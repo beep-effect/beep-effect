@@ -877,7 +877,6 @@ export const buildOntologySnapshot = (session: Session): OntologySnapshot =>
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { buildOntologySnapshotWithInference, OntologyInferenceResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
  * const session = createSession(
@@ -888,7 +887,7 @@ export const buildOntologySnapshot = (session: Session): OntologySnapshot =>
  * )
  * const inference = OntologyInferenceResult.make({
  *   processedChangeCount: 0,
- *   driftCap: NonNegativeInt.make(64),
+ *   driftCap: S.Natural.make(64),
  *   drifted: false,
  *   fullRecompute: true,
  *   changedSignatures: [],

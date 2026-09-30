@@ -9,7 +9,6 @@ import {
   SyncOperationRepositoryNotFound,
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
-import { NonNegativeInt } from "@beep/schema";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -37,7 +36,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, 
 
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const syncItemId = Documents.SyncItemId.make(1);
-const zero = NonNegativeInt.make(0);
+const zero = S.Natural.make(0);
 const decodeSyncOperation = (input: unknown) => decodeUnknownSyncOperation(input).pipe(Effect.orDie);
 
 const uploadSeed = (idempotencyKey: string, targetRelPath: string) =>

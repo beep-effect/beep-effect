@@ -70,7 +70,7 @@ import {
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { Effect, FileSystem, HashMap, identity, Order, Path, pipe, Ref, Result, Semaphore } from "effect";
@@ -100,8 +100,8 @@ const SyncConflictKind = DomainSyncConflict.SyncConflictKind;
 const SyncItemState = DomainSyncItem.SyncItemState;
 const SyncOperationType = DomainSyncOperation.SyncOperationType;
 
-const ZERO = NonNegativeInt.make(0);
-const GENERATION_ONE = NonNegativeInt.make(1);
+const ZERO = S.Natural.make(0);
+const GENERATION_ONE = S.Natural.make(1);
 
 const contentDigestOf = (bytes: Uint8Array): DocumentContentDigest =>
   DocumentContentDigest.make(bytesToHex(sha256(bytes)));
@@ -155,7 +155,7 @@ const idempotencyKeyFor = (
 type ObservedFile = {
   readonly digest: DocumentContentDigest;
   readonly relPath: VaultRelPath;
-  readonly sizeBytes: NonNegativeInt;
+  readonly sizeBytes: number;
 };
 
 type ObservedFolder = {
@@ -554,7 +554,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
             const file: ObservedFile = {
               digest: contentDigestOf(bytes),
               relPath: VaultRelPath.make(A.join(childSegments, "/")),
-              sizeBytes: NonNegativeInt.make(bytes.byteLength),
+              sizeBytes: S.Natural.make(bytes.byteLength),
             };
             return mergeObservations([{ files: [file], folders: [] }]);
           }
@@ -704,7 +704,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
           itemKind: SyncItemKind.Enum.folder,
           lastPushedDigest: O.none(),
           lastPushedGeneration: O.none(),
-          localGeneration: NonNegativeInt.make(trackedAtPath.value.localGeneration + 1),
+          localGeneration: S.Natural.make(trackedAtPath.value.localGeneration + 1),
           remoteId: O.none(),
           remoteName: O.none(),
           remoteParentId: O.none(),
@@ -767,7 +767,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
           itemKind: SyncItemKind.Enum.file,
           lastPushedDigest: O.none(),
           lastPushedGeneration: O.none(),
-          localGeneration: NonNegativeInt.make(tracked.value.localGeneration + 1),
+          localGeneration: S.Natural.make(tracked.value.localGeneration + 1),
           remoteId: O.none(),
           remoteName: O.none(),
           remoteParentId: O.none(),
@@ -793,7 +793,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
           ...item,
           contentDigest: O.some(file.digest),
           contentSizeBytes: O.some(file.sizeBytes),
-          localGeneration: NonNegativeInt.make(item.localGeneration + 1),
+          localGeneration: S.Natural.make(item.localGeneration + 1),
         })
       );
       const nextItemsByPath = HashMap.set(state.itemsByPath, file.relPath, edited);
@@ -818,7 +818,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
         DomainSyncItem.SyncItem.make({
           ...source,
           contentSizeBytes: O.some(file.sizeBytes),
-          localGeneration: NonNegativeInt.make(source.localGeneration + 1),
+          localGeneration: S.Natural.make(source.localGeneration + 1),
           localRelPath: file.relPath,
         })
       );
@@ -1053,7 +1053,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     item: DomainSyncItem.SyncItem,
     error: DmsMirrorUnavailable
   ) {
-    const attemptCount = NonNegativeInt.make(operation.attemptCount + 1);
+    const attemptCount = S.Natural.make(operation.attemptCount + 1);
     const requeue = error.retryable && attemptCount < config.maxAttempts;
     yield* operationRepository.update(
       DomainSyncOperation.SyncOperation.make({
@@ -1554,7 +1554,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     // probe answer and ask the provider now; passive reads stay cached.
     const probe = yield* input.forceProbe ? availability.refresh : availability.probe;
     const countItemsIn = (guard: (state: DomainSyncItem.SyncItemState) => boolean) =>
-      NonNegativeInt.make(A.length(A.filter(items, (item) => guard(item.syncState))));
+      S.Natural.make(A.length(A.filter(items, (item) => guard(item.syncState))));
 
     return VaultSyncStatus.make({
       conflictItems: countItemsIn(SyncItemState.is.conflict),
@@ -1563,12 +1563,12 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       currentItems: countItemsIn(SyncItemState.is.current),
       cursorPosition: O.map(cursor, (current) => current.streamPosition),
       errorItems: countItemsIn(SyncItemState.is.error),
-      failedOperations: NonNegativeInt.make(A.length(failed)),
-      openConflicts: NonNegativeInt.make(A.length(conflicts)),
+      failedOperations: S.Natural.make(A.length(failed)),
+      openConflicts: S.Natural.make(A.length(conflicts)),
       pendingItems: countItemsIn(SyncItemState.is.pending),
       probedAt: probe.probedAt,
       provider: probe.provider,
-      queuedOperations: NonNegativeInt.make(A.length(queued)),
+      queuedOperations: S.Natural.make(A.length(queued)),
     });
   });
 

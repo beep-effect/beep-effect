@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { Cause, Context, Effect, Exit, FiberSet, Layer, MutableRef, Semaphore } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -26,6 +25,7 @@ import type { DockAtomFeedEntry, DockAtomOperationOutcome, DockAtomSessionError 
 export { DockAtomSessionError } from "../Dock.protocol.ts";
 
 import { thunkEffectVoid } from "@beep/utils";
+import * as S from "effect/Schema";
 import { DockMutationResult } from "../Dock.outcomes.ts";
 import { DockEngine, DockSnapshotStore, requireSnapshot } from "../DockEngine.service.ts";
 import type { DockMutationOutcome } from "../Dock.outcomes.ts";
@@ -149,7 +149,7 @@ export const makeDockAtomSessionLayer: {
                           onSome: (error) =>
                             appendFeed(
                               DockAtomFeedFailure.make({
-                                submission: NonNegativeInt.make(submission),
+                                submission: S.Natural.make(submission),
                                 operationKind: operation.kind,
                                 error,
                               })
@@ -158,7 +158,7 @@ export const makeDockAtomSessionLayer: {
                       onSuccess: (outcome) =>
                         appendFeed(
                           DockAtomFeedSuccess.make({
-                            submission: NonNegativeInt.make(submission),
+                            submission: S.Natural.make(submission),
                             operationKind: operation.kind,
                             outcome,
                           })

@@ -21,7 +21,6 @@ import * as Crypto from "effect/Crypto";
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils, Sha256Hex } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { Context, DateTime, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -122,7 +121,7 @@ const metadataKey = (runId: ExtractionRunId): string => runKey(runId, "metadata.
 
 const documentKey = (runId: ExtractionRunId): string => runKey(runId, "input", "document.txt");
 
-const chunkKey = (runId: ExtractionRunId, chunkIndex: NonNegativeInt): string =>
+const chunkKey = (runId: ExtractionRunId, chunkIndex: number): string =>
   runKey(runId, "input", "chunks", `chunk-${chunkIndex}.txt`);
 
 const outputKey = (runId: ExtractionRunId, filename: string): string => runKey(runId, "outputs", filename);
@@ -195,7 +194,7 @@ export interface ExtractionRunServiceMethods {
    */
   saveChunk(
     runId: ExtractionRunId,
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     chunkText: string
   ): Effect.Effect<ChunkId, ExtractionRunError>;
 
@@ -421,14 +420,14 @@ const makeExtractionRunService = Effect.gen(function* () {
 
   const saveChunkRaw = Effect.fn("ExtractionRunService.saveChunk")(function* (
     runId: ExtractionRunId,
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     chunkText: string
   ) {
     const chunkId = ChunkId.fromDocument(runId, chunkIndex);
     yield* storage.set(chunkKey(runId, chunkIndex), chunkText);
     return chunkId;
   });
-  const saveChunk = (runId: ExtractionRunId, chunkIndex: NonNegativeInt, chunkText: string) =>
+  const saveChunk = (runId: ExtractionRunId, chunkIndex: number, chunkText: string) =>
     saveChunkRaw(runId, chunkIndex, chunkText).pipe(
       Effect.mapError(mapRunError("Failed to save extraction chunk", runId))
     );
@@ -445,7 +444,7 @@ const makeExtractionRunService = Effect.gen(function* () {
       type: outputType,
       path: `outputs/${filename}`,
       hash: Sha256Hex.make(yield* hashContent(content).pipe(Effect.provideService(Crypto.Crypto, crypto))),
-      size: NonNegativeInt.make(Buffer.byteLength(content, "utf8")),
+      size: S.Natural.make(Buffer.byteLength(content, "utf8")),
       savedAt: now,
     });
     yield* updateMetadata(runId, (run) =>

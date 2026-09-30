@@ -81,7 +81,7 @@ import { RegistrationGeometryError } from "@beep/repo-cli/test/DeletePackage";
 import { PacketCasConflictError, PacketStreamError } from "@beep/repo-cli/test/Goals";
 import { CaptureCommandTimedOutError, CapturePipeWedgedError } from "@beep/repo-cli/test/Process";
 import { QualityArtifactGeneratorError, TurboConfigProofError } from "@beep/repo-cli/test/Quality";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -528,15 +528,15 @@ describe("repo-cli tagged-error declared equivalence", () => {
   it("compares KnowledgeIntroducedFindingsError by declared fields", () => {
     const first = KnowledgeIntroducedFindingsError.make({
       message: "same",
-      introducedCount: NonNegativeInt.make(1),
+      introducedCount: S.Natural.make(1),
     });
     const second = KnowledgeIntroducedFindingsError.make({
       message: "same",
-      introducedCount: NonNegativeInt.make(1),
+      introducedCount: S.Natural.make(1),
     });
     const different = KnowledgeIntroducedFindingsError.make({
       message: "different",
-      introducedCount: NonNegativeInt.make(1),
+      introducedCount: S.Natural.make(1),
     });
 
     expectDeclaredEquivalence(KnowledgeIntroducedFindingsError, first, second, different);
@@ -544,15 +544,15 @@ describe("repo-cli tagged-error declared equivalence", () => {
   it("compares KnowledgeHostPathDebtError by declared fields", () => {
     const first = KnowledgeHostPathDebtError.make({
       message: "same",
-      liveDebtCount: NonNegativeInt.make(1),
+      liveDebtCount: S.Natural.make(1),
     });
     const second = KnowledgeHostPathDebtError.make({
       message: "same",
-      liveDebtCount: NonNegativeInt.make(1),
+      liveDebtCount: S.Natural.make(1),
     });
     const different = KnowledgeHostPathDebtError.make({
       message: "different",
-      liveDebtCount: NonNegativeInt.make(1),
+      liveDebtCount: S.Natural.make(1),
     });
 
     expectDeclaredEquivalence(KnowledgeHostPathDebtError, first, second, different);

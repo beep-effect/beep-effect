@@ -14,7 +14,7 @@ import {
 } from "@beep/file-processing/Artifact";
 import { ExportArchiveOperation, FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
-import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -24,6 +24,7 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { OutputBound, runCaptured } from "../../../internal/process/StepExec.ts";
+import { PosInt } from "../../../internal/schema/PosInt.ts";
 import { CorpusCommandError } from "../Corpus.errors.ts";
 import { classifyRecycleBinName, parseRecycleBinMetadata } from "../Corpus.recyclebin.ts";
 import {
@@ -137,7 +138,7 @@ type FamilyCounters = {
 
 const transformationError = (message: string): CorpusCommandError => CorpusCommandError.make({ message });
 
-const nonNegative = (value: number): NonNegativeInt => NonNegativeInt.make(Math.trunc(Math.max(value, 0)));
+const nonNegative = (value: number): number => S.Natural.make(Math.trunc(Math.max(value, 0)));
 
 const attachmentProbeOutputBound = OutputBound.make({
   maxChars: 4096,
@@ -375,7 +376,7 @@ const requireCanonicalContainedPath = Effect.fn("CorpusRestoration.requireCanoni
 const deterministicPreservationElapsed = (
   records: ReadonlyArray<ArchiveLedgerRecord>,
   seal: PreservationSeal
-): Effect.Effect<NonNegativeInt, CorpusCommandError> => {
+): Effect.Effect<number, CorpusCommandError> => {
   const preflight = A.findFirst(records, (record) => record.recordType === "archive-preflight");
   const startedAt = O.flatMap(preflight, (record) => DateTime.make(record.recordedAt));
   const sealedAt = DateTime.make(seal.recordedAt);

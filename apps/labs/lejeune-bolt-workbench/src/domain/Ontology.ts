@@ -6,13 +6,14 @@
  */
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
-import { LiteralKit, PosInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { LocalDateFromString } from "@beep/schema/LocalDate";
 import { HttpsUrl } from "@beep/schema/URL";
 import { DateTime, Effect, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "./PosInt.ts";
 
 const decodeLocalDateFromStringOption = S.decodeOption(LocalDateFromString);
 

@@ -6,9 +6,13 @@
  */
 
 import { $DocumentsServerId } from "@beep/identity/packages";
-import { PosInt } from "@beep/schema";
 import { Config, Context, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultSync.config");
 
@@ -82,8 +86,10 @@ export const DOCUMENTS_SYNC_DEFAULT_EVENT_PAGE_LIMIT = PosInt.make(100);
  * **Example** (Make vault sync config)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { VaultSyncConfigValue } from "@beep/documents-server/aggregates/Sync"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config = VaultSyncConfigValue.make({
  *   eventPageLimit: PosInt.make(100),
@@ -130,8 +136,9 @@ export class VaultSyncConfig extends Context.Service<VaultSyncConfig, VaultSyncC
    * **Example** (Build layer from value)
    *
    * ```ts
+   * import * as S from "effect/Schema"
    * import { VaultSyncConfig, VaultSyncConfigValue } from "@beep/documents-server/aggregates/Sync"
-   * import { PosInt } from "@beep/schema"
+   * const PosInt = S.Int.check(S.isGreaterThan(0))
    *
    * const layer = VaultSyncConfig.layerConfig(
    *   VaultSyncConfigValue.make({ eventPageLimit: PosInt.make(10), maxAttempts: PosInt.make(1) })

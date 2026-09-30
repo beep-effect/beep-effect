@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $LangExtractId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
@@ -52,8 +51,8 @@ export class NormalizedTextWithRawOffsets extends S.Class<NormalizedTextWithRawO
   $I`NormalizedTextWithRawOffsets`
 )(
   {
-    ends: S.Array(NonNegativeInt),
-    starts: S.Array(NonNegativeInt),
+    ends: S.Array(S.Natural),
+    starts: S.Array(S.Natural),
     text: S.String,
   },
   $I.annote("NormalizedTextWithRawOffsets", {
@@ -61,24 +60,24 @@ export class NormalizedTextWithRawOffsets extends S.Class<NormalizedTextWithRawO
   })
 ) {}
 
-const RawCluster = S.Tuple([NonNegativeInt, NonNegativeInt]).pipe(
+const RawCluster = S.Tuple([S.Natural, S.Natural]).pipe(
   $I.annoteSchema("RawCluster", {
     description: "Half-open raw UTF-16 range whose code points normalize as one cluster.",
   })
 );
 type RawCluster = typeof RawCluster.Type;
 
-type SourceClusterState = readonly [start: NonNegativeInt, clusters: Array<RawCluster>];
-type NormalizationState = readonly [starts: Array<NonNegativeInt>, ends: Array<NonNegativeInt>, points: Array<string>];
-type NormalizedRawPoint = readonly [point: string, sourceStart: NonNegativeInt, sourceEnd: NonNegativeInt];
+type SourceClusterState = readonly [start: number, clusters: Array<RawCluster>];
+type NormalizationState = readonly [starts: Array<number>, ends: Array<number>, points: Array<string>];
+type NormalizedRawPoint = readonly [point: string, sourceStart: number, sourceEnd: number];
 
-const rawCluster = (start: NonNegativeInt, end: NonNegativeInt): RawCluster => [start, end];
-const normalizedRawPoint = (
-  point: string,
-  sourceStart: NonNegativeInt,
-  sourceEnd: NonNegativeInt
-): NormalizedRawPoint => [point, sourceStart, sourceEnd];
-const sourceClusterInitial = (): SourceClusterState => [NonNegativeInt.make(0), A.empty()];
+const rawCluster = (start: number, end: number): RawCluster => [start, end];
+const normalizedRawPoint = (point: string, sourceStart: number, sourceEnd: number): NormalizedRawPoint => [
+  point,
+  sourceStart,
+  sourceEnd,
+];
+const sourceClusterInitial = (): SourceClusterState => [S.Natural.make(0), A.empty()];
 const normalizationInitial = (): NormalizationState => [A.empty(), A.empty(), A.empty()];
 const isCombiningMark = S.is(CombiningMark);
 const isWhitespace = S.is(WhitespaceCodePoint);
@@ -101,7 +100,7 @@ const sourceClusters = (source: string): ReadonlyArray<RawCluster> => {
     source,
     A.fromIterable,
     A.reduce(sourceClusterInitial(), ([start, clusters], point): SourceClusterState => {
-      const end = NonNegativeInt.make(start + Str.length(point));
+      const end = S.Natural.make(start + Str.length(point));
       const next = rawCluster(start, end);
       return [
         end,
@@ -140,8 +139,8 @@ const normalizeCluster = flow(normalizeUnicode, Str.replace(/[‘’‚‛]/gu, 
 const appendNormalizedPoint = (
   [starts, ends, points]: NormalizationState,
   point: string,
-  sourceStart: NonNegativeInt,
-  sourceEnd: NonNegativeInt
+  sourceStart: number,
+  sourceEnd: number
 ): NormalizationState =>
   pipe(
     isWhitespace(point),

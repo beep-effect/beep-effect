@@ -17,7 +17,6 @@ import {
   TextAnchorFields,
   TextAnchorWidthCheck,
 } from "@beep/provenance/TextAnchor";
-import { NonNegativeInt } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { identity } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -185,12 +184,12 @@ export class EvidenceSpan extends S.Class<EvidenceSpan>($I`EvidenceSpan`)(
  * **Example** (Check span consistency)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Confidence, EvidenceSpan, isEvidenceSpanInternallyConsistent } from "@beep/epistemic-domain/values/EvidenceSpan"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const span = EvidenceSpan.make({
- *   startChar: NonNegativeInt.make(0),
- *   endChar: NonNegativeInt.make(12),
+ *   startChar: S.Natural.make(0),
+ *   endChar: S.Natural.make(12),
  *   quote: "Ada Lovelace",
  *   confidence: Confidence.make(0.98)
  * })
@@ -227,8 +226,8 @@ export const EvidenceSpanArbitrary = Arbitrary.schema(
 ).pipe(
   Arbitrary.map(({ startChar, quote, confidence }) =>
     EvidenceSpan.make({
-      startChar: NonNegativeInt.make(startChar),
-      endChar: NonNegativeInt.make(startChar + Str.length(quote)),
+      startChar: S.Natural.make(startChar),
+      endChar: S.Natural.make(startChar + Str.length(quote)),
       quote,
       confidence,
     })

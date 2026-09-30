@@ -13,8 +13,6 @@ import { flow } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { Context, Duration, Effect, Layer, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -33,6 +31,7 @@ import {
 import type { ImageCandidate } from "../Domain/Model/Image.ts";
 import { ImageFetchResult } from "../Domain/Model/Image.ts";
 import { sha256Bytes as sha256BytesEffect } from "../Utils/Hash.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ImageFetcher");
 
@@ -384,8 +383,8 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           if (!Number.isNaN(size) && size > maxSizeBytes) {
             return yield* ImageTooLargeError.make({
               url: candidate.sourceUrl,
-              sizeBytes: NonNegativeInt.make(size),
-              maxBytes: NonNegativeInt.make(maxSizeBytes),
+              sizeBytes: S.Natural.make(size),
+              maxBytes: S.Natural.make(maxSizeBytes),
             });
           }
         }
@@ -399,8 +398,8 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
               return Effect.fail(
                 ImageTooLargeError.make({
                   url: candidate.sourceUrl,
-                  sizeBytes: NonNegativeInt.make(nextSize),
-                  maxBytes: NonNegativeInt.make(maxSizeBytes),
+                  sizeBytes: S.Natural.make(nextSize),
+                  maxBytes: S.Natural.make(maxSizeBytes),
                 })
               );
             }
@@ -428,8 +427,8 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
         if (bytes.length > maxSizeBytes) {
           return yield* ImageTooLargeError.make({
             url: candidate.sourceUrl,
-            sizeBytes: NonNegativeInt.make(bytes.length),
-            maxBytes: NonNegativeInt.make(maxSizeBytes),
+            sizeBytes: S.Natural.make(bytes.length),
+            maxBytes: S.Natural.make(maxSizeBytes),
           });
         }
 

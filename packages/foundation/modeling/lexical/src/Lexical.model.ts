@@ -18,12 +18,13 @@
 // cspell:word youtu
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
-import { Defect, LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, pipe, Result, SchemaGetter, SchemaTransformation, Struct } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { hasStrictNodeChildren, isStrictLexicalNode } from "./internal/conformance/Lexical.strict-invariants.ts";
+import { PosInt } from "./internal/PosInt.ts";
 import { legacyYouTubeVideoId, sanitizeInlineStyle, sanitizeStyleValue, sanitizeUrl } from "./Lexical.normalize.ts";
 import type { CodeFenceLanguage as MdCodeFenceLanguage } from "@beep/md/Md.model";
 import type * as R from "effect/Record";
@@ -50,10 +51,10 @@ const CodeNodeLanguage = S.OptionFromOptionalNullOr(S.String).pipe(
   })
 );
 
-const LexicalListStart = NonNegativeInt.pipe(
+const LexicalListStart = S.Natural.pipe(
   S.decodeTo(PosInt, {
     decode: SchemaGetter.transform((value) => PosInt.make(value === 0 ? 1 : value)),
-    encode: SchemaGetter.transform((value) => NonNegativeInt.make(value)),
+    encode: SchemaGetter.transform((value) => S.Natural.make(value)),
   }),
   $I.annoteSchema("LexicalListStart", {
     description: "Positive Lexical list start with legacy zero values normalized to one during serialized JSON decode.",
@@ -202,7 +203,7 @@ export type TextFormatBit = typeof TextFormatBit.Type;
  */
 export const TEXT_FORMAT_MASK_ALL = A.reduce(TextFormatBit.literals, 0, (mask, bit) => mask | bit);
 
-const TextFormatMaskBase = NonNegativeInt.check(
+const TextFormatMaskBase = S.Natural.check(
   S.isLessThanOrEqualTo(TEXT_FORMAT_MASK_ALL, {
     identifier: $I`TextFormatMaskKnownBitsCheck`,
     title: "Text Format Mask",
@@ -370,7 +371,7 @@ export type TextDetailBit = typeof TextDetailBit.Type;
  */
 export const TEXT_DETAIL_MASK_ALL = A.reduce(TextDetailBit.literals, 0, (mask, bit) => mask | bit);
 
-const TextDetailMaskBase = NonNegativeInt.check(
+const TextDetailMaskBase = S.Natural.check(
   S.isLessThanOrEqualTo(TEXT_DETAIL_MASK_ALL, {
     identifier: $I`TextDetailMaskKnownBitsCheck`,
     title: "Text Detail Mask",
@@ -437,7 +438,7 @@ export type TextDetailMask = typeof TextDetailMask.Type;
  * @category models
  * @since 0.0.0
  */
-export const LexicalIndentDepth = NonNegativeInt.pipe(
+export const LexicalIndentDepth = S.Natural.pipe(
   S.brand("LexicalIndentDepth"),
   $I.annoteSchema("LexicalIndentDepth", {
     description: "Non-negative Lexical indentation depth.",
@@ -556,7 +557,7 @@ export type TableCellSpan = typeof TableCellSpan.Type;
  * @category models
  * @since 0.0.0
  */
-export const TableDimension = NonNegativeInt.pipe(
+export const TableDimension = S.Natural.pipe(
   S.brand("TableDimension"),
   $I.annoteSchema("TableDimension", {
     description: "Non-negative table dimension emitted by Lexical table nodes.",
@@ -1885,8 +1886,10 @@ const ListNodeValueFields = ListNode.mapFields(Struct.omit(["type", "listType", 
  * **Example** (Construct a canonical numbered list)
  *
  * ```ts import.meta.vitest name="Construct a canonical numbered list"
+ * import * as S from "effect/Schema"
  * import { ListNode, ListNodeValue } from "@beep/lexical-schema/Lexical.model"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const payload = ListNodeValue.cases.number.make({ children: [], start: PosInt.make(1) })
  * const node = ListNode.make(payload)
@@ -2547,12 +2550,12 @@ export class TableNode extends ElementNode.extend<TableNode>($I`TableNode`)(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional row-striping flag emitted by Lexical table nodes." })
     ),
-    frozenColumnCount: NonNegativeInt.pipe(
+    frozenColumnCount: S.Natural.pipe(
       S.OptionFromOptional,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional number of frozen columns emitted by Lexical table nodes." })
     ),
-    frozenRowCount: NonNegativeInt.pipe(
+    frozenRowCount: S.Natural.pipe(
       S.OptionFromOptional,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional number of frozen rows emitted by Lexical table nodes." })
@@ -2588,8 +2591,8 @@ export declare namespace TableNode {
    */
   export interface Type extends ElementNode.Type {
     readonly colWidths: O.Option<ReadonlyArray<TableDimension>>;
-    readonly frozenColumnCount: O.Option<NonNegativeInt>;
-    readonly frozenRowCount: O.Option<NonNegativeInt>;
+    readonly frozenColumnCount: O.Option<number>;
+    readonly frozenRowCount: O.Option<number>;
     readonly rowStriping: O.Option<boolean>;
     readonly type: "table";
   }

@@ -10,7 +10,7 @@ import { ArchiveExportResult } from "@beep/file-processing/Extraction";
 import { DetectionResult, FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { $LibpffId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -177,7 +177,7 @@ export const makeLibpffFileProcessingEngine = (
       id: childArtifactId,
       mediaType: "text/plain",
       relativePath: childRelativePath,
-      sizeBytes: NonNegativeInt.make(34),
+      sizeBytes: S.Natural.make(34),
     });
 
     return ArchiveExportResult.make({

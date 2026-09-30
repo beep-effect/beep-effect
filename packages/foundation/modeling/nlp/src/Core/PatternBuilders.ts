@@ -261,11 +261,11 @@ export const make: {
  * **Example** (Add mark range to pattern)
  *
  * ```ts import.meta.vitest name="Add mark range to pattern"
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { hasMark, literal, make, withMark } from "@beep/nlp/Core/PatternBuilders"
  *
  * const pattern = make("marked-company", [literal("Acme"), literal("Inc.")])
- * const marked = withMark(pattern, [NonNegativeInt.make(0), NonNegativeInt.make(1)])
+ * const marked = withMark(pattern, [S.Natural.make(0), S.Natural.make(1)])
  * hasMark(marked) // => true
  * ```
  *
@@ -283,12 +283,12 @@ export const withMark: PatternDual<MarkRange> = dual(
  * **Example** (Remove mark from pattern)
  *
  * ```ts import.meta.vitest name="Remove mark from pattern"
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { hasMark, literal, make, withMark, withoutMark } from "@beep/nlp/Core/PatternBuilders"
  *
  * const pattern = withMark(make("marked-company", [literal("Acme")]), [
- *   NonNegativeInt.make(0),
- *   NonNegativeInt.make(0)
+ *   S.Natural.make(0),
+ *   S.Natural.make(0)
  * ])
  * hasMark(withoutMark(pattern)) // => false
  * ```
@@ -395,13 +395,13 @@ export const hasMark = (pattern: Pattern): boolean => O.isSome(pattern.mark);
  * **Example** (Read mark range option)
  *
  * ```ts import.meta.vitest name="Read mark range option"
+ * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { NonNegativeInt } from "@beep/schema"
  * import { getMark, literal, make, withMark } from "@beep/nlp/Core/PatternBuilders"
  *
  * const pattern = withMark(make("marked", [literal("Effect")]), [
- *   NonNegativeInt.make(0),
- *   NonNegativeInt.make(0)
+ *   S.Natural.make(0),
+ *   S.Natural.make(0)
  * ])
  * O.getOrThrow(getMark(pattern))[0] // => 0
  * ```

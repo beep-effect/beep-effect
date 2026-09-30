@@ -14,7 +14,7 @@
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, flow, Layer } from "effect";
 import * as A from "effect/Array";
@@ -40,6 +40,7 @@ import type {
 } from "./schema.ts";
 import { CanonicalEntities, canonicalEntities, EntityAliases, entityAliases, entityBlockingTokens } from "./schema.ts";
 import { UUID } from "../Domain/Identity.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 // =============================================================================
 // Types
@@ -163,16 +164,18 @@ export const normalizeEntityMention = flow(Str.toLowerCase, Str.trim);
 
 const canonicalEntityFilterTypesDefault = A.empty();
 const canonicalEntityFilterLimitDefault = PosInt.make(20);
-const canonicalEntityFilterOffsetDefault = NonNegativeInt.make(0);
+const canonicalEntityFilterOffsetDefault = S.Natural.make(0);
 /**
  * Ontology-scoped query input for listing canonical entities by type.
  *
  * **Example** (Filter canonical entities)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { IRI } from "@beep/rdf"
- * import { PosInt } from "@beep/schema"
  * import { CanonicalEntityFilter } from "@effect-ontology/Repository/EntityRegistry"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const filter = CanonicalEntityFilter.make({
  *   ontologyId: "claims",
@@ -191,7 +194,7 @@ export class CanonicalEntityFilter extends S.Class<CanonicalEntityFilter>($I`Can
     ontologyId: S.NonEmptyString,
     types: S.Array(IRI).pipe(S.withConstructorDefault(Effect.succeed(canonicalEntityFilterTypesDefault)), S.withDecodingDefaultType(Effect.succeed(canonicalEntityFilterTypesDefault))),
     limit: PosInt.pipe(S.withConstructorDefault(Effect.succeed(canonicalEntityFilterLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(canonicalEntityFilterLimitDefault))),
-    offset: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(canonicalEntityFilterOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(canonicalEntityFilterOffsetDefault))),
+    offset: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(canonicalEntityFilterOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(canonicalEntityFilterOffsetDefault))),
   },
   $I.annote("CanonicalEntityFilter", {
     description: "Ontology-scoped canonical-entity filters with schema-owned type and pagination defaults.",

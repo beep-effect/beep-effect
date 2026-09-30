@@ -6,7 +6,7 @@
  */
 
 import { $UsptoId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Effect } from "effect";
 import { dual } from "effect/Function";
@@ -72,7 +72,7 @@ const UsptoErrorContextFields = {
       description: "Sanitized technical cause when one is available.",
     })
   ),
-  status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+  status: S.OptionFromOptionalKey(S.Natural).pipe(
     S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({
       description: "HTTP response status associated with the failure when one is available.",
@@ -122,7 +122,7 @@ export class UsptoError extends S.TaggedError<UsptoError>($I`UsptoError`)(
    */
   static readonly fromReason = (
     reason: UsptoErrorReason,
-    options: { readonly cause?: string; readonly status?: NonNegativeInt } = {}
+    options: { readonly cause?: string; readonly status?: number } = {}
   ): UsptoError => {
     const context = UsptoErrorOptions.make({
       cause: O.fromUndefinedOr(options.cause),
@@ -154,6 +154,6 @@ export class UsptoError extends S.TaggedError<UsptoError>($I`UsptoError`)(
  * @since 0.0.0
  */
 export const makeUsptoError: {
-  (options?: { readonly cause?: string; readonly status?: NonNegativeInt }): (reason: UsptoErrorReason) => UsptoError;
-  (reason: UsptoErrorReason, options?: { readonly cause?: string; readonly status?: NonNegativeInt }): UsptoError;
+  (options?: { readonly cause?: string; readonly status?: number }): (reason: UsptoErrorReason) => UsptoError;
+  (reason: UsptoErrorReason, options?: { readonly cause?: string; readonly status?: number }): UsptoError;
 } = dual((args) => P.isString(args[0]), UsptoError.fromReason);

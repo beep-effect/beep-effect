@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as Effect from "effect/Effect";
@@ -557,7 +557,7 @@ export class SkillSnapshot extends S.Class<SkillSnapshot>($I`SkillSnapshot`)(
   S.Struct({
     algorithm: SkillSnapshotAlgorithm,
     treeHash: Sha256Hex,
-    fileCount: NonNegativeInt,
+    fileCount: S.Natural,
     manifestHash: Sha256Hex,
     manifest: S.Array(SkillSnapshotFile),
   }).check(SkillSnapshotFileCountCheck),
@@ -637,8 +637,8 @@ export class SkillProvenance extends S.Class<SkillProvenance>($I`SkillProvenance
   {
     status: SkillProvenanceStatus,
     confidence: SkillProvenanceConfidence,
-    matchedFileCount: NonNegativeInt,
-    upstreamFileCount: NonNegativeInt,
+    matchedFileCount: S.Natural,
+    upstreamFileCount: S.Natural,
     evidence: S.Array(SkillProvenanceEvidence),
   },
   $I.annote("SkillProvenance", {

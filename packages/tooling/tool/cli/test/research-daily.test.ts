@@ -17,7 +17,6 @@ import {
   readCogneeSettings,
   VAULT_DIRS,
 } from "@beep/repo-cli/test/Research";
-import { NonNegativeInt } from "@beep/schema";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Layer, Path, Stream } from "effect";
@@ -185,7 +184,7 @@ layer(testLayer, { timeout: "30 seconds" })("research daily cognify gate", (it) 
         ResearchDailyOptions.make({
           browser: "all",
           commit: true,
-          sinceDays: NonNegativeInt.make(1),
+          sinceDays: S.Natural.make(1),
           vaultRoot,
         })
       ).pipe(withConfig({ HOME: home }));
@@ -243,7 +242,7 @@ layer(testLayer, { timeout: "30 seconds" })("research daily cognify gate", (it) 
         ResearchDailyOptions.make({
           browser: "all",
           commit: false,
-          sinceDays: NonNegativeInt.make(1),
+          sinceDays: S.Natural.make(1),
           vaultRoot,
         })
       ).pipe(withConfig({ COGNEE_API_EMAIL: "not-an-email", COGNEE_API_URL: UNREACHABLE_COGNEE_URL, HOME: home }));

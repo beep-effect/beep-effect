@@ -13,7 +13,7 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Context, Equal, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -31,8 +31,9 @@ import { canonicalConflictPair, detectConflictKind } from "./Conflict.ts";
 import type { ClaimInsertRow, ClaimRow, CorrectionInsertRow, CorrectionRow } from "./schema.ts";
 import { Claims, Corrections, claims, conflicts, correctionClaims, corrections } from "./schema.ts";
 import { UUID } from "../Domain/Identity.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
-const ClaimCountDatabaseRow = S.Struct({ count: NonNegativeInt }).pipe(
+const ClaimCountDatabaseRow = S.Struct({ count: S.Natural }).pipe(
   $I.annoteSchema("ClaimCountDatabaseRow", {
     description: "Claim count projection decoded at the Drizzle database boundary.",
   })
@@ -107,7 +108,7 @@ export class ClaimFilter extends S.Class<ClaimFilter>($I`ClaimFilter`)(
     rank: S.optionalKey(S.Literals(["preferred", "normal", "deprecated"])),
     includeDeprecated: S.optionalKey(S.Boolean),
     limit: S.optionalKey(PosInt),
-    offset: S.optionalKey(NonNegativeInt),
+    offset: S.optionalKey(S.Natural),
   },
   $I.annote("ClaimFilter", {
     description: "Ontology-scoped persisted-claim filters with bounded pagination fields.",

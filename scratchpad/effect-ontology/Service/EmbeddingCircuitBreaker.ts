@@ -12,13 +12,14 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, PosInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Context, Duration, Effect, HashMap, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { CircuitBreaker, CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
 import { CircuitState, makeCircuitBreaker } from "../Runtime/CircuitBreaker.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCircuitBreaker");
 

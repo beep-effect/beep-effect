@@ -33,7 +33,6 @@ import {
   YeetVerdictJson,
   YeetVerdictLane,
 } from "@beep/repo-cli/test/Yeet";
-import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -284,7 +283,7 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics loader", (layerI
         schemaVersion: "yeet-attempt-journal/v1",
         _tag: "journal-compacted",
         recordedAt: at(-5),
-        evictedCount: NonNegativeInt.make(1),
+        evictedCount: S.Natural.make(1),
         oldestEvictedRecordedAt: at(-20),
         terminalEvictionCutoffRecordedAt: O.some(at(-10)),
       });

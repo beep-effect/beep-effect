@@ -732,6 +732,24 @@ describe("practice KG projections", () => {
 
   it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
+      "builds an email-free bundle when the extract has no children root",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const corpusRoot = yield* makeFixtureCorpus();
+        yield* fs.remove(path.join(corpusRoot, "staging", "extract", "children"), { recursive: true });
+        const bundleOut = path.join(corpusRoot, "bundle-no-children");
+        const result = yield* runBuild(graphOptions(corpusRoot, bundleOut), bundleOut);
+
+        expect(result.counts.emails).toBe(0);
+        expect(result.counts.documents).toBe(4);
+      }),
+      { timeout: 120_000 }
+    );
+  });
+
+  it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
       "persists docket-scoped normalized patents with exact claims-section evidence and bounded input",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;

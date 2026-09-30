@@ -1,7 +1,6 @@
 import { ArtifactLocator, SourceArtifact } from "@beep/file-processing/Artifact";
 import { ExportArchiveOperation, ExtractFileOperation } from "@beep/file-processing/Operation";
 import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -12,6 +11,8 @@ import { Effect, FileSystem, Logger, Path, References, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodePosixPath = S.decodeEffect(PosixPath);
 const decodeTikaAppEngineConfigResult = S.decodeResult(TikaAppEngineConfig);
@@ -74,7 +75,7 @@ const fixture = Effect.fn(function* (stubScript: string, format: FileFormatFamil
       locator: ArtifactLocator.make({ kind: "file", value: locatorValue }),
       name: "document.pdf",
       relativePath,
-      sizeBytes: NonNegativeInt.make(sourceBytes.length),
+      sizeBytes: S.Natural.make(sourceBytes.length),
       bytes: sourceBytes,
     }),
   });

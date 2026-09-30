@@ -31,7 +31,6 @@ import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 // worker, and the barrel pulls Markdown.ts → micromark, whose browser build
 // touches `document` at module top level (ReferenceError in workers).
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { A, O, Str } from "@beep/utils";
 import { Context, Effect, flow, Layer, MutableHashMap, Order, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -270,13 +269,13 @@ export class OntologyDisjointnessViolation extends S.Class<OntologyDisjointnessV
  * **Example** (Make complete inference result)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { OntologyInferenceResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const result = OntologyInferenceResult.make({
  *   processedChangeCount: 0,
- *   driftCap: NonNegativeInt.make(64),
+ *   driftCap: S.Natural.make(64),
  *   drifted: false,
  *   fullRecompute: true,
  *   changedSignatures: [],
@@ -294,7 +293,7 @@ export class OntologyDisjointnessViolation extends S.Class<OntologyDisjointnessV
 export class OntologyInferenceResult extends S.Class<OntologyInferenceResult>($I`OntologyInferenceResult`)(
   {
     processedChangeCount: S.Int,
-    driftCap: NonNegativeInt,
+    driftCap: S.Natural,
     drifted: S.Boolean,
     fullRecompute: S.Boolean,
     changedSignatures: S.Array(OntologyInferenceChangedSignature),
@@ -337,7 +336,7 @@ export class InferOntologySessionInput extends S.Class<InferOntologySessionInput
   {
     session: Session,
     previous: S.OptionFromOptionalKey(OntologyInferenceResult).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    driftCap: S.optionalKey(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(64)))),
+    driftCap: S.optionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(64)))),
   },
   $I.annote("InferOntologySessionInput", {
     description: "Input for structural inference over an ontology session.",
@@ -805,7 +804,7 @@ const inferOntologySession = Effect.fn("Ontology.Reasoner.infer")(function* (inp
   const changedOperations = changedOperationWindow(input);
   const changedSignatures = changedSignaturesFor(changedOperations);
   const previous = input.previous;
-  const driftCap = input.driftCap ?? NonNegativeInt.make(64);
+  const driftCap = input.driftCap ?? S.Natural.make(64);
   const historyRewound = pipe(
     previous,
     O.exists((result) => input.session.changeLog.length < result.processedChangeCount)
@@ -876,7 +875,6 @@ const inferOntologySession = Effect.fn("Ontology.Reasoner.infer")(function* (inp
  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { inferredSessionGraphPartitions, OntologyInferenceResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
  * const session = createSession(
@@ -887,7 +885,7 @@ const inferOntologySession = Effect.fn("Ontology.Reasoner.infer")(function* (inp
  * )
  * const result = OntologyInferenceResult.make({
  *   processedChangeCount: 0,
- *   driftCap: NonNegativeInt.make(64),
+ *   driftCap: S.Natural.make(64),
  *   drifted: false,
  *   fullRecompute: true,
  *   changedSignatures: [],

@@ -5,13 +5,14 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { Effect, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { DataValue } from "./Codemode.data.ts";
 import { ToolCall } from "./Codemode.tool-runtime.ts";
 import { DiagnosticKind } from "./interpreter/Interpreter.model.ts";
+import { PosInt } from "./PosInt.ts";
 
 const $I = $ScratchpadId.create("codemode/Codemode.result");
 

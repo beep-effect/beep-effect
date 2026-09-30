@@ -8,7 +8,6 @@ import {
   explainClaimEvidence,
 } from "@beep/epistemic-use-cases/ClaimEvidenceReview";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
@@ -19,6 +18,7 @@ import * as BrowserCrypto from "@effect/platform-browser/BrowserCrypto";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import { AsyncResult, Atom } from "effect/reactivity";
+import * as S from "effect/Schema";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const exampleText = (year: number) =>
@@ -29,8 +29,8 @@ const exampleBasis = (year: number, digest: SourceTextDigest) =>
     assertion: `North Observatory opened to the public in ${year}.`,
     subject: "North Observatory",
     evidence: EvidenceSpan.make({
-      startChar: NonNegativeInt.make(46),
-      endChar: NonNegativeInt.make(74),
+      startChar: S.Natural.make(46),
+      endChar: S.Natural.make(74),
       quote: `opened to the public in ${year}`,
       confidence: UnitInterval.make(0.82),
     }),

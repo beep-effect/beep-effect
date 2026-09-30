@@ -6,7 +6,6 @@
  */
 
 import { $OnepasswordCliId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
 import { Context, Effect, Layer, Redacted, Stream } from "effect";
 import * as A from "effect/Array";
@@ -147,7 +146,7 @@ const makeService = (commandPath: string, runner: OnePasswordCliRunner): OnePass
     );
     const value = yield* read(typedReference);
     return OnePasswordReferenceProbe.make({
-      byteLength: NonNegativeInt.make(new TextEncoder().encode(Redacted.value(value)).byteLength),
+      byteLength: S.Natural.make(new TextEncoder().encode(Redacted.value(value)).byteLength),
       reference: typedReference,
       status: "resolved",
     });

@@ -15,7 +15,7 @@ import { ArchiveExportResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { $LibpffId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, O, R, Str, Struct } from "@beep/utils";
 import { Effect, FileSystem, flow, Match, Number as Num, Order, Path, Stream } from "effect";
@@ -37,6 +37,11 @@ import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
 import type { Scope } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { LibpffError } from "./Libpff.errors.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const decodePosixPath = S.decodeEffect(PosixPath);
 
@@ -1196,7 +1201,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     }
     if (exitCode !== 0) {
       return yield* makeLibpffError("process", {
-        exitCode: NonNegativeInt.make(Math.max(0, exitCode)),
+        exitCode: S.Natural.make(Math.max(0, exitCode)),
         ...O.getSomesStruct({ processClassification: classifyProcessFailure(stderr) }),
       });
     }
@@ -1284,7 +1289,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         ref: ArtifactReference.make({
           id: childId,
           relativePath: decoded.value,
-          sizeBytes: NonNegativeInt.make(file.sizeBytes),
+          sizeBytes: S.Natural.make(file.sizeBytes),
         }),
       });
     }
@@ -1348,7 +1353,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         id: emlId,
         mediaType: "message/rfc822",
         relativePath: emlRelativePath.value,
-        sizeBytes: NonNegativeInt.make(emlBytes.length),
+        sizeBytes: S.Natural.make(emlBytes.length),
       })
     );
   });
@@ -1430,7 +1435,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       ArtifactReference.make({
         id: jsonlId,
         relativePath: jsonlRelativePath.value,
-        sizeBytes: NonNegativeInt.make(jsonlBytes.length),
+        sizeBytes: S.Natural.make(jsonlBytes.length),
       })
     );
   });

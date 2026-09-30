@@ -110,7 +110,6 @@ import {
   SKOS_TOP_CONCEPT_OF,
 } from "@beep/rdf/Vocab/Skos";
 import { XSD_ANY_URI, XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -778,8 +777,8 @@ describe("@beep/rdf crispening parity", () => {
     Effect.gen(function* () {
       const selector = TextPositionSelector.make({
         kind: "text-position",
-        start: NonNegativeInt.make(0),
-        end: NonNegativeInt.make(5),
+        start: S.Natural.make(0),
+        end: S.Natural.make(5),
       });
       const target = EvidenceTarget.make({
         source: IRIReference.decodeUnknownSync("https://example.org/document"),

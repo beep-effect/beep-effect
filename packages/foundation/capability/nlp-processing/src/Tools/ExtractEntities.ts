@@ -6,7 +6,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
 import { AiEntity, AiToolError } from "./_schemas.ts";
@@ -34,16 +33,16 @@ class ExtractEntitiesSuccess extends S.Class<ExtractEntitiesSuccess>($I`ExtractE
     allEntities: S.Array(AiEntity).annotateKey({
       description: "Combined built-in and custom entity matches",
     }),
-    allEntityCount: NonNegativeInt,
+    allEntityCount: S.Natural,
     customEntities: S.Array(AiEntity).annotateKey({
       description: "Custom learned entity matches",
     }),
-    customEntityCount: NonNegativeInt,
+    customEntityCount: S.Natural,
     customEntityTypes: S.Array(S.String),
     entities: S.Array(AiEntity).annotateKey({
       description: "Built-in entity matches",
     }),
-    entityCount: NonNegativeInt,
+    entityCount: S.Natural,
     entityTypes: S.Array(S.String),
   },
   $I.annote("ExtractEntitiesSuccess", {

@@ -13,7 +13,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { Effect, flow, HashMap, HashSet, Match, MutableHashMap, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -937,7 +937,6 @@ export class KnowledgeSkippedBlob extends S.Class<KnowledgeSkippedBlob>($I`Knowl
  *   KnowledgeRefObservation,
  * } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  * import { KnowledgeFindingLocation } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
  * const observation = KnowledgeRefObservation.make({
@@ -946,7 +945,7 @@ export class KnowledgeSkippedBlob extends S.Class<KnowledgeSkippedBlob>($I`Knowl
  *   ),
  *   ref: KnowledgeHostPathRef.make({ raw: "/tmp/portless", anchor: "temp" }),
  *   documentId: ".claude/skills/portless/SKILL.md",
- *   occurrence: NonNegativeInt.make(0),
+ *   occurrence: S.Natural.make(0),
  *   surface: "live",
  *   classification: "documented-temp-convention",
  *   resolution: KnowledgeRefNotApplicable.make({}),
@@ -965,7 +964,7 @@ export class KnowledgeRefObservation extends S.Class<KnowledgeRefObservation>($I
     refId: KnowledgeRefId,
     ref: KnowledgeRef,
     documentId: S.String,
-    occurrence: NonNegativeInt,
+    occurrence: S.Natural,
     surface: KnowledgeRefSurface,
     classification: KnowledgeRefClassification,
     resolution: KnowledgeRefResolution,
@@ -3039,14 +3038,14 @@ export const scanKnowledgeRefsTree = Effect.fn("Knowledge.scanRefsTree")(functio
       refId,
       ref: candidate.ref,
       documentId,
-      occurrence: NonNegativeInt.make(occurrence),
+      occurrence: S.Natural.make(occurrence),
       surface: candidate.surface,
       classification,
       resolution,
       location: KnowledgeFindingLocation.make({
         path: candidate.documentPath,
-        line: NonNegativeInt.make(candidate.line),
-        column: NonNegativeInt.make(candidate.column),
+        line: S.Natural.make(candidate.line),
+        column: S.Natural.make(candidate.column),
       }),
       remediation: knowledgeRefRemediation(classification, resolution),
     });

@@ -9,7 +9,6 @@ import {
   withAdmissionWorkloadBinding,
 } from "@beep/repo-cli/test/Process";
 import { collectStepOutput, QualityTaskStep } from "@beep/repo-cli/test/Quality";
-import { PosInt } from "@beep/schema/Int";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
@@ -26,6 +25,8 @@ import { ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import type { ChildProcess } from "effect/process";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const isCaptureCommandTimedOutError = S.is(CaptureCommandTimedOutError);
 

@@ -20,10 +20,10 @@ import {
   practiceKgGraphFieldTiers,
 } from "@beep/law-practice-use-cases/server";
 import { estimateJsonSize, FieldTierName, projectFieldTier, toColumnarEnvelope } from "@beep/mcp-kit";
-import { NonNegativeInt } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Effect, Path } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
 import { PracticeKgBundle } from "./PracticeKg.host.ts";
 import { PracticeKgQueries } from "./PracticeKg.queries.ts";
@@ -39,7 +39,6 @@ import {
 import type { FieldTierSet } from "@beep/mcp-kit";
 import type * as Tool from "effect/ai/Tool";
 import type * as Layer from "effect/Layer";
-import type * as S from "effect/Schema";
 import type * as SqlClient from "effect/sql/SqlClient";
 
 const spineStatus = PracticeKgEpistemicStatus.Enum["derived-from-official-records"];
@@ -63,7 +62,7 @@ const projectRows = (
     bundle_version: bundleVersion,
     epistemic_status: epistemicStatus,
     ...O.getSomesStruct({ note: O.fromUndefinedOr(note) }),
-    total: NonNegativeInt.make(A.length(rows)),
+    total: S.Natural.make(A.length(rows)),
   };
   return A.findFirst(tierOrder, (tier) => {
     const data = toColumnarEnvelope(A.map(rows, projectFieldTier(tier, tiers)));

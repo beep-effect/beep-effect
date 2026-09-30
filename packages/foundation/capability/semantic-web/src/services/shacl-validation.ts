@@ -8,7 +8,7 @@
 import { $SemanticWebId } from "@beep/identity/packages";
 import { Dataset, NamedNode, ObjectTerm } from "@beep/rdf/Rdf";
 import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Context, Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 
@@ -96,8 +96,8 @@ export type ShaclSeverity = typeof ShaclSeverity.Type;
 export class ShaclPropertyShape extends S.Class<ShaclPropertyShape>($I`ShaclPropertyShape`)(
   {
     path: NamedNode,
-    minCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    maxCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    minCount: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    maxCount: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
     datatype: S.OptionFromOptionalKey(NamedNode).pipe(S.withConstructorDefault(Effect.succeedNone)),
     class: S.OptionFromOptionalKey(NamedNode).pipe(S.withConstructorDefault(Effect.succeedNone)),
     hasValue: S.OptionFromOptionalKey(ObjectTerm).pipe(S.withConstructorDefault(Effect.succeedNone)),
@@ -249,7 +249,7 @@ export class ShaclValidationRequest extends S.Class<ShaclValidationRequest>($I`S
     dataset: Dataset,
     shapes: S.Array(ShaclNodeShape),
     shapesDataset: S.OptionFromOptionalKey(Dataset).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    maxResults: S.OptionFromOptionalKey(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    maxResults: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ShaclValidationRequest", {
     description: "SHACL validation request.",

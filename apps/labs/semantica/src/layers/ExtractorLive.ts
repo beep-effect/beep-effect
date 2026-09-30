@@ -18,7 +18,7 @@ import { DocumentId as NlpDocumentId } from "@beep/nlp/Core";
 import { UnitInterval } from "@beep/nlp/Handoff";
 import { NLPService } from "@beep/nlp-processing/NLPService";
 import { TextAnchor } from "@beep/provenance";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { Effect, HashMap, Layer, Number as N, Order, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -58,6 +58,8 @@ import type { CanonicalText, Chunk } from "@/schema/Text";
 import type { CanonicalizerShape } from "@/services/Canonicalizer";
 
 const decodeUnknownRelationExtractionCandidateResult = S.decodeUnknownResult(RelationExtractionCandidate);
+
+const isNatural = S.is(S.Natural);
 
 const utf8Encoder = new TextEncoder();
 
@@ -334,13 +336,13 @@ const hostedCacheKey = Effect.fn("Extractor.hostedCacheKey")(function* (
 
 const isStructureRole = S.is(StructureRole);
 
-const structureDepth = (extraction: GroundedExtraction): NonNegativeInt =>
+const structureDepth = (extraction: GroundedExtraction): number =>
   extraction.attributes.pipe(
     O.flatMap((attributes) => R.get(attributes, "depth")),
     O.flatMap(N.parse),
-    O.filter(NonNegativeInt.is),
-    O.map(NonNegativeInt.make),
-    O.getOrElse(() => NonNegativeInt.make(0))
+    O.filter(isNatural),
+    O.map(S.Natural.make),
+    O.getOrElse(() => S.Natural.make(0))
   );
 
 const extractionAttribute = (extraction: GroundedExtraction, name: string): O.Option<string> =>
@@ -421,9 +423,9 @@ const scopedEndpointAnchor = (evidence: TextAnchor, surface: string): Result.Res
   return locateRelationEvidence(aligned).pipe(
     Result.map(([, anchor]) =>
       TextAnchor.make({
-        endChar: NonNegativeInt.make(N.sum(evidence.startChar, anchor.endChar)),
+        endChar: S.Natural.make(N.sum(evidence.startChar, anchor.endChar)),
         quote: anchor.quote,
-        startChar: NonNegativeInt.make(N.sum(evidence.startChar, anchor.startChar)),
+        startChar: S.Natural.make(N.sum(evidence.startChar, anchor.startChar)),
       })
     )
   );
@@ -688,7 +690,7 @@ const patternClaim = Effect.fn("PatternExtractor.patternClaim")(function* (
 ) {
   const start = entity.span.start;
   const end = entity.span.end;
-  const validOffsets = NonNegativeInt.is(start) && NonNegativeInt.is(end) && start < end;
+  const validOffsets = isNatural(start) && isNatural(end) && start < end;
   const quote = validOffsets ? Str.slice(start, end)(canonical.text) : Str.empty;
   if (
     !validOffsets ||
@@ -700,12 +702,12 @@ const patternClaim = Effect.fn("PatternExtractor.patternClaim")(function* (
   }
   const body = ClaimBody.cases.Entity.make({
     cluster: O.none(),
-    endChar: NonNegativeInt.make(end),
+    endChar: S.Natural.make(end),
     entityType: Str.isNonEmpty(entity.entityType) ? entity.entityType : "UNKNOWN",
     kind: "Entity",
     label: quote,
     quote,
-    startChar: NonNegativeInt.make(start),
+    startChar: S.Natural.make(start),
   });
   return Result.succeed(
     yield* makeClaim(

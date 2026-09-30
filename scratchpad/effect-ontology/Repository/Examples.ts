@@ -13,7 +13,7 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Layer, SchemaTransformation } from "effect";
 import * as P from "effect/Predicate";
@@ -30,6 +30,7 @@ import { SqlClient } from "effect/sql";
 import { formatPgVector, normalizeDrizzleError } from "../Utils/Sql.ts";
 import type { LlmExampleRow } from "./schema.ts";
 import { LlmExamples, llmExamples } from "./schema.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 // =============================================================================
 // Types
@@ -277,8 +278,8 @@ export class CreateExampleInput extends S.Class<CreateExampleInput>($I`CreateExa
     targetClass: S.optionalKey(S.NonEmptyString),
     targetPredicate: S.optionalKey(S.NonEmptyString),
     evidenceText: S.optionalKey(S.NonEmptyString),
-    evidenceStartOffset: S.optionalKey(NonNegativeInt),
-    evidenceEndOffset: S.optionalKey(NonNegativeInt),
+    evidenceStartOffset: S.optionalKey(S.Natural),
+    evidenceEndOffset: S.optionalKey(S.Natural),
     expectedOutput: S.Record(S.String, S.Unknown),
     promptMessages: S.optionalKey(PromptMessages),
     explanation: S.optionalKey(S.NonEmptyString),

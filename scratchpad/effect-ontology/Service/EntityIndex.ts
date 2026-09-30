@@ -10,7 +10,6 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt } from "@beep/schema/Int";
 import { Clock, Context, Effect, HashMap, HashSet, Inspectable, Layer, Order, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -414,7 +413,7 @@ export const EntityIndexDefault = EntityIndex.Default;
  */
 export const SerializedEntityIndex = S.Struct({
   version: S.Literal(1),
-  indexedAt: NonNegativeInt,
+  indexedAt: S.Natural,
   entities: S.Array(
     S.Struct({
       id: S.String,
@@ -475,9 +474,9 @@ export interface PersistentEntityIndexService extends EntityIndexService {
    * Get index statistics
    */
   readonly stats: Effect.Effect<{
-    readonly entityCount: NonNegativeInt;
-    readonly typeCount: NonNegativeInt;
-    readonly lastPersistedAt: O.Option<NonNegativeInt>;
+    readonly entityCount: number;
+    readonly typeCount: number;
+    readonly lastPersistedAt: O.Option<S.Natural>;
   }>;
 }
 
@@ -540,7 +539,7 @@ export const makePersistentEntityIndex = dual3(
     Effect.gen(function* () {
       // In-memory state
       const stateRef = yield* Ref.make<IndexState>(emptyState);
-      const lastPersistedRef = yield* Ref.make<O.Option<NonNegativeInt>>(O.none());
+      const lastPersistedRef = yield* Ref.make<O.Option<S.Natural>>(O.none());
 
       const base = makeEntityIndexMethods(embedding, stateRef);
 
@@ -559,7 +558,7 @@ export const makePersistentEntityIndex = dual3(
             });
           }
         }
-        return { version: 1, indexedAt: NonNegativeInt.make(yield* Clock.currentTimeMillis), entities };
+        return { version: 1, indexedAt: S.Natural.make(yield* Clock.currentTimeMillis), entities };
       });
 
       const deserialize = Effect.fn("PersistentEntityIndex.deserialize")(function* (data: SerializedEntityIndex) {
@@ -584,7 +583,7 @@ export const makePersistentEntityIndex = dual3(
         yield* storage.set(blobPath, content).pipe(
           Effect.tap(() =>
             Clock.currentTimeMillis.pipe(
-              Effect.flatMap((now) => Ref.set(lastPersistedRef, O.some(NonNegativeInt.make(now))))
+              Effect.flatMap((now) => Ref.set(lastPersistedRef, O.some(S.Natural.make(now))))
             )
           ),
           Effect.tap(() =>
@@ -614,8 +613,8 @@ export const makePersistentEntityIndex = dual3(
         const state = yield* Ref.get(stateRef);
         const lastPersistedAt = yield* Ref.get(lastPersistedRef);
         return {
-          entityCount: NonNegativeInt.make(HashMap.size(state.entities)),
-          typeCount: NonNegativeInt.make(HashMap.size(state.typeIndex)),
+          entityCount: S.Natural.make(HashMap.size(state.entities)),
+          typeCount: S.Natural.make(HashMap.size(state.typeIndex)),
           lastPersistedAt,
         };
       });

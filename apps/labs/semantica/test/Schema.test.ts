@@ -10,7 +10,7 @@ import {
   TextAnchorVerificationReceipt,
   VerifiedTextAnchorError,
 } from "@beep/provenance";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -206,7 +206,7 @@ const sourceDocument = SourceDocument.make({
   id: documentId,
   mediaType: "text/markdown",
   origin: fixtureOrigin,
-  bytes: NonNegativeInt.make(6),
+  bytes: S.Natural.make(6),
   sha256: documentId,
   acquired,
 });
@@ -222,13 +222,13 @@ const sourceIdentity = SourceTextIdentity.make({
   normalizationVersion: "raw/1",
 });
 const anchor = TextAnchor.make({
-  startChar: NonNegativeInt.make(0),
-  endChar: NonNegativeInt.make(6),
+  startChar: S.Natural.make(0),
+  endChar: S.Natural.make(6),
   quote: "Effect",
 });
 const otherAnchor = TextAnchor.make({
-  startChar: NonNegativeInt.make(7),
-  endChar: NonNegativeInt.make(11),
+  startChar: S.Natural.make(7),
+  endChar: S.Natural.make(11),
   quote: "data",
 });
 const receipt = TextAnchorVerificationReceipt.make({ anchor, source: sourceIdentity });
@@ -242,7 +242,7 @@ const chunk = Chunk.make({
   id: chunkId,
   document: documentId,
   kind: "sentence",
-  ordinal: NonNegativeInt.make(0),
+  ordinal: S.Natural.make(0),
   anchor,
   receipt,
 });
@@ -325,8 +325,8 @@ const relationBody = ClaimBody.cases.Relation.make({
   predicate: "uses",
   subject: claimId,
   object: secondClaimId,
-  startChar: NonNegativeInt.make(0),
-  endChar: NonNegativeInt.make(6),
+  startChar: S.Natural.make(0),
+  endChar: S.Natural.make(6),
   quote: "Effect",
 });
 const relationClaimId = Result.getOrThrow(
@@ -341,7 +341,7 @@ const relationClaimId = Result.getOrThrow(
 const structureBody = ClaimBody.cases.Structure.make({
   kind: "Structure",
   role: "title",
-  depth: NonNegativeInt.make(0),
+  depth: S.Natural.make(0),
   startChar: anchor.startChar,
   endChar: anchor.endChar,
   quote: anchor.quote,
@@ -470,22 +470,22 @@ const documentOutcome = DocumentOutcome.make({
   origin: fixtureOrigin,
   parse: "parsed",
   extraction: { hosted: "extracted", pattern: "extracted" },
-  chunks: NonNegativeInt.make(1),
+  chunks: S.Natural.make(1),
   claims: {
     hosted: {
-      entity: NonNegativeInt.make(1),
-      relation: NonNegativeInt.make(0),
-      structure: NonNegativeInt.make(0),
+      entity: S.Natural.make(1),
+      relation: S.Natural.make(0),
+      structure: S.Natural.make(0),
     },
     pattern: {
-      entity: NonNegativeInt.make(1),
-      relation: NonNegativeInt.make(0),
-      structure: NonNegativeInt.make(0),
+      entity: S.Natural.make(1),
+      relation: S.Natural.make(0),
+      structure: S.Natural.make(0),
     },
   },
-  degradedClaims: NonNegativeInt.make(0),
-  anchorsVerified: NonNegativeInt.make(2),
-  anchorsFailed: NonNegativeInt.make(0),
+  degradedClaims: S.Natural.make(0),
+  anchorsVerified: S.Natural.make(2),
+  anchorsFailed: S.Natural.make(0),
   cacheKeys: [providerCacheKey],
 });
 const requiredC0 = Option.getOrThrow(HashMap.get(RequiredMetrics, "c0"));
@@ -494,7 +494,7 @@ const metricScores = A.map(requiredC0, (required) =>
     ...required,
     status: required.lane === "pattern" && required.subset === "relation" ? "unsupported" : "scored",
     value: UnitInterval.make(required.lane === "pattern" && required.subset === "relation" ? 0 : 1),
-    support: NonNegativeInt.make(required.lane === "pattern" && required.subset === "relation" ? 0 : 1),
+    support: S.Natural.make(required.lane === "pattern" && required.subset === "relation" ? 0 : 1),
   })
 );
 
@@ -503,7 +503,7 @@ const EvalReportBodySchema = S.Struct({
   run: EvalRun,
   documents: S.NonEmptyArray(DocumentOutcome),
   metrics: S.NonEmptyArray(MetricScore),
-  unexpectedDegraded: NonNegativeInt,
+  unexpectedDegraded: S.Natural,
 });
 const encodeEvalReportBodySchemaResult = S.encodeResult(EvalReportBodySchema);
 
@@ -517,7 +517,7 @@ const reportBody = {
   run: evalRun,
   documents: [documentOutcome] as [DocumentOutcome],
   metrics: metricScores as [MetricScore, ...Array<MetricScore>],
-  unexpectedDegraded: NonNegativeInt.make(0),
+  unexpectedDegraded: S.Natural.make(0),
 };
 const decodeEvalReportResult = S.decodeResult(EvalReport);
 const evalReport = Result.getOrThrow(decodeEvalReportResult(withReportDigest(reportBody)));
@@ -619,7 +619,7 @@ describe("C0 schema round trips", () => {
       GoldStructureLabel,
       GoldStructureLabel.make({
         role: "title",
-        depth: NonNegativeInt.make(0),
+        depth: S.Natural.make(0),
         startChar: anchor.startChar,
         endChar: anchor.endChar,
         quote: anchor.quote,
@@ -685,11 +685,11 @@ describe("C0 schema round trips", () => {
       const structure = GoldFile.make({
         labels: [
           GoldStructureLabel.make({
-            depth: NonNegativeInt.make(0),
-            endChar: NonNegativeInt.make(6),
+            depth: S.Natural.make(0),
+            endChar: S.Natural.make(6),
             quote: "Effect",
             role: "title",
-            startChar: NonNegativeInt.make(0),
+            startChar: S.Natural.make(0),
             verified: false,
           }),
         ],
@@ -702,11 +702,11 @@ describe("C0 schema round trips", () => {
         labels: [
           GoldEntityLabel.make({
             cluster: "software-effect",
-            endChar: NonNegativeInt.make(6),
+            endChar: S.Natural.make(6),
             entityType: "software",
             label: "Effect",
             quote: "Effect",
-            startChar: NonNegativeInt.make(0),
+            startChar: S.Natural.make(0),
             verified: false,
           }),
         ],
@@ -718,16 +718,16 @@ describe("C0 schema round trips", () => {
       const relation = GoldFile.make({
         labels: [
           GoldRelationLabel.make({
-            endChar: NonNegativeInt.make(18),
+            endChar: S.Natural.make(18),
             object: "Schema",
-            objectEndChar: NonNegativeInt.make(18),
-            objectStartChar: NonNegativeInt.make(12),
+            objectEndChar: S.Natural.make(18),
+            objectStartChar: S.Natural.make(12),
             predicate: "uses",
             quote: text,
-            startChar: NonNegativeInt.make(0),
+            startChar: S.Natural.make(0),
             subject: "Effect",
-            subjectEndChar: NonNegativeInt.make(6),
-            subjectStartChar: NonNegativeInt.make(0),
+            subjectEndChar: S.Natural.make(6),
+            subjectStartChar: S.Natural.make(0),
             verified: false,
           }),
         ],
@@ -1179,7 +1179,7 @@ describe("gold refinements", () => {
       quote: anchor.quote,
       verified: true,
     };
-    pipe(rejects(GoldStructureLabel, { ...shared, role: "title", depth: NonNegativeInt.make(0) }), assertFalse);
+    pipe(rejects(GoldStructureLabel, { ...shared, role: "title", depth: S.Natural.make(0) }), assertFalse);
     pipe(
       rejects(GoldEntityLabel, { ...shared, cluster: "software-effect", label: "Effect", entityType: "software" }),
       assertFalse
@@ -1377,7 +1377,7 @@ describe("evaluation refinements", () => {
       origin: w1Origin,
       claims: {
         ...documentOutcome.claims,
-        hosted: { ...documentOutcome.claims.hosted, relation: NonNegativeInt.make(1) },
+        hosted: { ...documentOutcome.claims.hosted, relation: S.Natural.make(1) },
       },
     });
     const body: typeof EvalReportBodySchema.Type = {
@@ -1397,7 +1397,7 @@ describe("evaluation refinements", () => {
               ...relationOutcome,
               claims: {
                 ...relationOutcome.claims,
-                hosted: { ...relationOutcome.claims.hosted, relation: NonNegativeInt.make(0) },
+                hosted: { ...relationOutcome.claims.hosted, relation: S.Natural.make(0) },
               },
             }),
             documentOutcome,
@@ -1428,7 +1428,7 @@ describe("evaluation refinements", () => {
           ...A.getUnsafe(metricScores, hostedIndex),
           status: "unsupported",
           value: UnitInterval.make(0),
-          support: NonNegativeInt.make(0),
+          support: S.Natural.make(0),
         })
       )
     ) as [MetricScore, ...Array<MetricScore>];
@@ -1446,7 +1446,7 @@ describe("evaluation refinements", () => {
           ...A.getUnsafe(metricScores, patternEntityIndex),
           status: "unsupported",
           value: UnitInterval.make(0),
-          support: NonNegativeInt.make(0),
+          support: S.Natural.make(0),
         })
       )
     ) as [MetricScore, ...Array<MetricScore>];
@@ -1454,12 +1454,9 @@ describe("evaluation refinements", () => {
   });
 
   it("rejects wrong degradation arithmetic, failed anchors, and a wrong report digest", () => {
-    pipe(
-      rejects(EvalReport, withReportDigest({ ...reportBody, unexpectedDegraded: NonNegativeInt.make(1) })),
-      assertTrue
-    );
+    pipe(rejects(EvalReport, withReportDigest({ ...reportBody, unexpectedDegraded: S.Natural.make(1) })), assertTrue);
 
-    const failedDocument = DocumentOutcome.make({ ...documentOutcome, anchorsFailed: NonNegativeInt.make(1) });
+    const failedDocument = DocumentOutcome.make({ ...documentOutcome, anchorsFailed: S.Natural.make(1) });
     pipe(rejects(EvalReport, withReportDigest({ ...reportBody, documents: [failedDocument] })), assertTrue);
     pipe(rejects(EvalReport, { ...evalReport, reportDigest: sha("0") }), assertTrue);
   });

@@ -7,9 +7,9 @@
  */
 
 import { $OpenaiId } from "@beep/identity/packages";
-import { PosInt } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import type { OpenAiEmbeddingModel, OpenAiLanguageModel } from "@effect/ai-openai";
 
 const $I = $OpenaiId.create("OpenAi.config");
@@ -161,9 +161,11 @@ export class OpenAiLanguageModelOptions extends S.Class<OpenAiLanguageModelOptio
  * **Example** (Create embedding-model options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { strictEqual } from "node:assert"
  * import { OpenAiEmbeddingModelOptions } from "@beep/openai"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = OpenAiEmbeddingModelOptions.make({ dimensions: PosInt.make(1536) })
  *

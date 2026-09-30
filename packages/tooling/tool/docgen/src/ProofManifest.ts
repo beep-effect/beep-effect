@@ -8,7 +8,7 @@
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { FsUtils } from "@beep/repo-utils";
 import { sha256Hex as utf8Sha256Hex } from "@beep/repo-utils/Sha256Hex";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str, thunkFalse } from "@beep/utils";
 import { DateTime, Effect, FileSystem, Order, Path } from "effect";
@@ -138,13 +138,14 @@ export type DocgenProofManifestStatus = typeof DocgenProofManifestStatus.Type;
  * **Example** (Use docgen proof manifests)
  *
  * ```ts
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ * import { Sha256Hex } from "@beep/schema"
  * import { DocgenProofManifestFile } from "@beep/repo-docgen/ProofManifest"
  *
  * const file = DocgenProofManifestFile.make({
  *   path: "src/index.ts",
  *   sha256: Sha256Hex.make("0".repeat(64)),
- *   bytes: NonNegativeInt.make(128)
+ *   bytes: S.Natural.make(128)
  * })
  *
  * console.log(file.path) // "src/index.ts"
@@ -157,7 +158,7 @@ export class DocgenProofManifestFile extends S.Class<DocgenProofManifestFile>($I
   {
     path: S.String,
     sha256: Sha256Hex,
-    bytes: NonNegativeInt,
+    bytes: S.Natural,
   },
   $I.annote("DocgenProofManifestFile", {
     description: "File-level SHA-256 digest included in a docgen proof manifest.",
@@ -170,15 +171,16 @@ export class DocgenProofManifestFile extends S.Class<DocgenProofManifestFile>($I
  * **Example** (Use docgen proof manifests)
  *
  * ```ts
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ * import { Sha256Hex } from "@beep/schema"
  * import { DocgenProofManifestFingerprint } from "@beep/repo-docgen/ProofManifest"
  *
  * const fingerprint = DocgenProofManifestFingerprint.make({
  *   sha256: Sha256Hex.make("a".repeat(64)),
  *   inputSha256: Sha256Hex.make("b".repeat(64)),
  *   outputSha256: Sha256Hex.make("c".repeat(64)),
- *   inputFileCount: NonNegativeInt.make(12),
- *   outputFileCount: NonNegativeInt.make(4),
+ *   inputFileCount: S.Natural.make(12),
+ *   outputFileCount: S.Natural.make(4),
  *   toolVersion: "0.0.2"
  * })
  *
@@ -195,8 +197,8 @@ export class DocgenProofManifestFingerprint extends S.Class<DocgenProofManifestF
     sha256: Sha256Hex,
     inputSha256: Sha256Hex,
     outputSha256: Sha256Hex,
-    inputFileCount: NonNegativeInt,
-    outputFileCount: NonNegativeInt,
+    inputFileCount: S.Natural,
+    outputFileCount: S.Natural,
     toolVersion: S.String,
   },
   $I.annote("DocgenProofManifestFingerprint", {
@@ -216,23 +218,24 @@ export class DocgenProofManifestFingerprint extends S.Class<DocgenProofManifestF
  * **Example** (Use docgen proof manifests)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import {
  *   DocgenProofManifest,
  *   DocgenProofManifestFile,
  *   DocgenProofManifestFingerprint
  * } from "@beep/repo-docgen/ProofManifest"
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema"
  * const source = DocgenProofManifestFile.make({
  *   path: "src/index.ts",
  *   sha256: Sha256Hex.make("0".repeat(64)),
- *   bytes: NonNegativeInt.make(128)
+ *   bytes: S.Natural.make(128)
  * })
  * const fingerprint = DocgenProofManifestFingerprint.make({
  *   sha256: Sha256Hex.make("1".repeat(64)),
  *   inputSha256: Sha256Hex.make("2".repeat(64)),
  *   outputSha256: Sha256Hex.make("3".repeat(64)),
- *   inputFileCount: NonNegativeInt.make(1),
- *   outputFileCount: NonNegativeInt.make(0),
+ *   inputFileCount: S.Natural.make(1),
+ *   outputFileCount: S.Natural.make(0),
  *   toolVersion: "0.0.2"
  * })
  * const manifest = DocgenProofManifest.make({
@@ -368,7 +371,7 @@ const readFileDigest = Effect.fn("DocgenProofManifest.readFileDigest")(function*
   return DocgenProofManifestFile.make({
     path: Str.replace(/\\/g, "/")(path.relative(packagePath, filePath)),
     sha256: yield* sha256Hex(content),
-    bytes: NonNegativeInt.make(content.length),
+    bytes: S.Natural.make(content.length),
   });
 });
 
@@ -409,8 +412,8 @@ const fingerprintForFiles = Effect.fn("DocgenProofManifest.fingerprintForFiles")
     sha256: yield* sha256Json({ inputSha256, outputSha256, toolVersion }),
     inputSha256,
     outputSha256,
-    inputFileCount: NonNegativeInt.make(options.inputs.length),
-    outputFileCount: NonNegativeInt.make(options.outputs.length),
+    inputFileCount: S.Natural.make(options.inputs.length),
+    outputFileCount: S.Natural.make(options.outputs.length),
     toolVersion,
   });
 });

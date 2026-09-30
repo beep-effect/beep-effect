@@ -12,10 +12,10 @@ import {
   EvidenceSourcePagePayload,
   GetContradictionCandidate,
 } from "@beep/epistemic-use-cases/public";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { DateTime, Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRpc, Reactivity } from "effect/reactivity";
+import * as S from "effect/Schema";
 import { epistemicProtocolLayerAtom } from "../Protocol.ts";
 import type {
   ContradictionCandidateDetailView,
@@ -147,6 +147,11 @@ export const contradictionKnownAtAtom = makeTemporalAxisAtom();
 /**
  * Zero-based offset of the currently visible contradiction queue page.
  *
+ * **Gotchas**
+ *
+ * Each write is checked as a non-negative integer; setting a negative or
+ * fractional offset throws a `SchemaError` and leaves the offset unchanged.
+ *
  * **Example** (Reading default queue offset)
  *
  * ```ts
@@ -159,14 +164,15 @@ export const contradictionKnownAtAtom = makeTemporalAxisAtom();
  * @category atoms
  * @since 0.0.0
  */
-export const contradictionQueueOffsetAtom: Atom.Writable<NonNegativeInt, NonNegativeInt> = Atom.make(
-  NonNegativeInt.make(0)
+export const contradictionQueueOffsetAtom: Atom.Writable<number, number> = Atom.writable(
+  () => 0,
+  (ctx, offset: number) => ctx.setSelf(S.Natural.make(offset))
 ).pipe(Atom.keepAlive);
 
 const queueQueryAtoms = Atom.family((disposition: ContradictionDispositionFilter) =>
   Atom.family((validAt: DateTime.Utc) =>
     Atom.family((knownAt: DateTime.Utc) =>
-      Atom.family((offset: NonNegativeInt) =>
+      Atom.family((offset: number) =>
         ContradictionClient.query(
           "ListContradictionCandidates",
           ContradictionListPayload.make({
@@ -472,7 +478,7 @@ export const resetContradictionTemporalViewAtom = ContradictionClient.runtime.fn
     const now = yield* DateTime.now;
     ctx.set(contradictionValidAtAtom, now);
     ctx.set(contradictionKnownAtAtom, now);
-    ctx.set(contradictionQueueOffsetAtom, NonNegativeInt.make(0));
+    ctx.set(contradictionQueueOffsetAtom, S.Natural.make(0));
     ctx.set(selectedContradictionEvidenceSourceAtom, O.none());
     ctx.set(contradictionReviewCandidateIdAtom, O.none());
   })
@@ -576,7 +582,7 @@ export const reviewContradictionCandidateAtom = ContradictionClient.runtime.fn<R
               O.getOrElse(() => disposition.resolvedAt)
             );
             ctx.set(contradictionKnownAtAtom, knownAt);
-            ctx.set(contradictionQueueOffsetAtom, NonNegativeInt.make(0));
+            ctx.set(contradictionQueueOffsetAtom, S.Natural.make(0));
             ctx.set(selectedContradictionEvidenceSourceAtom, O.none());
           })
         )

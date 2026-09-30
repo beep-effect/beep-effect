@@ -1,7 +1,6 @@
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { decodeJsonString } from "@beep/schema/Json";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { URLStr } from "@beep/schema/URL";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -480,7 +479,7 @@ describe("@beep/venice-ai", () => {
       });
       expect(
         yield* encodeVeniceAIServerSentEvent(
-          VeniceAIServerSentEvent.make({ data: O.some({ delta: "hello" }), done: false, index: NonNegativeInt.make(0) })
+          VeniceAIServerSentEvent.make({ data: O.some({ delta: "hello" }), done: false, index: S.Natural.make(0) })
         )
       ).toEqual({
         data: { delta: "hello" },
@@ -488,9 +487,7 @@ describe("@beep/venice-ai", () => {
         index: 0,
       });
       expect(
-        yield* encodeVeniceAIServerSentEvent(
-          VeniceAIServerSentEvent.make({ done: true, index: NonNegativeInt.make(1) })
-        )
+        yield* encodeVeniceAIServerSentEvent(VeniceAIServerSentEvent.make({ done: true, index: S.Natural.make(1) }))
       ).toEqual({
         done: true,
         index: 1,

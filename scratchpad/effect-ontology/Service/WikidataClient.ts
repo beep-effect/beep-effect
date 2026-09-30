@@ -13,7 +13,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import { Clock, Context, Duration, Effect, Layer, Order, Ref, Semaphore } from "effect";
 import * as A from "effect/Array";
@@ -24,6 +23,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
 import { ErrorMessage, OptionalErrorCause, OptionalHttpStatusCode } from "../Domain/Error/Base.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/WikidataClient");
 
@@ -268,8 +268,10 @@ export class SearchOptions extends S.Class<SearchOptions>($I`SearchOptions`)(
  * **Example** (Configure a Wikidata search)
  *
  * ```ts
- * import { PosInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import type { SearchOptionsInput } from "@effect-ontology/Service/WikidataClient"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options: SearchOptionsInput = { limit: PosInt.make(5) }
  * console.log(options)
@@ -307,8 +309,8 @@ const WikidataSearchResponse = S.Struct({
     search: S.String,
   }).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   search: S.Array(WikidataSearchResult),
-  success: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  "search-continue": NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  success: S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  "search-continue": S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 const WikidataEntityText = S.Struct({

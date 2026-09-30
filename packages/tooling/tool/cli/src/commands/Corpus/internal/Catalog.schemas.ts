@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { CorpusCopyMode } from "./Salvage.schemas.ts";
@@ -58,8 +58,9 @@ export type CorpusDuplicateScope = typeof CorpusDuplicateScope.Type;
  * **Example** (Make source file record)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusCatalogSourceFileRecord } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema"
  *
  * const record = CorpusCatalogSourceFileRecord.make({
  *   copyMode: "copied",
@@ -72,7 +73,7 @@ export type CorpusDuplicateScope = typeof CorpusDuplicateScope.Type;
  *   runLabel: "base",
  *   salvagedAt: "2026-06-11T15:00:00Z",
  *   sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
- *   sizeBytes: NonNegativeInt.make(0),
+ *   sizeBytes: S.Natural.make(0),
  *   sourceLabel: "source-a"
  * })
  * console.log(record.runLabel) // "base"
@@ -96,7 +97,7 @@ export class CorpusCatalogSourceFileRecord extends S.Class<CorpusCatalogSourceFi
     runLabel: S.NonEmptyString,
     salvagedAt: S.NonEmptyString,
     sha256: Sha256Hex,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     sourceLabel: S.NonEmptyString,
   },
   $I.annote("CorpusCatalogSourceFileRecord", {
@@ -112,8 +113,9 @@ export class CorpusCatalogSourceFileRecord extends S.Class<CorpusCatalogSourceFi
  * **Example** (Encode source file JSONL)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusCatalogSourceFileRecord, encodeCorpusCatalogSourceFileRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const record = CorpusCatalogSourceFileRecord.make({
@@ -128,7 +130,7 @@ export class CorpusCatalogSourceFileRecord extends S.Class<CorpusCatalogSourceFi
  *   runLabel: "refresh",
  *   salvagedAt: "2026-07-01T15:00:00Z",
  *   sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
- *   sizeBytes: NonNegativeInt.make(0),
+ *   sizeBytes: S.Natural.make(0),
  *   sourceLabel: "source-b"
  * })
  *
@@ -166,13 +168,13 @@ export const encodeCorpusCatalogSourceFileRecordJson = JsonStringCodec(CorpusCat
  */
 export class CorpusDuplicateSetRecord extends S.Class<CorpusDuplicateSetRecord>($I`CorpusDuplicateSetRecord`)(
   {
-    copies: NonNegativeInt,
+    copies: S.Natural,
     duplicateScope: CorpusDuplicateScope,
     digest: S.NonEmptyString,
     members: S.NonEmptyString,
-    runCount: NonNegativeInt,
+    runCount: S.Natural,
     runLabels: S.NonEmptyString,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
   },
   $I.annote("CorpusDuplicateSetRecord", {
     description:
@@ -237,13 +239,13 @@ export class CorpusCatalogOptions extends S.Class<CorpusCatalogOptions>($I`Corpu
  * **Example** (Make run summary counts)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusCatalogRunSummary } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const run = CorpusCatalogRunSummary.make({
- *   distinctDigests: NonNegativeInt.make(2),
- *   newDistinctDigests: NonNegativeInt.make(1),
- *   recordCount: NonNegativeInt.make(3),
+ *   distinctDigests: S.Natural.make(2),
+ *   newDistinctDigests: S.Natural.make(1),
+ *   recordCount: S.Natural.make(3),
  *   runLabel: "2026-07-refresh"
  * })
  * console.log(run.newDistinctDigests) // 1
@@ -254,9 +256,9 @@ export class CorpusCatalogOptions extends S.Class<CorpusCatalogOptions>($I`Corpu
  */
 export class CorpusCatalogRunSummary extends S.Class<CorpusCatalogRunSummary>($I`CorpusCatalogRunSummary`)(
   {
-    distinctDigests: NonNegativeInt,
-    newDistinctDigests: NonNegativeInt,
-    recordCount: NonNegativeInt,
+    distinctDigests: S.Natural,
+    newDistinctDigests: S.Natural,
+    recordCount: S.Natural,
     runLabel: S.NonEmptyString,
   },
   $I.annote("CorpusCatalogRunSummary", {
@@ -271,27 +273,27 @@ export class CorpusCatalogRunSummary extends S.Class<CorpusCatalogRunSummary>($I
  * **Example** (Make catalog summary)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusCatalogRunSummary, CorpusCatalogSummary } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = CorpusCatalogSummary.make({
- *   distinctDigests: NonNegativeInt.make(1),
- *   duplicateFiles: NonNegativeInt.make(0),
- *   duplicateSets: NonNegativeInt.make(0),
- *   matchedRestorations: NonNegativeInt.make(1),
- *   redundantBytes: NonNegativeInt.make(0),
+ *   distinctDigests: S.Natural.make(1),
+ *   duplicateFiles: S.Natural.make(0),
+ *   duplicateSets: S.Natural.make(0),
+ *   matchedRestorations: S.Natural.make(1),
+ *   redundantBytes: S.Natural.make(0),
  *   runs: [
  *     CorpusCatalogRunSummary.make({
- *       distinctDigests: NonNegativeInt.make(1),
- *       newDistinctDigests: NonNegativeInt.make(1),
- *       recordCount: NonNegativeInt.make(1),
+ *       distinctDigests: S.Natural.make(1),
+ *       newDistinctDigests: S.Natural.make(1),
+ *       recordCount: S.Natural.make(1),
  *       runLabel: "base"
  *     })
  *   ],
- *   sourceFiles: NonNegativeInt.make(1),
- *   totalBytes: NonNegativeInt.make(11),
- *   unmatchedContentFiles: NonNegativeInt.make(0),
- *   unmatchedMetadataFiles: NonNegativeInt.make(0)
+ *   sourceFiles: S.Natural.make(1),
+ *   totalBytes: S.Natural.make(11),
+ *   unmatchedContentFiles: S.Natural.make(0),
+ *   unmatchedMetadataFiles: S.Natural.make(0)
  * })
  * console.log(summary.sourceFiles) // 1
  * ```
@@ -301,16 +303,16 @@ export class CorpusCatalogRunSummary extends S.Class<CorpusCatalogRunSummary>($I
  */
 export class CorpusCatalogSummary extends S.Class<CorpusCatalogSummary>($I`CorpusCatalogSummary`)(
   {
-    distinctDigests: NonNegativeInt,
-    duplicateFiles: NonNegativeInt,
-    duplicateSets: NonNegativeInt,
-    matchedRestorations: NonNegativeInt,
-    redundantBytes: NonNegativeInt,
+    distinctDigests: S.Natural,
+    duplicateFiles: S.Natural,
+    duplicateSets: S.Natural,
+    matchedRestorations: S.Natural,
+    redundantBytes: S.Natural,
     runs: S.Array(CorpusCatalogRunSummary),
-    sourceFiles: NonNegativeInt,
-    totalBytes: NonNegativeInt,
-    unmatchedContentFiles: NonNegativeInt,
-    unmatchedMetadataFiles: NonNegativeInt,
+    sourceFiles: S.Natural,
+    totalBytes: S.Natural,
+    unmatchedContentFiles: S.Natural,
+    unmatchedMetadataFiles: S.Natural,
   },
   $I.annote("CorpusCatalogSummary", {
     description: "Summary counts returned by corpus catalog.",
@@ -323,28 +325,28 @@ export class CorpusCatalogSummary extends S.Class<CorpusCatalogSummary>($I`Corpu
  * **Example** (Encode catalog summary JSON)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusCatalogRunSummary, CorpusCatalogSummary, encodeCorpusCatalogSummaryJson } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const summary = CorpusCatalogSummary.make({
- *   distinctDigests: NonNegativeInt.make(1),
- *   duplicateFiles: NonNegativeInt.make(0),
- *   duplicateSets: NonNegativeInt.make(0),
- *   matchedRestorations: NonNegativeInt.make(0),
- *   redundantBytes: NonNegativeInt.make(0),
+ *   distinctDigests: S.Natural.make(1),
+ *   duplicateFiles: S.Natural.make(0),
+ *   duplicateSets: S.Natural.make(0),
+ *   matchedRestorations: S.Natural.make(0),
+ *   redundantBytes: S.Natural.make(0),
  *   runs: [
  *     CorpusCatalogRunSummary.make({
- *       distinctDigests: NonNegativeInt.make(1),
- *       newDistinctDigests: NonNegativeInt.make(1),
- *       recordCount: NonNegativeInt.make(1),
+ *       distinctDigests: S.Natural.make(1),
+ *       newDistinctDigests: S.Natural.make(1),
+ *       recordCount: S.Natural.make(1),
  *       runLabel: "base"
  *     })
  *   ],
- *   sourceFiles: NonNegativeInt.make(1),
- *   totalBytes: NonNegativeInt.make(11),
- *   unmatchedContentFiles: NonNegativeInt.make(0),
- *   unmatchedMetadataFiles: NonNegativeInt.make(0)
+ *   sourceFiles: S.Natural.make(1),
+ *   totalBytes: S.Natural.make(11),
+ *   unmatchedContentFiles: S.Natural.make(0),
+ *   unmatchedMetadataFiles: S.Natural.make(0)
  * })
  *
  * Effect.runPromise(encodeCorpusCatalogSummaryJson(summary)).then((json) => console.log(json.includes("\"sourceFiles\":1"))) // true

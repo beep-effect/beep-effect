@@ -12,10 +12,11 @@ import {
   PracticeKgEpistemicStatus,
   PracticeKgProvenanceKind,
 } from "@beep/law-practice-domain/values";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import type { Path } from "effect";
 import type * as AST from "effect/SchemaAST";
 
@@ -250,13 +251,13 @@ export class PracticeKgEdgeRow extends S.Class<PracticeKgEdgeRow>($I`PracticeKgE
  * **Example** (Make email header row)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PracticeKgEmailHeaderRow } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const header = PracticeKgEmailHeaderRow.make({
  *   archiveDigest: "sha256:1a4f",
  *   folderPath: "Inbox/Acme",
- *   messageOrd: NonNegativeInt.make(12),
+ *   messageOrd: S.Natural.make(12),
  *   messageRelPath: "artifact:sha256-1a4f.export/Inbox/Acme/Message00012",
  *   recipients: "ada@example.com | grace@example.com",
  *   senderEmail: "counsel@example.com",
@@ -276,7 +277,7 @@ export class PracticeKgEmailHeaderRow extends S.Class<PracticeKgEmailHeaderRow>(
     conversationTopic: S.optionalKey(S.String),
     deliveryIso: S.optionalKey(S.String),
     folderPath: S.String,
-    messageOrd: NonNegativeInt,
+    messageOrd: S.Natural,
     messageRelPath: S.NonEmptyString,
     recipients: S.String,
     senderEmail: S.optionalKey(S.String),
@@ -365,14 +366,14 @@ export class PracticeKgSourceRuns extends S.Class<PracticeKgSourceRuns>($I`Pract
  * **Example** (Make stable table counts)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PracticeKgCounts } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const counts = PracticeKgCounts.make({
- *   documents: NonNegativeInt.make(6104),
- *   edges: NonNegativeInt.make(19233),
- *   emails: NonNegativeInt.make(2317),
- *   nodes: NonNegativeInt.make(8421)
+ *   documents: S.Natural.make(6104),
+ *   edges: S.Natural.make(19233),
+ *   emails: S.Natural.make(2317),
+ *   nodes: S.Natural.make(8421)
  * })
  *
  * console.log(counts.edges > counts.nodes) // true
@@ -383,10 +384,10 @@ export class PracticeKgSourceRuns extends S.Class<PracticeKgSourceRuns>($I`Pract
  */
 export class PracticeKgCounts extends S.Class<PracticeKgCounts>($I`PracticeKgCounts`)(
   {
-    documents: NonNegativeInt,
-    edges: NonNegativeInt,
-    emails: NonNegativeInt,
-    nodes: NonNegativeInt,
+    documents: S.Natural,
+    edges: S.Natural,
+    emails: S.Natural,
+    nodes: S.Natural,
   },
   $I.annote("PracticeKgCounts", {
     description: "Deterministic node, edge, document, and email counts for one graph build.",
@@ -406,19 +407,19 @@ export class PracticeKgCounts extends S.Class<PracticeKgCounts>($I`PracticeKgCou
  * **Example** (Make portable bundle manifest)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PracticeKgBundleManifest, PracticeKgCounts } from "@beep/law-practice-server"
  * import { PracticeKgSchemaVersions, PracticeKgSourceRuns } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const manifest = PracticeKgBundleManifest.make({
  *   builtAt: "2026-07-27T18:04:11.000Z",
  *   bundleVersion: "2026.07.1",
  *   corpusRootExpected: true,
  *   counts: PracticeKgCounts.make({
- *     documents: NonNegativeInt.make(6104),
- *     edges: NonNegativeInt.make(19233),
- *     emails: NonNegativeInt.make(2317),
- *     nodes: NonNegativeInt.make(8421)
+ *     documents: S.Natural.make(6104),
+ *     edges: S.Natural.make(19233),
+ *     emails: S.Natural.make(2317),
+ *     nodes: S.Natural.make(8421)
  *   }),
  *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "1" }),
  *   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "included" })
@@ -457,23 +458,23 @@ export class PracticeKgBundleManifest extends S.Class<PracticeKgBundleManifest>(
  * **Example** (Make graph summary report)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PracticeKgCounts, PracticeKgSummary } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = PracticeKgSummary.make({
- *   baseDigests: NonNegativeInt.make(6104),
+ *   baseDigests: S.Natural.make(6104),
  *   bundleOut: "/corpus/staging/practice-kg-bundle",
  *   counts: PracticeKgCounts.make({
- *     documents: NonNegativeInt.make(6104),
- *     edges: NonNegativeInt.make(19233),
- *     emails: NonNegativeInt.make(2317),
- *     nodes: NonNegativeInt.make(8421)
+ *     documents: S.Natural.make(6104),
+ *     edges: S.Natural.make(19233),
+ *     emails: S.Natural.make(2317),
+ *     nodes: S.Natural.make(8421)
  *   }),
- *   docketFamilies: NonNegativeInt.make(212),
- *   docketFiles: NonNegativeInt.make(1904),
- *   familyAnchors: NonNegativeInt.make(198),
+ *   docketFamilies: S.Natural.make(212),
+ *   docketFiles: S.Natural.make(1904),
+ *   familyAnchors: S.Natural.make(198),
  *   includeRefresh: true,
- *   sourceRows: NonNegativeInt.make(7412)
+ *   sourceRows: S.Natural.make(7412)
  * })
  *
  * console.log(summary.counts.documents === summary.baseDigests) // true
@@ -484,14 +485,14 @@ export class PracticeKgBundleManifest extends S.Class<PracticeKgBundleManifest>(
  */
 export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgSummary`)(
   {
-    baseDigests: NonNegativeInt,
+    baseDigests: S.Natural,
     bundleOut: S.String,
     counts: PracticeKgCounts,
-    docketFiles: NonNegativeInt,
-    docketFamilies: NonNegativeInt,
-    familyAnchors: NonNegativeInt,
+    docketFiles: S.Natural,
+    docketFamilies: S.Natural,
+    familyAnchors: S.Natural,
     includeRefresh: S.Boolean,
-    sourceRows: NonNegativeInt,
+    sourceRows: S.Natural,
   },
   $I.annote("PracticeKgSummary", {
     description: "Build result and reconciliation counts returned by corpus graph.",
@@ -509,9 +510,9 @@ export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgS
  * **Example** (Encode manifest to JSON)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { encodePracticeKgBundleManifestJson, PracticeKgBundleManifest, PracticeKgCounts } from "@beep/law-practice-server"
  * import { PracticeKgSchemaVersions, PracticeKgSourceRuns } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const manifest = PracticeKgBundleManifest.make({
@@ -519,10 +520,10 @@ export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgS
  *   bundleVersion: "2026.07.1",
  *   corpusRootExpected: true,
  *   counts: PracticeKgCounts.make({
- *     documents: NonNegativeInt.make(6104),
- *     edges: NonNegativeInt.make(19233),
- *     emails: NonNegativeInt.make(2317),
- *     nodes: NonNegativeInt.make(8421)
+ *     documents: S.Natural.make(6104),
+ *     edges: S.Natural.make(19233),
+ *     emails: S.Natural.make(2317),
+ *     nodes: S.Natural.make(8421)
  *   }),
  *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "1" }),
  *   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "included" })
@@ -546,15 +547,15 @@ export const encodePracticeKgBundleManifestJson: {
  * **Example** (Encode counts to JSON)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { encodePracticeKgCountsJson, PracticeKgCounts } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const counts = PracticeKgCounts.make({
- *   documents: NonNegativeInt.make(6104),
- *   edges: NonNegativeInt.make(19233),
- *   emails: NonNegativeInt.make(2317),
- *   nodes: NonNegativeInt.make(8421)
+ *   documents: S.Natural.make(6104),
+ *   edges: S.Natural.make(19233),
+ *   emails: S.Natural.make(2317),
+ *   nodes: S.Natural.make(8421)
  * })
  *
  * Effect.runPromise(encodePracticeKgCountsJson(counts)).then(console.log)
@@ -608,24 +609,24 @@ export const encodePracticeKgNodePayloadJson: {
  * **Example** (Encode summary to JSON)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { encodePracticeKgSummaryJson, PracticeKgCounts, PracticeKgSummary } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const summary = PracticeKgSummary.make({
- *   baseDigests: NonNegativeInt.make(6104),
+ *   baseDigests: S.Natural.make(6104),
  *   bundleOut: "/corpus/staging/practice-kg-bundle",
  *   counts: PracticeKgCounts.make({
- *     documents: NonNegativeInt.make(6104),
- *     edges: NonNegativeInt.make(19233),
- *     emails: NonNegativeInt.make(2317),
- *     nodes: NonNegativeInt.make(8421)
+ *     documents: S.Natural.make(6104),
+ *     edges: S.Natural.make(19233),
+ *     emails: S.Natural.make(2317),
+ *     nodes: S.Natural.make(8421)
  *   }),
- *   docketFamilies: NonNegativeInt.make(212),
- *   docketFiles: NonNegativeInt.make(1904),
- *   familyAnchors: NonNegativeInt.make(198),
+ *   docketFamilies: S.Natural.make(212),
+ *   docketFiles: S.Natural.make(1904),
+ *   familyAnchors: S.Natural.make(198),
  *   includeRefresh: true,
- *   sourceRows: NonNegativeInt.make(7412)
+ *   sourceRows: S.Natural.make(7412)
  * })
  *
  * Effect.runPromise(encodePracticeKgSummaryJson(summary)).then((json) => console.log(json.includes("bundleOut")))

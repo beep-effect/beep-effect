@@ -5,13 +5,13 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt } from "@beep/schema";
 import { Console, Effect, HashMap, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { Command, Flag } from "effect/cli";
 import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   KnowledgeHostPathDebtError,
@@ -172,7 +172,7 @@ export const knowledgeSemanticDeltaFailure = (
     ? O.some(
         KnowledgeIntroducedFindingsError.make({
           message: `knowledge semantic-delta: ${A.length(report.introduced)} introduced blocking finding(s).`,
-          introducedCount: NonNegativeInt.make(A.length(report.introduced)),
+          introducedCount: S.Natural.make(A.length(report.introduced)),
         })
       )
     : O.none();
@@ -429,7 +429,7 @@ export const knowledgeRefsCheckFailure = (report: KnowledgeRefsReport): O.Option
     ? O.some(
         KnowledgeHostPathDebtError.make({
           message: `knowledge refs --check: ${A.length(debt)} live host-path observation(s).`,
-          liveDebtCount: NonNegativeInt.make(A.length(debt)),
+          liveDebtCount: S.Natural.make(A.length(debt)),
         })
       )
     : O.none();

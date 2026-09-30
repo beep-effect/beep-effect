@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Console, Effect, FileSystem, Inspectable, Layer, Runtime } from "effect";
 import * as A from "effect/Array";
@@ -204,8 +204,8 @@ class ReviewRound extends S.Class<ReviewRound>($I`ReviewRound`)(
     roundId: TrimmedNonEmptyString,
     criticId: TrimmedNonEmptyString,
     criticRole: TrimmedNonEmptyString,
-    requiredFindingCount: NonNegativeInt,
-    openRequiredFindingCount: NonNegativeInt,
+    requiredFindingCount: S.Natural,
+    openRequiredFindingCount: S.Natural,
     findings: S.Array(ReviewFinding),
   },
   $I.annote("ReviewRound", {

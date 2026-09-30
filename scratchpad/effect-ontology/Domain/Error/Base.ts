@@ -12,7 +12,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
+import { SchemaUtils, URLStr } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Effect } from "effect";
 
@@ -224,18 +224,18 @@ export type OptionalErrorMessage = typeof OptionalErrorMessage.Type;
  *
  * **Example** (Use OptionalNonNegativeInt)
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { NonNegativeInt } from "@beep/schema"
  * import { OptionalNonNegativeInt } from "@effect-ontology/Error/Base"
  *
- * const count = OptionalNonNegativeInt.make(O.some(NonNegativeInt.make(3)))
+ * const count = OptionalNonNegativeInt.make(O.some(S.Natural.make(3)))
  * console.log(O.isSome(count)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const OptionalNonNegativeInt = S.OptionFromNullishOr(NonNegativeInt).pipe(
+export const OptionalNonNegativeInt = S.OptionFromNullishOr(S.Natural).pipe(
   S.withConstructorDefault(Effect.succeedNone),
   $I.annoteSchema("OptionalNonNegativeInt", {
     description: "Optional finite non-negative integer normalized to an Effect Option.",
@@ -272,7 +272,7 @@ export type OptionalNonNegativeInt = typeof OptionalNonNegativeInt.Type;
  * @category errors
  * @since 0.0.0
  */
-export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
+export const HttpStatusCode = S.Natural.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
   $I.annoteSchema("HttpStatusCode", {
     description: "HTTP response status code in the standard three-digit range from 100 through 599.",
   })
@@ -333,7 +333,7 @@ export type OptionalHttpStatusCode = typeof OptionalHttpStatusCode.Type;
  * @category errors
  * @since 0.0.0
  */
-export const Milliseconds = NonNegativeInt.pipe(
+export const Milliseconds = S.Natural.pipe(
   S.brand("Milliseconds"),
   $I.annoteSchema("Milliseconds", {
     description: "Finite non-negative integer duration measured in milliseconds.",

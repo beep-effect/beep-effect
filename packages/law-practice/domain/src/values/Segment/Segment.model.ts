@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
+import { PosInt } from "../../internal/PosInt.ts";
 
 const $I = $LawPracticeDomainId.create("values/Segment/Segment.model");
 
@@ -22,13 +22,15 @@ const $I = $LawPracticeDomainId.create("values/Segment/Segment.model");
  * **Example** (Create position segment)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Segment } from "@beep/law-practice-domain"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const segment = Segment.make({
- *   cleanPos: NonNegativeInt.make(0),
+ *   cleanPos: S.Natural.make(0),
  *   len: PosInt.make(1),
- *   origPos: NonNegativeInt.make(0),
+ *   origPos: S.Natural.make(0),
  * })
  *
  * console.log(segment.len)
@@ -39,10 +41,10 @@ const $I = $LawPracticeDomainId.create("values/Segment/Segment.model");
  */
 export class Segment extends S.Class<Segment>($I`Segment`)(
   {
-    cleanPos: NonNegativeInt.annotateKey({
+    cleanPos: S.Natural.annotateKey({
       description: "Start position in clean text",
     }),
-    origPos: NonNegativeInt.annotateKey({
+    origPos: S.Natural.annotateKey({
       description: "Corresponding start position in original text",
     }),
     len: PosInt.annotateKey({

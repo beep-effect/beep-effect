@@ -8,7 +8,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import {
@@ -68,6 +67,7 @@ import {
 } from "../../internal/process/index.ts";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../internal/repo-run/ChangedFiles.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { PosInt } from "../../internal/schema/PosInt.ts";
 import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.ts";
 import {
   cleanCoverageRegressionOutputs,

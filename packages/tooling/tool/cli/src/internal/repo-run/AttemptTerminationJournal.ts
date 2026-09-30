@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Clock, Console, DateTime, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -124,7 +124,7 @@ export class YeetAttemptJournalCompacted extends S.Class<YeetAttemptJournalCompa
     schemaVersion: S.Literal("yeet-attempt-journal/v1"),
     _tag: S.Literal("journal-compacted"),
     recordedAt: S.String,
-    evictedCount: NonNegativeInt,
+    evictedCount: S.Natural,
     evictedAttemptIds: S.Array(UUIDSchema).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<UUID>())),
       S.withDecodingDefault(Effect.succeed(A.empty<UUID>()))
@@ -320,7 +320,7 @@ const retainedJournalLines = Effect.fn("AttemptTerminationJournal.retainedLines"
       schemaVersion: "yeet-attempt-journal/v1",
       _tag: "journal-compacted",
       recordedAt,
-      evictedCount: NonNegativeInt.make(
+      evictedCount: S.Natural.make(
         A.reduce(previousReceipts, A.length(evictedEvents), (total, previous) => total + previous.evictedCount)
       ),
       evictedAttemptIds: A.dedupe(

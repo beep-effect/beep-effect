@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { Duration, Effect } from "effect";
 import * as S from "effect/Schema";
 import { ErrorMessage, Milliseconds, OptionalErrorCause, OptionalHttpStatusCode } from "./Base.ts";
@@ -156,10 +156,10 @@ export class ImageTooLargeError extends S.TaggedError<ImageTooLargeError>($I`Ima
     url: URLStr.annotateKey({
       description: "Canonical URL of the oversized image.",
     }),
-    sizeBytes: NonNegativeInt.annotateKey({
+    sizeBytes: S.Natural.annotateKey({
       description: "Observed image size in bytes.",
     }),
-    maxBytes: NonNegativeInt.annotateKey({
+    maxBytes: S.Natural.annotateKey({
       description: "Maximum permitted image size in bytes.",
     }),
     message: ErrorMessage.pipe(S.withConstructorDefault(Effect.succeed("Image exceeds maximum size limit")), S.withDecodingDefaultTypeKey(Effect.succeed("Image exceeds maximum size limit"))).annotateKey({

@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { MimeType, NonNegativeInt, NonNegNum } from "@beep/schema";
+import { MimeType } from "@beep/schema";
 import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyName, OntologyVersion } from "../Identity.ts";
@@ -63,7 +63,7 @@ export class ManifestDocument extends S.Class<ManifestDocument>($I`ManifestDocum
     contentType: MimeType.annotateKey({
       description: "Recognized MIME type of the source document.",
     }),
-    sizeBytes: NonNegativeInt.annotateKey({
+    sizeBytes: S.Natural.annotateKey({
       description: "Non-negative source size measured in bytes.",
     }),
   },
@@ -305,7 +305,7 @@ export class ValidationActivityViolationSummary extends S.Class<ValidationActivi
     severity: ShaclSeverity.annotateKey({
       description: "Standard SHACL severity summarized by this value.",
     }),
-    count: NonNegativeInt.annotateKey({
+    count: S.Natural.annotateKey({
       description: "Number of results having the summarized severity.",
     }),
     sampleMessages: S.Array(S.NonEmptyString).pipe(
@@ -355,12 +355,12 @@ export class ValidationActivityOutput extends S.Class<ValidationActivityOutput>(
   {
     validatedUri: GcsUri,
     conforms: S.Boolean,
-    violations: NonNegativeInt,
+    violations: S.Natural,
     violationSummary: S.Array(ValidationActivityViolationSummary).pipe(
       S.withConstructorDefault(Effect.succeed(validationActivityOutputViolationSummaryDefault)), S.withDecodingDefaultType(Effect.succeed(validationActivityOutputViolationSummaryDefault))
     ),
     reportUri: GcsUri,
-    durationMs: NonNegNum,
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("ValidationActivityOutput", {
     description:

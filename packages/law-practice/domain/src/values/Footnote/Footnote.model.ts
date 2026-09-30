@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { A, P, pipe, Str } from "@beep/utils";
 import * as S from "effect/Schema";
+import { PosInt } from "../../internal/PosInt.ts";
 
 const $I = $LawPracticeDomainId.create("values/Footnote/Footnote.model");
 
@@ -66,12 +66,14 @@ const POST_FOOTNOTE_HEADING_RE = /^[A-Z][A-Z0-9 &:'.-]{3,}$/m;
  * **Example** (Create a footnote zone)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Footnote } from "@beep/law-practice-domain";
- * import { NonNegativeInt, PosInt } from "@beep/schema";
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const footnoteZone = Footnote.Zone.make({
- *   start: NonNegativeInt.make(0),
- *   end: NonNegativeInt.make(20),
+ *   start: S.Natural.make(0),
+ *   end: S.Natural.make(20),
  *   footnoteNumber: PosInt.make(1)
  * });
  * ```
@@ -82,11 +84,11 @@ const POST_FOOTNOTE_HEADING_RE = /^[A-Z][A-Z0-9 &:'.-]{3,}$/m;
 export class Zone extends S.Class<Zone>($I`Zone`)(
   {
     /** Start position in input-text coordinates. */
-    start: NonNegativeInt.annotateKey({
+    start: S.Natural.annotateKey({
       description: "Start position in input-text coordinates.",
     }),
     /** End position in input-text coordinates. */
-    end: NonNegativeInt.annotateKey({
+    end: S.Natural.annotateKey({
       description: "End position in input-text coordinates.",
     }),
     /** Footnote number (1, 2, 3...) */
@@ -204,8 +206,8 @@ export function detectTextFootnotes(text: string): FootnoteMap {
     const start = marker.index;
     const end = P.isUndefined(nextMarker) ? findFootnoteSectionEnd(text, start) : nextMarker.index;
     return Zone.make({
-      start: NonNegativeInt.make(start),
-      end: NonNegativeInt.make(end),
+      start: S.Natural.make(start),
+      end: S.Natural.make(end),
       footnoteNumber: PosInt.make(marker.footnoteNumber),
     });
   });

@@ -19,7 +19,6 @@ import {
   ContradictionResolutionProposal,
 } from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import type { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
@@ -208,12 +207,12 @@ export class ContradictionCandidateView extends S.Class<ContradictionCandidateVi
  * **Example** (Make empty candidate page)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ContradictionCandidatePage } from "@beep/epistemic-use-cases/public"
- * import { NonNegativeInt } from "@beep/schema/Int"
  *
  * const page = ContradictionCandidatePage.make({
  *   items: [],
- *   total: NonNegativeInt.make(0),
+ *   total: S.Natural.make(0),
  * })
  *
  * console.log(page.items.length) // 0
@@ -228,7 +227,7 @@ export class ContradictionCandidatePage extends S.Class<ContradictionCandidatePa
     items: S.Array(ContradictionCandidateView).annotateKey({
       description: "Ordered candidate rows in the requested page.",
     }),
-    total: NonNegativeInt.annotateKey({
+    total: S.Natural.annotateKey({
       description: "Total number of candidates matching the query before pagination.",
     }),
   },

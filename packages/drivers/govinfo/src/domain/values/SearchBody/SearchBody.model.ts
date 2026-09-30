@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
-import { PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
+import { PosInt } from "../../../internal/PosInt.ts";
 import { Sort } from "../Sort/index.ts";
 
 const $I = $GovinfoId.create("domain/values/SearchBody/SearchBody.model");

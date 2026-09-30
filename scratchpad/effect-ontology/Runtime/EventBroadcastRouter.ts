@@ -18,7 +18,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { PubSub as GCloudPubSub } from "@google-cloud/pubsub";
 import {
   Cause,
@@ -59,7 +58,7 @@ const BroadcastEventDefinition = S.Struct({
   type: S.tag("event"),
   entry: OntologyEventEntry,
   ontologyId: OntologyName,
-  timestamp: NonNegativeInt,
+  timestamp: S.Natural,
 });
 
 type BroadcastEventCodec = S.Codec<typeof BroadcastEventDefinition.Type, typeof BroadcastEventDefinition.Encoded>;
@@ -100,10 +99,10 @@ export type BroadcastEvent = typeof BroadcastEvent.Type;
  * **Example** (Construct a ping keep-alive)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import { PingMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
- * const message = PingMessage.make({ timestamp: NonNegativeInt.make(0) })
+ * const message = PingMessage.make({ timestamp: S.Natural.make(0) })
  * console.log(message.type) // "ping"
  * console.log(message.timestamp) // 0
  * ```
@@ -113,7 +112,7 @@ export type BroadcastEvent = typeof BroadcastEvent.Type;
  */
 export const PingMessage = S.Struct({
   type: S.tag("ping"),
-  timestamp: NonNegativeInt,
+  timestamp: S.Natural,
 }).pipe(
   $I.annoteSchema("PingMessage", {
     description: "Keep-alive message emitted by the WebSocket event stream.",
@@ -126,10 +125,10 @@ export const PingMessage = S.Struct({
  * **Example** (Read a ping timestamp)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import { PingMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
- * const message: PingMessage = PingMessage.make({ timestamp: NonNegativeInt.make(0) })
+ * const message: PingMessage = PingMessage.make({ timestamp: S.Natural.make(0) })
  * console.log(message.timestamp) // 0
  * ```
  *
@@ -145,13 +144,13 @@ export type PingMessage = typeof PingMessage.Type;
  * **Example** (Construct a connected greeting)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import { ConnectedMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
  * const message = ConnectedMessage.make({
  *   ontologyId: "football",
  *   serverId: "server-1",
- *   timestamp: NonNegativeInt.make(0)
+ *   timestamp: S.Natural.make(0)
  * })
  * console.log(message.type) // "connected"
  * console.log(message.serverId) // "server-1"
@@ -164,7 +163,7 @@ export const ConnectedMessage = S.Struct({
   type: S.tag("connected"),
   ontologyId: S.String,
   serverId: S.String,
-  timestamp: NonNegativeInt,
+  timestamp: S.Natural,
 }).pipe(
   $I.annoteSchema("ConnectedMessage", {
     description: "Connection acknowledgement identifying the ontology and serving instance.",
@@ -177,13 +176,13 @@ export const ConnectedMessage = S.Struct({
  * **Example** (Read the serving instance)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import { ConnectedMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
  * const message: ConnectedMessage = ConnectedMessage.make({
  *   ontologyId: "football",
  *   serverId: "server-1",
- *   timestamp: NonNegativeInt.make(0)
+ *   timestamp: S.Natural.make(0)
  * })
  * console.log(message.serverId) // "server-1"
  * ```
@@ -200,13 +199,12 @@ export type ConnectedMessage = typeof ConnectedMessage.Type;
  * **Example** (Decode a ping envelope)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
  * import { PingMessage, ServerMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownOption(ServerMessage)(
- *   PingMessage.make({ timestamp: NonNegativeInt.make(0) })
+ *   PingMessage.make({ timestamp: S.Natural.make(0) })
  * )
  * console.log(O.map(decoded, (message) => message.type))
  * ```
@@ -454,7 +452,7 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
           type: "event",
           entry: data.value,
           ontologyId,
-          timestamp: NonNegativeInt.make(message.publishTime?.getTime() ?? 0),
+          timestamp: S.Natural.make(message.publishTime?.getTime() ?? 0),
         };
         local.publishUnsafe(ontologyId, event);
         message.ack();
@@ -693,7 +691,7 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
     type: "connected",
     ontologyId,
     serverId,
-    timestamp: NonNegativeInt.make(yield* Clock.currentTimeMillis),
+    timestamp: S.Natural.make(yield* Clock.currentTimeMillis),
   };
   yield* writer.write(new TextEncoder().encode(yield* encodeServerMessage(connected)));
   yield* Effect.logInfo("WebSocket client connected", { ontologyId });
@@ -718,7 +716,7 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
     "ping"
   )(
     Effect.gen(function* () {
-      const ping: ServerMessage = { type: "ping", timestamp: NonNegativeInt.make(yield* Clock.currentTimeMillis) };
+      const ping: ServerMessage = { type: "ping", timestamp: S.Natural.make(yield* Clock.currentTimeMillis) };
       yield* writer.write(new TextEncoder().encode(yield* encodeServerMessage(ping)));
     }).pipe(Effect.delay("30 seconds"), Effect.forever, Effect.ignore)
   );
@@ -777,7 +775,7 @@ export const broadcastDomainEvent = Effect.fn("broadcastDomainEvent")(function* 
     type: "event",
     entry: event,
     ontologyId,
-    timestamp: NonNegativeInt.make(yield* Clock.currentTimeMillis),
+    timestamp: S.Natural.make(yield* Clock.currentTimeMillis),
   };
   yield* hub.broadcast(ontologyId, broadcastEvent);
 });

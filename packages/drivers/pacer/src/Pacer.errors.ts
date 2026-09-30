@@ -12,7 +12,7 @@
  */
 
 import { $PacerId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Match } from "effect";
 import * as HttpStatus from "effect/http/HttpStatus";
@@ -196,7 +196,7 @@ export class PacerPclError extends S.TaggedError<PacerPclError>($I`PacerPclError
   "PacerPclError",
   {
     reason: PacerPclErrorReason,
-    status: S.optionalKey(NonNegativeInt),
+    status: S.optionalKey(S.Natural),
     description: S.optionalKey(S.String),
     cause: S.optionalKey(S.String),
   },
@@ -220,7 +220,7 @@ export class PacerPclError extends S.TaggedError<PacerPclError>($I`PacerPclError
         Match.when(HttpStatus.fromLiteral("TooManyRequests"), () => PacerPclErrorReason.Enum["too-many-requests"]),
         Match.orElse(() => PacerPclErrorReason.Enum["server-error"])
       ),
-      status: NonNegativeInt.make(status),
+      status: S.Natural.make(status),
       ...O.getSomesStruct({ description: O.fromUndefinedOr(description) }),
     });
 
@@ -241,7 +241,7 @@ export class PacerPclError extends S.TaggedError<PacerPclError>($I`PacerPclError
       reason,
       ...O.getSomesStruct({
         cause: O.fromUndefinedOr(options.cause),
-        status: O.fromUndefinedOr(options.status).pipe(O.map(NonNegativeInt.make)),
+        status: O.fromUndefinedOr(options.status).pipe(O.map(S.Natural.make)),
       }),
     });
 }

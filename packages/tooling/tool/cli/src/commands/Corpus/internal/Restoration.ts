@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { Console, DateTime, Effect, FileSystem, HashMap, HashSet, Order, Path } from "effect";
@@ -187,7 +187,7 @@ type TerminalVerificationOutcome = {
 
 const archiveError = (message: string): CorpusCommandError => CorpusCommandError.make({ message });
 
-const nonNegative = (value: number): NonNegativeInt => NonNegativeInt.make(Math.max(0, Math.floor(value)));
+const nonNegative = (value: number): number => S.Natural.make(Math.max(0, Math.floor(value)));
 
 const digestBytes = (bytes: Uint8Array): Sha256Hex => Sha256Hex.make(bytesToHex(sha256(bytes)));
 

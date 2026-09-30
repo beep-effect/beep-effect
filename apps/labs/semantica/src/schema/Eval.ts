@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Equal, HashMap, HashSet, identity, Number as N, Option, Result } from "effect";
 import * as A from "effect/Array";
@@ -375,7 +375,7 @@ const MetricScoreFields = S.Struct({
   lane: ExtractionLane,
   status: MetricStatus,
   value: UnitInterval,
-  support: NonNegativeInt,
+  support: S.Natural,
 });
 
 const MetricScoreChecks = S.makeFilterGroup(
@@ -500,9 +500,9 @@ export const RequiredMetrics: HashMap.HashMap<CanaryStage, ReadonlyArray<Require
 const DocumentParseOutcome = LiteralKit(["parsed", ...DegradedKind.literals]);
 const DocumentExtractionOutcome = LiteralKit(["extracted", ...DegradedKind.literals]);
 const DocumentClaimCounts = S.Struct({
-  entity: NonNegativeInt,
-  relation: NonNegativeInt,
-  structure: NonNegativeInt,
+  entity: S.Natural,
+  relation: S.Natural,
+  structure: S.Natural,
 });
 
 /**
@@ -528,14 +528,14 @@ export class DocumentOutcome extends S.Class<DocumentOutcome>($I`DocumentOutcome
       hosted: DocumentExtractionOutcome,
       pattern: DocumentExtractionOutcome,
     }),
-    chunks: NonNegativeInt,
+    chunks: S.Natural,
     claims: S.Struct({
       hosted: DocumentClaimCounts,
       pattern: DocumentClaimCounts,
     }),
-    degradedClaims: NonNegativeInt,
-    anchorsVerified: NonNegativeInt,
-    anchorsFailed: NonNegativeInt,
+    degradedClaims: S.Natural,
+    anchorsVerified: S.Natural,
+    anchorsFailed: S.Natural,
     cacheKeys: S.Array(Sha256Hex),
   },
   $I.annote("DocumentOutcome", {
@@ -549,7 +549,7 @@ const EvalReportFields = S.Struct({
   run: EvalRun,
   documents: S.NonEmptyArray(DocumentOutcome),
   metrics: S.NonEmptyArray(MetricScore),
-  unexpectedDegraded: NonNegativeInt,
+  unexpectedDegraded: S.Natural,
   reportDigest: Sha256Hex,
 });
 

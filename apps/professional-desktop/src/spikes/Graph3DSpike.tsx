@@ -21,9 +21,7 @@ import {
 } from "@beep/graph-3d/browser";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability/CauseRedaction";
-import { PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as A from "@beep/utils/Array";
 import * as N from "@beep/utils/Number";
 import * as O from "@beep/utils/Option";
@@ -36,6 +34,7 @@ import { AsyncResult, Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
+import { PosInt } from "../internal/PosInt.ts";
 import { fpsSampleAtoms } from "./Fps.atoms.ts";
 import type { JSX } from "react";
 
@@ -44,8 +43,8 @@ const $I = $ProfessionalDesktopId.create("spikes/Graph3DSpike");
 class StressPreset extends S.Class<StressPreset>($I`StressPreset`)(
   {
     label: S.NonEmptyString,
-    nodeCount: NonNegativeInt,
-    edgeCount: NonNegativeInt,
+    nodeCount: S.Natural,
+    edgeCount: S.Natural,
   },
   $I.annote("StressPreset", {
     description: "Synthetic graph dimensions used by one Graph3D stress preset.",
@@ -55,26 +54,26 @@ class StressPreset extends S.Class<StressPreset>($I`StressPreset`)(
 
   static readonly default = StressPreset.make({
     label: "2.5k / 5k",
-    nodeCount: NonNegativeInt.make(2_500),
-    edgeCount: NonNegativeInt.make(5_000),
+    nodeCount: S.Natural.make(2_500),
+    edgeCount: S.Natural.make(5_000),
   });
 
   static readonly presets: ReadonlyArray<StressPreset> = [
     StressPreset.make({
       label: "1k / 2k",
-      nodeCount: NonNegativeInt.make(1_000),
-      edgeCount: NonNegativeInt.make(2_000),
+      nodeCount: S.Natural.make(1_000),
+      edgeCount: S.Natural.make(2_000),
     }),
     StressPreset.default,
     StressPreset.make({
       label: "2.5k / 12.5k",
-      nodeCount: NonNegativeInt.make(2_500),
-      edgeCount: NonNegativeInt.make(12_500),
+      nodeCount: S.Natural.make(2_500),
+      edgeCount: S.Natural.make(12_500),
     }),
     StressPreset.make({
       label: "5k / 10k",
-      nodeCount: NonNegativeInt.make(5_000),
-      edgeCount: NonNegativeInt.make(10_000),
+      nodeCount: S.Natural.make(5_000),
+      edgeCount: S.Natural.make(10_000),
     }),
   ];
 }
@@ -92,7 +91,7 @@ class StressReport extends S.Class<StressReport>($I`StressReport`)(
 
 class BrowserHeapMemory extends S.Class<BrowserHeapMemory>($I`BrowserHeapMemory`)(
   {
-    usedJSHeapSize: NonNegativeInt,
+    usedJSHeapSize: S.Natural,
   },
   $I.annote("BrowserHeapMemory", {
     description: "Chromium-specific browser heap measurement when the performance extension is available.",

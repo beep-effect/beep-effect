@@ -11,7 +11,6 @@ import { HashMap, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { LiteralKit, matchLiteral } from "../LiteralKit/index.ts";
-import { isNonNegative } from "../Number.ts";
 import type { SchemaAST } from "effect";
 import type { LiteralKit as LiteralKitSchema, LiteralToKey } from "../LiteralKit/index.ts";
 
@@ -109,8 +108,8 @@ export class MappedLiteralDuplicateError extends S.TaggedError<MappedLiteralDupl
   {
     side: S.Literals(["from", "to"]),
     literal: S.Union([S.String, S.BigInt, S.Boolean, S.Finite]),
-    firstIndex: S.Int.check(isNonNegative),
-    secondIndex: S.Int.check(isNonNegative),
+    firstIndex: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    secondIndex: S.Int.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annoteError<MappedLiteralDuplicateError>("MappedLiteralDuplicateError", {
     title: "Mapped Literal Duplicate Error",

@@ -1,4 +1,4 @@
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { Crypto, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -107,7 +107,7 @@ const makeDocumentSource = Effect.gen(function* () {
     const id = DocumentId.make(verified.digest);
     return SourceDocument.make({
       acquired: yield* makeAcquiredId(id),
-      bytes: NonNegativeInt.make(verified.bytes.byteLength),
+      bytes: S.Natural.make(verified.bytes.byteLength),
       id,
       mediaType,
       origin,

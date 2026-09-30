@@ -22,8 +22,8 @@ import {
 import { ExtractFileOperation, ProcessFileOperation } from "@beep/file-processing/Operation";
 import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { extractFile, makeFileProcessingServiceLayer, processFile } from "@beep/file-processing/Service";
+import { classifyFormatFromExtension, FileFormatFamily } from "@beep/file-processing/Strategy";
 import { TestFileProcessingEngine } from "@beep/file-processing/test";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -108,7 +108,7 @@ const makeSource = Effect.fn("FileProcessingTest.makeSource")(function* (
     locator: ArtifactLocator.make({ kind: "synthetic", value: locatorPath }),
     name: `readme.${extension}`,
     relativePath,
-    sizeBytes: NonNegativeInt.make(text?.length ?? 11),
+    sizeBytes: S.Natural.make(text?.length ?? 11),
     ...(text === undefined ? {} : { text }),
   });
 });
@@ -237,6 +237,33 @@ describe("@beep/file-processing", () => {
     },
     { arbitrary: fcRuns(50) }
   );
+
+  it("classifies every recognized extension into its format family", () => {
+    const cases = [
+      ["doc", "doc"],
+      ["docx", "docx"],
+      ["docm", "docm"],
+      ["rtf", "rtf"],
+      ["htm", "html"],
+      ["html", "html"],
+      ["xhtml", "xhtml"],
+      ["pdf", "pdf-text-layer"],
+      ["pst", "pst"],
+      ["txt", "plain-text"],
+      ["markdown", "markdown"],
+      ["png", "image-metadata"],
+      ["xls", "xls"],
+      ["xlsx", "xlsx"],
+      ["zip", "unknown"],
+      [undefined, "unknown"],
+    ] as const;
+
+    for (const [extension, family] of cases) {
+      expect(classifyFormatFromExtension(extension)).toBe(family);
+    }
+    expect(FileFormatFamily.processCapability("image-metadata")).toBe("extract-metadata");
+    expect(FileFormatFamily.processCapability("pdf-text-layer")).toBe("extract-text");
+  });
 
   it.layer(serviceLayer)("extracts synthetic text through the service contract", (it) => {
     it.effect(

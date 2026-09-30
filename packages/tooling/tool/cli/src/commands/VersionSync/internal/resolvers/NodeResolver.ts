@@ -9,7 +9,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, identity, Path, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
@@ -37,7 +36,7 @@ export class NodeVersionLocation extends S.Class<NodeVersionLocation>($I`NodeVer
   {
     file: S.String,
     jobName: S.String,
-    stepIndex: NonNegativeInt,
+    stepIndex: S.Natural,
     currentValue: S.String,
     yamlPath: S.Array(S.Union([S.String, S.Finite])),
   },
@@ -216,7 +215,7 @@ const findNodeVersionLocations: (
         NodeVersionLocation.make({
           file: relativeFile,
           jobName,
-          stepIndex: NonNegativeInt.make(stepIdx),
+          stepIndex: S.Natural.make(stepIdx),
           currentValue: nodeVersion,
           yamlPath: ["jobs", jobName, "steps", stepIdx, "with", "node-version"],
         })

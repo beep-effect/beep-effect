@@ -53,20 +53,20 @@ export const touchedGroupsInEvents: (events: ReadonlyArray<DockEvent>) => Readon
  * **Example** (Newest-first group recency)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ApiCommandOrigin, CommandId, DockAtomFeedSuccess, DockChanged, DockMutationCompleted, DockMutationOutcome, GroupId, GroupUpdatedEvent, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, touchedGroups } from "@beep/dock"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const groupId = GroupId.make("group-one")
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId, active: panel }) })
  * const entry = DockAtomFeedSuccess.make({
- *   submission: NonNegativeInt.make(1),
+ *   submission: S.Natural.make(1),
  *   operationKind: "dispatchCommand",
  *   outcome: DockMutationCompleted.make({
  *     outcome: DockMutationOutcome.make({
  *       commandId: CommandId.make("command-one"),
  *       origin: ApiCommandOrigin.make({ requestId: "request-one" }),
- *       result: DockChanged.make({ previousRevision: NonNegativeInt.make(0), state: workspace, events: [GroupUpdatedEvent.make({ groupId })] })
+ *       result: DockChanged.make({ previousRevision: S.Natural.make(0), state: workspace, events: [GroupUpdatedEvent.make({ groupId })] })
  *     })
  *   })
  * })
@@ -100,21 +100,21 @@ export const touchedGroups: (entries: ReadonlyArray<DockAtomFeedEntry>) => Reado
  * **Example** (MRU groups from feed atom)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ApiCommandOrigin, CommandId, DockAtomFeedSuccess, DockChanged, DockMutationCompleted, DockMutationOutcome, GroupId, GroupUpdatedEvent, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeMruGroupsAtom } from "@beep/dock"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Atom, AtomRegistry } from "effect/reactivity"
  *
  * const groupId = GroupId.make("group-one")
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId, active: panel }) })
  * const entry = DockAtomFeedSuccess.make({
- *   submission: NonNegativeInt.make(1),
+ *   submission: S.Natural.make(1),
  *   operationKind: "dispatchCommand",
  *   outcome: DockMutationCompleted.make({
  *     outcome: DockMutationOutcome.make({
  *       commandId: CommandId.make("command-one"),
  *       origin: ApiCommandOrigin.make({ requestId: "request-one" }),
- *       result: DockChanged.make({ previousRevision: NonNegativeInt.make(0), state: workspace, events: [GroupUpdatedEvent.make({ groupId })] })
+ *       result: DockChanged.make({ previousRevision: S.Natural.make(0), state: workspace, events: [GroupUpdatedEvent.make({ groupId })] })
  *     })
  *   })
  * })

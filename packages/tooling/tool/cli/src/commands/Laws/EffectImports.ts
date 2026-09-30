@@ -322,11 +322,7 @@ const defaultTarget = (source: string): ImportTarget => ({ kind: "default", sour
  * public first-hop path. Each override is still checked against both package
  * export maps before it replaces the ambiguous graph-derived candidates.
  */
-const CENSUS_MAPPING_OVERRIDES: RootImportMappings = {
-  "@beep/schema": {
-    NonNegativeInt: [namedTarget("@beep/schema/Number", "NonNegativeInt")],
-  },
-};
+const CENSUS_MAPPING_OVERRIDES: RootImportMappings = {};
 
 const mappingCandidatesEntry = (
   binding: string,

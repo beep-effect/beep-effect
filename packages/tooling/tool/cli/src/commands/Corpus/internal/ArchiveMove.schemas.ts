@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
@@ -49,16 +48,16 @@ export class CorpusArchiveMoveOptions extends S.Class<CorpusArchiveMoveOptions>(
  * **Example** (Create manifest record)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusArchiveMoveManifestRecord } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const record = CorpusArchiveMoveManifestRecord.make({
  *   archivePath: "/tmp/archive/source-a",
- *   copiedCount: NonNegativeInt.make(1),
- *   fileCount: NonNegativeInt.make(1),
+ *   copiedCount: S.Natural.make(1),
+ *   fileCount: S.Natural.make(1),
  *   movedAt: "2026-06-11T15:00:00Z",
  *   originPath: "/tmp/source-a",
- *   provenanceOnlyCount: NonNegativeInt.make(0)
+ *   provenanceOnlyCount: S.Natural.make(0)
  * })
  * console.log(record.fileCount) // 1
  * ```
@@ -71,11 +70,11 @@ export class CorpusArchiveMoveManifestRecord extends S.Class<CorpusArchiveMoveMa
 )(
   {
     archivePath: S.NonEmptyString,
-    copiedCount: NonNegativeInt,
-    fileCount: NonNegativeInt,
+    copiedCount: S.Natural,
+    fileCount: S.Natural,
     movedAt: S.NonEmptyString,
     originPath: S.NonEmptyString,
-    provenanceOnlyCount: NonNegativeInt,
+    provenanceOnlyCount: S.Natural,
   },
   $I.annote("CorpusArchiveMoveManifestRecord", {
     title: "Corpus Archive Move Manifest Record",
@@ -89,17 +88,17 @@ export class CorpusArchiveMoveManifestRecord extends S.Class<CorpusArchiveMoveMa
  * **Example** (Encode manifest record JSON)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusArchiveMoveManifestRecord, encodeCorpusArchiveMoveManifestRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const record = CorpusArchiveMoveManifestRecord.make({
  *   archivePath: "/tmp/archive/source-a",
- *   copiedCount: NonNegativeInt.make(1),
- *   fileCount: NonNegativeInt.make(1),
+ *   copiedCount: S.Natural.make(1),
+ *   fileCount: S.Natural.make(1),
  *   movedAt: "2026-06-11T15:00:00Z",
  *   originPath: "/tmp/source-a",
- *   provenanceOnlyCount: NonNegativeInt.make(0)
+ *   provenanceOnlyCount: S.Natural.make(0)
  * })
  *
  * Effect.runPromise(encodeCorpusArchiveMoveManifestRecordJson(record)).then((json) => console.log(json.includes("source-a"))) // true
@@ -116,14 +115,14 @@ export const encodeCorpusArchiveMoveManifestRecordJson = JsonStringCodec(CorpusA
  * **Example** (Make archive move summary)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusArchiveMoveSummary } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = CorpusArchiveMoveSummary.make({
- *   copiedRecords: NonNegativeInt.make(1),
- *   filesCovered: NonNegativeInt.make(1),
- *   provenanceOnlyRecords: NonNegativeInt.make(0),
- *   sourcesMoved: NonNegativeInt.make(1)
+ *   copiedRecords: S.Natural.make(1),
+ *   filesCovered: S.Natural.make(1),
+ *   provenanceOnlyRecords: S.Natural.make(0),
+ *   sourcesMoved: S.Natural.make(1)
  * })
  * console.log(summary.sourcesMoved) // 1
  * ```
@@ -133,10 +132,10 @@ export const encodeCorpusArchiveMoveManifestRecordJson = JsonStringCodec(CorpusA
  */
 export class CorpusArchiveMoveSummary extends S.Class<CorpusArchiveMoveSummary>($I`CorpusArchiveMoveSummary`)(
   {
-    copiedRecords: NonNegativeInt,
-    filesCovered: NonNegativeInt,
-    provenanceOnlyRecords: NonNegativeInt,
-    sourcesMoved: NonNegativeInt,
+    copiedRecords: S.Natural,
+    filesCovered: S.Natural,
+    provenanceOnlyRecords: S.Natural,
+    sourcesMoved: S.Natural,
   },
   $I.annote("CorpusArchiveMoveSummary", {
     title: "Corpus Archive Move Summary",

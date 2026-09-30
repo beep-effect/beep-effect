@@ -6,7 +6,7 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { thunkFalse, thunkTrue } from "@beep/utils";
 import { Brand, Effect } from "effect";
 import { dual } from "effect/Function";
@@ -35,7 +35,7 @@ const $I = $NlpId.create("Core/Token");
  * @category models
  * @since 0.0.0
  */
-export type TokenIndex = Brand.Branded<NonNegativeInt, "TokenIndex">;
+export type TokenIndex = Brand.Branded<number, "TokenIndex">;
 
 /**
  * Narrow an unknown value to a non-negative token index.
@@ -69,7 +69,7 @@ export const isTokenIndex = (u: unknown): u is TokenIndex => TokenIndex.is(u);
  * @category validation
  * @since 0.0.0
  */
-export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>(S.makeFilter(S.is(NonNegativeInt)));
+export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>(S.makeFilter(S.is(S.Natural)));
 
 /**
  * Schema that decodes non-negative numbers into {@link TokenIndex} values.
@@ -86,7 +86,7 @@ export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>
  * @category validation
  * @since 0.0.0
  */
-export const TokenIndex = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegativeInt.ast).pipe(
+export const TokenIndex = S.make<(typeof S.Natural)["Rebuild"]>(S.Natural.ast).pipe(
   S.brand("TokenIndex"),
   $I.annoteSchema("TokenIndex", {
     description: "Non-negative ordered index for an NLP token.",
@@ -113,7 +113,7 @@ export const TokenIndex = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegative
  * @category models
  * @since 0.0.0
  */
-export type CharPosition = Brand.Branded<NonNegativeInt, "CharPosition">;
+export type CharPosition = Brand.Branded<number, "CharPosition">;
 
 /**
  * Narrow an unknown value to a non-negative character offset.
@@ -147,9 +147,7 @@ export const isCharPosition = (u: unknown): u is CharPosition => CharPosition.is
  * @category validation
  * @since 0.0.0
  */
-export const charPosition: Brand.Constructor<CharPosition> = Brand.check<CharPosition>(
-  S.makeFilter(S.is(NonNegativeInt))
-);
+export const charPosition: Brand.Constructor<CharPosition> = Brand.check<CharPosition>(S.makeFilter(S.is(S.Natural)));
 
 /**
  * Schema that decodes non-negative numbers into {@link CharPosition} values.
@@ -166,7 +164,7 @@ export const charPosition: Brand.Constructor<CharPosition> = Brand.check<CharPos
  * @category validation
  * @since 0.0.0
  */
-export const CharPosition = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegativeInt.ast).pipe(
+export const CharPosition = S.make<(typeof S.Natural)["Rebuild"]>(S.Natural.ast).pipe(
   S.brand("CharPosition"),
   $I.annoteSchema("CharPosition", {
     description: "Non-negative character offset in source NLP text.",

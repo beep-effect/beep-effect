@@ -22,7 +22,6 @@ import {
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
@@ -32,6 +31,7 @@ import * as Shared from "@beep/shared-domain/identity/Shared";
 import { DateTime, Effect, identity, Order } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 
 const $I = $EpistemicUseCasesId.create("ContradictionTriage/ContradictionTriage.commands");
 
@@ -216,11 +216,11 @@ export type ContradictionCandidatePageLimit = typeof ContradictionCandidatePageL
  * **Example** (Build list candidates query)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import {
  *   ContradictionCandidatePageLimit,
  *   ListContradictionCandidates,
  * } from "@beep/epistemic-use-cases/server"
- * import { NonNegativeInt } from "@beep/schema/Int"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
  * import { DateTime } from "effect"
  *
@@ -229,7 +229,7 @@ export type ContradictionCandidatePageLimit = typeof ContradictionCandidatePageL
  *   disposition: "open",
  *   knownAt: at,
  *   limit: ContradictionCandidatePageLimit.make(20),
- *   offset: NonNegativeInt.make(0),
+ *   offset: S.Natural.make(0),
  *   orgId: Shared.OrganizationId.make(1),
  *   validAt: at,
  * })
@@ -251,7 +251,7 @@ export class ListContradictionCandidates extends S.Class<ListContradictionCandid
     limit: ContradictionCandidatePageLimit.annotateKey({
       description: "Maximum number of candidate rows to return.",
     }),
-    offset: NonNegativeInt.annotateKey({
+    offset: S.Natural.annotateKey({
       description: "Number of ordered candidate rows to skip.",
     }),
     orgId: Shared.OrganizationId.annotateKey({

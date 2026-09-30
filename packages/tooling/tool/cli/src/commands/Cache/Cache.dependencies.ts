@@ -4,7 +4,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { NonNegativeInt } from "@beep/schema";
 import { Config, Duration, Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -26,7 +25,7 @@ import { CacheCommandError, CacheExecutablePin } from "./Cache.schemas.ts";
 import type { CacheCensusWorkspace } from "./Cache.schemas.ts";
 
 const tools = ["bash", "cp", "find", "tar", "sha256sum", "awk"];
-const countFields = S.Tuple([NonNegativeInt, NonNegativeInt, NonNegativeInt, NonNegativeInt, NonNegativeInt]);
+const countFields = S.Tuple([S.Natural, S.Natural, S.Natural, S.Natural, S.Natural]);
 const decodeCountFields = S.decodeUnknownEffect(countFields);
 const bound = OutputBound.make({ maxChars: 512 * 1024, truncatedNotice: "[dependency inspection overflow]" });
 const digestScript =

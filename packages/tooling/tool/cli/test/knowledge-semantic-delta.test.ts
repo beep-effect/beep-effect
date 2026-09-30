@@ -27,7 +27,6 @@ import {
   renderKnowledgeSemanticDeltaHumanReport,
 } from "@beep/repo-cli/test/Knowledge";
 import { findRepoRoot } from "@beep/repo-utils";
-import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
@@ -329,7 +328,7 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
               KnowledgeRename.make({
                 sourcePath: "docs/old.md",
                 targetPath: "docs/new.md",
-                score: NonNegativeInt.make(100),
+                score: S.Natural.make(100),
               }),
             ],
           }
@@ -352,7 +351,7 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
               KnowledgeRename.make({
                 sourcePath: "docs/old.md",
                 targetPath: "docs/new.md",
-                score: NonNegativeInt.make(80),
+                score: S.Natural.make(80),
               }),
             ],
           }
@@ -675,7 +674,7 @@ describe("knowledge semantic-delta negative controls", () => {
               KnowledgeRename.make({
                 sourcePath: "docs/old.md",
                 targetPath: "docs/new.md",
-                score: NonNegativeInt.make(100),
+                score: S.Natural.make(100),
               }),
             ],
           }

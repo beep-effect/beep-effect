@@ -6,7 +6,7 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import * as A from "effect/Array";
@@ -168,10 +168,7 @@ class M365ErrorOptionsInput extends S.Class<M365ErrorOptionsInput>($I`M365ErrorO
     cause: optionalField(S.Unknown, "Original native or third-party cause when one was available."),
     itemId: optionalField(S.String, "Graph item id involved, if any."),
     resource: optionalField(S.String, "Graph resource family involved, if any."),
-    retryAfterSeconds: optionalField(
-      NonNegativeInt,
-      "Honored Retry-After delay in seconds, if the response was throttled."
-    ),
+    retryAfterSeconds: optionalField(S.Natural, "Honored Retry-After delay in seconds, if the response was throttled."),
     status: optionalField(M365HttpStatus, "HTTP status code associated with the failure, if any."),
     url: optionalField(S.String, "Request URL involved, if any."),
   },
@@ -180,7 +177,7 @@ class M365ErrorOptionsInput extends S.Class<M365ErrorOptionsInput>($I`M365ErrorO
   })
 ) {}
 
-const decodeRetryAfterSecondsOption = S.decodeUnknownOption(NonNegativeInt);
+const decodeRetryAfterSecondsOption = S.decodeUnknownOption(S.Natural);
 const makeHttpStatus: (status: number) => M365HttpStatus = flow(
   S.decodeUnknownOption(M365HttpStatus),
   O.getOrElse(() => HttpStatus.fromLiteral("InternalServerError"))
@@ -228,10 +225,7 @@ export class M365Error extends S.TaggedError<M365Error>($I`M365Error`)(
     cause: optionalField(S.String, "Sanitized cause label (tag/name), if any."),
     itemId: optionalField(S.String, "Graph item id involved, if any."),
     resource: optionalField(S.String, "Graph resource family (drives/sites/messages/events), if any."),
-    retryAfterSeconds: optionalField(
-      NonNegativeInt,
-      "Honored Retry-After delay in seconds, if the response was throttled."
-    ),
+    retryAfterSeconds: optionalField(S.Natural, "Honored Retry-After delay in seconds, if the response was throttled."),
     status: optionalField(M365HttpStatus, "HTTP status code, if any."),
     url: optionalField(S.String, "Request URL involved, if any."),
   },

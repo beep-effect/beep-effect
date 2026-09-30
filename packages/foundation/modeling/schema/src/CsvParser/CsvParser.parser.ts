@@ -13,7 +13,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { csvError } from "../CsvError/index.ts";
-import { isNonNegative } from "../Number.ts";
 import type { CsvError } from "../CsvError/index.ts";
 import type { ParserOptions } from "../ParserOptions/index.ts";
 
@@ -111,7 +110,7 @@ const getQuotedFieldStart = (input: string, cursor: number, parserOptions: Parse
  */
 export class ParsedField extends S.Class<ParsedField>($I`ParsedField`)(
   {
-    cursor: S.Int.check(isNonNegative),
+    cursor: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     value: S.String,
   },
   $I.annote("ParsedField", {
@@ -267,7 +266,7 @@ const parseField = (
  */
 export class ParsedRow extends S.Class<ParsedRow>($I`ParsedRow`)(
   {
-    cursor: S.Int.check(isNonNegative),
+    cursor: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     row: S.Array(S.String),
   },
   $I.annote("ParsedRow", {

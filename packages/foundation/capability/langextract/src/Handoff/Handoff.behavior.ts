@@ -7,9 +7,9 @@
 
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Contract } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { DocumentId } from "@beep/nlp/Core";
 import type { AnnotatedDocumentInput } from "./Handoff.model.ts";
@@ -87,7 +87,7 @@ export const toAnnotatedDocument = (input: AnnotatedDocumentInput): Contract.Ann
       id: chunkId,
       kind: "document",
       provenance,
-      span: Contract.Span.make({ end: NonNegativeInt.make(Str.length(input.text)), start: NonNegativeInt.make(0) }),
+      span: Contract.Span.make({ end: S.Natural.make(Str.length(input.text)), start: S.Natural.make(0) }),
       text: input.text,
     })
   );

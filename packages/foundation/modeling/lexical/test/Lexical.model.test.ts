@@ -23,7 +23,6 @@ import {
   TextNode,
 } from "@beep/lexical-schema";
 import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
-import { PosInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -42,6 +41,8 @@ import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { createEditor } from "lexical";
 import type { SerializedTableCellNode } from "@lexical/table";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeEditorStateWireFromJson = S.decodeEffect(EditorStateWireFromJson);
 const decodeEditorStateFromJsonResult = S.decodeResult(EditorStateFromJson, { onExcessProperty: "error" });

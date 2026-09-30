@@ -14,7 +14,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NamedNode } from "@beep/rdf";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Tuple, Effect } from "effect";
 import * as S from "effect/Schema";
 import type * as Event from "effect/eventlog/Event";
@@ -155,9 +155,9 @@ const ExtractionOutcome = LiteralKit(["success", "partial", "failed"]).annotate(
 const ExtractionCompletedPayloadDefinition = S.Struct({
   batchId: BatchId,
   ontologyId: OntologyName,
-  entityCount: NonNegativeInt,
-  relationCount: NonNegativeInt,
-  tripleCount: NonNegativeInt,
+  entityCount: S.Natural,
+  relationCount: S.Natural,
+  tripleCount: S.Natural,
   outputUri: S.OptionFromOptionalKey(GcsUri).pipe(S.withConstructorDefault(Effect.succeedNone)),
   status: ExtractionOutcome,
   timestamp: S.DateTimeUtcFromString,
@@ -172,8 +172,8 @@ const ValidationFailedPayloadDefinition = S.Struct({
   batchId: BatchId,
   validationId: S.NonEmptyString,
   ontologyId: OntologyName,
-  errorCount: NonNegativeInt,
-  warningCount: NonNegativeInt,
+  errorCount: S.Natural,
+  warningCount: S.Natural,
   reportUri: S.OptionFromOptionalKey(GcsUri).pipe(S.withConstructorDefault(Effect.succeedNone)),
   timestamp: S.DateTimeUtcFromString,
 });

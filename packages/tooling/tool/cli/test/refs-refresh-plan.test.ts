@@ -1,7 +1,6 @@
 import { fcRuns } from "@beep/fc-runs";
 import { GraftDeepCoverage } from "@beep/repo-cli/commands/Graft";
 import { ReferenceWorkspaceManifest, RefsRefreshPreflight, RefsRefreshStatus } from "@beep/repo-cli/commands/Refs";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Effect } from "effect";
@@ -213,9 +212,9 @@ describe("reference planning and refresh", () => {
           assertSome(
             status.members[0]?.coverage ?? O.none(),
             GraftDeepCoverage.make({
-              covered: NonNegativeInt.make(9),
-              total: NonNegativeInt.make(10),
-              failedFiles: NonNegativeInt.make(1),
+              covered: S.Natural.make(9),
+              total: S.Natural.make(10),
+              failedFiles: S.Natural.make(1),
             })
           );
           assertNone(status.members[1]?.coverage ?? O.none());
