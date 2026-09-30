@@ -431,6 +431,39 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("parity occurrence ident
     })
   );
 
+  it.effect("groups the backlog into rows sorted by file then rule, with sorted anchors", () =>
+    Effect.sync(() => {
+      const entry = (file: string, ruleId: "SFV4-default-wrapper" | "SFV4-opaque-wrapper", occurrence: string) =>
+        SchemaFirstInventoryEntry.make({
+          file,
+          symbol: "Widget",
+          kind: "schema-policy-advisory",
+          status: "advisory",
+          ruleId,
+          occurrence,
+          owner: "@beep/example",
+          reason: "parity occurrence",
+        });
+
+      const rows = toSchemaFirstBacklog([
+        entry("packages/b/src/B.ts", "SFV4-default-wrapper", "Widget::withEncodeDefault@bbbbbbbbbbbb"),
+        entry("packages/a/src/A.ts", "SFV4-opaque-wrapper", "Widget::Defect@aaaaaaaaaaaa"),
+        entry("packages/a/src/A.ts", "SFV4-default-wrapper", "Widget::withEncodeDefault@cccccccccccc"),
+        entry("packages/a/src/A.ts", "SFV4-default-wrapper", "Widget::boolWithDefault@111111111111"),
+      ]);
+
+      expect(A.map(rows, (row) => [row.file, row.ruleId, row.occurrences])).toEqual([
+        [
+          "packages/a/src/A.ts",
+          "SFV4-default-wrapper",
+          ["Widget::boolWithDefault@111111111111", "Widget::withEncodeDefault@cccccccccccc"],
+        ],
+        ["packages/a/src/A.ts", "SFV4-opaque-wrapper", ["Widget::Defect@aaaaaaaaaaaa"]],
+        ["packages/b/src/B.ts", "SFV4-default-wrapper", ["Widget::withEncodeDefault@bbbbbbbbbbbb"]],
+      ]);
+    })
+  );
+
   it.effect("falls back to #n only for byte-identical calls on one path", () =>
     Effect.gen(function* () {
       const [first, second] = anchors(yield* parityEntries(unionSource(["S.String", "S.String"])));
