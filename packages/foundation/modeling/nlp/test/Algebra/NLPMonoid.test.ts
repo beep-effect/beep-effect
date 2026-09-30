@@ -30,6 +30,9 @@ const decodeNLPTextAnalysis = S.decodeEffect(NLP.TextAnalysis);
 const encodeNLPDependencyEdge = S.encodeEffect(NLP.DependencyEdge);
 const encodeNLPDocumentStatistics = S.encodeEffect(NLP.DocumentStatistics);
 const encodeNLPTextAnalysis = S.encodeEffect(NLP.TextAnalysis);
+const encodeUnknownNLPTextAnalysis = S.encodeUnknownEffect(NLP.TextAnalysis);
+const decodeUnknownNLPBagOfWords = S.decodeUnknownEffect(NLP.BagOfWords);
+const isNLPBagOfWords = S.is(NLP.BagOfWords);
 
 const mutableHashMapEquals = <K, V>(
   a: MutableHashMap.MutableHashMap<K, V>,
@@ -187,6 +190,37 @@ describe("Linguistic Monoids", () => {
     );
     testMonoidLaws("AnnotationMap", NLP.AnnotationMap<number, string>(), annotationArbitrary, mutableHashMapEquals);
   });
+});
+
+describe("BagOfWords", () => {
+  it("accepts string terms with finite counts", () => {
+    expect(isNLPBagOfWords(MutableHashMap.make(["effect", 2], ["schema", 0.5]))).toBe(true);
+    expect(isNLPBagOfWords(MutableHashMap.empty<string, number>())).toBe(true);
+  });
+
+  it("rejects non-finite counts, non-number counts, and non-string terms", () => {
+    expect(isNLPBagOfWords(MutableHashMap.make(["x", Number.POSITIVE_INFINITY]))).toBe(false);
+    expect(isNLPBagOfWords(MutableHashMap.make(["x", Number.NaN]))).toBe(false);
+    expect(isNLPBagOfWords(MutableHashMap.make(["x", "no"]))).toBe(false);
+    expect(isNLPBagOfWords(MutableHashMap.make([1, 1]))).toBe(false);
+    expect(isNLPBagOfWords(new Map([["x", 1]]))).toBe(false);
+  });
+
+  it.effect("fails decode and encode of a text analysis carrying an invalid bag", () =>
+    Effect.gen(function* () {
+      const analysis = {
+        bow: MutableHashMap.make(["x", Number.POSITIVE_INFINITY]),
+        entities: [],
+        sentenceCount: 1,
+        vocabulary: HashSet.make("x"),
+      };
+      const decoded = yield* analysis.bow.pipe(decodeUnknownNLPBagOfWords, Effect.exit);
+      const encoded = yield* Effect.exit(encodeUnknownNLPTextAnalysis(analysis));
+
+      expect(decoded._tag).toBe("Failure");
+      expect(encoded._tag).toBe("Failure");
+    })
+  );
 });
 
 describe("TextAnalysis", () => {

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { ArrayOfStrings } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoUtilsId.create("JSDoc/models/TagParameters.model");
@@ -50,7 +49,7 @@ export class TagParameters extends S.Class<TagParameters>($I`TagParameters`)(
       description: "Whether free-text description is accepted",
     }),
     /** For tags with constrained values, the allowed options */
-    allowedValues: S.OptionFromOptionalKey(ArrayOfStrings).annotateKey({
+    allowedValues: S.String.pipe(S.Array, S.OptionFromOptionalKey).annotateKey({
       description: "For tags with constrained values, the allowed options",
     }),
   },

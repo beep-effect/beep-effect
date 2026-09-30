@@ -23,6 +23,14 @@ const decodeUnknownColorColorAmount = S.decodeUnknownEffect(Color.ColorAmount);
 const decodeUnknownColorHexToRgb = S.decodeUnknownEffect(Color.HexToRgb);
 const decodeUnknownColorRgbToHex = S.decodeUnknownEffect(Color.RgbToHex);
 const encodeColorColorAmount = S.encodeEffect(Color.ColorAmount);
+const encodeColorDarken = S.encodeEffect(Color.Darken);
+const encodeColorLighten = S.encodeEffect(Color.Lighten);
+const encodeColorMixColors = S.encodeEffect(Color.MixColors);
+const encodeColorOklchToHex = S.encodeEffect(Color.OklchToHex);
+const encodeColorOklchToRgb = S.encodeEffect(Color.OklchToRgb);
+const encodeColorRgbToHex = S.encodeEffect(Color.RgbToHex);
+const encodeColorRgbToOklch = S.encodeEffect(Color.RgbToOklch);
+const encodeColorWithAlpha = S.encodeEffect(Color.WithAlpha);
 
 describe("Color", () => {
   it.effect(
@@ -73,6 +81,37 @@ describe("Color", () => {
       expect(yield* decodeColorLighten({ color: "#000", amount: 1 })).toBe("#ffffff");
       expect(yield* decodeColorDarken({ color: "#fff", amount: 1 })).toBe("#000000");
       expect(yield* decodeColorWithAlpha({ color: "#336699", alpha: 0.25 })).toBe("rgba(51, 102, 153, 0.25)");
+    })
+  );
+
+  it.effect(
+    "refuses to encode one-way conversion and adjustment results",
+    Effect.fnUntraced(function* () {
+      const forbiddenMessage = <A>(effect: Effect.Effect<A, S.SchemaError>) =>
+        Effect.match(effect, { onFailure: (error) => error.message, onSuccess: () => "encoded" });
+      const hex = yield* decodeColorRgbToHex({ r: 0, g: 0, b: 1 });
+      const oklch = yield* decodeColorRgbToOklch({ r: 0, g: 0, b: 1 });
+      const rgb = yield* decodeColorOklchToRgb({ l: 0.5, c: 0.1, h: 120 });
+      const oklchHex = yield* decodeColorOklchToHex(oklch);
+      const mixed = yield* decodeColorMixColors({ color1: "#000", color2: "#fff", amount: 0.5 });
+      const lighter = yield* decodeColorLighten({ color: "#000", amount: 1 });
+      const darker = yield* decodeColorDarken({ color: "#fff", amount: 1 });
+      const translucent = yield* decodeColorWithAlpha({ color: "#336699", alpha: 0.25 });
+
+      expect(yield* forbiddenMessage(encodeColorRgbToHex(hex))).toContain("Encoding RgbToHex results back to RGB");
+      expect(yield* forbiddenMessage(encodeColorRgbToOklch(oklch))).toContain(
+        "Encoding RgbToOklch results back to RGB"
+      );
+      expect(yield* forbiddenMessage(encodeColorOklchToRgb(rgb))).toContain(
+        "Encoding OklchToRgb results back to OKLCH"
+      );
+      expect(yield* forbiddenMessage(encodeColorOklchToHex(oklchHex))).toContain(
+        "Encoding OklchToHex results back to OKLCH"
+      );
+      expect(yield* forbiddenMessage(encodeColorMixColors(mixed))).toContain("Encoding MixColors results back");
+      expect(yield* forbiddenMessage(encodeColorLighten(lighter))).toContain("Encoding Lighten results back");
+      expect(yield* forbiddenMessage(encodeColorDarken(darker))).toContain("Encoding Darken results back");
+      expect(yield* forbiddenMessage(encodeColorWithAlpha(translucent))).toContain("Encoding WithAlpha results back");
     })
   );
 

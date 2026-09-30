@@ -5,15 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import {
-  ArrayOfNonEmptyStrings,
-  FilePath,
-  LiteralKit,
-  NonNegativeInt,
-  SchemaUtils,
-  Sha256Hex,
-  Sha256HexFromBytes,
-} from "@beep/schema";
+import { FilePath, LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, Match, Result, SchemaGetter, Tuple } from "effect";
 import * as S from "effect/Schema";
@@ -1427,10 +1419,10 @@ export class Symbol extends S.Class<Symbol>($I`Symbol`)(
     summary: S.OptionFromNullOr(S.NonEmptyString).annotateKey({
       description: "Optional one-line summary for quick retrieval results.",
     }),
-    decorators: ArrayOfNonEmptyStrings.annotateKey({
+    decorators: S.Array(S.NonEmptyString).annotateKey({
       description: "Decorator names or decorator expressions applied to the symbol.",
     }),
-    keywords: ArrayOfNonEmptyStrings.annotateKey({
+    keywords: S.Array(S.NonEmptyString).annotateKey({
       description: "Search keywords derived from the symbol.",
     }),
     parentId: S.OptionFromNullOr(SymbolId).annotateKey({
