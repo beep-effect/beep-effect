@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError } from "@beep/repo-utils";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { HUNDRED as HUNDRED_PERCENTAGE, Percentage, ZERO as ZERO_PERCENTAGE } from "@beep/schema/Percentage";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
@@ -568,7 +568,7 @@ export class CoverageBaselineChangeSet extends S.Class<CoverageBaselineChangeSet
   {
     baseDescription: S.NonEmptyString,
     packageNames: S.Array(S.String),
-    dependentPackageNames: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
+    dependentPackageNames: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([]))),
     fullReasons: S.Array(S.String),
   },
   $I.annote("CoverageBaselineChangeSet", {
@@ -615,7 +615,7 @@ export class CoverageBaselineWritePlan extends S.Class<CoverageBaselineWritePlan
     changeSet: CoverageBaselineChangeSet,
     packages: S.Record(S.String, CoveragePackageBaseline),
     dispositions: S.Record(S.String, CoverageBaselineRowDisposition),
-    carriedUnmeasured: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
+    carriedUnmeasured: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([]))),
   },
   $I.annote("CoverageBaselineWritePlan", {
     description:
@@ -642,7 +642,7 @@ export class CoverageBaselineWritePlan extends S.Class<CoverageBaselineWritePlan
  */
 const CoverageComparisonFailureFields = {
   actual: Percentage,
-  filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   metric: CoverageMetricName,
   packageName: S.String,
   packagePath: CoverageRepoRelativePackagePath,
@@ -656,8 +656,11 @@ class CoverageBaselineDropFailure extends S.TaggedClass<CoverageBaselineDropFail
     // Present only when this pull request lowered the row and the package was
     // not allowed to judge itself: the diagnostic then names both the value the
     // branch proposed and the witness that withheld it.
-    loweredTo: Percentage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    loweredExclusion: CoverageSelfJudgeExclusion.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    loweredTo: Percentage.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    loweredExclusion: CoverageSelfJudgeExclusion.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("CoverageBaselineDropFailure", {
     description: "One package or existing-file metric that dropped below its committed baseline.",
@@ -773,7 +776,7 @@ export class CoverageLoweredFloor extends S.Class<CoverageLoweredFloor>($I`Cover
   {
     packageName: S.String,
     packagePath: CoverageRepoRelativePackagePath,
-    filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     metric: CoverageMetricName,
     base: Percentage,
     lowered: Percentage,
@@ -821,7 +824,7 @@ export class CoverageLoweredFloor extends S.Class<CoverageLoweredFloor>($I`Cover
 export class CoverageMeasuredRowProposal extends S.Class<CoverageMeasuredRowProposal>($I`CoverageMeasuredRowProposal`)(
   {
     packageName: S.String,
-    filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     row: CoverageFileBaseline,
   },
   $I.annote("CoverageMeasuredRowProposal", {
@@ -906,16 +909,18 @@ export class CoverageComparisonResult extends S.Class<CoverageComparisonResult>(
     newPackages: S.Array(CoverageSnapshotEntry),
     followUpDebt: S.Array(CoverageSnapshotEntry),
     loweredFloors: S.Array(CoverageLoweredFloor).pipe(
-      SchemaUtils.withConstantDefault<ReadonlyArray<CoverageLoweredFloor>>([])
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<CoverageLoweredFloor>>([]))
     ),
     measuredProposals: S.Array(CoverageMeasuredRowProposal).pipe(
-      SchemaUtils.withConstantDefault<ReadonlyArray<CoverageMeasuredRowProposal>>([])
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<CoverageMeasuredRowProposal>>([]))
     ),
     packageRowRemovals: S.Array(CoveragePackageRowRemovedFailure).pipe(
-      SchemaUtils.withConstantDefault<ReadonlyArray<CoveragePackageRowRemovedFailure>>([])
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<CoveragePackageRowRemovedFailure>>([]))
     ),
-    selfJudgeEligiblePackageNames: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
-    basePinned: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(false)),
+    selfJudgeEligiblePackageNames: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([]))
+    ),
+    basePinned: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed<boolean>(false))),
   },
   $I.annote("CoverageComparisonResult", {
     description: "Outcome of comparing current coverage against the committed baseline.",
@@ -968,8 +973,8 @@ export class CoverageComparisonBaselines extends S.Class<CoverageComparisonBasel
     // The merge-base document decides authorship: a row that differs from it is
     // one this branch wrote. Reading the base tip instead would attribute every
     // row `main` moved after the branch diverged to the branch.
-    mergeBase: CoverageRegressionBaseline.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    selfJudge: CoverageSelfJudgeScope.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    mergeBase: CoverageRegressionBaseline.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    selfJudge: CoverageSelfJudgeScope.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CoverageComparisonBaselines", {
     description: "Base-pinned comparison floors plus the branch's own baseline rows when a base is pinned.",
@@ -1451,7 +1456,7 @@ export class CoverageBaselineWriteOptions extends S.Class<CoverageBaselineWriteO
   $I`CoverageBaselineWriteOptions`
 )(
   {
-    carryUnmeasured: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(false)),
+    carryUnmeasured: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed<boolean>(false))),
     replaceAll: S.Boolean,
   },
   $I.annote("CoverageBaselineWriteOptions", {

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LogLevel } from "@beep/schema";
+import * as LogLevel from "effect/LogLevel";
 import * as S from "effect/Schema";
 
 const $I = $ObservabilityId.create("CoreConfig");
@@ -42,15 +42,9 @@ const ObservabilityCoreConfigFields = {
  * @category models
  * @since 0.0.0
  */
-export const ObservabilityCoreConfig = LogLevel.toTaggedUnion("minLogLevel")({
-  All: ObservabilityCoreConfigFields,
-  Fatal: ObservabilityCoreConfigFields,
-  Error: ObservabilityCoreConfigFields,
-  Warn: ObservabilityCoreConfigFields,
-  Info: ObservabilityCoreConfigFields,
-  Debug: ObservabilityCoreConfigFields,
-  Trace: ObservabilityCoreConfigFields,
-  None: ObservabilityCoreConfigFields,
+export const ObservabilityCoreConfig = S.Struct({
+  minLogLevel: S.Literals(LogLevel.values),
+  ...ObservabilityCoreConfigFields,
 }).pipe(
   $I.annoteSchema("ObservabilityCoreConfig", {
     description: "Browser-safe shared observability configuration.",

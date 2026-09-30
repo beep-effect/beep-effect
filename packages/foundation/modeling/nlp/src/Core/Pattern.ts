@@ -8,7 +8,7 @@
 import { $NlpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -536,7 +536,7 @@ export class Pattern extends S.TaggedClass<Pattern>($I`Pattern`)(
   {
     elements: S.Chunk(PatternElement),
     id: PatternId,
-    mark: S.OptionFromOptionalKey(MarkRange).pipe(SchemaUtils.withNoneDefault),
+    mark: S.OptionFromOptionalKey(MarkRange).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Pattern", {
     description: "Ordered sequence of NLP pattern elements with optional marked span.",

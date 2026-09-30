@@ -5,11 +5,12 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, URLStr } from "@beep/schema";
+import { LiteralKit, URLStr } from "@beep/schema";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EnrichedContent");
 
@@ -62,6 +63,8 @@ export const SourceType = LiteralKit(["news", "blog", "press_release", "official
  */
 export type SourceType = typeof SourceType.Type;
 
+const enrichedContentKeyEntitiesDefault = A.empty<string>();
+const enrichedContentTopicsDefault = A.empty<string>();
 /**
  * AI-derived metadata for one ingested content source.
  *
@@ -105,37 +108,37 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
       description: "Classification assigned to the source.",
     }),
     publishedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Original publication instant when the source provides one.",
       })
     ),
     author: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Attributed author when one can be identified.",
       })
     ),
     organization: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Publishing organization when one can be identified.",
       })
     ),
     keyEntities: S.Array(S.NonEmptyString).pipe(
-      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.withConstructorDefault(Effect.succeed(enrichedContentKeyEntitiesDefault)), S.withDecodingDefaultType(Effect.succeed(enrichedContentKeyEntitiesDefault)),
       S.annotateKey({
         description: "Prominent named entities detected in the source.",
       })
     ),
     topics: S.Array(S.NonEmptyString).pipe(
-      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.withConstructorDefault(Effect.succeed(enrichedContentTopicsDefault)), S.withDecodingDefaultType(Effect.succeed(enrichedContentTopicsDefault)),
       S.annotateKey({
         description: "Topic labels assigned to the source.",
       })
     ),
     language: LanguageCode.pipe(
-      SchemaUtils.withKeyDefaults("en"),
+      S.withConstructorDefault(Effect.succeed("en")), S.withDecodingDefaultTypeKey(Effect.succeed("en")),
       S.annotateKey({
         description: "Detected ISO 639-1 language code, defaulting to English.",
       })
@@ -240,31 +243,31 @@ export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
       description: "Cleaned Markdown content returned by the reader.",
     }),
     length: S.OptionFromOptionalKey(S.Natural).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Reader-reported character count when available.",
       })
     ),
     description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Page metadata description when available.",
       })
     ),
     publishedDate: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Publication date text reported by the remote page.",
       })
     ),
     siteName: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "OpenGraph or metadata site name when available.",
       })
     ),
     image: S.OptionFromOptionalKey(URLStr).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Featured-image URL when provided by the page.",
       })

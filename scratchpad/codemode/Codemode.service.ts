@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -34,7 +33,7 @@ const $I = $ScratchpadId.create("codemode/Codemode.service");
  *
  * **Gotchas**
  *
- * Omitted fields decode to `O.none()` via `withNoneDefault`. That is an explicit
+ * Omitted fields decode to `O.none()` via `S.OptionFromOptionalKey`. That is an explicit
  * Option-owned "no limit", not an unlimited numeric sentinel.
  *
  * **Example** (Decode omitted vs present limits)
@@ -57,9 +56,9 @@ const $I = $ScratchpadId.create("codemode/Codemode.service");
  */
 export class ExecutionLimits extends S.Class<ExecutionLimits>($I`ExecutionLimits`)(
   {
-    timeoutMs: S.OptionFromOptionalKey(PosInt).pipe(SchemaUtils.withNoneDefault),
-    maxToolCalls: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
-    maxOutputBytes: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+    timeoutMs: S.OptionFromOptionalKey(PosInt).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    maxToolCalls: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    maxOutputBytes: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ExecutionLimits", {
     description: "Optional per-execution limits decoded once into Effect Option values.",
@@ -95,7 +94,7 @@ export class InvalidExecutionLimits extends S.TaggedError<InvalidExecutionLimits
   "InvalidExecutionLimits",
   {
     message: S.String,
-    cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(S.Defect()).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("InvalidExecutionLimits", {
     description: "Execution limits failed schema validation.",

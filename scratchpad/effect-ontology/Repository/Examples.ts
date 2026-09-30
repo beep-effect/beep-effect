@@ -205,6 +205,8 @@ export const ScoredExample = S.Struct({
  */
 export type ScoredExample = typeof ScoredExample.Type;
 
+const exampleRetrievalOptionsKDefault = PosInt.make(5);
+const exampleRetrievalOptionsMinSimilarityDefault = UnitInterval.make(0.6);
 /**
  * Validated retrieval count, threshold, optional ontology filters, and
  * negative-example policy.
@@ -224,11 +226,11 @@ export type ScoredExample = typeof ScoredExample.Type;
  */
 export class ExampleRetrievalOptions extends S.Class<ExampleRetrievalOptions>($I`ExampleRetrievalOptions`)(
   {
-    k: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(5))),
-    minSimilarity: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.6))),
+    k: PosInt.pipe(S.withConstructorDefault(Effect.succeed(exampleRetrievalOptionsKDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(exampleRetrievalOptionsKDefault))),
+    minSimilarity: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(exampleRetrievalOptionsMinSimilarityDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(exampleRetrievalOptionsMinSimilarityDefault))),
     targetClass: S.optionalKey(S.NonEmptyString),
     targetPredicate: S.optionalKey(S.NonEmptyString),
-    includeNegatives: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    includeNegatives: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
   },
   $I.annote("ExampleRetrievalOptions", {
     description: "Validated retrieval count, threshold, optional ontology filters, and negative-example policy.",
@@ -271,7 +273,7 @@ export class CreateExampleInput extends S.Class<CreateExampleInput>($I`CreateExa
   {
     ontologyId: S.NonEmptyString,
     exampleType: ExampleType,
-    source: ExampleSource.pipe(SchemaUtils.withKeyDefaults(ExampleSource.Enum.manual)),
+    source: ExampleSource.pipe(S.withConstructorDefault(Effect.succeed(ExampleSource.Enum.manual)), S.withDecodingDefaultTypeKey(Effect.succeed(ExampleSource.Enum.manual))),
     inputText: S.NonEmptyString,
     targetClass: S.optionalKey(S.NonEmptyString),
     targetPredicate: S.optionalKey(S.NonEmptyString),
@@ -282,7 +284,7 @@ export class CreateExampleInput extends S.Class<CreateExampleInput>($I`CreateExa
     promptMessages: S.optionalKey(PromptMessages),
     explanation: S.optionalKey(S.NonEmptyString),
     embedding: S.Array(S.Finite),
-    isNegative: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    isNegative: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
     negativePattern: S.optionalKey(S.NonEmptyString),
     createdBy: S.optionalKey(S.NonEmptyString),
   },

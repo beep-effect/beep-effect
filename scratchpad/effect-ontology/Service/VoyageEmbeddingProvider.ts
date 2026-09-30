@@ -216,7 +216,7 @@ const VoyageUsage = S.Struct({
 
 const VoyageResponseSchema = S.Struct({
   // Note: `object` field is optional - Voyage API may omit it
-  object: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  object: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   data: S.Array(VoyageEmbeddingData),
   model: S.String,
   usage: VoyageUsage,
@@ -227,7 +227,7 @@ const VoyageResponseSchema = S.Struct({
  * API returns { "detail": "error message" } for non-2xx responses
  */
 const VoyageErrorSchema = S.Struct({
-  detail: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  detail: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 });
 
 // =============================================================================
@@ -327,8 +327,8 @@ const mapVoyageError = (error: unknown, timeout: Duration.Duration): AnyEmbeddin
 export class VoyageProviderConfig extends S.Class<VoyageProviderConfig>($I`VoyageProviderConfig`)(
   {
     apiKey: S.Redacted(S.NonEmptyString),
-    model: VoyageModel.pipe(SchemaUtils.withKeyDefaults(DEFAULT_VOYAGE_MODEL)),
-    timeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT)),
+    model: VoyageModel.pipe(S.withConstructorDefault(Effect.succeed<typeof DEFAULT_VOYAGE_MODEL>(DEFAULT_VOYAGE_MODEL)), S.withDecodingDefaultTypeKey(Effect.succeed<typeof DEFAULT_VOYAGE_MODEL>(DEFAULT_VOYAGE_MODEL))),
+    timeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT)), S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT))),
   },
   $I.annote("VoyageProviderConfig", {
     description: "Secret API credential, supported model, and request timeout for Voyage embeddings.",

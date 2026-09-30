@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $ProfessionalDesktopId.create("transport/SidecarTransport");
@@ -29,7 +29,7 @@ const $I = $ProfessionalDesktopId.create("transport/SidecarTransport");
 export class SidecarTransport extends S.Class<SidecarTransport>($I`SidecarTransport`)(
   {
     ipc: S.Boolean,
-    rpcSessionToken: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    rpcSessionToken: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SidecarTransport", {
     description: "The transport used to communicate with the sidecar.",

@@ -6,6 +6,7 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { StatutesAtLargeComponentSpan } from "../ComponentSpan/index.ts";
@@ -61,7 +62,7 @@ export class StatutesAtLargeCitation extends S.Class<StatutesAtLargeCitation>($I
     }),
     pincite: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           'Specific pincite page, from a trailing ", NNN" suffix (100 Stat. 3743, 3755 -> page=3743, pincite=3755) (#639).',
@@ -69,7 +70,7 @@ export class StatutesAtLargeCitation extends S.Class<StatutesAtLargeCitation>($I
     ),
     pinciteEndPage: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "End page for range pincites (3755-58 -> 3758) (#639).",
       })
@@ -81,14 +82,14 @@ export class StatutesAtLargeCitation extends S.Class<StatutesAtLargeCitation>($I
     ),
     year: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Publication year (if extracted).",
       })
     ),
     spans: StatutesAtLargeComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating the sub-parts of this citation within the source text.",
       })

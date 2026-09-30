@@ -19,10 +19,11 @@ import { $ScratchpadId } from "@beep/identity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { AbsoluteIRI, NamedNode, ObjectTerm } from "@beep/rdf";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { DateTime, SchemaGetter } from "effect";
+import { DateTime, SchemaGetter, Effect } from "effect";
 import * as S from "effect/Schema";
 import { GcsUri, withContentHashIdStatics } from "../Identity.ts";
 import { EventId as CanonicalEventId } from "../Model/CoreOntology.ts";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/KnowledgeModel");
 
@@ -340,7 +341,7 @@ export class Evidence extends S.Class<Evidence>($I`Evidence`)(
       description: "Non-empty collection of source-text spans supporting the claim.",
     }),
     context: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional section or paragraph context.",
       })
@@ -523,8 +524,8 @@ export class Claim extends S.Class<Claim>($I`Claim`)(
     evidence: Evidence,
     extractedAt: S.DateTimeUtcFromString,
     confidence: Confidence,
-    rank: ClaimRank.pipe(SchemaUtils.withKeyDefaults(ClaimRank.Enum.normal)),
-    validity: S.OptionFromOptionalKey(TemporalInterval).pipe(SchemaUtils.withNoneDefault),
+    rank: ClaimRank.pipe(S.withConstructorDefault(Effect.succeed(ClaimRank.Enum.normal)), S.withDecodingDefaultTypeKey(Effect.succeed(ClaimRank.Enum.normal))),
+    validity: S.OptionFromOptionalKey(TemporalInterval).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Claim", {
     description: "Provenance-bearing reported RDF fact with confidence, rank, and optional ordered validity.",
@@ -610,7 +611,7 @@ export class Assertion extends S.Class<Assertion>($I`Assertion`)(
     assertedAt: S.DateTimeUtcFromString,
     derivedFrom: ClaimId.pipe(S.NonEmptyArray),
     status: AssertionStatus,
-    validity: S.OptionFromOptionalKey(TemporalInterval).pipe(SchemaUtils.withNoneDefault),
+    validity: S.OptionFromOptionalKey(TemporalInterval).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Assertion", {
     description: "Curated RDF fact supported by one or more claims and carrying explicit curation status.",
@@ -771,13 +772,13 @@ export class EntityRef extends S.Class<EntityRef>($I`EntityRef`)(
       description: "Canonical RDF/JS named node identifying the participant.",
     }),
     role: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional semantic or presentation role in the event.",
       })
     ),
     label: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional display label.",
       })
@@ -790,6 +791,9 @@ export class EntityRef extends S.Class<EntityRef>($I`EntityRef`)(
   static readonly is = S.is(EntityRef);
 }
 
+const eventParticipantsDefault = A.empty<EntityRef>();
+const eventFactGroupDefault = A.empty<AssertionId>();
+const eventTagsDefault = A.empty<string>();
 /**
  * First-class real-world event grouping participants and curated facts.
  *
@@ -822,15 +826,15 @@ export class Event extends S.Class<Event>($I`Event`)(
   {
     id: EventId,
     type: EventType,
-    title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
+    title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     publishedAt: S.DateTimeUtcFromString,
-    ingestedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    participants: S.Array(EntityRef).pipe(SchemaUtils.withEmptyArrayDefaults<EntityRef>()),
-    factGroup: S.Array(AssertionId).pipe(SchemaUtils.withEmptyArrayDefaults<AssertionId>()),
+    ingestedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    participants: S.Array(EntityRef).pipe(S.withConstructorDefault(Effect.succeed(eventParticipantsDefault)), S.withDecodingDefaultType(Effect.succeed(eventParticipantsDefault))),
+    factGroup: S.Array(AssertionId).pipe(S.withConstructorDefault(Effect.succeed(eventFactGroupDefault)), S.withDecodingDefaultType(Effect.succeed(eventFactGroupDefault))),
     sourceDocuments: GcsUri.pipe(S.NonEmptyArray),
-    summary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    tags: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    summary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    tags: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(eventTagsDefault)), S.withDecodingDefaultType(Effect.succeed(eventTagsDefault))),
   },
   $I.annote("Event", {
     description: "First-class timeline event with validated time, participants, curated facts, and source provenance.",

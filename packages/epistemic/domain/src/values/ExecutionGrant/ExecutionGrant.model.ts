@@ -17,6 +17,7 @@ import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("values/ExecutionGrant/ExecutionGrant.model");
@@ -373,7 +374,7 @@ export type PolicyRevision = typeof PolicyRevision.Type;
  */
 export class GrantBudget extends S.Class<GrantBudget>($I`GrantBudget`)(
   {
-    maxToolCalls: S.Natural.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault).annotateKey({
+    maxToolCalls: S.Natural.pipe(S.OptionFromNullOr, S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Recorded ceiling on tool calls; not enforced in v1.",
     }),
   },

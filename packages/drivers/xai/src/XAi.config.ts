@@ -6,9 +6,9 @@
  */
 
 import { $XaiId } from "@beep/identity";
-import { SchemaUtils, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { identity, SchemaTransformation } from "effect";
+import { Effect, identity, SchemaTransformation } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
@@ -148,6 +148,7 @@ export const XAI_MANAGEMENT_API_URL = "https://management-api.x.ai";
  */
 export const XAI_WEBSOCKET_URL = "wss://api.x.ai";
 
+const xAiConfigInputHeadersDefault = R.empty();
 /**
  * Runtime configuration accepted by {@link XAi.makeLayer}.
  *
@@ -171,12 +172,28 @@ export const XAI_WEBSOCKET_URL = "wss://api.x.ai";
  */
 export class XAiConfigInput extends S.Class<XAiConfigInput>($I`XAiConfigInput`)(
   {
-    apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(SchemaUtils.withNoneDefault),
-    apiUrl: XAiHttpBaseUrl.pipe(SchemaUtils.withKeyDefaults(XAI_API_URL)),
-    headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())),
-    managementApiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(SchemaUtils.withNoneDefault),
-    managementApiUrl: XAiHttpBaseUrl.pipe(SchemaUtils.withKeyDefaults(XAI_MANAGEMENT_API_URL)),
-    websocketUrl: XAiWebSocketBaseUrl.pipe(SchemaUtils.withKeyDefaults(XAI_WEBSOCKET_URL)),
+    apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    apiUrl: XAiHttpBaseUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(XAI_API_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(XAI_API_URL))
+    ),
+    headers: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(xAiConfigInputHeadersDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(xAiConfigInputHeadersDefault))
+    ),
+    managementApiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    managementApiUrl: XAiHttpBaseUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(XAI_MANAGEMENT_API_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(XAI_MANAGEMENT_API_URL))
+    ),
+    websocketUrl: XAiWebSocketBaseUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(XAI_WEBSOCKET_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(XAI_WEBSOCKET_URL))
+    ),
   },
   $I.annote("XAiConfigInput", {
     description: "Runtime configuration accepted by the xAI driver layer.",

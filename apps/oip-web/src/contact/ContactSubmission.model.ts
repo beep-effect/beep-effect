@@ -6,7 +6,7 @@
  */
 
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TrimmedNonEmptyText } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, pipe, Result, SchemaTransformation } from "effect";
@@ -17,7 +17,8 @@ const $I = $OipWebId.create("contact/ContactSubmission.model");
 
 const contactEmailPattern =
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
-const TrimmedContactText = TrimmedNonEmptyText.check(
+const TrimmedText = S.String.pipe(S.decodeTo(S.NonEmptyString, SchemaTransformation.trim()));
+const TrimmedContactText = TrimmedText.check(
   S.isMinLength(1, { arbitraryConstraint: { patterns: [{ source: "^\\S(?:[\\s\\S]{0,80}\\S)?$", flags: "" }] } })
 ).pipe(
   $I.annoteSchema("TrimmedContactText", {
@@ -36,7 +37,7 @@ const ContactName = TrimmedContactText.pipe(
   })
 );
 
-const ContactEmail = TrimmedNonEmptyText.pipe(S.decode(SchemaTransformation.toLowerCase()))
+const ContactEmail = TrimmedText.pipe(S.decode(SchemaTransformation.toLowerCase()))
   .check(
     S.isMaxLength(254, {
       message: "Email must be 254 characters or fewer.",
@@ -172,15 +173,15 @@ export type ContactResponseMessage = typeof ContactResponseMessage.Type;
  */
 export class ContactSubmission extends S.Class<ContactSubmission>($I`ContactSubmission`)(
   {
-    company: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
+    company: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
     email: ContactEmail,
     message: ContactMessage,
     name: ContactName,
-    phone: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
-    posture: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
+    phone: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    posture: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
     submittedAt: S.Natural,
-    technology: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
-    website: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
+    technology: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    website: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ContactSubmission", {
     description: "Browser-submitted OIP contact form payload.",

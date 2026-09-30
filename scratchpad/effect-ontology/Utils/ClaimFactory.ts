@@ -99,6 +99,7 @@ const preferredObservationEvidence = <
 // Types
 // =============================================================================
 
+const claimFactoryOptionsDefaultConfidenceDefault = Confidence.make(0.85);
 /**
  * Options for claim creation
  *
@@ -124,7 +125,7 @@ export class ClaimFactoryOptions extends S.Class<ClaimFactoryOptions>($I`ClaimFa
     documentId: S.NonEmptyString.annotateKey({ description: "Source document identifier stored as the article ID." }),
     ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope assigned to generated claims." }),
     defaultConfidence: Confidence.pipe(
-      SchemaUtils.withKeyDefaults(Confidence.make(0.85)),
+      S.withConstructorDefault(Effect.succeed(claimFactoryOptionsDefaultConfidenceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(claimFactoryOptionsDefaultConfidenceDefault)),
       S.annotateKey({ description: "Confidence used when source evidence has no score." })
     ),
   },
@@ -146,8 +147,8 @@ class IriCollisionEntity extends S.Class<IriCollisionEntity>($I`IriCollisionEnti
   {
     mention: S.NonEmptyString,
     types: S.Array(IRI),
-    documentId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    chunkIndex: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+    documentId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    chunkIndex: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("IriCollisionEntity", {
     description: "Entity details retained when multiple extracted entities map to the same IRI.",

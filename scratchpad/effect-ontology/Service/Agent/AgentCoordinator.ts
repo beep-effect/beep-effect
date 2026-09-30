@@ -24,7 +24,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { Percentage } from "@beep/schema/Percentage";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { thunk0 } from "@beep/utils/thunk";
 import type { Config } from "effect";
 import { Clock, Context, DateTime, Duration, Effect, HashMap, Inspectable, Layer, Match, Ref } from "effect";
@@ -87,10 +86,10 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Agent/AgentCoordinator"
  */
 export class ExecutionPolicy extends S.Class<ExecutionPolicy>($I`ExecutionPolicy`)(
   {
-    agentTimeout: S.Duration.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+    agentTimeout: S.Duration.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Maximum duration allowed for one agent execution.",
     }),
-    continueOnError: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)).annotateKey({
+    continueOnError: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))).annotateKey({
       description: "Whether the pipeline should continue after an agent fails.",
     }),
   },

@@ -8,6 +8,7 @@
 import { $UsptoId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -66,13 +67,13 @@ export type UsptoErrorReason = typeof UsptoErrorReason.Type;
 
 const UsptoErrorContextFields = {
   cause: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({
       description: "Sanitized technical cause when one is available.",
     })
   ),
   status: S.OptionFromOptionalKey(S.Natural).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({
       description: "HTTP response status associated with the failure when one is available.",
     })

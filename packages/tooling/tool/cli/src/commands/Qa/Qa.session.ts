@@ -12,7 +12,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { ActionEvent, decodeActionEventJson, RoundNumber, SessionId, SessionStore } from "@beep/qa-capture";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, O, Str, thunkEmptyReadonlyRecord } from "@beep/utils";
 import { Effect, FileSystem, flow, Path, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -270,13 +270,13 @@ const originsOf = (url: URL): ReadonlyArray<string> => {
 export class CaptureTargetRequest extends S.Class<CaptureTargetRequest>($I`CaptureTargetRequest`)(
   {
     app: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CaptureTargetRequest.app", {
         description: "Portless app name to expand into a dev-server URL.",
       })
     ),
     url: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CaptureTargetRequest.url", {
         description: "Absolute URL, which wins over `app` when both are supplied.",
       })

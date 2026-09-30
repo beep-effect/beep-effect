@@ -31,7 +31,6 @@ import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 // worker, and the barrel pulls Markdown.ts → micromark, whose browser build
 // touches `document` at module top level (ReferenceError in workers).
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, O, Str } from "@beep/utils";
 import { Context, Effect, flow, Layer, MutableHashMap, Order, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -336,7 +335,7 @@ export class OntologyInferenceResult extends S.Class<OntologyInferenceResult>($I
 export class InferOntologySessionInput extends S.Class<InferOntologySessionInput>($I`InferOntologySessionInput`)(
   {
     session: Session,
-    previous: S.OptionFromOptionalKey(OntologyInferenceResult).pipe(SchemaUtils.withNoneDefault),
+    previous: S.OptionFromOptionalKey(OntologyInferenceResult).pipe(S.withConstructorDefault(Effect.succeedNone)),
     driftCap: S.optionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(64)))),
   },
   $I.annote("InferOntologySessionInput", {

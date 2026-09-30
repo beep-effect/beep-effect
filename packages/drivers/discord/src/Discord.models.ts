@@ -6,8 +6,7 @@
  */
 
 import { $DiscordId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
-import { SchemaTransformation } from "effect";
+import { Effect, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -169,7 +168,10 @@ const DiscordHttpSuccessStatus = DiscordHttpStatus.check(
  */
 export class DiscordConfigInput extends S.Class<DiscordConfigInput>($I`DiscordConfigInput`)(
   {
-    baseUrl: DiscordBaseUrl.pipe(SchemaUtils.withKeyDefaults(DISCORD_API_URL)).annotateKey({
+    baseUrl: DiscordBaseUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(DISCORD_API_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DISCORD_API_URL))
+    ).annotateKey({
       description: "Discord REST base URL; defaults to Discord's public v10 API.",
     }),
   },
@@ -283,13 +285,13 @@ export class DiscordChannelProof extends S.Class<DiscordChannelProof>($I`Discord
       description: "Discord channel snowflake identifier confirmed by the REST API.",
     }),
     guildId: S.OptionFromOptionalKey(DiscordSnowflake).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Discord guild snowflake identifier when the channel belongs to a guild.",
       })
     ),
     name: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Discord channel display name when returned by the API.",
       })
@@ -342,7 +344,7 @@ export class DiscordMessageProof extends S.Class<DiscordMessageProof>($I`Discord
       description: "Successful HTTP status observed for the message creation request.",
     }),
     timestamp: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Discord message creation timestamp when returned by the API.",
       })

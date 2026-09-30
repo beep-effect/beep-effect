@@ -10,8 +10,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Tuple } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/DurableLocator/DurableLocator.model");
@@ -25,14 +25,14 @@ const DurableLocatorFields = {
     }),
     prefix: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Text immediately preceding the exact quote.",
       })
     ),
     suffix: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Text immediately following the exact quote.",
       })
@@ -52,7 +52,7 @@ const DurableLocatorFields = {
   }),
   occurrence: S.Natural.pipe(
     S.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({
       description:
         "Document-order ordinal among token-bounded hits of exact. Omitted when the span is not a token-bounded hit.",

@@ -11,7 +11,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Effect from "effect/Effect";
@@ -67,10 +66,10 @@ const literalFields: ReadonlyArray<"captureKind" | "captureOwner" | "dueCertaint
 ];
 
 const defaultText = (column: string, value: string) =>
-  SchemaUtils.withKeyDefaults(S.String, value).pipe(pg.text(), pg.columnName(column));
+  S.String.pipe(S.withConstructorDefault(Effect.succeed(value)), S.withDecodingDefaultTypeKey(Effect.succeed(value)), pg.text(), pg.columnName(column));
 
 const stringList = (column: string) =>
-  SchemaUtils.withKeyDefaults(S.Array(S.String), emptyStrings).pipe(pg.jsonb(), pg.columnName(column));
+  S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(emptyStrings)), S.withDecodingDefaultTypeKey(Effect.succeed(emptyStrings)), pg.jsonb(), pg.columnName(column));
 
 const categoryField = S.String.pipe(
   S.decodeTo(
@@ -302,10 +301,7 @@ const emptyItems: ReadonlyArray<ExtractedActionItem> = [];
  */
 export class ActionItemsExtraction extends Model<ActionItemsExtraction>("ActionItemsExtraction")(
   {
-    actionItems: SchemaUtils.withKeyDefaults(S.Array(ExtractedActionItem), emptyItems).pipe(
-      pg.jsonb(),
-      pg.columnName("action_items"),
-    ),
+    actionItems: S.Array(ExtractedActionItem).pipe(S.withConstructorDefault(Effect.succeed(emptyItems)), S.withDecodingDefaultTypeKey(Effect.succeed(emptyItems)), pg.jsonb(), pg.columnName("action_items")),
   },
   $I.annote("ActionItemsExtraction", {
     description: "Extractor action-item list. Invalid elements are dropped before the list is trusted.",
@@ -787,18 +783,9 @@ export class StructuredExtraction extends Model<StructuredExtraction>("Structure
     overview: defaultText("overview", ""),
     emoji: defaultText("emoji", brain),
     category: categoryField,
-    sections: SchemaUtils.withKeyDefaults(S.Array(ExtractedSection), emptySections).pipe(
-      pg.jsonb(),
-      pg.columnName("sections"),
-    ),
-    actionItems: SchemaUtils.withKeyDefaults(S.Array(ExtractedActionItem), emptyItems).pipe(
-      pg.jsonb(),
-      pg.columnName("action_items"),
-    ),
-    events: SchemaUtils.withKeyDefaults(S.Array(ExtractedEvent), emptyEvents).pipe(
-      pg.jsonb(),
-      pg.columnName("events"),
-    ),
+    sections: S.Array(ExtractedSection).pipe(S.withConstructorDefault(Effect.succeed(emptySections)), S.withDecodingDefaultTypeKey(Effect.succeed(emptySections)), pg.jsonb(), pg.columnName("sections")),
+    actionItems: S.Array(ExtractedActionItem).pipe(S.withConstructorDefault(Effect.succeed(emptyItems)), S.withDecodingDefaultTypeKey(Effect.succeed(emptyItems)), pg.jsonb(), pg.columnName("action_items")),
+    events: S.Array(ExtractedEvent).pipe(S.withConstructorDefault(Effect.succeed(emptyEvents)), S.withDecodingDefaultTypeKey(Effect.succeed(emptyEvents)), pg.jsonb(), pg.columnName("events")),
   },
   $I.annote("StructuredExtraction", {
     description: "Full extractor result. Bad list elements and unknown categories do not fail the conversation.",

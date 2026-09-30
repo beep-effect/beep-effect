@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Inference");
 
@@ -150,13 +151,13 @@ export class InferenceRunRequest extends S.Class<InferenceRunRequest>($I`Inferen
       description: "Non-empty input RDF graph serialized as Turtle or TriG.",
     }),
     format: InferenceGraphFormat.pipe(
-      SchemaUtils.withKeyDefaults(InferenceGraphFormat.Enum.turtle),
+      S.withConstructorDefault(Effect.succeed(InferenceGraphFormat.Enum.turtle)), S.withDecodingDefaultTypeKey(Effect.succeed(InferenceGraphFormat.Enum.turtle)),
       S.annotateKey({
         description: "Concrete syntax used by inputGraph; defaults to Turtle.",
       })
     ),
     profile: ReasoningProfile.pipe(
-      SchemaUtils.withKeyDefaults(ReasoningProfile.Enum.rdfs),
+      S.withConstructorDefault(Effect.succeed(ReasoningProfile.Enum.rdfs)), S.withDecodingDefaultTypeKey(Effect.succeed(ReasoningProfile.Enum.rdfs)),
       S.annotateKey({
         description: "Reasoning strategy; defaults to full RDFS.",
       })
@@ -164,13 +165,13 @@ export class InferenceRunRequest extends S.Class<InferenceRunRequest>($I`Inferen
     customRules: S.NonEmptyString.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional non-empty N3 rule strings used by the custom profile.",
       })
     ),
     returnDeltaOnly: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({
         description: "Whether the response graph contains only newly inferred triples.",
       })
@@ -253,19 +254,19 @@ export class InferenceRunResponse extends S.Class<InferenceRunResponse>($I`Infer
       description: "Current lifecycle status of the inference job.",
     }),
     outputGraph: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional serialized result graph, present when a result is available.",
       })
     ),
     stats: S.OptionFromOptionalKey(InferenceStats).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional measurements produced by a completed inference run.",
       })
     ),
     error: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional non-empty failure diagnostic.",
       })
@@ -306,7 +307,7 @@ export class InferenceStatusResponse extends S.Class<InferenceStatusResponse>($I
       description: "Current lifecycle status of the inference job.",
     }),
     result: S.OptionFromOptionalKey(InferenceRunResponse).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional complete run response once the result is available.",
       })

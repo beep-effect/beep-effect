@@ -8,6 +8,7 @@
 import { $TikaId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -109,7 +110,7 @@ export class TikaError extends S.TaggedError<TikaError>($I`TikaError`)(
   "TikaError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Sanitized technical cause string when one is safe to retain.",
       })
@@ -118,7 +119,7 @@ export class TikaError extends S.TaggedError<TikaError>($I`TikaError`)(
       description: "Redacted technical error reason.",
     }),
     statusCode: S.OptionFromOptionalKey(S.Natural).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "HTTP or process status code associated with the Tika failure when one was available.",
       })

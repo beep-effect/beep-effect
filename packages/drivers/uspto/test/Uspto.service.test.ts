@@ -1,4 +1,3 @@
-import { NonEmptyTrimmedStr } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import {
@@ -118,9 +117,9 @@ describe("Uspto service", () => {
           const metadata = yield* uspto.getApplication("16138242");
 
           expect(metadata.applicationNumberText).toBe("16138242");
-          assertSome(metadata.inventionTitle, NonEmptyTrimmedStr.make("Adjustable widget assembly"));
-          assertSome(metadata.patentNumber, NonEmptyTrimmedStr.make("10772255"));
-          assertSome(metadata.firstApplicantName, NonEmptyTrimmedStr.make("Precision Widgets LLC"));
+          assertSome(metadata.inventionTitle, "Adjustable widget assembly");
+          assertSome(metadata.patentNumber, "10772255");
+          assertSome(metadata.firstApplicantName, "Precision Widgets LLC");
           expect(requestedUrls).toStrictEqual(["https://api.uspto.gov/api/v1/patent/applications/16138242"]);
         })
       );
@@ -196,7 +195,7 @@ describe("Uspto service", () => {
         expect(results).toHaveLength(1);
         assertSome(
           O.flatMap(O.fromUndefinedOr(results[0]), (result) => result.patentNumber),
-          NonEmptyTrimmedStr.make("10772255")
+          "10772255"
         );
       })
     );

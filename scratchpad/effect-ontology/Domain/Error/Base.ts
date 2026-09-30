@@ -15,6 +15,7 @@ import { IRI } from "@beep/rdf";
 import { SchemaUtils, URLStr } from "@beep/schema";
 import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import * as S from "effect/Schema";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Base");
 
@@ -72,7 +73,7 @@ export type ErrorMessage = typeof ErrorMessage.Type;
  * @since 0.0.0
  */
 export const OptionalErrorUrl = S.OptionFromNullishOr(URLStr).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   $I.annoteSchema("OptionalErrorUrl", {
     description: "Optional canonical URL normalized to an Effect Option.",
   })
@@ -111,7 +112,7 @@ export type OptionalErrorUrl = typeof OptionalErrorUrl.Type;
  * @since 0.0.0
  */
 export const OptionalErrorIri = S.OptionFromNullishOr(IRI).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   $I.annoteSchema("OptionalErrorIri", {
     description: "Optional canonical RDF IRI normalized to an Effect Option.",
   })
@@ -157,7 +158,7 @@ const ErrorDefect = S.Defect({ includeStack: true });
  * @since 0.0.0
  */
 export const OptionalErrorCause = S.OptionFromNullishOr(ErrorDefect).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   $I.annoteSchema("OptionalErrorCause", {
     description: "Optional underlying defect normalized to an Effect Option.",
   })
@@ -196,7 +197,7 @@ export type OptionalErrorCause = typeof OptionalErrorCause.Type;
  * @since 0.0.0
  */
 export const OptionalErrorMessage = S.OptionFromNullishOr(ErrorMessage).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   $I.annoteSchema("OptionalErrorMessage", {
     description: "Optional non-empty diagnostic text normalized to an Effect Option.",
   })
@@ -236,7 +237,7 @@ export type OptionalErrorMessage = typeof OptionalErrorMessage.Type;
  * @since 0.0.0
  */
 export const OptionalNonNegativeInt = S.OptionFromNullishOr(S.Natural).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   $I.annoteSchema("OptionalNonNegativeInt", {
     description: "Optional finite non-negative integer normalized to an Effect Option.",
   })
@@ -275,7 +276,7 @@ export type OptionalNonNegativeInt = typeof OptionalNonNegativeInt.Type;
  * @since 0.0.0
  */
 export const OptionalHttpStatusCode = S.OptionFromNullishOr(HttpStatusCode).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
 
   $I.annoteSchema("OptionalHttpStatusCode", {
     description: "Optional valid HTTP response status normalized to an Effect Option.",
@@ -353,7 +354,7 @@ export type Milliseconds = typeof Milliseconds.Type;
  * @since 0.0.0
  */
 export const OptionalMilliseconds = S.OptionFromNullishOr(Milliseconds).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   $I.annoteSchema("OptionalMilliseconds", {
     description: "Optional finite non-negative millisecond count normalized to an Effect Option.",
   })

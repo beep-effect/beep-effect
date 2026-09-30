@@ -8,6 +8,7 @@
 import { $OnepasswordCliId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $OnepasswordCliId.create("OnePasswordCli.models");
@@ -193,9 +194,11 @@ export class OnePasswordCliProcessResult extends S.Class<OnePasswordCliProcessRe
  */
 export class OnePasswordCliAccount extends S.Class<OnePasswordCliAccount>($I`OnePasswordCliAccount`)(
   {
-    account: S.OptionFromOptionalKey(OnePasswordCliAccountName).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Trimmed account identifier reported by `op whoami`, when signed in.",
-    }),
+    account: S.OptionFromOptionalKey(OnePasswordCliAccountName)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Trimmed account identifier reported by `op whoami`, when signed in.",
+      }),
     signedIn: S.Boolean.annotateKey({
       description: "Whether the 1Password CLI reports an active signed-in account.",
     }),

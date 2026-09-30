@@ -7,7 +7,7 @@
 
 import { $OipWebId } from "@beep/identity/packages";
 import { Sanity, SanityConfigInput, SanityQueryRequest } from "@beep/sanity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, Layer } from "effect";
 import { FetchHttpClient } from "effect/http";
@@ -63,10 +63,10 @@ type OipContentLoadErrorOptions = {
 export class OipContentLoadError extends S.TaggedError<OipContentLoadError>($I`OipContentLoadError`)(
   "OipContentLoadError",
   {
-    provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    provider: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    providerReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     reason: OipContentLoadErrorReason,
-    status: S.OptionFromOptionalKey(OipContentProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
+    status: S.OptionFromOptionalKey(OipContentProviderHttpStatus).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annoteError<OipContentLoadError>("OipContentLoadError", {
     description: "Typed server-side OIP content loading failure.",

@@ -7,12 +7,14 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { CitationId } from "../CitationId/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/ResolutionResult/ResolutionResult.model");
 
+const resolutionResultWarningsDefault = A.empty<string>();
 /**
  * Result of resolving a short-form citation.
  *
@@ -47,14 +49,14 @@ export class ResolutionResult extends S.Class<ResolutionResult>($I`ResolutionRes
   {
     resolvedTo: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Index of the citation this resolves to. undefined if resolution failed.",
       })
     ),
     antecedentIndex: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Index of this short-form's antecedent. On success mirrors resolvedTo; on the unresolved/fallback path points at the immediately preceding cited authority (Bluebook Rule 4.1). Records the immediate predecessor only.",
@@ -62,7 +64,7 @@ export class ResolutionResult extends S.Class<ResolutionResult>($I`ResolutionRes
     ),
     resolvedToId: CitationId.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Stable id of the resolvedTo citation (#860). Mirrors resolvedTo but survives filter/sort/map. Undefined when resolvedTo is.",
@@ -70,20 +72,21 @@ export class ResolutionResult extends S.Class<ResolutionResult>($I`ResolutionRes
     ),
     antecedentId: CitationId.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Stable id of the antecedentIndex citation (#860).",
       })
     ),
     failureReason: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Reason for resolution failure (if any).",
       })
     ),
     warnings: S.Array(S.String).pipe(
-      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.withConstructorDefault(Effect.succeed(resolutionResultWarningsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(resolutionResultWarningsDefault)),
       S.annotateKey({
         description: "Warnings about ambiguous or uncertain resolutions.",
       })

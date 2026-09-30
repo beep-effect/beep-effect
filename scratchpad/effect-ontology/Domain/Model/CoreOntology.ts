@@ -308,8 +308,8 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
     evidence: MentionEvidence,
     confidence: Confidence,
     mentionsEntity: IRI,
-    sourceDocument: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
-    extractedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
+    sourceDocument: S.OptionFromOptionalKey(IRI).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    extractedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Mention", {
     description: "Confidence-scored source evidence referring to a tracked entity or event.",
@@ -365,6 +365,9 @@ export const CanonicalEntityId = S.String.check(
  */
 export type CanonicalEntityId = typeof CanonicalEntityId.Type;
 
+const trackedEntityAttributesDefault = {};
+const trackedEntityMergedFromDefault = A.empty<IRI>();
+const trackedEntityExternalIdsDefault = {};
 /**
  * Persistent canonical entity tracked across source documents.
  *
@@ -391,14 +394,14 @@ export class TrackedEntity extends S.Class<TrackedEntity>($I`TrackedEntity`)(
     id: CanonicalEntityId,
     iri: IRI,
     name: S.NonEmptyString,
-    description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     types: S.NonEmptyArray(IRI),
-    attributes: Attributes.pipe(SchemaUtils.withKeyDefaults({})),
-    groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
-    resolutionConfidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
-    mergedFrom: S.Array(IRI).pipe(SchemaUtils.withEmptyArrayDefaults<IRI>()),
-    location: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
-    externalIds: S.Record(S.String, S.NonEmptyString).pipe(SchemaUtils.withKeyDefaults({})),
+    attributes: Attributes.pipe(S.withConstructorDefault(Effect.succeed(trackedEntityAttributesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(trackedEntityAttributesDefault))),
+    groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    resolutionConfidence: S.OptionFromOptionalKey(Confidence).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    mergedFrom: S.Array(IRI).pipe(S.withConstructorDefault(Effect.succeed(trackedEntityMergedFromDefault)), S.withDecodingDefaultType(Effect.succeed(trackedEntityMergedFromDefault))),
+    location: S.OptionFromOptionalKey(IRI).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    externalIds: S.Record(S.String, S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(trackedEntityExternalIdsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(trackedEntityExternalIdsDefault))),
   },
   $I.annote("TrackedEntity", {
     description: "Persistent canonical entity with ontology types, confidence, merges, and links.",
@@ -499,7 +502,7 @@ export type EventId = typeof EventId.Type;
 export class Participant extends S.Class<Participant>($I`Participant`)(
   {
     entityIri: IRI,
-    role: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
+    role: S.OptionFromOptionalKey(IRI).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Participant", {
     description: "Entity participation in an event with an optional ontology-defined role.",
@@ -509,7 +512,7 @@ export class Participant extends S.Class<Participant>($I`Participant`)(
 class EventIntervalFieldsModel extends S.Class<EventIntervalFieldsModel>($I`EventIntervalFieldsModel`)(
   {
     start: S.DateTimeUtcFromString,
-    end: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
+    end: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("EventIntervalFieldsModel", {
     description: "Internal field model for a start and optional end instant.",
@@ -616,6 +619,9 @@ export const EventTime = EventTimeDefinition.pipe(
  */
 export type EventTime = typeof EventTime.Type;
 
+const trackedEventTimeDefault = EventTime.cases.Unspecified.make({});
+const trackedEventParticipantsDefault = A.empty<Participant>();
+const trackedEventAttributesDefault = {};
 /**
  * Persistent ontology-typed occurrence involving tracked entities.
  *
@@ -641,11 +647,11 @@ export class TrackedEvent extends S.Class<TrackedEvent>($I`TrackedEvent`)(
     id: EventId,
     iri: IRI,
     types: S.NonEmptyArray(IRI),
-    time: EventTime.pipe(SchemaUtils.withKeyDefaults(EventTime.cases.Unspecified.make({}))),
-    participants: S.Array(Participant).pipe(SchemaUtils.withEmptyArrayDefaults<Participant>()),
-    location: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
-    attributes: Attributes.pipe(SchemaUtils.withKeyDefaults({})),
-    groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
+    time: EventTime.pipe(S.withConstructorDefault(Effect.succeed(trackedEventTimeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(trackedEventTimeDefault))),
+    participants: S.Array(Participant).pipe(S.withConstructorDefault(Effect.succeed(trackedEventParticipantsDefault)), S.withDecodingDefaultType(Effect.succeed(trackedEventParticipantsDefault))),
+    location: S.OptionFromOptionalKey(IRI).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    attributes: Attributes.pipe(S.withConstructorDefault(Effect.succeed(trackedEventAttributesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(trackedEventAttributesDefault))),
+    groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("TrackedEvent", {
     description: "Persistent ontology-typed event with explicit time, participants, location, and confidence.",
@@ -677,7 +683,7 @@ export class TrackedEvent extends S.Class<TrackedEvent>($I`TrackedEvent`)(
 
 const CoreOperationErrorFields = {
   message: S.NonEmptyString,
-  cause: S.OptionFromOptionalKey(S.Json).pipe(SchemaUtils.withNoneDefault),
+  cause: S.OptionFromOptionalKey(S.Json).pipe(S.withConstructorDefault(Effect.succeedNone)),
 };
 
 /**

@@ -6,8 +6,8 @@
  */
 
 import { $PhoenixId } from "@beep/identity";
-import { SchemaUtils, URLStr } from "@beep/schema";
-import { SchemaGetter } from "effect";
+import { URLStr } from "@beep/schema";
+import { Effect, SchemaGetter } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -52,6 +52,8 @@ const PhoenixBaseUrl = S.String.pipe(
  */
 export const PHOENIX_API_URL = "http://localhost:6006";
 
+const phoenixConfigInputBaseUrlDefault = makePhoenixBaseUrl(PHOENIX_API_URL);
+const phoenixConfigInputHeadersDefault = R.empty();
 /**
  * Runtime configuration accepted by {@link Phoenix.makeLayer}.
  *
@@ -76,16 +78,24 @@ export const PHOENIX_API_URL = "http://localhost:6006";
 export class PhoenixConfigInput extends S.Class<PhoenixConfigInput>($I`PhoenixConfigInput`)(
   {
     apiKey: S.OptionFromOptionalKey(S.NonEmptyString.pipe(S.RedactedFromValue))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Optional Phoenix API key used to build the Authorization header.",
       }),
-    baseUrl: PhoenixBaseUrl.pipe(SchemaUtils.withKeyDefaults(makePhoenixBaseUrl(PHOENIX_API_URL))).annotateKey({
+    baseUrl: PhoenixBaseUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(phoenixConfigInputBaseUrlDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(phoenixConfigInputBaseUrlDefault))
+    ).annotateKey({
       description: "Phoenix API base URL accepted by the SDK client.",
     }),
-    headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "Additional Phoenix API request headers.",
-    }),
+    headers: S.Record(S.String, S.String)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(phoenixConfigInputHeadersDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(phoenixConfigInputHeadersDefault))
+      )
+      .annotateKey({
+        description: "Additional Phoenix API request headers.",
+      }),
   },
   $I.annote("PhoenixConfigInput", {
     description: "Runtime configuration accepted by the Phoenix API driver layer.",

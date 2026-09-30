@@ -6,7 +6,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import type { Cause } from "effect";
 import { Duration, Effect, Number as Num, Schedule } from "effect";
 import * as A from "effect/Array";
@@ -69,6 +68,11 @@ const RetryPolicyInvariantCheck = S.makeFilter(
   }
 );
 
+const retryPolicyAttemptTimeoutDefault = Duration.seconds(60);
+const retryPolicyOverallTimeoutDefault = Duration.minutes(5);
+const retryPolicyInitialDelayDefault = Duration.seconds(1);
+const retryPolicyMaxDelayDefault = Duration.seconds(30);
+const retryPolicyMaxAttemptsDefault = PosInt.make(3);
 /**
  * Validated retry policy with per-attempt and overall deadlines.
  *
@@ -99,31 +103,31 @@ const RetryPolicyInvariantCheck = S.makeFilter(
 export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)(
   S.Struct({
     attemptTimeout: PositiveDuration.pipe(
-      SchemaUtils.withKeyDefaults(Duration.seconds(60)),
+      S.withConstructorDefault(Effect.succeed(retryPolicyAttemptTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyAttemptTimeoutDefault)),
       S.annotateKey({ description: "Maximum duration allowed for one attempt." })
     ),
     overallTimeout: PositiveDuration.pipe(
-      SchemaUtils.withKeyDefaults(Duration.minutes(5)),
+      S.withConstructorDefault(Effect.succeed(retryPolicyOverallTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyOverallTimeoutDefault)),
       S.annotateKey({ description: "Maximum duration allowed for all attempts and retry delays." })
     ),
     initialDelay: PositiveDuration.pipe(
-      SchemaUtils.withKeyDefaults(Duration.seconds(1)),
+      S.withConstructorDefault(Effect.succeed(retryPolicyInitialDelayDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyInitialDelayDefault)),
       S.annotateKey({ description: "Delay before the first retry." })
     ),
     maxDelay: PositiveDuration.pipe(
-      SchemaUtils.withKeyDefaults(Duration.seconds(30)),
+      S.withConstructorDefault(Effect.succeed(retryPolicyMaxDelayDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyMaxDelayDefault)),
       S.annotateKey({ description: "Upper bound applied to exponential retry delays." })
     ),
     maxAttempts: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(3)),
+      S.withConstructorDefault(Effect.succeed(retryPolicyMaxAttemptsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyMaxAttemptsDefault)),
       S.annotateKey({ description: "Maximum number of attempts, including the initial attempt." })
     ),
     serviceName: S.NonEmptyString.pipe(
-      SchemaUtils.withKeyDefaults("LanguageModel"),
+      S.withConstructorDefault(Effect.succeed("LanguageModel")), S.withDecodingDefaultTypeKey(Effect.succeed("LanguageModel")),
       S.annotateKey({ description: "Stable service name attached to retry diagnostics." })
     ),
     jitter: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether retry delays receive random jitter to avoid synchronized retries." })
     ),
   }).pipe(S.check(RetryPolicyInvariantCheck)),

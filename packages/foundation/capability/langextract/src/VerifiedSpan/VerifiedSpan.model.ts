@@ -9,9 +9,7 @@ import { GroundedExtraction, MAX_EXTRACTION_CANDIDATES } from "@beep/langextract
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchorVerificationReceipt, VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit } from "@beep/schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { ISOStr } from "@beep/schema/Timestamp";
-import { Tuple } from "effect";
+import { DateTime, Effect, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { identity, pipe } from "effect/Function";
@@ -377,7 +375,7 @@ const VerifiedSpanLocationFailureReason = LiteralKit([
 const VerifiedSpanAnchorFailureReason = LiteralKit(["invalid-anchor", "quote-mismatch"]);
 
 const VerifiedSpanAttemptFailureStruct = S.Struct({
-  candidateIndex: S.Natural.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  candidateIndex: S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   reason: VerifiedSpanAttemptFailureReason,
   stage: VerifiedSpanAttemptFailureStage,
 });
@@ -534,6 +532,30 @@ export const VerifiedSpanAttemptOutcome = VerifiedSpanAttemptOutcomeStatus.mapMe
  */
 export type VerifiedSpanAttemptOutcome = typeof VerifiedSpanAttemptOutcome.Type;
 
+// Attempt timestamps are persisted strings, so this validates the text and keeps it
+// verbatim: `S.DateTimeUtcFromString` would re-encode `...56Z` as `...56.000Z`.
+// fallow-ignore-next-line code-duplication -- consumer-local copy of the retired @beep/schema ISOStr wire; langextract has no dependency on @beep/skill-contract, which owns the other copy
+const IsoDateTimeString = S.Trim.check(
+  S.isNonEmpty({ message: "String must not be empty" }),
+  S.makeFilter((value: string) => O.isSome(DateTime.make(value)), {
+    identifier: $I`IsoDateTimeStringCheck`,
+    title: "ISO DateTime String",
+    description: "Accepts any string DateTime.make parses; generation stays inside a constructive ISO 8601 UTC shape.",
+    arbitraryConstraint: {
+      patterns: [
+        {
+          source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}Z$",
+          flags: "",
+        },
+      ],
+    },
+  })
+).pipe(
+  $I.annoteSchema("IsoDateTimeString", {
+    description: "Trimmed, non-empty datetime string that DateTime.make parses, kept verbatim.",
+  })
+);
+
 const GroundedExtractionBatch: S.Codec<
   ReadonlyArray<GroundedExtraction>,
   ReadonlyArray<GroundedExtraction.Encoded>
@@ -549,11 +571,14 @@ const VerifiedSpanNormalizationVersion = S.Literal(VERIFIED_SPAN_NORMALIZATION_V
 const sourceTextIdentityEquivalence = S.toEquivalence(SourceTextIdentity);
 const attemptIdEquivalence = S.toEquivalence(VerifiedSpanAttemptId);
 
-const OptionalVerifiedSpanAttemptId = VerifiedSpanAttemptId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionalVerifiedSpanAttemptId = VerifiedSpanAttemptId.pipe(
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(Effect.succeedNone)
+);
 
 type VerifiedSpanAttemptRecordFields = {
   readonly attemptId: typeof VerifiedSpanAttemptId;
-  readonly attemptedAt: typeof ISOStr;
+  readonly attemptedAt: typeof IsoDateTimeString;
   readonly candidates: typeof GroundedExtractionBatch;
   readonly engine: typeof VerifiedSpanEngine;
   readonly expectedSource: typeof SourceTextIdentity;
@@ -567,7 +592,7 @@ type VerifiedSpanAttemptRecordFields = {
 
 const VerifiedSpanAttemptRecordFields: VerifiedSpanAttemptRecordFields = {
   attemptId: VerifiedSpanAttemptId,
-  attemptedAt: ISOStr,
+  attemptedAt: IsoDateTimeString,
   candidates: GroundedExtractionBatch,
   engine: VerifiedSpanEngine,
   expectedSource: SourceTextIdentity,
@@ -835,7 +860,7 @@ export class VerifiedSpanHistory extends S.Class<VerifiedSpanHistory>($I`Verifie
 
 type VerifiedSpanRunFields = {
   readonly attemptId: typeof VerifiedSpanAttemptId;
-  readonly attemptedAt: typeof ISOStr;
+  readonly attemptedAt: typeof IsoDateTimeString;
   readonly candidates: typeof GroundedExtractionBatch;
   readonly engine: typeof VerifiedSpanEngine;
   readonly source: typeof SourceTextIdentity;
@@ -844,7 +869,7 @@ type VerifiedSpanRunFields = {
 
 const VerifiedSpanRunFields: VerifiedSpanRunFields = {
   attemptId: VerifiedSpanAttemptId,
-  attemptedAt: ISOStr,
+  attemptedAt: IsoDateTimeString,
   candidates: GroundedExtractionBatch,
   engine: VerifiedSpanEngine,
   source: SourceTextIdentity,

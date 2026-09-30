@@ -23,7 +23,6 @@ import { $ScratchpadId } from "@beep/identity";
 import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { SchemaUtils } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import type { Config } from "effect";
@@ -124,7 +123,7 @@ const ValueCorrectionFields = {
   }),
   originalValue: CorrectionValue.pipe(
     S.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({
       description: "Original value, when the violation reported one",
     })

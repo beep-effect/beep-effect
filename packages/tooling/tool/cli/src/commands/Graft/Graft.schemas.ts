@@ -6,7 +6,6 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { DurationUnit } from "@beep/schema/Duration";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { pipe } from "effect";
 import * as A from "effect/Array";
@@ -668,8 +667,30 @@ export const GraftDeepCaptureSource = LiteralKit(["all", "merge", "stdout"]).pip
 export type GraftDeepCaptureSource = typeof GraftDeepCaptureSource.Type;
 
 // A duration the child-process runner accepts verbatim; constraining the field
-// to this shape is what keeps an unparseable bound out of a spawned step.
-const DurationExpression = S.TemplateLiteral([S.Finite, " ", DurationUnit]);
+// to this shape is what keeps an unparseable bound out of a spawned step. The
+// units are `Duration.Unit`, which upstream exports as a type only.
+const DurationExpression = S.TemplateLiteral([
+  S.Finite,
+  " ",
+  S.Literals([
+    "nano",
+    "nanos",
+    "micro",
+    "micros",
+    "milli",
+    "millis",
+    "second",
+    "seconds",
+    "minute",
+    "minutes",
+    "hour",
+    "hours",
+    "day",
+    "days",
+    "week",
+    "weeks",
+  ]),
+]);
 
 /**
  * One subprocess a refresh run needs, named by the phase that owns it.

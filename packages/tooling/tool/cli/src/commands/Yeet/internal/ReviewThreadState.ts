@@ -38,8 +38,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { pipe } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -145,7 +145,7 @@ export class YeetReviewThreadNewestComment extends S.Class<YeetReviewThreadNewes
   {
     authorLogin: S.String,
     authorKind: YeetReviewCommentAuthorKind,
-    createdAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    createdAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetReviewThreadNewestComment", {
     description: "The newest comment on a review thread, reduced to its author and timestamp.",
@@ -183,11 +183,14 @@ export class YeetReviewThreadStateInput extends S.Class<YeetReviewThreadStateInp
     threadId: S.String,
     isResolved: S.Boolean,
     isOutdated: S.Boolean,
-    path: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    line: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    pullRequestAuthor: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    resolvedBy: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    newestComment: YeetReviewThreadNewestComment.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    path: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    line: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    pullRequestAuthor: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    resolvedBy: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    newestComment: YeetReviewThreadNewestComment.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("YeetReviewThreadStateInput", {
     description: "The structural review-thread metadata the thread-state rule classifies.",
@@ -308,8 +311,8 @@ export class ThreadUnresolved extends S.Class<ThreadUnresolved>($I`ThreadUnresol
   {
     state: S.tag("unresolved"),
     threadId: S.String,
-    path: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    line: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    path: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    line: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     isOutdated: S.Boolean,
   },
   $I.annote("ThreadUnresolved", {
@@ -335,8 +338,8 @@ export class ThreadResolvedAnswered extends S.Class<ThreadResolvedAnswered>($I`T
   {
     state: S.tag("resolved-answered"),
     threadId: S.String,
-    path: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    line: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    path: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    line: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     isOutdated: S.Boolean,
   },
   $I.annote("ThreadResolvedAnswered", {
@@ -361,11 +364,11 @@ export class ThreadResolvedFollowUp extends S.Class<ThreadResolvedFollowUp>($I`T
   {
     state: S.tag("resolved-follow-up"),
     threadId: S.String,
-    path: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    line: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    path: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    line: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     isOutdated: S.Boolean,
     followUpAuthor: S.String,
-    followUpAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    followUpAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ThreadResolvedFollowUp", {
     description: "A thread the pull request author resolved that a human reviewer has commented on since.",
@@ -388,11 +391,11 @@ export class ThreadResolvedAcknowledged extends S.Class<ThreadResolvedAcknowledg
   {
     state: S.tag("resolved-acknowledged"),
     threadId: S.String,
-    path: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    line: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    path: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    line: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     isOutdated: S.Boolean,
     followUpAuthor: S.String,
-    followUpAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    followUpAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ThreadResolvedAcknowledged", {
     description: "A thread the pull request author resolved that a review bot has acknowledged since.",

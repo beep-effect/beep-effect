@@ -6,7 +6,8 @@
  */
 import { $LangExtractId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const $I = $LangExtractId.create("Target");
@@ -38,6 +39,7 @@ export const ExtractionTargetKind = LiteralKit(["entity", "relation", "attribute
  */
 export type ExtractionTargetKind = typeof ExtractionTargetKind.Type;
 
+const extractionTargetAttributesDefault = A.empty<string>();
 /**
  * A single extraction target requested from a language model.
  *
@@ -54,8 +56,11 @@ export type ExtractionTargetKind = typeof ExtractionTargetKind.Type;
  */
 export class ExtractionTarget extends S.Class<ExtractionTarget>($I`ExtractionTarget`)(
   {
-    attributes: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
-    description: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    attributes: S.Array(S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeed(extractionTargetAttributesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(extractionTargetAttributesDefault))
+    ),
+    description: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     kind: ExtractionTargetKind,
     name: S.NonEmptyString,
   },
@@ -80,7 +85,10 @@ export class ExtractionTarget extends S.Class<ExtractionTarget>($I`ExtractionTar
  */
 export class ExtractionExampleItem extends S.Class<ExtractionExampleItem>($I`ExtractionExampleItem`)(
   {
-    attributes: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    attributes: S.Record(S.String, S.String).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     label: S.NonEmptyString,
     text: S.NonEmptyString,
   },

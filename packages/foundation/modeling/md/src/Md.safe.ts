@@ -20,6 +20,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "@beep/utils/Array";
 import { Number as N, Result, Struct } from "effect";
+import * as Effect from "effect/Effect";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -31,7 +32,6 @@ import {
   UserContentLinkUrlPolicySpec,
 } from "./Md.escape.ts";
 import { Block, Document, FootnoteIdentifier, Inline } from "./Md.model.ts";
-import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 import type { FootnoteIdentifier as FootnoteIdentifierValue, ListItemChild } from "./Md.model.ts";
 
@@ -198,6 +198,7 @@ export const UrlNodeTag = LiteralKit(["a", "img", "embed"]).pipe(
  */
 export type UrlNodeTag = typeof UrlNodeTag.Type;
 
+const urlSafetyViolationPathDefault = A.empty();
 /**
  * A URL-bearing Markdown node whose destination is outside its user-content
  * allow list.
@@ -222,7 +223,11 @@ export type UrlNodeTag = typeof UrlNodeTag.Type;
 export class UrlSafetyViolation extends S.TaggedClass<UrlSafetyViolation>($I`UrlSafetyViolation`)(
   "UnsafeUrl",
   {
-    path: DocumentSafetyPathSegment.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults),
+    path: DocumentSafetyPathSegment.pipe(
+      S.Array,
+      S.withConstructorDefault(Effect.succeed(urlSafetyViolationPathDefault)),
+      S.withDecodingDefaultType(Effect.succeed(urlSafetyViolationPathDefault))
+    ),
     nodeTag: UrlNodeTag,
     destination: S.String,
     destinationKind: DestinationKind,

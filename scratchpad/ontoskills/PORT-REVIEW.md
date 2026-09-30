@@ -54,7 +54,7 @@ what this checkout compiles today. Relevant signatures were cross-checked in
 | `SemverFromString` from `@beep/schema/Semver` | Yes | Decodes a string to a structured `Semver` value. Python stores `version` as arbitrary `Optional[str]`; this narrows and changes the Type side. | `packages/foundation/modeling/schema/src/Semver.ts:650-676` |
 | `SchemaGetter` from `effect` | Yes | Root namespace export exists, but this import is unused. Getter signatures relevant to transformations are in A.6. | `node_modules/effect/src/index.ts:532`; `node_modules/effect/src/SchemaGetter.ts:521-523`, `:561-565`, `:597-599` |
 | `* as A` from `@beep/utils/Array` | Yes | Re-exports Effect Array. `A.every(RelationIdPart.is)` is valid; using it after `S.Array(PatternPart)` is redundant because element decoding already validates every element. | `packages/foundation/modeling/utils/src/Array.ts:617`; `node_modules/effect/src/Array.ts:8609-8648` |
-| `NonEmptyTrimmedStr` from `@beep/schema` | Yes | Root barrel exports it; it trims, checks non-empty, brands, and has codec statics. It is unused. | `packages/foundation/modeling/schema/src/String.ts:64-89`; root barrel `.../schema/src/index.ts:474` |
+| `NonEmptyTrimmedStr` from `@beep/schema` | Yes | Root barrel exports it; it trims, checks non-empty, brands, and has codec statics. It is unused. | the `@beep/schema` `String` concept (retired 2026-09-29); root barrel `.../schema/src/index.ts:474` |
 
 ### A.3 Every Effect schema member used by the WIP
 
@@ -123,15 +123,20 @@ have different fields.
 
 ### A.5 SchemaUtils defaults and statics
 
+Historical note: the four `SchemaUtils` default helpers below were retired in PR 3b of effect-schema-parity;
+the rows and the samples in this review now name the upstream `effect/Schema`
+compositions that replaced them.
+
+
 | Helper | Exists / pipe position | Contract actually affected | Verdict in WIP | Evidence |
 | --- | --- | --- | --- | --- |
 | `withStatics(factory)` | Yes; data-last pipe transform | Attaches arbitrary statics and preserves them across later `annotate`. | Factory attachment is correct. It is unnecessary once identical tagged members are removed. | `.../SchemaUtils/withStatics.ts:44-84`, `:121-124` |
 | `withCodecStatics` | Yes; unary | Adds `is`, throwing `fromUnknown`, and non-throwing `decodeOption`. | Valid on `RelationIdPart`; the schema itself is under-annotated. | `.../SchemaUtils/withCodecStatics.ts:44-64`, `:92-99` |
 | `withOptionCodecStatics` | Yes; unary, service-free codecs only | Adds Option-based direct and JSON-string decode/encode statics plus shared statics. | Line 385 is valid in isolation but `PatternParts` is unused and redundant. | `.../SchemaUtils/codecStatics.ts:217-233`, `:544-560` |
-| `withNoneDefault` | Yes; unary | **Constructor default only**: `.make({})` supplies `Option.none`. It does not make an encoded key optional and does not define decode behavior. | Valid after `OptionFromOptionalKey`, but missing decode is already None because of that codec. It still does not accept encoded `null`. | `.../SchemaUtils/withConstructorDefaults.ts:49-54`; Effect constructor-only contract `node_modules/effect/src/Schema.ts:5797-5829` |
-| `withConstantDefault(value)` | Yes; data-last | **Constructor default only**; encoded key stays required and decoding an omitted key fails. | Not used. Appropriate only where constructor convenience must not change the wire. | `.../SchemaUtils/withConstructorDefaults.ts:56-91` |
-| `withKeyDefaults(value)` | Yes; dual/data-last | Combines constructor default with `S.withDecodingDefaultTypeKey`: encoded key becomes exact-optional, missing decode gets a Type-side default, encoding includes the value by default. | Correct for Python fields whose omitted input is valid and has the same canonical default, e.g. `optional=False`. | `.../SchemaUtils/withKeyDefaults.ts:53-72`; underlying contracts `node_modules/effect/src/Schema.ts:5844-5955` |
-| `withEmptyArrayDefaults` | Yes; unary or `()` | Same constructor + decode-side missing-key behavior as `withKeyDefaults`, specialized to a fresh empty readonly array. | Mechanically correct for actual `default_factory=list` fields; wrong when applied to required `intents`. | `.../SchemaUtils/withKeyDefaults.ts:74-87`, `:120-172` |
+| `withNoneDefault` (retired in PR 3b of effect-schema-parity) → `S.withConstructorDefault(Effect.succeedNone)` | Upstream; data-last | **Constructor default only**: `.make({})` supplies `Option.none`. It does not make an encoded key optional and does not define decode behavior. | Valid after `OptionFromOptionalKey`, but missing decode is already None because of that codec. It still does not accept encoded `null`. | the retired `withNoneDefault` helper (removed in PR 3b of effect-schema-parity); Effect constructor-only contract `node_modules/effect/src/Schema.ts:5797-5829` |
+| `withConstantDefault(value)` (retired in PR 3b of effect-schema-parity) → `S.withConstructorDefault(Effect.succeed(value))` | Upstream; data-last | **Constructor default only**; encoded key stays required and decoding an omitted key fails. | Not used. Appropriate only where constructor convenience must not change the wire. | the retired `withConstantDefault` helper (removed in PR 3b of effect-schema-parity) |
+| `withKeyDefaults(value)` (retired in PR 3b of effect-schema-parity) → `S.withConstructorDefault(Effect.succeed(value))` + `S.withDecodingDefaultTypeKey(Effect.succeed(value))` | Upstream pair; data-last; bind a constructed value to one const | Combines the constructor default with `S.withDecodingDefaultTypeKey`: encoded key becomes exact-optional, missing decode gets a Type-side default, encoding includes the value by default. | Correct for Python fields whose omitted input is valid and has the same canonical default, e.g. `optional=False`. | upstream contracts `node_modules/effect/src/Schema.ts:5726-5955` |
+| `withEmptyArrayDefaults` (retired in PR 3b of effect-schema-parity) → `S.withConstructorDefault(Effect.succeed(empty))` + `S.withDecodingDefaultType(Effect.succeed(empty))` over one `const empty = A.empty<T>()` | Upstream pair; data-last | Constructor default plus a Type-side decoding default for a missing or `undefined` value, sharing one empty readonly array. | Mechanically correct for actual `default_factory=list` fields; wrong when applied to required `intents`. | upstream contracts `node_modules/effect/src/Schema.ts:5726-5733`, `:5952-5960` |
 
 The source standard explicitly separates constructor defaults, decoding
 defaults, and encoded optionality (`standards/schema-first-development-prompt.md:207-218`).
@@ -154,7 +159,7 @@ instead deliberately normalizes absence to omitted encoding.
 | `S.decodeUnknownResult` | Synchronous non-throwing boundary returning `Result<Type, SchemaError>`. Suitable for deliberate inspect/drop policies. | `node_modules/effect/src/Schema.ts:1755-1777`; standard `standards/schema-first-development-prompt.md:600-605` |
 | `S.decodeUnknownEffect` | Default Effect-returning external-boundary decoder. | `node_modules/effect/src/Schema.ts:1500-1523`; standard `standards/schema-first-development-prompt.md:233-235` |
 | Array element dropping | No `S.Array` option in rc.112 drops invalid elements or emits warnings; Array is strict. Implement element-wise decode plus an owning boundary policy. `Effect.forEach`, `matchEffect`, `logWarning`, `map`, `as`, Option `some`/`none`, and `A.getSomes` all exist. | `node_modules/effect/src/Effect.ts:1088-1108`, `:3678-3688`, `:3837`, `:11055-11068`, `:22272`; `node_modules/effect/src/Option.ts:256-286`; `node_modules/effect/src/Array.ts:7692-7701` |
-| Boolean string codec | No exported `S.BooleanFromString` exists in either source tree. There is only a private internal `booleanToString` link. The repo exports `NormalizedBooleanString`, implemented with `S.decodeTo` + `SchemaTransformation.transform`, but it additionally trims and treats `"on"` as true. | private `node_modules/effect/src/Schema.ts:16294-16299`; local `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:15-19`, `:131-142` |
+| Boolean string codec | No exported `S.BooleanFromString` exists in either source tree. There is only a private internal `booleanToString` link. The repo exports `NormalizedBooleanString`, implemented with `S.decodeTo` + `SchemaTransformation.transform`, but it additionally trims and treats `"on"` as true. | private `node_modules/effect/src/Schema.ts:16294-16299`; the local `@beep/schema` `CommonTextSchemas` concept (retired 2026-09-29) |
 | Derived helpers | `S.is(schema)` derives a guard and `S.toEquivalence(schema)` derives structural equivalence. | `node_modules/effect/src/Schema.ts:1425-1442`, `:15577-15597`; real class-static use `packages/foundation/ui-system/dock/src/Dock.models-tree.ts:318` |
 | String/array helpers used in C | `Str.trim`, `toLowerCase`, `replace`, `startsWith`, `split`; `A.lastNonEmpty`, `every`, `getSomes` all exist through the `@beep/utils` re-exports. | `node_modules/effect/src/String.ts:219`, `:283`, `:319`, `:474`, `:548`; `node_modules/effect/src/Array.ts:2016`, `:7692`, `:8609`; re-exports `.../utils/src/Str.ts:830`, `.../utils/src/Array.ts:617` |
 | Additional checks used in C | `S.isNonEmpty` and `S.isMaxLength` are built-in checks; `S.encodeKeys` preserves camelCase Type fields with snake_case Encoded keys. | `node_modules/effect/src/Schema.ts:8942-8943`, `:8966-8984`, `:3651-3707` |
@@ -333,19 +338,23 @@ Before the behavior-specific items, simplify the four false variant families:
 export class Requirement extends S.Class<Requirement>($I`Requirement`)({
   type: RequirementType,
   value: S.String,
-  optional: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+  optional: S.Boolean.pipe(
+    S.withConstructorDefault(Effect.succeed(false)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+  ),
 }) {}
 
 export class ExecutionPayload extends S.Class<ExecutionPayload>($I`ExecutionPayload`)({
   executor: ExecutionPayloadExecutor,
   code: S.String,
   timeout: S.OptionFromNullOr(S.Int).pipe(
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeedNone),
+    S.withDecodingDefaultTypeKey(Effect.succeedNone),
   ),
 }) {}
 ```
 
-`S.Class`, LiteralKit-as-field, and `withKeyDefaults` are verified in A.3/A.5.
+`S.Class`, LiteralKit-as-field, and the constructor/decoding default pair are verified in A.3/A.5.
 The same simplification applies to `TemplateAnnotation` and `KnowledgeNode`.
 This is the smallest precise model under the standard's case-specific-payload
 rule (`standards/schema-first-development-prompt.md:250-261`).
@@ -368,8 +377,9 @@ export const StateUri = S.String.check(
 export type StateUri = typeof StateUri.Type;
 ```
 
-Then use `StateUri.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults)` for all
-three fields. `S.check`, `isPattern`, and `brand` are verified at
+Then bind `const noStateUris = A.empty<StateUri>()` and use
+`StateUri.pipe(S.Array, S.withConstructorDefault(Effect.succeed(noStateUris)), S.withDecodingDefaultType(Effect.succeed(noStateUris)))`
+for all three fields. `S.check`, `isPattern`, and `brand` are verified at
 `node_modules/effect/src/Schema.ts:5116-5140`, `:6820-6833`, and `:5198-5240`;
 `withCodecStatics` is verified at
 `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:92-99`.
@@ -438,9 +448,9 @@ non-URI path; the target check guarantees the normalized value. `decodeTo` and
 `SchemaTransformation.transform` signatures are verified at
 `node_modules/effect/src/Schema.ts:5585-5609` and
 `node_modules/effect/src/SchemaTransformation.ts:335-343`; string/array helpers
-are verified in A.6. Apply `RelationId.pipe(S.Array,
-SchemaUtils.withEmptyArrayDefaults)` to `dependsOn`, `extends`, and
-`contradicts`. This replaces—not completes—the unfinished filter at lines
+are verified in A.6. Bind `const noRelationIds = A.empty<RelationId>()` and apply
+`RelationId.pipe(S.Array, S.withConstructorDefault(Effect.succeed(noRelationIds)), S.withDecodingDefaultType(Effect.succeed(noRelationIds)))`
+to `dependsOn`, `extends`, and `contradicts`. This replaces—not completes—the unfinished filter at lines
 358-399.
 
 ### C.3 `coerce_is_user_invocable`
@@ -468,9 +478,9 @@ const UserInvocableInput = S.Union([
 
 `S.Union` is at `node_modules/effect/src/Schema.ts:4923-4927`; transform
 evidence is above. The local `NormalizedBooleanString` uses the same v4
-mechanism (`packages/foundation/modeling/schema/src/CommonTextSchemas.ts:131-142`)
-but is not exact parity: it trims and also treats `"on"` as true
-(`:15-19`). Reusing it is acceptable only as a documented redesign. Python's
+mechanism (in the `CommonTextSchemas` concept, retired 2026-09-29)
+but is not exact parity: it trims and also treats `"on"` as true.
+Reusing it is acceptable only as a documented redesign. Python's
 fallback `bool(v)` for arbitrary non-string values is broad coercion; prefer
 rejecting those values unless a real consumer proves compatibility is needed.
 
@@ -654,12 +664,17 @@ export declare namespace SkeletonNode {
   };
 }
 
+const noChildren = A.empty<SkeletonNode.Type>();
+
 export const SkeletonNode: S.Codec<SkeletonNode.Type, SkeletonNode.Encoded> =
   S.Struct({
     blockId: S.String,
     children: S.Array(S.suspend(
       (): S.Codec<SkeletonNode.Type, SkeletonNode.Encoded> => SkeletonNode,
-    )).pipe(SchemaUtils.withEmptyArrayDefaults),
+    )).pipe(
+      S.withConstructorDefault(Effect.succeed(noChildren)),
+      S.withDecodingDefaultType(Effect.succeed(noChildren)),
+    ),
   }).pipe(S.encodeKeys({ blockId: "block_id" }));
 ```
 
@@ -678,17 +693,35 @@ references; `ContentBlock` is the real `block_type` tagged union that includes
 Installed rc.112 requires the child identifier:
 
 ```ts
+const noFiles = A.empty<FileInfo>();
+const noReferenceFiles = A.empty<ReferenceFile>();
+const noExamples = A.empty<Example>();
+
 export class CompiledSkill extends ExtractedSkill.extend<CompiledSkill>(
   $I`CompiledSkill`,
 )({
   frontmatter: S.OptionFromNullOr(Frontmatter).pipe(
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeedNone),
+    S.withDecodingDefaultTypeKey(Effect.succeedNone),
   ),
-  files: FileInfo.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults),
-  referenceFiles: ReferenceFile.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults),
-  examples: Example.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults),
+  files: FileInfo.pipe(
+    S.Array,
+    S.withConstructorDefault(Effect.succeed(noFiles)),
+    S.withDecodingDefaultType(Effect.succeed(noFiles)),
+  ),
+  referenceFiles: ReferenceFile.pipe(
+    S.Array,
+    S.withConstructorDefault(Effect.succeed(noReferenceFiles)),
+    S.withDecodingDefaultType(Effect.succeed(noReferenceFiles)),
+  ),
+  examples: Example.pipe(
+    S.Array,
+    S.withConstructorDefault(Effect.succeed(noExamples)),
+    S.withDecodingDefaultType(Effect.succeed(noExamples)),
+  ),
   contentExtraction: S.OptionFromNullOr(ContentExtraction).pipe(
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeedNone),
+    S.withDecodingDefaultTypeKey(Effect.succeedNone),
   ),
 }) {}
 ```
@@ -737,7 +770,7 @@ Ranks are ordered by the first repair dependency, then semantic blast radius.
 | 12 | P1 | 340-356, 443 | Source metadata fields are flattened; WIP invents optional nested `meta`, and the class is optional so defaults/required behavior change. Preserve flat shape or supply a total compatibility adapter. |
 | 13 | P1 | 403-415, 417-449 | `ExtractedSkillAnnotations` is never referenced by `ExtractedSkill`; source annotation/workflow fields are effectively missing. Add the fields or a deliberate nested adapter. |
 | 14 | P1 | 409 | `workflows` is `Array<"workflow">` defaulting to `["workflow"]`, not `list[Workflow]` defaulting `[]`; implement Workflow and use its array schema. |
-| 15 | P1 | 424 | Required Python `intents` is given an empty missing-key default; remove `withEmptyArrayDefaults` unless empty/missing is an intentional redesign. |
+| 15 | P1 | 424 | Required Python `intents` is given an empty missing-key default; remove the empty-array default pair (formerly `withEmptyArrayDefaults`) unless empty/missing is an intentional redesign. |
 | 16 | P1 | 348 | `argument_hint: Optional[str]` becomes `argumentHints: string[] = []`; restore singular optional string (and snake_case wire mapping if Type is camelCase). |
 | 17 | P1 | 437-440 | Python provenance is `Optional[str]`; `ProvO` is a structured PROV-O union. Use string or document and test a real migration adapter. |
 | 18 | P1 | 441 | Knowledge-node strings are not parsed and invalid elements are not dropped with warnings. Implement C.4's element-wise ingress policy. |

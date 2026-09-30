@@ -74,16 +74,18 @@ export class VaultSyncStatus extends S.Class<VaultSyncStatus>($I`VaultSyncStatus
     // sidecar that predates the field must still produce a decodable status
     // (missing key -> none), not an unavailable panel.
     disconnectReason: S.OptionFromNullOr(DmsMirrorDisconnectReason)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), SchemaUtils.withNoneDefault)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Why the provider is disconnected; none while the mirror probe reports connected.",
       }),
     currentItems: S.Natural.annotateKey({
       description: "Number of tracked items in the current reconciliation state.",
     }),
-    cursorPosition: S.OptionFromNullOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Opaque remote-event stream position; none before the cursor bootstraps.",
-    }),
+    cursorPosition: S.OptionFromNullOr(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Opaque remote-event stream position; none before the cursor bootstraps.",
+      }),
     errorItems: S.Natural.annotateKey({
       description: "Number of tracked items in the error reconciliation state.",
     }),
@@ -99,7 +101,7 @@ export class VaultSyncStatus extends S.Class<VaultSyncStatus>($I`VaultSyncStatus
     // Same older-sidecar tolerance as disconnectReason: a status that predates
     // the field must decode (missing key -> none), not go unavailable.
     probedAt: S.OptionFromNullOr(S.DateTimeUtcFromString)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), SchemaUtils.withNoneDefault)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "When the mirror probe last actually asked the provider; none when no probe has contacted it.",
       }),

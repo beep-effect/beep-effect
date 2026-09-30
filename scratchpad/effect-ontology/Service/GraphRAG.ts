@@ -8,7 +8,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { SchemaUtils } from "@beep/schema";
 import { Context, Effect, HashMap, HashSet, Inspectable, Layer, Match, Number as Num, Order as Ord } from "effect";
 import * as A from "effect/Array";
 import type { TimeoutError } from "effect/Cause";
@@ -32,33 +31,38 @@ import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/GraphRAG");
 
+const retrievalOptionsShapeTopKDefault = PosInt.make(5);
+const retrievalOptionsShapeHopsDefault = S.Natural.make(1);
+const retrievalOptionsShapeMaxNodesDefault = PosInt.make(50);
+const retrievalOptionsShapeMinScoreDefault = Confidence.make(0.3);
+const retrievalOptionsShapeIncludeTypesDefault = A.empty<IRI>();
 const RetrievalOptionsShape = S.Struct({
   topK: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(5)),
+    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeTopKDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeTopKDefault)),
     S.annotateKey({ description: "Maximum embedding matches used as graph seeds." })
   ),
   hops: S.Natural.pipe(
-    SchemaUtils.withKeyDefaults(S.Natural.make(1)),
+    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeHopsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeHopsDefault)),
     S.annotateKey({ description: "Maximum breadth-first distance from a seed." })
   ),
   maxNodes: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(50)),
+    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeMaxNodesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeMaxNodesDefault)),
     S.annotateKey({ description: "Maximum entities admitted to the retrieved subgraph, including seeds." })
   ),
   minScore: Confidence.pipe(
-    SchemaUtils.withKeyDefaults(Confidence.make(0.3)),
+    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeMinScoreDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeMinScoreDefault)),
     S.annotateKey({ description: "Minimum embedding similarity admitted as a seed." })
   ),
   includeTypes: S.Array(IRI).pipe(
-    SchemaUtils.withEmptyArrayDefaults<IRI>(),
+    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeIncludeTypesDefault)), S.withDecodingDefaultType(Effect.succeed(retrievalOptionsShapeIncludeTypesDefault)),
     S.annotateKey({ description: "Optional ontology classes restricting seed candidates." })
   ),
   includeAttributes: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(true),
+    S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
     S.annotateKey({ description: "Whether entity attributes are rendered into generation context." })
   ),
   includeRelations: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(true),
+    S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
     S.annotateKey({ description: "Whether relations are rendered into generation context." })
   ),
 }).pipe(
@@ -67,9 +71,10 @@ const RetrievalOptionsShape = S.Struct({
   })
 );
 
+const generationOptionsShapeRetryPolicyDefault = RetryPolicy.make({});
 const GenerationOptionsShape = S.Struct({
   retryPolicy: RetryPolicy.pipe(
-    SchemaUtils.withKeyDefaults(RetryPolicy.make({})),
+    S.withConstructorDefault(Effect.succeed(generationOptionsShapeRetryPolicyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(generationOptionsShapeRetryPolicyDefault)),
     S.annotateKey({ description: "Validated attempt, backoff, and overall deadline policy." })
   ),
 }).pipe(
@@ -577,7 +582,7 @@ export class ExplainOptions extends S.Class<ExplainOptions>($I`ExplainOptions`)(
   {
     ...GenerationOptionsShape.fields,
     generateStepExplanations: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether a language model explains the selected path and each step." })
     ),
   },

@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { PublicLawComponentSpan } from "../ComponentSpan/index.ts";
@@ -63,14 +63,14 @@ export class PublicLawCitation extends S.Class<PublicLawCitation>($I`PublicLawCi
     }),
     title: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional bill title extracted from nearby text.",
       })
     ),
     spans: PublicLawComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating each recognized sub-part within the source text.",
       })

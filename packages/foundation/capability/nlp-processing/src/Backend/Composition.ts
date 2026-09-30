@@ -17,7 +17,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Cache, Duration, Effect } from "effect";
 import { dual, flow } from "effect/Function";
@@ -198,6 +197,8 @@ export const withFallback: {
   });
 });
 
+const cachingOptionsCapacityDefault = PosInt.make(1024);
+const cachingOptionsTimeToLiveDefault = Duration.minutes(10);
 /**
  * Cache settings for memoized backend composition.
  *
@@ -219,8 +220,14 @@ export const withFallback: {
  */
 export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
   {
-    capacity: SchemaUtils.withKeyDefaults(PosInt, PosInt.make(1024)),
-    timeToLive: SchemaUtils.withKeyDefaults(S.Duration, Duration.minutes(10)),
+    capacity: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(cachingOptionsCapacityDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(cachingOptionsCapacityDefault))
+    ),
+    timeToLive: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(cachingOptionsTimeToLiveDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(cachingOptionsTimeToLiveDefault))
+    ),
   },
   $I.annote("CachingOptions", {
     description: "Cache settings for memoized backend composition.",

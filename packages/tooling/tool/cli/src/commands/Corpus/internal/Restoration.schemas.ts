@@ -6,7 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
@@ -157,6 +158,14 @@ const PreservationCrashPoint = LiteralKit(["none", "after-payload-sync", "after-
   })
 );
 
+const restorationPreserveOptionsChunkSizeBytesDefault = PosInt.make(8 * 1024 * 1024);
+const restorationPreserveOptionsCollectorDestinationPrefixSegmentsDefault = S.Natural.make(2);
+const restorationPreserveOptionsExpectedCollectorCopiedCountDefault = S.Natural.make(10_871);
+const restorationPreserveOptionsExpectedCollectorErrorCountDefault = S.Natural.make(5_986);
+const restorationPreserveOptionsExpectedCollectorExcludedSecretCountDefault = S.Natural.make(12);
+const restorationPreserveOptionsExpectedCollectorPresentSuccessfulRowCountDefault = S.Natural.make(21_489);
+const restorationPreserveOptionsExpectedCollectorResumedCountDefault = S.Natural.make(11_639);
+const restorationPreserveOptionsExpectedCollectorUniqueSuccessfulDestinationCountDefault = S.Natural.make(10_871);
 /**
  * Validated inputs for one preservation run.
  *
@@ -194,18 +203,53 @@ export class RestorationPreserveOptions extends S.Class<RestorationPreserveOptio
   {
     absentRecycleTreePath: S.NonEmptyString,
     capacityCeilingBytes: PosInt,
-    chunkSizeBytes: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(8 * 1024 * 1024))),
-    collectorDestinationPrefixSegments: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(2))),
+    chunkSizeBytes: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsChunkSizeBytesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(restorationPreserveOptionsChunkSizeBytesDefault))
+    ),
+    collectorDestinationPrefixSegments: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsCollectorDestinationPrefixSegmentsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(restorationPreserveOptionsCollectorDestinationPrefixSegmentsDefault))
+    ),
     corpusRoot: S.NonEmptyString,
-    crashPoint: PreservationCrashPoint.pipe(SchemaUtils.withKeyDefaults("none")),
+    crashPoint: PreservationCrashPoint.pipe(
+      S.withConstructorDefault(Effect.succeed("none" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("none" as const))
+    ),
     expectedCollectorRowCount: S.Natural,
-    expectedCollectorCopiedCount: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(10_871))),
-    expectedCollectorErrorCount: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(5_986))),
-    expectedCollectorExcludedSecretCount: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(12))),
-    expectedCollectorPresentSuccessfulRowCount: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(21_489))),
-    expectedCollectorResumedCount: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(11_639))),
+    expectedCollectorCopiedCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsExpectedCollectorCopiedCountDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(restorationPreserveOptionsExpectedCollectorCopiedCountDefault))
+    ),
+    expectedCollectorErrorCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsExpectedCollectorErrorCountDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(restorationPreserveOptionsExpectedCollectorErrorCountDefault))
+    ),
+    expectedCollectorExcludedSecretCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsExpectedCollectorExcludedSecretCountDefault)),
+      S.withDecodingDefaultTypeKey(
+        Effect.succeed(restorationPreserveOptionsExpectedCollectorExcludedSecretCountDefault)
+      )
+    ),
+    expectedCollectorPresentSuccessfulRowCount: S.Natural.pipe(
+      S.withConstructorDefault(
+        Effect.succeed(restorationPreserveOptionsExpectedCollectorPresentSuccessfulRowCountDefault)
+      ),
+      S.withDecodingDefaultTypeKey(
+        Effect.succeed(restorationPreserveOptionsExpectedCollectorPresentSuccessfulRowCountDefault)
+      )
+    ),
+    expectedCollectorResumedCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsExpectedCollectorResumedCountDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(restorationPreserveOptionsExpectedCollectorResumedCountDefault))
+    ),
     expectedCollectorUniqueSuccessfulDestinationCount: S.Natural.pipe(
-      SchemaUtils.withKeyDefaults(S.Natural.make(10_871))
+      S.withConstructorDefault(
+        Effect.succeed(restorationPreserveOptionsExpectedCollectorUniqueSuccessfulDestinationCountDefault)
+      ),
+      S.withDecodingDefaultTypeKey(
+        Effect.succeed(restorationPreserveOptionsExpectedCollectorUniqueSuccessfulDestinationCountDefault)
+      )
     ),
     expectedMissingRecyclePayloadCount: S.Natural,
     expectedMutatedDestinationCount: S.Natural,
@@ -215,7 +259,10 @@ export class RestorationPreserveOptions extends S.Class<RestorationPreserveOptio
     expectedSourceTreeBytes: S.Natural,
     minimumFreeAfterBytes: S.Natural,
     rootArchivePath: S.NonEmptyString,
-    runLabel: RunLabel.pipe(SchemaUtils.withKeyDefaults("t7-salvage-2026-08-10")),
+    runLabel: RunLabel.pipe(
+      S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("t7-salvage-2026-08-10"))
+    ),
     sourceManifestPath: S.NonEmptyString,
     sourceRoot: S.NonEmptyString,
   },
@@ -243,7 +290,10 @@ export class RestorationPreserveOptions extends S.Class<RestorationPreserveOptio
 export class RestorationVerifyOptions extends S.Class<RestorationVerifyOptions>($I`RestorationVerifyOptions`)(
   {
     corpusRoot: S.NonEmptyString,
-    runLabel: RunLabel.pipe(SchemaUtils.withKeyDefaults("t7-salvage-2026-08-10")),
+    runLabel: RunLabel.pipe(
+      S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("t7-salvage-2026-08-10"))
+    ),
   },
   $I.annote("RestorationVerifyOptions", {
     description: "Corpus root and preservation run label independently reparsed and verified from a fresh process.",
@@ -324,7 +374,10 @@ const TransformationEvidenceIdentity = S.Struct({
  */
 export class RestorationMailOptions extends S.Class<RestorationMailOptions>($I`RestorationMailOptions`)(
   {
-    bwrapPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("bwrap")),
+    bwrapPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("bwrap")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("bwrap"))
+    ),
     corpusRoot: S.NonEmptyString,
     expectedStoreCount: S.Natural,
     maxAmplificationRatio: PositiveFinite,
@@ -332,11 +385,20 @@ export class RestorationMailOptions extends S.Class<RestorationMailOptions>($I`R
     maxTotalElapsedMillis: PosInt,
     maxTotalOutputBytes: PosInt,
     pffexportPath: S.NonEmptyString,
-    runLabel: RunLabel.pipe(SchemaUtils.withKeyDefaults("t7-salvage-2026-08-10")),
+    runLabel: RunLabel.pipe(
+      S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("t7-salvage-2026-08-10"))
+    ),
     scope: MailRestorationScope,
-    systemdRunPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("systemd-run")),
+    systemdRunPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("systemd-run")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("systemd-run"))
+    ),
     tikaJarPath: S.NonEmptyString,
-    javaPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("java")),
+    javaPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("java")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("java"))
+    ),
   },
   $I.annote("RestorationMailOptions", {
     description:
@@ -375,7 +437,10 @@ export class RestorationRecycleOptions extends S.Class<RestorationRecycleOptions
     expectedSurfaceCount: S.Natural,
     maxTotalElapsedMillis: PosInt,
     maxTotalOutputBytes: PosInt,
-    runLabel: RunLabel.pipe(SchemaUtils.withKeyDefaults("t7-salvage-2026-08-10")),
+    runLabel: RunLabel.pipe(
+      S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("t7-salvage-2026-08-10"))
+    ),
   },
   $I.annote("RestorationRecycleOptions", {
     description: "Expected three-volume and inherited-missing-payload denominators for recycle reconciliation.",
@@ -414,20 +479,38 @@ export class RestorationLegacyWordOptions extends S.Class<RestorationLegacyWordO
   $I`RestorationLegacyWordOptions`
 )(
   {
-    bwrapPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("bwrap")),
-    comparePath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("compare")),
+    bwrapPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("bwrap")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("bwrap"))
+    ),
+    comparePath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("compare")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("compare"))
+    ),
     converterPath: S.NonEmptyString,
     corpusRoot: S.NonEmptyString,
     expectedConverterVersion: S.NonEmptyString,
     expectedOccurrenceCount: S.Natural,
-    javaPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("java")),
+    javaPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("java")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("java"))
+    ),
     maxElapsedMillis: PosInt,
     maxTotalElapsedMillis: PosInt,
     maxTotalOutputBytes: PosInt,
     maxVisualRmse: NonNegativeFinite,
-    pdfinfoPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("pdfinfo")),
-    pdftoppmPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("pdftoppm")),
-    runLabel: RunLabel.pipe(SchemaUtils.withKeyDefaults("t7-salvage-2026-08-10")),
+    pdfinfoPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("pdfinfo")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("pdfinfo"))
+    ),
+    pdftoppmPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("pdftoppm")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("pdftoppm"))
+    ),
+    runLabel: RunLabel.pipe(
+      S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("t7-salvage-2026-08-10"))
+    ),
     tikaJarPath: S.NonEmptyString,
   },
   $I.annote("RestorationLegacyWordOptions", {

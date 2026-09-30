@@ -20,6 +20,7 @@ import {
   reconcileAttemptJournalsForCheckout,
   releaseJournalFileLock,
 } from "@beep/repo-cli/test/RepoRun";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   acquireFullProofFallbackLockOrObserveAtPath,
   acquireFullProofFallbackLockOrObserveAtPathForTesting,
@@ -145,7 +146,6 @@ import {
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { findRepoRoot } from "@beep/repo-utils";
-import { UUID } from "@beep/schema/String";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";

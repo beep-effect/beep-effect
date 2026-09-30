@@ -1277,7 +1277,9 @@ export class RetentionAuthorization extends S.Class<RetentionAuthorization>($I`R
 const MutableRetentionMetadataFields = S.Struct({
   disposition: S.Literal("delete-or-promote"),
   dispositionDate: IsoDate,
-  retentionAuthorization: S.OptionFromOptionalKey(RetentionAuthorization).pipe(SchemaUtils.withNoneDefault),
+  retentionAuthorization: S.OptionFromOptionalKey(RetentionAuthorization).pipe(
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
   schemaVersion: S.tag("lejeune-retention-metadata/v1"),
 });
 

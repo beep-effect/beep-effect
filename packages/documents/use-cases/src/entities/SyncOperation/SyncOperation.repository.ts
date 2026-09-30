@@ -10,12 +10,10 @@ import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Documen
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
 import { DmsProvider, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
 
 const $I = $DocumentsUseCasesId.create("entities/SyncOperation/SyncOperation.repository");
 
@@ -57,13 +55,13 @@ export class SyncOperationSeed extends S.Class<SyncOperationSeed>($I`SyncOperati
     idempotencyKey: S.NonEmptyString.annotateKey({
       description: "Unique key deduplicating replays of the same push operation.",
     }),
-    inputContentDigest: S.Option(DocumentContentDigest).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    inputContentDigest: S.Option(DocumentContentDigest).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Digest of the local content captured when the operation was queued; none for folders.",
     }),
     inputGeneration: S.Natural.annotateKey({
       description: "Local generation counter captured when the operation was queued.",
     }),
-    lastError: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    lastError: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Most recent attempt failure message; none while the operation is healthy.",
     }),
     operationType: DomainSyncOperation.SyncOperationType.annotateKey({
@@ -81,7 +79,7 @@ export class SyncOperationSeed extends S.Class<SyncOperationSeed>($I`SyncOperati
     targetName: S.NonEmptyString.annotateKey({
       description: "Remote item name to apply with this operation.",
     }),
-    targetParentRelPath: S.Option(VaultRelPath).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    targetParentRelPath: S.Option(VaultRelPath).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Vault-relative path of the intended remote parent folder; none targets the mirror root.",
     }),
     targetRelPath: VaultRelPath.annotateKey({

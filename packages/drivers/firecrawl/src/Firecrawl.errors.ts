@@ -20,10 +20,12 @@ const FirecrawlNonNegativeInt = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   })
 );
 
-const optionalString = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);
-const optionalUnknown = S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault);
-const optionalBoolean = S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault);
-const optionalNonNegativeInt = S.OptionFromOptionalKey(FirecrawlNonNegativeInt).pipe(SchemaUtils.withNoneDefault);
+const optionalString = S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone));
+const optionalUnknown = S.OptionFromOptionalKey(S.Unknown).pipe(S.withConstructorDefault(Effect.succeedNone));
+const optionalBoolean = S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone));
+const optionalNonNegativeInt = S.OptionFromOptionalKey(FirecrawlNonNegativeInt).pipe(
+  S.withConstructorDefault(Effect.succeedNone)
+);
 const isFirecrawlNonNegativeInt = S.is(FirecrawlNonNegativeInt);
 
 const FirecrawlMethodNameBase = LiteralKit([
@@ -265,8 +267,8 @@ export class FirecrawlApiFailure extends S.Class<FirecrawlApiFailure>($I`Firecra
 export class FirecrawlErrorOptions extends S.Class<FirecrawlErrorOptions>($I`FirecrawlErrorOptions`)(
   {
     cause: optionalString,
-    failure: S.OptionFromOptionalKey(FirecrawlApiFailure).pipe(SchemaUtils.withNoneDefault),
-    method: S.OptionFromOptionalKey(FirecrawlMethodName).pipe(SchemaUtils.withNoneDefault),
+    failure: S.OptionFromOptionalKey(FirecrawlApiFailure).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    method: S.OptionFromOptionalKey(FirecrawlMethodName).pipe(S.withConstructorDefault(Effect.succeedNone)),
     retryAfterSeconds: optionalNonNegativeInt,
     retryable: optionalBoolean,
     sdkVersion: optionalString,
@@ -311,8 +313,8 @@ export class FirecrawlError extends S.TaggedError<FirecrawlError>($I`FirecrawlEr
   "FirecrawlError",
   {
     cause: optionalString,
-    failure: S.OptionFromOptionalKey(FirecrawlApiFailure).pipe(SchemaUtils.withNoneDefault),
-    method: S.OptionFromOptionalKey(FirecrawlMethodName).pipe(SchemaUtils.withNoneDefault),
+    failure: S.OptionFromOptionalKey(FirecrawlApiFailure).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    method: S.OptionFromOptionalKey(FirecrawlMethodName).pipe(S.withConstructorDefault(Effect.succeedNone)),
     reason: FirecrawlErrorReason,
     retryAfterSeconds: optionalNonNegativeInt,
     retryable: optionalBoolean,

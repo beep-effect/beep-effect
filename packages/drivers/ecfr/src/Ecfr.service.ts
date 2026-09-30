@@ -71,7 +71,7 @@ const TitlePathSegment = S.String.check(
   })
 );
 const optional = <A, I, R>(schema: S.Codec<A, I, R>) =>
-  S.OptionFromOptionalKey(schema).pipe(SchemaUtils.withNoneDefault);
+  S.OptionFromOptionalKey(schema).pipe(S.withConstructorDefault(Effect.succeedNone));
 
 /**
  * Optional filters accepted by the eCFR corrections listing endpoint.

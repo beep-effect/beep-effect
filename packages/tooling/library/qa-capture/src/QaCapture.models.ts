@@ -12,10 +12,10 @@
 
 import { $QaCaptureId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { EpochMilliseconds, SequenceNumber } from "./ActionEvent.models.ts";
-import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $QaCaptureId.create("QaCapture.models");
@@ -477,7 +477,7 @@ export class CaptureSession extends S.Class<CaptureSession>($I`CaptureSession`)(
       })
     ),
     scenario: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CaptureSession.scenario", {
         description: "Scenario name driven during the session, when scripted.",
       })
@@ -614,7 +614,7 @@ export class ClockSync extends S.Class<ClockSync>($I`ClockSync`)(
 export class CaptureProvenance extends S.Class<CaptureProvenance>($I`CaptureProvenance`)(
   {
     actionSeq: S.OptionFromOptionalKey(SequenceNumber).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CaptureProvenance.actionSeq", {
         description: "Witness sequence number the artifact was extracted for, when event-scoped.",
       })
@@ -635,7 +635,7 @@ export class CaptureProvenance extends S.Class<CaptureProvenance>($I`CaptureProv
       })
     ),
     scenarioName: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CaptureProvenance.scenarioName", {
         description: "Scenario name driven during the session, when scripted.",
       })
@@ -651,7 +651,7 @@ export class CaptureProvenance extends S.Class<CaptureProvenance>($I`CaptureProv
       })
     ),
     sourceVideo: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CaptureProvenance.sourceVideo", {
         description: "Round-relative source video path, when derived from a recording.",
       })
@@ -704,7 +704,7 @@ export class CaptureArtifact extends S.Class<CaptureArtifact>($I`CaptureArtifact
         })
       )
     ).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CaptureArtifact.fileSizeBytes", {
         description: "Committed file size in bytes, when measured.",
       })
@@ -767,7 +767,7 @@ export class SessionManifest extends S.Class<SessionManifest>($I`SessionManifest
       })
     ),
     clockSync: S.OptionFromOptionalKey(ClockSync).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("SessionManifest.clockSync", {
         description: "Clock synchronization derived for the round, once correlated.",
       })
@@ -778,7 +778,7 @@ export class SessionManifest extends S.Class<SessionManifest>($I`SessionManifest
       })
     ),
     legacyManifestPath: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("SessionManifest.legacyManifestPath", {
         description: "Round-relative path of the legacy screenshot manifest for judge compatibility.",
       })
@@ -794,7 +794,7 @@ export class SessionManifest extends S.Class<SessionManifest>($I`SessionManifest
       })
     ),
     videoPath: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("SessionManifest.videoPath", {
         description: "Round-relative recorded video path, once committed.",
       })

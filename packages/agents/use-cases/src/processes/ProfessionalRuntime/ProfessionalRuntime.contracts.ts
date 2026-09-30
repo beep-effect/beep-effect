@@ -6,7 +6,8 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { EmailString, SchemaUtils } from "@beep/schema";
+import { EmailString } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import {
   RuntimeActivityType,
@@ -212,12 +213,14 @@ export class RuntimeEntityRef extends S.Class<RuntimeEntityRef>($I`RuntimeEntity
 export class RuntimeEvidenceRef extends S.Class<RuntimeEvidenceRef>($I`RuntimeEvidenceRef`)(
   {
     artifactId: RuntimeArtifactId.annotateKey({ description: "Source artifact identifier carrying the evidence." }),
-    spanId: RuntimeSpanId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+    spanId: RuntimeSpanId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional single source span identifier.",
     }),
-    spanIds: S.Array(RuntimeSpanId).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional source span identifiers when evidence covers multiple spans.",
-    }),
+    spanIds: S.Array(RuntimeSpanId)
+      .pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Optional source span identifiers when evidence covers multiple spans.",
+      }),
   },
   $I.annote("RuntimeEvidenceRef", {
     description: "Reference to one or more source spans on an artifact.",
@@ -261,7 +264,10 @@ export class RuntimeCandidateClaim extends S.Class<RuntimeCandidateClaim>($I`Run
     claimId: RuntimeClaimId.annotateKey({ description: "Candidate claim identifier." }),
     claimType: S.NonEmptyString.annotateKey({ description: "Domain-specific candidate claim type." }),
     confidence: RuntimeClaimConfidence.annotateKey({ description: "Confidence assigned to the candidate claim." }),
-    eventDate: RuntimeLocalDateText.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+    eventDate: RuntimeLocalDateText.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ).annotateKey({
       description: "Optional local date associated with the claim event.",
     }),
     evidence: S.Array(RuntimeEvidenceRef).annotateKey({ description: "Evidence references supporting the claim." }),
@@ -626,13 +632,18 @@ export class RuntimeActivity extends S.Class<RuntimeActivity>($I`RuntimeActivity
   {
     activityId: S.NonEmptyString.annotateKey({ description: "Runtime provenance activity identifier." }),
     activityType: RuntimeActivityType.annotateKey({ description: "Runtime provenance activity type." }),
-    artifactId: RuntimeArtifactId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+    artifactId: RuntimeArtifactId.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ).annotateKey({
       description: "Optional artifact identifier linked to the activity.",
     }),
     principalId: RuntimePrincipalId.annotateKey({ description: "Principal identifier responsible for the activity." }),
-    spanIds: S.Array(RuntimeSpanId).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional span identifiers linked to the activity.",
-    }),
+    spanIds: S.Array(RuntimeSpanId)
+      .pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Optional span identifiers linked to the activity.",
+      }),
   },
   $I.annote("RuntimeActivity", {
     description: "Provenance activity for ingestion and candidate proposal events.",

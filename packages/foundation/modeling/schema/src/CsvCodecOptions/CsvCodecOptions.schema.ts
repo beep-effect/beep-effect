@@ -31,6 +31,9 @@ const SingleCharacterText = S.String.check(
   })
 );
 
+const csvCodecOptionsMaxRowsDefault = S.Natural.make(0);
+const csvCodecOptionsSkipLinesDefault = S.Natural.make(0);
+const csvCodecOptionsSkipRowsDefault = S.Natural.make(0);
 /**
  * Schema-backed CSV text codec options.
  *
@@ -49,27 +52,39 @@ const SingleCharacterText = S.String.check(
  */
 export class CsvCodecOptions extends S.Class<CsvCodecOptions>($I`CsvCodecOptions`)(
   {
-    delimiter: SingleCharacterText.pipe(SchemaUtils.withKeyDefaults(",")),
+    delimiter: SingleCharacterText.pipe(
+      S.withConstructorDefault(Effect.succeed(",")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(","))
+    ),
     ignoreEmpty: SchemaUtils.BoolKeyDefaultFalse,
     quote: S.OptionFromNullOr(SingleCharacterText).pipe(
       S.withConstructorDefault(Effect.succeedSome('"')),
       S.withDecodingDefaultKey(Effect.succeed('"'))
     ),
     escape: S.OptionFromNullOr(SingleCharacterText).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
     comment: S.OptionFromNullOr(SingleCharacterText).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
     ltrim: SchemaUtils.BoolKeyDefaultFalse,
     rtrim: SchemaUtils.BoolKeyDefaultFalse,
     trim: SchemaUtils.BoolKeyDefaultFalse,
     strictColumnHandling: SchemaUtils.BoolKeyDefaultFalse,
-    maxRows: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
-    skipLines: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
-    skipRows: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
+    maxRows: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(csvCodecOptionsMaxRowsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(csvCodecOptionsMaxRowsDefault))
+    ),
+    skipLines: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(csvCodecOptionsSkipLinesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(csvCodecOptionsSkipLinesDefault))
+    ),
+    skipRows: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(csvCodecOptionsSkipRowsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(csvCodecOptionsSkipRowsDefault))
+    ),
   },
   $I.annote("CsvCodecOptions", {
     description: "Schema-backed CSV text codec options.",

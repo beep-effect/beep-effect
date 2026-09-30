@@ -13,7 +13,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
@@ -22,6 +21,7 @@ import * as Rpc from "effect/rpc/Rpc";
 import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { Entity as DomainEntity, Relation } from "../Domain/Model/Entity.ts";
+import { Effect } from "effect";
 import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cluster/ExtractionEntity");
@@ -63,11 +63,11 @@ export const ExtractFromTextPayload = S.Struct({
   ontologyVersion: S.String,
   /** Optional extraction parameters */
   params: S.Struct({
-    maxTokens: PosInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    temperature: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    includeConfidence: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    groundingThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    maxTokens: PosInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    temperature: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    includeConfidence: S.Boolean.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    groundingThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  }).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("ExtractFromTextPayload", {
     description: "Source text, ontology identity, and optional LLM parameters for a streaming extraction RPC.",
@@ -287,7 +287,7 @@ export const GetCachedResultRpc = Rpc.make("GetCachedResult", {
 export const CancelExtractionRpc = Rpc.make("CancelExtraction", {
   payload: S.Struct({
     idempotencyKey: S.String,
-    reason: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    reason: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }),
   success: S.Boolean,
   error: ExtractionError,
@@ -295,10 +295,10 @@ export const CancelExtractionRpc = Rpc.make("CancelExtraction", {
 
 /** Current state of an extraction run. */
 const ExtractionStatusFields = {
-  progress: Percentage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  completedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  error: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  progress: Percentage.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  startedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  completedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  error: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 };
 
 /**

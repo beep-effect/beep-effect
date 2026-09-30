@@ -609,6 +609,7 @@ export type OperationCategory = typeof OperationCategory.Type;
 // Execution Options
 // =============================================================================
 
+const executionOptionsTimeoutDefault = O.none();
 /**
  * Options controlling one executor run.
  *
@@ -635,10 +636,22 @@ export type OperationCategory = typeof OperationCategory.Type;
  */
 export class ExecutionOptions extends S.Class<ExecutionOptions>($I`ExecutionOptions`)(
   {
-    cache: SchemaUtils.withKeyDefaults(S.Boolean, true),
-    strategy: SchemaUtils.withKeyDefaults(ExecutionStrategy, ExecutionStrategy.Sequential),
-    timeout: SchemaUtils.withKeyDefaults(S.Option(S.Duration), O.none()),
-    trace: SchemaUtils.withKeyDefaults(S.Boolean, false),
+    cache: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    strategy: ExecutionStrategy.pipe(
+      S.withConstructorDefault(Effect.succeed(ExecutionStrategy.Sequential)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ExecutionStrategy.Sequential))
+    ),
+    timeout: S.Option(S.Duration).pipe(
+      S.withConstructorDefault(Effect.succeed(executionOptionsTimeoutDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(executionOptionsTimeoutDefault))
+    ),
+    trace: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
   },
   $I.annote("ExecutionOptions", {
     description: "Options controlling a single execution.",

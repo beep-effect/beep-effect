@@ -12,9 +12,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonEmptyTrimmedStr } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
-import { ISOStr } from "@beep/schema/Timestamp";
+import { IsoDateTimeString } from "@beep/skill-contract";
 import { A, Str } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -22,6 +22,8 @@ import { ProcessPid } from "../../internal/repo-run/ProcessTable.ts";
 import { PosInt } from "../../internal/schema/PosInt.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.schemas");
+
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 
 const REFS_HEADS_PREFIX = "refs/heads/";
 const WORKTREE_PREFIX = "worktree ";
@@ -289,15 +291,13 @@ export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
  *
  * ```ts
  * import { WorktreeRepositoryHash, WorktreeResidueManifest } from "@beep/repo-cli/commands/Worktree"
- * import { NonEmptyTrimmedStr } from "@beep/schema"
- * import { ISOStr } from "@beep/schema/Timestamp"
  * import * as O from "effect/Option"
  *
  * const manifest = WorktreeResidueManifest.make({
- *   name: NonEmptyTrimmedStr.make("feature-x"),
+ *   name: "feature-x",
  *   branch: O.some("feat/feature-x"),
  *   head: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
- *   archivedAt: ISOStr.make(NonEmptyTrimmedStr.make("2026-09-02T12:34:56.000Z")),
+ *   archivedAt: "2026-09-02T12:34:56.000Z",
  *   archiveRef: "refs/archive/worktrees/feature-x/20260902-123456",
  *   repositoryHash: WorktreeRepositoryHash.make("0123456789ab"),
  *   patchPath: O.none(),
@@ -314,10 +314,10 @@ export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
  */
 export class WorktreeResidueManifest extends S.Class<WorktreeResidueManifest>($I`WorktreeResidueManifest`)(
   {
-    name: NonEmptyTrimmedStr,
+    name: TrimmedNonEmptyString,
     branch: S.OptionFromNullOr(S.String),
     head: GitObjectId,
-    archivedAt: ISOStr,
+    archivedAt: IsoDateTimeString,
     archiveRef: S.NonEmptyString,
     repositoryHash: WorktreeRepositoryHash,
     patchPath: S.OptionFromNullOr(S.String),
@@ -384,9 +384,8 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  *
  * ```ts
  * import { WorktreeSessionMarker } from "@beep/repo-cli/commands/Worktree"
- * import { NonEmptyTrimmedStr } from "@beep/schema"
  *
- * const marker = WorktreeSessionMarker.make({ name: NonEmptyTrimmedStr.make("CLAUDE_PID"), pid: 4242 })
+ * const marker = WorktreeSessionMarker.make({ name: "CLAUDE_PID", pid: 4242 })
  * console.log(marker.name) // "CLAUDE_PID"
  * ```
  *
@@ -395,7 +394,7 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  */
 export class WorktreeSessionMarker extends S.Class<WorktreeSessionMarker>($I`WorktreeSessionMarker`)(
   {
-    name: NonEmptyTrimmedStr,
+    name: TrimmedNonEmptyString,
     pid: ProcessPid,
   },
   $I.annote("WorktreeSessionMarker", {
@@ -421,11 +420,10 @@ export class WorktreeSessionMarker extends S.Class<WorktreeSessionMarker>($I`Wor
  *
  * ```ts
  * import { WorktreeInvokerExemption, WorktreeSessionMarker } from "@beep/repo-cli/commands/Worktree"
- * import { NonEmptyTrimmedStr } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const exemption = WorktreeInvokerExemption.make({
- *   sessionMarker: O.some(WorktreeSessionMarker.make({ name: NonEmptyTrimmedStr.make("CLAUDE_PID"), pid: 4242 })),
+ *   sessionMarker: O.some(WorktreeSessionMarker.make({ name: "CLAUDE_PID", pid: 4242 })),
  * })
  * console.log(O.isSome(exemption.sessionMarker)) // true
  * ```
@@ -471,11 +469,10 @@ export class WorktreeInvokerExemption extends S.Class<WorktreeInvokerExemption>(
  *
  * ```ts
  * import { WorktreeRemovalRequest } from "@beep/repo-cli/commands/Worktree"
- * import { NonEmptyTrimmedStr } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const request = WorktreeRemovalRequest.make({
- *   name: NonEmptyTrimmedStr.make("feature-x"),
+ *   name: "feature-x",
  *   targetPath: "/repo-worktrees/feature-x",
  *   mainCheckout: "/repo",
  *   branch: O.some("feat/feature-x"),
@@ -491,7 +488,7 @@ export class WorktreeInvokerExemption extends S.Class<WorktreeInvokerExemption>(
  */
 export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`WorktreeRemovalRequest`)(
   {
-    name: NonEmptyTrimmedStr.check(S.isPattern(/^(?!\.{1,2}$)[^/\\\x00-\x1f\x7f]+$/u)),
+    name: TrimmedNonEmptyString.check(S.isPattern(/^(?!\.{1,2}$)[^/\\\x00-\x1f\x7f]+$/u)),
     targetPath: S.NonEmptyString.check(S.isPattern(/^[^\x00-\x1f\x7f]+$/u)),
     mainCheckout: S.String,
     branch: S.OptionFromNullOr(S.String),

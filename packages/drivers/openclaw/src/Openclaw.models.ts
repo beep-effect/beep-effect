@@ -12,7 +12,8 @@
 
 import { $OpenclawId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { flow, identity, SchemaTransformation } from "effect";
+import { Effect, flow, identity, SchemaTransformation } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -149,6 +150,7 @@ export const OpenclawDiagnosticText = S.String.pipe(
  */
 export type OpenclawDiagnosticText = typeof OpenclawDiagnosticText.Type;
 
+const openclawProcessRequestEnvDefault = R.empty();
 /**
  * Complete technical request passed to an injected OpenClaw process runner.
  *
@@ -177,19 +179,27 @@ export class OpenclawProcessRequest extends S.Class<OpenclawProcessRequest>($I`O
     args: S.Array(S.String).annotateKey({
       description: "Arguments passed to the executable; tokens never appear here.",
     }),
-    env: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "Hermetic environment supplied only to the child process.",
-    }),
+    env: S.Record(S.String, S.String)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawProcessRequestEnvDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawProcessRequestEnvDefault))
+      )
+      .annotateKey({
+        description: "Hermetic environment supplied only to the child process.",
+      }),
     executable: S.NonEmptyString.annotateKey({
       description: "Executable command or path used by the child process.",
     }),
-    stdin: OpenclawProcessStdinBase.pipe(SchemaUtils.withKeyDefaults("ignore")).annotateKey({
+    stdin: OpenclawProcessStdinBase.pipe(
+      S.withConstructorDefault(Effect.succeed("ignore" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("ignore" as const))
+    ).annotateKey({
       description: "Standard-input policy; defaults to ignored unless a private stdin payload is present.",
     }),
-    stdinText: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    stdinText: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Private standard-input payload supplied to the child without placing it in argv.",
     }),
-    timeoutMs: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    timeoutMs: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional per-invocation timeout in milliseconds.",
     }),
   },
@@ -247,7 +257,7 @@ export class OpenclawProcessResult extends S.Class<OpenclawProcessResult>($I`Ope
  */
 export class OpenclawVersionInfo extends S.Class<OpenclawVersionInfo>($I`OpenclawVersionInfo`)(
   {
-    commit: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    commit: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Short git commit reported in parentheses, when present.",
     }),
     raw: S.NonEmptyString.annotateKey({
@@ -590,19 +600,19 @@ export type OpenclawSecretsReload = typeof OpenclawSecretsReload.Type;
  */
 export class OpenclawChannelHealth extends S.Class<OpenclawChannelHealth>($I`OpenclawChannelHealth`)(
   {
-    connected: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    connected: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Whether the channel reports an active upstream connection.",
     }),
-    restartPending: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    restartPending: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Whether a channel restart is pending.",
     }),
-    running: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    running: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Whether the channel worker is running.",
     }),
-    tokenSource: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    tokenSource: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Reported credential source (e.g. 'config' or 'env'), when present.",
     }),
-    tokenStatus: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    tokenStatus: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Reported credential status (e.g. 'available'), when present.",
     }),
   },
@@ -611,6 +621,8 @@ export class OpenclawChannelHealth extends S.Class<OpenclawChannelHealth>($I`Ope
   })
 ) {}
 
+const openclawGatewayHealthChannelsDefault = R.empty();
+const openclawGatewayHealthPluginsLoadedDefault = A.empty();
 /**
  * Normalized projection of `openclaw gateway call health --json`.
  *
@@ -632,18 +644,28 @@ export class OpenclawChannelHealth extends S.Class<OpenclawChannelHealth>($I`Ope
  */
 export class OpenclawGatewayHealth extends S.Class<OpenclawGatewayHealth>($I`OpenclawGatewayHealth`)(
   {
-    channels: S.Record(S.String, OpenclawChannelHealth).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "Per-channel health projections keyed by channel name.",
-    }),
+    channels: S.Record(S.String, OpenclawChannelHealth)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawGatewayHealthChannelsDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawGatewayHealthChannelsDefault))
+      )
+      .annotateKey({
+        description: "Per-channel health projections keyed by channel name.",
+      }),
     ok: S.Boolean.annotateKey({
       description: "Top-level gateway health verdict.",
     }),
     pluginErrorCount: S.Natural.annotateKey({
       description: "Number of plugin errors reported by the gateway.",
     }),
-    pluginsLoaded: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults([])).annotateKey({
-      description: "Names of plugins the gateway reports as loaded.",
-    }),
+    pluginsLoaded: S.Array(S.String)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawGatewayHealthPluginsLoadedDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawGatewayHealthPluginsLoadedDefault))
+      )
+      .annotateKey({
+        description: "Names of plugins the gateway reports as loaded.",
+      }),
   },
   $I.annote("OpenclawGatewayHealth", {
     description: "Normalized projection of the authenticated gateway health call.",
@@ -681,25 +703,25 @@ export class OpenclawChannelAccountStatus extends S.Class<OpenclawChannelAccount
     configured: S.Boolean.annotateKey({
       description: "Whether the account has configuration present.",
     }),
-    connected: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    connected: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Whether the account reports an active upstream connection.",
     }),
     enabled: S.Boolean.annotateKey({
       description: "Whether the account is enabled.",
     }),
-    probeError: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    probeError: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Credential probe error text, when the probe failed.",
     }),
-    probeOk: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    probeOk: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Credential probe verdict, when a probe was requested.",
     }),
     running: S.Boolean.annotateKey({
       description: "Whether the account worker is running.",
     }),
-    tokenSource: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    tokenSource: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Reported credential source (e.g. 'config' or 'env'), when present.",
     }),
-    tokenStatus: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    tokenStatus: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Reported credential status (e.g. 'available'), when present.",
     }),
   },
@@ -730,25 +752,25 @@ export class OpenclawChannelAccountStatus extends S.Class<OpenclawChannelAccount
  */
 export class OpenclawAgentTurn extends S.Class<OpenclawAgentTurn>($I`OpenclawAgentTurn`)(
   {
-    aborted: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    aborted: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Whether the run aborted before completing.",
     }),
-    model: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    model: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Model that served the turn, when reported.",
     }),
-    provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    provider: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider that served the turn, when reported.",
     }),
-    runId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    runId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Gateway run identifier, when reported.",
     }),
     status: S.NonEmptyString.annotateKey({
       description: "Turn status reported by the CLI (e.g. 'ok').",
     }),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Stop reason reported for the run (e.g. 'stop'), when present.",
     }),
-    text: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    text: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "First response payload text, when present.",
     }),
   },
@@ -1153,6 +1175,7 @@ export const OpenclawLiveAcceptanceResult = S.Union([OpenclawLiveAcceptancePasse
  */
 export type OpenclawLiveAcceptanceResult = typeof OpenclawLiveAcceptanceResult.Type;
 
+const openclawInvocationContextExtraEnvDefault = R.empty();
 /**
  * Invocation context shared by every OpenClaw CLI operation.
  *
@@ -1179,27 +1202,43 @@ export class OpenclawInvocationContext extends S.Class<OpenclawInvocationContext
     binaryPath: S.NonEmptyString.annotateKey({
       description: "Path of the pinned openclaw executable.",
     }),
-    configPath: S.OptionFromOptionalKey(OpenclawAbsolutePath).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Absolute path exported as OPENCLAW_CONFIG_PATH, when set.",
-    }),
-    extraEnv: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "Additional environment entries; the gateway token travels here, never in argv.",
-    }),
-    gatewayUrl: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Gateway URL passed as --url for remote calls, when set.",
-    }),
-    home: S.OptionFromOptionalKey(OpenclawAbsolutePath).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    configPath: S.OptionFromOptionalKey(OpenclawAbsolutePath)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Absolute path exported as OPENCLAW_CONFIG_PATH, when set.",
+      }),
+    extraEnv: S.Record(S.String, S.String)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawInvocationContextExtraEnvDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawInvocationContextExtraEnvDefault))
+      )
+      .annotateKey({
+        description: "Additional environment entries; the gateway token travels here, never in argv.",
+      }),
+    gatewayUrl: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Gateway URL passed as --url for remote calls, when set.",
+      }),
+    home: S.OptionFromOptionalKey(OpenclawAbsolutePath).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Isolated HOME directory for hermetic invocations, when set.",
     }),
-    nixMode: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)).annotateKey({
+    nixMode: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ).annotateKey({
       description: "Whether OPENCLAW_NIX_MODE=1 is exported; managed deployments keep this on.",
     }),
-    nodeBinDir: S.OptionFromOptionalKey(OpenclawAbsolutePath).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Pinned Node bin directory prepended to the hermetic PATH, when set.",
-    }),
-    stateDir: S.OptionFromOptionalKey(OpenclawAbsolutePath).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Absolute path exported as OPENCLAW_STATE_DIR, when set.",
-    }),
+    nodeBinDir: S.OptionFromOptionalKey(OpenclawAbsolutePath)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Pinned Node bin directory prepended to the hermetic PATH, when set.",
+      }),
+    stateDir: S.OptionFromOptionalKey(OpenclawAbsolutePath)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Absolute path exported as OPENCLAW_STATE_DIR, when set.",
+      }),
   },
   $I.annote("OpenclawInvocationContext", {
     description: "Hermetic invocation context for OpenClaw CLI operations.",
@@ -1267,13 +1306,13 @@ export class OpenclawSystemdUnitState extends S.Class<OpenclawSystemdUnitState>(
     activeState: S.NonEmptyString.annotateKey({
       description: "Raw ActiveState value reported by systemctl.",
     }),
-    controlGroup: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    controlGroup: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Reported ControlGroup path, when present.",
     }),
-    fragmentPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    fragmentPath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Reported FragmentPath unit-file location, when present.",
     }),
-    mainPid: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    mainPid: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Reported MainPID, when the unit has a main process.",
     }),
   },
@@ -1354,7 +1393,7 @@ export class OpenclawHttpProbe extends S.Class<OpenclawHttpProbe>($I`OpenclawHtt
     endpoint: S.NonEmptyString.annotateKey({
       description: "Probed endpoint URL.",
     }),
-    httpStatus: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    httpStatus: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "HTTP status code, when a response was received.",
     }),
     status: OpenclawHttpProbeStatus.annotateKey({

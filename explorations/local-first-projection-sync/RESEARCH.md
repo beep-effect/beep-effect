@@ -231,8 +231,8 @@ is genuinely net-new; its primitives, transport, and authority boundary are not.
   `@beep/nlp` (`packages/foundation/capability/nlp/src/Graph/{TextGraph,GraphOps,EffectGraph}.ts`),
   `@beep/repo-utils`
   (`packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts`, lines
-  360/437), and a test in
-  `packages/foundation/modeling/schema/test/MutableHashMap.test.ts`.
+  360/437), and a test of the retired `@beep/schema` `MutableHashMap` concept
+  (removed in the effect-schema-parity group E PR).
 - `SynchronizedRef` (the mutable-registry guard) — the module exists in Effect v4
   (`effect/SynchronizedRef`) but **NOT FOUND** in any repo `src` (zero usages on
   2026-06-29). Available primitive, pattern not yet exercised here — first user.

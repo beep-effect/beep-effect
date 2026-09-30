@@ -8,7 +8,7 @@
 
 import { $AgentsDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { pipe, SchemaTransformation } from "effect";
+import { Effect, pipe, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -375,13 +375,15 @@ export type TokenSource = typeof TokenSource.Type;
 export class AuthenticatedSnapshot extends S.Class<AuthenticatedSnapshot>($I`AuthenticatedSnapshot`)(
   {
     status: S.tag("authenticated"),
-    email: S.OptionFromNullOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    email: S.OptionFromNullOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Account email reported by the probe; encodes absence as null.",
     }),
-    subscriptionLabel: S.OptionFromNullOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Subscription or plan label reported by the probe; encodes absence as null.",
-    }),
-    tokenSource: S.OptionFromNullOr(TokenSource).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    subscriptionLabel: S.OptionFromNullOr(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Subscription or plan label reported by the probe; encodes absence as null.",
+      }),
+    tokenSource: S.OptionFromNullOr(TokenSource).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Credential source reported by the probe; encodes absence as null.",
     }),
     probedAt: S.DateTimeUtcFromString.annotateKey({

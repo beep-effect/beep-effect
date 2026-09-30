@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 
@@ -58,14 +58,14 @@ export class CanonCitation extends S.Class<CanonCitation>($I`CanonCitation`)(
     }),
     subsection: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Subsection chain, e.g. "(B)(1)", "(A)".',
       })
     ),
     ruleSet: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Rule set when stated explicitly, e.g. "Code of Judicial Conduct".',
       })

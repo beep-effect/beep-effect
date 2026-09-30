@@ -7,7 +7,7 @@
 
 import { $RunpodId } from "@beep/identity";
 import { SchemaUtils, URLStr } from "@beep/schema";
-import { SchemaGetter } from "effect";
+import { Effect, SchemaGetter } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -90,6 +90,7 @@ export const RUNPOD_API_URL = "https://rest.runpod.io/v1";
  */
 export const RUNPOD_DOCS_INDEX_URL = "https://docs.runpod.io/llms.txt";
 
+const runpodConfigInputHeadersDefault = R.empty();
 /**
  * Runtime configuration accepted by {@link Runpod.makeLayer}.
  *
@@ -111,14 +112,21 @@ export const RUNPOD_DOCS_INDEX_URL = "https://docs.runpod.io/llms.txt";
 export class RunpodConfigInput extends S.Class<RunpodConfigInput>($I`RunpodConfigInput`)(
   {
     apiKey: S.optionalKey(S.String.pipe(S.RedactedFromValue)),
-    apiUrl: RunpodConfigUrl.pipe(SchemaUtils.withKeyDefaults(RUNPOD_API_URL)),
-    headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())),
+    apiUrl: RunpodConfigUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(RUNPOD_API_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(RUNPOD_API_URL))
+    ),
+    headers: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(runpodConfigInputHeadersDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(runpodConfigInputHeadersDefault))
+    ),
   },
   $I.annote("RunpodConfigInput", {
     description: "Runtime configuration accepted by the Runpod REST API driver layer.",
   })
 ) {}
 
+const runpodDocsConfigInputHeadersDefault = R.empty();
 /**
  * Runtime configuration accepted by {@link RunpodDocs.makeLayer}.
  *
@@ -138,8 +146,14 @@ export class RunpodConfigInput extends S.Class<RunpodConfigInput>($I`RunpodConfi
  */
 export class RunpodDocsConfigInput extends S.Class<RunpodDocsConfigInput>($I`RunpodDocsConfigInput`)(
   {
-    headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())),
-    indexUrl: RunpodConfigUrl.pipe(SchemaUtils.withKeyDefaults(RUNPOD_DOCS_INDEX_URL)),
+    headers: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(runpodDocsConfigInputHeadersDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(runpodDocsConfigInputHeadersDefault))
+    ),
+    indexUrl: RunpodConfigUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(RUNPOD_DOCS_INDEX_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(RUNPOD_DOCS_INDEX_URL))
+    ),
   },
   $I.annote("RunpodDocsConfigInput", {
     description: "Runtime configuration accepted by the Runpod documentation index driver layer.",

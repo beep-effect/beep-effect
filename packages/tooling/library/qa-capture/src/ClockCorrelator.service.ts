@@ -15,7 +15,6 @@
 
 import { ExtractClipRequest, FFmpeg, ProbeRegionLuminanceRequest } from "@beep/ffmpeg";
 import { $QaCaptureId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Context, Effect, Layer, Order, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -227,6 +226,7 @@ export const fitBeaconClockSync: {
   });
 });
 
+const correlateClockRequestBeaconEventsDefault = A.empty();
 /**
  * Request accepted by {@link ClockCorrelator} `correlate`.
  *
@@ -256,7 +256,8 @@ export class CorrelateClockRequest extends S.Class<CorrelateClockRequest>($I`Cor
       })
     ),
     beaconEvents: S.Array(BeaconEvent).pipe(
-      SchemaUtils.withKeyDefaults([]),
+      S.withConstructorDefault(Effect.succeed(correlateClockRequestBeaconEventsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(correlateClockRequestBeaconEventsDefault)),
       $I.annoteKey("CorrelateClockRequest.beaconEvents", {
         description: "Witness beacon flip events, when a sync beacon ran.",
       })
@@ -269,7 +270,8 @@ export class CorrelateClockRequest extends S.Class<CorrelateClockRequest>($I`Cor
         message: "Expected a beacon region of at least 16 pixels",
       })
     ).pipe(
-      SchemaUtils.withKeyDefaults(128),
+      S.withConstructorDefault(Effect.succeed(128)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(128)),
       $I.annoteKey("CorrelateClockRequest.beaconRegionSize", {
         description: "Square edge length of the top-left probe region in pixels.",
       })
@@ -282,7 +284,8 @@ export class CorrelateClockRequest extends S.Class<CorrelateClockRequest>($I`Cor
         message: "Expected a non-negative probe pad",
       })
     ).pipe(
-      SchemaUtils.withKeyDefaults(2),
+      S.withConstructorDefault(Effect.succeed(2)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2)),
       $I.annoteKey("CorrelateClockRequest.probePadSeconds", {
         description: "Seconds of padding around the beacon flip span when cutting the probe clip.",
       })

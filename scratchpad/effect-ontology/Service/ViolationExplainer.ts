@@ -13,7 +13,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { Dataset } from "@beep/rdf";
-import { SchemaUtils } from "@beep/schema";
 import { ShaclSeverity, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import { Clock, Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -83,6 +82,7 @@ export class ExplanationError extends S.TaggedError<ExplanationError>($I`Explana
 // Domain Models
 // =============================================================================
 
+const explanationContextMaxTokensDefault = PosInt.make(500);
 /**
  * Context for generating explanations
  *
@@ -101,17 +101,17 @@ export class ExplanationError extends S.TaggedError<ExplanationError>($I`Explana
 export class ExplanationContext extends S.Class<ExplanationContext>($I`ExplanationContext`)({
   /** The canonical RDF dataset containing the data graph */
   dataStore: S.OptionFromOptionalKey(Dataset).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({
       description: "Optional canonical RDF dataset containing the data graph used for explanation context.",
     })
   ),
   /** Turtle representation of relevant triples around the focus node */
-  neighborhoodTurtle: S.String.pipe(SchemaUtils.withKeyDefaults("")),
+  neighborhoodTurtle: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultTypeKey(Effect.succeed(""))),
   /** Domain description for additional context */
-  domainDescription: S.String.pipe(SchemaUtils.withKeyDefaults("")),
+  domainDescription: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultTypeKey(Effect.succeed(""))),
   /** Maximum tokens for the explanation */
-  maxTokens: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(500))),
+  maxTokens: PosInt.pipe(S.withConstructorDefault(Effect.succeed(explanationContextMaxTokensDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(explanationContextMaxTokensDefault))),
   },
   $I.annote("ExplanationContext", {
     description: "Neighborhood triples, domain description, and token bound for a SHACL explanation.",
@@ -155,6 +155,7 @@ export class ExplanationContext extends S.Class<ExplanationContext>($I`Explanati
   }
 }
 
+const llmViolationExplanationConfidenceDefault = Confidence.make(0.8);
 /**
  * LLM-generated explanation for a SHACL violation
  *
@@ -180,7 +181,7 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>($I
   /** Original violation */
   focusNode: S.String,
   /** Path that was violated (if any) */
-  path: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  path: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   /** Human-readable explanation of what went wrong */
   explanation: S.String,
   /** Suggested fix action */
@@ -190,7 +191,7 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>($I
   /** Affected entity IRIs */
   affectedEntities: S.Array(S.String),
   /** Confidence in the explanation (0-1) */
-  confidence: Confidence.pipe(SchemaUtils.withKeyDefaults(Confidence.make(0.8))),
+  confidence: Confidence.pipe(S.withConstructorDefault(Effect.succeed(llmViolationExplanationConfidenceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(llmViolationExplanationConfidenceDefault))),
   },
   $I.annote("LlmViolationExplanation", {
     description: "Human-readable SHACL explanation, suggested fix, severity, and confidence.",

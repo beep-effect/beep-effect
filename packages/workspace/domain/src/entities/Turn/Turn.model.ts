@@ -6,9 +6,9 @@
  */
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { TurnItems } from "./Turn.values.ts";
 
@@ -35,7 +35,7 @@ export class Turn extends ProductEntity.Entity<Turn>()(WorkspaceIdentity.TurnId)
       description: "Non-empty ordered items held by the turn aggregate.",
     }).pipe(pg.jsonb()),
     parentTurnId: S.OptionFromNullOr(WorkspaceIdentity.TurnId)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Optional parent turn lineage; encodes absent roots as SQL/wire null.",
       })

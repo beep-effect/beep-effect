@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { FederalRegisterComponentSpan } from "../ComponentSpan/index.ts";
@@ -63,14 +63,14 @@ export class FederalRegisterCitation extends S.Class<FederalRegisterCitation>($I
     }),
     year: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Publication year (if extracted).",
       })
     ),
     spans: FederalRegisterComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating the sub-parts of the citation within the source text.",
       })

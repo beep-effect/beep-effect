@@ -16,7 +16,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Clock, Duration, Effect, Number as N, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -65,6 +65,9 @@ export const CircuitState = LiteralKit(["closed", "open", "half_open"]).pipe(
  */
 export type CircuitState = typeof CircuitState.Type;
 
+const circuitBreakerConfigMaxFailuresDefault = PosInt.make(5);
+const circuitBreakerConfigResetTimeoutDefault = Duration.minutes(2);
+const circuitBreakerConfigSuccessThresholdDefault = PosInt.make(2);
 /**
  * Failure, recovery-delay, and recovery-success thresholds for {@link makeCircuitBreaker}.
  *
@@ -90,9 +93,9 @@ export type CircuitState = typeof CircuitState.Type;
  */
 export class CircuitBreakerConfig extends S.Class<CircuitBreakerConfig>($I`CircuitBreakerConfig`)(
   {
-    maxFailures: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(5))),
-    resetTimeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.minutes(2))),
-    successThreshold: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(2))),
+    maxFailures: PosInt.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigMaxFailuresDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigMaxFailuresDefault))),
+    resetTimeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigResetTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigResetTimeoutDefault))),
+    successThreshold: PosInt.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault))),
   },
   $I.annote("CircuitBreakerConfig", {
     description: "Failure, recovery-delay, and recovery-success thresholds for a circuit breaker.",

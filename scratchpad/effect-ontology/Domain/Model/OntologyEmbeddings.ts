@@ -104,6 +104,8 @@ export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedd
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(ElementEmbedding);
 }
 
+const ontologyEmbeddingsFieldsModelClassesDefault = A.empty<ElementEmbedding>();
+const ontologyEmbeddingsFieldsModelPropertiesDefault = A.empty<ElementEmbedding>();
 class OntologyEmbeddingsFieldsModel extends S.Class<OntologyEmbeddingsFieldsModel>($I`OntologyEmbeddingsFieldsModel`)(
   {
     ontologyUri: GcsUri.annotateKey({
@@ -129,11 +131,11 @@ class OntologyEmbeddingsFieldsModel extends S.Class<OntologyEmbeddingsFieldsMode
       description: "UTC instant at which the artifact was computed.",
     }),
     classes: S.Array(ElementEmbedding).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
+      S.withConstructorDefault(Effect.succeed(ontologyEmbeddingsFieldsModelClassesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyEmbeddingsFieldsModelClassesDefault)),
       S.annotateKey({ description: "Embeddings for ontology class definitions." })
     ),
     properties: S.Array(ElementEmbedding).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
+      S.withConstructorDefault(Effect.succeed(ontologyEmbeddingsFieldsModelPropertiesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyEmbeddingsFieldsModelPropertiesDefault)),
       S.annotateKey({ description: "Embeddings for ontology property definitions." })
     ),
   },

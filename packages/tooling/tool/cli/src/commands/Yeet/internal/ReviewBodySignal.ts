@@ -50,8 +50,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { pipe } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import { constant, dual } from "effect/Function";
 import * as N from "effect/Number";
@@ -88,7 +88,7 @@ const $I = $RepoCliId.create("commands/Yeet/internal/ReviewBodySignal");
 export class YeetReviewBodyItem extends S.Class<YeetReviewBodyItem>($I`YeetReviewBodyItem`)(
   {
     path: S.String,
-    line: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    line: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetReviewBodyItem", {
     description: "One file location a review body points at.",
@@ -149,7 +149,7 @@ export class ReviewBodyCoderabbit extends S.Class<ReviewBodyCoderabbit>($I`Revie
 export class ReviewBodyGreptile extends S.Class<ReviewBodyGreptile>($I`ReviewBodyGreptile`)(
   {
     signal: S.tag("greptile"),
-    confidence: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    confidence: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     newFindings: YeetReviewBodyFindingCounts,
   },
   $I.annote("ReviewBodyGreptile", {
@@ -263,7 +263,7 @@ export class YeetReviewBodyThreadLocation extends S.Class<YeetReviewBodyThreadLo
 )(
   {
     path: S.String,
-    line: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    line: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetReviewBodyThreadLocation", {
     description: "The path and line of an existing review thread.",

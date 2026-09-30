@@ -1,5 +1,5 @@
 import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/test/Quality";
-import { JsonStringCodec, nearestRank } from "@beep/repo-cli/test/SharedInternals";
+import { JsonStringCodec, nearestRank, UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   BuildYeetVerdictInput,
   buildYeetEconomicsReport,
@@ -33,7 +33,6 @@ import {
   YeetVerdictJson,
   YeetVerdictLane,
 } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";

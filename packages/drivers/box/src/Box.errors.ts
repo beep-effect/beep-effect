@@ -8,13 +8,12 @@
 import { $BoxId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { pipe, Result } from "effect";
+import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { BoxMethodName } from "./_generated/Box.models.gen.ts";
 import { BOX_SDK_VERSION } from "./internal/Box.constants.ts";
-import type { Effect } from "effect";
 import type { BoxMethodName as BoxMethodNameType } from "./_generated/Box.models.gen.ts";
 
 const $I = $BoxId.create("Box.errors");
@@ -242,13 +241,13 @@ const BoxHttpStatusCode = S.Int.check(
 );
 
 const BoxErrorContextFields = {
-  cause: S.OptionFromOptionalKey(BoxErrorCause).pipe(SchemaUtils.withNoneDefault),
-  code: S.OptionFromOptionalKey(BoxErrorCode).pipe(SchemaUtils.withNoneDefault),
-  context: S.OptionFromOptionalKey(BoxApiFailureContext).pipe(SchemaUtils.withNoneDefault),
-  helpUrl: S.OptionFromOptionalKey(BoxRedactedHelpUrl).pipe(SchemaUtils.withNoneDefault),
-  method: S.OptionFromOptionalKey(BoxMethodName).pipe(SchemaUtils.withNoneDefault),
-  requestId: S.OptionFromOptionalKey(BoxRequestId).pipe(SchemaUtils.withNoneDefault),
-  status: S.OptionFromOptionalKey(BoxHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+  cause: S.OptionFromOptionalKey(BoxErrorCause).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  code: S.OptionFromOptionalKey(BoxErrorCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  context: S.OptionFromOptionalKey(BoxApiFailureContext).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  helpUrl: S.OptionFromOptionalKey(BoxRedactedHelpUrl).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  method: S.OptionFromOptionalKey(BoxMethodName).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  requestId: S.OptionFromOptionalKey(BoxRequestId).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  status: S.OptionFromOptionalKey(BoxHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
 } satisfies S.Struct.Fields;
 
 /**
@@ -270,7 +269,7 @@ const BoxErrorContextFields = {
 export class BoxErrorOptions extends S.Class<BoxErrorOptions>($I`BoxErrorOptions`)(
   {
     ...BoxErrorContextFields,
-    sdkVersion: S.OptionFromOptionalKey(BoxSdkVersion).pipe(SchemaUtils.withNoneDefault),
+    sdkVersion: S.OptionFromOptionalKey(BoxSdkVersion).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BoxErrorOptions", {
     description: "Sanitized options for constructing Box driver errors.",
@@ -294,15 +293,15 @@ class BoxErrorOptionsInput extends S.Class<BoxErrorOptionsInput>($I`BoxErrorOpti
 ) {}
 
 const BoxErrorDiagnosticFields = {
-  cause: S.OptionFromOptionalKey(BoxErrorCause).pipe(SchemaUtils.withNoneDefault),
-  code: S.OptionFromOptionalKey(BoxErrorCode).pipe(SchemaUtils.withNoneDefault),
-  context: S.OptionFromOptionalKey(BoxApiFailureContext).pipe(SchemaUtils.withNoneDefault),
-  method: S.OptionFromOptionalKey(BoxMethodName).pipe(SchemaUtils.withNoneDefault),
+  cause: S.OptionFromOptionalKey(BoxErrorCause).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  code: S.OptionFromOptionalKey(BoxErrorCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  context: S.OptionFromOptionalKey(BoxApiFailureContext).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  method: S.OptionFromOptionalKey(BoxMethodName).pipe(S.withConstructorDefault(Effect.succeedNone)),
   provider: S.Literal("box"),
   reason: BoxErrorReason,
-  requestId: S.OptionFromOptionalKey(BoxRequestId).pipe(SchemaUtils.withNoneDefault),
-  sdkVersion: S.OptionFromOptionalKey(BoxSdkVersion).pipe(SchemaUtils.withNoneDefault),
-  status: S.OptionFromOptionalKey(BoxHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+  requestId: S.OptionFromOptionalKey(BoxRequestId).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  sdkVersion: S.OptionFromOptionalKey(BoxSdkVersion).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  status: S.OptionFromOptionalKey(BoxHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
 } satisfies S.Struct.Fields;
 
 /**
@@ -347,7 +346,11 @@ export class BoxError extends S.TaggedError<BoxError>($I`BoxError`)(
   {
     ...BoxErrorContextFields,
     reason: BoxErrorReason,
-    sdkVersion: BoxSdkVersion.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(BOX_SDK_VERSION)),
+    sdkVersion: BoxSdkVersion.pipe(
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed<typeof BOX_SDK_VERSION>(BOX_SDK_VERSION)),
+      S.withDecodingDefaultTypeKey(Effect.succeed<typeof BOX_SDK_VERSION>(BOX_SDK_VERSION))
+    ),
   },
   $I.annoteError<BoxError>("BoxError", {
     description: "Sanitized technical failure raised by the Box driver boundary.",

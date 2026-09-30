@@ -6,14 +6,14 @@
  */
 
 import { $SchemaId } from "@beep/identity";
-import { Effect, Match, Number as Num, pipe, RegExp as Regex, Result } from "effect";
+import { Effect, Match, Number as Num, pipe, RegExp as Regex, Result, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { BuffEncoding } from "../BufferEncoding.ts";
 import { Defect } from "../Opaque.ts";
-import { RegExpFromStr } from "../RegExp.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HeaderArray, HeaderTransformFunction } from "./ParserOptions.types.ts";
 import type * as AST from "effect/SchemaAST";
@@ -36,7 +36,32 @@ const SingleCharacterText = S.String.check(
   })
 );
 
-const decodeRegExpResult = S.decodeResult(RegExpFromStr);
+const canMakeRegExp = (pattern: string): boolean => Result.isSuccess(Result.try(() => new globalThis.RegExp(pattern)));
+
+const RegExpPatternCheck = S.makeFilter(canMakeRegExp, {
+  identifier: $I`RegExpPatternCheck`,
+  title: "RegExp String",
+  description: "A string that can be converted to a JavaScript RegExp with new RegExp(value).",
+  message: "Expected a valid regular expression pattern string",
+});
+
+// The encoded side stays a plain pattern string, never the `{ source, flags }`
+// object that `S.toCodecJson(S.RegExp)` writes. The pattern check runs before
+// the transformation, so constructing the RegExp cannot throw.
+const RegExpFromPattern = S.String.check(RegExpPatternCheck).pipe(
+  S.decodeTo(
+    S.RegExp,
+    SchemaTransformation.transform({
+      decode: (pattern: string) => new globalThis.RegExp(pattern),
+      encode: Struct.get("source"),
+    })
+  ),
+  $I.annoteSchema("RegExpFromPattern", {
+    description: "A regular expression decoded from its pattern string.",
+  })
+);
+
+const decodeRegExpResult = S.decodeResult(RegExpFromPattern);
 /**
  * A parser header configuration input.
  *
@@ -85,7 +110,7 @@ export type HeaderValueInput = typeof HeaderValueInput.Type;
 export class ParserOptionsError extends S.TaggedError<ParserOptionsError>($I.make("ParserOptionsError"))(
   "ParserOptionsError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(S.withConstructorDefault(Effect.succeedNone)),
     message: S.String,
   },
   $I.annoteError<ParserOptionsError>("ParserOptionsError", {
@@ -111,6 +136,9 @@ const buildNextTokenRegExp = (escapedDelimiter: string): globalThis.RegExp =>
     )
   );
 
+const parserOptionsMaxRowsDefault = S.Natural.make(0);
+const parserOptionsSkipLinesDefault = S.Natural.make(0);
+const parserOptionsSkipRowsDefault = S.Natural.make(0);
 /**
  * Schema-backed CSV parser options.
  *
@@ -136,35 +164,53 @@ const buildNextTokenRegExp = (escapedDelimiter: string): globalThis.RegExp =>
 export class ParserOptions extends S.Class<ParserOptions>($I`ParserOptions`)(
   {
     objectMode: SchemaUtils.BoolKeyDefaultTrue,
-    delimiter: SingleCharacterText.pipe(SchemaUtils.withKeyDefaults(",")),
+    delimiter: SingleCharacterText.pipe(
+      S.withConstructorDefault(Effect.succeed(",")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(","))
+    ),
     ignoreEmpty: SchemaUtils.BoolKeyDefaultFalse,
     quote: S.OptionFromNullOr(S.String).pipe(
       S.withConstructorDefault(Effect.succeedSome('"')),
       S.withDecodingDefaultKey(Effect.succeed('"'))
     ),
     escape: S.OptionFromNullOr(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
     comment: S.OptionFromNullOr(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
     ltrim: SchemaUtils.BoolKeyDefaultFalse,
     rtrim: SchemaUtils.BoolKeyDefaultFalse,
     trim: SchemaUtils.BoolKeyDefaultFalse,
     headers: S.OptionFromNullOr(HeaderValueInput).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
     renameHeaders: SchemaUtils.BoolKeyDefaultFalse,
     strictColumnHandling: SchemaUtils.BoolKeyDefaultFalse,
     discardUnmappedColumns: SchemaUtils.BoolKeyDefaultFalse,
-    carriageReturn: S.String.pipe(SchemaUtils.withKeyDefaults("\r")),
-    encoding: BuffEncoding.pipe(SchemaUtils.withKeyDefaults(BuffEncoding.Enum.utf8)),
-    maxRows: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
-    skipLines: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
-    skipRows: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
+    carriageReturn: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("\r")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("\r"))
+    ),
+    encoding: BuffEncoding.pipe(
+      S.withConstructorDefault(Effect.succeed(BuffEncoding.Enum.utf8)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(BuffEncoding.Enum.utf8))
+    ),
+    maxRows: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(parserOptionsMaxRowsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(parserOptionsMaxRowsDefault))
+    ),
+    skipLines: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(parserOptionsSkipLinesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(parserOptionsSkipLinesDefault))
+    ),
+    skipRows: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(parserOptionsSkipRowsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(parserOptionsSkipRowsDefault))
+    ),
   },
   $I.annote("ParserOptions", {
     description: "Schema-backed CSV parser options.",

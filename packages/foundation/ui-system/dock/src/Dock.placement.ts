@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Tuple } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { GroupId, SplitId, SplitRatio } from "./Dock.ids.ts";
 
@@ -56,8 +56,8 @@ export class TabPlacement extends S.Class<TabPlacement>($I`TabPlacement`)(
   {
     kind: S.tag("tab"),
     groupId: GroupId,
-    index: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
-    activate: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(true)),
+    index: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    activate: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed<boolean>(true))),
   },
   $I.annote("TabPlacement", {
     description: "Inserts a panel into an existing tab group, optionally without changing its active panel.",
@@ -123,7 +123,7 @@ export class SplitPlacement extends S.Class<SplitPlacement>($I`SplitPlacement`)(
     newGroupId: GroupId,
     splitId: SplitId,
     side: DockSide,
-    newGroupRatio: SplitRatio.pipe(SchemaUtils.withConstantDefault<number>(5_000)),
+    newGroupRatio: SplitRatio.pipe(S.withConstructorDefault(Effect.succeed<number>(5_000))),
   },
   $I.annote("SplitPlacement", {
     description: "Creates a new tab group beside an existing group with an explicit share for the new group.",
@@ -156,7 +156,7 @@ export class RootSplitPlacement extends S.Class<RootSplitPlacement>($I`RootSplit
     side: DockSide,
     splitId: SplitId,
     newGroupId: GroupId,
-    newGroupRatio: SplitRatio.pipe(SchemaUtils.withConstantDefault<number>(5_000)),
+    newGroupRatio: SplitRatio.pipe(S.withConstructorDefault(Effect.succeed<number>(5_000))),
   },
   $I.annote("RootSplitPlacement", {
     description: "Creates a new tab group against one semantic edge of an existing docked workspace root.",
@@ -184,7 +184,7 @@ export class GroupSplitPlacement extends S.Class<GroupSplitPlacement>($I`GroupSp
     referenceGroupId: GroupId,
     splitId: SplitId,
     side: DockSide,
-    newGroupRatio: SplitRatio.pipe(SchemaUtils.withConstantDefault<number>(5_000)),
+    newGroupRatio: SplitRatio.pipe(S.withConstructorDefault(Effect.succeed<number>(5_000))),
   },
   $I.annote("GroupSplitPlacement", {
     description: "Relocates an existing group beside a reference group using a new split.",
@@ -211,7 +211,7 @@ export class GroupRootSplitPlacement extends S.Class<GroupRootSplitPlacement>($I
     kind: S.tag("groupRootSplit"),
     side: DockSide,
     splitId: SplitId,
-    newGroupRatio: SplitRatio.pipe(SchemaUtils.withConstantDefault<number>(5_000)),
+    newGroupRatio: SplitRatio.pipe(S.withConstructorDefault(Effect.succeed<number>(5_000))),
   },
   $I.annote("GroupRootSplitPlacement", {
     description: "Relocates an existing group against one semantic edge of the workspace root.",

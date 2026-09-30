@@ -8,7 +8,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import { $ScratchpadId } from "@beep/identity";
 import { HttpUrl } from "@beep/ontology/Ontology.models";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Match } from "effect";
+import { Match, Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { ContentHash, GcsUri, OntologyName } from "../Identity.ts";
@@ -90,19 +90,19 @@ export class IngestLinkRequest extends S.Class<IngestLinkRequest>($I`IngestLinkR
       description: "Ontology registry identifier that scopes extraction.",
     }),
     skipEnrich: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether AI enrichment is skipped; defaults to false.",
       })
     ),
     sourceType: S.OptionFromOptionalKey(SourceType).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional caller-provided source classification override.",
       })
     ),
     allowDuplicates: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether already-known content may create another record; defaults to false.",
       })
@@ -148,13 +148,13 @@ export class IngestLinkResponse extends S.Class<IngestLinkResponse>($I`IngestLin
       description: "Validated GCS URI of the stored content artifact.",
     }),
     headline: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional extracted headline.",
       })
     ),
     wordCount: S.OptionFromNullishOr(S.Natural).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional non-negative extracted word count.",
       })
@@ -170,6 +170,7 @@ export class IngestLinkResponse extends S.Class<IngestLinkResponse>($I`IngestLin
   static readonly is = S.is(IngestLinkResponse);
 }
 
+const batchIngestRequestConcurrencyDefault = PosInt.make(5);
 /**
  * Request to ingest a non-empty batch of HTTP(S) resources.
  *
@@ -200,19 +201,19 @@ export class BatchIngestRequest extends S.Class<BatchIngestRequest>($I`BatchInge
       description: "Ontology registry identifier that scopes extraction.",
     }),
     concurrency: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(5)),
+      S.withConstructorDefault(Effect.succeed(batchIngestRequestConcurrencyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(batchIngestRequestConcurrencyDefault)),
       S.annotateKey({
         description: "Maximum number of concurrent link ingestions; defaults to five.",
       })
     ),
     skipEnrich: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether AI enrichment is skipped for every link; defaults to false.",
       })
     ),
     continueOnError: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({
         description: "Whether remaining links continue after one failure; defaults to true.",
       })
@@ -340,9 +341,10 @@ const summarizeBatchResults = (results: ReadonlyArray<BatchIngestResult>): Batch
   });
 };
 
+const batchIngestResponseDefinitionResultsDefault = A.empty<BatchIngestResult>();
 const BatchIngestResponseDefinition = S.Struct({
   results: S.Array(BatchIngestResult).pipe(
-    SchemaUtils.withEmptyArrayDefaults<BatchIngestResult>(),
+    S.withConstructorDefault(Effect.succeed(batchIngestResponseDefinitionResultsDefault)), S.withDecodingDefaultType(Effect.succeed(batchIngestResponseDefinitionResultsDefault)),
     S.annotateKey({
       description: "Per-link tagged outcomes; defaults to an empty collection.",
     })
@@ -422,6 +424,8 @@ export const BatchIngestResponse = BatchIngestResponseDefinition.pipe(
  */
 export type BatchIngestResponse = typeof BatchIngestResponse.Type;
 
+const listLinksQueryLimitDefault = PosInt.make(20);
+const listLinksQueryOffsetDefault = S.Natural.make(0);
 /**
  * Normalized query for listing ingested links.
  *
@@ -442,31 +446,31 @@ export type BatchIngestResponse = typeof BatchIngestResponse.Type;
 export class ListLinksQuery extends S.Class<ListLinksQuery>($I`ListLinksQuery`)(
   {
     status: S.OptionFromOptionalKey(LinkStatus).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional lifecycle-status filter.",
       })
     ),
     sourceType: S.OptionFromOptionalKey(SourceType).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional source-classification filter.",
       })
     ),
     organization: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional non-empty organization filter.",
       })
     ),
     limit: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(20)),
+      S.withConstructorDefault(Effect.succeed(listLinksQueryLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(listLinksQueryLimitDefault)),
       S.annotateKey({
         description: "Positive page size; defaults to twenty.",
       })
     ),
     offset: S.Natural.pipe(
-      SchemaUtils.withKeyDefaults(S.Natural.make(0)),
+      S.withConstructorDefault(Effect.succeed(listLinksQueryOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(listLinksQueryOffsetDefault)),
       S.annotateKey({
         description: "Non-negative pagination offset; defaults to zero.",
       })
@@ -506,34 +510,34 @@ export class LinkSummary extends S.Class<LinkSummary>($I`LinkSummary`)(
       description: "Canonical full SHA-256 content identity.",
     }),
     sourceUri: S.OptionFromNullishOr(HttpUrl).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional original HTTP(S) source URL." })
     ),
     sourceType: S.OptionFromNullishOr(SourceType).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional source classification." })
     ),
     headline: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional extracted headline." })
     ),
     organization: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional attributed organization." })
     ),
     status: LinkStatus.annotateKey({
       description: "Current ingestion lifecycle status.",
     }),
     wordCount: S.OptionFromNullishOr(S.Natural).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional non-negative extracted word count." })
     ),
     fetchedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional UTC fetch instant." })
     ),
     enrichedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional UTC enrichment instant." })
     ),
   },
@@ -542,6 +546,7 @@ export class LinkSummary extends S.Class<LinkSummary>($I`LinkSummary`)(
   })
 ) {}
 
+const listLinksResponseLinksDefault = A.empty<LinkSummary>();
 /**
  * Paginated response listing ingested links.
  *
@@ -566,7 +571,7 @@ export class LinkSummary extends S.Class<LinkSummary>($I`LinkSummary`)(
 export class ListLinksResponse extends S.Class<ListLinksResponse>($I`ListLinksResponse`)(
   {
     links: S.Array(LinkSummary).pipe(
-      SchemaUtils.withEmptyArrayDefaults<LinkSummary>(),
+      S.withConstructorDefault(Effect.succeed(listLinksResponseLinksDefault)), S.withDecodingDefaultType(Effect.succeed(listLinksResponseLinksDefault)),
       S.annotateKey({ description: "Current page of link summaries." })
     ),
     total: S.Natural.annotateKey({ description: "Total matching link count." }),
@@ -579,6 +584,8 @@ export class ListLinksResponse extends S.Class<ListLinksResponse>($I`ListLinksRe
   })
 ) {}
 
+const linkDetailTopicsDefault = A.empty<string>();
+const linkDetailKeyEntitiesDefault = A.empty<string>();
 /**
  * Detailed projection of one ingested link and its processing metadata.
  *
@@ -609,23 +616,23 @@ export class LinkDetail extends S.Class<LinkDetail>($I`LinkDetail`)(
   {
     id: S.NonEmptyString,
     contentHash: ContentHash,
-    sourceUri: S.OptionFromNullishOr(HttpUrl).pipe(SchemaUtils.withNoneDefault),
-    sourceType: S.OptionFromNullishOr(SourceType).pipe(SchemaUtils.withNoneDefault),
-    headline: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    description: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    author: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    organization: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    language: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    topics: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
-    keyEntities: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    sourceUri: S.OptionFromNullishOr(HttpUrl).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sourceType: S.OptionFromNullishOr(SourceType).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    headline: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    description: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    author: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    organization: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    language: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    topics: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(linkDetailTopicsDefault)), S.withDecodingDefaultType(Effect.succeed(linkDetailTopicsDefault))),
+    keyEntities: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(linkDetailKeyEntitiesDefault)), S.withDecodingDefaultType(Effect.succeed(linkDetailKeyEntitiesDefault))),
     storageUri: GcsUri,
     status: LinkStatus,
-    wordCount: S.OptionFromNullishOr(S.Natural).pipe(SchemaUtils.withNoneDefault),
-    publishedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    fetchedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    enrichedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    processedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    errorMessage: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    wordCount: S.OptionFromNullishOr(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    publishedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    fetchedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    enrichedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    processedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    errorMessage: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("LinkDetail", {
     description: "Detailed ingested-link projection with validated identities and fully normalized optional metadata.",

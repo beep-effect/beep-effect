@@ -13,7 +13,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { MutableHashMapFromSelf } from "@beep/schema/MutableHashMap";
 import { MutableHashMap, MutableHashSet, Number as N, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
@@ -258,10 +257,12 @@ export const makeLocalNameSchema: {
  */
 export class LocalNameMapResult extends S.Class<LocalNameMapResult>($I`LocalNameMapResult`)(
   {
-    map: MutableHashMapFromSelf({ key: S.String, value: IRI }).annotateKey({
+    map: S.declare(MutableHashMap.isMutableHashMap<string, IRI>, { expected: "MutableHashMap" }).annotateKey({
       description: "Case-insensitive local-name mapping; the last IRI wins when names collide.",
     }),
-    collisions: MutableHashMapFromSelf({ key: S.String, value: S.Array(IRI) }).annotateKey({
+    collisions: S.declare(MutableHashMap.isMutableHashMap<string, ReadonlyArray<IRI>>, {
+      expected: "MutableHashMap",
+    }).annotateKey({
       description: "All IRIs associated with each colliding local name.",
     }),
     hasCollisions: S.Boolean.annotateKey({ description: "Whether any local-name collision was detected." }),

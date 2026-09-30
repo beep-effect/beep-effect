@@ -6,7 +6,7 @@
  */
 import { $LangExtractId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $LangExtractId.create("VerifiedSpan");
@@ -74,7 +74,7 @@ export type VerifiedSpanErrorReason = typeof VerifiedSpanErrorReason.Type;
 export class VerifiedSpanError extends S.TaggedError<VerifiedSpanError>($I`VerifiedSpanError`)(
   "VerifiedSpanError",
   {
-    candidateIndex: S.Natural.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    candidateIndex: S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     message: S.String,
     reason: VerifiedSpanErrorReason,
   },

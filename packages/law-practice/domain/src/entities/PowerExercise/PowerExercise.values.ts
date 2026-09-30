@@ -10,6 +10,7 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { ActFrameElementRef } from "../../values/ActFrameElementRef/index.ts";
 import { ConstitutionOutcome } from "../../values/ConstitutionOutcome/index.ts";
@@ -174,7 +175,7 @@ export type DeterminationBasis = typeof DeterminationBasis.Type;
  */
 export class ConstitutionDetermination extends S.Class<ConstitutionDetermination>($I`ConstitutionDetermination`)(
   {
-    basis: S.OptionFromNullOr(DeterminationBasis).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    basis: S.OptionFromNullOr(DeterminationBasis).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Ground the determination was stated on, absent when none was given.",
     }),
     interpreter: Principal.annotateKey({
@@ -219,7 +220,7 @@ export class ConstitutionDetermination extends S.Class<ConstitutionDetermination
  */
 export class PermissionDetermination extends S.Class<PermissionDetermination>($I`PermissionDetermination`)(
   {
-    basis: S.OptionFromNullOr(DeterminationBasis).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    basis: S.OptionFromNullOr(DeterminationBasis).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Ground the determination was stated on, absent when none was given.",
     }),
     interpreter: Principal.annotateKey({
@@ -263,7 +264,7 @@ export class PermissionDetermination extends S.Class<PermissionDetermination>($I
  */
 export class DispositionDetermination extends S.Class<DispositionDetermination>($I`DispositionDetermination`)(
   {
-    basis: S.OptionFromNullOr(DeterminationBasis).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    basis: S.OptionFromNullOr(DeterminationBasis).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Ground the disposition was stated on, absent when none was given.",
     }),
     disposition: ActDisposition.annotateKey({
@@ -343,15 +344,20 @@ export class DispositionDetermination extends S.Class<DispositionDetermination>(
  */
 export class ExerciseResult extends S.Class<ExerciseResult>($I`ExerciseResult`)(
   {
-    constitution: S.OptionFromNullOr(ConstitutionDetermination).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Determination about power, absent while nobody has made one.",
-    }),
+    constitution: S.OptionFromNullOr(ConstitutionDetermination)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Determination about power, absent while nobody has made one.",
+      }),
     disposition: DispositionDetermination.annotateKey({
       description: "Required disposition of the act, carrying `undetermined` when nothing is settled.",
     }),
-    permission: S.OptionFromNullOr(PermissionDetermination).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Determination about breach, absent while nobody has made one and never implied by the other axis.",
-    }),
+    permission: S.OptionFromNullOr(PermissionDetermination)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description:
+          "Determination about breach, absent while nobody has made one and never implied by the other axis.",
+      }),
   },
   $I.annote("ExerciseResult", {
     description: "What was determined about one recorded exercise, on two independent axes plus a disposition.",
@@ -496,13 +502,15 @@ export class AssertedAuthorityBasis extends S.Class<AssertedAuthorityBasis>($I`A
       description: "Role the actor claimed to be acting in, asserted and never verified.",
     }),
     exercisedPower: S.OptionFromNullOr(LawPractice.LegalPositionRelatorId)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Stored power relation cited as the ground for acting; absent when the power rests on a norm.",
       }),
-    foundingExercise: S.OptionFromNullOr(LawPractice.PowerExerciseId).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Exercise that conferred the cited power, matching the grounding a produced position records.",
-    }),
+    foundingExercise: S.OptionFromNullOr(LawPractice.PowerExerciseId)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Exercise that conferred the cited power, matching the grounding a produced position records.",
+      }),
     sourceNorm: SourceNormRef.annotateKey({
       description: "Opaque reference to the norm the authority is claimed under.",
     }),

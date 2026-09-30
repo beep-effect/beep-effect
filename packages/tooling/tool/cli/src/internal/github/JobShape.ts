@@ -29,8 +29,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { pipe } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -119,6 +119,7 @@ export class GithubJobStepRecord extends S.Class<GithubJobStepRecord>($I`GithubJ
   })
 ) {}
 
+const githubJobRecordStepsDefault = A.empty();
 /**
  * The fields of a GitHub job record the shape classes are read from.
  *
@@ -153,7 +154,10 @@ export class GithubJobRecord extends S.Class<GithubJobRecord>($I`GithubJobRecord
     databaseId: S.Finite,
     name: S.String,
     status: S.String,
-    steps: S.Array(GithubJobStepRecord).pipe(SchemaUtils.withKeyDefaults([])),
+    steps: S.Array(GithubJobStepRecord).pipe(
+      S.withConstructorDefault(Effect.succeed(githubJobRecordStepsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(githubJobRecordStepsDefault))
+    ),
   },
   $I.annote("GithubJobRecord", {
     description: "The fields of a GitHub job record from which infrastructure-failure shape classes are read.",

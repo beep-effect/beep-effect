@@ -9,17 +9,21 @@ import { $OpenaiCompatId } from "@beep/identity";
 import { LiteralKit, OptionFromOptionalNullishKey, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Tuple } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
-import type * as Effect from "effect/Effect";
 import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $OpenaiCompatId.create("OpenAiCompat.models");
 
-const OptionalNullableString = OptionFromOptionalNullishKey(S.String).pipe(SchemaUtils.withNoneDefault);
-const OptionalNonNegativeInt = S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault);
-const OptionalUnknownRecord = S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault);
+const OptionalNullableString = OptionFromOptionalNullishKey(S.String).pipe(
+  S.withConstructorDefault(Effect.succeedNone)
+);
+const OptionalNonNegativeInt = S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone));
+const OptionalUnknownRecord = S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(
+  S.withConstructorDefault(Effect.succeedNone)
+);
 /**
  * OpenAI-compatible sampling temperature.
  *
@@ -913,7 +917,11 @@ export class OpenAiCompatAssistantMessage extends S.Class<OpenAiCompatAssistantM
     role: S.optionalKey(S.Literal("assistant")).annotateKey({
       description: "Optional assistant role marker returned by the provider.",
     }),
-    tool_calls: OpenAiCompatToolCall.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+    tool_calls: OpenAiCompatToolCall.pipe(
+      S.Array,
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ).annotateKey({
       description: "Tool calls returned with the assistant message.",
     }),
   },
@@ -953,7 +961,7 @@ export class OpenAiCompatAssistantDelta extends S.Class<OpenAiCompatAssistantDel
     tool_calls: OpenAiCompatToolCallDelta.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ).annotateKey({ description: "Incremental tool-call deltas returned by the stream." }),
   },
   $I.annote("OpenAiCompatAssistantDelta", {
@@ -1036,7 +1044,7 @@ export class OpenAiCompatChatCompletionChoice extends S.Class<OpenAiCompatChatCo
       description: "Zero-based chat completion choice index.",
     }),
     message: S.OptionFromOptionalKey(OpenAiCompatAssistantMessage)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Assistant message payload for this choice." }),
   },
   $I.annote("OpenAiCompatChatCompletionChoice", {
@@ -1084,7 +1092,7 @@ export class OpenAiCompatChatCompletionResponse extends S.Class<OpenAiCompatChat
     id: S.optionalKey(S.String).annotateKey({ description: "Provider response identifier." }),
     model: S.optionalKey(S.String).annotateKey({ description: "Provider model identifier for the response." }),
     usage: S.OptionFromOptionalKey(OpenAiCompatUsage)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Optional token usage returned by the provider." }),
   },
   $I.annote("OpenAiCompatChatCompletionResponse", {
@@ -1120,7 +1128,7 @@ export class OpenAiCompatChatCompletionChunkChoice extends S.Class<OpenAiCompatC
 )(
   {
     delta: S.OptionFromOptionalKey(OpenAiCompatAssistantDelta)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Assistant delta payload for this stream choice." }),
     finish_reason: OptionalNullableString.annotateKey({
       description: "Provider finish reason carried by this stream choice.",
@@ -1173,7 +1181,7 @@ export class OpenAiCompatChatCompletionChunk extends S.Class<OpenAiCompatChatCom
     id: S.optionalKey(S.String).annotateKey({ description: "Provider stream chunk identifier." }),
     model: S.optionalKey(S.String).annotateKey({ description: "Provider model identifier for the chunk." }),
     usage: S.OptionFromOptionalKey(OpenAiCompatUsage)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Optional token usage returned by a stream chunk." }),
   },
   $I.annote("OpenAiCompatChatCompletionChunk", {

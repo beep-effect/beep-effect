@@ -13,7 +13,6 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Context, DateTime, Effect, Layer, Order, Random } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -72,6 +71,9 @@ export class ReconciliationError extends S.TaggedError<ReconciliationError>($I`R
 // Types
 // =============================================================================
 
+const reconciliationConfigAutoLinkThresholdDefault = Percentage.make(90);
+const reconciliationConfigQueueThresholdDefault = Percentage.make(50);
+const reconciliationConfigMaxCandidatesDefault = PosInt.make(5);
 /**
  * Configuration for entity reconciliation
  *
@@ -89,16 +91,16 @@ export class ReconciliationError extends S.TaggedError<ReconciliationError>($I`R
  */
 export class ReconciliationConfig extends S.Class<ReconciliationConfig>($I`ReconciliationConfig`)({
   /** Minimum score for automatic linking (default: 90) */
-  autoLinkThreshold: Percentage.pipe(SchemaUtils.withKeyDefaults(Percentage.make(90))),
+  autoLinkThreshold: Percentage.pipe(S.withConstructorDefault(Effect.succeed(reconciliationConfigAutoLinkThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(reconciliationConfigAutoLinkThresholdDefault))),
 
   /** Minimum score for queueing for review (default: 50) */
-  queueThreshold: Percentage.pipe(SchemaUtils.withKeyDefaults(Percentage.make(50))),
+  queueThreshold: Percentage.pipe(S.withConstructorDefault(Effect.succeed(reconciliationConfigQueueThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(reconciliationConfigQueueThresholdDefault))),
 
   /** Maximum candidates to consider (default: 5) */
-  maxCandidates: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(5))),
+  maxCandidates: PosInt.pipe(S.withConstructorDefault(Effect.succeed(reconciliationConfigMaxCandidatesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(reconciliationConfigMaxCandidatesDefault))),
 
   /** Language for Wikidata search (default: "en") */
-  language: S.String.pipe(SchemaUtils.withKeyDefaults("en")),
+  language: S.String.pipe(S.withConstructorDefault(Effect.succeed("en")), S.withDecodingDefaultTypeKey(Effect.succeed("en"))),
   },
   $I.annote("ReconciliationConfig", {
     description: "Auto-link and queue score thresholds plus candidate and language bounds.",

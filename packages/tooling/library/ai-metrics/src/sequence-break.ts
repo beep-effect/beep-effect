@@ -6,8 +6,8 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { identity, Number as Num, Order } from "effect";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { Effect, identity, Number as Num, Order } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { HookPulseAgentKind, HookPulseWaitReason } from "./hook-pulse.ts";
@@ -489,7 +489,7 @@ export class SequenceBreakNotificationV1 extends S.Class<SequenceBreakNotificati
     waitReason: HookPulseWaitReason,
     stage: SequenceBreakNotificationStage,
     ageMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
-    evidenceTier: S.Literal("derived").pipe(SchemaUtils.withConstantDefault("derived")),
+    evidenceTier: S.Literal("derived").pipe(S.withConstructorDefault(Effect.succeed("derived"))),
     transport: SequenceBreakNotificationTransport,
     delivery: SequenceBreakDeliveryOutcome,
   }).check(

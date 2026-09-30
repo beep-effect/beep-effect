@@ -8,7 +8,6 @@
 import { ExtractionResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $TikaId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, FileSystem, Path, Stream } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -28,6 +27,7 @@ const defaultJavaPath = "java";
 const defaultTimeoutMillis = 120_000;
 const defaultForceKillAfterMillis = 10_000;
 
+const tikaAppEngineConfigTimeoutMillisDefault = PosInt.make(defaultTimeoutMillis);
 /**
  * Configuration for the tika-app subprocess engine.
  *
@@ -47,10 +47,16 @@ export class TikaAppEngineConfig extends S.Class<TikaAppEngineConfig>($I`TikaApp
     jarPath: S.NonEmptyString.annotateKey({
       description: "Path to the tika-app JAR file.",
     }),
-    javaPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultJavaPath)).annotateKey({
+    javaPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultJavaPath)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultJavaPath))
+    ).annotateKey({
       description: "Java executable command or path used to run tika-app.",
     }),
-    timeoutMillis: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(defaultTimeoutMillis))).annotateKey({
+    timeoutMillis: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(tikaAppEngineConfigTimeoutMillisDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(tikaAppEngineConfigTimeoutMillisDefault))
+    ).annotateKey({
       description: "Per-file tika-app extraction timeout in milliseconds.",
     }),
   },

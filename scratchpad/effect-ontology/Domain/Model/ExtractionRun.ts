@@ -6,13 +6,14 @@
  */
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { PrimaryKey, Tuple } from "effect";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { PrimaryKey, Tuple, Effect } from "effect";
 import * as S from "effect/Schema";
 import { ChunkId, DocumentId, IdempotencyKey, OntologyVersion } from "../Identity.ts";
 import { PathLayout } from "../PathLayout.ts";
 import { OntologyRef } from "./Ontology.ts";
 import { OutputType } from "./OutputType.ts";
+import * as A from "effect/Array";
 import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionRun");
@@ -141,6 +142,7 @@ export class OutputMetadata extends S.Class<OutputMetadata>($I`OutputMetadata`)(
   })
 ) {}
 
+const auditEventDataDefault = {};
 /**
  * Structured, JSON-compatible extraction-run audit event.
  *
@@ -163,13 +165,14 @@ export class AuditEvent extends S.Class<AuditEvent>($I`AuditEvent`)(
   {
     timestamp: S.DateTimeUtcFromString,
     type: AuditEventType,
-    data: S.Record(S.String, S.Json).pipe(SchemaUtils.withKeyDefaults({})),
+    data: S.Record(S.String, S.Json).pipe(S.withConstructorDefault(Effect.succeed(auditEventDataDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(auditEventDataDefault))),
   },
   $I.annote("AuditEvent", {
     description: "Timestamped audit event with a stable category and JSON-compatible data.",
   })
 ) {}
 
+const auditErrorContextDefault = {};
 /**
  * Structured error retained in an extraction run's audit trail.
  *
@@ -194,7 +197,7 @@ export class AuditError extends S.Class<AuditError>($I`AuditError`)(
     timestamp: S.DateTimeUtcFromString,
     type: ErrorCode,
     message: S.NonEmptyString,
-    context: S.Record(S.String, S.Json).pipe(SchemaUtils.withKeyDefaults({})),
+    context: S.Record(S.String, S.Json).pipe(S.withConstructorDefault(Effect.succeed(auditErrorContextDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(auditErrorContextDefault))),
   },
   $I.annote("AuditError", {
     description: "Timestamped extraction failure with a stable code and JSON-compatible context.",
@@ -282,6 +285,8 @@ const SentenceOverlap = S.Natural.check(
     })
   );
 
+const chunkingConfigMaxChunkSizeDefault = ChunkSize.make(4_000);
+const chunkingConfigOverlapSentencesDefault = SentenceOverlap.make(2);
 /**
  * Schema-defaulted text chunking policy.
  *
@@ -299,9 +304,9 @@ const SentenceOverlap = S.Natural.check(
  */
 export class ChunkingConfig extends S.Class<ChunkingConfig>($I`ChunkingConfig`)(
   {
-    maxChunkSize: ChunkSize.pipe(SchemaUtils.withKeyDefaults(ChunkSize.make(4_000))),
-    preserveSentences: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    overlapSentences: SentenceOverlap.pipe(SchemaUtils.withKeyDefaults(SentenceOverlap.make(2))),
+    maxChunkSize: ChunkSize.pipe(S.withConstructorDefault(Effect.succeed(chunkingConfigMaxChunkSizeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(chunkingConfigMaxChunkSizeDefault))),
+    preserveSentences: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+    overlapSentences: SentenceOverlap.pipe(S.withConstructorDefault(Effect.succeed(chunkingConfigOverlapSentencesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(chunkingConfigOverlapSentencesDefault))),
   },
   $I.annote("ChunkingConfig", {
     description: "Bounded, schema-defaulted policy for extraction text chunking.",
@@ -416,15 +421,17 @@ class GroundingDisabled extends S.Class<GroundingDisabled>($I`GroundingDisabled`
   })
 ) {}
 
+const groundingEnabledThresholdDefault = Confidence.make(0.8);
+const groundingEnabledBatchSizeDefault = PosInt.make(5);
 class GroundingEnabled extends S.Class<GroundingEnabled>($I`GroundingEnabled`)(
   {
     mode: S.tag(GroundingMode.Enum.Enabled),
     threshold: Confidence.pipe(
-      SchemaUtils.withKeyDefaults(Confidence.make(0.8)),
+      S.withConstructorDefault(Effect.succeed(groundingEnabledThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(groundingEnabledThresholdDefault)),
       S.annotateKey({ description: "Minimum verifier confidence required to publish a supported fact." })
     ),
     batchSize: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(5)),
+      S.withConstructorDefault(Effect.succeed(groundingEnabledBatchSizeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(groundingEnabledBatchSizeDefault)),
       S.annotateKey({ description: "Positive maximum number of facts sent in one grounding request." })
     ),
   },
@@ -479,6 +486,8 @@ export const GroundingPolicy = GroundingMode.mapMembers(
  */
 export type GroundingPolicy = typeof GroundingPolicy.Type;
 
+const runConfigConcurrencyDefault = Concurrency.make(4);
+const runConfigGroundingDefault = GroundingPolicy.cases.Enabled.make({});
 /**
  * Complete immutable configuration snapshot for an extraction run.
  *
@@ -513,9 +522,9 @@ export class RunConfig extends S.Class<RunConfig>($I`RunConfig`)(
     ontology: OntologyRef,
     chunking: ChunkingConfig,
     llm: LlmConfig,
-    concurrency: Concurrency.pipe(SchemaUtils.withKeyDefaults(Concurrency.make(4))),
+    concurrency: Concurrency.pipe(S.withConstructorDefault(Effect.succeed(runConfigConcurrencyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(runConfigConcurrencyDefault))),
     grounding: GroundingPolicy.pipe(
-      SchemaUtils.withKeyDefaults(GroundingPolicy.cases.Enabled.make({})),
+      S.withConstructorDefault(Effect.succeed(runConfigGroundingDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(runConfigGroundingDefault)),
       S.annotateKey({ description: "Grounding policy applied to extracted facts." })
     ),
   },
@@ -563,6 +572,9 @@ export class RunStats extends S.Class<RunStats>($I`RunStats`)(
   })
 ) {}
 
+const extractionRunOutputsDefault = A.empty<OutputMetadata>();
+const extractionRunEventsDefault = A.empty<AuditEvent>();
+const extractionRunErrorsDefault = A.empty<AuditError>();
 /**
  * Root aggregate for one execution of the knowledge-extraction pipeline.
  *
@@ -607,17 +619,17 @@ export class RunStats extends S.Class<RunStats>($I`RunStats`)(
 export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   {
     id: DocumentId,
-    idempotencyKey: S.OptionFromOptionalKey(IdempotencyKey).pipe(SchemaUtils.withNoneDefault),
+    idempotencyKey: S.OptionFromOptionalKey(IdempotencyKey).pipe(S.withConstructorDefault(Effect.succeedNone)),
     status: RunStatus,
     config: RunConfig,
-    ontologyVersion: S.OptionFromOptionalKey(OntologyVersion).pipe(SchemaUtils.withNoneDefault),
+    ontologyVersion: S.OptionFromOptionalKey(OntologyVersion).pipe(S.withConstructorDefault(Effect.succeedNone)),
     createdAt: S.DateTimeUtcFromString,
-    updatedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
+    updatedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     outputDir: S.NonEmptyString,
-    stats: S.OptionFromOptionalKey(RunStats).pipe(SchemaUtils.withNoneDefault),
-    outputs: S.Array(OutputMetadata).pipe(SchemaUtils.withEmptyArrayDefaults<OutputMetadata>()),
-    events: S.Array(AuditEvent).pipe(SchemaUtils.withEmptyArrayDefaults<AuditEvent>()),
-    errors: S.Array(AuditError).pipe(SchemaUtils.withEmptyArrayDefaults<AuditError>()),
+    stats: S.OptionFromOptionalKey(RunStats).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    outputs: S.Array(OutputMetadata).pipe(S.withConstructorDefault(Effect.succeed(extractionRunOutputsDefault)), S.withDecodingDefaultType(Effect.succeed(extractionRunOutputsDefault))),
+    events: S.Array(AuditEvent).pipe(S.withConstructorDefault(Effect.succeed(extractionRunEventsDefault)), S.withDecodingDefaultType(Effect.succeed(extractionRunEventsDefault))),
+    errors: S.Array(AuditError).pipe(S.withConstructorDefault(Effect.succeed(extractionRunErrorsDefault)), S.withDecodingDefaultType(Effect.succeed(extractionRunErrorsDefault))),
   },
   $I.annote("ExtractionRun", {
     description: "Immutable extraction-run aggregate with status, config, outputs, audit, and paths.",

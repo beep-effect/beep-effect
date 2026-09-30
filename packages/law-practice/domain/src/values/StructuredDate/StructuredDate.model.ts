@@ -7,7 +7,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/StructuredDate/StructuredDate.model");
@@ -47,14 +47,14 @@ export class ParsedDate extends S.Class<ParsedDate>($I`ParsedDate`)(
     }),
     month: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Calendar month (1-12); absent for year-only dates.",
       })
     ),
     day: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Calendar day of month (1-31); absent for year-only or month-only dates.",
       })

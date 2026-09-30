@@ -917,7 +917,8 @@ export class ExtractFramesAtResult extends S.Class<ExtractFramesAtResult>($I`Ext
 export class ExtractClipRequest extends S.Class<ExtractClipRequest>($I`ExtractClipRequest`)(
   {
     codec: ClipCodec.pipe(
-      SchemaUtils.withKeyDefaults(ClipCodec.Enum.h264),
+      S.withConstructorDefault(Effect.succeed(ClipCodec.Enum.h264)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ClipCodec.Enum.h264)),
       $I.annoteKey("ExtractClipRequest.codec", {
         description: "Encoder preset; h264 targets mp4 outputs, vp9 targets webm outputs.",
       })
@@ -1044,7 +1045,8 @@ export class ExtractClipResult extends S.Class<ExtractClipResult>($I`ExtractClip
 export class RenderGifRequest extends S.Class<RenderGifRequest>($I`RenderGifRequest`)(
   {
     dither: GifDither.pipe(
-      SchemaUtils.withKeyDefaults(GifDither.Enum.bayer),
+      S.withConstructorDefault(Effect.succeed(GifDither.Enum.bayer)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(GifDither.Enum.bayer)),
       $I.annoteKey("RenderGifRequest.dither", {
         description: "paletteuse dithering mode; bayer adds bayer_scale=5.",
       })
@@ -1055,7 +1057,8 @@ export class RenderGifRequest extends S.Class<RenderGifRequest>($I`RenderGifRequ
       })
     ),
     fps: PositiveFrameRate.pipe(
-      SchemaUtils.withKeyDefaults(10),
+      S.withConstructorDefault(Effect.succeed(10)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(10)),
       $I.annoteKey("RenderGifRequest.fps", {
         description: "GIF frame rate applied by the fps video filter.",
       })
@@ -1083,7 +1086,8 @@ export class RenderGifRequest extends S.Class<RenderGifRequest>($I`RenderGifRequ
       })
     ),
     width: VideoDimension.pipe(
-      SchemaUtils.withKeyDefaults(640),
+      S.withConstructorDefault(Effect.succeed(640)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(640)),
       $I.annoteKey("RenderGifRequest.width", {
         description: "GIF pixel width; height follows the source aspect ratio.",
       })
@@ -1174,7 +1178,8 @@ export class RenderGifResult extends S.Class<RenderGifResult>($I`RenderGifResult
 export class RenderContactSheetRequest extends S.Class<RenderContactSheetRequest>($I`RenderContactSheetRequest`)(
   {
     columns: TileCount.pipe(
-      SchemaUtils.withKeyDefaults(4),
+      S.withConstructorDefault(Effect.succeed(4)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(4)),
       $I.annoteKey("RenderContactSheetRequest.columns", {
         description: "Number of tile columns in the sheet grid.",
       })
@@ -1192,19 +1197,22 @@ export class RenderContactSheetRequest extends S.Class<RenderContactSheetRequest
       })
     ),
     quality: JpegQuality.pipe(
-      SchemaUtils.withKeyDefaults(5),
+      S.withConstructorDefault(Effect.succeed(5)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(5)),
       $I.annoteKey("RenderContactSheetRequest.quality", {
         description: "JPEG quantizer passed as -q:v (1 best, 31 worst).",
       })
     ),
     rows: TileCount.pipe(
-      SchemaUtils.withKeyDefaults(4),
+      S.withConstructorDefault(Effect.succeed(4)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(4)),
       $I.annoteKey("RenderContactSheetRequest.rows", {
         description: "Number of tile rows in the sheet grid.",
       })
     ),
     tileWidth: VideoDimension.pipe(
-      SchemaUtils.withKeyDefaults(320),
+      S.withConstructorDefault(Effect.succeed(320)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(320)),
       $I.annoteKey("RenderContactSheetRequest.tileWidth", {
         description: "Pixel width of each tile; height follows the source aspect ratio.",
       })

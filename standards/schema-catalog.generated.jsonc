@@ -12550,6 +12550,14 @@
       "description": "Target channel for a redaction; client strips internal detail, diagnostic keeps bounded detail."
     },
     {
+      "file": "packages/foundation/capability/observability/src/CoreConfig.ts",
+      "symbol": "ObservabilityCoreConfig",
+      "kind": "struct-const",
+      "owner": "@beep/observability",
+      "identity": "ObservabilityCoreConfig",
+      "description": "Browser-safe shared observability configuration."
+    },
+    {
       "file": "packages/foundation/capability/observability/src/HttpError.ts",
       "symbol": "BadGatewayError",
       "kind": "tagged-error",
@@ -15397,6 +15405,12 @@
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Algebra/NLPMonoid.ts",
+      "symbol": "BagOfWords",
+      "kind": "codec",
+      "owner": "@beep/nlp"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/NLPMonoid.ts",
       "symbol": "DependencyEdge",
       "kind": "schema-class",
       "owner": "@beep/nlp",
@@ -17630,52 +17644,12 @@
       "description": "Age in years"
     },
     {
-      "file": "packages/foundation/modeling/schema/src/ArrayOf.ts",
-      "symbol": "ArrayOfInts",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "ArrayOfInts",
-      "description": "An array of integers"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/ArrayOf.ts",
-      "symbol": "ArrayOfNonEmptyStrings",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "ArrayOfNonEmptyStrings",
-      "description": "An array of non-empty strings"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/ArrayOf.ts",
-      "symbol": "ArrayOfNumbers",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "ArrayOfNumbers",
-      "description": "An array of numbers"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/ArrayOf.ts",
-      "symbol": "ArrayOfStrings",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "ArrayOfStrings",
-      "description": "An array of strings"
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/AtURI.ts",
       "symbol": "AtUri",
       "kind": "brand",
       "owner": "@beep/schema",
       "identity": "AtUri",
       "description": "A normalized AT Protocol Lexicon AT URI string shaped as at://AUTHORITY[/COLLECTION[/RKEY]]."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/BigDecimal.ts",
-      "symbol": "BigDecimalFromNumber",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "BigDecimalFromNumber",
-      "description": "A BigDecimal from a number"
     },
     {
       "file": "packages/foundation/modeling/schema/src/BinaryFileExtension.ts",
@@ -17692,14 +17666,6 @@
       "owner": "@beep/schema",
       "identity": "BuffEncoding",
       "description": "A BufferEncoding string literal"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Bytes.ts",
-      "symbol": "Bytes",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Bytes",
-      "description": "A protobuf bytes value represented as a branded Uint8Array."
     },
     {
       "file": "packages/foundation/modeling/schema/src/CardinalDirection/CardinalDirection.schema.ts",
@@ -18024,30 +17990,6 @@
       "owner": "@beep/schema",
       "identity": "RgbToOklch",
       "description": "Decodes normalized RGB values into canonical OKLCH coordinates."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-      "symbol": "CommaSeparatedList",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "CommaSeparatedList",
-      "description": "Comma-separated text decoded into a trimmed non-empty string list."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-      "symbol": "NormalizedBooleanString",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "NormalizedBooleanString",
-      "description": "Normalized boolean value decoded from common boolean string values."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-      "symbol": "TrimmedNonEmptyText",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "TrimmedNonEmptyText",
-      "description": "Trimmed text that must be non-empty after normalization."
     },
     {
       "file": "packages/foundation/modeling/schema/src/ContinentCode.ts",
@@ -18398,70 +18340,6 @@
       "description": "An active ISO 4217 currency display name."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.adapter.ts",
-      "symbol": "DateInputToDateTime",
-      "kind": "union",
-      "owner": "@beep/schema",
-      "identity": "DateInputToDateTime",
-      "description": "Nullable or optional string input accepted by DateTime UI adapters."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts",
-      "symbol": "DateTimeInput",
-      "kind": "union",
-      "owner": "@beep/schema",
-      "identity": "DateTimeInput",
-      "description": "Raw Effect DateTime.Input values plus tagged primitive transports accepted by DateTimeUtcFromValid."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts",
-      "symbol": "DateTimeInputDateTime",
-      "kind": "union",
-      "owner": "@beep/schema",
-      "identity": "DateTimeInputDateTime",
-      "description": "An existing Effect DateTime value accepted as a DateTime input."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts",
-      "symbol": "DateTimeInputInstant",
-      "kind": "tagged-class",
-      "owner": "@beep/schema",
-      "identity": "DateTimeInputInstant",
-      "description": "A tagged DateTime.Instant transport value with epoch milliseconds."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts",
-      "symbol": "DateTimeInputInstantWithZone",
-      "kind": "tagged-class",
-      "owner": "@beep/schema",
-      "identity": "DateTimeInputInstantWithZone",
-      "description": "A tagged DateTime.InstantWithZone transport value with a valid time zone identifier."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts",
-      "symbol": "DateTimeInputKind",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "DateTimeInputKind",
-      "description": "Discriminator values for DateTime.Input transport representations."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts",
-      "symbol": "DateTimeInputParts",
-      "kind": "tagged-class",
-      "owner": "@beep/schema",
-      "identity": "DateTimeInputParts",
-      "description": "A tagged Partial<DateTime.Parts> transport value."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts",
-      "symbol": "DateTimeUtcFromValid",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "DateTimeUtcFromValid",
-      "description": "Bidirectional schema transformation from valid Effect DateTime.Input values into DateTime.Utc."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Did.ts",
       "symbol": "Did",
       "kind": "brand",
@@ -18476,44 +18354,6 @@
       "owner": "@beep/schema",
       "identity": "Double",
       "description": "A protobuf double number represented as an IEEE-754 binary64 JavaScript number."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Duration/Duration.input.ts",
-      "symbol": "DurationFromInput",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "DurationFromInput",
-      "description": "A one-way schema that normalizes supported duration inputs into an Effect Duration value."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Duration/Duration.input.ts",
-      "symbol": "DurationInput",
-      "kind": "union",
-      "owner": "@beep/schema",
-      "identity": "DurationInput",
-      "description": "Duration input accepted as an existing Duration, numeric transport, duration string, or additive object."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Duration/Duration.input.ts",
-      "symbol": "DurationObject",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "DurationObject",
-      "description": "A structured duration input whose populated unit fields are added together."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Duration/Duration.input.ts",
-      "symbol": "DurationUnit",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "DurationUnit",
-      "description": "A unit of time measurement accepted by duration input schemas."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Duration/Duration.input.ts",
-      "symbol": "Input",
-      "kind": "union",
-      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/EthAmount/EthAmount.schema.ts",
@@ -18670,22 +18510,6 @@
       "owner": "@beep/schema",
       "identity": "VideoExtension",
       "description": "A file extension for a mime type that is a video."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/FileInfo.ts",
-      "symbol": "FileInfo",
-      "kind": "tagged-union",
-      "owner": "@beep/schema",
-      "identity": "FileInfo",
-      "description": "File-system stat metadata discriminated by entry kind."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/FileInfo.ts",
-      "symbol": "FileInfoType",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "FileInfoType",
-      "description": "The supported kinds of file-system entries, with a helper for constructing union members."
     },
     {
       "file": "packages/foundation/modeling/schema/src/FilePath/FilePath.guards.ts",
@@ -19068,54 +18892,6 @@
       "symbol": "Schema",
       "kind": "brand",
       "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.encoded.ts",
-      "symbol": "GraphEncoded",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "GraphEncoded",
-      "description": "The encoded representation of an Effect graph value."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts",
-      "symbol": "EdgeIndex",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "EdgeIndex",
-      "description": "A branded non-negative graph edge index."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts",
-      "symbol": "EdgeIndexFromString",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "EdgeIndexFromString",
-      "description": "A graph edge index decoded from a string."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts",
-      "symbol": "NodeIndex",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "NodeIndex",
-      "description": "A branded non-negative graph node index."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts",
-      "symbol": "NodeIndexFromString",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "NodeIndexFromString",
-      "description": "A graph node index decoded from a string."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.shared.ts",
-      "symbol": "GraphKindValue",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "GraphKindValue",
-      "description": "Public schema module export."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Html.ts",
@@ -19839,70 +19615,6 @@
       "description": "520 “Web Server Returned an Unknown Error” – This is a code used by\nCloudflare. It specifies that the origin server returned an unexpected or\nunknown response to Cloudflare."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-      "symbol": "Document",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "Document",
-      "description": "Draft-2020-12 document envelope: dialect, root schema, and hoisted definitions."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-      "symbol": "Node",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "Node",
-      "description": "A JSON Schema draft-2020-12 node with lossless unknown-keyword preservation."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-      "symbol": "NodeCodec",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "NodeCodec",
-      "description": "Wire codec between flat JSON Schema objects and Node instances."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-      "symbol": "SubSchema",
-      "kind": "union",
-      "owner": "@beep/schema",
-      "identity": "SubSchema",
-      "description": "A boolean schema or a full JSON Schema node."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.shared.ts",
-      "symbol": "CanonicalKeyword",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "CanonicalKeyword",
-      "description": "A first-class draft-2020-12 keyword recognized by the JSONSchema node model."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.shared.ts",
-      "symbol": "ExtensionsBag",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "ExtensionsBag",
-      "description": "Preserved non-canonical keywords, keyed by extension name."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.shared.ts",
-      "symbol": "TypeName",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "TypeName",
-      "description": "A draft-2020-12 primitive type name."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.shared.ts",
-      "symbol": "Types",
-      "kind": "union",
-      "owner": "@beep/schema",
-      "identity": "Types",
-      "description": "The `type` keyword value: one type name or a non-empty unique array of type names."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Json.ts",
       "symbol": "JsonArray",
       "kind": "schema-const",
@@ -19941,14 +19653,6 @@
       "owner": "@beep/schema",
       "identity": "JsonlTextToUnknown",
       "description": "Schema transformation that parses strict JSONL text into unknown values."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/KebabStr.ts",
-      "symbol": "KebabCaseStr",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "KebabCaseStr",
-      "description": "A branded kebab-case string."
     },
     {
       "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
@@ -19995,22 +19699,6 @@
       "owner": "@beep/schema",
       "identity": "LocalDateFromString",
       "description": "LocalDateFromString - Schema that transforms ISO date strings (YYYY-MM-DD) to LocalDate"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Logs.ts",
-      "symbol": "LogLevel",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "LogLevel",
-      "description": "Log levels supported"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Logs.ts",
-      "symbol": "LogSeverity",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "LogSeverity",
-      "description": "Log severities supported"
     },
     {
       "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
@@ -20133,14 +19821,6 @@
       "symbol": "ParserOptionsError",
       "kind": "tagged-error",
       "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/PascalStr.ts",
-      "symbol": "PascalCaseStr",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "PascalCaseStr",
-      "description": "A branded PascalCase string."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Percentage.ts",
@@ -20373,22 +20053,6 @@
       "description": "A fallback list of `Referrer-Policy` values for legacy browser support."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/RegExp.ts",
-      "symbol": "RegExpFromStr",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "RegExpFromStr",
-      "description": "A one-way schema that decodes RegExp-compatible pattern strings into JavaScript RegExp values."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/RegExp.ts",
-      "symbol": "RegExpStr",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "RegExpStr",
-      "description": "A string that can be converted directly to a JavaScript RegExp using new RegExp(value)."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts",
       "symbol": "SafeObject",
       "kind": "brand",
@@ -20616,84 +20280,6 @@
       "description": "Canonical lowercase kebab-case slug safe for a single URL path segment."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/SnakeStr.ts",
-      "symbol": "SnakeCaseStr",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "SnakeCaseStr",
-      "description": "A branded snake_case string."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-      "symbol": "StatusCauseFields",
-      "kind": "schema-const",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-      "symbol": "StatusCauseInput",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "StatusCauseInput",
-      "description": "Normalized status/cause input payload."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-      "symbol": "StatusCauseInputOptions",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "StatusCauseInputOptions",
-      "description": "Normalized status/cause input options."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "NonEmptyTrimmedStr",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "NonEmptyTrimmedStr",
-      "description": "Non-empty trimmed string"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "NullableStr",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "NullableStr",
-      "description": "A nullable string"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "OptionFromNullableStr",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "OptionFromNullableStr",
-      "description": "An option from a nullable string"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "OptionFromOptionalStrWithNoneDefault",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "OptionFromOptionalStrWithNoneDefault",
-      "description": "Optional string property codec decoded as Option with None as the missing-key default."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "StrFromUnknown",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "StrFromUnknown",
-      "description": "Schema transformation that decodes any unknown input into a string."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "UUID",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "UUID",
-      "description": "Universally Unique Identifier"
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/TerritoryCode.ts",
       "symbol": "TerritoryCode",
       "kind": "literal-kit",
@@ -20716,46 +20302,6 @@
       "owner": "@beep/schema",
       "identity": "TerritoryNameFromCode",
       "description": "A reversible CLDR territory code to English display-name codec."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Timestamp/Timestamp.schema.ts",
-      "symbol": "EpochMillis",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "EpochMillis",
-      "description": "Epoch milliseconds since 1970-01-01T00:00:00.000Z"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Timestamp/Timestamp.schema.ts",
-      "symbol": "ISOStr",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "ISOStr",
-      "description": "ISO 8601 datetime string"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Timestamp/Timestamp.schema.ts",
-      "symbol": "Timestamp",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "Timestamp",
-      "description": "Timestamp - A Schema.Class wrapping DateTime.Utc for UTC timestamps"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Timestamp/Timestamp.schema.ts",
-      "symbol": "ToIsoStr",
-      "kind": "union",
-      "owner": "@beep/schema",
-      "identity": "ToIsoStr",
-      "description": "Schema transformer converting timestamps (numbers or ISO strings) into normalized ISO strings."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Timezone.ts",
-      "symbol": "Timezone",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "Timezone",
-      "description": "IANA timezone identifier literal type."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Toml.ts",

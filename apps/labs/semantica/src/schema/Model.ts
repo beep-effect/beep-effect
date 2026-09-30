@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { identity } from "effect";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { Effect, identity } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PosInt } from "./PosInt.ts";
@@ -107,7 +107,7 @@ export type TaskType = typeof TaskType.Type;
  */
 const ModelIdentityFields = S.Struct({
   artifactHash: Sha256Hex,
-  dimension: S.OptionFromOptionalKey(PosInt).pipe(SchemaUtils.withNoneDefault),
+  dimension: S.OptionFromOptionalKey(PosInt).pipe(S.withConstructorDefault(Effect.succeedNone)),
   name: S.NonEmptyString,
   provider: ProviderFamily,
   revision: S.NonEmptyString,

@@ -14,7 +14,6 @@
  */
 
 import { IRI } from "@beep/rdf";
-import { SchemaUtils } from "@beep/schema";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -24,6 +23,7 @@ import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { partitionPropertiesByRangeType } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { extractLocalNameFromIri, makeLocalNameSchema } from "../Utils/Iri.ts";
+import { Effect } from "effect";
 
 /**
  * Coerce string array to IRI array.
@@ -130,7 +130,7 @@ export const makeRelationSchema = dual2(
           object: EntityIdUnion.annotate({
             description: "Object entity ID from Stage 1 - MUST be one of the identified entities",
           }),
-          evidence: EvidenceSpan.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
+          evidence: EvidenceSpan.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotate({
             description: "Text span where this relation was expressed (include startChar/endChar offsets)",
           }),
         }).annotate({
@@ -158,7 +158,7 @@ export const makeRelationSchema = dual2(
           ]).annotate({
             description: "Literal value - string, number, or boolean (NOT entity ID)",
           }),
-          evidence: EvidenceSpan.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
+          evidence: EvidenceSpan.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotate({
             description: "Text span where this relation was expressed (include startChar/endChar offsets)",
           }),
         }).annotate({

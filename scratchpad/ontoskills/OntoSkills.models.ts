@@ -7,7 +7,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonEmptyTrimmedStr } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256 } from "@beep/shared-domain/entity/primitives";
@@ -23,6 +22,8 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 type PosInt = typeof PosInt.Type;
 
 const $I = $ScratchpadId.create("ontoskills/OntoSkills.models");
+
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 const zero = S.Natural.make(0);
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const STATE_URI_PATTERN = /^oc:[A-Z][a-zA-Z0-9]*(?::[a-zA-Z0-9_-]+)?$/;
@@ -87,8 +88,8 @@ export type RequirementType = typeof RequirementType.Type;
 export class Requirement extends S.Class<Requirement>($I`Requirement`)(
   {
     type: RequirementType,
-    value: NonEmptyTrimmedStr,
-    optional: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    value: TrimmedNonEmptyString,
+    optional: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
   },
   $I.annote("Requirement", {
     description: "A typed prerequisite and its optionality for skill execution.",
@@ -172,6 +173,7 @@ export const DurationFromSeconds = S.Natural.pipe(
  */
 export type DurationFromSeconds = typeof DurationFromSeconds.Type;
 
+const executionPayloadTimeoutDefault = O.none();
 /**
  * Executable source and its owning runtime.
  *
@@ -196,8 +198,8 @@ export type DurationFromSeconds = typeof DurationFromSeconds.Type;
 export class ExecutionPayload extends S.Class<ExecutionPayload>($I`ExecutionPayload`)(
   {
     executor: ExecutionPayloadExecutor,
-    code: NonEmptyTrimmedStr,
-    timeout: S.OptionFromNullOr(DurationFromSeconds).pipe(SchemaUtils.withKeyDefaults(O.none())),
+    code: TrimmedNonEmptyString,
+    timeout: S.OptionFromNullOr(DurationFromSeconds).pipe(S.withConstructorDefault(Effect.succeed(executionPayloadTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(executionPayloadTimeoutDefault))),
   },
   $I.annote("ExecutionPayload", {
     description: "Executable skill source, runtime selection, and optional timeout in seconds.",
@@ -247,6 +249,9 @@ export const StateUri = S.String.check(
  */
 export type StateUri = typeof StateUri.Type;
 
+const stateTransitionRequiresStateDefault = A.empty<StateUri>();
+const stateTransitionYieldsStateDefault = A.empty<StateUri>();
+const stateTransitionHandlesFailureDefault = A.empty<StateUri>();
 /**
  * State preconditions, outcomes, and handled failures for a skill.
  *
@@ -269,9 +274,9 @@ export type StateUri = typeof StateUri.Type;
  */
 export class StateTransition extends S.Class<StateTransition>($I`StateTransition`)(
   {
-    requiresState: S.Array(StateUri).pipe(SchemaUtils.withEmptyArrayDefaults<StateUri>()),
-    yieldsState: S.Array(StateUri).pipe(SchemaUtils.withEmptyArrayDefaults<StateUri>()),
-    handlesFailure: S.Array(StateUri).pipe(SchemaUtils.withEmptyArrayDefaults<StateUri>()),
+    requiresState: S.Array(StateUri).pipe(S.withConstructorDefault(Effect.succeed(stateTransitionRequiresStateDefault)), S.withDecodingDefaultType(Effect.succeed(stateTransitionRequiresStateDefault))),
+    yieldsState: S.Array(StateUri).pipe(S.withConstructorDefault(Effect.succeed(stateTransitionYieldsStateDefault)), S.withDecodingDefaultType(Effect.succeed(stateTransitionYieldsStateDefault))),
+    handlesFailure: S.Array(StateUri).pipe(S.withConstructorDefault(Effect.succeed(stateTransitionHandlesFailureDefault)), S.withDecodingDefaultType(Effect.succeed(stateTransitionHandlesFailureDefault))),
   },
   $I.annote("StateTransition", {
     description: "Execution-state edges that a skill requires, yields, or explicitly handles.",
@@ -458,6 +463,12 @@ export const KnowledgeNodeType = KnowledgeNodeTypeBase.pipe(
  */
 export type KnowledgeNodeType = typeof KnowledgeNodeType.Type;
 
+const knowledgeNodeAppliesToContextDefault = O.none();
+const knowledgeNodeHasRationaleDefault = O.none();
+const knowledgeNodeSeverityLevelDefault = O.none();
+const knowledgeNodeCodeLanguageDefault = O.none();
+const knowledgeNodeStepOrderDefault = O.none();
+const knowledgeNodeTemplateVariablesDefault = O.none();
 /**
  * One strict epistemic or operational fact extracted from a skill.
  *
@@ -484,13 +495,13 @@ export type KnowledgeNodeType = typeof KnowledgeNodeType.Type;
 export class KnowledgeNode extends S.Class<KnowledgeNode>($I`KnowledgeNode`)(
   {
     nodeType: KnowledgeNodeType,
-    directiveContent: NonEmptyTrimmedStr,
-    appliesToContext: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    hasRationale: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    severityLevel: S.OptionFromNullOr(SeverityLevel).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    codeLanguage: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    stepOrder: S.OptionFromNullOr(PosInt).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    templateVariables: S.String.pipe(S.Array, S.OptionFromNullOr, SchemaUtils.withKeyDefaults(O.none())),
+    directiveContent: TrimmedNonEmptyString,
+    appliesToContext: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(knowledgeNodeAppliesToContextDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(knowledgeNodeAppliesToContextDefault))),
+    hasRationale: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(knowledgeNodeHasRationaleDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(knowledgeNodeHasRationaleDefault))),
+    severityLevel: S.OptionFromNullOr(SeverityLevel).pipe(S.withConstructorDefault(Effect.succeed(knowledgeNodeSeverityLevelDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(knowledgeNodeSeverityLevelDefault))),
+    codeLanguage: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(knowledgeNodeCodeLanguageDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(knowledgeNodeCodeLanguageDefault))),
+    stepOrder: S.OptionFromNullOr(PosInt).pipe(S.withConstructorDefault(Effect.succeed(knowledgeNodeStepOrderDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(knowledgeNodeStepOrderDefault))),
+    templateVariables: S.String.pipe(S.Array, S.OptionFromNullOr, S.withConstructorDefault(Effect.succeed(knowledgeNodeTemplateVariablesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(knowledgeNodeTemplateVariablesDefault))),
   },
   $I.annote("KnowledgeNode", {
     description: "A validated unit of skill knowledge with optional context, rationale, severity, and operational metadata.",
@@ -599,7 +610,7 @@ export type KnowledgeNodesFromLLM = typeof KnowledgeNodesFromLLM.Type;
  * @since 0.0.0
  */
 export class CodeAnnotation extends S.Class<CodeAnnotation>($I`CodeAnnotation`)(
-  { index: S.Natural, purpose: NonEmptyTrimmedStr, context: NonEmptyTrimmedStr },
+  { index: S.Natural, purpose: TrimmedNonEmptyString, context: TrimmedNonEmptyString },
   $I.annote("CodeAnnotation", {
     description: "Semantic purpose and surrounding context assigned to an extracted code block.",
   })
@@ -625,7 +636,7 @@ export class CodeAnnotation extends S.Class<CodeAnnotation>($I`CodeAnnotation`)(
  * @since 0.0.0
  */
 export class TableAnnotation extends S.Class<TableAnnotation>($I`TableAnnotation`)(
-  { index: S.Natural, purpose: NonEmptyTrimmedStr },
+  { index: S.Natural, purpose: TrimmedNonEmptyString },
   $I.annote("TableAnnotation", {
     description: "Semantic purpose assigned to an extracted markdown table.",
   })
@@ -651,7 +662,7 @@ export class TableAnnotation extends S.Class<TableAnnotation>($I`TableAnnotation
  * @since 0.0.0
  */
 export class FlowchartAnnotation extends S.Class<FlowchartAnnotation>($I`FlowchartAnnotation`)(
-  { index: S.Natural, description: NonEmptyTrimmedStr },
+  { index: S.Natural, description: TrimmedNonEmptyString },
   $I.annote("FlowchartAnnotation", {
     description: "Natural-language interpretation assigned to an extracted flowchart.",
   })
@@ -771,12 +782,13 @@ export type ReferenceFilePurpose = typeof ReferenceFilePurpose.Type;
  * @since 0.0.0
  */
 export class ReferenceFile extends S.Class<ReferenceFile>($I`ReferenceFile`)(
-  { relativePath: NonEmptyTrimmedStr, purpose: ReferenceFilePurpose },
+  { relativePath: TrimmedNonEmptyString, purpose: ReferenceFilePurpose },
   $I.annote("ReferenceFile", {
     description: "A skill-relative reference selected for deferred, purpose-aware loading.",
   })
 ) {}
 
+const exampleTagsDefault = A.empty<string>();
 /**
  * Input/output example used for pattern matching.
  *
@@ -799,16 +811,18 @@ export class ReferenceFile extends S.Class<ReferenceFile>($I`ReferenceFile`)(
  */
 export class Example extends S.Class<Example>($I`Example`)(
   {
-    name: NonEmptyTrimmedStr,
-    inputDescription: NonEmptyTrimmedStr,
-    outputExample: NonEmptyTrimmedStr,
-    tags: S.Array(NonEmptyTrimmedStr).pipe(SchemaUtils.withEmptyArrayDefaults<NonEmptyTrimmedStr>()),
+    name: TrimmedNonEmptyString,
+    inputDescription: TrimmedNonEmptyString,
+    outputExample: TrimmedNonEmptyString,
+    tags: S.Array(TrimmedNonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(exampleTagsDefault)), S.withDecodingDefaultType(Effect.succeed(exampleTagsDefault))),
   },
   $I.annote("Example", {
     description: "A named input/output pair that demonstrates a reusable skill pattern.",
   })
 ) {}
 
+const workflowStepExpectedOutcomeDefault = O.none();
+const workflowStepDependsOnDefault = A.empty<string>();
 /**
  * One dependency-aware step in a workflow.
  *
@@ -831,10 +845,10 @@ export class Example extends S.Class<Example>($I`Example`)(
  */
 export class WorkflowStep extends S.Class<WorkflowStep>($I`WorkflowStep`)(
   {
-    stepId: NonEmptyTrimmedStr,
-    description: NonEmptyTrimmedStr,
-    expectedOutcome: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    dependsOn: S.Array(NonEmptyTrimmedStr).pipe(SchemaUtils.withEmptyArrayDefaults<NonEmptyTrimmedStr>()),
+    stepId: TrimmedNonEmptyString,
+    description: TrimmedNonEmptyString,
+    expectedOutcome: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(workflowStepExpectedOutcomeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(workflowStepExpectedOutcomeDefault))),
+    dependsOn: S.Array(TrimmedNonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(workflowStepDependsOnDefault)), S.withDecodingDefaultType(Effect.succeed(workflowStepDependsOnDefault))),
   },
   $I.annote("WorkflowStep", {
     description: "A workflow action with an optional expected outcome and predecessor step identifiers.",
@@ -865,9 +879,9 @@ export class WorkflowStep extends S.Class<WorkflowStep>($I`WorkflowStep`)(
  */
 export class Workflow extends S.Class<Workflow>($I`Workflow`)(
   {
-    workflowId: NonEmptyTrimmedStr,
-    name: NonEmptyTrimmedStr,
-    description: NonEmptyTrimmedStr,
+    workflowId: TrimmedNonEmptyString,
+    name: TrimmedNonEmptyString,
+    description: TrimmedNonEmptyString,
     steps: S.Array(WorkflowStep),
   },
   $I.annote("Workflow", {
@@ -891,7 +905,7 @@ export class Workflow extends S.Class<Workflow>($I`Workflow`)(
  * @category validation
  * @since 0.0.0
  */
-export const SkillId = NonEmptyTrimmedStr.check(
+export const SkillId = TrimmedNonEmptyString.check(
   S.isPattern(SLUG_PATTERN, {
     identifier: $I`SkillIdPatternCheck`,
     title: "OntoSkills skill identifier",
@@ -1087,6 +1101,27 @@ export const SkillType = SkillTypeBase.pipe(
  */
 export type SkillType = typeof SkillType.Type;
 
+const extractedSkillRequirementsDefault = A.empty<Requirement>();
+const extractedSkillDependsOnDefault = A.empty<RelationId>();
+const extractedSkillExtendsDefault = A.empty<RelationId>();
+const extractedSkillContradictsDefault = A.empty<RelationId>();
+const extractedSkillStateTransitionsDefault = O.none();
+const extractedSkillExecutionPayloadDefault = O.none();
+const extractedSkillProvenanceDefault = O.none();
+const extractedSkillKnowledgeNodesDefault = A.empty<KnowledgeNode>();
+const extractedSkillCategoryDefault = O.none();
+const extractedSkillVersionDefault = O.none();
+const extractedSkillLicenseDefault = O.none();
+const extractedSkillAuthorDefault = O.none();
+const extractedSkillPackageNameDefault = O.none();
+const extractedSkillArgumentHintDefault = O.none();
+const extractedSkillAllowedToolsDefault = A.empty<string>();
+const extractedSkillAliasesDefault = A.empty<string>();
+const extractedSkillCodeAnnotationsDefault = A.empty<CodeAnnotation>();
+const extractedSkillTableAnnotationsDefault = A.empty<TableAnnotation>();
+const extractedSkillFlowchartAnnotationsDefault = A.empty<FlowchartAnnotation>();
+const extractedSkillTemplateAnnotationsDefault = A.empty<TemplateAnnotation>();
+const extractedSkillWorkflowsDefault = A.empty<Workflow>();
 /**
  * Flat schema-first equivalent of the Python `ExtractedSkill` model.
  *
@@ -1119,33 +1154,33 @@ export class ExtractedSkill extends S.Class<ExtractedSkill>($I`ExtractedSkill`)(
   {
     id: SkillId,
     hash: Sha256,
-    nature: NonEmptyTrimmedStr,
-    genus: NonEmptyTrimmedStr,
-    differentia: NonEmptyTrimmedStr,
-    intents: S.Array(NonEmptyTrimmedStr),
-    requirements: S.Array(Requirement).pipe(SchemaUtils.withEmptyArrayDefaults<Requirement>()),
-    dependsOn: S.Array(RelationId).pipe(SchemaUtils.withEmptyArrayDefaults<RelationId>()),
-    extends: S.Array(RelationId).pipe(SchemaUtils.withEmptyArrayDefaults<RelationId>()),
-    contradicts: S.Array(RelationId).pipe(SchemaUtils.withEmptyArrayDefaults<RelationId>()),
-    stateTransitions: S.OptionFromNullOr(StateTransition).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    generatedBy: S.String.pipe(SchemaUtils.withKeyDefaults("unknown")),
-    executionPayload: S.OptionFromNullOr(ExecutionPayload).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    provenance: S.OptionFromNullOr(NonEmptyTrimmedStr).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    knowledgeNodes: S.Array(KnowledgeNode).pipe(SchemaUtils.withEmptyArrayDefaults<KnowledgeNode>()),
-    category: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    version: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    license: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    author: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    packageName: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    isUserInvocable: IsUserInvocable.pipe(SchemaUtils.withKeyDefaults(true)),
-    argumentHint: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    allowedTools: S.Array(NonEmptyTrimmedStr).pipe(SchemaUtils.withEmptyArrayDefaults<NonEmptyTrimmedStr>()),
-    aliases: S.Array(NonEmptyTrimmedStr).pipe(SchemaUtils.withEmptyArrayDefaults<NonEmptyTrimmedStr>()),
-    codeAnnotations: S.Array(CodeAnnotation).pipe(SchemaUtils.withEmptyArrayDefaults<CodeAnnotation>()),
-    tableAnnotations: S.Array(TableAnnotation).pipe(SchemaUtils.withEmptyArrayDefaults<TableAnnotation>()),
-    flowchartAnnotations: S.Array(FlowchartAnnotation).pipe(SchemaUtils.withEmptyArrayDefaults<FlowchartAnnotation>()),
-    templateAnnotations: S.Array(TemplateAnnotation).pipe(SchemaUtils.withEmptyArrayDefaults<TemplateAnnotation>()),
-    workflows: S.Array(Workflow).pipe(SchemaUtils.withEmptyArrayDefaults<Workflow>()),
+    nature: TrimmedNonEmptyString,
+    genus: TrimmedNonEmptyString,
+    differentia: TrimmedNonEmptyString,
+    intents: S.Array(TrimmedNonEmptyString),
+    requirements: S.Array(Requirement).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillRequirementsDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillRequirementsDefault))),
+    dependsOn: S.Array(RelationId).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillDependsOnDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillDependsOnDefault))),
+    extends: S.Array(RelationId).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillExtendsDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillExtendsDefault))),
+    contradicts: S.Array(RelationId).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillContradictsDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillContradictsDefault))),
+    stateTransitions: S.OptionFromNullOr(StateTransition).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillStateTransitionsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractedSkillStateTransitionsDefault))),
+    generatedBy: S.String.pipe(S.withConstructorDefault(Effect.succeed("unknown")), S.withDecodingDefaultTypeKey(Effect.succeed("unknown"))),
+    executionPayload: S.OptionFromNullOr(ExecutionPayload).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillExecutionPayloadDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractedSkillExecutionPayloadDefault))),
+    provenance: S.OptionFromNullOr(TrimmedNonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillProvenanceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractedSkillProvenanceDefault))),
+    knowledgeNodes: S.Array(KnowledgeNode).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillKnowledgeNodesDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillKnowledgeNodesDefault))),
+    category: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillCategoryDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractedSkillCategoryDefault))),
+    version: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillVersionDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractedSkillVersionDefault))),
+    license: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillLicenseDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractedSkillLicenseDefault))),
+    author: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillAuthorDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractedSkillAuthorDefault))),
+    packageName: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillPackageNameDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractedSkillPackageNameDefault))),
+    isUserInvocable: IsUserInvocable.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+    argumentHint: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillArgumentHintDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractedSkillArgumentHintDefault))),
+    allowedTools: S.Array(TrimmedNonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillAllowedToolsDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillAllowedToolsDefault))),
+    aliases: S.Array(TrimmedNonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillAliasesDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillAliasesDefault))),
+    codeAnnotations: S.Array(CodeAnnotation).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillCodeAnnotationsDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillCodeAnnotationsDefault))),
+    tableAnnotations: S.Array(TableAnnotation).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillTableAnnotationsDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillTableAnnotationsDefault))),
+    flowchartAnnotations: S.Array(FlowchartAnnotation).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillFlowchartAnnotationsDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillFlowchartAnnotationsDefault))),
+    templateAnnotations: S.Array(TemplateAnnotation).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillTemplateAnnotationsDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillTemplateAnnotationsDefault))),
+    workflows: S.Array(Workflow).pipe(S.withConstructorDefault(Effect.succeed(extractedSkillWorkflowsDefault)), S.withDecodingDefaultType(Effect.succeed(extractedSkillWorkflowsDefault))),
   },
   $I.annote("ExtractedSkill", {
     description: "Complete flat LLM extraction result with strict knowledge, relations, metadata, and workflow fields.",
@@ -1305,6 +1340,8 @@ export const FrontmatterDescription = S.String.check(
  */
 export type FrontmatterDescription = typeof FrontmatterDescription.Type;
 
+const frontmatterVersionDefault = O.none();
+const frontmatterMetadataDefault = R.empty();
 /**
  * Parsed and normalized skill frontmatter.
  *
@@ -1328,8 +1365,8 @@ export class Frontmatter extends S.Class<Frontmatter>($I`Frontmatter`)(
   {
     name: SkillName,
     description: FrontmatterDescription,
-    version: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults(R.empty())),
+    version: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(frontmatterVersionDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(frontmatterVersionDefault))),
+    metadata: S.Record(S.String, S.Unknown).pipe(S.withConstructorDefault(Effect.succeed(frontmatterMetadataDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(frontmatterMetadataDefault))),
   },
   $I.annote("Frontmatter", {
     description: "Validated SKILL.md frontmatter with canonical name and preserved extension metadata.",
@@ -1359,10 +1396,10 @@ export class Frontmatter extends S.Class<Frontmatter>($I`Frontmatter`)(
  */
 export class FileInfo extends S.Class<FileInfo>($I`FileInfo`)(
   {
-    relativePath: NonEmptyTrimmedStr,
+    relativePath: TrimmedNonEmptyString,
     contentHash: Sha256,
     fileSize: S.Natural,
-    mimeType: NonEmptyTrimmedStr,
+    mimeType: TrimmedNonEmptyString,
   },
   $I.annote("FileInfo", {
     description: "Deterministic filesystem metadata used for progressive disclosure and change detection.",
@@ -1474,10 +1511,10 @@ export class CodeBlock extends S.Class<CodeBlock>($I`CodeBlock`)(
   {
     blockType: S.tag("code_block").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("code_block"))),
     language: S.String,
-    content: NonEmptyTrimmedStr,
+    content: TrimmedNonEmptyString,
     sourceLineStart: PosInt,
     sourceLineEnd: PosInt,
-    contentOrder: S.Natural.pipe(SchemaUtils.withKeyDefaults(zero)),
+    contentOrder: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
   },
   $I.annote("CodeBlock", {
     description: "Fenced code source with language, source span, and document order.",
@@ -1510,10 +1547,10 @@ export class CodeBlock extends S.Class<CodeBlock>($I`CodeBlock`)(
 export class MarkdownTable extends S.Class<MarkdownTable>($I`MarkdownTable`)(
   {
     blockType: S.tag("table").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("table"))),
-    markdownSource: NonEmptyTrimmedStr,
+    markdownSource: TrimmedNonEmptyString,
     caption: S.OptionFromNullOr(S.String),
     rowCount: S.Natural,
-    contentOrder: S.Natural.pipe(SchemaUtils.withKeyDefaults(zero)),
+    contentOrder: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
   },
   $I.annote("MarkdownTable", {
     description: "Markdown table source, nullable caption, row count, and document order.",
@@ -1544,9 +1581,9 @@ export class MarkdownTable extends S.Class<MarkdownTable>($I`MarkdownTable`)(
 export class FlowchartBlock extends S.Class<FlowchartBlock>($I`FlowchartBlock`)(
   {
     blockType: S.tag("flowchart").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("flowchart"))),
-    source: NonEmptyTrimmedStr,
+    source: TrimmedNonEmptyString,
     chartType: FlowchartType,
-    contentOrder: S.Natural.pipe(SchemaUtils.withKeyDefaults(zero)),
+    contentOrder: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
   },
   $I.annote("FlowchartBlock", {
     description: "Diagram source classified as Graphviz or Mermaid with stable document order.",
@@ -1571,7 +1608,7 @@ export declare namespace ProcedureStep {
    * @since 0.0.0
    */
   export type Type = {
-    readonly text: NonEmptyTrimmedStr;
+    readonly text: string;
     readonly position: PosInt;
     readonly children: ReadonlyArray<ContentBlock.Type>;
   };
@@ -1629,7 +1666,7 @@ const ProcedureStepChildren: S.Codec<
  * @since 0.0.0
  */
 export const ProcedureStep: S.Codec<ProcedureStep.Type, ProcedureStep.Encoded> = S.Struct({
-  text: NonEmptyTrimmedStr,
+  text: TrimmedNonEmptyString,
   position: PosInt,
   children: ProcedureStepChildren,
 }).pipe(
@@ -1672,7 +1709,7 @@ export class OrderedProcedure extends S.Class<OrderedProcedure>($I`OrderedProced
       S.withDecodingDefaultTypeKey(Effect.succeed("ordered_procedure"))
     ),
     items: S.Array(ProcedureStep),
-    contentOrder: S.Natural.pipe(SchemaUtils.withKeyDefaults(zero)),
+    contentOrder: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
   },
   $I.annote("OrderedProcedure", {
     description: "Ordered procedural content with nested child blocks and stable document order.",
@@ -1703,9 +1740,9 @@ export class OrderedProcedure extends S.Class<OrderedProcedure>($I`OrderedProced
 export class TemplateBlock extends S.Class<TemplateBlock>($I`TemplateBlock`)(
   {
     blockType: S.tag("template").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("template"))),
-    content: NonEmptyTrimmedStr,
-    detectedVariables: S.Array(NonEmptyTrimmedStr),
-    contentOrder: S.Natural.pipe(SchemaUtils.withKeyDefaults(zero)),
+    content: TrimmedNonEmptyString,
+    detectedVariables: S.Array(TrimmedNonEmptyString),
+    contentOrder: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
   },
   $I.annote("TemplateBlock", {
     description: "Template content and its detected variable placeholders in document order.",
@@ -1736,7 +1773,7 @@ export class TemplateBlock extends S.Class<TemplateBlock>($I`TemplateBlock`)(
 export class Paragraph extends S.Class<Paragraph>($I`Paragraph`)(
   {
     blockType: S.tag("paragraph").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("paragraph"))),
-    textContent: NonEmptyTrimmedStr,
+    textContent: TrimmedNonEmptyString,
     contentOrder: S.Natural,
   },
   $I.annote("Paragraph", {
@@ -1762,7 +1799,7 @@ export declare namespace BulletItem {
    * @since 0.0.0
    */
   export type Type = {
-    readonly text: NonEmptyTrimmedStr;
+    readonly text: string;
     readonly order: number;
     readonly children: ReadonlyArray<ContentBlock.Type>;
   };
@@ -1820,7 +1857,7 @@ const BulletItemChildren: S.Codec<
  * @since 0.0.0
  */
 export const BulletItem: S.Codec<BulletItem.Type, BulletItem.Encoded> = S.Struct({
-  text: NonEmptyTrimmedStr,
+  text: TrimmedNonEmptyString,
   order: S.Natural,
   children: BulletItemChildren,
 }).pipe(
@@ -1871,6 +1908,7 @@ export class BulletListBlock extends S.Class<BulletListBlock>($I`BulletListBlock
   static readonly thunkThis = () => BulletListBlock;
 }
 
+const blockQuoteBlockAttributionDefault = O.none();
 /**
  * Quoted content with optional attribution.
  *
@@ -1895,8 +1933,8 @@ export class BulletListBlock extends S.Class<BulletListBlock>($I`BulletListBlock
 export class BlockQuoteBlock extends S.Class<BlockQuoteBlock>($I`BlockQuoteBlock`)(
   {
     blockType: S.tag("blockquote").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("blockquote"))),
-    content: NonEmptyTrimmedStr,
-    attribution: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withKeyDefaults(O.none())),
+    content: TrimmedNonEmptyString,
+    attribution: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(blockQuoteBlockAttributionDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(blockQuoteBlockAttributionDefault))),
     contentOrder: S.Natural,
   },
   $I.annote("BlockQuoteBlock", {
@@ -1928,7 +1966,7 @@ export class BlockQuoteBlock extends S.Class<BlockQuoteBlock>($I`BlockQuoteBlock
 export class HTMLBlock extends S.Class<HTMLBlock>($I`HTMLBlock`)(
   {
     blockType: S.tag("html_block").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("html_block"))),
-    content: NonEmptyTrimmedStr,
+    content: TrimmedNonEmptyString,
     contentOrder: S.Natural,
   },
   $I.annote("HTMLBlock", {
@@ -1938,6 +1976,7 @@ export class HTMLBlock extends S.Class<HTMLBlock>($I`HTMLBlock`)(
   static readonly thunkThis = () => HTMLBlock;
 }
 
+const frontmatterBlockPropertiesDefault = R.empty();
 /**
  * Raw YAML frontmatter represented as a content block.
  *
@@ -1961,7 +2000,7 @@ export class FrontmatterBlock extends S.Class<FrontmatterBlock>($I`FrontmatterBl
   {
     blockType: S.tag("frontmatter").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("frontmatter"))),
     rawYaml: S.String,
-    properties: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())),
+    properties: S.Record(S.String, S.String).pipe(S.withConstructorDefault(Effect.succeed(frontmatterBlockPropertiesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(frontmatterBlockPropertiesDefault))),
     contentOrder: S.Natural,
   },
   $I.annote("FrontmatterBlock", {
@@ -1994,7 +2033,7 @@ export class FrontmatterBlock extends S.Class<FrontmatterBlock>($I`FrontmatterBl
 export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
   {
     blockType: S.tag("heading").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("heading"))),
-    text: NonEmptyTrimmedStr,
+    text: TrimmedNonEmptyString,
     level: PosInt,
     contentOrder: S.Natural,
   },
@@ -2174,7 +2213,7 @@ export declare namespace Section {
    * @since 0.0.0
    */
   export type Type = {
-    readonly title: NonEmptyTrimmedStr;
+    readonly title: string;
     readonly level: PosInt;
     readonly order: number;
     readonly content: ReadonlyArray<ContentBlock.Type>;
@@ -2248,7 +2287,7 @@ const SectionSubsections: S.Codec<ReadonlyArray<Section.Type>, ReadonlyArray<Sec
  * @since 0.0.0
  */
 export const Section: S.Codec<Section.Type, Section.Encoded> = S.Struct({
-  title: NonEmptyTrimmedStr,
+  title: TrimmedNonEmptyString,
   level: PosInt,
   order: S.Natural,
   content: SectionContent,
@@ -2268,6 +2307,12 @@ export const Section: S.Codec<Section.Type, Section.Encoded> = S.Struct({
  */
 export type Section = typeof Section.Type;
 
+const contentExtractionSectionsDefault = A.empty<Section>();
+const contentExtractionCodeBlocksDefault = A.empty<CodeBlock>();
+const contentExtractionTablesDefault = A.empty<MarkdownTable>();
+const contentExtractionFlowchartsDefault = A.empty<FlowchartBlock>();
+const contentExtractionProceduresDefault = A.empty<OrderedProcedure>();
+const contentExtractionTemplatesDefault = A.empty<TemplateBlock>();
 /**
  * Aggregate result of Phase 1 structural extraction.
  *
@@ -2287,18 +2332,19 @@ export type Section = typeof Section.Type;
  */
 export class ContentExtraction extends S.Class<ContentExtraction>($I`ContentExtraction`)(
   {
-    sections: S.Array(Section).pipe(SchemaUtils.withEmptyArrayDefaults<Section>()),
-    codeBlocks: S.Array(CodeBlock).pipe(SchemaUtils.withEmptyArrayDefaults<CodeBlock>()),
-    tables: S.Array(MarkdownTable).pipe(SchemaUtils.withEmptyArrayDefaults<MarkdownTable>()),
-    flowcharts: S.Array(FlowchartBlock).pipe(SchemaUtils.withEmptyArrayDefaults<FlowchartBlock>()),
-    procedures: S.Array(OrderedProcedure).pipe(SchemaUtils.withEmptyArrayDefaults<OrderedProcedure>()),
-    templates: S.Array(TemplateBlock).pipe(SchemaUtils.withEmptyArrayDefaults<TemplateBlock>()),
+    sections: S.Array(Section).pipe(S.withConstructorDefault(Effect.succeed(contentExtractionSectionsDefault)), S.withDecodingDefaultType(Effect.succeed(contentExtractionSectionsDefault))),
+    codeBlocks: S.Array(CodeBlock).pipe(S.withConstructorDefault(Effect.succeed(contentExtractionCodeBlocksDefault)), S.withDecodingDefaultType(Effect.succeed(contentExtractionCodeBlocksDefault))),
+    tables: S.Array(MarkdownTable).pipe(S.withConstructorDefault(Effect.succeed(contentExtractionTablesDefault)), S.withDecodingDefaultType(Effect.succeed(contentExtractionTablesDefault))),
+    flowcharts: S.Array(FlowchartBlock).pipe(S.withConstructorDefault(Effect.succeed(contentExtractionFlowchartsDefault)), S.withDecodingDefaultType(Effect.succeed(contentExtractionFlowchartsDefault))),
+    procedures: S.Array(OrderedProcedure).pipe(S.withConstructorDefault(Effect.succeed(contentExtractionProceduresDefault)), S.withDecodingDefaultType(Effect.succeed(contentExtractionProceduresDefault))),
+    templates: S.Array(TemplateBlock).pipe(S.withConstructorDefault(Effect.succeed(contentExtractionTemplatesDefault)), S.withDecodingDefaultType(Effect.succeed(contentExtractionTemplatesDefault))),
   },
   $I.annote("ContentExtraction", {
     description: "Phase 1 structural extraction grouped into sections and specialized block inventories.",
   })
 ) {}
 
+const flatBlockParentBlockIdDefault = O.none();
 /**
  * Unique-ID projection of one content block.
  *
@@ -2329,12 +2375,12 @@ export class ContentExtraction extends S.Class<ContentExtraction>($I`ContentExtr
  */
 export class FlatBlock extends S.Class<FlatBlock>($I`FlatBlock`)(
   {
-    blockId: NonEmptyTrimmedStr,
+    blockId: TrimmedNonEmptyString,
     blockType: ContentBlockType,
     content: ContentBlock,
     lineStart: PosInt,
     lineEnd: PosInt,
-    parentBlockId: S.OptionFromNullOr(NonEmptyTrimmedStr).pipe(SchemaUtils.withKeyDefaults(O.none())),
+    parentBlockId: S.OptionFromNullOr(TrimmedNonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(flatBlockParentBlockIdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(flatBlockParentBlockIdDefault))),
   },
   $I.annote("FlatBlock", {
     description: "Hydration-ready content block with stable identifier, source span, and optional parent.",
@@ -2357,7 +2403,7 @@ export declare namespace SkeletonNode {
    * @since 0.0.0
    */
   export type Type = {
-    readonly blockId: NonEmptyTrimmedStr;
+    readonly blockId: string;
     readonly children: ReadonlyArray<Type>;
   };
 
@@ -2412,7 +2458,7 @@ const SkeletonNodeChildren: S.Codec<
  * @since 0.0.0
  */
 export const SkeletonNode: S.Codec<SkeletonNode.Type, SkeletonNode.Encoded> = S.Struct({
-  blockId: NonEmptyTrimmedStr,
+  blockId: TrimmedNonEmptyString,
   children: SkeletonNodeChildren,
 }).pipe(
   $I.annoteSchema("SkeletonNode", {
@@ -2429,6 +2475,7 @@ export const SkeletonNode: S.Codec<SkeletonNode.Type, SkeletonNode.Encoded> = S.
  */
 export type SkeletonNode = typeof SkeletonNode.Type;
 
+const skeletonListItemChildrenDefault = A.empty<string>();
 /**
  * List item represented in a document skeleton.
  *
@@ -2449,14 +2496,15 @@ export type SkeletonNode = typeof SkeletonNode.Type;
  */
 export class SkeletonListItem extends S.Class<SkeletonListItem>($I`SkeletonListItem`)(
   {
-    textBlockId: NonEmptyTrimmedStr,
-    children: S.Array(NonEmptyTrimmedStr).pipe(SchemaUtils.withEmptyArrayDefaults<NonEmptyTrimmedStr>()),
+    textBlockId: TrimmedNonEmptyString,
+    children: S.Array(TrimmedNonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(skeletonListItemChildrenDefault)), S.withDecodingDefaultType(Effect.succeed(skeletonListItemChildrenDefault))),
   },
   $I.annote("SkeletonListItem", {
     description: "Skeleton list item linking its text block to child block identifiers.",
   })
 ) {}
 
+const documentSkeletonListItemsDefault = R.empty();
 /**
  * LLM-produced hierarchy over deterministic block identifiers.
  *
@@ -2479,13 +2527,14 @@ export class SkeletonListItem extends S.Class<SkeletonListItem>($I`SkeletonListI
 export class DocumentSkeleton extends S.Class<DocumentSkeleton>($I`DocumentSkeleton`)(
   {
     sections: S.Array(SkeletonNode),
-    listItems: S.Record(S.String, S.Array(SkeletonListItem)).pipe(SchemaUtils.withKeyDefaults(R.empty())),
+    listItems: S.Record(S.String, S.Array(SkeletonListItem)).pipe(S.withConstructorDefault(Effect.succeed(documentSkeletonListItemsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(documentSkeletonListItemsDefault))),
   },
   $I.annote("DocumentSkeleton", {
     description: "Document section tree and keyed list-item structures produced from flat block identifiers.",
   })
 ) {}
 
+const directoryScanContentExtractionDefault = O.none();
 /**
  * Complete Phase 1 filesystem and content inventory.
  *
@@ -2520,19 +2569,24 @@ export class DirectoryScan extends S.Class<DirectoryScan>($I`DirectoryScan`)(
   {
     frontmatter: Frontmatter,
     skillId: SkillId,
-    qualifiedId: NonEmptyTrimmedStr,
+    qualifiedId: TrimmedNonEmptyString,
     contentHash: Sha256,
-    provenancePath: NonEmptyTrimmedStr,
+    provenancePath: TrimmedNonEmptyString,
     files: S.Array(FileInfo),
-    skillMdContent: NonEmptyTrimmedStr,
+    skillMdContent: TrimmedNonEmptyString,
     fileTree: S.String,
-    contentExtraction: S.OptionFromNullOr(ContentExtraction).pipe(SchemaUtils.withKeyDefaults(O.none())),
+    contentExtraction: S.OptionFromNullOr(ContentExtraction).pipe(S.withConstructorDefault(Effect.succeed(directoryScanContentExtractionDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(directoryScanContentExtractionDefault))),
   },
   $I.annote("DirectoryScan", {
     description: "Deterministic Phase 1 scan containing frontmatter, hashes, files, source text, and optional extraction.",
   })
 ) {}
 
+const compiledSkillFrontmatterDefault = O.none();
+const compiledSkillFilesDefault = A.empty<FileInfo>();
+const compiledSkillReferenceFilesDefault = A.empty<ReferenceFile>();
+const compiledSkillExamplesDefault = A.empty<Example>();
+const compiledSkillContentExtractionDefault = O.none();
 /**
  * Final compiler output combining extracted semantics with Phase 1 and Phase 2 artifacts.
  *
@@ -2560,11 +2614,11 @@ export class DirectoryScan extends S.Class<DirectoryScan>($I`DirectoryScan`)(
  */
 export class CompiledSkill extends ExtractedSkill.extend<CompiledSkill>($I`CompiledSkill`)(
   {
-    frontmatter: S.OptionFromNullOr(Frontmatter).pipe(SchemaUtils.withKeyDefaults(O.none())),
-    files: S.Array(FileInfo).pipe(SchemaUtils.withEmptyArrayDefaults<FileInfo>()),
-    referenceFiles: S.Array(ReferenceFile).pipe(SchemaUtils.withEmptyArrayDefaults<ReferenceFile>()),
-    examples: S.Array(Example).pipe(SchemaUtils.withEmptyArrayDefaults<Example>()),
-    contentExtraction: S.OptionFromNullOr(ContentExtraction).pipe(SchemaUtils.withKeyDefaults(O.none())),
+    frontmatter: S.OptionFromNullOr(Frontmatter).pipe(S.withConstructorDefault(Effect.succeed(compiledSkillFrontmatterDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(compiledSkillFrontmatterDefault))),
+    files: S.Array(FileInfo).pipe(S.withConstructorDefault(Effect.succeed(compiledSkillFilesDefault)), S.withDecodingDefaultType(Effect.succeed(compiledSkillFilesDefault))),
+    referenceFiles: S.Array(ReferenceFile).pipe(S.withConstructorDefault(Effect.succeed(compiledSkillReferenceFilesDefault)), S.withDecodingDefaultType(Effect.succeed(compiledSkillReferenceFilesDefault))),
+    examples: S.Array(Example).pipe(S.withConstructorDefault(Effect.succeed(compiledSkillExamplesDefault)), S.withDecodingDefaultType(Effect.succeed(compiledSkillExamplesDefault))),
+    contentExtraction: S.OptionFromNullOr(ContentExtraction).pipe(S.withConstructorDefault(Effect.succeed(compiledSkillContentExtractionDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(compiledSkillContentExtractionDefault))),
   },
   $I.annote("CompiledSkill", {
     description: "Final OntoSkills compiler model spanning extraction, filesystem evidence, references, examples, and content.",

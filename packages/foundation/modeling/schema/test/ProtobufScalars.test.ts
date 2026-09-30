@@ -1,5 +1,4 @@
 import { fcRuns } from "@beep/fc-runs";
-import { Bytes } from "@beep/schema/Bytes";
 import { Double } from "@beep/schema/Double";
 import { Fixed64 } from "@beep/schema/Fixed64";
 import { Float } from "@beep/schema/Float";
@@ -11,11 +10,9 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 
-const decodeUnknownBytes = S.decodeUnknownEffect(Bytes);
 const decodeUnknownDouble = S.decodeUnknownEffect(Double);
 const decodeUnknownFixed64 = S.decodeUnknownEffect(Fixed64);
 const decodeUnknownFloat = S.decodeUnknownEffect(Float);
-const isBytes2 = S.is(Bytes);
 const isDouble2 = S.is(Double);
 const isFixed642 = S.is(Fixed64);
 const isFloat2 = S.is(Float);
@@ -166,39 +163,6 @@ describe("protobuf scalar schemas", { concurrent: false }, () => {
         expect(isFixed642(value)).toBe(true);
         expect(value >= uint64Minimum).toBe(true);
         expect(value <= uint64Maximum).toBe(true);
-
-        return true;
-      }),
-      { arbitrary: fcRuns(100) }
-    );
-  });
-
-  describe("protobuf bytes scalar schema", () => {
-    it.effect(
-      "accepts Uint8Array bytes values",
-      Effect.fnUntraced(function* () {
-        const input = new Uint8Array([1, 2, 3]);
-        const decoded = yield* decodeUnknownBytes(input);
-
-        expect(decoded).toBe(input);
-        expect(decoded.byteLength).toBe(3);
-      })
-    );
-
-    it.effect(
-      "rejects non-Uint8Array bytes values",
-      Effect.fnUntraced(function* () {
-        pipe(yield* Effect.exit(decodeUnknownBytes([1, 2, 3])), Exit.isFailure, assertTrue);
-        pipe(yield* Effect.exit(decodeUnknownBytes("AQID")), Exit.isFailure, assertTrue);
-      })
-    );
-
-    it.effect.prop(
-      "derives Uint8Array arbitrary values from the schema",
-      [Arbitrary.schema(Bytes)],
-      Effect.fnUntraced(function* ([value]) {
-        expect(isBytes2(value)).toBe(true);
-        expect(value).toBeInstanceOf(Uint8Array);
 
         return true;
       }),

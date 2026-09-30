@@ -8,10 +8,11 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
 import { Attributes, EntityId } from "./shared.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolution");
 
@@ -50,6 +51,7 @@ export const ResolutionMethod = LiteralKit(["exact", "similarity", "containment"
  */
 export type ResolutionMethod = typeof ResolutionMethod.Type;
 
+const mentionRecordAttributesDefault = {};
 /**
  * Immutable evidence node preserving one original extraction event.
  *
@@ -87,14 +89,14 @@ export class MentionRecord extends S.TaggedClass<MentionRecord>($I`MentionRecord
       description: "Ontology classes assigned by extraction.",
     }),
     attributes: Attributes.pipe(
-      SchemaUtils.withKeyDefaults({}),
+      S.withConstructorDefault(Effect.succeed(mentionRecordAttributesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(mentionRecordAttributesDefault)),
       S.annotateKey({ description: "Property values preserved from extraction." })
     ),
     chunkIndex: S.Natural.annotateKey({
       description: "Zero-based source chunk index.",
     }),
     confidence: S.OptionFromOptionalKey(Confidence).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Extraction confidence when measured." })
     ),
   },
@@ -106,6 +108,8 @@ export class MentionRecord extends S.TaggedClass<MentionRecord>($I`MentionRecord
   static readonly is = S.is(MentionRecord);
 }
 
+const resolvedEntityAttributesDefault = {};
+const resolvedEntityExternalIdsDefault = {};
 /**
  * Canonical entity produced by clustering immutable mention records.
  *
@@ -140,11 +144,11 @@ export class ResolvedEntity extends S.TaggedClass<ResolvedEntity>($I`ResolvedEnt
       description: "Merged ontology class IRIs.",
     }),
     attributes: Attributes.pipe(
-      SchemaUtils.withKeyDefaults({}),
+      S.withConstructorDefault(Effect.succeed(resolvedEntityAttributesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(resolvedEntityAttributesDefault)),
       S.annotateKey({ description: "Merged property values for the resolved cluster." })
     ),
     externalIds: S.Record(S.String, S.NonEmptyString).pipe(
-      SchemaUtils.withKeyDefaults({}),
+      S.withConstructorDefault(Effect.succeed(resolvedEntityExternalIdsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(resolvedEntityExternalIdsDefault)),
       S.annotateKey({ description: "External knowledge-base identifiers by namespace." })
     ),
   },
@@ -252,11 +256,11 @@ export class RelationEdge extends S.TaggedClass<RelationEdge>($I`RelationEdge`)(
       description: "Ontology property IRI relating two canonical entities.",
     }),
     grounded: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({ description: "Whether source grounding verified this relation." })
     ),
     confidence: S.OptionFromOptionalKey(Confidence).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Grounding confidence when verification was performed." })
     ),
   },
@@ -299,6 +303,12 @@ export const EREdge = EREdgeDefinition.pipe(
  */
 export type EREdge = typeof EREdge.Type;
 
+const entityResolutionConfigSimilarityThresholdDefault = UnitInterval.make(0.7);
+const entityResolutionConfigMentionWeightDefault = UnitInterval.make(0.5);
+const entityResolutionConfigTypeWeightDefault = UnitInterval.make(0.3);
+const entityResolutionConfigNeighborWeightDefault = UnitInterval.make(0.2);
+const entityResolutionConfigEmbeddingWeightDefault = UnitInterval.make(0);
+const entityResolutionConfigTypeOverlapRatioDefault = UnitInterval.make(0.5);
 /**
  * Tunable policy for deterministic entity clustering.
  *
@@ -323,31 +333,31 @@ export type EREdge = typeof EREdge.Type;
 export class EntityResolutionConfig extends S.Class<EntityResolutionConfig>($I`EntityResolutionConfig`)(
   {
     similarityThreshold: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.7)),
+      S.withConstructorDefault(Effect.succeed(entityResolutionConfigSimilarityThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigSimilarityThresholdDefault)),
       S.annotateKey({ description: "Minimum overall score accepted for clustering." })
     ),
     mentionWeight: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.5)),
+      S.withConstructorDefault(Effect.succeed(entityResolutionConfigMentionWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigMentionWeightDefault)),
       S.annotateKey({ description: "Contribution of mention-string similarity." })
     ),
     typeWeight: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.3)),
+      S.withConstructorDefault(Effect.succeed(entityResolutionConfigTypeWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigTypeWeightDefault)),
       S.annotateKey({ description: "Contribution of ontology-type overlap." })
     ),
     neighborWeight: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.2)),
+      S.withConstructorDefault(Effect.succeed(entityResolutionConfigNeighborWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigNeighborWeightDefault)),
       S.annotateKey({ description: "Contribution of graph-neighbor similarity." })
     ),
     embeddingWeight: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0)),
+      S.withConstructorDefault(Effect.succeed(entityResolutionConfigEmbeddingWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigEmbeddingWeightDefault)),
       S.annotateKey({ description: "Contribution of vector similarity; zero disables it." })
     ),
     requireTypeOverlap: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether candidates must share an ontology type." })
     ),
     typeOverlapRatio: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.5)),
+      S.withConstructorDefault(Effect.succeed(entityResolutionConfigTypeOverlapRatioDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigTypeOverlapRatioDefault)),
       S.annotateKey({ description: "Minimum type-overlap ratio when overlap is required." })
     ),
   },

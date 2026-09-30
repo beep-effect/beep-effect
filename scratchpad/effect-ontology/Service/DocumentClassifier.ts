@@ -12,7 +12,6 @@ import * as Crypto from "effect/Crypto";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Inspectable, Layer, MutableHashMap } from "effect";
 import * as A from "effect/Array";
@@ -80,11 +79,11 @@ export const DocumentClassification = S.Struct({
     description: "Estimated entity density",
   }),
   /** Optional detected language */
-  language: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
+  language: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotate({
     description: "Detected language code (ISO 639-1)",
   }),
   /** Optional extracted title */
-  title: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
+  title: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotate({
     description: "Document title if detectable",
   }),
 }).pipe(
@@ -174,7 +173,7 @@ export const ClassifyInput = S.Struct({
   /** Document text preview (first 1500-4000 chars recommended) */
   preview: S.String,
   /** Content type hint (e.g., "text/plain", "text/markdown") */
-  contentType: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  contentType: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("ClassifyInput", {
     description: "Document preview and optional content-type hint for single classification.",
@@ -216,7 +215,7 @@ export const ClassifyBatchInput = S.Struct({
       /** Document text preview */
       preview: S.String,
       /** Content type hint */
-      contentType: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+      contentType: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     })
   ),
 }).pipe(

@@ -13,7 +13,7 @@ import {
   HubSpotUpsertContactRequest,
 } from "@beep/hubspot";
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Clock, Effect, Layer, pipe } from "effect";
 import { FetchHttpClient } from "effect/http";
@@ -68,10 +68,10 @@ type ContactSubmissionErrorOptions = {
 export class ContactSubmissionError extends S.TaggedError<ContactSubmissionError>($I`ContactSubmissionError`)(
   "ContactSubmissionError",
   {
-    provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    provider: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    providerReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     reason: ContactSubmissionErrorReason,
-    status: S.OptionFromOptionalKey(ContactProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
+    status: S.OptionFromOptionalKey(ContactProviderHttpStatus).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annoteError<ContactSubmissionError>("ContactSubmissionError", {
     description: "Typed server-side contact submission boundary failure.",

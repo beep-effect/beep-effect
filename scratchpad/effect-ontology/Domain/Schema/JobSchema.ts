@@ -12,10 +12,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { HttpsUrl, LiteralKit, SchemaUtils, UUID } from "@beep/schema";
+import { HttpsUrl, LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { OntologyName, withContentHashIdStatics } from "../Identity.ts";
+import { OntologyName, UUID, withContentHashIdStatics } from "../Identity.ts";
 import { EntityId } from "../Model/shared.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/JobSchema");
 const backgroundJobIdPattern = /^job-[0-9a-f]{12}$/;
@@ -235,24 +236,25 @@ export const BackgroundJob = BackgroundJobDefinition.pipe(
  */
 export type BackgroundJob = typeof BackgroundJob.Type;
 
+const jobMetadataDefinitionAttemptsDefault = S.Natural.make(0);
 const JobMetadataDefinition = S.Struct({
   id: BackgroundJobId.annotateKey({
     description: "Identifier of the job whose retries are tracked.",
   }),
   attempts: S.Natural.pipe(
-    SchemaUtils.withKeyDefaults(S.Natural.make(0)),
+    S.withConstructorDefault(Effect.succeed(jobMetadataDefinitionAttemptsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(jobMetadataDefinitionAttemptsDefault)),
     S.annotateKey({
       description: "Number of completed delivery attempts; defaults to zero.",
     })
   ),
   lastError: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({
       description: "Optional diagnostic from the most recent failed attempt.",
     })
   ),
   lastAttemptAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({
       description: "Optional UTC instant of the most recent attempt.",
     })

@@ -22,7 +22,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, Str } from "@beep/utils";
 import { Config, Context, DateTime, Effect, FileSystem, Layer, Match, Path, pipe, Result } from "effect";
 import * as Bool from "effect/Boolean";
@@ -83,7 +82,6 @@ const GitCountFromString = S.FiniteFromString.pipe(
 const decodeGitCount = S.decodeUnknownEffect(GitCountFromString);
 const isWorktreeRemovalName = S.is(WorktreeRemovalRequest.fields.name);
 const decodeGitObjectId = S.decodeUnknownEffect(GitObjectId);
-const decodeIsoString = S.decodeUnknownEffect(ISOStr);
 const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeWorktreeRepositoryHash = S.decodeUnknownEffect(WorktreeRepositoryHash);
 const encodeResidueManifest = S.encodeEffect(S.fromJsonString(WorktreeResidueManifest, { space: 2 }));
@@ -879,11 +877,7 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const now = yield* DateTime.now;
-  const archivedAt = yield* decodeIsoString(DateTime.formatIso(now)).pipe(
-    Effect.mapError((cause) =>
-      WorktreePreservationError.new("prepare-residue", "Current time was not a valid ISO timestamp.", { cause })
-    )
-  );
+  const archivedAt = DateTime.formatIso(now);
   const mainCheckout = path.resolve(request.mainCheckout);
   const repositoryDigest = yield* decodeSha256HexFromBytes(textEncoder.encode(mainCheckout)).pipe(
     Effect.mapError((cause) =>

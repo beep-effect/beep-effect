@@ -15,6 +15,7 @@ import { $UsptoMcpId } from "@beep/identity/packages";
 import { ApiKeyRequiredFailure, annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UsptoApplicationMetadata, UsptoApplicationNumber } from "@beep/uspto";
+import { Effect } from "effect";
 import { Tool, Toolkit } from "effect/ai";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
@@ -250,7 +251,10 @@ export class UsptoGetDocumentsParams extends S.Class<UsptoGetDocumentsParams>($I
     applicationNumber: UsptoApplicationNumber.annotateKey({
       description: "Eight-digit USPTO application number to list file-wrapper documents for.",
     }),
-    budgetBytes: PosInt.pipe(SchemaUtils.withKeyDefaults(DEFAULT_DOCUMENT_BUDGET_BYTES)).annotateKey({
+    budgetBytes: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_DOCUMENT_BUDGET_BYTES)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_DOCUMENT_BUDGET_BYTES))
+    ).annotateKey({
       description: "Maximum serialized size, in bytes, the reshaped response must fit within. Defaults to 8000.",
     }),
   },

@@ -1035,14 +1035,14 @@ export type SafeUrl = typeof SafeUrl.Type;
 export class BaseNode extends S.Class<BaseNode>($I`BaseNode`)(
   {
     version: LexicalNodeVersion.pipe(
-      SchemaUtils.withConstantDefault(1),
+      S.withConstructorDefault(Effect.succeed(1)),
       S.annotateKey({
         description: "Serialized Lexical node schema version; Lexical currently writes version 1 for built-in nodes.",
       })
     ),
     $: S.Record(S.String, S.Json).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Optional NODE_STATE_KEY payload containing JSON-valued persisted Lexical NodeState keyed by state name.",
@@ -1134,29 +1134,29 @@ export class ElementNode extends BaseNode.extend<ElementNode>($I`ElementNode`)(
         "Child nodes in document order, structurally decoded without applying the public LexicalNode parent-child grammar.",
     }),
     direction: S.OptionFromNullOr(Direction).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional text direction decoded from Lexical's nullable direction field.",
       })
     ),
     format: ElementFormat.pipe(
-      SchemaUtils.withConstantDefault<ElementFormat>(""),
+      S.withConstructorDefault(Effect.succeed<ElementFormat>("")),
       S.annotateKey({ description: "Block alignment format token applied to the element." })
     ),
     indent: LexicalIndentDepth.pipe(
-      SchemaUtils.withConstantDefault<number>(0),
+      S.withConstructorDefault(Effect.succeed<number>(0)),
       S.annotateKey({ description: "Lexical indentation depth for nested block layout." })
     ),
     textFormat: TextFormatMask.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional TextFormatType bitmask applied to newly inserted text within the element.",
       })
     ),
     textStyle: SafeInlineStyle.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Optional CSS style applied to newly inserted text within the element, sanitized to an allowlist of safe presentation properties.",
@@ -1716,7 +1716,7 @@ export class QuoteNode extends ElementNode.extend<QuoteNode>($I`QuoteNode`)(
   {
     type: S.tag("quote"),
     shadowRoot: S.OptionFromOptional(S.Boolean).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Whether this quote is a multi-block shadow-root region rather than a legacy inline quote.",
       })
@@ -1950,7 +1950,7 @@ export class ListItemNode extends ElementNode.extend<ListItemNode>($I`ListItemNo
   {
     type: S.tag("listitem"),
     checked: S.OptionFromOptional(S.Boolean).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Checkbox state for check lists; absent otherwise.",
       })
@@ -2032,15 +2032,15 @@ export class LinkNode extends ElementNode.extend<LinkNode>($I`LinkNode`)(
     type: S.tag("link"),
     url: SafeUrl.annotateKey({ description: "The link target URL, sanitized before it reaches an anchor href." }),
     rel: S.OptionFromOptionalNullOr(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional anchor rel attribute." })
     ),
     target: S.OptionFromOptionalNullOr(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional anchor target attribute." })
     ),
     title: S.OptionFromOptionalNullOr(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional anchor title attribute." })
     ),
   },
@@ -2115,13 +2115,13 @@ export class CodeNode extends ElementNode.extend<CodeNode>($I`CodeNode`)(
   {
     type: S.tag("code"),
     language: CodeNodeLanguage.pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional code-fence language identifier.",
       })
     ),
     theme: S.OptionFromOptional(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional code highlight theme." })
     ),
   },
@@ -2198,7 +2198,7 @@ export class ArtifactRefNode extends BaseNode.extend<ArtifactRefNode>($I`Artifac
     type: S.tag("artifact-ref"),
     artifactId: ArtifactRefId.annotateKey({ description: "Identifier of the referenced runtime artifact." }),
     label: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional human-readable label; defaults to the artifact id when absent.",
       })
@@ -2281,7 +2281,7 @@ export class YouTubeNode extends BaseNode.extend<YouTubeNode>($I`YouTubeNode`)(
       description: "The bare YouTube video id rendered by the decorator block.",
     }),
     format: ElementFormat.pipe(
-      SchemaUtils.withConstantDefault<ElementFormat>(""),
+      S.withConstructorDefault(Effect.succeed<ElementFormat>("")),
       S.annotateKey({ description: "Block alignment format token applied to the embed." })
     ),
   },
@@ -2355,29 +2355,29 @@ export class TableCellNode extends ElementNode.extend<TableCellNode>($I`TableCel
     }),
     colSpan: TableCellSpan.pipe(
       S.OptionFromOptional,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional colspan for merged table cells." })
     ),
     rowSpan: TableCellSpan.pipe(
       S.OptionFromOptional,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional rowspan for merged table cells." })
     ),
     width: TableDimension.pipe(
       S.OptionFromOptional,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional cell width emitted by Lexical table nodes." })
     ),
     backgroundColor: SafeStyleValue.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional cell background color emitted by Lexical table nodes, sanitized to a safe CSS value.",
       })
     ),
     verticalAlign: SafeStyleValue.pipe(
       S.OptionFromOptional,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional vertical alignment emitted by Lexical table nodes, sanitized to a safe CSS value.",
       })
@@ -2466,7 +2466,7 @@ export class TableRowNode extends ElementNode.extend<TableRowNode>($I`TableRowNo
     type: S.tag("tablerow"),
     height: TableDimension.pipe(
       S.OptionFromOptional,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional row height emitted by Lexical table nodes." })
     ),
   },
@@ -2542,22 +2542,22 @@ export class TableNode extends ElementNode.extend<TableNode>($I`TableNode`)(
     type: S.tag("table"),
     colWidths: S.Array(TableDimension).pipe(
       S.OptionFromOptional,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional table column widths emitted by Lexical table nodes." })
     ),
     rowStriping: S.Boolean.pipe(
       S.OptionFromOptional,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional row-striping flag emitted by Lexical table nodes." })
     ),
     frozenColumnCount: S.Natural.pipe(
       S.OptionFromOptional,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional number of frozen columns emitted by Lexical table nodes." })
     ),
     frozenRowCount: S.Natural.pipe(
       S.OptionFromOptional,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional number of frozen rows emitted by Lexical table nodes." })
     ),
   },
@@ -3128,7 +3128,7 @@ export class LexicalDecodeError extends S.TaggedError<LexicalDecodeError>($I`Lex
 export class LexicalCompatibilityIssue extends S.Class<LexicalCompatibilityIssue>($I`LexicalCompatibilityIssue`)(
   {
     code: S.Literal("strict-schema-mismatch").pipe(
-      SchemaUtils.withConstantDefault("strict-schema-mismatch"),
+      S.withConstructorDefault(Effect.succeed("strict-schema-mismatch")),
       S.annotateKey({ description: "Stable compatibility issue code." })
     ),
     message: S.NonEmptyString.annotateKey({

@@ -9,7 +9,8 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
@@ -127,6 +128,8 @@ export class DocumentationStagedSearchMetadata extends S.Class<DocumentationStag
   })
 ) {}
 
+const blogStagedSearchMetadataAuthorsDefault = A.empty<string>();
+const blogStagedSearchMetadataTagsDefault = A.empty<string>();
 /**
  * Staged search metadata for a blog post, with sections nested inline.
  *
@@ -159,8 +162,8 @@ export class BlogStagedSearchMetadata extends S.Class<BlogStagedSearchMetadata>(
     page_title: S.String,
     description: S.String,
     published_at: S.String,
-    authors: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
-    tags: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    authors: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(blogStagedSearchMetadataAuthorsDefault)), S.withDecodingDefaultType(Effect.succeed(blogStagedSearchMetadataAuthorsDefault))),
+    tags: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(blogStagedSearchMetadataTagsDefault)), S.withDecodingDefaultType(Effect.succeed(blogStagedSearchMetadataTagsDefault))),
     sections: SearchSections,
   },
   $I.annote("BlogStagedSearchMetadata", {

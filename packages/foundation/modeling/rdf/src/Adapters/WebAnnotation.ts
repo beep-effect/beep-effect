@@ -9,7 +9,7 @@
 import { $RdfId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { pipe, Result, SchemaGetter } from "effect";
+import { Effect, pipe, Result, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import {
   EvidenceAnchor,
@@ -61,8 +61,8 @@ export class WebAnnotationTextQuoteSelector extends S.Class<WebAnnotationTextQuo
   {
     type: S.tag("TextQuoteSelector"),
     exact: S.NonEmptyString,
-    prefix: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suffix: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    prefix: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suffix: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("WebAnnotationTextQuoteSelector", {
     description: "Web Annotation text-quote selector DTO.",
@@ -135,7 +135,7 @@ export class WebAnnotationFragmentSelector extends S.Class<WebAnnotationFragment
   {
     type: S.tag("FragmentSelector"),
     value: S.NonEmptyString,
-    conformsTo: S.OptionFromOptionalKey(IRIReference).pipe(SchemaUtils.withNoneDefault),
+    conformsTo: S.OptionFromOptionalKey(IRIReference).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("WebAnnotationFragmentSelector", {
     description: "Web Annotation fragment selector DTO.",
@@ -249,7 +249,7 @@ export class WebAnnotation extends S.Class<WebAnnotation>($I`WebAnnotation`)(
   {
     id: IRIReference,
     type: S.tag("Annotation"),
-    bodyValue: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    bodyValue: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     target: WebAnnotationTarget,
   },
   $I.annote("WebAnnotation", {

@@ -69,8 +69,8 @@ export class DiagnosticModel extends S.Class<DiagnosticModel>($I`DiagnosticModel
   {
     kind: DiagnosticKind,
     message: S.String,
-    location: S.OptionFromOptionalKey(DiagnosticLocation).pipe(SchemaUtils.withNoneDefault),
-    suggestions: S.String.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    location: S.OptionFromOptionalKey(DiagnosticLocation).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suggestions: S.String.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("DiagnosticModel", {
     description: "Schema-owned CodeMode diagnostic with a finite kind domain.",
@@ -151,9 +151,9 @@ export class SuccessModel extends S.TaggedClass<SuccessModel>($I`SuccessModel`)(
   "Success",
   {
     value: DataValue,
-    warnings: DiagnosticModel.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    logs: S.String.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    truncated: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    warnings: DiagnosticModel.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    logs: S.String.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    truncated: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
     toolCalls: S.Array(ToolCall),
   },
   $I.annote("SuccessModel", {
@@ -186,8 +186,8 @@ export class FailureModel extends S.TaggedClass<FailureModel>($I`FailureModel`)(
   "Failure",
   {
     error: DiagnosticModel,
-    logs: S.String.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    truncated: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    logs: S.String.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    truncated: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
     toolCalls: S.Array(ToolCall),
   },
   $I.annote("FailureModel", {

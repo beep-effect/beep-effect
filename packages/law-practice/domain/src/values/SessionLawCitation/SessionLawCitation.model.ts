@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 
@@ -71,35 +71,35 @@ export class SessionLawCitation extends S.Class<SessionLawCitation>($I`SessionLa
     }),
     section: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Single cited section, or the first of a list/range.",
       })
     ),
     sections: S.Array(S.String).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Multiple cited sections (§§ 6, 7, 8 -> ["6","7","8"]).',
       })
     ),
     sectionRange: S.Struct({ start: S.String, end: S.String }).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Section range (§§ 25-26 -> {start:"25",end:"26"}).',
       })
     ),
     page: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Single cited page, or the first of a range.",
       })
     ),
     pageRange: S.Struct({ start: S.String, end: S.String }).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Page range (pp. 3038-3039, at 2590-95).",
       })

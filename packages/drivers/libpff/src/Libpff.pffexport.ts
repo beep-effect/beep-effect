@@ -257,39 +257,54 @@ export type PffexportExistingExportPolicy = typeof PffexportExistingExportPolicy
 export class PffexportEngineConfig extends S.Class<PffexportEngineConfig>($I`PffexportEngineConfig`)(
   {
     bwrapPath: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Optional bubblewrap executable used to isolate untrusted archive parsing from the network, parent environment, and writable host filesystem.",
       })
     ),
-    existingExportPolicy: PffexportExistingExportPolicy.pipe(SchemaUtils.withKeyDefaults("fail")).annotateKey({
+    existingExportPolicy: PffexportExistingExportPolicy.pipe(
+      S.withConstructorDefault(Effect.succeed("fail" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("fail" as const))
+    ).annotateKey({
       description:
         "Behavior when any prior export tree (.export/.orphans/.recovered) or messages JSONL already exists for this source.",
     }),
-    exportFormat: PffexportFormat.pipe(SchemaUtils.withKeyDefaults("text")).annotateKey({
+    exportFormat: PffexportFormat.pipe(
+      S.withConstructorDefault(Effect.succeed("text" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("text" as const))
+    ).annotateKey({
       description: "pffexport message body format passed to the `-f` flag.",
     }),
-    exportMode: PffexportMode.pipe(SchemaUtils.withKeyDefaults("items")).annotateKey({
+    exportMode: PffexportMode.pipe(
+      S.withConstructorDefault(Effect.succeed("items" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("items" as const))
+    ).annotateKey({
       description: "pffexport item selection mode passed to the `-m` flag.",
     }),
     exportRoot: S.String.annotateKey({
       description: "Host filesystem directory where pffexport materializes archive children.",
     }),
     maxOutputBytes: S.OptionFromOptionalKey(PosInt).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Positive hard ceiling for all raw and derived bytes retained by one archive export.",
       })
     ),
-    pffexportPath: S.String.pipe(SchemaUtils.withKeyDefaults(defaultPffexportPath)).annotateKey({
+    pffexportPath: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultPffexportPath)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultPffexportPath))
+    ).annotateKey({
       description: "Executable path or command name used to spawn pffexport.",
     }),
-    systemdRunPath: S.String.pipe(SchemaUtils.withKeyDefaults(defaultSystemdRunPath)).annotateKey({
+    systemdRunPath: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultSystemdRunPath)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultSystemdRunPath))
+    ).annotateKey({
       description: "systemd-run executable used to apply a hard memory cgroup around quota-limited sandbox exports.",
     }),
     timeoutMillis: S.OptionFromOptionalKey(PosInt).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Positive per-archive subprocess timeout in milliseconds when configured.",
       })

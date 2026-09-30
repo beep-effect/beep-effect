@@ -7,7 +7,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { TreatiseComponentSpan } from "../ComponentSpan/index.ts";
@@ -69,21 +69,21 @@ export class TreatiseCitation extends S.Class<TreatiseCitation>($I`TreatiseCitat
     }),
     edition: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Edition + year, when present in trailing parenthetical (e.g., "5th ed. 2008").',
       })
     ),
     year: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Publication year (if extracted from parenthetical).",
       })
     ),
     spans: TreatiseComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating each recognized sub-part within the source text.",
       })
