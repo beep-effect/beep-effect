@@ -23,6 +23,7 @@ import * as S from "effect/Schema";
  * **Example** (Declare an optional cause field)
  *
  * ```ts
+ * import * as SchemaUtils from "@beep/schema/SchemaUtils"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
