@@ -18,9 +18,7 @@ import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $OpenaiCompatId.create("OpenAiCompat.models");
 
-const OptionalNullableString = OptionFromOptionalNullishKey(S.String).pipe(
-  S.withConstructorDefault(Effect.succeedNone)
-);
+const OptionalNullableString = S.OptionFromOptionalNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone));
 const OptionalNonNegativeInt = S.OptionFromOptionalKey(NonNegativeInt).pipe(
   S.withConstructorDefault(Effect.succeedNone)
 );

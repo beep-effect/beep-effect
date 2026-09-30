@@ -792,9 +792,11 @@ export class AiSyncError extends S.TaggedError<AiSyncError>($I`AiSyncError`)(
     sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     relativePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     schemaId: AiSyncValidationSchemaId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    cause: S.Defect({ includeStack: true })
-      .pipe(S.overrideToEquivalence(() => () => true))
-      .pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    cause: S.Defect({ includeStack: true }).pipe(
+      S.overrideToEquivalence(() => () => true),
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annoteError<AiSyncError>("AiSyncError", {
     description: "Typed operational error for AI sync generation, drift checks, transforms, and validation.",
