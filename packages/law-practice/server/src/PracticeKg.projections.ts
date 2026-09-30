@@ -10,7 +10,6 @@ import { $I as $BeepId, $LawPracticeServerId } from "@beep/identity/packages";
 import { KG_BUILD_TABLE_NAME } from "@beep/law-practice-tables/entities/KgBuild";
 import { KG_EDGE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgEdge";
 import { KG_NODE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgNode";
-import { NonNegativeInt } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Context, Effect, FileSystem, Layer, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -609,10 +608,10 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     options.maxTextBytes
   );
   const counts = PracticeKgCounts.make({
-    documents: NonNegativeInt.make(duckCounts.documents),
-    edges: NonNegativeInt.make(A.length(graph.edges)),
-    emails: NonNegativeInt.make(duckCounts.emails),
-    nodes: NonNegativeInt.make(A.length(graph.nodes)),
+    documents: S.Natural.make(duckCounts.documents),
+    edges: S.Natural.make(A.length(graph.edges)),
+    emails: S.Natural.make(duckCounts.emails),
+    nodes: S.Natural.make(A.length(graph.nodes)),
   });
   const sourceRuns = PracticeKgSourceRuns.make({
     base: "included",
@@ -641,14 +640,14 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     .pipe(PracticeKgProjectionError.mapError("Failed writing graph bundle README."));
 
   const summary = PracticeKgSummary.make({
-    baseDigests: NonNegativeInt.make(reconciliation.baseDigests),
+    baseDigests: S.Natural.make(reconciliation.baseDigests),
     bundleOut,
     counts,
-    docketFamilies: NonNegativeInt.make(reconciliation.docketFamilies),
-    docketFiles: NonNegativeInt.make(reconciliation.docketFiles),
-    familyAnchors: NonNegativeInt.make(reconciliation.familyAnchors),
+    docketFamilies: S.Natural.make(reconciliation.docketFamilies),
+    docketFiles: S.Natural.make(reconciliation.docketFiles),
+    familyAnchors: S.Natural.make(reconciliation.familyAnchors),
     includeRefresh: options.includeRefresh,
-    sourceRows: NonNegativeInt.make(reconciliation.sourceRows),
+    sourceRows: S.Natural.make(reconciliation.sourceRows),
   });
   const summaryJson = yield* encodePracticeKgSummaryJson(summary).pipe(
     PracticeKgProjectionError.mapError("Graph summary failed JSON encoding.")

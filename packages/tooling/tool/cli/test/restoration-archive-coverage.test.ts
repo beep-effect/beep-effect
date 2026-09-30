@@ -6,7 +6,7 @@ import {
   RestorationPreserveOptions,
 } from "@beep/repo-cli/commands/Corpus";
 import { restorationArchiveTesting as RA, withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
-import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -14,6 +14,8 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const provideTestLayer = provideScopedLayer(NodeServices.layer);
 const provideCorpusLayer = provideScopedLayer(CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)));
@@ -41,23 +43,23 @@ const preserveOptions = (
     absentRecycleTreePath: `${sourceRoot}-absent`,
     capacityCeilingBytes: PosInt.make(1),
     chunkSizeBytes: PosInt.make(1),
-    collectorDestinationPrefixSegments: NonNegativeInt.make(2),
+    collectorDestinationPrefixSegments: S.Natural.make(2),
     corpusRoot,
     crashPoint: "none",
-    expectedCollectorCopiedCount: NonNegativeInt.make(0),
-    expectedCollectorErrorCount: NonNegativeInt.make(0),
-    expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
-    expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(0),
-    expectedCollectorResumedCount: NonNegativeInt.make(0),
-    expectedCollectorRowCount: NonNegativeInt.make(0),
-    expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(0),
-    expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
-    expectedMutatedDestinationCount: NonNegativeInt.make(0),
-    expectedRootArchiveBytes: NonNegativeInt.make(0),
-    expectedSourceDirectoryCount: NonNegativeInt.make(0),
-    expectedSourceFileCount: NonNegativeInt.make(0),
-    expectedSourceTreeBytes: NonNegativeInt.make(0),
-    minimumFreeAfterBytes: NonNegativeInt.make(0),
+    expectedCollectorCopiedCount: S.Natural.make(0),
+    expectedCollectorErrorCount: S.Natural.make(0),
+    expectedCollectorExcludedSecretCount: S.Natural.make(0),
+    expectedCollectorPresentSuccessfulRowCount: S.Natural.make(0),
+    expectedCollectorResumedCount: S.Natural.make(0),
+    expectedCollectorRowCount: S.Natural.make(0),
+    expectedCollectorUniqueSuccessfulDestinationCount: S.Natural.make(0),
+    expectedMissingRecyclePayloadCount: S.Natural.make(0),
+    expectedMutatedDestinationCount: S.Natural.make(0),
+    expectedRootArchiveBytes: S.Natural.make(0),
+    expectedSourceDirectoryCount: S.Natural.make(0),
+    expectedSourceFileCount: S.Natural.make(0),
+    expectedSourceTreeBytes: S.Natural.make(0),
+    minimumFreeAfterBytes: S.Natural.make(0),
     rootArchivePath,
     runLabel: "archive-boundary-test",
     sourceManifestPath,
@@ -163,7 +165,7 @@ describe("restoration archive boundary helpers", () => {
           yield* RA.reconcileCollectorRecord(
             CollectorManifestRecord.cases.copied.make({
               dst: "C:\\root",
-              size: NonNegativeInt.make(0),
+              size: S.Natural.make(0),
               src: "C:\\source\\bad.bin",
               status: "copied",
             }),
@@ -175,7 +177,7 @@ describe("restoration archive boundary helpers", () => {
         const collectorRecord = (name: string, size: number) =>
           CollectorManifestRecord.cases.copied.make({
             dst: `C:\\root\\${name}`,
-            size: NonNegativeInt.make(size),
+            size: S.Natural.make(size),
             src: `C:\\source\\${name}`,
             status: "copied",
           });
@@ -307,10 +309,10 @@ describe("restoration archive boundary helpers", () => {
         const approvedOptions = RestorationPreserveOptions.make({
           ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
           capacityCeilingBytes: PosInt.make(1024),
-          expectedRootArchiveBytes: NonNegativeInt.make("archive".length),
-          expectedSourceDirectoryCount: NonNegativeInt.make(1),
-          expectedSourceFileCount: NonNegativeInt.make(1),
-          expectedSourceTreeBytes: NonNegativeInt.make("source".length),
+          expectedRootArchiveBytes: S.Natural.make("archive".length),
+          expectedSourceDirectoryCount: S.Natural.make(1),
+          expectedSourceFileCount: S.Natural.make(1),
+          expectedSourceTreeBytes: S.Natural.make("source".length),
         });
         const context = {
           archiveRoot,
@@ -342,7 +344,7 @@ describe("restoration archive boundary helpers", () => {
               manifestPath: path.join(archiveRoot, "denominator-failure.jsonl"),
               options: RestorationPreserveOptions.make({
                 ...approvedOptions,
-                expectedSourceFileCount: NonNegativeInt.make(2),
+                expectedSourceFileCount: S.Natural.make(2),
               }),
             },
             inventory
@@ -405,10 +407,10 @@ describe("restoration archive boundary helpers", () => {
           ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
           absentRecycleTreePath: reappearedTree,
           capacityCeilingBytes: PosInt.make(1024),
-          expectedRootArchiveBytes: NonNegativeInt.make("archive".length),
-          expectedSourceDirectoryCount: NonNegativeInt.make(1),
-          expectedSourceFileCount: NonNegativeInt.make(1),
-          expectedSourceTreeBytes: NonNegativeInt.make("source".length),
+          expectedRootArchiveBytes: S.Natural.make("archive".length),
+          expectedSourceDirectoryCount: S.Natural.make(1),
+          expectedSourceFileCount: S.Natural.make(1),
+          expectedSourceTreeBytes: S.Natural.make("source".length),
         });
         expect(yield* preserveRestorationArchive(options).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" });
       },
@@ -435,7 +437,7 @@ describe("restoration archive boundary helpers", () => {
         const collectorRow = yield* S.encodeEffect(collectorManifestJson)(
           CollectorManifestRecord.make({
             dst: "C:\\root\\present.bin",
-            size: NonNegativeInt.make(4),
+            size: S.Natural.make(4),
             src: "C:\\source\\present.bin",
             status: "copied",
           })
@@ -444,12 +446,12 @@ describe("restoration archive boundary helpers", () => {
         const options = RestorationPreserveOptions.make({
           ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
           capacityCeilingBytes: PosInt.make(1024),
-          expectedCollectorCopiedCount: NonNegativeInt.make(1),
-          expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(1),
-          expectedCollectorRowCount: NonNegativeInt.make(1),
-          expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(1),
-          expectedRootArchiveBytes: NonNegativeInt.make("archive".length),
-          expectedSourceDirectoryCount: NonNegativeInt.make(1),
+          expectedCollectorCopiedCount: S.Natural.make(1),
+          expectedCollectorPresentSuccessfulRowCount: S.Natural.make(1),
+          expectedCollectorRowCount: S.Natural.make(1),
+          expectedCollectorUniqueSuccessfulDestinationCount: S.Natural.make(1),
+          expectedRootArchiveBytes: S.Natural.make("archive".length),
+          expectedSourceDirectoryCount: S.Natural.make(1),
         });
         const lateFileSystem = {
           ...fs,
@@ -531,8 +533,8 @@ describe("restoration archive boundary helpers", () => {
           const options = RestorationPreserveOptions.make({
             ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
             capacityCeilingBytes: PosInt.make(1024),
-            expectedRootArchiveBytes: NonNegativeInt.make("archive".length),
-            expectedSourceDirectoryCount: NonNegativeInt.make(1),
+            expectedRootArchiveBytes: S.Natural.make("archive".length),
+            expectedSourceDirectoryCount: S.Natural.make(1),
           });
           expect(yield* preserveRestorationArchive(options).pipe(provideScopedLayer(layer), Effect.exit)).toMatchObject(
             {
@@ -604,10 +606,10 @@ describe("restoration archive boundary helpers", () => {
         const options = RestorationPreserveOptions.make({
           ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
           capacityCeilingBytes: PosInt.make(1024),
-          expectedRootArchiveBytes: NonNegativeInt.make("archive".length),
-          expectedSourceDirectoryCount: NonNegativeInt.make(1),
-          expectedSourceFileCount: NonNegativeInt.make(1),
-          expectedSourceTreeBytes: NonNegativeInt.make("source".length),
+          expectedRootArchiveBytes: S.Natural.make("archive".length),
+          expectedSourceDirectoryCount: S.Natural.make(1),
+          expectedSourceFileCount: S.Natural.make(1),
+          expectedSourceTreeBytes: S.Natural.make("source".length),
         });
         const outcome = yield* preserveRestorationArchive(options).pipe(provideScopedLayer(layer), Effect.exit);
         expect(mutation).toBe(3);
@@ -725,14 +727,14 @@ describe("restoration archive boundary helpers", () => {
 
         const preflight = ArchiveLedgerRecord.cases["archive-preflight"].make({
           approved: true,
-          approvedCeilingBytes: NonNegativeInt.make(1),
-          availableBytes: NonNegativeInt.make(1),
-          directoryCount: NonNegativeInt.make(0),
-          fileCount: NonNegativeInt.make(1),
-          minimumFreeAfterBytes: NonNegativeInt.make(0),
+          approvedCeilingBytes: S.Natural.make(1),
+          availableBytes: S.Natural.make(1),
+          directoryCount: S.Natural.make(0),
+          fileCount: S.Natural.make(1),
+          minimumFreeAfterBytes: S.Natural.make(0),
           recordedAt: "2026-08-30T00:00:00.000Z",
           recordType: "archive-preflight",
-          requiredBytes: NonNegativeInt.make(1),
+          requiredBytes: S.Natural.make(1),
           runId: "failure-terminal-run",
           schemaVersion: "oppold-corpus-restoration/v1",
         });

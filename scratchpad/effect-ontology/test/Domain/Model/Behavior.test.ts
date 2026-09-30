@@ -1,5 +1,4 @@
 import { IRI } from "@beep/rdf/Iri";
-import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect } from "effect";
 import * as O from "effect/Option";
@@ -154,7 +153,7 @@ describe("effect-ontology model behavior", () => {
         ontologyVersion: batch.ontologyVersion,
         createdAt: batch.createdAt,
         updatedAt: batch.updatedAt,
-        documentCount: NonNegativeInt.make(0),
+        documentCount: S.Natural.make(0),
       });
 
       expect(BatchState.isValidTransition("Pending", "Preprocessing")).toBe(true);
@@ -164,7 +163,7 @@ describe("effect-ontology model behavior", () => {
   );
 
   it("builds stable run-scoped chunk identifiers without a free helper", () => {
-    const chunkId = ExtractionRun.chunkId(DocumentId.make("doc-deadbeefcafe"), NonNegativeInt.make(2));
+    const chunkId = ExtractionRun.chunkId(DocumentId.make("doc-deadbeefcafe"), S.Natural.make(2));
 
     expect(chunkId).toBe("doc-deadbeefcafe-chunk-2");
   });

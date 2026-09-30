@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
@@ -30,21 +30,21 @@ const $I = $LawPracticeDomainId.create("values/StatuteCitation/StatuteCitation.m
  * **Example** (Creating a statute citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { StatuteCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = StatuteCitation.make({
  *   text: "28 U.S.C. § 1331",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "28 U.S.C. § 1331",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  * })
  *
  * console.log(citation.type) // "statute"
@@ -57,7 +57,7 @@ export class StatuteCitation extends S.Class<StatuteCitation>($I`StatuteCitation
   {
     ...CitationBase.fields,
     type: S.tag("statute"),
-    title: NonNegativeInt.pipe(
+    title: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -127,7 +127,7 @@ export class StatuteCitation extends S.Class<StatuteCitation>($I`StatuteCitation
         description: 'True when "et seq." follows the citation',
       })
     ),
-    year: NonNegativeInt.pipe(
+    year: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -141,7 +141,7 @@ export class StatuteCitation extends S.Class<StatuteCitation>($I`StatuteCitation
         description: "Publisher of an annotated code edition (West, Lexis) (#285).",
       })
     ),
-    recompiledYear: NonNegativeInt.pipe(
+    recompiledYear: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({

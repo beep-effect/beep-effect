@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -398,7 +398,7 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
       const replayLog = yield* readContainedFileBytesNoFollow(
         fixture,
         `${taskDirectory}/.turbo/turbo-qualify.log`,
-        NonNegativeInt.make(logLimit * 4)
+        S.Natural.make(logLimit * 4)
       );
       const replayText = yield* O.match(replayLog.contents, {
         onNone: () => Effect.succeed(""),
@@ -429,7 +429,7 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
         exitCode: captured.exitCode,
         outputSha256: yield* hashText(tree),
         logSha256: yield* hashText(text),
-        logBytes: NonNegativeInt.make(taskLog.byteLength),
+        logBytes: S.Natural.make(taskLog.byteLength),
         violations,
       });
     });
@@ -723,9 +723,9 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
       const nonExecution = CacheSyntheticNonExecution.make({
         id: "absent-script",
         processExitCode: absent.captured.exitCode,
-        summaryTaskCount: NonNegativeInt.make(A.length(absent.summary.tasks)),
-        selectedTaskCount: NonNegativeInt.make(A.length(selected)),
-        executionRecordCount: NonNegativeInt.make(
+        summaryTaskCount: S.Natural.make(A.length(absent.summary.tasks)),
+        selectedTaskCount: S.Natural.make(A.length(selected)),
+        executionRecordCount: S.Natural.make(
           A.length(A.filter(absent.summary.tasks, (task) => O.isSome(task.execution)))
         ),
         commands: A.map(selected, (task) => task.command),

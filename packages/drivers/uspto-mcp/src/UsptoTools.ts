@@ -13,11 +13,12 @@
 
 import { $UsptoMcpId } from "@beep/identity/packages";
 import { ApiKeyRequiredFailure, annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
-import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UsptoApplicationMetadata, UsptoApplicationNumber } from "@beep/uspto";
 import { Effect } from "effect";
 import { Tool, Toolkit } from "effect/ai";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import { DocumentsProjectionOutput } from "./UsptoDocumentTiers.ts";
 
 const $I = $UsptoMcpId.create("UsptoTools");
@@ -228,9 +229,11 @@ export const UsptoSearchApplicationsTool = annotateFourHints(
  * **Example** (Building get-documents params)
  *
  * ```ts
- * import { PosInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { UsptoApplicationNumber } from "@beep/uspto"
  * import { UsptoGetDocumentsParams } from "@beep/uspto-mcp/UsptoTools"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const params = UsptoGetDocumentsParams.make({
  *   applicationNumber: UsptoApplicationNumber.make("16138242"),

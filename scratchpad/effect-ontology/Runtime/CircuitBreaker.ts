@@ -16,11 +16,12 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, PosInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Clock, Duration, Effect, Number as N, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CircuitOpenError } from "../Domain/Error/Circuit.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/CircuitBreaker");
 const NonNegativeCounter = S.Finite.check(
@@ -73,9 +74,11 @@ const circuitBreakerConfigSuccessThresholdDefault = PosInt.make(2);
  * **Example** (Construct a fail-fast circuit config)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Duration } from "effect"
- * import { PosInt } from "@beep/schema/Int"
  * import { CircuitBreakerConfig } from "@effect-ontology/Runtime/CircuitBreaker"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config = CircuitBreakerConfig.make({
  *   maxFailures: PosInt.make(1),
@@ -145,9 +148,11 @@ class CircuitBreakerState extends S.Class<CircuitBreakerState>($I`CircuitBreaker
  * **Example** (Open the circuit after one failure)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Duration, Effect } from "effect"
- * import { PosInt } from "@beep/schema/Int"
  * import { makeCircuitBreaker } from "@effect-ontology/Runtime/CircuitBreaker"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const state = Effect.runSync(
  *   Effect.gen(function* () {

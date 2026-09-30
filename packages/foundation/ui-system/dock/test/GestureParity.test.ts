@@ -19,7 +19,6 @@ import {
   TabsNode,
   TextPanelView,
 } from "@beep/dock";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
@@ -74,7 +73,7 @@ describe("dock gesture command parity", () => {
               "open-two-clamped",
               OpenPanelCommand.make({
                 panel: panelTwo,
-                placement: TabPlacement.make({ groupId: groupOne, index: O.some(NonNegativeInt.make(99)) }),
+                placement: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(99)) }),
               })
             )
           )
@@ -88,7 +87,7 @@ describe("dock gesture command parity", () => {
                 panel: panelThree,
                 placement: TabPlacement.make({
                   groupId: groupOne,
-                  index: O.some(NonNegativeInt.make(0)),
+                  index: O.some(S.Natural.make(0)),
                   activate: false,
                 }),
               })
@@ -104,7 +103,7 @@ describe("dock gesture command parity", () => {
                 panel: panelFour,
                 placement: TabPlacement.make({
                   groupId: groupOne,
-                  index: O.some(NonNegativeInt.make(1)),
+                  index: O.some(S.Natural.make(1)),
                   activate: false,
                 }),
               })
@@ -139,7 +138,7 @@ describe("dock gesture command parity", () => {
               "reorder-active",
               MovePanelCommand.make({
                 panelId: panelThree.id,
-                target: TabPlacement.make({ groupId: groupOne, index: O.some(NonNegativeInt.make(0)) }),
+                target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(0)) }),
               })
             )
           )
@@ -153,7 +152,7 @@ describe("dock gesture command parity", () => {
               "reorder-inactive",
               MovePanelCommand.make({
                 panelId: panelOne.id,
-                target: TabPlacement.make({ groupId: groupOne, index: O.some(NonNegativeInt.make(2)) }),
+                target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(2)) }),
               })
             )
           )
@@ -167,7 +166,7 @@ describe("dock gesture command parity", () => {
             "reorder-noop",
             MovePanelCommand.make({
               panelId: panelTwo.id,
-              target: TabPlacement.make({ groupId: groupOne, index: O.some(NonNegativeInt.make(1)) }),
+              target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(1)) }),
             })
           )
         );
@@ -285,7 +284,7 @@ describe("dock gesture command parity", () => {
                 panelId: panelTwo.id,
                 target: TabPlacement.make({
                   groupId: groupTwo,
-                  index: O.some(NonNegativeInt.make(0)),
+                  index: O.some(S.Natural.make(0)),
                   activate: false,
                 }),
               })
@@ -323,7 +322,7 @@ describe("dock gesture command parity", () => {
               "merge-default",
               MoveGroupCommand.make({
                 groupId: groupTwo,
-                target: TabPlacement.make({ groupId: groupOne, index: O.some(NonNegativeInt.make(0)) }),
+                target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(0)) }),
               })
             )
           )

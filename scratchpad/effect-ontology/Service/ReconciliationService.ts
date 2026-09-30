@@ -12,7 +12,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import { Context, DateTime, Effect, Layer, Order, Random } from "effect";
 import * as A from "effect/Array";
@@ -22,6 +21,7 @@ import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import { StorageService } from "./Storage.ts";
 import type { WikidataApiError, WikidataRateLimitError } from "./WikidataClient.ts";
 import { WikidataCandidate, WikidataClient } from "./WikidataClient.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ReconciliationService");
 

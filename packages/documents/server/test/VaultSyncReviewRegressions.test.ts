@@ -17,7 +17,6 @@ import {
   SyncOperationRepository,
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
-import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -27,6 +26,7 @@ import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const RegressionTestLayer = DocumentsSyncFixtureLive.pipe(
@@ -169,7 +169,7 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
         const seeded = yield* itemRepository.create(
           SyncItemSeed.make({
             itemKind: "file",
-            localGeneration: NonNegativeInt.make(1),
+            localGeneration: S.Natural.make(1),
             localRelPath: VaultRelPath.make("ghost.txt"),
             provider: "box",
             syncState: "pending",
@@ -178,9 +178,9 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
         );
         yield* operationRepository.enqueue(
           SyncOperationSeed.make({
-            attemptCount: NonNegativeInt.make(0),
+            attemptCount: S.Natural.make(0),
             idempotencyKey: `box:${workspaceId}:${seeded.id}:uploadFile:ghost.txt:1`,
-            inputGeneration: NonNegativeInt.make(1),
+            inputGeneration: S.Natural.make(1),
             operationType: "uploadFile",
             provider: "box",
             status: "queued",

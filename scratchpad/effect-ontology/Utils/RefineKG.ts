@@ -30,17 +30,17 @@ import { dual2 } from "./Dual.ts";
  * **Example** (Refine an empty graph)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { DateTime, Graph } from "effect"
  * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { EntityResolutionGraph, EntityResolutionStats } from "@effect-ontology/Model/EntityResolutionGraph"
  * import { refineKnowledgeGraph } from "@effect-ontology/Utils/RefineKG"
  *
  * const stats = EntityResolutionStats.make({
- *   mentionCount: NonNegativeInt.make(0),
- *   resolvedCount: NonNegativeInt.make(0),
- *   relationCount: NonNegativeInt.make(0),
- *   clusterCount: NonNegativeInt.make(0)
+ *   mentionCount: S.Natural.make(0),
+ *   resolvedCount: S.Natural.make(0),
+ *   relationCount: S.Natural.make(0),
+ *   clusterCount: S.Natural.make(0)
  * })
  * const resolution = EntityResolutionGraph.make({
  *   graph: Graph.directed(),

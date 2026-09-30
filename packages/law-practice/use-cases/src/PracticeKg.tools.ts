@@ -17,10 +17,11 @@ import {
   FieldTierName,
   FourHintAnnotations,
 } from "@beep/mcp-kit";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 
 const $I = $LawPracticeUseCasesId.create("PracticeKg.tools");
 const defaultBudgetBytes = PosInt.make(8000);
@@ -177,16 +178,16 @@ export class PracticeKgToolError extends S.Class<PracticeKgToolError>($I`Practic
  * **Example** (Make budgeted tool result)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PracticeKgToolResult } from "@beep/law-practice-use-cases/server"
  * import { ColumnarEnvelope } from "@beep/mcp-kit"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const result = PracticeKgToolResult.make({
  *   bundle_version: "2026-07-27-01",
  *   data: ColumnarEnvelope.make({ columns: ["family"], rows: [["10008"]] }),
  *   epistemic_status: "derived-from-official-records",
  *   tier: "minimal",
- *   total: NonNegativeInt.make(1),
+ *   total: S.Natural.make(1),
  *   truncated: false
  * })
  * console.log(result.bundle_version)
@@ -202,7 +203,7 @@ export class PracticeKgToolResult extends S.Class<PracticeKgToolResult>($I`Pract
     epistemic_status: PracticeKgEpistemicStatus,
     note: S.optionalKey(S.String),
     tier: FieldTierName,
-    total: NonNegativeInt,
+    total: S.Natural,
     truncated: S.Boolean,
   },
   $I.annote("PracticeKgToolResult", {
@@ -434,12 +435,12 @@ export class PracticeKgCandidateClaimToolRow extends S.Class<PracticeKgCandidate
     claimText: S.String,
     digest: S.String,
     docket: S.String,
-    endChar: NonNegativeInt,
+    endChar: S.Natural,
     evidenceQuote: S.String,
     family: S.String,
     label: S.Literal("candidate — unreviewed"),
     sourceFile: S.String,
-    startChar: NonNegativeInt,
+    startChar: S.Natural,
   },
   $I.annote("PracticeKgCandidateClaimToolRow", {
     description: "Candidate claim row carrying its docket join, extraction activity, and evidence span.",

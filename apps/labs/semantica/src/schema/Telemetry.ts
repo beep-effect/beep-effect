@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
 import { RunId } from "@/schema/Ids";
 
@@ -34,13 +34,13 @@ export class EvalRunTelemetry extends S.Class<EvalRunTelemetry>($I`EvalRunTeleme
     runId: RunId,
     mode: EvaluationMode,
     startedAt: S.DateTimeUtcFromString,
-    wallClockMs: NonNegativeInt,
-    coldStartMs: NonNegativeInt,
-    p95Ms: NonNegativeInt,
-    rssBytes: NonNegativeInt,
-    diskGrowthBytes: NonNegativeInt,
-    dependencyBytes: S.OptionFromNullOr(NonNegativeInt),
-    modelBytes: S.OptionFromNullOr(NonNegativeInt),
+    wallClockMs: S.Natural,
+    coldStartMs: S.Natural,
+    p95Ms: S.Natural,
+    rssBytes: S.Natural,
+    diskGrowthBytes: S.Natural,
+    dependencyBytes: S.OptionFromNullOr(S.Natural),
+    modelBytes: S.OptionFromNullOr(S.Natural),
   },
   $I.annote("EvalRunTelemetry", {
     description:

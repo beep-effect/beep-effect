@@ -21,7 +21,6 @@
 
 import { ModelInvariantError, VariantField } from "@beep/effect-drizzle";
 import * as Pg from "@beep/effect-drizzle/pg";
-import { PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -29,6 +28,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Model as M } from "effect/schema";
 import * as Shared from "../identity/Shared/index.ts";
+import { PosInt } from "../internal/PosInt.ts";
 import { Principal } from "./Principal.ts";
 import * as PublicEntityId from "./PublicEntityId.ts";
 import { SourceKind } from "./SourceKind.ts";

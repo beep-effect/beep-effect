@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
@@ -27,21 +27,21 @@ const $I = $LawPracticeDomainId.create("values/RegulationCitation/RegulationCita
  * **Example** (Make a regulation citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RegulationCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = RegulationCitation.make({
  *   text: "42 C.F.R. § 405.1",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "42 C.F.R. § 405.1",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  * })
  *
  * console.log(citation.type) // "regulation"
@@ -54,7 +54,7 @@ export class RegulationCitation extends S.Class<RegulationCitation>($I`Regulatio
   {
     ...CitationBase.fields,
     type: S.tag("regulation"),
-    title: NonNegativeInt.pipe(
+    title: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -122,7 +122,7 @@ export class RegulationCitation extends S.Class<RegulationCitation>($I`Regulatio
         description: 'True when "et seq." follows.',
       })
     ),
-    year: NonNegativeInt.pipe(
+    year: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -136,7 +136,7 @@ export class RegulationCitation extends S.Class<RegulationCitation>($I`Regulatio
         description: "Publisher of an annotated edition.",
       })
     ),
-    recompiledYear: NonNegativeInt.pipe(
+    recompiledYear: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({

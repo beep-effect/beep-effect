@@ -7,7 +7,6 @@
 
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { JsonObject } from "@beep/schema/Json";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
@@ -23,6 +22,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "../../internal/PosInt.ts";
 import { Confidence } from "../EvidenceSpan/index.ts";
 import { canonicalJson } from "../internal/CanonicalJson.ts";
 import { LogicalEdgeKey } from "../LogicalEdgeIdentity/index.ts";
@@ -1325,18 +1325,20 @@ const encodeProposalContent = S.encodeResult(ContradictionProposalContent.mapFie
  * **Example** (Compute proposal digest)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import {
  *   BeliefVersionRef,
  *   ContradictionProposalId,
  *   contradictionProposalDigest,
  * } from "@beep/epistemic-domain/values/Contradiction"
  * import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity"
- * import { PosInt } from "@beep/schema/Int"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  * import { DateTime } from "effect"
  * import * as O from "effect/Option"
  * import * as Result from "effect/Result"
  * import * as Str from "effect/String"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const digest = contradictionProposalDigest({
  *   fact: { amount: "125" },
@@ -1442,6 +1444,7 @@ const encodeCandidateContent = S.encodeResult(ContradictionCandidateContent.mapF
  * **Example** (Compute candidate payload digest)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import {
  *   BeliefVersionRef,
  *   ContradictionAssessment,
@@ -1455,12 +1458,13 @@ const encodeCandidateContent = S.encodeResult(ContradictionCandidateContent.mapF
  * } from "@beep/epistemic-domain/values/Contradiction"
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity"
- * import { PosInt } from "@beep/schema/Int"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  * import { DateTime } from "effect"
  * import * as O from "effect/Option"
  * import * as Result from "effect/Result"
  * import * as Str from "effect/String"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const leftEvidenceIds: readonly [Epistemic.EvidenceId] = [Epistemic.EvidenceId.make(1)]
  * const rightEvidenceIds: readonly [Epistemic.EvidenceId] = [Epistemic.EvidenceId.make(2)]

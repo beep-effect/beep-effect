@@ -35,7 +35,7 @@ import {
   CacheTaskConfiguration,
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { LiteralKit, NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -183,9 +183,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   const tree = CacheDependencyTree.make({
     format: "canonical-gnu-tar/v1",
     sha256: digest,
-    regularFiles: NonNegativeInt.make(0),
-    entries: NonNegativeInt.make(0),
-    bytes: NonNegativeInt.make(0),
+    regularFiles: S.Natural.make(0),
+    entries: S.Natural.make(0),
+    bytes: S.Natural.make(0),
     links: [],
   });
   const dependencies = CacheDependencyMaterialization.make({
@@ -211,7 +211,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
         profile && id === task
           ? CacheTaskConfiguration.make({ ...configuration, passThroughEnv: ["BIOME_CONFIG_PATH"] })
           : CacheTaskConfiguration.make({ ...configuration, cache: closureFault === "cached" && id !== task }),
-      inputCount: NonNegativeInt.make(0),
+      inputCount: S.Natural.make(0),
       inputsDigest: digest,
     })
   );

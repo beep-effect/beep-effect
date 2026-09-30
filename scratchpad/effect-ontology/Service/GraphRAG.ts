@@ -8,7 +8,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { Context, Effect, HashMap, HashSet, Inspectable, Layer, Match, Number as Num, Order as Ord } from "effect";
 import * as A from "effect/Array";
 import type { TimeoutError } from "effect/Cause";
@@ -28,11 +27,12 @@ import { EntityIndex } from "./EntityIndex.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
 import { RetryPolicy } from "./Retry.ts";
 import { Subgraph, SubgraphExtractor } from "./SubgraphExtractor.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/GraphRAG");
 
 const retrievalOptionsShapeTopKDefault = PosInt.make(5);
-const retrievalOptionsShapeHopsDefault = NonNegativeInt.make(1);
+const retrievalOptionsShapeHopsDefault = S.Natural.make(1);
 const retrievalOptionsShapeMaxNodesDefault = PosInt.make(50);
 const retrievalOptionsShapeMinScoreDefault = Confidence.make(0.3);
 const retrievalOptionsShapeIncludeTypesDefault = A.empty<IRI>();
@@ -41,7 +41,7 @@ const RetrievalOptionsShape = S.Struct({
     S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeTopKDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeTopKDefault)),
     S.annotateKey({ description: "Maximum embedding matches used as graph seeds." })
   ),
-  hops: NonNegativeInt.pipe(
+  hops: S.Natural.pipe(
     S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeHopsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeHopsDefault)),
     S.annotateKey({ description: "Maximum breadth-first distance from a seed." })
   ),
@@ -89,9 +89,9 @@ const GenerationOptionsShape = S.Struct({
  * **Example** (Construct a seed scored node)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import { IRI } from "@beep/rdf"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Entity } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { ScoredNode } from "@effect-ontology/Service/GraphRAG"
@@ -103,7 +103,7 @@ const GenerationOptionsShape = S.Struct({
  *     types: [IRI.make("https://schema.org/Person")]
  *   }),
  *   score: Confidence.make(0.9),
- *   hopDistance: NonNegativeInt.make(0),
+ *   hopDistance: S.Natural.make(0),
  *   isSeed: true
  * })
  * console.log(node.isSeed) // true
@@ -117,7 +117,7 @@ export class ScoredNode extends S.Class<ScoredNode>($I`ScoredNode`)(
   {
     entity: Entity.annotateKey({ description: "Retrieved entity." }),
     score: Confidence.annotateKey({ description: "Fused embedding-rank and hop-distance relevance." }),
-    hopDistance: NonNegativeInt.annotateKey({ description: "Shortest measured distance from any accepted seed." }),
+    hopDistance: S.Natural.annotateKey({ description: "Shortest measured distance from any accepted seed." }),
     isSeed: S.Boolean.annotateKey({ description: "Whether the entity came directly from embedding search." }),
   },
   $I.annote("ScoredNode", {
@@ -131,15 +131,15 @@ export class ScoredNode extends S.Class<ScoredNode>($I`ScoredNode`)(
  * **Example** (Construct retrieval statistics)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
- * import { NonNegativeInt } from "@beep/schema"
  * import { RetrievalStats } from "@effect-ontology/Service/GraphRAG"
  *
  * const stats = RetrievalStats.make({
- *   seedCount: NonNegativeInt.make(1),
- *   nodeCount: NonNegativeInt.make(3),
- *   edgeCount: NonNegativeInt.make(2),
- *   hops: NonNegativeInt.make(1),
+ *   seedCount: S.Natural.make(1),
+ *   nodeCount: S.Natural.make(3),
+ *   edgeCount: S.Natural.make(2),
+ *   hops: S.Natural.make(1),
  *   avgScore: Confidence.make(0.8)
  * })
  * console.log(stats.nodeCount) // 3
@@ -150,10 +150,10 @@ export class ScoredNode extends S.Class<ScoredNode>($I`ScoredNode`)(
  */
 export class RetrievalStats extends S.Class<RetrievalStats>($I`RetrievalStats`)(
   {
-    seedCount: NonNegativeInt.annotateKey({ description: "Accepted embedding seeds present in the subgraph." }),
-    nodeCount: NonNegativeInt.annotateKey({ description: "Total retrieved entities." }),
-    edgeCount: NonNegativeInt.annotateKey({ description: "Total retrieved relations." }),
-    hops: NonNegativeInt.annotateKey({ description: "Deepest breadth-first distance actually reached." }),
+    seedCount: S.Natural.annotateKey({ description: "Accepted embedding seeds present in the subgraph." }),
+    nodeCount: S.Natural.annotateKey({ description: "Total retrieved entities." }),
+    edgeCount: S.Natural.annotateKey({ description: "Total retrieved relations." }),
+    hops: S.Natural.annotateKey({ description: "Deepest breadth-first distance actually reached." }),
     avgScore: Confidence.annotateKey({ description: "Mean fused relevance across retrieved entities." }),
   },
   $I.annote("RetrievalStats", {
@@ -205,9 +205,9 @@ export type RetrievalOptionsInput = (typeof RetrievalOptions)["~type.make.in"];
  * **Example** (Construct a one-seed retrieval result)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import { IRI } from "@beep/rdf"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Entity } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { RetrievalResult, RetrievalStats, ScoredNode } from "@effect-ontology/Service/GraphRAG"
@@ -223,24 +223,24 @@ export type RetrievalOptionsInput = (typeof RetrievalOptions)["~type.make.in"];
  *     nodes: [ada],
  *     edges: [],
  *     centerNodes: [ada.id],
- *     depth: NonNegativeInt.make(0),
+ *     depth: S.Natural.make(0),
  *     distances: []
  *   }),
  *   scoredNodes: [
  *     ScoredNode.make({
  *       entity: ada,
  *       score: Confidence.make(0.9),
- *       hopDistance: NonNegativeInt.make(0),
+ *       hopDistance: S.Natural.make(0),
  *       isSeed: true
  *     })
  *   ],
  *   context: "Ada wrote Notes.",
  *   query: "Who is Ada?",
  *   stats: RetrievalStats.make({
- *     seedCount: NonNegativeInt.make(1),
- *     nodeCount: NonNegativeInt.make(1),
- *     edgeCount: NonNegativeInt.make(0),
- *     hops: NonNegativeInt.make(0),
+ *     seedCount: S.Natural.make(1),
+ *     nodeCount: S.Natural.make(1),
+ *     edgeCount: S.Natural.make(0),
+ *     hops: S.Natural.make(0),
  *     avgScore: Confidence.make(0.9)
  *   })
  * })
@@ -388,9 +388,9 @@ export type FormatContextOptionsInput = (typeof FormatContextOptions)["~type.mak
  * **Example** (Cite a retrieved seed entity)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import { IRI } from "@beep/rdf"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Entity } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { GroundedAnswer, RetrievalResult, RetrievalStats, ScoredNode } from "@effect-ontology/Service/GraphRAG"
@@ -406,24 +406,24 @@ export type FormatContextOptionsInput = (typeof FormatContextOptions)["~type.mak
  *     nodes: [ada],
  *     edges: [],
  *     centerNodes: [ada.id],
- *     depth: NonNegativeInt.make(0),
+ *     depth: S.Natural.make(0),
  *     distances: []
  *   }),
  *   scoredNodes: [
  *     ScoredNode.make({
  *       entity: ada,
  *       score: Confidence.make(0.9),
- *       hopDistance: NonNegativeInt.make(0),
+ *       hopDistance: S.Natural.make(0),
  *       isSeed: true
  *     })
  *   ],
  *   context: "Ada wrote Notes.",
  *   query: "Who is Ada?",
  *   stats: RetrievalStats.make({
- *     seedCount: NonNegativeInt.make(1),
- *     nodeCount: NonNegativeInt.make(1),
- *     edgeCount: NonNegativeInt.make(0),
- *     hops: NonNegativeInt.make(0),
+ *     seedCount: S.Natural.make(1),
+ *     nodeCount: S.Natural.make(1),
+ *     edgeCount: S.Natural.make(0),
+ *     hops: S.Natural.make(0),
  *     avgScore: Confidence.make(0.9)
  *   })
  * })
@@ -762,12 +762,12 @@ const buildScoredNodes: {
     seedRanks: HashMap.HashMap<EntityId, number>
   ): ReadonlyArray<ScoredNode> => {
     const distances = HashMap.fromIterable(
-      A.map(subgraph.distances, (distance): readonly [EntityId, NonNegativeInt] => [distance.entityId, distance.hops])
+      A.map(subgraph.distances, (distance): readonly [EntityId, number] => [distance.entityId, distance.hops])
     );
     const scored = A.map(subgraph.nodes, (entity) => {
       const isSeed = A.contains(subgraph.centerNodes, entity.id);
       const embeddingScore = O.getOrElse(HashMap.get(seedScores, entity.id), () => 0);
-      const hopDistance = O.getOrElse(HashMap.get(distances, entity.id), () => NonNegativeInt.make(0));
+      const hopDistance = O.getOrElse(HashMap.get(distances, entity.id), () => S.Natural.make(0));
       const embeddingRank = O.getOrElse(HashMap.get(seedRanks, entity.id), () => A.length(subgraph.nodes) + 1);
       const normalized = Num.min(1, computeRRFScore([embeddingRank, hopDistance + 1]) * 30);
       return ScoredNode.make({
@@ -1046,7 +1046,7 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
           nodes: [],
           edges: [],
           centerNodes: [],
-          depth: NonNegativeInt.make(0),
+          depth: S.Natural.make(0),
           distances: [],
         });
         return RetrievalResult.make({
@@ -1055,10 +1055,10 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
           context: `## Retrieved Knowledge Graph Context\n\nQuery: "${query}"\n\nNo relevant entities found in the knowledge graph.`,
           query,
           stats: RetrievalStats.make({
-            seedCount: NonNegativeInt.make(0),
-            nodeCount: NonNegativeInt.make(0),
-            edgeCount: NonNegativeInt.make(0),
-            hops: NonNegativeInt.make(0),
+            seedCount: S.Natural.make(0),
+            nodeCount: S.Natural.make(0),
+            edgeCount: S.Natural.make(0),
+            hops: S.Natural.make(0),
             avgScore: Confidence.make(0),
           }),
         });
@@ -1092,9 +1092,9 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
         context,
         query,
         stats: RetrievalStats.make({
-          seedCount: NonNegativeInt.make(A.length(subgraph.centerNodes)),
-          nodeCount: NonNegativeInt.make(A.length(subgraph.nodes)),
-          edgeCount: NonNegativeInt.make(A.length(subgraph.edges)),
+          seedCount: S.Natural.make(A.length(subgraph.centerNodes)),
+          nodeCount: S.Natural.make(A.length(subgraph.nodes)),
+          edgeCount: S.Natural.make(A.length(subgraph.edges)),
           hops: subgraph.depth,
           avgScore: Confidence.make(avgScore),
         }),
@@ -1110,14 +1110,14 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
     ) {
       const options = FormatContextOptions.make(optionsInput);
       const distances = HashMap.fromIterable(
-        A.map(subgraph.distances, (distance): readonly [EntityId, NonNegativeInt] => [distance.entityId, distance.hops])
+        A.map(subgraph.distances, (distance): readonly [EntityId, number] => [distance.entityId, distance.hops])
       );
       const scoredNodes = A.map(subgraph.nodes, (entity) => {
         const isSeed = A.contains(subgraph.centerNodes, entity.id);
         return ScoredNode.make({
           entity,
           score: Confidence.make(isSeed ? 1 : 0.5),
-          hopDistance: O.getOrElse(HashMap.get(distances, entity.id), () => NonNegativeInt.make(0)),
+          hopDistance: O.getOrElse(HashMap.get(distances, entity.id), () => S.Natural.make(0)),
           isSeed,
         });
       });

@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 import { text as readableText } from "node:stream/consumers";
 import * as B from "@beep/box";
-import { HttpsUrl, NonNegativeInt } from "@beep/schema";
+import { HttpsUrl } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as NodeStream from "@effect/platform-node-shared/NodeStream";
@@ -300,7 +300,7 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
   pipe(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value), assertTrue);
 };
 
-const UploadBigFilePayloadArbitrary = Arbitrary.schema(NonNegativeInt).pipe(
+const UploadBigFilePayloadArbitrary = Arbitrary.schema(S.Natural).pipe(
   Arbitrary.map((fileSize) =>
     B.BoxUploadBigFilePayload.make({
       file: new Uint8Array([1, 2, 3]),
@@ -427,7 +427,7 @@ describe("@beep/box", () => {
     const withContext = B.BoxError.fromReason("response status", {
       context: B.BoxApiFailureContext.make({
         values: {
-          conflictCount: NonNegativeInt.make(1),
+          conflictCount: S.Natural.make(1),
           conflicts: [{ id: "123", type: "file" }],
         },
       }),
@@ -457,7 +457,7 @@ describe("@beep/box", () => {
       conflict.context,
       B.BoxApiFailureContext.make({
         values: {
-          conflictCount: NonNegativeInt.make(1),
+          conflictCount: S.Natural.make(1),
           conflicts: [{ id: "456", type: "file" }],
         },
       })
@@ -515,7 +515,7 @@ describe("@beep/box", () => {
       sdkFailure.context,
       B.BoxApiFailureContext.make({
         values: {
-          conflictCount: NonNegativeInt.make(1),
+          conflictCount: S.Natural.make(1),
           conflicts: [{ id: "987654321", type: "folder" }],
         },
       })

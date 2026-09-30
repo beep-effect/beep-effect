@@ -10,7 +10,6 @@ import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { NonNegativeInt } from "../Int.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import type * as AST from "effect/SchemaAST";
 
@@ -32,9 +31,9 @@ const SingleCharacterText = S.String.check(
   })
 );
 
-const csvCodecOptionsMaxRowsDefault = NonNegativeInt.make(0);
-const csvCodecOptionsSkipLinesDefault = NonNegativeInt.make(0);
-const csvCodecOptionsSkipRowsDefault = NonNegativeInt.make(0);
+const csvCodecOptionsMaxRowsDefault = S.Natural.make(0);
+const csvCodecOptionsSkipLinesDefault = S.Natural.make(0);
+const csvCodecOptionsSkipRowsDefault = S.Natural.make(0);
 /**
  * Schema-backed CSV text codec options.
  *
@@ -74,15 +73,15 @@ export class CsvCodecOptions extends S.Class<CsvCodecOptions>($I`CsvCodecOptions
     rtrim: SchemaUtils.BoolKeyDefaultFalse,
     trim: SchemaUtils.BoolKeyDefaultFalse,
     strictColumnHandling: SchemaUtils.BoolKeyDefaultFalse,
-    maxRows: NonNegativeInt.pipe(
+    maxRows: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(csvCodecOptionsMaxRowsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(csvCodecOptionsMaxRowsDefault))
     ),
-    skipLines: NonNegativeInt.pipe(
+    skipLines: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(csvCodecOptionsSkipLinesDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(csvCodecOptionsSkipLinesDefault))
     ),
-    skipRows: NonNegativeInt.pipe(
+    skipRows: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(csvCodecOptionsSkipRowsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(csvCodecOptionsSkipRowsDefault))
     ),

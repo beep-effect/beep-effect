@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { DateTime, Effect, FileSystem, Layer, MutableHashMap, MutableRef, Path, pipe, Stream } from "effect";
@@ -84,7 +84,7 @@ type Sha256State = ReturnType<typeof sha256.create>;
 class CollectorManifestRecord extends S.Class<CollectorManifestRecord>($I`CollectorManifestRecord`)(
   {
     dst: S.OptionFromOptionalKey(S.NonEmptyString),
-    size: S.OptionFromOptionalKey(NonNegativeInt),
+    size: S.OptionFromOptionalKey(S.Natural),
     status: S.Literals(["copied", "error", "excluded-secret", "resumed"]),
   },
   $I.annote("CollectorManifestRecord", {
@@ -97,11 +97,11 @@ class CollectorReconciliationSummary extends S.Class<CollectorReconciliationSumm
   $I`CollectorReconciliationSummary`
 )(
   {
-    collectorErrors: NonNegativeInt,
-    deliberateExclusions: NonNegativeInt,
-    missingDestinations: NonNegativeInt,
-    reconciledDestinations: NonNegativeInt,
-    sizeMismatches: NonNegativeInt,
+    collectorErrors: S.Natural,
+    deliberateExclusions: S.Natural,
+    missingDestinations: S.Natural,
+    reconciledDestinations: S.Natural,
+    sizeMismatches: S.Natural,
   },
   $I.annote("CollectorReconciliationSummary", {
     description:
@@ -159,7 +159,7 @@ const sourceObservation = (info: FileSystem.File.Info): SourceStabilityObservati
     O.map((mtime) => DateTime.toEpochMillis(DateTime.makeUnsafe(mtime))),
     O.getOrElse(() => 0)
   );
-  return SourceStabilityObservation.make({ mtimeEpoch, sizeBytes: NonNegativeInt.make(Number(info.size)) });
+  return SourceStabilityObservation.make({ mtimeEpoch, sizeBytes: S.Natural.make(Number(info.size)) });
 };
 
 const objectIdentity = (
@@ -189,7 +189,7 @@ const digestResult = Effect.fn("Preservation.digestResult")(function* (
   const sha256Hex = yield* decodeSha256(Hex.encode(hasher.digest())).pipe(
     Effect.mapError(ioError("hash-finalize", "stream"))
   );
-  return StreamingHashResult.make({ bytes: NonNegativeInt.make(bytes), sha256: sha256Hex });
+  return StreamingHashResult.make({ bytes: S.Natural.make(bytes), sha256: sha256Hex });
 });
 
 const hashStream = Effect.fn("Preservation.hashStream")(function* (
@@ -445,7 +445,7 @@ const discardStaged = Effect.fn("Preservation.discardStaged")(function* (
   const fs = yield* FileSystem.FileSystem;
   yield* fs.truncate(partialAbs).pipe(Effect.mapError(ioError("partial-truncate", partialAbs)));
   return PreservationAttemptOutcome.cases["resume-discarded"].make({
-    bytesDiscarded: NonNegativeInt.make(stagedBytes),
+    bytesDiscarded: S.Natural.make(stagedBytes),
     kind: "resume-discarded",
   });
 });
@@ -492,7 +492,7 @@ const settleFullLengthDestination = Effect.fn("Preservation.settleFullLengthDest
   return O.some(
     PreservationAttemptOutcome.cases["already-complete"].make({
       kind: "already-complete",
-      bytesReused: NonNegativeInt.make(destBytes),
+      bytesReused: S.Natural.make(destBytes),
       sha256: firstSourceHash.sha256,
       statAfter: O.getOrThrow(statAfter),
       statBefore,
@@ -603,15 +603,15 @@ const promoteVerifiedCopy = Effect.fn("Preservation.promoteVerifiedCopy")(functi
   yield* fsyncDirectory(parent);
   return staged.stagedBytes === 0
     ? PreservationAttemptOutcome.cases.copied.make({
-        bytesCopied: NonNegativeInt.make(bytesCopied),
+        bytesCopied: S.Natural.make(bytesCopied),
         kind: "copied",
         sha256: sourceHash.sha256,
         statAfter,
         statBefore,
       })
     : PreservationAttemptOutcome.cases["resume-completed"].make({
-        bytesCopied: NonNegativeInt.make(bytesCopied),
-        bytesReused: NonNegativeInt.make(staged.stagedBytes),
+        bytesCopied: S.Natural.make(bytesCopied),
+        bytesReused: S.Natural.make(staged.stagedBytes),
         kind: "resume-completed",
         sha256: sourceHash.sha256,
         statAfter,
@@ -761,7 +761,7 @@ const verifyRow = Effect.fn("Preservation.verifyRow")(function* (
       destRelativePath: row.destRelativePath,
       object: row.object,
       outcome: PreservationVerificationOutcome.cases["size-mismatch"].make({
-        actualBytes: NonNegativeInt.make(actualBytes),
+        actualBytes: S.Natural.make(actualBytes),
         expectedBytes: row.object.sizeBytes,
         kind: "size-mismatch",
       }),
@@ -792,14 +792,14 @@ const verifyRow = Effect.fn("Preservation.verifyRow")(function* (
 
 const verificationSummary = (rows: ReadonlyArray<PreservationVerificationRow>): PreservationVerificationSummary =>
   PreservationVerificationSummary.make({
-    bytesVerified: NonNegativeInt.make(
+    bytesVerified: S.Natural.make(
       A.reduce(rows, 0, (total, row) => (row.outcome.kind === "verified" ? total + row.object.sizeBytes : total))
     ),
-    hashMismatched: NonNegativeInt.make(A.filter(rows, (row) => row.outcome.kind === "hash-mismatch").length),
-    missing: NonNegativeInt.make(A.filter(rows, (row) => row.outcome.kind === "missing-destination").length),
-    rowsChecked: NonNegativeInt.make(A.length(rows)),
-    sizeMismatched: NonNegativeInt.make(A.filter(rows, (row) => row.outcome.kind === "size-mismatch").length),
-    verified: NonNegativeInt.make(A.filter(rows, (row) => row.outcome.kind === "verified").length),
+    hashMismatched: S.Natural.make(A.filter(rows, (row) => row.outcome.kind === "hash-mismatch").length),
+    missing: S.Natural.make(A.filter(rows, (row) => row.outcome.kind === "missing-destination").length),
+    rowsChecked: S.Natural.make(A.length(rows)),
+    sizeMismatched: S.Natural.make(A.filter(rows, (row) => row.outcome.kind === "size-mismatch").length),
+    verified: S.Natural.make(A.filter(rows, (row) => row.outcome.kind === "verified").length),
   });
 
 /**
@@ -923,7 +923,7 @@ const readCollectorManifest = Effect.fn("Preservation.readCollectorManifest")(fu
 type CollectorTerminalEvidence = {
   readonly collectorErrors: number;
   readonly deliberateExclusions: number;
-  readonly terminalSuccesses: MutableHashMap.MutableHashMap<string, NonNegativeInt>;
+  readonly terminalSuccesses: MutableHashMap.MutableHashMap<string, number>;
 };
 
 type CollectorDestinationStatus = "missing" | "reconciled" | "size-mismatch";
@@ -931,7 +931,7 @@ type CollectorDestinationStatus = "missing" | "reconciled" | "size-mismatch";
 const collectorSuccessCoordinates = Effect.fn("Preservation.collectorSuccessCoordinates")(function* (
   row: CollectorManifestRecord,
   manifestPath: string
-): Effect.fn.Return<readonly [string, NonNegativeInt], PreservationArchiveIoError> {
+): Effect.fn.Return<readonly [string, number], PreservationArchiveIoError> {
   const coordinates = O.all({ destination: row.dst, size: row.size });
   if (O.isNone(coordinates)) {
     return yield* PreservationArchiveIoError.make({
@@ -988,7 +988,7 @@ const reconcileCollectorDestination = Effect.fn("Preservation.reconcileCollector
   salvageRoot: string,
   manifestPath: string,
   relative: string,
-  expectedSize: NonNegativeInt
+  expectedSize: number
 ): Effect.fn.Return<CollectorDestinationStatus, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1012,7 +1012,7 @@ const reconcileCollectorDestination = Effect.fn("Preservation.reconcileCollector
 const reconcileCollectorDestinations = Effect.fn("Preservation.reconcileCollectorDestinations")(function* (
   salvageRoot: string,
   manifestPath: string,
-  terminalSuccesses: MutableHashMap.MutableHashMap<string, NonNegativeInt>
+  terminalSuccesses: MutableHashMap.MutableHashMap<string, number>
 ): Effect.fn.Return<
   ReadonlyArray<CollectorDestinationStatus>,
   PreservationArchiveIoError,
@@ -1031,11 +1031,11 @@ const reconcileCollectorManifest = Effect.fn("Preservation.reconcileCollectorMan
   const manifestPath = path.join(salvageRoot, "_meta", "manifest.jsonl");
   const evidence = yield* collectorTerminalEvidence(yield* readCollectorManifest(options), manifestPath);
   const statuses = yield* reconcileCollectorDestinations(salvageRoot, manifestPath, evidence.terminalSuccesses);
-  const count = (status: CollectorDestinationStatus): NonNegativeInt =>
-    NonNegativeInt.make(A.length(A.filter(statuses, (candidate) => candidate === status)));
+  const count = (status: CollectorDestinationStatus): number =>
+    S.Natural.make(A.length(A.filter(statuses, (candidate) => candidate === status)));
   return CollectorReconciliationSummary.make({
-    collectorErrors: NonNegativeInt.make(evidence.collectorErrors),
-    deliberateExclusions: NonNegativeInt.make(evidence.deliberateExclusions),
+    collectorErrors: S.Natural.make(evidence.collectorErrors),
+    deliberateExclusions: S.Natural.make(evidence.deliberateExclusions),
     missingDestinations: count("missing"),
     reconciledDestinations: count("reconciled"),
     sizeMismatches: count("size-mismatch"),
@@ -1056,13 +1056,13 @@ const inheritedLossRows = (summary: CollectorReconciliationSummary): ReadonlyArr
     lossClass: "deliberate-exclusion",
   }),
   InheritedLossRow.make({
-    count: NonNegativeInt.make(1),
+    count: S.Natural.make(1),
     evidenceRef:
       "explorations/oppold-corpus-overhaul/research/2026-08-17-restoration-census.md#filesystem-and-drive-facts",
     lossClass: "exfat-stripped-metadata",
   }),
   InheritedLossRow.make({
-    count: NonNegativeInt.make(13),
+    count: S.Natural.make(13),
     evidenceRef:
       "explorations/oppold-corpus-overhaul/research/2026-08-17-restoration-census.md#the-three-recycle-surfaces-are-three-volumes",
     lossClass: "missing-recycle-r-record",
@@ -1154,7 +1154,7 @@ const destinationFreeBytes = Effect.fn("Preservation.destinationFreeBytes")(func
     });
   }
   const parsed = yield* decodeNumber(availableKiB.value).pipe(Effect.mapError(ioError("capacity-decode", corpusRoot)));
-  return NonNegativeInt.make(parsed * 1024);
+  return S.Natural.make(parsed * 1024);
 });
 
 const measureCapacityForFiles = Effect.fn("Preservation.measureCapacityForFiles")(function* (
@@ -1168,11 +1168,11 @@ const measureCapacityForFiles = Effect.fn("Preservation.measureCapacityForFiles"
   const sourceRoot = path.resolve(options.t7Root);
   yield* fs.makeDirectory(corpusRoot, { recursive: true }).pipe(Effect.mapError(ioError("mkdir", corpusRoot)));
   return CapacityMeasurement.make({
-    destFreeBytes: NonNegativeInt.make(yield* destinationFreeBytes(corpusRoot)),
+    destFreeBytes: S.Natural.make(yield* destinationFreeBytes(corpusRoot)),
     measuredAt: DateTime.formatIso(yield* DateTime.now),
-    objectCount: NonNegativeInt.make(A.length(files)),
-    requiredBytes: NonNegativeInt.make(sourceBytes),
-    sourceBytes: NonNegativeInt.make(sourceBytes),
+    objectCount: S.Natural.make(A.length(files)),
+    requiredBytes: S.Natural.make(sourceBytes),
+    sourceBytes: S.Natural.make(sourceBytes),
     sourceRoot,
   });
 });
@@ -1312,7 +1312,7 @@ export const approveT7PreservationImpl = Effect.fn("CorpusCommandService.approve
   const approved = CapacityPreflight.cases.approved.make({
     approvedAt: DateTime.formatIso(yield* DateTime.now),
     approvedBy,
-    ceilingBytes: NonNegativeInt.make(ceilingBytes),
+    ceilingBytes: S.Natural.make(ceilingBytes),
     kind: "approved",
     measurement: proposed.measurement,
   });
@@ -1379,15 +1379,15 @@ export const validateRefreshedCapacityForTesting = Effect.fnUntraced(function* (
   }
   if (currentRequiredBytes > ceilingBytes) {
     return yield* PreservationCeilingExceededError.make({
-      ceilingBytes: NonNegativeInt.make(ceilingBytes),
-      measuredBytes: NonNegativeInt.make(currentRequiredBytes),
+      ceilingBytes: S.Natural.make(ceilingBytes),
+      measuredBytes: S.Natural.make(currentRequiredBytes),
       message: "The current preservation requirement exceeds the approved ceiling.",
     });
   }
   if (currentRequiredBytes > destFreeBytes) {
     return yield* PreservationCeilingExceededError.make({
-      ceilingBytes: NonNegativeInt.make(destFreeBytes),
-      measuredBytes: NonNegativeInt.make(currentRequiredBytes),
+      ceilingBytes: S.Natural.make(destFreeBytes),
+      measuredBytes: S.Natural.make(currentRequiredBytes),
       message: "The current destination free space is smaller than the preservation requirement.",
     });
   }
@@ -1463,15 +1463,15 @@ export const validateCopyTimeCapacityForTesting = Effect.fnUntraced(function* (
 ) {
   if (aggregateRequiredBytes > ceilingBytes) {
     return yield* PreservationCeilingExceededError.make({
-      ceilingBytes: NonNegativeInt.make(ceilingBytes),
-      measuredBytes: NonNegativeInt.make(aggregateRequiredBytes),
+      ceilingBytes: S.Natural.make(ceilingBytes),
+      measuredBytes: S.Natural.make(aggregateRequiredBytes),
       message: "Copy-time source growth exceeds the approved preservation ceiling.",
     });
   }
   if (remainingRequiredBytes > destFreeBytes) {
     return yield* PreservationCeilingExceededError.make({
-      ceilingBytes: NonNegativeInt.make(destFreeBytes),
-      measuredBytes: NonNegativeInt.make(remainingRequiredBytes),
+      ceilingBytes: S.Natural.make(destFreeBytes),
+      measuredBytes: S.Natural.make(remainingRequiredBytes),
       message: "Copy-time source growth exceeds the measured destination free space.",
     });
   }
@@ -1526,7 +1526,7 @@ const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal"
     const outcome = yield* writer.archiveObject(sourceAbs, destAbs, attemptIdentity);
     const row = PreservationManifestRow.make({
       archivedAt: DateTime.formatIso(yield* DateTime.now),
-      attempt: NonNegativeInt.make(attempt),
+      attempt: S.Natural.make(attempt),
       destRelativePath,
       object: attemptIdentity,
       outcome,
@@ -1660,9 +1660,9 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
           }
         }
         const summary = PreservationRunSummary.make({
-          attempted: NonNegativeInt.make(attempted),
-          passed: NonNegativeInt.make(passed),
-          unapproved: NonNegativeInt.make(unapproved),
+          attempted: S.Natural.make(attempted),
+          passed: S.Natural.make(passed),
+          unapproved: S.Natural.make(unapproved),
         });
         yield* printLines([
           `preservation run: attempted=${summary.attempted} passed=${summary.passed} unapproved=${summary.unapproved}`,
@@ -1725,7 +1725,7 @@ export const verifyT7PreservationImpl = Effect.fn("CorpusCommandService.verifyT7
   if (!complete) {
     const unverifiedRows = report.summary.rowsChecked - report.summary.verified;
     return yield* PreservationVerificationFailure.make({
-      failedRows: NonNegativeInt.make(unverifiedRows > 0 ? unverifiedRows : 1),
+      failedRows: S.Natural.make(unverifiedRows > 0 ? unverifiedRows : 1),
       message:
         "Independent preservation verification found non-verified, missing-census, source-drift, or inherited-loss rows.",
     });

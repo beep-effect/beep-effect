@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 
@@ -14,7 +14,7 @@ const $I = $LawPracticeDomainId.create("values/ContextOptions/ContextOptions.mod
 
 const ContextType = LiteralKit(["sentence", "paragraph"]);
 
-const ContextMaxLength = NonNegativeInt.pipe(
+const ContextMaxLength = S.Natural.pipe(
   S.OptionFromOptionalKey,
   S.withConstructorDefault(Effect.succeedNone),
   S.annotateKey({
@@ -33,13 +33,13 @@ const ContextMaxLength = NonNegativeInt.pipe(
  * **Example** (Make with type and maxLength)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ContextOptions } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const options = ContextOptions.make({
  *   type: "paragraph",
- *   maxLength: O.some(NonNegativeInt.make(1000)),
+ *   maxLength: O.some(S.Natural.make(1000)),
  * })
  *
  * console.log(options.type) // "paragraph"

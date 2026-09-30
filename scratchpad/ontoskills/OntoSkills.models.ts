@@ -7,8 +7,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256 } from "@beep/shared-domain/entity/primitives";
@@ -20,10 +18,13 @@ import { Duration, Effect, SchemaTransformation, Tuple } from "effect";
 import { flow, identity } from "effect/Function";
 import * as S from "effect/Schema";
 
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
+type PosInt = typeof PosInt.Type;
+
 const $I = $ScratchpadId.create("ontoskills/OntoSkills.models");
 
 const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
-const zero = NonNegativeInt.make(0);
+const zero = S.Natural.make(0);
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const STATE_URI_PATTERN = /^oc:[A-Z][a-zA-Z0-9]*(?::[a-zA-Z0-9_-]+)?$/;
 const FRONTMATTER_TAG_PATTERN = /<[a-zA-Z][^>]*>/;
@@ -150,12 +151,12 @@ export type ExecutionPayloadExecutor = typeof ExecutionPayloadExecutor.Type;
  * @category codecs
  * @since 0.0.0
  */
-export const DurationFromSeconds = NonNegativeInt.pipe(
+export const DurationFromSeconds = S.Natural.pipe(
   S.decodeTo(
     S.Duration,
-    SchemaTransformation.transform<Duration.Duration, NonNegativeInt>({
+    SchemaTransformation.transform<Duration.Duration, number>({
       decode: Duration.seconds,
-      encode: flow(Duration.toSeconds, NonNegativeInt.make),
+      encode: flow(Duration.toSeconds, S.Natural.make),
     })
   ),
   $I.annoteSchema("DurationFromSeconds", {
@@ -609,7 +610,7 @@ export type KnowledgeNodesFromLLM = typeof KnowledgeNodesFromLLM.Type;
  * @since 0.0.0
  */
 export class CodeAnnotation extends S.Class<CodeAnnotation>($I`CodeAnnotation`)(
-  { index: NonNegativeInt, purpose: TrimmedNonEmptyString, context: TrimmedNonEmptyString },
+  { index: S.Natural, purpose: TrimmedNonEmptyString, context: TrimmedNonEmptyString },
   $I.annote("CodeAnnotation", {
     description: "Semantic purpose and surrounding context assigned to an extracted code block.",
   })
@@ -635,7 +636,7 @@ export class CodeAnnotation extends S.Class<CodeAnnotation>($I`CodeAnnotation`)(
  * @since 0.0.0
  */
 export class TableAnnotation extends S.Class<TableAnnotation>($I`TableAnnotation`)(
-  { index: NonNegativeInt, purpose: TrimmedNonEmptyString },
+  { index: S.Natural, purpose: TrimmedNonEmptyString },
   $I.annote("TableAnnotation", {
     description: "Semantic purpose assigned to an extracted markdown table.",
   })
@@ -661,7 +662,7 @@ export class TableAnnotation extends S.Class<TableAnnotation>($I`TableAnnotation
  * @since 0.0.0
  */
 export class FlowchartAnnotation extends S.Class<FlowchartAnnotation>($I`FlowchartAnnotation`)(
-  { index: NonNegativeInt, description: TrimmedNonEmptyString },
+  { index: S.Natural, description: TrimmedNonEmptyString },
   $I.annote("FlowchartAnnotation", {
     description: "Natural-language interpretation assigned to an extracted flowchart.",
   })
@@ -721,7 +722,7 @@ export type TemplateAnnotationType = typeof TemplateAnnotationType.Type;
  * @since 0.0.0
  */
 export class TemplateAnnotation extends S.Class<TemplateAnnotation>($I`TemplateAnnotation`)(
-  { index: NonNegativeInt, templateType: TemplateAnnotationType },
+  { index: S.Natural, templateType: TemplateAnnotationType },
   $I.annote("TemplateAnnotation", {
     description: "Semantic role assigned to an indexed template extracted during Phase 1.",
   })
@@ -1397,7 +1398,7 @@ export class FileInfo extends S.Class<FileInfo>($I`FileInfo`)(
   {
     relativePath: TrimmedNonEmptyString,
     contentHash: Sha256,
-    fileSize: NonNegativeInt,
+    fileSize: S.Natural,
     mimeType: TrimmedNonEmptyString,
   },
   $I.annote("FileInfo", {
@@ -1513,7 +1514,7 @@ export class CodeBlock extends S.Class<CodeBlock>($I`CodeBlock`)(
     content: TrimmedNonEmptyString,
     sourceLineStart: PosInt,
     sourceLineEnd: PosInt,
-    contentOrder: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
+    contentOrder: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
   },
   $I.annote("CodeBlock", {
     description: "Fenced code source with language, source span, and document order.",
@@ -1548,8 +1549,8 @@ export class MarkdownTable extends S.Class<MarkdownTable>($I`MarkdownTable`)(
     blockType: S.tag("table").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("table"))),
     markdownSource: TrimmedNonEmptyString,
     caption: S.OptionFromNullOr(S.String),
-    rowCount: NonNegativeInt,
-    contentOrder: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
+    rowCount: S.Natural,
+    contentOrder: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
   },
   $I.annote("MarkdownTable", {
     description: "Markdown table source, nullable caption, row count, and document order.",
@@ -1582,7 +1583,7 @@ export class FlowchartBlock extends S.Class<FlowchartBlock>($I`FlowchartBlock`)(
     blockType: S.tag("flowchart").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("flowchart"))),
     source: TrimmedNonEmptyString,
     chartType: FlowchartType,
-    contentOrder: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
+    contentOrder: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
   },
   $I.annote("FlowchartBlock", {
     description: "Diagram source classified as Graphviz or Mermaid with stable document order.",
@@ -1708,7 +1709,7 @@ export class OrderedProcedure extends S.Class<OrderedProcedure>($I`OrderedProced
       S.withDecodingDefaultTypeKey(Effect.succeed("ordered_procedure"))
     ),
     items: S.Array(ProcedureStep),
-    contentOrder: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
+    contentOrder: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
   },
   $I.annote("OrderedProcedure", {
     description: "Ordered procedural content with nested child blocks and stable document order.",
@@ -1741,7 +1742,7 @@ export class TemplateBlock extends S.Class<TemplateBlock>($I`TemplateBlock`)(
     blockType: S.tag("template").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("template"))),
     content: TrimmedNonEmptyString,
     detectedVariables: S.Array(TrimmedNonEmptyString),
-    contentOrder: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
+    contentOrder: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(zero)), S.withDecodingDefaultTypeKey(Effect.succeed(zero))),
   },
   $I.annote("TemplateBlock", {
     description: "Template content and its detected variable placeholders in document order.",
@@ -1773,7 +1774,7 @@ export class Paragraph extends S.Class<Paragraph>($I`Paragraph`)(
   {
     blockType: S.tag("paragraph").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("paragraph"))),
     textContent: TrimmedNonEmptyString,
-    contentOrder: NonNegativeInt,
+    contentOrder: S.Natural,
   },
   $I.annote("Paragraph", {
     description: "A free-form markdown paragraph with stable document order.",
@@ -1799,7 +1800,7 @@ export declare namespace BulletItem {
    */
   export type Type = {
     readonly text: string;
-    readonly order: NonNegativeInt;
+    readonly order: number;
     readonly children: ReadonlyArray<ContentBlock.Type>;
   };
 
@@ -1857,7 +1858,7 @@ const BulletItemChildren: S.Codec<
  */
 export const BulletItem: S.Codec<BulletItem.Type, BulletItem.Encoded> = S.Struct({
   text: TrimmedNonEmptyString,
-  order: NonNegativeInt,
+  order: S.Natural,
   children: BulletItemChildren,
 }).pipe(
   $I.annoteSchema("BulletItem", {
@@ -1898,7 +1899,7 @@ export class BulletListBlock extends S.Class<BulletListBlock>($I`BulletListBlock
   {
     blockType: S.tag("bullet_list").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("bullet_list"))),
     items: S.Array(BulletItem),
-    contentOrder: NonNegativeInt,
+    contentOrder: S.Natural,
   },
   $I.annote("BulletListBlock", {
     description: "An unordered markdown list represented by stable ordered item records.",
@@ -1934,7 +1935,7 @@ export class BlockQuoteBlock extends S.Class<BlockQuoteBlock>($I`BlockQuoteBlock
     blockType: S.tag("blockquote").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("blockquote"))),
     content: TrimmedNonEmptyString,
     attribution: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(blockQuoteBlockAttributionDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(blockQuoteBlockAttributionDefault))),
-    contentOrder: NonNegativeInt,
+    contentOrder: S.Natural,
   },
   $I.annote("BlockQuoteBlock", {
     description: "Quoted markdown content with nullable attribution and stable document order.",
@@ -1966,7 +1967,7 @@ export class HTMLBlock extends S.Class<HTMLBlock>($I`HTMLBlock`)(
   {
     blockType: S.tag("html_block").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("html_block"))),
     content: TrimmedNonEmptyString,
-    contentOrder: NonNegativeInt,
+    contentOrder: S.Natural,
   },
   $I.annote("HTMLBlock", {
     description: "Raw HTML content retained from markdown structural extraction.",
@@ -2000,7 +2001,7 @@ export class FrontmatterBlock extends S.Class<FrontmatterBlock>($I`FrontmatterBl
     blockType: S.tag("frontmatter").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("frontmatter"))),
     rawYaml: S.String,
     properties: S.Record(S.String, S.String).pipe(S.withConstructorDefault(Effect.succeed(frontmatterBlockPropertiesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(frontmatterBlockPropertiesDefault))),
-    contentOrder: NonNegativeInt,
+    contentOrder: S.Natural,
   },
   $I.annote("FrontmatterBlock", {
     description: "Raw YAML frontmatter and string-valued properties in flat extraction order.",
@@ -2034,7 +2035,7 @@ export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
     blockType: S.tag("heading").pipe(S.withDecodingDefaultTypeKey(Effect.succeed("heading"))),
     text: TrimmedNonEmptyString,
     level: PosInt,
-    contentOrder: NonNegativeInt,
+    contentOrder: S.Natural,
   },
   $I.annote("HeadingBlock", {
     description: "A markdown heading retained as a flat content block with level and order.",
@@ -2214,7 +2215,7 @@ export declare namespace Section {
   export type Type = {
     readonly title: string;
     readonly level: PosInt;
-    readonly order: NonNegativeInt;
+    readonly order: number;
     readonly content: ReadonlyArray<ContentBlock.Type>;
     readonly subsections: ReadonlyArray<Type>;
   };
@@ -2288,7 +2289,7 @@ const SectionSubsections: S.Codec<ReadonlyArray<Section.Type>, ReadonlyArray<Sec
 export const Section: S.Codec<Section.Type, Section.Encoded> = S.Struct({
   title: TrimmedNonEmptyString,
   level: PosInt,
-  order: NonNegativeInt,
+  order: S.Natural,
   content: SectionContent,
   subsections: SectionSubsections,
 }).pipe(

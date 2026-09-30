@@ -6,7 +6,7 @@
  */
 
 import { $BoxId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
@@ -110,7 +110,7 @@ const BoxApiFailureConflict = S.Struct({
 );
 
 const BoxApiFailureContextValues = S.Struct({
-  conflictCount: NonNegativeInt,
+  conflictCount: S.Natural,
   conflicts: S.Array(BoxApiFailureConflict),
 }).pipe(
   $I.annoteSchema("BoxApiFailureContextValues", {
@@ -124,11 +124,11 @@ const BoxApiFailureContextValues = S.Struct({
  * **Example** (Make failure context values)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { BoxApiFailureContext } from "@beep/box"
- * import { NonNegativeInt } from "@beep/schema/Number"
  *
  * const context = BoxApiFailureContext.make({
- *   values: { conflictCount: NonNegativeInt.make(1), conflicts: [{ id: "123", type: "file" }] }
+ *   values: { conflictCount: S.Natural.make(1), conflicts: [{ id: "123", type: "file" }] }
  * })
  * console.log(context.values.conflictCount)
  * ```
@@ -509,7 +509,7 @@ const readContextInfo = (value: unknown): O.Option<BoxApiFailureContext> =>
     O.map((conflicts) =>
       BoxApiFailureContext.make({
         values: {
-          conflictCount: NonNegativeInt.make(A.length(conflicts)),
+          conflictCount: S.Natural.make(A.length(conflicts)),
           conflicts: A.filterMap(conflicts, (conflict) => decodeApiFailureConflict(conflict)),
         },
       })

@@ -1,4 +1,4 @@
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Effect, HashMap, HashSet, Layer, Number as N } from "effect";
 import * as A from "effect/Array";
@@ -250,23 +250,23 @@ const documentOutcome = (
   );
   const cacheKeys = A.dedupe(A.getSomes(A.map(A.appendAll(hosted, pattern), (claim) => claim.cacheKey)));
   return DocumentOutcome.make({
-    anchorsFailed: NonNegativeInt.make(0),
-    anchorsVerified: NonNegativeInt.make(A.length(document.chunks) + A.length(hosted) + A.length(pattern)),
+    anchorsFailed: S.Natural.make(0),
+    anchorsVerified: S.Natural.make(A.length(document.chunks) + A.length(hosted) + A.length(pattern)),
     cacheKeys,
-    chunks: NonNegativeInt.make(A.length(document.chunks)),
+    chunks: S.Natural.make(A.length(document.chunks)),
     claims: {
       hosted: {
-        entity: NonNegativeInt.make(claimKindCount(hosted, "Entity")),
-        relation: NonNegativeInt.make(claimKindCount(hosted, "Relation")),
-        structure: NonNegativeInt.make(claimKindCount(hosted, "Structure")),
+        entity: S.Natural.make(claimKindCount(hosted, "Entity")),
+        relation: S.Natural.make(claimKindCount(hosted, "Relation")),
+        structure: S.Natural.make(claimKindCount(hosted, "Structure")),
       },
       pattern: {
-        entity: NonNegativeInt.make(claimKindCount(pattern, "Entity")),
-        relation: NonNegativeInt.make(claimKindCount(pattern, "Relation")),
-        structure: NonNegativeInt.make(claimKindCount(pattern, "Structure")),
+        entity: S.Natural.make(claimKindCount(pattern, "Entity")),
+        relation: S.Natural.make(claimKindCount(pattern, "Relation")),
+        structure: S.Natural.make(claimKindCount(pattern, "Structure")),
       },
     },
-    degradedClaims: NonNegativeInt.make(degradedClaims),
+    degradedClaims: S.Natural.make(degradedClaims),
     document: document.document.id,
     extraction: {
       hosted: extractionStatus(parse, hostedOutcome),
@@ -485,7 +485,7 @@ const makeEvaluator = Effect.gen(function* () {
             MetricScore.make({
               ...metric,
               status: "unsupported",
-              support: NonNegativeInt.make(0),
+              support: S.Natural.make(0),
               value: UnitInterval.make(0),
             })
           );
@@ -498,7 +498,7 @@ const makeEvaluator = Effect.gen(function* () {
           MetricScore.make({
             ...metric,
             status: "scored",
-            support: NonNegativeInt.make(A.length(coverage)),
+            support: S.Natural.make(A.length(coverage)),
             value: UnitInterval.make(metricValue(metric.name, coverage, outcomes, metric.lane)),
           })
         );
@@ -518,7 +518,7 @@ const makeEvaluator = Effect.gen(function* () {
         reportDigest: Sha256Hex.make(Str.repeat(64)("0")),
         run,
         schemaVersion: "eval-report/v1" as const,
-        unexpectedDegraded: NonNegativeInt.make(A.length(A.filter(nonEmptyDocuments, unexpectedlyDegraded))),
+        unexpectedDegraded: S.Natural.make(A.length(A.filter(nonEmptyDocuments, unexpectedlyDegraded))),
       };
       const reportDigest = yield* digestOmitting(
         S.Struct(EvalReport.fields),

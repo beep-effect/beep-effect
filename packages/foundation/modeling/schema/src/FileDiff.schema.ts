@@ -7,7 +7,6 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { NonNegativeInt } from "./Int.ts";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("FileDiff.schema");
@@ -16,8 +15,8 @@ class InfoBase extends S.Class<InfoBase>($I`InfoBase`)(
   {
     file: SchemaUtils.optional(S.String),
     patch: SchemaUtils.optional(S.String),
-    additions: NonNegativeInt,
-    deletions: NonNegativeInt,
+    additions: S.Natural,
+    deletions: S.Natural,
   },
   $I.annote("InfoBase", {
     description: "Common file-diff fields shared by every status-specific diff summary.",

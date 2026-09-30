@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Equal, HashSet, identity, Number as N, SchemaGetter, SchemaIssue, Tuple } from "effect";
@@ -129,7 +129,7 @@ export class GoldRef extends S.Class<GoldRef>($I`GoldRef`)(
 
 const GoldStructureLabelFields = S.Struct({
   role: StructureRole,
-  depth: NonNegativeInt,
+  depth: S.Natural,
   ...TextAnchorFields,
   verified: S.Boolean,
 });
@@ -188,11 +188,11 @@ export class GoldEntityLabel extends S.Class<GoldEntityLabel>($I`GoldEntityLabel
 const GoldRelationLabelFields = S.Struct({
   predicate: S.NonEmptyString,
   subject: S.NonEmptyString,
-  subjectStartChar: NonNegativeInt,
-  subjectEndChar: NonNegativeInt,
+  subjectStartChar: S.Natural,
+  subjectEndChar: S.Natural,
   object: S.NonEmptyString,
-  objectStartChar: NonNegativeInt,
-  objectEndChar: NonNegativeInt,
+  objectStartChar: S.Natural,
+  objectEndChar: S.Natural,
   ...TextAnchorFields,
   verified: S.Boolean,
 });
@@ -279,7 +279,7 @@ const sliceForDigest = (
 class EncodedGoldStructureLabel extends S.Class<EncodedGoldStructureLabel>($I`EncodedGoldStructureLabel`)(
   {
     role: StructureRole,
-    depth: NonNegativeInt,
+    depth: S.Natural,
     startChar: TextAnchorFields.startChar,
     endChar: TextAnchorFields.endChar,
     quoteSha256: Sha256Hex,
@@ -311,11 +311,11 @@ const GoldStructureLabelFromEncoded = EncodedGoldStructureLabel.pipe(
     ),
     encode: SchemaGetter.transform<EncodedGoldStructureLabel, typeof GoldStructureLabel.Encoded>((label) =>
       EncodedGoldStructureLabel.make({
-        depth: NonNegativeInt.make(label.depth),
-        endChar: NonNegativeInt.make(label.endChar),
+        depth: S.Natural.make(label.depth),
+        endChar: S.Natural.make(label.endChar),
         quoteSha256: sha256TextSync(label.quote),
         role: label.role,
-        startChar: NonNegativeInt.make(label.startChar),
+        startChar: S.Natural.make(label.startChar),
         verified: label.verified,
       })
     ),
@@ -378,11 +378,11 @@ const GoldEntityLabelFromEncoded = EncodedGoldEntityLabel.pipe(
     encode: SchemaGetter.transform<EncodedGoldEntityLabel, typeof GoldEntityLabel.Encoded>((label) =>
       EncodedGoldEntityLabel.make({
         cluster: label.cluster,
-        endChar: NonNegativeInt.make(label.endChar),
+        endChar: S.Natural.make(label.endChar),
         entityType: label.entityType,
         labelSha256: sha256TextSync(label.label),
         quoteSha256: sha256TextSync(label.quote),
-        startChar: NonNegativeInt.make(label.startChar),
+        startChar: S.Natural.make(label.startChar),
         verified: label.verified,
       })
     ),
@@ -392,11 +392,11 @@ const GoldEntityLabelFromEncoded = EncodedGoldEntityLabel.pipe(
 class EncodedGoldRelationLabel extends S.Class<EncodedGoldRelationLabel>($I`EncodedGoldRelationLabel`)(
   {
     predicate: S.NonEmptyString,
-    subjectStartChar: NonNegativeInt,
-    subjectEndChar: NonNegativeInt,
+    subjectStartChar: S.Natural,
+    subjectEndChar: S.Natural,
     subjectSha256: Sha256Hex,
-    objectStartChar: NonNegativeInt,
-    objectEndChar: NonNegativeInt,
+    objectStartChar: S.Natural,
+    objectEndChar: S.Natural,
     objectSha256: Sha256Hex,
     startChar: TextAnchorFields.startChar,
     endChar: TextAnchorFields.endChar,
@@ -454,16 +454,16 @@ const GoldRelationLabelFromEncoded = EncodedGoldRelationLabel.pipe(
     ),
     encode: SchemaGetter.transform<EncodedGoldRelationLabel, typeof GoldRelationLabel.Encoded>((label) =>
       EncodedGoldRelationLabel.make({
-        endChar: NonNegativeInt.make(label.endChar),
-        objectEndChar: NonNegativeInt.make(label.objectEndChar),
+        endChar: S.Natural.make(label.endChar),
+        objectEndChar: S.Natural.make(label.objectEndChar),
         objectSha256: sha256TextSync(label.object),
-        objectStartChar: NonNegativeInt.make(label.objectStartChar),
+        objectStartChar: S.Natural.make(label.objectStartChar),
         predicate: label.predicate,
         quoteSha256: sha256TextSync(label.quote),
-        startChar: NonNegativeInt.make(label.startChar),
-        subjectEndChar: NonNegativeInt.make(label.subjectEndChar),
+        startChar: S.Natural.make(label.startChar),
+        subjectEndChar: S.Natural.make(label.subjectEndChar),
         subjectSha256: sha256TextSync(label.subject),
-        subjectStartChar: NonNegativeInt.make(label.subjectStartChar),
+        subjectStartChar: S.Natural.make(label.subjectStartChar),
         verified: label.verified,
       })
     ),

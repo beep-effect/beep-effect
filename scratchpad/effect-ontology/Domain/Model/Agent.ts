@@ -6,13 +6,14 @@
  */
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
 import { type Duration, Effect } from "effect";
 import { DateTime } from "effect";
 import * as A from "effect/Array";
 import type * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/Agent");
 
@@ -469,7 +470,7 @@ export class IntermediateResult extends S.Class<IntermediateResult>($I`Intermedi
 
 const pipelineStateCompletedAgentsDefault = A.empty<AgentId>();
 const pipelineStateIntermediateResultsDefault = A.empty<IntermediateResult>();
-const pipelineStateIterationCountDefault = NonNegativeInt.make(0);
+const pipelineStateIterationCountDefault = S.Natural.make(0);
 /**
  * Immutable checkpoint snapshot of a multi-agent pipeline.
  *
@@ -512,7 +513,7 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
     status: PipelineStatus.annotateKey({
       description: "Canonical discriminated pipeline status.",
     }),
-    iterationCount: NonNegativeInt.pipe(
+    iterationCount: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(pipelineStateIterationCountDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(pipelineStateIterationCountDefault)),
       S.annotateKey({ description: "Completed loop iterations." })
     ),

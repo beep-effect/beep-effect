@@ -6,10 +6,11 @@
  */
 
 import { $TikaId } from "@beep/identity";
-import { PosInt, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Effect, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 
 const $I = $TikaId.create("Tika.config");
 

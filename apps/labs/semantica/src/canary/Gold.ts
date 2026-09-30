@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Console, Effect, FileSystem, Number as N, Order, Path, Result, Struct, Tuple } from "effect";
@@ -145,11 +145,11 @@ interface GoldProposalOptions {
  * @since 0.0.0
  */
 type GoldProposalResultFields = {
-  readonly accepted: typeof NonNegativeInt;
+  readonly accepted: typeof S.Natural;
   readonly files: S.$Array<typeof GoldFile>;
   readonly fraction: typeof UnitInterval;
   readonly reference: typeof GoldReferenceOutcome;
-  readonly total: typeof NonNegativeInt;
+  readonly total: typeof S.Natural;
 };
 
 const GoldProposalResultBase: S.Class<
@@ -158,11 +158,11 @@ const GoldProposalResultBase: S.Class<
   {}
 > = S.Class<GoldProposalResult>($I`GoldProposalResult`)<GoldProposalResultFields>(
   {
-    accepted: NonNegativeInt,
+    accepted: S.Natural,
     files: S.Array(GoldFile),
     fraction: UnitInterval,
     reference: GoldReferenceOutcome,
-    total: NonNegativeInt,
+    total: S.Natural,
   },
   $I.annote("GoldProposalResult", {
     description: "Gold proposal counts, files written in this invocation, and reference-write disposition.",
@@ -395,14 +395,14 @@ const makeVerifiedGoldLabel = Effect.fnUntraced(function* (
         GoldRelationLabel.makeEffect({
           endChar: anchor.endChar,
           object: resolved.object.quote,
-          objectEndChar: NonNegativeInt.make(resolved.object.endChar),
-          objectStartChar: NonNegativeInt.make(resolved.object.startChar),
+          objectEndChar: S.Natural.make(resolved.object.endChar),
+          objectStartChar: S.Natural.make(resolved.object.startChar),
           predicate: label.predicate,
           quote: anchor.quote,
           startChar: anchor.startChar,
           subject: resolved.subject.quote,
-          subjectEndChar: NonNegativeInt.make(resolved.subject.endChar),
-          subjectStartChar: NonNegativeInt.make(resolved.subject.startChar),
+          subjectEndChar: S.Natural.make(resolved.subject.endChar),
+          subjectStartChar: S.Natural.make(resolved.subject.startChar),
           verified: false,
         }).pipe(Effect.result, Effect.map(Result.getSuccess)),
     });
@@ -778,11 +778,11 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   if (!completeRun) {
     yield* Console.log("gold.json not written; this invocation selected only part of the frozen gold set");
     return GoldProposalResult.make({
-      accepted: NonNegativeInt.make(accepted),
+      accepted: S.Natural.make(accepted),
       files: A.map(proposed, (item) => item.file),
       fraction: UnitInterval.make(fraction),
       reference: GoldReferenceNotWritten.make({ missingJobs: inventory.missingJobs }),
-      total: NonNegativeInt.make(total),
+      total: S.Natural.make(total),
     });
   }
   return yield* A.match(inventory.missingJobs, {
@@ -802,11 +802,11 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
       );
       yield* writeJsonAtomic(path.join(options.outputDirectory, "gold.json"), referenceJson);
       return GoldProposalResult.make({
-        accepted: NonNegativeInt.make(accepted),
+        accepted: S.Natural.make(accepted),
         files: A.map(proposed, (item) => item.file),
         fraction: UnitInterval.make(fraction),
         reference: GoldReferenceWritten.make({ reference }),
-        total: NonNegativeInt.make(total),
+        total: S.Natural.make(total),
       });
     }),
     onNonEmpty: (missingJobs) =>
@@ -818,11 +818,11 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
       ).pipe(
         Effect.as(
           GoldProposalResult.make({
-            accepted: NonNegativeInt.make(accepted),
+            accepted: S.Natural.make(accepted),
             files: A.map(proposed, (item) => item.file),
             fraction: UnitInterval.make(fraction),
             reference: GoldReferenceNotWritten.make({ missingJobs }),
-            total: NonNegativeInt.make(total),
+            total: S.Natural.make(total),
           })
         )
       ),

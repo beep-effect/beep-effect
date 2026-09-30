@@ -23,7 +23,7 @@ import {
   DmsRemoteItem,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { Context, Effect, HashMap, Layer, Number as N, pipe, Ref } from "effect";
@@ -115,22 +115,22 @@ export type DmsMirrorFixtureVerb = typeof DmsMirrorFixtureVerb.Type;
  */
 export class DmsMirrorFixtureCounts extends S.Class<DmsMirrorFixtureCounts>($I`DmsMirrorFixtureCounts`)(
   {
-    ensureFolder: NonNegativeInt.annotateKey({
+    ensureFolder: S.Natural.annotateKey({
       description: "Number of ensureFolder calls observed by the fixture.",
     }),
-    moveItem: NonNegativeInt.annotateKey({
+    moveItem: S.Natural.annotateKey({
       description: "Number of moveItem calls observed by the fixture.",
     }),
-    pollEvents: NonNegativeInt.annotateKey({
+    pollEvents: S.Natural.annotateKey({
       description: "Number of pollEvents calls observed by the fixture.",
     }),
-    renameItem: NonNegativeInt.annotateKey({
+    renameItem: S.Natural.annotateKey({
       description: "Number of renameItem calls observed by the fixture.",
     }),
-    uploadFile: NonNegativeInt.annotateKey({
+    uploadFile: S.Natural.annotateKey({
       description: "Number of uploadFile calls observed by the fixture.",
     }),
-    uploadFileVersion: NonNegativeInt.annotateKey({
+    uploadFileVersion: S.Natural.annotateKey({
       description: "Number of uploadFileVersion calls observed by the fixture.",
     }),
   },
@@ -170,7 +170,7 @@ export class DmsMirrorFixtureNode extends S.Class<DmsMirrorFixtureNode>($I`DmsMi
     name: S.NonEmptyString.annotateKey({
       description: "Remote item name of the node.",
     }),
-    version: NonNegativeInt.annotateKey({
+    version: S.Natural.annotateKey({
       description: "Number of content versions the node received; folders stay at one.",
     }),
   },
@@ -284,7 +284,7 @@ const nodeOf = (item: FixtureItemState): DmsMirrorFixtureNode =>
     contentDigest: item.contentDigest,
     itemKind: item.itemKind,
     name: item.name,
-    version: NonNegativeInt.make(item.version),
+    version: S.Natural.make(item.version),
   });
 
 /**
@@ -513,8 +513,7 @@ export const makeDmsMirrorFixture = Effect.fn($I`makeDmsMirrorFixture`)(function
   const handle = DmsMirrorFixtureHandle.of({
     counts: Effect.gen(function* () {
       const counts = yield* Ref.get(countsRef);
-      const countOf = (verb: DmsMirrorFixtureVerb) =>
-        NonNegativeInt.make(O.getOrElse(HashMap.get(counts, verb), () => 0));
+      const countOf = (verb: DmsMirrorFixtureVerb) => S.Natural.make(O.getOrElse(HashMap.get(counts, verb), () => 0));
       return DmsMirrorFixtureCounts.make({
         ensureFolder: countOf(DmsMirrorFixtureVerb.Enum.ensureFolder),
         moveItem: countOf(DmsMirrorFixtureVerb.Enum.moveItem),

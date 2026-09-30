@@ -8,7 +8,6 @@ import {
   PffexportEngineConfig,
   PffexportMessageRecord,
 } from "@beep/libpff";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -55,7 +54,7 @@ const liveOperation = Effect.fn("LibpffLive.operation")(function* (pstPath: stri
       locator: ArtifactLocator.make({ kind: "file", value: locatorValue }),
       name: path.basename(pstPath),
       relativePath,
-      sizeBytes: NonNegativeInt.make(Number(stat.size)),
+      sizeBytes: S.Natural.make(Number(stat.size)),
       bytes: sourceBytes,
     }),
   });

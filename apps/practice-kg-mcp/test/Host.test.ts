@@ -4,7 +4,6 @@ import {
   PracticeKgSchemaVersions,
   PracticeKgSourceRuns,
 } from "@beep/law-practice-server";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -23,10 +22,10 @@ const manifest = PracticeKgBundleManifest.make({
   bundleVersion: "2026.08.1",
   corpusRootExpected: true,
   counts: PracticeKgCounts.make({
-    documents: NonNegativeInt.make(2),
-    edges: NonNegativeInt.make(3),
-    emails: NonNegativeInt.make(1),
-    nodes: NonNegativeInt.make(4),
+    documents: S.Natural.make(2),
+    edges: S.Natural.make(3),
+    emails: S.Natural.make(1),
+    nodes: S.Natural.make(4),
   }),
   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "1" }),
   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "excluded" }),

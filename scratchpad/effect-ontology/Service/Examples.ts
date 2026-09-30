@@ -13,7 +13,7 @@
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, PosInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Layer, Match } from "effect";
 import type * as O from "effect/Option";
@@ -28,10 +28,11 @@ import type {
 import { ExampleRetrievalOptions, ExamplesRepository, ScoredExample } from "../Repository/Examples.ts";
 import type { LlmExampleRow } from "../Repository/schema.ts";
 import { EmbeddingService } from "./Embedding.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Examples");
 
-const PositiveInt = S.Int.check(S.isGreaterThan(0)).pipe(
+const PositiveInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).pipe(
   $I.annoteSchema("PositiveInt", {
     description: "Positive integer used for example-retrieval limits.",
   })

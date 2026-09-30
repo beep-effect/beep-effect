@@ -10,10 +10,10 @@
  */
 
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
-import { NonNegativeInt } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Layer, Stream } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import {
   AssistantTurnBlockEvent,
   AssistantTurnFinalization,
@@ -108,9 +108,9 @@ const toIndexedBlocks = (history: ReadonlyArray<TurnHistoryItem>): ReadonlyArray
  * @since 0.0.0
  */
 export const fixtureProviderUsage = ProviderUsageMetadata.make({
-  inputTokens: NonNegativeInt.make(12),
+  inputTokens: S.Natural.make(12),
   model: "fixture",
-  outputTokens: NonNegativeInt.make(8),
+  outputTokens: S.Natural.make(8),
   provider: "fixture",
   stopReason: O.some("stop"),
 });

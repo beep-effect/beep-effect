@@ -7,7 +7,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 
@@ -15,7 +15,7 @@ const $I = $LawPracticeDomainId.create("values/DurableLocatorOptions/DurableLoca
 
 const DurableLocatorSpace = LiteralKit(["original", "clean"]);
 
-const durableLocatorOptionFieldsContextLengthDefault = NonNegativeInt.make(32);
+const durableLocatorOptionFieldsContextLengthDefault = S.Natural.make(32);
 const DurableLocatorOptionFields = {
   fullSpan: SchemaUtils.BoolKeyDefaultFalse.pipe(
     S.annotateKey({
@@ -23,7 +23,7 @@ const DurableLocatorOptionFields = {
         "Use fullSpan (case name through final parenthetical) when present, else the core span. Default false.",
     })
   ),
-  contextLength: NonNegativeInt.pipe(
+  contextLength: S.Natural.pipe(
     S.withConstructorDefault(Effect.succeed(durableLocatorOptionFieldsContextLengthDefault)),
     S.withDecodingDefaultTypeKey(Effect.succeed(durableLocatorOptionFieldsContextLengthDefault)),
     S.annotateKey({
@@ -43,13 +43,13 @@ const DurableLocatorOptionFields = {
  * **Example** (Build custom locator options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { DurableLocatorOptions } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const options = DurableLocatorOptions.make({
  *   space: "clean",
  *   fullSpan: true,
- *   contextLength: NonNegativeInt.make(64),
+ *   contextLength: S.Natural.make(64),
  * })
  *
  * console.log(options.space) // "clean"

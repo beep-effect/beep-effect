@@ -6,7 +6,6 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
@@ -27,23 +26,23 @@ const $I = $LawPracticeDomainId.create("values/PublicLawCitation/PublicLawCitati
  * **Example** (Make a public-law citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PublicLawCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = PublicLawCitation.make({
  *   text: "Pub. L. No. 116-136",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "Pub. L. No. 116-136",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
- *   congress: NonNegativeInt.make(116),
- *   lawNumber: NonNegativeInt.make(136),
+ *   patternsChecked: S.Natural.make(1),
+ *   congress: S.Natural.make(116),
+ *   lawNumber: S.Natural.make(136),
  * })
  *
  * console.log(citation.type) // "publicLaw"
@@ -56,10 +55,10 @@ export class PublicLawCitation extends S.Class<PublicLawCitation>($I`PublicLawCi
   {
     ...CitationBase.fields,
     type: S.tag("publicLaw"),
-    congress: NonNegativeInt.annotateKey({
+    congress: S.Natural.annotateKey({
       description: "Congress number (e.g., 116).",
     }),
-    lawNumber: NonNegativeInt.annotateKey({
+    lawNumber: S.Natural.annotateKey({
       description: "Law number within that Congress.",
     }),
     title: S.String.pipe(

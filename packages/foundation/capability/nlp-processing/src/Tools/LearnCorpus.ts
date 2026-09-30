@@ -6,7 +6,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
 import { AiToolError } from "./_schemas.ts";
@@ -43,11 +42,11 @@ class LearnCorpusParameters extends S.Class<LearnCorpusParameters>($I`LearnCorpu
 class LearnCorpusSuccess extends S.Class<LearnCorpusSuccess>($I`LearnCorpusSuccess`)(
   {
     corpusId: S.String,
-    learnedCount: NonNegativeInt,
+    learnedCount: S.Natural,
     reindexRequired: S.Boolean,
-    skippedCount: NonNegativeInt,
-    totalDocuments: NonNegativeInt,
-    vocabularySize: NonNegativeInt,
+    skippedCount: S.Natural,
+    totalDocuments: S.Natural,
+    vocabularySize: S.Natural,
   },
   $I.annote("LearnCorpusSuccess", {
     description: "Learning result summary for an incremental corpus update.",

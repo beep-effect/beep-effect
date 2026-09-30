@@ -15,7 +15,7 @@ import {
 } from "@beep/file-processing/Artifact";
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
-import { NonNegativeInt, PosixPath, Sha256HexFromBytes } from "@beep/schema";
+import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
 import { decodeXmlTextAs } from "@beep/schema/Xml";
 import { DateTime, Effect } from "effect";
 import * as A from "effect/Array";
@@ -226,7 +226,7 @@ const makePdfOperation = (id: string, digest: Sha256Hex, bytes: Uint8Array): Ext
       locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
       name: `${id}.pdf`,
       relativePath,
-      sizeBytes: NonNegativeInt.make(bytes.byteLength),
+      sizeBytes: S.Natural.make(bytes.byteLength),
     }),
   });
 };

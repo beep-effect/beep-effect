@@ -9,7 +9,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { IRI } from "@beep/rdf";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { DateTime, Effect, Order, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -223,8 +223,8 @@ export type MentionId = typeof MentionId.Type;
 
 const LegacyMentionEvidence = S.Struct({
   text: S.NonEmptyString,
-  startOffset: NonNegativeInt,
-  endOffset: NonNegativeInt,
+  startOffset: S.Natural,
+  endOffset: S.Natural,
 });
 type LegacyMentionEvidenceValue = typeof LegacyMentionEvidence.Type;
 
@@ -259,8 +259,8 @@ export const MentionEvidence = LegacyMentionEvidence.pipe(
     encode: SchemaGetter.transform(
       (anchor: typeof TextAnchor.Encoded): LegacyMentionEvidenceValue => ({
         text: anchor.quote,
-        startOffset: NonNegativeInt.make(anchor.startChar),
-        endOffset: NonNegativeInt.make(anchor.endChar),
+        startOffset: S.Natural.make(anchor.startChar),
+        endOffset: S.Natural.make(anchor.endChar),
       })
     ),
   }),

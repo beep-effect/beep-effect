@@ -13,7 +13,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Struct from "@beep/utils/Struct";
 import { Effect, Inspectable, Order, pipe } from "effect";
@@ -25,6 +24,7 @@ import * as Str from "effect/String";
 import { IdempotencyKey } from "../Domain/Identity.ts";
 import { dual4 } from "./Dual.ts";
 import { sha256Sync, sha256SyncFull } from "./Hash.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Utils/IdempotencyKey");
 

@@ -107,15 +107,15 @@ const historyStubCard = Effect.fnUntraced(function* (
  * **Example** (Sift history into cards)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
  * import { historySiftImpl } from "@beep/repo-cli/commands/Research/internal/HistorySift"
  * import { ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const program = historySiftImpl(
  *   ResearchHistorySiftOptions.make({
  *     browser: "all",
- *     sinceDays: NonNegativeInt.make(7),
+ *     sinceDays: S.Natural.make(7),
  *     vaultRoot: "/repo/.research"
  *   })
  * )

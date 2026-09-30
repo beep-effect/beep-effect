@@ -12,7 +12,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Context, Duration, Effect, Fiber, Layer, Schedule, Stream } from "effect";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
@@ -141,7 +141,7 @@ const makeEventBridge = Effect.gen(function* () {
             type: "event",
             entry,
             ontologyId,
-            timestamp: NonNegativeInt.make(entry.createdAt.epochMilliseconds),
+            timestamp: S.Natural.make(entry.createdAt.epochMilliseconds),
           };
           yield* broadcastHub.broadcast(ontologyId, broadcastEvent);
           yield* Effect.logDebug("Event bridged to WebSocket", {

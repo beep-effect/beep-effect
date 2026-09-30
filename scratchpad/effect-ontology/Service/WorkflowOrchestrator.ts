@@ -18,7 +18,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
   Cause,
@@ -435,7 +434,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
         ontologyVersion,
         createdAt: workflowStart,
         updatedAt: workflowStart,
-        documentCount: NonNegativeInt.make(A.length(manifest.documents)),
+        documentCount: S.Natural.make(A.length(manifest.documents)),
       });
       yield* emitState(pendingState);
 
@@ -456,9 +455,9 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
         ontologyVersion,
         createdAt: workflowStart,
         updatedAt: yield* DateTime.now,
-        documentsTotal: NonNegativeInt.make(manifest.documents.length),
-        documentsClassified: NonNegativeInt.make(0),
-        documentsFailed: NonNegativeInt.make(0),
+        documentsTotal: S.Natural.make(manifest.documents.length),
+        documentsClassified: S.Natural.make(0),
+        documentsFailed: S.Natural.make(0),
         enrichedManifestUri: O.none(),
       });
       yield* emitState(preprocessingState);
@@ -475,10 +474,10 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             }).execute
           : Effect.succeed({
               enrichedManifestUri: GcsUri.decodeUnknownSync(manifestUri),
-              totalDocuments: NonNegativeInt.make(manifest.documents.length),
-              classifiedCount: NonNegativeInt.make(0),
-              failedCount: NonNegativeInt.make(0),
-              totalEstimatedTokens: NonNegativeInt.make(0),
+              totalDocuments: S.Natural.make(manifest.documents.length),
+              classifiedCount: S.Natural.make(0),
+              failedCount: S.Natural.make(0),
+              totalEstimatedTokens: S.Natural.make(0),
               averageComplexity: UnitInterval.make(0.5),
               durationMs: 0,
             })
@@ -492,9 +491,9 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
               ontologyVersion,
               createdAt: workflowStart,
               updatedAt: yield* DateTime.now,
-              documentsTotal: NonNegativeInt.make(result.totalDocuments),
-              documentsClassified: NonNegativeInt.make(result.classifiedCount),
-              documentsFailed: NonNegativeInt.make(result.failedCount),
+              documentsTotal: S.Natural.make(result.totalDocuments),
+              documentsClassified: S.Natural.make(result.classifiedCount),
+              documentsFailed: S.Natural.make(result.failedCount),
               enrichedManifestUri: O.some(result.enrichedManifestUri),
             });
             yield* emitState(updatedPreprocessingState);
@@ -509,10 +508,10 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             });
             return {
               enrichedManifestUri: GcsUri.decodeUnknownSync(manifestUri),
-              totalDocuments: NonNegativeInt.make(manifest.documents.length),
-              classifiedCount: NonNegativeInt.make(0),
-              failedCount: NonNegativeInt.make(0),
-              totalEstimatedTokens: NonNegativeInt.make(0),
+              totalDocuments: S.Natural.make(manifest.documents.length),
+              classifiedCount: S.Natural.make(0),
+              failedCount: S.Natural.make(0),
+              totalEstimatedTokens: S.Natural.make(0),
               averageComplexity: UnitInterval.make(0.5),
               durationMs: 0,
             };
@@ -680,9 +679,9 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
                       startedAt,
                       completedAt,
                       graphUri: GcsUri.decodeUnknownSync(result.output.graphUri),
-                      entityCount: NonNegativeInt.make(result.output.entityCount),
-                      relationCount: NonNegativeInt.make(result.output.relationCount),
-                      claimCount: NonNegativeInt.make(result.output.claimCount),
+                      entityCount: S.Natural.make(result.output.entityCount),
+                      relationCount: S.Natural.make(result.output.relationCount),
+                      claimCount: S.Natural.make(result.output.claimCount),
                     }
                   : s
               )
@@ -701,9 +700,9 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             ontologyVersion,
             createdAt: workflowStart,
             updatedAt: yield* DateTime.now,
-            documentsTotal: NonNegativeInt.make(manifest.documents.length),
-            documentsCompleted: NonNegativeInt.make(successCount),
-            documentsFailed: NonNegativeInt.make(failedCount),
+            documentsTotal: S.Natural.make(manifest.documents.length),
+            documentsCompleted: S.Natural.make(successCount),
+            documentsFailed: S.Natural.make(failedCount),
             currentDocumentId: O.some(doc.documentId),
             documentStatuses: currentStatuses,
           });
@@ -751,8 +750,8 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
         createdAt: workflowStart,
         updatedAt: yield* DateTime.now,
         extractionOutputUri: successfulResults[0]?.graphUri ?? manifestUri,
-        entitiesTotal: NonNegativeInt.make(0),
-        clustersFormed: NonNegativeInt.make(0),
+        entitiesTotal: S.Natural.make(0),
+        clustersFormed: S.Natural.make(0),
       });
       yield* emitState(resolvingState);
 
@@ -854,8 +853,8 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             batchId,
             validationId: `val-${batchId}-${yield* Clock.currentTimeMillis}`,
             ontologyId: manifest.ontologyId,
-            errorCount: NonNegativeInt.make(validationResult.violations),
-            warningCount: NonNegativeInt.make(0),
+            errorCount: S.Natural.make(validationResult.violations),
+            warningCount: S.Natural.make(0),
             reportUri: O.fromNullishOr(validationResult.reportUri),
             timestamp: yield* DateTime.now,
           })
@@ -912,8 +911,8 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
         createdAt: workflowStart,
         updatedAt: yield* DateTime.now,
         validatedGraphUri: validationResult.validatedUri,
-        triplesTotal: NonNegativeInt.make(0),
-        triplesIngested: NonNegativeInt.make(0),
+        triplesTotal: S.Natural.make(0),
+        triplesIngested: S.Natural.make(0),
       });
       yield* emitState(ingestingState);
 
@@ -941,14 +940,14 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
         updatedAt: workflowEnd,
         canonicalGraphUri: ingestionResult.canonicalUri,
         stats: {
-          documentsProcessed: NonNegativeInt.make(successfulResults.length),
-          documentsSucceeded: NonNegativeInt.make(successfulResults.length),
-          documentsFailed: NonNegativeInt.make(failedResults.length),
-          entitiesExtracted: NonNegativeInt.make(successfulResults.reduce((sum, r) => sum + r.entityCount, 0)),
-          relationsExtracted: NonNegativeInt.make(successfulResults.reduce((sum, r) => sum + r.relationCount, 0)),
-          claimsExtracted: NonNegativeInt.make(successfulResults.reduce((sum, r) => sum + (r.claimCount ?? 0), 0)),
-          clustersResolved: NonNegativeInt.make(resolutionResult.clustersFormed),
-          triplesIngested: NonNegativeInt.make(ingestionResult.triplesIngested),
+          documentsProcessed: S.Natural.make(successfulResults.length),
+          documentsSucceeded: S.Natural.make(successfulResults.length),
+          documentsFailed: S.Natural.make(failedResults.length),
+          entitiesExtracted: S.Natural.make(successfulResults.reduce((sum, r) => sum + r.entityCount, 0)),
+          relationsExtracted: S.Natural.make(successfulResults.reduce((sum, r) => sum + r.relationCount, 0)),
+          claimsExtracted: S.Natural.make(successfulResults.reduce((sum, r) => sum + (r.claimCount ?? 0), 0)),
+          clustersResolved: S.Natural.make(resolutionResult.clustersFormed),
+          triplesIngested: S.Natural.make(ingestionResult.triplesIngested),
           totalDurationMs: DateTime.distance(workflowStart, workflowEnd),
         },
         documentStatuses: _documentStatuses,

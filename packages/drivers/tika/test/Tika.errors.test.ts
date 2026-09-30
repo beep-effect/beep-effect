@@ -1,4 +1,3 @@
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import {
   makeTikaError,
@@ -50,7 +49,7 @@ describe("TikaErrorReason", () => {
     expect(
       encode(
         TikaError,
-        TikaError.fromReason("response-status", TikaErrorOptions.make({ statusCode: NonNegativeInt.make(415) }))
+        TikaError.fromReason("response-status", TikaErrorOptions.make({ statusCode: S.Natural.make(415) }))
       )
     ).toEqual({
       _tag: "TikaError",
@@ -94,11 +93,11 @@ describe("tikaOperationError", () => {
       const operation = yield* makeExtractOperationFixture("plain-text");
       const unsupported = tikaOperationError(
         operation,
-        makeTikaError("response-status", { statusCode: NonNegativeInt.make(415) })
+        makeTikaError("response-status", { statusCode: S.Natural.make(415) })
       );
       const failed = tikaOperationError(
         operation,
-        makeTikaError("response-status", { statusCode: NonNegativeInt.make(500) })
+        makeTikaError("response-status", { statusCode: S.Natural.make(500) })
       );
 
       expect(unsupported.reason).toBe("unsupported-file-format");

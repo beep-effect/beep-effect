@@ -10,7 +10,7 @@ import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { annotateFourHints, destructiveWriteToolHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { ChangeOperation, SessionChangeDelta, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { PrefixMap } from "@beep/rdf/Rdf";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
 import { Tool, Toolkit } from "effect/ai";
 import * as S from "effect/Schema";
@@ -73,11 +73,11 @@ export type OntologyFingerprint = typeof OntologyFingerprint.Type;
  */
 export class OntologyToolBudgets extends S.Class<OntologyToolBudgets>($I`OntologyToolBudgets`)(
   {
-    maxChangeOperations: NonNegativeInt,
-    maxQueryResults: NonNegativeInt,
-    maxSearchResults: NonNegativeInt,
-    maxValidationResults: NonNegativeInt,
-    reasonerDriftCap: NonNegativeInt,
+    maxChangeOperations: S.Natural,
+    maxQueryResults: S.Natural,
+    maxSearchResults: S.Natural,
+    maxValidationResults: S.Natural,
+    reasonerDriftCap: S.Natural,
   },
   $I.annote("OntologyToolBudgets", { description: "Server-owned static ceilings for ontology tools." })
 ) {}
@@ -92,11 +92,11 @@ export class OntologyToolBudgets extends S.Class<OntologyToolBudgets>($I`Ontolog
  * @since 0.0.0
  */
 export const ontologyToolBudgets = OntologyToolBudgets.make({
-  maxChangeOperations: NonNegativeInt.make(256),
-  maxQueryResults: NonNegativeInt.make(200),
-  maxSearchResults: NonNegativeInt.make(100),
-  maxValidationResults: NonNegativeInt.make(100),
-  reasonerDriftCap: NonNegativeInt.make(64),
+  maxChangeOperations: S.Natural.make(256),
+  maxQueryResults: S.Natural.make(200),
+  maxSearchResults: S.Natural.make(100),
+  maxValidationResults: S.Natural.make(100),
+  reasonerDriftCap: S.Natural.make(64),
 });
 
 /** Budget family refused by the toolkit.
@@ -162,8 +162,8 @@ export class OntologyBudgetRefusal extends S.TaggedError<OntologyBudgetRefusal>(
   "OntologyBudgetRefusal",
   {
     kind: OntologyBudgetKind,
-    actual: NonNegativeInt,
-    limit: NonNegativeInt,
+    actual: S.Natural,
+    limit: S.Natural,
     guidance: S.NonEmptyString,
     recoverable: S.Literal(true),
   },
@@ -186,8 +186,8 @@ export class OntologyReasonerDriftRefusal extends S.TaggedError<OntologyReasoner
 )(
   "OntologyReasonerDriftRefusal",
   {
-    actual: NonNegativeInt,
-    cap: NonNegativeInt,
+    actual: S.Natural,
+    cap: S.Natural,
     guidance: S.NonEmptyString,
     recoverable: S.Literal(true),
   },
@@ -344,7 +344,7 @@ export class OpenInspectResponse extends S.Class<OpenInspectResponse>($I`OpenIns
     path: OntologyFilePath,
     sessionId: SessionId,
     fingerprint: OntologyFingerprint,
-    quadCount: NonNegativeInt,
+    quadCount: S.Natural,
     prefixes: PrefixMap,
   },
   $I.annote("OpenInspectResponse", { description: "Inspection metadata for a saved Turtle ontology." })
@@ -414,7 +414,7 @@ export class OntologySearchResponse extends S.Class<OntologySearchResponse>($I`O
   {
     fingerprint: OntologyFingerprint,
     results: S.Array(OntologyResourceSummary),
-    resultCount: NonNegativeInt,
+    resultCount: S.Natural,
     truncated: S.Boolean,
   },
   $I.annote("OntologySearchResponse", { description: "Server-bounded ontology resource search results." })
@@ -655,7 +655,7 @@ export class PublishProvenanceRequest extends S.Class<PublishProvenanceRequest>(
  * @since 0.0.0
  */
 export class PublishProvenanceResponse extends S.Class<PublishProvenanceResponse>($I`PublishProvenanceResponse`)(
-  { provPath: OntologyFilePath, publishedBytes: NonNegativeInt, status: NonNegativeInt },
+  { provPath: OntologyFilePath, publishedBytes: S.Natural, status: S.Natural },
   $I.annote("PublishProvenanceResponse", { description: "Result of a governed provenance publication." })
 ) {}
 

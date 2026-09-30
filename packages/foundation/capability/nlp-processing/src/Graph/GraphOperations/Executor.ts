@@ -25,10 +25,10 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { A, dual, flow, P } from "@beep/utils";
 import { Clock, Context, Duration, Effect, Layer, Match, Number as N, Result } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Obs from "../../internal/observability.ts";
 import { getChildren, toArray } from "../EffectGraph.ts";
 import { ExecutionError, TimeoutError } from "./Errors.ts";
@@ -312,12 +312,12 @@ const foldApplications: {
   (applications: ReadonlyArray<Application>, nodesProcessed: number, durationMs: number): ExecutionFold => ({
     errors: A.flatMap(applications, (r) => r.errors),
     metrics: Types.ExecutionMetrics.make({
-      cacheHits: NonNegativeInt.make(A.length(A.filter(applications, (r) => r.fromCache))),
-      cacheMisses: NonNegativeInt.make(A.length(A.filter(applications, (r) => !r.fromCache))),
+      cacheHits: S.Natural.make(A.length(A.filter(applications, (r) => r.fromCache))),
+      cacheMisses: S.Natural.make(A.length(A.filter(applications, (r) => !r.fromCache))),
       duration: Duration.millis(durationMs),
-      nodesCreated: NonNegativeInt.make(A.reduce(applications, 0, (sum, r) => sum + A.length(r.newNodes))),
-      nodesProcessed: NonNegativeInt.make(nodesProcessed),
-      tokensConsumed: NonNegativeInt.make(0),
+      nodesCreated: S.Natural.make(A.reduce(applications, 0, (sum, r) => sum + A.length(r.newNodes))),
+      nodesProcessed: S.Natural.make(nodesProcessed),
+      tokensConsumed: S.Natural.make(0),
     }),
     newNodes: A.flatMap(applications, (r) => r.newNodes),
   })

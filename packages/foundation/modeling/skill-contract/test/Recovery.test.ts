@@ -1,5 +1,3 @@
-import { PosInt } from "@beep/schema/Int";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import {
   BoundedRecoveryPolicy,
@@ -22,6 +20,8 @@ import { Duration, Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeBudgetDuration = S.decodeEffect(BudgetDuration);
 const isBudgetDuration = S.is(BudgetDuration);
@@ -46,16 +46,16 @@ const budget = RecoveryBudget.make({
   totalTimeout: BudgetDuration.make(Duration.seconds(2)),
 });
 const consumed = RecoveryBudgetConsumed.make({
-  attempts: NonNegativeInt.make(2),
+  attempts: S.Natural.make(2),
   elapsed: BudgetDuration.make(Duration.seconds(2)),
-  operations: NonNegativeInt.make(3),
+  operations: S.Natural.make(3),
 });
 const attempt = (ordinal: 1 | 2) =>
   RecoveryAttemptReceipt.make({
     attempt: PosInt.make(ordinal),
     endedAt: `2026-08-24T00:00:0${ordinal}.000Z`,
     observations: [subject],
-    operations: NonNegativeInt.make(ordinal),
+    operations: S.Natural.make(ordinal),
     outcome: ordinal === 1 ? "failed" : "aborted",
     reason: O.none(),
     startedAt: `2026-08-24T00:00:0${ordinal - 1}.000Z`,

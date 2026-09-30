@@ -6,13 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import {
-  LiteralKit,
-  NonNegativeInt,
-  PosInt,
-  SafeObject as SafeObjectSchema,
-  SchemaUtils,
-} from "@beep/schema";
+import { LiteralKit, SafeObject as SafeObjectSchema, SchemaUtils } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, Str, Struct, thunkNull } from "@beep/utils";
 import { Cause, Clock, DateTime, Effect, Exit, flow, HashMap, HashSet, Order, Ref, Result, Stream } from "effect";
@@ -33,6 +27,7 @@ import {
   CodeModeURLSearchParams,
   isCodeModeValue,
 } from "./Codemode.values.ts";
+import { PosInt } from "./PosInt.ts";
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-runtime");
 const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
@@ -128,7 +123,7 @@ export class ToolCall extends S.Class<ToolCall>($I`ToolCall`)(
  */
 export class ToolCallStarted extends S.Class<ToolCallStarted>($I`ToolCallStarted`)(
   {
-    index: NonNegativeInt,
+    index: S.Natural,
     name: TrimmedNonEmptyString,
     input: S.Unknown,
   },
@@ -138,17 +133,17 @@ export class ToolCallStarted extends S.Class<ToolCallStarted>($I`ToolCallStarted
 ) {
   static readonly new = (index: number, call: ToolCall, input: unknown): ToolCallStarted =>
     ToolCallStarted.make({
-      index: NonNegativeInt.make(index),
+      index: S.Natural.make(index),
       name: call.name,
       input,
     });
 }
 
 const endedFields = {
-  index: NonNegativeInt,
+  index: S.Natural,
   name: TrimmedNonEmptyString,
   input: S.Unknown,
-  durationMs: NonNegativeInt,
+  durationMs: S.Natural,
 };
 
 /**
@@ -190,7 +185,7 @@ export class ToolCallSucceeded extends S.TaggedClass<ToolCallSucceeded>($I`ToolC
       index: call.index,
       name: call.name,
       input: call.input,
-      durationMs: NonNegativeInt.make(durationMs),
+      durationMs: S.Natural.make(durationMs),
     });
 }
 
@@ -233,7 +228,7 @@ export class ToolCallInterrupted extends S.TaggedClass<ToolCallInterrupted>($I`T
       index: call.index,
       name: call.name,
       input: call.input,
-      durationMs: NonNegativeInt.make(durationMs),
+      durationMs: S.Natural.make(durationMs),
     });
 }
 
@@ -272,7 +267,7 @@ export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFai
       index: call.index,
       name: call.name,
       input: call.input,
-      durationMs: NonNegativeInt.make(durationMs),
+      durationMs: S.Natural.make(durationMs),
       message,
     });
 }
@@ -327,7 +322,7 @@ export type ToolCallHooks<R = never> = {
 };
 
 const searchInputLimitDefault = PosInt.make(10);
-const searchInputOffsetDefault = NonNegativeInt.make(0);
+const searchInputOffsetDefault = S.Natural.make(0);
 /**
  * Search query and pagination controls for the built-in discovery function.
  *
@@ -357,7 +352,7 @@ export class SearchInput extends S.Class<SearchInput>($I`SearchInput`)(
     query: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     namespace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     limit: PosInt.pipe(S.withConstructorDefault(Effect.succeed(searchInputLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(searchInputLimitDefault))),
-    offset: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(searchInputOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(searchInputOffsetDefault))),
+    offset: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(searchInputOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(searchInputOffsetDefault))),
   },
   $I.annote("SearchInput", {
     description: "Search query and pagination controls for the built-in discovery function.",
@@ -368,7 +363,7 @@ export class SearchInput extends S.Class<SearchInput>($I`SearchInput`)(
       query: O.fromNullishOr(query),
       namespace: O.fromNullishOr(namespace),
       limit: PosInt.make(limit),
-      offset: NonNegativeInt.make(offset),
+      offset: S.Natural.make(offset),
     });
 }
 const decodeUnknownSearchInput = S.decodeUnknownEffect(SearchInput);
@@ -431,8 +426,8 @@ export class SearchItem extends S.Class<SearchItem>($I`SearchItem`)(
 export class SearchOutput extends S.Class<SearchOutput>($I`SearchOutput`)(
   {
     items: S.Array(SearchItem),
-    remaining: NonNegativeInt,
-    next: S.OptionFromNullOr(S.Struct({ offset: NonNegativeInt })).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    remaining: S.Natural,
+    next: S.OptionFromNullOr(S.Struct({ offset: S.Natural })).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SearchOutput", {
     description: "Paginated tool-discovery results.",
@@ -441,10 +436,10 @@ export class SearchOutput extends S.Class<SearchOutput>($I`SearchOutput`)(
   static readonly new = (items: ReadonlyArray<SearchItem>, remaining: number, nextOffset?: number): SearchOutput =>
     SearchOutput.make({
       items,
-      remaining: NonNegativeInt.make(remaining),
+      remaining: S.Natural.make(remaining),
       next: pipe(
         O.fromNullishOr(nextOffset),
-        O.map((offset) => ({ offset: NonNegativeInt.make(offset) }))
+        O.map((offset) => ({ offset: S.Natural.make(offset) }))
       ),
     });
 }
@@ -1326,14 +1321,14 @@ export type ToolRuntime<R = never> = {
 export const make: {
   <R>(
     handlers: AnyWithHandler,
-    maxToolCalls: O.Option<NonNegativeInt>,
+    maxToolCalls: O.Option<number>,
     index: ReadonlyArray<SearchEntry>,
     hooks?: ToolCallHooks<R>
   ): (toolkit: Toolkit.Any) => Effect.Effect<ToolRuntime<R>, ToolRuntimeError>;
   <R>(
     toolkit: Toolkit.Any,
     handlers: AnyWithHandler,
-    maxToolCalls: O.Option<NonNegativeInt>,
+    maxToolCalls: O.Option<number>,
     index: ReadonlyArray<SearchEntry>,
     hooks?: ToolCallHooks<R>
   ): Effect.Effect<ToolRuntime<R>, ToolRuntimeError>;
@@ -1342,7 +1337,7 @@ export const make: {
   Effect.fnUntraced(function* <R>(
     toolkit: Toolkit.Any,
     handlers: AnyWithHandler,
-    maxToolCalls: O.Option<NonNegativeInt>,
+    maxToolCalls: O.Option<number>,
     index: ReadonlyArray<SearchEntry>,
     hooks: ToolCallHooks<R> = {}
   ): Effect.fn.Return<ToolRuntime<R>, ToolRuntimeError> {

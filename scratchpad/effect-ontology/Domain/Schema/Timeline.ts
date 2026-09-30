@@ -8,7 +8,7 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { DateTime, Effect, SchemaGetter } from "effect";
 import * as A from "effect/Array";
@@ -16,6 +16,7 @@ import * as S from "effect/Schema";
 import { OptionalConfidence } from "../Model/shared.ts";
 import { ClaimRank, RdfObject, TextSpan } from "./KnowledgeModel.ts";
 import { UUID } from "../Identity.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Timeline");
 const Sha256HexString = Sha256Hex.pipe(S.decodeTo(S.String));
@@ -92,8 +93,8 @@ const BooleanQueryValue = BooleanQueryValueDefinition.pipe(
 );
 
 const NonNegativeIntQuery = S.FiniteFromString.pipe(
-  S.decodeTo(NonNegativeInt, {
-    decode: SchemaGetter.transform(NonNegativeInt.make),
+  S.decodeTo(S.Natural, {
+    decode: SchemaGetter.transform(S.Natural.make),
     encode: SchemaGetter.transform((value): number => value),
   }),
   $I.annoteSchema("NonNegativeIntQuery", {
@@ -364,8 +365,8 @@ export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`Art
   {
     article: ArticleSummary,
     claims: S.Array(ClaimWithRank).pipe(S.withConstructorDefault(Effect.succeed(articleDetailResponseClaimsDefault)), S.withDecodingDefaultType(Effect.succeed(articleDetailResponseClaimsDefault))),
-    entityCount: NonNegativeInt,
-    conflictCount: NonNegativeInt,
+    entityCount: S.Natural,
+    conflictCount: S.Natural,
   },
   $I.annote("ArticleDetailResponse", {
     description: "Detailed source article with ranked claims and non-negative entity and conflict counts.",
@@ -433,7 +434,7 @@ export class TimelineEntityResponse extends S.Class<TimelineEntityResponse>($I`T
 ) {}
 
 const timelineClaimsQueryLimitDefault = PosInt.make(20);
-const timelineClaimsQueryOffsetDefault = NonNegativeInt.make(0);
+const timelineClaimsQueryOffsetDefault = S.Natural.make(0);
 /**
  * Filter and pagination query for timeline claims.
  *
@@ -491,9 +492,9 @@ const timelineClaimsResponseClaimsDefault = A.empty<ClaimWithRank>();
 export class TimelineClaimsResponse extends S.Class<TimelineClaimsResponse>($I`TimelineClaimsResponse`)(
   {
     claims: S.Array(ClaimWithRank).pipe(S.withConstructorDefault(Effect.succeed(timelineClaimsResponseClaimsDefault)), S.withDecodingDefaultType(Effect.succeed(timelineClaimsResponseClaimsDefault))),
-    total: NonNegativeInt,
+    total: S.Natural,
     limit: PosInt,
-    offset: NonNegativeInt,
+    offset: S.Natural,
     hasMore: S.Boolean,
   },
   $I.annote("TimelineClaimsResponse", {
@@ -671,7 +672,7 @@ export class ConflictActor extends S.Class<ConflictActor>($I`ConflictActor`)(
 ) {}
 
 const conflictsQueryLimitDefault = PosInt.make(20);
-const conflictsQueryOffsetDefault = NonNegativeInt.make(0);
+const conflictsQueryOffsetDefault = S.Natural.make(0);
 /**
  * Filter and pagination query for detected claim conflicts.
  *
@@ -862,8 +863,8 @@ const conflictsResponseConflictsDefault = A.empty<ClaimConflict>();
 export class ConflictsResponse extends S.Class<ConflictsResponse>($I`ConflictsResponse`)(
   {
     conflicts: S.Array(ClaimConflict).pipe(S.withConstructorDefault(Effect.succeed(conflictsResponseConflictsDefault)), S.withDecodingDefaultType(Effect.succeed(conflictsResponseConflictsDefault))),
-    total: NonNegativeInt,
-    pendingCount: NonNegativeInt,
+    total: S.Natural,
+    pendingCount: S.Natural,
   },
   $I.annote("ConflictsResponse", {
     description: "Detected-conflict response with tagged conflicts and non-negative aggregate counts.",

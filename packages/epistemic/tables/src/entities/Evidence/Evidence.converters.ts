@@ -10,7 +10,6 @@ import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $EpistemicTablesId } from "@beep/identity/packages";
 import { TextAnchorFields } from "@beep/provenance/TextAnchor";
-import { NonNegativeInt } from "@beep/schema";
 import { pipe, Result } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -125,7 +124,7 @@ const decodePersistedEvidence = (row: EvidenceRow): Result.Result<Evidence, S.Sc
     decodeEvidenceRow(row),
     Result.orElse(() =>
       Result.flatMap(decodeLegacyEvidenceRow(row), (legacy) => {
-        const endChar = NonNegativeInt.make(legacy.span.startChar + Str.length(legacy.span.quote));
+        const endChar = S.Natural.make(legacy.span.startChar + Str.length(legacy.span.quote));
         return pipe(
           decodeEvidenceRow({
             ...row,

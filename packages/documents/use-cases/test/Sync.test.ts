@@ -35,7 +35,6 @@ import {
   VaultSyncRpcs,
   VaultSyncWorkspacePayload,
 } from "@beep/documents-use-cases/public";
-import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -64,7 +63,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, 
   pipe(equivalent(decoded, value), assertTrue);
 };
 
-const zero = NonNegativeInt.make(0);
+const zero = S.Natural.make(0);
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(1);
 
 const idleStatus = VaultSyncStatus.make({

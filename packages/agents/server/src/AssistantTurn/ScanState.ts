@@ -7,7 +7,6 @@
 
 import { $AgentsServerId } from "@beep/identity";
 import { Fn } from "@beep/schema";
-import { isNonNegative } from "@beep/schema/Number";
 import { Effect, Match } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -15,7 +14,7 @@ import * as S from "effect/Schema";
 
 const $I = $AgentsServerId.create("AssistantTurn/ScanState");
 
-const NonNegativeScanDepth = S.Int.check(isNonNegative).pipe(
+const NonNegativeScanDepth = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("NonNegativeScanDepth", {
     description: "Non-negative integer nesting depth in the incremental assistant-block scanner.",
   })

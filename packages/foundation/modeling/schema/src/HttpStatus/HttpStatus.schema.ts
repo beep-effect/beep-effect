@@ -7,7 +7,6 @@
 
 import * as S from "effect/Schema";
 import { MappedLiteralKit } from "../MappedLiteralKit/index.ts";
-import { NonNegativeInt } from "../Number.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HttpStatus4XX } from "./HttpStatus.client-error.ts";
 import { HttpStatus1XX } from "./HttpStatus.informational.ts";
@@ -41,7 +40,7 @@ import { HttpStatusUnofficial } from "./HttpStatus.unofficial.aggregate.ts";
  * @category validation
  * @since 0.0.0
  */
-export const HttpStatusCode = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegativeInt.ast)
+export const HttpStatusCode = S.make<(typeof S.Natural)["Rebuild"]>(S.Natural.ast)
   .check(S.isBetween({ minimum: 100, maximum: 599 }))
   .pipe(
     $I.annoteSchema("HttpStatusCode", {

@@ -6,9 +6,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as S from "effect/Schema";
 import { KnowledgeGraph } from "./Entity.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionTelemetry");
 
@@ -18,10 +18,10 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionTelemetr
  * **Example** (Represent unavailable provider usage)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import { ProviderTokenUsage } from "@effect-ontology/Model/ExtractionTelemetry"
  *
- * const usage = ProviderTokenUsage.cases.Unavailable.make({ attemptCount: NonNegativeInt.make(2) })
+ * const usage = ProviderTokenUsage.cases.Unavailable.make({ attemptCount: S.Natural.make(2) })
  * console.log(usage._tag) // "Unavailable"
  * ```
  *
@@ -31,18 +31,18 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionTelemetr
 export const ProviderTokenUsage = (() => {
   const definition = S.TaggedUnion({
     Complete: {
-      inputTokens: NonNegativeInt,
-      outputTokens: NonNegativeInt,
+      inputTokens: S.Natural,
+      outputTokens: S.Natural,
       attemptCount: PosInt,
     },
     Partial: {
-      inputTokens: NonNegativeInt,
-      outputTokens: NonNegativeInt,
+      inputTokens: S.Natural,
+      outputTokens: S.Natural,
       attemptCount: PosInt,
       missingAttempts: PosInt,
     },
     Unavailable: {
-      attemptCount: NonNegativeInt,
+      attemptCount: S.Natural,
     },
   });
   const schema = definition.check(
@@ -74,12 +74,12 @@ export type ProviderTokenUsage = typeof ProviderTokenUsage.Type;
  * **Example** (Create a zero-call telemetry value)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import { ExtractionTelemetry, ProviderTokenUsage } from "@effect-ontology/Model/ExtractionTelemetry"
  *
  * const telemetry = ExtractionTelemetry.make({
- *   chunkCount: NonNegativeInt.make(0),
- *   usage: ProviderTokenUsage.cases.Unavailable.make({ attemptCount: NonNegativeInt.make(0) })
+ *   chunkCount: S.Natural.make(0),
+ *   usage: ProviderTokenUsage.cases.Unavailable.make({ attemptCount: S.Natural.make(0) })
  * })
  * console.log(telemetry.chunkCount) // 0
  * ```
@@ -89,7 +89,7 @@ export type ProviderTokenUsage = typeof ProviderTokenUsage.Type;
  */
 export class ExtractionTelemetry extends S.Class<ExtractionTelemetry>($I`ExtractionTelemetry`)(
   {
-    chunkCount: NonNegativeInt,
+    chunkCount: S.Natural,
     usage: ProviderTokenUsage,
   },
   $I.annote("ExtractionTelemetry", {
@@ -109,15 +109,15 @@ export class ExtractionTelemetry extends S.Class<ExtractionTelemetry>($I`Extract
  * **Example** (Read outcome telemetry)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { ExtractionOutcome, ExtractionTelemetry, ProviderTokenUsage } from "@effect-ontology/Model/ExtractionTelemetry"
  *
  * const outcome = ExtractionOutcome.make({
  *   graph: KnowledgeGraph.make({}),
  *   telemetry: ExtractionTelemetry.make({
- *     chunkCount: NonNegativeInt.make(0),
- *     usage: ProviderTokenUsage.cases.Unavailable.make({ attemptCount: NonNegativeInt.make(0) })
+ *     chunkCount: S.Natural.make(0),
+ *     usage: ProviderTokenUsage.cases.Unavailable.make({ attemptCount: S.Natural.make(0) })
  *   })
  * })
  * console.log(outcome.telemetry.chunkCount) // 0

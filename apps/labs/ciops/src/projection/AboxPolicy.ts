@@ -5,10 +5,11 @@
  * @since 0.0.0
  */
 
-import { FiniteFromString, PosInt } from "@beep/schema";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "./PosInt.ts";
 import { AdmissionPolicyParams, AdmissionPriority, AdmissionTokenWeights, PolicyDecodeError } from "./Schemas.ts";
 
 // The pattern binds the complete committed document shape while leaving every
@@ -29,14 +30,18 @@ const captureAt = Effect.fnUntraced(function* (
   );
 });
 
+const decodeFinite = S.decodeEffect(S.FiniteFromString);
+
+const decodePosInt = S.decodeEffect(PosInt);
+
 const decodePositiveInteger = Effect.fnUntraced(function* (
   raw: string,
   label: string
 ): Effect.fn.Return<PosInt, PolicyDecodeError> {
-  const finite = yield* FiniteFromString.decodeEffect(raw).pipe(
+  const finite = yield* decodeFinite(raw).pipe(
     Effect.mapError(() => schemaFailure(`A-Box value "${label}" was not a finite number.`))
   );
-  return yield* PosInt.decodeEffect(finite).pipe(
+  return yield* decodePosInt(finite).pipe(
     Effect.mapError(() => schemaFailure(`A-Box value "${label}" was not a positive integer.`))
   );
 });

@@ -1,4 +1,3 @@
-import { PosInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Stream } from "effect";
@@ -6,6 +5,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { BackpressureConfig, withBackpressure } from "../../Cluster/BackpressureHandler.ts";
 import { ChunkingProgressEvent } from "../../Contract/ProgressStreaming.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 const decodeChunkingProgressEvent = S.decodeEffect(ChunkingProgressEvent);
 const isPosInt = S.is(PosInt);
 

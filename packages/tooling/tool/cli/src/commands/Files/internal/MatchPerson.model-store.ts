@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -15,6 +15,7 @@ import * as Hex from "effect/encoding/Hex";
 import { HttpClient, HttpClientError, HttpClientRequest } from "effect/http";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { PosInt } from "../../../internal/schema/PosInt.ts";
 import { canonicalizeFileTargetPath } from "./FileTransaction.ts";
 import { MatchPersonError } from "./MatchPerson.errors.ts";
 import type { MatchPersonModelAcquisitionError, MatchPersonModelIntegrityError } from "./MatchPerson.errors.ts";
@@ -102,7 +103,7 @@ const pinnedComponents = ["aligner", "recognizer"] as const;
 class ObservedArtifact extends S.Class<ObservedArtifact>($I`ObservedArtifact`)(
   {
     sha256: Sha256Hex,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
   },
   $I.annote("ObservedArtifact", {
     description: "Bounded-memory size and SHA-256 observation for one local model artifact.",
@@ -189,7 +190,7 @@ const inspectArtifact = Effect.fn("Files.PersonMatchModelStore.inspectArtifact")
 
   return ObservedArtifact.make({
     sha256: Sha256Hex.make(Hex.encode(hasher.digest())),
-    sizeBytes: NonNegativeInt.make(sizeBytes),
+    sizeBytes: S.Natural.make(sizeBytes),
   });
 });
 
@@ -512,7 +513,7 @@ const downloadArtifactAttempt = Effect.fn("Files.PersonMatchModelStore.downloadA
   );
   return ObservedArtifact.make({
     sha256: Sha256Hex.make(Hex.encode(hasher.digest())),
-    sizeBytes: NonNegativeInt.make(sizeBytes),
+    sizeBytes: S.Natural.make(sizeBytes),
   });
 });
 
@@ -586,9 +587,12 @@ const downloadArtifact = Effect.fn("Files.PersonMatchModelStore.downloadArtifact
  * **Example** (Build a hermetic acquisition effect)
  *
  * ```ts
- * import { PosInt, Sha256Hex } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ * import { Sha256Hex } from "@beep/schema"
  * import { Effect } from "effect"
  * import { acquirePinnedPersonMatchArtifactForTest } from "./MatchPerson.model-store.ts"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const operation = acquirePinnedPersonMatchArtifactForTest(
  *   "/cache/models",

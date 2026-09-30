@@ -11,12 +11,13 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MimeType, NonNegativeInt, NonNegNum, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MimeType, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Match, Number as N, Effect } from "effect";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyVersion } from "../Identity.ts";
 import * as A from "effect/Array";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/DocumentMetadata");
 
@@ -191,7 +192,7 @@ const ChunkSize = PosInt.check(
     })
   );
 
-const SentenceOverlap = NonNegativeInt.check(
+const SentenceOverlap = S.Natural.check(
   S.makeFilterGroup(
     [
       S.isGreaterThanOrEqualTo(0, {
@@ -477,7 +478,7 @@ export const ComplexityScore = UnitInterval.pipe(
  */
 export type ComplexityScore = typeof ComplexityScore.Type;
 
-const tokenAdjustment = Match.type<NonNegativeInt>().pipe(
+const tokenAdjustment = Match.type<number>().pipe(
   Match.when(
     (tokens) => tokens < 1_000,
     () => -10
@@ -540,10 +541,10 @@ const documentMetadataDomainTagsDefault = A.empty<string>();
  *
  * **Example** (Use DocumentMetadata)
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata"
  *
- * console.log(DocumentMetadata.estimateTokens(NonNegativeInt.make(1_001))) // 251
+ * console.log(DocumentMetadata.estimateTokens(S.Natural.make(1_001))) // 251
  * ```
  *
  * @category models
@@ -554,14 +555,14 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
     documentId: DocumentId,
     sourceUri: GcsUri,
     contentType: MimeType,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     publishedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     ingestedAt: S.DateTimeUtcFromString,
     preprocessedAt: S.DateTimeUtcFromString,
     title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     language: LanguageCode,
-    estimatedTokens: NonNegativeInt,
+    estimatedTokens: S.Natural,
     documentType: DocumentType,
     domainTags: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(documentMetadataDomainTagsDefault)), S.withDecodingDefaultType(Effect.succeed(documentMetadataDomainTagsDefault))),
     complexityScore: ComplexityScore,
@@ -569,8 +570,8 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
     chunkingStrategy: ChunkingStrategy,
     suggestedChunkSize: ChunkSize,
     suggestedOverlap: SentenceOverlap,
-    priority: NonNegativeInt,
-    estimatedExtractionCost: NonNegativeInt,
+    priority: S.Natural,
+    estimatedExtractionCost: S.Natural,
   },
   $I.annote("DocumentMetadata", {
     description: "Validated source, temporal, classification, chunking, and scheduling metadata for one document.",
@@ -592,8 +593,8 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
    * @category utilities
    * @since 0.0.0
    */
-  static readonly estimateTokens = (characterCount: NonNegativeInt): NonNegativeInt =>
-    NonNegativeInt.make(globalThis.Math.ceil(characterCount / 4));
+  static readonly estimateTokens = (characterCount: number): number =>
+    S.Natural.make(globalThis.Math.ceil(characterCount / 4));
 
   /**
    * Compute a deterministic processing priority.
@@ -617,10 +618,10 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
    */
   static readonly computePriority = (
     complexity: ComplexityScore,
-    estimatedTokens: NonNegativeInt,
+    estimatedTokens: number,
     entityDensity: EntityDensity
-  ): NonNegativeInt =>
-    NonNegativeInt.make(
+  ): number =>
+    S.Natural.make(
       N.round(0)(50 - (1 - complexity) * 20 + tokenAdjustment(estimatedTokens) + densityAdjustment(entityDensity))
     );
 
@@ -642,7 +643,7 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
     readonly documentId: DocumentId;
     readonly sourceUri: GcsUri;
     readonly contentType: MimeType;
-    readonly sizeBytes: NonNegativeInt;
+    readonly sizeBytes: number;
     readonly preprocessedAt: typeof S.DateTimeUtc.Type;
   }): DocumentMetadata => {
     const estimatedTokens = DocumentMetadata.estimateTokens(input.sizeBytes);
@@ -659,8 +660,8 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
       chunkingStrategy: ChunkingStrategy.Enum.standard,
       suggestedChunkSize: params.chunkSize,
       suggestedOverlap: params.overlapSentences,
-      priority: NonNegativeInt.make(50),
-      estimatedExtractionCost: NonNegativeInt.make(estimatedTokens * 2),
+      priority: S.Natural.make(50),
+      estimatedExtractionCost: S.Natural.make(estimatedTokens * 2),
     });
   };
 }
@@ -693,13 +694,13 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
  */
 export class PreprocessingStats extends S.Class<PreprocessingStats>($I`PreprocessingStats`)(
   {
-    totalDocuments: NonNegativeInt,
-    classifiedCount: NonNegativeInt,
-    failedCount: NonNegativeInt,
-    totalEstimatedTokens: NonNegativeInt,
-    preprocessingDurationMs: NonNegNum,
+    totalDocuments: S.Natural,
+    classifiedCount: S.Natural,
+    failedCount: S.Natural,
+    totalEstimatedTokens: S.Natural,
+    preprocessingDurationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
     averageComplexity: ComplexityScore,
-    documentTypeDistribution: S.Record(S.String, NonNegativeInt),
+    documentTypeDistribution: S.Record(S.String, S.Natural),
   },
   $I.annote("PreprocessingStats", {
     description: "Non-negative aggregate counts, token estimate, duration, complexity, and type distribution.",
@@ -833,7 +834,7 @@ export class PreprocessingActivityOutput extends S.Class<PreprocessingActivityOu
   {
     enrichedManifestUri: GcsUri,
     stats: PreprocessingStats,
-    durationMs: NonNegNum,
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("PreprocessingActivityOutput", {
     description: "Preprocessing activity output with its enriched manifest location, statistics, and finite duration.",

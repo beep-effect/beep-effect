@@ -13,8 +13,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { Dataset } from "@beep/rdf";
-import { NonNegativeInt, PosInt } from "@beep/schema";
-import { NonNegNum } from "@beep/schema/Number";
 import { ShaclSeverity, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import { Clock, Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -26,6 +24,7 @@ import { LanguageModel } from "effect/ai";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
 
@@ -229,16 +228,15 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>($I
  * **Example** (Inspect batch explanation result)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
  *
- * import { NonNegativeInt } from "@beep/schema"
- * import { NonNegNum } from "@beep/schema/Number"
  *
  * const batch = BatchExplanationResult.make({
  *   explanations: [],
- *   totalViolations: NonNegativeInt.make(1),
- *   explainedCount: NonNegativeInt.make(0),
- *   durationMs: NonNegNum.make(20)
+ *   totalViolations: S.Natural.make(1),
+ *   explainedCount: S.Natural.make(0),
+ *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(20)
  * })
  * console.log(batch.explainedCount) // 0
  * ```
@@ -249,9 +247,9 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>($I
 export class BatchExplanationResult extends S.Class<BatchExplanationResult>($I`BatchExplanationResult`)(
   {
     explanations: S.Array(LlmViolationExplanation),
-    totalViolations: NonNegativeInt,
-    explainedCount: NonNegativeInt,
-    durationMs: NonNegNum,
+    totalViolations: S.Natural,
+    explainedCount: S.Natural,
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("BatchExplanationResult", {
     description: "Per-violation explanations plus explained and elapsed counters.",
@@ -263,15 +261,14 @@ export class BatchExplanationResult extends S.Class<BatchExplanationResult>($I`B
    * **Example** (Inspect batch explanation result.is complete)
    *
    * ```ts
-   * import { NonNegativeInt } from "@beep/schema"
-   * import { NonNegNum } from "@beep/schema/Number"
+   * import * as S from "effect/Schema"
    * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
    *
    * const batch = BatchExplanationResult.make({
    *   explanations: [],
-   *   totalViolations: NonNegativeInt.make(1),
-   *   explainedCount: NonNegativeInt.make(0),
-   *   durationMs: NonNegNum.make(20)
+   *   totalViolations: S.Natural.make(1),
+   *   explainedCount: S.Natural.make(0),
+   *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(20)
    * })
    * console.log(batch.explainedCount) // 0
    * ```
@@ -429,8 +426,8 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
 
       return BatchExplanationResult.make({
         explanations: [...explanations],
-        totalViolations: NonNegativeInt.make(violations.length),
-        explainedCount: NonNegativeInt.make(explanations.length),
+        totalViolations: S.Natural.make(violations.length),
+        explainedCount: S.Natural.make(explanations.length),
         durationMs,
       });
     });

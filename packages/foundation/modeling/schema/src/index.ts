@@ -101,11 +101,6 @@ export * as FileTypeChecker from "./FileTypeChecker/index.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Fixed32.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Fixed64.ts";
 /**
  * @since 0.0.0
@@ -168,16 +163,6 @@ export { HttpStatusCode } from "./HttpStatus/index.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Int.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Int64.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Json.ts";
 /**
  * @since 0.0.0
@@ -214,11 +199,6 @@ export * from "./Markdown.ts";
  * @category validation
  */
 export * from "./MimeType.ts";
-/**
- * @category validation
- * @since 0.0.0
- */
-export * from "./Number.ts";
 /**
  * Opaque payload schemas (`Defect`, `OpaqueUnknown`) whose equivalence is declared always-true.
  *
@@ -313,27 +293,7 @@ export * from "./SeverityLevel.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Sfixed32.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Sfixed64.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Sha256.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Sint32.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Sint64.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -354,16 +314,6 @@ export * from "./Toml.ts";
  * @category validation
  */
 export * from "./Transformations.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Uint32.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Uint64.ts";
 /**
  * @since 0.0.0
  * @category validation

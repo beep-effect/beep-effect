@@ -6,7 +6,7 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { NonNegativeInt, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, HashSet, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
@@ -174,7 +174,7 @@ const M365ConfigUrl = S.String.pipe(
 );
 
 const m365ConfigInputGraphBaseUrlDefault = makeNormalizedUrl(GRAPH_API_BASE_URL);
-const m365ConfigInputMaxRetriesDefault = NonNegativeInt.make(DEFAULT_MAX_RETRIES);
+const m365ConfigInputMaxRetriesDefault = S.Natural.make(DEFAULT_MAX_RETRIES);
 const m365ConfigInputRedirectUriDefault = makeNormalizedUrl(DEFAULT_REDIRECT_URI);
 /**
  * Runtime configuration accepted by the Microsoft 365 driver layers.
@@ -230,7 +230,7 @@ export class M365ConfigInput extends S.Class<M365ConfigInput>($I`M365ConfigInput
     ).annotateKey({
       description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
     }),
-    maxRetries: NonNegativeInt.pipe(
+    maxRetries: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(m365ConfigInputMaxRetriesDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputMaxRetriesDefault))
     ).annotateKey({
@@ -296,7 +296,7 @@ export class ResolvedM365Config extends S.Class<ResolvedM365Config>($I`ResolvedM
     scopes: S.Array(S.NonEmptyString).annotateKey({ description: "Resolved delegated read scopes." }),
     redirectUri: URLStr.annotateKey({ description: "Resolved normalized loopback redirect URI base." }),
     graphBaseUrl: URLStr.annotateKey({ description: "Resolved Graph base URL (normalized, no trailing slash)." }),
-    maxRetries: NonNegativeInt.annotateKey({ description: "Resolved throttle-retry budget." }),
+    maxRetries: S.Natural.annotateKey({ description: "Resolved throttle-retry budget." }),
     tokenCachePath: S.Option(S.NonEmptyString).annotateKey({
       description: "Resolved encrypted token-cache path, if persistence is configured.",
     }),

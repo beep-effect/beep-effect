@@ -13,8 +13,6 @@ import {
   SOURCE_TEXT_PAGE_CODE_UNITS,
 } from "@beep/file-processing/SourceText";
 import { makeDrizzleLayer, PostgresDrizzle } from "@beep/postgres";
-import { PosInt } from "@beep/schema/Int";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { makePgliteSqlTestLayer } from "@beep/test-utils";
@@ -51,6 +49,8 @@ import {
 } from "@/contradiction/ContradictionQaSeed";
 import { migrateOnBoot } from "@/runtime/Migrations";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 const desktopWorkspaceId = WorkspaceIdentity.WorkspaceId.make(1);
@@ -268,7 +268,7 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
               disposition: "open",
               knownAt: instant(1_767_225_610_000),
               limit: PosInt.make(10),
-              offset: NonNegativeInt.make(0),
+              offset: S.Natural.make(0),
               orgId: 1,
               validAt: instant(1_767_225_610_000),
             })

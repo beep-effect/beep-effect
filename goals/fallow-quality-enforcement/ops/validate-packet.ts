@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Console, Effect, FileSystem, Inspectable, Layer, Path, pipe, Runtime } from "effect";
 import * as A from "effect/Array";
@@ -405,9 +405,9 @@ class YeetMapping extends S.Class<YeetMapping>($I`YeetMapping`)(
 
 class FindingAttributionSummary extends S.Class<FindingAttributionSummary>($I`FindingAttributionSummary`)(
   {
-    introduced: NonNegativeInt,
-    inheritedAdjacent: NonNegativeInt,
-    notApplicable: NonNegativeInt,
+    introduced: S.Natural,
+    inheritedAdjacent: S.Natural,
+    notApplicable: S.Natural,
   },
   $I.annote("FindingAttributionSummary", {
     description: "Count summary for Fallow finding attribution.",
@@ -431,7 +431,7 @@ class FallowReportFinding extends S.Class<FallowReportFinding>($I`FallowReportFi
 
 class FallowReportPayload extends S.Class<FallowReportPayload>($I`FallowReportPayload`)(
   {
-    findingCount: NonNegativeInt,
+    findingCount: S.Natural,
     findings: S.Array(FallowReportFinding),
   },
   $I.annote("FallowReportPayload", {
@@ -461,7 +461,7 @@ class PromotionCriteria extends S.Class<PromotionCriteria>($I`PromotionCriteria`
     requiredCommands: S.NonEmptyArray(CommandString),
     requiredEvidenceRefs: S.NonEmptyArray(RepoRefString),
     requiredReviewerRoles: S.NonEmptyArray(TrimmedNonEmptyString),
-    minimumCleanRuns: NonNegativeInt,
+    minimumCleanRuns: S.Natural,
   },
   $I.annote("PromotionCriteria", {
     description: "Evidence gate required before a feature can be promoted.",
@@ -623,7 +623,7 @@ class FallowReportOk extends S.Class<FallowReportOk>($I`FallowReportOk`)(
   {
     ...FallowReportBaseFields,
     status: S.Literal("ok"),
-    exitStatus: NonNegativeInt,
+    exitStatus: S.Natural,
     report: FallowReportPayload,
   },
   $I.annote("FallowReportOk", {
@@ -647,7 +647,7 @@ class FallowReportInvalidJson extends S.Class<FallowReportInvalidJson>($I`Fallow
   {
     ...FallowReportBaseFields,
     status: S.Literal("invalid-json"),
-    exitStatus: NonNegativeInt,
+    exitStatus: S.Natural,
     stderrExcerpt: TrimmedNonEmptyString,
   },
   $I.annote("FallowReportInvalidJson", {
@@ -659,7 +659,7 @@ class FallowReportInvalidReport extends S.Class<FallowReportInvalidReport>($I`Fa
   {
     ...FallowReportBaseFields,
     status: S.Literal("invalid-report"),
-    exitStatus: NonNegativeInt,
+    exitStatus: S.Natural,
     stderrExcerpt: TrimmedNonEmptyString,
   },
   $I.annote("FallowReportInvalidReport", {
@@ -806,8 +806,8 @@ class ReviewRound extends S.Class<ReviewRound>($I`ReviewRound`)(
     roundId: TrimmedNonEmptyString,
     criticId: TrimmedNonEmptyString,
     criticRole: TrimmedNonEmptyString,
-    requiredFindingCount: NonNegativeInt,
-    openRequiredFindingCount: NonNegativeInt,
+    requiredFindingCount: S.Natural,
+    openRequiredFindingCount: S.Natural,
     findings: S.Array(ReviewFinding),
     acceptanceCommands: S.NonEmptyArray(CommandString),
   },

@@ -1,4 +1,3 @@
-import { PosInt } from "@beep/schema/Int";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -10,6 +9,8 @@ import { EventId as CoreEventId } from "../../Domain/Model/CoreOntology.ts";
 import { EventId as KnowledgeEventId } from "../../Domain/Schema/KnowledgeModel.ts";
 import { getRunIdFromText } from "../../Service/ExtractionRun.ts";
 import { createExtractionStarted, makeProgressBuilder } from "../../Service/ProgressStreaming.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodePosIntResult = S.decodeResult(PosInt);
 const isIsoDateTimeString = S.is(IsoDateTimeString);

@@ -17,7 +17,6 @@ import {
   OntologyTierGateRefusal,
   OntologyToolExecutionError,
 } from "@beep/ontology-use-cases/tools";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
@@ -118,22 +117,22 @@ describe("ontology use-case tagged-error declared equivalence", () => {
     const same = S.toEquivalence(OntologyBudgetRefusal);
     const first = OntologyBudgetRefusal.make({
       kind: "changeOperations",
-      actual: NonNegativeInt.make(12),
-      limit: NonNegativeInt.make(10),
+      actual: S.Natural.make(12),
+      limit: S.Natural.make(10),
       guidance: "Reduce the change batch.",
       recoverable: true,
     });
     const second = OntologyBudgetRefusal.make({
       kind: "changeOperations",
-      actual: NonNegativeInt.make(12),
-      limit: NonNegativeInt.make(10),
+      actual: S.Natural.make(12),
+      limit: S.Natural.make(10),
       guidance: "Reduce the change batch.",
       recoverable: true,
     });
     const different = OntologyBudgetRefusal.make({
       kind: "changeOperations",
-      actual: NonNegativeInt.make(13),
-      limit: NonNegativeInt.make(10),
+      actual: S.Natural.make(13),
+      limit: S.Natural.make(10),
       guidance: "Reduce the change batch.",
       recoverable: true,
     });
@@ -144,20 +143,20 @@ describe("ontology use-case tagged-error declared equivalence", () => {
   it("compares OntologyReasonerDriftRefusal by declared fields", () => {
     const same = S.toEquivalence(OntologyReasonerDriftRefusal);
     const first = OntologyReasonerDriftRefusal.make({
-      actual: NonNegativeInt.make(12),
-      cap: NonNegativeInt.make(10),
+      actual: S.Natural.make(12),
+      cap: S.Natural.make(10),
       guidance: "Reduce inferred drift.",
       recoverable: true,
     });
     const second = OntologyReasonerDriftRefusal.make({
-      actual: NonNegativeInt.make(12),
-      cap: NonNegativeInt.make(10),
+      actual: S.Natural.make(12),
+      cap: S.Natural.make(10),
       guidance: "Reduce inferred drift.",
       recoverable: true,
     });
     const different = OntologyReasonerDriftRefusal.make({
-      actual: NonNegativeInt.make(12),
-      cap: NonNegativeInt.make(11),
+      actual: S.Natural.make(12),
+      cap: S.Natural.make(11),
       guidance: "Reduce inferred drift.",
       recoverable: true,
     });
