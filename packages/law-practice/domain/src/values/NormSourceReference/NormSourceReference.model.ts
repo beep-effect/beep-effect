@@ -18,7 +18,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { SourceNormRef } from "../SourceNormRef/index.ts";
 
@@ -105,7 +105,7 @@ export type NormTextFragment = typeof NormTextFragment.Type;
  */
 export class NormSourceReference extends S.Class<NormSourceReference>($I`NormSourceReference`)(
   {
-    fragment: S.OptionFromNullOr(NormTextFragment).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    fragment: S.OptionFromNullOr(NormTextFragment).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Verbatim words this element was read from; absent when it rests on a provision as a whole.",
     }),
     norm: SourceNormRef.annotateKey({

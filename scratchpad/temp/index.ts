@@ -6,7 +6,7 @@
 //   NonEmptyTrimmedStr,
 //   NonNegativeInt,
 //   PosInt,
-//   SchemaUtils, Timezone,
+//   SchemaUtils,
 // } from "@beep/schema";
 // import { pipe } from "effect/Function";
 // import { URI } from "@beep/rdf";
@@ -94,13 +94,13 @@
 //
 // export class ModelConfig extends S.Class<ModelConfig>($I`ModelConfig`)({
 //     extractorModel: NonEmptyTrimmedStr.pipe(
-//       SchemaUtils.withKeyDefaults(NonEmptyTrimmedStr.make("stub")),
+//       S.withConstructorDefault(Effect.succeed(NonEmptyTrimmedStr.make("stub"))), S.withDecodingDefaultTypeKey(Effect.succeed(NonEmptyTrimmedStr.make("stub"))),
 //     ),
-//     normalizerModel: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     entityLinkerModel: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     conflictResolverModel: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     temperature: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0.0))),
-//     maxOutputTokens: PosInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+//     normalizerModel: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     entityLinkerModel: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     conflictResolverModel: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     temperature: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0.0))), S.withDecodingDefaultTypeKey(Effect.succeed(NonNegativeInt.make(0.0)))),
+//     maxOutputTokens: PosInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 //   },
 //   $I.annote("ModelConfig", {
 //     description: "",
@@ -110,8 +110,8 @@
 //
 // export class ThresholdConfig extends S.Class<ThresholdConfig>($I`ThresholdConfig`)(
 //   {
-//     duplicateTextSimilarity: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0.92))),
-//     lowQaualitySttConfidence: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0.55))),
+//     duplicateTextSimilarity: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0.92))), S.withDecodingDefaultTypeKey(Effect.succeed(NonNegativeInt.make(0.92)))),
+//     lowQaualitySttConfidence: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0.55))), S.withDecodingDefaultTypeKey(Effect.succeed(NonNegativeInt.make(0.55)))),
 //   },
 //   $I.annote("ThresholdConfig", {
 //     description: "",
@@ -121,9 +121,9 @@
 //
 // export class PolicyConfig extends S.Class<PolicyConfig>($I`PolicyConfig`)(
 //   {
-//     blockCredentials: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-//     reviewHighSensitivity: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-//     rejectEphemeral: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+//     blockCredentials: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+//     reviewHighSensitivity: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+//     rejectEphemeral: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
 //   },
 //   $I.annote("PolicyConfig", {
 //     description: "",
@@ -133,17 +133,17 @@
 //
 // export class RoutingConfig extends S.Class<RoutingConfig>($I`RoutingConfig`)(
 //   {
-//     autoCreateHighConfidence: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+//     autoCreateHighConfidence: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
 //     /** relaxed from False post-hallucination-campaign */
-//     autoCreateMediumConfidence: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true), $I.annoteKey("RoutingConfig.autoCreateMediumConfidence", {
+//     autoCreateMediumConfidence: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)), $I.annoteKey("RoutingConfig.autoCreateMediumConfidence", {
 //       documentation: "relaxed from False post-hallucination-campaign",
 //     })),
-//     reviewUncertain: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-//     reviewLowConfidence: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-//     allowSupersession: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-//     allowReviewedSupersession: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-//     allowLockedSupersession: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-//     routeTasks: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+//     reviewUncertain: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+//     reviewLowConfidence: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+//     allowSupersession: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+//     allowReviewedSupersession: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+//     allowLockedSupersession: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+//     routeTasks: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
 //
 //   },
 //   $I.annote("RoutingConfig", {
@@ -154,9 +154,9 @@
 //
 // export class OutputConfig extends S.Class<OutputConfig>($I`OutputConfig`)(
 //   {
-//     includePrivateInputFingerprint: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-//     vectorNamespace: NonEmptyTrimmedStr.pipe(SchemaUtils.withKeyDefaults(NonEmptyTrimmedStr.make("ns2"))),
-//     emitDiagnosticTriplesForRejections: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+//     includePrivateInputFingerprint: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+//     vectorNamespace: NonEmptyTrimmedStr.pipe(S.withConstructorDefault(Effect.succeed(NonEmptyTrimmedStr.make("ns2"))), S.withDecodingDefaultTypeKey(Effect.succeed(NonEmptyTrimmedStr.make("ns2")))),
+//     emitDiagnosticTriplesForRejections: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
 //   },
 //   $I.annote("OutputConfig", {
 //     description: "",
@@ -166,9 +166,9 @@
 //
 // export class MemoryPipelineConfig extends S.Class<MemoryPipelineConfig>($I`MemoryPipelineConfig`)(
 //   {
-//     configVersion: NonEmptyTrimmedStr.pipe(SchemaUtils.withKeyDefaults(NonEmptyTrimmedStr.make("memory_pipeline_config.v1"))),
-//     pipelineVersion: NonEmptyTrimmedStr.pipe(SchemaUtils.withKeyDefaults(NonEmptyTrimmedStr.make("memory_pipeline.v1"))),
-//     ontologyVersion: NonEmptyTrimmedStr.pipe(SchemaUtils.withKeyDefaults(NonEmptyTrimmedStr.make("omi_memory_ontology.v0"))),
+//     configVersion: NonEmptyTrimmedStr.pipe(S.withConstructorDefault(Effect.succeed(NonEmptyTrimmedStr.make("memory_pipeline_config.v1"))), S.withDecodingDefaultTypeKey(Effect.succeed(NonEmptyTrimmedStr.make("memory_pipeline_config.v1")))),
+//     pipelineVersion: NonEmptyTrimmedStr.pipe(S.withConstructorDefault(Effect.succeed(NonEmptyTrimmedStr.make("memory_pipeline.v1"))), S.withDecodingDefaultTypeKey(Effect.succeed(NonEmptyTrimmedStr.make("memory_pipeline.v1")))),
+//     ontologyVersion: NonEmptyTrimmedStr.pipe(S.withConstructorDefault(Effect.succeed(NonEmptyTrimmedStr.make("omi_memory_ontology.v0"))), S.withDecodingDefaultTypeKey(Effect.succeed(NonEmptyTrimmedStr.make("omi_memory_ontology.v0")))),
 //     models: ModelConfig,
 //     thresholds: ThresholdConfig,
 //     policy: PolicyConfig,
@@ -183,14 +183,14 @@
 //
 // export class SourceRef extends S.Class<SourceRef>($I`SourceRef`)(
 //   {
-//     conversationId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     transcriptSegmentId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     memoryId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     integrationId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     appId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     documentId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     externalId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     fixtureId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+//     conversationId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     transcriptSegmentId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     memoryId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     integrationId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     appId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     documentId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     externalId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     fixtureId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 //   },
 //   $I.annote("SourceRef", {
 //     description: "",
@@ -228,10 +228,10 @@
 //     label: S.String.pipe($I.annoteKey("SourceTypeConfig.label", {
 //       description: "human-readable name for the prompt",
 //     })),
-//     confidenceCap: S.Finite.pipe(S.check(S.isGreaterThanOrEqualTo(0)), SchemaUtils.withKeyDefaults(PosInt.make(1))),
-//     requiresCorroboration: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-//     defaultEmptyOnNoise: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-//     guidanceNotes: S.String.pipe(SchemaUtils.withKeyDefaults("")),
+//     confidenceCap: S.Finite.pipe(S.check(S.isGreaterThanOrEqualTo(0)), S.withConstructorDefault(Effect.succeed(PosInt.make(1))), S.withDecodingDefaultTypeKey(Effect.succeed(PosInt.make(1)))),
+//     requiresCorroboration: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+//     defaultEmptyOnNoise: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+//     guidanceNotes: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultTypeKey(Effect.succeed(""))),
 //   });
 //
 //   return pipe(
@@ -293,18 +293,18 @@
 //   <T extends SourceDescriptorType>({ literal }: S.Literal<T>) => S.Struct({
 //     sourceType: S.tag(literal),
 //     sourceId: S.String,
-//     sourceUri: URI.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+//     sourceUri: URI.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 //     capturedAt: S.DateTimeUtcFromDate.pipe(
 //       S.OptionFromOptionalKey,
-//       SchemaUtils.withNoneDefault,
+//       S.withConstructorDefault(Effect.succeedNone),
 //     ),
-//     timezone: Timezone.pipe(
+//     timezone: S.TimeZoneNamedFromString.pipe(
 //       S.OptionFromOptionalKey,
-//       SchemaUtils.withNoneDefault,
+//       S.withConstructorDefault(Effect.succeedNone),
 //     ),
 //     language: LanguageCode.pipe(
 //       S.OptionFromOptionalKey,
-//       SchemaUtils.withNoneDefault,
+//       S.withConstructorDefault(Effect.succeedNone),
 //     ),
 //     metadata: S.Record(S.String, S.Any),
 //   });
@@ -339,13 +339,13 @@
 //
 // export class ActorDescriptor extends S.Class<ActorDescriptor>($I`ActorDescriptor`)(
 //   {
-//     userId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     syntheticUserId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     displayName: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-//     knownAliases: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults),
+//     userId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     syntheticUserId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     displayName: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+//     knownAliases: S.String.pipe(S.Array, S.withConstructorDefault(Effect.succeed(A.empty())), S.withDecodingDefaultType(Effect.succeed(A.empty()))),
 //     local: LanguageCode.pipe(
 //       S.OptionFromOptionalKey,
-//       SchemaUtils.withNoneDefault,
+//       S.withConstructorDefault(Effect.succeedNone),
 //     )
 //   },
 //   $I.annote("ActorDescriptor", {

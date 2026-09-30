@@ -1,9 +1,9 @@
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { ImportedConfig } from "./imported.ts";
 
 export class ChunkOptions extends S.Class<ChunkOptions>("ChunkOptions")({
-  size: S.optionalKey(S.Finite).pipe(SchemaUtils.withKeyDefaults(1024)),
+  size: S.optionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeed(1024)), S.withDecodingDefaultTypeKey(Effect.succeed(1024))),
   label: S.optionalKey(S.String),
   retries: S.optionalKey(S.Finite),
 }) {}

@@ -1253,7 +1253,7 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"severity":"warning","file":"packages/example/src/Example.ts","line":5,' +
             '"symbol":"runWorker.params",' +
             '"message":"Parameter default object for \\"params\\" should move fallback values into schema defaults so construction, decoding, and tests share one source of truth.",' +
-            '"remediation":"Move option/request fallback values into schema fields with S.withConstructorDefault, S.withDecodingDefault*, or SchemaUtils.withKeyDefaults; inventory the exception only when the fallback intentionally differs from schema construction semantics."}';
+            '"remediation":"Move option/request fallback values into schema fields with S.withConstructorDefault and S.withDecodingDefault*; inventory the exception only when the fallback intentionally differs from schema construction semantics."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
       ).pipe(provideScopedLayer(testLayer))

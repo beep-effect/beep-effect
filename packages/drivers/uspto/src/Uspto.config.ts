@@ -6,8 +6,8 @@
  */
 
 import { $UsptoId } from "@beep/identity";
-import { SchemaUtils, URLStr } from "@beep/schema";
-import { identity, SchemaTransformation } from "effect";
+import { URLStr } from "@beep/schema";
+import { Effect, identity, SchemaTransformation } from "effect";
 import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -49,7 +49,8 @@ const UsptoApiUrl = S.String.pipe(
       encode: identity,
     })
   ),
-  SchemaUtils.withKeyDefaults(USPTO_API_URL)
+  S.withConstructorDefault(Effect.succeed(USPTO_API_URL)),
+  S.withDecodingDefaultTypeKey(Effect.succeed(USPTO_API_URL))
 );
 
 /**

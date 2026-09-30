@@ -7,7 +7,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { envelopeFields } from "../Envelope.ts";
@@ -79,7 +79,7 @@ export class Input extends S.Class<Input>($I`PostCompactInput`)(
     ...envelopeFields,
     hook_event_name: S.Literal("PostCompact"),
     trigger: Trigger,
-    compact_summary: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    compact_summary: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PostCompactInput", {
     description: "Input for the PostCompact hook event.",
@@ -111,11 +111,11 @@ export class Input extends S.Class<Input>($I`PostCompactInput`)(
  */
 export class Output extends S.Class<Output>($I`PostCompactOutput`)(
   {
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PostCompactOutput", {
     description: "Output returned by a PostCompact hook handler.",

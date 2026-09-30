@@ -220,7 +220,10 @@ const DEFAULT_ENCODING: TextEncoding = "utf-8";
  */
 export class TextReadOptions extends S.Class<TextReadOptions>($I`TextReadOptions`)(
   {
-    encoding: TextEncoding.pipe(SchemaUtils.withKeyDefaults(DEFAULT_ENCODING)).annotateKey({
+    encoding: TextEncoding.pipe(
+      S.withConstructorDefault(Effect.succeed<typeof DEFAULT_ENCODING>(DEFAULT_ENCODING)),
+      S.withDecodingDefaultTypeKey(Effect.succeed<typeof DEFAULT_ENCODING>(DEFAULT_ENCODING))
+    ).annotateKey({
       description: 'Text decoding label applied to file bytes (default: "utf-8").',
     }),
     skipEmpty: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
@@ -253,10 +256,16 @@ export class TextReadOptions extends S.Class<TextReadOptions>($I`TextReadOptions
 export class TextStreamOptions extends S.Class<TextStreamOptions>($I`TextStreamOptions`)(
   {
     ...TextReadOptions.fields,
-    maxLines: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(Number.MAX_SAFE_INTEGER)).annotateKey({
+    maxLines: PositiveInteger.pipe(
+      S.withConstructorDefault(Effect.succeed(Number.MAX_SAFE_INTEGER)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(Number.MAX_SAFE_INTEGER))
+    ).annotateKey({
       description: "Maximum number of lines to emit after skipping (default: unbounded).",
     }),
-    skip: NonNegativeInteger.pipe(SchemaUtils.withKeyDefaults(0)).annotateKey({
+    skip: NonNegativeInteger.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ).annotateKey({
       description: "Number of leading lines to skip before emitting (default: 0).",
     }),
   },

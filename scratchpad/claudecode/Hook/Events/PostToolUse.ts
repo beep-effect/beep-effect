@@ -8,7 +8,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -58,8 +57,8 @@ export class Input extends S.Class<Input>($I`PostToolUseInput`)(
     tool_name: S.String,
     tool_input: S.Record(S.String, S.Unknown),
     tool_response: S.Record(S.String, S.Unknown),
-    tool_use_id: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    duration_ms: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    tool_use_id: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    duration_ms: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PostToolUseInput", {
     description: "Input for the PostToolUse hook event.",
@@ -96,9 +95,9 @@ export class Input extends S.Class<Input>($I`PostToolUseInput`)(
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PostToolUseHookSpecificOutput`)(
   {
     hookEventName: S.Literal("PostToolUse"),
-    additionalContext: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    updatedToolOutput: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault),
-    updatedMCPToolOutput: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault),
+    additionalContext: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    updatedToolOutput: S.OptionFromOptionalKey(S.Unknown).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    updatedMCPToolOutput: S.OptionFromOptionalKey(S.Unknown).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PostToolUseHookSpecificOutput", {
     description: "PostToolUse-specific response returned to Claude Code.",
@@ -127,14 +126,14 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PostToolU
  */
 export class Output extends S.Class<Output>($I`PostToolUseOutput`)(
   {
-    decision: S.OptionFromOptionalKey(S.Literal("block")).pipe(SchemaUtils.withNoneDefault),
-    reason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(SchemaUtils.withNoneDefault),
+    decision: S.OptionFromOptionalKey(S.Literal("block")).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    reason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PostToolUseOutput", {
     description: "Output returned by a PostToolUse hook handler.",

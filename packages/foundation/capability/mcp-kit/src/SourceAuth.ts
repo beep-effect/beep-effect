@@ -18,7 +18,7 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Config, Data, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -107,7 +107,7 @@ export class SourceAuthRegistration extends S.Class<SourceAuthRegistration>($I`S
       description: "Credential gate policy for this source.",
     }),
     signupUrl: S.OptionFromNullOr(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional signup URL surfaced when the credential is missing.",
       })

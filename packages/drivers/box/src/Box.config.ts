@@ -6,7 +6,6 @@
  */
 
 import { $BoxId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Config, Context, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -18,8 +17,8 @@ const $I = $BoxId.create("Box.config");
 const BoxCcgConfigShape = S.Struct({
   clientId: S.String,
   clientSecret: S.Redacted(S.String),
-  enterpriseId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  userId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  enterpriseId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  userId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
 }).check(
   S.makeFilter((config) => O.isSome(config.enterpriseId) !== O.isSome(config.userId), {
     identifier: $I`BoxCcgSubjectCheck`,

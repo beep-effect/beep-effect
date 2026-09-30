@@ -37,7 +37,7 @@ import {
   M365SiteCollection,
 } from "@beep/m365";
 import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import { Tool, Toolkit } from "effect/ai";
 import * as S from "effect/Schema";
 
@@ -75,7 +75,7 @@ export class M365ToolError extends S.Class<M365ToolError>($I`M365ToolError`)(
     operation: S.NonEmptyString.annotateKey({
       description: "Driver operation that failed.",
     }),
-    reason: S.OptionFromOptionalKey(M365ErrorReason).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    reason: S.OptionFromOptionalKey(M365ErrorReason).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Stable failure category or driver error reason.",
     }),
     retryable: S.Boolean.annotateKey({

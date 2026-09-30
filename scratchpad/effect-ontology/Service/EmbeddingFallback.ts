@@ -12,7 +12,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -80,7 +79,7 @@ export class ActiveProviderInfo extends S.Class<ActiveProviderInfo>($I`ActivePro
   {
     currentProvider: EmbeddingProviderId,
     fallbackCount: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Fallback count must be non-negative." })),
-    lastFallbackReason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    lastFallbackReason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ActiveProviderInfo", {
     description: "Current embedding provider, fallback count, and optional last fallback reason.",

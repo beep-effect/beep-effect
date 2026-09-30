@@ -6,7 +6,8 @@
  */
 
 import { $BoxProvisioningId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BoxPlanName, BoxSourceRevision } from "./BoxProvisioningIntent.ts";
@@ -65,8 +66,8 @@ export type BoxResourceKind = typeof BoxResourceKind.Type;
 export class BoxActionPrecondition extends S.Class<BoxActionPrecondition>($I`BoxActionPrecondition`)(
   {
     state: LiteralKit(["absent", "present", "unchanged"]),
-    providerId: S.OptionFromOptionalKey(BoxProviderId).pipe(SchemaUtils.withNoneDefault),
-    etag: S.OptionFromOptionalKey(BoxProviderRevision).pipe(SchemaUtils.withNoneDefault),
+    providerId: S.OptionFromOptionalKey(BoxProviderId).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    etag: S.OptionFromOptionalKey(BoxProviderRevision).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BoxActionPrecondition", {
     description: "Redacted resource presence and identity expected when an action is applied.",
@@ -193,8 +194,8 @@ const commonActionFields = {
   resourceKind: BoxResourceKind,
   dependencies: S.Array(Sha256Hex),
   destructive: S.Boolean,
-  beforeDigest: S.OptionFromOptionalKey(Sha256Hex).pipe(SchemaUtils.withNoneDefault),
-  afterDigest: S.OptionFromOptionalKey(Sha256Hex).pipe(SchemaUtils.withNoneDefault),
+  beforeDigest: S.OptionFromOptionalKey(Sha256Hex).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  afterDigest: S.OptionFromOptionalKey(Sha256Hex).pipe(S.withConstructorDefault(Effect.succeedNone)),
   precondition: BoxActionPrecondition,
 } satisfies S.Struct.Fields;
 
@@ -430,7 +431,9 @@ export class BoxForeignResource extends S.Class<BoxForeignResource>($I`BoxForeig
  */
 export class BoxProvisioningPlan extends S.Class<BoxProvisioningPlan>($I`BoxProvisioningPlan`)(
   {
-    version: S.Literal("box-provisioning-plan/v1").pipe(SchemaUtils.withConstantDefault("box-provisioning-plan/v1")),
+    version: S.Literal("box-provisioning-plan/v1").pipe(
+      S.withConstructorDefault(Effect.succeed("box-provisioning-plan/v1"))
+    ),
     sourceRevision: BoxSourceRevision,
     expectedEnterpriseId: BoxProviderId,
     subjectId: BoxProviderId,

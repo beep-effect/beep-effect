@@ -11,7 +11,7 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CandorDisposition, IdsSubmissionFact, PatentCitationEvent } from "@beep/law-practice-domain";
 import { Defect, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CandorFilingScope } from "../CandorPolicy/CandorPolicy.values.ts";
@@ -98,7 +98,7 @@ export class CandorRecordRepositoryUnavailable extends S.TaggedError<CandorRecor
   "CandorRecordRepositoryUnavailable",
   {
     cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Optional underlying driver defect captured when the repository could not serve a request.",
       }),

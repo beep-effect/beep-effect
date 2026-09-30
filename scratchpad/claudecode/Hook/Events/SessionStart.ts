@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -99,9 +99,9 @@ export class Input extends S.Class<Input>($I`SessionStartInput`)(
     ...envelopeFields,
     hook_event_name: S.Literal("SessionStart"),
     source: Source,
-    model: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    agent_type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    session_title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    model: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    agent_type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    session_title: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SessionStartInput", {
     description: "Input for the SessionStart hook event.",
@@ -137,11 +137,11 @@ export class Input extends S.Class<Input>($I`SessionStartInput`)(
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SessionStartHookSpecificOutput`)(
   {
     hookEventName: S.Literal("SessionStart"),
-    additionalContext: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    initialUserMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    sessionTitle: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    watchPaths: S.OptionFromOptionalKey(WatchPaths).pipe(SchemaUtils.withNoneDefault),
-    reloadSkills: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    additionalContext: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    initialUserMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sessionTitle: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    watchPaths: S.OptionFromOptionalKey(WatchPaths).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    reloadSkills: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SessionStartHookSpecificOutput", {
     description: "SessionStart-specific response returned to Claude Code.",
@@ -169,12 +169,12 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SessionSt
  */
 export class Output extends S.Class<Output>($I`SessionStartOutput`)(
   {
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(SchemaUtils.withNoneDefault),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SessionStartOutput", {
     description: "Output returned by a SessionStart hook handler.",

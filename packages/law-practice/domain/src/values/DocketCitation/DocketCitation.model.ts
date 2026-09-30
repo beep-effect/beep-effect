@@ -7,7 +7,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { Span } from "../Span/index.ts";
@@ -60,21 +61,21 @@ export class DocketCitation extends S.Class<DocketCitation>($I`DocketCitation`)(
     }),
     court: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Court abbreviation extracted from the parenthetical (e.g. "N.Y.", "S.D.N.Y.").',
       })
     ),
     normalizedCourt: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Normalized court string: spaces collapsed, trailing period ensured.",
       })
     ),
     year: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Year of decision.",
       })
@@ -83,61 +84,61 @@ export class DocketCitation extends S.Class<DocketCitation>($I`DocketCitation`)(
       iso: S.String,
       parsed: S.Struct({
         year: NonNegativeInt,
-        month: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-        day: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-      }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+        month: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+        day: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+      }).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     }).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Date information when the parenthetical includes month/day.",
       })
     ),
     caseName: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Extracted case name (party names around "v.").',
       })
     ),
     plaintiff: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Plaintiff party name.",
       })
     ),
     defendant: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Defendant party name.",
       })
     ),
     plaintiffNormalized: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Normalized plaintiff name for matching (lowercase, stripped of noise).",
       })
     ),
     defendantNormalized: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Normalized defendant name for matching (lowercase, stripped of noise).",
       })
     ),
     proceduralPrefix: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Procedural prefix for non-adversarial cases (e.g. "In re").',
       })
     ),
     fullSpan: Span.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Full span covering citation from case name through closing parenthetical.",
       })

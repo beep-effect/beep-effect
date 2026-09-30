@@ -6,8 +6,8 @@
  */
 
 import { $BoxProvisioningId } from "@beep/identity";
-import { HttpsUrl, LiteralKit, SchemaUtils } from "@beep/schema";
-import { HashMap, MutableHashSet, Order } from "effect";
+import { HttpsUrl, LiteralKit } from "@beep/schema";
+import { Effect, HashMap, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual, pipe } from "effect/Function";
@@ -212,6 +212,7 @@ export class BoxAdoption extends S.Class<BoxAdoption>($I`BoxAdoption`)(
   })
 ) {}
 
+const boxAdoptionsEntriesDefault = A.empty<BoxAdoption>();
 /**
  * Versioned ownership bindings for adopted or reconciler-created Box folders.
  *
@@ -230,9 +231,12 @@ export class BoxAdoption extends S.Class<BoxAdoption>($I`BoxAdoption`)(
 export class BoxAdoptions extends S.Class<BoxAdoptions>($I`BoxAdoptions`)(
   {
     version: S.Literal("box-provisioning-adoptions/v1").pipe(
-      SchemaUtils.withConstantDefault("box-provisioning-adoptions/v1")
+      S.withConstructorDefault(Effect.succeed("box-provisioning-adoptions/v1"))
     ),
-    entries: S.Array(BoxAdoption).pipe(SchemaUtils.withEmptyArrayDefaults<BoxAdoption>()),
+    entries: S.Array(BoxAdoption).pipe(
+      S.withConstructorDefault(Effect.succeed(boxAdoptionsEntriesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(boxAdoptionsEntriesDefault))
+    ),
   },
   $I.annote("BoxAdoptions", {
     description: "Versioned folder ownership bindings for pre-existing and reconciler-created Box resources.",
@@ -394,7 +398,9 @@ export class BoxEntitlements extends S.Class<BoxEntitlements>($I`BoxEntitlements
     metadata: BoxEntitlementAvailability,
     retention: BoxEntitlementAvailability,
     externalCollaboratorsRequirePaidSeats: S.Boolean,
-    signCustomIntegrationAnnualAllowance: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+    signCustomIntegrationAnnualAllowance: S.OptionFromOptionalKey(S.Natural).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("BoxEntitlements", {
     description: "Operator-asserted Box subscription capabilities used by the planner's entitlement gate.",
@@ -430,7 +436,7 @@ export class BoxEntitlements extends S.Class<BoxEntitlements>($I`BoxEntitlements
 export class BoxFolderIntent extends S.Class<BoxFolderIntent>($I`BoxFolderIntent`)(
   {
     logicalKey: BoxLogicalKey,
-    parentKey: S.OptionFromOptionalKey(BoxLogicalKey).pipe(SchemaUtils.withNoneDefault),
+    parentKey: S.OptionFromOptionalKey(BoxLogicalKey).pipe(S.withConstructorDefault(Effect.succeedNone)),
     name: BoxFolderName,
   },
   $I.annote("BoxFolderIntent", {
@@ -698,19 +704,43 @@ const desiredStateCoherence = S.makeFilter<{
   }
 );
 
+const boxDesiredStateFieldsAdoptionsDefault = BoxAdoptions.make({ entries: [] });
+const boxDesiredStateFieldsFoldersDefault = A.empty<BoxFolderIntent>();
+const boxDesiredStateFieldsCollaborationsDefault = A.empty<BoxCollaborationIntent>();
+const boxDesiredStateFieldsWebhooksDefault = A.empty<BoxWebhookIntent>();
+const boxDesiredStateFieldsMetadataDefault = A.empty<BoxMetadataIntent>();
+const boxDesiredStateFieldsRetentionDefault = A.empty<BoxRetentionIntent>();
 const BoxDesiredStateFields = S.Struct({
-  version: S.Literal("box-provisioning/v1").pipe(SchemaUtils.withConstantDefault("box-provisioning/v1")),
-  adoptions: SchemaUtils.withKeyDefaults(BoxAdoptions, BoxAdoptions.make({ entries: [] })),
+  version: S.Literal("box-provisioning/v1").pipe(S.withConstructorDefault(Effect.succeed("box-provisioning/v1"))),
+  adoptions: BoxAdoptions.pipe(
+    S.withConstructorDefault(Effect.succeed(boxDesiredStateFieldsAdoptionsDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(boxDesiredStateFieldsAdoptionsDefault))
+  ),
   sourceRevision: BoxSourceRevision,
   expectedEnterpriseId: BoxProviderId,
   expectedSubjectId: BoxProviderId,
   rootFolderId: BoxProviderId,
   entitlements: BoxEntitlements,
-  folders: S.Array(BoxFolderIntent).pipe(SchemaUtils.withEmptyArrayDefaults<BoxFolderIntent>()),
-  collaborations: S.Array(BoxCollaborationIntent).pipe(SchemaUtils.withEmptyArrayDefaults<BoxCollaborationIntent>()),
-  webhooks: S.Array(BoxWebhookIntent).pipe(SchemaUtils.withEmptyArrayDefaults<BoxWebhookIntent>()),
-  metadata: S.Array(BoxMetadataIntent).pipe(SchemaUtils.withEmptyArrayDefaults<BoxMetadataIntent>()),
-  retention: S.Array(BoxRetentionIntent).pipe(SchemaUtils.withEmptyArrayDefaults<BoxRetentionIntent>()),
+  folders: S.Array(BoxFolderIntent).pipe(
+    S.withConstructorDefault(Effect.succeed(boxDesiredStateFieldsFoldersDefault)),
+    S.withDecodingDefaultType(Effect.succeed(boxDesiredStateFieldsFoldersDefault))
+  ),
+  collaborations: S.Array(BoxCollaborationIntent).pipe(
+    S.withConstructorDefault(Effect.succeed(boxDesiredStateFieldsCollaborationsDefault)),
+    S.withDecodingDefaultType(Effect.succeed(boxDesiredStateFieldsCollaborationsDefault))
+  ),
+  webhooks: S.Array(BoxWebhookIntent).pipe(
+    S.withConstructorDefault(Effect.succeed(boxDesiredStateFieldsWebhooksDefault)),
+    S.withDecodingDefaultType(Effect.succeed(boxDesiredStateFieldsWebhooksDefault))
+  ),
+  metadata: S.Array(BoxMetadataIntent).pipe(
+    S.withConstructorDefault(Effect.succeed(boxDesiredStateFieldsMetadataDefault)),
+    S.withDecodingDefaultType(Effect.succeed(boxDesiredStateFieldsMetadataDefault))
+  ),
+  retention: S.Array(BoxRetentionIntent).pipe(
+    S.withConstructorDefault(Effect.succeed(boxDesiredStateFieldsRetentionDefault)),
+    S.withDecodingDefaultType(Effect.succeed(boxDesiredStateFieldsRetentionDefault))
+  ),
 }).check(desiredStateCoherence);
 
 /**

@@ -11,12 +11,11 @@
  */
 
 import { $InfraId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import * as aws from "@pulumi/aws";
 import * as ghaRunners from "@pulumi/gharunners";
 import * as pulumi from "@pulumi/pulumi";
-import { flow } from "effect";
+import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 import { withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
 
@@ -616,14 +615,20 @@ export type CiFleetControllerPulumiConfigValues = typeof CiFleetControllerPulumi
  */
 export class CiFleetControllerConfig extends S.Class<CiFleetControllerConfig>($I`CiFleetControllerConfig`)(
   {
-    amiId: S.OptionFromOptionalKey(AmiId).pipe(SchemaUtils.withNoneDefault),
-    amiSsmParameterName: SsmParameterName.pipe(SchemaUtils.withKeyDefaults(defaultAmiSsmParameterName)),
+    amiId: S.OptionFromOptionalKey(AmiId).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    amiSsmParameterName: SsmParameterName.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultAmiSsmParameterName)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultAmiSsmParameterName))
+    ),
     githubAppIdSsmParameterArn: SsmParameterArn,
     githubAppKeyBase64SsmParameterArn: SsmParameterArn,
     githubAppKmsKeyArn: AwsArn,
     githubAppWebhookSecretSsmParameterArn: SsmParameterArn,
     runnerBinariesSyncerLambdaZip: AbsoluteZipPath,
-    runnerLabel: RunnerLabel.pipe(SchemaUtils.withKeyDefaults(defaultRunnerLabel)),
+    runnerLabel: RunnerLabel.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultRunnerLabel)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultRunnerLabel))
+    ),
     runnerRolePermissionsBoundaryArn: AwsArn,
     runnersLambdaZip: AbsoluteZipPath,
     terminationWatcherLambdaZip: AbsoluteZipPath,

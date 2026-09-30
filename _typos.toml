@@ -125,6 +125,9 @@ extend-exclude = [
   # Detector evidence quotes source excerpts truncated at fixed character limits.
   # Their partial identifiers are machine output, not authored prose.
   "standards/effect-vitest.inventory.jsonc",
+  # schema-inventory/v1 rows cap upstream signatures and summaries at fixed
+  # lengths, so truncated identifiers are machine output, not authored prose.
+  "packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/*.jsonl",
   "**/internal/data/**",
   "packages/law-practice/domain/src/internal/generated/free-law-project/**",
   "**/src-tauri/gen/**",

@@ -11,7 +11,7 @@ import { Document } from "@beep/md/Md.model";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
-import { Order, pipe } from "effect";
+import { Effect, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -189,9 +189,11 @@ export class TimelineTurn extends S.Class<TimelineTurn>($I`TimelineTurn`)(
     turnIndex: NonNegativeInt.annotateKey({
       description: "Zero-based non-negative turn order within the thread.",
     }),
-    parentTurnId: S.OptionFromNullOr(WorkspaceIdentity.TurnId).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional parent turn id, decoded from null when the turn is a root.",
-    }),
+    parentTurnId: S.OptionFromNullOr(WorkspaceIdentity.TurnId)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Optional parent turn id, decoded from null when the turn is a root.",
+      }),
     items: S.Array(TimelineItem).annotateKey({
       description: "Resolved visible timeline items for the turn.",
     }),

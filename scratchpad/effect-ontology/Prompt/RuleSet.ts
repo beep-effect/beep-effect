@@ -7,8 +7,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { SchemaUtils } from "@beep/schema";
-import { HashMap, Match, pipe, Tuple } from "effect";
+import { HashMap, Match, pipe, Tuple, Effect } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { flow } from "effect/Function";
@@ -37,6 +36,10 @@ const AllowedIriKind = S.Literals(["classes", "objectProperties", "datatypePrope
 /** Selector accepted by the internal allowed-IRI preview renderer. */
 type AllowedIriKind = typeof AllowedIriKind.Type;
 
+const allowedIriSetClassIrisDefault = A.empty<IRI>();
+const allowedIriSetObjectPropertyIrisDefault = A.empty<IRI>();
+const allowedIriSetDatatypePropertyIrisDefault = A.empty<IRI>();
+const allowedIriSetEntityIdsDefault = A.empty<string>();
 /**
  * Canonical ontology IRIs and entity identifiers with precomputed
  * case-insensitive lookup indexes.
@@ -57,28 +60,28 @@ export class AllowedIriSet extends S.Class<AllowedIriSet>($I`AllowedIriSet`)(
   {
     /** Canonical class IRIs accepted during entity extraction. */
     classIris: S.Array(IRI).pipe(
-      SchemaUtils.withEmptyArrayDefaults<IRI>(),
+      S.withConstructorDefault(Effect.succeed(allowedIriSetClassIrisDefault)), S.withDecodingDefaultType(Effect.succeed(allowedIriSetClassIrisDefault)),
       $I.annoteKey("AllowedIriSet.classIris", {
         description: "Canonical class IRIs accepted during entity extraction.",
       })
     ),
     /** Canonical object-property IRIs accepted during relation extraction. */
     objectPropertyIris: S.Array(IRI).pipe(
-      SchemaUtils.withEmptyArrayDefaults<IRI>(),
+      S.withConstructorDefault(Effect.succeed(allowedIriSetObjectPropertyIrisDefault)), S.withDecodingDefaultType(Effect.succeed(allowedIriSetObjectPropertyIrisDefault)),
       $I.annoteKey("AllowedIriSet.objectPropertyIris", {
         description: "Canonical object-property IRIs accepted during relation extraction.",
       })
     ),
     /** Canonical datatype-property IRIs accepted during extraction. */
     datatypePropertyIris: S.Array(IRI).pipe(
-      SchemaUtils.withEmptyArrayDefaults<IRI>(),
+      S.withConstructorDefault(Effect.succeed(allowedIriSetDatatypePropertyIrisDefault)), S.withDecodingDefaultType(Effect.succeed(allowedIriSetDatatypePropertyIrisDefault)),
       $I.annoteKey("AllowedIriSet.datatypePropertyIris", {
         description: "Canonical datatype-property IRIs accepted during extraction.",
       })
     ),
     /** Entity identifiers produced by the preceding extraction stage. */
     entityIds: S.Array(S.String).pipe(
-      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.withConstructorDefault(Effect.succeed(allowedIriSetEntityIdsDefault)), S.withDecodingDefaultType(Effect.succeed(allowedIriSetEntityIdsDefault)),
       $I.annoteKey("AllowedIriSet.entityIds", {
         description: "Entity identifiers produced by the preceding extraction stage.",
       })

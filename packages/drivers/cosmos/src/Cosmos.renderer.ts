@@ -7,7 +7,7 @@
 /// <reference path="./vendor.d.ts" />
 
 import { $CosmosId } from "@beep/identity/packages";
-import { Fn, HexColor, SchemaUtils } from "@beep/schema";
+import { Fn, HexColor } from "@beep/schema";
 import { A, O, P } from "@beep/utils";
 import { Duration, Effect, Match, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -19,23 +19,65 @@ const $I = $CosmosId.create("Cosmos.renderer");
 
 class CosmosGraphConfig extends S.Class<CosmosGraphConfig>($I`CosmosGraphConfig`)(
   {
-    enableDrag: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    enableSimulation: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    fitViewDelay: S.Finite.pipe(SchemaUtils.withKeyDefaults(100)),
-    fitViewOnInit: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    fitViewPadding: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.15)),
-    linkBlending: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    simulationFriction: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.15)),
-    simulationGravity: S.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
-    simulationRepulsion: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.45)),
-    transitionDuration: S.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
+    enableDrag: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    enableSimulation: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    fitViewDelay: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(100)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(100))
+    ),
+    fitViewOnInit: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    fitViewPadding: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.15)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.15))
+    ),
+    linkBlending: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    simulationFriction: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.15)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.15))
+    ),
+    simulationGravity: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ),
+    simulationRepulsion: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.45)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.45))
+    ),
+    transitionDuration: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ),
     // Appearance was left entirely to cosmos.gl's defaults, which draw a graph you
     // can barely see: single-pixel grey points and hairline links on a dark
     // background. A diagram nobody can read is not a diagram.
-    linkWidthScale: S.Finite.pipe(SchemaUtils.withKeyDefaults(1.6)),
-    pointSizeScale: S.Finite.pipe(SchemaUtils.withKeyDefaults(2.4)),
-    renderLinks: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    scalePointsOnZoom: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    linkWidthScale: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(1.6)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(1.6))
+    ),
+    pointSizeScale: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(2.4)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2.4))
+    ),
+    renderLinks: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    scalePointsOnZoom: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
   },
   $I.annote("CosmosGraphConfig", {
     description: "Stable cosmos.gl simulation, appearance, and viewport defaults used for each mounted graph.",
@@ -265,7 +307,10 @@ type CosmosGraphModule = {
 
 class GraphologyOptions extends S.Class<GraphologyOptions>($I`GraphologyOptions`)(
   {
-    multi: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    multi: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
     type: S.tag("directed"),
   },
   $I.annote("GraphologyOptions", {
@@ -273,21 +318,29 @@ class GraphologyOptions extends S.Class<GraphologyOptions>($I`GraphologyOptions`
   })
 ) {}
 
+const edgeAttributesColorDefault = HexColor.make("#94a3b8");
 class EdgeAttributes extends S.Class<EdgeAttributes>($I`EdgeAttributes`)(
   {
-    color: HexColor.pipe(SchemaUtils.withKeyDefaults(HexColor.make("#94a3b8"))),
-    size: S.Finite.pipe(SchemaUtils.withKeyDefaults(1)),
+    color: HexColor.pipe(
+      S.withConstructorDefault(Effect.succeed(edgeAttributesColorDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(edgeAttributesColorDefault))
+    ),
+    size: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(1)), S.withDecodingDefaultTypeKey(Effect.succeed(1))),
   },
   $I.annote("EdgeAttributes", {
     description: "Default visual attributes assigned to graphology edges rendered by sigma.js.",
   })
 ) {}
 
+const nodeAttributesColorDefault = HexColor.make("#38bdf8");
 class NodeAttributes extends S.Class<NodeAttributes>($I`NodeAttributes`)(
   {
-    color: HexColor.pipe(SchemaUtils.withKeyDefaults(HexColor.make("#38bdf8"))),
+    color: HexColor.pipe(
+      S.withConstructorDefault(Effect.succeed(nodeAttributesColorDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(nodeAttributesColorDefault))
+    ),
     label: S.NonEmptyString,
-    size: S.Finite.pipe(SchemaUtils.withKeyDefaults(2)),
+    size: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(2)), S.withDecodingDefaultTypeKey(Effect.succeed(2))),
     x: S.Finite,
     y: S.Finite,
   },

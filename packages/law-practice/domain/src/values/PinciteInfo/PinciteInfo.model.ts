@@ -7,6 +7,8 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import type * as O from "effect/Option";
 
@@ -88,6 +90,7 @@ export declare namespace PinciteInfo {
   }
 }
 
+const additionalPincitesDefault = A.empty<PinciteInfo.Type>();
 /**
  * Additional discrete pincites following the primary one (#247).
  *
@@ -97,7 +100,8 @@ export declare namespace PinciteInfo {
  * hand-written {@link PinciteInfo} namespace types for the same reason.
  */
 const AdditionalPincites = S.Array(S.suspend((): S.Codec<PinciteInfo.Type, PinciteInfo.Encoded> => PinciteInfo)).pipe(
-  SchemaUtils.withEmptyArrayDefaults<PinciteInfo.Type>(),
+  S.withConstructorDefault(Effect.succeed(additionalPincitesDefault)),
+  S.withDecodingDefaultType(Effect.succeed(additionalPincitesDefault)),
   S.annotateKey({
     description:
       "Additional discrete pincites following the primary one (#247). Each entry is a full PinciteInfo so ranges/footnotes/star-pages inside the comma chain are preserved.",
@@ -149,21 +153,21 @@ export class PinciteInfo extends S.Class<PinciteInfo>($I`PinciteInfo`)(
   {
     page: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Primary page number. Undefined when the pincite is paragraph-only (#204).",
       })
     ),
     endPage: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'End page for ranges: "570-75" → 575',
       })
     ),
     footnote: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           'Footnote number: "570 n.3" → 3. For multi-footnote refs ("nn.3-5"), the first note; see footnoteEnd for the range end.',
@@ -171,7 +175,7 @@ export class PinciteInfo extends S.Class<PinciteInfo>($I`PinciteInfo`)(
     ),
     footnoteEnd: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'End footnote for multi-note refs: "570 nn.3-5" → 5',
       })
@@ -187,14 +191,14 @@ export class PinciteInfo extends S.Class<PinciteInfo>($I`PinciteInfo`)(
     ),
     paragraph: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Paragraph number for ¶ N / para. N pincites (#204).",
       })
     ),
     endParagraph: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "End paragraph for ¶¶ N-M / paras. N-M pincites (#204).",
       })

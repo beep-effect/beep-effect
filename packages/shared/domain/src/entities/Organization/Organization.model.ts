@@ -6,8 +6,9 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import { SchemaUtils, Slug } from "@beep/schema";
+import { Slug } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Shared from "../../identity/Shared/index.ts";
 import { LicenseTier, Settings } from "./Organization.values.ts";
@@ -39,7 +40,7 @@ export class Model extends ProductEntity.Entity<Model>()(Shared.OrganizationId)(
     ),
     name: S.NonEmptyString.pipe(pg.text()),
     parentOrgId: S.OptionFromNullOr(Shared.OrganizationId).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       pg.integer(),
       pg.columnName("parent_org_id")
     ),

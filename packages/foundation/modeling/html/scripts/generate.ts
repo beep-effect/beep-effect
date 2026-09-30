@@ -810,7 +810,7 @@ type RawData = typeof RawData.Type;
 // ---------------------------------------------------------------------------
 
 const optionalRuntime = (schema: string): string =>
-  `S.OptionFromOptionalKey(${schema}).pipe(SchemaUtils.withNoneDefault)`;
+  `S.OptionFromOptionalKey(${schema}).pipe(S.withConstructorDefault(Effect.succeedNone))`;
 
 const literalUnion: (values: ReadonlyArray<string>) => string = flow(A.map(encodeJson), A.join(" | "));
 
@@ -2490,7 +2490,7 @@ export declare namespace ${cls} {
 export class Document extends S.TaggedClass<Document>($I\`Document\`)(
   "#document",
   {
-    doctype: S.OptionFromOptionalKey(Doctype).pipe(SchemaUtils.withNoneDefault),
+    doctype: S.OptionFromOptionalKey(Doctype).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Document", { description: "An HTML document root." })
@@ -2587,7 +2587,7 @@ export class ForeignElement extends S.TaggedClass<ForeignElement>($I\`ForeignEle
     namespace: ForeignNamespace,
     name: ForeignElementName,
     attributes: S.OptionFromOptionalKey(S.Record(ForeignAttributeName, S.String)).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     children: HtmlChildren,
   },
@@ -2697,7 +2697,8 @@ export const ${name} = taggedUnion<${types}, ${encodeds}>(
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 // WHATWG's lowercase global event handler names are normative.

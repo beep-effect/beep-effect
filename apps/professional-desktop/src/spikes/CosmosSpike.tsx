@@ -11,7 +11,6 @@ import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability/CauseRedaction";
 import { Fn } from "@beep/schema/Fn";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Button } from "@beep/ui/components/button";
 import * as O from "@beep/utils/Option";
 import * as P from "@beep/utils/Predicate";
@@ -212,7 +211,7 @@ export const CosmosSpikeStatus = CosmosSpikeState.mapMembers(
 type CosmosSpikeStatus = typeof CosmosSpikeStatus.Type;
 
 const SpikeContainer = S.OptionFromNullishOr(S.instanceOf(HTMLDivElement)).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   $I.annoteSchema("SpikeContainer", {
     description: "Optional mounted DOM container decoded from a React callback ref boundary.",
   })

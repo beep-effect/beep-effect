@@ -67,6 +67,7 @@ export const SanityQueryParamValue = S.Union([S.Boolean, S.Finite, S.String]).pi
  */
 export type SanityQueryParamValue = typeof SanityQueryParamValue.Type;
 
+const sanityQueryRequestParamsDefault = R.empty();
 /**
  * Sanity GROQ query request.
  *
@@ -88,9 +89,14 @@ export type SanityQueryParamValue = typeof SanityQueryParamValue.Type;
  */
 export class SanityQueryRequest extends S.Class<SanityQueryRequest>($I`SanityQueryRequest`)(
   {
-    params: S.Record(S.String, SanityQueryParamValue).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "GROQ query variables serialized as scalar JSON values.",
-    }),
+    params: S.Record(S.String, SanityQueryParamValue)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(sanityQueryRequestParamsDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(sanityQueryRequestParamsDefault))
+      )
+      .annotateKey({
+        description: "GROQ query variables serialized as scalar JSON values.",
+      }),
     query: S.String.annotateKey({
       description: "GROQ query text submitted to the Sanity content API.",
     }),
@@ -125,7 +131,7 @@ export class SanityQueryRequest extends S.Class<SanityQueryRequest>($I`SanityQue
 export class SanityQueryResponse extends S.Class<SanityQueryResponse>($I`SanityQueryResponse`)(
   {
     ms: S.OptionFromOptionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0)))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Optional Sanity query latency in non-negative milliseconds.",
       }),

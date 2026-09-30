@@ -15,6 +15,7 @@ const $I = $LawPracticeDomainId.create("values/DurableLocatorOptions/DurableLoca
 
 const DurableLocatorSpace = LiteralKit(["original", "clean"]);
 
+const durableLocatorOptionFieldsContextLengthDefault = NonNegativeInt.make(32);
 const DurableLocatorOptionFields = {
   fullSpan: SchemaUtils.BoolKeyDefaultFalse.pipe(
     S.annotateKey({
@@ -23,7 +24,8 @@ const DurableLocatorOptionFields = {
     })
   ),
   contextLength: NonNegativeInt.pipe(
-    SchemaUtils.withKeyDefaults(NonNegativeInt.make(32)),
+    S.withConstructorDefault(Effect.succeed(durableLocatorOptionFieldsContextLengthDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(durableLocatorOptionFieldsContextLengthDefault)),
     S.annotateKey({
       description: "Max characters per context side after sentence-bounding. Default 32.",
     })

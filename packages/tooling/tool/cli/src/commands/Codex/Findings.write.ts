@@ -13,7 +13,7 @@
 
 import { writeFileWithinCanonicalRootAtomically } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as S from "effect/Schema";
@@ -118,7 +118,8 @@ export class PacketDocument extends S.Class<PacketDocument>($I`PacketDocument`)(
       })
     ),
     scan: PacketScanPolicy.pipe(
-      SchemaUtils.withKeyDefaults("reject"),
+      S.withConstructorDefault(Effect.succeed("reject" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("reject" as const)),
       $I.annoteKey("PacketDocument.scan", {
         description: "Whether scan hits refuse the write or are reported to the operator.",
       })

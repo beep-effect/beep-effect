@@ -5,7 +5,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Tuple } from "effect";
+import { Effect, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
@@ -256,6 +256,7 @@ export const InvariantEnforcement = InvariantEnforcementKind.mapMembers(
  */
 export type InvariantEnforcement = typeof InvariantEnforcement.Type;
 
+const invariantDescriptorFieldsTestIdsDefault = A.empty<string>();
 const InvariantDescriptorFields = S.Struct({
   id: S.NonEmptyString,
   title: S.NonEmptyString,
@@ -265,7 +266,10 @@ const InvariantDescriptorFields = S.Struct({
   decidability: InvariantDecidability,
   enforcement: S.NonEmptyArray(InvariantEnforcement),
   references: S.NonEmptyArray(SpecificationReference),
-  testIds: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+  testIds: S.Array(S.NonEmptyString).pipe(
+    S.withConstructorDefault(Effect.succeed(invariantDescriptorFieldsTestIdsDefault)),
+    S.withDecodingDefaultType(Effect.succeed(invariantDescriptorFieldsTestIdsDefault))
+  ),
 }).pipe(
   $I.annoteSchema("InvariantDescriptorFields", {
     description: "Fields of one specification-backed invariant descriptor.",

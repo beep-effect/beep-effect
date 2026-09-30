@@ -196,7 +196,8 @@ entry point for MyCase ([GitHub practice-management MCP search](https://github.c
 - Date/time primitives:
   `packages/foundation/modeling/utils/src/DateTime.ts`,
   `packages/foundation/modeling/schema/src/LocalDate/index.ts`,
-  `packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts`,
+  the retired `DateTimeUtcFromValid` concept (removed in the effect-schema-parity group D PR;
+  its picker adapters now live in `packages/foundation/ui-system/ui/src/components/effect-date-time-picker.tsx`),
   and `packages/foundation/modeling/schema/src/index.ts`.
 - NLP/entity extraction foundations:
   `packages/drivers/nlp-mcp/README.md`,

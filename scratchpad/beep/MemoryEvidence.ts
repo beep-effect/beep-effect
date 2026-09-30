@@ -10,7 +10,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -71,7 +70,7 @@ const optionalInstantSchema = S.NullOr(S.String).pipe(
       ),
     ),
   }),
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
 );
 
 const jsonList = (column: string) =>

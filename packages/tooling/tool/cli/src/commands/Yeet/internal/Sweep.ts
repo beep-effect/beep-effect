@@ -95,7 +95,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { shellQuote } from "@beep/repo-ai-metrics";
 import { guardLiteralArg } from "@beep/repo-utils";
-import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Cause, Clock, DateTime, Effect, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -215,13 +214,13 @@ export class SweepGitState extends S.Class<SweepGitState>($I`SweepGitState`)(
     lockfileMovedOnMainUpdate: S.Boolean,
     statusProbeUnreliable: S.Boolean,
     worktreeProbeUnreliable: S.Boolean,
-    mainWorktreePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    mainTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    localTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    remoteTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    pullRequestState: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    pullRequestHeadBranch: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    pullRequestHeadOid: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    mainWorktreePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    mainTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    localTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    remoteTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    pullRequestState: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    pullRequestHeadBranch: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    pullRequestHeadOid: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SweepGitState", {
     description: "Read-only git and GitHub facts one post-merge workspace sweep is planned from.",

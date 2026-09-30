@@ -9,6 +9,7 @@ import { ContradictionCandidateKey } from "@beep/epistemic-domain/values/Contrad
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -77,7 +78,7 @@ export class ContradictionRepositoryUnavailable extends S.TaggedError<Contradict
   "ContradictionRepositoryUnavailable",
   {
     cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional driver defect retained for boundary diagnostics." })
     ),
     operation: ContradictionTriageOperation.annotateKey({

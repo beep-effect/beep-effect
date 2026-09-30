@@ -9,12 +9,11 @@
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition";
 import type * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import type { Effect } from "effect";
 
 const $I = $EpistemicUseCasesId.create("ClaimDisposition/ClaimDisposition.ports");
 
@@ -86,7 +85,7 @@ export class ClaimDispositionRepositoryUnavailable extends S.TaggedError<ClaimDi
   "ClaimDispositionRepositoryUnavailable",
   {
     cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Optional underlying driver defect captured when the repository could not serve a request.",
       }),

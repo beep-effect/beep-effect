@@ -7,7 +7,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationId } from "../CitationId/index.ts";
 import { CitationSignal } from "../CitationSignal/index.ts";
@@ -49,7 +49,7 @@ export class StringCitationGroup extends S.Class<StringCitationGroup>($I`StringC
     }),
     signal: CitationSignal.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "The group's leading citation signal, when present.",
       })

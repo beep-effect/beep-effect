@@ -16,14 +16,14 @@ import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
 import { PosInt, SchemaUtils } from "@beep/schema";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import { IrToLawExtractionError } from "../IrToLaw/index.ts";
 import type { ClaimProjectionView } from "@beep/epistemic-domain/values";
-import type { Effect } from "effect";
 
 const $I = $LawPracticeUseCasesId.create("OfficeActionReview/OfficeActionReview.ports");
 
+const officeActionReviewInputEntitySeedDefault = PosInt.make(1);
 /**
  * Input to one office-action review: the fixture identity of the office action
  * under review, the matter it prosecutes, and the source artifact the loop
@@ -83,7 +83,10 @@ export class OfficeActionReviewInput extends S.Class<OfficeActionReviewInput>($I
     sourceArtifact: SourceArtifact.annotateKey({
       description: "Source artifact whose text is extracted for review.",
     }),
-    entitySeed: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(1))).annotateKey({
+    entitySeed: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(officeActionReviewInputEntitySeedDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(officeActionReviewInputEntitySeedDefault))
+    ).annotateKey({
       description: "Deterministic positive seed used to mint distinct batch entity identities.",
     }),
   },

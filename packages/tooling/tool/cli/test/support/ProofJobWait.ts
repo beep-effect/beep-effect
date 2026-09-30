@@ -15,8 +15,8 @@ import { Clock, Deferred, Duration, Effect, Fiber } from "effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as TestClock from "effect/testing/TestClock";
+import type { UUID } from "@beep/repo-cli/test/SharedInternals";
 import type { ProofJobLauncherShape, ProofJobWaitOptions } from "@beep/repo-cli/test/Yeet";
-import type { UUID } from "@beep/schema/String";
 
 export const waitTimesOut = Effect.fnUntraced(function* (
   launcher: ProofJobLauncherShape,
