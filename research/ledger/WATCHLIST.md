@@ -10,7 +10,7 @@ Routine-proposed. Human admits. Add-with-evidence only.
 
 | id | term | why | evidence | action |
 | --- | --- | --- | --- | --- |
-| w-schema-binary | Effect SchemaBinary / cluster wire | SchemaBinary shipped in rc.113+; tip now rc.117 — watch cluster consumers | effect@4.0.0-rc.117 | keep |
+| w-schema-binary | Effect SchemaBinary / cluster wire | SchemaBinary shipped in rc.113+; tip now rc.118 — watch cluster consumers | effect@4.0.0-rc.118 | keep |
 | w-drizzle-taggederror | drizzle Schema.TaggedErrorClass | #6162 still OPEN (reconfirmed Sep 30) | drizzle-orm#6162 | keep |
 | w-uspto-odp-auth | USPTO ODP profile + API key | four fields still mandatory (reconfirmed Sep 30 via patent.dev) | patent.dev; data.uspto.gov/support | keep |
 | w-skills-over-mcp | Agent Plugins vs SEP-2640 | **SEP-2640 MERGED Final on main** 2026-09-13; Tier-1 SDKs still OPEN | mcp#2640 merged; sdk PRs OPEN | keep |
@@ -48,7 +48,7 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-mcp-registry-draw | MCP registry unrepaired sample | 48.8% initialize; 37.5% never start | arXiv 2609.10962 | keep |
 | w-cobra-skills | COBRA-Skills bandit skill evolution | budgeted skill optimization | arXiv 2609.11682 | keep |
 | w-nobox-mcp | No-Box MCP prompt-injection scan | description-only IPI detection | arXiv 2609.10854 | keep |
-| w-schema-jit | SchemaJIT/AOT compilers | **SETTLED merged** #7908 Sep 18 — watch npm inclusion via rc.118 | Effect#7908 merged | retire-after-admit |
+| w-schema-jit | SchemaJIT/AOT compilers | **RETIRED 2026-09-30** #7908 ships in effect@4.0.0-rc.118 (SchemaJITCompiler export) | effect@4.0.0-rc.118 dist/schema/index.d.ts | retired |
 | w-sep2640-final-unmerged | SEP-2640 Final≠merged | **RETIRED 2026-09-23** Final merged; replaced by w-sep2640-sdk-ship | mcp#2640 merged 2026-09-13 | retired |
 | w-zero-canary | Rocicorp Zero canary channel | canary.15 → **canary.20** (2026-09-30) | npm @rocicorp/zero 1.11.0-canary.20 | keep |
 | w-patent-kb-connect | patent-kb-connect hosted MCP | 727k US patent MCP created Sep 12 | blazingbunny/patent-kb-connect | keep |

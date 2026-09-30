@@ -24,4 +24,4 @@ Executable captures / ledger ops for publisher. Human admits. Never auto-merge.
 - Retarget `w-jazz-alpha-57` → **alpha.58** (retire-57 / add-58).
 - Retarget `w-evolu-8110` → **8.12.0**.
 - Keep HOLDs: USPTO four-field, Harvey–Everlaw fall 2026, iManage/TR coming soon, Instant 2027-08-31, drizzle `#6162`, MCP `#3306`, SEP-3004 closed, SEP-2640 SDK ship gate.
-- Add watches for SKILLLITE / latent-monitor evasion / Assay / SAGE (see WATCHLIST_PATCH.md).
+- Add watches for SKILLLITE / latent-monitor evasion / Assay / SAGE (see research/ledger/WATCHLIST.md).
