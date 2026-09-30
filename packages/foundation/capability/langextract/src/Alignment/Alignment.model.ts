@@ -10,7 +10,6 @@ import { AlignmentStatus, ExtractionCandidate, GroundedExtraction } from "@beep/
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
@@ -226,8 +225,8 @@ export declare namespace AlignedMatch {
  */
 export class AlignmentSource extends S.Class<AlignmentSource>($I`AlignmentSource`)(
   {
-    fuzzyThreshold: UnitInterval.pipe(SchemaUtils.withConstantDefault<number>(DEFAULT_FUZZY_THRESHOLD)),
-    maxExtractions: NonNegativeInt.pipe(SchemaUtils.withConstantDefault<number>(DEFAULT_MAX_EXTRACTIONS)),
+    fuzzyThreshold: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed<number>(DEFAULT_FUZZY_THRESHOLD))),
+    maxExtractions: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed<number>(DEFAULT_MAX_EXTRACTIONS))),
     sourceText: S.String,
   },
   $I.annote("AlignmentSource", {

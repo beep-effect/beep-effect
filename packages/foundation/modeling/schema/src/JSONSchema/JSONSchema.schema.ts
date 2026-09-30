@@ -13,13 +13,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { SchemaGetter } from "effect";
+import { Effect, SchemaGetter } from "effect";
 import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 import {
   $I,
   AbsoluteUriString,
@@ -123,7 +122,7 @@ export declare namespace SubSchema {
 }
 
 const optionalKeyword = <Inner extends S.Top>(inner: Inner, description: string) =>
-  S.OptionFromOptionalKey(inner).pipe(SchemaUtils.withNoneDefault).annotateKey({ description });
+  S.OptionFromOptionalKey(inner).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
 
 const SubSchemaRecord = S.Record(S.String, SubSchema);
 
@@ -150,6 +149,7 @@ const Vocabulary = S.Record(S.String, S.Boolean)
     })
   );
 
+const nodeExtensionsDefault = {};
 /**
  * A JSON Schema draft-2020-12 node: one class, every keyword an
  * Option-wrapped optional field. Keyword co-occurrence is unrestricted (the
@@ -251,7 +251,10 @@ export class Node extends S.Class<Node>($I`Node`)(
     unevaluatedProperties: optionalKeyword(SubSchema, "Schema for properties not evaluated by other applicators."),
     uniqueItems: optionalKeyword(S.Boolean, "When true, all array items must be distinct."),
     writeOnly: optionalKeyword(S.Boolean, "Value is accepted on writes but omitted from reads."),
-    extensions: ExtensionsBag.pipe(SchemaUtils.withKeyDefaults({})).annotateKey({
+    extensions: ExtensionsBag.pipe(
+      S.withConstructorDefault(Effect.succeed(nodeExtensionsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(nodeExtensionsDefault))
+    ).annotateKey({
       description:
         "Non-canonical keywords preserved from the wire; merged back inline on encode. Keys must not shadow canonical keywords.",
     }),
@@ -445,6 +448,7 @@ export const NodeCodec = S.Record(S.String, S.Unknown).pipe(
  */
 export type NodeCodec = typeof NodeCodec.Type;
 
+const documentDefinitionsDefault = {};
 /**
  * Effect-style document envelope for draft-2020-12, mirroring
  * `JsonSchema.Document<"draft-2020-12">`: a root schema plus a definitions
@@ -471,13 +475,19 @@ export type NodeCodec = typeof NodeCodec.Type;
 export class Document extends S.Class<Document>($I`Document`)(
   {
     dialect: S.Literal("draft-2020-12")
-      .pipe(SchemaUtils.withKeyDefaults("draft-2020-12"))
+      .pipe(
+        S.withConstructorDefault(Effect.succeed("draft-2020-12" as const)),
+        S.withDecodingDefaultTypeKey(Effect.succeed("draft-2020-12" as const))
+      )
       .annotateKey({ description: "The canonical dialect of this envelope; always draft-2020-12." }),
     schema: NodeCodec.annotateKey({
       description: "Root schema of the document (object form; the envelope has no boolean root).",
     }),
     definitions: S.Record(S.String, NodeCodec)
-      .pipe(SchemaUtils.withKeyDefaults({}))
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(documentDefinitionsDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(documentDefinitionsDefault))
+      )
       .annotateKey({ description: "Definitions hoisted out of the root schema, keyed by definition name." }),
   },
   $I.annote("Document", {

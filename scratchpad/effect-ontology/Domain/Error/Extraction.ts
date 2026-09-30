@@ -11,14 +11,14 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause, OptionalErrorMessage, OptionalNonNegativeInt } from "./Base.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Extraction");
 
 const OptionalExtractionJson = S.OptionFromNullishOr(S.Json).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
     $I.annoteSchema("OptionalExtractionJson", {
       description: "Optional serializable extraction payload normalized to an Effect Option.",
     })
@@ -33,7 +33,7 @@ const ExtractionJsonArray = ExtractionJsonArrayDefinition.pipe(
 );
 
 const OptionalExtractionJsonArray = S.OptionFromNullishOr(ExtractionJsonArray).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
     $I.annoteSchema("OptionalExtractionJsonArray", {
       description: "Optional collection of partial extraction payloads normalized to an Effect Option.",
     })

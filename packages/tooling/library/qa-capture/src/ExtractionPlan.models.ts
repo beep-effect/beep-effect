@@ -187,7 +187,8 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
         message: "Expected a positive GIF frame rate",
       })
     ).pipe(
-      SchemaUtils.withKeyDefaults(10),
+      S.withConstructorDefault(Effect.succeed(10)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(10)),
       $I.annoteKey("ExtractionRule.gifFps", {
         description: "GIF frame rate used when the rule renders a GIF.",
       })
@@ -205,25 +206,29 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
         message: "Expected a non-negative distance threshold",
       })
     ).pipe(
-      SchemaUtils.withKeyDefaults(0),
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       $I.annoteKey("ExtractionRule.minDistancePx", {
         description: "Minimum pointer travel in pixels before the rule fires (drag).",
       })
     ),
     minDwellMs: DurationMilliseconds.pipe(
-      SchemaUtils.withKeyDefaults(0),
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       $I.annoteKey("ExtractionRule.minDwellMs", {
         description: "Minimum dwell duration in milliseconds before the rule fires (hover).",
       })
     ),
     postRollMs: DurationMilliseconds.pipe(
-      SchemaUtils.withKeyDefaults(0),
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       $I.annoteKey("ExtractionRule.postRollMs", {
         description: "Milliseconds appended after the triggering span.",
       })
     ),
     preRollMs: DurationMilliseconds.pipe(
-      SchemaUtils.withKeyDefaults(0),
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       $I.annoteKey("ExtractionRule.preRollMs", {
         description: "Milliseconds prepended before the triggering span.",
       })
@@ -426,7 +431,8 @@ export class ArtifactBudget extends S.Class<ArtifactBudget>($I`ArtifactBudget`)(
         message: "Expected a positive GIF duration cap",
       })
     ).pipe(
-      SchemaUtils.withKeyDefaults(6),
+      S.withConstructorDefault(Effect.succeed(6)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(6)),
       $I.annoteKey("ArtifactBudget.maxGifSeconds", {
         description: "Maximum GIF duration in seconds; longer windows are capped.",
       })
@@ -439,7 +445,8 @@ export class ArtifactBudget extends S.Class<ArtifactBudget>($I`ArtifactBudget`)(
         message: "Expected a positive byte budget",
       })
     ).pipe(
-      SchemaUtils.withKeyDefaults(20971520),
+      S.withConstructorDefault(Effect.succeed(20971520)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(20971520)),
       $I.annoteKey("ArtifactBudget.maxTotalBytes", {
         description: "Maximum estimated total artifact bytes per round; defaults to 20 MiB.",
       })
@@ -535,7 +542,7 @@ export class ExtractionWindow extends S.Class<ExtractionWindow>($I`ExtractionWin
       })
     ),
     gif: S.OptionFromOptionalKey(GifSpec).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionWindow.gif", {
         description: "GIF rendering parameters, when the window renders a GIF.",
       })
@@ -596,7 +603,7 @@ export class ExtractionWindow extends S.Class<ExtractionWindow>($I`ExtractionWin
 export class DroppedWindow extends S.Class<DroppedWindow>($I`DroppedWindow`)(
   {
     detail: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("DroppedWindow.detail", {
         description: "Free-form context for the merge, degradation, or drop.",
       })

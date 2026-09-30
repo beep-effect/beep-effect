@@ -527,7 +527,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1313,
+      "line": 1323,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure in-memory parser over optional API image maps and Markdown content; it normalizes directly into the schema-backed PatentFigure model and neither decodes nor persists the transient option bag."
     },
@@ -537,7 +537,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1476,
+      "line": 1486,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure in-memory text parser whose required content and optional title are already strings; the transient option bag is call-site ergonomics and never crosses a decode or persistence boundary."
     },
@@ -547,7 +547,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 909,
+      "line": 919,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure lookup over optional in-memory office and kind-code strings; it returns Effect Option and the transient option bag is never decoded or persisted."
     },
@@ -557,7 +557,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1069,
+      "line": 1079,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure projection from optional API metadata and content into the schema-backed PatentDisplay model; the transient option bag is assembled in-process and never decoded or persisted."
     },
@@ -567,7 +567,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 826,
+      "line": 836,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure lookup over optional in-memory country text and an Effect Option kind code; it returns the schema-backed PatentStatus literal and the transient option bag is never decoded or persisted."
     },
@@ -577,7 +577,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1404,
+      "line": 1414,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure parser over in-memory content plus schema-backed PatentSectionKind values; it returns the schema-backed PatentSections model and the transient option bag is never decoded or persisted."
     },

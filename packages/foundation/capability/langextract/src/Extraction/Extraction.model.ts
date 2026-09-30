@@ -10,7 +10,8 @@ import { DocumentId } from "@beep/nlp/Core";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import {
   MAX_CANDIDATE_ATTRIBUTES,
@@ -114,8 +115,8 @@ export type AlignmentStatus = typeof AlignmentStatus.Type;
  */
 export class LangExtractOptions extends S.Class<LangExtractOptions>($I`LangExtractOptions`)(
   {
-    fuzzyThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    maxExtractions: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    fuzzyThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    maxExtractions: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("LangExtractOptions", {
     description: "Options for model parsing and deterministic source alignment.",
@@ -154,9 +155,9 @@ export class ExtractionCandidate extends S.Class<ExtractionCandidate>($I`Extract
         })
       ),
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    confidence: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    confidence: UnitInterval.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     label: ExtractionCandidateLabel,
     text: ExtractionCandidateText,
   },
@@ -289,6 +290,8 @@ export declare namespace GroundedExtraction {
   export type Encoded = typeof GroundedExtraction.Encoded;
 }
 
+const langExtractRequestExamplesDefault = A.empty<ExtractionExample>();
+const langExtractRequestOptionsDefault = LangExtractOptions.make({});
 /**
  * Provider-neutral extraction request.
  *
@@ -319,9 +322,13 @@ export class LangExtractRequest extends S.Class<LangExtractRequest>($I`LangExtra
           message: `LangExtract request must include at most ${MAX_REQUEST_EXAMPLES} examples.`,
         })
       ),
-      SchemaUtils.withEmptyArrayDefaults<ExtractionExample>()
+      S.withConstructorDefault(Effect.succeed(langExtractRequestExamplesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(langExtractRequestExamplesDefault))
     ),
-    options: LangExtractOptions.pipe(SchemaUtils.withKeyDefaults(LangExtractOptions.make({}))),
+    options: LangExtractOptions.pipe(
+      S.withConstructorDefault(Effect.succeed(langExtractRequestOptionsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(langExtractRequestOptionsDefault))
+    ),
     targets: S.NonEmptyArray(ExtractionTarget),
     text: S.String.check(
       S.isMaxLength(MAX_REQUEST_TEXT_LENGTH, {

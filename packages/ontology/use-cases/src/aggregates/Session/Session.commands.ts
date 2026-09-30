@@ -7,7 +7,7 @@
 
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { Session, SessionId } from "@beep/ontology-domain/aggregates/Session";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.ts";
 
@@ -38,7 +38,7 @@ export class OpenOntologyFileCommand extends S.Class<OpenOntologyFileCommand>($I
   {
     sessionId: SessionId,
     path: OntologyFilePath,
-    baseIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    baseIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("OpenOntologyFileCommand", {
     description: "Command to open a Turtle document into an ontology session.",

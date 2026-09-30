@@ -8,10 +8,10 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { GhActor, GhComment, GhPageInfo, GhPrView } from "../../../../internal/github/index.ts";
-import type * as Effect from "effect/Effect";
 import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/closeout/Gh.schemas");
@@ -210,6 +210,7 @@ export class GhReviewThreadLatestComment extends S.Class<GhReviewThreadLatestCom
   })
 ) {}
 
+const ghReviewThreadLatestConnectionNodesDefault = A.empty<GhReviewThreadLatestComment>();
 /**
  * The newest-comment connection of one review thread.
  *
@@ -230,7 +231,8 @@ export class GhReviewThreadLatestConnection extends S.Class<GhReviewThreadLatest
 )(
   {
     nodes: S.Array(GhReviewThreadLatestComment).pipe(
-      SchemaUtils.withKeyDefaults(A.empty<GhReviewThreadLatestComment>())
+      S.withConstructorDefault(Effect.succeed(ghReviewThreadLatestConnectionNodesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ghReviewThreadLatestConnectionNodesDefault))
     ),
   },
   $I.annote("GhReviewThreadLatestConnection", {

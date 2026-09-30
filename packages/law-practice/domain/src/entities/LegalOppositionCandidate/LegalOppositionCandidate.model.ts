@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { LegalOppositionCandidateInput } from "../../values/LegalOppositionCandidateInput/index.ts";
 import { PriorityBasis } from "../../values/PriorityBasis/index.ts";
@@ -73,11 +73,11 @@ export class LegalOppositionCandidate extends ProductEntity.Entity<LegalOppositi
       description: "Screening result as the policy emitted it, with its unordered pair of stored relations.",
     }).pipe(pg.jsonb()),
     priorityBasis: S.OptionFromNullOr(PriorityBasis)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Basis a party offered for its position prevailing; absent until one is recorded." })
       .pipe(pg.jsonb(), pg.columnName("priority_basis")),
     verdictFamily: S.OptionFromNullOr(LegalVerdictAssignment)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Attorney-assigned family with its assigner; absent until an attorney assigns one." })
       .pipe(pg.jsonb(), pg.columnName("verdict_family")),
   },

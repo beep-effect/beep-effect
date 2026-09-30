@@ -6,9 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Match, Order } from "effect";
+import { Effect, Match, Order } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as Ordering from "effect/Ordering";
@@ -86,6 +86,7 @@ const DocgenJsonObject = S.Json.pipe(
   })
 );
 
+const docgenConfigDocumentExcludeDefault = A.empty<string>();
 /**
  * Parsed `docgen.json` document used by the command suite.
  *
@@ -109,7 +110,10 @@ export class DocgenConfigDocument extends S.Class<DocgenConfigDocument>($I`Docge
     $schema: S.optionalKey(S.String),
     projectHomepage: S.optionalKey(S.String),
     srcLink: S.optionalKey(S.String),
-    srcDir: S.String.pipe(SchemaUtils.withKeyDefaults("src")),
+    srcDir: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("src")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("src"))
+    ),
     outDir: S.optionalKey(S.String),
     theme: S.optionalKey(S.String),
     enableSearch: S.optionalKey(S.Boolean),
@@ -118,7 +122,10 @@ export class DocgenConfigDocument extends S.Class<DocgenConfigDocument>($I`Docge
     enforceVersion: S.optionalKey(S.Boolean),
     tscExecutable: S.optionalKey(S.String),
     include: S.String.pipe(S.Array, S.optionalKey),
-    exclude: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    exclude: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(docgenConfigDocumentExcludeDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(docgenConfigDocumentExcludeDefault))
+    ),
     parseCompilerOptions: S.optionalKey(S.Union([S.String, DocgenJsonObject])),
     examplesCompilerOptions: S.optionalKey(S.Union([S.String, DocgenJsonObject])),
   },
@@ -155,7 +162,10 @@ export class DocgenWorkspacePackage extends S.Class<DocgenWorkspacePackage>($I`D
     relativePath: S.String,
     absolutePath: S.String,
     docsOutputPath: S.String,
-    generatedDocsModulesPath: S.String.pipe(SchemaUtils.withKeyDefaults("docs/modules")),
+    generatedDocsModulesPath: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("docs/modules")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("docs/modules"))
+    ),
     hasDocgenConfig: S.Boolean,
     hasGeneratedDocs: S.Boolean,
     status: DocgenPackageStatus,

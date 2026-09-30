@@ -16,7 +16,7 @@ import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkIt
 import { $ArchitectureLabUiId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -153,9 +153,11 @@ export class WorkItemSummaryViewModel extends S.Class<WorkItemSummaryViewModel>(
     statusLabel: WorkItemStatusLabel.annotateKey({
       description: "Uppercase display label derived from the canonical status.",
     }),
-    assigneeLabel: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional display label for the assigned Worker.",
-    }),
+    assigneeLabel: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Optional display label for the assigned Worker.",
+      }),
     visibleActions: VisibleActionList.annotateKey({
       description: "Unique browser-safe action keys currently visible for the WorkItem.",
     }),

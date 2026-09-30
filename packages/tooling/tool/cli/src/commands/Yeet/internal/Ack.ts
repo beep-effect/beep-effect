@@ -30,7 +30,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { DateTime, Effect, Match } from "effect";
 import * as O from "effect/Option";
@@ -307,8 +307,8 @@ export class YeetAckClearedResolution extends S.Class<YeetAckClearedResolution>(
     headSha: S.NonEmptyString,
     mergeable: S.NonEmptyString,
     mergeStateStatus: S.NullOr(S.String),
-    jobId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    unit: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    jobId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    unit: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetAckClearedResolution", {
     description:

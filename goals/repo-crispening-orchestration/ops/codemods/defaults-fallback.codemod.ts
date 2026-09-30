@@ -10,8 +10,9 @@
  *
  * When `size` is an `S.optionalKey(...)` field on a same-file `S.Class`/
  * `S.Struct`, the default belongs on the schema via
- * `SchemaUtils.withKeyDefaults(1024)` (see
- * `packages/agents/server/src/AssistantTurn/ScanState.ts:33`), after which the
+ * `S.withConstructorDefault(Effect.succeed(1024))` plus
+ * `S.withDecodingDefaultTypeKey(Effect.succeed(1024))` (see
+ * `packages/agents/server/src/AssistantTurn/ScanState.ts`), after which the
  * body read simplifies to the plain field access.
  *
  * Assisted tier (SPEC.md §5.5 / README triage: 0.6-0.9): this codemod is a
@@ -34,17 +35,16 @@ import type { TSMorphServiceError } from "@beep/repo-utils";
 import type { BinaryExpression, Expression, ObjectLiteralExpression, PropertyAssignment, SourceFile } from "ts-morph";
 
 const SCHEMA_MODULE = "effect/Schema";
-const SCHEMA_UTILS_MODULE = "@beep/schema";
-const SCHEMA_UTILS_LOCAL = "SchemaUtils";
+const EFFECT_MODULE = "effect";
+const EFFECT_LOCAL = "Effect";
 
 /** Combinators that already attach a default; a field carrying one is skipped. */
 const DEFAULT_COMBINATORS = new Set<string>([
-  "withKeyDefaults",
-  "withConstantDefault",
   "withConstructorDefault",
   "withDecodingDefault",
   "withDecodingDefaultKey",
-  "withEmptyArrayDefaults",
+  "withDecodingDefaultType",
+  "withDecodingDefaultTypeKey",
 ]);
 
 /** Local namespace name for `import * as S from "effect/Schema"`, if any. */
@@ -166,21 +166,21 @@ const asFallback = (
   return { fieldName: left.getName(), defaultText: right.getText(), lhsText: left.getText() };
 };
 
-/** Ensure `import { SchemaUtils } from "@beep/schema"` is present. */
-const ensureSchemaUtilsImport = (sourceFile: SourceFile): void => {
+/** Ensure a value `import { Effect } from "effect"` is present. */
+const ensureEffectImport = (sourceFile: SourceFile): void => {
   for (const declaration of sourceFile.getImportDeclarations()) {
-    if (declaration.getModuleSpecifierValue() !== SCHEMA_UTILS_MODULE) {
+    if (declaration.getModuleSpecifierValue() !== EFFECT_MODULE || declaration.isTypeOnly()) {
       continue;
     }
-    if (declaration.getNamedImports().some((specifier) => specifier.getName() === SCHEMA_UTILS_LOCAL)) {
+    if (declaration.getNamedImports().some((specifier) => specifier.getName() === EFFECT_LOCAL)) {
       return;
     }
-    declaration.addNamedImport(SCHEMA_UTILS_LOCAL);
+    declaration.addNamedImport(EFFECT_LOCAL);
     return;
   }
   sourceFile.addImportDeclaration({
-    moduleSpecifier: SCHEMA_UTILS_MODULE,
-    namedImports: [SCHEMA_UTILS_LOCAL],
+    moduleSpecifier: EFFECT_MODULE,
+    namedImports: [EFFECT_LOCAL],
   });
 };
 
@@ -232,13 +232,13 @@ export const rewriteDefaultsFallback = (sourceFile: SourceFile): void => {
     return;
   }
 
-  ensureSchemaUtilsImport(sourceFile);
+  ensureEffectImport(sourceFile);
 
   for (const edit of edits) {
     const initializer = edit.field.getInitializer();
     if (initializer !== undefined) {
       initializer.replaceWithText(
-        `${initializer.getText()}.pipe(${SCHEMA_UTILS_LOCAL}.withKeyDefaults(${edit.defaultText}))`
+        `${initializer.getText()}.pipe(${schemaAlias}.withConstructorDefault(${EFFECT_LOCAL}.succeed(${edit.defaultText})), ${schemaAlias}.withDecodingDefaultTypeKey(${EFFECT_LOCAL}.succeed(${edit.defaultText})))`
       );
     }
   }

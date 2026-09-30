@@ -8,7 +8,6 @@ import { pluck } from "@beep/schema/SchemaUtils/pluck";
 import { split } from "@beep/schema/SchemaUtils/split";
 import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
-import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertExitSuccess, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
@@ -26,29 +25,6 @@ const encodeUnknownOptionalKeySettings = S.encodeUnknownEffect(OptionalKeySettin
 const OptionalPatch = S.Struct({ file: optional(S.String) });
 const decodeOptionalPatch = S.decodeUnknownEffect(OptionalPatch);
 const encodeOptionalPatch = S.encodeEffect(OptionalPatch);
-const EmptyArraySettings = S.Struct({
-  tags: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>()),
-});
-const decodeEmptyArraySettingsEffect = S.decodeEffect(EmptyArraySettings);
-const DataFirstEmptyArrayTags = SchemaUtils.withEmptyArrayDefaults(S.String.pipe(S.Array));
-const DataFirstEmptyArraySettings = S.Struct({ tags: DataFirstEmptyArrayTags });
-const decodeDataFirstEmptyArraySettingsEffect = S.decodeEffect(DataFirstEmptyArraySettings);
-const OptionalLabelNode = S.Struct({
-  label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-});
-const decodeOptionalLabelNodeEffect = S.decodeEffect(OptionalLabelNode);
-const NullableDirectionNode = S.Struct({
-  direction: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
-});
-const ConstantDefaultsNode = S.Struct({
-  version: S.Literal(1).pipe(SchemaUtils.withConstantDefault(1)),
-  format: S.Literals(["", "left", "center"]).pipe(SchemaUtils.withConstantDefault<"" | "left" | "center">("")),
-});
-const RequiredVersionNode = S.Struct({
-  version: S.Literal(1).pipe(SchemaUtils.withConstantDefault(1)),
-});
-const decodeRequiredVersionNodeEffect = S.decodeEffect(RequiredVersionNode);
-const decodeUnknownRequiredVersionNodeEffect = S.decodeUnknownEffect(RequiredVersionNode);
 
 describe("optionalKeyWithDefault", () => {
   it.effect(
@@ -310,61 +286,6 @@ describe("withStatics", () => {
     expect(TenantName.empty).toBe("");
     expect(TenantName.isTenantName("tenant")).toBe(true);
   });
-});
-
-describe("withEmptyArrayDefaults", () => {
-  it.effect(
-    "defaults missing array fields to an empty readonly array",
-    Effect.fnUntraced(function* () {
-      expect(A.isReadonlyArrayEmpty((yield* decodeEmptyArraySettingsEffect({})).tags)).toBe(true);
-    })
-  );
-
-  it.effect(
-    "supports the data-first call style",
-    Effect.fnUntraced(function* () {
-      expect(A.isReadonlyArrayEmpty((yield* decodeDataFirstEmptyArraySettingsEffect({ tags: undefined })).tags)).toBe(
-        true
-      );
-    })
-  );
-});
-
-describe("withNoneDefault", () => {
-  it("defaults an omitted optional-key Option field to None at construction time", () => {
-    pipe(OptionalLabelNode.make({}).label, O.isNone, assertTrue);
-    assertSome(OptionalLabelNode.make({ label: O.some("x") }).label, "x");
-  });
-
-  it("defaults an omitted nullable Option field to None at construction time", () => {
-    pipe(NullableDirectionNode.make({}).direction, O.isNone, assertTrue);
-  });
-
-  it.effect(
-    "leaves the decode contract intact (missing optional key still decodes to None)",
-    Effect.fnUntraced(function* () {
-      pipe((yield* decodeOptionalLabelNodeEffect({})).label, O.isNone, assertTrue);
-      assertSome((yield* decodeOptionalLabelNodeEffect({ label: "x" })).label, "x");
-    })
-  );
-});
-
-describe("withConstantDefault", () => {
-  it("defaults an omitted field to the constant at construction time", () => {
-    const made = ConstantDefaultsNode.make({});
-
-    expect(made.version).toBe(1);
-    expect(made.format).toBe("");
-  });
-
-  it.effect(
-    "leaves the encoded contract required (the key is still mandatory on decode)",
-    Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.exit(decodeUnknownRequiredVersionNodeEffect({}));
-      pipe(failure1, Exit.hasFails, assertTrue);
-      expect((yield* decodeRequiredVersionNodeEffect({ version: 1 })).version).toBe(1);
-    })
-  );
 });
 
 describe("withCodecStatics", () => {

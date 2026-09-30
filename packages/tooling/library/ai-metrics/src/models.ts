@@ -7,10 +7,12 @@
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const $I = $RepoAiMetricsId.create("models");
-const OptionalTranscriptString = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);
+const OptionalTranscriptString = S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone));
 
 /**
  * Numeric count returned by aggregate DuckDB queries.
@@ -369,14 +371,14 @@ export type AiMetricsSourceRole = typeof AiMetricsSourceRole.Type;
  */
 export class AiMetricsSourceAttribution extends S.Class<AiMetricsSourceAttribution>($I`AiMetricsSourceAttribution`)(
   {
-    agentNicknameHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    agentRoleHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    forkedFromIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    parentSessionIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    parentThreadIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    sessionIdHash: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    agentNicknameHash: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    agentRoleHash: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    forkedFromIdHash: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    parentSessionIdHash: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    parentThreadIdHash: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sessionIdHash: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     sourceRole: AiMetricsSourceRole,
-    threadSpawn: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    threadSpawn: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AiMetricsSourceAttribution", {
     description: "Hash-only metadata that distinguishes primary sessions from delegated subagent work.",
@@ -644,15 +646,25 @@ export class AiMetricsOtlpEndpointSpec extends S.Class<AiMetricsOtlpEndpointSpec
  */
 export class AiMetricsScoreWeights extends S.Class<AiMetricsScoreWeights>($I`AiMetricsScoreWeights`)(
   {
-    cost: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.1)),
-    flow: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.2)),
-    outcome: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.7)),
+    cost: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.1)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.1))
+    ),
+    flow: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.2)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.2))
+    ),
+    outcome: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.7)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.7))
+    ),
   },
   $I.annote("AiMetricsScoreWeights", {
     description: "Default weighted rubric emphasizing outcomes over flow and cost.",
   })
 ) {}
 
+const configSnapshotIncludedPathsDefault = A.empty<string>();
 /**
  * Versioned snapshot of agent-facing repository configuration.
  *
@@ -677,10 +689,13 @@ export class ConfigSnapshot extends S.Class<ConfigSnapshot>($I`ConfigSnapshot`)(
   {
     changedPaths: S.Array(S.String),
     configHash: S.String,
-    gitCommit: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    includedPaths: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    gitCommit: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    includedPaths: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(configSnapshotIncludedPathsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(configSnapshotIncludedPathsDefault))
+    ),
     label: S.String,
-    previousSnapshotId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    previousSnapshotId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     snapshotId: S.String,
   },
   $I.annote("ConfigSnapshot", {
@@ -689,7 +704,8 @@ export class ConfigSnapshot extends S.Class<ConfigSnapshot>($I`ConfigSnapshot`)(
 ) {}
 
 const SourceRoleDefaultPrimary = AiMetricsSourceRole.pipe(
-  SchemaUtils.withKeyDefaults(AiMetricsSourceRole.Enum.primary)
+  S.withConstructorDefault(Effect.succeed(AiMetricsSourceRole.Enum.primary)),
+  S.withDecodingDefaultTypeKey(Effect.succeed(AiMetricsSourceRole.Enum.primary))
 );
 
 /**
@@ -717,10 +733,10 @@ const SourceRoleDefaultPrimary = AiMetricsSourceRole.pipe(
 export class AgentTask extends S.Class<AgentTask>($I`AgentTask`)(
   {
     agentTaskId: S.String,
-    configSnapshotId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    configSnapshotId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     createdAtEpochMillis: S.Natural,
-    firstSeenAt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    lastSeenAt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    firstSeenAt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    lastSeenAt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     repoRootHash: S.String,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
@@ -754,12 +770,12 @@ export class AgentTask extends S.Class<AgentTask>($I`AgentTask`)(
 export class AgentSession extends S.Class<AgentSession>($I`AgentSession`)(
   {
     agentSessionId: S.String,
-    agentTaskId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    agentTaskId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     ...AiMetricsSourceAttribution.fields,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
     sourceRole: SourceRoleDefaultPrimary,
-    startedAt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    startedAt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentSession", {
     description:
@@ -826,10 +842,12 @@ export class AgentTurn extends S.Class<AgentTurn>($I`AgentTurn`)(
 export class ModelCall extends S.Class<ModelCall>($I`ModelCall`)(
   {
     callId: S.String,
-    latencyMs: S.OptionFromOptionalKey(AiMetricsNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    latencyMs: S.OptionFromOptionalKey(AiMetricsNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     model: S.String,
     provider: S.String,
-    totalTokens: S.OptionFromOptionalKey(AiMetricsNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    totalTokens: S.OptionFromOptionalKey(AiMetricsNonNegativeInteger).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("ModelCall", {
     description: "Provider/model usage, latency, and token measurement for a coding-agent run.",
@@ -859,8 +877,8 @@ export class ModelCall extends S.Class<ModelCall>($I`ModelCall`)(
  */
 export class ToolInvocation extends S.Class<ToolInvocation>($I`ToolInvocation`)(
   {
-    durationMs: S.OptionFromOptionalKey(AiMetricsNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    exitCode: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    durationMs: S.OptionFromOptionalKey(AiMetricsNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    exitCode: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
     toolName: S.String,
     toolRunId: S.String,
   },
@@ -900,7 +918,7 @@ export class OutcomeLabel extends S.Class<OutcomeLabel>($I`OutcomeLabel`)(
     interventionCount: AiMetricsNonNegativeInteger,
     labelId: S.String,
     labeledAtEpochMillis: S.Natural,
-    note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    note: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     passed: S.Boolean,
     qualityGate: AiMetricsQualityGateStatus,
     rating: AiMetricsRating,
@@ -938,7 +956,7 @@ export class BenchmarkCase extends S.Class<BenchmarkCase>($I`BenchmarkCase`)(
     benchmarkCaseId: S.String,
     expectedChecks: S.Array(S.String),
     promptHash: S.String,
-    promptRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    promptRef: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     title: S.String,
   },
   $I.annote("BenchmarkCase", {
@@ -978,7 +996,7 @@ export class BenchmarkRun extends S.Class<BenchmarkRun>($I`BenchmarkRun`)(
     benchmarkRunId: S.String,
     configSnapshotId: S.String,
     elapsedMs: AiMetricsNonNegativeInteger,
-    note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    note: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     passed: S.Boolean,
     qualityGate: AiMetricsQualityGateStatus,
     recordedAtEpochMillis: S.Natural,
@@ -1068,8 +1086,8 @@ export class TranscriptIngestSummary extends S.Class<TranscriptIngestSummary>($I
   {
     acceptedEvents: AiMetricsNonNegativeInteger,
     eventNames: S.Array(S.String),
-    firstTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    lastTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    firstTimestamp: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    lastTimestamp: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     rejectedLines: AiMetricsNonNegativeInteger,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
@@ -1099,8 +1117,8 @@ export class TranscriptIngestSummary extends S.Class<TranscriptIngestSummary>($I
  */
 export class CodexTranscriptLine extends S.Class<CodexTranscriptLine>($I`CodexTranscriptLine`)(
   {
-    payload: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault),
-    timestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    payload: S.OptionFromOptionalKey(S.Unknown).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    timestamp: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     type: S.String,
   },
   $I.annote("CodexTranscriptLine", {
@@ -1130,7 +1148,7 @@ export class CodexTranscriptLine extends S.Class<CodexTranscriptLine>($I`CodexTr
 export class ClaudeTranscriptLine extends S.Class<ClaudeTranscriptLine>($I`ClaudeTranscriptLine`)(
   {
     cwd: OptionalTranscriptString,
-    message: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault),
+    message: S.OptionFromOptionalKey(S.Unknown).pipe(S.withConstructorDefault(Effect.succeedNone)),
     sessionId: OptionalTranscriptString,
     timestamp: OptionalTranscriptString,
     type: OptionalTranscriptString,
@@ -1163,7 +1181,7 @@ export class OpenClawTranscriptLine extends S.Class<OpenClawTranscriptLine>($I`O
   {
     event: OptionalTranscriptString,
     message: OptionalTranscriptString,
-    payload: S.OptionFromOptionalKey(UnknownRecord).pipe(SchemaUtils.withNoneDefault),
+    payload: S.OptionFromOptionalKey(UnknownRecord).pipe(S.withConstructorDefault(Effect.succeedNone)),
     timestamp: OptionalTranscriptString,
     type: OptionalTranscriptString,
   },

@@ -69,7 +69,7 @@ export const PostgresConfig = S.Struct({
   database: S.String,
   username: S.String,
   password: S.Redacted(S.NonEmptyString),
-  ssl: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+  ssl: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
 }).pipe(
   $I.annoteSchema("PostgresConfig", {
     description: "PostgreSQL host, port, database, username, redacted password, and optional TLS flag.",

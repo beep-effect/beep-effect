@@ -27,8 +27,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("claudecode/Settings/HooksSection");
 
@@ -109,9 +110,9 @@ export type HookShell = typeof HookShell.Type;
 export type HookShellEncoded = typeof HookShell.Encoded;
 
 const commonHookFields = {
-  if: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  timeout: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-  statusMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  if: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  timeout: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  statusMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
 };
 
 /**
@@ -135,10 +136,10 @@ export class CommandHookEntry extends S.Class<CommandHookEntry>($I`CommandHookEn
     ...commonHookFields,
     type: S.tag("command"),
     command: S.String,
-    args: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    async: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    asyncRewake: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    shell: S.OptionFromOptionalKey(HookShell).pipe(SchemaUtils.withNoneDefault),
+    args: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    async: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    asyncRewake: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    shell: S.OptionFromOptionalKey(HookShell).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CommandHookEntry", {
     description: "A Claude Code hook executed as a local command.",
@@ -201,8 +202,8 @@ export class HttpHookEntry extends S.Class<HttpHookEntry>($I`HttpHookEntry`)(
     ...commonHookFields,
     type: S.tag("http"),
     url: S.String,
-    headers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
-    allowedEnvVars: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
+    headers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowedEnvVars: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("HttpHookEntry", {
     description: "A Claude Code hook executed by an HTTP endpoint.",
@@ -269,7 +270,7 @@ export class McpToolHookEntry extends S.Class<McpToolHookEntry>($I`McpToolHookEn
     type: S.tag("mcp_tool"),
     server: S.String,
     tool: S.String,
-    input: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault),
+    input: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("McpToolHookEntry", {
     description: "A Claude Code hook executed by an MCP tool.",
@@ -333,8 +334,8 @@ export class PromptHookEntry extends S.Class<PromptHookEntry>($I`PromptHookEntry
     ...commonHookFields,
     type: S.tag("prompt"),
     prompt: S.String,
-    model: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    continueOnBlock: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    model: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    continueOnBlock: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PromptHookEntry", {
     description: "A Claude Code hook evaluated by a single model prompt.",
@@ -397,7 +398,7 @@ export class AgentHookEntry extends S.Class<AgentHookEntry>($I`AgentHookEntry`)(
     ...commonHookFields,
     type: S.tag("agent"),
     prompt: S.String,
-    model: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    model: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentHookEntry", {
     description: "A Claude Code hook evaluated by a tool-capable subagent.",
@@ -513,7 +514,7 @@ export type HookEntryEncoded = typeof HookEntry.Encoded;
  */
 export class HookMatcherGroup extends S.Class<HookMatcherGroup>($I`HookMatcherGroup`)(
   {
-    matcher: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    matcher: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     hooks: HookEntry.pipe(S.Array),
   },
   $I.annote("HookMatcherGroup", {

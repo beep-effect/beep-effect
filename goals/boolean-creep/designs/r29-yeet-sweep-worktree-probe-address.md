@@ -63,7 +63,7 @@ Use `.cases.unreliable.make({})`, `.cases.unaddressed.make({})`, and `.cases.add
 
 Keep the replacement field required. Old omission of path meant None, but the old reliability Boolean was required: explicitly migrate each caller to its correct case. Never silently default missing replacement observations. Do not introduce a stricter path schema, trimming, existence check or canonicalization. Spaces, whitespace-only nonempty paths, quotes and shell metacharacters remain valid constructor payloads; existing parser trim and shell quoting retain their current boundary roles.
 
-Reference verification: `packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:710-719,793-815` implements and demonstrates this helper. `.repos/effect/packages/effect/SCHEMA.md:2137-2163` and `src/Schema.ts:6178-6233` establish tagged cases/guards/match. `src/Schema.ts:14159-14179` and local `SchemaUtils/withConstructorDefaults.ts:49-54` establish optional-key decode/encode and constructor None semantics. No advanced API is assumed from memory.
+Reference verification: `packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:710-719,793-815` implements and demonstrates this helper. `.repos/effect/packages/effect/SCHEMA.md:2137-2163` and `src/Schema.ts:6178-6233` establish tagged cases/guards/match. `src/Schema.ts:14159-14179` and the retired `SchemaUtils.withNoneDefault` helper (removed in PR 3b of effect-schema-parity; now `S.withConstructorDefault(Effect.succeedNone)`) establish optional-key decode/encode and constructor None semantics. No advanced API is assumed from memory.
 
 ## Migration inventory
 

@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-error");
 
@@ -37,7 +37,7 @@ export class ToolError extends S.TaggedError<ToolError>($I`ToolError`)(
   "ToolError",
   {
     message: S.String,
-    cause: S.Defect().pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    cause: S.Defect().pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ToolError", {
     description: "A host tool failure safe to surface through CodeMode.",

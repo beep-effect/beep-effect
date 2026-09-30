@@ -12,7 +12,7 @@ import { IRI } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import { thunkTrue } from "@beep/utils/thunk";
-import { Number as Num } from "effect";
+import { Number as Num, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -42,22 +42,25 @@ const AgentConcurrency = PosInt.check(
     })
   );
 
+const ontologyAgentConfigModelValidationPolicyDefault = ValidationPolicy.decodeUnknownSync({});
+const ontologyAgentConfigModelConcurrencyDefault = AgentConcurrency.make(4);
+const ontologyAgentConfigModelChunkingDefault = ChunkingConfig.default();
 class OntologyAgentConfigModel extends S.Class<OntologyAgentConfigModel>($I`OntologyAgentConfig`)(
   {
     ontology: S.OptionFromOptionalKey(OntologyRef).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Exact ontology version, or no override to use the configured default." })
     ),
     validationPolicy: ValidationPolicy.pipe(
-      SchemaUtils.withKeyDefaults(ValidationPolicy.decodeUnknownSync({})),
+      S.withConstructorDefault(Effect.succeed(ontologyAgentConfigModelValidationPolicyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(ontologyAgentConfigModelValidationPolicyDefault)),
       S.annotateKey({ description: "Severity-to-workflow failure policy." })
     ),
     concurrency: AgentConcurrency.pipe(
-      SchemaUtils.withKeyDefaults(AgentConcurrency.make(4)),
+      S.withConstructorDefault(Effect.succeed(ontologyAgentConfigModelConcurrencyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(ontologyAgentConfigModelConcurrencyDefault)),
       S.annotateKey({ description: "Maximum concurrently executing extraction tasks." })
     ),
     chunking: ChunkingConfig.pipe(
-      SchemaUtils.withKeyDefaults(ChunkingConfig.default()),
+      S.withConstructorDefault(Effect.succeed(ontologyAgentConfigModelChunkingDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(ontologyAgentConfigModelChunkingDefault)),
       S.annotateKey({ description: "Schema-defaulted text chunking policy." })
     ),
   },
@@ -136,7 +139,7 @@ export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionM
     chunkCount: NonNegativeInt,
     usage: ProviderTokenUsage,
     duration: S.DurationFromMillis,
-    runId: S.OptionFromOptionalKey(ExtractionRunId).pipe(SchemaUtils.withNoneDefault),
+    runId: S.OptionFromOptionalKey(ExtractionRunId).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ExtractionMetrics", {
     description: "Non-negative extraction counts, token use, elapsed duration, and optional run identity.",
@@ -217,11 +220,11 @@ export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionRes
     graph: KnowledgeGraph,
     metrics: ExtractionMetrics,
     turtle: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional RDF graph serialized as Turtle." })
     ),
     validationReport: S.OptionFromOptionalKey(ShaclValidationReport).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional SHACL report produced for the extracted graph." })
     ),
   },
@@ -373,6 +376,7 @@ export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionRes
   }
 }
 
+const extractWithClaimsOptionsModelDefaultConfidenceDefault = Confidence.make(0.8);
 class ExtractWithClaimsOptionsModel extends S.Class<ExtractWithClaimsOptionsModel>($I`ExtractWithClaimsOptions`)(
   {
     ontologyId: S.NonEmptyString.annotateKey({
@@ -382,19 +386,19 @@ class ExtractWithClaimsOptionsModel extends S.Class<ExtractWithClaimsOptionsMode
       description: "Source article identifier retained as claim provenance.",
     }),
     autoCreateAssertions: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({ description: "Whether extracted claims are immediately promoted to assertions." })
     ),
     defaultConfidence: Confidence.pipe(
-      SchemaUtils.withKeyDefaults(Confidence.make(0.8)),
+      S.withConstructorDefault(Effect.succeed(extractWithClaimsOptionsModelDefaultConfidenceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractWithClaimsOptionsModelDefaultConfidenceDefault)),
       S.annotateKey({ description: "Confidence used when extraction supplies no measured value." })
     ),
     targetNamespace: S.OptionFromOptionalKey(IRI).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional local namespace used when minting entity IRIs." })
     ),
     agentConfig: S.OptionFromOptionalKey(OntologyAgentConfig).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional per-operation agent-policy override." })
     ),
   },
@@ -614,10 +618,11 @@ export class ExtractWithClaimsResult extends S.Class<ExtractWithClaimsResult>($I
   }
 }
 
+const queryBindingModelBindingsDefault = {};
 class QueryBindingModel extends S.Class<QueryBindingModel>($I`QueryBinding`)(
   {
     bindings: S.Record(S.String, S.String).pipe(
-      SchemaUtils.withKeyDefaults({}),
+      S.withConstructorDefault(Effect.succeed(queryBindingModelBindingsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(queryBindingModelBindingsDefault)),
       S.annotateKey({ description: "SPARQL variable names mapped to serialized RDF terms." })
     ),
   },
@@ -656,6 +661,7 @@ export const QueryBinding = QueryBindingModel.pipe(
  */
 export type QueryBinding = typeof QueryBinding.Type;
 
+const queryResultModelBindingsDefault = A.empty<QueryBinding>();
 class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
   {
     answer: S.NonEmptyString.annotateKey({
@@ -665,7 +671,7 @@ class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
       description: "Generated SPARQL query retained for transparency.",
     }),
     bindings: S.Array(QueryBinding).pipe(
-      SchemaUtils.withEmptyArrayDefaults<QueryBinding>(),
+      S.withConstructorDefault(Effect.succeed(queryResultModelBindingsDefault)), S.withDecodingDefaultType(Effect.succeed(queryResultModelBindingsDefault)),
       S.annotateKey({ description: "Raw result rows returned by SPARQL evaluation." })
     ),
     confidence: Confidence.annotateKey({
@@ -735,10 +741,11 @@ export const QueryResult = QueryResultModel.pipe(
  */
 export type QueryResult = typeof QueryResult.Type;
 
+const reasoningResultModelRulesAppliedDefault = A.empty<string>();
 class ReasoningResultModel extends S.Class<ReasoningResultModel>($I`ReasoningResult`)(
   {
     inferredTripleCount: NonNegativeInt,
-    rulesApplied: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    rulesApplied: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(reasoningResultModelRulesAppliedDefault)), S.withDecodingDefaultType(Effect.succeed(reasoningResultModelRulesAppliedDefault))),
     duration: S.DurationFromMillis,
   },
   $I.annote("ReasoningResult", {
@@ -781,18 +788,21 @@ export const ReasoningResult = ReasoningResultModel.pipe(
  */
 export type ReasoningResult = typeof ReasoningResult.Type;
 
+const violationsByLevelModelViolationsDefault = A.empty<string>();
+const violationsByLevelModelWarningsDefault = A.empty<string>();
+const violationsByLevelModelInfoDefault = A.empty<string>();
 class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`ViolationsByLevel`)(
   {
     violations: S.Array(S.NonEmptyString).pipe(
-      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.withConstructorDefault(Effect.succeed(violationsByLevelModelViolationsDefault)), S.withDecodingDefaultType(Effect.succeed(violationsByLevelModelViolationsDefault)),
       S.annotateKey({ description: "Blocking SHACL Violation diagnostics." })
     ),
     warnings: S.Array(S.NonEmptyString).pipe(
-      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.withConstructorDefault(Effect.succeed(violationsByLevelModelWarningsDefault)), S.withDecodingDefaultType(Effect.succeed(violationsByLevelModelWarningsDefault)),
       S.annotateKey({ description: "Non-blocking SHACL Warning diagnostics." })
     ),
     info: S.Array(S.NonEmptyString).pipe(
-      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.withConstructorDefault(Effect.succeed(violationsByLevelModelInfoDefault)), S.withDecodingDefaultType(Effect.succeed(violationsByLevelModelInfoDefault)),
       S.annotateKey({ description: "Informational SHACL diagnostics." })
     ),
   },
@@ -881,14 +891,14 @@ class ViolationExplanationModel extends S.Class<ViolationExplanationModel>($I`Vi
       description: "Serialized RDF term for the focus node that failed validation.",
     }),
     path: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional serialized SHACL property path." })
     ),
     explanation: S.NonEmptyString.annotateKey({
       description: "Context-aware human-readable explanation of the violation.",
     }),
     suggestion: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional corrective action when one can be determined." })
     ),
     severity: ShaclSeverity.annotateKey({
@@ -935,17 +945,19 @@ export const ViolationExplanation = ViolationExplanationModel.pipe(
  */
 export type ViolationExplanation = typeof ViolationExplanation.Type;
 
+const enhancedValidationReportModelExplanationsDefault = A.empty<ViolationExplanation>();
+const enhancedValidationReportModelByLevelDefault = ViolationsByLevelModel.make({});
 class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportModel>($I`EnhancedValidationReport`)(
   {
     conforms: S.Boolean.annotateKey({
       description: "Whether the data graph conforms to every evaluated shape.",
     }),
     explanations: S.Array(ViolationExplanation).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ViolationExplanation>(),
+      S.withConstructorDefault(Effect.succeed(enhancedValidationReportModelExplanationsDefault)), S.withDecodingDefaultType(Effect.succeed(enhancedValidationReportModelExplanationsDefault)),
       S.annotateKey({ description: "Context-aware explanation for each surfaced diagnostic." })
     ),
     byLevel: ViolationsByLevel.pipe(
-      SchemaUtils.withKeyDefaults(ViolationsByLevelModel.make({})),
+      S.withConstructorDefault(Effect.succeed(enhancedValidationReportModelByLevelDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(enhancedValidationReportModelByLevelDefault)),
       S.annotateKey({ description: "Diagnostics partitioned by SHACL severity." })
     ),
     duration: S.DurationFromMillis,

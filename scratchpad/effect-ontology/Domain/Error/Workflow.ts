@@ -10,9 +10,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause, OptionalErrorMessage } from "./Base.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Workflow");
 
@@ -118,7 +118,7 @@ export class WorkflowSuspendedError extends S.TaggedError<WorkflowSuspendedError
     cause: OptionalErrorMessage.annotateKey({
       description: "Optional suspension reason, normalized to Option.",
     }),
-    isResumable: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)).annotateKey({
+    isResumable: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))).annotateKey({
       description: "Whether the suspended execution may be resumed.",
     }),
   },

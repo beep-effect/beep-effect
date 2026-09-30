@@ -6,9 +6,9 @@
  */
 
 import { $HubspotId } from "@beep/identity";
-import { SchemaUtils, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { identity, SchemaTransformation } from "effect";
+import { Effect, identity, SchemaTransformation } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -145,6 +145,7 @@ export const HUBSPOT_FORMS_API_URL = "https://api.hsforms.com";
  */
 export const HUBSPOT_CRM_API_URL = "https://api.hubapi.com";
 
+const hubSpotConfigInputHeadersDefault = R.empty();
 /**
  * Runtime configuration accepted by {@link HubSpot.makeLayer}.
  *
@@ -172,15 +173,26 @@ export class HubSpotConfigInput extends S.Class<HubSpotConfigInput>($I`HubSpotCo
     accessToken: S.optionalKey(S.String.pipe(S.RedactedFromValue)).annotateKey({
       description: "Optional redacted private-app access token used for authenticated HubSpot requests.",
     }),
-    crmApiUrl: HubSpotBaseUrl.pipe(SchemaUtils.withKeyDefaults(HUBSPOT_CRM_API_URL)).annotateKey({
+    crmApiUrl: HubSpotBaseUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(HUBSPOT_CRM_API_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(HUBSPOT_CRM_API_URL))
+    ).annotateKey({
       description: "Base URL for HubSpot CRM API requests.",
     }),
-    formsApiUrl: HubSpotBaseUrl.pipe(SchemaUtils.withKeyDefaults(HUBSPOT_FORMS_API_URL)).annotateKey({
+    formsApiUrl: HubSpotBaseUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(HUBSPOT_FORMS_API_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(HUBSPOT_FORMS_API_URL))
+    ).annotateKey({
       description: "Base URL for HubSpot secure Forms API submissions.",
     }),
-    headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "Additional HTTP headers merged into HubSpot API requests.",
-    }),
+    headers: S.Record(S.String, S.String)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(hubSpotConfigInputHeadersDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(hubSpotConfigInputHeadersDefault))
+      )
+      .annotateKey({
+        description: "Additional HTTP headers merged into HubSpot API requests.",
+      }),
   },
   $I.annote("HubSpotConfigInput", {
     description: "Runtime configuration accepted by the HubSpot API driver layer.",

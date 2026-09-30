@@ -6,8 +6,8 @@
  */
 import { $LangExtractId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as O from "@beep/utils/Option";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as R from "effect/Record";
@@ -75,7 +75,7 @@ type LangExtractErrorFromReason = {
 export class LangExtractError extends S.TaggedError<LangExtractError>($I`LangExtractError`)(
   "LangExtractError",
   {
-    details: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    details: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     message: S.String,
     reason: LangExtractErrorReason,
   },

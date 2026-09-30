@@ -20,11 +20,11 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { DateTime } from "effect";
+import { DateTime, Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { PolicyRevision, SinkAudience, SinkClass } from "../ExecutionGrant/index.ts";
@@ -295,7 +295,7 @@ const decisionCommonFields = {
   seq: NonNegativeInt.annotateKey({
     description: "Position in the run's chain; zero-based, dense.",
   }),
-  prevHash: DecisionRecordHash.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault).annotateKey({
+  prevHash: DecisionRecordHash.pipe(S.OptionFromNullOr, S.withConstructorDefault(Effect.succeedNone)).annotateKey({
     description: "Hash of the previous decision in this run; none only at seq zero.",
   }),
   hash: DecisionRecordHash.annotateKey({

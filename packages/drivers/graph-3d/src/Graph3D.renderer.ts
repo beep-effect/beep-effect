@@ -12,7 +12,7 @@
  */
 
 import { $Graph3dId } from "@beep/identity/packages";
-import { Fn, SchemaUtils } from "@beep/schema";
+import { Fn } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
@@ -50,32 +50,86 @@ class Graph3DConfig extends S.Class<Graph3DConfig>($I`Graph3DConfig`)(
     // no-override fallback (research VERIFICATION.md §5.4). Fixed dark grammar
     // in both app themes, matching the cosmos driver's hardcoded-color
     // convention.
-    background: S.Finite.pipe(SchemaUtils.withKeyDefaults(0x111111)),
-    cameraFov: S.Finite.pipe(SchemaUtils.withKeyDefaults(40)),
+    background: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0x111111)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0x111111))
+    ),
+    cameraFov: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(40)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(40))
+    ),
     // Importance sizing: logical = sizeBase + importance * sizeScale, world
     // diameter = logical * sizeWorldFactor * zoomDamping.
-    sizeBase: S.Finite.pipe(SchemaUtils.withKeyDefaults(10)),
-    sizeScale: S.Finite.pipe(SchemaUtils.withKeyDefaults(22.4)),
-    sizeWorldFactor: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.5)),
+    sizeBase: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(10)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(10))
+    ),
+    sizeScale: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(22.4)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(22.4))
+    ),
+    sizeWorldFactor: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.5)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.5))
+    ),
     // Edge ribbons: width 0.4..5.0 by weight^1.2; global opacity
     // max(0.10, 0.95 - sqrt(E)/100); per-edge alpha 0.5..1.0 by weight.
-    edgeWidthBase: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.4)),
-    edgeWidthScale: S.Finite.pipe(SchemaUtils.withKeyDefaults(4.6)),
-    edgeSegments: S.Int.pipe(SchemaUtils.withKeyDefaults(30)),
-    edgeCurvature: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.25)),
-    edgeCurveRotation: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.25)),
+    edgeWidthBase: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.4)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.4))
+    ),
+    edgeWidthScale: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(4.6)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(4.6))
+    ),
+    edgeSegments: S.Int.pipe(
+      S.withConstructorDefault(Effect.succeed(30)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(30))
+    ),
+    edgeCurvature: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.25)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.25))
+    ),
+    edgeCurveRotation: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.25)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.25))
+    ),
     // Label declutter: budget K = clamp(round(4.5 * sqrt(n) * (700/d)^0.7), 8, 90),
     // pool-bounded; opacity floor 0.10; depth fade >35 units behind center over
     // 130 units capped at 85%.
-    labelPoolSize: S.Int.pipe(SchemaUtils.withKeyDefaults(96)),
-    labelBudgetMax: S.Int.pipe(SchemaUtils.withKeyDefaults(90)),
-    labelBudgetMin: S.Int.pipe(SchemaUtils.withKeyDefaults(8)),
+    labelPoolSize: S.Int.pipe(
+      S.withConstructorDefault(Effect.succeed(96)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(96))
+    ),
+    labelBudgetMax: S.Int.pipe(
+      S.withConstructorDefault(Effect.succeed(90)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(90))
+    ),
+    labelBudgetMin: S.Int.pipe(
+      S.withConstructorDefault(Effect.succeed(8)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(8))
+    ),
     // Selection dimming (confirmed reference values).
-    dimmedNodeOpacity: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.1)),
-    dimmedEdgeOpacity: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.3)),
-    pickRadiusPx: S.Finite.pipe(SchemaUtils.withKeyDefaults(24)),
-    panSpeed: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.3)),
-    rotateSpeed: S.Finite.pipe(SchemaUtils.withKeyDefaults(2.2)),
+    dimmedNodeOpacity: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.1)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.1))
+    ),
+    dimmedEdgeOpacity: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.3)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.3))
+    ),
+    pickRadiusPx: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(24)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(24))
+    ),
+    panSpeed: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0.3)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.3))
+    ),
+    rotateSpeed: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(2.2)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2.2))
+    ),
   },
   $I.annote("Graph3DConfig", {
     description: "Stable visual-grammar and interaction defaults for each mounted 3D graph.",

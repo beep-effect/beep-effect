@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, Order } from "effect";
 import * as A from "effect/Array";
 import type * as FileSystem from "effect/FileSystem";
@@ -79,7 +79,7 @@ export class PluginIssue extends S.Class<PluginIssue>($I`PluginIssue`)(
     code: S.String,
     severity: PluginIssueSeverity,
     message: S.String,
-    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PluginIssue", {
     description: "A validation or lint finding for a Claude Code plugin.",

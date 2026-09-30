@@ -8,7 +8,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
-import type { Duration, Effect } from "effect";
+import { type Duration, Effect } from "effect";
 import { DateTime } from "effect";
 import * as A from "effect/Array";
 import type * as O from "effect/Option";
@@ -142,7 +142,7 @@ export class AgentMetadata extends S.Class<AgentMetadata>($I`AgentMetadata`)(
       description: "Functional role played by the agent.",
     }),
     version: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Implementation version when independently versioned." })
     ),
   },
@@ -151,6 +151,8 @@ export class AgentMetadata extends S.Class<AgentMetadata>($I`AgentMetadata`)(
   })
 ) {}
 
+const validationResultErrorsDefault = A.empty<string>();
+const validationResultWarningsDefault = A.empty<string>();
 /**
  * Immutable diagnostics produced by agent input validation.
  *
@@ -175,11 +177,11 @@ export class AgentMetadata extends S.Class<AgentMetadata>($I`AgentMetadata`)(
 export class ValidationResult extends S.Class<ValidationResult>($I`ValidationResult`)(
   {
     errors: S.Array(S.NonEmptyString).pipe(
-      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.withConstructorDefault(Effect.succeed(validationResultErrorsDefault)), S.withDecodingDefaultType(Effect.succeed(validationResultErrorsDefault)),
       S.annotateKey({ description: "Blocking validation diagnostics." })
     ),
     warnings: S.Array(S.NonEmptyString).pipe(
-      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.withConstructorDefault(Effect.succeed(validationResultWarningsDefault)), S.withDecodingDefaultType(Effect.succeed(validationResultWarningsDefault)),
       S.annotateKey({ description: "Non-blocking validation diagnostics." })
     ),
   },
@@ -465,6 +467,9 @@ export class IntermediateResult extends S.Class<IntermediateResult>($I`Intermedi
   })
 ) {}
 
+const pipelineStateCompletedAgentsDefault = A.empty<AgentId>();
+const pipelineStateIntermediateResultsDefault = A.empty<IntermediateResult>();
+const pipelineStateIterationCountDefault = NonNegativeInt.make(0);
 /**
  * Immutable checkpoint snapshot of a multi-agent pipeline.
  *
@@ -490,15 +495,15 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
       description: "Unique identifier for this pipeline execution.",
     }),
     currentAgentId: S.OptionFromOptionalKey(AgentId).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Agent currently executing, when any." })
     ),
     completedAgents: S.Array(AgentId).pipe(
-      SchemaUtils.withEmptyArrayDefaults<AgentId>(),
+      S.withConstructorDefault(Effect.succeed(pipelineStateCompletedAgentsDefault)), S.withDecodingDefaultType(Effect.succeed(pipelineStateCompletedAgentsDefault)),
       S.annotateKey({ description: "Agents that completed successfully." })
     ),
     intermediateResults: S.Array(IntermediateResult).pipe(
-      SchemaUtils.withEmptyArrayDefaults<IntermediateResult>(),
+      S.withConstructorDefault(Effect.succeed(pipelineStateIntermediateResultsDefault)), S.withDecodingDefaultType(Effect.succeed(pipelineStateIntermediateResultsDefault)),
       S.annotateKey({ description: "Checkpoint-safe outputs from completed agents." })
     ),
     startedAt: S.DateTimeUtcFromString.annotateKey({
@@ -508,7 +513,7 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
       description: "Canonical discriminated pipeline status.",
     }),
     iterationCount: NonNegativeInt.pipe(
-      SchemaUtils.withKeyDefaults(NonNegativeInt.make(0)),
+      S.withConstructorDefault(Effect.succeed(pipelineStateIterationCountDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(pipelineStateIterationCountDefault)),
       S.annotateKey({ description: "Completed loop iterations." })
     ),
   },
@@ -620,6 +625,7 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
   }
 }
 
+const terminationConditionMaxIterationsDefault = PosInt.make(5);
 /**
  * Stop conditions for a looping agent pipeline.
  *
@@ -638,19 +644,19 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
 export class TerminationCondition extends S.Class<TerminationCondition>($I`TerminationCondition`)(
   {
     maxIterations: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(5)),
+      S.withConstructorDefault(Effect.succeed(terminationConditionMaxIterationsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(terminationConditionMaxIterationsDefault)),
       S.annotateKey({ description: "Maximum completed iterations before forced termination." })
     ),
     stopOnConformance: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether validation conformance terminates the loop." })
     ),
     minConfidence: S.OptionFromOptionalKey(Confidence).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional confidence floor for continued execution." })
     ),
     timeout: S.OptionFromOptionalKey(S.DurationFromMillis).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional execution timeout encoded as milliseconds." })
     ),
   },
@@ -676,6 +682,7 @@ export class TerminationCondition extends S.Class<TerminationCondition>($I`Termi
   }
 }
 
+const checkpointConfigAfterAgentsDefault = A.empty<AgentId>();
 /**
  * Policy controlling pipeline checkpoint creation and approval.
  *
@@ -694,19 +701,19 @@ export class TerminationCondition extends S.Class<TerminationCondition>($I`Termi
 export class CheckpointConfig extends S.Class<CheckpointConfig>($I`CheckpointConfig`)(
   {
     afterAgents: S.Array(AgentId).pipe(
-      SchemaUtils.withEmptyArrayDefaults<AgentId>(),
+      S.withConstructorDefault(Effect.succeed(checkpointConfigAfterAgentsDefault)), S.withDecodingDefaultType(Effect.succeed(checkpointConfigAfterAgentsDefault)),
       S.annotateKey({ description: "Agents whose completion triggers a checkpoint." })
     ),
     everyNIterations: S.OptionFromOptionalKey(PosInt).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional periodic checkpoint interval for loop mode." })
     ),
     requireApproval: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({ description: "Whether a human must approve checkpoint continuation." })
     ),
     approvalTimeout: S.OptionFromOptionalKey(S.DurationFromMillis).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional approval timeout encoded as milliseconds." })
     ),
   },
@@ -755,7 +762,7 @@ export class AgentStarted extends S.TaggedClass<AgentStarted>($I`AgentStarted`)(
   {
     agentId: AgentId,
     startedAt: S.DateTimeUtcFromString,
-    inputSummary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    inputSummary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentStarted", {
     description: "Lifecycle event recording the start of one agent execution.",
@@ -787,7 +794,7 @@ export class AgentProgress extends S.TaggedClass<AgentProgress>($I`AgentProgress
   {
     agentId: AgentId,
     progress: Percentage,
-    message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     timestamp: S.DateTimeUtcFromString,
   },
   $I.annote("AgentProgress", {
@@ -820,7 +827,7 @@ export class AgentCompleted extends S.TaggedClass<AgentCompleted>($I`AgentComple
     agentId: AgentId,
     completedAt: S.DateTimeUtcFromString,
     duration: S.DurationFromMillis,
-    outputSummary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    outputSummary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentCompleted", {
     description: "Lifecycle event recording successful agent completion and duration.",
@@ -854,7 +861,7 @@ export class AgentFailed extends S.TaggedClass<AgentFailed>($I`AgentFailed`)(
     failedAt: S.DateTimeUtcFromString,
     duration: S.DurationFromMillis,
     error: S.NonEmptyString,
-    retryable: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    retryable: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
   },
   $I.annote("AgentFailed", {
     description: "Lifecycle event recording typed failure information for one agent execution.",

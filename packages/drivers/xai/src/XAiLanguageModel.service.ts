@@ -12,7 +12,6 @@ import {
   makeFromProvider,
   OpenAiCompatLanguageModelConfig,
 } from "@beep/openai-compat";
-import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
 import { Effect, Layer, pipe, Stream } from "effect";
@@ -95,7 +94,7 @@ export type XAiModelName = typeof XAiModelName.Type;
  */
 export class XAiLanguageModelOptions extends S.Class<XAiLanguageModelOptions>($I`XAiLanguageModelOptions`)(
   {
-    config: S.OptionFromOptionalKey(OpenAiCompatLanguageModelConfig).pipe(SchemaUtils.withNoneDefault),
+    config: S.OptionFromOptionalKey(OpenAiCompatLanguageModelConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
     model: XAiModelName,
   },
   $I.annote("XAiLanguageModelOptions", {

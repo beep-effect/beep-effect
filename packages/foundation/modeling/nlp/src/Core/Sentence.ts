@@ -6,9 +6,9 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Brand, Chunk } from "effect";
+import { Brand, Chunk, Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -118,10 +118,10 @@ export class Sentence extends S.Class<Sentence>($I`Sentence`)(
     tokens: S.Chunk(Token),
     start: TokenIndex,
     end: TokenIndex,
-    sentiment: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    importance: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    negationFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    markedUpText: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    sentiment: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    importance: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    negationFlag: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    markedUpText: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Sentence", {
     description: "Immutable NLP sentence with token offsets and optional scoring metadata.",

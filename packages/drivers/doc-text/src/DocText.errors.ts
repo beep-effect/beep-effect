@@ -8,6 +8,7 @@
 import { $I as $RootId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -104,7 +105,7 @@ export class DocTextError extends S.TaggedError<DocTextError>($I`DocTextError`)(
   "DocTextError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Sanitized technical cause string when one is safe to retain.",
       })
