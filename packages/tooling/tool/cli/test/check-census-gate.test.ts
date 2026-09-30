@@ -20,6 +20,7 @@ import {
   parseCheckCensusSample,
   readCheckCensusBaseline,
   readCheckCensusMetrics,
+  renderCheckCensusBaselineLines,
   renderCheckCensusGateLines,
   resolveCheckCensusTargets,
   runCheckCensusGate,
@@ -380,6 +381,45 @@ describe("check-census gate orchestration", () => {
       );
     })
   );
+});
+
+describe("check-census gate rendering", () => {
+  it("names a compiler change, an empty unfiltered gate, and an undefined check-time change", () => {
+    const zeroBaseline = compareCheckCensusSample(sample(10, 3), row("tiny", 10, 0));
+    const changed = CheckCensusGateReport.make({
+      baselineCommit: "368998daff",
+      baselineCompiler: "7.0.2+effect-tsgo.0.45.0",
+      compiler: "7.0.3+effect-tsgo.0.46.0",
+      comparisons: [zeroBaseline],
+    });
+    const empty = CheckCensusGateReport.make({
+      baselineCommit: "368998daff",
+      baselineCompiler: "7.0.2+effect-tsgo.0.45.0",
+      compiler: "7.0.2+effect-tsgo.0.45.0",
+      comparisons: [],
+    });
+
+    const changedLines = renderCheckCensusGateLines(changed);
+    expect(
+      A.some(changedLines, Str.startsWith("FAIL compiler changed: baseline measured with 7.0.2+effect-tsgo.0.45.0"))
+    ).toBe(true);
+    expect(A.some(changedLines, Str.includes("checkTimeMs 0 -> 3 (n/a) slower"))).toBe(true);
+    expect(checkCensusGateFailureMessage(changed)).toContain("the compiler changed");
+    expect(
+      A.some(renderCheckCensusGateLines(empty), Str.startsWith("FAIL no baselined program was selected (no --filter)"))
+    ).toBe(true);
+  });
+
+  it("marks only a dirty-worktree baseline as carrying uncommitted changes", () => {
+    const clean = CheckCensusBaseline.make({ ...baselineOf([row("@beep/schema", 1, 1)]), dirtyWorktree: false });
+    const dirty = baselineOf([row("@beep/schema", 1, 1)]);
+
+    assertSome(
+      A.head(renderCheckCensusBaselineLines(clean)),
+      "check-census baseline (1 rows, compiler 7.0.2+effect-tsgo.0.45.0, 368998daff4b5d6c0e2f1a3b7c9d8e6f5a4b3c2d)"
+    );
+    expect(A.some(renderCheckCensusBaselineLines(dirty), Str.endsWith(" + uncommitted changes)"))).toBe(true);
+  });
 });
 
 describe("check-census compiler output helpers", () => {

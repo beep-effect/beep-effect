@@ -39,10 +39,15 @@ const REPORT_PATH = "out/check-census.json";
 // prints the fixture compiler, `--listFilesOnly` prints the program's one source
 // file, and every other run prints the `--extendedDiagnostics` metric lines. A
 // `sample.txt` next to the tsconfig overrides the metrics; a `no-metrics` marker
-// makes the run print nothing, like a compiler that dropped `--extendedDiagnostics`.
+// makes the run print nothing, like a compiler that dropped `--extendedDiagnostics`;
+// an `unrecognised-version` marker at the root garbles `--version`.
 const compilerShim = `#!/bin/sh
 if [ "$1" = "--version" ]; then
-  echo "Version ${FIXTURE_COMPILER}"
+  if [ -f unrecognised-version ]; then
+    echo "tsc development build"
+  else
+    echo "Version ${FIXTURE_COMPILER}"
+  fi
   exit 0
 fi
 dir=$(dirname "$2")
@@ -204,6 +209,20 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
       expect(error._tag).toBe("QualityScriptCommandError");
       expect(error.message).toContain("Instantiations");
       expect(yield* fs.exists(REPORT_PATH)).toBe(false);
+    })
+  );
+
+  it.effect("refuses to gate when tsc --version prints no recognisable version", () =>
+    Effect.gen(function* () {
+      yield* fixtureRepo;
+      yield* writeProjectFile("unrecognised-version", "");
+
+      const exit = yield* Effect.exit(runCheckCensusCommand(["--gate-only", "--output-json", REPORT_PATH]));
+
+      assertTrue(Exit.isFailure(exit));
+      const error = yield* exit.cause.pipe(Cause.findErrorOption, Effect.fromOption);
+      expect(error._tag).toBe("QualityScriptCommandError");
+      expect(error.message).toContain("--version output: tsc development build");
     })
   );
 
