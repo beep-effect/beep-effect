@@ -17,13 +17,15 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import { Command } from "effect/cli";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Project } from "ts-morph";
+import { Project, SyntaxKind } from "ts-morph";
 import { expectReportedExit } from "./support/CommandTest.ts";
+import type { SourceFile } from "ts-morph";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
@@ -44,6 +46,69 @@ const parityEntriesIn = (project: Project, sourceLines: ReadonlyArray<string>) =
 
 const parityEntries = (sourceLines: ReadonlyArray<string>) =>
   parityEntriesIn(new Project({ useInMemoryFileSystem: true }), sourceLines);
+
+// A project where `@beep/schema` resolves to declarations at the real SchemaUtils source paths, so
+// detection runs through the checker rather than the unresolved-import fallback.
+const schemaUtilsProject = () => {
+  const project = new Project({
+    useInMemoryFileSystem: true,
+    compilerOptions: { baseUrl: ".", paths: { "@beep/schema": ["packages/foundation/modeling/schema/src/index.ts"] } },
+  });
+  const schemaSource = "packages/foundation/modeling/schema/src";
+  project.createSourceFile(`${schemaSource}/index.ts`, 'export * as SchemaUtils from "./SchemaUtils/index.ts";');
+  project.createSourceFile(
+    `${schemaSource}/SchemaUtils/index.ts`,
+    A.join(
+      [
+        'export * from "./optionalKeyWithDefaults.ts";',
+        'export * from "./withEncodeDefault.ts";',
+        'export * from "./withKeyDefaults.ts";',
+      ],
+      "\n"
+    )
+  );
+  project.createSourceFile(
+    `${schemaSource}/SchemaUtils/optionalKeyWithDefaults.ts`,
+    "export const optionalKeyWithDefault = <A>(value: A) => <S>(schema: S): S => schema;"
+  );
+  project.createSourceFile(
+    `${schemaSource}/SchemaUtils/withEncodeDefault.ts`,
+    A.join(
+      [
+        "export const withEncodeDefault = <S, A>(schema: S, thunk: () => A): S => schema;",
+        "export const boolWithDefault = (value: boolean) => withEncodeDefault(value, () => value);",
+      ],
+      "\n"
+    )
+  );
+  project.createSourceFile(
+    `${schemaSource}/SchemaUtils/withKeyDefaults.ts`,
+    A.join(
+      [
+        "export const boolKeyWithDefault = (value: boolean) => value;",
+        "export const BoolKeyDefaultFalse = boolKeyWithDefault(false);",
+      ],
+      "\n"
+    )
+  );
+  return project;
+};
+
+// The schema-package-relative files that declare the first identifier named `name` in a source file.
+const declarationPathsOf =
+  (sourceFile: SourceFile) =>
+  (name: string): ReadonlyArray<string> =>
+    pipe(
+      sourceFile.getDescendantsOfKind(SyntaxKind.Identifier),
+      A.findFirst((identifier) => identifier.getText() === name),
+      O.flatMap((identifier) => O.fromUndefinedOr(identifier.getSymbol())),
+      O.map((symbol) =>
+        A.map(symbol.getDeclarations(), (declaration) =>
+          Str.replace(/^.*\/modeling\/schema\//u, "")(declaration.getSourceFile().getFilePath())
+        )
+      ),
+      O.getOrElse(A.empty<string>)
+    );
 
 // Anchors end in a content hash; tests compare the readable part and check the hash separately.
 const readable = (entries: ReadonlyArray<SchemaFirstInventoryEntry>): ReadonlyArray<string> =>
@@ -193,29 +258,40 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
       ).toEqual(["SFV4-default-wrapper title::withNoneDefault@<hash>"]);
     })
   );
-  it.effect("names the upstream form for every SchemaUtils default wrapper", () =>
+  it.effect("names the upstream form for every live SchemaUtils default wrapper, resolved to its declaration", () =>
     Effect.gen(function* () {
-      const entries = yield* parityEntries([
+      const project = schemaUtilsProject();
+      const entries = yield* parityEntriesIn(project, [
         'import * as S from "effect/Schema";',
         'import { SchemaUtils } from "@beep/schema";',
         "export const Widget = S.Struct({",
-        '  constant: S.String.pipe(SchemaUtils.withConstantDefault("none")),',
         '  keyed: S.String.pipe(SchemaUtils.optionalKeyWithDefault("none")),',
-        '  encoded: S.String.pipe(SchemaUtils.withEncodeDefault(() => "none")),',
+        '  encoded: SchemaUtils.withEncodeDefault(S.String, () => "none"),',
         "  flag: SchemaUtils.boolWithDefault(false),",
         "  keyFlag: SchemaUtils.boolKeyWithDefault(true),",
+        "  kept: SchemaUtils.BoolKeyDefaultFalse,",
         "});",
       ]);
 
+      // Detection must come from the checker: every wrapper resolves to its SchemaUtils declaration.
+      expect(
+        A.map(
+          ["optionalKeyWithDefault", "withEncodeDefault", "boolWithDefault", "boolKeyWithDefault"],
+          declarationPathsOf(project.getSourceFileOrThrow(fixtureFile))
+        )
+      ).toEqual([
+        ["src/SchemaUtils/optionalKeyWithDefaults.ts"],
+        ["src/SchemaUtils/withEncodeDefault.ts"],
+        ["src/SchemaUtils/withEncodeDefault.ts"],
+        ["src/SchemaUtils/withKeyDefaults.ts"],
+      ]);
       expect(readable(entries)).toEqual([
-        "SFV4-default-wrapper Widget.constant::withConstantDefault@<hash>",
         "SFV4-default-wrapper Widget.keyed::optionalKeyWithDefault@<hash>",
         "SFV4-default-wrapper Widget.encoded::withEncodeDefault@<hash>",
         "SFV4-default-wrapper Widget.flag::boolWithDefault@<hash>",
         "SFV4-default-wrapper Widget.keyFlag::boolKeyWithDefault@<hash>",
       ]);
       expect(A.map(entries, (entry) => entry.reason)).toEqual([
-        "SchemaUtils.withConstantDefault wraps an upstream schema default; use S.withConstructorDefault(Effect.succeed(value)) directly so the default stays on Effect's own combinators.",
         "SchemaUtils.optionalKeyWithDefault wraps an upstream schema default; use S.withDecodingDefaultTypeKey(Effect.succeed(value)) directly so the default stays on Effect's own combinators.",
         "SchemaUtils.withEncodeDefault wraps an upstream schema default; use S.withDecodingDefaultTypeKey(Effect.sync(thunk)) directly so the default stays on Effect's own combinators.",
         "SchemaUtils.boolWithDefault wraps an upstream schema default; use S.Boolean.pipe(S.withDecodingDefaultTypeKey(Effect.succeed(value))) directly so the default stays on Effect's own combinators.",
@@ -233,17 +309,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
             'import * as BeepSchema from "@beep/schema";',
             'import * as Opaque from "@beep/schema/Opaque";',
             "export const Widget = S.Struct({",
-            "  byMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema.SchemaUtils.withNoneDefault),",
-            '  byElement: S.OptionFromOptionalKey(S.Finite).pipe(BeepSchema["SchemaUtils"].withNoneDefault),',
-            "  otherMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema.Other.withNoneDefault),",
-            "  computedMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema[key].withNoneDefault),",
-            "  notRoot: S.OptionFromOptionalKey(S.String).pipe(Opaque.SchemaUtils.withNoneDefault),",
+            "  byMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema.SchemaUtils.withEncodeDefault),",
+            '  byElement: S.OptionFromOptionalKey(S.Finite).pipe(BeepSchema["SchemaUtils"].withEncodeDefault),',
+            "  otherMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema.Other.withEncodeDefault),",
+            "  computedMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema[key].withEncodeDefault),",
+            "  notRoot: S.OptionFromOptionalKey(S.String).pipe(Opaque.SchemaUtils.withEncodeDefault),",
             "});",
           ])
         )
       ).toEqual([
-        "SFV4-default-wrapper Widget.byMember::withNoneDefault@<hash>",
-        "SFV4-default-wrapper Widget.byElement::withNoneDefault@<hash>",
+        "SFV4-default-wrapper Widget.byMember::withEncodeDefault@<hash>",
+        "SFV4-default-wrapper Widget.byElement::withEncodeDefault@<hash>",
       ]);
     })
   );
