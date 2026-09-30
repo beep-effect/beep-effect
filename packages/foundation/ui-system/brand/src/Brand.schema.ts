@@ -7,6 +7,7 @@
 import { $BrandId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { HexColor } from "@beep/schema/Color";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $BrandId.create("Brand.schema");
@@ -745,7 +746,7 @@ export class MarkSvgRequest extends S.Class<MarkSvgRequest>($I`MarkSvgRequest`)(
     }),
     paint: MarkPaint.annotateKey({ description: "Colors for the mark." }),
     ground: S.OptionFromOptionalKey(MarkGround)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Optional ground rectangle behind the mark." }),
   },
   $I.annote("MarkSvgRequest", { description: "Request to render the mark as a standalone SVG document." })

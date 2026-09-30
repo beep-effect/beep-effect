@@ -10,22 +10,7 @@
  * @since 0.0.0
  * @category validation
  */
-export * from "./ArrayBuffer.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./ArrayOf.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./AtURI.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./BigDecimal.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -35,17 +20,7 @@ export * from "./BufferEncoding.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Bytes.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Color/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./CommonTextSchemas.ts";
 /**
  * Specification-grounded conformance models and annotation helpers.
  *
@@ -82,11 +57,6 @@ export * from "./CurrencyCode.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./DateTimeUtcFromValid/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Did.ts";
 /**
  * @since 0.0.0
@@ -97,23 +67,6 @@ export * from "./Did.ts";
  * @category validation
  */
 export * from "./Double.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export {
-  Duration,
-  type Duration as DurationValue,
-  DurationFromInput,
-  type DurationFromInput as DurationFromInputValue,
-  DurationInput,
-  type DurationInput as DurationInputValue,
-  DurationObject,
-  DurationUnit,
-  type DurationUnit as DurationUnitValue,
-  FromInput,
-  type Unit as DurationUnitAlias,
-} from "./Duration/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -129,11 +82,6 @@ export * as FileDiff from "./FileDiff.schema.ts";
  * @category validation
  */
 export * from "./FileExtension.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./FileInfo.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -193,11 +141,6 @@ export * from "./Glob/index.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Graph/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Html.ts";
 /**
  * @since 0.0.0
@@ -209,25 +152,6 @@ export * from "./Int.ts";
  * @category validation
  */
 export * from "./Int64.ts";
-/**
- * Structured model of JSON Schema draft-2020-12 documents: recursive `Node`
- * class, lossless wire codec, `boolean | Node` subschema union, document
- * envelope, and local `$ref` resolvers.
- *
- * **Example** (Decode JSON Schema node)
- *
- * ```ts
- * import { JSONSchema } from "@beep/schema"
- * import * as S from "effect/Schema"
- *
- * const node = S.decodeUnknownResult(JSONSchema.NodeCodec)({ type: "object" })
- * console.log(node._tag)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export * as JSONSchema from "./JSONSchema/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -242,22 +166,12 @@ export * from "./Jsonc.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./KebabStr.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./LiteralKit/index.ts";
 /**
  * @since 0.0.0
  * @category validation
  */
 export * from "./LocalDate/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Logs.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -273,16 +187,6 @@ export * from "./Markdown.ts";
  * @category validation
  */
 export * from "./MimeType.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./MutableHashMap.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./MutableHashSet.ts";
 /**
  * @category validation
  * @since 0.0.0
@@ -300,11 +204,6 @@ export * from "./Opaque.ts";
  * @category validation
  */
 export * from "./Options.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./PascalStr.ts";
 /**
  * Transport-layer port number schemas and codecs.
  *
@@ -338,11 +237,6 @@ export * from "./Primitive.ts";
  * @category schemas
  */
 export * from "./Record/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./RegExp.ts";
 /**
  * Nominal safe-object schema and object-keyword normalization codec.
  *
@@ -422,27 +316,7 @@ export * from "./Slug.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./SnakeStr.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./StatusCauseError.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./String.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./TerritoryCode.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Timezone.ts";
 /**
  * @since 0.0.0
  * @category validation

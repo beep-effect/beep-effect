@@ -340,13 +340,15 @@ export class BoundaryParams extends S.Class<BoundaryParams>($I`BoundaryParams`)(
       })
     ),
     min: S.Finite.pipe(
-      SchemaUtils.withKeyDefaults(minSafeInteger),
+      S.withConstructorDefault(Effect.succeed(minSafeInteger)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(minSafeInteger)),
       $I.annoteKey("BoundaryParams.min", {
         description: "Minimum value allowed by the number input.",
       })
     ),
     max: S.Finite.pipe(
-      SchemaUtils.withKeyDefaults(maxSafeInteger),
+      S.withConstructorDefault(Effect.succeed(maxSafeInteger)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(maxSafeInteger)),
       $I.annoteKey("BoundaryParams.max", {
         description: "Maximum value allowed by the number input.",
       })
@@ -380,13 +382,15 @@ export class BoundaryParams extends S.Class<BoundaryParams>($I`BoundaryParams`)(
 export class SpinParams extends S.Class<SpinParams>($I`SpinParams`)(
   {
     precision: NonNegativePrecision.pipe(
-      SchemaUtils.withKeyDefaults(0),
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       $I.annoteKey("SpinParams.precision", {
         description: "Decimal precision used while formatting spinner results.",
       })
     ),
     step: PositiveFiniteStep.pipe(
-      SchemaUtils.withKeyDefaults(1),
+      S.withConstructorDefault(Effect.succeed(1)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(1)),
       $I.annoteKey("SpinParams.step", {
         description: "Positive increment or decrement amount for spinner changes.",
       })
@@ -642,7 +646,7 @@ export type NumberInputError = typeof NumberInputError.Type;
 export class NumberInputChangeMetadata extends S.Class<NumberInputChangeMetadata>($I`NumberInputChangeMetadata`)(
   {
     error: S.OptionFromNullOr(NumberInputError).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("NumberInputChangeMetadata.error", {
         description: "Range-validation error when the current value is outside the configured bounds.",
       })

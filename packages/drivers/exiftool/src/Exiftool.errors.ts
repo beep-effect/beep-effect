@@ -6,8 +6,9 @@
  */
 
 import { $ExiftoolId } from "@beep/identity/packages";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { O, P } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -104,25 +105,25 @@ const optionsFromInput = (options: ExiftoolErrorContextInput): ExiftoolErrorFrom
 export class ExiftoolErrorContext extends S.Class<ExiftoolErrorContext>($I`ExiftoolErrorContext`)(
   {
     command: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolErrorContext.command", {
         description: "Native executable path or command name involved in the failure, when available.",
       })
     ),
     exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolErrorContext.exitCode", {
         description: "Native process exit status, when the process returned one.",
       })
     ),
     stderr: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolErrorContext.stderr", {
         description: "Captured standard error text, when available.",
       })
     ),
     stdout: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolErrorContext.stdout", {
         description: "Captured standard output text, when available.",
       })
@@ -161,31 +162,31 @@ export class ExiftoolErrorFromUnknownOptions extends S.Class<ExiftoolErrorFromUn
 )(
   {
     cause: S.OptionFromOptionalKey(ExiftoolDefect).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolErrorFromUnknownOptions.cause", {
         description: "Inspectable originating defect, when available.",
       })
     ),
     command: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolErrorFromUnknownOptions.command", {
         description: "Native executable path or command name involved in the failure, when available.",
       })
     ),
     exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolErrorFromUnknownOptions.exitCode", {
         description: "Native process exit status, when the process returned one.",
       })
     ),
     stderr: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolErrorFromUnknownOptions.stderr", {
         description: "Captured standard error text, when available.",
       })
     ),
     stdout: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolErrorFromUnknownOptions.stdout", {
         description: "Captured standard output text, when available.",
       })
@@ -215,19 +216,19 @@ export class ExiftoolError extends S.TaggedError<ExiftoolError>($I`ExiftoolError
   "ExiftoolError",
   {
     command: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolError.command", {
         description: "Native executable path or command name involved in the failure, when available.",
       })
     ),
     cause: S.OptionFromOptionalKey(ExiftoolDefect).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolError.cause", {
         description: "Inspectable originating defect, when available.",
       })
     ),
     exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolError.exitCode", {
         description: "Native process exit status, when the process returned one.",
       })
@@ -243,13 +244,13 @@ export class ExiftoolError extends S.TaggedError<ExiftoolError>($I`ExiftoolError
       })
     ),
     stderr: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolError.stderr", {
         description: "Captured standard error text, when available.",
       })
     ),
     stdout: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExiftoolError.stdout", {
         description: "Captured standard output text, when available.",
       })

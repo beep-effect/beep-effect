@@ -13,9 +13,8 @@
 
 import { ExtractFramesAtRequest, RenderContactSheetRequest, RenderGifRequest } from "@beep/ffmpeg";
 import { $QaCaptureId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { flow, Match, MutableHashMap, Number as N, Order, pipe } from "effect";
+import { Effect, flow, Match, MutableHashMap, Number as N, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { ActionEvent } from "./ActionEvent.models.ts";
@@ -782,6 +781,7 @@ export const applyBudget: {
   return BudgetFitResult.make({ dropped, estimatedTotalBytes: estimateTotal(current, budget), windows: current });
 });
 
+const buildExtractionPlanOptionsBudgetDefault = ArtifactBudget.make({});
 /**
  * Inputs of one {@link buildExtractionPlan} run.
  *
@@ -804,7 +804,8 @@ export const applyBudget: {
 export class BuildExtractionPlanOptions extends S.Class<BuildExtractionPlanOptions>($I`BuildExtractionPlanOptions`)(
   {
     budget: ArtifactBudget.pipe(
-      SchemaUtils.withKeyDefaults(ArtifactBudget.make({})),
+      S.withConstructorDefault(Effect.succeed(buildExtractionPlanOptionsBudgetDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(buildExtractionPlanOptionsBudgetDefault)),
       $I.annoteKey("BuildExtractionPlanOptions.budget", {
         description: "Artifact byte budget the plan must fit inside.",
       })
@@ -815,7 +816,8 @@ export class BuildExtractionPlanOptions extends S.Class<BuildExtractionPlanOptio
       })
     ),
     rules: ExtractionRuleSet.pipe(
-      SchemaUtils.withKeyDefaults(defaultExtractionRules),
+      S.withConstructorDefault(Effect.succeed(defaultExtractionRules)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultExtractionRules)),
       $I.annoteKey("BuildExtractionPlanOptions.rules", {
         description: "Extraction rules deciding which spans become windows.",
       })

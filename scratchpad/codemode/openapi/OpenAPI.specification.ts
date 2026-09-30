@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MappedLiteralKit, NonEmptyTrimmedStr, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, pipe, R, Str, Struct, thunkEmptyStr } from "@beep/utils";
-import { flow, HashMap, HashSet, Order, Result } from "effect";
+import { flow, HashMap, HashSet, Order, Result, Effect } from "effect";
 import { dual } from "effect/Function";
 import { fromSchemaOpenApi3_0, fromSchemaOpenApi3_1 } from "effect/JsonSchema";
 import * as S from "effect/Schema";
@@ -34,6 +34,7 @@ import {
 const decodeURLFromStringResult = S.decodeResult(S.URLFromString);
 
 const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.specification");
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 
 const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics(["is"]));
 const NonEmptyString = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
@@ -584,14 +585,14 @@ const isBinaryMediaType = (document: Document, mediaType: string, value: unknown
 };
 
 class JsonContent extends S.Class<JsonContent>($I`JsonContent`)(
-  { mediaType: NonEmptyTrimmedStr, schema: S.Unknown },
+  { mediaType: TrimmedNonEmptyString, schema: S.Unknown },
   $I.annote("JsonContent", {
     description: "Selected JSON media type and its schema.",
   })
 ) {
   static readonly new = (mediaType: string, schema: unknown): JsonContent =>
     JsonContent.make({
-      mediaType: NonEmptyTrimmedStr.make(mediaType),
+      mediaType,
       schema,
     });
 }
@@ -622,12 +623,12 @@ const isFlattenableObjectBody = (
 
 class PlannedField extends S.Class<PlannedField>($I`PlannedField`)(
   {
-    name: NonEmptyTrimmedStr,
+    name: TrimmedNonEmptyString,
     location: InputLocation,
     required: S.Boolean,
     schema: JsonSchema,
-    style: S.OptionFromOptionalKey(InputStyle).pipe(SchemaUtils.withNoneDefault),
-    explode: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    style: S.OptionFromOptionalKey(InputStyle).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    explode: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PlannedField", {
     description: "An operation field before conflict-safe input naming.",
@@ -642,7 +643,7 @@ class PlannedField extends S.Class<PlannedField>($I`PlannedField`)(
     explode: O.Option<boolean>
   ): PlannedField =>
     PlannedField.make({
-      name: NonEmptyTrimmedStr.make(name),
+      name,
       location,
       required,
       schema,
@@ -653,8 +654,8 @@ class PlannedField extends S.Class<PlannedField>($I`PlannedField`)(
 
 class DeclaredParameter extends S.Class<DeclaredParameter>($I`DeclaredParameter`)(
   {
-    name: NonEmptyTrimmedStr,
-    location: NonEmptyTrimmedStr,
+    name: TrimmedNonEmptyString,
+    location: TrimmedNonEmptyString,
     parameter: UnknownRecord,
   },
   $I.annote("DeclaredParameter", {
@@ -667,8 +668,8 @@ class DeclaredParameter extends S.Class<DeclaredParameter>($I`DeclaredParameter`
     parameter: Readonly<Record<string, unknown>>
   ): DeclaredParameter =>
     DeclaredParameter.make({
-      name: NonEmptyTrimmedStr.make(name),
-      location: NonEmptyTrimmedStr.make(location),
+      name,
+      location,
       parameter,
     });
 }
@@ -804,7 +805,7 @@ const operationParameters = (
 class BodyFields extends S.Class<BodyFields>($I`BodyFields`)(
   {
     fields: S.Array(PlannedField),
-    body: S.OptionFromOptionalKey(Body).pipe(SchemaUtils.withNoneDefault),
+    body: S.OptionFromOptionalKey(Body).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BodyFields", {
     description: "Request-body fields before conflict-safe input naming.",

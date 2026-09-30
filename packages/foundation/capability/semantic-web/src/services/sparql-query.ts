@@ -8,7 +8,7 @@
 import { $SemanticWebId } from "@beep/identity/packages";
 import { Dataset, Term } from "@beep/rdf/Rdf";
 import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 
@@ -92,7 +92,7 @@ export class SparqlQueryRequest extends S.Class<SparqlQueryRequest>($I`SparqlQue
     query: S.NonEmptyString,
     profile: SparqlQueryProfile,
     dataset: Dataset,
-    timeoutMs: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    timeoutMs: S.OptionFromOptionalKey(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SparqlQueryRequest", {
     description: "SPARQL query request.",

@@ -126,12 +126,12 @@ const SidecarClosedKind = LiteralKit(["error", "terminated", "event-stream-close
  */
 export class SidecarClosedPayload extends S.Class<SidecarClosedPayload>($I`SidecarClosedPayload`)(
   {
-    code: S.OptionFromNullOr(S.Int).pipe(SchemaUtils.withNoneDefault),
+    code: S.OptionFromNullOr(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
     kind: SidecarClosedKind.annotateKey({
       description: "Terminal sidecar lifecycle reason.",
     }),
-    message: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
-    signal: S.OptionFromNullOr(S.Int).pipe(SchemaUtils.withNoneDefault),
+    message: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    signal: S.OptionFromNullOr(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SidecarClosedPayload", {
     description: "Terminal sidecar lifecycle payload delivered on `sidecar://closed`.",

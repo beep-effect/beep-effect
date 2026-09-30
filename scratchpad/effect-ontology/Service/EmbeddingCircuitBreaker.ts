@@ -12,7 +12,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, PosInt } from "@beep/schema";
 import { Context, Duration, Effect, HashMap, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -63,6 +63,9 @@ export const EmbeddingProviderId = LiteralKit(["voyage", "nomic", "openai"]).pip
  */
 export type EmbeddingProviderId = typeof EmbeddingProviderId.Type;
 
+const providerCircuitConfigMaxFailuresDefault = PosInt.make(3);
+const providerCircuitConfigResetTimeoutDefault = Duration.seconds(30);
+const providerCircuitConfigSuccessThresholdDefault = PosInt.make(2);
 /**
  * Provider-specific circuit breaker configuration
  *
@@ -80,9 +83,9 @@ export type EmbeddingProviderId = typeof EmbeddingProviderId.Type;
  */
 export class ProviderCircuitConfig extends S.Class<ProviderCircuitConfig>($I`ProviderCircuitConfig`)(
   {
-    maxFailures: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(3))),
-    resetTimeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(30))),
-    successThreshold: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(2))),
+    maxFailures: PosInt.pipe(S.withConstructorDefault(Effect.succeed(providerCircuitConfigMaxFailuresDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(providerCircuitConfigMaxFailuresDefault))),
+    resetTimeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(providerCircuitConfigResetTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(providerCircuitConfigResetTimeoutDefault))),
+    successThreshold: PosInt.pipe(S.withConstructorDefault(Effect.succeed(providerCircuitConfigSuccessThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(providerCircuitConfigSuccessThresholdDefault))),
   },
   $I.annote("ProviderCircuitConfig", {
     description: "Failure, recovery-delay, and recovery-success thresholds for an embedding provider.",

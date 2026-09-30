@@ -7,7 +7,7 @@
 
 import { $AiSyncId } from "@beep/identity/packages";
 import { SchemaUtils, UnknownRecord } from "@beep/schema";
-import { flow, identity, SchemaTransformation } from "effect";
+import { Effect, flow, identity, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -201,7 +201,7 @@ export class AgentCommandMetadata extends S.Class<AgentCommandMetadata>($I`Agent
   {
     name: S.String,
     description: S.String,
-    arguments: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    arguments: S.Array(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentCommandMetadata", {
     description: "Portable metadata for agents with documented custom command concepts.",
@@ -226,8 +226,8 @@ export class AgentPluginManifestMetadata extends S.Class<AgentPluginManifestMeta
   {
     name: S.String,
     version: S.String,
-    description: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    metadata: UnknownRecord.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    description: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    metadata: UnknownRecord.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentPluginManifestMetadata", {
     description: "Plugin manifest metadata for documented plugin surfaces.",

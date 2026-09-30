@@ -1,7 +1,6 @@
 import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { ISOStr } from "@beep/schema/Timestamp";
 import {
   BoundedRecoveryPolicy,
   BudgetDuration,
@@ -54,12 +53,12 @@ const consumed = RecoveryBudgetConsumed.make({
 const attempt = (ordinal: 1 | 2) =>
   RecoveryAttemptReceipt.make({
     attempt: PosInt.make(ordinal),
-    endedAt: ISOStr.make(`2026-08-24T00:00:0${ordinal}.000Z`),
+    endedAt: `2026-08-24T00:00:0${ordinal}.000Z`,
     observations: [subject],
     operations: NonNegativeInt.make(ordinal),
     outcome: ordinal === 1 ? "failed" : "aborted",
     reason: O.none(),
-    startedAt: ISOStr.make(`2026-08-24T00:00:0${ordinal - 1}.000Z`),
+    startedAt: `2026-08-24T00:00:0${ordinal - 1}.000Z`,
   });
 const failure = FailureReceiptPredicate.make({
   attempts: [attempt(1), attempt(2)],

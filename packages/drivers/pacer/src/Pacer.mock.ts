@@ -258,7 +258,8 @@ export class PacerMockOptions extends S.Class<PacerMockOptions>($I`PacerMockOpti
      * cso-auth behavior. Defaults to `"success"`.
      */
     auth: PacerAuthOption.pipe(
-      SchemaUtils.withKeyDefaults(PacerAuthOption.Enum.success),
+      S.withConstructorDefault(Effect.succeed(PacerAuthOption.Enum.success)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(PacerAuthOption.Enum.success)),
       S.annotateKey({
         description: "cso-auth behavior. Defaults to `'success'`.",
         default: "success",
@@ -268,7 +269,8 @@ export class PacerMockOptions extends S.Class<PacerMockOptions>($I`PacerMockOpti
      * /cases/find behavior. Defaults to `'success'`.
      */
     cases: PacerCasesOption.pipe(
-      SchemaUtils.withKeyDefaults(PacerCasesOption.Enum.success),
+      S.withConstructorDefault(Effect.succeed(PacerCasesOption.Enum.success)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(PacerCasesOption.Enum.success)),
       S.annotateKey({
         description: "/cases/find behavior. Defaults to `'success'`.",
         default: "success",
@@ -278,7 +280,8 @@ export class PacerMockOptions extends S.Class<PacerMockOptions>($I`PacerMockOpti
      * Batch job terminal status. Defaults to `"complete"`.
      */
     batch: PacerBatchOption.pipe(
-      SchemaUtils.withKeyDefaults(PacerBatchOption.Enum.complete),
+      S.withConstructorDefault(Effect.succeed(PacerBatchOption.Enum.complete)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(PacerBatchOption.Enum.complete)),
       S.annotateKey({
         description: "Batch job terminal status. Defaults to `'complete'`.",
         default: "complete",
@@ -288,7 +291,8 @@ export class PacerMockOptions extends S.Class<PacerMockOptions>($I`PacerMockOpti
      * /cases/reports/:reportId delete behavior. Defaults to `"success"`.
      */
     deleteReport: PacerDeleteReportOption.pipe(
-      SchemaUtils.withKeyDefaults(PacerDeleteReportOption.Enum.success),
+      S.withConstructorDefault(Effect.succeed(PacerDeleteReportOption.Enum.success)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(PacerDeleteReportOption.Enum.success)),
       S.annotateKey({
         description: "/cases/reports/:reportId delete behavior. Defaults to `'success'`.",
         default: "success",
@@ -298,7 +302,8 @@ export class PacerMockOptions extends S.Class<PacerMockOptions>($I`PacerMockOpti
      * cso-logout behavior. Defaults to `"success"`.
      */
     logout: PacerLogoutOption.pipe(
-      SchemaUtils.withKeyDefaults(PacerLogoutOption.Enum.success),
+      S.withConstructorDefault(Effect.succeed(PacerLogoutOption.Enum.success)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(PacerLogoutOption.Enum.success)),
       S.annotateKey({
         description: "cso-logout behavior. Defaults to `'success'`.",
         default: "success",

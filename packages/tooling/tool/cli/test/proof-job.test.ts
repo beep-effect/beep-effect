@@ -1,6 +1,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { yeetCommand } from "@beep/repo-cli/commands/Yeet";
 import { acquireJournalFileLock, MemoryStats, releaseJournalFileLock } from "@beep/repo-cli/test/RepoRun";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import * as Job from "@beep/repo-cli/test/Yeet";
 import {
   attemptJournalPathForCheckout,
@@ -9,7 +10,6 @@ import {
   YeetInboxRowJson,
   yeetProofJobRowId,
 } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";

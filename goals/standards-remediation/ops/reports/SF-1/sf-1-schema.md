@@ -293,7 +293,8 @@ Read each named test file directly against its recorded reason; all 6 hold:
 - `packages/foundation/modeling/schema/src/Csp/Csp.schema.ts` (fixed)
 - `packages/foundation/modeling/schema/src/index.ts` (fixed)
 - `packages/foundation/modeling/schema/test/Csp.test.ts` (new)
-- `packages/foundation/modeling/schema/test/StatusCauseError.test.ts` (+1 test)
+- the `@beep/schema` `StatusCauseError` test file (+1 test; the concept and its tests were
+  retired on 2026-09-29)
 - All other experimental edits (`LiteralKit.schema.ts`, `VariantSchema.core.ts`,
   `Graph.encoded.ts`, `Graph.edge.ts`) were reverted; `git status --porcelain`
   confirms clean on all four.

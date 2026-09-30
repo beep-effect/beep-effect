@@ -1,5 +1,4 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { ISOStr } from "@beep/schema/Timestamp";
 import {
   AlwaysGateApplicability,
   ConditionalGateApplicability,
@@ -116,7 +115,7 @@ describe("@beep/skill-contract Gate", () => {
   it.effect("keeps allowed and denied outcomes as coherent audited values", () =>
     Effect.gen(function* () {
       const gateId = ConsumerGateId.make("artifact-exists");
-      const occurredAt = ISOStr.make("2026-08-24T00:00:00.000Z");
+      const occurredAt = "2026-08-24T00:00:00.000Z";
       const allowed = ArtifactExistsVerdict.cases.allowed.make({
         audit: {
           detail: { checkedPaths: ["frames/drag.png"] },

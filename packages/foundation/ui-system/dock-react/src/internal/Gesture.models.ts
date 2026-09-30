@@ -1,6 +1,7 @@
 import { AnchoredBox, DockBox, GroupId, PanelId, SplitId, SplitRatio } from "@beep/dock";
 import { $DockReactId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $DockReactId.create("Gesture.models");
@@ -79,7 +80,7 @@ export class TabInsertionPreview extends S.Class<TabInsertionPreview>($I`TabInse
   {
     kind: S.tag("tab-insertion"),
     groupId: GroupId,
-    index: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    index: S.OptionFromOptionalKey(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeedNone)),
     caretBox: DockBox,
   },
   $I.annote("TabInsertionPreview", {

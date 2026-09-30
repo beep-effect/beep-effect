@@ -235,6 +235,7 @@ const WikidataSearchLimit = PosInt.check(
   S.isLessThanOrEqualTo(50, { message: "Expected at most 50 Wikidata search results" })
 );
 
+const searchOptionsLimitDefault = PosInt.make(10);
 /**
  * Validated options for a Wikidata entity search.
  *
@@ -251,10 +252,10 @@ const WikidataSearchLimit = PosInt.check(
  */
 export class SearchOptions extends S.Class<SearchOptions>($I`SearchOptions`)(
   {
-    language: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("en")),
-    limit: WikidataSearchLimit.pipe(SchemaUtils.withKeyDefaults(PosInt.make(10))),
-    type: WikidataEntityType.pipe(SchemaUtils.withKeyDefaults(WikidataEntityType.Enum.item)),
-    strictLanguage: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    language: S.NonEmptyString.pipe(S.withConstructorDefault(Effect.succeed("en")), S.withDecodingDefaultTypeKey(Effect.succeed("en"))),
+    limit: WikidataSearchLimit.pipe(S.withConstructorDefault(Effect.succeed(searchOptionsLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(searchOptionsLimitDefault))),
+    type: WikidataEntityType.pipe(S.withConstructorDefault(Effect.succeed(WikidataEntityType.Enum.item)), S.withDecodingDefaultTypeKey(Effect.succeed(WikidataEntityType.Enum.item))),
+    strictLanguage: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
   },
   $I.annote("SearchOptions", {
     description: "Language, bounded result count, entity family, and language-matching policy for Wikidata search.",
@@ -292,22 +293,22 @@ const WikidataSearchMatch = S.Struct({
 const WikidataSearchResult = S.Struct({
   id: S.String,
   title: S.String,
-  pageid: PosInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  pageid: PosInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   concepturi: S.String,
   url: S.String,
-  label: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  description: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  label: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  description: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   match: WikidataSearchMatch,
-  aliases: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  aliases: S.Array(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 });
 
 const WikidataSearchResponse = S.Struct({
   searchinfo: S.Struct({
     search: S.String,
-  }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  }).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   search: S.Array(WikidataSearchResult),
-  success: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  "search-continue": NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  success: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  "search-continue": NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 const WikidataEntityText = S.Struct({

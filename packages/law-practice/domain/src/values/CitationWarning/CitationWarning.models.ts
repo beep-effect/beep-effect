@@ -10,7 +10,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/CitationWarning/CitationWarning.models");
@@ -131,7 +132,7 @@ export class CitationWarning extends S.Class<CitationWarning>($I`CitationWarning
     }),
     context: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Additional free-form context about the warning.",
       })

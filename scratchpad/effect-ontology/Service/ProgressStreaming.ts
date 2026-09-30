@@ -12,11 +12,9 @@
 
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
-import { UUID } from "@beep/schema/String";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { Chunk, Clock, DateTime, Duration, Effect, HashSet, Match, Random, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -40,7 +38,7 @@ import {
   RecoverableErrorEvent,
   RelationFoundEvent,
 } from "../Contract/ProgressStreaming.ts";
-import { ExtractionRunId } from "../Domain/Identity.ts";
+import { ExtractionRunId, UUID } from "../Domain/Identity.ts";
 import { dual2 } from "../Utils/Dual.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ProgressStreaming");
@@ -231,7 +229,7 @@ export const createExtractionStarted: {
       _tag: "extraction_started",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(0),
       totalChunks: state.totalChunks,
       textMetadata: {
@@ -297,7 +295,7 @@ export const createChunkingProgress: {
       _tag: "chunking_progress",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       chunksCompleted,
       chunksProcessing,
@@ -360,7 +358,7 @@ export const createChunkProcessingStarted: {
       _tag: "chunk_processing_started",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       chunkIndex,
       chunkTextLength,
@@ -430,7 +428,7 @@ export const createEntityFound: {
       _tag: "entity_found",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 40)),
       chunkIndex,
       entityId,
@@ -506,7 +504,7 @@ export const createRelationFound: {
       _tag: "relation_found",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 60)),
       chunkIndex,
       subjectId,
@@ -579,7 +577,7 @@ export const createChunkProcessingComplete: {
       _tag: "chunk_processing_complete",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 100)),
       chunkIndex,
       entityCount,
@@ -656,7 +654,7 @@ export const createExtractionComplete: {
       _tag: "extraction_complete",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(100),
       totalEntities,
       totalRelations,
@@ -735,7 +733,7 @@ export const createExtractionFailed: {
     return ExtractionFailedEvent.make({
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       errorType,
       errorMessage,
@@ -814,7 +812,7 @@ export const createRecoverableError: {
     return RecoverableErrorEvent.make({
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 50)),
       chunkIndex,
       errorType,
@@ -1109,7 +1107,7 @@ export const enqueueEvent: {
             _tag: "backpressure_warning",
             eventId: UUID.make(uuidv4()),
             runId: event.runId,
-            timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+            timestamp: DateTime.formatIso(yield* DateTime.now),
             overallProgress: event.overallProgress,
             queuedEvents: PosInt.make(queueSize),
             maxQueueSize: PosInt.make(state.config.maxQueueSize),
@@ -1319,7 +1317,7 @@ class PauseReason extends S.Class<PauseReason>($I`PauseReason`)(
     errorType: S.NonEmptyString,
     message: S.NonEmptyString,
     isRecoverable: S.Boolean,
-    retryAfter: S.Duration.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    retryAfter: S.Duration.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PauseReason", {
     description: "Failure and optional retry delay that caused extraction to pause.",
@@ -1354,7 +1352,7 @@ export class ResumableExtractionState extends S.Class<ResumableExtractionState>(
     lastSuccessfulChunkIndex: NonNegativeInt,
     partialResults: ResumablePartialResults,
     pausedAt: S.Date,
-    pauseReason: PauseReason.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    pauseReason: PauseReason.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ResumableExtractionState", {
     description: "Checkpoint, partial counts, pause time, and recovery reason for a resumable extraction.",

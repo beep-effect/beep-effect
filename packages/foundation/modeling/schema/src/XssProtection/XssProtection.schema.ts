@@ -185,7 +185,7 @@ export type XSSProtectionOption = typeof XSSProtectionOption.Type;
 export class XSSProtectionResponseHeader extends S.Class<XSSProtectionResponseHeader>($I`XSSProtectionResponseHeader`)(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromUndefinedOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("XSSProtectionResponseHeader", {
     description: "The `X-XSS-Protection` response header.",

@@ -7,7 +7,6 @@
  */
 
 import { $ArchitectureLabDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId";
 import { Effect } from "effect";
 import * as O from "effect/Option";
@@ -62,12 +61,12 @@ export class WorkItem extends S.Class<WorkItem>($I`WorkItem`)(
       .annotateKey({
         description: "Worker assigned to the WorkItem, when assigned.",
       })
-      .pipe(SchemaUtils.withNoneDefault),
+      .pipe(S.withConstructorDefault(Effect.succeedNone)),
     priority: S.OptionFromOptionalKey(WorkPriority)
       .annotateKey({
         description: "Relative WorkItem priority, when explicitly carried.",
       })
-      .pipe(SchemaUtils.withNoneDefault),
+      .pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("WorkItem", {
     title: "WorkItem",
@@ -110,7 +109,7 @@ export class CreateWorkItemInput extends S.Class<CreateWorkItemInput>($I`CreateW
       .annotateKey({
         description: "Optional priority requested for the new WorkItem.",
       })
-      .pipe(SchemaUtils.withNoneDefault),
+      .pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CreateWorkItemInput", {
     title: "Create WorkItem input",

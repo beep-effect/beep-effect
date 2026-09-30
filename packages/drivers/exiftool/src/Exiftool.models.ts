@@ -7,8 +7,8 @@
 
 import { $ExiftoolId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import type * as Effect from "effect/Effect";
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
 // fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
@@ -298,13 +298,15 @@ export type ExiftoolWritableExtension = typeof ExiftoolWritableExtension.Type;
 export class ExiftoolConfigInput extends S.Class<ExiftoolConfigInput>($I`ExiftoolConfigInput`)(
   {
     exiftoolPath: S.String.pipe(
-      SchemaUtils.withKeyDefaults("exiftool"),
+      S.withConstructorDefault(Effect.succeed("exiftool")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("exiftool")),
       $I.annoteKey("ExiftoolConfigInput.exiftoolPath", {
         description: "Executable path or command name used for exiftool.",
       })
     ),
     forceKillAfterMillis: PositiveMilliseconds.pipe(
-      SchemaUtils.withKeyDefaults(2000),
+      S.withConstructorDefault(Effect.succeed(2000)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2000)),
       $I.annoteKey("ExiftoolConfigInput.forceKillAfterMillis", {
         description: "Timeout in milliseconds before an interrupted native process is force-killed.",
       })
@@ -372,91 +374,91 @@ export class ExiftoolConfig extends S.Class<ExiftoolConfig>($I`ExiftoolConfig`)(
 export class ExifMetadata extends S.Class<ExifMetadata>($I`ExifMetadata`)(
   {
     createDate: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.createDate", {
         description: "CreateDate tag text, when the file reported one.",
       })
     ),
     dateTimeOriginal: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.dateTimeOriginal", {
         description: "DateTimeOriginal tag text, when the file reported one.",
       })
     ),
     fileName: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.fileName", {
         description: "File name reported by exiftool, when available.",
       })
     ),
     fileSize: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.fileSize", {
         description: "Human-readable file size text, when available.",
       })
     ),
     fileType: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.fileType", {
         description: "Detected file type name, when available.",
       })
     ),
     gpsAltitude: S.OptionFromOptionalKey(S.Finite).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.gpsAltitude", {
         description: "Numeric GPS altitude, when the file reported one.",
       })
     ),
     gpsLatitude: S.OptionFromOptionalKey(S.Finite).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.gpsLatitude", {
         description: "Numeric GPS latitude in decimal degrees, when the file reported one.",
       })
     ),
     gpsLongitude: S.OptionFromOptionalKey(S.Finite).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.gpsLongitude", {
         description: "Numeric GPS longitude in decimal degrees, when the file reported one.",
       })
     ),
     imageHeight: S.OptionFromOptionalKey(S.Finite).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.imageHeight", {
         description: "Numeric image height in pixels, when the file reported one.",
       })
     ),
     imageWidth: S.OptionFromOptionalKey(S.Finite).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.imageWidth", {
         description: "Numeric image width in pixels, when the file reported one.",
       })
     ),
     make: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.make", {
         description: "Camera make text, when the file reported one.",
       })
     ),
     mimeType: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.mimeType", {
         description: "Detected MIME type, when available.",
       })
     ),
     model: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.model", {
         description: "Camera model text, when the file reported one.",
       })
     ),
     modifyDate: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.modifyDate", {
         description: "ModifyDate tag text, when the file reported one.",
       })
     ),
     orientation: S.OptionFromOptionalKey(S.Union([S.Finite, S.String])).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.orientation", {
         description: "Orientation value as number or text, when the file reported one.",
       })
@@ -467,7 +469,7 @@ export class ExifMetadata extends S.Class<ExifMetadata>($I`ExifMetadata`)(
       })
     ),
     software: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExifMetadata.software", {
         description: "Producing software text, when the file reported one.",
       })
@@ -501,7 +503,8 @@ export class ReadTagsRequest extends S.Class<ReadTagsRequest>($I`ReadTagsRequest
       })
     ),
     numeric: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       $I.annoteKey("ReadTagsRequest.numeric", {
         description: "Whether to request numeric tag values via exiftool's -n flag.",
       })
@@ -687,13 +690,13 @@ export class BeepQaProvenance extends S.Class<BeepQaProvenance>($I`BeepQaProvena
       })
     ),
     clockOffsetMs: S.OptionFromOptionalKey(S.Finite).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("BeepQaProvenance.clockOffsetMs", {
         description: "Video-clock to wall-clock offset in milliseconds, when correlation produced one.",
       })
     ),
     commitSha: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("BeepQaProvenance.commitSha", {
         description: "Commit SHA the captured build was running, when known.",
       })
@@ -709,13 +712,13 @@ export class BeepQaProvenance extends S.Class<BeepQaProvenance>($I`BeepQaProvena
       })
     ),
     sourceVideo: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("BeepQaProvenance.sourceVideo", {
         description: "Recording the artifact was extracted from, when applicable.",
       })
     ),
     toolVersions: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("BeepQaProvenance.toolVersions", {
         description: "Tool-name to version map recorded at capture time, when known.",
       })

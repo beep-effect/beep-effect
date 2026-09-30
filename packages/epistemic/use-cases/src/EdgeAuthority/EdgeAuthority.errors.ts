@@ -12,11 +12,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+// fallow-ignore-file code-duplication -- consumer-local composition that replaces the retired `@beep/schema` `SchemaUtils.withNoneDefault` (optionalDefect); the upstream-first doctrine (standards/architecture/DECISIONS.md, 2026-09-29) forbids a shared replacement.
 
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -113,7 +115,7 @@ export type EdgeWriteOperation = typeof EdgeWriteOperation.Type;
 
 const optionalDefect = (description: string) =>
   S.OptionFromOptionalKey(Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
+    .pipe(S.withConstructorDefault(Effect.succeedNone))
     .annotateKey({
       description,
     });
@@ -157,7 +159,7 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I
     logicalKey: LogicalEdgeKey.annotateKey({
       description: "Logical edge whose supersession was rejected.",
     }),
-    observedVersion: PosInt.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault).annotateKey({
+    observedVersion: PosInt.pipe(S.OptionFromNullOr, S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Version actually found at the open head; absent when no open head could be read.",
     }),
   },

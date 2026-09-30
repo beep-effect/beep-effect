@@ -27,14 +27,14 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { Defect, makeStatusCauseError, StatusCauseFields } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { Effect, ErrorReporter, HashMap, SchemaIssue, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HttpStatus from "effect/http/HttpStatus";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import type { StatusCauseInput } from "@beep/schema";
 
 const $I = $ObservabilityId.create("HttpError");
 
@@ -59,10 +59,16 @@ type StatusErrorConstructor<ErrorValue> = {
 
 const isStatusErrorDataFirst = (args: IArguments): boolean => args.length >= 2 || P.isString(args[0]);
 
+type StatusErrorInput<Status extends number> = {
+  readonly message: string;
+  readonly status: Status;
+  readonly cause: O.Option<unknown>;
+};
+
 const makeStatusConstructor =
-  <Input extends StatusCauseInput, Error>(ctor: new (value: Input) => Error, status: number) =>
+  <Status extends number, Error>(ctor: new (value: StatusErrorInput<Status>) => Error, status: Status) =>
   (message: string, cause?: unknown): Error =>
-    makeStatusCauseError(ctor)({ message, status, cause });
+    new ctor({ message, status, cause: O.isOption(cause) ? cause : O.fromUndefinedOr(cause) });
 
 // The retired `@beep/schema` `HttpStatus4XX` / `HttpStatus5XX` kits: the status name on the
 // encoded side and its code on the decoded side, over the same names. `effect/http/HttpStatus`
@@ -140,8 +146,9 @@ const ServerErrorStatus = statusNameCodec([
 
 const statusFields = <Status extends S.Top>(status: Status) =>
   ({
-    ...StatusCauseFields,
+    message: S.String,
     status,
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
   }) as const;
 
 /**

@@ -7,7 +7,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { UUID } from "@beep/schema/String";
 import {
   ConfigProvider,
   Console,
@@ -38,6 +37,7 @@ import { processIdentityStatus, processStartIdentityForPid } from "../../../inte
 import { runRepoCommandCapture } from "../../../internal/repo-run/RepoRun.executor.ts";
 import { detectRunScopeSupport } from "../../../internal/repo-run/RunScope.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { UUID } from "../../../internal/schema/Uuid.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { writeYeetAckReceipt, YeetAckObservedResolution, YeetAckReceipt } from "./Ack.ts";
 import { appendYeetInboxRowOnce, YeetProofJobFinishedRow, yeetProofJobRowId } from "./Inbox.ts";

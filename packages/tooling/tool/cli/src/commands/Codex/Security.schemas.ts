@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
-import { SchemaGetter } from "effect";
+import { LiteralKit, MappedLiteralKit } from "@beep/schema";
+import { Effect, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -161,7 +161,7 @@ class Target extends S.Class<Target>($I`Target`)(
   {
     kind: S.Literal("git_revision"),
     revision: GitCommitSha,
-    remote: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    remote: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     targetId: S.NonEmptyString,
   },
   $I.annote("Target", { description: "Immutable repository revision; snapshots are not accepted by packet ingestion." })
@@ -190,20 +190,29 @@ export class SecuritySourceReceipt extends S.Class<SecuritySourceReceipt>($I`Sec
     description: "Local capture provenance used when upstream omits repository identity.",
   })
 ) {}
+const scopeLimitationsDefault = A.empty();
 class Scope extends S.Class<Scope>($I`Scope`)(
   {
     includePaths: S.Array(S.String),
     excludePaths: S.Array(S.String),
-    limitations: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults([])),
-    runtimeStatus: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    summary: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    context: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    validationMode: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    limitations: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(scopeLimitationsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(scopeLimitationsDefault))
+    ),
+    runtimeStatus: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    summary: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    context: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    validationMode: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Scope", { description: "Declared included and excluded scan paths." })
 ) {}
 class Extensions extends S.Class<Extensions>($I`Extensions`)(
-  { mock: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)) },
+  {
+    mock: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+  },
   $I.annote("Extensions", { description: "Synthetic-scan marker that cannot be promoted to a real findings packet." })
 ) {}
 class Scan extends S.Class<Scan>($I`Scan`)(
@@ -216,7 +225,7 @@ class Scan extends S.Class<Scan>($I`Scan`)(
     sealedAt: Timestamp,
     target: Target,
     scope: Scope,
-    extensions: S.OptionFromOptionalKey(Extensions).pipe(SchemaUtils.withNoneDefault),
+    extensions: S.OptionFromOptionalKey(Extensions).pipe(S.withConstructorDefault(Effect.succeedNone)),
     coverageRef: S.Literal("coverage.json"),
     findingsRef: S.Literal("findings.json"),
     artifacts: S.Array(Artifact).check(S.isMinLength(2), S.isMaxLength(10000)),
@@ -401,7 +410,7 @@ export class SecurityScanOptions extends S.Class<SecurityScanOptions>($I`Securit
     outputDir: S.String,
     maxCost: S.Finite.check(S.isGreaterThan(0), S.isLessThanOrEqualTo(100)),
     timeoutMinutes: S.Int.check(S.isGreaterThan(0), S.isLessThanOrEqualTo(120)),
-    target: S.OptionFromOptionalKey(RepoRelativePath).pipe(SchemaUtils.withNoneDefault),
+    target: S.OptionFromOptionalKey(RepoRelativePath).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SecurityScanOptions", { description: "Bounded operator inputs for a local Security CLI run." })
 ) {}

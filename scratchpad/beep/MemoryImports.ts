@@ -12,7 +12,6 @@
 import { sql } from "drizzle-orm";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -68,7 +67,7 @@ const strippedOptional = (column: string, description: string) =>
           ),
         ),
       }),
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
     ),
     description,
   ).pipe(pg.text(), pg.columnName(column));

@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import bundleAnalyzer from "@next/bundle-analyzer";
 import createMDX from "@next/mdx";
 import withSerwistInit from "@serwist/next";
-import { flow, pipe, Result } from "effect";
+import { Effect, flow, pipe, Result } from "effect";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -19,7 +19,6 @@ import { schemaIssueToError } from "./internal.ts";
 import { AllowedDevOrigin } from "./models/AllowedDevOrigin.schema.ts";
 import { defineNextConfig, NextConfig as NextConfigModel } from "./NextConfig.model.ts";
 import { SecureHeadersConfig, withSecureHeaders } from "./security/index.ts";
-import type { Effect } from "effect";
 import type { NextConfig as NextConfigFromNext } from "next";
 
 const $I = $RepoConfigsId.create("next/SharedNextConfig.model");
@@ -29,7 +28,12 @@ const optional = <Schema extends S.Top>(schema: Schema, description: string) =>
   S.optionalKey(schema).annotateKey({ description });
 const emptyStringList: Array<string> = [];
 const stringListWithEmptyDefault = (description: string) =>
-  S.String.pipe(S.Array, S.mutable, SchemaUtils.withKeyDefaults(emptyStringList)).annotateKey({ description });
+  S.String.pipe(
+    S.Array,
+    S.mutable,
+    S.withConstructorDefault(Effect.succeed(emptyStringList)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(emptyStringList))
+  ).annotateKey({ description });
 
 const DEFAULT_PAGE_EXTENSIONS: ReadonlyArray<string> = ["ts", "tsx", "md", "mdx"];
 const DEFAULT_TRANSPILE_PACKAGES: ReadonlyArray<string> = ["@beep/ui", "@beep/identity", "@beep/schema", "@beep/utils"];
@@ -147,7 +151,10 @@ export type BeepNextBundleAnalyzerConfig = typeof BeepNextBundleAnalyzerConfig.T
 
 class BeepNextMdxConfigOptions extends S.Class<BeepNextMdxConfigOptions>($I`BeepNextMdxConfigOptions`)(
   {
-    extension: S.RegExp.pipe(SchemaUtils.withKeyDefaults(DEFAULT_MDX_EXTENSION)).annotateKey({
+    extension: S.RegExp.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_MDX_EXTENSION)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_MDX_EXTENSION))
+    ).annotateKey({
       description: "Webpack rule condition for MDX file extensions.",
     }),
   },
@@ -199,10 +206,16 @@ export type BeepNextMdxConfig = typeof BeepNextMdxConfig.Type;
 class BeepNextPwaConfigOptions extends S.Class<BeepNextPwaConfigOptions>($I`BeepNextPwaConfigOptions`)(
   {
     enabled: optional(S.Boolean, "Overrides the decoded NEXT_DISABLE_PWA env toggle."),
-    swSrc: S.String.pipe(SchemaUtils.withKeyDefaults("src/app/sw.ts")).annotateKey({
+    swSrc: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("src/app/sw.ts")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("src/app/sw.ts"))
+    ).annotateKey({
       description: "Service worker source file passed to serwist (swSrc).",
     }),
-    swDest: S.String.pipe(SchemaUtils.withKeyDefaults("public/sw.js")).annotateKey({
+    swDest: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("public/sw.js")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("public/sw.js"))
+    ).annotateKey({
       description: "Compiled service worker output path passed to serwist (swDest).",
     }),
     register: optional(S.Boolean, "Whether serwist auto-registers the generated service worker."),

@@ -6,7 +6,7 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import * as A from "effect/Array";
@@ -161,7 +161,7 @@ type M365ErrorOptionsInputRaw = {
 };
 
 const optionalField = <Inner extends S.Top>(inner: Inner, description: string) =>
-  S.OptionFromOptionalKey(inner).pipe(SchemaUtils.withNoneDefault).annotateKey({ description });
+  S.OptionFromOptionalKey(inner).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
 
 class M365ErrorOptionsInput extends S.Class<M365ErrorOptionsInput>($I`M365ErrorOptionsInput`)(
   {

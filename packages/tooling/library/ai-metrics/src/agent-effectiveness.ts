@@ -502,10 +502,17 @@ export class AgentEffectivenessDoctorInput extends S.Class<AgentEffectivenessDoc
   {
     dataRoot: S.String,
     noPhoenix: SchemaUtils.BoolKeyDefaultFalse,
-    phoenixBaseUrl: S.String.pipe(SchemaUtils.withKeyDefaults(defaultPhoenixBaseUrl)),
-    target: AiMetricsDeployTarget.pipe(SchemaUtils.withKeyDefaults(AiMetricsDeployTarget.Enum.dankserver)),
+    phoenixBaseUrl: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultPhoenixBaseUrl)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultPhoenixBaseUrl))
+    ),
+    target: AiMetricsDeployTarget.pipe(
+      S.withConstructorDefault(Effect.succeed(AiMetricsDeployTarget.Enum.dankserver)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(AiMetricsDeployTarget.Enum.dankserver))
+    ),
     workerEvalReportPath: S.String.pipe(
-      SchemaUtils.withKeyDefaults(DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH)
+      S.withConstructorDefault(Effect.succeed(DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_AGENT_EFFECTIVENESS_WORKER_EVAL_REPORT_PATH))
     ),
   },
   $I.annote("AgentEffectivenessDoctorInput", {
@@ -543,7 +550,10 @@ export class AgentEffectivenessAnnotationPlanInput extends S.Class<AgentEffectiv
   $I`AgentEffectivenessAnnotationPlanInput`
 )(
   {
-    annotationLimit: S.Int.pipe(SchemaUtils.withKeyDefaults(defaultAnnotationLimit)),
+    annotationLimit: S.Int.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultAnnotationLimit)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultAnnotationLimit))
+    ),
     doctor: AgentEffectivenessDoctorInput,
   },
   $I.annote("AgentEffectivenessAnnotationPlanInput", {
@@ -595,13 +605,13 @@ export class AgentEffectivenessPhoenixProject extends S.Class<AgentEffectiveness
   $I`AgentEffectivenessPhoenixProject`
 )(
   {
-    hasTraces: S.OptionFromNullOr(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    hasTraces: S.OptionFromNullOr(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
     name: S.String,
-    recordCount: S.OptionFromNullOr(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    recordCount: S.OptionFromNullOr(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
     spanAnnotationNames: S.Array(S.String),
     sessionAnnotationNames: S.Array(S.String),
     traceAnnotationNames: S.Array(S.String),
-    traceCount: S.OptionFromNullOr(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    traceCount: S.OptionFromNullOr(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentEffectivenessPhoenixProject", {
     description: "Sanitized Phoenix project inventory row used by the agent-effectiveness doctor.",
@@ -662,7 +672,7 @@ export class AgentEffectivenessPhoenixSection extends S.Class<AgentEffectiveness
     promptCount: S.Finite,
     serverInsufficientStorage: S.Boolean,
     status: AgentEffectivenessStatus,
-    version: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    version: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentEffectivenessPhoenixSection", {
     description: "Non-mutating Phoenix readiness section for the agent-effectiveness doctor.",
@@ -711,7 +721,7 @@ export class AgentEffectivenessSourceCoverage extends S.Class<AgentEffectiveness
 )(
   {
     acceptedEvents: S.Finite,
-    lastTimestamp: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    lastTimestamp: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     rejectedLines: S.Finite,
     sourceFileCount: S.Finite,
     sourceKind: S.String,
@@ -884,8 +894,12 @@ export class AgentEffectivenessAiMetricsSection extends S.Class<AgentEffectivene
     dataRoot: S.String,
     derivedDuckDbPath: S.String,
     labelCount: S.Finite,
-    latestForwarder: S.OptionFromNullOr(AgentEffectivenessForwarderSummary).pipe(SchemaUtils.withNoneDefault),
-    latestScorecard: S.OptionFromNullOr(AgentEffectivenessScorecardSummary).pipe(SchemaUtils.withNoneDefault),
+    latestForwarder: S.OptionFromNullOr(AgentEffectivenessForwarderSummary).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    latestScorecard: S.OptionFromNullOr(AgentEffectivenessScorecardSummary).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     message: S.String,
     sourceCoverage: S.Array(AgentEffectivenessSourceCoverage),
     status: AgentEffectivenessStatus,
@@ -896,6 +910,7 @@ export class AgentEffectivenessAiMetricsSection extends S.Class<AgentEffectivene
   })
 ) {}
 
+const agentEffectivenessJsdocWorkerSectionPolicyViolationCodesDefault = A.empty<string>();
 /**
  * JSDoc worker-eval section for the doctor report.
  *
@@ -941,13 +956,16 @@ export class AgentEffectivenessJsdocWorkerSection extends S.Class<AgentEffective
   $I`AgentEffectivenessJsdocWorkerSection`
 )(
   {
-    cleanupDeleteStatus: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
-    cleanupStopStatus: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    cleanupDeleteStatus: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    cleanupStopStatus: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     completedPackets: S.Finite,
     failedPackets: S.Finite,
     message: S.String,
-    otlpStatus: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
-    policyViolationCodes: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    otlpStatus: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    policyViolationCodes: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(agentEffectivenessJsdocWorkerSectionPolicyViolationCodesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(agentEffectivenessJsdocWorkerSectionPolicyViolationCodesDefault))
+    ),
     reportPath: S.String,
     selectedPackets: S.Finite,
     status: AgentEffectivenessStatus,
@@ -1096,7 +1114,9 @@ export class AgentEffectivenessDoctorReport extends S.Class<AgentEffectivenessDo
     schemaVersion: S.Literals(
       AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-doctor/v1"]).literals
     ).pipe(
-      SchemaUtils.withConstantDefault(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-doctor/v1"])
+      S.withConstructorDefault(
+        Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-doctor/v1"])
+      )
     ),
     summary: AgentEffectivenessDoctorSummary,
     target: AiMetricsDeployTarget,
@@ -1108,6 +1128,7 @@ export class AgentEffectivenessDoctorReport extends S.Class<AgentEffectivenessDo
   static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessDoctorReport));
 }
 
+const agentEffectivenessPlannedAnnotationMetadataDefault = {};
 /**
  * One local-only annotation row that could be written to Phoenix later.
  *
@@ -1155,7 +1176,10 @@ export class AgentEffectivenessPlannedAnnotation extends S.Class<AgentEffectiven
 )(
   {
     annotationId: S.String,
-    metadata: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults({})),
+    metadata: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(agentEffectivenessPlannedAnnotationMetadataDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(agentEffectivenessPlannedAnnotationMetadataDefault))
+    ),
     name: S.String,
     optimization: AgentEffectivenessAnnotationOptimization,
     source: AgentEffectivenessAnnotationSource,
@@ -1274,8 +1298,8 @@ export class AgentEffectivenessAnnotationPlan extends S.Class<AgentEffectiveness
     schemaVersion: S.Literals(
       AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-annotation-plan/v1"]).literals
     ).pipe(
-      SchemaUtils.withConstantDefault(
-        AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-annotation-plan/v1"]
+      S.withConstructorDefault(
+        Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-annotation-plan/v1"])
       )
     ),
     summary: AgentEffectivenessDoctorSummary,
@@ -1375,8 +1399,8 @@ export class AgentEffectivenessAnnotationCheckReport extends S.Class<AgentEffect
     schemaVersion: S.Literals(
       AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-annotation-check/v1"]).literals
     ).pipe(
-      SchemaUtils.withConstantDefault(
-        AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-annotation-check/v1"]
+      S.withConstructorDefault(
+        Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-annotation-check/v1"])
       )
     ),
     status: AgentEffectivenessStatus,
@@ -1506,6 +1530,8 @@ export const AgentEffectivenessDatasetKind = LiteralKit([
  */
 export type AgentEffectivenessDatasetKind = typeof AgentEffectivenessDatasetKind.Type;
 
+const agentEffectivenessDatasetExampleMetadataDefault = {};
+const agentEffectivenessDatasetExampleOutputDefault = {};
 /**
  * One sanitized example destined for a Phoenix dataset.
  *
@@ -1537,9 +1563,18 @@ export class AgentEffectivenessDatasetExample extends S.Class<AgentEffectiveness
   {
     id: S.String,
     input: S.Record(S.String, S.Unknown),
-    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults({})),
-    output: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults({})),
-    split: S.String.pipe(SchemaUtils.withKeyDefaults("current")),
+    metadata: S.Record(S.String, S.Unknown).pipe(
+      S.withConstructorDefault(Effect.succeed(agentEffectivenessDatasetExampleMetadataDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(agentEffectivenessDatasetExampleMetadataDefault))
+    ),
+    output: S.Record(S.String, S.Unknown).pipe(
+      S.withConstructorDefault(Effect.succeed(agentEffectivenessDatasetExampleOutputDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(agentEffectivenessDatasetExampleOutputDefault))
+    ),
+    split: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("current")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("current"))
+    ),
   },
   $I.annote("AgentEffectivenessDatasetExample", {
     description: "Sanitized, aggregate-only example destined for a Phoenix dataset.",
@@ -1628,7 +1663,9 @@ export class AgentEffectivenessDatasetBundle extends S.Class<AgentEffectivenessD
     schemaVersion: S.Literals(
       AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-datasets/v1"]).literals
     ).pipe(
-      SchemaUtils.withConstantDefault(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-datasets/v1"])
+      S.withConstructorDefault(
+        Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-datasets/v1"])
+      )
     ),
   },
   $I.annote("AgentEffectivenessDatasetBundle", {
@@ -1795,7 +1832,9 @@ export class AgentEffectivenessPromptBundle extends S.Class<AgentEffectivenessPr
     schemaVersion: S.Literals(
       AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-prompts/v1"]).literals
     ).pipe(
-      SchemaUtils.withConstantDefault(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-prompts/v1"])
+      S.withConstructorDefault(
+        Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-prompts/v1"])
+      )
     ),
   },
   $I.annote("AgentEffectivenessPromptBundle", {
@@ -1805,6 +1844,7 @@ export class AgentEffectivenessPromptBundle extends S.Class<AgentEffectivenessPr
   static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPromptBundle));
 }
 
+const agentEffectivenessExperimentSpecMetadataDefault = {};
 /**
  * Deterministic experiment plan entry.
  *
@@ -1838,7 +1878,10 @@ export class AgentEffectivenessExperimentSpec extends S.Class<AgentEffectiveness
   {
     datasetName: S.String,
     description: S.String,
-    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults({})),
+    metadata: S.Record(S.String, S.Unknown).pipe(
+      S.withConstructorDefault(Effect.succeed(agentEffectivenessExperimentSpecMetadataDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(agentEffectivenessExperimentSpecMetadataDefault))
+    ),
     name: S.String,
   },
   $I.annote("AgentEffectivenessExperimentSpec", {
@@ -1883,8 +1926,8 @@ export class AgentEffectivenessExperimentBundle extends S.Class<AgentEffectivene
     schemaVersion: S.Literals(
       AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-experiments/v1"]).literals
     ).pipe(
-      SchemaUtils.withConstantDefault(
-        AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-experiments/v1"]
+      S.withConstructorDefault(
+        Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-experiments/v1"])
       )
     ),
   },
@@ -2114,20 +2157,30 @@ const WorkerEvalPolicyViolation = S.Union([S.String, WorkerEvalPolicyViolationOb
   })
 );
 
+const workerEvalPacketPolicyViolationCodesDefault = A.empty<string>();
 class WorkerEvalPacket extends S.Class<WorkerEvalPacket>($I`WorkerEvalPacket`)(
   {
-    policyViolationCodes: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    policyViolationCodes: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(workerEvalPacketPolicyViolationCodesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(workerEvalPacketPolicyViolationCodesDefault))
+    ),
   },
   $I.annote("WorkerEvalPacket", {
     description: "Internal minimal JSDoc worker-eval packet row.",
   })
 ) {}
 
+const workerEvalReportPacketsDefault = A.empty<WorkerEvalPacket>();
+const workerEvalReportPolicyViolationsDefault = A.empty<typeof WorkerEvalPolicyViolation.Type>();
 class WorkerEvalReport extends S.Class<WorkerEvalReport>($I`WorkerEvalReport`)(
   {
-    packets: S.Array(WorkerEvalPacket).pipe(SchemaUtils.withEmptyArrayDefaults<WorkerEvalPacket>()),
+    packets: S.Array(WorkerEvalPacket).pipe(
+      S.withConstructorDefault(Effect.succeed(workerEvalReportPacketsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(workerEvalReportPacketsDefault))
+    ),
     policyViolations: S.Array(WorkerEvalPolicyViolation).pipe(
-      SchemaUtils.withEmptyArrayDefaults<typeof WorkerEvalPolicyViolation.Type>()
+      S.withConstructorDefault(Effect.succeed(workerEvalReportPolicyViolationsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(workerEvalReportPolicyViolationsDefault))
     ),
     summary: WorkerEvalSummary,
   },

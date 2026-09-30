@@ -40,6 +40,7 @@ const decodeUnknownFileSignatureResult = S.decodeUnknownResult(FileSignature);
 const decodeUnknownFileTypeInfoResult = S.decodeUnknownResult(FileTypeInfo);
 const encodeUnknownDetectFileOptionsResult = S.encodeUnknownResult(DetectFileOptions);
 const encodeUnknownFileContentResult = S.encodeUnknownResult(FileContent);
+const encodeUnknownFileContentJsonResult = S.encodeUnknownResult(S.toCodecJson(FileContent));
 const encodeUnknownFileSignatureResult = S.encodeUnknownResult(FileSignature);
 const encodeUnknownValidateFileTypeOptionsResult = S.encodeUnknownResult(ValidateFileTypeOptions);
 const isDetectedFileInfo = S.is(DetectedFileInfo);
@@ -251,6 +252,25 @@ describe("FileTypeChecker schemas", () => {
       const encoded = Result.getOrThrow(encodeUnknownFileContentResult(decoded));
       pipe(decodeFileContentResult(encoded), Result.isSuccess, assertTrue);
     }
+  });
+
+  it("rejects detached ArrayBuffers and compares ArrayBuffers by bytes", () => {
+    const detached = new ArrayBuffer(4);
+    detached.transfer();
+    const fileContentEquivalence = S.toEquivalence(FileContent);
+
+    pipe(decodeFileContentResult(new ArrayBuffer(4)), Result.isSuccess, assertTrue);
+    const rejected = decodeFileContentResult(detached);
+    pipe(rejected, Result.isFailure, assertTrue);
+    expect(String(Result.merge(rejected))).toContain("Expected an ArrayBuffer that has not been detached by transfer");
+    expect(fileContentEquivalence(new Uint8Array([1, 2]).buffer, new Uint8Array([1, 2]).buffer)).toBe(true);
+    expect(fileContentEquivalence(new Uint8Array([1, 2]).buffer, new Uint8Array([1, 3]).buffer)).toBe(false);
+  });
+
+  it("encodes ArrayBuffer content to the same base64 JSON as Uint8Array content", () => {
+    expect(Result.getOrThrow(encodeUnknownFileContentJsonResult(new Uint8Array([104, 105]).buffer))).toBe("aGk=");
+    expect(Result.getOrThrow(encodeUnknownFileContentJsonResult(new ArrayBuffer(0)))).toBe("");
+    expect(Result.getOrThrow(encodeUnknownFileContentJsonResult(new Uint8Array([104, 105])))).toBe("aGk=");
   });
 
   it("keeps catalog keys correlated, exhaustive, and schema-valid", () => {

@@ -10,9 +10,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+// fallow-ignore-file code-duplication -- consumer-local composition that replaces the retired `@beep/schema` `SchemaUtils.withNoneDefault` (optionalDefect); the upstream-first doctrine (standards/architecture/DECISIONS.md, 2026-09-29) forbids a shared replacement.
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -63,7 +65,7 @@ export type ExecutionLedgerOperation = typeof ExecutionLedgerOperation.Type;
 
 const optionalDefect = (description: string) =>
   S.OptionFromOptionalKey(Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
+    .pipe(S.withConstructorDefault(Effect.succeedNone))
     .annotateKey({
       description,
     });

@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -85,7 +85,7 @@ export class Input extends S.Class<Input>($I`PreCompactInput`)(
     ...envelopeFields,
     hook_event_name: S.Literal("PreCompact"),
     trigger: Trigger,
-    custom_instructions: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    custom_instructions: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PreCompactInput", {
     description: "Input for the PreCompact hook event.",
@@ -117,13 +117,13 @@ export class Input extends S.Class<Input>($I`PreCompactInput`)(
  */
 export class Output extends S.Class<Output>($I`PreCompactOutput`)(
   {
-    decision: S.OptionFromOptionalKey(S.Literal("block")).pipe(SchemaUtils.withNoneDefault),
-    reason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    decision: S.OptionFromOptionalKey(S.Literal("block")).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    reason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PreCompactOutput", {
     description: "Output returned by a PreCompact hook handler.",

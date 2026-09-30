@@ -7,7 +7,7 @@
  */
 
 import { $SharedUseCasesId } from "@beep/identity/packages";
-import { KebabCaseStr, LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $SharedUseCasesId.create("PromotionGate/PromotionGate.schema");
@@ -46,6 +46,13 @@ export class PromotionSubjectRef extends S.Class<PromotionSubjectRef>($I`Promoti
 /**
  * Opaque refusal reason safe to return across the shared boundary.
  *
+ * **Details**
+ *
+ * Decoding trims the input, then requires a non-empty kebab-case code of at
+ * most 80 characters. The decoded type carries the `NonEmptyTrimmedStr`,
+ * `KebabCaseStr`, and `PromotionBlockReason` brand keys, so the promoted
+ * contract's type is unchanged.
+ *
  * **Gotchas**
  *
  * This is a policy identifier or bounded refusal code, not the vertical's raw
@@ -62,7 +69,11 @@ export class PromotionSubjectRef extends S.Class<PromotionSubjectRef>($I`Promoti
  * @category value-objects
  * @since 0.0.0
  */
-export const PromotionBlockReason = KebabCaseStr.check(S.isMaxLength(80)).pipe(
+export const PromotionBlockReason = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" })).pipe(
+  S.brand("NonEmptyTrimmedStr"),
+  S.check(S.isPattern(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/, { message: "Must be KebabCase format" })),
+  S.brand("KebabCaseStr"),
+  S.check(S.isMaxLength(80)),
   S.brand("PromotionBlockReason"),
   $I.annoteSchema("PromotionBlockReason", {
     description: "Opaque sanitized reason code for a blocked candidate promotion.",

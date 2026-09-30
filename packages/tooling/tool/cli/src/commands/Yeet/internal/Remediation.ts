@@ -41,7 +41,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Console, Effect, FileSystem, HashSet, Match, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -137,7 +137,7 @@ export class YeetRemediationWave extends S.Class<YeetRemediationWave>($I`YeetRem
     prNumber: S.Finite,
     sessionStartedAt: S.NullOr(S.String),
     updatedAt: S.String,
-    redSetKey: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    redSetKey: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetRemediationWave", {
     description:
@@ -909,6 +909,7 @@ export class YeetBaseConflictCorruptReceipt extends S.Class<YeetBaseConflictCorr
   })
 ) {}
 
+const yeetBaseConflictWalkCorruptReceiptsDefault = A.empty<YeetBaseConflictCorruptReceipt>();
 /**
  * Where one head's base-conflict generation walk stopped, and what it passed.
  *
@@ -935,7 +936,8 @@ export class YeetBaseConflictWalk extends S.Class<YeetBaseConflictWalk>($I`YeetB
   {
     generation: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     corruptReceipts: S.Array(YeetBaseConflictCorruptReceipt).pipe(
-      SchemaUtils.withKeyDefaults(A.empty<YeetBaseConflictCorruptReceipt>())
+      S.withConstructorDefault(Effect.succeed(yeetBaseConflictWalkCorruptReceiptsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetBaseConflictWalkCorruptReceiptsDefault))
     ),
   },
   $I.annote("YeetBaseConflictWalk", {

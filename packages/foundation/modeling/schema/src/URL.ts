@@ -9,10 +9,15 @@ import { O } from "@beep/utils";
 import { Brand } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
-import { NonEmptyTrimmedStr } from "./String.ts";
 
 const decodeURLFromStringOption = S.decodeOption(S.URLFromString);
 const decodeUnknownURLFromStringOption = S.decodeUnknownOption(S.URLFromString);
+// URL is deferred to an operator ruling (SPEC goal-time row 2026-09-29); the inner brand keeps
+// URLStr's decoded type identical to the retired String concept's until then.
+const NonEmptyTrimmedStr = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" })).pipe(
+  S.brand("NonEmptyTrimmedStr")
+);
+type NonEmptyTrimmedStr = typeof NonEmptyTrimmedStr.Type;
 const isNonEmptyTrimmedStr = S.is(NonEmptyTrimmedStr);
 
 const $I = $SchemaId.create("URL");

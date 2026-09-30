@@ -880,8 +880,7 @@ Decision:
 
 `@beep/schema` uses namespace-first concept modules as the canonical topology
 for reusable schema concepts. Public concept subpaths are flat, for example
-`@beep/schema/Duration`, `@beep/schema/Glob`, `@beep/schema/Color`, and
-`@beep/schema/HttpHeaders`. Consumers import those modules as namespaces and use
+`@beep/schema/Glob`, `@beep/schema/Color`, and `@beep/schema/HttpHeaders`. Consumers import those modules as namespaces and use
 concise role members such as `Schema`, `Input`, `FromInput`, `Object`, and
 `Unit`.
 

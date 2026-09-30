@@ -123,7 +123,7 @@ export type CrossOriginEmbedderPolicyOption = typeof CrossOriginEmbedderPolicyOp
 export class COEPResponseHeader extends S.Class<COEPResponseHeader>($I`COEPResponseHeader`)(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromUndefinedOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("COEPResponseHeader", {
     description: "The `Cross-Origin-Embedder-Policy` response header.",

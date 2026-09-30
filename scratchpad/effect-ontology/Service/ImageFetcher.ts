@@ -13,7 +13,7 @@ import { flow } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { PosInt } from "@beep/schema";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Context, Duration, Effect, Layer, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
@@ -94,6 +94,7 @@ const isRetryableImageError = (error: ImageError): boolean =>
 // Types
 // =============================================================================
 
+const imageFetchOptionsMaxSizeBytesDefault = PosInt.make(DEFAULT_MAX_SIZE_BYTES);
 /**
  * Options for image fetching
  *
@@ -111,10 +112,10 @@ const isRetryableImageError = (error: ImageError): boolean =>
  */
 export class ImageFetchOptions extends S.Class<ImageFetchOptions>($I`ImageFetchOptions`)(
   {
-    timeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT)),
-    maxSizeBytes: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(DEFAULT_MAX_SIZE_BYTES))),
-    allowedTypes: S.NonEmptyArray(S.NonEmptyString).pipe(SchemaUtils.withKeyDefaults(ALLOWED_CONTENT_TYPES)),
-    retry: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    timeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT)), S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT))),
+    maxSizeBytes: PosInt.pipe(S.withConstructorDefault(Effect.succeed(imageFetchOptionsMaxSizeBytesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(imageFetchOptionsMaxSizeBytesDefault))),
+    allowedTypes: S.NonEmptyArray(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(ALLOWED_CONTENT_TYPES)), S.withDecodingDefaultTypeKey(Effect.succeed(ALLOWED_CONTENT_TYPES))),
+    retry: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
   },
   $I.annote("ImageFetchOptions", {
     description: "Request timeout, byte ceiling, accepted media types, and retry policy for image fetching.",

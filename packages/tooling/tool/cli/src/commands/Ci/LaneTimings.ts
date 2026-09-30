@@ -99,6 +99,8 @@ export const CiRunnerClass = LiteralKit(["managed", "github-hosted", "unknown"])
  */
 export type CiRunnerClass = typeof CiRunnerClass.Type;
 
+const ciWorkflowJobLabelsDefault = A.empty();
+const ciWorkflowJobStepsDefault = A.empty();
 /**
  * One hosted job as returned by the Actions jobs REST endpoint.
  *
@@ -135,21 +137,36 @@ export class CiWorkflowJob extends S.Class<CiWorkflowJob>($I`CiWorkflowJob`)(
     conclusion: S.NullOr(S.String),
     created_at: S.String,
     id: S.Finite,
-    labels: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults([])),
+    labels: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(ciWorkflowJobLabelsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ciWorkflowJobLabelsDefault))
+    ),
     name: S.String,
     run_attempt: S.Finite,
     run_id: S.Finite,
-    runner_name: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)),
+    runner_name: S.NullOr(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(null))
+    ),
     started_at: S.NullOr(S.String),
     status: S.String,
     steps: S.Array(
       S.Struct({
-        completed_at: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)),
+        completed_at: S.NullOr(S.String).pipe(
+          S.withConstructorDefault(Effect.succeed(null)),
+          S.withDecodingDefaultTypeKey(Effect.succeed(null))
+        ),
         conclusion: S.NullOr(S.String),
         name: S.String,
-        started_at: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)),
+        started_at: S.NullOr(S.String).pipe(
+          S.withConstructorDefault(Effect.succeed(null)),
+          S.withDecodingDefaultTypeKey(Effect.succeed(null))
+        ),
       })
-    ).pipe(SchemaUtils.withKeyDefaults([])),
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(ciWorkflowJobStepsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ciWorkflowJobStepsDefault))
+    ),
   },
   $I.annote("CiWorkflowJob", {
     description: "One hosted job as returned by the GitHub Actions jobs REST endpoint.",
@@ -185,7 +202,10 @@ const isCiWorkflowAttemptOneJob = S.is(CiWorkflowAttemptOneJob);
 export class CiWorkflowJobsPage extends S.Class<CiWorkflowJobsPage>($I`CiWorkflowJobsPage`)(
   {
     jobs: S.Array(CiWorkflowJob),
-    total_count: S.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
+    total_count: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ),
   },
   $I.annote("CiWorkflowJobsPage", {
     description: "One page of jobs returned by the GitHub Actions jobs REST endpoint.",
@@ -226,17 +246,17 @@ export class CiWorkflowJobsPage extends S.Class<CiWorkflowJobsPage>($I`CiWorkflo
 export class CiLaneTimingRow extends S.Class<CiLaneTimingRow>($I`CiLaneTimingRow`)(
   {
     conclusion: S.String,
-    durationSeconds: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    durationSeconds: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     infraFailure: S.Boolean,
-    installSeconds: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    installSeconds: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     jobId: S.Finite,
     jobName: S.String,
-    peakRssBytes: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    pickupSeconds: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    peakRssBytes: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    pickupSeconds: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     runAttempt: S.Finite,
     runId: S.Finite,
     runnerClass: CiRunnerClass,
-    setupSeconds: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    setupSeconds: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CiLaneTimingRow", {
     description: "One hosted lane timing row with attempt-filtered pickup latency and per-phase seconds.",
@@ -270,9 +290,9 @@ export class CiLaneTimingsReport extends S.Class<CiLaneTimingsReport>($I`CiLaneT
     attemptOneJobCount: S.Finite,
     jobCount: S.Finite,
     managedInfraFailureCount: S.Finite,
-    managedInfraSuccessRate: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    managedInfraSuccessRate: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     managedJobCount: S.Finite,
-    medianAttemptOnePickupSeconds: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    medianAttemptOnePickupSeconds: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     rows: S.Array(CiLaneTimingRow),
     schemaVersion: S.Literal("ci-lane-timings/v1"),
   },
@@ -1584,9 +1604,13 @@ class CiRequiredStatusCheck extends S.Class<CiRequiredStatusCheck>($I`CiRequired
   })
 ) {}
 
+const ciBranchRuleParametersRequiredStatusChecksDefault = A.empty();
 class CiBranchRuleParameters extends S.Class<CiBranchRuleParameters>($I`CiBranchRuleParameters`)(
   {
-    required_status_checks: S.Array(CiRequiredStatusCheck).pipe(SchemaUtils.withKeyDefaults([])),
+    required_status_checks: S.Array(CiRequiredStatusCheck).pipe(
+      S.withConstructorDefault(Effect.succeed(ciBranchRuleParametersRequiredStatusChecksDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ciBranchRuleParametersRequiredStatusChecksDefault))
+    ),
   },
   $I.annote("CiBranchRuleParameters", {
     description: "Required-status-check parameters retained from an effective branch rule.",

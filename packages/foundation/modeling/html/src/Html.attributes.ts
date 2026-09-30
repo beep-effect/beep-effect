@@ -1804,7 +1804,7 @@ export type HtmlIdValue = typeof HtmlIdValue.Type;
 // field bundles
 // -----------------------------------------------------------------------------
 
-const OptionalString = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);
+const OptionalString = S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone));
 type OptionalString = typeof OptionalString;
 
 /**
@@ -1831,18 +1831,18 @@ type OptionalString = typeof OptionalString;
  * @since 0.0.0
  */
 export const EnumeratedGlobalAttributes = readonlyStruct({
-  autocapitalize: S.OptionFromOptionalKey(AutoCapitalize).pipe(SchemaUtils.withNoneDefault),
-  autocorrect: S.OptionFromOptionalKey(AutoCorrect).pipe(SchemaUtils.withNoneDefault),
-  contenteditable: S.OptionFromOptionalKey(ContentEditable).pipe(SchemaUtils.withNoneDefault),
-  dir: S.OptionFromOptionalKey(Dir).pipe(SchemaUtils.withNoneDefault),
-  draggable: S.OptionFromOptionalKey(Draggable).pipe(SchemaUtils.withNoneDefault),
-  enterkeyhint: S.OptionFromOptionalKey(EnterKeyHint).pipe(SchemaUtils.withNoneDefault),
-  hidden: S.OptionFromOptionalKey(Hidden).pipe(SchemaUtils.withNoneDefault),
-  inputmode: S.OptionFromOptionalKey(InputMode).pipe(SchemaUtils.withNoneDefault),
-  popover: S.OptionFromOptionalKey(Popover).pipe(SchemaUtils.withNoneDefault),
-  spellcheck: S.OptionFromOptionalKey(SpellCheck).pipe(SchemaUtils.withNoneDefault),
-  translate: S.OptionFromOptionalKey(Translate).pipe(SchemaUtils.withNoneDefault),
-  writingsuggestions: S.OptionFromOptionalKey(WritingSuggestions).pipe(SchemaUtils.withNoneDefault),
+  autocapitalize: S.OptionFromOptionalKey(AutoCapitalize).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  autocorrect: S.OptionFromOptionalKey(AutoCorrect).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  contenteditable: S.OptionFromOptionalKey(ContentEditable).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  dir: S.OptionFromOptionalKey(Dir).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  draggable: S.OptionFromOptionalKey(Draggable).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  enterkeyhint: S.OptionFromOptionalKey(EnterKeyHint).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  hidden: S.OptionFromOptionalKey(Hidden).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  inputmode: S.OptionFromOptionalKey(InputMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  popover: S.OptionFromOptionalKey(Popover).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  spellcheck: S.OptionFromOptionalKey(SpellCheck).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  translate: S.OptionFromOptionalKey(Translate).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  writingsuggestions: S.OptionFromOptionalKey(WritingSuggestions).pipe(S.withConstructorDefault(Effect.succeedNone)),
 });
 
 /**
@@ -1864,25 +1864,25 @@ export const EnumeratedGlobalAttributes = readonlyStruct({
 export const StandardGlobalAttributes = readonlyStruct({
   accesskey: OptionalString,
   ...EnumeratedGlobalAttributes,
-  autofocus: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+  autofocus: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
   class: OptionalString,
   exportparts: OptionalString,
-  headingoffset: S.OptionFromOptionalKey(HeadingOffset).pipe(SchemaUtils.withNoneDefault),
-  headingreset: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-  id: S.OptionFromOptionalKey(HtmlIdValue).pipe(SchemaUtils.withNoneDefault),
-  inert: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+  headingoffset: S.OptionFromOptionalKey(HeadingOffset).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  headingreset: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  id: S.OptionFromOptionalKey(HtmlIdValue).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  inert: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
   is: OptionalString,
   itemid: OptionalString,
   itemprop: OptionalString,
   itemref: OptionalString,
-  itemscope: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+  itemscope: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
   itemtype: OptionalString,
   lang: OptionalString,
   nonce: OptionalString,
   part: OptionalString,
   slot: OptionalString,
   style: OptionalString,
-  tabindex: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+  tabindex: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
   title: OptionalString,
 });
 
@@ -1960,7 +1960,7 @@ export type DatasetKey = typeof DatasetKey.Type;
  * @since 0.0.0
  */
 export const DatasetAttribute = readonlyStruct({
-  dataset: S.OptionFromOptionalKey(S.Record(DatasetKey, S.String)).pipe(SchemaUtils.withNoneDefault),
+  dataset: S.OptionFromOptionalKey(S.Record(DatasetKey, S.String)).pipe(S.withConstructorDefault(Effect.succeedNone)),
 });
 
 const ariaAttributeNames = LiteralKit([

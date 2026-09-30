@@ -10,7 +10,7 @@ import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { makeLayer as makePgliteLayer } from "@beep/pglite";
 import * as Rdf from "@beep/rdf/Rdf";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
 import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
@@ -192,7 +192,7 @@ const annotateProjectionOutcome = <A2, E2, R2>(effect: Effect.Effect<A2, E2, R2>
 export class ProjectionLayerOptions extends S.Class<ProjectionLayerOptions>($I`ProjectionLayerOptions`)(
   {
     duckDbPath: S.NonEmptyString,
-    pgliteDataDir: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    pgliteDataDir: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProjectionLayerOptions", {
     description: "Caller-selected machine-local paths for one scoped projection layer.",

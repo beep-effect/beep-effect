@@ -6,8 +6,9 @@
  */
 
 import { $QaCaptureId } from "@beep/identity/packages";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { O, P } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -43,7 +44,7 @@ export class QaCaptureError extends S.TaggedError<QaCaptureError>($I`QaCaptureEr
   "QaCaptureError",
   {
     cause: S.OptionFromOptionalKey(QaCaptureDefect).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("QaCaptureError.cause", {
         description: "Inspectable originating defect, when available.",
       })
@@ -59,7 +60,7 @@ export class QaCaptureError extends S.TaggedError<QaCaptureError>($I`QaCaptureEr
       })
     ),
     path: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("QaCaptureError.path", {
         description: "File-system path involved in the failure, when available.",
       })

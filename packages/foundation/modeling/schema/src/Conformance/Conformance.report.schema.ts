@@ -5,11 +5,10 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Tuple } from "effect";
+import { Effect, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { RequirementStrength } from "./Conformance.invariant.schema.ts";
 import { SpecificationReference } from "./Conformance.source.schema.ts";
 
@@ -22,28 +21,36 @@ const ConformancePathSegment = S.Union([S.String, S.Natural]).pipe(
   })
 );
 
+const violationIssuePathDefault = A.empty<string | number>();
 class ViolationIssue extends S.Class<ViolationIssue>($I`ViolationIssue`)(
   {
     kind: S.tag("violation"),
     invariantId: S.NonEmptyString,
     strength: RequirementStrength,
-    path: S.Array(ConformancePathSegment).pipe(SchemaUtils.withEmptyArrayDefaults<string | number>()),
+    path: S.Array(ConformancePathSegment).pipe(
+      S.withConstructorDefault(Effect.succeed(violationIssuePathDefault)),
+      S.withDecodingDefaultType(Effect.succeed(violationIssuePathDefault))
+    ),
     message: S.NonEmptyString,
-    reference: S.OptionFromOptionalKey(SpecificationReference).pipe(SchemaUtils.withNoneDefault),
+    reference: S.OptionFromOptionalKey(SpecificationReference).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ViolationIssue", {
     description: "Definite violation of a mechanically decidable conformance invariant.",
   })
 ) {}
 
+const indeterminateIssuePathDefault = A.empty<string | number>();
 class IndeterminateIssue extends S.Class<IndeterminateIssue>($I`IndeterminateIssue`)(
   {
     kind: S.tag("indeterminate"),
     invariantId: S.NonEmptyString,
-    path: S.Array(ConformancePathSegment).pipe(SchemaUtils.withEmptyArrayDefaults<string | number>()),
+    path: S.Array(ConformancePathSegment).pipe(
+      S.withConstructorDefault(Effect.succeed(indeterminateIssuePathDefault)),
+      S.withDecodingDefaultType(Effect.succeed(indeterminateIssuePathDefault))
+    ),
     message: S.NonEmptyString,
     reason: S.NonEmptyString,
-    reference: S.OptionFromOptionalKey(SpecificationReference).pipe(SchemaUtils.withNoneDefault),
+    reference: S.OptionFromOptionalKey(SpecificationReference).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("IndeterminateIssue", {
     description: "Invariant outcome that requires context or authority unavailable to the validator.",
@@ -132,11 +139,15 @@ class ConformingReport extends S.Class<ConformingReport>($I`ConformingReport`)(
   })
 ) {}
 
+const nonConformingReportFieldsIndeterminateIssuesDefault = A.empty<IndeterminateIssue>();
 const NonConformingReportFields = S.Struct({
   status: S.tag("nonConforming"),
   ...commonReportFields,
   issues: S.NonEmptyArray(ViolationIssue),
-  indeterminateIssues: S.Array(IndeterminateIssue).pipe(SchemaUtils.withEmptyArrayDefaults<IndeterminateIssue>()),
+  indeterminateIssues: S.Array(IndeterminateIssue).pipe(
+    S.withConstructorDefault(Effect.succeed(nonConformingReportFieldsIndeterminateIssuesDefault)),
+    S.withDecodingDefaultType(Effect.succeed(nonConformingReportFieldsIndeterminateIssuesDefault))
+  ),
 });
 
 const NonConformingReportConsistency = S.makeFilter(

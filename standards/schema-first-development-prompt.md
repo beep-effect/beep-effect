@@ -418,17 +418,17 @@ const makeImportOptions = (input: {
 **Target:**
 
 ```ts
-import { SchemaUtils } from "@beep/schema";
 import { $PackageNameId } from "@beep/identity/packages";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $PackageNameId.create("relative/path/from/package/src");
 
 export class ImportOptions extends S.Class<ImportOptions>($I`ImportOptions`)(
   {
-    strict: S.Boolean.pipe(SchemaUtils.withConstantDefault(true)),
+    strict: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
     note: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
   },
   $I.annote("ImportOptions", {

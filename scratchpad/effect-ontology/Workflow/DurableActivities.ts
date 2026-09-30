@@ -1136,10 +1136,10 @@ export const ClaimPersistenceInput = S.Struct({
     S.Struct({
       documentId: S.String,
       sourceUri: S.String,
-      eventTime: S.DateTimeUtc.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-      headline: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+      eventTime: S.DateTimeUtc.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+      headline: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     })
-  ).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  ).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("ClaimPersistenceInput", {
     description: "Batch, ontology, document graph URIs, and namespace used to persist validated claims.",
@@ -1525,10 +1525,10 @@ export const InferenceInput = S.Struct({
   /** Reasoning profile to use (default: rdfs) */
   profile: S.Literals(["rdfs", "rdfs-subclass", "owl-sameas", "custom"]).pipe(
     S.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
+    S.withConstructorDefault(Effect.succeedNone)
   ),
   /** Whether inference is enabled (default: true) */
-  enabled: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  enabled: S.Boolean.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("InferenceInput", {
     description: "Batch, resolved graph URI, reasoning profile, and enablement flag for RDFS inference.",
@@ -1799,7 +1799,7 @@ export const ComputeEmbeddingsInput = S.Struct({
   /** URI of the ontology (e.g., "gs://bucket/ontologies/football/ontology.ttl") */
   ontologyUri: S.String,
   /** Embedding model to use */
-  model: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  model: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("ComputeEmbeddingsInput", {
     description: "Ontology URI and optional embedding model used to pre-compute class and property vectors.",
@@ -2113,7 +2113,7 @@ export const LlmVerificationInput = S.Struct({
   /** Entity pairs with low confidence to verify */
   entityPairs: S.Array(EntityPair),
   /** Similarity threshold below which to verify (default: 0.7) */
-  verificationThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  verificationThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("LlmVerificationInput", {
     description: "Batch identity, uncertain entity pairs, and optional similarity threshold for LLM verification.",
@@ -2236,7 +2236,7 @@ const EntityComparisonSchema = S.Struct({
   confidence: Confidence.annotate({
     description: "Confidence in the decision (0-1)",
   }),
-  reasoning: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
+  reasoning: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotate({
     description: "Brief explanation of the decision",
   }),
 }).annotate({

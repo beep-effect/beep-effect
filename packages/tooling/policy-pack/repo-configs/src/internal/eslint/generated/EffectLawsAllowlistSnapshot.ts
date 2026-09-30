@@ -38,22 +38,6 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-      "kind": "object-method",
-      "reason": "partitionWire is a wire trust boundary: effect's Record helpers build results with plain objects, so an own \"__proto__\" key from JSON.parse hits the Object.prototype setter, silently dropping the key and transiently installing attacker-controlled JSON as a prototype. Null-prototype accumulators via Object.create(null) + Object.entries iteration preserve hostile keys losslessly; property-tested by the __proto__ regression in test/JSONSchema.test.ts.",
-      "owner": "@beep/schema",
-      "issue": "JSONSCHEMA-PARTITION-PROTO-POLLUTION-GUARD"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts",
-      "kind": "object-method",
-      "reason": "classStatics returns an intentionally frozen public utility bag so an S.Class declaration can safely share destructurable precompiled codec helpers without consumers replacing the selected functions after initialization.",
-      "owner": "@beep/schema",
-      "issue": "SCHEMA-CLASS-STATICS-IMMUTABLE-UTILITY-BAG"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/modeling/utils/src/Schema.ts",
       "kind": "native-error",
       "reason": "compileAssertion is a low-level adapter that precompiles the decoded schema parser while preserving Effect Schema.asserts compatibility: schema failures must throw native Error with the exact generic message and SchemaIssue cause, while defects and mixed causes must preserve the complete Cause. A tagged application error would change that observable vendor contract.",

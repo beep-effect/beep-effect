@@ -7,8 +7,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Inspectable, pipe } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Inspectable, pipe, Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -213,7 +213,7 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
     /** Optional counterexample demonstrating the mistake to avoid. */
     counterExample: RuleExample.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionRule.counterExample", {
         description: "Optional counterexample demonstrating the mistake to avoid.",
       })

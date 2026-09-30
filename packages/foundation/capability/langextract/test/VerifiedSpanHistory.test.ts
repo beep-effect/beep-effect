@@ -13,7 +13,6 @@ import {
 } from "@beep/langextract/VerifiedSpan";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { NonNegativeInt, PosixPath, Sha256HexFromBytes } from "@beep/schema";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -90,7 +89,7 @@ const candidate = (text: string): GroundedExtraction =>
   });
 
 const attemptId = (ordinal: number): VerifiedSpanAttemptId => VerifiedSpanAttemptId.make(`attempt-${ordinal}`);
-const attemptedAt = (ordinal: number): ISOStr => ISOStr.make(`2026-08-27T00:00:0${ordinal}.000Z`);
+const attemptedAt = (ordinal: number): string => `2026-08-27T00:00:0${ordinal}.000Z`;
 
 const beginInput = (
   ordinal: number,

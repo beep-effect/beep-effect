@@ -9,9 +9,12 @@ import { AbsoluteIRI, IRI } from "@beep/rdf";
 import { SchemaUtils, SemanticVersion } from "@beep/schema";
 import * as S from "effect/Schema";
 import { GcsObject, OntologyName } from "../Identity.ts";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/OntologyRegistry");
 
+const ontologyEntryImportsDefault = A.empty<IRI>();
 /**
  * Registry metadata and storage references for one ontology.
  *
@@ -59,7 +62,7 @@ export class OntologyEntry extends S.Class<OntologyEntry>($I`OntologyEntry`)(
       description: "Human-readable ontology title.",
     }),
     description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional non-empty explanation of the ontology's purpose.",
       })
@@ -68,25 +71,25 @@ export class OntologyEntry extends S.Class<OntologyEntry>($I`OntologyEntry`)(
       description: "Canonical bucket-relative path to the ontology document.",
     }),
     shapesPath: S.OptionFromOptionalNullOr(GcsObject).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional bucket-relative path to the ontology's SHACL shapes.",
       })
     ),
     imports: S.Array(IRI).pipe(
-      SchemaUtils.withEmptyArrayDefaults<IRI>(),
+      S.withConstructorDefault(Effect.succeed(ontologyEntryImportsDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyEntryImportsDefault)),
       S.annotateKey({
         description: "Declared owl:imports IRIs; defaults to an empty collection.",
       })
     ),
     externalVocabsPath: S.OptionFromOptionalNullOr(GcsObject).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional path to a merged external-vocabulary artifact.",
       })
     ),
     embeddingsPath: S.OptionFromOptionalNullOr(GcsObject).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional path to precomputed ontology embeddings.",
       })
@@ -122,7 +125,7 @@ export class OntologyEntry extends S.Class<OntologyEntry>($I`OntologyEntry`)(
 export class SharedResources extends S.Class<SharedResources>($I`SharedResources`)(
   {
     externalVocabs: S.OptionFromOptionalNullOr(GcsObject).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional canonical path to vocabularies shared by all ontologies.",
       })
@@ -133,6 +136,7 @@ export class SharedResources extends S.Class<SharedResources>($I`SharedResources
   })
 ) {}
 
+const ontologyRegistryOntologiesDefault = A.empty<OntologyEntry>();
 /**
  * Complete versioned ontology-registry manifest.
  *
@@ -169,13 +173,13 @@ export class OntologyRegistry extends S.Class<OntologyRegistry>($I`OntologyRegis
       description: "UTC instant at which the registry was generated.",
     }),
     ontologies: S.Array(OntologyEntry).pipe(
-      SchemaUtils.withEmptyArrayDefaults<OntologyEntry>(),
+      S.withConstructorDefault(Effect.succeed(ontologyRegistryOntologiesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyRegistryOntologiesDefault)),
       S.annotateKey({
         description: "Validated ontology entries; defaults to an empty collection.",
       })
     ),
     sharedResources: S.OptionFromOptionalKey(SharedResources).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional resources shared by all ontology entries.",
       })

@@ -23,7 +23,6 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { HashSet as StoredHashSet } from "@beep/schema/HashSet";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { HashSet, Tuple } from "effect";
@@ -188,7 +187,7 @@ export type PositionDerivationKind = typeof PositionDerivationKind.Type;
 
 const hasDerivationKind = (kinds: HashSet.HashSet<PositionDerivationKind>): boolean => !HashSet.isEmpty(kinds);
 
-const PositionDerivationKinds = StoredHashSet(PositionDerivationKind).check(
+const PositionDerivationKinds = PositionDerivationKind.pipe(S.HashSet, S.toCodecJson).check(
   S.makeFilter(hasDerivationKind, {
     identifier: $I`PositionDerivationKindsCheck`,
     arbitraryConstraint: { minSize: 1 },

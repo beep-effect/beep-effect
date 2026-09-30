@@ -11,7 +11,6 @@
  */
 
 import { NonNegativeInt } from "@beep/schema/Int";
-import { EpochMillis } from "@beep/schema/Timestamp";
 import { Clock, Context, Effect, HashMap, HashSet, Inspectable, Layer, Order, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -415,7 +414,7 @@ export const EntityIndexDefault = EntityIndex.Default;
  */
 export const SerializedEntityIndex = S.Struct({
   version: S.Literal(1),
-  indexedAt: EpochMillis,
+  indexedAt: NonNegativeInt,
   entities: S.Array(
     S.Struct({
       id: S.String,
@@ -478,7 +477,7 @@ export interface PersistentEntityIndexService extends EntityIndexService {
   readonly stats: Effect.Effect<{
     readonly entityCount: NonNegativeInt;
     readonly typeCount: NonNegativeInt;
-    readonly lastPersistedAt: O.Option<EpochMillis>;
+    readonly lastPersistedAt: O.Option<NonNegativeInt>;
   }>;
 }
 
@@ -541,7 +540,7 @@ export const makePersistentEntityIndex = dual3(
     Effect.gen(function* () {
       // In-memory state
       const stateRef = yield* Ref.make<IndexState>(emptyState);
-      const lastPersistedRef = yield* Ref.make<O.Option<EpochMillis>>(O.none());
+      const lastPersistedRef = yield* Ref.make<O.Option<NonNegativeInt>>(O.none());
 
       const base = makeEntityIndexMethods(embedding, stateRef);
 
@@ -560,7 +559,7 @@ export const makePersistentEntityIndex = dual3(
             });
           }
         }
-        return { version: 1, indexedAt: EpochMillis.make(yield* Clock.currentTimeMillis), entities };
+        return { version: 1, indexedAt: NonNegativeInt.make(yield* Clock.currentTimeMillis), entities };
       });
 
       const deserialize = Effect.fn("PersistentEntityIndex.deserialize")(function* (data: SerializedEntityIndex) {
@@ -585,7 +584,7 @@ export const makePersistentEntityIndex = dual3(
         yield* storage.set(blobPath, content).pipe(
           Effect.tap(() =>
             Clock.currentTimeMillis.pipe(
-              Effect.flatMap((now) => Ref.set(lastPersistedRef, O.some(EpochMillis.make(now))))
+              Effect.flatMap((now) => Ref.set(lastPersistedRef, O.some(NonNegativeInt.make(now))))
             )
           ),
           Effect.tap(() =>

@@ -5,12 +5,13 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 import { HooksSection } from "../Settings/HooksSection.ts";
 import { PermissionMode } from "../Settings/Schema.ts";
 import { EffortLevel, StringOrStringArray } from "./Skill.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("claudecode/Frontmatter/Subagent");
 
@@ -82,20 +83,20 @@ export class SubagentFrontmatter extends S.Class<SubagentFrontmatter>($I`Subagen
   {
     name: S.String,
     description: S.String,
-    model: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    effort: S.OptionFromOptionalKey(EffortLevel).pipe(SchemaUtils.withNoneDefault),
-    maxTurns: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    initialPrompt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    tools: S.OptionFromOptionalKey(StringOrStringArray).pipe(SchemaUtils.withNoneDefault),
-    disallowedTools: S.OptionFromOptionalKey(StringOrStringArray).pipe(SchemaUtils.withNoneDefault),
-    isolation: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    color: S.OptionFromOptionalKey(SubagentColor).pipe(SchemaUtils.withNoneDefault),
-    skills: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    mcpServers: S.OptionFromOptionalKey(InlineMcpServerReference.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    memory: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    background: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    permissionMode: S.OptionFromOptionalKey(PermissionMode).pipe(SchemaUtils.withNoneDefault),
-    hooks: S.OptionFromOptionalKey(HooksSection).pipe(SchemaUtils.withNoneDefault),
+    model: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    effort: S.OptionFromOptionalKey(EffortLevel).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    maxTurns: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    initialPrompt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    tools: S.OptionFromOptionalKey(StringOrStringArray).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disallowedTools: S.OptionFromOptionalKey(StringOrStringArray).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    isolation: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    color: S.OptionFromOptionalKey(SubagentColor).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    skills: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    mcpServers: S.OptionFromOptionalKey(InlineMcpServerReference.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    memory: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    background: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    permissionMode: S.OptionFromOptionalKey(PermissionMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hooks: S.OptionFromOptionalKey(HooksSection).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SubagentFrontmatter", {
     description: "Runtime model for the YAML frontmatter of a Claude Code subagent file.",
