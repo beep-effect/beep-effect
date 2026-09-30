@@ -7,7 +7,8 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { Match } from "effect";
+import { HashMap, Match } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { SchemaAST, Struct, Unify } from "effect";
@@ -211,6 +212,60 @@ export class LiteralKitTaggedUnionLiteralError extends S.TaggedError<LiteralKitT
   })
 ) {}
 
+/**
+ * Error thrown when two literals passed to {@link LiteralKit} derive the same
+ * helper key via {@link LiteralToKey}.
+ *
+ * **Details**
+ *
+ * Distinct literals such as `1` and `"number1"` would make one `Enum`, `is`,
+ * and `$match` entry overwrite the other while the schema still accepts both
+ * values, so the constructor throws this error instead. A repeated identical
+ * literal derives the same key for the same value and is allowed.
+ *
+ * **Example** (Create key collision error)
+ *
+ * ```ts import.meta.vitest name="Create key collision error"
+ * import { LiteralKitKeyCollisionError } from "@beep/schema/LiteralKit"
+ *
+ * const error = LiteralKitKeyCollisionError.make({
+ *   key: "number1",
+ *   existing: 1,
+ *   incoming: "number1"
+ * })
+ * error.key // => "number1"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class LiteralKitKeyCollisionError extends S.TaggedError<LiteralKitKeyCollisionError>(
+  $I.make("LiteralKitKeyCollisionError")
+)(
+  "LiteralKitKeyCollisionError",
+  {
+    key: S.String,
+    existing: LiteralValueSchema,
+    incoming: LiteralValueSchema,
+  },
+  $I.annoteError<LiteralKitKeyCollisionError>("LiteralKitKeyCollisionError", {
+    title: "LiteralKit Key Collision Error",
+    description: "Two distinct LiteralKit literals derived the same helper key.",
+  })
+) {}
+
+const assertUniqueHelperKeys = (literals: Literals): void =>
+  void A.reduce(HashMap.empty<string, SchemaAST.LiteralValue>(), (seen, literal: SchemaAST.LiteralValue) => {
+    const key: string = matchLiteral(literal);
+    const existing = HashMap.get(seen, key);
+    // A repeated identical literal maps the key to the same value, so kits composed from overlapping
+    // literal lists (for example `FileExtension`) stay valid; only distinct literals collide.
+    if (O.isSome(existing) && !Object.is(existing.value, literal)) {
+      throw LiteralKitKeyCollisionError.make({ key, existing: existing.value, incoming: literal });
+    }
+    return HashMap.set(seen, key, literal);
+  })(literals);
+
 function buildMatch<L extends Literals>(_: L) {
   function $match<const Cases extends MatchCases<L>>(
     cases: Cases & { readonly [K in Exclude<keyof Cases, MatchKeys<L>>]: never }
@@ -298,7 +353,9 @@ export interface LiteralKit<L extends Literals> extends S.Literals<L> {
  * upstream members for the rest: `Kit.literals` for the tuple,
  * `Kit.pick([...]).literals` for a subset, `HashSet.fromIterable(Kit.literals)`
  * for a set, and `Function.constant(Kit.Enum.key)` for a thunk. The helpers
- * survive `annotate`, `annotateKey`, and `check`.
+ * survive `annotate`, `annotateKey`, and `check`. Distinct literals that
+ * derive the same helper key (`1` next to `"number1"`) throw
+ * {@link LiteralKitKeyCollisionError}.
  *
  * **Example** (Build mixed literal kit)
  *
@@ -348,6 +405,7 @@ export interface LiteralKit<L extends Literals> extends S.Literals<L> {
  * @since 0.0.0
  */
 export function LiteralKit<const L extends Literals>(literals: L): LiteralKit<L> {
+  assertUniqueHelperKeys(literals);
   const base = S.Literals(literals);
 
   const toTaggedUnion =

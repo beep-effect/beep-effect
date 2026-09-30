@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { LiteralKitKeyCollisionError } from "@beep/schema/LiteralKit";
 import { MappedLiteralDuplicateError, MappedLiteralKit } from "@beep/schema/MappedLiteralKit";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
@@ -154,6 +155,24 @@ describe("MappedLiteralKit", () => {
         ["B", "00000"],
       ] as const)
     ).toThrow(MappedLiteralDuplicateError);
+  });
+
+  it("rejects from-side literals that derive the same helper key", () => {
+    expect(() =>
+      MappedLiteralKit([
+        [1, "one"],
+        ["number1", "also-one"],
+      ] as const)
+    ).toThrow(LiteralKitKeyCollisionError);
+  });
+
+  it("rejects to-side literals that derive the same helper key", () => {
+    expect(() =>
+      MappedLiteralKit([
+        ["one", 1],
+        ["also-one", "number1"],
+      ] as const)
+    ).toThrow(LiteralKitKeyCollisionError);
   });
 });
 

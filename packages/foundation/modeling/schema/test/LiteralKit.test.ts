@@ -1,9 +1,10 @@
 import { fcRuns } from "@beep/fc-runs";
-import { LiteralKit } from "@beep/schema/LiteralKit";
+import { LiteralKit, LiteralKitKeyCollisionError } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import { assertInstanceOf, deepStrictEqual } from "@effect/vitest/utils";
+import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 
@@ -135,6 +136,27 @@ describe("LiteralKit", () => {
         return narrowed;
       },
     });
+  });
+});
+
+describe("LiteralKit helper-key collisions", () => {
+  it("rejects a mixed pair that derives the same helper key", () => {
+    const error = Result.merge(Result.try(() => LiteralKit([1, "number1"])));
+    assertInstanceOf(error, LiteralKitKeyCollisionError);
+    deepStrictEqual(
+      { key: error.key, existing: error.existing, incoming: error.incoming },
+      { key: "number1", existing: 1, incoming: "number1" }
+    );
+  });
+
+  it("rejects distinct string and bigint literals that derive the same helper key", () => {
+    expect(() => LiteralKit([1n, "bigint1n"])).toThrow(LiteralKitKeyCollisionError);
+  });
+
+  it("keeps a repeated identical literal, which maps its key to the same value", () => {
+    const Kit = LiteralKit(["draft", "live", "draft"]);
+    expect(Kit.Enum.draft).toBe("draft");
+    expect(Kit.is.draft("draft")).toBe(true);
   });
 });
 
