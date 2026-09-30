@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { HashSet as StoredHashSet } from "@beep/schema/HashSet";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { HashSet } from "effect";
 import * as S from "effect/Schema";
@@ -16,7 +15,7 @@ const $I = $LawPracticeDomainId.create("values/LegalRole/LegalRole.model");
 
 const isNonEmptyPartyKinds = (kinds: HashSet.HashSet<PartyKind>): boolean => !HashSet.isEmpty(kinds);
 
-const AdmittedPlayerKinds = StoredHashSet(PartyKind).check(
+const AdmittedPlayerKinds = PartyKind.pipe(S.HashSet, S.toCodecJson).check(
   S.makeFilter(isNonEmptyPartyKinds, {
     identifier: $I`LegalRoleAdmittedPlayerKindsCheck`,
     // maxSize matches the PartyKind domain (two literals): the native set

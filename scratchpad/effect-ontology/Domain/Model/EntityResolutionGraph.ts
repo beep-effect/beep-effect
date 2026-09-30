@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { DirectedGraph, NodeIndex, NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 
 import * as S from "effect/Schema";
@@ -221,7 +221,7 @@ export class EntityResolutionStats extends S.Class<EntityResolutionStats>($I`Ent
   })
 ) {}
 
-const ResolutionGraph = DirectedGraph({ node: ERNode, edge: EREdge }).pipe(
+const ResolutionGraph = S.toCodecJson(S.Graph("directed", ERNode, EREdge)).pipe(
   $I.annoteSchema("ResolutionGraph", {
     description: "Immutable directed graph of entity-resolution nodes and edges.",
   })
@@ -232,8 +232,8 @@ const ResolutionGraph = DirectedGraph({ node: ERNode, edge: EREdge }).pipe(
  *
  * **Details**
  *
- * * The graph uses the repository's schema-backed Effect `DirectedGraph`
- * codec. Indexes are serialized records rather than mutable JavaScript maps,
+ * * The graph uses Effect's `Schema.Graph` JSON codec (`S.toCodecJson`).
+ * Indexes are serialized records rather than mutable JavaScript maps,
  * preserving deterministic transport behavior.
  *
  * **Example** (Use EntityResolutionGraph)
@@ -270,7 +270,7 @@ export class EntityResolutionGraph extends S.Class<EntityResolutionGraph>($I`Ent
     graph: ResolutionGraph.annotateKey({
       description: "Immutable two-tier mention-to-canonical graph.",
     }),
-    entityIndex: S.Record(EntityId, NodeIndex).annotateKey({
+    entityIndex: S.Record(EntityId, S.Natural).annotateKey({
       description: "Lookup from entity identifier to graph node index.",
     }),
     canonicalMap: S.Record(EntityId, EntityId).annotateKey({
