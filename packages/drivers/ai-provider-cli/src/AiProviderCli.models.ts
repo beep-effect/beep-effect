@@ -7,6 +7,7 @@
 
 import { $AiProviderCliId } from "@beep/identity";
 import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
@@ -254,6 +255,7 @@ export const AiProviderCliExitCode = S.Int.check(S.isBetween({ minimum: 0, maxim
  */
 export type AiProviderCliExitCode = typeof AiProviderCliExitCode.Type;
 
+const aiProviderCliProbeOptionsEnvDefault = R.empty();
 /**
  * Per-call process overrides for a provider CLI auth probe.
  *
@@ -281,18 +283,26 @@ export type AiProviderCliExitCode = typeof AiProviderCliExitCode.Type;
  */
 export class AiProviderCliProbeOptions extends S.Class<AiProviderCliProbeOptions>($I`AiProviderCliProbeOptions`)(
   {
-    env: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "Environment overlay supplied only to the provider CLI child process.",
-    }),
-    executable: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional executable override supplied only to the provider CLI runner.",
-    }),
+    env: S.Record(S.String, S.String)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(aiProviderCliProbeOptionsEnvDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(aiProviderCliProbeOptionsEnvDefault))
+      )
+      .annotateKey({
+        description: "Environment overlay supplied only to the provider CLI child process.",
+      }),
+    executable: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Optional executable override supplied only to the provider CLI runner.",
+      }),
   },
   $I.annote("AiProviderCliProbeOptions", {
     description: "Per-call executable and child-environment overrides for a provider CLI auth probe.",
   })
 ) {}
 
+const aiProviderCliRunRequestEnvDefault = R.empty();
 /**
  * Complete technical request passed to an injected provider CLI runner.
  *
@@ -324,9 +334,14 @@ export class AiProviderCliRunRequest extends S.Class<AiProviderCliRunRequest>($I
     args: S.Array(S.String).annotateKey({
       description: "Provider-specific auth status command arguments.",
     }),
-    env: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "Environment overlay supplied only to the child process.",
-    }),
+    env: S.Record(S.String, S.String)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(aiProviderCliRunRequestEnvDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(aiProviderCliRunRequestEnvDefault))
+      )
+      .annotateKey({
+        description: "Environment overlay supplied only to the child process.",
+      }),
     executable: S.NonEmptyString.annotateKey({
       description: "Executable command or path used by the child process.",
     }),
@@ -457,18 +472,22 @@ export class AiProviderCliClaudeAuthStatusPayload extends S.Class<AiProviderCliC
   $I`AiProviderCliClaudeAuthStatusPayload`
 )(
   {
-    authMethod: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Login method reported by the Claude CLI, when present.",
-    }),
-    email: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    authMethod: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Login method reported by the Claude CLI, when present.",
+      }),
+    email: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Account email reported by the Claude CLI, when present.",
     }),
     loggedIn: S.Boolean.annotateKey({
       description: "Whether the Claude CLI reports an authenticated session.",
     }),
-    subscriptionType: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Subscription tier identifier reported by the Claude CLI, when present.",
-    }),
+    subscriptionType: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Subscription tier identifier reported by the Claude CLI, when present.",
+      }),
   },
   $I.annote("AiProviderCliClaudeAuthStatusPayload", {
     description: "Decoded stdout JSON payload from the Claude CLI auth status command.",
@@ -507,7 +526,7 @@ export class AiProviderCliClaudeAuthStatusPayload extends S.Class<AiProviderCliC
  */
 export class AiProviderCliAuthSnapshot extends S.Class<AiProviderCliAuthSnapshot>($I`AiProviderCliAuthSnapshot`)(
   {
-    email: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    email: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Account email reported by the provider CLI, when available.",
     }),
     provider: AiProviderCliProvider.annotateKey({
@@ -516,12 +535,16 @@ export class AiProviderCliAuthSnapshot extends S.Class<AiProviderCliAuthSnapshot
     status: AiProviderCliAuthStatus.annotateKey({
       description: "Redacted auth state inferred from the provider CLI status command.",
     }),
-    subscriptionLabel: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Human-readable subscription or plan label, when the provider CLI reports one.",
-    }),
-    tokenSource: S.OptionFromOptionalKey(AiProviderCliTokenSource).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Credential origin reported by the provider CLI, when recognized.",
-    }),
+    subscriptionLabel: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Human-readable subscription or plan label, when the provider CLI reports one.",
+      }),
+    tokenSource: S.OptionFromOptionalKey(AiProviderCliTokenSource)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Credential origin reported by the provider CLI, when recognized.",
+      }),
   },
   $I.annote("AiProviderCliAuthSnapshot", {
     description: "Rich provider CLI auth snapshot with optional account and subscription detail.",

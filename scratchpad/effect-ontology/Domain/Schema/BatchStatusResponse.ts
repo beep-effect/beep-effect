@@ -11,11 +11,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import type * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BatchId } from "../Identity.ts";
 import { BatchState } from "../Model/BatchWorkflow.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/BatchStatusResponse");
 
@@ -33,14 +33,14 @@ const BatchStatusResponseDefinition = S.TaggedUnion({
         description: "Identifier of the suspended batch.",
       }),
       cause: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-        SchemaUtils.withNoneDefault,
+        S.withConstructorDefault(Effect.succeedNone),
         S.annotateKey({
           description: "Optional human-readable reason the workflow was suspended.",
         })
       ),
       lastKnownState: BatchState.pipe(
         S.OptionFromOptionalKey,
-        SchemaUtils.withNoneDefault,
+        S.withConstructorDefault(Effect.succeedNone),
         S.annotateKey({
           description: "Optional last durable state observed before suspension.",
         })

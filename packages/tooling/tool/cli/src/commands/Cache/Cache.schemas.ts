@@ -13,7 +13,7 @@ import {
   CacheReviewDecision,
   CacheTaskConfiguration,
 } from "@beep/repo-configs/cache";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
@@ -367,7 +367,10 @@ export class CacheCensusReport extends S.Class<CacheCensusReport>($I`CacheCensus
     nodes: S.Array(CacheCensusNode),
     sources: S.Array(CacheCensusSource),
     entrypointSources: S.Array(S.String),
-    entrypointReview: CacheCensusEntrypointReview.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    entrypointReview: CacheCensusEntrypointReview.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     unresolved: S.Array(S.String),
   },
   $I.annote("CacheCensusReport", {

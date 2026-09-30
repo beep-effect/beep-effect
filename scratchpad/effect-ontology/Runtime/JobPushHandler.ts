@@ -27,6 +27,7 @@ const BackgroundJobFromJsonString = S.fromJsonString(BackgroundJob).pipe(
 // Pub/Sub Push Message Schema
 // =============================================================================
 
+const pubSubPushMessageAttributesDefault = {};
 /**
  * Pub/Sub push message envelope
  *
@@ -37,7 +38,7 @@ const PubSubPushMessage = S.Struct({
     data: S.String, // Base64 encoded
     messageId: S.String,
     publishTime: S.String,
-    attributes: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults({})),
+    attributes: S.Record(S.String, S.String).pipe(S.withConstructorDefault(Effect.succeed(pubSubPushMessageAttributesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(pubSubPushMessageAttributesDefault))),
   }),
   subscription: S.String,
 });

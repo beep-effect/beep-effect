@@ -12,7 +12,7 @@
 
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import { ISOStr } from "@beep/schema/Timestamp";
@@ -1318,7 +1318,7 @@ class PauseReason extends S.Class<PauseReason>($I`PauseReason`)(
     errorType: S.NonEmptyString,
     message: S.NonEmptyString,
     isRecoverable: S.Boolean,
-    retryAfter: S.Duration.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    retryAfter: S.Duration.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PauseReason", {
     description: "Failure and optional retry delay that caused extraction to pause.",
@@ -1353,7 +1353,7 @@ export class ResumableExtractionState extends S.Class<ResumableExtractionState>(
     lastSuccessfulChunkIndex: NonNegativeInt,
     partialResults: ResumablePartialResults,
     pausedAt: S.Date,
-    pauseReason: PauseReason.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    pauseReason: PauseReason.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ResumableExtractionState", {
     description: "Checkpoint, partial counts, pause time, and recovery reason for a resumable extraction.",

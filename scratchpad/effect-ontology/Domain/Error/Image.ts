@@ -10,8 +10,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
-import { Duration } from "effect";
+import { NonNegativeInt, URLStr } from "@beep/schema";
+import { Duration, Effect } from "effect";
 import * as S from "effect/Schema";
 import { ErrorMessage, Milliseconds, OptionalErrorCause, OptionalHttpStatusCode } from "./Base.ts";
 
@@ -65,7 +65,7 @@ const ImageTimeoutErrorFields = {
   timeoutMs: Milliseconds.annotateKey({
     description: "Configured image-fetch deadline in milliseconds.",
   }),
-  message: ErrorMessage.pipe(SchemaUtils.withKeyDefaults("Image fetch timed out")).annotateKey({
+  message: ErrorMessage.pipe(S.withConstructorDefault(Effect.succeed("Image fetch timed out")), S.withDecodingDefaultTypeKey(Effect.succeed("Image fetch timed out"))).annotateKey({
     description: "Human-readable timeout diagnostic with a schema-owned default.",
   }),
 } satisfies S.Struct.Fields;
@@ -162,7 +162,7 @@ export class ImageTooLargeError extends S.TaggedError<ImageTooLargeError>($I`Ima
     maxBytes: NonNegativeInt.annotateKey({
       description: "Maximum permitted image size in bytes.",
     }),
-    message: ErrorMessage.pipe(SchemaUtils.withKeyDefaults("Image exceeds maximum size limit")).annotateKey({
+    message: ErrorMessage.pipe(S.withConstructorDefault(Effect.succeed("Image exceeds maximum size limit")), S.withDecodingDefaultTypeKey(Effect.succeed("Image exceeds maximum size limit"))).annotateKey({
       description: "Human-readable size-limit diagnostic with a schema-owned default.",
     }),
   },
@@ -207,7 +207,7 @@ export class ImageInvalidTypeError extends S.TaggedError<ImageInvalidTypeError>(
     allowedTypes: S.NonEmptyArray(S.NonEmptyString).annotateKey({
       description: "Non-empty set of accepted image media types.",
     }),
-    message: ErrorMessage.pipe(SchemaUtils.withKeyDefaults("Image has unsupported content type")).annotateKey({
+    message: ErrorMessage.pipe(S.withConstructorDefault(Effect.succeed("Image has unsupported content type")), S.withDecodingDefaultTypeKey(Effect.succeed("Image has unsupported content type"))).annotateKey({
       description: "Human-readable media-type diagnostic with a schema-owned default.",
     }),
   },

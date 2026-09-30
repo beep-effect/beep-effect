@@ -7,10 +7,10 @@
 "use client";
 
 import { $UiId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import { ArrowRightIcon, CheckIcon, ClockIcon, SpinnerGapIcon, WarningCircleIcon } from "@phosphor-icons/react";
-import { DateTime, pipe } from "effect";
+import { DateTime, Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { formatShortDate, toUtcDateTime } from "../lib/date-time.ts";
@@ -128,7 +128,7 @@ const actionStyleClassName = ActionStyle.$match({
 
 const NotificationActionFields = {
   executed: S.OptionFromOptionalKey(S.Boolean).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     $I.annoteKey("NotificationAction.executed", {
       description: "Optional completion state projected to false by the notification renderer.",
     })
@@ -144,7 +144,7 @@ const NotificationActionFields = {
     })
   ),
   style: S.OptionFromOptionalKey(ActionStyle).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     $I.annoteKey("NotificationAction.style", {
       description: "Optional visual button style projected to default by the notification renderer.",
     })

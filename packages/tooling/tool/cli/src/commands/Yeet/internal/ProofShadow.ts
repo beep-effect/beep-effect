@@ -1,6 +1,5 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
-import { SchemaUtils } from "@beep/schema";
 import { Console, DateTime, Duration, Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import { constFalse, constTrue, dual } from "effect/Function";
@@ -235,7 +234,7 @@ export class ProofShadowReport extends S.Class<ProofShadowReport>($I`ProofShadow
     barBranches: ProofCount,
     barDisagreements: ProofCount,
     enforcementReady: S.Boolean,
-    since: S.DateTimeUtcFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    since: S.DateTimeUtcFromString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProofShadowReport", {
     description:
@@ -1139,7 +1138,7 @@ export class ProofShadowReportInput extends S.Class<ProofShadowReportInput>($I`P
     expiredFacts: ProofCount,
     malformedRows: ProofCount,
     bar: S.optionalKey(ProofShadowEnforcementBar),
-    since: S.DateTimeUtc.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    since: S.DateTimeUtc.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProofShadowReportInput", {
     description:
@@ -1324,7 +1323,7 @@ export const renderProofShadowReport = (report: ProofShadowReport): string => {
 export class YeetProofReportOptions extends S.Class<YeetProofReportOptions>($I`YeetProofReportOptions`)(
   {
     json: S.Boolean,
-    since: S.DateTimeUtc.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    since: S.DateTimeUtc.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetProofReportOptions", {
     description:

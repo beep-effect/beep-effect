@@ -173,7 +173,7 @@ export class CorrectionChainEntry extends S.Class<CorrectionChainEntry>($I`Corre
   {
     correction: Corrections.select,
     originalClaimId: UUID,
-    newClaimId: S.OptionFromNullishOr(UUID).pipe(SchemaUtils.withNoneDefault),
+    newClaimId: S.OptionFromNullishOr(UUID).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CorrectionChainEntry", {
     description: "Correction metadata joined to its original and optional replacement persisted claim identifiers.",

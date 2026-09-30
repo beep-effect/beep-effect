@@ -13,14 +13,13 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils as SchemaDefaults } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Duration, pipe } from "effect";
+import { Duration, pipe, Effect } from "effect";
 import * as S from "effect/Schema";
 import { ExtractionRunId, UUID } from "../Domain/Identity.ts";
 
@@ -235,7 +234,7 @@ export class ExtractionStartedEvent extends S.TaggedClass<ExtractionStartedEvent
       /** Optional source media type or application-defined content category. */
       contentType: S.String.pipe(
         S.OptionFromOptionalKey,
-        SchemaUtils.withNoneDefault,
+        S.withConstructorDefault(Effect.succeedNone),
         $I.annoteKey("ExtractionStartedEvent.textMetadata.contentType", {
           description: "Optional source media type or application-defined content category.",
         })
@@ -649,7 +648,7 @@ export class EntityFoundEvent extends S.TaggedClass<EntityFoundEvent>($I`EntityF
     /** Optional confidence assigned to this sampled entity extraction. */
     confidence: Confidence.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("EntityFoundEvent.confidence", {
         description: "Optional confidence assigned to this sampled entity extraction.",
       })
@@ -791,7 +790,7 @@ export class RelationFoundEvent extends S.TaggedClass<RelationFoundEvent>($I`Rel
     /** Optional confidence assigned to this sampled relation extraction. */
     confidence: Confidence.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("RelationFoundEvent.confidence", {
         description: "Optional confidence assigned to this sampled relation extraction.",
       })
@@ -945,7 +944,7 @@ export class ChunkProcessingCompleteEvent extends S.TaggedClass<ChunkProcessingC
         description: "Ordered collection of recoverable diagnostics produced while processing one chunk.",
       }),
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ChunkProcessingCompleteEvent.errors", {
         description: "Optional ordered diagnostics from recoverable chunk-processing failures.",
       })
@@ -1059,7 +1058,7 @@ export const ExtractionFailedRetryStrategy = pipe(
     /** Optional initial or fixed retry delay in milliseconds. */
     delayMs: PosInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionFailedEvent.retryStrategy.delayMs", {
         description: "Optional initial or fixed retry delay in milliseconds.",
       })
@@ -1067,7 +1066,7 @@ export const ExtractionFailedRetryStrategy = pipe(
     /** Optional upper bound on client retry attempts. */
     maxAttempts: PosInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionFailedEvent.retryStrategy.maxAttempts", {
         description: "Optional upper bound on client retry attempts.",
       })
@@ -1181,7 +1180,7 @@ export class ExtractionFailedEvent extends S.TaggedClass<ExtractionFailedEvent>(
     ),
 
     /** Optional retry policy for a recoverable extraction failure. */
-    retryStrategy: ExtractionFailedRetryStrategy.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    retryStrategy: ExtractionFailedRetryStrategy.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
     /** Optional usable counts accumulated before the terminal failure. */
     partialResults: S.Struct({
@@ -1205,7 +1204,7 @@ export class ExtractionFailedEvent extends S.TaggedClass<ExtractionFailedEvent>(
         description: "Usable extraction counts accumulated before a terminal failure.",
       }),
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionFailedEvent.partialResults", {
         description: "Optional usable counts accumulated before the terminal failure.",
       })
@@ -1214,7 +1213,7 @@ export class ExtractionFailedEvent extends S.TaggedClass<ExtractionFailedEvent>(
     /** Optional zero-based checkpoint from which a resumable extraction may continue. */
     lastSuccessfulChunkIndex: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionFailedEvent.lastSuccessfulChunkIndex", {
         description: "Optional zero-based checkpoint from which a resumable extraction may continue.",
       })
@@ -1284,7 +1283,7 @@ export class ExtractionCancelledEvent extends S.TaggedClass<ExtractionCancelledE
         description: "Usable extraction counts accumulated before client cancellation.",
       }),
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionCancelledEvent.partialResults", {
         description: "Optional usable counts accumulated before cancellation.",
       })
@@ -1293,7 +1292,7 @@ export class ExtractionCancelledEvent extends S.TaggedClass<ExtractionCancelledE
     /** Optional zero-based index of the last chunk processed before cancellation. */
     lastProcessedChunkIndex: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionCancelledEvent.lastProcessedChunkIndex", {
         description: "Optional zero-based index of the last chunk processed before cancellation.",
       })
@@ -1510,7 +1509,7 @@ export class FatalErrorEvent extends S.TaggedClass<FatalErrorEvent>($I`FatalErro
         description: "Usable extraction counts accumulated before a fatal systemic failure.",
       }),
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FatalErrorEvent.partialResults", {
         description: "Optional usable counts accumulated before the fatal failure.",
       })
@@ -1519,7 +1518,7 @@ export class FatalErrorEvent extends S.TaggedClass<FatalErrorEvent>($I`FatalErro
     /** Optional server-recommended delay in milliseconds before retrying. */
     retryAfterMs: PosInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FatalErrorEvent.retryAfterMs", {
         description: "Optional server-recommended delay in milliseconds before retrying.",
       })
@@ -1868,6 +1867,10 @@ export const BackpressureStrategy = LiteralKit(["drop_oldest", "drop_newest", "b
  */
 export type BackpressureStrategy = typeof BackpressureStrategy.Type;
 
+const backpressureConfigMaxQueueSizeDefault = PosInt.make(1000);
+const backpressureConfigWarningThresholdDefault = UnitInterval.make(0.8);
+const backpressureConfigBlockTimeoutDefault = Duration.seconds(5);
+const backpressureConfigDetailedEventSampleRateDefault = UnitInterval.make(0.1);
 /**
  * Configuration that bounds the server event queue and selects an overflow
  * strategy when a client consumes progress more slowly than it is produced.
@@ -1901,11 +1904,11 @@ export type BackpressureStrategy = typeof BackpressureStrategy.Type;
  */
 export class BackpressureConfig extends S.Class<BackpressureConfig>($I`BackpressureConfig`)(
   {
-    maxQueueSize: PosInt.pipe(SchemaDefaults.withKeyDefaults(PosInt.make(1000))),
-    warningThreshold: UnitInterval.pipe(SchemaDefaults.withKeyDefaults(UnitInterval.make(0.8))),
-    strategy: BackpressureStrategy.pipe(SchemaDefaults.withKeyDefaults(BackpressureStrategy.Enum.drop_oldest)),
-    blockTimeout: S.Duration.pipe(SchemaDefaults.withKeyDefaults(Duration.seconds(5))),
-    detailedEventSampleRate: UnitInterval.pipe(SchemaDefaults.withKeyDefaults(UnitInterval.make(0.1))),
+    maxQueueSize: PosInt.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigMaxQueueSizeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigMaxQueueSizeDefault))),
+    warningThreshold: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigWarningThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigWarningThresholdDefault))),
+    strategy: BackpressureStrategy.pipe(S.withConstructorDefault(Effect.succeed(BackpressureStrategy.Enum.drop_oldest)), S.withDecodingDefaultTypeKey(Effect.succeed(BackpressureStrategy.Enum.drop_oldest))),
+    blockTimeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigBlockTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigBlockTimeoutDefault))),
+    detailedEventSampleRate: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigDetailedEventSampleRateDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigDetailedEventSampleRateDefault))),
   },
   $I.annote("BackpressureConfig", {
     description: "Capacity, warning, overflow, blocking, and sampling policy for progress-event queues.",
@@ -1972,7 +1975,7 @@ export class CancellationRequest extends S.Class<CancellationRequest>($I`Cancell
     /** Optional human-readable reason supplied by the client. */
     reason: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CancellationRequest.reason", {
         description: "Optional human-readable reason supplied by the client.",
       })
@@ -1981,7 +1984,7 @@ export class CancellationRequest extends S.Class<CancellationRequest>($I`Cancell
     /** Optional request to persist usable partial results before termination. */
     savePartialResults: S.Boolean.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CancellationRequest.savePartialResults", {
         description: "Optional request to persist usable partial results before termination.",
       })
@@ -2034,7 +2037,7 @@ export class CancellationResponse extends S.Class<CancellationResponse>($I`Cance
     /** Optional explanation when the server rejects cancellation. */
     rejectionReason: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CancellationResponse.rejectionReason", {
         description: "Optional explanation when the server rejects cancellation.",
       })
@@ -2443,7 +2446,7 @@ export class StartExtractionRequest extends S.TaggedClass<StartExtractionRequest
     /** Optional existing run identifier used to resume an extraction. */
     runId: ExtractionRunId.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("StartExtractionRequest.runId", {
         description: "Optional existing run identifier used to resume an extraction.",
       })
@@ -2511,7 +2514,7 @@ export class StartExtractionResponse extends S.TaggedClass<StartExtractionRespon
         description: "Structured rejection returned when an extraction request is not accepted.",
       }),
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("StartExtractionResponse.error", {
         description: "Optional structured error present when the request is rejected.",
       })

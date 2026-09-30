@@ -26,7 +26,7 @@ const MISSING_ENTRY_REMEDIATIONS: Readonly<Record<string, string>> = {
   "SFV4-boundary-codec":
     "Replace direct JSON.parse with S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard.",
   "SFV4-defaults":
-    "Move option/request fallback values into schema fields with S.withConstructorDefault, S.withDecodingDefault*, or SchemaUtils.withKeyDefaults; inventory the exception only when the fallback intentionally differs from schema construction semantics.",
+    "Move option/request fallback values into schema fields with S.withConstructorDefault and S.withDecodingDefault*; inventory the exception only when the fallback intentionally differs from schema construction semantics.",
   "SFV4-equivalence":
     "Derive comparison from S.toEquivalence(schema) or SchemaUtils.toEquivalence(schema); use S.overrideToEquivalence only when schema semantics intentionally differ.",
   "SFV4-tagged-error-equivalence":

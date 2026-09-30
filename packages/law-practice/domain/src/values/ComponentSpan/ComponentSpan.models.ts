@@ -12,14 +12,14 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { Span } from "../Span/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/ComponentSpan/ComponentSpan.models");
 
 /** Optional {@link Span} field: a missing key decodes to `None`, default `None`. */
-const OptionFromOptionalSpan = Span.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionFromOptionalSpan = Span.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
 
 /**
  * Component spans for case citations (type: `case`).

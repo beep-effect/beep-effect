@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { Clock, Console, DateTime, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -130,7 +130,10 @@ export class YeetAttemptJournalCompacted extends S.Class<YeetAttemptJournalCompa
       S.withDecodingDefault(Effect.succeed(A.empty<UUID>()))
     ),
     oldestEvictedRecordedAt: S.String,
-    terminalEvictionCutoffRecordedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    terminalEvictionCutoffRecordedAt: S.String.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("YeetAttemptJournalCompacted", {
     description: "Receipt proving that bounded Yeet attempt-journal retention evicted older rows.",
@@ -142,8 +145,8 @@ const AttemptJournalRetentionEvent = S.Union([
     schemaVersion: S.Literal("yeet-attempt-journal/v1"),
     attemptId: UUIDSchema,
     startedAt: S.String,
-    ownerPid: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    ownerProcStart: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    ownerPid: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    ownerProcStart: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     ...attemptInputFactFields,
   }),
   S.TaggedStruct("attempt-finished", {

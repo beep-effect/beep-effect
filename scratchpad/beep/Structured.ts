@@ -11,7 +11,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as DateTime from "effect/DateTime";
@@ -295,13 +294,13 @@ const categoryField = S.String.pipe(
 );
 
 const defaultText = (column: string, value: string) =>
-  SchemaUtils.withKeyDefaults(S.String, value).pipe(pg.text(), pg.columnName(column));
+  S.String.pipe(S.withConstructorDefault(Effect.succeed(value)), S.withDecodingDefaultTypeKey(Effect.succeed(value)), pg.text(), pg.columnName(column));
 
 const defaultFlag = (column: string) =>
-  SchemaUtils.withKeyDefaults(S.Boolean, false).pipe(pg.boolean(), pg.columnName(column));
+  S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)), pg.boolean(), pg.columnName(column));
 
 const stringList = (column: string) =>
-  SchemaUtils.withKeyDefaults(S.Array(S.String), emptyStrings).pipe(pg.jsonb(), pg.columnName(column));
+  S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(emptyStrings)), S.withDecodingDefaultTypeKey(Effect.succeed(emptyStrings)), pg.jsonb(), pg.columnName(column));
 
 const pad2 = (value: number): string => Str.padStart(2, "0")(String(value));
 const pad4 = (value: number): string => Str.padStart(4, "0")(String(value));
@@ -473,7 +472,7 @@ export class Event extends Model<Event>("Event")(
     title: text("title"),
     description: defaultText("description", ""),
     start: timestamp("start"),
-    duration: SchemaUtils.withKeyDefaults(S.Int, 30).pipe(pg.integer(), pg.columnName("duration")),
+    duration: S.Int.pipe(S.withConstructorDefault(Effect.succeed(30)), S.withDecodingDefaultTypeKey(Effect.succeed(30)), pg.integer(), pg.columnName("duration")),
     created: defaultFlag("created"),
   },
   $I.annote("Event", {
@@ -646,12 +645,9 @@ export class Structured extends Model<Structured>("Structured")(
     overview: defaultText("overview", ""),
     emoji: defaultText("emoji", brain),
     category: categoryField,
-    sections: SchemaUtils.withKeyDefaults(S.Array(Section), emptySections).pipe(pg.jsonb(), pg.columnName("sections")),
-    actionItems: SchemaUtils.withKeyDefaults(S.Array(ActionItem), emptyItems).pipe(
-      pg.jsonb(),
-      pg.columnName("action_items"),
-    ),
-    events: SchemaUtils.withKeyDefaults(S.Array(Event), emptyEvents).pipe(pg.jsonb(), pg.columnName("events")),
+    sections: S.Array(Section).pipe(S.withConstructorDefault(Effect.succeed(emptySections)), S.withDecodingDefaultTypeKey(Effect.succeed(emptySections)), pg.jsonb(), pg.columnName("sections")),
+    actionItems: S.Array(ActionItem).pipe(S.withConstructorDefault(Effect.succeed(emptyItems)), S.withDecodingDefaultTypeKey(Effect.succeed(emptyItems)), pg.jsonb(), pg.columnName("action_items")),
+    events: S.Array(Event).pipe(S.withConstructorDefault(Effect.succeed(emptyEvents)), S.withDecodingDefaultTypeKey(Effect.succeed(emptyEvents)), pg.jsonb(), pg.columnName("events")),
   },
   $I.annote("Structured", {
     description: "Conversation title, overview, sections, action items, and events.",

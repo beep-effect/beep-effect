@@ -108,8 +108,10 @@ export class ConfigUpdateTargetResult extends S.Class<ConfigUpdateTargetResult>(
   })
 ) {}
 
+const defaultedConfigUpdateTargetResultsDefault = A.empty<ConfigUpdateTargetResult>();
 const DefaultedConfigUpdateTargetResults = S.Array(ConfigUpdateTargetResult).pipe(
-  SchemaUtils.withEmptyArrayDefaults<ConfigUpdateTargetResult>()
+  S.withConstructorDefault(Effect.succeed(defaultedConfigUpdateTargetResultsDefault)),
+  S.withDecodingDefaultType(Effect.succeed(defaultedConfigUpdateTargetResultsDefault))
 );
 
 /**

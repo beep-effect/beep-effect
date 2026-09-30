@@ -7,9 +7,9 @@
 
 import { $DiscordId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { DiscordHttpStatus } from "./Discord.models.ts";
-import type { Effect } from "effect";
 import type * as O from "effect/Option";
 
 const $I = $DiscordId.create("Discord.errors");
@@ -91,26 +91,26 @@ export class DiscordError extends S.TaggedError<DiscordError>($I`DiscordError`)(
   "DiscordError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Sanitized technical cause string when one is safe to retain.",
       })
     ),
     method: S.OptionFromOptionalKey(S.Literals(["GET", "POST"])).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Discord REST method involved in the failure.",
       })
     ),
     path: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Discord REST path involved in the failure.",
       })
     ),
     reason: DiscordErrorReason,
     status: S.OptionFromOptionalKey(DiscordHttpStatus).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "HTTP status code involved in the failure when it was a recognized status.",
       })

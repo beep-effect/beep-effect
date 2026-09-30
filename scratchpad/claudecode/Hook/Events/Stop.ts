@@ -8,13 +8,13 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
-import type * as Effect from "effect/Effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 import { envelopeFields } from "../Envelope.ts";
 import type { HookDefinition } from "../Runner.ts";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("claudecode/Hook/Events/Stop");
 // ---------------------------------------------------------------------------
@@ -48,12 +48,12 @@ export class BackgroundTask extends S.Class<BackgroundTask>($I`BackgroundTask`)(
     id: S.String,
     type: S.String,
     status: S.String,
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    command: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    agent_type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    server: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    tool: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    command: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    agent_type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    server: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    tool: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BackgroundTask", {
     description: "Background task active when a turn stops.",
@@ -96,6 +96,8 @@ export class SessionCron extends S.Class<SessionCron>($I`SessionCron`)(
   })
 ) {}
 
+const inputBackgroundTasksDefault = A.empty<BackgroundTask>();
+const inputSessionCronsDefault = A.empty<SessionCron>();
 /**
  * Stdin payload for a Stop hook, including whether a stop hook is
  * already active and any background tasks or session crons.
@@ -126,9 +128,9 @@ export class Input extends S.Class<Input>($I`StopInput`)(
     ...envelopeFields,
     hook_event_name: S.Literal("Stop"),
     stop_hook_active: S.Boolean,
-    last_assistant_message: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    background_tasks: S.Array(BackgroundTask).pipe(SchemaUtils.withEmptyArrayDefaults<BackgroundTask>()),
-    session_crons: S.Array(SessionCron).pipe(SchemaUtils.withEmptyArrayDefaults<SessionCron>()),
+    last_assistant_message: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    background_tasks: S.Array(BackgroundTask).pipe(S.withConstructorDefault(Effect.succeed(inputBackgroundTasksDefault)), S.withDecodingDefaultType(Effect.succeed(inputBackgroundTasksDefault))),
+    session_crons: S.Array(SessionCron).pipe(S.withConstructorDefault(Effect.succeed(inputSessionCronsDefault)), S.withDecodingDefaultType(Effect.succeed(inputSessionCronsDefault))),
   },
   $I.annote("StopInput", {
     description: "Input for the Stop hook event.",
@@ -163,7 +165,7 @@ export class Input extends S.Class<Input>($I`StopInput`)(
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`StopHookSpecificOutput`)(
   {
     hookEventName: S.Literal("Stop"),
-    additionalContext: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    additionalContext: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("StopHookSpecificOutput", {
     description: "Stop-specific response returned to Claude Code.",
@@ -191,14 +193,14 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`StopHookS
  */
 export class Output extends S.Class<Output>($I`StopOutput`)(
   {
-    decision: S.OptionFromOptionalKey(S.Literal("block")).pipe(SchemaUtils.withNoneDefault),
-    reason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(SchemaUtils.withNoneDefault),
+    decision: S.OptionFromOptionalKey(S.Literal("block")).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    reason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("StopOutput", {
     description: "Output returned by a Stop hook handler.",

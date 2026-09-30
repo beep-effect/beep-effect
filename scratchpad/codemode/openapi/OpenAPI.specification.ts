@@ -7,7 +7,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, pipe, R, Str, Struct, thunkEmptyStr } from "@beep/utils";
-import { flow, HashMap, HashSet, Order, Result } from "effect";
+import { flow, HashMap, HashSet, Order, Result, Effect } from "effect";
 import { dual } from "effect/Function";
 import { fromSchemaOpenApi3_0, fromSchemaOpenApi3_1 } from "effect/JsonSchema";
 import * as S from "effect/Schema";
@@ -627,8 +627,8 @@ class PlannedField extends S.Class<PlannedField>($I`PlannedField`)(
     location: InputLocation,
     required: S.Boolean,
     schema: JsonSchema,
-    style: S.OptionFromOptionalKey(InputStyle).pipe(SchemaUtils.withNoneDefault),
-    explode: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    style: S.OptionFromOptionalKey(InputStyle).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    explode: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PlannedField", {
     description: "An operation field before conflict-safe input naming.",
@@ -805,7 +805,7 @@ const operationParameters = (
 class BodyFields extends S.Class<BodyFields>($I`BodyFields`)(
   {
     fields: S.Array(PlannedField),
-    body: S.OptionFromOptionalKey(Body).pipe(SchemaUtils.withNoneDefault),
+    body: S.OptionFromOptionalKey(Body).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BodyFields", {
     description: "Request-body fields before conflict-safe input naming.",

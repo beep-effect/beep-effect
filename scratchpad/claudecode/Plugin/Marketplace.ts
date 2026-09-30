@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 import { AuthorInfo, ComponentPathSpec, HooksSpec, ServerConfigSpec } from "./Manifest.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("claudecode/Plugin/Marketplace");
 
@@ -32,8 +32,8 @@ export class GithubPluginSource extends S.Class<GithubPluginSource>($I`GithubPlu
   {
     source: S.tag("github"),
     repo: S.String,
-    ref: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    sha: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ref: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sha: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("GithubPluginSource", {
     description: "Marketplace plugin source hosted in a GitHub repository.",
@@ -98,8 +98,8 @@ export class UrlPluginSource extends S.Class<UrlPluginSource>($I`UrlPluginSource
   {
     source: S.tag("url"),
     url: S.String,
-    ref: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    sha: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ref: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sha: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("UrlPluginSource", {
     description: "Marketplace plugin source addressed by URL.",
@@ -166,8 +166,8 @@ export class GitSubdirPluginSource extends S.Class<GitSubdirPluginSource>($I`Git
     source: S.tag("git-subdir"),
     url: S.String,
     path: S.String,
-    ref: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    sha: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ref: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sha: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("GitSubdirPluginSource", {
     description: "Marketplace plugin source in a git repository subdirectory.",
@@ -218,8 +218,8 @@ export class NpmPluginSource extends S.Class<NpmPluginSource>($I`NpmPluginSource
   {
     source: S.tag("npm"),
     package: S.String,
-    version: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    registry: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    version: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    registry: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("NpmPluginSource", {
     description: "Marketplace plugin source published as an npm package.",
@@ -328,25 +328,25 @@ export class MarketplacePluginEntry extends S.Class<MarketplacePluginEntry>($I`M
   {
     name: S.String,
     source: MarketplacePluginSourceSpec,
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    displayName: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    category: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    tags: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    defaultEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    version: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    author: S.OptionFromOptionalKey(AuthorInfo).pipe(SchemaUtils.withNoneDefault),
-    homepage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    repository: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    license: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    keywords: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    commands: S.OptionFromOptionalKey(ComponentPathSpec).pipe(SchemaUtils.withNoneDefault),
-    agents: S.OptionFromOptionalKey(ComponentPathSpec).pipe(SchemaUtils.withNoneDefault),
-    skills: S.OptionFromOptionalKey(ComponentPathSpec).pipe(SchemaUtils.withNoneDefault),
-    outputStyles: S.OptionFromOptionalKey(ComponentPathSpec).pipe(SchemaUtils.withNoneDefault),
-    hooks: S.OptionFromOptionalKey(HooksSpec).pipe(SchemaUtils.withNoneDefault),
-    mcpServers: S.OptionFromOptionalKey(ServerConfigSpec).pipe(SchemaUtils.withNoneDefault),
-    lspServers: S.OptionFromOptionalKey(ServerConfigSpec).pipe(SchemaUtils.withNoneDefault),
-    strict: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    displayName: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    category: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    tags: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    defaultEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    version: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    author: S.OptionFromOptionalKey(AuthorInfo).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    homepage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    repository: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    license: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    keywords: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    commands: S.OptionFromOptionalKey(ComponentPathSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    agents: S.OptionFromOptionalKey(ComponentPathSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    skills: S.OptionFromOptionalKey(ComponentPathSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    outputStyles: S.OptionFromOptionalKey(ComponentPathSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hooks: S.OptionFromOptionalKey(HooksSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    mcpServers: S.OptionFromOptionalKey(ServerConfigSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    lspServers: S.OptionFromOptionalKey(ServerConfigSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    strict: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("MarketplacePluginEntry", {
     description: "One plugin entry in a Claude Code marketplace catalog.",
@@ -409,7 +409,7 @@ export declare namespace MarketplacePluginEntry {
  */
 export class MarketplaceMetadata extends S.Class<MarketplaceMetadata>($I`MarketplaceMetadata`)(
   {
-    pluginRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    pluginRoot: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("MarketplaceMetadata", {
     description: "Marketplace-wide plugin root metadata.",
@@ -462,14 +462,14 @@ export declare namespace MarketplaceMetadata {
  */
 export class MarketplaceFile extends S.Class<MarketplaceFile>($I`MarketplaceFile`)(
   {
-    $schema: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    $schema: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     name: S.String,
-    version: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    version: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     owner: AuthorInfo,
-    metadata: S.OptionFromOptionalKey(MarketplaceMetadata).pipe(SchemaUtils.withNoneDefault),
+    metadata: S.OptionFromOptionalKey(MarketplaceMetadata).pipe(S.withConstructorDefault(Effect.succeedNone)),
     allowCrossMarketplaceDependenciesOn: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     plugins: MarketplacePluginEntry.pipe(S.Array),
   },

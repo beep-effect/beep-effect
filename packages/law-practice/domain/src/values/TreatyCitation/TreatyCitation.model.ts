@@ -6,7 +6,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 
@@ -54,56 +55,56 @@ export class TreatyCitation extends S.Class<TreatyCitation>($I`TreatyCitation`)(
     type: S.tag("treaty"),
     series: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Treaty series identifier (e.g. "T.I.A.S.", "U.N.T.S.", "U.S.T.").',
       })
     ),
     seriesNumber: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Series number for "No."-style series (T.I.A.S. No. 1502 -> "1502").',
       })
     ),
     volume: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Volume for volume-series-page forms (1155 U.N.T.S. 331 -> 1155).",
       })
     ),
     page: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Page for volume-series-page forms.",
       })
     ),
     treatyName: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Named treaty title (reserved; not yet populated).",
       })
     ),
     article: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Cited article (reserved).",
       })
     ),
     paragraph: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Cited paragraph (reserved).",
       })
     ),
     year: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Publication year (reserved).",
       })

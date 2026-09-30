@@ -7,7 +7,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { O, P, pipe, R } from "@beep/utils";
-import { type Effect, flow, HashMap, Layer, Redacted, SchemaGetter } from "effect";
+import { Effect, flow, HashMap, Layer, Redacted, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import type * as Tool from "effect/ai/Tool";
 import type * as Toolkit from "effect/ai/Toolkit";
@@ -234,11 +234,11 @@ export type ApiPath = typeof ApiPath.Type;
  */
 export class Operation extends S.Class<Operation>($I`Operation`)(
   {
-    operationId: S.OptionFromOptionalKey(OperationId).pipe(SchemaUtils.withNoneDefault),
+    operationId: S.OptionFromOptionalKey(OperationId).pipe(S.withConstructorDefault(Effect.succeedNone)),
     method: HttpMethod,
     path: ApiPath,
-    summary: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    summary: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Operation", {
     description: "The operation identity handed to authentication and errors.",
@@ -815,6 +815,7 @@ const StringMap = S.Record(S.String, S.String).pipe(
   })
 );
 
+const optionsHeadersDefault = HashMap.empty<string, string>();
 /**
  * Decoded OpenAPI adapter options with Option and HashMap core values.
  *
@@ -841,9 +842,9 @@ const StringMap = S.Record(S.String, S.String).pipe(
 export class Options extends S.Class<Options>($I`Options`)(
   {
     spec: Document,
-    baseUrl: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    auth: S.OptionFromOptionalKey(AuthConfig).pipe(SchemaUtils.withNoneDefault),
-    headers: StringMap.pipe(SchemaUtils.withKeyDefaults(HashMap.empty<string, string>())),
+    baseUrl: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    auth: S.OptionFromOptionalKey(AuthConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    headers: StringMap.pipe(S.withConstructorDefault(Effect.succeed(optionsHeadersDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(optionsHeadersDefault))),
   },
   $I.annote("Options", {
     description: "Decoded OpenAPI adapter options with Option and HashMap core values.",
@@ -1011,8 +1012,8 @@ export class InputField extends S.Class<InputField>($I`InputField`)(
     location: InputLocation,
     required: S.Boolean,
     schema: JsonSchema,
-    style: S.OptionFromOptionalKey(InputStyle).pipe(SchemaUtils.withNoneDefault),
-    explode: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    style: S.OptionFromOptionalKey(InputStyle).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    explode: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("InputField", {
     description: "One normalized parameter or request-body field.",
@@ -1141,7 +1142,7 @@ export class Body extends S.Class<Body>($I`Body`)(
 export class OperationInput extends S.Class<OperationInput>($I`OperationInput`)(
   {
     fields: S.Array(InputField),
-    body: S.OptionFromOptionalKey(Body).pipe(SchemaUtils.withNoneDefault),
+    body: S.OptionFromOptionalKey(Body).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("OperationInput", {
     description: "The normalized model-visible input for one operation.",
@@ -1219,10 +1220,10 @@ export class Plan extends S.Class<Plan>($I`Plan`)(
     operation: Operation,
     url: TrimmedNonEmptyString,
     fields: S.Array(InputField),
-    body: S.OptionFromOptionalKey(Body).pipe(SchemaUtils.withNoneDefault),
+    body: S.OptionFromOptionalKey(Body).pipe(S.withConstructorDefault(Effect.succeedNone)),
     security: S.Array(SecurityRequirement),
     schemes: SecuritySchemeMap,
-    auth: S.OptionFromOptionalKey(AuthConfig).pipe(SchemaUtils.withNoneDefault),
+    auth: S.OptionFromOptionalKey(AuthConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
     headers: S.HashMap(S.String, S.String),
   },
   $I.annote("Plan", {
@@ -1309,7 +1310,7 @@ export class InvalidOpenApiOptions extends S.TaggedError<InvalidOpenApiOptions>(
   "InvalidOpenApiOptions",
   {
     message: S.String,
-    cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(S.Defect()).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("InvalidOpenApiOptions", {
     description: "The OpenAPI adapter options failed schema decoding.",

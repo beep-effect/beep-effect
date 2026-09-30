@@ -19,7 +19,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId, CoreVocab } from "@beep/identity";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
-import { SchemaUtils } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -169,7 +168,7 @@ const SparqlResponseSchema = S.Struct({
     title: "SPARQL Query",
     description: "Valid SPARQL SELECT query",
   }),
-  explanation: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
+  explanation: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotate({
     title: "Explanation",
     description: "Brief explanation of the query logic",
   }),

@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitingApplicationIdentity } from "../../values/CitingApplicationIdentity/index.ts";
 import {
@@ -83,7 +83,7 @@ export class IdsSubmissionFact extends ProductEntity.Entity<IdsSubmissionFact>()
       description: "CFR capture and MPEP revision this record's fact vocabulary was modeled from.",
     }).pipe(pg.jsonb(), pg.columnName("modeled_from")),
     officeTreatment: S.OptionFromNullOr(IdsOfficeTreatmentFacts)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Office treatment as observed, absent until the Office has acted." })
       .pipe(pg.jsonb(), pg.columnName("office_treatment")),
     operativeDate: S.DateTimeUtcFromMillis.annotateKey({

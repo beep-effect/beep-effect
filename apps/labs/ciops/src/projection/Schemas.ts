@@ -711,7 +711,7 @@ class AdmissionJournalV3Identity extends S.Class<AdmissionJournalV3Identity>($I`
     pid: S.Finite,
     attemptId: S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }), S.isUUID()).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     checkoutRoot: S.String,
     branch: S.String,

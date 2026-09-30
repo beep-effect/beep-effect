@@ -7,6 +7,7 @@
 
 import { $PandocAstId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -198,14 +199,16 @@ export type PandocKeyValue = typeof PandocKeyValue.Type;
  */
 export class PandocAttr extends S.Class<PandocAttr>($I`PandocAttr`)(
   {
-    classes: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])).annotateKey({
-      description: "Pandoc attribute classes.",
-    }),
-    id: S.String.pipe(SchemaUtils.withConstantDefault<string>("")).annotateKey({
+    classes: S.Array(S.String)
+      .pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([])))
+      .annotateKey({
+        description: "Pandoc attribute classes.",
+      }),
+    id: S.String.pipe(S.withConstructorDefault(Effect.succeed<string>(""))).annotateKey({
       description: "Pandoc attribute identifier.",
     }),
     keyValues: S.Array(PandocKeyValue)
-      .pipe(SchemaUtils.withConstantDefault<ReadonlyArray<PandocKeyValue>>([]))
+      .pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<PandocKeyValue>>([])))
       .annotateKey({
         description: "Pandoc attribute key/value pairs.",
       }),
@@ -267,7 +270,7 @@ export declare namespace PandocAttr {
  */
 export class PandocTarget extends S.Class<PandocTarget>($I`PandocTarget`)(
   {
-    title: S.String.pipe(SchemaUtils.withConstantDefault<string>("")).annotateKey({
+    title: S.String.pipe(S.withConstructorDefault(Effect.succeed<string>(""))).annotateKey({
       description: "Pandoc target title.",
     }),
     url: S.String.annotateKey({
@@ -4278,7 +4281,7 @@ export class PandocDocument extends S.TaggedClass<PandocDocument>($I`PandocDocum
   "pandocDocument",
   {
     apiVersion: PandocApiVersion.pipe(
-      SchemaUtils.withConstantDefault<PandocApiVersion>(DEFAULT_PANDOC_API_VERSION)
+      S.withConstructorDefault(Effect.succeed<PandocApiVersion>(DEFAULT_PANDOC_API_VERSION))
     ).annotateKey({
       description: "Pandoc API version tuple.",
     }),

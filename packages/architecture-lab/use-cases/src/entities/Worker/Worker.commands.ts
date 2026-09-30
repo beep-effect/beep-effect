@@ -8,8 +8,8 @@
 
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.commands");
@@ -107,9 +107,11 @@ export class GetWorkerQuery extends S.Class<GetWorkerQuery>($I`GetWorkerQuery`)(
  */
 export class ListWorkersQuery extends S.Class<ListWorkersQuery>($I`ListWorkersQuery`)(
   {
-    status: S.OptionFromOptionalKey(DomainWorker.WorkerStatus).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional lifecycle status filter applied after repository listing.",
-    }),
+    status: S.OptionFromOptionalKey(DomainWorker.WorkerStatus)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Optional lifecycle status filter applied after repository listing.",
+      }),
   },
   $I.annote("ListWorkersQuery", {
     title: "List Workers query",

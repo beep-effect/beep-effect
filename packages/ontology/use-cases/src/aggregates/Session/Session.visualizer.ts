@@ -12,7 +12,6 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { Float32Arr } from "@beep/schema/Float32Array";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, O, P, Str } from "@beep/utils";
 import { Effect, MutableHashMap, MutableHashSet, Order, pipe, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
@@ -182,7 +181,7 @@ export class OntologyGraphProjectionOptions extends S.Class<OntologyGraphProject
   {
     viewMode: OntologyViewMode,
     foldLevel: OntologyFoldLevel,
-    focusIri: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    focusIri: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     focusDepth: S.Int,
     pinnedNodes: S.Array(OntologyPinnedNode),
     structuralFoldThreshold: S.Int,

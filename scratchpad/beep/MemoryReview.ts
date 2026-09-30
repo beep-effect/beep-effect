@@ -9,7 +9,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -28,7 +27,7 @@ const awareInstant =
 const nullableText = (column: string, description: string) =>
   S.OptionFromNullOr(S.String)
     .annotateKey({ description })
-    .pipe(SchemaUtils.withNoneDefault, pg.text(), pg.columnName(column));
+    .pipe(S.withConstructorDefault(Effect.succeedNone), pg.text(), pg.columnName(column));
 
 const factIdText = (value: unknown): string => {
   if (P.isString(value)) return Str.trim(value);

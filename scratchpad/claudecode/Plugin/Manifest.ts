@@ -5,10 +5,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 import { HooksSection } from "../Settings/HooksSection.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("claudecode/Plugin/Manifest");
 
@@ -31,8 +32,8 @@ const $I = $ScratchpadId.create("claudecode/Plugin/Manifest");
 export class AuthorInfo extends S.Class<AuthorInfo>($I`AuthorInfo`)(
   {
     name: S.String,
-    email: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    url: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    email: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    url: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AuthorInfo", {
     description: "Author or owner metadata in a Claude Code manifest.",
@@ -218,12 +219,12 @@ export class UserConfigEntry extends S.Class<UserConfigEntry>($I`UserConfigEntry
     type: UserConfigType,
     title: S.String,
     description: S.String,
-    sensitive: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    required: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    default: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault),
-    multiple: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    min: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    max: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    sensitive: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    required: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    default: S.OptionFromOptionalKey(S.Unknown).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    multiple: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    min: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    max: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("UserConfigEntry", {
     description: "One user-facing Claude Code plugin configuration entry.",
@@ -311,7 +312,7 @@ export type UserConfigRecord = typeof UserConfigRecord.Type;
 export class ChannelSpec extends S.Class<ChannelSpec>($I`ChannelSpec`)(
   {
     server: S.String,
-    userConfig: S.OptionFromOptionalKey(UserConfigRecord).pipe(SchemaUtils.withNoneDefault),
+    userConfig: S.OptionFromOptionalKey(UserConfigRecord).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ChannelSpec", {
     description: "A plugin message channel backed by one MCP server.",
@@ -361,7 +362,7 @@ export declare namespace ChannelSpec {
 export class PluginDependency extends S.Class<PluginDependency>($I`PluginDependency`)(
   {
     name: S.String,
-    version: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    version: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PluginDependency", {
     description: "A named Claude Code plugin dependency.",
@@ -449,8 +450,8 @@ export type DependencySpec = typeof DependencySpec.Type;
  */
 export class ExperimentalSpec extends S.Class<ExperimentalSpec>($I`ExperimentalSpec`)(
   {
-    themes: S.OptionFromOptionalKey(ComponentPathSpec).pipe(SchemaUtils.withNoneDefault),
-    monitors: S.OptionFromOptionalKey(ComponentPathSpec).pipe(SchemaUtils.withNoneDefault),
+    themes: S.OptionFromOptionalKey(ComponentPathSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    monitors: S.OptionFromOptionalKey(ComponentPathSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ExperimentalSpec", {
     description: "Experimental theme and monitor component paths.",
@@ -500,27 +501,27 @@ export declare namespace ExperimentalSpec {
 export class PluginManifest extends S.Class<PluginManifest>($I`PluginManifest`)(
   {
     name: S.String,
-    $schema: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    version: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    displayName: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    defaultEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    author: S.OptionFromOptionalKey(AuthorInfo).pipe(SchemaUtils.withNoneDefault),
-    homepage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    repository: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    license: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    keywords: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    dependencies: S.OptionFromOptionalKey(DependencySpec.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    experimental: S.OptionFromOptionalKey(ExperimentalSpec).pipe(SchemaUtils.withNoneDefault),
-    commands: S.OptionFromOptionalKey(ComponentPathSpec).pipe(SchemaUtils.withNoneDefault),
-    agents: S.OptionFromOptionalKey(ComponentPathSpec).pipe(SchemaUtils.withNoneDefault),
-    skills: S.OptionFromOptionalKey(ComponentPathSpec).pipe(SchemaUtils.withNoneDefault),
-    outputStyles: S.OptionFromOptionalKey(ComponentPathSpec).pipe(SchemaUtils.withNoneDefault),
-    hooks: S.OptionFromOptionalKey(HooksSpec).pipe(SchemaUtils.withNoneDefault),
-    mcpServers: S.OptionFromOptionalKey(ServerConfigSpec).pipe(SchemaUtils.withNoneDefault),
-    lspServers: S.OptionFromOptionalKey(ServerConfigSpec).pipe(SchemaUtils.withNoneDefault),
-    userConfig: S.OptionFromOptionalKey(UserConfigRecord).pipe(SchemaUtils.withNoneDefault),
-    channels: S.OptionFromOptionalKey(ChannelSpec.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
+    $schema: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    version: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    displayName: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    defaultEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    author: S.OptionFromOptionalKey(AuthorInfo).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    homepage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    repository: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    license: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    keywords: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    dependencies: S.OptionFromOptionalKey(DependencySpec.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    experimental: S.OptionFromOptionalKey(ExperimentalSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    commands: S.OptionFromOptionalKey(ComponentPathSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    agents: S.OptionFromOptionalKey(ComponentPathSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    skills: S.OptionFromOptionalKey(ComponentPathSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    outputStyles: S.OptionFromOptionalKey(ComponentPathSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hooks: S.OptionFromOptionalKey(HooksSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    mcpServers: S.OptionFromOptionalKey(ServerConfigSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    lspServers: S.OptionFromOptionalKey(ServerConfigSpec).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    userConfig: S.OptionFromOptionalKey(UserConfigRecord).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    channels: S.OptionFromOptionalKey(ChannelSpec.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PluginManifest", {
     description: "Claude Code plugin metadata and component locations.",

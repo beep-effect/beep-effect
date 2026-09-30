@@ -12,7 +12,6 @@ import {
   AiMetricsTool,
   makeAiMetricsInstallSpec,
 } from "@beep/repo-ai-metrics";
-import { SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
@@ -293,9 +292,15 @@ export const AIMetricsPulumiConfigValues = S.Class<AIMetricsPulumiConfigValuesFi
  */
 export class AIMetricsRemoteSshConfig extends S.Class<AIMetricsRemoteSshConfig>($I`AIMetricsRemoteSshConfig`)(
   {
-    agentSocketPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    host: S.String.pipe(SchemaUtils.withKeyDefaults(defaultSshHost)),
-    user: S.String.pipe(SchemaUtils.withKeyDefaults(defaultSshUser)),
+    agentSocketPath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    host: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultSshHost)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultSshHost))
+    ),
+    user: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultSshUser)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultSshUser))
+    ),
   },
   $I.annote("AIMetricsRemoteSshConfig", {
     description: "Pulumi SSH connection inputs for deploying the AI metrics Phoenix backend with the local SSH agent.",
@@ -319,14 +324,26 @@ export class AIMetricsRemoteDeploymentConfig extends S.Class<AIMetricsRemoteDepl
   $I`AIMetricsRemoteDeploymentConfig`
 )(
   {
-    phoenixTailnetHttpsPort: TailnetHttpsPort.pipe(SchemaUtils.withKeyDefaults(defaultPhoenixTailnetHttpsPort)),
-    remoteConfigRoot: S.String.pipe(SchemaUtils.withKeyDefaults(defaultRemoteConfigRoot)),
-    remoteMirrorRoot: S.String.pipe(SchemaUtils.withKeyDefaults(defaultRemoteMirrorRoot)),
+    phoenixTailnetHttpsPort: TailnetHttpsPort.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultPhoenixTailnetHttpsPort)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultPhoenixTailnetHttpsPort))
+    ),
+    remoteConfigRoot: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultRemoteConfigRoot)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultRemoteConfigRoot))
+    ),
+    remoteMirrorRoot: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultRemoteMirrorRoot)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultRemoteMirrorRoot))
+    ),
     ssh: AIMetricsRemoteSshConfig.pipe(
       S.withConstructorDefault(Effect.succeed(AIMetricsRemoteSshConfig.make({}))),
       S.withDecodingDefaultKey(Effect.succeed({}))
     ),
-    tailnetFqdn: S.String.pipe(SchemaUtils.withKeyDefaults(defaultTailnetFqdn)),
+    tailnetFqdn: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultTailnetFqdn)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultTailnetFqdn))
+    ),
   },
   $I.annote("AIMetricsRemoteDeploymentConfig", {
     description: "Remote host, systemd, and Tailscale Serve settings for the AI metrics Phoenix backend.",

@@ -16,7 +16,6 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { SchemaUtils } from "@beep/schema";
 import { Config, Console, Effect, FileSystem, pipe } from "effect";
 import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
@@ -81,11 +80,14 @@ export const HeavyAdmissionJson = JsonStringCodec(HeavyAdmission);
  */
 export class CiAdmissionInput extends S.Class<CiAdmissionInput>($I`CiAdmissionInput`)(
   {
-    eventName: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    eventPath: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    base: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    githubOutputPath: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    json: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    eventName: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    eventPath: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    base: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    githubOutputPath: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    json: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
     cwd: S.String,
   },
   $I.annote("CiAdmissionInput", {

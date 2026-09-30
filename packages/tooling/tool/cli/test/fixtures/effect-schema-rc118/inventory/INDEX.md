@@ -1,16 +1,18 @@
 # Schema inventory index
 
-Pin: `df77fff9396fe31de72d1947ecb5b74f8cee89e1` (inventoryPin: root package.json catalog `effect`; sources read with `git -C .repos/effect show <pin>:<file>`). TypeScript parser: `6.0.3`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: `explorations/effect-schema-parity/research/tools/modules.ts`.
+Pin: `df77fff9396fe31de72d1947ecb5b74f8cee89e1` (inventoryPin: root package.json catalog `effect`; sources read with `git -C .repos/effect show <pin>:<file>`). TypeScript parser: `6.0.2`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: `packages/tooling/tool/cli/src/commands/Lint/internal/EffectSchemaInventoryModules.ts`.
+
+Row digest: `519a2ee22549217f9afcd6d1e015d50f97b045cdbf59449fe3d866821ecd90b4` (SHA-256 over the module JSONL files concatenated byte for byte in Module totals order).
 
 Regenerate from repo root (offline):
 
 ```sh
-bun run explorations/effect-schema-parity/research/tools/schema-inventory.ts
+bun run beep lint effect-schema-inventory --write
 ```
 
 ## Module totals
 
-Count verification: `rg --no-ignore --no-heading -F -c '"sha":' explorations/effect-schema-parity/research/inventory/*.jsonl` (sum file counts). Bytes are UTF-8 JSONL bytes from Buffer.byteLength, excluding Markdown and tools; byte sizes are not line counts.
+Count verification: `rg --no-ignore --no-heading -F -c '"sha":' packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/*.jsonl` (sum file counts). Bytes are UTF-8 JSONL byte lengths, excluding Markdown; byte sizes are not line counts.
 
 Importable `no` marks provenance-only modules whose path effect's exports map nulls (`./internal/*`); their rows carry `"importable":false`.
 
@@ -44,7 +46,7 @@ Importable `no` marks provenance-only modules whose path effect's exports map nu
 
 ## Per-module kinds and categories
 
-Every cell verified with `rg --no-ignore --no-heading -F -c '"kind":"<kind>"' <module.jsonl>` or `rg --no-ignore --no-heading -F -c '"category":"<category>"' <module.jsonl>`; untagged uses `'"category":null'`. The generator runs these exact commands for every group.
+Every cell verified with `rg --no-ignore --no-heading -F -c '"kind":"<kind>"' <module.jsonl>` or `rg --no-ignore --no-heading -F -c '"category":"<category>"' <module.jsonl>`; untagged uses `'"category":null'`. The hosted fixture test re-renders this index from the committed rows and requires identical bytes.
 
 | Module | Kinds | Categories |
 | --- | --- | --- |
@@ -75,7 +77,7 @@ Every cell verified with `rg --no-ignore --no-heading -F -c '"kind":"<kind>"' <m
 
 ## Largest Schema.ts category groups
 
-Verification: `rg --no-ignore --no-heading -F -c '"category":"<category>"' explorations/effect-schema-parity/research/inventory/effect-Schema.jsonl`; same independently verified groups above, ranked by count, lexical tie-break. Untagged members excluded.
+Verification: `rg --no-ignore --no-heading -F -c '"category":"<category>"' packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/effect-Schema.jsonl`; same independently verified groups above, ranked by count, lexical tie-break. Untagged members excluded.
 
 | Category | Rows |
 | --- | ---: |

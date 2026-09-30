@@ -10,7 +10,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { PosInt } from "@beep/schema";
 import { EpochMillis } from "@beep/schema/Timestamp";
 import { Clock, Context, Duration, Effect, HashMap, Inspectable, Layer, Ref } from "effect";
 import * as A from "effect/Array";
@@ -86,6 +86,8 @@ const evictLeastRecentlyUsed = (
   return O.match(lruKey, { onNone: () => map, onSome: (key) => HashMap.remove(map, key) });
 };
 
+const embeddingCacheConfigTtlDefault = Duration.hours(1);
+const embeddingCacheConfigMaxEntriesDefault = PosInt.make(10_000);
 /**
  * Entry lifetime and capacity bound for an embedding cache.
  *
@@ -108,8 +110,8 @@ const evictLeastRecentlyUsed = (
  */
 export class EmbeddingCacheConfig extends S.Class<EmbeddingCacheConfig>($I`EmbeddingCacheConfig`)(
   {
-    ttl: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.hours(1))),
-    maxEntries: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(10_000))),
+    ttl: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(embeddingCacheConfigTtlDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingCacheConfigTtlDefault))),
+    maxEntries: PosInt.pipe(S.withConstructorDefault(Effect.succeed(embeddingCacheConfigMaxEntriesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingCacheConfigMaxEntriesDefault))),
   },
   $I.annote("EmbeddingCacheConfig", {
     description: "Entry lifetime and capacity bound for an embedding cache.",

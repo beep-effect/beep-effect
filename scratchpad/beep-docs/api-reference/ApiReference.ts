@@ -8,10 +8,9 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Semver, SemverFromString } from "@beep/schema/Semver";
 import { Slug } from "@beep/schema/Slug";
-import { HashMap, HashSet, Match, Order } from "effect";
+import { HashMap, HashSet, Match, Order, Effect } from "effect";
 import { thunkEmptyStr } from "@beep/utils/thunk";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -36,9 +35,9 @@ import { CodeSnippetLanguage } from "./CodeSnippet.ts";
 
 const $I = $ScratchpadId.create("beep-docs/api-reference/ApiReference");
 
-const OptionalSemver = SemverFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
-const OptionalUrl = S.URLFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
-const OptionalString = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionalSemver = SemverFromString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
+const OptionalUrl = S.URLFromString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
+const OptionalString = S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
 
 /**
  * Declaration kinds the module view renders with a dedicated name.
@@ -265,7 +264,7 @@ export class ApiCodeExample extends S.Class<ApiCodeExample>($I`ApiCodeExample`)(
     since: OptionalSemver,
     source: S.String,
     sourceUrl: OptionalUrl,
-    title: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    title: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ApiCodeExample", {
     description:
@@ -309,7 +308,7 @@ export class ApiDeclaration extends S.Class<ApiDeclaration>($I`ApiDeclaration`)(
     signature: OptionalString,
     since: OptionalSemver,
     sourceUrl: OptionalUrl,
-    typeKind: TypeKind.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    typeKind: TypeKind.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ApiDeclaration", {
     description: "An exported declaration with its anchor, category, rendered comment, signature, and examples.",

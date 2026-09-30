@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -115,10 +115,10 @@ export class Input extends S.Class<Input>($I`ElicitationInput`)(
     hook_event_name: S.Literal("Elicitation"),
     mcp_server_name: S.String,
     message: S.String,
-    mode: S.OptionFromOptionalKey(Mode).pipe(SchemaUtils.withNoneDefault),
-    url: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    elicitation_id: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    requested_schema: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault),
+    mode: S.OptionFromOptionalKey(Mode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    url: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    elicitation_id: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    requested_schema: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ElicitationInput", {
     description: "Input for the Elicitation hook event.",
@@ -152,7 +152,7 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`Elicitati
   {
     hookEventName: S.Literal("Elicitation"),
     action: Action,
-    content: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault),
+    content: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ElicitationHookSpecificOutput", {
     description: "Elicitation-specific response returned to Claude Code.",
@@ -179,12 +179,12 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`Elicitati
  */
 export class Output extends S.Class<Output>($I`ElicitationOutput`)(
   {
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(SchemaUtils.withNoneDefault),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ElicitationOutput", {
     description: "Output returned by an Elicitation hook handler.",

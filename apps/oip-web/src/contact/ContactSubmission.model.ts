@@ -173,15 +173,15 @@ export type ContactResponseMessage = typeof ContactResponseMessage.Type;
  */
 export class ContactSubmission extends S.Class<ContactSubmission>($I`ContactSubmission`)(
   {
-    company: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
+    company: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
     email: ContactEmail,
     message: ContactMessage,
     name: ContactName,
-    phone: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
-    posture: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
+    phone: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    posture: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
     submittedAt: NonNegativeInt,
-    technology: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
-    website: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
+    technology: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    website: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ContactSubmission", {
     description: "Browser-submitted OIP contact form payload.",

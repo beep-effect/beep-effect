@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { envelopeFields } from "../Envelope.ts";
@@ -91,7 +91,7 @@ export class Input extends S.Class<Input>($I`NotificationInput`)(
     ...envelopeFields,
     hook_event_name: S.Literal("Notification"),
     message: S.String,
-    title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    title: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     notification_type: NotificationType,
   },
   $I.annote("NotificationInput", {
@@ -128,11 +128,11 @@ export class Input extends S.Class<Input>($I`NotificationInput`)(
  */
 export class Output extends S.Class<Output>($I`NotificationOutput`)(
   {
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("NotificationOutput", {
     description: "Output returned by a Notification hook handler.",
