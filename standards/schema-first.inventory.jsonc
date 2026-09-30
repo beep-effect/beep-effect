@@ -903,7 +903,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 53,
+      "line": 54,
       "owner": "@beep/repo-cli",
       "reason": "Corpus-preservation regression serializes fixed JSON fixtures through the compact S.fromJsonString(S.Unknown) codec; the codec calls build inputs and assert no schema law, so schema-derived arbitrary coverage does not apply."
     },
