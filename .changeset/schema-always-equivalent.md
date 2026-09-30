@@ -27,6 +27,7 @@
 "@beep/openclaw": patch
 "@beep/pandoc-ast": patch
 "@beep/phoenix": patch
+"@beep/pglite": patch
 "@beep/postgres": patch
 "@beep/practice-kg-mcp": patch
 "@beep/professional-desktop": patch

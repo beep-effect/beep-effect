@@ -1417,6 +1417,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "@effect/sql-pg": "catalog:",
         "@effect/sql-pglite": "catalog:",
