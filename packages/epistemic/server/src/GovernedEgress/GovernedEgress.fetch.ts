@@ -69,7 +69,6 @@ import {
 } from "@beep/epistemic-domain/values/GrantSet";
 import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { $EpistemicServerId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import { A, O } from "@beep/utils";
 import { DateTime, Duration, Effect, Ref, Semaphore } from "effect";
@@ -314,7 +313,7 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
           policyRevision: frozen.policyRevision,
           prevHash: state.lastHash,
           runKey,
-          seq: NonNegativeInt.make(state.nextSeq),
+          seq: S.Natural.make(state.nextSeq),
           sinkClass: request.sinkClass,
         };
         const record = sealExecutionDecision(

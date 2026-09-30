@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
@@ -114,7 +114,7 @@ export class CorpusOrganizeRecord extends S.Class<CorpusOrganizeRecord>($I`Corpu
     restoredFromRecycleBin: S.Boolean,
     sourceLabel: S.NonEmptyString,
     sourceRelativePath: S.NonEmptyString,
-    versionIndex: S.optionalKey(NonNegativeInt),
+    versionIndex: S.optionalKey(S.Natural),
   },
   $I.annote("CorpusOrganizeRecord", {
     description: "JSONL-safe organize manifest row for one canonical corpus artifact.",
@@ -154,20 +154,20 @@ export const encodeCorpusOrganizeRecordJson = JsonStringCodec(CorpusOrganizeReco
  * **Example** (Make organize summary)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusOrganizeSummary } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = CorpusOrganizeSummary.make({
- *   canonicalArtifacts: NonNegativeInt.make(4),
- *   clientFiles: NonNegativeInt.make(1),
- *   docketFamilies: NonNegativeInt.make(1),
- *   docketFiles: NonNegativeInt.make(2),
- *   duplicatesSkipped: NonNegativeInt.make(0),
- *   emailArchives: NonNegativeInt.make(1),
- *   emailExportFiles: NonNegativeInt.make(0),
- *   restoredNames: NonNegativeInt.make(1),
- *   unsortedFiles: NonNegativeInt.make(0),
- *   versionGroups: NonNegativeInt.make(1)
+ *   canonicalArtifacts: S.Natural.make(4),
+ *   clientFiles: S.Natural.make(1),
+ *   docketFamilies: S.Natural.make(1),
+ *   docketFiles: S.Natural.make(2),
+ *   duplicatesSkipped: S.Natural.make(0),
+ *   emailArchives: S.Natural.make(1),
+ *   emailExportFiles: S.Natural.make(0),
+ *   restoredNames: S.Natural.make(1),
+ *   unsortedFiles: S.Natural.make(0),
+ *   versionGroups: S.Natural.make(1)
  * })
  * console.log(summary.docketFiles) // 2
  * ```
@@ -177,16 +177,16 @@ export const encodeCorpusOrganizeRecordJson = JsonStringCodec(CorpusOrganizeReco
  */
 export class CorpusOrganizeSummary extends S.Class<CorpusOrganizeSummary>($I`CorpusOrganizeSummary`)(
   {
-    canonicalArtifacts: NonNegativeInt,
-    clientFiles: NonNegativeInt,
-    docketFamilies: NonNegativeInt,
-    docketFiles: NonNegativeInt,
-    duplicatesSkipped: NonNegativeInt,
-    emailArchives: NonNegativeInt,
-    emailExportFiles: NonNegativeInt,
-    restoredNames: NonNegativeInt,
-    unsortedFiles: NonNegativeInt,
-    versionGroups: NonNegativeInt,
+    canonicalArtifacts: S.Natural,
+    clientFiles: S.Natural,
+    docketFamilies: S.Natural,
+    docketFiles: S.Natural,
+    duplicatesSkipped: S.Natural,
+    emailArchives: S.Natural,
+    emailExportFiles: S.Natural,
+    restoredNames: S.Natural,
+    unsortedFiles: S.Natural,
+    versionGroups: S.Natural,
   },
   $I.annote("CorpusOrganizeSummary", {
     description: "Summary counts returned by corpus organize.",
@@ -199,21 +199,21 @@ export class CorpusOrganizeSummary extends S.Class<CorpusOrganizeSummary>($I`Cor
  * **Example** (Encode summary as JSON)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusOrganizeSummary, encodeCorpusOrganizeSummaryJson } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const summary = CorpusOrganizeSummary.make({
- *   canonicalArtifacts: NonNegativeInt.make(0),
- *   clientFiles: NonNegativeInt.make(0),
- *   docketFamilies: NonNegativeInt.make(0),
- *   docketFiles: NonNegativeInt.make(0),
- *   duplicatesSkipped: NonNegativeInt.make(0),
- *   emailArchives: NonNegativeInt.make(0),
- *   emailExportFiles: NonNegativeInt.make(0),
- *   restoredNames: NonNegativeInt.make(0),
- *   unsortedFiles: NonNegativeInt.make(0),
- *   versionGroups: NonNegativeInt.make(0)
+ *   canonicalArtifacts: S.Natural.make(0),
+ *   clientFiles: S.Natural.make(0),
+ *   docketFamilies: S.Natural.make(0),
+ *   docketFiles: S.Natural.make(0),
+ *   duplicatesSkipped: S.Natural.make(0),
+ *   emailArchives: S.Natural.make(0),
+ *   emailExportFiles: S.Natural.make(0),
+ *   restoredNames: S.Natural.make(0),
+ *   unsortedFiles: S.Natural.make(0),
+ *   versionGroups: S.Natural.make(0)
  * })
  *
  * Effect.runPromise(encodeCorpusOrganizeSummaryJson(summary)).then((json) => console.log(json.includes("canonicalArtifacts"))) // true

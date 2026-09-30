@@ -11,7 +11,6 @@
 
 import { composeGatedLayers, FetchableHandle, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
 import { conformance2026, connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
-import { PosInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Uspto, UsptoApplicationMetadata, UsptoConfigInput, UsptoDocumentReference } from "@beep/uspto";
@@ -43,6 +42,8 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const encodeUnknownJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeDocumentsProjectionOutput = S.decodeEffect(DocumentsProjectionOutput);

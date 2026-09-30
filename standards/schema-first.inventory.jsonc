@@ -265,7 +265,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 53,
+      "line": 52,
       "owner": "@beep/epistemic-server",
       "reason": "External-Postgres race regression uses deterministic candidate identifiers to prove concurrent repository behavior; arbitrary values would make the race non-reproducible, and schema-derived identifier laws live with the owning domain models."
     },
@@ -275,7 +275,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 81,
+      "line": 82,
       "owner": "@beep/epistemic-server",
       "reason": "Repository integration suite uses fixed schema-decoded fixtures to prove atomic review, races, temporal queries, and restart behavior; schema-derived arbitrary round-trips live with the owning domain and use-case models."
     },
@@ -507,7 +507,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1323,
+      "line": 1324,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure in-memory parser over optional API image maps and Markdown content; it normalizes directly into the schema-backed PatentFigure model and neither decodes nor persists the transient option bag."
     },
@@ -517,7 +517,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1486,
+      "line": 1487,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure in-memory text parser whose required content and optional title are already strings; the transient option bag is call-site ergonomics and never crosses a decode or persistence boundary."
     },
@@ -527,7 +527,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 919,
+      "line": 920,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure lookup over optional in-memory office and kind-code strings; it returns Effect Option and the transient option bag is never decoded or persisted."
     },
@@ -537,7 +537,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1079,
+      "line": 1080,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure projection from optional API metadata and content into the schema-backed PatentDisplay model; the transient option bag is assembled in-process and never decoded or persisted."
     },
@@ -547,7 +547,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 836,
+      "line": 837,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure lookup over optional in-memory country text and an Effect Option kind code; it returns the schema-backed PatentStatus literal and the transient option bag is never decoded or persisted."
     },
@@ -557,7 +557,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1414,
+      "line": 1415,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure parser over in-memory content plus schema-backed PatentSectionKind values; it returns the schema-backed PatentSections model and the transient option bag is never decoded or persisted."
     },
@@ -597,7 +597,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 52,
+      "line": 51,
       "owner": "@beep/law-practice-server",
       "reason": "Synthetic golden fixture helper decodes branded file-processing IDs and PosixPath values for one deterministic office-action source artifact; property coverage belongs in the file-processing package schemas."
     },

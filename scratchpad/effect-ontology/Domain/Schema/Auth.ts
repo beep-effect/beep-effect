@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Auth");
 

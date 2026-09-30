@@ -1,7 +1,7 @@
 import { Confidence } from "@beep/epistemic-domain";
 import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchor, TextAnchorFields, TextAnchorVerificationReceipt, TextAnchorWidthCheck } from "@beep/provenance";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Equal, HashMap, HashSet, identity, Option, Order, Result, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -324,7 +324,7 @@ class RelationClaimBody extends S.Class<RelationClaimBody>($I`RelationClaimBody`
 const StructureBodyFields = S.Struct({
   kind: S.tag("Structure"),
   role: StructureRole,
-  depth: NonNegativeInt,
+  depth: S.Natural,
   ...TextAnchorFields,
 });
 
@@ -343,8 +343,8 @@ const ClaimBodyKind = LiteralKit(["Entity", "Relation", "Structure"]);
  * **Example** (Create an entity body)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ClaimBody } from "@/schema/Evidence"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const body = ClaimBody.cases.Entity.make({
@@ -352,8 +352,8 @@ const ClaimBodyKind = LiteralKit(["Entity", "Relation", "Structure"]);
  *   label: "Effect",
  *   entityType: "software",
  *   cluster: O.some("software-effect"),
- *   startChar: NonNegativeInt.make(0),
- *   endChar: NonNegativeInt.make(6),
+ *   startChar: S.Natural.make(0),
+ *   endChar: S.Natural.make(6),
  *   quote: "Effect"
  * })
  * console.log(body.kind) // "Entity"

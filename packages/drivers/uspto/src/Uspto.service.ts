@@ -6,7 +6,7 @@
  */
 
 import { $UsptoId } from "@beep/identity";
-import { assertAllowedRemoteUrl, NonNegativeInt, URLStr } from "@beep/schema";
+import { assertAllowedRemoteUrl, URLStr } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Context, Effect, Layer, Match, Redacted } from "effect";
@@ -264,9 +264,9 @@ const resolveConfig = (input: UsptoConfigInput): ResolvedUsptoConfig => ({
 
 const statusError = (status: number): UsptoError =>
   Match.value(status).pipe(
-    Match.when(404, () => UsptoError.fromReason("not-found", { status: NonNegativeInt.make(status) })),
-    Match.when(429, () => UsptoError.fromReason("rate-limited", { status: NonNegativeInt.make(status) })),
-    Match.orElse(() => UsptoError.fromReason("response-status", { status: NonNegativeInt.make(status) }))
+    Match.when(404, () => UsptoError.fromReason("not-found", { status: S.Natural.make(status) })),
+    Match.when(429, () => UsptoError.fromReason("rate-limited", { status: S.Natural.make(status) })),
+    Match.orElse(() => UsptoError.fromReason("response-status", { status: S.Natural.make(status) }))
   );
 
 const makeService = (client: HttpClient.HttpClient, config: ResolvedUsptoConfig): UsptoShape => {

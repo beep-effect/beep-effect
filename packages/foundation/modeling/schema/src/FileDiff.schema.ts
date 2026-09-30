@@ -10,7 +10,6 @@ import { SchemaGetter } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { NonNegativeInt } from "./Int.ts";
 
 const $I = $SchemaId.create("FileDiff.schema");
 
@@ -32,8 +31,8 @@ class InfoBase extends S.Class<InfoBase>($I`InfoBase`)(
   {
     file: optionalUndefined(S.String),
     patch: optionalUndefined(S.String),
-    additions: NonNegativeInt,
-    deletions: NonNegativeInt,
+    additions: S.Natural,
+    deletions: S.Natural,
   },
   $I.annote("InfoBase", {
     description: "Common file-diff fields shared by every status-specific diff summary.",

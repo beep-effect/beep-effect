@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
@@ -74,24 +73,24 @@ export class UsageRecord extends ProductEntity.Entity<UsageRecord>()(Epistemic.U
       })
       .pipe(pg.integer(), pg.columnName("activity_id")),
     actor: Principal.pipe(pg.jsonb()),
-    costUsdApproxMicros: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("cost_usd_approx_micros")),
+    costUsdApproxMicros: S.Natural.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("cost_usd_approx_micros")),
     credentialReference: OnePasswordReference.pipe(
       S.OptionFromNullOr,
       pg.text(),
       pg.columnName("credential_reference")
     ),
-    inputTokens: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("input_tokens")),
-    latencyMillis: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("latency_millis")),
+    inputTokens: S.Natural.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("input_tokens")),
+    latencyMillis: S.Natural.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("latency_millis")),
     metadata: S.Record(S.String, S.Unknown).pipe(pg.jsonb()),
     model: UsageModelName.annotateKey({ description: "Provider model name recorded for usage attribution." }).pipe(
       pg.text()
     ),
-    outputTokens: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("output_tokens")),
+    outputTokens: S.Natural.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("output_tokens")),
     provider: UsageProviderName.annotateKey({ description: "Provider name recorded for usage attribution." }).pipe(
       pg.text()
     ),
-    totalTokens: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("total_tokens")),
-    unitCount: NonNegativeInt.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("unit_count")),
+    totalTokens: S.Natural.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("total_tokens")),
+    unitCount: S.Natural.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("unit_count")),
   },
   $I.annote("UsageRecord", {
     description: "Append-only usage attribution record linked to an epistemic Activity.",

@@ -58,9 +58,7 @@ import {
   verifyTextAnchor,
 } from "@beep/provenance/VerifiedTextAnchor";
 import { Cuid } from "@beep/schema/Cuid";
-import { PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
@@ -84,6 +82,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 import type * as Crypto from "effect/Crypto";
 
 const decodeLogicalEdgeIdentity = S.decodeEffect(LogicalEdgeIdentity);
@@ -165,7 +164,7 @@ export const CONTRADICTION_QA_SOURCE_LOCATOR = PosixPath.make("qa/contradiction-
  * @category constants
  * @since 0.0.0
  */
-export const CONTRADICTION_QA_ANCHOR_START = NonNegativeInt.make(SOURCE_TEXT_PAGE_CODE_UNITS - 1);
+export const CONTRADICTION_QA_ANCHOR_START = S.Natural.make(SOURCE_TEXT_PAGE_CODE_UNITS - 1);
 
 /**
  * Exact quote bound to the verified QA evidence.
@@ -988,7 +987,7 @@ const prepareCanonicalSource = Effect.fn("ContradictionQaSeed.prepareCanonicalSo
     textDigest: sourceDigest,
   });
   const anchor = TextAnchor.make({
-    endChar: NonNegativeInt.make(CONTRADICTION_QA_ANCHOR_START + Str.length(CONTRADICTION_QA_ANCHOR_QUOTE)),
+    endChar: S.Natural.make(CONTRADICTION_QA_ANCHOR_START + Str.length(CONTRADICTION_QA_ANCHOR_QUOTE)),
     quote: CONTRADICTION_QA_ANCHOR_QUOTE,
     startChar: CONTRADICTION_QA_ANCHOR_START,
   });

@@ -6,7 +6,6 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
@@ -26,21 +25,21 @@ const $I = $LawPracticeDomainId.create("values/TreatyCitation/TreatyCitation.mod
  * **Example** (Make U.N.T.S. treaty citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { TreatyCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = TreatyCitation.make({
  *   text: "1155 U.N.T.S. 331",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "1155 U.N.T.S. 331",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  * })
  *
  * console.log(citation.type) // "treaty"
@@ -67,14 +66,14 @@ export class TreatyCitation extends S.Class<TreatyCitation>($I`TreatyCitation`)(
         description: 'Series number for "No."-style series (T.I.A.S. No. 1502 -> "1502").',
       })
     ),
-    volume: NonNegativeInt.pipe(
+    volume: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Volume for volume-series-page forms (1155 U.N.T.S. 331 -> 1155).",
       })
     ),
-    page: NonNegativeInt.pipe(
+    page: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -102,7 +101,7 @@ export class TreatyCitation extends S.Class<TreatyCitation>($I`TreatyCitation`)(
         description: "Cited paragraph (reserved).",
       })
     ),
-    year: NonNegativeInt.pipe(
+    year: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({

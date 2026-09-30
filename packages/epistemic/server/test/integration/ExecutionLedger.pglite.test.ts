@@ -16,7 +16,6 @@ import { GrantSetDigest } from "@beep/epistemic-domain/values/GrantSet";
 import { EpistemicServerDrizzleLive } from "@beep/epistemic-server/layer";
 import { ExecutionLedger, ExecutionLedgerConstraintViolation } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -25,6 +24,7 @@ import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { DateTime, Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import type {
   DecisionRecordHash as DecisionRecordHashType,
@@ -73,7 +73,7 @@ const decisionContent = (input: {
     policyRevision: revision,
     prevHash: input.prevHash,
     runKey: ExecutionRunKey.make(input.runKey),
-    seq: NonNegativeInt.make(input.seq),
+    seq: S.Natural.make(input.seq),
     sinkClass: "network-egress",
   } as const;
   return input.verdict === "denied"

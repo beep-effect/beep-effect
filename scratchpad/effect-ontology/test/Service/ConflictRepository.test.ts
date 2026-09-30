@@ -2,7 +2,6 @@ import { DrizzleError } from "@beep/drizzle";
 import { PgliteTestLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { assert, it } from "@effect/vitest";
 import { Context, DateTime, Effect, Equal, Layer, Order } from "effect";
 import * as A from "effect/Array";
@@ -23,6 +22,8 @@ import { ConflictRepository, canonicalConflictPair, EqualConflictPairError } fro
 import { CurrentConflictActor } from "../../Runtime/HttpMiddleware.ts";
 import { TimelineRouter } from "../../Runtime/HttpServer.ts";
 import { UUID } from "../../Domain/Identity.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeTimelineEntityResponseJson = S.decodeEffect(S.fromJsonString(TimelineEntityResponse));
 const decodeUnknownConflictsQuery = S.decodeUnknownEffect(ConflictsQuery);
@@ -252,7 +253,7 @@ describe("ConflictRepository", { concurrent: false }, () => {
         const query = ConflictsQuery.make({
           ontologyId: OntologyA,
           limit: PosInt.make(1),
-          offset: NonNegativeInt.make(1),
+          offset: S.Natural.make(1),
         });
         const page = yield* conflicts.list(query);
         const counts = yield* conflicts.counts(query);

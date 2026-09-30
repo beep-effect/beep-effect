@@ -1,5 +1,4 @@
 import { PhaseProfile, profilePhase } from "@beep/observability";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it as loggerSubjectIt } from "@effect/vitest";
@@ -47,7 +46,7 @@ describe("PhaseProfiler", () => {
       decodePhaseProfileOption({
         phase: "",
         outcome: "completed",
-        durationMs: NonNegativeInt.make(1),
+        durationMs: S.Natural.make(1),
         attributes: {},
       })
     );

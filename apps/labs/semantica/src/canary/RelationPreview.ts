@@ -1,7 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { AlignmentSource, alignCandidates } from "@beep/langextract/Alignment";
 import { parseModelOutput } from "@beep/langextract/Extraction";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Console, Effect, FileSystem, HashSet, Number as N, Path } from "effect";
 import * as A from "effect/Array";
@@ -82,11 +82,11 @@ export class RelationPreviewOptions extends S.Class<RelationPreviewOptions>($I`R
 class RelationPreviewCaseResult extends S.Class<RelationPreviewCaseResult>($I`RelationPreviewCaseResult`)(
   {
     cacheKey: Sha256Hex,
-    candidateCount: NonNegativeInt,
-    degradedRelations: NonNegativeInt,
-    groundedRelations: NonNegativeInt,
+    candidateCount: S.Natural,
+    degradedRelations: S.Natural,
+    groundedRelations: S.Natural,
     paperId: CorpusPaperId,
-    relationCandidates: NonNegativeInt,
+    relationCandidates: S.Natural,
   },
   $I.annote("RelationPreviewCaseResult", {
     description: "Parsed, relation-candidate, grounded, and degraded counts for one historical response.",
@@ -96,8 +96,8 @@ class RelationPreviewCaseResult extends S.Class<RelationPreviewCaseResult>($I`Re
 class RelationPreviewReport extends S.Class<RelationPreviewReport>($I`RelationPreviewReport`)(
   {
     cases: S.NonEmptyArray(RelationPreviewCaseResult),
-    groundedPapers: NonNegativeInt,
-    groundedRelations: NonNegativeInt,
+    groundedPapers: S.Natural,
+    groundedRelations: S.Natural,
     passed: S.Literal(true),
     schemaVersion: S.Literal("semantica-relation-preview-report/v1"),
   },
@@ -206,11 +206,11 @@ const previewCase = Effect.fn("RelationPreview.previewCase")(function* (
   const groundedRelations = A.length(A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Relation"));
   return RelationPreviewCaseResult.make({
     cacheKey: preview.cacheDigest,
-    candidateCount: NonNegativeInt.make(A.length(extractions)),
-    degradedRelations: NonNegativeInt.make(N.subtract(relationCandidates, groundedRelations)),
-    groundedRelations: NonNegativeInt.make(groundedRelations),
+    candidateCount: S.Natural.make(A.length(extractions)),
+    degradedRelations: S.Natural.make(N.subtract(relationCandidates, groundedRelations)),
+    groundedRelations: S.Natural.make(groundedRelations),
     paperId: preview.paperId,
-    relationCandidates: NonNegativeInt.make(relationCandidates),
+    relationCandidates: S.Natural.make(relationCandidates),
   });
 });
 
@@ -256,8 +256,8 @@ export const runRelationPreview = Effect.fn("RelationPreview.run")(function* (op
   }
   const report = RelationPreviewReport.make({
     cases,
-    groundedPapers: NonNegativeInt.make(groundedPapers),
-    groundedRelations: NonNegativeInt.make(groundedRelations),
+    groundedPapers: S.Natural.make(groundedPapers),
+    groundedRelations: S.Natural.make(groundedRelations),
     passed: true,
     schemaVersion: "semantica-relation-preview-report/v1",
   });

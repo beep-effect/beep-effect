@@ -27,7 +27,6 @@ import {
   TopLeftAnchoredBox,
 } from "@beep/dock";
 import { fcRuns } from "@beep/fc-runs";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -534,7 +533,7 @@ describe("DockEngine", () => {
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
         const exhausted = EmptyWorkspace.make({
-          revision: NonNegativeInt.make(globalThis.Number.MAX_SAFE_INTEGER),
+          revision: S.Natural.make(globalThis.Number.MAX_SAFE_INTEGER),
         });
         const failure = yield* Effect.flip(engine.transition(exhausted, openPanelOne));
 
@@ -555,7 +554,7 @@ describe("DockEngine", () => {
           populated: (workspace) =>
             Effect.succeed(
               PopulatedWorkspace.make({
-                revision: NonNegativeInt.make(globalThis.Number.MAX_SAFE_INTEGER),
+                revision: S.Natural.make(globalThis.Number.MAX_SAFE_INTEGER),
                 root: workspace.root,
               })
             ),

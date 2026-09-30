@@ -7,7 +7,7 @@ import * as Arbitrary from "effect/Arbitrary";
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
+import { SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { Effect, Number as N } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -117,7 +117,7 @@ class OntologyEmbeddingsFieldsModel extends S.Class<OntologyEmbeddingsFieldsMode
     model: S.NonEmptyString.annotateKey({
       description: "Embedding-model identifier used to compute every vector.",
     }),
-    dimension: NonNegativeInt.check(
+    dimension: S.Natural.check(
       S.isGreaterThan(0, {
         identifier: $I`EmbeddingDimensionPositiveCheck`,
         title: "Positive Embedding Dimension",
@@ -281,7 +281,7 @@ export const OntologyEmbeddingsArbitrary = Arbitrary.schema(OntologyEmbeddingsFi
   Arbitrary.map((value) =>
     OntologyEmbeddingsFieldsModel.make({
       ...value,
-      dimension: NonNegativeInt.make(1),
+      dimension: S.Natural.make(1),
       classes: A.map(value.classes, (element) => ElementEmbedding.make({ ...element, embedding: [0] })),
       properties: A.map(value.properties, (element) => ElementEmbedding.make({ ...element, embedding: [0] })),
     })

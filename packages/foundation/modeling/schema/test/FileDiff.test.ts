@@ -1,6 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
 import { FileDiff } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -106,8 +105,8 @@ describe("FileDiff.Info", () => {
       const modified = FileDiff.Modified.make({
         file: undefined,
         patch: undefined,
-        additions: NonNegativeInt.make(1),
-        deletions: NonNegativeInt.make(0),
+        additions: S.Natural.make(1),
+        deletions: S.Natural.make(0),
       });
 
       expect(yield* encodeModified(modified)).toEqual({ status: "modified", additions: 1, deletions: 0 });

@@ -9,7 +9,6 @@ import {
   ContradictionTriageService,
 } from "@beep/epistemic-use-cases/server";
 import { SourceTextResolver } from "@beep/file-processing/SourceText";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { it } from "@beep/test-runner";
@@ -19,8 +18,11 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tracer from "effect/Tracer";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const ACTION_SPAN = "epistemic.contradiction.list_candidates";
 const PORT_SPAN = "epistemic.contradiction.list";
@@ -30,13 +32,13 @@ const payload = ContradictionListPayload.make({
   disposition: "open",
   knownAt: DateTime.makeUnsafe(2_000),
   limit: PosInt.make(20),
-  offset: NonNegativeInt.make(0),
+  offset: S.Natural.make(0),
   validAt: DateTime.makeUnsafe(1_000),
 });
 
 const emptyPage = ContradictionCandidatePage.make({
   items: [],
-  total: NonNegativeInt.make(0),
+  total: S.Natural.make(0),
 });
 
 const TestCrypto = Layer.succeed(

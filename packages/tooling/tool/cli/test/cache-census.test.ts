@@ -17,7 +17,7 @@ import {
   CacheQualificationKey,
   CacheTaskConfiguration,
 } from "@beep/repo-configs/cache";
-import { NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -379,9 +379,9 @@ describe("computation configuration fingerprint", () => {
       const tree = CacheDependencyTree.make({
         format: "canonical-gnu-tar/v1",
         sha256: digest,
-        regularFiles: NonNegativeInt.make(1),
-        entries: NonNegativeInt.make(2),
-        bytes: NonNegativeInt.make(1),
+        regularFiles: S.Natural.make(1),
+        entries: S.Natural.make(2),
+        bytes: S.Natural.make(1),
         links: [],
       });
       const first = yield* fingerprintCacheComputation(

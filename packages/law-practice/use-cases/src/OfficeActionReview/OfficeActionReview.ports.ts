@@ -15,10 +15,11 @@ import { OperationId, SourceArtifact } from "@beep/file-processing/Artifact";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import { IrToLawExtractionError } from "../IrToLaw/index.ts";
+import { PosInt } from "../internal/PosInt.ts";
 import type { ClaimProjectionView } from "@beep/epistemic-domain/values";
 
 const $I = $LawPracticeUseCasesId.create("OfficeActionReview/OfficeActionReview.ports");
@@ -34,7 +35,6 @@ const officeActionReviewInputEntitySeedDefault = PosInt.make(1);
  * ```ts
  * import { ArtifactId, ArtifactLocator, ContentDigest, OperationId, SourceArtifact } from "@beep/file-processing/Artifact"
  * import { OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -57,7 +57,7 @@ const officeActionReviewInputEntitySeedDefault = PosInt.make(1);
  *       locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
  *       name: "office-action.txt",
  *       relativePath,
- *       sizeBytes: NonNegativeInt.make(21),
+ *       sizeBytes: S.Natural.make(21),
  *       text: "Claim 1 rejected."
  *     })
  *   })

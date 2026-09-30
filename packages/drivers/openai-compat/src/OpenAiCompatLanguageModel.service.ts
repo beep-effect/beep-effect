@@ -7,8 +7,6 @@
 
 import { $OpenaiCompatId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -23,6 +21,7 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import {
   OpenAiCompatAssistantChatMessage,
   OpenAiCompatChatCompletionChunk,
@@ -54,9 +53,7 @@ const encodeUnknownJsonEffect = S.encodeUnknownEffect(UnknownJson);
 const $I = $OpenaiCompatId.create("OpenAiCompatLanguageModel.service");
 const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
 const OptionalPosInt = S.OptionFromOptionalKey(PosInt).pipe(S.withConstructorDefault(Effect.succeedNone));
-const OptionalNonNegativeInt = S.OptionFromOptionalKey(NonNegativeInt).pipe(
-  S.withConstructorDefault(Effect.succeedNone)
-);
+const OptionalNonNegativeInt = S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone));
 const OptionalBoolean = S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone));
 const OptionalString = S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone));
 const OptionalNullableTemperature = OpenAiCompatTemperature.pipe(
@@ -89,9 +86,11 @@ const decodeKnownFinishReasonOption: (reason: string) => O.Option<Response.Finis
  * **Example** (Set max tokens and temperature)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { PosInt } from "@beep/schema/Int"
  * import { OpenAiCompatLanguageModelConfig } from "@beep/openai-compat"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config = OpenAiCompatLanguageModelConfig.make({
  *   maxTokens: O.some(PosInt.make(512)),

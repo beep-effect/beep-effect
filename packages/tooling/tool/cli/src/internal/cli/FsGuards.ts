@@ -27,7 +27,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
-import type { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import type { Sha256Hex } from "@beep/schema";
 import type * as Crypto from "effect/Crypto";
 
 const $I = $RepoCliId.create("internal/cli/FsGuards");
@@ -735,6 +735,7 @@ export const readContainedFileStringNoFollow = Effect.fn("RepoCli.FsGuards.readC
   return ContainedFileRead.make({ contents, exists: true });
 });
 const isFsGuardError = S.is(FsGuardError);
+const decodeByteLimit = S.decodeEffect(S.Natural);
 
 /**
  * Read at most the allowed number of original bytes, rejecting symlinks and oversized files.
@@ -745,13 +746,17 @@ const isFsGuardError = S.is(FsGuardError);
  * during capture cannot cause an unbounded allocation. The same contained-path
  * and operating-system rename boundary as the string reader applies.
  *
+ * **Gotchas**
+ *
+ * `maxBytes` is decoded as a non-negative integer before any filesystem access;
+ * a negative or fractional limit fails with an {@link FsGuardError}.
+ *
  * **Example** (Bound a receipt to one MiB)
  *
  * ```ts
  * import { readContainedFileBytesNoFollow } from "@beep/repo-cli/test/Cli"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
- * const read = readContainedFileBytesNoFollow("/repo", "receipt.json", NonNegativeInt.make(1048576))
+ * const read = readContainedFileBytesNoFollow("/repo", "receipt.json", 1048576)
  * console.assert(Effect.isEffect(read))
  * ```
  *
@@ -765,8 +770,20 @@ const isFsGuardError = S.is(FsGuardError);
 export const readContainedFileBytesNoFollow = Effect.fn("RepoCli.FsGuards.readContainedFileBytesNoFollow")(function* (
   expectedRoot: string,
   target: string,
-  maxBytes: NonNegativeInt
+  maxBytes: number
 ) {
+  const byteLimit = yield* decodeByteLimit(maxBytes).pipe(
+    Effect.mapError((cause) =>
+      fsGuardError(
+        expectedRoot,
+        target,
+        target,
+        "filesystem-failure",
+        "Maximum byte length must be a non-negative integer.",
+        cause
+      )
+    )
+  );
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const prepared = yield* prepareContainedTarget(fs, path, expectedRoot, target, false);
@@ -780,7 +797,7 @@ export const readContainedFileBytesNoFollow = Effect.fn("RepoCli.FsGuards.readCo
     Effect.gen(function* () {
       const file = yield* fs.open(resolved, { flag: "r" });
       const buffer = yield* Effect.try({
-        try: () => new Uint8Array(maxBytes + 1),
+        try: () => new Uint8Array(byteLimit + 1),
         catch: (cause) =>
           fsGuardError(root, resolved, resolved, "filesystem-failure", "Cannot allocate bounded file capture.", cause),
       });
@@ -789,7 +806,7 @@ export const readContainedFileBytesNoFollow = Effect.fn("RepoCli.FsGuards.readCo
         // The read is bounded by the remaining Uint8Array capacity, so conversion is exact.
         const read = Number(yield* file.read(buffer.subarray(length)));
         length += read;
-        if (length > maxBytes)
+        if (length > byteLimit)
           return yield* fsGuardError(
             root,
             resolved,

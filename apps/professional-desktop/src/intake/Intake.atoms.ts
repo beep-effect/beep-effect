@@ -14,7 +14,6 @@ import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
 import { SchemaUtils } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as A from "@beep/utils/Array";
 import * as N from "@beep/utils/Number";
@@ -321,11 +320,11 @@ export type VaultSelectionState = typeof VaultSelectionState.Type;
  * **Example** (Create initial intake state)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Number";
+ * import * as S from "effect/Schema"
  * import { DocumentIntakeState, VaultSelectionState } from "@/intake/Intake.atoms"
  *
  * const state = DocumentIntakeState.make({
- *   activeBatches: NonNegativeInt.make(0),
+ *   activeBatches: S.Natural.make(0),
  *   isDragging: false,
  *   results: [],
  *   vaultSelection: VaultSelectionState.cases.idle.make()
@@ -338,7 +337,7 @@ export type VaultSelectionState = typeof VaultSelectionState.Type;
  */
 export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`DocumentIntakeState`)(
   {
-    activeBatches: NonNegativeInt,
+    activeBatches: S.Natural,
     isDragging: S.Boolean,
     results: S.Array(IntakeResultEntry),
     vaultSelection: VaultSelectionState,
@@ -351,7 +350,7 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
    * The canonical zero state: no batches, no results, idle vault selection.
    */
   static readonly initial = DocumentIntakeState.make({
-    activeBatches: NonNegativeInt.make(0),
+    activeBatches: S.Natural.make(0),
     isDragging: false,
     results: [],
     vaultSelection: VaultSelectionState.cases.idle.make(),
@@ -378,7 +377,7 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
    */
   // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
   startBatch(): DocumentIntakeState {
-    return DocumentIntakeState.make({ ...this, activeBatches: NonNegativeInt.make(this.activeBatches + 1) });
+    return DocumentIntakeState.make({ ...this, activeBatches: S.Natural.make(this.activeBatches + 1) });
   }
 
   /**
@@ -386,7 +385,7 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
    */
   // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
   finishBatch(): DocumentIntakeState {
-    return DocumentIntakeState.make({ ...this, activeBatches: NonNegativeInt.make(this.activeBatches - 1) });
+    return DocumentIntakeState.make({ ...this, activeBatches: S.Natural.make(this.activeBatches - 1) });
   }
 
   /**

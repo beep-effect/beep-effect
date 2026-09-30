@@ -7,7 +7,6 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -29,13 +28,13 @@ const resolutionResultWarningsDefault = A.empty<string>();
  * **Example** (Make a resolution result)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ResolutionResult } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const result = ResolutionResult.make({
- *   resolvedTo: O.some(NonNegativeInt.make(2)),
- *   antecedentIndex: O.some(NonNegativeInt.make(2)),
+ *   resolvedTo: O.some(S.Natural.make(2)),
+ *   antecedentIndex: O.some(S.Natural.make(2)),
  *   confidence: 0.92,
  * })
  *
@@ -48,14 +47,14 @@ const resolutionResultWarningsDefault = A.empty<string>();
  */
 export class ResolutionResult extends S.Class<ResolutionResult>($I`ResolutionResult`)(
   {
-    resolvedTo: NonNegativeInt.pipe(
+    resolvedTo: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Index of the citation this resolves to. undefined if resolution failed.",
       })
     ),
-    antecedentIndex: NonNegativeInt.pipe(
+    antecedentIndex: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({

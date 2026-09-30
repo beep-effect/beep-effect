@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $UiId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { useAtomMount, useAtomSet } from "@effect/atom-react";
 import { Match } from "effect";
 import { Atom } from "effect/reactivity";
@@ -16,8 +15,8 @@ const $I = $UiId.create("hooks/useSpinner");
 
 class SpinnerSchedule extends S.Class<SpinnerSchedule>($I`SpinnerSchedule`)(
   {
-    continuousChangeInterval: NonNegativeInt,
-    continuousChangeDelay: NonNegativeInt,
+    continuousChangeInterval: S.Natural,
+    continuousChangeDelay: S.Natural,
   },
   $I.annote("SpinnerSchedule", {
     description: "Timing configuration used while a spinner button is held down.",
@@ -28,8 +27,8 @@ class SpinnerSchedule extends S.Class<SpinnerSchedule>($I`SpinnerSchedule`)(
 }
 
 const spinnerSchedule = SpinnerSchedule.make({
-  continuousChangeInterval: NonNegativeInt.make(50),
-  continuousChangeDelay: NonNegativeInt.make(300),
+  continuousChangeInterval: S.Natural.make(50),
+  continuousChangeDelay: S.Natural.make(300),
 });
 
 type SpinnerState = {

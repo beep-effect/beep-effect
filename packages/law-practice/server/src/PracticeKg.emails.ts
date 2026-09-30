@@ -7,12 +7,12 @@
 
 import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { parseOutlookHeaders, rfc5322DateFromOutlookTimestamp } from "@beep/libpff";
-import { NonNegativeInt } from "@beep/schema";
 import { thunk0, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import { stripPrefix } from "./PracticeKg.rows.ts";
@@ -132,7 +132,7 @@ const readEmailArchiveRows = Effect.fn("PracticeKg.readEmailArchiveRows")(functi
       return PracticeKgEmailHeaderRow.make({
         archiveDigest,
         folderPath: folderPath === "." ? "" : folderPath,
-        messageOrd: NonNegativeInt.make(messageOrdinal(path.basename(messageDir))),
+        messageOrd: S.Natural.make(messageOrdinal(path.basename(messageDir))),
         messageRelPath: relativeMessagePath,
         recipients: recipientsFromText(recipientsText),
         subject: O.getOrElse(headerValue(headers, "Subject"), thunkEmptyStr),

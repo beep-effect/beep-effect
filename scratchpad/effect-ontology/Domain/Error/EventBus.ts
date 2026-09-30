@@ -10,7 +10,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "./Base.ts";
 
@@ -102,13 +101,12 @@ export class PubSubError extends S.TaggedError<PubSubError>($I`PubSubError`)(
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const error = S.decodeUnknownOption(DeadLetterError)({
  *   _tag: "DeadLetterError",
  *   jobId: "job-42",
  *   jobType: "EmbedDocument",
- *   attempts: NonNegativeInt.make(3),
+ *   attempts: S.Natural.make(3),
  *   lastError: "Provider unavailable."
  * })
  * console.log(O.isSome(error)) // true
@@ -127,7 +125,7 @@ export class DeadLetterError extends S.TaggedError<DeadLetterError>($I`DeadLette
     jobType: S.NonEmptyString.annotateKey({
       description: "Stable job type that exhausted retries.",
     }),
-    attempts: NonNegativeInt.annotateKey({
+    attempts: S.Natural.annotateKey({
       description: "Number of completed delivery attempts.",
     }),
     lastError: ErrorMessage.annotateKey({

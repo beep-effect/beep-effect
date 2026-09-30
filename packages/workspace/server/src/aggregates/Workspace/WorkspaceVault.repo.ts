@@ -7,7 +7,6 @@
  */
 
 import { PostgresDrizzle } from "@beep/postgres";
-import { PosInt } from "@beep/schema/Int";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Workspace } from "@beep/workspace-domain/entities/Workspace";
 import { DbSchema } from "@beep/workspace-tables";
@@ -18,6 +17,7 @@ import { Effect, FileSystem, HashMap, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "../../internal/PosInt.ts";
 import type { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
 
 const WORKSPACE_TABLE_NAME = "workspace_workspace" as const;

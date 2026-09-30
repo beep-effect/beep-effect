@@ -11,7 +11,6 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { Context, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -32,9 +31,9 @@ const $I = $McpKitId.create("McpCaller");
  * **Example** (Make identity with clientId)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { McpCallerIdentity } from "@beep/mcp-kit"
- * import { NonNegativeInt } from "@beep/schema"
- * const caller = McpCallerIdentity.make({ clientId: NonNegativeInt.make(1) })
+ * const caller = McpCallerIdentity.make({ clientId: S.Natural.make(1) })
  * console.log(caller.clientId)
  * ```
  *
@@ -43,7 +42,7 @@ const $I = $McpKitId.create("McpCaller");
  */
 export class McpCallerIdentity extends S.Class<McpCallerIdentity>($I`McpCallerIdentity`)(
   {
-    clientId: NonNegativeInt.annotateKey({
+    clientId: S.Natural.annotateKey({
       description: "Server-assigned id of the protocol exchange that carried this dispatch.",
     }),
     sessionId: S.OptionFromNullOr(S.NonEmptyString).pipe(

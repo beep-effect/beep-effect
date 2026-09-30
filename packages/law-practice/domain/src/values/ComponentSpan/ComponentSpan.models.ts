@@ -33,17 +33,17 @@ const OptionFromOptionalSpan = Span.pipe(S.OptionFromOptionalKey, S.withConstruc
  * **Example** (Make case component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CaseComponentSpan, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = CaseComponentSpan.make({
  *   caseName: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(12),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(12),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(12),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(12),
  *     })
  *   ),
  * })
@@ -118,17 +118,17 @@ export declare namespace CaseComponentSpan {
  * **Example** (Make statute component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Span, StatuteComponentSpan } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = StatuteComponentSpan.make({
  *   section: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(4),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(4),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(4),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(4),
  *     })
  *   ),
  * })
@@ -196,17 +196,17 @@ export declare namespace StatuteComponentSpan {
  * **Example** (Make constitutional component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ConstitutionalComponentSpan, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = ConstitutionalComponentSpan.make({
  *   amendment: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(5),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(5),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(5),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(5),
  *     })
  *   ),
  * })
@@ -278,17 +278,17 @@ export declare namespace ConstitutionalComponentSpan {
  * **Example** (Make journal component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { JournalComponentSpan, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = JournalComponentSpan.make({
  *   journal: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(8),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(8),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(8),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(8),
  *     })
  *   ),
  * })
@@ -357,17 +357,17 @@ export declare namespace JournalComponentSpan {
  * **Example** (Make neutral component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { NeutralComponentSpan, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = NeutralComponentSpan.make({
  *   documentNumber: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(3),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(3),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(3),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(3),
  *     })
  *   ),
  * })
@@ -430,17 +430,17 @@ export declare namespace NeutralComponentSpan {
  * **Example** (Make Id component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { IdComponentSpan, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = IdComponentSpan.make({
  *   pincite: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(2),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(2),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(2),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(2),
  *     })
  *   ),
  * })
@@ -499,17 +499,17 @@ export declare namespace IdComponentSpan {
  * **Example** (Make supra component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Span, SupraComponentSpan } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = SupraComponentSpan.make({
  *   pincite: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(2),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(2),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(2),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(2),
  *     })
  *   ),
  * })
@@ -568,17 +568,17 @@ export declare namespace SupraComponentSpan {
  * **Example** (Make short-form case spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ShortFormCaseComponentSpan, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = ShortFormCaseComponentSpan.make({
  *   pincite: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(2),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(2),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(2),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(2),
  *     })
  *   ),
  * })
@@ -642,17 +642,17 @@ export declare namespace ShortFormCaseComponentSpan {
  * **Example** (Make public law component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PublicLawComponentSpan, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = PublicLawComponentSpan.make({
  *   lawNumber: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(6),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(6),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(6),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(6),
  *     })
  *   ),
  * })
@@ -718,17 +718,17 @@ export declare namespace PublicLawComponentSpan {
  * **Example** (Make federal register spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { FederalRegisterComponentSpan, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = FederalRegisterComponentSpan.make({
  *   page: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(5),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(5),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(5),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(5),
  *     })
  *   ),
  * })
@@ -797,17 +797,17 @@ export declare namespace FederalRegisterComponentSpan {
  * **Example** (Make statutes at large spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Span, StatutesAtLargeComponentSpan } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = StatutesAtLargeComponentSpan.make({
  *   page: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(4),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(4),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(4),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(4),
  *     })
  *   ),
  * })
@@ -876,17 +876,17 @@ export declare namespace StatutesAtLargeComponentSpan {
  * **Example** (Make federal rule component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { FederalRuleComponentSpan, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = FederalRuleComponentSpan.make({
  *   rule: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(2),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(2),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(2),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(2),
  *     })
  *   ),
  * })
@@ -953,17 +953,17 @@ export declare namespace FederalRuleComponentSpan {
  * **Example** (Make Restatement component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestatementComponentSpan, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = RestatementComponentSpan.make({
  *   section: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(3),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(3),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(3),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(3),
  *     })
  *   ),
  * })
@@ -1031,17 +1031,17 @@ export declare namespace RestatementComponentSpan {
  * **Example** (Make treatise component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Span, TreatiseComponentSpan } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = TreatiseComponentSpan.make({
  *   section: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(3),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(3),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(3),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(3),
  *     })
  *   ),
  * })
@@ -1109,17 +1109,17 @@ export declare namespace TreatiseComponentSpan {
  * **Example** (Make annotation component spans)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { AnnotationComponentSpan, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const spans = AnnotationComponentSpan.make({
  *   series: O.some(
  *     Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(5),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(5),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(5),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(5),
  *     })
  *   ),
  * })

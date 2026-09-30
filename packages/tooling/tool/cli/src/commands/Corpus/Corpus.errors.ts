@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -108,12 +108,12 @@ export class PreservationPreflightUnapprovedError extends S.TaggedError<Preserva
  * **Example** (Create a ceiling error)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PreservationCeilingExceededError } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const error = PreservationCeilingExceededError.make({
- *   ceilingBytes: NonNegativeInt.make(1),
- *   measuredBytes: NonNegativeInt.make(2),
+ *   ceilingBytes: S.Natural.make(1),
+ *   measuredBytes: S.Natural.make(2),
  *   message: "Too large."
  * })
  * console.log(error.measuredBytes) // 2
@@ -127,8 +127,8 @@ export class PreservationCeilingExceededError extends S.TaggedError<Preservation
 )(
   "PreservationCeilingExceededError",
   {
-    ceilingBytes: NonNegativeInt,
-    measuredBytes: NonNegativeInt,
+    ceilingBytes: S.Natural,
+    measuredBytes: S.Natural,
     message: S.NonEmptyString,
   },
   $I.annoteError<PreservationCeilingExceededError>("PreservationCeilingExceededError", {
@@ -172,11 +172,11 @@ export class PreservationArchiveIoError extends S.TaggedError<PreservationArchiv
  * **Example** (Create a verification failure)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PreservationVerificationFailure } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const error = PreservationVerificationFailure.make({
- *   failedRows: NonNegativeInt.make(1),
+ *   failedRows: S.Natural.make(1),
  *   message: "Verification failed."
  * })
  * console.log(error.failedRows) // 1
@@ -190,7 +190,7 @@ export class PreservationVerificationFailure extends S.TaggedError<PreservationV
 )(
   "PreservationVerificationFailure",
   {
-    failedRows: NonNegativeInt,
+    failedRows: S.Natural,
     message: S.NonEmptyString,
   },
   $I.annoteError<PreservationVerificationFailure>("PreservationVerificationFailure", {
@@ -204,12 +204,12 @@ export class PreservationVerificationFailure extends S.TaggedError<PreservationV
  * **Example** (Create an unapproved-rows error)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PreservationUnapprovedRowsError } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const error = PreservationUnapprovedRowsError.make({
  *   message: "Unapproved terminal rows remain.",
- *   unapprovedRows: NonNegativeInt.make(2)
+ *   unapprovedRows: S.Natural.make(2)
  * })
  * console.log(error.unapprovedRows) // 2
  * ```
@@ -223,7 +223,7 @@ export class PreservationUnapprovedRowsError extends S.TaggedError<PreservationU
   "PreservationUnapprovedRowsError",
   {
     message: S.NonEmptyString,
-    unapprovedRows: NonNegativeInt,
+    unapprovedRows: S.Natural,
   },
   $I.annoteError<PreservationUnapprovedRowsError>("PreservationUnapprovedRowsError", {
     description: "The archive run finished with terminal manifest rows outside the approved pass kinds.",

@@ -7,21 +7,18 @@
 
 import { $OpenaiCompatId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Tuple } from "effect";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $OpenaiCompatId.create("OpenAiCompat.models");
 
 const OptionalNullableString = S.OptionFromOptionalNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone));
-const OptionalNonNegativeInt = S.OptionFromOptionalKey(NonNegativeInt).pipe(
-  S.withConstructorDefault(Effect.succeedNone)
-);
+const OptionalNonNegativeInt = S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone));
 const OptionalUnknownRecord = S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(
   S.withConstructorDefault(Effect.succeedNone)
 );
@@ -248,7 +245,7 @@ export class OpenAiCompatToolCall extends S.Class<OpenAiCompatToolCall>($I`OpenA
       description: "Function payload attached to the OpenAI-compatible tool call.",
     }),
     id: S.String.annotateKey({ description: "Provider-generated tool-call identifier." }),
-    index: S.optionalKey(NonNegativeInt).annotateKey({
+    index: S.optionalKey(S.Natural).annotateKey({
       description: "Zero-based tool-call index when a provider includes one.",
     }),
     type: S.tag("function").annotateKey({ description: "OpenAI-compatible tool-call discriminator." }),
@@ -298,12 +295,12 @@ export class OpenAiCompatToolCallFunctionDelta extends S.Class<OpenAiCompatToolC
  * **Example** (Making a tool-call delta)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Number"
+ * import * as S from "effect/Schema"
  * import { OpenAiCompatToolCallDelta } from "@beep/openai-compat"
  *
  * const delta = OpenAiCompatToolCallDelta.make({
  *   function: { arguments: "{\"city\"" },
- *   index: NonNegativeInt.make(0)
+ *   index: S.Natural.make(0)
  * })
  *
  * console.log(delta)
@@ -318,7 +315,7 @@ export class OpenAiCompatToolCallDelta extends S.Class<OpenAiCompatToolCallDelta
       description: "Incremental function payload for the streaming tool-call delta.",
     }),
     id: S.optionalKey(S.String).annotateKey({ description: "Tool-call identifier when supplied by the stream." }),
-    index: S.optionalKey(NonNegativeInt).annotateKey({
+    index: S.optionalKey(S.Natural).annotateKey({
       description: "Zero-based streaming tool-call index.",
     }),
     type: S.optionalKey(S.Literal("function")).annotateKey({
@@ -860,7 +857,7 @@ export class OpenAiCompatChatCompletionRequest extends S.Class<OpenAiCompatChatC
     response_format: S.optionalKey(OpenAiCompatResponseFormat).annotateKey({
       description: "Optional response-format controls for provider output.",
     }),
-    seed: S.optionalKey(NonNegativeInt).annotateKey({
+    seed: S.optionalKey(S.Natural).annotateKey({
       description: "Non-negative deterministic sampling seed.",
     }),
     stream: S.Boolean.pipe(S.optionalKey).annotateKey({
@@ -976,14 +973,14 @@ export class OpenAiCompatAssistantDelta extends S.Class<OpenAiCompatAssistantDel
  * **Example** (Making a usage payload)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { NonNegativeInt } from "@beep/schema/Number"
  * import { OpenAiCompatUsage } from "@beep/openai-compat"
  *
  * const usage = OpenAiCompatUsage.make({
- *   completion_tokens: O.some(NonNegativeInt.make(2)),
- *   prompt_tokens: O.some(NonNegativeInt.make(1)),
- *   total_tokens: O.some(NonNegativeInt.make(3))
+ *   completion_tokens: O.some(S.Natural.make(2)),
+ *   prompt_tokens: O.some(S.Natural.make(1)),
+ *   total_tokens: O.some(S.Natural.make(3))
  * })
  *
  * console.log(usage)
@@ -1018,13 +1015,13 @@ export class OpenAiCompatUsage extends S.Class<OpenAiCompatUsage>($I`OpenAiCompa
  * **Example** (Making a completion choice)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { NonNegativeInt } from "@beep/schema/Number"
  * import { OpenAiCompatAssistantMessage, OpenAiCompatChatCompletionChoice } from "@beep/openai-compat"
  *
  * const choice = OpenAiCompatChatCompletionChoice.make({
  *   finish_reason: O.some("stop"),
- *   index: NonNegativeInt.make(0),
+ *   index: S.Natural.make(0),
  *   message: O.some(OpenAiCompatAssistantMessage.make({ content: O.some("Hello"), role: "assistant" }))
  * })
  *
@@ -1041,7 +1038,7 @@ export class OpenAiCompatChatCompletionChoice extends S.Class<OpenAiCompatChatCo
     finish_reason: OptionalNullableString.annotateKey({
       description: "Provider finish reason for this chat completion choice.",
     }),
-    index: S.optionalKey(NonNegativeInt).annotateKey({
+    index: S.optionalKey(S.Natural).annotateKey({
       description: "Zero-based chat completion choice index.",
     }),
     message: S.OptionFromOptionalKey(OpenAiCompatAssistantMessage)
@@ -1059,8 +1056,8 @@ export class OpenAiCompatChatCompletionChoice extends S.Class<OpenAiCompatChatCo
  * **Example** (Making a completion response)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { NonNegativeInt } from "@beep/schema/Number"
  * import {
  *   OpenAiCompatAssistantMessage,
  *   OpenAiCompatChatCompletionChoice,
@@ -1071,7 +1068,7 @@ export class OpenAiCompatChatCompletionChoice extends S.Class<OpenAiCompatChatCo
  *   choices: [
  *     OpenAiCompatChatCompletionChoice.make({
  *       finish_reason: O.some("stop"),
- *       index: NonNegativeInt.make(0),
+ *       index: S.Natural.make(0),
  *       message: O.some(OpenAiCompatAssistantMessage.make({ content: O.some("Hello") }))
  *     })
  *   ]
@@ -1109,13 +1106,13 @@ export class OpenAiCompatChatCompletionResponse extends S.Class<OpenAiCompatChat
  * **Example** (Making a stream chunk choice)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { NonNegativeInt } from "@beep/schema/Number"
  * import { OpenAiCompatAssistantDelta, OpenAiCompatChatCompletionChunkChoice } from "@beep/openai-compat"
  *
  * const choice = OpenAiCompatChatCompletionChunkChoice.make({
  *   delta: O.some(OpenAiCompatAssistantDelta.make({ content: O.some("Hi ") })),
- *   index: NonNegativeInt.make(0)
+ *   index: S.Natural.make(0)
  * })
  *
  * console.log(choice)
@@ -1134,7 +1131,7 @@ export class OpenAiCompatChatCompletionChunkChoice extends S.Class<OpenAiCompatC
     finish_reason: OptionalNullableString.annotateKey({
       description: "Provider finish reason carried by this stream choice.",
     }),
-    index: S.optionalKey(NonNegativeInt).annotateKey({
+    index: S.optionalKey(S.Natural).annotateKey({
       description: "Zero-based stream choice index.",
     }),
   },
@@ -1149,8 +1146,8 @@ export class OpenAiCompatChatCompletionChunkChoice extends S.Class<OpenAiCompatC
  * **Example** (Making a stream chunk)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { NonNegativeInt } from "@beep/schema/Number"
  * import {
  *   OpenAiCompatAssistantDelta,
  *   OpenAiCompatChatCompletionChunk,
@@ -1161,7 +1158,7 @@ export class OpenAiCompatChatCompletionChunkChoice extends S.Class<OpenAiCompatC
  *   choices: [
  *     OpenAiCompatChatCompletionChunkChoice.make({
  *       delta: O.some(OpenAiCompatAssistantDelta.make({ content: O.some("Hi ") })),
- *       index: NonNegativeInt.make(0)
+ *       index: S.Natural.make(0)
  *     })
  *   ]
  * })

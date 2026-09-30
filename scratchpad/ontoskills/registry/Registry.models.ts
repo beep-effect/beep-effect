@@ -9,9 +9,11 @@ import {$ScratchpadId} from "@beep/identity";
 import * as S from "effect/Schema";
 import {LiteralKit} from "@beep/schema/LiteralKit";
 import {SemverFromString} from "@beep/schema/Semver";
-import {FilePath, PosInt} from "@beep/schema";
+import { FilePath } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
+
 
 const $I = $ScratchpadId.create("ontoskills/registry/Registry.models");
 

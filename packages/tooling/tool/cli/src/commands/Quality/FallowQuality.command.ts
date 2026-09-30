@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { Fn, NonNegativeInt } from "@beep/schema";
+import { Fn } from "@beep/schema";
 import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { Argument, Command, Flag } from "effect/cli";
@@ -487,9 +487,9 @@ const countFor = (findings: ReadonlyArray<FallowFinding>, attribution: typeof Fi
 
 const attributionSummary = (findings: ReadonlyArray<FallowFinding>): FindingAttributionSummary =>
   FindingAttributionSummary.make({
-    introduced: NonNegativeInt.make(countFor(findings, "introduced")),
-    inheritedAdjacent: NonNegativeInt.make(countFor(findings, "inherited-adjacent")),
-    notApplicable: NonNegativeInt.make(countFor(findings, "not-applicable")),
+    introduced: S.Natural.make(countFor(findings, "introduced")),
+    inheritedAdjacent: S.Natural.make(countFor(findings, "inherited-adjacent")),
+    notApplicable: S.Natural.make(countFor(findings, "not-applicable")),
   });
 
 const attributionKinds = (findings: ReadonlyArray<FallowFinding>): FallowAttributionKinds => {
@@ -1121,9 +1121,9 @@ const makeOkEnvelope = (
   return FallowReportOk.make({
     ...baseEnvelope(feature, options, paths, generatedAt, toolVersion, dirtyWorktree, findings),
     status: "ok",
-    exitStatus: NonNegativeInt.make(exitStatus),
+    exitStatus: S.Natural.make(exitStatus),
     report: FallowReportPayload.make({
-      findingCount: NonNegativeInt.make(A.length(findings)),
+      findingCount: S.Natural.make(A.length(findings)),
       findings,
     }),
   });
@@ -1156,14 +1156,14 @@ const makeFailureEnvelope = (
       FallowReportInvalidJson.make({
         ...base,
         status: "invalid-json",
-        exitStatus: NonNegativeInt.make(exitStatus),
+        exitStatus: S.Natural.make(exitStatus),
         stderrExcerpt: message,
       }),
     "invalid-report": () =>
       FallowReportInvalidReport.make({
         ...base,
         status: "invalid-report",
-        exitStatus: NonNegativeInt.make(exitStatus),
+        exitStatus: S.Natural.make(exitStatus),
         stderrExcerpt: message,
       }),
     "tool-failed": () =>

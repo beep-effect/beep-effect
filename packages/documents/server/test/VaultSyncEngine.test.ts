@@ -20,7 +20,6 @@ import {
   SyncOperationRepository,
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
-import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -140,9 +139,9 @@ const renameVaultEntry = Effect.fn("VaultSyncEngineTest.renameVaultEntry")(funct
 const rootFileSeed = (relPath: string, contents: string) =>
   SyncItemSeed.make({
     contentDigest: O.some(digestOf(contents)),
-    contentSizeBytes: O.some(NonNegativeInt.make(encodeText(contents).byteLength)),
+    contentSizeBytes: O.some(S.Natural.make(encodeText(contents).byteLength)),
     itemKind: "file",
-    localGeneration: NonNegativeInt.make(1),
+    localGeneration: S.Natural.make(1),
     localRelPath: VaultRelPath.make(relPath),
     provider: "box",
     syncState: "pending",
@@ -156,10 +155,10 @@ const rootUploadSeed = (
   status: DomainSyncOperation.SyncOperationStatus
 ) =>
   SyncOperationSeed.make({
-    attemptCount: NonNegativeInt.make(0),
+    attemptCount: S.Natural.make(0),
     idempotencyKey: `box:${workspaceId}:uploadFile:${relPath}:1`,
     inputContentDigest: O.some(digestOf(contents)),
-    inputGeneration: NonNegativeInt.make(1),
+    inputGeneration: S.Natural.make(1),
     operationType: "uploadFile",
     provider: "box",
     status,

@@ -1,5 +1,4 @@
 import { Contract } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -33,7 +32,7 @@ const sampleDocument = Contract.AnnotatedDocument.make({
       id: Contract.ChunkId.make("chunk-1"),
       kind: "sentence",
       provenance: sampleProvenance,
-      span: Contract.Span.make({ end: NonNegativeInt.make(11), start: NonNegativeInt.make(0) }),
+      span: Contract.Span.make({ end: S.Natural.make(11), start: S.Natural.make(0) }),
       text: "Hello world",
     }),
   ],
@@ -51,7 +50,7 @@ const sampleDocument = Contract.AnnotatedDocument.make({
       chunkId: Contract.ChunkId.make("chunk-1"),
       id: Contract.MentionId.make("mention-1"),
       provenance: sampleProvenance,
-      span: Contract.Span.make({ end: NonNegativeInt.make(11), start: NonNegativeInt.make(6) }),
+      span: Contract.Span.make({ end: S.Natural.make(11), start: S.Natural.make(6) }),
       text: "world",
     }),
   ],
@@ -144,7 +143,7 @@ describe("Span", () => {
     ([a, b]) => {
       const start = Math.min(a, b);
       const end = Math.max(a, b);
-      const span = Contract.Span.make({ end: NonNegativeInt.make(end), start: NonNegativeInt.make(start) });
+      const span = Contract.Span.make({ end: S.Natural.make(end), start: S.Natural.make(start) });
       return span.start <= span.end && span.start === start && span.end === end;
     },
     { arbitrary: fcRuns(100) }
@@ -187,7 +186,7 @@ describe("Span", () => {
   );
 
   it("rejects spans whose end precedes start", () => {
-    expect(() => Contract.Span.make({ end: NonNegativeInt.make(4), start: NonNegativeInt.make(5) })).toThrow();
+    expect(() => Contract.Span.make({ end: S.Natural.make(4), start: S.Natural.make(5) })).toThrow();
   });
 });
 
@@ -290,7 +289,7 @@ it.effect("encodes Contract.Span through its generation link", () =>
     const codec = S.make<S.Codec<Contract.Span, unknown>>(
       SchemaAST.decodeTo(link.to, SchemaAST.toType(Contract.Span.ast), link.transformation)
     );
-    const value = Contract.Span.make({ start: NonNegativeInt.make(1), end: NonNegativeInt.make(4) });
+    const value = Contract.Span.make({ start: S.Natural.make(1), end: S.Natural.make(4) });
     expect(yield* S.encodeEffect(codec)(value)).toEqual(value);
   })
 );

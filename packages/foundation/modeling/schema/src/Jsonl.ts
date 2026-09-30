@@ -11,7 +11,6 @@ import { Effect, flow, pipe, SchemaGetter, SchemaIssue } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { isNonNegative } from "./Number.ts";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Jsonl");
@@ -25,7 +24,7 @@ class JsonlChunkParseError extends S.Class<JsonlChunkParseError>($I`JsonlChunkPa
 class JsonlChunkParseResult extends S.Class<JsonlChunkParseResult>($I`JsonlChunkParseResult`)({
   done: S.Boolean,
   error: S.NullOr(JsonlChunkParseError),
-  read: S.Int.check(isNonNegative),
+  read: S.Int.check(S.isGreaterThanOrEqualTo(0)),
   values: S.Unknown,
 }) {}
 

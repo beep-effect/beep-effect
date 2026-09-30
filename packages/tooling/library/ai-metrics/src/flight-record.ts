@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegNum, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -143,7 +143,7 @@ class ClosedFlightWait extends S.Class<ClosedFlightWait>($I`ClosedFlightWait`)(
     waitId: Sha256Hex,
     openedAt: S.DateTimeUtcFromString,
     closedAt: S.DateTimeUtcFromString,
-    durationMs: NonNegNum,
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
     reason: WaitReason,
     evidenceTier: EvidenceTier,
   },

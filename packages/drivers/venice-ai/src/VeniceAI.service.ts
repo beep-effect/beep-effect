@@ -8,7 +8,6 @@
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { HttpStatus } from "@beep/schema/HttpStatus";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { URLStr } from "@beep/schema/URL";
 import { A, O, Str } from "@beep/utils";
 import { Config, Context, Effect, flow, Layer, pipe, Result, SchemaGetter, Stream } from "effect";
@@ -619,14 +618,14 @@ export type VeniceAIResponse = typeof VeniceAIResponse.Type;
  * **Example** (Make streaming SSE event)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Number"
+ * import * as S from "effect/Schema"
  * import { VeniceAIServerSentEvent } from "@beep/venice-ai"
  * import * as O from "effect/Option"
  *
  * const event = VeniceAIServerSentEvent.make({
  *   data: O.some({ delta: "hello" }),
  *   done: false,
- *   index: NonNegativeInt.make(0)
+ *   index: S.Natural.make(0)
  * })
  *
  * console.log(event)
@@ -642,7 +641,7 @@ export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I
       S.annotateKey({ description: "Decoded SSE payload when the event carries data." })
     ),
     done: S.Boolean.annotateKey({ description: "Whether this SSE event is the terminal [DONE] marker." }),
-    index: NonNegativeInt.annotateKey({ description: "Zero-based stream event index." }),
+    index: S.Natural.annotateKey({ description: "Zero-based stream event index." }),
   },
   $I.annote("VeniceAIServerSentEvent", {
     description: "Parsed server-sent event emitted by Venice streaming endpoints.",
@@ -1886,11 +1885,11 @@ const parseSseData = (
   index: number
 ): Effect.Effect<VeniceAIServerSentEvent, VeniceAIError> =>
   data === "[DONE]"
-    ? Effect.succeed(VeniceAIServerSentEvent.make({ done: true, index: NonNegativeInt.make(index) }))
+    ? Effect.succeed(VeniceAIServerSentEvent.make({ done: true, index: S.Natural.make(index) }))
     : pipe(
         decodeSseJson(data),
         Effect.map((decoded) =>
-          VeniceAIServerSentEvent.make({ data: O.some(decoded), done: false, index: NonNegativeInt.make(index) })
+          VeniceAIServerSentEvent.make({ data: O.some(decoded), done: false, index: S.Natural.make(index) })
         ),
         Effect.mapError((cause) => VeniceAIError.fromDescriptor(descriptor, "sse decoding", { cause }))
       );

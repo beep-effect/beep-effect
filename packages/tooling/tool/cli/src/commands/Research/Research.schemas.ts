@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { SystemdUnitPath } from "../../internal/systemd/index.ts";
 
@@ -226,12 +226,12 @@ export type BrowserKind = typeof BrowserKind.Type;
  * **Example** (Make history-sift options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const options = ResearchHistorySiftOptions.make({
  *   browser: "all",
- *   sinceDays: NonNegativeInt.make(7),
+ *   sinceDays: S.Natural.make(7),
  *   vaultRoot: "/home/user/knowledge"
  * })
  * console.log(options.sinceDays)
@@ -243,7 +243,7 @@ export type BrowserKind = typeof BrowserKind.Type;
 export class ResearchHistorySiftOptions extends S.Class<ResearchHistorySiftOptions>($I`ResearchHistorySiftOptions`)(
   {
     browser: BrowserKind,
-    sinceDays: NonNegativeInt,
+    sinceDays: S.Natural,
     vaultRoot: S.String,
   },
   $I.annote("ResearchHistorySiftOptions", {
@@ -257,15 +257,15 @@ export class ResearchHistorySiftOptions extends S.Class<ResearchHistorySiftOptio
  * **Example** (Make history-sift summary)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ResearchHistorySiftSummary } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = ResearchHistorySiftSummary.make({
- *   profilesScanned: NonNegativeInt.make(2),
- *   skippedFiltered: NonNegativeInt.make(40),
- *   skippedSeen: NonNegativeInt.make(3),
- *   stubsWritten: NonNegativeInt.make(5),
- *   urlsScanned: NonNegativeInt.make(48)
+ *   profilesScanned: S.Natural.make(2),
+ *   skippedFiltered: S.Natural.make(40),
+ *   skippedSeen: S.Natural.make(3),
+ *   stubsWritten: S.Natural.make(5),
+ *   urlsScanned: S.Natural.make(48)
  * })
  * console.log(summary.stubsWritten)
  * ```
@@ -275,11 +275,11 @@ export class ResearchHistorySiftOptions extends S.Class<ResearchHistorySiftOptio
  */
 export class ResearchHistorySiftSummary extends S.Class<ResearchHistorySiftSummary>($I`ResearchHistorySiftSummary`)(
   {
-    profilesScanned: NonNegativeInt,
-    skippedFiltered: NonNegativeInt,
-    skippedSeen: NonNegativeInt,
-    stubsWritten: NonNegativeInt,
-    urlsScanned: NonNegativeInt,
+    profilesScanned: S.Natural,
+    skippedFiltered: S.Natural,
+    skippedSeen: S.Natural,
+    stubsWritten: S.Natural,
+    urlsScanned: S.Natural,
   },
   $I.annote("ResearchHistorySiftSummary", {
     description: "Counts describing one research history-sift run across browser profiles.",
@@ -325,14 +325,14 @@ export class ResearchRepoCardOptions extends S.Class<ResearchRepoCardOptions>($I
  * **Example** (Make repo-card summary)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ResearchRepoCardSummary } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = ResearchRepoCardSummary.make({
- *   cardsSkipped: NonNegativeInt.make(1),
- *   cardsWritten: NonNegativeInt.make(3),
- *   reposScanned: NonNegativeInt.make(4),
- *   starsScanned: NonNegativeInt.make(0)
+ *   cardsSkipped: S.Natural.make(1),
+ *   cardsWritten: S.Natural.make(3),
+ *   reposScanned: S.Natural.make(4),
+ *   starsScanned: S.Natural.make(0)
  * })
  * console.log(summary.cardsWritten)
  * ```
@@ -342,10 +342,10 @@ export class ResearchRepoCardOptions extends S.Class<ResearchRepoCardOptions>($I
  */
 export class ResearchRepoCardSummary extends S.Class<ResearchRepoCardSummary>($I`ResearchRepoCardSummary`)(
   {
-    cardsSkipped: NonNegativeInt,
-    cardsWritten: NonNegativeInt,
-    reposScanned: NonNegativeInt,
-    starsScanned: NonNegativeInt,
+    cardsSkipped: S.Natural,
+    cardsWritten: S.Natural,
+    reposScanned: S.Natural,
+    starsScanned: S.Natural,
   },
   $I.annote("ResearchRepoCardSummary", {
     description: "Counts describing one research repo-card run over cloned and starred repositories.",
@@ -389,13 +389,13 @@ export class ResearchNotionPullOptions extends S.Class<ResearchNotionPullOptions
  * **Example** (Make notion-pull summary)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ResearchNotionPullSummary } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = ResearchNotionPullSummary.make({
- *   cardsWritten: NonNegativeInt.make(4),
- *   pagesSeen: NonNegativeInt.make(6),
- *   skippedSeen: NonNegativeInt.make(2)
+ *   cardsWritten: S.Natural.make(4),
+ *   pagesSeen: S.Natural.make(6),
+ *   skippedSeen: S.Natural.make(2)
  * })
  * console.log(summary.cardsWritten)
  * ```
@@ -405,9 +405,9 @@ export class ResearchNotionPullOptions extends S.Class<ResearchNotionPullOptions
  */
 export class ResearchNotionPullSummary extends S.Class<ResearchNotionPullSummary>($I`ResearchNotionPullSummary`)(
   {
-    cardsWritten: NonNegativeInt,
-    pagesSeen: NonNegativeInt,
-    skippedSeen: NonNegativeInt,
+    cardsWritten: S.Natural,
+    pagesSeen: S.Natural,
+    skippedSeen: S.Natural,
   },
   $I.annote("ResearchNotionPullSummary", {
     description: "Counts describing one research notion-pull run over the saved-links database.",
@@ -420,13 +420,13 @@ export class ResearchNotionPullSummary extends S.Class<ResearchNotionPullSummary
  * **Example** (Make daily options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ResearchDailyOptions } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const options = ResearchDailyOptions.make({
  *   browser: "all",
  *   commit: true,
- *   sinceDays: NonNegativeInt.make(2),
+ *   sinceDays: S.Natural.make(2),
  *   vaultRoot: "/home/user/knowledge"
  * })
  * console.log(options.commit)
@@ -440,7 +440,7 @@ export class ResearchDailyOptions extends S.Class<ResearchDailyOptions>($I`Resea
     browser: BrowserKind,
     commit: S.Boolean,
     notionPage: S.String.pipe(S.optionalKey),
-    sinceDays: NonNegativeInt,
+    sinceDays: S.Natural,
     vaultRoot: S.String,
   },
   $I.annote("ResearchDailyOptions", {
@@ -505,11 +505,11 @@ export class ResearchCognifyOptions extends S.Class<ResearchCognifyOptions>($I`R
  * **Example** (Make cognify summary)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ResearchCognifySummary } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = ResearchCognifySummary.make({
- *   cardsPushed: NonNegativeInt.make(5),
+ *   cardsPushed: S.Natural.make(5),
  *   datasets: ["kb_repos"],
  *   dryRun: false
  * })
@@ -521,7 +521,7 @@ export class ResearchCognifyOptions extends S.Class<ResearchCognifyOptions>($I`R
  */
 export class ResearchCognifySummary extends S.Class<ResearchCognifySummary>($I`ResearchCognifySummary`)(
   {
-    cardsPushed: NonNegativeInt,
+    cardsPushed: S.Natural,
     datasets: S.Array(S.String),
     dryRun: S.Boolean,
   },
@@ -561,13 +561,13 @@ export class ResearchDigestOptions extends S.Class<ResearchDigestOptions>($I`Res
  * **Example** (Make digest summary)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ResearchDigestSummary } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = ResearchDigestSummary.make({
  *   digestPath: "digest/2026-07-05.md",
- *   inboxBacklog: NonNegativeInt.make(3),
- *   newCards: NonNegativeInt.make(7)
+ *   inboxBacklog: S.Natural.make(3),
+ *   newCards: S.Natural.make(7)
  * })
  * console.log(summary.digestPath)
  * ```
@@ -578,8 +578,8 @@ export class ResearchDigestOptions extends S.Class<ResearchDigestOptions>($I`Res
 export class ResearchDigestSummary extends S.Class<ResearchDigestSummary>($I`ResearchDigestSummary`)(
   {
     digestPath: S.String,
-    inboxBacklog: NonNegativeInt,
-    newCards: NonNegativeInt,
+    inboxBacklog: S.Natural,
+    newCards: S.Natural,
   },
   $I.annote("ResearchDigestSummary", {
     description: "Counts describing one research digest note.",
@@ -678,10 +678,10 @@ export class ResearchStatusOptions extends S.Class<ResearchStatusOptions>($I`Res
  * **Example** (Make source-type count)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ResearchSourceTypeCount } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const row = ResearchSourceTypeCount.make({ cards: NonNegativeInt.make(3), sourceType: "article" })
+ * const row = ResearchSourceTypeCount.make({ cards: S.Natural.make(3), sourceType: "article" })
  * console.log(row.cards)
  * ```
  *
@@ -690,7 +690,7 @@ export class ResearchStatusOptions extends S.Class<ResearchStatusOptions>($I`Res
  */
 export class ResearchSourceTypeCount extends S.Class<ResearchSourceTypeCount>($I`ResearchSourceTypeCount`)(
   {
-    cards: NonNegativeInt,
+    cards: S.Natural,
     sourceType: CardSourceType,
   },
   $I.annote("ResearchSourceTypeCount", {
@@ -704,15 +704,15 @@ export class ResearchSourceTypeCount extends S.Class<ResearchSourceTypeCount>($I
  * **Example** (Make status summary)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ResearchStatusSummary } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = ResearchStatusSummary.make({
  *   bySourceType: [],
- *   inboxCards: NonNegativeInt.make(0),
- *   pendingCognify: NonNegativeInt.make(0),
- *   seenUrls: NonNegativeInt.make(0),
- *   totalCards: NonNegativeInt.make(0)
+ *   inboxCards: S.Natural.make(0),
+ *   pendingCognify: S.Natural.make(0),
+ *   seenUrls: S.Natural.make(0),
+ *   totalCards: S.Natural.make(0)
  * })
  * console.log(summary.totalCards)
  * ```
@@ -723,10 +723,10 @@ export class ResearchSourceTypeCount extends S.Class<ResearchSourceTypeCount>($I
 export class ResearchStatusSummary extends S.Class<ResearchStatusSummary>($I`ResearchStatusSummary`)(
   {
     bySourceType: S.Array(ResearchSourceTypeCount),
-    inboxCards: NonNegativeInt,
-    pendingCognify: NonNegativeInt,
-    seenUrls: NonNegativeInt,
-    totalCards: NonNegativeInt,
+    inboxCards: S.Natural,
+    pendingCognify: S.Natural,
+    seenUrls: S.Natural,
+    totalCards: S.Natural,
   },
   $I.annote("ResearchStatusSummary", {
     description: "Aggregate vault and catalog counts reported by research status.",

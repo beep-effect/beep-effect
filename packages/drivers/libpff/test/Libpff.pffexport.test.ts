@@ -13,7 +13,6 @@ import {
   PffexportEngineConfig,
   PffexportMessageRecord,
 } from "@beep/libpff";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -26,6 +25,8 @@ import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeArtifactId = S.decodeEffect(ArtifactId);
 const decodeContentDigest = S.decodeEffect(ContentDigest);
@@ -275,7 +276,7 @@ const fixture = Effect.fn(function* (stubScript: string) {
       locator: ArtifactLocator.make({ kind: "file", value: locatorValue }),
       name: "mailbox.pst",
       relativePath,
-      sizeBytes: NonNegativeInt.make(sourceBytes.length),
+      sizeBytes: S.Natural.make(sourceBytes.length),
       bytes: sourceBytes,
     }),
   });

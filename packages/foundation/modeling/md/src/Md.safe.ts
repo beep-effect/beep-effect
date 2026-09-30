@@ -16,7 +16,6 @@ import { Html } from "@beep/html";
 import { HtmlConformanceIssue } from "@beep/html/Html.conformance";
 import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html/Html.policy";
 import { $MdId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "@beep/utils/Array";
@@ -339,12 +338,12 @@ export class HtmlProjectionSafetyViolation extends S.TaggedError<HtmlProjectionS
  * **Example** (Construct a complexity violation)
  *
  * ```ts import.meta.vitest name="Construct a complexity violation"
+ * import * as S from "effect/Schema"
  * import { DocumentComplexitySafetyViolation, MAX_SAFE_DOCUMENT_NODES } from "@beep/md/Md.safe"
- * import { NonNegativeInt } from "@beep/schema/Int"
  *
  * const issue = DocumentComplexitySafetyViolation.make({
- *   maxNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES),
- *   observedNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES + 1),
+ *   maxNodes: S.Natural.make(MAX_SAFE_DOCUMENT_NODES),
+ *   observedNodes: S.Natural.make(MAX_SAFE_DOCUMENT_NODES + 1),
  * })
  * issue._tag // => "DocumentComplexity"
  * ```
@@ -357,8 +356,8 @@ export class DocumentComplexitySafetyViolation extends S.TaggedError<DocumentCom
 )(
   "DocumentComplexity",
   {
-    maxNodes: NonNegativeInt,
-    observedNodes: NonNegativeInt,
+    maxNodes: S.Natural,
+    observedNodes: S.Natural,
   },
   $I.annoteError<DocumentComplexitySafetyViolation>("DocumentComplexitySafetyViolation", {
     description: "A Markdown AST whose bounded node count exceeds the user-content safety budget.",
@@ -455,8 +454,8 @@ const documentComplexitySafetyIssues = (document: Document): ReadonlyArray<Docum
   return observedNodes > MAX_SAFE_DOCUMENT_NODES
     ? [
         DocumentComplexitySafetyViolation.make({
-          maxNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES),
-          observedNodes: NonNegativeInt.make(observedNodes),
+          maxNodes: S.Natural.make(MAX_SAFE_DOCUMENT_NODES),
+          observedNodes: S.Natural.make(observedNodes),
         }),
       ]
     : A.emptyReadonly();

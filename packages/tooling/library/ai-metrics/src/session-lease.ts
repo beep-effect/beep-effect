@@ -6,13 +6,14 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import { dual } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import {
   combineOipTaints,
@@ -561,7 +562,7 @@ export class SessionLeaseExpiryCandidate extends S.Class<SessionLeaseExpiryCandi
     leaseDigest: Sha256Hex,
     evaluatedAt: S.DateTimeUtcFromString,
     ttlMs: PosInt,
-    idleMs: NonNegativeInt,
+    idleMs: S.Natural,
   }).check(
     S.makeFilter(
       (input) => {

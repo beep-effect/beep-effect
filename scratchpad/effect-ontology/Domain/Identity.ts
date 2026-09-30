@@ -13,7 +13,6 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import type { NonNegativeInt } from "@beep/schema";
 import { SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Match } from "effect";
 import type * as Brand from "effect/Brand";
@@ -855,7 +854,7 @@ export const ChunkId = S.String.check(
     }),
     SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics((schema) => ({
-      fromDocument: dual(2, (documentId: DocumentId, index: NonNegativeInt): typeof schema.Type =>
+      fromDocument: dual(2, (documentId: DocumentId, index: number): typeof schema.Type =>
         schema.make(`${documentId}-chunk-${index}`)
       ),
     }))

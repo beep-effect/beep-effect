@@ -1,5 +1,4 @@
 import { $CiopsId } from "@beep/identity/packages";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -41,6 +40,8 @@ import {
 import { emitScheduleAbox } from "@/projection/Turtle";
 import type { CiOpsProjectionShape } from "@/projection/CiOpsProjection";
 import type { AdmissionPolicyParams, AdmissionWorkKind } from "@/projection/Schemas";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const aboxPath = "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
 const journalPath =
@@ -108,7 +109,7 @@ const inputFor = (
     policy,
     pending,
     ledger,
-    projectionInstantMillis: NonNegativeInt.make(projectionInstantMillis),
+    projectionInstantMillis: S.Natural.make(projectionInstantMillis),
     policyDigest: "policy-digest",
     journalPrefixDigest: "journal-prefix-digest",
   });
@@ -231,7 +232,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
           kind: "publish",
           priority: "publish",
           weightTokens: policy.weights.publish,
-          enqueuedAtMillis: NonNegativeInt.make(enqueuedAtMillis),
+          enqueuedAtMillis: S.Natural.make(enqueuedAtMillis),
         });
         const verify = PendingRequest.make({
           ...verifySeed,
@@ -239,7 +240,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
           kind: "review-fix",
           priority: "verify",
           weightTokens: policy.weights.reviewFix,
-          enqueuedAtMillis: NonNegativeInt.make(enqueuedAtMillis + 1),
+          enqueuedAtMillis: S.Natural.make(enqueuedAtMillis + 1),
         });
         const instant = enqueuedAtMillis + policy.publishAgingSeconds * 1000 + 1;
         const proposal = yield* projectSchedule(inputFor(policy, [verify, publish], emptyTokenLedger, instant));
@@ -260,7 +261,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
           ["active-review-3", policy.weights.reviewFix]
         ),
         activeReviewFixNonces: HashSet.make("active-review-1", "active-review-2", "active-review-3"),
-        activeTokenTotal: NonNegativeInt.make(3),
+        activeTokenTotal: S.Natural.make(3),
       });
       const reviewFix = PendingRequest.make({
         nonce: "queued-review-fix",
@@ -268,7 +269,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
         priority: "verify",
         weightTokens: policy.weights.reviewFix,
         originKey: "",
-        enqueuedAtMillis: NonNegativeInt.make(0),
+        enqueuedAtMillis: S.Natural.make(0),
       });
       const fullProof = PendingRequest.make({
         nonce: "queued-full-proof",
@@ -276,7 +277,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
         priority: "verify",
         weightTokens: policy.weights.fullProof,
         originKey: "origin-a",
-        enqueuedAtMillis: NonNegativeInt.make(1),
+        enqueuedAtMillis: S.Natural.make(1),
       });
       const capped = yield* projectSchedule(inputFor(policy, [reviewFix, fullProof], saturatedLedger, 1));
 
@@ -369,28 +370,28 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
     Effect.gen(function* () {
       const outcome: ReplayEventOutcome = "pass";
       const report = ReplayReport.make({
-        eventCount: NonNegativeInt.make(1),
-        admittedCount: NonNegativeInt.make(1),
-        releasedCount: NonNegativeInt.make(0),
+        eventCount: S.Natural.make(1),
+        admittedCount: S.Natural.make(1),
+        releasedCount: S.Natural.make(0),
         verdicts: [
           ReplayEventVerdict.make({
-            eventIndex: NonNegativeInt.make(0),
-            admittedAtMillis: NonNegativeInt.make(1_000),
+            eventIndex: S.Natural.make(0),
+            admittedAtMillis: S.Natural.make(1_000),
             expectedNonce: "request-1",
             projectedNonce: "request-1",
-            pendingCount: NonNegativeInt.make(1),
-            activeTokenTotal: NonNegativeInt.make(0),
+            pendingCount: S.Natural.make(1),
+            activeTokenTotal: S.Natural.make(0),
             outcome,
           }),
         ],
         mismatches: [],
         evictions: [
           InferredLeaseEviction.make({
-            eventIndex: NonNegativeInt.make(66),
+            eventIndex: S.Natural.make(66),
             evictedNonce: "1813f29f",
             weightTokens: PosInt.make(5),
-            activeTokenTotalBefore: NonNegativeInt.make(8),
-            activeTokenTotalAfter: NonNegativeInt.make(3),
+            activeTokenTotalBefore: S.Natural.make(8),
+            activeTokenTotalAfter: S.Natural.make(3),
           }),
         ],
         passed: true,
@@ -412,7 +413,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
         ScheduleProposal.make({
           episodeId: "verification-1",
           proposalId,
-          projectionInstantMillis: NonNegativeInt.make(1_000),
+          projectionInstantMillis: S.Natural.make(1_000),
           steps: [],
           deferredTail: [],
           policyDigest: "policy",
@@ -441,7 +442,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
         priority: "verify",
         weightTokens: policy.weights.reviewFix,
         originKey: "origin-a",
-        enqueuedAtMillis: NonNegativeInt.make(1),
+        enqueuedAtMillis: S.Natural.make(1),
       });
       const stepped = yield* projectSchedule(inputFor(policy, [request], emptyTokenLedger, 1)).pipe(
         Effect.flatMap(emitScheduleAbox)
@@ -465,7 +466,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
           priority: "verify",
           weightTokens: policy.weights.mergedPreview,
           originKey: "origin-test",
-          enqueuedAtMillis: NonNegativeInt.make(index),
+          enqueuedAtMillis: S.Natural.make(index),
         })
       );
       const proposal = yield* projectSchedule(inputFor(policy, pending, emptyTokenLedger, 1_000));
@@ -494,12 +495,12 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
         priority: "verify",
         weightTokens: policy.weights.fullProof,
         originKey: "origin-test",
-        enqueuedAtMillis: NonNegativeInt.make(0),
+        enqueuedAtMillis: S.Natural.make(0),
       });
       const ledger = TokenLedgerState.make({
         activeGrants: HashMap.make(["active", policy.capacityMaxTokens]),
         activeReviewFixNonces: HashSet.empty(),
-        activeTokenTotal: NonNegativeInt.make(policy.capacityMaxTokens),
+        activeTokenTotal: S.Natural.make(policy.capacityMaxTokens),
       });
       const empty = yield* projectSchedule(inputFor(policy, []));
       const deferred = yield* projectSchedule(inputFor(policy, [request], ledger));

@@ -8,7 +8,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
 import { Attributes, EntityId } from "./shared.ts";
@@ -92,7 +92,7 @@ export class MentionRecord extends S.TaggedClass<MentionRecord>($I`MentionRecord
       S.withConstructorDefault(Effect.succeed(mentionRecordAttributesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(mentionRecordAttributesDefault)),
       S.annotateKey({ description: "Property values preserved from extraction." })
     ),
-    chunkIndex: NonNegativeInt.annotateKey({
+    chunkIndex: S.Natural.annotateKey({
       description: "Zero-based source chunk index.",
     }),
     confidence: S.OptionFromOptionalKey(Confidence).pipe(

@@ -11,7 +11,6 @@
  * @since 0.0.0
  */
 
-import { PosInt } from "@beep/schema";
 import { dual } from "effect/Function";
 import type { SafeObject } from "../Codemode.values.ts";
 import { A, O, P, pipe, Str } from "@beep/utils";
@@ -31,6 +30,7 @@ import {
   sourceLocation,
 } from "./Interpreter.model.ts";
 import { containsRuntimeReference } from "./Interpreter.references.ts";
+import { PosInt } from "../PosInt.ts";
 
 const encodeUnknownJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const isErrorConstructorName = S.is(ErrorConstructorName);

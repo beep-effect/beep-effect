@@ -2,7 +2,6 @@
 
 import { DOC_TEXT_ENGINE_VERSION } from "@beep/doc-text";
 import { isUtf16Boundary, SourceTextExtractor, TextAnchor } from "@beep/provenance";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -217,9 +216,9 @@ describe("C0 F1 input services", () => {
             const receipt = yield* canonicalizer.verify(
               canonical,
               TextAnchor.make({
-                endChar: NonNegativeInt.make(width),
+                endChar: S.Natural.make(width),
                 quote,
-                startChar: NonNegativeInt.make(0),
+                startChar: S.Natural.make(0),
               })
             );
             expect(receipt.anchor.quote).toBe(quote);

@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
@@ -59,17 +58,17 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
  * **Example** (Make extract summary counts)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusExtractSummary } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = CorpusExtractSummary.make({
- *   childArtifactCount: NonNegativeInt.make(1),
- *   duplicatesSkipped: NonNegativeInt.make(0),
- *   failedCount: NonNegativeInt.make(0),
- *   skippedCount: NonNegativeInt.make(0),
- *   sourceCount: NonNegativeInt.make(2),
- *   succeededCount: NonNegativeInt.make(2),
- *   textArtifactCount: NonNegativeInt.make(2)
+ *   childArtifactCount: S.Natural.make(1),
+ *   duplicatesSkipped: S.Natural.make(0),
+ *   failedCount: S.Natural.make(0),
+ *   skippedCount: S.Natural.make(0),
+ *   sourceCount: S.Natural.make(2),
+ *   succeededCount: S.Natural.make(2),
+ *   textArtifactCount: S.Natural.make(2)
  * })
  * console.log(summary.succeededCount) // 2
  * ```
@@ -79,13 +78,13 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
  */
 export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`CorpusExtractSummary`)(
   {
-    childArtifactCount: NonNegativeInt,
-    duplicatesSkipped: NonNegativeInt,
-    failedCount: NonNegativeInt,
-    skippedCount: NonNegativeInt,
-    sourceCount: NonNegativeInt,
-    succeededCount: NonNegativeInt,
-    textArtifactCount: NonNegativeInt,
+    childArtifactCount: S.Natural,
+    duplicatesSkipped: S.Natural,
+    failedCount: S.Natural,
+    skippedCount: S.Natural,
+    sourceCount: S.Natural,
+    succeededCount: S.Natural,
+    textArtifactCount: S.Natural,
   },
   $I.annote("CorpusExtractSummary", {
     description: "Summary counts returned by corpus extract.",
@@ -98,18 +97,18 @@ export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`Corpu
  * **Example** (Encode extract summary JSON)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusExtractSummary, encodeCorpusExtractSummaryJson } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const summary = CorpusExtractSummary.make({
- *   childArtifactCount: NonNegativeInt.make(0),
- *   duplicatesSkipped: NonNegativeInt.make(0),
- *   failedCount: NonNegativeInt.make(0),
- *   skippedCount: NonNegativeInt.make(0),
- *   sourceCount: NonNegativeInt.make(1),
- *   succeededCount: NonNegativeInt.make(1),
- *   textArtifactCount: NonNegativeInt.make(1)
+ *   childArtifactCount: S.Natural.make(0),
+ *   duplicatesSkipped: S.Natural.make(0),
+ *   failedCount: S.Natural.make(0),
+ *   skippedCount: S.Natural.make(0),
+ *   sourceCount: S.Natural.make(1),
+ *   succeededCount: S.Natural.make(1),
+ *   textArtifactCount: S.Natural.make(1)
  * })
  *
  * Effect.runPromise(encodeCorpusExtractSummaryJson(summary)).then((json) => console.log(json.includes("\"sourceCount\":1"))) // true

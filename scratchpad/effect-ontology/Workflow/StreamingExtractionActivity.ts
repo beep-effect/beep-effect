@@ -21,7 +21,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { provBundleToDataset } from "@beep/rdf/ProvRdf";
-import { NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
 import { Crypto, DateTime, Duration, Effect, pipe } from "effect";
 import * as Hex from "effect/encoding/Hex";
 import * as A from "effect/Array";
@@ -51,6 +50,7 @@ import {
 } from "../Utils/ClaimFactory.ts";
 import { dual3 } from "../Utils/Dual.ts";
 import { makeProvenanceUri } from "../Utils/Provenance.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/StreamingExtractionActivity");
 const isActivityError = S.is(ActivityError);
@@ -107,25 +107,25 @@ export const StreamingExtractionOutput = S.Struct({
     })
   ),
   /** Number of entities written to the graph. */
-  entityCount: NonNegativeInt.pipe(
+  entityCount: S.Natural.pipe(
     $I.annoteKey("StreamingExtractionOutput.entityCount", {
       description: "Number of entities written to the graph.",
     })
   ),
   /** Number of relations written to the graph. */
-  relationCount: NonNegativeInt.pipe(
+  relationCount: S.Natural.pipe(
     $I.annoteKey("StreamingExtractionOutput.relationCount", {
       description: "Number of relations written to the graph.",
     })
   ),
   /** Number of claims derived from the extracted graph. */
-  claimCount: NonNegativeInt.pipe(
+  claimCount: S.Natural.pipe(
     $I.annoteKey("StreamingExtractionOutput.claimCount", {
       description: "Number of claims derived from the extracted graph.",
     })
   ),
   /** Total extraction duration in milliseconds. */
-  durationMs: NonNegNum.pipe(
+  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
     $I.annoteKey("StreamingExtractionOutput.durationMs", {
       description: "Total extraction duration in milliseconds.",
     })
@@ -197,12 +197,13 @@ const extractOntologyName = (uri: string): OntologyName => {
  *
  * ```ts
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
- * import { PosInt } from "@beep/schema/Int"
  * import { Duration } from "effect"
  * import { BatchId, ContentHash, DocumentId, GcsUri, Namespace, OntologyName } from "@effect-ontology/Identity"
  * import { ExtractionActivityInput } from "@effect-ontology/Schema/Batch"
  * import { buildRunConfig } from "@effect-ontology/Workflow/StreamingExtractionActivity"
  * import * as S from "effect/Schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const input = ExtractionActivityInput.make({
  *   batchId: BatchId.make("batch-deadbeefcafe"),
@@ -258,7 +259,7 @@ export const buildRunConfig = dual3(
     const chunkingConfig = ChunkingConfig.make({
       maxChunkSize: PosInt.make(input.chunking.chunkSize),
       preserveSentences: input.chunking.preserveSentences,
-      overlapSentences: NonNegativeInt.make(2),
+      overlapSentences: S.Natural.make(2),
     });
 
     // Build LlmConfig from service config
@@ -583,19 +584,19 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       yield* Effect.logInfo("Streaming extraction activity complete", {
         batchId: input.batchId,
         documentId: input.documentId,
-        entityCount: NonNegativeInt.make(graph.entities.length),
-        relationCount: NonNegativeInt.make(graph.relations.length),
-        claimCount: NonNegativeInt.make(claims.length),
-        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+        entityCount: S.Natural.make(graph.entities.length),
+        relationCount: S.Natural.make(graph.relations.length),
+        claimCount: S.Natural.make(claims.length),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
       });
 
       return {
         documentId: input.documentId,
         graphUri,
-        entityCount: NonNegativeInt.make(graph.entities.length),
-        relationCount: NonNegativeInt.make(graph.relations.length),
-        claimCount: NonNegativeInt.make(claims.length),
-        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+        entityCount: S.Natural.make(graph.entities.length),
+        relationCount: S.Natural.make(graph.relations.length),
+        claimCount: S.Natural.make(claims.length),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,

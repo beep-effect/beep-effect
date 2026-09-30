@@ -1,7 +1,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { ObjectRef } from "@beep/rdf/Prov";
-import { NonNegativeInt } from "@beep/schema";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Context, Duration, Effect, Equal, HashMap, Layer, Ref } from "effect";
 import * as O from "effect/Option";
@@ -178,8 +177,8 @@ describe("durable activity boundaries", () => {
           confidence: Confidence.make(0.92),
           evidence: {
             text: "Ada",
-            startOffset: NonNegativeInt.make(4),
-            endOffset: NonNegativeInt.make(7),
+            startOffset: S.Natural.make(4),
+            endOffset: S.Natural.make(7),
           },
         });
         const artifact = ClaimExtractionArtifact.make({
@@ -211,8 +210,8 @@ describe("durable activity boundaries", () => {
             yield* Ref.set(persistedClaims, claims);
             return PersistenceResult.make({
               articleId: "article-1",
-              claimsInserted: NonNegativeInt.make(claims.length),
-              claimsTotal: NonNegativeInt.make(claims.length),
+              claimsInserted: S.Natural.make(claims.length),
+              claimsTotal: S.Natural.make(claims.length),
             });
           }),
         });
@@ -247,10 +246,10 @@ describe("durable activity boundaries", () => {
               newCanonicals: [IRI.make("https://example.test/entity/canonical")],
               mergedEntities: [],
               stats: ResolutionStats.make({
-                totalEntities: NonNegativeInt.make(1),
-                matchedToExisting: NonNegativeInt.make(0),
-                createdNew: NonNegativeInt.make(1),
-                candidatesEvaluated: NonNegativeInt.make(0),
+                totalEntities: S.Natural.make(1),
+                matchedToExisting: S.Natural.make(0),
+                createdNew: S.Natural.make(1),
+                candidatesEvaluated: S.Natural.make(0),
               }),
             });
           }),

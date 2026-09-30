@@ -11,7 +11,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { ConfigProvider, Console, Duration, Effect, FileSystem, Layer, Path } from "effect";
 import type { Scope } from "effect/Scope";
@@ -36,6 +35,7 @@ import { withErrorHandler } from "../ErrorHandler.ts";
 const encodePrettyUnknown = S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }));
 import type { ExtractionError } from "../../Domain/Error/Extraction.ts";
 import type { RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Extract");
 
@@ -193,7 +193,7 @@ const extractHandler = Effect.fn("extractHandler")(function* (
     chunking: ChunkingConfig.make({
       maxChunkSize: PosInt.make(2000),
       preserveSentences: true,
-      overlapSentences: NonNegativeInt.make(2),
+      overlapSentences: S.Natural.make(2),
     }),
     llm: LlmConfig.make({
       model: "claude-haiku-4-5",

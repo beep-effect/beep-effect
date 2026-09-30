@@ -7,7 +7,7 @@
 
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 
@@ -166,14 +166,14 @@ export class IndexedBlock extends S.Class<IndexedBlock>($I`IndexedBlock`)(
  * **Example** (Make provider usage metadata)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ProviderUsageMetadata } from "@beep/agents-use-cases/public"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const usage = ProviderUsageMetadata.make({
- *   inputTokens: NonNegativeInt.make(12),
+ *   inputTokens: S.Natural.make(12),
  *   model: "fixture",
- *   outputTokens: NonNegativeInt.make(8),
+ *   outputTokens: S.Natural.make(8),
  *   provider: "fixture",
  *   stopReason: O.some("stop")
  * })
@@ -185,13 +185,13 @@ export class IndexedBlock extends S.Class<IndexedBlock>($I`IndexedBlock`)(
  */
 export class ProviderUsageMetadata extends S.Class<ProviderUsageMetadata>($I`ProviderUsageMetadata`)(
   {
-    inputTokens: NonNegativeInt.annotateKey({
+    inputTokens: S.Natural.annotateKey({
       description: "Total provider-reported input tokens, including cached input when the provider counts it.",
     }),
     model: S.NonEmptyString.annotateKey({
       description: "Provider-returned model identifier for the finalized request.",
     }),
-    outputTokens: NonNegativeInt.annotateKey({
+    outputTokens: S.Natural.annotateKey({
       description: "Total provider-reported output tokens for the finalized request.",
     }),
     provider: S.NonEmptyString.annotateKey({

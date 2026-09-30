@@ -6,7 +6,6 @@
  */
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Effect } from "effect";
@@ -44,7 +43,7 @@ export class Turn extends ProductEntity.Entity<Turn>()(WorkspaceIdentity.TurnId)
     threadId: WorkspaceIdentity.ThreadId.annotateKey({
       description: "Thread containing the turn.",
     }).pipe(pg.integer(), pg.columnName("thread_id"), pg.index()),
-    turnIndex: NonNegativeInt.annotateKey({
+    turnIndex: S.Natural.annotateKey({
       description: "Zero-based turn ordering index within the thread.",
     }).pipe(pg.integer(), pg.columnName("turn_index"), pg.index()),
   },

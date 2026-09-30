@@ -15,11 +15,11 @@ import {
   touchedGroups,
   touchedGroupsInEvents,
 } from "@beep/dock";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { Atom, AtomRegistry } from "effect/reactivity";
+import * as S from "effect/Schema";
 import { groupOne, groupTwo, panelOne } from "./Fixtures.ts";
 import type { DockAtomFeedEntry, DockEvent } from "@beep/dock";
 
@@ -28,14 +28,14 @@ const origin = ApiCommandOrigin.make({ requestId: "recency-test" });
 
 const changed = (submission: number, events: readonly [DockEvent, ...ReadonlyArray<DockEvent>]) =>
   DockAtomFeedSuccess.make({
-    submission: NonNegativeInt.make(submission),
+    submission: S.Natural.make(submission),
     operationKind: "dispatchCommand",
     outcome: DockMutationCompleted.make({
       outcome: DockMutationOutcome.make({
         commandId: CommandId.make(`command-${submission}`),
         origin,
         result: DockChanged.make({
-          previousRevision: NonNegativeInt.make(submission),
+          previousRevision: S.Natural.make(submission),
           state: workspace,
           events,
         }),
@@ -45,20 +45,20 @@ const changed = (submission: number, events: readonly [DockEvent, ...ReadonlyArr
 
 const unchanged = (submission: number) =>
   DockAtomFeedSuccess.make({
-    submission: NonNegativeInt.make(submission),
+    submission: S.Natural.make(submission),
     operationKind: "dispatchCommand",
     outcome: DockMutationCompleted.make({
       outcome: DockMutationOutcome.make({
         commandId: CommandId.make(`command-${submission}`),
         origin,
-        result: DockUnchanged.make({ revision: NonNegativeInt.make(submission), reason: "panel-already-active" }),
+        result: DockUnchanged.make({ revision: S.Natural.make(submission), reason: "panel-already-active" }),
       }),
     }),
   });
 
 const saved = (submission: number) =>
   DockAtomFeedSuccess.make({
-    submission: NonNegativeInt.make(submission),
+    submission: S.Natural.make(submission),
     operationKind: "saveSnapshot",
     outcome: DockSnapshotSaved.make({ snapshot: "{}" }),
   });

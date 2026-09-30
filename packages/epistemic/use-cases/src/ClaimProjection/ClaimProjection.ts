@@ -13,7 +13,7 @@
 import * as DomainCandidateClaim from "@beep/epistemic-domain/entities/CandidateClaim";
 import { ClaimLifecycle, ClaimProjectionView, ClaimStateCounts } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Fn, NonNegativeInt } from "@beep/schema";
+import { Fn } from "@beep/schema";
 import { Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -94,12 +94,12 @@ export const projectClaims: ClaimProjection = ClaimProjection.implementSync((aut
     A.sort(Order.String)
   );
   return ClaimProjectionView.make({
-    total: NonNegativeInt.make(A.length(authority)),
+    total: S.Natural.make(A.length(authority)),
     counts: ClaimStateCounts.make({
-      candidate: NonNegativeInt.make(countOf(ClaimLifecycle.Enum.candidate)),
-      shape_valid: NonNegativeInt.make(countOf(ClaimLifecycle.Enum.shape_valid)),
-      consistency_checked: NonNegativeInt.make(countOf(ClaimLifecycle.Enum.consistency_checked)),
-      admitted: NonNegativeInt.make(countOf(ClaimLifecycle.Enum.admitted)),
+      candidate: S.Natural.make(countOf(ClaimLifecycle.Enum.candidate)),
+      shape_valid: S.Natural.make(countOf(ClaimLifecycle.Enum.shape_valid)),
+      consistency_checked: S.Natural.make(countOf(ClaimLifecycle.Enum.consistency_checked)),
+      admitted: S.Natural.make(countOf(ClaimLifecycle.Enum.admitted)),
     }),
     admittedKeys,
   });

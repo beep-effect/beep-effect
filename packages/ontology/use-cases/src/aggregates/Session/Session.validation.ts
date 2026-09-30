@@ -34,7 +34,7 @@ import {
 } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import {
   ShaclNodeShape,
   ShaclPropertyShape,
@@ -93,14 +93,14 @@ const dcat = (name: string): NamedNode => makeNamedNode(`${DCAT_NAMESPACE}${name
  * **Example** (Make verified repair proposal)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ChangeOperation, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { OntologyRepairProposal } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const proposal = OntologyRepairProposal.make({
  *   id: "repair:0",
- *   violationIndex: NonNegativeInt.make(0),
+ *   violationIndex: S.Natural.make(0),
  *   focusNode: "https://example.test/alice",
  *   path: makeNamedNode("https://schema.org/name"),
  *   message: "Add the missing value.",
@@ -127,7 +127,7 @@ const dcat = (name: string): NamedNode => makeNamedNode(`${DCAT_NAMESPACE}${name
 export class OntologyRepairProposal extends S.Class<OntologyRepairProposal>($I`OntologyRepairProposal`)(
   {
     id: S.NonEmptyString,
-    violationIndex: NonNegativeInt,
+    violationIndex: S.Natural,
     focusNode: S.NonEmptyString,
     path: NamedNode,
     message: S.String,
@@ -169,7 +169,7 @@ export class RunOntologyValidationInput extends S.Class<RunOntologyValidationInp
   {
     session: Session,
     inference: S.OptionFromOptionalKey(OntologyInferenceResult).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    maxResults: NonNegativeInt.pipe(
+    maxResults: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(100)),
       S.withDecodingDefaultKey(Effect.succeed(100))
     ),
@@ -370,8 +370,8 @@ const objectNamedNode = (quad: Quad): O.Option<NamedNode> =>
 const objectSubject = (quad: Quad): O.Option<Subject> =>
   quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode" ? O.some(quad.object) : O.none();
 
-const objectInteger = (quad: Quad): O.Option<NonNegativeInt> =>
-  quad.object.termType === "Literal" ? O.some(NonNegativeInt.make(Number.parseInt(quad.object.value, 10))) : O.none();
+const objectInteger = (quad: Quad): O.Option<number> =>
+  quad.object.termType === "Literal" ? O.some(S.Natural.make(Number.parseInt(quad.object.value, 10))) : O.none();
 
 const quadsForSubject = (dataset: Dataset, subject: Subject): ReadonlyArray<Quad> =>
   pipe(
@@ -393,7 +393,7 @@ const firstObjectTerm = (dataset: Dataset, subject: Subject, predicate: NamedNod
     O.map((quad) => quad.object)
   );
 
-const firstObjectInteger = (dataset: Dataset, subject: Subject, predicate: NamedNode): O.Option<NonNegativeInt> =>
+const firstObjectInteger = (dataset: Dataset, subject: Subject, predicate: NamedNode): O.Option<number> =>
   pipe(
     quadsForSubject(dataset, subject),
     A.findFirst((quad) => hasPredicate(quad, predicate)),
@@ -706,7 +706,7 @@ const repairProposal = Effect.fn("Ontology.Validation.repairProposal")(function*
                   A.map((operation) => serializeQuad(operation.quad)),
                   A.join("|")
                 )}`,
-                violationIndex: NonNegativeInt.make(violationIndex),
+                violationIndex: S.Natural.make(violationIndex),
                 focusNode: violation.focusNode,
                 path: violation.path,
                 message: `${candidate.safety} repair verified against the SHACL engine.`,

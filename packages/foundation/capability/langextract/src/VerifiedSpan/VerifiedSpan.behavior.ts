@@ -14,7 +14,6 @@ import {
   verifySourceTextIdentity,
   verifyTextAnchorAgainstVerifiedSource,
 } from "@beep/provenance/VerifiedTextAnchor";
-import { NonNegativeInt } from "@beep/schema";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
@@ -56,10 +55,10 @@ import type { NormalizedTextWithRawOffsets } from "./VerifiedSpan.normalization.
 
 const sourceTextIdentityEquivalence = S.toEquivalence(SourceTextIdentity);
 type MatchScanState = readonly [matchedLength: number, start: O.Option<number>];
-type ReconstructionState = readonly [expectedStart: NonNegativeInt, parts: Chunk.Chunk<string>];
+type ReconstructionState = readonly [expectedStart: number, parts: Chunk.Chunk<string>];
 
 const matchScanInitial = (): MatchScanState => [0, O.none()];
-const reconstructionInitial = (): ReconstructionState => [NonNegativeInt.make(0), Chunk.empty()];
+const reconstructionInitial = (): ReconstructionState => [S.Natural.make(0), Chunk.empty()];
 const missingAnchor = () => "missing-anchor";
 const missingMatch = () => "missing-match";
 
@@ -147,9 +146,9 @@ const rawAnchor = (sourceText: string, startChar: number, endChar: number): O.Op
       onTrue: () =>
         O.some(
           TextAnchor.make({
-            endChar: NonNegativeInt.make(endChar),
+            endChar: S.Natural.make(endChar),
             quote: Str.slice(startChar, endChar)(sourceText),
-            startChar: NonNegativeInt.make(startChar),
+            startChar: S.Natural.make(startChar),
           })
         ),
     })
@@ -165,7 +164,7 @@ const exactRawMatches = (sourceText: string, locator: string): ReadonlyArray<Tex
     A.fromIterable
   );
 
-type NormalizedRange = readonly [startChar: NonNegativeInt, endChar: NonNegativeInt];
+type NormalizedRange = readonly [startChar: number, endChar: number];
 
 const normalizedRange = (
   normalizedSource: NormalizedTextWithRawOffsets,
@@ -180,8 +179,8 @@ const normalizedRawAnchor = (
   normalizedLocator: string,
   normalizedStart: number,
   normalizedEnd: number,
-  startChar: NonNegativeInt,
-  endChar: NonNegativeInt
+  startChar: number,
+  endChar: number
 ): O.Option<TextAnchor> =>
   pipe(
     Bool.and(
@@ -355,8 +354,8 @@ const convertCodePointRange = Effect.fnUntraced(function* (
     return yield* VerifiedSpanError.fromReason("invalid-offset");
   }
   return Utf16TextRange.make({
-    endChar: NonNegativeInt.make(Str.length(A.join(A.take(points, range.end), ""))),
-    startChar: NonNegativeInt.make(Str.length(A.join(A.take(points, range.start), ""))),
+    endChar: S.Natural.make(Str.length(A.join(A.take(points, range.end), ""))),
+    startChar: S.Natural.make(Str.length(A.join(A.take(points, range.start), ""))),
   });
 });
 
@@ -371,16 +370,16 @@ const convertCodePointRange = Effect.fnUntraced(function* (
  * **Example** (Convert range to UTF-16)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
  * import {
  *   TextOffsetRange,
  *   convertTextOffsetRange,
  * } from "@beep/langextract/VerifiedSpan"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const range = TextOffsetRange.make({
- *   start: NonNegativeInt.make(1),
- *   end: NonNegativeInt.make(2),
+ *   start: S.Natural.make(1),
+ *   end: S.Natural.make(2),
  *   unit: "unicode-code-point",
  * })
  * Effect.runPromise(convertTextOffsetRange(range, "A😀B")).then(console.log)
@@ -423,12 +422,12 @@ export const convertTextOffsetRange: {
  * **Example** (Reconstruct source from chunks)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
  * import { RawTextChunk, reconstructSourceText } from "@beep/langextract/VerifiedSpan"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const first = RawTextChunk.make({ startChar: NonNegativeInt.make(0), text: "page one\f" })
- * const second = RawTextChunk.make({ startChar: NonNegativeInt.make(9), text: "page two" })
+ * const first = RawTextChunk.make({ startChar: S.Natural.make(0), text: "page one\f" })
+ * const second = RawTextChunk.make({ startChar: S.Natural.make(9), text: "page two" })
  * Effect.runPromise(reconstructSourceText([first, second])).then(console.log)
  * ```
  *
@@ -449,7 +448,7 @@ export const reconstructSourceText = Effect.fn("VerifiedSpan.reconstructSourceTe
       if (Bool.or(Bool.not(Eq.equals(chunk.startChar, expectedStart)), Str.isEmpty(chunk.text))) {
         return Effect.fail(VerifiedSpanError.fromReason("malformed-source"));
       }
-      const nextStart = NonNegativeInt.make(expectedStart + Str.length(chunk.text));
+      const nextStart = S.Natural.make(expectedStart + Str.length(chunk.text));
       return pipe(
         nextStart > MAX_SOURCE_TEXT_LENGTH,
         Bool.match({
@@ -524,7 +523,7 @@ export const locateGroundedExtractions: {
         locatePreparedRawText(sourceText, normalizedSource, extraction.text).pipe(
           Effect.mapError((error) =>
             VerifiedSpanError.make({
-              candidateIndex: O.some(NonNegativeInt.make(index)),
+              candidateIndex: O.some(S.Natural.make(index)),
               message: error.message,
               reason: error.reason,
             })
@@ -538,7 +537,7 @@ export const locateGroundedExtractions: {
 const attemptFailure = (
   stage: VerifiedSpanAttemptFailure["stage"],
   reason: VerifiedSpanAttemptFailure["reason"],
-  candidateIndex: O.Option<NonNegativeInt> = O.none()
+  candidateIndex: O.Option<number> = O.none()
 ): VerifiedSpanAttemptFailure =>
   VerifiedSpanAttemptFailure.make({
     candidateIndex,
@@ -597,12 +596,12 @@ const verifyLocatedAnchors = (
       ).pipe(
         Effect.map((verified) =>
           VerifiedSpanCandidateAnchorReceipt.make({
-            candidateIndex: NonNegativeInt.make(index),
+            candidateIndex: S.Natural.make(index),
             receipt: toTextAnchorVerificationReceipt(verified),
           })
         ),
         /* v8 ignore next -- locator output already proves boundaries and exact slices; retain fail-closed defense */
-        Effect.mapError((error) => attemptFailure("anchor", error.reason, O.some(NonNegativeInt.make(index))))
+        Effect.mapError((error) => attemptFailure("anchor", error.reason, O.some(S.Natural.make(index))))
       ),
     { concurrency: 1 }
   ).pipe(

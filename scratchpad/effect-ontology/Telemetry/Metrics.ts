@@ -11,7 +11,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Context, Duration, HashMap, Layer } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Telemetry/Metrics");
@@ -27,15 +26,15 @@ import * as Str from "effect/String";
  * **Example** (Record a successful extraction)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ExtractionMetrics } from "@effect-ontology/Telemetry/Metrics"
  * import { Duration } from "effect"
  *
  * const metrics = ExtractionMetrics.make({
  *   duration: Duration.millis(120),
- *   entityCount: NonNegativeInt.make(3),
- *   relationCount: NonNegativeInt.make(1),
- *   chunkCount: NonNegativeInt.make(1),
+ *   entityCount: S.Natural.make(3),
+ *   relationCount: S.Natural.make(1),
+ *   chunkCount: S.Natural.make(1),
  *   success: true
  * })
  * console.log(metrics.entityCount) // 3
@@ -48,9 +47,9 @@ import * as Str from "effect/String";
 export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionMetrics`)(
   {
     duration: S.Duration,
-    entityCount: NonNegativeInt,
-    relationCount: NonNegativeInt,
-    chunkCount: NonNegativeInt,
+    entityCount: S.Natural,
+    relationCount: S.Natural,
+    chunkCount: S.Natural,
     success: S.Boolean,
   },
   $I.annote("ExtractionMetrics", {
@@ -65,7 +64,7 @@ export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionM
  * **Example** (Record a billed LLM call)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { LlmCallMetrics } from "@effect-ontology/Telemetry/Metrics"
  * import { Duration } from "effect"
  *
@@ -73,8 +72,8 @@ export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionM
  *   provider: "anthropic",
  *   model: "claude-sonnet-4-5",
  *   duration: Duration.millis(80),
- *   tokensIn: NonNegativeInt.make(100),
- *   tokensOut: NonNegativeInt.make(40),
+ *   tokensIn: S.Natural.make(100),
+ *   tokensOut: S.Natural.make(40),
  *   success: true
  * })
  * console.log(metrics.model) // "claude-sonnet-4-5"
@@ -89,8 +88,8 @@ export class LlmCallMetrics extends S.Class<LlmCallMetrics>($I`LlmCallMetrics`)(
     provider: S.NonEmptyString,
     model: S.NonEmptyString,
     duration: S.Duration,
-    tokensIn: NonNegativeInt,
-    tokensOut: NonNegativeInt,
+    tokensIn: S.Natural,
+    tokensOut: S.Natural,
     success: S.Boolean,
   },
   $I.annote("LlmCallMetrics", {
@@ -104,13 +103,13 @@ export class LlmCallMetrics extends S.Class<LlmCallMetrics>($I`LlmCallMetrics`)(
  * **Example** (Snapshot cache hit rate inputs)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { EmbeddingCacheMetrics } from "@effect-ontology/Telemetry/Metrics"
  * import { Duration } from "effect"
  *
  * const metrics = EmbeddingCacheMetrics.make({
- *   hits: NonNegativeInt.make(9),
- *   misses: NonNegativeInt.make(1),
+ *   hits: S.Natural.make(9),
+ *   misses: S.Natural.make(1),
  *   latency: Duration.millis(4)
  * })
  * console.log(metrics.hits) // 9
@@ -122,8 +121,8 @@ export class LlmCallMetrics extends S.Class<LlmCallMetrics>($I`LlmCallMetrics`)(
  */
 export class EmbeddingCacheMetrics extends S.Class<EmbeddingCacheMetrics>($I`EmbeddingCacheMetrics`)(
   {
-    hits: NonNegativeInt,
-    misses: NonNegativeInt,
+    hits: S.Natural,
+    misses: S.Natural,
     latency: S.Duration,
   },
   $I.annote("EmbeddingCacheMetrics", {
@@ -187,7 +186,7 @@ const initialState: MetricsState = {
  * **Example** (Record an extraction and scrape the text format)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ExtractionMetrics, MetricsService } from "@effect-ontology/Telemetry/Metrics"
  * import { Duration, Effect } from "effect"
  *
@@ -196,9 +195,9 @@ const initialState: MetricsState = {
  *   yield* metrics.recordExtraction(
  *     ExtractionMetrics.make({
  *       duration: Duration.millis(120),
- *       entityCount: NonNegativeInt.make(3),
- *       relationCount: NonNegativeInt.make(1),
- *       chunkCount: NonNegativeInt.make(1),
+ *       entityCount: S.Natural.make(3),
+ *       relationCount: S.Natural.make(1),
+ *       chunkCount: S.Natural.make(1),
  *       success: true
  *     })
  *   )

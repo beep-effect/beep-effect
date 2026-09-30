@@ -12,7 +12,6 @@
  * @since 0.0.0
  */
 
-import { PosInt } from "@beep/schema/Int";
 import { AnthropicClient } from "@effect/ai-anthropic";
 import { OpenAiClient } from "@effect/ai-openai";
 import { Clock, DateTime, Duration, Effect, Layer, Ref, Stream } from "effect";
@@ -22,6 +21,7 @@ import * as RateLimiter from "effect/persistence/RateLimiter";
 import { ConfigService } from "../Service/Config.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { makeCircuitBreaker } from "./CircuitBreaker.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 interface ProviderRateLimit {
   readonly perSecond: number;

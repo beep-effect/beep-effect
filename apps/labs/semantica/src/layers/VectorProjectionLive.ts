@@ -1,6 +1,5 @@
 import { DuckDb } from "@beep/duckdb";
 import { $SemanticaId } from "@beep/identity/packages";
-import { PosInt } from "@beep/schema";
 import { Crypto, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -12,6 +11,7 @@ import { ChunkId } from "@/schema/Ids";
 import { ModelIdentity } from "@/schema/Model";
 import { KnnNeighbor, KnnQueryResult } from "@/schema/Projection";
 import { VectorProjection } from "@/services/VectorProjection";
+import { PosInt } from "../schema/PosInt.ts";
 
 const $I = $SemanticaId.create("layers/VectorProjectionLive");
 const TABLE = "semantica_embedding_vectors";

@@ -13,7 +13,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { BuffEncoding } from "../BufferEncoding.ts";
-import { NonNegativeInt } from "../Int.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { alwaysEquivalent } from "../SchemaUtils/toEquivalence.ts";
 import { HeaderArray, HeaderTransformFunction } from "./ParserOptions.types.ts";
@@ -139,9 +138,9 @@ const buildNextTokenRegExp = (escapedDelimiter: string): globalThis.RegExp =>
     )
   );
 
-const parserOptionsMaxRowsDefault = NonNegativeInt.make(0);
-const parserOptionsSkipLinesDefault = NonNegativeInt.make(0);
-const parserOptionsSkipRowsDefault = NonNegativeInt.make(0);
+const parserOptionsMaxRowsDefault = S.Natural.make(0);
+const parserOptionsSkipLinesDefault = S.Natural.make(0);
+const parserOptionsSkipRowsDefault = S.Natural.make(0);
 /**
  * Schema-backed CSV parser options.
  *
@@ -202,15 +201,15 @@ export class ParserOptions extends S.Class<ParserOptions>($I`ParserOptions`)(
       S.withConstructorDefault(Effect.succeed(BuffEncoding.Enum.utf8)),
       S.withDecodingDefaultTypeKey(Effect.succeed(BuffEncoding.Enum.utf8))
     ),
-    maxRows: NonNegativeInt.pipe(
+    maxRows: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(parserOptionsMaxRowsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(parserOptionsMaxRowsDefault))
     ),
-    skipLines: NonNegativeInt.pipe(
+    skipLines: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(parserOptionsSkipLinesDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(parserOptionsSkipLinesDefault))
     ),
-    skipRows: NonNegativeInt.pipe(
+    skipRows: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(parserOptionsSkipRowsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(parserOptionsSkipRowsDefault))
     ),

@@ -35,10 +35,10 @@ import {
   LogicalEdgeKey,
 } from "@beep/epistemic-domain/values";
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { PosInt } from "@beep/schema/Int";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as S from "effect/Schema";
+import { PosInt } from "../../internal/PosInt.ts";
 
 const $I = $EpistemicDomainId.create("entities/EdgeVersion/EdgeVersion.model");
 const pg = ProductEntity.pg;

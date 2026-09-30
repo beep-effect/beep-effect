@@ -5,7 +5,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -38,7 +38,7 @@ class LaneProofRecord extends S.Class<LaneProofRecord>($I`LaneProofRecord`)(
     headSha: S.String,
     baseSha: S.String,
     envProfileHash: S.String,
-    durationMs: NonNegativeInt,
+    durationMs: S.Natural,
     verifiedAt: S.String,
   },
   $I.annote("LaneProofRecord", {
@@ -329,7 +329,7 @@ export const persistLaneProofs = Effect.fn("LaneProofReuse.persist")(function* (
         O.map(({ refreshed: identity }) =>
           LaneProofRecord.make({
             ...identity,
-            durationMs: NonNegativeInt.make(Math.max(0, Math.round(durationMs))),
+            durationMs: S.Natural.make(Math.max(0, Math.round(durationMs))),
             verifiedAt,
           })
         )

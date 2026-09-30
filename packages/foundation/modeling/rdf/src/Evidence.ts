@@ -7,7 +7,7 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { IRIReference } from "./Iri.ts";
@@ -121,8 +121,8 @@ export class TextQuoteSelector extends S.Class<TextQuoteSelector>($I`TextQuoteSe
 export class TextPositionSelector extends S.Class<TextPositionSelector>($I`TextPositionSelector`)(
   {
     kind: S.tag("text-position"),
-    start: NonNegativeInt,
-    end: NonNegativeInt,
+    start: S.Natural,
+    end: S.Natural,
   },
   $I.annote("TextPositionSelector", {
     description: "Text-position selector for evidence anchors.",

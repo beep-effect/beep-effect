@@ -7,12 +7,13 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { Heading, Ol, renderPlainTextBlock } from "@beep/md";
-import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, flow, Match, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "../../internal/PosInt.ts";
 import {
   PatentApplicationDocument,
   PatentApplicationSection,
@@ -510,8 +511,8 @@ export const normalizePatentApplicationDocument = Effect.fn("PatentDocument.norm
             content,
             heading: draft.heading,
             role: draft.role,
-            sourceEnd: NonNegativeInt.make(draft.sourceEnd),
-            sourceStart: NonNegativeInt.make(draft.sourceStart),
+            sourceEnd: S.Natural.make(draft.sourceEnd),
+            sourceStart: S.Natural.make(draft.sourceStart),
           })
         )
       : Effect.fail(

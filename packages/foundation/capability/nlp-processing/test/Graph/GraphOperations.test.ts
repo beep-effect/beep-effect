@@ -1,6 +1,5 @@
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
 import { Errors, Executor, Operation, ResultStore, Types } from "@beep/nlp-processing/Graph/GraphOperations";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -194,7 +193,7 @@ describe("ResultStore", () => {
     Effect.fnUntraced(function* () {
       const { key, result } = yield* mkResultFixture;
       const stored = ResultStore.StoredResult.make({
-        hits: NonNegativeInt.make(0),
+        hits: S.Natural.make(0),
         key,
         result,
         timestamp: result.timestamp,
@@ -353,8 +352,8 @@ describe("GraphExecutor", () => {
               Types.OperationCost.make({
                 complexity: "O(n)",
                 estimatedTime: Duration.millis(3),
-                memoryCost: NonNegativeInt.make(2),
-                tokenCost: NonNegativeInt.make(5),
+                memoryCost: S.Natural.make(2),
+                tokenCost: S.Natural.make(5),
               })
             ),
         });
