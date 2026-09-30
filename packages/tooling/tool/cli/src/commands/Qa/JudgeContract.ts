@@ -10,7 +10,6 @@ import { RoundNumber } from "@beep/qa-capture";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { ISOStr } from "@beep/schema/Timestamp";
 import {
   AlwaysGateApplicability,
   EvidenceDigest,
@@ -42,7 +41,7 @@ const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 const $I = $RepoCliId.create("commands/Qa/JudgeContract");
 const remediationOwner = "@beep/repo-cli/Qa";
-const auditTimestamp = DateTime.now.pipe(Effect.map(DateTime.formatIso), Effect.map(ISOStr.make));
+const auditTimestamp = DateTime.now.pipe(Effect.map(DateTime.formatIso));
 
 const citedEventIdExistsGateId = QaJudgeGateId.make("cited-event-id-exists");
 const declaredRoundCoherentGateId = QaJudgeGateId.make("declared-round-coherent");
@@ -661,7 +660,7 @@ export const JudgeOutputInventoryDecodesGate = alwaysBlockingGate(
 const outputDecodeDenial = (
   failure: JudgeOutputDecodeFailure,
   issue: string,
-  occurredAt: ISOStr
+  occurredAt: string
 ): JudgeOutputInventoryDecodesVerdict =>
   JudgeOutputInventoryDecodesVerdict.cases.denied.make({
     audit: {

@@ -8,7 +8,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { GitObjectId } from "@beep/schema/Conformance";
-import { NonEmptyTrimmedStr } from "@beep/schema/String";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
@@ -569,7 +568,7 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
   const removal = yield* Effect.result(
     removalService.remove(
       WorktreeRemovalRequest.make({
-        name: NonEmptyTrimmedStr.make(ctx.path.basename(entry.path)),
+        name: ctx.path.basename(entry.path),
         targetPath: entry.path,
         mainCheckout,
         branch: O.fromNullishOr(entry.branch),

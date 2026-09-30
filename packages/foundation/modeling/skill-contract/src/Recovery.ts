@@ -9,12 +9,11 @@ import { $SkillContractId } from "@beep/identity/packages";
 import { PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { NonNegativeInt } from "@beep/schema/Number";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { DateTime, Duration, Number as Num, Predicate, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { EvidenceReceipt, EvidenceSubject } from "./EvidenceReceipt.ts";
-import { EvidencePredicateType } from "./Gate.ts";
+import { EvidencePredicateType, IsoDateTimeString } from "./Gate.ts";
 
 const $I = $SkillContractId.create("Recovery");
 
@@ -167,12 +166,12 @@ export type RecoveryAttemptOutcome = typeof RecoveryAttemptOutcome.Type;
 export class RecoveryAttemptReceipt extends S.Class<RecoveryAttemptReceipt>($I`RecoveryAttemptReceipt`)(
   {
     attempt: PosInt,
-    endedAt: ISOStr,
+    endedAt: IsoDateTimeString,
     observations: S.Array(EvidenceSubject),
     operations: NonNegativeInt,
     outcome: RecoveryAttemptOutcome,
     reason: S.OptionFromOptionalKey(S.NonEmptyString),
-    startedAt: ISOStr,
+    startedAt: IsoDateTimeString,
   },
   $I.annote("RecoveryAttemptReceipt", {
     description: "Auditable timestamps, outcome, operation count, and evidence observations for one attempt.",

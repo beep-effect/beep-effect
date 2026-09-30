@@ -7,7 +7,6 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
-import { UUID as UUIDSchema } from "@beep/schema/String";
 import { Clock, Console, DateTime, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -15,12 +14,13 @@ import { constant, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { UUID as UUIDSchema } from "../schema/Uuid.ts";
 import { acquireJournalFileLock, releaseJournalFileLock } from "./AdmissionJournal.ts";
 import { publishJournalTextAtomically } from "./JournalFile.ts";
 import { ProcessIdentityStatus, processIdentityStatus } from "./ProcessIdentity.ts";
 import { attemptInputFactFields, QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 import { repoRunArtifactId } from "./RepoRunArtifacts.ts";
-import type { UUID } from "@beep/schema/String";
+import type { UUID } from "../schema/Uuid.ts";
 import type { YeetAdmissionLease, YeetAdmissionTicket } from "./QualityScheduler.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/AttemptTerminationJournal");

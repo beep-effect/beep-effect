@@ -14,7 +14,7 @@
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, PosInt, SchemaUtils, UUID } from "@beep/schema";
+import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, flow, Layer } from "effect";
 import * as A from "effect/Array";
@@ -39,6 +39,7 @@ import type {
   EntityBlockingTokenInsertRow,
 } from "./schema.ts";
 import { CanonicalEntities, canonicalEntities, EntityAliases, entityAliases, entityBlockingTokens } from "./schema.ts";
+import { UUID } from "../Domain/Identity.ts";
 
 // =============================================================================
 // Types

@@ -89,9 +89,6 @@ Check `packages/common/schema/src/` before writing a custom primitive.
 
 Examples worth reusing:
 
-- `TrimmedNonEmptyText`
-- `CommaSeparatedList`
-- `NormalizedBooleanString`
 - `FilePath`
 - `PosixPath`
 - `Email`
@@ -100,6 +97,16 @@ Examples worth reusing:
 
 If the domain already exists there, reuse it or extend it instead of cloning the
 logic locally.
+
+Common text shapes come from upstream compositions, not `@beep/schema`:
+
+- trimmed non-empty text:
+  `S.String.pipe(S.decodeTo(S.NonEmptyString, SchemaTransformation.trim()))`, or
+  `S.Trim.check(S.isNonEmpty())` when the decoded side must also be trimmed
+- delimited lists: `SchemaGetter.split({ separator: "," })` inside `S.decodeTo`
+  (an empty string decodes to `[]`)
+- configuration flags: `Config.Boolean("FLAG")` from `effect/Config`
+- log levels: `S.Literals(LogLevel.values)` from `effect/LogLevel`
 
 ## Prefer Shared Transform Helpers Before Manual Wrappers
 

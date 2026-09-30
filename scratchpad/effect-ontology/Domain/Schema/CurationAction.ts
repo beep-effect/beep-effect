@@ -14,9 +14,8 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NamedNode } from "@beep/rdf";
-import { UUID } from "@beep/schema";
 import * as S from "effect/Schema";
-import { OntologyName } from "../Identity.ts";
+import { OntologyName, UUID } from "../Identity.ts";
 import { ClaimId, RdfObject } from "./KnowledgeModel.ts";
 import { Effect } from "effect";
 

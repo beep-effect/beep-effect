@@ -7709,7 +7709,7 @@
       "symbol": "runPromise",
       "occurrence": "v2:3312591c12d7e78be74505860e3c012209991ab0c65a29b4d889d86a4ae84640",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withLabsFixture(LabsRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { // The no-op path is unreachable through the command surface \u2014 // create-package only calls the",
+      "evidence": "Effect.runPromise( withLabsFixture(LabsRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { // The no-op path is unreachable through the command surface — // create-package only calls the",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -13694,7 +13694,7 @@
       "symbol": "runPromise",
       "occurrence": "v2:131d8f8c061dcd8f65b1b492572a702572b3023b608641891b6adc249d081f34",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; // Projections are disposable derived copies: a v1 trace is never // upcast \u2014 it fails the v2 decode, explore --ch",
+      "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; // Projections are disposable derived copies: a v1 trace is never // upcast — it fails the v2 decode, explore --ch",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -18356,7 +18356,7 @@
       "symbol": "runPromise",
       "occurrence": "v2:6199f01797254cf611db8e6ae74b6e13151b1ba90808856c20929303197fe63c",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempCwd( Effect.fnUntraced(function* (cwd) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; // The cited artifact really exists \u2014 one round up. Containm",
+      "evidence": "Effect.runPromise( withTempCwd( Effect.fnUntraced(function* (cwd) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; // The cited artifact really exists — one round up. Containm",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -18650,7 +18650,7 @@
       "symbol": "runPromise",
       "occurrence": "v2:ed1567f8b25ed21ba656ee45796954325341a9c6278b886d157e96ee883f2702",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboQueryAffectedOutput(`\u2022 turbo 2.9.16 { \"data\": { \"affectedTasks\": { \"items\": [ { \"name\": \"lint\", \"package\": { \"name\": \"",
+      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboQueryAffectedOutput(`• turbo 2.9.16 { \"data\": { \"affectedTasks\": { \"items\": [ { \"name\": \"lint\", \"package\": { \"name\": \"",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -18671,7 +18671,7 @@
       "symbol": "runPromise",
       "occurrence": "v2:a2c6ab9830ec73683938f7a2e386352a6e449feb8bed7bc085debfdf49b5a427",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboDryRunOutput(`\u2022 turbo 2.9.16 { \"packages\": [\"@beep/demo\", \"@beep/other\"], \"tasks\": [ { \"task\": \"lint\", \"package\": \"@be",
+      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboDryRunOutput(`• turbo 2.9.16 { \"packages\": [\"@beep/demo\", \"@beep/other\"], \"tasks\": [ { \"task\": \"lint\", \"package\": \"@be",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -43838,7 +43838,7 @@
       "line": 1581,
       "endLine": 1581,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:f1427c0ef4f3deb379f6439a64fdf9def49845a1f5f39aa440e5c054aa3f0285",
+      "occurrence": "v2:3bc028df85176c02941dd69f8e25fd05daf6a0cf81124443bce9c03890707b69",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(Layer.fresh(WorktreeRemovalServiceLayer).pipe(Layer.provide([NodeServices.layer, probe])))",
       "replacement": {
@@ -54279,7 +54279,7 @@
       "line": 1000,
       "endLine": 1026,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:453188322451dfea40c6436223f244b49d5c3a67c69558de4df83dc6b99c8c97",
+      "occurrence": "v2:60145a3549decb1d9bd71a785fad556b0f3fd67408e4d4b4e2e1ee145c54ed43",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const removalService = yield* WorktreeRemovalService; const context = yield* resolveWorktreeContext(rep",
       "replacement": {
@@ -54300,7 +54300,7 @@
       "line": 1030,
       "endLine": 1059,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:3811c8d2ef03c714e02584c223cd0e9e4db4931175b50b31b34b9821e0780d52",
+      "occurrence": "v2:338b29c09e29130f9ca0251d10ab2170455249ddd231a2320967a01e033ea230",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const service = yield* WorktreeRemovalService; const context = yield* re",
       "replacement": {
@@ -54363,7 +54363,7 @@
       "line": 1107,
       "endLine": 1157,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:5982ccedc7bffe5ee627b3c0c554e631d412fdb95acea3128da69674757d4a21",
+      "occurrence": "v2:8f0469be2b769e459942e02a90e30a0e3ab1f15e5ba6ed1cad5cc7136c79b318",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {
@@ -54384,7 +54384,7 @@
       "line": 1161,
       "endLine": 1217,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:3b6414613b233ec25e5c379c3828d0b0f360c036145abf4c2ceab7058ff6cbca",
+      "occurrence": "v2:97fdb15ddb124ba9a6993b6da4f95259379c320e30cdd66640724606a386150e",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {
@@ -54405,7 +54405,7 @@
       "line": 1221,
       "endLine": 1264,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:8ebfc719f51481816f1a1ad5f5b133e72df00fdc4eb958d340b9e33fd1faa718",
+      "occurrence": "v2:a8851b0372b13be1f0ed26e876b8965bea8d993cebe1c7eab8302deeaf5d68bb",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {
@@ -54426,7 +54426,7 @@
       "line": 1268,
       "endLine": 1322,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:8df3a9322a3f30c092a4c4e1b1e293b0f971c32453e8d93065eeb9d7f38caf52",
+      "occurrence": "v2:2f4fd50cb681f1bd87af4d243683aa481d014111c2c466f94f541822dc0392d3",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((firstRepoRoot) => withScratchRepo((secondRepoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* W",
       "replacement": {
@@ -54447,7 +54447,7 @@
       "line": 1326,
       "endLine": 1409,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:70f9bdd25be4ad5bf19de38cec66b35bcecbe4756756e66dc4e65034669c3232",
+      "occurrence": "v2:ea9c0ef0a9742e9eb40da6b250edb38006f753aadd3a7e9a8f84d6dd97da7f5c",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {
@@ -54468,7 +54468,7 @@
       "line": 1413,
       "endLine": 1531,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:9d880f2f7c797bf68fad1a162121a5b6a946ebb31991d3fa93292e70cb3ec241",
+      "occurrence": "v2:96264b1416583944dada6c575114db478a1195949e37edf4392a1d7d6f25dc4a",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {
@@ -54510,7 +54510,7 @@
       "line": 1535,
       "endLine": 1600,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:6cf0892dd029a1ff8bccf75c130439b8747a35a44c5b7f0e86fd7d92eae654db",
+      "occurrence": "v2:2f8553267f892aff2519d883af6ca1f3d55f223ae94f2b4dcaba5fac44cb8baa",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const context = yield* resolveWorktreeContext(repoRoot); const branch =",
       "replacement": {
@@ -54531,7 +54531,7 @@
       "line": 1604,
       "endLine": 1659,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:013845927d22d5d0cb7ab6d0d27252dde177f2d9c88e8e7ec4e7bd8afac54aa6",
+      "occurrence": "v2:d9a2f13fe3ed7830827098e1ed6ff847b612f0a55b7487375784166945219b41",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {
@@ -54550,9 +54550,9 @@
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
       "line": 1665,
-      "endLine": 1818,
+      "endLine": 1816,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:735a1f2223b74625e1c4fd2d14afbb52b9aabd5f1700cf67a65cace9f087848e",
+      "occurrence": "v2:75799c34fcf786f0d338ebf9a136902cbffdfd8fb6257c5a7082875d73227e42",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {
@@ -54565,15 +54565,15 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/worktree-command.test.ts:1822:withScratchRepo@4#1",
+      "id": "EV003:packages/tooling/tool/cli/test/worktree-command.test.ts:1820:withScratchRepo@4#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
-      "line": 1822,
-      "endLine": 1859,
+      "line": 1820,
+      "endLine": 1857,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:f6357637f13f6d5e2fa195de3626906cc7830914a6bc78a3ca2fbdeafc11b4dc",
+      "occurrence": "v2:7dceaecb51f469080c322ce752075c2dc1c1bd26dac3172dbe7e49e68b4e84cd",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {
@@ -54586,15 +54586,15 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/worktree-command.test.ts:1863:withScratchRepo@4#1",
+      "id": "EV003:packages/tooling/tool/cli/test/worktree-command.test.ts:1861:withScratchRepo@4#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
-      "line": 1863,
-      "endLine": 1897,
+      "line": 1861,
+      "endLine": 1895,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:7426f156d0f3eeabf367b80811ae08400f1e26c222e4ee3d439db71f5d5f2ebd",
+      "occurrence": "v2:74c5424a32abeda402ff32496c834b01fe179e0c739a48fc23cc8257e1652224",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const removalService = yield* WorktreeRemovalService; const context = yield* resolveWorktreeContext(rep",
       "replacement": {
@@ -54607,15 +54607,15 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/worktree-command.test.ts:1901:withScratchRepo@4#1",
+      "id": "EV003:packages/tooling/tool/cli/test/worktree-command.test.ts:1899:withScratchRepo@4#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
-      "line": 1901,
-      "endLine": 1959,
+      "line": 1899,
+      "endLine": 1957,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:e6e81e58d83cb246b24df376404400eb62a3b03ab9f9581865ce62d70e3e9840",
+      "occurrence": "v2:5ac1a1b4e1049d8841a9be7cc0101e8111e0d32ea681fdfc091740af3430da3f",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {
@@ -54720,7 +54720,7 @@
       "line": 840,
       "endLine": 863,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:457e56e17bf72f6ef47e1e3bc6b0cbb68ce3d91c8c6261b11b99e85d96d04ae1",
+      "occurrence": "v2:baf811361c5d2807f4b75dea582f41474677bce9b9f762eefb984c223d699cbd",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const service = yield* WorktreeRemovalService; const context = yield* resolveWorktreeContext(repoRoot);",
       "replacement": {
@@ -54741,7 +54741,7 @@
       "line": 867,
       "endLine": 895,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:74f99e5df1889524011467af2db0ced9f04d1cc8005e6f946cca197663a55ad8",
+      "occurrence": "v2:cca66cbadc80ed45db976617b463a6722579b711e0e18e44d3ac7342d5e2fede",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const service = yield* WorktreeRemovalService; const context = yield* re",
       "replacement": {
@@ -54762,7 +54762,7 @@
       "line": 899,
       "endLine": 928,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:f3f7245a04b8d2d22be14a6eba98e393ecdb2fa9c0a5c22d0778dd81d8cc609d",
+      "occurrence": "v2:76b810b73c095cbc4afd3db9b72c4e95db55f5c9f64f4c81d6530d8489a1abf8",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const service = yield* WorktreeRemovalService; const context = yield* re",
       "replacement": {
@@ -55342,15 +55342,15 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/worktree-reap.test.ts:491:withScratchRepo@4#1",
+      "id": "EV003:packages/tooling/tool/cli/test/worktree-reap.test.ts:490:withScratchRepo@4#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/worktree-reap.test.ts",
-      "line": 491,
-      "endLine": 519,
+      "line": 490,
+      "endLine": 518,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:77f02a363f8828848aee03b88399f5ea3c81f44c9a0b732e56a898cdf1e3acc5",
+      "occurrence": "v2:d2f1e6ac21e1c70e82394cbc310698df505ef8ffa91b7f59b57ad48bdb358e2d",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo(({ repoRoot, worktreesRoot }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const target = yield* addWorktree(repoRoot, worktreesRoot, \"unauthorized\"); const re",
       "replacement": {
@@ -58380,7 +58380,7 @@
       "symbol": "scoped",
       "occurrence": "v2:0ed7bdfd8cb280c55dfb9d3465c0706297cc5beb337ed06b5eb47a940ce14c1f",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const preserved = [ \"https://example.com/private/source.ts\", \"http://localhost:3000/private/source.ts\", \"word/private/source.ts\", \"na\u00efve/private/source.ts\", \"\u5b57",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const preserved = [ \"https://example.com/private/source.ts\", \"http://localhost:3000/private/source.ts\", \"word/private/source.ts\", \"naïve/private/source.ts\", \"字",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -59489,9 +59489,9 @@
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
       "line": 1726,
-      "endLine": 1813,
+      "endLine": 1811,
       "symbol": "scoped",
-      "occurrence": "v2:e09b8d6a4fe9a2ed774313ea0d7eaecd4ee9a729bb27a0a89824f95593ddb65d",
+      "occurrence": "v2:7cfbcfb803d38be16aa49f82851d4ad6f0bdca3d754cf579cf07549e4e8c1aae",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { yield* fs.open(path.join(targetPath, \"README.md\"), { flag: \"r\" }); const ownName = Str.trim(yield* fs.readFileString(\"/proc/self/comm\")); // Under the other se",
       "replacement": {
@@ -60144,9 +60144,9 @@
       "line": 495,
       "endLine": 507,
       "symbol": "result",
-      "occurrence": "v2:e802d227b6eef63ce7420128ee53de5487ebb71cc29cc7e3dfa983c1c57d993f",
+      "occurrence": "v2:85509e74f2430b523064350d0ebbe953f565a0ecf3d482e2a8e1297ed7be388e",
       "class": "result-outcome-assertion",
-      "evidence": "Effect.result( removal.remove( WorktreeRemovalRequest.make({ name: NonEmptyTrimmedStr.make(\"unauthorized\"), targetPath: target, mainCheckout: repoRoot, branch: O.some(\"feat/unauthorized\"), archive: tr",
+      "evidence": "Effect.result( removal.remove( WorktreeRemovalRequest.make({ name: \"unauthorized\", targetPath: target, mainCheckout: repoRoot, branch: O.some(\"feat/unauthorized\"), archive: true, deleteBranch: true, e",
       "replacement": {
         "primitive": "readme.exit",
         "sketch": "utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. readme.exit: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) with unresolved, mixed or assertion-only outcomes. Review Effect.result to Effect.exit migration while preserving matcher polarity and existing operands: Result failure holds an error, whereas Exit failure holds a Cause. Select a specific Exit helper only when its expected value or Cause is established; never invent one from a Boolean predicate or partial error field."
@@ -61156,7 +61156,7 @@
       "symbol": "it.layer",
       "occurrence": "v2:334f551ed498057e65213c9225e42be24ab1e015bb5ae47b3371c5da131b6dbb",
       "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer( OnePasswordCli.makeLayerFromRunner((_command, args) => Effect.succeed( OnePasswordCliProcessResult.make({ exitCode: 0, stderr: \"\", stdout: Str.concat( \"\u00e9\ud83d\udd10\", O.getOrElse(A.get(args, 1), () =",
+      "evidence": "it.layer( OnePasswordCli.makeLayerFromRunner((_command, args) => Effect.succeed( OnePasswordCliProcessResult.make({ exitCode: 0, stderr: \"\", stdout: Str.concat( \"é🔐\", O.getOrElse(A.get(args, 1), () =",
       "replacement": {
         "primitive": "it.layer.option.timeout",
         "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
@@ -83594,7 +83594,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -83616,7 +83616,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -86672,7 +86672,7 @@
       "symbol": "it.live",
       "occurrence": "v2:141d36b40898a162dab2b2dd5f1371cb3537c2dcca923ba000f4fc4ff9949b0e",
       "class": "unjustified-live-test",
-      "evidence": "it.live(\"streams required-pending \u2192 base-conflict \u2192 required-pending across an emptied rollup\", () => inTempRepo((root) => Effect.gen(function* () { const ended = yield* runYeetWatchStream(contextFor(",
+      "evidence": "it.live(\"streams required-pending → base-conflict → required-pending across an emptied rollup\", () => inTempRepo((root) => Effect.gen(function* () { const ended = yield* runYeetWatchStream(contextFor(",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -86693,7 +86693,7 @@
       "symbol": "it.live",
       "occurrence": "v2:a455174259d997790093e6ab5728b34eea082d929813064392d55fce6f0d16ce",
       "class": "unjustified-live-test",
-      "evidence": "it.live(\"streams base-conflict \u2192 registration on the same head with the clock restarted, never settle-timeout\", () => inTempRepo((root) => Effect.gen(function* () { const ticks = yield* Ref.make(0); c",
+      "evidence": "it.live(\"streams base-conflict → registration on the same head with the clock restarted, never settle-timeout\", () => inTempRepo((root) => Effect.gen(function* () { const ticks = yield* Ref.make(0); c",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."

@@ -6,7 +6,7 @@
  */
 
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TrimmedNonEmptyText } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, pipe, Result, SchemaTransformation } from "effect";
@@ -17,7 +17,8 @@ const $I = $OipWebId.create("contact/ContactSubmission.model");
 
 const contactEmailPattern =
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
-const TrimmedContactText = TrimmedNonEmptyText.check(
+const TrimmedText = S.String.pipe(S.decodeTo(S.NonEmptyString, SchemaTransformation.trim()));
+const TrimmedContactText = TrimmedText.check(
   S.isMinLength(1, { arbitraryConstraint: { patterns: [{ source: "^\\S(?:[\\s\\S]{0,80}\\S)?$", flags: "" }] } })
 ).pipe(
   $I.annoteSchema("TrimmedContactText", {
@@ -36,7 +37,7 @@ const ContactName = TrimmedContactText.pipe(
   })
 );
 
-const ContactEmail = TrimmedNonEmptyText.pipe(S.decode(SchemaTransformation.toLowerCase()))
+const ContactEmail = TrimmedText.pipe(S.decode(SchemaTransformation.toLowerCase()))
   .check(
     S.isMaxLength(254, {
       message: "Email must be 254 characters or fewer.",

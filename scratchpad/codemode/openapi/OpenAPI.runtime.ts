@@ -7,7 +7,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { dual } from "effect/Function";
-import { MappedLiteralKit, NonEmptyTrimmedStr, NonNegativeInt } from "@beep/schema";
+import { MappedLiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, N, O, P, pipe, R, Str, Struct, thunkEmptyStr, thunkFalse, thunkTrue } from "@beep/utils";
 import { Chunk, Effect, flow, HashMap, HashSet, Redacted, Result, Stream } from "effect";
 import * as Base64 from "effect/encoding/Base64";
@@ -33,6 +33,7 @@ import {
 const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.runtime");
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 
 const maxErrorBodyChars = 1_024;
 const maxResponseBodyBytes = 50 * 1_024 * 1_024;
@@ -378,7 +379,7 @@ const buildRequest = (
 
 class CredentialBinding extends S.Class<CredentialBinding>($I`CredentialBinding`)(
   {
-    name: NonEmptyTrimmedStr,
+    name: TrimmedNonEmptyString,
     definition: SecurityScheme,
     credential: Credential,
   },
@@ -388,7 +389,7 @@ class CredentialBinding extends S.Class<CredentialBinding>($I`CredentialBinding`
 ) {
   static readonly new = (name: string, definition: SecuritySchemeType, credential: Credential): CredentialBinding =>
     CredentialBinding.make({
-      name: NonEmptyTrimmedStr.make(name),
+      name,
       definition,
       credential,
     });

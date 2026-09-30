@@ -6,7 +6,7 @@
  */
 
 import { $ObservabilityId } from "@beep/identity/packages";
-import { DurationInput, LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as NodeSdk from "@effect/opentelemetry/NodeSdk";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-proto";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-proto";
@@ -94,7 +94,7 @@ const nodeSdkServerOptionsShutdownTimeoutDefault = Duration.seconds(3);
  */
 export class NodeSdkServerOptions extends S.Class<NodeSdkServerOptions>($I`NodeSdkServerOptions`)(
   {
-    loggerExportInterval: DurationInput.pipe(
+    loggerExportInterval: S.Duration.pipe(
       S.withConstructorDefault(Effect.succeed(nodeSdkServerOptionsLoggerExportIntervalDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(nodeSdkServerOptionsLoggerExportIntervalDefault))
     ),
@@ -104,7 +104,7 @@ export class NodeSdkServerOptions extends S.Class<NodeSdkServerOptions>($I`NodeS
     ),
     logRecordProcessor: S.optionalKey(NodeSdkLogRecordProcessorOption),
     metricReader: S.optionalKey(NodeSdkMetricReaderOption),
-    metricsExportInterval: DurationInput.pipe(
+    metricsExportInterval: S.Duration.pipe(
       S.withConstructorDefault(Effect.succeed(nodeSdkServerOptionsMetricsExportIntervalDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(nodeSdkServerOptionsMetricsExportIntervalDefault))
     ),
@@ -112,7 +112,7 @@ export class NodeSdkServerOptions extends S.Class<NodeSdkServerOptions>($I`NodeS
       S.withConstructorDefault(Effect.succeed(NodeSdkMetricTemporality.Enum.cumulative)),
       S.withDecodingDefaultTypeKey(Effect.succeed(NodeSdkMetricTemporality.Enum.cumulative))
     ),
-    shutdownTimeout: DurationInput.pipe(
+    shutdownTimeout: S.Duration.pipe(
       S.withConstructorDefault(Effect.succeed(nodeSdkServerOptionsShutdownTimeoutDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(nodeSdkServerOptionsShutdownTimeoutDefault))
     ),
@@ -209,8 +209,8 @@ export const makeNodeSdkServerConfig: {
   (args) => ServerObservabilityConfig.is(args[0]),
   (config: ServerObservabilityConfig, options?: NodeSdkServerOptionsInput | undefined): NodeSdk.Configuration => {
     const resolvedOptions = NodeSdkServerOptions.make(options ?? {});
-    const loggerExportInterval = Duration.toMillis(Duration.fromInputUnsafe(resolvedOptions.loggerExportInterval));
-    const metricsExportInterval = Duration.toMillis(Duration.fromInputUnsafe(resolvedOptions.metricsExportInterval));
+    const loggerExportInterval = Duration.toMillis(resolvedOptions.loggerExportInterval);
+    const metricsExportInterval = Duration.toMillis(resolvedOptions.metricsExportInterval);
 
     return {
       resource: toNodeSdkResource(config),

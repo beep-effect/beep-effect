@@ -17,14 +17,58 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { UUID } from "@beep/schema/String";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Duration, pipe, Effect } from "effect";
+import { DateTime, Duration, Effect, pipe } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ExtractionRunId } from "../Domain/Identity.ts";
+import { ExtractionRunId, UUID } from "../Domain/Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Contract/ProgressStreaming");
+
+/**
+ * Trimmed, non-empty datetime string that `DateTime.make` parses, kept verbatim on the wire.
+ *
+ * **Example** (Check a progress timestamp)
+ *
+ * ```ts
+ * import { IsoDateTimeString } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(IsoDateTimeString)("2026-09-29T12:34:56.789Z")) // true
+ * console.log(S.is(IsoDateTimeString)("not a date")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const IsoDateTimeString = S.Trim.check(
+  S.isNonEmpty({ message: "String must not be empty" }),
+  S.makeFilter((value: string) => O.isSome(DateTime.make(value)), {
+    identifier: $I`IsoDateTimeStringCheck`,
+    title: "ISO DateTime String",
+    description: "Accepts any string DateTime.make parses; generation stays inside a constructive ISO 8601 UTC shape.",
+    arbitraryConstraint: {
+      patterns: [
+        {
+          source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}Z$",
+          flags: "",
+        },
+      ],
+    },
+  })
+).pipe(
+  $I.annoteSchema("IsoDateTimeString", {
+    description: "Trimmed, non-empty datetime string that DateTime.make parses, kept verbatim.",
+  })
+);
+
+/**
+ * Runtime type decoded by {@link IsoDateTimeString}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type IsoDateTimeString = typeof IsoDateTimeString.Type;
 
 // =============================================================================
 // Progress Event Tags (Discriminated Union)
@@ -161,7 +205,7 @@ const BaseProgressEvent = S.Struct({
   ),
 
   /** Server timestamp at which the event was created. */
-  timestamp: ISOStr.pipe(
+  timestamp: IsoDateTimeString.pipe(
     $I.annoteKey("BaseProgressEvent.timestamp", {
       description: "Server timestamp at which the event was created.",
     })
@@ -2045,7 +2089,7 @@ export class CancellationResponse extends S.Class<CancellationResponse>($I`Cance
     ),
 
     /** Server timestamp at which the response was created. */
-    timestamp: ISOStr.pipe(
+    timestamp: IsoDateTimeString.pipe(
       $I.annoteKey("CancellationResponse.timestamp", {
         description: "Server timestamp at which the response was created.",
       })
@@ -2313,7 +2357,7 @@ export class ProgressMessage extends S.TaggedClass<ProgressMessage>($I`ProgressM
     ),
 
     /** Server timestamp at which the transport envelope was created. */
-    createdAt: ISOStr.pipe(
+    createdAt: IsoDateTimeString.pipe(
       $I.annoteKey("ProgressMessage.createdAt", {
         description: "Server timestamp at which the transport envelope was created.",
       })
@@ -2522,7 +2566,7 @@ export class StartExtractionResponse extends S.TaggedClass<StartExtractionRespon
     ),
 
     /** Server timestamp at which the response was created. */
-    timestamp: ISOStr.pipe(
+    timestamp: IsoDateTimeString.pipe(
       $I.annoteKey("StartExtractionResponse.timestamp", {
         description: "Server timestamp at which the response was created.",
       })
@@ -2572,7 +2616,7 @@ export class AckMessage extends S.TaggedClass<AckMessage>($I`AckMessage`)(
     ),
 
     /** Client timestamp at which event receipt was acknowledged. */
-    timestamp: ISOStr.pipe(
+    timestamp: IsoDateTimeString.pipe(
       $I.annoteKey("AckMessage.timestamp", {
         description: "Client timestamp at which event receipt was acknowledged.",
       })

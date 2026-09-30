@@ -865,7 +865,7 @@ export class YeetProofJobFinishedRow extends S.Class<YeetProofJobFinishedRow>($I
  * **Example** (Derive an id)
  * ```ts
  * import { yeetProofJobRowId } from "@beep/repo-cli/test/Yeet"
- * import { UUID } from "@beep/schema/String"
+ * import { UUID } from "@beep/repo-cli/test/SharedInternals"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * const jobId = Effect.runSync(S.decodeEffect(UUID)("0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60"))

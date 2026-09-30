@@ -85,7 +85,7 @@
 
 ## SFV4-normalization refinements
 
-- `@beep/schema` has many true-positive-looking normalization helpers that are already inside schema codecs. Examples: `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36-43`, `:81-88`, and `:126-133` use `SchemaTransformation.transform`; `packages/foundation/modeling/schema/src/Semver.ts:397-404` feeds `SemverFromString` at `:626-630`; `packages/foundation/modeling/schema/src/Jsonl.ts:72` is inside the `JsonlTextToUnknown` decoder at `:103-107`. The detector should avoid flagging normalization when the containing function is the decode/encode implementation of a schema transformation.
+- `@beep/schema` has many true-positive-looking normalization helpers that are already inside schema codecs. Examples: the three `CommonTextSchemas` codecs (retired on 2026-09-29 for upstream compositions) used `SchemaTransformation.transform`; `packages/foundation/modeling/schema/src/Semver.ts:397-404` feeds `SemverFromString` at `:626-630`; `packages/foundation/modeling/schema/src/Jsonl.ts:72` is inside the `JsonlTextToUnknown` decoder at `:103-107`. The detector should avoid flagging normalization when the containing function is the decode/encode implementation of a schema transformation.
 - Parser behavior is distinct from schema-field normalization. `packages/foundation/modeling/schema/src/CsvParser/CsvParser.parser.ts:45-58` trims CSV fields according to decoded parser flags; this is the CSV codec's parsing behavior, not a missing field transform.
 - Trust-boundary host/URL normalization must stay explicit. `packages/foundation/modeling/schema/src/SafeRemoteHost.ts:110` lowercases and bracket-strips hostnames for SSRF classification; SPEC fence 4 applies.
 - Still flag exported utility normalization when a schema codec is nearby but absent. `packages/foundation/modeling/schema/src/BinaryFileExtension.ts:148-152` lowercases an extracted extension for `hasBinaryExtension`; a `BinaryFileExtensionFromPath` transformation schema would be a useful fixture.
@@ -93,7 +93,7 @@
 ## SFV4-null-return refinements
 
 - Internal soft decoders returning `null` are strong candidates when callers immediately branch on null. Examples: `packages/foundation/modeling/schema/src/CryptoTxnHash/CryptoTxnHash.schema.ts:22-32` and `packages/foundation/modeling/schema/src/CryptoWalletAddress/CryptoWalletAddress.schema.ts:41-85`; both can return `Option<Uint8Array>`.
-- UI adapter contracts can legitimately return `null`. `packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.adapter.ts:114-120` bridges date/time picker empty values; keep this as a 3rd-party/UI boundary escape hatch.
+- UI adapter contracts can legitimately return `null`. The date/time picker adapter (once in the retired `DateTimeUtcFromValid` concept, removed in the effect-schema-parity group D PR; now private helpers in `packages/foundation/ui-system/ui/src/components/effect-date-time-picker.tsx`) bridges date/time picker empty values; keep this as a 3rd-party/UI boundary escape hatch.
 - Encoded HTTP-header omission can legitimately use `undefined` when the decoded/domain side is already `Option`. Example: one-way secure-header transforms such as `packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/CrossOriginEmbedderPolicy.schema.ts:137-144`.
 - Exported helpers that duplicate an existing Option surface are still candidates. `packages/foundation/modeling/schema/src/Csp/Csp.schema.ts:824-830` returns `string | undefined`, while `ContentSecurityPolicyHeader.createValue` at `:885-904` already exposes `Effect<Option<string>, SecureHeaderError>`.
 
@@ -117,7 +117,7 @@
 
 ## SFV4-normalization Refinements
 
-- Useful true-positive fixture: `packages/foundation/primitive/data/src/internal/data/mime-types/index.ts:179` normalizes caller input for `lookup` by extracting an extension and lowercasing it in a function body. A small `S.decodeTo(..., SchemaTransformation.transform(...))` lookup-input schema would mirror existing normalization exemplars such as `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36-43` and `packages/foundation/modeling/schema/src/internal/email.ts:36-39`.
+- Useful true-positive fixture: `packages/foundation/primitive/data/src/internal/data/mime-types/index.ts:179` normalizes caller input for `lookup` by extracting an extension and lowercasing it in a function body. A small `S.decodeTo(..., SchemaTransformation.transform(...))` lookup-input schema would mirror existing normalization exemplars such as the trimming codec the retired `CommonTextSchemas` concept carried and `packages/foundation/modeling/schema/src/internal/email.ts:36-39`.
 - Constant-data construction needs an escape hatch. `packages/foundation/primitive/data/src/internal/data/utils.ts:4` uses `Str.capitalize` to derive formal calendar literals from static lowercase arrays; this is not boundary normalization of user input.
 - Tests need an escape hatch. `packages/foundation/primitive/data/test/keyboard-shortcuts.test.ts:56` uses `Str.capitalize` as a fixture invariant for curated shortcut rows; do not flag test assertions as schema-normalization targets.
 
