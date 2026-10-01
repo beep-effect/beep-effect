@@ -1193,7 +1193,8 @@ describe("ci lane timing admission window", () => {
       const report = yield* collectCiLaneTimingWindow(
         ".",
         windowOptions({
-          until: DateTime.makeUnsafe("2026-09-25T14:47:00.000Z"),
+          since: DateTime.makeUnsafe("2026-09-26T00:00:00Z"),
+          until: DateTime.makeUnsafe("2026-10-03T00:00:00Z"),
         })
       );
       strictEqual(report.contextCount, 16);

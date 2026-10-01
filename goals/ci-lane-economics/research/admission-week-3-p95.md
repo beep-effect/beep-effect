@@ -194,8 +194,19 @@ day come from the census TSV's unique run ids.
   `--until` to the whole week, so the 2.6 days when `Lint Policy` was still
   required went unmeasured. The verdict does not depend on it, but a future
   window that straddles a ruleset change could pass without measuring a
-  check that was required for part of it. A mid-window population warning in
-  `beep ci lane-timings` is owed (ledger 2026-10-01).
+  check that was required for part of it. #1369 (merged 2026-10-01, after
+  this census ran) closes that gap: `--window` now refuses a window that a
+  ruleset change straddles unless `--preview` is passed. Rerunning the
+  canonical command on main after #1369 exits 1 with `required contexts
+  changed inside the window: ruleset 10240248 version 50918272 effective
+  2026-09-25T14:46:59.802Z (after version 49479116) removed Lint Policy.`
+  Under current rules, window 3 is therefore not an admissible window at all.
+  The tables above come from the run made before #1369 and serve as
+  attribution. The verdict (no admission) is the same either way.
+- The first complete half-open UTC week under the 16-context population
+  alone is `2026-09-26T00:00:00Z` → `2026-10-03T00:00:00Z`. It already
+  contains three of the breaching days above (09-26, 09-27, 09-29), so
+  censusing it before a queue move lands would measure the same fault.
 - The remaining failure is hosted-runner concurrency under agent fan-out.
   Shard re-splits cannot fix it. The proposed (unsigned) next decision is
   `research/repair-decision-3-proposed.md`. No shard or fleet move is made

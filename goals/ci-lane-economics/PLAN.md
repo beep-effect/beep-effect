@@ -28,7 +28,10 @@ Status: `active`
   change landed inside window 3, so the census resolves 16 contexts at its
   `--until` and `Lint Policy` leaves the admission table. No packet entry
   recorded the change; the census found it by failing closed (ledger
-  2026-10-01).
+  2026-10-01). #1369 (merged the same day) now refuses any `--window` a
+  ruleset change straddles, so window 3 is non-admissible on main. Its tables
+  stand as attribution. The first clean 16-context week is 2026-09-26 →
+  2026-10-03.
 
 - Window-3 retarget (2026-09-24): the last repair merge is #1194 at
   2026-09-22T16:34Z, so window 3 is the first complete half-open UTC week

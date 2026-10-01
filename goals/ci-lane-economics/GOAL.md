@@ -18,6 +18,7 @@ Current phase: P3 repair path. Three admission windows are denied:
   fan-out from 09-25. See `research/admission-week-3-p95.md`. The next move
   is proposed, unsigned, in `research/repair-decision-3-proposed.md`; window
   4 is the first complete half-open UTC week after a signed move merges.
+  Since #1369 the census refuses a window that a ruleset change straddles.
 
 The repair path is signed in `research/repair-decision-2.md`. Moves: #1195
 (`Test Unit` shard split: `repo-cli` becomes `repo-cli-1`/`repo-cli-2` via
