@@ -92,7 +92,10 @@ Higher sources outrank lower sources when they conflict.
       with `pkg.pr.new` allowed by the environment, `bash scripts/cloud-session-setup.sh`
       exits `0`, after which `bun --version` equals `.bun-version`,
       `node_modules/effect/package.json` exists, and `bun run beep --help`
-      exits `0`.
+      exits `0`. Binaries land beside the caller's existing `bun`, so no PATH
+      change is needed; only when no `bun` existed, or `--host cloud` was
+      passed, does the caller first `source ~/.cache/beep/cloud-env.sh`
+      (never the setup script itself).
 - [ ] `bash scripts/cloud-session-setup.sh --check` on a container that denies
       `pkg.pr.new` exits `78` and prints the denied host and the remedy
       ("add pkg.pr.new to the environment's allowed domains") without changing
@@ -123,7 +126,7 @@ Higher sources outrank lower sources when they conflict.
 | Script lint | `shellcheck scripts/cloud-session-setup.sh` | No findings |
 | Script no-op on satisfied host | `bash scripts/cloud-session-setup.sh && git status --porcelain` | Exit `0`; no tracked changes |
 | Preflight on denied host | `bash scripts/cloud-session-setup.sh --check` in the cloud before the allowlist | Exit `78`; names `pkg.pr.new` |
-| Full bootstrap in the cloud | `bash scripts/cloud-session-setup.sh && bun run beep --help` after the allowlist | Exit `0` |
+| Full bootstrap in the cloud | `bash scripts/cloud-session-setup.sh --host cloud && source ~/.cache/beep/cloud-env.sh && bun run beep --help` after the allowlist | Exit `0` |
 | Hook guard | `BEEP_AGENT_HOST=cloud bash .claude/hooks/hook-pulse.sh < /dev/null; echo $?` and the SessionStart transcript of a cloud session | Exit `0`; no error lines |
 | Pulse conformance (only if D3 adds a literal) | `bun run beep quality package-verify @beep/repo-ai-metrics --quick` | Green |
 | Reflection artifact | `bun run beep lint reflection-artifacts` | Green |
