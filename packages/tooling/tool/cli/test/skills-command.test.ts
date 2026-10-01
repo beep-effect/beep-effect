@@ -3,8 +3,7 @@ import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { Effect, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -264,14 +263,11 @@ describe("skills command", () => {
       Effect.gen(function* () {
         yield* writeProjectFile(".codex/config.toml", "[skills]\n  include_instructions = true\n");
 
-        const result = yield* Effect.result(runSkillsUpdate({ mode: "write", skill: O.some("grill-me") }));
+        const result = yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") }).pipe(Effect.flip);
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
 
-        assertTrue(Result.isFailure(result));
-        if (Result.isFailure(result)) {
-          expect(result.failure.message).toContain("unsafe file path");
-        }
+        expect(result.message).toContain("unsafe file path");
         expect(yield* fs.exists(path.join(process.cwd(), ".claude", "pwned.md"))).toBe(false);
       }).pipe(Effect.provideService(HttpClient.HttpClient, makeTraversalSkillsClient()), withTempRepoCommand)
     ));

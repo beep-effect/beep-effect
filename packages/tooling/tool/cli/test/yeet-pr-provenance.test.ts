@@ -10,6 +10,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { assertDefined, assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, Fiber, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -37,7 +38,7 @@ describe("Yeet PR provenance v2", () => {
 
   it.effect("does not classify companion variables as Codex", () =>
     Effect.gen(function* () {
-      expect(yield* detectCodexEnvironment).toStrictEqual([false, O.none()]);
+      deepStrictEqual(yield* detectCodexEnvironment, [false, O.none()]);
     }).pipe(
       Effect.provideService(
         ConfigProvider.ConfigProvider,
@@ -78,8 +79,8 @@ describe("Yeet PR provenance v2", () => {
         )
       );
       expect(provenance.harness).toBe("claude-code");
-      expect(provenance.sessionHome).toStrictEqual(O.some("/session/home"));
-      expect(provenance.sessionName).toStrictEqual(O.some("FABLE"));
+      assertSome(provenance.sessionHome, "/session/home");
+      assertSome(provenance.sessionName, "FABLE");
       expect(provenance.model).toBe("claude-opus-4-1");
     }).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -130,7 +131,7 @@ describe("Yeet PR provenance v2", () => {
           ConfigProvider.fromEnv({ env: { HOME: home, CLAUDE_CODE_SESSION_ID: "claude-session", CLAUDE_PID: "123" } })
         )
       );
-      expect(provenance.sessionHome).toStrictEqual(O.some("/checkout"));
+      assertSome(provenance.sessionHome, "/checkout");
       expect(provenance.sessionHomeSource).toBe("checkout");
     }).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -144,7 +145,7 @@ describe("Yeet PR provenance v2", () => {
       Effect.tap((provenance) =>
         Effect.sync(() => {
           expect(provenance.harness).toBe("codex");
-          expect(provenance.hostHarness).toStrictEqual(O.some("claude-code"));
+          assertSome(provenance.hostHarness, "claude-code");
         })
       ),
       provideScopedLayer(PlatformLayer)
@@ -170,7 +171,7 @@ describe("Yeet PR provenance v2", () => {
           ConfigProvider.fromEnv({ env: { HOME: home, CODEX_THREAD_ID: "thread-model" } })
         )
       );
-      expect(provenance.sessionHome).toStrictEqual(O.some("/session/home"));
+      assertSome(provenance.sessionHome, "/session/home");
       expect(provenance.model).toBe("gpt-5.6-codex");
     }).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -195,8 +196,8 @@ describe("Yeet PR provenance v2", () => {
       yield* TestClock.adjust("2 seconds");
       const provenance = yield* Fiber.join(fiber);
       expect(provenance.harness).toBe("codex");
-      expect(provenance.sessionId).toStrictEqual(O.some("exact-thread-id"));
-      expect(provenance.sessionHome).toStrictEqual(O.some(root));
+      assertSome(provenance.sessionId, "exact-thread-id");
+      assertSome(provenance.sessionHome, root);
       expect(provenance.model).toBe("unknown");
     }).pipe(
       Effect.provideService(
@@ -231,7 +232,7 @@ describe("Yeet PR provenance v2", () => {
         )
       );
       expect(provenance.workspace).toBe("beep-effect10");
-      expect(provenance.sessionWorkspace).toStrictEqual(O.some("beep-effect3"));
+      assertSome(provenance.sessionWorkspace, "beep-effect3");
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -245,8 +246,17 @@ describe("Yeet PR provenance v2", () => {
     });
     const publicValue = toPublicPrProvenance([claude, codex], O.some(42), true);
     expect(publicValue).toBeInstanceOf(PublicPrProvenance);
-    expect(publicValue.agents[0]?.label).toStrictEqual(O.none());
-    expect(publicValue.agents[1]?.label).toStrictEqual(O.some("FABLE"));
+    {
+      const optionUnderTest = publicValue.agents[0]?.label;
+      assertDefined(optionUnderTest);
+      assertNone(optionUnderTest);
+    }
+    {
+      const optionUnderTest = publicValue.agents[1]?.label;
+      const expectedOptionValue = "FABLE";
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
     const footer = renderPrProvenance(publicValue);
     expect(footer).toContain("bun run beep yeet resume 42");
     expect(footer).not.toContain("thread-private");

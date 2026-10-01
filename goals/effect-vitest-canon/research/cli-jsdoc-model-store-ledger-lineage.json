@@ -1,0 +1,472 @@
+{
+  "sourceFixSha": "37e76036e5486d84ede6931c2c371b0e68968e04",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:1078:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:233:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:300:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:377:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:425:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:501:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:585:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:642:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:705:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:766:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:840:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:906:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:985:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:114:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:133:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:153:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:176:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:194:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:208:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:227:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:241:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:264:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:287:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:311:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:334:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:359:runPromise@4#1",
+    "EV003:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:144:withFixtureRepo@42#1",
+    "EV003:packages/tooling/tool/cli/test/person-match-model-store.test.ts:24:withTempRoot@21#1"
+  ],
+  "lineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:1078:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "flags Effect and discovered foundation roots in examples without banning other workspace roots",
+      "currentTitle": "flags Effect and discovered foundation roots in examples without banning other workspace roots",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1081,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf '@beep/foundation-demo\\\\n@beep/consumer\\\\n'\", packages: [ { name: \"@beep/foundation-demo\", dir: \"foundation/demo\", files: [ [ \"src/index.t"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:233:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "checks sectionless prose, loose fences, and empty titled examples",
+      "currentTitle": "checks sectionless prose, loose fences, and empty titled examples",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 236,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf '@beep/demo\\\\n'\", packages: [ { name: \"@beep/demo\", dir: \"demo\", files: [ [ \"src/index.ts\", `/** * Demo package documentation. * * @packag"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:300:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "exempts re-export declarations from requiredExportTags and missingSummary while direct exports still fire (R2, R5)",
+      "currentTitle": "exempts re-export declarations from requiredExportTags and missingSummary while direct exports still fire (R2, R5)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 303,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf '@beep/demo\\\\n'\", packages: [ { name: \"@beep/demo\", dir: \"demo\", files: [ [ \"src/lib.ts\", `/** * Demo library value re-exported by the pac"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:377:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "filters phantom package names parsed from topo-sort dependency section headers (R3-J2)",
+      "currentTitle": "filters phantom package names parsed from topo-sort dependency section headers (R3-J2)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 380,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf 'dependencies 0\\\\ndevDependencies 1\\\\npeerDependencies 2\\\\noptionalDependencies 3\\\\n@beep/demo 4\\\\n'\", packages: [ { name: \"@beep/demo\", d"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:425:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "parses real workspace package names from topo-sort output in topological order (R3-J2)",
+      "currentTitle": "parses real workspace package names from topo-sort output in topological order (R3-J2)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 428,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf 'devDependencies 0\\\\n@beep/demo 1\\\\ndependencies 2\\\\n@beep/demo-two 3\\\\n'\", packages: [ { name: \"@beep/demo\", dir: \"demo\", files: [ [ \"src"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:501:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "strips multi-line import statements before flagging type assertions while real assertions outside imports still fire (R3-J3)",
+      "currentTitle": "strips multi-line import statements before flagging type assertions while real assertions outside imports still fire (R3-J3)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 504,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf '@beep/demo\\\\n'\", packages: [ { name: \"@beep/demo\", dir: \"demo\", files: [ [ \"src/index.ts\", `/** * Demo package documentation. * * @packag"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:585:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "consolidates a documented-first-signature function-overload group into a single resolved entry (R19)",
+      "currentTitle": "consolidates a documented-first-signature function-overload group into a single resolved entry (R19)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 588,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf '@beep/demo\\\\n'\", packages: [ { name: \"@beep/demo\", dir: \"demo\", files: [ [ \"src/index.ts\", `/** * Demo package documentation. * * @packag"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:642:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "consolidates a fully undocumented function-overload group into a single open entry (R19)",
+      "currentTitle": "consolidates a fully undocumented function-overload group into a single open entry (R19)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 645,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf '@beep/demo\\\\n'\", packages: [ { name: \"@beep/demo\", dir: \"demo\", files: [ [ \"src/index.ts\", `/** * Demo package documentation. * * @packag"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:705:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "still flags a malformed doc block on a non-anchor overload signature (R19)",
+      "currentTitle": "still flags a malformed doc block on a non-anchor overload signature (R19)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 708,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf '@beep/demo\\\\n'\", packages: [ { name: \"@beep/demo\", dir: \"demo\", files: [ [ \"src/index.ts\", `/** * Demo package documentation. * * @packag"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:766:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "attributes the doc block to the export assignment for a default-exported call expression while an undocumented sibling still opens (R20)",
+      "currentTitle": "attributes the doc block to the export assignment for a default-exported call expression while an undocumented sibling still opens (R20)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 769,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf '@beep/demo\\\\n'\", packages: [ { name: \"@beep/demo\", dir: \"demo\", files: [ [ \"src/index.ts\", `/** * Demo package documentation. * * @packag"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:840:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reads leading-comment JSDoc on destructured BindingElement exports (R24)",
+      "currentTitle": "reads leading-comment JSDoc on destructured BindingElement exports (R24)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 843,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf '@beep/demo\\\\n'\", packages: [ { name: \"@beep/demo\", dir: \"demo\", files: [ [ \"src/index.ts\", `/** * Demo package documentation. * * @packag"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:906:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "strips string literal contents before flagging declare/any/as-assertion patterns while real unsafe code outside strings still fires (R20, R21)",
+      "currentTitle": "strips string literal contents before flagging declare/any/as-assertion patterns while real unsafe code outside strings still fires (R20, R21)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 909,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf '@beep/demo\\\\n'\", packages: [ { name: \"@beep/demo\", dir: \"demo\", files: [ [ \"src/index.ts\", `/** * Demo package documentation. * * @packag"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:985:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "scans a namespaced-barrel target's own declarations exactly like a flat-barrel target, with only the barrel line itself exempt (R9)",
+      "currentTitle": "scans a namespaced-barrel target's own declarations exactly like a flat-barrel target, with only the barrel line itself exempt (R9)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 988,
+          "evidence": "Effect.runPromise( withFixtureRepo( { topoSortScript: \"printf '@beep/demo\\\\n'\", packages: [ { name: \"@beep/demo\", dir: \"demo\", files: [ [ \"src/index.ts\", `/** * Demo package documentation. * * @packag"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:114:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects an existing corrupt pin and releases its acquisition lock",
+      "currentTitle": "rejects an existing corrupt pin and releases its acquisition lock",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 115,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const alignerDirectory = path.join(root, \"pinned\", \"aligner\""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:133:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects a dangling pin without attempting a download and releases its lock",
+      "currentTitle": "rejects a dangling pin without attempting a download and releases its lock",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 134,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const alignerDirectory = path.join(root, \"pinned\", \"aligner\""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:153:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects an aliased existing pin and releases its lock",
+      "currentTitle": "rejects an aliased existing pin and releases its lock",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 154,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const alignerDirectory = path.join(root, \"pinned\", \"aligner\""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:176:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "maps an occupied model-store lock to the typed acquisition channel and preserves its owner token",
+      "currentTitle": "maps an occupied model-store lock to the typed acquisition channel and preserves its owner token",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 177,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const lockPath = path.join(root, \".adaface-model-store.lock\""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:194:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects a model root that is a regular file through the typed integrity channel",
+      "currentTitle": "rejects a model root that is a regular file through the typed integrity channel",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 195,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const fileRoot = path.join(root, \"model-root-file\"); yield*"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:208:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects incomplete Buffalo and AdaFace component sets before reading artifacts",
+      "currentTitle": "rejects incomplete Buffalo and AdaFace component sets before reading artifacts",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 209,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const buffalo = yield* buffaloModel(root, []); const adaFace = yield* adaFaceModel(root, []); yield* expectIntegrityFailure( verifyP"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:227:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects a same-size component set that omits the detector role",
+      "currentTitle": "rejects a same-size component set that omits the detector role",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 228,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const path = yield* Path.Path; const runtimeRoot = path.join(root, \"models\", \"beep_buffalo_l_v1\"); const recognizer = recognizerComp"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:241:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects altered component provenance before reading its artifacts",
+      "currentTitle": "rejects altered component provenance before reading its artifacts",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 242,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const path = yield* Path.Path; const runtimeRoot = path.join(root, \"models\", \"beep_buffalo_l_v1\"); const alteredDetector = { ...dete"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:264:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects missing and duplicate artifact provenance for a pinned component",
+      "currentTitle": "rejects missing and duplicate artifact provenance for a pinned component",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 265,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const path = yield* Path.Path; const runtimeRoot = path.join(root, \"models\", \"beep_buffalo_l_v1\"); const recognizer = recognizerComp"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:287:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects altered artifact metadata before trusting its installation path",
+      "currentTitle": "rejects altered artifact metadata before trusting its installation path",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 288,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const path = yield* Path.Path; const runtimeRoot = path.join(root, \"models\", \"beep_buffalo_l_v1\"); const model = yield* buffaloModel"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:311:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "re-hashes exact reported metadata and rejects corrupt physical bytes",
+      "currentTitle": "re-hashes exact reported metadata and rejects corrupt physical bytes",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 312,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const runtimeRoot = path.join(root, \"models\", \"beep_buffalo_"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:334:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects an exact reported artifact when its installation path is an alias",
+      "currentTitle": "rejects an exact reported artifact when its installation path is an alias",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 335,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const runtimeRoot = path.join(root, \"models\", \"beep_buffalo_"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/person-match-model-store.test.ts:359:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "builds the AdaFace allowlist and rejects its missing detector artifact",
+      "currentTitle": "builds the AdaFace allowlist and rejects its missing detector artifact",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 360,
+          "evidence": "Effect.runPromise( withTempRoot((root) => Effect.gen(function* () { const components = [ detectorComponent([]), { role: \"aligner\", name: \"cvlface_DFA_mobilenet\", revision: \"8317e6dda53d91e707497992314"
+        }
+      ],
+      "afterMatches": []
+    }
+  ],
+  "wrapperMatches": [
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:144:withFixtureRepo@42#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:147:withFixtureRepo@42#1",
+      "occurrence": "v2:3dcc2ce72d6dc10cb058de9c33d70e9a1a23a31474c6ba247fada5d168128981",
+      "evidence": "function* <A, E, R>( options: { readonly topoSortScript: string; readonly packages: ReadonlyArray<FixturePackage> }, use: (repoRoot: string) => Effect.Effect<A, E, R> ) { return yield* Effect.acquireU"
+    },
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/person-match-model-store.test.ts:24:withTempRoot@21#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/person-match-model-store.test.ts:25:withTempRoot@21#1",
+      "occurrence": "v2:3048cd05dcf066b90ae1deec6c8e35add919181dbdc6d29591c9ca38cb38d039",
+      "evidence": "<A, E, R>(use: (root: string) => Effect.Effect<A, E, R>) => Effect.acquireUseRelease( FileSystem.FileSystem.use((fs) => fs.makeTempDirectory()), use, (root) => FileSystem.FileSystem.use((fs) => fs.rem"
+    }
+  ],
+  "addedCurrentRows": 0,
+  "counts": {
+    "open": 1650,
+    "fixed": 1833,
+    "exception": 12
+  },
+  "fullPackageProof": "passed grouped CLI package verification against source 37e76036e5: audit 683.8 seconds; docgen 21.0 seconds"
+}

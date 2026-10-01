@@ -16,8 +16,8 @@ import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
-import * as O from "effect/Option";
 import * as Str from "effect/String";
 
 const AT = "2026-08-17T00:00:00Z";
@@ -93,8 +93,8 @@ describe("YeetAckReceiptJson", () => {
   );
 
   it("rejects garbage instead of decaying to a partial receipt", () => {
-    expect(O.isNone(YeetAckReceiptJson.decodeOption("not json"))).toBe(true);
-    expect(O.isNone(YeetAckReceiptJson.decodeOption('{"id":"x"}'))).toBe(true);
+    YeetAckReceiptJson.decodeOption("not json").pipe(assertNone);
+    YeetAckReceiptJson.decodeOption('{"id":"x"}').pipe(assertNone);
   });
 });
 

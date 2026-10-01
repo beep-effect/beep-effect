@@ -7,7 +7,7 @@ import {
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
-import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
 
@@ -40,7 +40,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("rows filesystem", (it) 
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-vitest-inventory-read-" });
       const absent = yield* readEffectVitestInventory(root);
-      assertTrue(O.isNone(absent), "A missing baseline remains absent");
+      deepStrictEqual(absent, O.none(), "A missing baseline remains absent");
       yield* fs.makeDirectory(path.join(root, "standards"));
       yield* fs.writeFileString(path.join(root, "standards/effect-vitest.inventory.jsonc"), "{broken");
       const failure = yield* readEffectVitestInventory(root).pipe(Effect.flip);

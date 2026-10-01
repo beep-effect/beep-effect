@@ -6,10 +6,9 @@ import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, FileSystem, Layer, Path } from "effect";
 import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
@@ -112,9 +111,7 @@ describe("coverage baseline subtraction", () => {
             expect(R.keys(decoded.packages)).toStrictEqual(["@beep/alpha"]);
             expect(R.keys(decoded.exemptions)).toStrictEqual([]);
             expect(R.keys(decoded.follow_ups)).toStrictEqual(["@beep/alpha"]);
-            expect(R.get(decoded.packages, "@beep/alpha")).toStrictEqual(
-              O.some({ path: "packages/foundation/modeling/alpha" })
-            );
+            assertSome(R.get(decoded.packages, "@beep/alpha"), { path: "packages/foundation/modeling/alpha" });
             // Provenance is inherited, matching how scoped merges carry it through.
             expect(decoded.generated_at).toBe(baselineFixture.generated_at);
             expect(decoded.git_sha).toBe(baselineFixture.git_sha);

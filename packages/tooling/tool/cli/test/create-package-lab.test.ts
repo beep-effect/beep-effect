@@ -17,17 +17,19 @@ import {
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { today } from "@beep/schema/LocalDate";
 import { it } from "@beep/test-runner";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
+import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as jsonc from "jsonc-parser";
+import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
@@ -37,7 +39,6 @@ const encodeLabManifestFromJsonStringEffect = S.encodeEffect(LabManifestFromJson
 const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
-  TestConsole.layer,
   FsUtilsLive.pipe(Layer.provideMerge(CommandPlatformLayer)),
   TSMorphServiceLive.pipe(Layer.provideMerge(CommandPlatformLayer))
 );
@@ -50,8 +51,6 @@ const encodeJson = S.encodeUnknownEffect(UnknownJson);
 const encodePrettyJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }));
 const decodeUnknownJson = S.decodeUnknownEffect(UnknownJson);
 const CreatePackageLabTestTimeoutMs = 30_000;
-const TestFileCwd = process.cwd();
-
 const RootPackage = S.Struct({
   workspaces: S.Array(S.String),
 });
@@ -96,25 +95,13 @@ const decodeLabCheckTsconfig = S.decodeUnknownEffect(LabCheckTsconfig);
 const LabTsconfigArbitrary = Arbitrary.schema(AppTsconfig);
 const LabCheckTsconfigArbitrary = Arbitrary.schema(LabCheckTsconfig);
 
-const withTempRepoCommand = <A2, E, R>(use: Effect.Effect<A2, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const tmpDir = yield* fs.makeTempDirectory();
-
-      process.chdir(tmpDir);
-      yield* fs.makeDirectory(path.join(tmpDir, ".git"), { recursive: true });
-
-      return { fs, tmpDir } as const;
-    }),
-    () => use,
-    ({ fs, tmpDir }) =>
-      Effect.gen(function* () {
-        process.chdir(TestFileCwd);
-        yield* fs.remove(tmpDir, { recursive: true, force: true });
-      })
-  ).pipe(provideScopedLayer(CommandTestLayer), Effect.orDie);
+const temporaryRepository = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = yield* temporaryWorkingDirectory;
+  yield* fs.makeDirectory(path.join(directory, ".git"), { recursive: true });
+  return directory;
+});
 
 const writeTextFile = Effect.fn(function* (filePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -321,7 +308,8 @@ const withLabsFixture = <A2, E, R>(
   options: RootConfigOptions,
   use: (context: TempRepoCommandContext) => Effect.Effect<A2, E, R>
 ) =>
-  withTempRepoCommand(
+  Effect.andThen(
+    temporaryRepository,
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -330,7 +318,7 @@ const withLabsFixture = <A2, E, R>(
       yield* bootstrapMarkedIdentityWorkspace(rootDir);
       return yield* use({ fs, path, rootDir });
     })
-  );
+  ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), Effect.orDie);
 
 const readIdentityRegistry = Effect.fn(function* (context: TempRepoCommandContext) {
   return yield* context.fs.readFileString(
@@ -361,58 +349,66 @@ const expectNoPackageCeremony = (manifest: {
   expect(manifest.scripts.coverage).toBeUndefined();
 };
 
-describe("create-package --lab", { concurrent: false }, () => {
-  it.effect.prop(
-    "property: lab tsconfig schemas round-trip derived values",
-    [LabTsconfigArbitrary, LabCheckTsconfigArbitrary],
-    Effect.fnUntraced(function* ([labTsconfig, labCheckTsconfig]) {
-      expect(yield* decodeAppTsconfig(yield* encodeAppTsconfigEffect(labTsconfig))).toEqual(labTsconfig);
-      expect(yield* decodeLabCheckTsconfig(yield* encodeLabCheckTsconfigEffect(labCheckTsconfig))).toEqual(
-        labCheckTsconfig
-      );
-    }),
-    { arbitrary: fcRuns(16) }
-  );
-
-  {
-    const manifestEquivalence = S.toEquivalence(LabManifest);
-    const isoDate = Arbitrary.map(
-      Arbitrary.all([
-        Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1970), S.isLessThanOrEqualTo(2100))),
-        Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(12))),
-        Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(28))),
-      ]),
-      ([year, month, day]) =>
-        `${Str.padStart(4, "0")(String(year))}-${Str.padStart(2, "0")(String(month))}-${Str.padStart(2, "0")(String(day))}`
-    );
-    const encodedManifest = Arbitrary.all({
-      schemaVersion: Arbitrary.Constant("lab-manifest/v1" as const),
-      purpose: Arbitrary.schema(S.String.check(S.isMinLength(1))),
-      created: isoDate,
-      disposition: Arbitrary.schema(S.Union([S.Literal("active"), S.Literal("promote"), S.Literal("expired")])),
-      postgresSchema: S.Literal("lab_a").pipe(S.UndefinedOr, Arbitrary.schema),
-    });
+it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  describe("create-package --lab", { concurrent: false }, () => {
     it.effect.prop(
-      "property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates",
-      [encodedManifest],
-      Effect.fnUntraced(function* ([encoded]) {
-        const json = yield* encodePrettyJson(encoded);
-        const decoded = yield* decodeUnknownLabManifestFromJsonStringEffect(json);
-        expect(
-          manifestEquivalence(
-            yield* decodeUnknownLabManifestFromJsonStringEffect(yield* encodeLabManifestFromJsonStringEffect(decoded)),
-            decoded
-          )
-        ).toBe(true);
-      }),
+      "property: lab tsconfig schemas round-trip derived values",
+      [LabTsconfigArbitrary, LabCheckTsconfigArbitrary],
+      flow(
+        Effect.fnUntraced(function* ([labTsconfig, labCheckTsconfig]) {
+          expect(yield* decodeAppTsconfig(yield* encodeAppTsconfigEffect(labTsconfig))).toEqual(labTsconfig);
+          expect(yield* decodeLabCheckTsconfig(yield* encodeLabCheckTsconfigEffect(labCheckTsconfig))).toEqual(
+            labCheckTsconfig
+          );
+        }),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      ),
       { arbitrary: fcRuns(16) }
     );
-  }
 
-  it(
-    "scaffolds a nextjs lab with manifest, labs portless label, @beep/ui wiring, and the labs identity segment",
-    () =>
-      Effect.runPromise(
+    {
+      const manifestEquivalence = S.toEquivalence(LabManifest);
+      const isoDate = Arbitrary.map(
+        Arbitrary.all([
+          Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1970), S.isLessThanOrEqualTo(2100))),
+          Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(12))),
+          Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(28))),
+        ]),
+        ([year, month, day]) =>
+          `${Str.padStart(4, "0")(String(year))}-${Str.padStart(2, "0")(String(month))}-${Str.padStart(2, "0")(String(day))}`
+      );
+      const encodedManifest = Arbitrary.all({
+        schemaVersion: Arbitrary.Constant("lab-manifest/v1" as const),
+        purpose: Arbitrary.schema(S.String.check(S.isMinLength(1))),
+        created: isoDate,
+        disposition: Arbitrary.schema(S.Union([S.Literal("active"), S.Literal("promote"), S.Literal("expired")])),
+        postgresSchema: S.Literal("lab_a").pipe(S.UndefinedOr, Arbitrary.schema),
+      });
+      it.effect.prop(
+        "property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates",
+        [encodedManifest],
+        flow(
+          Effect.fnUntraced(function* ([encoded]) {
+            const json = yield* encodePrettyJson(encoded);
+            const decoded = yield* decodeUnknownLabManifestFromJsonStringEffect(json);
+            expect(
+              manifestEquivalence(
+                yield* decodeUnknownLabManifestFromJsonStringEffect(
+                  yield* encodeLabManifestFromJsonStringEffect(decoded)
+                ),
+                decoded
+              )
+            ).toBe(true);
+          }),
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        { arbitrary: fcRuns(16) }
+      );
+    }
+
+    it.effect(
+      "scaffolds a nextjs lab with manifest, labs portless label, @beep/ui wiring, and the labs identity segment",
+      () =>
         withLabsFixture(LabsRootConfig, (context) =>
           Effect.gen(function* () {
             const { fs, path, rootDir } = context;
@@ -495,15 +491,13 @@ describe("create-package --lab", { concurrent: false }, () => {
               markerIndex(LAB_EXPORTS_END_MARKER)(registry)
             );
           })
-        )
-      ),
-    CreatePackageLabTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageLabTestTimeoutMs
+    );
 
-  it(
-    "scaffolds a vite lab with the @beep/ui style chain and lab-only postcss config",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "scaffolds a vite lab with the @beep/ui style chain and lab-only postcss config",
+      () =>
         withLabsFixture(LabsRootConfig, (context) =>
           Effect.gen(function* () {
             const { fs, path, rootDir } = context;
@@ -551,15 +545,13 @@ describe("create-package --lab", { concurrent: false }, () => {
             expect(registry).toContain('const generatedLabComposers = $I.compose("graph-lab");');
             expect(registry).toContain("export const $GraphLabId");
           })
-        )
-      ),
-    CreatePackageLabTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageLabTestTimeoutMs
+    );
 
-  it(
-    "scaffolds a service lab with the HttpApi stack and no frontend dependencies",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "scaffolds a service lab with the HttpApi stack and no frontend dependencies",
+      () =>
         withLabsFixture(LabsRootConfig, (context) =>
           Effect.gen(function* () {
             const { fs, path, rootDir } = context;
@@ -627,15 +619,13 @@ describe("create-package --lab", { concurrent: false }, () => {
             expect(registry).toContain('const generatedLabComposers = $I.compose("probe-svc");');
             expect(registry).toContain("export const $ProbeSvcId");
           })
-        )
-      ),
-    CreatePackageLabTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageLabTestTimeoutMs
+    );
 
-  it(
-    "scaffolds a tauri lab with a compilable crate icon and the labs portless devUrl",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "scaffolds a tauri lab with a compilable crate icon and the labs portless devUrl",
+      () =>
         withLabsFixture(LabsRootConfig, (context) =>
           Effect.gen(function* () {
             const { fs, path, rootDir } = context;
@@ -685,15 +675,13 @@ describe("create-package --lab", { concurrent: false }, () => {
             const registry = yield* readIdentityRegistry(context);
             expect(registry).toContain('const generatedLabComposers = $I.compose("probe-tauri");');
           })
-        )
-      ),
-    CreatePackageLabTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageLabTestTimeoutMs
+    );
 
-  it(
-    "rebuilds the labs identity segment sorted when a second lab is created",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "rebuilds the labs identity segment sorted when a second lab is created",
+      () =>
         withLabsFixture(LabsRootConfig, (context) =>
           Effect.gen(function* () {
             yield* runCreatePackageCommand([
@@ -725,16 +713,15 @@ describe("create-package --lab", { concurrent: false }, () => {
               markerIndex("export const $ZetaLabId")(registry)
             );
           })
-        )
-      ),
-    CreatePackageLabTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageLabTestTimeoutMs
+    );
 
-  it(
-    "refuses --lab flag misuse before touching the filesystem",
-    () =>
-      Effect.runPromise(
-        withTempRepoCommand(
+    it.effect(
+      "refuses --lab flag misuse before touching the filesystem",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const runRefusal = (args: ReadonlyArray<string>) =>
               runCreatePackageCommand(args).pipe(
@@ -777,15 +764,17 @@ describe("create-package --lab", { concurrent: false }, () => {
               "non-empty --description"
             );
           })
-        )
-      ),
-    CreatePackageLabTestTimeoutMs
-  );
+        ).pipe(
+          Effect.provideServiceEffect(Console.Console, TestConsole.make),
+          Effect.orDie,
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+      CreatePackageLabTestTimeoutMs
+    );
 
-  it(
-    "refuses lab scaffolding when the root workspaces lack the apps/labs/* glob (D5)",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "refuses lab scaffolding when the root workspaces lack the apps/labs/* glob (D5)",
+      () =>
         withLabsFixture(NoLabsGlobRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
             const result = yield* runCreatePackageCommand([
@@ -807,15 +796,13 @@ describe("create-package --lab", { concurrent: false }, () => {
             expect(result).toContain('missing the "apps/labs/*" glob');
             expect(yield* fs.exists(path.join(rootDir, "apps", "labs", "probe-lab"))).toBe(false);
           })
-        )
-      ),
-    CreatePackageLabTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageLabTestTimeoutMs
+    );
 
-  it(
-    "refuses a non-lab package targeted into the labs root via --parent-dir",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "refuses a non-lab package targeted into the labs root via --parent-dir",
+      () =>
         withLabsFixture(LabsRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
             // The inverse of the D5 guard: landing inside apps/labs without
@@ -843,15 +830,13 @@ describe("create-package --lab", { concurrent: false }, () => {
             expect(result).toContain("--lab");
             expect(yield* fs.exists(path.join(rootDir, "apps", "labs", "sneaky-lab"))).toBe(false);
           })
-        )
-      ),
-    CreatePackageLabTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageLabTestTimeoutMs
+    );
 
-  it(
-    "gates every create on the retired-packages registry, dry-run included",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "gates every create on the retired-packages registry, dry-run included",
+      () =>
         withLabsFixture(LabsRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
             yield* writeJsonFile(path.join(rootDir, RETIRED_REGISTRY_PATH), {
@@ -907,15 +892,13 @@ describe("create-package --lab", { concurrent: false }, () => {
             const createOutput = A.join(A.map(yield* TestConsole.logLines, String), "\n");
             expect(createOutput).toContain(`${RETIRED_REGISTRY_PATH}: removed the retired entry for "@beep/probe"`);
           })
-        )
-      ),
-    CreatePackageLabTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageLabTestTimeoutMs
+    );
 
-  it(
-    "leaves the retired registry untouched when the name is absent",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "leaves the retired registry untouched when the name is absent",
+      () =>
         withLabsFixture(LabsRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
             // The no-op path is unreachable through the command surface —
@@ -934,8 +917,8 @@ describe("create-package --lab", { concurrent: false }, () => {
             expect(removed).toBe(false);
             expect(yield* fs.readFileString(registryPath)).toBe(before);
           })
-        )
-      ),
-    CreatePackageLabTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageLabTestTimeoutMs
+    );
+  });
 });

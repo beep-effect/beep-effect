@@ -1072,3 +1072,22 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** a `GOAL.md` convention for "blocked until
   <instant>" that the launcher honours by exiting cleanly and re-firing at
   that instant, so a date-gated goal is scheduled rather than looped.
+
+## 2026-10-01 — a mid-window ruleset change stopped the window-3 census
+
+- **Doing:** running the window-3 admission census (`--since
+  2026-09-23T00:00:00Z --until 2026-09-30T00:00:00Z`, no `--preview`) from
+  the scheduled launcher.
+- **Evidence:** the command exited 1 with `Ruleset 10240248 version 50918272
+  is not a ratified admission population.` `gh api
+  repos/beep-effect/beep-effect/rulesets/10240248/history` shows version
+  `50918272` effective 2026-09-25T14:46:59.802Z, removing `Heavy / Lint
+  Policy` (16 contexts). No packet, PR or ledger entry recorded the change, so
+  the census only found it when the window had already closed. The census
+  takes its population from the version in force at `--until`, so window 3
+  straddles two populations: 17 contexts for its first 2.6 days and 16 after.
+- **Would have prevented it:** a ruleset-change hook (or a nightly `gh api`
+  diff in the research routine) that writes a ledger row and a
+  ratification prompt whenever ruleset `10240248` gains a history version,
+  plus a `--window` warning when a population change falls inside the window
+  instead of only resolving the version at its end.
