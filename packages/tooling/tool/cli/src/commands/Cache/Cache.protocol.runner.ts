@@ -36,6 +36,8 @@ import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
 import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 
+const CacheProtocolJson = S.fromJsonString(S.Json);
+
 const cases = CacheProtocolIsolationRoot.fields.case;
 const extraCase = S.is(CacheProtocolReadFailure.fields.case);
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
@@ -186,7 +188,7 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
       yield* writeContainedFileString(
         work,
         ".turbo/config.json",
-        yield* S.encodeEffect(S.fromJsonString(S.Json))({ teamId: request.client.namespace })
+        yield* S.encodeEffect(CacheProtocolJson)({ teamId: request.client.namespace })
       );
       yield* writeContainedFileString(
         work,
@@ -442,10 +444,10 @@ export const runCacheProtocolExperiment = Effect.fn("CacheProtocol.experiment")(
         const resolved = CacheProtocolRequest.make({ ...request, executable });
         const encoded = yield* JsonStringCodec(CacheProtocolRequest).encode(resolved);
         yield* writeContainedFileString(directory, "request.json", encoded);
-        const module = yield* S.encodeEffect(S.fromJsonString(S.Json))(
+        const module = yield* S.encodeEffect(CacheProtocolJson)(
           path.join(root, "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts")
         );
-        const worker = `import { NodeCrypto, NodeServices } from "@effect/platform-node";\nimport { BunRuntime } from "@effect/platform-bun";\nimport { Effect, FileSystem, Layer } from "effect";\nimport * as S from "effect/Schema";\nimport { runCacheProtocolWorker } from ${module};\nimport { CacheProtocolRequest, CacheProtocolExecution } from ${yield* S.encodeEffect(S.fromJsonString(S.Json))(path.join(root, "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.schemas.ts"))};\nBunRuntime.runMain(Effect.gen(function*(){ const fs=yield*FileSystem.FileSystem; const request=yield*S.decodeUnknownEffect(S.fromJsonString(CacheProtocolRequest))(yield*fs.readFileString("request.json")); const report=yield*runCacheProtocolWorker(process.cwd(),request); yield*fs.writeFileString("report.json",yield*S.encodeEffect(S.fromJsonString(CacheProtocolExecution))(report)); }).pipe(Effect.provide(Layer.mergeAll(NodeServices.layer,NodeCrypto.layer))));\n`;
+        const worker = `import { NodeCrypto, NodeServices } from "@effect/platform-node";\nimport { BunRuntime } from "@effect/platform-bun";\nimport { Effect, FileSystem, Layer } from "effect";\nimport * as S from "effect/Schema";\nimport { runCacheProtocolWorker } from ${module};\nimport { CacheProtocolRequest, CacheProtocolExecution } from ${yield* S.encodeEffect(CacheProtocolJson)(path.join(root, "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.schemas.ts"))};\nconst RequestJson=S.fromJsonString(CacheProtocolRequest); const ExecutionJson=S.fromJsonString(CacheProtocolExecution);\nBunRuntime.runMain(Effect.gen(function*(){ const fs=yield*FileSystem.FileSystem; const request=yield*S.decodeUnknownEffect(RequestJson)(yield*fs.readFileString("request.json")); const report=yield*runCacheProtocolWorker(process.cwd(),request); yield*fs.writeFileString("report.json",yield*S.encodeEffect(ExecutionJson)(report)); }).pipe(Effect.provide(Layer.mergeAll(NodeServices.layer,NodeCrypto.layer))));\n`;
         yield* writeContainedFileString(directory, "worker.ts", worker);
         const captured = yield* runCapturedStreams({
           command: "/usr/bin/bwrap",

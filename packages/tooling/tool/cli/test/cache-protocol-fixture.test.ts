@@ -16,6 +16,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const FixtureEventsJson = S.fromJsonString(S.Array(CacheFixtureEvent));
+
 const reader = "fixture-reader-only";
 const writer = "fixture-writer-only";
 const credentials = CacheFixtureCredentials.make({
@@ -164,8 +166,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
           );
         }
         const events = yield* fixture.events;
-        const encoded = yield* S.encodeEffect(S.fromJsonString(S.Array(CacheFixtureEvent)))(events);
-        expect(yield* S.decodeUnknownEffect(S.fromJsonString(S.Array(CacheFixtureEvent)))(encoded)).toEqual(events);
+        const encoded = yield* S.encodeEffect(FixtureEventsJson)(events);
+        expect(yield* S.decodeUnknownEffect(FixtureEventsJson)(encoded)).toEqual(events);
         for (const secret of [reader, writer, tag, "complete fixture artifact"]) expect(encoded).not.toContain(secret);
         expect(events).toHaveLength(5);
         expect(A.map(events, (event) => event.sequence)).toEqual([1, 2, 3, 4, 5]);

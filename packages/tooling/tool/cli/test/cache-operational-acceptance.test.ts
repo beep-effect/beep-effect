@@ -51,6 +51,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { canaryInput, contractInput, input } from "./helpers/cache-producer-bundle-fixture.ts";
 
+const ActivationPreviewJson = S.fromJsonString(CacheActivationPreview);
+const AcceptanceReferenceJson = S.fromJsonString(CacheProducerAcceptanceReference);
+const PolicyBaselineJson = S.fromJsonString(CachePolicyBaseline);
+const QualificationStoreJson = S.fromJsonString(CacheQualificationStore);
+
 const platform = Layer.mergeAll(
   NodeCrypto.layer,
   NodeServices.layer,
@@ -156,7 +161,7 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
         const preview = CacheActivationPreview.make({ activation, source, target });
         const activationRequest = yield* writeEvidence(
           "activation.json",
-          yield* S.encodeEffect(S.fromJsonString(CacheActivationPreview))(preview)
+          yield* S.encodeEffect(ActivationPreviewJson)(preview)
         );
         const signedText = yield* Fingerprint.projectCacheSignedRoot(rootText);
         const signedRoot = yield* writeEvidence("signed-root.json", signedText);
@@ -235,7 +240,7 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
         const directory = path.join(root, "accepted");
         yield* fs.makeDirectory(directory, { mode: 0o700 });
         const accepted = yield* persistCacheProducerAcceptance(directory, request, trust);
-        const marker = yield* S.encodeEffect(S.fromJsonString(CacheProducerAcceptanceReference))(accepted);
+        const marker = yield* S.encodeEffect(AcceptanceReferenceJson)(accepted);
         yield* fs.writeFileString(path.join(root, "accepted.json"), marker);
         const reference = CacheEvidenceReference.make({
           path: "accepted.json",
@@ -275,7 +280,7 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
         yield* fs.makeDirectory(path.join(root, "standards"));
         yield* fs.writeFileString(
           path.join(root, "standards/cache-qualification-baseline.json"),
-          yield* S.encodeEffect(S.fromJsonString(CachePolicyBaseline))(baseline)
+          yield* S.encodeEffect(PolicyBaselineJson)(baseline)
         );
         const candidate = CacheQualificationEntry.make({
           key: contract.key,
@@ -289,7 +294,7 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
           key: contract.key,
           status: { state: "qualified", contract, review, receipts: [reference] },
         });
-        const prior = yield* S.encodeEffect(S.fromJsonString(CacheQualificationStore))(
+        const prior = yield* S.encodeEffect(QualificationStoreJson)(
           CacheQualificationStore.make({
             revision: 2,
             entries: [shadow],
@@ -315,10 +320,10 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
             .pipe(Effect.flip);
           expect(failure.message).toBe("Signed qualification requires a reviewed execution profile and activation.");
           expect(yield* fs.readFileString(ledger)).toBe(prior);
-          const priorStore = yield* S.decodeEffect(S.fromJsonString(CacheQualificationStore))(prior);
+          const priorStore = yield* S.decodeEffect(QualificationStoreJson)(prior);
           yield* fs.writeFileString(
             ledger,
-            yield* S.encodeEffect(S.fromJsonString(CacheQualificationStore))(
+            yield* S.encodeEffect(QualificationStoreJson)(
               CacheQualificationStore.make({
                 ...priorStore,
                 revision: 3,

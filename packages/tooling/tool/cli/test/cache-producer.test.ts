@@ -27,6 +27,9 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { input as bundleInput, contractInput, pilot as input } from "./helpers/cache-producer-bundle-fixture.ts";
 
+const ProducerApprovalJson = S.fromJsonString(CacheProducerApproval);
+const ProducerBindingJson = S.fromJsonString(CacheProducerBinding);
+
 const contract = S.decodeUnknownSync(CacheTaskContract)(contractInput);
 const setup = Effect.fn("ProducerTest.setup")(function* () {
   const receipt = yield* S.decodeUnknownEffect(CacheProducerBundle)(bundleInput);
@@ -339,9 +342,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const { fs, path, directory, receipt, envelope } = yield* persistentSetup();
         const verifier = yield* openCacheProducerVerifier(directory);
         const file = path.join(directory, "approval.json");
-        const approval = yield* S.decodeUnknownEffect(S.fromJsonString(CacheProducerApproval))(
-          yield* fs.readFileString(file)
-        );
+        const approval = yield* S.decodeUnknownEffect(ProducerApprovalJson)(yield* fs.readFileString(file));
         const changedContract = CacheTaskContract.make({ ...approval.contract, negativeCases: ["weaker-policy"] });
         for (const binding of [
           approval.binding,
@@ -351,7 +352,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
           }),
         ]) {
           const changed = CacheProducerApproval.make({ binding, contract: changedContract });
-          yield* fs.writeFileString(file, yield* S.encodeEffect(S.fromJsonString(CacheProducerApproval))(changed));
+          yield* fs.writeFileString(file, yield* S.encodeEffect(ProducerApprovalJson)(changed));
           assertTrue(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result)));
           assertTrue(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result)));
         }
@@ -375,7 +376,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         });
         yield* fs.writeFileString(
           path.join(directory, "approval.json"),
-          yield* S.encodeEffect(S.fromJsonString(CacheProducerBinding))(changed)
+          yield* S.encodeEffect(ProducerBindingJson)(changed)
         );
         assertTrue(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result)));
         assertTrue(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result)));

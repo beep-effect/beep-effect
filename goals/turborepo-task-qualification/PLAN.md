@@ -3273,3 +3273,41 @@ gates, this verifies the structural source repair batch on the updated dependenc
 set. Native qualification and semantic population closure remain unproven. The
 new current-source-review-refresh receipt records stale historical review bindings
 without renewing them. Publish this tested batch through Yeet before native work.
+
+
+### 2026-10-01 root Schema compiler gate and planner refresh
+
+The source-health publication exposed twenty-two root Oxlint inline Schema
+compiler findings that the passing package audit did not exercise. The obsolete
+publication was deliberately stopped after that observed failure. Ten files now
+hoist reusable schema ASTs; generated protocol worker codecs also live at module
+scope. No policy, baseline, threshold or suppression changed. Root Oxlint passes,
+as do 114 focused tests across ten files, package lint/source checks and the
+canonical package test typecheck. A fresh full CLI package proof is running with
+all ten source hashes captured and unchanged.
+
+The fresh census still has 144 workspaces, 3,473 graph nodes and 1,970 executable
+roots. Current clean local/hosted planner projections and nested-command routing
+are retained separately. The current-planner-routing-review receipt attributes
+twelve changed CI plans per context and explicitly reviews the twenty-one shell
+expression sites. Both generic census obligations remain open pending final
+committed-source attachment and complete dynamic source review. Stable/canary
+native qualification, adoption, reflection/lifecycle and full PR closeout remain
+required. The previous d331 frozen bindings are preserved as historical evidence;
+renew them after the hoist repair is verified and committed.
+
+The fresh full CLI proof completed successfully: audit 632.6 seconds and docgen
+21.7 seconds. All ten captured source hashes are unchanged. Together with root
+Oxlint, 114 focused tests and canonical test typechecking, this verifies the
+Schema compiler hoist repair. Publish the batch through Yeet and renew frozen
+source/workflow bindings before the native qualification run.
+
+
+Publication refused a stale base after main advanced to `f05e1a698d`. It was
+integrated as `5c1eb7a7df`, preserving all thirteen dirty/untracked file hashes.
+The sole inventory conflict was resolved by retaining all 2,876 current-main
+findings and the branch's twelve previously reviewed Cache exceptions; the
+branch had no modified or removed baseline rows. Installation from the merged
+frozen lockfile passed. Current package/quality proof must now include main's
+new CI modules and dependency changes. Earlier successful proof remains retained
+with its exact pre-merge source boundary; no stale-base override was used.

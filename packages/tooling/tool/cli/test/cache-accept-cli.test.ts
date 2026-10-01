@@ -20,6 +20,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { canaryInput, contractInput, input } from "./helpers/cache-producer-bundle-fixture.ts";
 
+const ProducerImportRequestJson = S.fromJsonString(CacheProducerImportRequest);
+const AcceptanceReferenceJson = S.fromJsonString(CacheProducerAcceptanceReference);
+
 it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), {
   timeout: "30 seconds",
   excludeTestServices: true,
@@ -67,11 +70,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), {
       yield* fs.makeDirectory(directory, { mode: 0o700 });
       const requestPath = path.join(root, "request.json");
       const referencePath = path.join(root, "reference.json");
-      yield* fs.writeFileString(
-        requestPath,
-        yield* S.encodeEffect(S.fromJsonString(CacheProducerImportRequest))(request),
-        { mode: 0o600 }
-      );
+      yield* fs.writeFileString(requestPath, yield* S.encodeEffect(ProducerImportRequestJson)(request), {
+        mode: 0o600,
+      });
       const args = [
         "bun",
         "run",
@@ -94,7 +95,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), {
       expect((yield* fs.stat(requestPath)).size).toBeGreaterThan(BigInt(64 * 1024));
       expect(accepted.exitCode).toBe(0);
       const marker = yield* fs.readFileString(referencePath);
-      const reference = yield* S.decodeEffect(S.fromJsonString(CacheProducerAcceptanceReference))(marker);
+      const reference = yield* S.decodeEffect(AcceptanceReferenceJson)(marker);
       const result = yield* readCacheProducerAcceptance(directory, reference, trust);
       expect(result.contract).toEqual(contract);
       expect(result.failures).toEqual([]);

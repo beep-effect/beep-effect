@@ -102,6 +102,8 @@ import type * as PlatformError from "effect/PlatformError";
 import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
 import type { CachePilotRequest } from "./Cache.pilot.schemas.ts";
 
+const CachePilotRunType = S.toType(CachePilotRun);
+
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot");
 const decodeSignedPilotRun = S.decodeUnknownEffect(S.toType(CacheSignedPilotRun));
 const PilotMode = LiteralKit(["local", "signed"]);
@@ -1065,7 +1067,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       env: Readonly<Record<string, string>> = {}
     ) {
       return yield* executeNative(fixture, id, enabled, reuse, guest, env).pipe(
-        Effect.flatMap(S.decodeUnknownEffect(S.toType(CachePilotRun)))
+        Effect.flatMap(S.decodeUnknownEffect(CachePilotRunType))
       );
     });
     const verifyFinalIntegrity = Effect.fn("CachePilot.verifyFinalIntegrity")(function* () {

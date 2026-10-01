@@ -2806,3 +2806,17 @@ While refreshing PR #1389 before the next structural repair,
 that failure; local repair continues with the published head unchanged. Shared
 account query budgeting and cached exact-head snapshots would reduce redundant
 status requests while preserving the final fresh closeout requirement.
+
+
+### 2026-10-01 root Schema compiler gate beyond package verification
+
+While publishing the source-health repair, `lint:policy:medium` failed on
+22 `beep(no-inline-schema-compile)` findings in goal-owned Cache source/tests.
+The full package audit and docgen had passed, but did not exercise the root
+Oxlint gate. Evidence: the publication log and prepared ten-file hoist manifest
+under `.beep/qualification-signed-implementation/schema-hoist-repair/`.
+The obsolete publication was deliberately cancelled after the observed failure;
+other owners' scheduler leases were preserved. The repair hoists schema ASTs
+and generated worker codecs without changing policy or adding suppressions.
+Running the applicable root compiler gate before freezing native source bindings
+would have prevented this extra frozen-binding refresh.

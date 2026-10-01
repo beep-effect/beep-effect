@@ -52,6 +52,8 @@ import type {
   CacheTransitionRequest,
 } from "./Cache.schemas.ts";
 
+const CacheAcceptedReferenceJson = S.fromJsonString(CacheProducerAcceptanceReference);
+
 const $I = $RepoCliId.create("commands/Cache/Cache.service");
 const baselinePath = "standards/cache-qualification-baseline.json";
 const storePath = "standards/cache-qualification.json";
@@ -150,7 +152,7 @@ const verifyQualifiedEvidence = Effect.fn("CacheQualification.verifyQualifiedEvi
   if (status.receipts.length !== 1)
     return yield* CacheCommandError.new("Qualified entries require exactly one immutable acceptance reference.");
   const reference = yield* verifyReference(root, status.receipts[0]).pipe(
-    Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(CacheProducerAcceptanceReference)))
+    Effect.flatMap(S.decodeUnknownEffect(CacheAcceptedReferenceJson))
   );
   const configuration = yield* loadCacheProducerStoreConfiguration();
   const accepted = yield* readCacheProducerAcceptance(configuration.directory, reference, configuration.trust);

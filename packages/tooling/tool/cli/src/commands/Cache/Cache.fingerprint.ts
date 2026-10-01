@@ -34,6 +34,8 @@ import {
 } from "./Cache.schemas.ts";
 import type { CacheActivationProjection, CacheQualificationKey } from "@beep/repo-configs/cache";
 
+const CacheGlobalConfigurationFlag = S.Literal(true);
+
 const decodeNonEmptyString = S.decodeEffect(S.NonEmptyString);
 
 const captureVersion = Effect.fn("CacheFingerprint.captureVersion")(function* (
@@ -340,7 +342,7 @@ export const projectCacheSignedRoot = Effect.fn("CacheFingerprint.projectSignedR
     onNone: () => Effect.succeed({}),
     onSome: decodeJsonObject,
   });
-  const usesGlobal = S.is(S.Literal(true))(R.get(flags, "globalConfiguration").pipe(O.getOrUndefined));
+  const usesGlobal = S.is(CacheGlobalConfigurationFlag)(R.get(flags, "globalConfiguration").pipe(O.getOrUndefined));
   const configuration = usesGlobal ? yield* decodeJsonObject(rootConfig.global) : rootConfig;
   const remoteConfig = yield* O.match(R.get(configuration, "remoteCache"), {
     onNone: () => Effect.succeed({}),

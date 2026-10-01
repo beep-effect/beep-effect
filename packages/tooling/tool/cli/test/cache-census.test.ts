@@ -36,6 +36,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const CensusJsonObject = S.fromJsonString(S.JsonObject);
+
 const workspace = CacheCensusWorkspace.make({
   name: "@beep/fixture",
   directory: "packages/fixture",
@@ -133,7 +135,7 @@ const activationFixture = Effect.fn("CacheCensusTest.activationFixture")(functio
   });
   return { before, after, census, source, activation };
 });
-const encodeJsonObjectJson = S.encodeEffect(S.fromJsonString(S.JsonObject));
+const encodeJsonObjectJson = S.encodeEffect(CensusJsonObject);
 
 describe("reviewed cache activation projection", () => {
   it.effect.prop(
@@ -564,7 +566,7 @@ describe("signed root projection", () => {
       const source =
         '{"tasks":{"lint":{"cache":false}},"remoteCache":{"enabled":false,"signature":false,"timeout":42}}';
       const projected = yield* projectCacheSignedRoot(source);
-      expect(yield* S.decodeEffect(S.fromJsonString(S.JsonObject))(projected)).toEqual({
+      expect(yield* S.decodeEffect(CensusJsonObject)(projected)).toEqual({
         tasks: { lint: { cache: false } },
         remoteCache: { enabled: true, signature: true, timeout: 42 },
       });
@@ -572,7 +574,7 @@ describe("signed root projection", () => {
       const globalSource =
         '{/* reviewed */"futureFlags":{"globalConfiguration":true},"tasks":{"lint":{"cache":false}},"global":{"env":["KEEP"],"remoteCache":{"timeout":42}}}';
       const global = yield* projectCacheSignedRoot(globalSource);
-      expect(yield* S.decodeEffect(S.fromJsonString(S.JsonObject))(global)).toEqual({
+      expect(yield* S.decodeEffect(CensusJsonObject)(global)).toEqual({
         futureFlags: { globalConfiguration: true },
         tasks: { lint: { cache: false } },
         global: { env: ["KEEP"], remoteCache: { timeout: 42, enabled: true, signature: true } },

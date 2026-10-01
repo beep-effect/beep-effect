@@ -2540,7 +2540,7 @@
       "symbol": "runPromise",
       "occurrence": "v2:6199f01797254cf611db8e6ae74b6e13151b1ba90808856c20929303197fe63c",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempCwd( Effect.fnUntraced(function* (cwd) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; // The cited artifact really exists \u2014 one round up. Containm",
+      "evidence": "Effect.runPromise( withTempCwd( Effect.fnUntraced(function* (cwd) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; // The cited artifact really exists — one round up. Containm",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -2834,7 +2834,7 @@
       "symbol": "runPromise",
       "occurrence": "v2:ed1567f8b25ed21ba656ee45796954325341a9c6278b886d157e96ee883f2702",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboQueryAffectedOutput(`\u2022 turbo 2.9.16 { \"data\": { \"affectedTasks\": { \"items\": [ { \"name\": \"lint\", \"package\": { \"name\": \"",
+      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboQueryAffectedOutput(`• turbo 2.9.16 { \"data\": { \"affectedTasks\": { \"items\": [ { \"name\": \"lint\", \"package\": { \"name\": \"",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -2855,7 +2855,7 @@
       "symbol": "runPromise",
       "occurrence": "v2:a2c6ab9830ec73683938f7a2e386352a6e449feb8bed7bc085debfdf49b5a427",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboDryRunOutput(`\u2022 turbo 2.9.16 { \"packages\": [\"@beep/demo\", \"@beep/other\"], \"tasks\": [ { \"task\": \"lint\", \"package\": \"@be",
+      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboDryRunOutput(`• turbo 2.9.16 { \"packages\": [\"@beep/demo\", \"@beep/other\"], \"tasks\": [ { \"task\": \"lint\", \"package\": \"@be",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -35789,7 +35789,7 @@
       "symbol": "scoped",
       "occurrence": "v2:0ed7bdfd8cb280c55dfb9d3465c0706297cc5beb337ed06b5eb47a940ce14c1f",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const preserved = [ \"https://example.com/private/source.ts\", \"http://localhost:3000/private/source.ts\", \"word/private/source.ts\", \"na\u00efve/private/source.ts\", \"\u5b57",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const preserved = [ \"https://example.com/private/source.ts\", \"http://localhost:3000/private/source.ts\", \"word/private/source.ts\", \"naïve/private/source.ts\", \"字",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -39034,7 +39034,7 @@
       "symbol": "expect",
       "occurrence": "v2:4deb1cc46cb95e06bad995c501950cf0a0dd79e1fc2c896139f66d8852190e50",
       "class": "hand-rolled-data-assertion",
-      "evidence": "expect( pipe( laneReport(unparsable.law, \"biome\"), O.map((report) => report.environmentDiagnostics) ) ).toEqual(O.some([\"Biome exited 1 without a JSON report: check \u2501\u2501 Some errors\", \"biome processed n",
+      "evidence": "expect( pipe( laneReport(unparsable.law, \"biome\"), O.map((report) => report.environmentDiagnostics) ) ).toEqual(O.some([\"Biome exited 1 without a JSON report: check ━━ Some errors\", \"biome processed n",
       "replacement": {
         "primitive": "utils.assertSome",
         "sketch": "Review structural equality against the supplied Option.some constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
@@ -40679,7 +40679,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -40723,7 +40723,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -44931,7 +44931,7 @@
       "symbol": "it.live",
       "occurrence": "v2:141d36b40898a162dab2b2dd5f1371cb3537c2dcca923ba000f4fc4ff9949b0e",
       "class": "unjustified-live-test",
-      "evidence": "it.live(\"streams required-pending \u2192 base-conflict \u2192 required-pending across an emptied rollup\", () => inTempRepo((root) => Effect.gen(function* () { const ended = yield* runYeetWatchStream(contextFor(",
+      "evidence": "it.live(\"streams required-pending → base-conflict → required-pending across an emptied rollup\", () => inTempRepo((root) => Effect.gen(function* () { const ended = yield* runYeetWatchStream(contextFor(",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -44952,7 +44952,7 @@
       "symbol": "it.live",
       "occurrence": "v2:a455174259d997790093e6ab5728b34eea082d929813064392d55fce6f0d16ce",
       "class": "unjustified-live-test",
-      "evidence": "it.live(\"streams base-conflict \u2192 registration on the same head with the clock restarted, never settle-timeout\", () => inTempRepo((root) => Effect.gen(function* () { const ticks = yield* Ref.make(0); c",
+      "evidence": "it.live(\"streams base-conflict → registration on the same head with the clock restarted, never settle-timeout\", () => inTempRepo((root) => Effect.gen(function* () { const ticks = yield* Ref.make(0); c",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -54747,7 +54747,7 @@
       "symbol": "it.layer",
       "occurrence": "v2:334f551ed498057e65213c9225e42be24ab1e015bb5ae47b3371c5da131b6dbb",
       "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer( OnePasswordCli.makeLayerFromRunner((_command, args) => Effect.succeed( OnePasswordCliProcessResult.make({ exitCode: 0, stderr: \"\", stdout: Str.concat( \"\u00e9\ud83d\udd10\", O.getOrElse(A.get(args, 1), () =",
+      "evidence": "it.layer( OnePasswordCli.makeLayerFromRunner((_command, args) => Effect.succeed( OnePasswordCliProcessResult.make({ exitCode: 0, stderr: \"\", stdout: Str.concat( \"é🔐\", O.getOrElse(A.get(args, 1), () =",
       "replacement": {
         "primitive": "it.layer.option.timeout",
         "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."

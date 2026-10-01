@@ -35,6 +35,8 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { canaryInput, contractInput, input } from "./helpers/cache-producer-bundle-fixture.ts";
 
+const ProducerImportRequestJson = S.fromJsonString(CacheProducerImportRequest);
+
 const setup = Effect.gen(function* () {
   const bundle = yield* S.decodeUnknownEffect(CacheProducerBundle)(input);
   const contract = yield* S.decodeUnknownEffect(CacheTaskContract)(contractInput);
@@ -430,7 +432,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { concurrent: fal
             canary: request.observations.stable,
           },
         });
-        const forgedText = yield* S.encodeEffect(S.fromJsonString(CacheProducerImportRequest))(forged);
+        const forgedText = yield* S.encodeEffect(ProducerImportRequestJson)(forged);
         const forgedReference = CacheProducerAcceptanceReference.make({
           sha256: yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(forgedText)),
         });
