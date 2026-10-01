@@ -29,8 +29,12 @@ the redacted projection are committed):
   `pid_pair` on all 695 rows (the ETL labels by identity member, and every row carries
   `pid`). The 200 released and ticket-evicted rows carry no `procStart`, which is written
   `<absent>` (the ETL's `owner_refs_without_start`), so their `ownerRef` cannot join a
-  started one. `checkoutRoot` becomes `checkoutRef = sha256(checkoutRoot)[:12]` (35
-  distinct; equality joins kept, no label). Every other member (`_tag`, `schemaVersion`,
+  started one. `checkoutRoot` becomes the capture-scoped
+  `checkoutRef = sha256("<checkoutRoot>:<captureSalt hex>")[:12]` (35 distinct; equality
+  joins kept, no label; a candidate path cannot be confirmed from the committed bytes
+  without the local salt). The first render hashed the bare path and was re-rendered
+  the same day after the PR #1386 P2 security thread (second addendum in DECISIONS.md);
+  the recorded projection digest is the re-render's. Every other member (`_tag`, `schemaVersion`,
   `attemptId`, `nonce`, `originKey`, `kind`, `priority`, `weightTokens`, `branch`,
   `memoryPeakBytes`, `reason`, every `*AtMillis`) is kept verbatim, and an unknown member
   fails the script. One row per line in payload order, keys sorted.

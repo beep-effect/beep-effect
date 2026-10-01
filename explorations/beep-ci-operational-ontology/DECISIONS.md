@@ -1628,3 +1628,20 @@ Handoff: the run-4 pin (goal `ciops-ontology-pipeline` P1, W3) reads the project
 and sha256 from any clone, and a missing or mismatched projection fails Queue D closed, with
 no silent fallback to the `run3b-fleet` pin. A re-render of the projection needs a new
 DECISIONS entry.
+
+**2026-10-01 second addendum to the admission-journal snapshot ruling (PR #1386 review,
+P2 security thread).** A Greptile thread on `research/scripts/redact_journal_snapshot.py`
+found that the first projection's `checkoutRef = sha256(checkoutRoot)[:12]` was guessable:
+anyone holding plausible checkout-path candidates could hash them and confirm a match
+against the committed bytes, which is the exposure the dropped host paths were meant to
+close. The reference is now capture-scoped like `ownerRef`:
+`checkoutRef = sha256(f"{checkoutRoot}:{captureSalt.hex()}")[:12]`. This is the re-render
+the first addendum reserved for a DECISIONS entry: the projection was rebuilt from the
+unchanged payload (`a0cf2df3af2d…`) and the same local salt, its `SHA256SUMS.txt` line now
+reads `8cceaf171636…`, and `--check` passes (digest, structure, residue scan, byte-identical
+recompute where payload and salt are present). The census is unchanged (695 rows, same
+per-`_tag` counts, 35 distinct `checkoutRef`), and the old-path-to-new-reference map is a
+bijection over the 495 rows that carry a checkout, so every equality join the first render
+offered survives; no bare-path hash remains in the projection. `ownerRef` values are
+untouched. Only the bytes of `journal.redacted.ndjson` and its digest line changed; the
+payload line, the salt, and the Queue D handoff (path plus sha256, fails closed) stand.

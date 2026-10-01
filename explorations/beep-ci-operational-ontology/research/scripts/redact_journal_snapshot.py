@@ -1,5 +1,5 @@
 """Committable redacted projection of an admission-journal snapshot (PR #1386 review;
-addendum to the 2026-10-01 admission-journal snapshot ruling in DECISIONS.md).
+addenda to the 2026-10-01 admission-journal snapshot ruling in DECISIONS.md).
 
 The 2026-10-01 snapshot froze the canonical admission journal before its 200-admission
 rolling window dropped the only organic withdrawal and ticket-eviction rows (run-4 docket
@@ -21,8 +21,12 @@ Redaction rule (follows the committed run-3b corpus custody precedent,
     `owner_refs_without_start`, and this script reports them as `ownerRef without start`.
     A reference without a start cannot join one with a start by `ownerRef`; `nonce` and
     `attemptId` remain the row joins.
-  - `checkoutRoot` (a host path) is replaced by `checkoutRef = sha256(checkoutRoot)[:12]`
-    over its UTF-8 bytes: equality joins between rows survive, no label is kept.
+  - `checkoutRoot` (a host path) is replaced by the capture-scoped
+    `checkoutRef = sha256(f"{checkoutRoot}:{captureSalt.hex()}")[:12]` over its UTF-8
+    bytes: equality joins between rows survive, no label is kept, and a candidate path
+    cannot be confirmed from the committed bytes without the local salt (the first render
+    hashed the bare path; the PR #1386 P2 security thread had it re-rendered, second
+    addendum in DECISIONS.md).
   - Every other known member is kept verbatim: `_tag`, `schemaVersion`, `attemptId`,
     `nonce`, `originKey`, `kind`, `priority`, `weightTokens`, `branch`,
     `memoryPeakBytes`, `reason` and every `*AtMillis` instant.
@@ -32,15 +36,18 @@ Redaction rule (follows the committed run-3b corpus custody precedent,
 
 The capture salt is `canonical/capture-salt.hex` (hexadecimal encoding of 32 random
 bytes). It lives under the git-ignored `canonical/` directory, is generated once by the
-first `--write`, and is never committed or printed. Without it the projection cannot be
-recomputed, only verified by digest.
+first `--write`, and is never committed or printed. It scopes both `ownerRef` and
+`checkoutRef` to this capture. Without it the projection cannot be recomputed, only
+verified by digest.
 
 Modes (exactly one):
 
   --write  verify the payload digest recorded in SHA256SUMS.txt, load or mint the salt,
            write the projection, and record its digest line in SHA256SUMS.txt (the
            payload line is kept). Idempotent. Refuses when a recorded projection digest
-           would change (for example a lost salt): a re-render needs a DECISIONS entry.
+           would change (for example a lost salt): a re-render needs a DECISIONS entry,
+           after which the recorded projection line is removed from SHA256SUMS.txt and
+           `--write` records the new digest.
   --check  verify the committed projection against its recorded digest, its structure
            (known members only, no pid/procStart/checkoutRoot, 12-hex refs, canonical
            form) and a residue scan (no home-directory path, no `uid-<digits>`). When the raw
@@ -158,7 +165,8 @@ def project_row(row: object, number: int, salt: bytes) -> dict:
         root = row["checkoutRoot"]
         if type(root) is not str or not root:
             raise Refusal(f"payload row {number} ({tag}): checkoutRoot is not a nonempty string")
-        result["checkoutRef"] = sha256(root.encode("utf-8"))[:12]
+        # Capture-scoped like ownerRef: the bare-path hash was guessable (PR #1386 P2 thread).
+        result["checkoutRef"] = sha256(f"{root}:{salt.hex()}".encode("utf-8"))[:12]
     return result
 
 
@@ -272,7 +280,8 @@ def write(snapshot: Path) -> None:
     target = snapshot / PROJECTION
     if PROJECTION in sums and sums[PROJECTION] != digest:
         raise Refusal(f"recorded {PROJECTION} digest {sums[PROJECTION][:12]} differs from the recomputed "
-                      f"{digest[:12]}; refusing to re-render (a re-render needs a DECISIONS entry)")
+                      f"{digest[:12]}; refusing to re-render (a re-render needs a DECISIONS entry, "
+                      f"then drop the recorded {PROJECTION} line from {SUMS})")
     if target.is_file() and target.read_bytes() == data:
         print(f"unchanged {PROJECTION} ({digest[:12]})")
     else:
