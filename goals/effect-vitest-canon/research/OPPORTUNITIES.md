@@ -6184,3 +6184,14 @@ initialization or the first push happens before its cleanup is registered. Its
 release also ignores removal failure. Use the existing scoped temporary-directory
 primitive at allocation time, retain independent nested fixture contexts, and
 verify cleanup both after success and after an injected initialization failure.
+
+### Package quick checks after dependency API removal
+
+After PR #1365 merged the codec-statics retirement from main, a direct
+`beep quality package-verify @beep/repo-cli --quick` reported 1,003 type errors.
+Generated Schema declarations still referenced removed `SelectedCodecStatics`.
+Rebuilding Schema reduced the errors to 90; rebuilding repo-utils and
+repo-configs narrowed them to HarnessLedger's stale ai-metrics declarations.
+The quick lane should identify stale referenced declaration outputs or explain
+its dependency-build prerequisite before presenting a cascade as source errors.
+Do not refresh lint baselines or alter production types to suppress this signal.

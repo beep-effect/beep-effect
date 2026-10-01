@@ -52,3 +52,13 @@ entry point. Root test types and the ratchet pass. Full package verification of
 the hardened source passes: audit 1,107.5 seconds and docgen 41.2 seconds.
 This later proof covers the stdout oracles and cleanup hardening. The 39 reviewed baseline IDs and dispositions are
 preserved while their current source metadata is refreshed.
+
+## Campaign dispositions
+
+Source repair `96da5fb036` supports ten fixed findings: eight historical provider
+wrappers and the cleanup and tee-oracle findings. Eleven reviewed exceptions
+retain eight native live-clock cases, two native resource imports and the
+TestClock-driven watchdog sleep. Historical IDs, evidence and replacement
+guidance remain unchanged. The two physical polling-loop findings and the two
+no-findings lens records remain open for final file closeout; the readiness
+budget issue remains recorded in OPPORTUNITIES.md.
