@@ -55,18 +55,36 @@
   (`turbo query affected` + decoded schemas, `YEET_FEEDBACK_TASKS`),
   `internal/Planner.ts` (`YeetProofTier`: full | cheap-gates | review-fix),
   `internal/Verdict.ts` + `.beep/yeet/runs/*/verdict.json` (per-lane `durationMs`,
-  `outcome`, `createdAt`, `branch`, `head` — the KPI's T1 vein),
+  `outcome`, `createdAt`, `branch`, `head`; last-write-only — the KPI's T1 vein is
+  `.beep/yeet/runs/*/attempts.ndjson`, whose `attempt-finished` embeds the verdict,
+  `internal/AttemptJournal.ts:92`),
   `internal/WaveOrder.ts` (`WaveOrder`, `DEFAULT_GATE_ORDER_SEED`, `gate-order/v1`; handoff
   document `goals/time-to-certainty/research/gate-order-handoff.json`).
 - `packages/tooling/tool/cli` Quality internals — REUSE: `commands/Quality/Tasks.ts`
   (lane assembly, concurrency bounds, coverage CI-identity pinning, `--force` in CI),
   `internal/cli/TurboCache.ts` (cache-posture state machine).
+- `packages/tooling/tool/cli` admission + proof internals — REUSE:
+  `internal/repo-run/QualityScheduler.ts` (+ `.schemas.ts`: `AdmissionWorkKind`,
+  `AdmissionPriority`, `YeetProofTier`, `AdmissionConfig`, leases with
+  `nonce`/`enqueuedAtMillis`), `internal/repo-run/AdmissionJournal.ts` (v1/v2/v3 transition
+  journal, 200-admission retention), `internal/repo-run/AttemptTerminationJournal.ts`
+  (terminal-attempt retention, `journal-compacted` receipts),
+  `commands/Yeet/internal/{ProofFact,ProofLedger,ProofShadow,Economics}.ts` with
+  `bun run beep yeet proof-report` and `bun run beep yeet economics`
+  (`Yeet.command.ts:1253`/`:1263`); ledger at `<owning clone>/.beep/yeet/proof-ledger.ndjson`
+  (`ArtifactPaths.ts` `proofLedgerPathForCheckout`, time-to-certainty ruling 71).
 - `turbo.json` — REUSE: task/`global.inputs` definitions (the hash-surface facts, incl.
   root `package.json` in global inputs).
-- `bun run beep topo sort` — REUSE: package topology for reverse-topo scheduling facts.
+- `bun run beep topo-sort` — REUSE: package topology for reverse-topo scheduling facts.
 - `standards/ARCHITECTURE.md` + `standards/architecture/*` — REUSE: slice/role/family
   semantics for formal-first class extraction.
-- KPI ETL / vein miners / projection function — NET-NEW (labs-incubated per DECISIONS).
+- Projection function — REUSE: `apps/labs/ciops` (`@beep/ciops`, S7 v1 admission projection;
+  `s7-emission/v2`). KPI ETL — REUSE as reference: `research/scripts/kpi_baseline_probe.py`
+  (S0 baseline instrument), `goals/time-to-certainty/research/scripts/economics.py` and
+  `bun run beep yeet economics [--fleet]` (time-to-certainty M1–M5 proxies, cross-check
+  only). NET-NEW: the S7-v2 lane-DAG planner body (`planEpisode` stub,
+  `CiOpsProjection.ts:97`), the durable labs-incubated KPI ETL (seat-request clock, tier
+  partitions), and S8 formalization.
 
 ## 5. Cross-links & provenance
 
@@ -75,6 +93,13 @@
 - Sibling context: `A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md` (repo root; the "bush"),
   `explorations/knowledge-endgame/` (parked; ontologies-as-backpressure framing this packet
   operationalizes).
-- Related shipped machinery this packet measures/schedules around: yeet cheap-gates tier +
-  machine-wide proof coordinator (PRs #837/#840), asymmetric turbo remote cache
-  (PRs #673/#674), the in-flight yeet-proof-scheduler worktree.
+- Related shipped machinery this packet measures/schedules around: yeet cheap-gates tier and
+  the per-origin proof coordinator (PRs #837/#840; superseded as admission authority by #929,
+  exclusive low-memory fallback retained), the machine-wide weighted admission scheduler
+  (#870; sole authority since #929; `iv-870`/`iv-929`, Ruling 6 (2026-10-01 graduation
+  sitting)), asymmetric turbo remote cache (PRs #673/#674).
+- Sibling goal: `goals/time-to-certainty` (paused 2026-09-28 on its ruling 80) moves the KPI's
+  operational proxies M1–M5 and names this packet as owner of the KPI definition and planner
+  (its manifest `provenance.note`, `GOAL.md`, `SPEC.md` "The metric"); boundary per its
+  ruling 79. Graduated goal: `goals/ciops-ontology-pipeline` (Ruling 3, 2026-10-01
+  graduation sitting).

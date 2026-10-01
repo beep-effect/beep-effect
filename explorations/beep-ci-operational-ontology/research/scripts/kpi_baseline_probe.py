@@ -6,10 +6,15 @@ branch-scoped Started/Finished events with the full verdict embedded per
 attempt (wall elapsedMs, outcome, failedStepId, failureKind).
 
 VEIN CAVEAT (round-1 seat C, 2026-08-27): the journal is a RING BUFFER, not
-append-only history — Yeet retains only the newest ~50 attempt starts per
-branch (RETAINED_ATTEMPTS in Yeet/internal/AttemptJournal.ts). Episodes that
-crossed the retention boundary are truncated or missing; every number this
-probe prints is a fact about the RETAINED WINDOW only.
+append-only history — Yeet retains only the newest 50 attempts per run-id
+file (RETAINED_ATTEMPTS in internal/repo-run/AttemptTerminationJournal.ts;
+since #978 it counts TERMINAL attempts and keeps unterminated ones). Episodes
+that crossed the retention boundary are truncated or missing; every number
+this probe prints is a fact about the RETAINED WINDOW only.
+
+S0 baseline instrument (2026-08-27): does not read attempt-terminated or
+journal-compacted rows (post-#964); for current journals see
+kpi-measurement-rules.md §6.
 
 v3 changes (round-1 panel):
 - multi-root fleet mode + the fleet filters that produced the published v0.5

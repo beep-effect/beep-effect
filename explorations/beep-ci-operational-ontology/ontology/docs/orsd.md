@@ -101,3 +101,26 @@ auditor skill run AS WRITTEN is the S4 gate — lane-contract §4b).
   figures) as an independent voice.
 - Term-set ratification pending: the namespace is settled (DECISIONS 2026-08-27), but the
   term set ratifies against the ontology slice's IRI doctrine at S8.
+
+## 9. 2026-10-01 amendment — counts and contract errata
+
+Authority: DECISIONS.md, "2026-10-01 — graduation sitting" (Ruling 9). This section
+corrects the companion files without changing their bytes. The run-4 pin lane folds these
+corrections into `competency-questions.yaml`, `pre-glossary.csv`, `closed-world.yaml` and
+`use-cases.yaml` alongside the CQ-009 re-scope.
+
+- **§6 census.** 42 candidate classes, 70 candidate properties, 4 named individuals (116
+  rows) since `a0ec34047d` (#963); the 41/67/4 above is the 2026-08-29 count.
+- **Lease identity (#878, `a9497e66ca`).** The lease carries the ticket's `nonce` and
+  `enqueuedAtMillis` (legacy lease files decode `""`/`0`), and the journal's
+  `admission-admitted` row carries `enqueuedAtMillis` and `admittedAtMillis`. CQ-021's
+  note, pre-glossary SeatGrant ("NO stored edge ... filename stem nonce-pid only") and
+  enqueuedAt ("the lease does not carry it") describe pre-#878 state.
+- **Admission exclusion (#929).** Read CQ-009, CQ-008's sample answer, pre-glossary
+  Checkout / hasOriginKey / MachineProofLock, UC-002's flow line and closed-world
+  `hasOriginKey` through `scope.md` "2026-10-01 amendment". MachineProofLock now denotes
+  the legacy per-origin lock (drain only) and the below-envelope fallback origin lease.
+- **Code cites by symbol** (lines drift): CQ-009 `QualityScheduler.ts:614-628` →
+  `isTicketSkippable`; CQ-010 `:661-663` → the self-admission charge check
+  `activeTokenTotal(state) + ticket.weightTokens <= capacityTokens`; CQ-023 `:600-601` →
+  `effectivePriorityRank`.

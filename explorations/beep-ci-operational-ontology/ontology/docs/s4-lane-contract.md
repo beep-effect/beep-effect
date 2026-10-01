@@ -244,3 +244,14 @@ to the operator with the lane's stream tail.
   frozen-input digests, the full lane map (disjoint ownership), and the AgentO prompt
   discipline: fixed schema, no minting, fidelity over condensation, ledger for gaps,
   report-file-first-append-as-you-go, final message = one-line pointer.
+
+## 8. 2026-10-01 amendment — runner routing
+
+Authority: DECISIONS.md, "2026-10-01 — graduation sitting", Ruling 4. The `runner`,
+`model` and `reasoning_effort` pins in §3 and the commands in §7 record the S4 runs
+under "2026-08-27 — delegated-lane reasoning effort" and stay their provenance; Ruling 4
+supersedes that directive for future work only. New lanes route per `AGENTS.md` "Volume
+pools": `claude-opus-5-5` by default; Codex only when the operator names it for the
+task, with the pins AGENTS.md states; Grok proxy lanes only for research-class work or a
+named operator opt-in. The model stays explicit: the telemetry header records the
+runner, model and effort actually launched.

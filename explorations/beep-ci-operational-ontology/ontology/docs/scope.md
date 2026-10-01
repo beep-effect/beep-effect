@@ -85,3 +85,21 @@ attempts red; 17% of attempts lock-contention bounces; 292 machine-hours inside 
   `ciops:`.
 - Naming per `_shared/naming-conventions.md`: CamelCase singular classes, camelCase
   properties, no class-encoding property names.
+
+## 2026-10-01 amendment — deployed exclusion moved to the checkout (#929)
+
+Authority: DECISIONS.md, "2026-10-01 — graduation sitting" (Ruling 9). The round-3 text
+above describes the deployed scheduler from #870 until #929 (`e76c4db079`, 2026-08-31).
+Since #929 the scheduler skips a ticket when a lease holds the same checkout, when a
+legacy same-origin owner is still draining (`legacy-origin-lock/v1`), when the ticket's
+`blockedOnOriginAtMillis` stamp is fresh, or when the review-fix class cap is saturated
+(`QualityScheduler.ts` `isTicketSkippable`). Current-version same-origin proofs in
+distinct checkouts are capacity peers. Origin exclusion survives only in the legacy
+drain, the fresh stamp, and the exclusive fallback origin lease on hosts below the
+scheduler memory envelope (`AdmissionOriginGate.tryAcquireFallback`); "proof lock" among
+the contended resources now means that fallback lease. CQ-009 and the pre-glossary rows
+Checkout, hasOriginKey and MachineProofLock read through this amendment. CQ-009's
+disposition is Ruling 9's: the run-4 pin re-scopes it to same-checkout exclusion plus the
+legacy-origin drain, with a new must-fail fixture, and
+`../tests/fixtures/must-fail/cq009-two-grants.ttl` keeps its pre-#929 meaning under a
+temporal scope. Until that pin, `../tests/cq-009.sparql` and its fixture stay as written.

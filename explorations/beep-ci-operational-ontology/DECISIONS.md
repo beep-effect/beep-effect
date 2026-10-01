@@ -1269,3 +1269,336 @@ newest ratification and leaving reuse out of DISPOSITIONS.
 S6 A-Box), and the projection of rat-032/033/037/039 and rat-053..rat-070 land together,
 the projection serving as the gate's own regression exercise, with every packet proof green.
 Rejected: a gate-first PR without real-data exercise.
+
+## 2026-10-01 — admission-journal snapshot (one ruling, steward: Benjamin)
+
+Raised at the start of the 2026-10-01 graduation audit, ahead of the graduation sitting
+below. The canonical admission journal keeps only the newest 200 admissions
+(`RETAINED_ADMISSIONS = 200` in `internal/repo-run/AdmissionJournal.ts`; the trim runs on
+every append). Its window (2026-09-28T11:41Z onward, about 2.8 admissions an hour) held
+the only organic evidence for the run-4 docket's Queue D duties
+`otp:bind-request-termination:001` and `otp:bind-admission-request:001`: the
+`admission-withdrawn` rows and one `admission-ticket-evicted` row (queued-submitter-death,
+2026-09-28T22:09Z), each with its `admission-enqueued` row, among them one withdrawn
+attempt that was re-enqueued (a resubmission chain). The first withdrawal would have
+trimmed out late the same day and the ticket eviction by the next morning. No audit lane,
+docket lane or run generator captured this data. The ruling resolved to the recommended
+arm.
+
+**Ruling — interim digest-only snapshot, taken now.** The canonical `journal.ndjson` was
+copied byte-for-byte at 2026-10-01T12:20Z to
+`research/evidence/journal-snapshot-2026-10-01/canonical/`, following the
+`journal-snapshot-2026-08-27/` precedent. The payload stays local: the `.gitignore` rule
+`journal-snapshot-*/*/` keeps it out of the tree, because its rows carry pids,
+process-start instants and origin keys and this repo is public. `MANIFEST.md` (reason,
+retention law, census, window, use) and `SHA256SUMS.txt` (payload sha256 `a0cf2df3af2d…`)
+are committed. Census at the snapshot: 695 rows, 0 malformed (249 `admission-enqueued`,
+200 `admission-admitted`, 199 `admission-released`, 46 `admission-withdrawn`, 1
+`admission-ticket-evicted`, 0 lease evictions; 495 v3 rows and 200 v1), window
+2026-09-28T11:41:11Z → 2026-10-01T12:12:44Z. The run-4 pin reads the snapshot as an
+organic Queue D input and re-censuses the live journal beside it. The snapshot is
+not a `run4-fleet` corpus pin and carries no generator digest. Rejected: pinning a
+`run4-fleet` capture now (a run3b-style generator cannot verify its citations at HEAD
+until the replay contract is ruled; that is Ruling 8 of the sitting below) and accepting
+the loss on record (Queue D would fall back to the `run3b-fleet` pin's five lease and two
+ticket evictions, with no organic withdrawal or resubmission chain).
+
+## 2026-10-01 — graduation sitting (11 rulings, steward: Benjamin)
+
+Grilled after a five-lane audit of the packet, each lane checked by a skeptic pass,
+against main `04993ae26a`, 207 commits past the last session anchor `c8d6d2f218`
+(2026-09-12). The graduation PR was prepared on `886de7a261`. Main through `5214ecbed9`
+changes nothing in the packet or `goals/time-to-certainty`; its only `apps/labs/ciops` edit
+(#1371, the `AdmissionPriority` decode in `AboxPolicy.ts` and `Schemas.ts`) leaves the
+planner seam and every symbol this sitting cites unchanged. Inputs: the audit's apply plan (38
+deduplicated findings), `goals/time-to-certainty` at HEAD (paused 2026-09-28 on its ruling
+80; `PLAN.md` C3.3–C3.6, C4a, C4.1, C5, D1, D2, A3 and the A1 close re-run checked; the C4
+parent box and C4.2 unchecked), the run-4 intake docket, and the S7 contract. The packet
+held no session after the 2026-09-12 docket verification. What reached it since were
+receipts (the 2026-09-16 #1160 citation refresh and the 2026-09-25 gate-order handoff
+under time-to-certainty rulings 76–79) and repo-wide refactors of `apps/labs/ciops`. The
+sitting decides whether the packet leaves the exploration pipeline: the run-4 gate, both
+open questions, the goal, seat routing, the lab, the change-event ledger, the tree's home,
+the frozen-pin replay contract, CQ-009, the merged-preview tier and the S7-v2 seam. All
+eleven resolved to the recommended arm. Rulings 1–11 are numbered within this entry; the
+earlier series is cited with its sitting (the run-3 corpora grill's Rulings 1–16, the
+Stage B grill's Rulings 17–21, and the one-ruling entries 22 and 23).
+
+**Ruling 1 — C4.1 satisfies the run-4 gate.** The docket's gate names
+`goals/time-to-certainty` "C4 (the proof-ledger writer)", and the Stage B grill's Ruling
+17 placed the missing writer at "that packet's C4 shadow-mode milestone". C4.1
+(2026-09-21, time-to-certainty rulings 61–64) is that milestone, so Ruling 17's premise
+that the `ProofLedger` service "has no lane writer" no longer holds. On every attempt the
+verdict writer (`Yeet/internal/Handler.ts`, calling `recordProofShadowForAttempt` in
+`ProofShadow.ts`) appends a `ProofFact` for each lane that ran to passed or failed,
+carrying `ProofProvenance` (run id, attempt id, origin key, tier, stage, head SHA, hosted
+run id) and recorded and expiry instants. Since #1321 (2026-09-28, time-to-certainty
+ruling 71) the ledger is one append-only file in the owning clone,
+`.beep/yeet/proof-ledger.ndjson`. Issuance and custody provenance therefore exist now;
+claim realization and copy (a fact actually satisfying another attempt) do not, because
+reuse stays off until C4.2. The run-4 pin requires time-to-certainty C4.1 checked plus
+`ProofFact` rows recorded after #1321 from both local stages (pre-push and merged-preview)
+in the owning clone's ledger; if that does not hold, the pin lane records the census and
+stops. A NEW ledger-capture generator reads those rows: the run3b ETL records only that a
+ledger file exists ("no ledger contents read or emitted") and excludes the "ledger
+family", so a sibling on the Stage B Ruling 18 pattern reads the contents under the
+corpora grill's Ruling 11 custody surrogate and Ruling 22's residue law (goal phase P1,
+W4). The issuance and custody legs of rat-047/048/051/052 discharge against those rows,
+and seats weigh shadow would-reuse hits as hypothetical claims, never as realized ones.
+Every realization and copy leg (rat-047's claim realization, the copy legs of
+rat-047/048/051/052, the content-snapshot rival's correction leg) stays flagged and names
+time-to-certainty C4.2 (its ruling 80) as its evidence. Run 4 no longer waits on a flip
+that ruling 80 deliberately left without a calendar bound. Rejected: waiting for C4.2 (run
+4 would inherit an undated event-count condition: 200 post-#1321 attempts on 10 branches
+with zero disagreements, zero malformed rows, C5 green and the ruling-69 root-input gap
+closed) and pinning without Queue B (rat-047/048/051/052 would re-park a third time with
+the issuance and custody evidence that already exists left unread).
+
+**Ruling 2 — both open questions close at graduation; S8 DEFERRED; pipeline v2 amended.**
+(a) Run-4 pre-work becomes a phase of the goal named in Ruling 3: goal phase P3 (W7) runs
+auditor run 4, fed by the P1 captures (W3–W4). The intake docket, its 2026-09-12
+verification and the J03 deferral to the run-4 sitting travel to the goal as inputs, by
+link. The manifest's first `openQuestions` item is removed. (b) **DEFERRED: S8** (OWL 2
+RL + SHACL formalization, rules compilation, IRI scheme). The corpora grill's Ruling 15
+kept IRI-scheme work out of run 3 "per the standing pipeline", with run-3-scoped rationale
+and no DEFERRED marker; this ruling is that marker, and the deferral now runs past
+graduation. Reasons: nonce literals already carry identity evidence, the `ciops-prov:`
+namespace keeps open closure and stays excluded from negation and ratified typing, and no
+CQ, ratification or consumer requires IRI syntax today. S8 becomes the gated MAP candidate
+`ciops-iri-formalization`. Its gate fires when a ratification sitting cannot decide an
+identity criterion without IRI syntax, when the lab's schemas are proposed for
+`packages/ontology/domain` (the slice's IRI doctrine then binds), or when a Must CQ needs
+`ciops-prov:` terms under closed-world negation. The manifest's second `openQuestions`
+item is removed. (c) README "The Pipeline (grilled v2)" gains a dated 2026-10-01
+amendment: graduation follows S7 plus the goal; the S9 dogfood proof becomes goal phase P4
+(W9); and three legs defer to the S8 gate with it: the 2026-08-27 reasoning-stack ruling's
+OWL 2 RL and rules-compilation leg, the 2026-08-30 S5 design grill's clause that the
+taxonomy graduates to the formal T-Box "only at S8", and the 2026-08-27 incubation-home
+ruling's `packages/ontology` artifact flow. Those entries stay as written. Rejected:
+closing (a) and (b) without the pipeline amendment (the README stage line would still
+promise S8 and S9 before graduation) and holding graduation (the packet would sit active
+in `research` with no session, the fake-active state the explore skill warns against).
+
+**Ruling 3 — one goal, `goals/ciops-ontology-pipeline`, with a stated-verdict done bar.**
+The goal operates the ratified ontology as a pipeline: live admission and wave-order
+projection through the S7 engine, CQ regression held green as the certainty test, auditor
+run 4, and a STATED fleet time-to-certainty verdict under the v1.1 KPI law
+(`research/kpi-measurement-rules.md` §6) beside time-to-certainty's close economics, with
+change events tagged (Ruling 6). Improvement is reported, not required: the levers ship
+through time-to-certainty, and this goal measures and attributes them. The Spark names
+"the operational ontology pipeline itself" as the graduation target, one steward has run
+every stage serially, and run 4 and the live projection share one Stage C capture.
+Boundary (time-to-certainty ruling 79, "the ontology seam stays as it is"):
+
+- Time-to-certainty keeps M1–M5, `yeet economics`, the proof ledger and the C4.2 flip, the
+  deployed `gate-order-lexicographic/v1` order in `WaveOrder.ts`, and its handoff
+  document, whose only writer is that packet's fixture.
+- This goal owns the KPI definition (`research/kpi-measurement-rules.md`), the T-Box,
+  A-Box and CQs, auditor runs, `apps/labs/ciops` with the `planEpisode` body, the
+  change-event ledger and the KPI verdict.
+- Facts cross the boundary only as documents read by path and sha256. Neither packet edits
+  the other's tracked artifacts beyond dated receipts.
+
+Rejected: requiring improvement (the goal's close would hang on levers another packet
+ships), two goals (`ciops-projection-live` and `ciops-auditor-run4` would split one KPI
+and one T-Box across two packets and double the ceremony), and parking (the fake-active
+state again).
+
+**Ruling 4 — Opus 5.5 on every auditor seat, the blinded alternative included.** From this
+sitting on, every lane, seat, reviewer and delegation for this packet and its goal follows
+the `AGENTS.md` "Volume pools" doctrine (2026-09-24): Claude Opus 5.5 (`claude-opus-5-5`)
+by default. Auditor run 4 seats every role on Opus 5.5, the adversary and the blinded
+alternative included, each in an independent context. Blinding is by withheld inputs and
+independent context, never by model family: SKILL.md Step 7b feeds the blinded seat only
+observations and hypotheses, says "Same-context execution voids the pass", and has the
+manifest record `independent_context` and `blinded` per agent. Codex and Grok seats run
+only as an operator opt-in that the run-4 launch entry names. The launch entry also
+records each seat's actual launch command as a deviation from SKILL.md's `codex exec`
+recipe; validator v15 checks only a non-blank `agents.<role>.model` and
+`agents.<role>.effort`, so the deviation needs no engine edit. Skill v16 (a model-agnostic
+seat launcher with its own self-test family) is optional hardening (goal W2), not a
+prerequisite for the pin. The trade-off is accepted: the blinded seat loses model-family
+independence unless the operator opts in to Grok. This supersedes, for future work only,
+the 2026-08-27 delegated-lane effort directive (codex max / grok xhigh), the 2026-09-09
+routing preamble at the top of this file (its `AGENTS.md#token-heavy-codex-work` anchor
+has not existed since #1162, `fd7d06b834`), run-2 launch Ruling 4 (seats keep the run-1
+assignment) and the Codex arm of run-3 launch Ruling 2. Completed runs keep their recorded
+seat provenance, and those entries and the preamble stay as written. Rejected: Grok
+(`grok-4.6` through `claudeg`) on the blinded seat (an auditor seat is not research-class
+work, and `AGENTS.md` reserves Grok proxy lanes for that) and keeping codex max / grok
+xhigh seats (the pool doctrine makes Codex an explicit opt-in).
+
+**Ruling 5 — `apps/labs/ciops` stays `active`, owned by the goal.** Under
+`standards/architecture/15-lab-apps.md` a lab is `active`, `promote` or `expired`, and no
+convention ties a lab's disposition to an exploration's graduation. The lab is the goal's
+runtime: the S7 engine, the replay gate and the emission golden. The goal widens it (the
+`planEpisode` body, live replay) without publishing an API, and repo-cli never imports it.
+No `lab.manifest.json` edit. Promotion into a slice package follows
+`docs/runbooks/lab-promotion.md` and is the gated MAP candidate `ciops-yeet-projection`:
+it fires when live differential replay holds at a ratified bar and the KPI verdict shows
+the projected order beating the deployed one, and even then it needs its own grill,
+because the time-to-certainty and S7 contracts both forbid a second scheduler. Rejected:
+flipping to `promote` now (the seam is a stub, live replay is unproven and S8 is deferred;
+S7 sitting 1 Ruling 3 promotes "when proven").
+
+**Ruling 6 — change-event ledger: admission criterion, seed status, two rows now.**
+`research/control-interventions.yaml` held one event (iv-870) while time-to-certainty
+shipped a stream of levers onto the KPI series, and the 2026-08-27
+purity-vs-control-interventions ruling admits every lever without a criterion. (1)
+Admission criterion: a row records a change to admission, ordering, gate selection or
+early stop, Turbo/cache task inputs, or lane assembly or sharding on the local tiers, plus
+hosted-runner capacity on the hosted tier. Instrumentation-only and shadow-only changes
+(C4.1, with reuse off) are excluded. (2) Rows stay seed data: `OperationalChangeEvent` and
+`ciops:landedAt` (seed-only in `s6/PREDICATES.yaml`) ratify at run 4 through a new Queue-G
+intake row in the docket, not at S8. (3) Two rows are written in the graduation PR, with
+values re-verified by `gh pr view`: `iv-929-origin-lock-retirement` (#929, `e76c4db079`,
+2026-08-31T08:20:46Z: the weighted scheduler becomes the sole admission authority and
+exclusion becomes checkout-scoped, a partition point every post-08-31 KPI reading crosses)
+and `iv-1006-wave-order` (#1006, `d7a08b513b`, 2026-09-04T05:34:17Z: the B3 cost-ordered
+fail-fast ladder), with #1068 (`2086a0a090`) and #1269 (`b2a654bc43`) recorded as later
+landing-instant caveats. The remaining candidates are backfilled in goal phase P0 (W1) by
+a reproducible query under criterion (1): `git log --since=2026-08-27T19:52Z` over the
+scheduler, admission, Turbo/cache, lane-assembly and hosted-runner paths, then
+`gh pr view <n> --json mergedAt,mergeCommit` for each hit. The KPI verdict therefore never
+reads an untagged series. This disposes of time-to-certainty ruling 79's open item
+`iv-1006-wave-order`. Rejected: no rows now (#929 would stay an unrecorded partition point
+until W1) and every candidate row now (a hand list without a criterion is neither complete
+nor reproducible).
+
+**Ruling 7 — the ontology tree stays in place.** After graduation `ontology/**` and
+`research/scripts/**` stay under this exploration as the goal's declared working tree; the
+goal owns them by back-link, and its SPEC lists them as target surfaces. New auditor runs
+and projections append under the same ONT root, so prior-index chains, corpus manifests
+and frozen pins keep their paths, and frozen bytes keep the byte-immutability law. The
+exploration's authored surfaces (README, CAPTURE, RESEARCH, BRIEF, MAP and this log)
+become provenance; future rulings land in the goal's `research/decisions.md`, which cites
+this file as the prior log. Reasons: 34 tracked files outside the packet name its path.
+Eleven sit outside `goals/` and `explorations/` (`.gitleaks.toml`, `.gitignore`,
+`.fallowrc.jsonc`, `biome.jsonc`, `biome.identity.jsonc`, three `apps/labs/ciops` files, a
+repo-cli quality test, and two `.claude/skills` files); the other 23 sit under `goals/**`
+and `explorations/turborepo-quality-cache`, including the executable consumer
+`goals/time-to-certainty/research/scripts/economics.py` (`DEFAULT_CORPUS` → `run2-fleet`).
+The validator-enforced prior-index chain is ONT-relative too. Moving the tree into
+`packages/ontology` would be a promotion and waits on the S8 gate (Ruling 2). Rejected:
+moving the tree under the goal (it rewrites thousands of frozen paths and every coupled
+config for no gain).
+
+**Ruling 8 — frozen corpus pins replay against their recorded tree.** At HEAD both run-3
+fleet generators' verify modes exit 1 ("source citation anchor differs in current tree"):
+26 of 31 citations fail in `run3-fleet`, and 39 of 44 in each of `run3b-fleet` and
+`run3b-synthetic`, from post-pin line shifts and refactors.
+
+- (1) Recorded: #1160 (`c4eee75131`, 2026-09-16) rewrote citation line numbers in the
+  three run-3 pins' MANIFESTs with no DECISIONS entry (Ruling 23 covers only
+  `security_resanitization`), and that edit was red at its own merge (7, 11 and 11
+  citations failing against its tree).
+- (2) A verifier outside `extraction/`, `research/scripts/verify_run3_citations.py`,
+  resolves each run-3 citation against the manifest's recorded `corpus_tree`
+  (`eb477727a6`, the tree of capture commit `a9035c364e`) using the manifest bytes at the
+  pin tag `evidence/beep-ci-ops/orun-2026-09-10T02-10-52Z-pin` (`1c7cd98289`). It must
+  print a 0/0/0 verdict, as the audit's replica does, and exits non-zero on any failure.
+- (3) The evidence tag `evidence/beep-ci-ops/orun-2026-09-10T02-10-52Z-capture` goes on
+  capture commit `a9035c364e`, which no remote ref contains today. The orchestrator pushes
+  it; lanes create nothing remote.
+- (4) The generators' own current-tree citation check becomes advisory by this ruling;
+  editing them would change their self-pinned `generator_sha256`.
+- (5) `parentLaneId` (added to `YeetVerdictLane` in `Verdict.ts` by #1239, `d9f74d230a`,
+  2026-09-25; the sitting's question said #1122) is a non-process lane join key. The run3b
+  join-key census asserts an exact set, so the new optional field trips it;
+  `process_member('parentLaneId')` is false in both generators, so it is a tripwire, not
+  residue.
+- (6) The corpus regression suite (`test_run3_generators.py`, `test_run3b_generator.py`
+  and `test_run2_repair.py` under `ontology/extraction/s4/beep-ci-ops/corpus/`: 98 tests,
+  2 failures and 3 errors at HEAD, not CI-wired) is retired in place, because it lives in
+  the byte-immutable `extraction/` tree. Its reds are the citation drift, `stepId: S.`
+  removed from `ProofState.ts` by #1168, and the `parentLaneId` census. Its bytes stay as
+  provenance, and the item (2) verifier replaces its citation leg.
+- (7) The run-4 generator and Queue F adopt tree-pinned replay: each citation resolves
+  against the manifest's recorded `corpus_tree`, and current-tree resolution is advisory.
+
+Rejected: another line-number refresh (it would fail again at merge, and one needle,
+`pipe(branch, repoRunSafeArtifactName`, is gone since #1200) and leaving the verifiers red
+with documentation only (the next pin would inherit a replay check that cannot pass).
+
+**Ruling 9 — CQ-009 errata now, re-scope at the run-4 pin.** CQ-009 asks whether any "two
+active origin-keyed admission grants" share an origin and must answer zero. Since #929
+(`e76c4db079`, 2026-08-31) that state is legal: the deployed scheduler skips a ticket on a
+same-checkout lease, a legacy same-origin owner still draining (`legacy-origin-lock/v1`),
+a fresh `blockedOnOriginAtMillis` stamp or a saturated review-fix class cap
+(`QualityScheduler.ts` `isTicketSkippable`), and current-version same-origin proofs in
+distinct checkouts are capacity peers. `ontology/docs/scope.md` and
+`ontology/docs/orsd.md` §9 record as errata now that the deployed exclusion moved to the
+checkout at #929, without changing the bytes of `competency-questions.yaml`,
+`pre-glossary.csv`, `closed-world.yaml` or `use-cases.yaml`. At the run-4 pin CQ-009 is
+re-scoped to same-checkout exclusion plus the legacy-origin drain, with a new must-fail
+fixture, and the pin lane folds the errata into those files.
+`ontology/tests/fixtures/must-fail/cq009-two-grants.ttl` keeps its pre-#929 meaning under
+a temporal scope. Rejected: keeping CQ-009 as historical law with a notes amendment only
+(the Must CQ would go on flagging legal post-#929 state) and retiring CQ-009 (the
+exclusion law still exists in narrower form and keeps a test).
+
+**Ruling 10 — merged preview is a sub-partition of TierLocalFullProof in KPI law v1.1.**
+Time-to-certainty's SPEC lists four tiers; this packet's KPI law and
+`ontology/docs/literal-domains.md` list three `AssuranceTierId` members; the deployed
+`ProofStage` (`internal/repo-run/QualityScheduler.schemas.ts`) is
+`repair-loop | pre-push | merged-preview | hosted`, and `AdmissionWorkKind` includes
+`merged-preview`. KPI law v1.1 (`research/kpi-measurement-rules.md` §6) reports
+merged-preview episodes as a sub-partition of TierLocalFullProof, and a fourth
+`AssuranceTier` member is proposed to run 4: ratifying vocabulary outside an auditor run
+is a BRIEF no-go. Rejected: adding the tier now (vocabulary ratified outside a run) and
+ignoring merged preview (its episodes would fold silently into the local full-proof
+distribution).
+
+**Ruling 11 — S7-v2 seam widening authorized as goal scope, design first.** S7 sitting 1
+Ruling 1 rejected a full-episode planner that "runs ahead of both ratified vocabulary and
+journal carriers", and time-to-certainty ruling 78 says no code reads the gate-order
+handoff "until the S7-v2 seam widens, which is that packet's call". At HEAD `planEpisode`
+always fails with the `plannerNotImplemented` stub, `PlanEpisodeInput` is `{ episodeId }`,
+and S7 §6 says "No lane-DAG planner implementation (seam only)". The widening is
+authorized as goal scope, and its design is the first deliverable of goal phase P2's W6:
+the S7 §3.2/§6 amendment and a `PlanEpisodeInput` widened to carry the
+`gate-order-handoff/v1` path and sha256, with lane steps provisional in `ciops-prov:`. The
+lab decodes only the handoff subset it reads, pinned by sha256, and never imports
+repo-cli. `schedulesWorkUnit` stays unratified (docket Queue E item 2) until run 4.
+Time-to-certainty ruling 79's "the ontology seam stays as it is" binds that packet's side;
+this ruling widens the seam from this side, by contract amendment, before any planner body
+lands. Rejected: leaving the seam as it is (W6 and the S9 statement would have no lawful
+input).
+
+**Closure.** State flips: manifest `status` `graduated`, `stage` `graduate`,
+`openQuestions` `[]`, `links.goals` `["goals/ciops-ontology-pipeline"]`, `updated`
+2026-10-01; README Next Open Question points at the goal, the Pipeline paragraph carries
+the Ruling 2(c) amendment with S8 **DEFERRED** to `ciops-iri-formalization`, and one dated
+Trail line records the sitting and the admission-journal snapshot;
+`bun run beep explore atlas --write` regenerates the Status region and the git-ignored
+Atlas. The goal is scaffolded from the `bun run beep goals bootstrap --plan --json` plan
+`goal-plan/v1:ca099108927d…` (packetId `goal-packet/v1:b4601e724c8c…`, no conflicts).
+Recorded with the rulings: the 2026-09-09 routing preamble at the top of this file is
+superseded for future work by Ruling 4 and stays as written (audit F21); #1160's un-ruled
+citation edit, its red-at-merge state and the retirement of the frozen corpus regression
+suite are in Ruling 8 (audit F10). Notes, not rulings: `research/s7-replay-evidence.md` is
+never re-rendered; the bare `evidence:s7` script in `apps/labs/ciops/package.json`
+overwrites it, so `--check` is the only sanctioned mode, and any re-render needs a
+DECISIONS entry (making the script check-by-default is a lab follow-up outside this PR).
+No time-to-certainty receipt names the ownership move: the chain from this packet's Next
+Open Question through `links.goals` to the goal already resolves, and that packet's
+manifest note, GOAL.md and SPEC.md stay as written. The graduation PR touches these files,
+each staged by name:
+
+- `explorations/beep-ci-operational-ontology/`: `DECISIONS.md` (this entry and the
+  snapshot entry above); `BRIEF.md` and `MAP.md` (new); `README.md` (Next Open Question,
+  Pipeline amendment, Read This First, Trail; Status region regenerated); `RESEARCH.md`;
+  `ops/manifest.json`; `research/SOURCES.md`; `research/auditor-run4-intake.md`;
+  `research/control-interventions.yaml`; `research/kpi-measurement-rules.md`;
+  `research/scripts/kpi_baseline_probe.py` (docstring only);
+  `research/scripts/verify_run3_citations.py` (new);
+  `research/evidence/journal-snapshot-2026-10-01/MANIFEST.md` and `SHA256SUMS.txt` (new;
+  payload gitignored); `ontology/docs/scope.md`, `orsd.md`, `s4-lane-contract.md`,
+  `s5-taxonomy-contract.md`, `s6-abox-contract.md` and `s7-projection-contract.md`.
+- `goals/ciops-ontology-pipeline/` (new): `ops/manifest.json`, `README.md`, `GOAL.md`,
+  `SPEC.md`, `PLAN.md`, `research/SOURCES.md`, `research/decisions.md`, and the bootstrap
+  `.gitkeep` files under `research/`, `history/` and `history/reflections/`.
+- Not touched: anything under `ontology/extraction/**`, `CAPTURE.md`,
+  `research/OPPORTUNITIES.md`, `goals/time-to-certainty/**` and `apps/labs/ciops/**`. The
+  evidence tag `evidence/beep-ci-ops/orun-2026-09-10T02-10-52Z-capture` on `a9035c364e` is
+  a ref, not a file.

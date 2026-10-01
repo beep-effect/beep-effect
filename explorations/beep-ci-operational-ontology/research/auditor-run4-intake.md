@@ -32,6 +32,19 @@ if C4 is not checked it records the state in its report and stops without creati
 manifest or seat. Only a steward ruling scribed in `DECISIONS.md` can amend the gate; this docket
 supplies no fallback.
 
+**2026-10-01 addendum (graduation sitting, Ruling 1).** At `04993ae26a`,
+`goals/time-to-certainty/PLAN.md` shows C3.3–C3.6, C4a, C4.1 (shadow-mode proof-ledger writer,
+`recordProofShadowForAttempt`, 2026-09-21) and C5 checked. The C4 parent box (`:163`) and C4.2
+enforcement (`:176`, that packet's ruling 80) are unchecked, and that packet is paused
+(2026-09-28). The paragraph above records the `e16e7a9297` state.
+
+Under graduation Ruling 1 the gate reads: C4.1 is checked AND the owning clone's
+`.beep/yeet/proof-ledger.ndjson` (time-to-certainty ruling 71) holds `ProofFact` rows recorded
+after #1321 from both local stages; otherwise the pin lane records the census and stops. Issuance
+and custody legs read those rows through a NEW sibling proof-ledger capture generator (Ruling 18
+pattern; Rulings 11 and 22). Every realization, copy or correction leg waits for time-to-certainty
+C4.2.
+
 ## Prior-run chain (validator-enforced)
 
 The run manifest must carry exactly:
@@ -96,8 +109,9 @@ SeatRequest), rat-068 (`otp:att-admission-allocation:001`, SeatGrant) and rat-06
 DISPOSITIONS rows with the reuse grain in the justification; VerificationResultArtifact carries rat-070 at assessment-origin
 grain. Routing: account-copy identity and effective authorization continuity need organic
 lease renewal/transfer chains (Stage C); demand-versus-description grain needs an organic
-withdrawal/resubmission chain with both ticket records (Stage C); equal-content assessment,
-copy/correction and issuance identity wait for C4 (Queue C(iii), Queue D).
+withdrawal/resubmission chain with both ticket records (Stage C); equal-content assessment and
+copy/correction identity wait for time-to-certainty C4.2; issuance identity reads the proof-ledger
+capture (Queue C(iii), Queue D).
 
 - **SeatGrant** (class, `rat-066`): with account-copy identity and effective authorization continuity deferred to run 4 as flagged.
 - **VerificationResultArtifact** (class, `rat-070`): with equal-content assessment, copy/correction and issuance identity deferred to run 4 as flagged.
@@ -137,8 +151,9 @@ carried from the run-3 docket (records in
 
 > Authoritative generation, issuance, custody, copy, correction, and claim-realization provenance across heterogeneous VerificationEvidence instances is required to decide content versus carrier identity.
 
-Run-4 routing: **waits for C4.** The proof-ledger writer is the first source of issued claims;
-until it exists the run-3 attempt/verdict projections support record-level review only.
+Run-4 routing: **waits for the proof-ledger capture** (issuance and custody: time-to-certainty
+C4.1 shadow facts, graduation Ruling 1); realization and copy wait for time-to-certainty C4.2. The
+run-3 attempt/verdict projections support record-level review only.
 
 #### rat-048: `otp:pa-projection-limitation-report:001`
 
@@ -146,10 +161,11 @@ until it exists the run-3 attempt/verdict projections support record-level revie
 
 > Authoritative result formation, issuance, producer, custody, copy, correction, and revocation provenance across heterogeneous VerificationResultArtifact records is required to choose content, record-token, or carrier-lineage identity. A separate limitation-report term additionally requires independent issuance and a Must/Should CQ that consumes it apart from the containing result.
 
-Run-4 routing: **waits for C4** for the result-provenance identity; the run-3 partial
-result-record evidence (embedded verdicts, the S7 replay report) stays recorded against the
-flag without lifting it. The separate limitation-report term still needs its own independent
-issuance and a Must/Should CQ that consumes it apart from the containing result; neither exists.
+Run-4 routing: **waits for the proof-ledger capture** (issuance; realization and correction wait
+for C4.2) for the result-provenance identity; the run-3 partial result-record evidence (embedded
+verdicts, the S7 replay report) stays recorded against the flag without lifting it. The separate
+limitation-report term still needs its own independent issuance and a Must/Should CQ that consumes
+it apart from the containing result; neither exists.
 
 #### rat-049: `otp:pa-yeet-verification-workflow:001`
 
@@ -180,9 +196,10 @@ membership-change rule and the shared-versus-copied domain decision across plann
 
 > Authoritative result formation, issuance, producer, custody, copy, correction, and revocation provenance across heterogeneous VerificationResultArtifact records is required to choose content, record-token, or carrier-lineage identity. A separate planned-lane-status term additionally requires retained issuance, parent-attempt and execution joins, and a Must/Should CQ that consumes it separately.
 
-Run-4 routing: **waits for C4** for the result-provenance identity; the run-3 parent-attempt
-joins are recorded, not discharging. The separate planned-lane-status term still needs
-retained issuance, the parent-attempt and execution joins, and its own Must/Should CQ.
+Run-4 routing: **waits for the proof-ledger capture** (issuance; realization and correction wait
+for C4.2) for the result-provenance identity; the run-3 parent-attempt joins are recorded, not
+discharging. The separate planned-lane-status term still needs retained issuance, the
+parent-attempt and execution joins, and its own Must/Should CQ.
 
 #### rat-052: `otp:pb-verification-evidence-receipt:001`
 
@@ -190,7 +207,8 @@ retained issuance, the parent-attempt and execution joins, and its own Must/Shou
 
 > Run-3 must provide authoritative claim-formation and realization rules plus issuance, producer, custody, copy, retention, correction, and revocation provenance across heterogeneous VerificationEvidence records.
 
-Run-4 routing: **waits for C4** (claim-formation rules are the writer's contract).
+Run-4 routing: **waits for the proof-ledger capture** (claim formation is the C4.1 writer
+contract, `ProofShadow.ts`; realization waits for C4.2).
 
 Queue B totals: **6 flags**, **4 re-parked to run 4 under Ruling 17** (047, 048, 051, 052) and
 **2 duties on the contract/governance route** (049, 050).
@@ -404,7 +422,7 @@ Needed evidence retained from `INDEX` (28 rows):
   - `so:sha256:d90be1aaa963b3e017130d2add821e59f623ac0540f9563cd9dd1d607cae8ce9`
   - `so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17`
 
-**result-artifact-content-snapshot** (14): 14 verdict rows carrying the VerificationResultArtifact content-snapshot rival: two independent equal-content assessments of one attempt whose consumers treat them as distinct or as one, plus issuance/correction provenance (C4).
+**result-artifact-content-snapshot** (14): 14 verdict rows carrying the VerificationResultArtifact content-snapshot rival: two independent equal-content assessments of one attempt whose consumers treat them as distinct or as one, plus issuance/correction provenance (issuance: proof-ledger capture; correction: C4.2).
 
 Needed evidence retained from `INDEX` (14 rows):
 
@@ -815,7 +833,7 @@ Withdrawals are deferrals with named evidence, not rejections (sitting-3 Ruling 
 | `otp:ver-wall-time-evidence:001` | ExecutionDurationAssertion | A Must/Should CQ whose executable query requires a separately identified wall-time evidence class plus an observed consumer selecting or rejecting a verdict on it (C(i) `wall-time-evidence-class`). |
 | `otp:bind-admission-grant:001` | SeatGrant (synthetic operational reading) | Organic lease-eviction/renewal/transfer chains in a fleet capture showing effective allocation continuity, joined to an independently identified holder. |
 | `otp:bind-admission-request:001` | SeatRequest (synthetic operational reading) | An organic withdrawal/resubmission chain with an independently tracked demand referent and both ticket records. |
-| `otp:ver-attempt-verdict:001` | VerificationResultArtifact (content-snapshot rival) | Two independent equal-content assessments of one attempt whose consumers treat them as distinct or as one, plus the issuance/correction provenance the proof-ledger writer will carry (C4). |
+| `otp:ver-attempt-verdict:001` | VerificationResultArtifact (content-snapshot rival) | Two independent equal-content assessments of one attempt whose consumers treat them as distinct or as one, plus the issuance/correction provenance the proof-ledger writer will carry (issuance: proof-ledger capture; correction: C4.2). |
 
 The table is a routing summary. The complete receipt duties govern re-opening each proposal:
 
@@ -905,9 +923,21 @@ zero retained ticket evictions does not establish that none occurred. The earlie
 census is historical; the current journal bytes do not reproduce it. These organic writer
 rows remain distinct from labeled `run3b-synthetic` output. Whether retained chains are new
 relative to `run3b-fleet` (5 lease and 2 ticket evictions in its manifest) is decided by the
-**Stage C capture at the run-4 pin**: a new `run4-fleet` pin produced by the run3b ETL mechanics
-under Rulings 10, 19 and 22 (synthetic labels retained; refreshed pins carry
-`corpus_tree`/`corpus_base`; residue scans zero), not by editing any existing pin.
+**Stage C capture at the run-4 pin**: a new `run4-fleet` pin produced by a NEW sibling generator
+using the run3b ETL mechanics with tree-pinned citation replay (graduation Ruling 8) under Rulings
+10, 19 and 22 (synthetic labels retained; refreshed pins carry `corpus_tree`/`corpus_base`;
+residue scans zero), not by editing any existing pin.
+
+**Organic eviction census (2026-10-01T11:30Z, counts only).** Same method. The canonical
+root has one journal with 692 rows: 200 `v1` `admission-admitted` and 492 `v3` (247
+`admission-enqueued`, 199 `admission-released`, 45 `admission-withdrawn`, 1
+`admission-ticket-evicted` (queued-submitter-death, 2026-09-28T22:09Z), 0
+`admission-lease-evicted`). The session and system temp roots are absent. The 09-12 lease
+evictions have rolled out of the 200-admission window. Under the 2026-10-01 admission-journal
+snapshot ruling, a digest-only snapshot is at `research/evidence/journal-snapshot-2026-10-01/`
+(695 rows copied at 2026-10-01T12:20Z; payload local and gitignored, manifest and digests
+committed). The run-4 pin reads it as organic Queue D input beside a re-census of the live
+journal.
 
 ### Queue E: CQ-019 / CQ-020 leftovers (Ruling 16, sitting-3 Ruling 4)
 
@@ -923,11 +953,11 @@ under Rulings 10, 19 and 22 (synthetic labels retained; refreshed pins carry
 ### Queue F: S6 POLICY provenance convention
 
 `ontology/extraction/s6/POLICY.yaml` still pins its sources by `corpus_commit`. The authorized
-later change adopts the run-3 `corpus_tree`/`corpus_base` and current-tree citation convention
-(Ruling 22 refresh conventions; the receipt "capture provenance must survive squash merges" is
-in `research/OPPORTUNITIES.md`). This docket schedules that edit for the run-4 pin lane as a
-regenerate-and-verify step (`apply_s6_dispositions.py --check`, `run_shacl.py` green); it does
-not edit POLICY.yaml.
+later change adopts the run-3 `corpus_tree`/`corpus_base` and tree-pinned citation convention
+(graduation Ruling 8; Ruling 22 refresh conventions; the receipt "capture provenance must survive
+squash merges" is in `research/OPPORTUNITIES.md`). This docket schedules that edit for the run-4
+pin lane as a regenerate-and-verify step (`apply_s6_dispositions.py --check`, `run_shacl.py`
+green); it does not edit POLICY.yaml.
 
 ### Non-triggers and carry-forwards
 
@@ -939,11 +969,21 @@ not edit POLICY.yaml.
   from negation/ratified typing. No separate namespace proposal was presented at sitting 3;
   the joint cluster ruling did not ratify absent proposals or decide S8 IRI syntax
   (`ONT/work/sittings/ratification-docket.md`, "Intake spellings and the actual proposal set").
-- **Seats follow the run-3 launch entry** unless the run-4 launch entry amends it: Codex seats
-  `gpt-6-astra` at `max` (the packet's 2026-08-27 delegated-lane directive governs seats; the
-  root routing note's `medium` governs ordinary token-heavy work), the adversary in an
-  independent context, the blinded alternative as a headless `claudeg` session on `grok-4.6`
-  with `-alt` ids. Every seat's launched effort is recorded in `agents.<role>.effort` (v15).
+- **Seats follow graduation Ruling 4** (2026-10-01) unless the run-4 launch entry amends it:
+  every seat on Claude Opus 5.5 (`claude-opus-5-5`) in an independent context, the adversary
+  independent, and the blinded alternative fed only observations and hypotheses (SKILL.md Step
+  7b) with `-alt` ids. Codex or Grok seats run only when the launch entry names the operator's
+  opt-in. The launch entry records each seat's actual launch command as a deviation from
+  SKILL.md's `codex exec` recipe; validator v15 checks only non-blank
+  `agents.<role>.model`/`effort`. Every seat's launched effort is recorded in
+  `agents.<role>.effort` (v15).
+- **Change-event vocabulary gets a Queue-G intake row (graduation Ruling 6).** S6 typed no
+  `research/control-interventions.yaml` row: `OperationalChangeEvent` appears in no S5 TAXONOMY
+  or S6 artifact, and `ciops:landedAt` is `seed-only` with CQ-016 as its consumer
+  (`ontology/extraction/s6/PREDICATES.yaml`). The pin lane adds one Queue-G intake row that
+  presents the class and `ciops:landedAt` over the ledger as it stands at the pin (iv-870,
+  iv-929, iv-1006 and the goal's W1 backfill under the ruling's admission criterion), so the
+  pair ratifies at run 4, not at S8.
 - **Denotation grain.** One hypothesis per candidate referent kind, grouping the individual
   chains that instantiate it; an observation with an empty candidate set still emits one
   hypothesis whose null stands (v15 prompt). Run 3's 109-record consolidation pass is not repeated.
@@ -989,7 +1029,7 @@ because an adapter can observe them.
 | Convention | Required reading |
 | --- | --- |
 | `corpus_commit` | Historical capture HEAD; may be unreachable after squash merge; never the run's frozen repository pin. |
-| `corpus_tree` / `corpus_base` | Captured tree and base provenance on refreshed manifests; citations retain file/line/anchor and captured hash; replay checks the current tree. |
+| `corpus_tree` / `corpus_base` | Captured tree and base provenance on refreshed manifests; citations retain file/line/anchor and captured hash; replay resolves each citation against the manifest's recorded `corpus_tree` (graduation Ruling 8; `research/scripts/verify_run3_citations.py` replays the run-3 pins this way); current-tree resolution is advisory. |
 | `ownerRef` / `ownerRefVariant` | Capture-local surrogates (`pid_pair`, `ownerpid`, `attachedpid`, `weak`); no cross-capture continuity; never a substitute for nonce/attempt joins. |
 | `security_resanitization` | Repair history and prior-manifest lineage (Rulings 22, 23), not a new capture or ratification. |
 | `complete_within`, source receipts, `provenance: synthetic` | Scope statements for retained windows and fixture production; synthetic terminal joins demonstrate writer behaviour, not organic incidence. |

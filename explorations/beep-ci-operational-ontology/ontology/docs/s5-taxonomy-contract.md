@@ -114,3 +114,16 @@ candidate accepted in a later sitting becomes `accepted-via` with that sitting's
 ratification as its `join_ref`; no candidate row is invented for a taxonomy-only
 term. These additions leave all other totality, join, typing, and parameter laws
 in force.
+
+## 2026-10-01 amendment — seat routing
+
+Authority: DECISIONS.md, "2026-10-01 — graduation sitting", Ruling 4. §3 step 3's
+seat models (codex Sol max assembly lanes, a codex max adversary, a grok xhigh
+blinded alternative) record the seat round ratified at "2026-08-30 — S5 sitting 4"
+and stay its provenance. Future seats run `claude-opus-5-5`, the blinded
+alternative included: blinding comes from withheld inputs and an independent
+context (the `ontology-foundational-auditor` SKILL.md), never from model family.
+Codex and Grok seats run only as an operator opt-in named in the launch entry,
+with the pins `AGENTS.md` "Volume pools" states. The launch entry records each
+seat's actual launch command as a deviation from SKILL.md's `codex exec` recipe,
+and seat telemetry records the runner and model actually launched.
