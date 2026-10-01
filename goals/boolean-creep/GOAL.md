@@ -46,7 +46,7 @@ Workflow:
    by landing tier; set an instance `applied` in its implementation PR; use
    Yeet repair, full verify, publish, and monitor to exact-head merge-ready.
 5. Preserve unrelated work. The 2026-09-28 decision authorizes agent merge
-   through the ChatGPT Chrome extension; use one remaining PR (#1328).
+   through the ChatGPT Chrome extension; use one successor PR to merged #1328 for all remaining work.
 6. Include implementation, final candidate rounds, reflection and lifecycle
    change in that PR. After merge, run two exact-main dry rounds and verify
    completion. Follow the 2026-09-28 decision for consolidated landing.
