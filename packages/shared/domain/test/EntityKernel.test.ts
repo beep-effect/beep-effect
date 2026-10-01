@@ -122,11 +122,10 @@ describe("EntityId", () => {
 
       const Annotated = DocumentId.annotate({ description: "proof" });
       expect(Annotated).not.toBe(DocumentId);
-      assertTrue(hasFunctionStatic(Annotated, "is"));
-      assertTrue(hasFunctionStatic(Annotated, "decodeUnknownSync"));
-      assertTrue(hasFunctionStatic(Annotated, "decodeUnknownEffect"));
-      assertFalse(hasFunctionStatic(Annotated, "fromUnknown"));
-      expect(O.getOrThrow(invokeStatic(Annotated, "decodeUnknownSync", 1))).toBe(1);
+      assertFalse(hasFunctionStatic(Annotated, "is"));
+      assertFalse(hasFunctionStatic(Annotated, "decodeUnknownSync"));
+      assertFalse(hasFunctionStatic(Annotated, "decodeUnknownEffect"));
+      assertTrue(S.is(Annotated)(1));
       invokeStatic(Annotated, "equivalence", decoded, decoded).pipe(O.getOrThrow, assertTrue);
       expect(O.getOrThrow(invokeStatic(Annotated, "equivalence", decoded, 2))).toBe(false);
       invokeStatic(Annotated, "equivalence").pipe(O.getOrThrow, P.isFunction, assertFalse);
