@@ -99,5 +99,9 @@
     "called_cloud_agent": false,
     "wrote_goals_or_inbox": false
   },
+  "publisher_stage": {
+    "opened_pr": 1391,
+    "note": "blinding and quotaPools.publisher are the writer stage, frozen at written_at (no PR yet). Publisher applied research/ledger/stamp.json and research/ledger/WATCHLIST.md and opened PR #1391."
+  },
   "written_at": "2026-10-01T08:35:00-05:00"
 }

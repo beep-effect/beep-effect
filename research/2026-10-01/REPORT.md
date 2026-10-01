@@ -1,6 +1,6 @@
 # Nightly research packet — 2026-10-01
 
-Window: `2026-09-30T08:19:00-05:00` → `2026-10-01T08:19:00-05:00` (~24h). Thursday — **no** Sunday weekly consolidation / tombstone reaper. Prior: research/2026-09-30 PR #1358 merged ~2026-10-01 1:21 AM CT. Blinded front-half; no clone / no PR.
+Window: `2026-09-30T08:19:00-05:00` → `2026-10-01T08:19:00-05:00` (~24h). Thursday — **no** Sunday weekly consolidation / tombstone reaper. Prior: research/2026-09-30 PR #1358 merged ~2026-10-01 1:21 AM CT. Writer stage was blinded (no clone / no PR at `written_at`). Publisher opened PR #1391.
 
 ## Delta-first
 
