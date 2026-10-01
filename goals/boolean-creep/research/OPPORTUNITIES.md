@@ -1976,3 +1976,12 @@ used. The first R50 patch also selected `bundleOut` rather than the
 `PracticeKgOptions` declaration; hosted review caught that one-line owner
 citation before launch. The R49 artifacts remain historical; no provider call
 was spent.
+
+## 2026-10-01: hosted lint found an inherited malformed code span
+
+The exact-head Heavy / Lint Policy job found an unterminated TSDoc code span in
+`CheckCensusGate.ts` that arrived from main and was outside the packet diff.
+Keeping the command in one code span fixes the documentation without changing
+runtime behavior. A changed-source TSDoc syntax check after each main merge
+would have caught the inherited defect before the heavy matrix and before R50
+finished an exact-source admission review.
