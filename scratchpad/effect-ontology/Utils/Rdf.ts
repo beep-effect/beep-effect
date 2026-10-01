@@ -11,6 +11,8 @@ import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { dual2 } from "./Dual.ts";
+import * as S from "effect/Schema";
+import { Result } from "effect";
 
 /**
  * Concatenates a namespace and local identifier, then validates the result as
@@ -32,7 +34,7 @@ import { dual2 } from "./Dual.ts";
  * @since 0.0.0
  */
 export const buildIri = dual2(
-  (baseNamespace: string, localName: string): IriValue => IRI.decodeUnknownSync(`${baseNamespace}${localName}`)
+  (baseNamespace: string, localName: string): IriValue => Result.getOrThrow(S.decodeResult(IRI)(`${baseNamespace}${localName}`))
 );
 
 /**
@@ -43,8 +45,9 @@ export const buildIri = dual2(
  * ```ts
  * import { IRI } from "@beep/rdf"
  * import { canonicalNamedNode } from "@effect-ontology/Utils/Rdf"
+ * import * as S from "effect/Schema"
  *
- * const node = canonicalNamedNode(IRI.decodeUnknownSync("https://example.com/person"))
+ * const node = canonicalNamedNode(S.decodeUnknownSync(IRI)("https://example.com/person"))
  * console.log(node.value) // "https://example.com/person"
  * ```
  *
@@ -90,11 +93,12 @@ export const canonicalLiteral = (input: {
  * import { IRI } from "@beep/rdf"
  * import { canonicalQuad } from "@effect-ontology/Utils/Rdf"
  * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
  * const quad = canonicalQuad({
- *   subject: IRI.decodeUnknownSync("https://example.com/ada"),
- *   predicate: IRI.decodeUnknownSync("https://example.com/name"),
- *   object: IRI.decodeUnknownSync("https://example.com/Ada"),
+ *   subject: S.decodeUnknownSync(IRI)("https://example.com/ada"),
+ *   predicate: S.decodeUnknownSync(IRI)("https://example.com/name"),
+ *   object: S.decodeUnknownSync(IRI)("https://example.com/Ada"),
  *   graph: O.none()
  * })
  * console.log(quad.subject.value) // "https://example.com/ada"

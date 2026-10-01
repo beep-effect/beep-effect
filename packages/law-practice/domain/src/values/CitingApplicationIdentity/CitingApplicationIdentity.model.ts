@@ -475,8 +475,7 @@ export const CitingApplicationIdentity = S.Union([UsptoCitingApplication, WipoCi
   $I.annoteSchema("CitingApplicationIdentity", {
     description:
       "Law-owned union of the accepted citing-application representations: normalized USPTO and canonical WIPO ST.13.",
-  }),
-  SchemaUtils.withCodecStatics(["encodeEffect", "equivalence"])
+  })
 );
 
 /**

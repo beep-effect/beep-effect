@@ -333,7 +333,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       });
                       const ctx = yield* ontology.ontology;
                       const classes = yield* Effect.forEach(A.take(ctx.classes, 100), (value) =>
-                        ClassDefinition.decodeUnknownEffect(value)
+                        S.decodeUnknownEffect(ClassDefinition)(value)
                       );
                       return Chunk.fromIterable(classes);
                     })

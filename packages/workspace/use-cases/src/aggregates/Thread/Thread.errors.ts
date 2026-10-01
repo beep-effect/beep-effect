@@ -7,7 +7,6 @@
  */
 
 import { $WorkspaceUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 
@@ -129,9 +128,10 @@ export class ThreadStoreUnavailable extends S.TaggedError<ThreadStoreUnavailable
  *
  * ```ts
  * import { ThreadStoreError, ThreadStoreUnavailable } from "@beep/workspace-use-cases/aggregates/Thread/server"
+ * import * as S from "effect/Schema"
  *
  * const error = new ThreadStoreUnavailable({ reason: "database unavailable" })
- * console.log(ThreadStoreError.is(error)) // true
+ * console.log(S.is(ThreadStoreError)(error)) // true
  * ```
  *
  * @category errors
@@ -140,8 +140,7 @@ export class ThreadStoreUnavailable extends S.TaggedError<ThreadStoreUnavailable
 export const ThreadStoreError = S.Union([ThreadStoreNotFound, ThreadStoreConflict, ThreadStoreUnavailable]).pipe(
   $I.annoteSchema("ThreadStoreError", {
     description: "ThreadStore port failure.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

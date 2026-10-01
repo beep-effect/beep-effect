@@ -192,7 +192,7 @@ const candidates = (document: Document): ReadonlyArray<OperationCandidate> => {
         pathValue,
         R.toEntries,
         A.map(([sourceMethod, operationValue]) => {
-          const method = HttpMethod.decodeOption(sourceMethod);
+          const method = S.decodeUnknownOption(HttpMethod)(sourceMethod);
           return O.isSome(method) && isRecord(operationValue)
             ? O.some(
                 OperationCandidate.new(HttpMethod.To.Enum[method.value], method.value, path, pathValue, operationValue)
@@ -207,10 +207,10 @@ const candidates = (document: Document): ReadonlyArray<OperationCandidate> => {
 
 const operationFrom = (candidate: OperationCandidate): O.Option<Operation> =>
   pipe(
-    ApiPath.decodeUnknownOption(candidate.path),
+    S.decodeOption(ApiPath)(candidate.path),
     O.map((path) =>
       Operation.new(
-        pipe(own(candidate.operation, "operationId"), O.flatMap(OperationId.decodeUnknownOption)),
+        pipe(own(candidate.operation, "operationId"), O.flatMap(S.decodeUnknownOption(OperationId))),
         candidate.method,
         path,
         pipe(own(candidate.operation, "summary"), O.flatMap(nonEmptyString)),

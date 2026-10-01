@@ -38,11 +38,7 @@ export const EcfrErrorReason = EcfrErrorReasonBase.pipe(
   $I.annoteSchema("EcfrErrorReason", {
     description: "Redacted technical error reasons emitted by the eCFR REST API driver.",
   }),
-  SchemaUtils.withLiteralKitStatics(EcfrErrorReasonBase),
-  SchemaUtils.withStatics((schema: typeof EcfrErrorReasonBase) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(EcfrErrorReasonBase)
 );
 
 /**

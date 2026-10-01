@@ -249,8 +249,8 @@ describe("VaultSyncEngine port", () => {
       );
       expect(repositoryDown._tag).toBe("SyncItemRepositoryUnavailable");
 
-      pipe(VaultSyncError.is(VaultScanFailed.make({ reason: "vault root missing" })), assertTrue);
-      pipe(VaultSyncError.is(VaultSyncActionError.new("client-safe failure")), assertFalse);
+      pipe(S.is(VaultSyncError)(VaultScanFailed.make({ reason: "vault root missing" })), assertTrue);
+      pipe(S.is(VaultSyncError)(VaultSyncActionError.new("client-safe failure")), assertFalse);
     })
   );
 

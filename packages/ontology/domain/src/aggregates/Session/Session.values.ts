@@ -7,7 +7,6 @@
 
 import { $OntologyDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as S from "effect/Schema";
 
 const $I = $OntologyDomainId.create("aggregates/Session/Session.values");
@@ -33,8 +32,7 @@ export const SessionId = S.NonEmptyString.pipe(
   S.brand("OntologySessionId"),
   $I.annoteSchema("SessionId", {
     description: "Stable id for an ontology workbench session.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**

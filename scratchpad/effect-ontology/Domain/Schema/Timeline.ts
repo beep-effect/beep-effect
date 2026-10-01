@@ -8,7 +8,7 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { DateTime, Effect, SchemaGetter } from "effect";
 import * as A from "effect/Array";
@@ -136,11 +136,10 @@ const OrderedUtcRangeDefinition = S.Struct({
         message: "UTC range end must be greater than or equal to its start.",
       }
     )
-  )
-  .pipe(SchemaUtils.withCodecStatics(["is"]));
+  );
 
 const OrderedUtcRangeFromSelf = S.declare((input: unknown): input is typeof OrderedUtcRangeDefinition.Type =>
-  OrderedUtcRangeDefinition.is(input)
+  S.is(OrderedUtcRangeDefinition)(input)
 ).annotate({
   toCodecArbitrary: () =>
     new SchemaAST.Link(S.toType(OrderedUtcRangeDefinition).ast, SchemaTransformation.passthrough()),

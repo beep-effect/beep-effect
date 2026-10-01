@@ -330,28 +330,30 @@ describe("@beep/infra OpenClaw", () => {
   it.effect(
     "decodes typed Pulumi config values and rejects wrong types",
     Effect.fnUntraced(function* () {
-      const decoded = yield* OpenClawPulumiConfigValues.decodeEffect({
+      const decoded = yield* S.decodeEffect(OpenClawPulumiConfigValues)({
         expectedUid: 1000,
         gatewayPort: 19_040,
       });
 
       expect(decoded.expectedUid).toBe(1000);
       expect(decoded.gatewayPort).toBe(19_040);
-      expect((yield* Effect.flip(OpenClawPulumiConfigValues.decodeEffect({ gatewayPort: "19040" })))._tag).toBe(
-        "SchemaError"
-      );
-      expect((yield* Effect.flip(OpenClawPulumiConfigValues.decodeEffect({ gatewayPort: 80 })))._tag).toBe(
+      expect(
+        (yield* Effect.flip(S.decodeUnknownEffect(OpenClawPulumiConfigValues)({ gatewayPort: "19040" })))._tag
+      ).toBe("SchemaError");
+      expect((yield* Effect.flip(S.decodeEffect(OpenClawPulumiConfigValues)({ gatewayPort: 80 })))._tag).toBe(
         "SchemaError"
       );
       expect(
-        (yield* Effect.flip(OpenClawPulumiConfigValues.decodeEffect({ expectedMachineId: "not-a-machine-id" })))._tag
+        (yield* Effect.flip(S.decodeEffect(OpenClawPulumiConfigValues)({ expectedMachineId: "not-a-machine-id" })))._tag
       ).toBe("SchemaError");
       expect(
         (yield* Effect.flip(
-          OpenClawPulumiConfigValues.decodeEffect({ localProviderBaseUrl: "https://remote.example.test/v1" })
+          S.decodeEffect(OpenClawPulumiConfigValues)({ localProviderBaseUrl: "https://remote.example.test/v1" })
         ))._tag
       ).toBe("SchemaError");
-      expect(yield* OpenClawPulumiConfigValues.decodeEffect({ configWrites: true })).not.toHaveProperty("configWrites");
+      expect(yield* S.decodeUnknownEffect(OpenClawPulumiConfigValues)({ configWrites: true })).not.toHaveProperty(
+        "configWrites"
+      );
     })
   );
 

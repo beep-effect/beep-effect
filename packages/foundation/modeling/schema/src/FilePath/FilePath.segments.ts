@@ -8,7 +8,6 @@ import { HashSet } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 import {
   $I,
   windowsInvalidSegmentCharacterRegExp,
@@ -241,8 +240,7 @@ export const WindowsSegments = S.NonEmptyArray(ValidWindowsPathSegment).pipe(
   S.brand("WindowsSegments"),
   $I.annoteSchema("WindowsSegments", {
     description: "A non-empty Windows path segment list.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -328,8 +326,7 @@ export const ValidWindowsUncSegments = S.TupleWithRest(
   S.brand("ValidWindowsUncSegments"),
   $I.annoteSchema("ValidWindowsUncSegments", {
     description: "A UNC segment list with server, share, and at least one leaf segment.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

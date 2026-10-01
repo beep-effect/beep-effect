@@ -14,7 +14,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as vercel from "@pulumiverse/vercel";
 import { Effect, pipe, Result } from "effect";
 import * as S from "effect/Schema";
-import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
+import { optionalPulumiConfigFields } from "./internal/PulumiConfigSchema.ts";
 import { VercelAuthenticationDeploymentType } from "./Vercel.ts";
 
 const $I = $InfraId.create("OipWeb");
@@ -90,7 +90,7 @@ const vercelAuthenticationDeploymentTypeFromPulumiConfig = (
   value === undefined
     ? undefined
     : Result.getOrThrowWith(
-        VercelAuthenticationDeploymentType.decodeResult(value),
+        S.decodeUnknownResult(VercelAuthenticationDeploymentType)(value),
         schemaIssueToPulumiConfigError("vercelAuthenticationDeploymentType", value)
       );
 
@@ -143,9 +143,7 @@ export const OipWebPulumiConfigValues = S.Class<OipWebPulumiConfigValues>($I`Oip
   $I.annote("OipWebPulumiConfigValues", {
     description: "Optional Pulumi config values before OIP deploy defaults are applied.",
   })
-)
-  .mapFields(optionalPulumiConfigFields)
-  .pipe(withPulumiConfigDecodeEffect);
+).mapFields(optionalPulumiConfigFields);
 
 /**
  * Pulumi DIY state backend settings for OIP.

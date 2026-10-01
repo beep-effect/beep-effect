@@ -13,11 +13,11 @@
 import { $ScratchpadId } from "@beep/identity";
 import { getSomesStruct } from "@beep/utils/Option";
 import type { Duration } from "effect";
-import { Context, DateTime, Effect, Layer, MutableHashSet } from "effect";
+import { Context, DateTime, Effect, Layer, MutableHashSet, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError, SystemError } from "effect/PlatformError";
-import type * as S from "effect/Schema";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
 import { ContentHash } from "../Domain/Identity.ts";
@@ -139,7 +139,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
     Effect.gen(function* (): Effect.fn.Return<ImageBlobStoreService, never, StorageService> {
       const storage = yield* StorageService;
 
-      const imagePathHash = (hash: string): ContentHash => ContentHash.decodeUnknownSync(hash);
+      const imagePathHash = (hash: string): ContentHash => Result.getOrThrow(S.decodeResult(ContentHash)(hash));
 
       return {
         putBytes: (hash: string, bytes: Uint8Array) =>

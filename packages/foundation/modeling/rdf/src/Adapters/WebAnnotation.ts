@@ -7,7 +7,6 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Effect, pipe, Result, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
@@ -356,8 +355,7 @@ export const WebAnnotationSelectorFromEvidenceSelector = S.toEncoded(EvidenceSel
       "WebAnnotationSelectorFromEvidenceSelector",
       "Codec between package-owned evidence selectors and Web Annotation selector DTOs."
     ),
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -491,8 +489,7 @@ export const WebAnnotationTargetFromEvidenceTarget = S.toEncoded(EvidenceTarget)
       "WebAnnotationTargetFromEvidenceTarget",
       "Codec between evidence targets and Web Annotation target DTOs."
     ),
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -577,8 +574,7 @@ export const WebAnnotationFromEvidenceAnchor = S.toEncoded(EvidenceAnchor).pipe(
       "WebAnnotationFromEvidenceAnchor",
       "Codec between evidence anchors and Web Annotation DTOs."
     ),
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**

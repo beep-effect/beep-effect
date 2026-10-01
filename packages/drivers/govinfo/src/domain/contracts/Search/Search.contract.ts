@@ -198,8 +198,9 @@ export class FailureInternalServerError extends S.TaggedError<FailureInternalSer
  *
  * ```ts
  * import { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
+ * import * as S from "effect/Schema"
  *
- * console.log(Failure.is({ _tag: "FailureNotFound", status: 404 }))
+ * console.log(S.is(Failure)({ _tag: "FailureNotFound", status: 404 }))
  * ```
  *
  * @category errors
@@ -214,12 +215,7 @@ export const Failure = S.Union([
   $I.annoteSchema("Failure", {
     description: "Tagged union of typed GovInfo search endpoint failures.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**

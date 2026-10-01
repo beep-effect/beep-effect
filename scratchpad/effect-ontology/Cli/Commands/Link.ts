@@ -22,6 +22,7 @@ import { withErrorHandler } from "../ErrorHandler.ts";
 import type { ParsingFailed, RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
 import type { PlatformError } from "effect/PlatformError";
 import { PosInt } from "../../Schema/PosInt.ts";
+import * as S from "effect/Schema";
 
 // =============================================================================
 // Command Options
@@ -108,7 +109,7 @@ To create a link, run:`);
     yield* Console.log("Q-IDs should match the pattern: Q followed by digits (e.g., Q42)");
     return;
   }
-  const entityIriResult = IRI.decodeUnknownResult(entityIri);
+  const entityIriResult = S.decodeResult(IRI)(entityIri);
   if (Result.isFailure(entityIriResult)) {
     yield* Console.error(`Invalid entity IRI: ${entityIri}`);
     return;

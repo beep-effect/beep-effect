@@ -21,6 +21,8 @@ import { Effect, flow, Result } from "effect";
 import * as S from "effect/Schema";
 import { BeepQaProvenance, EpochMilliseconds, TagAssignment } from "./Exiftool.models.ts";
 
+const decodeEpochMillisecondsOption = S.decodeUnknownOption(EpochMilliseconds);
+
 const $I = $ExiftoolId.create("ExiftoolConfig");
 
 /**
@@ -485,7 +487,7 @@ export const provenanceFromRawTags = (raw: Readonly<Record<string, unknown>>): O
   pipe(
     O.all({
       actionId: rawTextAt(raw, "actionId"),
-      capturedAtEpochMs: pipe(rawNumberAt(raw, "capturedAtEpochMs"), O.flatMap(EpochMilliseconds.decodeUnknownOption)),
+      capturedAtEpochMs: pipe(rawNumberAt(raw, "capturedAtEpochMs"), O.flatMap(decodeEpochMillisecondsOption)),
       scenarioName: rawTextAt(raw, "scenarioName"),
       sessionId: rawTextAt(raw, "sessionId"),
     }),

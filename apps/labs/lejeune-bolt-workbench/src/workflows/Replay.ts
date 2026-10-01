@@ -74,7 +74,7 @@ class ReplayError extends S.TaggedError<ReplayError>($I`ReplayError`)(
 ) {}
 
 const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
-  const encoded = yield* ImmutableDemoBundleFromJsonString.encodeEffect(bundle).pipe(
+  const encoded = yield* S.encodeEffect(ImmutableDemoBundleFromJsonString)(bundle).pipe(
     Effect.mapError((cause) =>
       ReplayError.make({
         cause,
@@ -83,7 +83,7 @@ const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
       })
     )
   );
-  return yield* Sha256HexFromBytes.decodeEffect(strToU8(encoded)).pipe(
+  return yield* S.decodeEffect(Sha256HexFromBytes)(strToU8(encoded)).pipe(
     Effect.mapError((cause) =>
       ReplayError.make({
         cause,

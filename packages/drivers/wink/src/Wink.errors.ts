@@ -183,10 +183,11 @@ export class WinkEntityError extends S.TaggedError<WinkEntityError>($I`WinkEntit
  *
  * ```ts
  * import { WinkEngineError, WinkError } from "@beep/wink"
+ * import * as S from "effect/Schema"
  *
  * const error = WinkEngineError.fromCause(new Error("missing model"), "initialize")
  *
- * console.log(WinkError.is(error))
+ * console.log(S.is(WinkError)(error))
  * ```
  *
  * @category errors
@@ -195,8 +196,7 @@ export class WinkEntityError extends S.TaggedError<WinkEntityError>($I`WinkEntit
 export const WinkError = S.Union([WinkEngineError, WinkEntityError, WinkTokenizationError]).pipe(
   $I.annoteSchema("WinkError", {
     description: "Union of wink runtime errors.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

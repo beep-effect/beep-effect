@@ -69,9 +69,9 @@ describe("effect-ontology identity schemas", () => {
 
   it("keeps full content identity distinct from its explicit legacy prefix", () => {
     expect(ContentHash.prefix(emptySha256)).toBe("e3b0c44298fc1c14");
-    expect(ContentHash.is(emptySha256)).toBe(true);
-    expect(ContentHash.is("e3b0c44298fc1c14")).toBe(false);
-    expect(LegacyContentHashPrefix.is("e3b0c44298fc1c14")).toBe(true);
+    expect(S.is(ContentHash)(emptySha256)).toBe(true);
+    expect(S.is(ContentHash)("e3b0c44298fc1c14")).toBe(false);
+    expect(S.is(LegacyContentHashPrefix)("e3b0c44298fc1c14")).toBe(true);
   });
 
   it("derives compact storage identifiers through schema-owned statics", () => {

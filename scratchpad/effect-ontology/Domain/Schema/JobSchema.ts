@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { HttpsUrl, LiteralKit, SchemaUtils } from "@beep/schema";
+import { HttpsUrl, LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName, UUID, withContentHashIdStatics } from "../Identity.ts";
 import { EntityId } from "../Model/shared.ts";
@@ -27,8 +27,9 @@ const backgroundJobIdPattern = /^job-[0-9a-f]{12}$/;
  * **Example** (Use BackgroundJobId)
  * ```ts
  * import { BackgroundJobId } from "@effect-ontology/Schema/JobSchema"
+ * import * as S from "effect/Schema"
  *
- * console.log(BackgroundJobId.is("job-abc123def456")) // true
+ * console.log(S.is(BackgroundJobId)("job-abc123def456")) // true
  * ```
  *
  * @invariant Uses `job-` followed by exactly twelve lowercase hexadecimal
@@ -48,7 +49,6 @@ export const BackgroundJobId = S.String.check(
     $I.annoteSchema("BackgroundJobId", {
       description: "Compact content-derived identifier for a persisted background job.",
     }),
-    SchemaUtils.withCodecStatics(["is"]),
     withContentHashIdStatics("job")
   );
 

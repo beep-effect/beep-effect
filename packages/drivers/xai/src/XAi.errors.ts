@@ -53,10 +53,6 @@ export const XAiErrorReason = XAiErrorReasonBase.pipe(
   $I.annoteSchema("XAiErrorReason", {
     description: "Redacted technical error reasons emitted by the xAI driver.",
   }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  })),
   SchemaUtils.withLiteralKitStatics(XAiErrorReasonBase)
 );
 

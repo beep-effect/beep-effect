@@ -9,15 +9,14 @@ is 1, and the launch/retry queue mappings remain enabled. The earlier emergency
 pause blocked PR job pickup and has been superseded. Follow the current policy
 in AWS cost operations; the 14-worker deployment evidence below is historical.
 
-The current `beep-ec2-heavy` pool uses Spot capacity with
-`price-capacity-optimized` allocation and automatic On-Demand fallback disabled.
-This September 15 containment supersedes the September 9 On-Demand posture.
-Keep the two-instance cap, 64 GiB instance choices and ephemeral one-job-per-VM
-teardown. The October 1 source change below moves the pool to
-`capacity-optimized` across eight 64 GiB types and five availability zones,
-still all-Spot with the same cap; until it is deployed, the live pool keeps
-the September 15 settings. A budget alert does not enforce a monthly worker-hour limit. Diagnose
-interrupted jobs before retrying; changing the alert does not change running workers.
+The current `beep-ec2-heavy` pool uses Spot capacity with `capacity-optimized`
+allocation across eight 64 GiB instance types and five availability zones, and
+automatic On-Demand fallback disabled. This is the October 1, 2026 pool spread
+(deployment evidence below), on top of the September 15 containment that
+superseded the September 9 On-Demand posture. Keep the two-instance cap, 64 GiB
+instance choices and ephemeral one-job-per-VM teardown. A budget alert does not
+enforce a monthly worker-hour limit. Diagnose interrupted jobs before retrying;
+changing the alert does not change running workers.
 
 ## Admission and capacity
 
@@ -141,35 +140,70 @@ runner workload identity.
 
 This fixes Spot-specific interruption and the known cleanup permission defect.
 Normal host, network, application, or timeout failures still require diagnosis.
-The 14-instance cap limits concurrency, not a monthly budget: billing continues
+The instance cap (14 in this September 9 procedure; two in source since
+September 15, raised only by a time-boxed burst) limits concurrency, not a
+monthly budget: billing continues
 for each running VM until its ephemeral teardown completes.
 
-## Deployment evidence — pending (2026-10-01 Spot pool spread)
+## Deployment evidence — 2026-10-01 (Spot pool spread)
 
-The source change sets `instance_allocation_strategy` to `capacity-optimized`,
-widens `runnerInstanceTypes` to eight 64 GiB x86_64 types (`r7a.2xlarge`,
-`r7i.2xlarge`, `r6i.2xlarge`, `r6a.2xlarge`, `m7a.4xlarge`, `m7i.4xlarge`,
-`m6a.4xlarge`, `m6i.4xlarge`), and adds public subnets C, D and E in
-`us-east-1c`, `us-east-1d` and `us-east-1f` (`10.88.32.0/20`,
-`10.88.48.0/20`, `10.88.64.0/20`) on the existing public route table. Purchase
-model, the two-worker cap and the empty On-Demand failover list are unchanged.
-It is not deployed. The operator runs the steps from "Deploy and verify":
+Source: `instance_allocation_strategy` `capacity-optimized`, eight 64 GiB
+x86_64 instance types (`r7a.2xlarge`, `r7i.2xlarge`, `r6i.2xlarge`,
+`r6a.2xlarge`, `m7a.4xlarge`, `m7i.4xlarge`, `m6a.4xlarge`, `m6i.4xlarge`), and
+public subnets C, D and E in `us-east-1c`, `us-east-1d` and `us-east-1f`
+(`10.88.32.0/20`, `10.88.48.0/20`, `10.88.64.0/20`) on the existing public
+route table. Purchase model, the two-worker cap and the empty On-Demand
+failover list are unchanged.
 
-1. `op run --env-file=<path> -- true >/dev/null`, then use the same wrapper for
-   Pulumi against the S3 backend and the `production` stack in
-   `infra/ci-runners`.
-2. `bun run beep quality package-verify @beep/infra`.
-3. Review a saved Pulumi preview. Expected changes: three new subnets and three
-   route-table associations, and scale-up Lambda environment updates for the
-   strategy, instance types and subnet list. Existing subnets
-   A and B, the security groups, the AMI, the cap and the purchase model must
-   not change.
-4. Apply the reviewed plan with the operator attending (`pulumi up -s
-   production`), then confirm with `pulumi preview --expect-no-changes`.
-5. Confirm a heavy job succeeds on a newly launched Spot worker, and record
-   the launch types and zones here. Over the following days, repeat the
-   reclaim count from "Attribute a runner loss" to compare with the 41
-   evictions per 564 launches baseline.
+- Applied 2026-10-01 12:03–12:05 UTC from a clean `origin/main` checkout with a
+  saved plan (`pulumi preview --diff --refresh --save-plan`, then
+  `pulumi up --plan`), the operator confirming the reviewed preview first:
+  6 created (three subnets, three route-table associations), 4 updated (AWS
+  provider version, the runner module, the scale-up Lambda environment and a
+  new launch-template version), 210 unchanged, no deletions or replacements.
+- Pulumi's recorded state predated the 2026-09-15 containment, which had been
+  applied as live Lambda edits. The preview therefore also showed On-Demand to
+  Spot, cap 14 to 2, the failover list removal and
+  `scale_up_reserved_concurrent_executions: 1`. Each was compared with the live
+  Lambda configuration and concurrency before the apply and was already live;
+  the apply only brought the state in line. Diff a preview against the live
+  configuration, not against the state alone.
+- A second `pulumi preview --refresh --expect-no-changes` reported 220
+  unchanged resources.
+- The apply resets `RUNNERS_MAXIMUM_COUNT` to the source value. A temporary
+  burst cap that was live during the apply was re-applied afterwards with that
+  burst's own `set-cap.sh`, after the no-drift check, and its restore guard was
+  left in place.
+- Live check after the apply: the scale-up Lambda environment carries
+  `capacity-optimized`, `spot`, all eight types and five subnet ids; all five
+  subnets are `available` and route `0.0.0.0/0` to the internet gateway.
+- Job execution on the new pools, 12:05–12:45 UTC (the 40 minutes after the
+  apply): 40 workers launched, all Spot, in all five zones — `r6a.2xlarge` 19
+  (`us-east-1b` 13, `us-east-1a` 6), `m7i.4xlarge` 15 (`us-east-1c` 8,
+  `us-east-1d` 6, `us-east-1f` 1), `m6a.4xlarge` 5 (`us-east-1a`),
+  `r7a.2xlarge` 1 (`us-east-1b`). Each worker ran exactly one heavy job, in
+  workflow runs 36853948319, 36856561977, 36856678457, 36856816907,
+  36858959880, 36860910363, 36861577932 and 36862034113. At 12:50 UTC: 29
+  succeeded, 3 were cancelled by a newer push, 6 were still running, 1 failed
+  on its own output (`Heavy / Coverage Regression`, exit 1), and 1 was lost to
+  a Spot eviction (`r6a.2xlarge` in `us-east-1a`, launched 12:17:57, evicted
+  12:23:02, `Heavy / Coverage Regression` in run 36856561977).
+- CloudTrail `BidEvictedEvent` count for the same window: 3. Two reclaimed
+  workers launched before the apply; one reclaimed a worker launched after it.
+  That is 1 eviction in 40 post-apply launches, against the baseline of 41 in
+  564. The sample is 40 minutes and too small to call the rate; the two
+  preceding hours had 22 evictions and 20 launches. Reproduce with
+  `aws cloudtrail lookup-events --lookup-attributes
+  AttributeKey=EventName,AttributeValue=BidEvictedEvent --start-time <t0>
+  --end-time <t1>` and the launch list from `aws ec2 describe-instances`
+  filtered on the `ghr:Application` tag and `LaunchTime`, joined to the
+  Actions jobs API on `runner_name`. The dated launch-to-job record for this window is
+  kept in [evidence/2026-10-01-spot-pool-spread-launches.md](./evidence/2026-10-01-spot-pool-spread-launches.md),
+  because terminated-instance records expire.
+- Open: repeat the reclaim count from "Attribute a runner loss" over the
+  following days and compare with the baseline of 41 evictions per 564
+  launches before deciding whether to shard the Coverage Regression and Lint
+  Policy lanes.
 
 ## Deployment evidence — 2026-09-09
 

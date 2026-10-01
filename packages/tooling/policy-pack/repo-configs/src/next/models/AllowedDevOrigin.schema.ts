@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoConfigsId.create("next/models/AllowedDevOrigin.schema");
@@ -42,8 +41,7 @@ export const AllowedDevOrigin = S.Trim.check(
     description: "A hostname or leading-wildcard hostname entry for Next.js allowedDevOrigins.",
     documentation:
       "Next.js allowedDevOrigins entries are additional development hostnames, such as local-origin.dev or *.local-origin.dev.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
+  })
 );
 
 /**

@@ -8,6 +8,7 @@ import {
 } from "@beep/provenance";
 import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
 import { Crypto, Effect, Layer } from "effect";
+import * as S from "effect/Schema";
 import { AnchorRejected } from "@/schema/Errors";
 import { Canonicalizer } from "@/services/Canonicalizer";
 
@@ -16,7 +17,7 @@ const utf8Encoder = new TextEncoder();
 const makeCanonicalizer = Effect.gen(function* () {
   const crypto = yield* Crypto.Crypto;
   const hashText = Effect.fn("Canonicalizer.hashText")((text: string) =>
-    Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(text)).pipe(
+    S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(text)).pipe(
       Effect.provideService(Crypto.Crypto, crypto),
       Effect.orDie
     )

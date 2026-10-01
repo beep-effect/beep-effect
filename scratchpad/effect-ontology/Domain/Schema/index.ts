@@ -95,7 +95,8 @@ export * from "./DocumentMetadata.ts";
  * **Example** (Use index)
  * ```ts
  * import { ClaimId } from "@effect-ontology/Schema/index"
- * console.log(ClaimId.is("claim-abc123def456")) // true
+ * import * as S from "effect/Schema"
+ * console.log(S.is(ClaimId)("claim-abc123def456")) // true
  * ```
  *
  * @category models

@@ -115,7 +115,7 @@ const CODEC_PARITY_SALT = "hook-pulse-writer-codec-parity-salt";
 const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
   Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
 
-const decodeHookPulseFromRaw = HookPulseV1FromRawEvent.decodeUnknownEffect;
+const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
 const decodeHookPulseRow = HookPulseV1.decodeJsonEffect;
 const decodeRowKeys = S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.Unknown)));
 const decodeRowString = S.decodeUnknownEffect(S.String);

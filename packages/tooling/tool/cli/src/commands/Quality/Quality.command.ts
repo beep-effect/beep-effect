@@ -490,6 +490,78 @@ export const effectDiagnosticsDirectiveExemptions: readonly [
   }),
 ];
 
+const TsgoDisabledRuleName = LiteralKit(["experimentalApiUsage", "unstableApiUsage"]);
+
+/**
+ * One installed `@effect/tsgo` rule the root profile declares `"off"`, with the reason.
+ *
+ * **Details**
+ *
+ * The rule domain is a closed literal set, so turning another rule off is a schema change
+ * reviewed in this file. A declared rule must be configured exactly `"off"` in the root
+ * `diagnosticSeverity` map; every other installed rule must stay `"error"`.
+ *
+ * **Example** (Declare a disabled rule)
+ *
+ * ```ts
+ * import { TsgoDisabledRule } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const disabled = TsgoDisabledRule.make({
+ *   rule: "unstableApiUsage",
+ *   reason: "The repo builds on effect/unstable/* modules by design.",
+ * })
+ * console.log(disabled.rule) // => "unstableApiUsage"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TsgoDisabledRule extends S.Class<TsgoDisabledRule>($I`TsgoDisabledRule`)(
+  {
+    rule: TsgoDisabledRuleName,
+    reason: S.NonEmptyString,
+  },
+  $I.annote("TsgoDisabledRule", {
+    description: "An installed @effect/tsgo rule the root profile configures off, with the reason it is off.",
+  })
+) {}
+
+/**
+ * The complete set of installed `@effect/tsgo` rules the root profile configures `"off"`.
+ *
+ * **Details**
+ *
+ * Both entries are the stability rules from `@effect/tsgo` 0.47: they flag every import of an
+ * API tagged `@stability experimental` or `@stability unstable`, and this repository builds on
+ * `effect/unstable/*` (HTTP, HttpApi, CLI, and friends) on purpose.
+ *
+ * **Example** (Read the disabled rule names)
+ *
+ * ```ts
+ * import { tsgoDisabledRules } from "@beep/repo-cli/commands/Quality/Quality.command"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.map(tsgoDisabledRules, (disabled) => disabled.rule))
+ * // => ["experimentalApiUsage", "unstableApiUsage"]
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const tsgoDisabledRules: readonly [TsgoDisabledRule, TsgoDisabledRule] = [
+  TsgoDisabledRule.make({
+    rule: "experimentalApiUsage",
+    reason: "Experimental-tagged Effect APIs are adopted deliberately; the stability tag is not a defect signal here.",
+  }),
+  TsgoDisabledRule.make({
+    rule: "unstableApiUsage",
+    reason: "The repository builds on effect/unstable/* modules by design, so every import would be reported.",
+  }),
+];
+
+const isTsgoDisabledRuleName = (ruleName: string): boolean =>
+  A.some(tsgoDisabledRules, (disabled) => disabled.rule === ruleName);
+
 const skipFileDirectiveLine = (rule: typeof EffectDiagnosticsExemptRule.Type): string =>
   `// ${effectDiagnosticsDirectivePrefix} ${rule}:skip-file`;
 
@@ -2253,6 +2325,65 @@ const collectDisabledDiagnosticSeverityEntries = (
   );
 };
 
+const rootDiagnosticSeverityPath = "compilerOptions.plugins.@effect/language-service.diagnosticSeverity";
+
+interface TsgoSeverityDiagnostics {
+  readonly disabledSeverityEntries: ReadonlyArray<string>;
+  readonly nonErrorSeverities: ReadonlyArray<string>;
+}
+
+interface TsgoSeverityDiagnosticsInput {
+  readonly diagnosticSeverity: Readonly<Record<string, unknown>>;
+  readonly plugin: Readonly<Record<string, unknown>>;
+}
+
+const collectTsgoSeverityDiagnostics = ({
+  plugin,
+  diagnosticSeverity,
+}: TsgoSeverityDiagnosticsInput): TsgoSeverityDiagnostics => ({
+  nonErrorSeverities: pipe(
+    R.keys(diagnosticSeverity),
+    A.sort(Order.String),
+    A.flatMap((ruleName) => {
+      const expected = isTsgoDisabledRuleName(ruleName) ? "off" : "error";
+      return diagnosticSeverity[ruleName] === expected
+        ? A.empty<string>()
+        : A.of(`${ruleName}: ${String(diagnosticSeverity[ruleName])} (expected ${expected})`);
+    })
+  ),
+  disabledSeverityEntries: A.filter(
+    collectDisabledDiagnosticSeverityEntries(plugin, ["compilerOptions", "plugins", "@effect/language-service"]),
+    (entry) => !A.some(tsgoDisabledRules, (disabled) => entry === `${rootDiagnosticSeverityPath}.${disabled.rule}`)
+  ),
+});
+
+/**
+ * Check the root plugin's rule severities against the error-everywhere policy.
+ *
+ * **Details**
+ *
+ * Every configured rule must be `"error"`, except the rules {@link tsgoDisabledRules} declares,
+ * which must be exactly `"off"`. An `"off"` entry anywhere else in the plugin (an override's
+ * `diagnosticSeverity`, or an undeclared root rule) is reported as a disabled entry.
+ *
+ * **Example** (Accept a declared-off rule)
+ *
+ * ```ts
+ * import { collectTsgoSeverityDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const diagnosticSeverity = { floatingEffect: "error", unstableApiUsage: "off" }
+ * const plugin = { name: "@effect/language-service", diagnosticSeverity }
+ * const result = collectTsgoSeverityDiagnosticsForTesting({ plugin, diagnosticSeverity })
+ * console.log(result.nonErrorSeverities.length + result.disabledSeverityEntries.length) // => 0
+ * ```
+ *
+ * @param input - Root `@effect/language-service` plugin record and its root `diagnosticSeverity` map.
+ * @returns Rules at the wrong severity, and `"off"` entries the policy does not declare.
+ * @category testing
+ * @since 0.0.0
+ */
+export const collectTsgoSeverityDiagnosticsForTesting = collectTsgoSeverityDiagnostics;
+
 const renderTsgoRuleDiagnostics = (label: string, diagnostics: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.isReadonlyArrayNonEmpty(diagnostics)
     ? [`${label}:`, ...A.map(diagnostics, (diagnostic) => `  - ${diagnostic}`)]
@@ -2695,7 +2826,7 @@ const assembleTsgoRuleDiagnostics = (
 ): ReadonlyArray<string> => [
   ...renderTsgoRuleDiagnostics("missing installed rules", missingRuleNames),
   ...renderTsgoRuleDiagnostics("unexpected configured rules", extraRuleNames),
-  ...renderTsgoRuleDiagnostics("rules not configured as error", nonErrorSeverities),
+  ...renderTsgoRuleDiagnostics("rules not at their required severity", nonErrorSeverities),
   ...renderTsgoRuleDiagnostics("diagnosticSeverity entries set to off", disabledSeverityEntries),
   ...renderTsgoRuleDiagnostics("plugin options out of parity with the installed compiler", pluginOptionDiagnostics),
   ...renderTsgoRuleDiagnostics("invalid workspace Effect language-service profiles", pluginProfileDiagnostics),
@@ -2842,19 +2973,10 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   const configuredRuleNames = pipe(R.keys(diagnosticSeverity.value), A.sort(Order.String));
   const missingRuleNames = A.filter(installedRuleNames, (ruleName) => !A.contains(configuredRuleNames, ruleName));
   const extraRuleNames = A.filter(configuredRuleNames, (ruleName) => !A.contains(installedRuleNames, ruleName));
-  const nonErrorSeverities = pipe(
-    configuredRuleNames,
-    A.flatMap((ruleName) =>
-      diagnosticSeverity.value[ruleName] === "error"
-        ? A.empty<string>()
-        : A.of(`${ruleName}: ${String(diagnosticSeverity.value[ruleName])}`)
-    )
-  );
-  const disabledSeverityEntries = collectDisabledDiagnosticSeverityEntries(plugin.value, [
-    "compilerOptions",
-    "plugins",
-    "@effect/language-service",
-  ]);
+  const { nonErrorSeverities, disabledSeverityEntries } = collectTsgoSeverityDiagnostics({
+    plugin: plugin.value,
+    diagnosticSeverity: diagnosticSeverity.value,
+  });
   const pluginOptionDiagnostics = collectPluginOptionParityDiagnostics(documentedOptionNames, plugin.value);
   const pluginProfileDiagnostics = yield* collectWorkspaceTsconfigProfileDiagnostics(repoRoot, plugin.value);
   const disabledDirectives = yield* collectDisabledEffectDiagnosticDirectives(repoRoot);
@@ -2879,7 +3001,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   }
 
   yield* Console.log(
-    `[lint:tsgo-rules] verified ${A.length(installedRuleNames)} installed @effect/tsgo rule(s) are configured as error and ${A.length(documentedOptionNames)} documented plugin option(s) are set explicitly`
+    `[lint:tsgo-rules] verified ${A.length(installedRuleNames)} installed @effect/tsgo rule(s) are configured as error (${A.length(tsgoDisabledRules)} declared off) and ${A.length(documentedOptionNames)} documented plugin option(s) are set explicitly`
   );
 });
 

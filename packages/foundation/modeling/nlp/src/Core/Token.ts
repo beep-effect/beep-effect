@@ -6,7 +6,6 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { thunkFalse, thunkTrue } from "@beep/utils";
 import { Brand, Effect } from "effect";
 import { dual } from "effect/Function";
@@ -52,7 +51,7 @@ export type TokenIndex = Brand.Branded<number, "TokenIndex">;
  * @category validation
  * @since 0.0.0
  */
-export const isTokenIndex = (u: unknown): u is TokenIndex => TokenIndex.is(u);
+export const isTokenIndex = (u: unknown): u is TokenIndex => S.is(TokenIndex)(u);
 
 /**
  * Construct a branded token index after validating it is non-negative.
@@ -90,8 +89,7 @@ export const TokenIndex = S.make<(typeof S.Natural)["Rebuild"]>(S.Natural.ast).p
   S.brand("TokenIndex"),
   $I.annoteSchema("TokenIndex", {
     description: "Non-negative ordered index for an NLP token.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -130,7 +128,7 @@ export type CharPosition = Brand.Branded<number, "CharPosition">;
  * @category validation
  * @since 0.0.0
  */
-export const isCharPosition = (u: unknown): u is CharPosition => CharPosition.is(u);
+export const isCharPosition = (u: unknown): u is CharPosition => S.is(CharPosition)(u);
 
 /**
  * Construct a branded character offset after validating it is non-negative.
@@ -168,8 +166,7 @@ export const CharPosition = S.make<(typeof S.Natural)["Rebuild"]>(S.Natural.ast)
   S.brand("CharPosition"),
   $I.annoteSchema("CharPosition", {
     description: "Non-negative character offset in source NLP text.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

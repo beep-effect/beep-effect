@@ -41,10 +41,11 @@ const decodeUrl = S.decodeOption(S.URLFromString);
  * ```ts
  * import { resolveSinkAudience } from "@beep/epistemic-config/server"
  * import { SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
+ * import * as S from "effect/Schema"
  *
- * console.log(resolveSinkAudience(SinkDestination.decodeUnknownSync("http://127.0.0.1:3939")))
+ * console.log(resolveSinkAudience(S.decodeUnknownSync(SinkDestination)("http://127.0.0.1:3939")))
  * // "local-workspace"
- * console.log(resolveSinkAudience(SinkDestination.decodeUnknownSync("https://registry.example")))
+ * console.log(resolveSinkAudience(S.decodeUnknownSync(SinkDestination)("https://registry.example")))
  * // "external-network"
  * ```
  *

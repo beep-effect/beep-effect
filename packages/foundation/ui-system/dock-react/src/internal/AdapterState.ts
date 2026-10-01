@@ -25,6 +25,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import { Atom } from "effect/reactivity";
+import * as S from "effect/Schema";
 import type {
   ActivatePanelCommand,
   ClosePanelCommand,
@@ -216,7 +217,7 @@ export const adapterState: {
         onNone: () => workspace.floating,
         onSome: (candidate) =>
           A.map(workspace.floating, (member) =>
-            A.some(DockNode.tabs(member.root), (tabs) => GroupId.equals(tabs.groupId, candidate.groupId))
+            A.some(DockNode.tabs(member.root), (tabs) => S.toEquivalence(GroupId)(tabs.groupId, candidate.groupId))
               ? FloatingMember.make({ anchoredBox: candidate.anchoredBox, root: member.root })
               : member
           ),

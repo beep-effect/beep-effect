@@ -52,9 +52,8 @@ const makeBatchPathSchema = <const Name extends string, const Suffix extends str
   S.TemplateLiteral(["batches/", BatchId, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
     S.brand(name),
-    SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
     SchemaUtils.withStatics((schema) => ({
-      fromBatch: (batchId: BatchId): typeof schema.Type => schema.decodeUnknownSync(`batches/${batchId}/${suffix}`),
+      fromBatch: (batchId: BatchId): typeof schema.Type => Result.getOrThrow(S.decodeUnknownResult(schema)(`batches/${batchId}/${suffix}`)),
     }))
   );
 
@@ -66,10 +65,9 @@ const makeDocumentPathSchema = <const Name extends string, const Suffix extends 
   S.TemplateLiteral(["documents/", DocumentId, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
     S.brand(name),
-    SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
     SchemaUtils.withStatics((schema) => ({
       fromDocument: (documentId: DocumentId): typeof schema.Type =>
-        schema.decodeUnknownSync(`documents/${documentId}/${suffix}`),
+        Result.getOrThrow(S.decodeUnknownResult(schema)(`documents/${documentId}/${suffix}`)),
     }))
   );
 
@@ -81,9 +79,8 @@ const makeImageHashPathSchema = <const Name extends string, const Suffix extends
   S.TemplateLiteral(["assets/images/", ContentHash, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
     S.brand(name),
-    SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
     SchemaUtils.withStatics((schema) => ({
-      fromHash: (hash: ContentHash): typeof schema.Type => schema.decodeUnknownSync(`assets/images/${hash}/${suffix}`),
+      fromHash: (hash: ContentHash): typeof schema.Type => Result.getOrThrow(S.decodeUnknownResult(schema)(`assets/images/${hash}/${suffix}`)),
     }))
   );
 
@@ -95,10 +92,9 @@ const makeImageOwnerPathSchema = <const Name extends string, const Suffix extend
   S.TemplateLiteral(["assets/owners/", ImageOwnerType, "/", StoragePathSegment, `/images${suffix}`]).pipe(
     annotateStoragePath(name, description),
     S.brand(name),
-    SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
     SchemaUtils.withStatics((schema) => ({
       fromParts: (ownerType: ImageOwnerType, ownerId: StoragePathSegment): typeof schema.Type =>
-        schema.decodeUnknownSync(`assets/owners/${ownerType}/${ownerId}/images${suffix}`),
+        Result.getOrThrow(S.decodeUnknownResult(schema)(`assets/owners/${ownerType}/${ownerId}/images${suffix}`)),
     }))
   );
 
@@ -113,9 +109,10 @@ const makeImageOwnerPathSchema = <const Name extends string, const Suffix extend
  * **Example** (Use StoragePathSegment)
  * ```ts
  * import { StoragePathSegment } from "@effect-ontology/PathLayout"
+ * import * as S from "effect/Schema"
  *
- * console.log(StoragePathSegment.is("link-2026_07")) // true
- * console.log(StoragePathSegment.is("../escape")) // false
+ * console.log(S.is(StoragePathSegment)("link-2026_07")) // true
+ * console.log(S.is(StoragePathSegment)("../escape")) // false
  * ```
  *
  * @invariant One to 128 ASCII letters, digits, dots, underscores, colons,
@@ -135,8 +132,7 @@ export const StoragePathSegment = S.String.check(
     S.brand("StoragePathSegment"),
     $I.annoteSchema("StoragePathSegment", {
       description: "Traversal-safe single segment for a storage object key.",
-    }),
-    SchemaUtils.withCodecStatics(["is"])
+    })
   );
 
 /**

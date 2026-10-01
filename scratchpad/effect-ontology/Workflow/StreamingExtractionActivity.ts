@@ -168,7 +168,7 @@ const resolveBucket = (config: { storage: { bucket: O.Option<string> } }) =>
 const computeContentHash = Effect.fn("StreamingExtractionActivity.computeContentHash")(function* (content: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", textEncoder.encode(content));
-  return yield* ContentHash.decodeEffect(Hex.encode(digest));
+  return yield* S.decodeEffect(ContentHash)(Hex.encode(digest));
 });
 
 /** Extracts the ontology name component from a storage URI path. */
@@ -573,7 +573,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       const graphPath = PathLayout.document.graph(input.documentId);
       yield* storage.set(graphPath, trigContent);
 
-      const graphUri = yield* GcsUri.decodeEffect(`gs://${bucket}/${graphPath}`);
+      const graphUri = yield* S.decodeEffect(GcsUri)(`gs://${bucket}/${graphPath}`);
 
       // Note: Claims are persisted only after SHACL validation passes,
       // via makeClaimPersistenceActivity in WorkflowOrchestrator.

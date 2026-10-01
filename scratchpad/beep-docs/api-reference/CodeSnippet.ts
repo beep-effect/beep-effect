@@ -14,7 +14,6 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 const $I = $ScratchpadId.create("beep-docs/api-reference/CodeSnippet");
 
 /**
@@ -176,7 +175,6 @@ export const CodeSnippetLanguageFromInfoString = S.String.pipe(
     decode: SchemaGetter.transformEffect(decodeInfoString),
     encode: SchemaGetter.passthrough({ strict: false }),
   }),
-  SchemaUtils.withCodecStatics(["decodeOption"]),
   $I.annoteSchema("CodeSnippetLanguageFromInfoString", {
     description: "Normalizes a fenced-code info string into a canonical snippet language name.",
   })

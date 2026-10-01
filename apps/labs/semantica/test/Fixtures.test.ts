@@ -326,7 +326,7 @@ describe("F1 fixtures", () => {
         const secondDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-f1-pdf-second-" });
         const names = A.make("pdf-two-column.pdf", "pdf-multipage.pdf", "pdf-truncated.pdf");
         const hashBytes = Effect.fnUntraced(function* (bytes: Uint8Array) {
-          return yield* Sha256HexFromBytes.decodeEffect(bytes).pipe(
+          return yield* S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(
             Effect.provideService(Crypto.Crypto, crypto),
             Effect.orDie
           );

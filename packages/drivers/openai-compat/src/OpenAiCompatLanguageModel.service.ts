@@ -51,7 +51,7 @@ const decodeUnknownJsonEffect = S.decodeUnknownEffect(UnknownJson);
 const encodeUnknownJsonEffect = S.encodeUnknownEffect(UnknownJson);
 
 const $I = $OpenaiCompatId.create("OpenAiCompatLanguageModel.service");
-const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
+const UnknownRecord = S.Record(S.String, S.Unknown);
 const OptionalPosInt = S.OptionFromOptionalKey(PosInt).pipe(S.withConstructorDefault(Effect.succeedNone));
 const OptionalNonNegativeInt = S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone));
 const OptionalBoolean = S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone));
@@ -276,7 +276,7 @@ const mapSchemaError =
     makeAiError(moduleName, method, AiError.InvalidOutputError.fromSchemaError(cause));
 
 const jsonObjectOrEmpty: (value: unknown) => Readonly<Record<string, unknown>> = flow(
-  UnknownRecord.decodeUnknownOption,
+  S.decodeUnknownOption(UnknownRecord),
   O.getOrElse(R.empty<string, unknown>)
 );
 

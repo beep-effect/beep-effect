@@ -49,6 +49,8 @@ Load/use: `$effect-first-development`, `$schema-first-development`,
 - **Do not remove `withCodecStatics` or `$I.annoteSchema`.** Both measured as
   dead ends (≤2.4%), and removing statics *increases* instantiations 41% because
   the explicit wrapper return type caps inference.
+  (Superseded 2026-10-01: `goals/effect-schema-parity` P5 retired
+  `withCodecStatics` repo-wide; Box's literal kits carry none.)
 - **Measurement gotcha**: `files` does not clear an inherited `include`. Use
   `"include": []` or the measurement silently covers the whole package.
 - Do not hand-write models or operations — `generate-from-sdk-types` binds.

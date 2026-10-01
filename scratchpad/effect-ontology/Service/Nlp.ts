@@ -16,7 +16,6 @@ import { DefaultBM25Config } from "@beep/nlp/Core/Vectorization";
 import { Tokenization } from "@beep/nlp-processing/Core";
 import { IRI } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { WinkTokenizationError } from "@beep/wink/Wink.errors";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { WinkStringArray } from "@beep/wink/Wink.models";
@@ -34,7 +33,7 @@ import {
   pipe,
   Schedule,
   SchemaGetter,
-  Tuple,
+  Tuple, Result,
 } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -236,7 +235,6 @@ export const ChunkOptions = ChunkOptionsInput.pipe(
     decode: SchemaGetter.transform(resolveChunkOptions),
     encode: SchemaGetter.transform(encodeChunkOptions),
   }),
-  SchemaUtils.withCodecStatics(["decodeEffect"]),
   $I.annoteSchema("ChunkOptions", {
     description: "Optional chunk overrides decoded to one complete canonical strategy parameter set.",
   })
@@ -321,7 +319,7 @@ export class NlpIndexError extends S.TaggedError<NlpIndexError>($I`NlpIndexError
 ) {}
 
 const decodeWinkStrings = (value: unknown, operation: string, text: string) =>
-  WinkStringArray.decodeUnknownEffect(value).pipe(
+  S.decodeUnknownEffect(WinkStringArray)(value).pipe(
     Effect.mapError((cause) => WinkTokenizationError.fromCause(cause, operation, { text }))
   );
 
@@ -750,7 +748,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         );
       }),
       chunkText: Effect.fn("NlpService.chunkText")(function* (text: string, options: typeof ChunkOptions.Encoded = {}) {
-        const decodedOptions = yield* ChunkOptions.decodeEffect(options);
+        const decodedOptions = yield* S.decodeEffect(ChunkOptions)(options);
         const { params, strategy } = decodedOptions;
         const maxChunkSize = params.chunkSize;
         const overlapSentences = params.overlapSentences;
@@ -898,7 +896,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
             const iri = result.id;
             const domainModel = MutableHashMap.get(domainModelMap, iri);
             if (O.isSome(domainModel)) {
-              const iriValue = IRI.decodeUnknownSync(iri);
+              const iriValue = Result.getOrThrow(S.decodeResult(IRI)(iri));
               results.push(makeOntologySearchResult(iriValue, result.score, domainModel.value));
             }
           }
@@ -1004,7 +1002,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
           if (score > 0) {
             const domainModel = MutableHashMap.get(domainModelMap, iri);
             if (O.isSome(domainModel)) {
-              const iriValue = IRI.decodeUnknownSync(iri);
+              const iriValue = Result.getOrThrow(S.decodeResult(IRI)(iri));
               results.push(makeOntologySearchResult(iriValue, score, domainModel.value));
             }
           }

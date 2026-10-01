@@ -155,8 +155,7 @@ export const VaultSyncError = S.Union([
 ]).pipe(
   $I.annoteSchema("VaultSyncError", {
     description: "Internal typed failure raised by the vault sync engine.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

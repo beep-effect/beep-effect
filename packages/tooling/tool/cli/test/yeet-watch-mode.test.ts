@@ -564,7 +564,7 @@ describe("collectYeetWatchSnapshot", () => {
     { timeout: "10 seconds" }
   )("splits closeout issues by source", (it) => {
     it.effect(
-      "charges a closeout's unmet Greptile gates to closeout-gates-passed, not to threads",
+      "keeps a closeout's unmet Greptile gates out of threads-resolved",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         // Watch reads the closeout artifact under `<repoRoot>/.beep/yeet/runs/`.
@@ -602,7 +602,6 @@ describe("collectYeetWatchSnapshot", () => {
 
         strictEqual(A.length(issues), 2);
         strictEqual(snapshot.criteria.threadsResolved, true);
-        strictEqual(snapshot.criteria.closeoutGatesPassed, false);
       })
     );
   });

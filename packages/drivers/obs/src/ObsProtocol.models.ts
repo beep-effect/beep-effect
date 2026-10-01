@@ -672,8 +672,9 @@ export class ObsRequestResponseMessage extends S.Class<ObsRequestResponseMessage
  *
  * ```ts
  * import { ObsIncomingMessage } from "@beep/obs"
+ * import * as S from "effect/Schema"
  *
- * console.log(ObsIncomingMessage.is({ op: 2, d: { negotiatedRpcVersion: 1 } }))
+ * console.log(S.is(ObsIncomingMessage)({ op: 2, d: { negotiatedRpcVersion: 1 } }))
  * ```
  *
  * @category schemas
@@ -688,12 +689,7 @@ export const ObsIncomingMessage = S.Union([
   $I.annoteSchema("ObsIncomingMessage", {
     description: "obs-websocket messages sent from the server to this client.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("op"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("op")
 );
 
 /**
@@ -713,11 +709,10 @@ export const ObsIncomingMessage = S.Union([
  */
 export type ObsIncomingMessage = typeof ObsIncomingMessage.Type;
 
-const ObsOutgoingMessageWithCodecStatics = S.Union([ObsIdentifyMessage, ObsRequestMessage]).pipe(
+const ObsOutgoingMessageUntagged = S.Union([ObsIdentifyMessage, ObsRequestMessage]).pipe(
   $I.annoteSchema("ObsOutgoingMessage", {
     description: "obs-websocket messages sent from this client to the server.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -728,17 +723,15 @@ const ObsOutgoingMessageWithCodecStatics = S.Union([ObsIdentifyMessage, ObsReque
  *
  * ```ts
  * import { ObsOutgoingMessage } from "@beep/obs"
+ * import * as S from "effect/Schema"
  *
- * console.log(ObsOutgoingMessage.is({ op: 1, d: { rpcVersion: 1, eventSubscriptions: 79 } }))
+ * console.log(S.is(ObsOutgoingMessage)({ op: 1, d: { rpcVersion: 1, eventSubscriptions: 79 } }))
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ObsOutgoingMessage = ObsOutgoingMessageWithCodecStatics.pipe(
-  S.toTaggedUnion("op"),
-  SchemaUtils.withStatics(() => ({ is: ObsOutgoingMessageWithCodecStatics.is }))
-);
+export const ObsOutgoingMessage = ObsOutgoingMessageUntagged.pipe(S.toTaggedUnion("op"));
 
 /**
  * Messages this client sends to the obs-websocket server.

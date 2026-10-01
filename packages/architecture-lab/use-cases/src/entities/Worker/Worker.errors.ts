@@ -7,7 +7,6 @@
  */
 
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import * as S from "effect/Schema";
 
@@ -143,8 +142,9 @@ export class WorkerActionFailed extends S.TaggedError<WorkerActionFailed>($I`Wor
  *   WorkerActionError,
  *   WorkerActionFailed,
  * } from "@beep/architecture-lab-use-cases/entities/Worker"
+ * import * as S from "effect/Schema"
  *
- * const isActionError = WorkerActionError.is
+ * const isActionError = S.is(WorkerActionError)
  *
  * console.log(isActionError(WorkerActionFailed.make({ reason: "Repository unavailable" }))) // true
  * ```
@@ -158,12 +158,7 @@ export const WorkerActionError = S.Union([WorkerNotFound, WorkerConflict, Worker
     title: "Worker action error",
     description: "Tagged union of public Worker use-case failures.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**

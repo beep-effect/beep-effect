@@ -6,7 +6,6 @@
  */
 
 import { $OipWebId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { FetchHttpClient } from "effect/http";
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api";
 import { AtomHttpApi } from "effect/reactivity";
@@ -101,10 +100,7 @@ export class ContactSubmissionRejected extends S.Class<ContactSubmissionRejected
 export const ContactSubmissionPayload = ContactSubmissionFormPayload.pipe(
   $I.annoteSchema("ContactSubmissionPayload", {
     description: "Browser wire payload accepted by the OIP contact HTTP API.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeUnknownEffect: S.decodeUnknownEffect(schema),
-  }))
+  })
 );
 
 /**

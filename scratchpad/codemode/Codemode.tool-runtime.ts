@@ -6,7 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, O, P, pipe, R, Str, Struct, thunkNull } from "@beep/utils";
 import { Cause, Clock, DateTime, Effect, Exit, flow, HashMap, HashSet, Order, Ref, Result, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -281,11 +281,12 @@ export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFai
  *
  * ```ts
  * import { ToolCall, ToolCallEnded, ToolCallStarted, ToolCallSucceeded } from "@beep/scratchpad/codemode"
+ * import * as S from "effect/Schema"
  *
  * const started = ToolCallStarted.new(0, ToolCall.new("search"), {})
  * const ended = ToolCallSucceeded.new(started, 5)
  *
- * console.log(ToolCallEnded.is(ended)) // true
+ * console.log(S.is(ToolCallEnded)(ended)) // true
  * console.log(ended._tag) // "success"
  * ```
  *
@@ -297,8 +298,7 @@ export const ToolCallEnded = S.Union([ToolCallSucceeded, ToolCallInterrupted, To
   $I.annoteSchema("ToolCallEnded", {
     description: "All terminal observations for an admitted tool call.",
   }),
-  S.toTaggedUnion("_tag"),
-  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
+  S.toTaggedUnion("_tag")
 );
 
 /**

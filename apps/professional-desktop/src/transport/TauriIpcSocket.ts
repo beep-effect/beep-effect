@@ -29,7 +29,6 @@
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, tapRedactedCause } from "@beep/observability/CauseRedaction";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as O from "@beep/utils/Option";
 import * as P from "@beep/utils/Predicate";
 import * as Str from "@beep/utils/Str";
@@ -92,11 +91,10 @@ const SidecarEvent = {
 export const InboundFrame = S.NonEmptyString.pipe(
   $I.annoteSchema("InboundFrame", {
     description: "A single complete inbound ndjson rpc frame emitted on `sidecar://rx`.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeUnknownEffect: S.decodeUnknownEffect(schema),
-  }))
+  })
 );
+
+const decodeInboundFrame = S.decodeUnknownEffect(InboundFrame);
 
 type InboundFrame = typeof InboundFrame.Type;
 
@@ -320,7 +318,7 @@ const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, So
         })
       ),
     Rx: ({ payload }) =>
-      InboundFrame.decodeUnknownEffect(payload).pipe(
+      decodeInboundFrame(payload).pipe(
         Effect.tapError(() => Metric.update(Metric.withAttributes(ipcDecodeFailures, { event: "Rx" }), 1)),
         tapRedactedCause(
           LogRedactedCauseOptions.make({

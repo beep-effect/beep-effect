@@ -17,7 +17,6 @@ import * as ghaRunners from "@pulumi/gharunners";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
-import { withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
 
 const $I = $InfraId.create("CiFleetController");
 
@@ -613,7 +612,7 @@ export const CiFleetControllerPulumiConfigValues = S.Class<CiFleetControllerPulu
   $I.annote("CiFleetControllerPulumiConfigValues", {
     description: "Pulumi config values accepted by the CI fleet controller.",
   })
-).pipe(withPulumiConfigDecodeEffect);
+);
 
 /**
  * Runtime type for {@link CiFleetControllerPulumiConfigValues}.

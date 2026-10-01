@@ -12,7 +12,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { dual } from "effect/Function";
-import { SchemaUtils } from "@beep/schema";
 import { A, P, R } from "@beep/utils";
 import { MutableHashSet } from "effect";
 import * as S from "effect/Schema";
@@ -35,10 +34,11 @@ const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.references");
  * ```ts
  * import { GlobalNamespace } from "../../../codemode/interpreter/Interpreter.model.ts"
  * import { RuntimeReferenceValue } from "../../../codemode/interpreter/Interpreter.references.ts"
+ * import * as S from "effect/Schema"
  *
- * console.log(RuntimeReferenceValue.is(GlobalNamespace.new("JSON")))
+ * console.log(S.is(RuntimeReferenceValue)(GlobalNamespace.new("JSON")))
  * // true
- * console.log(RuntimeReferenceValue.is({ kind: "plain" }))
+ * console.log(S.is(RuntimeReferenceValue)({ kind: "plain" }))
  * // false
  * ```
  *
@@ -49,8 +49,7 @@ const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.references");
 export const RuntimeReferenceValue = S.Union([RuntimeReference, ToolReference, CodeModePromise, CodeModeValue]).pipe(
   $I.annoteSchema("RuntimeReferenceValue", {
     description: "Every schema-owned runtime reference and mutable guest value.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -81,7 +80,7 @@ export type RuntimeReferenceValue = typeof RuntimeReferenceValue.Type;
  * @category guards
  * @since 0.0.0
  */
-export const isRuntimeReference = RuntimeReferenceValue.is;
+export const isRuntimeReference = S.is(RuntimeReferenceValue);
 
 const isFunctionRuntimeReference = RuntimeReference.isAnyOf([
   "CodeModeFunction",
@@ -299,7 +298,7 @@ export const rejectCircularInsertion: {
  * @since 0.0.0
  */
 export const typeofValue = (value: unknown): string => {
-  if (RuntimeReference.is(value) && isFunctionRuntimeReference(value)) return "function";
+  if (S.is(RuntimeReference)(value) && isFunctionRuntimeReference(value)) return "function";
   if (ToolReference.is(value)) return A.isReadonlyArrayNonEmpty(value.path) ? "function" : "object";
   if (RuntimeReference.guards.GlobalNamespace(value)) {
     return GlobalNamespaceName.$match(value.name, {

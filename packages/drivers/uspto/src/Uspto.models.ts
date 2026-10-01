@@ -6,7 +6,6 @@
  */
 
 import { $UsptoId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, flow, pipe, SchemaGetter, SchemaIssue, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
@@ -42,8 +41,7 @@ export const UsptoApplicationNumber = S.String.check(
   S.brand("UsptoApplicationNumber"),
   $I.annoteSchema("UsptoApplicationNumber", {
     description: "Normalized eight-digit USPTO application number (series code plus serial number).",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**
@@ -104,8 +102,7 @@ export const UsptoApplicationNumberFromText = S.String.pipe(
   }),
   $I.annoteSchema("UsptoApplicationNumberFromText", {
     description: "Codec that normalizes free-text USPTO application numbers into the eight-digit domain form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**
@@ -215,8 +212,7 @@ export const UsptoPatentNumberFromText = S.String.pipe(
   }),
   $I.annoteSchema("UsptoPatentNumberFromText", {
     description: "Codec that normalizes free-text USPTO patent numbers into the domain form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**
@@ -262,7 +258,7 @@ export type UsptoPatentNumberFromText = typeof UsptoPatentNumberFromText.Type;
  */
 export const normalizeUsptoApplicationNumber = (text: string): O.Option<string> =>
   pipe(
-    UsptoApplicationNumberFromText.decodeUnknownOption(text),
+    S.decodeOption(UsptoApplicationNumberFromText)(text),
     O.map((value): string => value)
   );
 
@@ -289,7 +285,7 @@ export const normalizeUsptoApplicationNumber = (text: string): O.Option<string> 
  * @since 0.0.0
  */
 export const normalizeUsptoPatentNumber: (text: string) => O.Option<string> = flow(
-  UsptoPatentNumberFromText.decodeUnknownOption,
+  S.decodeUnknownOption(UsptoPatentNumberFromText),
   O.map((value): string => value)
 );
 

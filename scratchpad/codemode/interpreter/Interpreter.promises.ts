@@ -54,7 +54,7 @@ const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.promises");
 
 const failureFromCause = (cause: Cause.Cause<InterpreterFailure>): InterpreterFailure => {
   const squashed = Cause.squash(cause);
-  return InterpreterFailure.is(squashed) ? squashed : InterpreterRuntimeError.new(normalizeError(squashed).message);
+  return S.is(InterpreterFailure)(squashed) ? squashed : InterpreterRuntimeError.new(normalizeError(squashed).message);
 };
 
 /**

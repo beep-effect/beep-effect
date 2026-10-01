@@ -34,6 +34,7 @@ import {
   BoxObservedWebhook,
   BoxProviderId,
 } from "./BoxProvisioningObserved.ts";
+import { BoxBlockedAction } from "./BoxProvisioningPlan.ts";
 import {
   BoxActionApplied,
   BoxActionBlocked,
@@ -65,7 +66,6 @@ import type * as PlatformError from "effect/PlatformError";
 import type { BoxProvisioningApplyJournalError } from "./BoxProvisioningErrors.ts";
 import type { BoxDesiredState, BoxLogicalKey } from "./BoxProvisioningIntent.ts";
 import type {
-  BoxBlockedAction,
   BoxCreateAction,
   BoxNoopAction,
   BoxPlanAction,
@@ -561,7 +561,7 @@ const applyBlocked = (action: BoxBlockedAction): BoxApplyOutcome =>
 const hasUnsupportedDestructiveAction = (actions: ReadonlyArray<BoxPlanAction>): boolean =>
   A.some(actions, (action) => action.destructive || action._tag === "Delete" || action._tag === "Replace");
 
-const isBlockedAction = (action: BoxPlanAction): action is BoxBlockedAction => P.isTagged(action, "Blocked");
+const isBlockedAction = S.is(BoxBlockedAction);
 const isEntitlementReason = (reason: BoxBlockedAction["reason"]) => P.isTagged(reason, "BlockedByEntitlement");
 
 const blockerContractError = (

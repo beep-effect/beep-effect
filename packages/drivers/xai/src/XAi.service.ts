@@ -688,14 +688,14 @@ const queryValueToStrings = (value: XAiQueryValue): ReadonlyArray<string> => {
   if (A.isArray(value)) {
     return pipe(
       value,
-      A.map((entry) => XAiQueryScalar.decodeUnknownOption(entry)),
+      A.map((entry) => S.decodeUnknownOption(XAiQueryScalar)(entry)),
       A.getSomes,
       A.map(queryScalarToString)
     );
   }
 
   return pipe(
-    XAiQueryScalar.decodeUnknownOption(value),
+    S.decodeUnknownOption(XAiQueryScalar)(value),
     O.map((scalar) => A.make(queryScalarToString(scalar))),
     O.getOrElse(A.empty<string>)
   );

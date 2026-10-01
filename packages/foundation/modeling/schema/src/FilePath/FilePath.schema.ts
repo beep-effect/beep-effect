@@ -10,7 +10,6 @@ import * as F from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HasNullByte, SupportedWindowsNamespace, UsesPosixSeparator, UsesWindowsSeparator } from "./FilePath.guards.ts";
 import { HasLeafSegment } from "./FilePath.roots.ts";
 import { $I, isWindowsDrivePrefix } from "./FilePath.shared.ts";
@@ -62,14 +61,14 @@ export const SupportedPathFamily = SupportedPathFamilyKit.pipe(
  */
 export type SupportedPathFamily = typeof SupportedPathFamily.Type;
 
-const isSupportedWindowsNamespace = SupportedWindowsNamespace.is;
-const isUsesPosixSeparator = UsesPosixSeparator.is;
-const isUsesWindowsSeparator = UsesWindowsSeparator.is;
-const isWindowsDrivePath = WindowsDrivePath.is;
-const isWindowsUncPath = WindowsUncPath.is;
-const isWindowsRelativePath = WindowsRelativePath.is;
-const isHasNullByte = HasNullByte.is;
-const isHasLeafSegment = HasLeafSegment.is;
+const isSupportedWindowsNamespace = S.is(SupportedWindowsNamespace);
+const isUsesPosixSeparator = S.is(UsesPosixSeparator);
+const isUsesWindowsSeparator = S.is(UsesWindowsSeparator);
+const isWindowsDrivePath = S.is(WindowsDrivePath);
+const isWindowsUncPath = S.is(WindowsUncPath);
+const isWindowsRelativePath = S.is(WindowsRelativePath);
+const isHasNullByte = S.is(HasNullByte);
+const isHasLeafSegment = S.is(HasLeafSegment);
 
 const classifyPathFamily = Match.type<string>().pipe(
   Match.when(Str.startsWith("\\\\"), F.constant(SupportedPathFamilyKit.Enum.windowsUnc)),
@@ -138,9 +137,10 @@ const FilePathChecks = S.makeFilterGroup(
  * ```ts import.meta.vitest name="Decode valid file paths"
  * import * as Effect from "effect/Effect"
  * import { FilePath } from "@beep/schema/FilePath"
+ * import * as S from "effect/Schema"
  *
- * const posix = await Effect.runPromise(FilePath.decodeUnknownEffect("/usr/local/bin/node"))
- * const relative = await Effect.runPromise(FilePath.decodeUnknownEffect("src/index.ts"))
+ * const posix = await Effect.runPromise(S.decodeUnknownEffect(FilePath)("/usr/local/bin/node"))
+ * const relative = await Effect.runPromise(S.decodeUnknownEffect(FilePath)("src/index.ts"))
  * ```
  *
  * **Example** (Reject bare root paths)
@@ -160,7 +160,6 @@ const FilePathChecks = S.makeFilterGroup(
  */
 export const FilePath = S.String.check(FilePathChecks).pipe(
   S.brand("FilePath"),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"]),
   $I.annoteSchema("FilePath", {
     description: "A file path string valid for at least one supported operating-system path family.",
   })

@@ -16,9 +16,8 @@ import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@
 import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { SchemaUtils } from "@beep/schema";
 import { Str as BeepStr } from "@beep/utils";
-import { Effect, Equal, Hash, MutableHashMap } from "effect";
+import { Effect, Equal, Hash, MutableHashMap, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
@@ -315,7 +314,6 @@ export class ClaimExtractionArtifact extends S.Class<ClaimExtractionArtifact>($I
 ) {}
 
 const ClaimExtractionArtifactJson = S.fromJsonString(ClaimExtractionArtifact).pipe(
-  SchemaUtils.withCodecStatics(["decodeEffect", "encodeEffect"]),
   $I.annoteSchema("ClaimExtractionArtifactJson", {
     description: "JSON-string wire codec for the exact durable extraction artifact embedded in RDF.",
   })
@@ -825,8 +823,8 @@ export const knowledgeGraphToClaims = dual3(
 export const claimDataToQuads = dual3(
   (claim: ClaimData, graphUri: string | undefined, extractedAt: string | undefined): ReadonlyArray<Quad> => {
     const quads: Array<Quad> = [];
-    const claimIri = IRI.decodeUnknownSync(`${CLAIMS.namespace}${claim.claimId}`);
-    const graph = P.isUndefined(graphUri) ? undefined : IRI.decodeUnknownSync(graphUri);
+    const claimIri = Result.getOrThrow(S.decodeResult(IRI)(`${CLAIMS.namespace}${claim.claimId}`));
+    const graph = P.isUndefined(graphUri) ? undefined : Result.getOrThrow(S.decodeResult(IRI)(graphUri));
 
     // Type assertion: claim:id a claims:Claim
     quads.push(
@@ -843,7 +841,7 @@ export const claimDataToQuads = dual3(
       claimQuad({
         subject: claimIri,
         predicate: RDF_SUBJECT,
-        object: IRI.decodeUnknownSync(claim.subjectIri),
+        object: Result.getOrThrow(S.decodeResult(IRI)(claim.subjectIri)),
         graph,
       })
     );
@@ -853,14 +851,14 @@ export const claimDataToQuads = dual3(
       claimQuad({
         subject: claimIri,
         predicate: RDF_PREDICATE,
-        object: IRI.decodeUnknownSync(claim.predicateIri),
+        object: Result.getOrThrow(S.decodeResult(IRI)(claim.predicateIri)),
         graph,
       })
     );
 
     // RDF reification: rdf:object (IRI or Literal)
     const objectTerm =
-      claim.objectType === "iri" ? IRI.decodeUnknownSync(claim.objectValue) : claimLiteral({ value: claim.objectValue });
+      claim.objectType === "iri" ? Result.getOrThrow(S.decodeResult(IRI)(claim.objectValue)) : claimLiteral({ value: claim.objectValue });
 
     quads.push(
       claimQuad({
@@ -914,14 +912,14 @@ export const claimDataToQuads = dual3(
       claimQuad({
         subject: claimIri,
         predicate: CLAIMS.statedIn,
-        object: IRI.decodeUnknownSync(`${CLAIMS.namespace}article/${claim.articleId}`),
+        object: Result.getOrThrow(S.decodeResult(IRI)(`${CLAIMS.namespace}article/${claim.articleId}`)),
         graph,
       })
     );
 
     // Evidence
     if (P.isNotUndefined(claim.evidence)) {
-      const evidenceIri = IRI.decodeUnknownSync(`${claimIri}/evidence`);
+      const evidenceIri = Result.getOrThrow(S.decodeResult(IRI)(`${claimIri}/evidence`));
 
       quads.push(
         claimQuad({
@@ -1042,9 +1040,9 @@ export const claimExtractionArtifactToQuads = dual2(
     artifact: ClaimExtractionArtifact,
     graphUri: string
   ) {
-    const payload = yield* ClaimExtractionArtifactJson.encodeEffect(artifact);
-    const graph = IRI.decodeUnknownSync(graphUri);
-    const artifactIri = IRI.decodeUnknownSync(`${graphUri}:extraction-artifact`);
+    const payload = yield* S.encodeEffect(ClaimExtractionArtifactJson)(artifact);
+    const graph = Result.getOrThrow(S.decodeResult(IRI)(graphUri));
+    const artifactIri = Result.getOrThrow(S.decodeResult(IRI)(`${graphUri}:extraction-artifact`));
     return [
       claimQuad({
         subject: artifactIri,
@@ -1109,5 +1107,5 @@ export const claimExtractionArtifactFromQuads = Effect.fn("ClaimFactory.claimExt
     O.getOrElse(() => "")
   );
 
-  return O.some(yield* ClaimExtractionArtifactJson.decodeEffect(payload));
+  return O.some(yield* S.decodeEffect(ClaimExtractionArtifactJson)(payload));
 });

@@ -7,6 +7,7 @@
 
 import { SchemaUtils } from "@beep/schema";
 import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 import {
   ChildArtifactRecord,
   FileProcessingCoverageSummary,
@@ -15,7 +16,6 @@ import {
   SourceProcessingRecord,
 } from "./Extraction.manifest.ts";
 import type * as Effect from "effect/Effect";
-import type * as S from "effect/Schema";
 import type * as AST from "effect/SchemaAST";
 
 type JsonEncodeEffect<Input> = {
@@ -144,7 +144,7 @@ export const encodeFileProcessingCoverageSummaryJson = FileProcessingCoverageSum
  */
 export const encodeSourceProcessingRecordJson: JsonEncodeEffect<unknown> = dual(
   SchemaUtils.isCodecDataFirst,
-  SourceProcessingRecord.encodeJson
+  S.encodeUnknownEffect(S.fromJsonString(SourceProcessingRecord))
 );
 
 /**
@@ -183,7 +183,7 @@ export const encodeSourceProcessingRecordJson: JsonEncodeEffect<unknown> = dual(
  */
 export const encodeFileProcessingFailureRecordJson: JsonEncodeEffect<unknown> = dual(
   SchemaUtils.isCodecDataFirst,
-  FileProcessingFailureRecord.encodeJson
+  S.encodeUnknownEffect(S.fromJsonString(FileProcessingFailureRecord))
 );
 
 /**

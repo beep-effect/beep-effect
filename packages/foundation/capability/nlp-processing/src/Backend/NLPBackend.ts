@@ -187,9 +187,10 @@ export class BackendOperationError extends S.TaggedError<BackendOperationError>(
  *
  * ```ts import.meta.vitest name="Check union membership"
  * import { notSupported, NLPBackendError } from "@beep/nlp-processing/Backend/NLPBackend"
+ * import * as S from "effect/Schema"
  *
  * const error = notSupported("minimal", "ner")
- * NLPBackendError.is(error) // => true
+ * S.is(NLPBackendError)(error) // => true
  * ```
  *
  * @category errors
@@ -198,8 +199,7 @@ export class BackendOperationError extends S.TaggedError<BackendOperationError>(
 export const NLPBackendError = S.Union([BackendNotSupported, BackendInitError, BackendOperationError]).pipe(
   $I.annoteSchema("NLPBackendError", {
     description: "A backend failure.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

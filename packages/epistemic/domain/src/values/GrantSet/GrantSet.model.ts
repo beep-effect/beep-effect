@@ -420,9 +420,10 @@ export const verifyFrozenGrantSetDigest = (frozen: FrozenGrantSet): boolean =>
  * ```ts
  * import { ExecutionRequestEvaluationOptions, PolicyRevision } from "@beep/epistemic-domain"
  * import { DateTime } from "effect"
+ * import * as S from "effect/Schema"
  *
  * const options = ExecutionRequestEvaluationOptions.make({
- *   currentPolicyRevision: PolicyRevision.decodeUnknownSync("1.0.0"),
+ *   currentPolicyRevision: S.decodeUnknownSync(PolicyRevision)("1.0.0"),
  *   now: DateTime.makeUnsafe(0)
  * })
  * console.log(options.currentPolicyRevision)

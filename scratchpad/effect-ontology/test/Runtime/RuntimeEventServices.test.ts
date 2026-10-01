@@ -78,7 +78,7 @@ describe("EventBridge", () => {
         assert.strictEqual(yield* hub.getClientCount(ontologyId), 1);
 
         const createdAt = yield* DateTime.now;
-        const entry = yield* OntologyEventEntry.decodeUnknownEffect({
+        const entry = yield* S.decodeEffect(OntologyEventEntry)({
           id: "event-1",
           primaryKey: "runtime-event-test:claim-abc123def456",
           createdAt,

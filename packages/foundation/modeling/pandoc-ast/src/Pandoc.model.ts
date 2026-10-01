@@ -6,7 +6,6 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
@@ -2022,9 +2021,10 @@ export declare namespace UnknownInline {
  *
  * ```ts import.meta.vitest name="Checking inline union"
  * import { PandocInline, Str } from "@beep/pandoc-ast/Pandoc.model"
+ * import * as S from "effect/Schema"
  *
  * const inline = Str.make({ text: "hi" })
- * PandocInline.is(inline) // => true
+ * S.is(PandocInline)(inline) // => true
  * ```
  *
  * @category models
@@ -2057,12 +2057,7 @@ export const PandocInline = S.Union([
   $I.annoteSchema("PandocInline", {
     description: "Pandoc inline union for the v1 compatibility slice.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**
@@ -3546,9 +3541,10 @@ export declare namespace UnknownBlock {
  *
  * ```ts import.meta.vitest name="Checking block union"
  * import { PandocBlock, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ * import * as S from "effect/Schema"
  *
  * const block = Para.make({ children: [Str.make({ text: "hi" })] })
- * PandocBlock.is(block) // => true
+ * S.is(PandocBlock)(block) // => true
  * ```
  *
  * @category models
@@ -3575,12 +3571,7 @@ export const PandocBlock = S.Union([
   $I.annoteSchema("PandocBlock", {
     description: "Pandoc block union for the v1 compatibility slice.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**
@@ -3969,8 +3960,9 @@ export class UnknownMeta extends S.TaggedClass<UnknownMeta>($I`UnknownMeta`)(
  *
  * ```ts
  * import { MetaString, PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
+ * import * as S from "effect/Schema"
  *
- * console.log(PandocMetaValue.is(MetaString.make({ value: "Doc" })))
+ * console.log(S.is(PandocMetaValue)(MetaString.make({ value: "Doc" })))
  * ```
  *
  * @category schemas
@@ -3989,12 +3981,7 @@ export const PandocMetaValue = S.Union([
   $I.annoteSchema("PandocMetaValue", {
     description: "Recursive semantic Pandoc metadata-value union.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**
