@@ -18,7 +18,9 @@ from skillopt.envs.base import EnvAdapter
 from skillopt.model.codex_harness import render_skill_md, run_target_exec
 from skillopt.prompts import load_prompt
 
+from beep_skillopt.controls import SCORER_ENVIRONMENT_FAILURE as _SCORER_ENVIRONMENT_FAILURE
 from beep_skillopt.controls import LoopControls
+from beep_skillopt.controls import is_scorer_environment_failure as _is_scorer_environment_failure
 
 
 _TRUE_VALUES = {"1", "true", "yes", "on"}
@@ -412,7 +414,6 @@ class BeepLawAdapter(EnvAdapter):
         return payload
 
 
-_SCORER_ENVIRONMENT_FAILURE = "environment-failure"
 
 
 def _scorer_environment_failure(stdout: str) -> dict | None:
@@ -433,11 +434,6 @@ def _scorer_environment_failure(stdout: str) -> dict | None:
     if payload.get("status") != _SCORER_ENVIRONMENT_FAILURE:
         return None
     return {**payload, "score": 0.0}
-
-
-def _is_scorer_environment_failure(row: dict) -> bool:
-    scorer = row.get("scorer")
-    return isinstance(scorer, dict) and scorer.get("status") == _SCORER_ENVIRONMENT_FAILURE
 
 
 def _scorer_model_args(target_model: str, reasoning_effort: str) -> list[str]:

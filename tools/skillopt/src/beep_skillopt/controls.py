@@ -53,6 +53,39 @@ from beep_skillopt.screen import CorpusTask, ScreenConfig, load_corpus_tasks, sc
 
 RunBatch = Callable[[list[dict], str, str], list[dict]]
 
+SCORER_ENVIRONMENT_FAILURE = "environment-failure"
+
+
+def is_scorer_environment_failure(row: dict) -> bool:
+    """True when the scorer could not measure this rollout (a broken tool, not the agent)."""
+    scorer = row.get("scorer")
+    return isinstance(scorer, dict) and scorer.get("status") == SCORER_ENVIRONMENT_FAILURE
+
+
+def measured_rows(rows: list[dict]) -> list[dict]:
+    """The rows a run actually measured: environment failures dropped, latest row per item id.
+
+    A resumed batch re-measures a task whose scorer failed and appends the new
+    row to ``results.jsonl``; the failed attempt stays in the file. Reading
+    through this keeps the failed attempt out of every mean and per-task summary.
+    Rows without an id are kept as-is, in file order.
+    """
+    latest: dict[str, dict] = {}
+    order: list[str] = []
+    anonymous: list[dict] = []
+    for row in rows:
+        if is_scorer_environment_failure(row):
+            continue
+        if "id" not in row:
+            anonymous.append(row)
+            continue
+        key = str(row["id"])
+        if key not in latest:
+            order.append(key)
+        latest[key] = row
+    return [latest[key] for key in order] + anonymous
+
+
 SCREEN_LOG = "screen-log.jsonl"
 BASELINE_NOISE = "baseline-noise.json"
 BASELINE_NOISE_DIR = "baseline-noise"

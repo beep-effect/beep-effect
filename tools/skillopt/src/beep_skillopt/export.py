@@ -48,7 +48,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from beep_skillopt.controls import BASELINE_NOISE, SCREEN_LOG, summarize_results
+from beep_skillopt.controls import BASELINE_NOISE, SCREEN_LOG, measured_rows, summarize_results
 from beep_skillopt.screen import diff_digest
 
 STEPS_FILE = "steps.jsonl"
@@ -97,7 +97,7 @@ def _mean(values: list[float]) -> float:
 
 def _baseline_score(out_root: Path, metric: str, weight: float) -> float | None:
     """The loop baseline at full precision, as the trainer's ``compute_score`` has it."""
-    rows = _read_jsonl(out_root / "selection_eval_baseline" / "results.jsonl")
+    rows = measured_rows(_read_jsonl(out_root / "selection_eval_baseline" / "results.jsonl"))
     if not rows:
         return None
     hard = _mean([float(r.get("hard", 0) or 0) for r in rows])
@@ -199,7 +199,9 @@ def build_steps(out_root: str | Path) -> list[dict[str, Any]]:
 
         per_task: list[dict[str, Any]] = []
         if evaluated:
-            sel_rows = _read_jsonl(root / "steps" / f"step_{step:04d}" / "selection_eval" / "results.jsonl")
+            sel_rows = measured_rows(
+                _read_jsonl(root / "steps" / f"step_{step:04d}" / "selection_eval" / "results.jsonl")
+            )
             per_task = summarize_results(sel_rows)["per_task"] if sel_rows else []
 
         cand_score = None

@@ -20,6 +20,8 @@ from beep_skillopt.adapter import (
     _score_failure_reason,
     _scorer_environment_failure,
 )
+from beep_skillopt.controls import measured_rows
+from beep_skillopt.export import _baseline_score
 
 ENVIRONMENT_REPORT = {
     "status": "environment-failure",
@@ -151,6 +153,27 @@ class RunBatchEnvironmentFailureTest(unittest.TestCase):
         results = self._run()
         self.assertEqual(sorted(row["id"] for row in results), ["task-a", "task-b"])
         self.assertFalse(any(_is_scorer_environment_failure(row) for row in results))
+
+
+class MeasuredRowsTest(unittest.TestCase):
+    FAILED = {"id": "task-b", "agent_ok": True, "soft": 0.0, "hard": 0, "scorer": ENVIRONMENT_REPORT}
+    RETRIED = {"id": "task-b", "agent_ok": True, "soft": 1.0, "hard": 1, "scorer": {"score": 1.0}}
+    OTHER = {"id": "task-a", "agent_ok": True, "soft": 0.5, "hard": 0, "scorer": {"score": 0.5}}
+
+    def test_drops_environment_failures_and_keeps_the_latest_row_per_id(self) -> None:
+        stale = {"id": "task-a", "soft": 0.1, "hard": 0}
+        anonymous = {"soft": 0.2}
+        rows = measured_rows([stale, self.FAILED, anonymous, self.OTHER, self.RETRIED])
+        self.assertEqual(rows, [self.OTHER, self.RETRIED, anonymous])
+
+    def test_exported_baseline_ignores_a_failed_attempt_that_was_remeasured(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            baseline = Path(tmp) / "selection_eval_baseline"
+            baseline.mkdir()
+            with (baseline / "results.jsonl").open("w", encoding="utf-8") as handle:
+                for row in (self.OTHER, self.FAILED, self.RETRIED):
+                    handle.write(json.dumps(row) + "\n")
+            self.assertEqual(_baseline_score(Path(tmp), "soft", 0.5), 0.75)
 
 
 if __name__ == "__main__":
