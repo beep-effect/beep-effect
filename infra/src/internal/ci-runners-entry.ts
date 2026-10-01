@@ -15,7 +15,13 @@ const stack = new CiRunnersStack("ci-runners", loadCiRunnersStackArgs());
 const controller = new CiFleetController("ci-fleet-controller", {
   config: loadCiFleetControllerConfig(),
   region: stack.region,
-  subnetIds: [stack.publicSubnetAId, stack.publicSubnetBId],
+  subnetIds: [
+    stack.publicSubnetAId,
+    stack.publicSubnetBId,
+    stack.publicSubnetCId,
+    stack.publicSubnetDId,
+    stack.publicSubnetEId,
+  ],
   vpcId: stack.vpcId,
   workerSecurityGroupId: stack.workerSecurityGroupId,
 });
@@ -65,6 +71,30 @@ export const publicSubnetAId = stack.publicSubnetAId;
  * @since 0.0.0
  */
 export const publicSubnetBId = stack.publicSubnetBId;
+
+/**
+ * Public subnet id in the third availability zone.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const publicSubnetCId = stack.publicSubnetCId;
+
+/**
+ * Public subnet id in the fourth availability zone.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const publicSubnetDId = stack.publicSubnetDId;
+
+/**
+ * Public subnet id in the fifth availability zone.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const publicSubnetEId = stack.publicSubnetEId;
 
 /**
  * Zero-ingress worker security group id.

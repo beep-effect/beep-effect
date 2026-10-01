@@ -3,6 +3,7 @@ import {
   CiRunnersNetworkConfig,
   CiRunnersPulumiConfigValues,
   CiRunnersReaperConfig,
+  CiRunnersStack,
   CiRunnersStackArgs,
   CiRunnersWorkerConfig,
   ciRunnersInfraTagValue,
@@ -17,8 +18,9 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, pipe } from "effect";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as pulumi from "@pulumi/pulumi";
+import { Effect, MutableHashMap, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
@@ -38,8 +40,15 @@ describe("@beep/infra CiRunners", () => {
     expect(args.network.vpcCidr).toBe("10.88.0.0/16");
     expect(args.network.publicSubnetACidr).toBe("10.88.0.0/20");
     expect(args.network.publicSubnetBCidr).toBe("10.88.16.0/20");
+    expect(args.network.publicSubnetCCidr).toBe("10.88.32.0/20");
+    expect(args.network.publicSubnetDCidr).toBe("10.88.48.0/20");
+    expect(args.network.publicSubnetECidr).toBe("10.88.64.0/20");
     expect(args.network.availabilityZoneA).toBe("us-east-1a");
     expect(args.network.availabilityZoneB).toBe("us-east-1b");
+    expect(args.network.availabilityZoneC).toBe("us-east-1c");
+    expect(args.network.availabilityZoneD).toBe("us-east-1d");
+    // us-east-1e offers none of the fleet's instance types.
+    expect(args.network.availabilityZoneE).toBe("us-east-1f");
     expect(args.worker.instanceType).toBe("m7i.2xlarge");
     expect(args.worker.rootVolumeSizeGb).toBe(100);
     expect(args.worker.maxRunMinutes).toBe(60);
@@ -55,11 +64,17 @@ describe("@beep/infra CiRunners", () => {
       amiId: "ami-0123456789abcdef0",
       availabilityZoneA: "us-east-2a",
       availabilityZoneB: "us-east-2b",
+      availabilityZoneC: "us-east-2c",
+      availabilityZoneD: "us-east-2d",
+      availabilityZoneE: "us-east-2e",
       awsRegion: "us-east-2",
       instanceType: "m6a.2xlarge",
       maxRunMinutes: 90,
       publicSubnetACidr: "10.99.0.0/20",
       publicSubnetBCidr: "10.99.16.0/20",
+      publicSubnetCCidr: "10.99.32.0/20",
+      publicSubnetDCidr: "10.99.48.0/20",
+      publicSubnetECidr: "10.99.64.0/20",
       reaperTtlMinutes: 120,
       rootVolumeSizeGb: 200,
       vpcCidr: "10.99.0.0/16",
@@ -69,6 +84,8 @@ describe("@beep/infra CiRunners", () => {
     expect(args.network.region).toBe("us-east-2");
     expect(args.network.availabilityZoneA).toBe("us-east-2a");
     expect(args.network.availabilityZoneB).toBe("us-east-2b");
+    expect(args.network.availabilityZoneE).toBe("us-east-2e");
+    expect(args.network.publicSubnetECidr).toBe("10.99.64.0/20");
     expect(args.network.vpcCidr).toBe("10.99.0.0/16");
     expect(args.worker.instanceType).toBe("m6a.2xlarge");
     expect(args.worker.rootVolumeSizeGb).toBe(200);
@@ -90,6 +107,18 @@ describe("@beep/infra CiRunners", () => {
     expect(() => makeCiRunnersStackArgsFromConfigValues({ awsRegion: "us-east-2" })).toThrow();
     // Zone override outside the default region is equally rejected.
     expect(() => makeCiRunnersStackArgsFromConfigValues({ availabilityZoneA: "us-west-2a" })).toThrow();
+    // A partial region move that leaves any later slot behind is rejected too.
+    expect(() =>
+      makeCiRunnersStackArgsFromConfigValues({
+        availabilityZoneA: "us-east-2a",
+        availabilityZoneB: "us-east-2b",
+        awsRegion: "us-east-2",
+      })
+    ).toThrow();
+  });
+
+  it("rejects two subnet slots in one availability zone", () => {
+    expect(() => makeCiRunnersStackArgsFromConfigValues({ availabilityZoneE: "us-east-1a" })).toThrow();
   });
 
   it("rejects subnet geometry outside the VPC or overlapping", () => {
@@ -104,14 +133,76 @@ describe("@beep/infra CiRunners", () => {
         publicSubnetBCidr: "10.88.8.0/21",
       })
     ).toThrow();
+    // Overlap between any two slots counts, not only A and B.
+    expect(() => makeCiRunnersStackArgsFromConfigValues({ publicSubnetECidr: "10.88.0.0/24" })).toThrow();
     // Adjacent, non-overlapping subnets inside the VPC remain valid.
     expect(
       makeCiRunnersStackArgsFromConfigValues({
-        publicSubnetACidr: "10.88.32.0/20",
-        publicSubnetBCidr: "10.88.48.0/20",
+        publicSubnetACidr: "10.88.80.0/20",
+        publicSubnetBCidr: "10.88.96.0/20",
       }).network.publicSubnetACidr
-    ).toBe("10.88.32.0/20");
+    ).toBe("10.88.80.0/20");
   });
+
+  it.effect(
+    "provisions one public subnet per slot on the shared public route table",
+    Effect.fnUntraced(function* () {
+      const subnets = MutableHashMap.empty<string, unknown>();
+      const routeTableSubnets = MutableHashMap.empty<string, unknown>();
+
+      yield* Effect.acquireUseRelease(
+        Effect.tryPromise(() =>
+          pulumi.runtime.setMocks(
+            {
+              call: () => ({ accountId: "123456789012", partition: "aws", value: "ami-0123456789abcdef0" }),
+              newResource: (args) => {
+                if (args.type === "aws:ec2/subnet:Subnet") {
+                  MutableHashMap.set(subnets, args.name, {
+                    availabilityZone: args.inputs.availabilityZone,
+                    cidrBlock: args.inputs.cidrBlock,
+                    mapPublicIpOnLaunch: args.inputs.mapPublicIpOnLaunch,
+                  });
+                }
+                if (args.type === "aws:ec2/routeTableAssociation:RouteTableAssociation") {
+                  MutableHashMap.set(routeTableSubnets, args.name, args.inputs.subnetId);
+                }
+                return { id: `${args.name}-id`, state: args.inputs };
+              },
+            },
+            "beep-ci-runners",
+            "test"
+          )
+        ),
+        () =>
+          Effect.sync(() => {
+            new CiRunnersStack(
+              "ci-runners",
+              makeCiRunnersStackArgsFromConfigValues({ amiId: "ami-0123456789abcdef0" })
+            );
+          }),
+        () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+      );
+
+      expect(MutableHashMap.size(subnets)).toBe(5);
+      for (const [slot, availabilityZone, cidrBlock] of [
+        ["a", "us-east-1a", "10.88.0.0/20"],
+        ["b", "us-east-1b", "10.88.16.0/20"],
+        ["c", "us-east-1c", "10.88.32.0/20"],
+        ["d", "us-east-1d", "10.88.48.0/20"],
+        ["e", "us-east-1f", "10.88.64.0/20"],
+      ] as const) {
+        assertSome(MutableHashMap.get(subnets, `ci-runners-public-${slot}`), {
+          availabilityZone,
+          cidrBlock,
+          mapPublicIpOnLaunch: false,
+        });
+        assertSome(
+          MutableHashMap.get(routeTableSubnets, `ci-runners-public-${slot}-rta`),
+          `ci-runners-public-${slot}-id`
+        );
+      }
+    })
+  );
 
   it("keeps stack args import-safe", () => {
     const args = CiRunnersStackArgs.make({});
@@ -151,8 +242,14 @@ describe("@beep/infra CiRunners", () => {
       const network = CiRunnersNetworkConfig.make({
         availabilityZoneA: "us-east-2a",
         availabilityZoneB: "us-east-2b",
+        availabilityZoneC: "us-east-2c",
+        availabilityZoneD: "us-east-2d",
+        availabilityZoneE: "us-east-2e",
         publicSubnetACidr: "10.99.0.0/20",
         publicSubnetBCidr: "10.99.16.0/20",
+        publicSubnetCCidr: "10.99.32.0/20",
+        publicSubnetDCidr: "10.99.48.0/20",
+        publicSubnetECidr: "10.99.64.0/20",
         region: "us-east-2",
         vpcCidr: "10.99.0.0/16",
       });
