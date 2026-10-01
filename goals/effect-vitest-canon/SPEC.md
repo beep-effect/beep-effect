@@ -1,3 +1,9 @@
+> Current-source amendment, 2026-10-01: new work uses the verified Effect /
+> Effect Vitest 4.0.0 cohort, Vitest 5.0.3 and GPT-6.1-Sol medium. Older
+> rc.113/version/model receipts retain their historical provenance. See
+> [the cohort receipt](history/2026-10-01-current-source-cohort.md).
+> D1–D14 and all remaining acceptance gates are unchanged.
+
 # Canonical Effect Vitest tests
 
 This packet executes Benjamin's contract locked on 2026-09-04. Execution began on
