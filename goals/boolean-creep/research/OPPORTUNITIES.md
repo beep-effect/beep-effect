@@ -2007,3 +2007,55 @@ records the failure without changing that policy or the campaign's evidence gate
 Direct route evidence and explicit model/effort pins are needed until a compatible
 checker can inspect the manifest. A versioned compatibility check between the
 workstation manifest and older campaign checkouts would prevent this interruption.
+
+### 2026-10-01: source refresh and local proof friction
+
+R54 review continued while main advanced through catalog/Turbo changes, a
+cloud-agent packet, the shadcn rollout, dead-runner retry support, and the
+separately managed model-policy PR #1396, and CIops/ontology PRs #1386 and
+#1394. The CIops code is excluded from the campaign corpus, while its added
+document names expand citation resolution. The shadcn/retry range changed 198
+files and affected 87 inventory rows, including 27 qualified owners. Review
+preserved each frozen proposal and verdict, then checked the exact changed
+source and refreshed the complete audit. Reviewing full commit ranges and
+retaining proofs for unchanged source avoided restarting the campaign.
+
+`yeet publish --fast` waited for full-proof admission before pushing even
+with no full proof steps. Other live proof leases owned the available tokens.
+Only that campaign job was cancelled before using Yeet's supported
+`--start-pr-early --pr` path. Publication succeeded before broad proof. No
+proof or campaign credit follows from that publication.
+
+The isolated clean-HEAD install included `@shadcn/lint`, but the working
+checkout still had older dependencies. Full proof could not load the plugin.
+`bun install --frozen-lockfile` refreshed the working checkout, and the exact
+`bun run beep ci lane shadcn-lint` rerun passed. Dependency freshness in the
+working checkout needs a separate check after a main merge.
+
+Full verification then found an inherited `lint:tsgo-rules` failure. Current
+main's `tsconfig.json` includes `@beep/dock-react/dock.css`; its tracked
+`vitest.aliases.generated.json` omits that one alias. The two files matched
+main byte-for-byte, and the TypeScript JSONC parser found no other alias
+difference. The generated projection still needs repair and exact-gate
+verification with current source bindings. Main's dock export rollout should
+have regenerated and checked the complete alias projection before merge.
+
+R54's lexical audit also exposed a citation-review defect. Numbers introduced
+by the candidate could bind to the same candidate commit and receive
+`no-conflict` without a verified source landmark. The private dock recovery
+found stale locators on thirteen claims that the parser had passed. Complete
+current-clause review and direct source excerpts are now required alongside
+the lexical audit. Parser status alone cannot approve a current claim.
+
+Confirmed Codex quota exhaustion interrupted three workers. The originating
+orchestrator used the authorized Cursor route, whose initialization reported
+Claude Opus 5.5 300K Medium. Separate author and read-only reviewer sessions
+preserved independence. Cursor's configured Git restriction required parent
+exports of exact source and test blobs with hashes. No synthetic commit was
+pushed and no evidence or campaign gate was waived.
+
+R54 review friction: a provisional citation checker accepted nearby landmarks outside exact
+cited bounds. Parent falsification retained eight counterexamples, including a guard cited
+at line 34 with its actual expression at line 33. Nearby token matches are diagnostic
+evidence only; require source-aware whole-claim dispositions and exact ranges before sealing
+a receipt. No provisional confirmation was treated as approval.

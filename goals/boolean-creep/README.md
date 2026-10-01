@@ -2,24 +2,44 @@
 
 PR #1388 merged externally at `ed09a085f35c617c352de43152330d52b908f5b5`
 before the campaign gates passed. Benjamin approved continuing all remaining work
-in one successor PR on `codex/boolean-creep-r54-remainder-2026-10-01`.
-The merge tree is byte-identical to published head `e1191a49`; product source
-is unchanged from R54 main binding `ec71f01a`. Continue the existing review and
-rebind its receipt to the successor; this is not a new campaign.
+in the single successor PR #1395 on `codex/boolean-creep-r54-remainder-2026-10-01`.
+At that initial handoff, the merge commit and the prior published commit
+`e1191a49b7b3c89c147b3d8f3176e75260950cdb` both resolve to tree
+`5509f037aa2bdf8fe03cb0930a7f7a79dd1823ac`. This historical tree equality
+is recorded in `data/r54-continuation-2026-10-01.json`.
 
-R54 v6 passed its 66-file seal check but has no zero-finding receipt. Independent
-review is correcting stale source claims and adjudicating all 365 held items.
-Its test-map count is 346 unique test reanchors plus 12 map rebindings; the older
-358-test description combined those categories. Preserve the original proposals
-and synthetic audit commits; they remain unpublished and grant no campaign credit.
+The successor now includes main `f7c23dd21265d723b2fb4a1a2b58c51c037ea6f1`.
+Source cited by qualified owners changed after the original `ec71f01a` binding,
+including `ContradictionTriageView.tsx` and `speech-input.tsx`. The earlier review
+cannot establish current-source coverage. R54 corrections remain private and
+unapproved while independent reviewers check complete current claims, distinguish
+historical pins, and retain every held audit item. Require a fresh exact-source
+candidate, complete audit and independently bound zero-finding receipt before
+applying corrections. Synthetic audit commits remain unpublished and grant no
+campaign credit. The former current section is preserved verbatim in
+`history/2026-10-01-pre-r54-continuation-review-followup.md.txt`.
 
-Inventory remains 723 records: 108 qualified, 615 disqualified and zero applied.
+The live inventory has 723 records: 108 qualified, 615 disqualified and zero
+applied. R53 withdrew two D1 rows from the prior 725 / 108 / 617 projection:
+`with-codec-statics-install-on-owned-schema` lost its owning file, and moving it
+to the surviving literal would duplicate `with-statics-attach-statics`;
+`r2-foundation-static-descriptors-mode` lost `descriptorForMode` and its mode
+type, leaving no Boolean literal owner. The independent withdrawal rulings are
+in `data/r53-current-source-review/review.md`; the full prior inventory is in
+`history/inventory/2026-10-01-pre-r53-source-refresh.jsonl`. These withdrawals
+are source reconciliation, not census convergence or implementation credit.
+
+R54 v6's former 66-file seal and its 346 unique named-test reanchors plus 12 map
+rebindings are historical preparation evidence. The older 358-test description
+combined those categories. Neither that seal nor a structural inventory validator
+admits a newer candidate or approves any census execution.
+
 R54 citation review grants no census, dry-round, campaign-wide P3, ratification
 or implementation credit. After reviewed corrections install and publish,
 independently approve fresh complete census inputs and the rebound runtime,
-then run the bounded probe and current-source census. Keep both dry rounds,
+then run the bounded probe and current-source census. Keep both full dry rounds,
 replacement independent zero-finding P3, delegated ratification, implementation,
-final candidate rounds and exact-main post-merge evidence.
+final candidate rounds and exact-main post-merge evidence in this campaign.
 
 ## Historical R49 source refresh, 2026-10-01
 
