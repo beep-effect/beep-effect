@@ -116,6 +116,15 @@ cd apps/professional-desktop && bun run test
 Suites that share a process global (the Tauri `invoke` mock, `import.meta.env`, spies) need
 `describe(name, { concurrent: false }, ...)`: the repo runs test cases concurrently.
 
+Two gate notes for new statechart tests:
+
+- `vi.mock` and `vi.hoisted` only work with `import { vi } from "vitest"`; the `@effect/vitest`
+  re-export fails with "problems in resolving the mocks API". The `lint:effect-vitest` gate reports
+  that import as EV011, so such files carry a reviewed row in `standards/effect-vitest.inventory.jsonc`.
+- A test that advances `TestClock` must own its clock: run it outside a shared `it.layer` block and
+  provide the services it needs per test (`Reactivity.make` + `Effect.provideService`), as
+  `startIntakeIsolated` does in the intake test harness.
+
 ## Inspector
 
 In the desktop app, opt in per dev session:
