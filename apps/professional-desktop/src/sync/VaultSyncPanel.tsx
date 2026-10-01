@@ -45,7 +45,7 @@ const ConnectionBadge = ({ connected }: { readonly connected: boolean }): JSX.El
     className={
       connected
         ? "rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs text-primary"
-        : "rounded-sm bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-600 dark:text-amber-300"
+        : "rounded-sm bg-warning/10 px-1.5 py-0.5 text-xs text-warning-text"
     }
     data-testid="vault-sync-connection"
   >
@@ -120,12 +120,14 @@ const DisconnectedNote = ({
   readonly reason: O.Option<DmsMirrorDisconnectReason>;
   readonly waiting: boolean;
 }): JSX.Element => {
-  // Dark mode needs the brighter amber text tier and an explicit high-contrast
-  // button treatment: amber-600 on the tinted alert surface fell below
-  // readable contrast on the near-black theme (QA round 104, R104-02).
+  // Dark mode needs the brighter warning text tier: amber-600 on the tinted
+  // alert surface fell below readable contrast on the near-black theme (QA
+  // round 104, R104-02). `warning-text` carries that high-contrast tier in its
+  // dark value; the retry button uses the design system's `warning` variant,
+  // which paints the same tier on its own border, label and hover wash.
   const probeNote = (message: string) => (
     <div
-      className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600 dark:border-amber-400/50 dark:text-amber-200"
+      className="mt-2 rounded-sm border border-warning/40 bg-warning/10 p-2 text-xs text-warning-text dark:border-warning/50"
       data-testid="vault-sync-setup-note"
     >
       <p>{message}</p>
@@ -143,8 +145,8 @@ const DisconnectedNote = ({
       <Button
         type="button"
         size="sm"
-        variant="outline"
-        className="mt-2 dark:border-amber-300/60 dark:text-amber-100 dark:hover:bg-amber-500/20"
+        variant="warning"
+        className="mt-2"
         onClick={onRetry}
         disabled={waiting}
         data-testid="vault-sync-reconnect"
@@ -161,7 +163,7 @@ const DisconnectedNote = ({
       DmsMirrorDisconnectReason.$match(value, {
         "credentials-missing": () => (
           <p
-            className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600 dark:border-amber-400/50 dark:text-amber-200"
+            className="mt-2 rounded-sm border border-warning/40 bg-warning/10 p-2 text-xs text-warning-text dark:border-warning/50"
             data-testid="vault-sync-setup-note"
           >
             Configure CCG with DMS_BOX_CLIENT_ID, DMS_BOX_CLIENT_SECRET, and an enterprise or user subject, or set
@@ -241,11 +243,7 @@ const VaultSyncConflictsList = ({
   return AsyncResult.isSuccess(conflicts) && A.isReadonlyArrayNonEmpty(conflicts.value) ? (
     <ul className="mt-3 space-y-2" data-testid="vault-sync-conflicts">
       {A.map(conflicts.value, (conflict) => (
-        <li
-          key={conflict.id}
-          className="rounded-sm border border-amber-500/40 p-2"
-          data-testid="vault-sync-conflict-row"
-        >
+        <li key={conflict.id} className="rounded-sm border border-warning/40 p-2" data-testid="vault-sync-conflict-row">
           <div className="flex items-center justify-between gap-2">
             <span className="font-medium">{conflict.conflictKind}</span>
             <Button
@@ -315,7 +313,7 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
       className={
         floating
           ? "fixed bottom-4 left-4 z-40 max-h-96 w-80 overflow-y-auto rounded-md border bg-card p-3 text-sm shadow-sm"
-          : "mx-auto mt-6 max-h-[calc(100vh-6rem)] w-[min(44rem,calc(100%-3rem))] overflow-y-auto rounded-lg border bg-card p-5 text-sm shadow-sm"
+          : "mx-auto mt-6 max-h-viewport-inset w-sync-panel overflow-y-auto rounded-lg border bg-card p-5 text-sm shadow-sm"
       }
       data-testid="vault-sync-panel"
     >

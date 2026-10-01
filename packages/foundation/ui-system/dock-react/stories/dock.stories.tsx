@@ -30,14 +30,14 @@ const textPanel = (id: string, title: string, body: string): Panel =>
   Panel.make({ id: PanelId.make(id), title, view: TextPanelView.make({ text: body }) });
 
 const NotesPanel = (props: DockPanelProps) => (
-  <article className="dock-story-notes">
+  <article data-dock-story-notes="">
     <h2>Schema-first dock workspace</h2>
     <p>
       Drag tabs between groups, drop on edges to split, Float / Maximize from the strip, drag the floating pane by its
       header, resize with the sashes — Escape cancels any gesture. Every layout mutation is a kernel command; the DOM is
       a projection of the workspace schema.
     </p>
-    <p className="dock-story-notes-meta">panel {props.api.id}</p>
+    <p data-dock-story-notes-meta="">panel {props.api.id}</p>
   </article>
 );
 
@@ -46,7 +46,7 @@ const components: Readonly<Record<string, DockRenderer>> = { notes: NotesPanel }
 // Pin the story host to fixed dimensions so play geometry never depends on
 // the test viewport; throws when the story markup is missing its host.
 const pinHost = (canvasElement: HTMLElement, width: string, height?: string): HTMLElement => {
-  const host = canvasElement.querySelector<HTMLElement>(".dock-story");
+  const host = canvasElement.querySelector<HTMLElement>("[data-dock-story]");
   if (host === null) throw new Error("Missing dock story host");
   host.style.width = width;
   if (height !== undefined) host.style.height = height;
@@ -192,7 +192,7 @@ const graphs = {
 };
 
 const StoryWatermark = () => (
-  <div className="dock-story-notes">
+  <div data-dock-story-notes="">
     <h2>Empty workspace</h2>
     <p>No groups are docked. Hosts supply this watermark via `watermarkComponent`.</p>
   </div>
@@ -211,7 +211,7 @@ const DockStory = (props: {
   readonly watermark?: React.FunctionComponent | undefined;
   readonly tab?: React.FunctionComponent<DockTabProps> | undefined;
 }) => (
-  <div className="dock-story">
+  <div data-dock-story="">
     <DockviewReact
       graph={props.graph}
       components={components}
@@ -221,6 +221,26 @@ const DockStory = (props: {
     />
   </div>
 );
+
+// A selector that stops matching is a story bug, not a geometry bug: fail loud
+// before any geometry assertion runs.
+const requireElement = (canvasElement: HTMLElement, selector: string): HTMLElement => {
+  const element = canvasElement.querySelector<HTMLElement>(selector);
+  if (element === null) {
+    throw new Error(`Missing workspace story geometry: ${selector}`);
+  }
+  return element;
+};
+
+// Every positioned dock box must resolve its --dock-* properties through the package stylesheet.
+const expectPositionedByDockProperties = (box: HTMLElement): void => {
+  const computed = getComputedStyle(box);
+  void expect(computed.position).toBe("absolute");
+  void expect(computed.left).toBe(box.style.getPropertyValue("--dock-left"));
+  void expect(computed.top).toBe(box.style.getPropertyValue("--dock-top"));
+  void expect(computed.width).toBe(box.style.getPropertyValue("--dock-width"));
+  void expect(computed.height).toBe(box.style.getPropertyValue("--dock-height"));
+};
 
 const meta = {
   title: "Dock/DockviewReact",
@@ -254,6 +274,18 @@ export const Workspace: Story = {
     // label, hence the regex.
     void expect(canvas.getByRole("tab", { name: /Scratch/ })).toBeVisible();
     void expect(canvasElement.querySelector("[data-floating-title]")).toHaveTextContent("Scratch");
+    // The adapter only writes geometry as --dock-* custom properties; the package stylesheet
+    // (`@beep/dock-react/dock.css`) has to turn them into positioned, sized boxes. A missing
+    // import or a selector that stops matching leaves every pane static, and only a real
+    // browser with the stylesheet loaded can see that.
+    const root = requireElement(canvasElement, "[data-dock-root]");
+    const group = requireElement(canvasElement, "[data-dock-root] > section[data-group-id]");
+    const floating = requireElement(canvasElement, "[data-dock-root] > [data-floating-pane]");
+    void expect(getComputedStyle(root).position).toBe("relative");
+    expectPositionedByDockProperties(group);
+    expectPositionedByDockProperties(floating);
+    void expect(getComputedStyle(group).display).toBe("flex");
+    void expect(getComputedStyle(floating).zIndex).toBe(floating.style.getPropertyValue("--dock-z"));
   },
 };
 

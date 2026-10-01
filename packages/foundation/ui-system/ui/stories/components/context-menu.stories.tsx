@@ -79,8 +79,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: (args) => (
     <ContextMenu {...args}>
-      <ContextMenuTrigger className="flex h-[150px] w-[300px] items-center justify-center rounded-md border border-dashed text-sm">
-        Right click here
+      <ContextMenuTrigger className="flex h-37.5 w-75">
+        <div className="flex size-full items-center justify-center rounded-md border border-dashed text-sm">
+          Right click here
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-52">
         <ContextMenuItem>
@@ -114,8 +116,10 @@ export const Default: Story = {
 export const DisabledItem: Story = {
   render: (args) => (
     <ContextMenu {...args}>
-      <ContextMenuTrigger className="flex h-[150px] w-[300px] items-center justify-center rounded-md border border-dashed text-sm">
-        Right click here
+      <ContextMenuTrigger className="flex h-37.5 w-75">
+        <div className="flex size-full items-center justify-center rounded-md border border-dashed text-sm">
+          Right click here
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-52">
         {A.map(editActions, (action) => (
@@ -141,8 +145,10 @@ export const DisabledItem: Story = {
 export const DestructiveItem: Story = {
   render: (args) => (
     <ContextMenu {...args}>
-      <ContextMenuTrigger className="flex h-[150px] w-[300px] items-center justify-center rounded-md border border-dashed text-sm">
-        Right click here
+      <ContextMenuTrigger className="flex h-37.5 w-75">
+        <div className="flex size-full items-center justify-center rounded-md border border-dashed text-sm">
+          Right click here
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-52">
         <ContextMenuItem>Open</ContextMenuItem>
@@ -167,8 +173,10 @@ export const WithCheckboxes: Story = {
     const [checkboxState, setCheckboxState] = useAtom(contextCheckboxStateAtom(storyInstanceId));
     return (
       <ContextMenu {...args}>
-        <ContextMenuTrigger className="flex h-[150px] w-[300px] items-center justify-center rounded-md border border-dashed text-sm">
-          Right click here
+        <ContextMenuTrigger className="flex h-37.5 w-75">
+          <div className="flex size-full items-center justify-center rounded-md border border-dashed text-sm">
+            Right click here
+          </div>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-52">
           <ContextMenuCheckboxItem
@@ -210,8 +218,10 @@ export const WithCheckboxes: Story = {
 export const WithRadioGroup: Story = {
   render: (args) => (
     <ContextMenu {...args}>
-      <ContextMenuTrigger className="flex h-[150px] w-[300px] items-center justify-center rounded-md border border-dashed text-sm">
-        Right click here
+      <ContextMenuTrigger className="flex h-37.5 w-75">
+        <div className="flex size-full items-center justify-center rounded-md border border-dashed text-sm">
+          Right click here
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-52">
         <ContextMenuRadioGroup defaultValue="Pedro Duarte">
@@ -243,8 +253,10 @@ export const WithRadioGroup: Story = {
 export const WithSubmenu: Story = {
   render: (args) => (
     <ContextMenu {...args}>
-      <ContextMenuTrigger className="flex h-[150px] w-[300px] items-center justify-center rounded-md border border-dashed text-sm">
-        Right click here
+      <ContextMenuTrigger className="flex h-37.5 w-75">
+        <div className="flex size-full items-center justify-center rounded-md border border-dashed text-sm">
+          Right click here
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-52">
         <ContextMenuItem>New Tab</ContextMenuItem>
@@ -279,8 +291,10 @@ export const WithSubmenu: Story = {
 export const FullComposition: Story = {
   render: (args) => (
     <ContextMenu {...args}>
-      <ContextMenuTrigger className="flex h-[150px] w-[300px] items-center justify-center rounded-md border border-dashed text-sm">
-        Right click here
+      <ContextMenuTrigger className="flex h-37.5 w-75">
+        <div className="flex size-full items-center justify-center rounded-md border border-dashed text-sm">
+          Right click here
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-56">
         <ContextMenuGroup>

@@ -73,7 +73,7 @@ export const Rating: React.FC<RatingProps> = ({ className, max = 5, onValueChang
           value={String(optionValue)}
           aria-label={`${optionValue} of ${max}`}
           data-filled={filled || undefined}
-          className="text-muted-foreground/60 hover:text-amber-300 data-[checked]:text-amber-400 data-[filled=true]:text-amber-400 focus-visible:ring-ring/50 rounded-sm outline-none transition-colors focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50"
+          className="text-muted-foreground/60 hover:text-rating/70 data-[checked]:text-rating data-[filled=true]:text-rating focus-visible:ring-ring/50 rounded-sm outline-none transition-colors focus-visible:ring-3 disabled:pointer-events-none disabled:opacity-50"
         >
           <RadioPrimitive.Indicator className="sr-only" />
           <StarIcon weight={filled ? "fill" : "regular"} className="size-5" />

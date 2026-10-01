@@ -77,7 +77,7 @@ export const WithControl: Story = {
 export const WithCheckbox: Story = {
   args: { htmlFor: "terms", children: "Accept terms and conditions" },
   render: (args) => (
-    <Label {...args} className="gap-2">
+    <Label {...args}>
       <input id="terms" type="checkbox" className="size-4" />
       {args.children}
     </Label>

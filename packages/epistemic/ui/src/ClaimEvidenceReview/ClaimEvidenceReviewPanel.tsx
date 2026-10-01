@@ -101,17 +101,19 @@ export function ClaimEvidenceReviewPanel({
       <Card>
         <CardHeader>
           <p className="text-sm text-muted-foreground">Extracted claim · {basis.claimRef}</p>
-          <CardTitle className="text-xl leading-relaxed">{basis.assertion}</CardTitle>
+          <p className="text-xl font-medium leading-relaxed">{basis.assertion}</p>
           <p className="text-sm">
             <span className="text-muted-foreground">Subject</span> · {basis.subject}
           </p>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          <blockquote className="border-l-2 pl-4 text-lg">“{basis.evidence.quote}”</blockquote>
-          <p className="text-sm text-muted-foreground">
-            Extractor confidence: {basis.evidence.confidence} / 1. This is an extraction score; a matching quote still
-            needs interpretation.
-          </p>
+        <CardContent>
+          <div className="grid gap-4">
+            <blockquote className="border-l-2 pl-4 text-lg">“{basis.evidence.quote}”</blockquote>
+            <p className="text-sm text-muted-foreground">
+              Extractor confidence: {basis.evidence.confidence} / 1. This is an extraction score; a matching quote still
+              needs interpretation.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
@@ -127,96 +129,98 @@ export function ClaimEvidenceReviewPanel({
             {verificationMessage(verification)}
           </p>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          <dl className="grid gap-2 text-sm sm:grid-cols-2">
-            <div>
-              <dt className="text-muted-foreground">Scope</dt>
-              <dd className="wrap-anywhere">{currentSource.scopeRef}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Source</dt>
-              <dd className="wrap-anywhere">{currentSource.sourceRef}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Document</dt>
-              <dd className="wrap-anywhere">{currentSource.locator}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Current extractor</dt>
-              <dd>
-                {currentSource.extractor.name} · {currentSource.extractor.version}
-              </dd>
-            </div>
-          </dl>
-          {verified ? (
-            <VerifiedSourceTextViewer
-              className="h-52"
-              pageText={sourceText}
-              pageStartOffset={0}
-              anchorStartOffset={basis.evidence.startChar}
-              anchorEndOffset={basis.evidence.endChar}
-              autoScrollToAnchor={false}
-            />
-          ) : (
-            <pre
-              role="region"
-              className="max-h-52 overflow-auto whitespace-pre-wrap rounded-lg border bg-muted/20 p-4 text-sm"
-              aria-label="Current unverified source text"
-            >
-              {sourceText}
-            </pre>
-          )}
-          <details className="rounded-lg border p-3 text-sm">
-            <summary className="cursor-pointer font-medium">Evidence identity and extraction details</summary>
-            <dl className="mt-3 grid gap-3">
+        <CardContent>
+          <div className="grid gap-4">
+            <dl className="grid gap-2 text-sm sm:grid-cols-2">
               <div>
-                <dt className="text-muted-foreground">Extracted source scope</dt>
-                <dd className="wrap-anywhere">{basis.source.scopeRef}</dd>
+                <dt className="text-muted-foreground">Scope</dt>
+                <dd className="wrap-anywhere">{currentSource.scopeRef}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Extracted source</dt>
-                <dd className="wrap-anywhere">{basis.source.sourceRef}</dd>
+                <dt className="text-muted-foreground">Source</dt>
+                <dd className="wrap-anywhere">{currentSource.sourceRef}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Extracted document</dt>
-                <dd className="wrap-anywhere">{basis.source.locator}</dd>
+                <dt className="text-muted-foreground">Document</dt>
+                <dd className="wrap-anywhere">{currentSource.locator}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Extracted with</dt>
+                <dt className="text-muted-foreground">Current extractor</dt>
                 <dd>
-                  {basis.source.extractor.name} · {basis.source.extractor.version}
+                  {currentSource.extractor.name} · {currentSource.extractor.version}
                 </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Normalization version</dt>
-                <dd>
-                  {basis.source.normalizationVersion} (extracted) · {currentSource.normalizationVersion} (current)
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">UTF-16 evidence offsets</dt>
-                <dd>
-                  {basis.evidence.startChar}–{basis.evidence.endChar}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Extracted text digest</dt>
-                <dd className="wrap-anywhere font-mono text-xs">{basis.source.textDigest}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Current text digest</dt>
-                <dd className="wrap-anywhere font-mono text-xs">{currentSource.textDigest}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Extracted artifact digest</dt>
-                <dd className="wrap-anywhere font-mono text-xs">{basis.source.sourceDigest}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Current artifact digest</dt>
-                <dd className="wrap-anywhere font-mono text-xs">{currentSource.sourceDigest}</dd>
               </div>
             </dl>
-          </details>
+            {verified ? (
+              <VerifiedSourceTextViewer
+                className="h-52"
+                pageText={sourceText}
+                pageStartOffset={0}
+                anchorStartOffset={basis.evidence.startChar}
+                anchorEndOffset={basis.evidence.endChar}
+                autoScrollToAnchor={false}
+              />
+            ) : (
+              <pre
+                role="region"
+                className="max-h-52 overflow-auto whitespace-pre-wrap rounded-lg border bg-muted/20 p-4 text-sm"
+                aria-label="Current unverified source text"
+              >
+                {sourceText}
+              </pre>
+            )}
+            <details className="rounded-lg border p-3 text-sm">
+              <summary className="cursor-pointer font-medium">Evidence identity and extraction details</summary>
+              <dl className="mt-3 grid gap-3">
+                <div>
+                  <dt className="text-muted-foreground">Extracted source scope</dt>
+                  <dd className="wrap-anywhere">{basis.source.scopeRef}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Extracted source</dt>
+                  <dd className="wrap-anywhere">{basis.source.sourceRef}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Extracted document</dt>
+                  <dd className="wrap-anywhere">{basis.source.locator}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Extracted with</dt>
+                  <dd>
+                    {basis.source.extractor.name} · {basis.source.extractor.version}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Normalization version</dt>
+                  <dd>
+                    {basis.source.normalizationVersion} (extracted) · {currentSource.normalizationVersion} (current)
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">UTF-16 evidence offsets</dt>
+                  <dd>
+                    {basis.evidence.startChar}–{basis.evidence.endChar}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Extracted text digest</dt>
+                  <dd className="wrap-anywhere font-mono text-xs">{basis.source.textDigest}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Current text digest</dt>
+                  <dd className="wrap-anywhere font-mono text-xs">{currentSource.textDigest}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Extracted artifact digest</dt>
+                  <dd className="wrap-anywhere font-mono text-xs">{basis.source.sourceDigest}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Current artifact digest</dt>
+                  <dd className="wrap-anywhere font-mono text-xs">{currentSource.sourceDigest}</dd>
+                </div>
+              </dl>
+            </details>
+          </div>
         </CardContent>
       </Card>
 
@@ -230,19 +234,21 @@ export function ClaimEvidenceReviewPanel({
             {reviewMessage(review)}
           </p>
         </CardHeader>
-        <CardContent className="grid gap-3">
-          <p className="text-sm text-muted-foreground">
-            Approval records your assessment of this assertion, subject, and exact evidence. A changed basis requires
-            another review.
-          </p>
-          {error !== undefined ? (
-            <p role="alert" className="text-sm text-destructive">
-              {error}
+        <CardContent>
+          <div className="grid gap-3">
+            <p className="text-sm text-muted-foreground">
+              Approval records your assessment of this assertion, subject, and exact evidence. A changed basis requires
+              another review.
             </p>
-          ) : null}
-          <Button className="w-fit" type="button" disabled={pending || !verified || approved} onClick={onApprove}>
-            {pending ? "Checking evidence…" : approved ? "Claim approved" : "Approve this claim"}
-          </Button>
+            {error !== undefined ? (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
+              </p>
+            ) : null}
+            <Button className="w-fit" type="button" disabled={pending || !verified || approved} onClick={onApprove}>
+              {pending ? "Checking evidence…" : approved ? "Claim approved" : "Approve this claim"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </article>

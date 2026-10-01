@@ -191,7 +191,7 @@ export const ConversationScrollButton = ({ className, ...props }: ConversationSc
     !isAtBottom && (
       <Button
         className={cn(
-          "bg-background dark:bg-background absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full shadow-md",
+          "bg-background dark:bg-background absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full shadow-md",
           className
         )}
         onClick={() => void scrollToBottom()}

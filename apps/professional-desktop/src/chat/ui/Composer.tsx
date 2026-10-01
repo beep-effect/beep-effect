@@ -126,11 +126,11 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
     // internally while the send row stays visible — rather than scrolling the
     // whole composer (which pushed Send out of view on short panes).
     <div
-      className="flex max-h-[50%] shrink-0 flex-col border-t bg-background/80 p-3 backdrop-blur"
+      className="flex max-h-1/2 shrink-0 flex-col border-t bg-background/80 p-3 backdrop-blur"
       data-testid="composer"
     >
       {shell.isEditing ? (
-        <div className="mb-2 flex items-center justify-between rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-muted-foreground">
+        <div className="mb-2 flex items-center justify-between rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-muted-foreground">
           <span>Editing message — sending will rewrite the thread from this point.</span>
           <Button variant="ghost" size="sm" onClick={shell.cancelEdit}>
             Cancel

@@ -1,3 +1,4 @@
+import { Toast, ToastClose, ToastDescription, ToastTitle, ToastViewport } from "@beep/ui/components/toast";
 import { Toaster, ToastPrimitive } from "@beep/ui/components/toaster";
 import { A } from "@beep/utils";
 import { expect, userEvent, within } from "storybook/test";
@@ -44,17 +45,13 @@ function ToastInbox() {
   return (
     <>
       {A.map(toasts, (toast) => (
-        <ToastPrimitive.Root
-          key={toast.id}
-          toast={toast}
-          className="relative flex w-full items-center justify-between space-x-2 rounded-md border bg-background p-4 pr-6 text-foreground shadow-lg"
-        >
+        <Toast key={toast.id} toast={toast}>
           <div className="grid gap-1">
-            <ToastPrimitive.Title className="font-semibold text-sm">{toast.title}</ToastPrimitive.Title>
-            <ToastPrimitive.Description className="text-sm opacity-90">{toast.description}</ToastPrimitive.Description>
+            <ToastTitle>{toast.title}</ToastTitle>
+            <ToastDescription>{toast.description}</ToastDescription>
           </div>
-          <ToastPrimitive.Close className="absolute top-1 right-1 rounded-md p-1">x</ToastPrimitive.Close>
-        </ToastPrimitive.Root>
+          <ToastClose />
+        </Toast>
       ))}
     </>
   );
@@ -76,16 +73,18 @@ function ToastTrigger() {
 
 /**
  * A trigger button, hosted inside a `ToastPrimitive.Provider`, adds a toast through
- * `useToastManager`. The play test clicks the trigger and asserts the new toast's title
- * and description render in the viewport, demonstrating the imperative add-and-render flow.
+ * `useToastManager`, and the styled `Toast` parts from `@beep/ui/components/toast` render it. The
+ * play test clicks the trigger and asserts the new toast's title and description render in the
+ * viewport, demonstrating the imperative add-and-render flow. The close button appears on hover or
+ * focus, as `ToastClose` specifies.
  */
 export const WithTrigger: Story = {
   render: () => (
     <ToastPrimitive.Provider>
       <ToastTrigger />
-      <ToastPrimitive.Viewport className="fixed right-0 bottom-0 z-[100] p-4">
+      <ToastViewport>
         <ToastInbox />
-      </ToastPrimitive.Viewport>
+      </ToastViewport>
     </ToastPrimitive.Provider>
   ),
   play: ({ canvasElement }) => {

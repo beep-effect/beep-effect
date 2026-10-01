@@ -1,3 +1,4 @@
+// fallow-ignore-file code-duplication -- pre-existing story clones on main: the diff-attributed audit charges them to this change because its edited lines fall inside the clone ranges. Story variants repeat the canonical markup on purpose (the Storybook docs panel shows each story's source; shared render helpers would hide that usage). Review by 2026-12-31.
 import { Button } from "@beep/ui/components/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@beep/ui/components/collapsible";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
@@ -53,8 +54,8 @@ export const Default: Story = {
   render: (args) => (
     <Collapsible {...args} className="w-80">
       <CollapsibleTrigger render={<Button variant="outline">Toggle details</Button>} />
-      <CollapsibleContent className="mt-2 rounded-md border px-4 py-3 text-sm">
-        This panel is hidden until the trigger is pressed.
+      <CollapsibleContent className="mt-2">
+        <div className="rounded-md border px-4 py-3 text-sm">This panel is hidden until the trigger is pressed.</div>
       </CollapsibleContent>
     </Collapsible>
   ),
@@ -78,8 +79,10 @@ export const DefaultOpen: Story = {
   render: (args) => (
     <Collapsible {...args} className="w-80">
       <CollapsibleTrigger render={<Button variant="outline">Toggle details</Button>} />
-      <CollapsibleContent className="mt-2 rounded-md border px-4 py-3 text-sm">
-        This panel opened automatically when the story mounted.
+      <CollapsibleContent className="mt-2">
+        <div className="rounded-md border px-4 py-3 text-sm">
+          This panel opened automatically when the story mounted.
+        </div>
       </CollapsibleContent>
     </Collapsible>
   ),
@@ -98,8 +101,8 @@ export const Toggling: Story = {
   render: (args) => (
     <Collapsible {...args} className="w-80">
       <CollapsibleTrigger render={<Button variant="outline">Toggle panel</Button>} />
-      <CollapsibleContent className="mt-2 rounded-md border px-4 py-3 text-sm">
-        Press the trigger again to collapse this panel.
+      <CollapsibleContent className="mt-2">
+        <div className="rounded-md border px-4 py-3 text-sm">Press the trigger again to collapse this panel.</div>
       </CollapsibleContent>
     </Collapsible>
   ),
@@ -133,8 +136,10 @@ export const Disabled: Story = {
   render: (args) => (
     <Collapsible {...args} className="w-80">
       <CollapsibleTrigger render={<Button variant="outline">Toggle details</Button>} />
-      <CollapsibleContent className="mt-2 rounded-md border px-4 py-3 text-sm">
-        This content cannot be revealed while the collapsible is disabled.
+      <CollapsibleContent className="mt-2">
+        <div className="rounded-md border px-4 py-3 text-sm">
+          This content cannot be revealed while the collapsible is disabled.
+        </div>
       </CollapsibleContent>
     </Collapsible>
   ),
@@ -157,8 +162,8 @@ export const Controlled: Story = {
   render: (args) => (
     <Collapsible {...args} className="w-80">
       <CollapsibleTrigger render={<Button variant="outline">Controlled trigger</Button>} />
-      <CollapsibleContent className="mt-2 rounded-md border px-4 py-3 text-sm">
-        This panel is held open by the controlled open prop.
+      <CollapsibleContent className="mt-2">
+        <div className="rounded-md border px-4 py-3 text-sm">This panel is held open by the controlled open prop.</div>
       </CollapsibleContent>
     </Collapsible>
   ),
@@ -176,22 +181,26 @@ export const Controlled: Story = {
 export const RepositoryBranches: Story = {
   args: { defaultOpen: true },
   render: (args) => (
-    <Collapsible {...args} className="w-80 space-y-2">
-      <div className="flex items-center justify-between gap-4 px-1">
-        <h4 className="text-sm font-semibold">@beep starred 3 repositories</h4>
-        <CollapsibleTrigger
-          render={
-            <Button variant="ghost" size="icon" aria-label="Toggle branches">
-              @
-            </Button>
-          }
-        />
+    <Collapsible {...args} className="w-80">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4 px-1">
+          <h4 className="text-sm font-semibold">@beep starred 3 repositories</h4>
+          <CollapsibleTrigger
+            render={
+              <Button variant="ghost" size="icon" aria-label="Toggle branches">
+                @
+              </Button>
+            }
+          />
+        </div>
+        <div className="rounded-md border px-4 py-2 font-mono text-sm">@beep/ui</div>
+        <CollapsibleContent>
+          <div className="space-y-2">
+            <div className="rounded-md border px-4 py-2 font-mono text-sm">@beep/schema</div>
+            <div className="rounded-md border px-4 py-2 font-mono text-sm">@beep/utils</div>
+          </div>
+        </CollapsibleContent>
       </div>
-      <div className="rounded-md border px-4 py-2 font-mono text-sm">@beep/ui</div>
-      <CollapsibleContent className="space-y-2">
-        <div className="rounded-md border px-4 py-2 font-mono text-sm">@beep/schema</div>
-        <div className="rounded-md border px-4 py-2 font-mono text-sm">@beep/utils</div>
-      </CollapsibleContent>
     </Collapsible>
   ),
   play: ({ canvasElement }) => {

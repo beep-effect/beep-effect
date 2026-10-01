@@ -64,7 +64,7 @@ export const TextLines: Story = {
 export const AvatarWithText: Story = {
   render: () => (
     <div className="flex items-center gap-4">
-      <Skeleton className="size-12 rounded-full" />
+      <Skeleton shape="circle" className="size-12" />
       <div className="flex flex-col gap-2">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="h-4 w-28" />
@@ -77,7 +77,7 @@ export const AvatarWithText: Story = {
 export const Card: Story = {
   render: () => (
     <div className="flex w-72 flex-col gap-4 rounded-xl border p-4">
-      <Skeleton className="h-40 w-full rounded-lg" />
+      <Skeleton className="h-40 w-full" />
       <div className="flex flex-col gap-2">
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-4 w-full" />

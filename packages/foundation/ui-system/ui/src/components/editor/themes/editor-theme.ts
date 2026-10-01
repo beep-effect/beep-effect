@@ -38,24 +38,24 @@ export const editorTheme: EditorThemeClasses = {
   },
   paragraph: "leading-7 [&:not(:first-child)]:mt-6",
   quote: "mt-6 border-l-2 pl-6 italic",
-  link: "text-blue-600 hover:underline hover:cursor-pointer",
+  link: "text-info-text hover:underline hover:cursor-pointer",
   list: {
     checklist: "relative",
     listitem: "mx-8",
     listitemChecked:
-      'relative mx-2 px-6 list-none outline-none line-through before:content-[""] before:w-4 before:h-4 before:top-0.5 before:left-0 before:cursor-pointer before:block before:bg-cover before:absolute before:border before:border-primary before:rounded before:bg-primary before:bg-no-repeat after:content-[""] after:cursor-pointer after:border-white after:border-solid after:absolute after:block after:top-[6px] after:w-[3px] after:left-[7px] after:right-[7px] after:h-[6px] after:rotate-45 after:border-r-2 after:border-b-2 after:border-l-0 after:border-t-0',
+      "relative mx-2 px-6 list-none outline-none line-through before:w-4 before:h-4 before:top-0.5 before:left-0 before:cursor-pointer before:block before:bg-cover before:absolute before:border before:border-primary before:rounded before:bg-primary before:bg-no-repeat after:cursor-pointer after:border-white after:border-solid after:absolute after:block after:top-1.5 after:w-0.75 after:left-1.75 after:right-1.75 after:h-1.5 after:rotate-45 after:border-r-2 after:border-b-2 after:border-l-0 after:border-t-0",
     listitemUnchecked:
-      'relative mx-2 px-6 list-none outline-none before:content-[""] before:w-4 before:h-4 before:top-0.5 before:left-0 before:cursor-pointer before:block before:bg-cover before:absolute before:border before:border-primary before:rounded',
+      "relative mx-2 px-6 list-none outline-none before:w-4 before:h-4 before:top-0.5 before:left-0 before:cursor-pointer before:block before:bg-cover before:absolute before:border before:border-primary before:rounded",
     nested: {
       listitem: "list-none before:hidden after:hidden",
     },
     ol: "m-0 p-0 list-decimal [&>li]:mt-2",
     olDepth: [
       "list-outside !list-decimal",
-      "list-outside !list-[upper-roman]",
-      "list-outside !list-[lower-roman]",
-      "list-outside !list-[upper-alpha]",
-      "list-outside !list-[lower-alpha]",
+      "list-outside !list-upper-roman",
+      "list-outside !list-lower-roman",
+      "list-outside !list-upper-alpha",
+      "list-outside !list-lower-alpha",
     ],
     ul: "m-0 p-0 list-outside [&>li]:mt-2",
     ulDepth: [
@@ -66,7 +66,7 @@ export const editorTheme: EditorThemeClasses = {
       "list-outside !list-disc",
     ],
   },
-  hashtag: "text-blue-600 bg-blue-100 rounded-md px-1",
+  hashtag: "text-info-text bg-info/15 rounded-md px-1",
   text: {
     bold: "font-bold",
     code: "bg-muted p-1 rounded-md font-mono text-sm",
@@ -75,11 +75,11 @@ export const editorTheme: EditorThemeClasses = {
     subscript: "sub",
     superscript: "sup",
     underline: "underline",
-    underlineStrikethrough: "[text-decoration:underline_line-through]",
+    underlineStrikethrough: "underline-line-through",
   },
   image: "relative inline-block user-select-none cursor-default editor-image",
   inlineImage: "relative inline-block user-select-none cursor-default inline-editor-image",
-  keyword: "text-purple-900 font-bold",
+  keyword: "text-keyword font-bold",
   code: "EditorTheme__code",
   codeHighlight: {
     atrule: "EditorTheme__tokenAttr",
@@ -132,12 +132,12 @@ export const editorTheme: EditorThemeClasses = {
   tableCellHeader:
     "EditorTheme__tableCellHeader bg-muted border px-4 py-2 text-left font-bold [&[align=center]]:text-center [&[align=right]]:text-right",
   tableCellPrimarySelected:
-    "EditorTheme__tableCellPrimarySelected border border-primary border-solid block h-[calc(100%-2px)] w-[calc(100%-2px)] absolute -left-[1px] -top-[1px] z-10 ",
+    "EditorTheme__tableCellPrimarySelected border border-primary border-solid block h-full-minus-2px w-full-minus-2px absolute -left-px -top-px z-10",
   tableCellResizer: "EditorTheme__tableCellResizer absolute -right-1 h-full w-2 cursor-ew-resize z-10 top-0",
   tableCellSelected: "EditorTheme__tableCellSelected bg-muted",
   tableCellSortedIndicator:
     "EditorTheme__tableCellSortedIndicator block opacity-50 absolute bottom-0 left-0 w-full h-1 bg-muted",
-  tableResizeRuler: "EditorTheme__tableCellResizeRuler block absolute w-[1px] h-full bg-primary top-0",
+  tableResizeRuler: "EditorTheme__tableCellResizeRuler block absolute w-px h-full bg-primary top-0",
   tableRowStriping: "EditorTheme__tableRowStriping m-0 border-t p-0 even:bg-muted",
   tableSelected: "EditorTheme__tableSelected ring-2 ring-primary ring-offset-2",
   tableSelection: "EditorTheme__tableSelection bg-transparent",
@@ -149,8 +149,8 @@ export const editorTheme: EditorThemeClasses = {
     base: "user-select-none",
     focus: "ring-2 ring-primary ring-offset-2",
   },
-  hr: 'p-0.5 border-none my-1 mx-0 cursor-pointer after:content-[""] after:block after:h-0.5 after:bg-muted selected:ring-2 selected:ring-primary selected:ring-offset-2 selected:user-select-none',
-  indent: "[--lexical-indent-base-value:40px]",
+  hr: "p-0.5 border-none my-1 mx-0 cursor-pointer after:block after:h-0.5 after:bg-muted selected:ring-2 selected:ring-primary selected:ring-offset-2 selected:user-select-none",
+  indent: "editor-indent-base",
   mark: "",
   markOverlap: "",
 };

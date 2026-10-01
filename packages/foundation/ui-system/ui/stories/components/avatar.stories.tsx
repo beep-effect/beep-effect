@@ -7,8 +7,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
  * compound component: compose `AvatarImage` and `AvatarFallback` inside an `Avatar`
  * root. The image is loaded out of band and only swaps in once it resolves
  * successfully; until then (or on error) the `AvatarFallback` — typically the user's
- * initials — is shown. The root is a `size-10` rounded-full `span`; override `className`
- * to resize or reshape it.
+ * initials — is shown. The root is a `size-10` rounded-full `span`; resize it with the
+ * `size` prop and reshape it with the `shape` prop. `className` is for layout only
+ * (margin, placement): the design-system lint reports appearance classes on components.
  *
  * Imported from `@beep/ui/components/avatar`.
  */
@@ -17,9 +18,23 @@ const meta = {
   component: Avatar,
   tags: ["autodocs"],
   argTypes: {
+    size: {
+      control: "select",
+      options: ["sm", "default", "lg"],
+      description:
+        "Avatar diameter: `sm` (2rem), `default` (2.5rem) or `lg` (3.5rem). Scales the fallback text with it.",
+      table: { defaultValue: { summary: "default" } },
+    },
+    shape: {
+      control: "select",
+      options: ["circle", "rounded"],
+      description: "`circle` or `rounded` (a rounded square) for the root, the image and the fallback.",
+      table: { defaultValue: { summary: "circle" } },
+    },
     className: {
       control: "text",
-      description: "Additional classes merged onto the root container (e.g. size or shape overrides).",
+      description:
+        "Layout classes merged onto the root container (margin, placement). Size and shape come from the props.",
     },
     children: {
       control: false,
@@ -103,15 +118,15 @@ export const BrokenImage: Story = {
 };
 
 /**
- * The root shape is fully `className`-driven: swap `rounded-full` for `rounded-lg`
- * (or any radius) to render a squared avatar.
+ * `shape="rounded"` swaps the default circle for a `rounded-lg` square; the fallback
+ * follows the root's shape.
  */
 export const Rounded: Story = {
-  args: { className: "rounded-lg" },
+  args: { shape: "rounded" },
   render: (args) => (
     <Avatar {...args}>
       <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-      <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+      <AvatarFallback>CN</AvatarFallback>
     </Avatar>
   ),
   play: ({ canvasElement }) => {
@@ -122,20 +137,20 @@ export const Rounded: Story = {
 };
 
 /**
- * The default `size-10` can be overridden via `className`; here a small, default, and
- * large avatar sit side by side to show the spectrum.
+ * `size` picks `sm` (`size-8`), `default` (`size-10`), or `lg` (`size-14`), and the
+ * fallback text scales with it; here the three sit side by side to show the spectrum.
  */
 export const Sizes: Story = {
   render: () => (
     <div className="flex items-center gap-4">
-      <Avatar className="size-8">
-        <AvatarFallback className="text-xs">SM</AvatarFallback>
+      <Avatar size="sm">
+        <AvatarFallback>SM</AvatarFallback>
       </Avatar>
       <Avatar>
         <AvatarFallback>MD</AvatarFallback>
       </Avatar>
-      <Avatar className="size-14">
-        <AvatarFallback className="text-base">LG</AvatarFallback>
+      <Avatar size="lg">
+        <AvatarFallback>LG</AvatarFallback>
       </Avatar>
     </div>
   ),

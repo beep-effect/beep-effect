@@ -353,7 +353,7 @@ function TourOverlay({
       <svg aria-hidden="true" focusable="false" className="absolute inset-0 size-full">
         <defs>
           <mask id="tour-mask">
-            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+            <rect x="0" y="0" width="100%" height="100%" className="fill-white" />
             {A.map(targets, (target, i) => (
               <rect
                 key={i}
@@ -362,7 +362,7 @@ function TourOverlay({
                 width={target.rect.width}
                 height={target.rect.height}
                 rx={target.radius}
-                fill="black"
+                className="fill-black"
               />
             ))}
           </mask>
@@ -376,7 +376,8 @@ function TourOverlay({
             width={target.rect.width}
             height={target.rect.height}
             rx={target.radius}
-            className="stroke-primary fill-none stroke-2"
+            fill="none"
+            className="stroke-primary stroke-2"
           />
         ))}
       </svg>

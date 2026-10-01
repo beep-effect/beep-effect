@@ -119,7 +119,7 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
           list is ever meant to be reachable sideways. */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden p-2" data-testid="sidebar-list">
         {loadFailed ? (
-          <Empty className="h-full border-none" data-testid="sidebar-load-failed">
+          <Empty className="h-full" data-testid="sidebar-load-failed">
             <EmptyHeader>
               <EmptyTitle>Threads unavailable</EmptyTitle>
               <EmptyDescription>
@@ -129,7 +129,7 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
           </Empty>
         ) : null}
         {isEmpty ? (
-          <Empty className="h-full border-none" data-testid="sidebar-empty">
+          <Empty className="h-full" data-testid="sidebar-empty">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <svg

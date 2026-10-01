@@ -119,7 +119,7 @@ const EmojiPickerInner: React.FC<EmojiPickerProps> = ({
           onEmojiSelect={handleSelect}
           className="flex flex-col gap-2"
         >
-          <FrimousseEmojiPicker.Search className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border bg-transparent px-2.5 text-sm outline-none focus-visible:ring-[3px]" />
+          <FrimousseEmojiPicker.Search className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3" />
           <FrimousseEmojiPicker.Viewport className="h-64">
             <FrimousseEmojiPicker.Loading className="text-muted-foreground flex h-24 items-center justify-center text-sm">
               Loading...
@@ -153,10 +153,7 @@ const EmojiPickerInner: React.FC<EmojiPickerProps> = ({
                   </button>
                 ),
                 Row: ({ className: rowClassName, ...rowProps }) => (
-                  <div
-                    {...rowProps}
-                    className={cn("grid grid-cols-[repeat(var(--frimousse-list-columns),2rem)]", rowClassName)}
-                  />
+                  <div {...rowProps} className={cn("grid grid-cols-emoji", rowClassName)} />
                 ),
               }}
             />

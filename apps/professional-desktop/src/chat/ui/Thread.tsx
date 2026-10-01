@@ -75,7 +75,7 @@ const turnRole = (turn: TimelineTurn): MessageRole =>
 
 const CostRollup = ({ costMicros }: { readonly costMicros: number }): JSX.Element | null =>
   costMicros > 0 ? (
-    <div className="mt-1 text-[0.7rem] text-muted-foreground">${(costMicros / 1_000_000).toFixed(4)}</div>
+    <div className="mt-1 text-2xs text-muted-foreground">${(costMicros / 1_000_000).toFixed(4)}</div>
   ) : null;
 
 const TurnRow = ({
@@ -100,9 +100,7 @@ const TurnRow = ({
       className={`mb-4 flex flex-col ${MessageRole.is.user(role) ? "items-end" : "items-start"}`}
       data-testid={`turn-${role}`}
     >
-      <div
-        className={`max-w-[80%] rounded-lg px-3 py-2 ${MessageRole.is.user(role) ? "bg-primary/10" : "bg-muted/50"}`}
-      >
+      <div className={`max-w-4/5 rounded-lg px-3 py-2 ${MessageRole.is.user(role) ? "bg-primary/10" : "bg-muted/50"}`}>
         {A.map(turn.items, (item, i) => (
           <TimelineItemRow key={i} item={item} />
         ))}
@@ -169,12 +167,12 @@ const UnreconciledTurns = ({ turns }: { readonly turns: ReadonlyArray<StreamingT
     {A.map(turns, (turn, index) => (
       <div key={`unreconciled-${index}`}>
         <div className="mb-4 flex flex-col items-end" data-testid="turn-unreconciled-user">
-          <div className="max-w-[80%] rounded-lg bg-primary/10 px-3 py-2">
+          <div className="max-w-4/5 rounded-lg bg-primary/10 px-3 py-2">
             <MessageView content={turn.userContent} />
           </div>
         </div>
         <div className="mb-4 flex flex-col items-start" data-testid="turn-unreconciled">
-          <div className="max-w-[80%] rounded-lg bg-muted/50 px-3 py-2">
+          <div className="max-w-4/5 rounded-lg bg-muted/50 px-3 py-2">
             {A.isReadonlyArrayEmpty(turn.blocks) ? (
               <div className="text-sm text-muted-foreground">Reply completed; waiting for the thread to refresh…</div>
             ) : (
@@ -200,12 +198,12 @@ const StreamingTurnView = ({
       <>
         {/* The message you just sent, shown while the reply streams. */}
         <div className="mb-4 flex flex-col items-end" data-testid="turn-streaming-user">
-          <div className="max-w-[80%] rounded-lg bg-primary/10 px-3 py-2">
+          <div className="max-w-4/5 rounded-lg bg-primary/10 px-3 py-2">
             <MessageView content={turn.userContent} />
           </div>
         </div>
         <div className="mb-4 flex flex-col items-start" data-testid="turn-streaming">
-          <div className="max-w-[80%] rounded-lg bg-muted/50 px-3 py-2">
+          <div className="max-w-4/5 rounded-lg bg-muted/50 px-3 py-2">
             {A.isReadonlyArrayEmpty(turn.blocks) ? (
               <div className="text-sm text-muted-foreground" data-testid="thinking">
                 {turnActive ? "Thinking…" : "Reply completed; waiting for the thread to refresh…"}

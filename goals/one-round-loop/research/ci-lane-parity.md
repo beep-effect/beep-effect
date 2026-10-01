@@ -43,6 +43,7 @@ machine-readable `--list` output is normative and this file is history.
 | 19 | `security` (dependency-review sub-gate) | Security | yes | ci-native | — | dep-graph availability probe (`gh api`) + `actions/dependency-review-action@v4` | **PERMANENT CI-only** (GitHub dependency-graph API); documented unreplayable |
 | 20 | `nix` | Nix Shell | yes | cli-runnable | `nix` | PR: `nix flake check --all-systems` + `nix develop --command echo` (raw YAML); push: `bun run audit:github nix` (→ CLI, same commands) | `pre-push:nix` ✔ (identical commands) |
 | 21 | `sast` | SAST | yes | cli-runnable | `sast` | `bun run beep quality github-checks sast` (semgrep docker over changed JS/TS vs origin/main) | `pre-push:sast` ✔ (same body) |
+| 22 | `verify`/`shadcn-lint` (added 2026-10-01) | Shadcn Lint | no | cli-runnable | `shadcn-lint` | `bun run beep ci lane shadcn-lint` → `turbo run lint:shadcn` (`oxlint --disable-nested-config --deny-warnings -c .oxlintrc.shadcn.json apps packages`; runbook `docs/runbooks/design-system-lint.md`) | `quality:shadcn-lint` ✔ (same `beep ci lane` argv); `lint:shadcn` also runs in the Lint Policy state battery |
 
 \* `secrets`/`security` are ci-native for parity purposes (the CI gate runs a
 pinned image/action with CI-side security controls), but `beep ci local` keeps

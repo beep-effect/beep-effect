@@ -45,7 +45,7 @@ import {
 import { MentionOptions } from "./config.ts";
 import type { MenuRenderFn } from "@lexical/react/LexicalTypeaheadMenuPlugin";
 import type { LexicalEditor } from "lexical";
-import type { ReactNode, RefObject } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 import type { MentionOption, MentionSource, SlashItem } from "./config.ts";
 
 const $I = $EditorId.create("chat/typeahead");
@@ -305,6 +305,30 @@ const caretViewportRect = (
 };
 
 /**
+ * Pixel length for one edge of a positioned typeahead surface.
+ *
+ * **Details**
+ *
+ * The menu's fixed coordinates ride in CSS custom properties consumed by the
+ * `left-(--typeahead-left)` / `top-(--typeahead-top)` / `bottom-(--typeahead-bottom)`
+ * classes. An omitted edge leaves its property unset, so that inset resolves to `auto`.
+ *
+ * **Example** (Edge values for a menu anchored below the caret)
+ *
+ * ```ts import.meta.vitest name="Inset lengths"
+ * import { typeaheadInsetPx } from "@beep/editor/chat/typeahead"
+ *
+ * typeaheadInsetPx(124) // => "124px"
+ * typeaheadInsetPx(undefined) // => undefined
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const typeaheadInsetPx = (value: number | undefined): string | undefined =>
+  value === undefined ? undefined : `${value}px`;
+
+/**
  * Renders the open typeahead as a `listbox` portal pinned to the viewport at
  * the caret: below the caret line when there is room, flipped above it
  * otherwise. `position: fixed` keeps the menu inside the view box, so a
@@ -344,8 +368,14 @@ function TypeaheadMenuList<TOption extends MenuOption>({
   return createPortal(
     <div
       {...typeaheadMenuMarker(editor)}
-      style={menuPosition}
-      className="bg-popover text-popover-foreground fixed z-50 max-h-72 w-64 overflow-auto rounded-md border p-1 shadow-md"
+      style={
+        {
+          "--typeahead-left": typeaheadInsetPx(menuPosition.left),
+          "--typeahead-top": typeaheadInsetPx(menuPosition.top),
+          "--typeahead-bottom": typeaheadInsetPx(menuPosition.bottom),
+        } as CSSProperties
+      }
+      className="bg-popover text-popover-foreground fixed top-(--typeahead-top) bottom-(--typeahead-bottom) left-(--typeahead-left) z-50 max-h-72 w-64 overflow-auto rounded-md border p-1 shadow-md"
     >
       {A.map(options, (option, index) => (
         <div
@@ -394,6 +424,11 @@ function MentionLookupNotice({
   if (caret === undefined) {
     return null;
   }
+  const noticePosition = typeaheadMenuPosition({
+    caret,
+    viewportHeight: window.innerHeight,
+    viewportWidth: window.innerWidth,
+  });
   return (
     <>
       {createPortal(
@@ -409,12 +444,14 @@ function MentionLookupNotice({
       )}
       {createPortal(
         <div
-          style={typeaheadMenuPosition({
-            caret,
-            viewportHeight: window.innerHeight,
-            viewportWidth: window.innerWidth,
-          })}
-          className="bg-popover text-muted-foreground fixed z-50 w-64 rounded-md border p-2 text-sm shadow-md"
+          style={
+            {
+              "--typeahead-left": typeaheadInsetPx(noticePosition.left),
+              "--typeahead-top": typeaheadInsetPx(noticePosition.top),
+              "--typeahead-bottom": typeaheadInsetPx(noticePosition.bottom),
+            } as CSSProperties
+          }
+          className="bg-popover text-muted-foreground fixed top-(--typeahead-top) bottom-(--typeahead-bottom) left-(--typeahead-left) z-50 w-64 rounded-md border p-2 text-sm shadow-md"
           role="status"
         >
           {message}

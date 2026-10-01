@@ -40,16 +40,10 @@ function ToasterViewport() {
   return (
     <ToastViewport>
       {A.map(toasts, (toast) => (
-        <Toast
-          key={toast.id}
-          toast={toast as ToastPrimitive.Root.ToastObject<ToastData>}
-          className="bg-[--sl-color-bg]"
-        >
+        <Toast key={toast.id} toast={toast as ToastPrimitive.Root.ToastObject<ToastData>}>
           <div className="grid gap-1">
-            {toast.title && <ToastTitle className="text-[--sl-color-white]">{toast.title}</ToastTitle>}
-            {toast.description && (
-              <ToastDescription className="text-[--sl-color-text]">{toast.description}</ToastDescription>
-            )}
+            {toast.title && <ToastTitle>{toast.title}</ToastTitle>}
+            {toast.description && <ToastDescription>{toast.description}</ToastDescription>}
           </div>
           {toast.actionProps && (
             <button
@@ -60,7 +54,7 @@ function ToasterViewport() {
               {...toast.actionProps}
             />
           )}
-          <ToastClose className="cursor-pointer bg-transparent text-[--sl-color-white]" />
+          <ToastClose className="cursor-pointer bg-transparent" />
         </Toast>
       ))}
     </ToastViewport>
