@@ -2,15 +2,15 @@ import { lintCommand } from "@beep/repo-cli";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, FileSystem, flow, Layer, Path, Result, Runtime } from "effect";
+import { Cause, Console, Effect, Exit, FileSystem, flow, Layer, Path, Result, Runtime } from "effect";
 import { Command } from "effect/cli";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { withTempWorkingDirectory } from "./support/CommandTest.ts";
+import * as TestConsole from "effect/testing/TestConsole";
+import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
@@ -106,129 +106,121 @@ const expectReflectionLintSuccess = Effect.fn("expectReflectionLintSuccess")(fun
   assertTrue(Exit.isSuccess(exit));
 });
 
-describe("reflection-artifacts lint command", { concurrent: false }, () => {
-  it(
-    "blocks a reflectionRequired completed goal with no reflection artifact",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
+  describe("reflection-artifacts lint command", { concurrent: false }, () => {
+    it.effect(
+      "blocks a reflectionRequired completed goal with no reflection artifact",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const exit = yield* runReflectionLintFixture();
             expectReportedFailure(exit);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "passes when a schema-valid reflection artifact is present",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "passes when a schema-valid reflection artifact is present",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           expectReflectionLintSuccess({
             reflection: { body: VALID_REFLECTION, file: "2026-06-09-claude.md" },
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "accepts CRLF-delimited reflection frontmatter",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "accepts CRLF-delimited reflection frontmatter",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           expectReflectionLintSuccess({
             reflection: { body: VALID_REFLECTION_CRLF, file: "2026-06-09-claude.md" },
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "blocks when a reflection artifact has invalid frontmatter",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "blocks when a reflection artifact has invalid frontmatter",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const exit = yield* runReflectionLintFixture({
               reflection: { body: "# no frontmatter here\n", file: "2026-06-09-claude.md" },
             });
             expectReportedFailure(exit);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "blocks completed goals when reflectionRequired is absent and no reflection artifact exists",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "blocks completed goals when reflectionRequired is absent and no reflection artifact exists",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const exit = yield* runReflectionLintFixture({});
             expectReportedFailure(exit);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "treats an explicit reflectionRequired opt-out as a non-blocking advisory",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(expectReflectionLintSuccess({ reflectionRequired: false })).pipe(
-          provideScopedLayer(testLayer)
-        )
-      ),
-    20_000
-  );
+    it.effect(
+      "treats an explicit reflectionRequired opt-out as a non-blocking advisory",
+      () =>
+        Effect.andThen(temporaryWorkingDirectory, expectReflectionLintSuccess({ reflectionRequired: false })).pipe(
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+      20_000
+    );
 
-  it(
-    "passes when a completed goal without reflectionRequired has a valid reflection",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "passes when a completed goal without reflectionRequired has a valid reflection",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           expectReflectionLintSuccess({
             reflectionRequired: false,
             reflection: { body: VALID_REFLECTION, file: "2026-06-09-claude.md" },
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  // The PR #365 YAML traps hid in a completed-only gap: an invalid reflection
-  // in an ACTIVE packet passed this lint while goals doctor failed it. The
-  // frontmatter gate now covers every packet.
-  it(
-    "blocks an active goal whose reflection file has no frontmatter block",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    // The PR #365 YAML traps hid in a completed-only gap: an invalid reflection
+    // in an ACTIVE packet passed this lint while goals doctor failed it. The
+    // frontmatter gate now covers every packet.
+    it.effect(
+      "blocks an active goal whose reflection file has no frontmatter block",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeActiveGoal("in-flight");
             yield* writeReflection("in-flight", "2026-08-17-claude.md", "# no frontmatter here\n");
             const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
             expectReportedFailure(exit);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  // Present-but-invalid frontmatter is the decode-failure path — this is the
-  // literal receipt-10 trap: a colon-space inside an unquoted plain scalar
-  // turns the explanation into a YAML mapping error.
-  it(
-    "blocks an active goal whose present frontmatter does not decode",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    // Present-but-invalid frontmatter is the decode-failure path — this is the
+    // literal receipt-10 trap: a colon-space inside an unquoted plain scalar
+    // turns the explanation into a YAML mapping error.
+    it.effect(
+      "blocks an active goal whose present frontmatter does not decode",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeActiveGoal("in-flight");
             yield* writeReflection(
@@ -242,16 +234,15 @@ describe("reflection-artifacts lint command", { concurrent: false }, () => {
             const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
             expectReportedFailure(exit);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "does not apply the closeout-presence gate to active goals",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "does not apply the closeout-presence gate to active goals",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeActiveGoal("in-flight");
             yield* writeReflection("in-flight", "2026-08-17-claude.md", VALID_REFLECTION);
@@ -259,8 +250,8 @@ describe("reflection-artifacts lint command", { concurrent: false }, () => {
             const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
             assertTrue(Exit.isSuccess(exit));
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
+  });
 });

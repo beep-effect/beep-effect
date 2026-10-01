@@ -1,7 +1,7 @@
 # Instance
 
 - id: `color-support-level-flags`
-- file:line: `packages/foundation/capability/chalk/src/internal/ChalkSchema.ts:267`
+- file:line: `packages/foundation/capability/chalk/src/internal/ChalkSchema.ts:266`
 - symbol: `ColorSupport`
 - members: `hasBasic`, `has256`, `has16m`
 - evidence classes:
@@ -10,7 +10,7 @@
 
 # Current shape
 
-Live declaration at `packages/foundation/capability/chalk/src/internal/ChalkSchema.ts:264`:
+Live declaration at `packages/foundation/capability/chalk/src/internal/ChalkSchema.ts:263`:
 
 ```ts
 export class ColorSupport extends S.Class<ColorSupport>($I`ColorSupport`)(
@@ -41,7 +41,7 @@ Level `0` is represented by the separate `false` member of `ColorInfo`, not a `C
 
 # Target schema
 
-Reuse the existing `ColorSupportLevel` schema and type at `ChalkSchema.ts:223-247`. Do not mint another kit or literal domain.
+Reuse the existing `ColorSupportLevel` schema and type at `ChalkSchema.ts:223-246`. Do not mint another kit or literal domain.
 
 ```ts
 export class ColorSupport extends S.Class<ColorSupport>($I`ColorSupport`)(
@@ -58,9 +58,9 @@ Consumers that need a capability answer derive it from `support.level` and the e
 
 # Migration inventory
 
-- `packages/foundation/capability/chalk/src/internal/ChalkSchema.ts:252-259` — update the `ColorSupport.make` example to `{ level: 3 }`.
-- `packages/foundation/capability/chalk/src/internal/ChalkSchema.ts:267-269` — delete the three fields, retaining `level: ColorSupportLevel`.
-- `packages/foundation/capability/chalk/src/internal/ChalkSchema.ts:271-272` — describe the level as the source of truth rather than generic duplicated metadata.
+- `packages/foundation/capability/chalk/src/internal/ChalkSchema.ts:251-258` — update the `ColorSupport.make` example to `{ level: 3 }`.
+- `packages/foundation/capability/chalk/src/internal/ChalkSchema.ts:266-268` — delete the three fields, retaining `level: ColorSupportLevel`.
+- `packages/foundation/capability/chalk/src/internal/ChalkSchema.ts:270-271` — describe the level as the source of truth rather than generic duplicated metadata.
 - `packages/foundation/capability/chalk/src/internal/SupportsColor.ts:318-329` — simplify `translateLevel`: level `0` remains `false`; enabled levels construct `ColorSupport.make({ level: enabledLevel })` without inequality projections.
 - `packages/foundation/capability/chalk/src/internal/SupportsColor.browser.ts:41-46` — construct truecolor support as `ColorSupport.make({ level: 3 })`.
 - `packages/foundation/capability/chalk/src/internal/SupportsColor.browser.ts:48-53` — construct basic support as `ColorSupport.make({ level: 1 })`.

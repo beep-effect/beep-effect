@@ -1,6 +1,5 @@
 import { findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
@@ -81,12 +80,13 @@ const collectViolations = Effect.fnUntraced(function* () {
   return offending;
 });
 
-describe("single-project emit law", () => {
-  it("no beep:build or beep:check script uses the subgraph builder or --force", () =>
-    Effect.runPromise(
+it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  describe("single-project emit law", () => {
+    it.effect("no beep:build or beep:check script uses the subgraph builder or --force", () =>
       Effect.gen(function* () {
         const violations = yield* collectViolations();
         expect(A.join(violations, "\n")).toBe("");
-      }).pipe(provideScopedLayer(NodeServices.layer))
-    ));
+      })
+    );
+  });
 });

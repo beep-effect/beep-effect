@@ -27,6 +27,7 @@ import { NodeCrypto } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Match, Path, pipe, Ref, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -353,7 +354,7 @@ describe("runner bake report writer", () => {
         const bytes = yield* fs.readFileString(reportPath);
         expect(bytes).not.toContain('"_id":"Option"');
         expect(bytes).toContain('"priorPin":"ami-00112233445566778"');
-        expect((yield* BakeReportJson.decode(bytes)).priorPin).toStrictEqual(O.some("ami-00112233445566778"));
+        assertSome((yield* BakeReportJson.decode(bytes)).priorPin, "ami-00112233445566778");
       })
     )
   );
@@ -565,13 +566,13 @@ describe("runner bake planning and argv", () => {
         // prove reachability against the canonical remote before AWS calls.
         expect(A.some(captured, A.contains("--contains"))).toBe(true);
         expect(A.some(captured, A.contains("remote"))).toBe(true);
-        expect(argumentAfter(runInstances, "--block-device-mappings")).toStrictEqual(
-          O.some(
-            '[{"DeviceName":"/dev/xvda","Ebs":{"DeleteOnTermination":true,"Encrypted":true,"Iops":3000,"Throughput":250,"VolumeSize":100,"VolumeType":"gp3"}}]'
-          )
+        assertSome(
+          argumentAfter(runInstances, "--block-device-mappings"),
+          '[{"DeviceName":"/dev/xvda","Ebs":{"DeleteOnTermination":true,"Encrypted":true,"Iops":3000,"Throughput":250,"VolumeSize":100,"VolumeType":"gp3"}}]'
         );
-        expect(argumentAfter(createImage, "--name")).toStrictEqual(
-          O.some(`beep-ci-runners-${Str.slice(0, 12)(baked.lockfileSha256)}-1786640400000`)
+        assertSome(
+          argumentAfter(createImage, "--name"),
+          `beep-ci-runners-${Str.slice(0, 12)(baked.lockfileSha256)}-1786640400000`
         );
         expect(
           pipe(

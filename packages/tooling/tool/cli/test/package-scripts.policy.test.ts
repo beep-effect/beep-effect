@@ -9,6 +9,7 @@ import { FsUtilsLive, jsonStringifyPretty } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -73,7 +74,7 @@ describe("package scripts policy", () => {
               const actual = Result.getOrThrow(decodeAppResult(scripts));
               const expected = policy.expected("app", actual, noEvidence);
               expect(expected.extras).toEqual(actual.extras);
-              for (const [key, value] of actual.impls) expect(HashMap.get(expected.impls, key)).toEqual(O.some(value));
+              for (const [key, value] of actual.impls) assertSome(HashMap.get(expected.impls, key), value);
               expect(policy.diff(expected, policy.expected("app", expected, noEvidence))).toEqual([]);
 
               return true;
@@ -269,9 +270,9 @@ describe("package scripts policy", () => {
           yield* jsonStringifyPretty({ name: "@beep/gov-legal-mcp", scripts: R.remove(manifest.scripts, "codegen") })
         );
         const missing = yield* policy.check(root);
-        expect(HashMap.get(missing.drift, "packages/drivers/gov-legal-mcp/package.json")).toEqual(
-          O.some([{ _tag: "missing-task", name: "codegen" }])
-        );
+        assertSome(HashMap.get(missing.drift, "packages/drivers/gov-legal-mcp/package.json"), [
+          { _tag: "missing-task", name: "codegen" },
+        ]);
       })
     )
   );

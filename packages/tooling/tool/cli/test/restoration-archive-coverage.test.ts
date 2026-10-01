@@ -10,8 +10,10 @@ import { Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from "effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -83,27 +85,29 @@ describe("restoration archive boundary helpers", () => {
         yield* fs.writeFileString(different, "abcxef");
         yield* fs.writeFileString(short, "abc");
 
-        expect(
-          yield* RA.inspectCanonicalPath(source, "File", "wrong type", "symbolic link").pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Success" });
-        expect(
-          yield* RA.inspectCanonicalPath(source, "Directory", "wrong type", "symbolic link").pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.inspectCanonicalPath(source, "File", "wrong type", "symbolic link").pipe(Effect.exit)).pipe(
+          Exit.isSuccess,
+          assertTrue
+        );
+        (yield* RA.inspectCanonicalPath(source, "Directory", "wrong type", "symbolic link").pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
         expect(yield* RA.requireContainedPath(path, root, source, "outside", true)).toBe(source);
-        expect(yield* RA.requireContainedPath(path, root, root, "equal", false).pipe(Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
-        expect(
-          yield* RA.requireContainedPath(path, root, path.dirname(root), "outside", true).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.requireContainedPath(path, root, root, "equal", false).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
+        (yield* RA.requireContainedPath(path, root, path.dirname(root), "outside", true).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
         expect(yield* RA.prefixMatches(source, equal, 0, 2)).toBe(true);
         expect(yield* RA.prefixMatches(source, equal, 6, 2)).toBe(true);
         expect(yield* RA.prefixMatches(source, different, 6, 2)).toBe(false);
         expect(yield* RA.prefixMatches(source, short, 6, 2)).toBe(false);
         expect(yield* RA.maybeCrash("none", "after-copy")).toBeUndefined();
-        expect(yield* RA.maybeCrash("after-rename", "after-rename").pipe(Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
+        (yield* RA.maybeCrash("after-rename", "after-rename").pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
       },
       Effect.scoped,
       provideTestLayer
@@ -126,19 +130,15 @@ describe("restoration archive boundary helpers", () => {
         yield* fs.writeFileString(rootArchive, "archive");
         yield* fs.writeFileString(manifest, "");
 
-        expect(
-          yield* RA.validateCanonicalArchivePaths(preserveOptions(sourceRoot, rootArchive, corpusRoot, manifest)).pipe(
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.validateCanonicalArchivePaths(preserveOptions(sourceRoot, rootArchive, corpusRoot, manifest)).pipe(
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
 
         const separateArchive = path.join(root, "separate.zip");
         yield* fs.writeFileString(separateArchive, "archive");
-        expect(
-          yield* RA.validateCanonicalArchivePaths(
-            preserveOptions(sourceRoot, separateArchive, sourceRoot, manifest)
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.validateCanonicalArchivePaths(
+          preserveOptions(sourceRoot, separateArchive, sourceRoot, manifest)
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
         expect(
           yield* RA.reconcileCollectorRecord(
@@ -161,18 +161,16 @@ describe("restoration archive boundary helpers", () => {
             2
           )
         ).toEqual({ kind: "ignored" });
-        expect(
-          yield* RA.reconcileCollectorRecord(
-            CollectorManifestRecord.cases.copied.make({
-              dst: "C:\\root",
-              size: S.Natural.make(0),
-              src: "C:\\source\\bad.bin",
-              status: "copied",
-            }),
-            sourceRoot,
-            2
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.reconcileCollectorRecord(
+          CollectorManifestRecord.cases.copied.make({
+            dst: "C:\\root",
+            size: S.Natural.make(0),
+            src: "C:\\source\\bad.bin",
+            status: "copied",
+          }),
+          sourceRoot,
+          2
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
         const collectorRecord = (name: string, size: number) =>
           CollectorManifestRecord.cases.copied.make({
@@ -193,26 +191,30 @@ describe("restoration archive boundary helpers", () => {
           recordedSize: 4,
           relativePath: "present.bin",
         });
-        expect(
-          yield* RA.reconcileCollectorRecord(collectorRecord("present.bin", 5), sourceRoot, 2).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.reconcileCollectorRecord(collectorRecord("present.bin", 5), sourceRoot, 2).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
         const directoryPath = path.join(sourceRoot, "directory");
         yield* fs.makeDirectory(directoryPath);
-        expect(
-          yield* RA.reconcileCollectorRecord(collectorRecord("directory", 0), sourceRoot, 2).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.reconcileCollectorRecord(collectorRecord("directory", 0), sourceRoot, 2).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
         const outside = path.join(root, "outside.bin");
         const symlink = path.join(sourceRoot, "symlink.bin");
         yield* fs.writeFileString(outside, "data");
         yield* fs.symlink(outside, symlink);
-        expect(
-          yield* RA.reconcileCollectorRecord(collectorRecord("symlink.bin", 4), sourceRoot, 2).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.reconcileCollectorRecord(collectorRecord("symlink.bin", 4), sourceRoot, 2).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
         const availableBytes = yield* RA.availableRestorationBytesAt(root);
         expect(availableBytes).toBeGreaterThan(0);
-        expect(yield* RA.availableRestorationBytesAt(path.join(root, "missing")).pipe(Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
+        (yield* RA.availableRestorationBytesAt(path.join(root, "missing")).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
       },
       Effect.scoped,
       provideTestLayer
@@ -287,23 +289,26 @@ describe("restoration archive boundary helpers", () => {
           sourceRoot,
         };
 
-        expect(
-          yield* RA.collectArchiveInventory({ ...canonicalPaths, sourceRoot: sourceFile }).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.collectArchiveInventory({ ...canonicalPaths, sourceRoot: sourceFile }).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
         const alias = path.join(sourceRoot, "alias.bin");
         yield* fs.symlink(rootArchive, alias);
-        expect(yield* RA.collectArchiveInventory(canonicalPaths).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" });
+        (yield* RA.collectArchiveInventory(canonicalPaths).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
         yield* fs.remove(alias);
         const fifo = path.join(sourceRoot, "unsupported.fifo");
         expect(Bun.spawnSync(["mkfifo", fifo], { stderr: "pipe", stdout: "pipe" }).exitCode).toBe(0);
-        expect(yield* RA.collectArchiveInventory(canonicalPaths).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" });
+        (yield* RA.collectArchiveInventory(canonicalPaths).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
         yield* fs.remove(fifo);
-        expect(
-          yield* RA.collectArchiveInventory({ ...canonicalPaths, rootArchivePath: sourceRoot }).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.collectArchiveInventory({ ...canonicalPaths, rootArchivePath: sourceFile }).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.collectArchiveInventory({ ...canonicalPaths, rootArchivePath: sourceRoot }).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
+        (yield* RA.collectArchiveInventory({ ...canonicalPaths, rootArchivePath: sourceFile }).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
 
         const inventory = yield* RA.collectArchiveInventory(canonicalPaths);
         const approvedOptions = RestorationPreserveOptions.make({
@@ -327,58 +332,44 @@ describe("restoration archive boundary helpers", () => {
           runId: "final-inventory-run",
           startedAt: 0,
         };
-        expect(
-          yield* RA.validateFinalArchiveInventory(
-            {
-              ...context,
-              canonicalPaths: { ...canonicalPaths, sourceRoot: sourceFile },
-              manifestPath: path.join(archiveRoot, "collect-failure.jsonl"),
-            },
-            inventory
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.validateFinalArchiveInventory(
-            {
-              ...context,
-              manifestPath: path.join(archiveRoot, "denominator-failure.jsonl"),
-              options: RestorationPreserveOptions.make({
-                ...approvedOptions,
-                expectedSourceFileCount: S.Natural.make(2),
-              }),
-            },
-            inventory
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.validateFinalArchiveInventory(
-            { ...context, manifestPath: path.join(archiveRoot, "signature-failure.jsonl") },
-            { ...inventory, signature: Sha256Hex.make("0".repeat(64)) }
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.validateFinalArchiveInventory(
-            {
-              ...context,
-              manifestPath: path.join(archiveRoot, "capacity-failure.jsonl"),
-              options: RestorationPreserveOptions.make({ ...approvedOptions, capacityCeilingBytes: PosInt.make(1) }),
-            },
-            inventory
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.validateFinalArchiveInventory(
+          {
+            ...context,
+            canonicalPaths: { ...canonicalPaths, sourceRoot: sourceFile },
+            manifestPath: path.join(archiveRoot, "collect-failure.jsonl"),
+          },
+          inventory
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.validateFinalArchiveInventory(
+          {
+            ...context,
+            manifestPath: path.join(archiveRoot, "denominator-failure.jsonl"),
+            options: RestorationPreserveOptions.make({
+              ...approvedOptions,
+              expectedSourceFileCount: S.Natural.make(2),
+            }),
+          },
+          inventory
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.validateFinalArchiveInventory(
+          { ...context, manifestPath: path.join(archiveRoot, "signature-failure.jsonl") },
+          { ...inventory, signature: Sha256Hex.make("0".repeat(64)) }
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.validateFinalArchiveInventory(
+          {
+            ...context,
+            manifestPath: path.join(archiveRoot, "capacity-failure.jsonl"),
+            options: RestorationPreserveOptions.make({ ...approvedOptions, capacityCeilingBytes: PosInt.make(1) }),
+          },
+          inventory
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
-        expect(yield* RA.requireInventoryDenominator("files", 1, 2).pipe(Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
-        expect(yield* RA.requireCollectorDenominator("rows", 1, 2).pipe(Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
-        expect(
-          yield* RA.reconcileCollectorHistoricalIdentities([
-            { kind: "present", recordedSize: 1, relativePath: "same.bin" },
-            { kind: "mutated", recordedSize: 2, relativePath: "same.bin" },
-          ]).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.requireInventoryDenominator("files", 1, 2).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.requireCollectorDenominator("rows", 1, 2).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.reconcileCollectorHistoricalIdentities([
+          { kind: "present", recordedSize: 1, relativePath: "same.bin" },
+          { kind: "mutated", recordedSize: 2, relativePath: "same.bin" },
+        ]).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
       },
       Effect.scoped,
       provideTestLayer
@@ -412,7 +403,7 @@ describe("restoration archive boundary helpers", () => {
           expectedSourceFileCount: S.Natural.make(1),
           expectedSourceTreeBytes: S.Natural.make("source".length),
         });
-        expect(yield* preserveRestorationArchive(options).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" });
+        (yield* preserveRestorationArchive(options).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
       },
       Effect.scoped,
       provideCorpusLayer
@@ -463,9 +454,10 @@ describe("restoration archive boundary helpers", () => {
         const layer = CorpusCommandServiceLive.pipe(
           Layer.provide(Layer.merge(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, lateFileSystem)))
         );
-        expect(yield* preserveRestorationArchive(options).pipe(provideScopedLayer(layer), Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
+        (yield* preserveRestorationArchive(options).pipe(provideScopedLayer(layer), Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
       },
       Effect.scoped,
       provideTestLayer
@@ -536,10 +528,9 @@ describe("restoration archive boundary helpers", () => {
             expectedRootArchiveBytes: S.Natural.make("archive".length),
             expectedSourceDirectoryCount: S.Natural.make(1),
           });
-          expect(yield* preserveRestorationArchive(options).pipe(provideScopedLayer(layer), Effect.exit)).toMatchObject(
-            {
-              _tag: "Failure",
-            }
+          (yield* preserveRestorationArchive(options).pipe(provideScopedLayer(layer), Effect.exit)).pipe(
+            Exit.isFailure,
+            assertTrue
           );
         });
 
@@ -646,10 +637,10 @@ describe("restoration archive boundary helpers", () => {
         const claimPath = path.join(root, "writer.claim");
         expect(yield* RA.tryWriteExclusiveCoordinationFile(claimPath, claimText)).toBe(true);
         expect(yield* RA.tryWriteExclusiveCoordinationFile(claimPath, claimText)).toBe(false);
-        expect(yield* RA.readCanonicalCoordinationFile(claimPath)).toEqual(O.some(claimText));
+        assertSome(yield* RA.readCanonicalCoordinationFile(claimPath), claimText);
         expect(yield* RA.moveObservedCoordinationFile(claimPath, "wrong-generation")).toBe(false);
         expect(yield* RA.moveObservedCoordinationFile(claimPath, claimText)).toBe(true);
-        expect(yield* RA.readCanonicalCoordinationFile(claimPath)).toEqual(O.none());
+        assertNone(yield* RA.readCanonicalCoordinationFile(claimPath));
 
         const deadText = `${yield* RA.encodeRestorationWriterClaim({
           ...liveClaim,
@@ -670,9 +661,10 @@ describe("restoration archive boundary helpers", () => {
         expect(yield* RA.tryRecoverObservedWriterReapClaim(reapPath, claimText, deadText)).toBe(false);
         expect(yield* RA.moveObservedCoordinationFile(tombstonePath, claimText)).toBe(true);
         yield* fs.writeFileString(tombstonePath, deadText);
-        expect(
-          yield* RA.tryRecoverObservedWriterReapClaim(reapPath, claimText, deadText).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.tryRecoverObservedWriterReapClaim(reapPath, claimText, deadText).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
         expect(yield* RA.moveObservedCoordinationFile(tombstonePath, deadText)).toBe(true);
         expect(yield* RA.moveObservedCoordinationFile(reapPath, deadText)).toBe(true);
         yield* fs.writeFileString(reapPath, "changed-generation");
@@ -683,16 +675,18 @@ describe("restoration archive boundary helpers", () => {
         const lease = { claimPath: acquiredPath, claimText };
         expect(yield* RA.acquireObservedRestorationWriterClaim(lease)).toEqual(lease);
         yield* RA.releaseArchiveWriterClaim(lease);
-        expect(yield* RA.releaseArchiveWriterClaim(lease).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" });
+        (yield* RA.releaseArchiveWriterClaim(lease).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
         const validationRoot = path.join(root, "validation-root");
         yield* fs.makeDirectory(validationRoot);
-        expect(yield* RA.validateArchiveManifestSeal(validationRoot, [], []).pipe(Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
-        expect(
-          yield* RA.validateArchiveManifestSeal(validationRoot, ["synthetic-line"], []).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.validateArchiveManifestSeal(validationRoot, [], []).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
+        (yield* RA.validateArchiveManifestSeal(validationRoot, ["synthetic-line"], []).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
 
         const reportRoot = path.join(root, "report-root");
         yield* fs.makeDirectory(reportRoot);
@@ -703,17 +697,13 @@ describe("restoration archive boundary helpers", () => {
         if (reportName === undefined) return yield* Effect.die("Expected a verification report.");
         const reportPath = path.join(reportDirectory, reportName);
         yield* fs.writeFileString(reportPath, "drift");
-        expect(yield* RA.persistVerificationReport(reportRoot, []).pipe(Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
+        (yield* RA.persistVerificationReport(reportRoot, []).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
         yield* fs.writeFileString(reportPath, "");
         yield* fs.rename(reportPath, `${reportPath}.partial`);
         yield* RA.persistVerificationReport(reportRoot, []);
         yield* fs.rename(reportPath, `${reportPath}.partial`);
         yield* fs.writeFileString(`${reportPath}.partial`, "drift");
-        expect(yield* RA.persistVerificationReport(reportRoot, []).pipe(Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
+        (yield* RA.persistVerificationReport(reportRoot, []).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
         const payloadRoot = path.join(root, "payload-root");
         yield* fs.makeDirectory(path.join(payloadRoot, "payload"), { recursive: true });
@@ -721,9 +711,10 @@ describe("restoration archive boundary helpers", () => {
         const outside = path.join(root, "outside-payload.bin");
         yield* fs.writeFileString(outside, "outside");
         yield* fs.symlink(outside, path.join(payloadRoot, "payload", "alias.bin"));
-        expect(yield* RA.requireArchivePayloadOwned(payloadRoot, HashMap.empty()).pipe(Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
+        (yield* RA.requireArchivePayloadOwned(payloadRoot, HashMap.empty()).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
 
         const preflight = ArchiveLedgerRecord.cases["archive-preflight"].make({
           approved: true,
@@ -751,7 +742,7 @@ describe("restoration archive boundary helpers", () => {
           sourceRelativePath: "synthetic.bin",
         });
         expect(HashMap.size(yield* RA.validateArchiveTerminalIndex(root, [failure], preflight))).toBe(1);
-        expect(O.isSome(RA.indexArchiveTerminals([failure, failure, failure]).duplicateObjectId)).toBe(true);
+        RA.indexArchiveTerminals([failure, failure, failure]).duplicateObjectId.pipe(O.isSome, assertTrue);
       },
       Effect.scoped,
       provideTestLayer
@@ -780,84 +771,70 @@ describe("restoration archive boundary helpers", () => {
         const liveText = yield* claim("live-contention-owner");
         const staleText = yield* claim("stale-contention-owner", "retired-boot");
 
-        expect(
-          yield* RA.processStartTime(process.pid).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              readFileString: () => Effect.succeed("malformed process stat"),
-            }),
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.processStartTime(process.pid).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              readFileString: () => fs.readFileString(root),
-            }),
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.currentBootId().pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              readFileString: () => Effect.succeed("  \n"),
-            }),
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* withRestorationWriterClaim(root, "unavailable-process.claim", Effect.void).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              readFileString: (filePath, encoding) =>
-                filePath === `/proc/${process.pid}/stat`
-                  ? fs.readFileString(path.join(root, "missing-proc-stat"), encoding)
-                  : fs.readFileString(filePath, encoding),
-            }),
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.processStartTime(process.pid).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            readFileString: () => Effect.succeed("malformed process stat"),
+          }),
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.processStartTime(process.pid).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            readFileString: () => fs.readFileString(root),
+          }),
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.currentBootId().pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            readFileString: () => Effect.succeed("  \n"),
+          }),
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
+        (yield* withRestorationWriterClaim(root, "unavailable-process.claim", Effect.void).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            readFileString: (filePath, encoding) =>
+              filePath === `/proc/${process.pid}/stat`
+                ? fs.readFileString(path.join(root, "missing-proc-stat"), encoding)
+                : fs.readFileString(filePath, encoding),
+          }),
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
 
         const racedClaimPath = path.join(root, "raced.claim");
         const collisionTargetPath = path.join(root, "collision-target.claim");
         yield* fs.writeFileString(collisionTargetPath, liveText);
-        expect(
-          yield* RA.acquireObservedRestorationWriterClaim({ claimPath: racedClaimPath, claimText: staleText }).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              open: (filePath, options) =>
-                filePath === racedClaimPath && options?.flag === "wx"
-                  ? fs.open(collisionTargetPath, options)
-                  : fs.open(filePath, options),
-            }),
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.acquireObservedRestorationWriterClaim({ claimPath: racedClaimPath, claimText: staleText }).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            open: (filePath, options) =>
+              filePath === racedClaimPath && options?.flag === "wx"
+                ? fs.open(collisionTargetPath, options)
+                : fs.open(filePath, options),
+          }),
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
 
         const liveClaimPath = path.join(root, "live.claim");
         yield* fs.writeFileString(liveClaimPath, liveText);
-        expect(
-          yield* RA.readCanonicalCoordinationFile(liveClaimPath).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              open: (filePath, options) =>
-                fs.open(filePath, options).pipe(
-                  Effect.map((file) => ({
-                    ...file,
-                    stat: file.stat.pipe(Effect.map((info) => ({ ...info, type: "Directory" as const }))),
-                  }))
-                ),
-            }),
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.acquireObservedRestorationWriterClaim({ claimPath: liveClaimPath, claimText: staleText }).pipe(
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.readCanonicalCoordinationFile(liveClaimPath).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            open: (filePath, options) =>
+              fs.open(filePath, options).pipe(
+                Effect.map((file) => ({
+                  ...file,
+                  stat: file.stat.pipe(Effect.map((info) => ({ ...info, type: "Directory" as const }))),
+                }))
+              ),
+          }),
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.acquireObservedRestorationWriterClaim({ claimPath: liveClaimPath, claimText: staleText }).pipe(
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
         expect(
           yield* RA.moveObservedCoordinationFile(liveClaimPath, liveText).pipe(
             Effect.provideService(FileSystem.FileSystem, {
@@ -866,15 +843,13 @@ describe("restoration archive boundary helpers", () => {
             })
           )
         ).toBe(false);
-        expect(
-          yield* RA.moveObservedCoordinationFile(liveClaimPath, liveText).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              rename: () => fs.rename(liveClaimPath, root),
-            }),
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.moveObservedCoordinationFile(liveClaimPath, liveText).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            rename: () => fs.rename(liveClaimPath, root),
+          }),
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
 
         const interruptedReapPath = path.join(root, "interrupted-reap.claim");
         yield* fs.writeFileString(interruptedReapPath, staleText);
@@ -917,15 +892,13 @@ describe("restoration archive boundary helpers", () => {
         yield* fs.writeFileString(reapClaimPath, liveText);
         expect(yield* RA.tryMoveObservedWriterClaim(staleClaimPath, staleText, staleText)).toBe(false);
         expect(yield* RA.tryReplaceStaleWriterClaim(staleClaimPath, staleText, staleText)).toBe(false);
-        expect(
-          yield* RA.acquireObservedRestorationWriterClaim({ claimPath: staleClaimPath, claimText: liveText }).pipe(
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.acquireObservedRestorationWriterClaim({ claimPath: staleClaimPath, claimText: liveText }).pipe(
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
 
-        expect(
-          yield* RA.tryWriteExclusiveCoordinationFile(path.join(root, "missing", "claim"), liveText).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.tryWriteExclusiveCoordinationFile(path.join(root, "missing", "claim"), liveText).pipe(
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
 
         const emptySource = path.join(root, "empty-source.bin");
         const emptyPartial = path.join(root, "empty-partial.bin");
@@ -1024,46 +997,38 @@ describe("restoration archive boundary helpers", () => {
           sourceRelativePath: "source.bin",
         };
         expect(yield* RA.inspectExpectedSourceFile(object, "source changed")).toEqual(sourceInfo);
-        expect(
-          yield* RA.inspectExpectedSourceFile(
-            { ...object, expectedSizeBytes: object.expectedSizeBytes + 1 },
-            "source changed"
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.inspectArchiveAttemptSource(
-            { ...object, expectedSizeBytes: object.expectedSizeBytes + 1 },
-            true
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.inspectExpectedSourceFile(
+          { ...object, expectedSizeBytes: object.expectedSizeBytes + 1 },
+          "source changed"
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.inspectArchiveAttemptSource(
+          { ...object, expectedSizeBytes: object.expectedSizeBytes + 1 },
+          true
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
         const sourceRootInfo = yield* fs.stat(sourceRoot);
-        expect(
-          yield* RA.inspectExpectedSourceDirectory(
-            {
-              destinationRelativePath: "payload/tree",
-              expectedInfo: { ...RA.sourceIdentity(sourceRootInfo), mode: Number(sourceRootInfo.mode) + 1 },
-              objectId: "directory-object",
-              sourceLabel: "tree",
-              sourceRelativePath: ".",
-            },
-            sourceRoot
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.inspectExpectedSourceDirectory(
+          {
+            destinationRelativePath: "payload/tree",
+            expectedInfo: { ...RA.sourceIdentity(sourceRootInfo), mode: Number(sourceRootInfo.mode) + 1 },
+            objectId: "directory-object",
+            sourceLabel: "tree",
+            sourceRelativePath: ".",
+          },
+          sourceRoot
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
         const linkedDirectory = path.join(sourceRoot, "linked-directory");
         yield* fs.symlink(destinationDirectory, linkedDirectory);
-        expect(
-          yield* RA.inspectExpectedSourceDirectory(
-            {
-              destinationRelativePath: "payload/linked-directory",
-              expectedInfo: RA.sourceIdentity(yield* fs.stat(destinationDirectory)),
-              objectId: "linked-directory-object",
-              sourceLabel: "tree",
-              sourceRelativePath: "linked-directory",
-            },
-            sourceRoot
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.inspectExpectedSourceDirectory(
+          {
+            destinationRelativePath: "payload/linked-directory",
+            expectedInfo: RA.sourceIdentity(yield* fs.stat(destinationDirectory)),
+            objectId: "linked-directory-object",
+            sourceLabel: "tree",
+            sourceRelativePath: "linked-directory",
+          },
+          sourceRoot
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
         const context = {
           attemptId: "attempt-1",
@@ -1097,76 +1062,63 @@ describe("restoration archive boundary helpers", () => {
         const mismatchedPartial = `${mismatchedDestination}.partial`;
         yield* fs.writeFileString(mismatchedDestination, "mismatched-bytes");
         yield* fs.writeFileString(mismatchedPartial, "retained-partial");
-        expect(
+        assertNone(
           yield* RA.reconcileCompleteArchiveDestination(
             { ...context, destinationPath: mismatchedDestination, partialPath: mismatchedPartial },
             sourceInfo
           )
-        ).toEqual(O.none());
+        );
         expect(yield* fs.exists(`${mismatchedPartial}.rejected-${context.attemptId}`)).toBe(true);
         yield* fs.remove(destinationPath);
         yield* fs.link(sourcePath, destinationPath);
-        expect(yield* RA.reconcileCompleteArchiveDestination(context, sourceInfo).pipe(Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
+        (yield* RA.reconcileCompleteArchiveDestination(context, sourceInfo).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
         yield* fs.remove(destinationPath);
         yield* fs.remove(partialPath);
         yield* fs.link(sourcePath, partialPath);
-        expect(yield* RA.resumableArchiveOffset(context, sourceInfo).pipe(Effect.exit)).toMatchObject({
-          _tag: "Failure",
-        });
+        (yield* RA.resumableArchiveOffset(context, sourceInfo).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
         yield* fs.remove(partialPath);
         yield* fs.writeFileString(partialPath, "source-bytes-with-extra-data");
         expect(yield* RA.resumableArchiveOffset(context, sourceInfo)).toMatchObject({ resumeBytes: 0 });
         yield* fs.writeFileString(partialPath, "partial");
 
         const cleanPartialInfo = yield* fs.stat(partialPath);
-        expect(
-          yield* RA.validateOpenedArchiveCopy(
-            { ...context, object: { ...object, expectedInfo: { ...object.expectedInfo, sizeBytes: 1 } } },
-            { expectedInfo: O.none(), resumeBytes: 0 },
-            sourceInfo,
-            cleanPartialInfo
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.validateOpenedArchiveCopy(
-            context,
-            { expectedInfo: O.none(), resumeBytes: 0 },
-            sourceInfo,
-            yield* fs.stat(destinationDirectory)
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.validateOpenedArchiveCopy(
-            context,
-            { expectedInfo: O.some({ ...RA.sourceIdentity(cleanPartialInfo), sizeBytes: 1 }), resumeBytes: 0 },
-            sourceInfo,
-            cleanPartialInfo
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.validateOpenedArchiveCopy(
-            context,
-            { expectedInfo: O.none(), resumeBytes: 0 },
-            sourceInfo,
-            destinationInfo
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
-        expect(
-          yield* RA.validateOpenedArchiveCopy(
-            { ...context, partialPath: sourcePath },
-            { expectedInfo: O.none(), resumeBytes: 0 },
-            sourceInfo,
-            sourceInfo
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.validateOpenedArchiveCopy(
+          { ...context, object: { ...object, expectedInfo: { ...object.expectedInfo, sizeBytes: 1 } } },
+          { expectedInfo: O.none(), resumeBytes: 0 },
+          sourceInfo,
+          cleanPartialInfo
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.validateOpenedArchiveCopy(
+          context,
+          { expectedInfo: O.none(), resumeBytes: 0 },
+          sourceInfo,
+          yield* fs.stat(destinationDirectory)
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.validateOpenedArchiveCopy(
+          context,
+          { expectedInfo: O.some({ ...RA.sourceIdentity(cleanPartialInfo), sizeBytes: 1 }), resumeBytes: 0 },
+          sourceInfo,
+          cleanPartialInfo
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.validateOpenedArchiveCopy(
+          context,
+          { expectedInfo: O.none(), resumeBytes: 0 },
+          sourceInfo,
+          destinationInfo
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
+        (yield* RA.validateOpenedArchiveCopy(
+          { ...context, partialPath: sourcePath },
+          { expectedInfo: O.none(), resumeBytes: 0 },
+          sourceInfo,
+          sourceInfo
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
-        expect(
-          yield* Effect.scoped(
-            RA.hashResumedArchivePrefix(sourcePath, object.expectedSizeBytes + 1, 2, sha256.create())
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* Effect.scoped(
+          RA.hashResumedArchivePrefix(sourcePath, object.expectedSizeBytes + 1, 2, sha256.create())
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
         const options = preserveOptions(sourceRoot, sourcePath, root, path.join(root, "collector.jsonl"));
         const sourceStat = RA.sourceStat(sourceInfo);
@@ -1179,17 +1131,13 @@ describe("restoration archive boundary helpers", () => {
           partialPath: promotedPartial,
         };
         yield* fs.link(sourcePath, promotedPartial);
-        expect(
-          yield* RA.promoteAndVerifyArchiveCopy(promoteContext, options, sourceStat, sourceStat, copiedDigest, 0).pipe(
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.promoteAndVerifyArchiveCopy(promoteContext, options, sourceStat, sourceStat, copiedDigest, 0).pipe(
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
         yield* fs.writeFileString(promotedPartial, "source-bytes");
-        expect(
-          yield* RA.promoteAndVerifyArchiveCopy(promoteContext, options, sourceStat, sourceStat, copiedDigest, 0).pipe(
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.promoteAndVerifyArchiveCopy(promoteContext, options, sourceStat, sourceStat, copiedDigest, 0).pipe(
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
       },
       Effect.scoped,
       provideTestLayer

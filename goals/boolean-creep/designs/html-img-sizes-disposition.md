@@ -61,7 +61,7 @@ Match the disposition to the exact existing issues. Missing retains path `attrib
 
 # Migration inventory
 
-- `Html.conformance.ts:12-24,81` — add `LiteralKit` to the existing `@beep/schema` import; reuse `SchemaUtils` and `$I`. There is no current LiteralKit import in this file.
+- `Html.conformance.ts:12-25,80` — add a dedicated `LiteralKit` import from `@beep/schema`; reuse `$I`. There is no current LiteralKit or SchemaUtils import in this file.
 - `Html.conformance.ts:334-350` — reuse `stringAttributeValue`, `srcsetProfile`, and `sourceSizeAnalysis` unchanged.
 - `Html.conformance.ts:972-977` — retain `imgAllowsAutoSizes` for the independent picture-source reader at line 1083.
 - `Html.conformance.ts:979-1023` — replace all six locals and issue spreads with one direct classifier plus exhaustive disposition match.

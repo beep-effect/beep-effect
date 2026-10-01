@@ -60,3 +60,24 @@ Types:                  248667
 Instantiations:         799552
 Check time:             1.381s
 ```
+
+## Post-close addendum: follow-up PR (2026-10-01)
+
+The F15 delta-review follow-up re-writes the `@beep/repo-cli` baseline row.
+Measured the same way (single checker, fresh build-info, dependency closure
+built, clean trees):
+
+| `@beep/repo-cli` | Instantiations | Types |
+| --- | ---: | ---: |
+| Committed row, measured at `9951f493a0` | 4,202,537 | 1,078,097 |
+| Live `origin/main` `50e9c4bc41` | 4,204,960 | 1,078,652 |
+| Follow-up head `b8a577a6d8` | 4,205,657 | 1,079,002 |
+
+The follow-up costs +697 instantiations and +350 types against live main;
+that is the detector's extra resolution code. The baseline file moves
++3,120 / +905 because the row it replaces was measured at `9951f493a0`,
+which is not an ancestor of `50e9c4bc41`. The remaining +2,423 / +555 is
+main's drift since that row, from #1367 (`Quality.command.ts` and the
+`@effect/tsgo` 0.47.2 rules) and #1373 (Yeet internals). `@beep/schema`
+(446,382) and `@beep/law-practice-domain` (799,552) are unchanged.
+

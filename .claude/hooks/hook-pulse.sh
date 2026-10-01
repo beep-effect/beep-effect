@@ -766,11 +766,30 @@ if [ "${notifier_rev}" != "log-only-0" ]; then
           notification_terminal="ghostty"
         fi
       fi
+      # A desktop host route is "self" only when the host's own session ID
+      # equals this hook's session. A headless child (`claude -p`, `codex
+      # exec`) inherits its launcher's IDs; it receives that host as an
+      # explicitly labeled "parent" route instead of borrowing it as its own.
       notification_uri="${BEEP_SEQUENCE_BREAK_OPEN_URI:-}"
-      if [ -z "${notification_uri}" ] &&
-        [ "${CODEX_INTERNAL_ORIGINATOR_OVERRIDE:-}" = "Codex Desktop" ] &&
-        [ -n "${CODEX_THREAD_ID:-}" ] && [ "${CODEX_THREAD_ID}" = "${raw_session_id}" ]; then
-        notification_uri="codex://threads/${raw_session_id}"
+      notification_relation="self"
+      codex_desktop_thread=""
+      if [ "${CODEX_INTERNAL_ORIGINATOR_OVERRIDE:-}" = "Codex Desktop" ]; then
+        codex_desktop_thread="${CODEX_THREAD_ID:-}"
+      fi
+      claude_desktop_session="${CLAUDE_CODE_HOST_SESSION_ID:-}"
+      if [ -z "${notification_uri}" ]; then
+        if [ -n "${codex_desktop_thread}" ] && [ "${codex_desktop_thread}" = "${raw_session_id}" ]; then
+          notification_uri="codex://threads/${raw_session_id}"
+        elif [ "${agent_kind}" = "claude-code" ] && [ -n "${claude_desktop_session}" ] &&
+          [ -n "${CLAUDE_CODE_SESSION_ID:-}" ] && [ "${CLAUDE_CODE_SESSION_ID}" = "${raw_session_id}" ]; then
+          notification_uri="claude://code/continue?session=${claude_desktop_session}"
+        elif [ -n "${codex_desktop_thread}" ]; then
+          notification_uri="codex://threads/${codex_desktop_thread}"
+          notification_relation="parent"
+        elif [ -n "${claude_desktop_session}" ]; then
+          notification_uri="claude://code/continue?session=${claude_desktop_session}"
+          notification_relation="parent"
+        fi
       fi
       notifier_args=(
         "${agent_kind}"
@@ -783,9 +802,13 @@ if [ "${notifier_rev}" != "log-only-0" ]; then
         "${raw_cwd}"
         "${notification_uri}"
         "${notification_terminal}"
+        "${notification_relation}"
       )
       if [ "${BEEP_SEQUENCE_BREAK_FOREGROUND:-0}" = "1" ]; then
-        "${notifier_path}" "${notifier_args[@]}" </dev/null >/dev/null 2>&1 || true
+        # The foreground (diagnostic) worker never lingers to close its card;
+        # only a detached worker may outlive the hook.
+        BEEP_SEQUENCE_BREAK_CLOSE_WATCH_SECONDS=0 \
+          "${notifier_path}" "${notifier_args[@]}" </dev/null >/dev/null 2>&1 || true
       else
         setsid -f -- "${notifier_path}" "${notifier_args[@]}" </dev/null >/dev/null 2>&1 || true
       fi

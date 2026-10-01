@@ -9,9 +9,36 @@ Status: `active`
 | P0 Cache-warm census | complete | Re-measure every required lane's p50/p95 on cache-warm PR and push waves (attempt-one successful runs only; failures and reruns feed flake attribution, never the percentiles). | Completed 2026-08-13 via the explicit 10-wave alternative; see `research/cache-warm-lane-census.md`. |
 | P1 Placement decisions | complete | Decide fleet vs hosted vs free re-fit per lane from the census plus cost model. | Signed and live-falsified 2026-08-13; see `research/placement-decision.md`. No fleet additions; the one hosted re-fit candidate remains on its existing fleet placement after two runner shutdowns. |
 | P2 Execute moves | complete | Move lanes per the placement table (workflow lane edits; sharding where caching cannot help). | Completed 2026-08-16: every signed zero-expansion move merged through #719. |
-| P3 Evidence + close | in progress — two windows denied, repair path | Prove the charter on live waves and close. | Window 1 (2026-09-04 → 2026-09-11, 18 contexts) denied 2026-09-21: `Check` 20m19s, `Coverage Regression` 30m58s, pickup 8m22s (`research/admission-week-p95.md`). Window 2 (2026-09-13 → 2026-09-20, ratified 17 contexts) denied 2026-09-22: `Test Unit` 22m02s, `Lint Policy` 21m59s, pickup 7m47s; `Check` recovered to 8m22s (`research/admission-week-2-p95.md`). Repair moves (`research/repair-decision-2.md`): #1195 `Test Unit` shard split merged 2026-09-22, #1194 refs-check quiet listing merged 2026-09-22T16:34Z; `Lint Policy` handed to `goals/time-to-certainty` C4 (measured, not repaired, here); window 3 is `2026-09-23T00:00:00Z` → `2026-09-30T00:00:00Z`, censused on or after 2026-09-30T00:00Z, then close only when every required p95 under the ratified population is below 20m00s and no tripwire breaches. |
+| P3 Evidence + close | in progress — three windows denied, fan-out governor signed | Prove the charter on live waves and close. | Window 1 (2026-09-04 → 2026-09-11, 18 contexts) denied 2026-09-21: `Check` 20m19s, `Coverage Regression` 30m58s, pickup 8m22s (`research/admission-week-p95.md`). Window 2 (2026-09-13 → 2026-09-20, ratified 17 contexts) denied 2026-09-22: `Test Unit` 22m02s, `Lint Policy` 21m59s, pickup 7m47s; `Check` recovered to 8m22s (`research/admission-week-2-p95.md`). Repair moves (`research/repair-decision-2.md`): #1195 `Test Unit` shard split merged 2026-09-22, #1194 refs-check quiet listing merged 2026-09-22T16:34Z; `Lint Policy` handed to `goals/time-to-certainty` C4 (measured, not repaired, here); window 3 is `2026-09-23T00:00:00Z` → `2026-09-30T00:00:00Z`, censused on or after 2026-09-30T00:00Z, censused 2026-10-01 under ratified 16 contexts (version `50918272`, `Lint Policy` removed 2026-09-25) and denied: `Test Unit` 35m00s, `Lint` 29m16s, pickup 23m58s; shard bodies held (repo-cli-1/2 p95 748 s/735 s), breach is hosted-queue saturation under agent fan-out (`research/admission-week-3-p95.md`). Repair signed 2026-10-01 (`research/repair-decision-3.md`): cap of six CI-active branches enforced by a `pre-push`/PR-creation governor, C deferred, B reserve. Next: land the governor PR, then census window 4, the first complete half-open week after it merges; close only when every required p95 under the ratified population is below 20m00s and no tripwire breaches. |
 
 ## Notes
+
+- Admission verdict (2026-10-01): window 3 (2026-09-23 → 2026-09-30) is
+  denied; see `research/admission-week-3-p95.md`. 09-23/24 clear every gate;
+  from 09-25 run volume rose 10–25× (58 branches in a day, 44
+  `codex/effect-vitest-*` lanes over the week) and shards waited up to 59
+  minutes for a free hosted runner. The repair is a queue/fan-out move, not
+  a shard move, proposed that day and signed as `research/repair-decision-3.md`.
+
+- Repair signed (2026-10-01): `research/repair-decision-3.md` (renamed from
+  `-proposed`) bounds admitted load at six CI-active branches. Window-3 peak
+  concurrency separates the days cleanly: passing days peaked at 2–7
+  concurrent runs (4–6 branches), breaching days at 11–20 (10–18). The
+  census gains a per-day peak-branches column; a week that never peaks at
+  five or more is "pass, unexercised". C deferred, B reserve, D rejected.
+
+- Population ratification (2026-10-01): ruleset `10240248` version
+  `50918272`, effective 2026-09-25T14:46:59.802Z, removes `Heavy / Lint
+  Policy` and is ratified at exactly 16 required contexts (verified from
+  `gh api repos/beep-effect/beep-effect/rulesets/10240248/history/50918272`;
+  same operator account as `49479116`; the live ruleset also lists 16). The
+  change landed inside window 3, so the census resolves 16 contexts at its
+  `--until` and `Lint Policy` leaves the admission table. No packet entry
+  recorded the change; the census found it by failing closed (ledger
+  2026-10-01). #1369 (merged the same day) now refuses any `--window` a
+  ruleset change straddles, so window 3 is non-admissible on main. Its tables
+  stand as attribution. The first clean 16-context week is 2026-09-26 →
+  2026-10-03.
 
 - Window-3 retarget (2026-09-24): the last repair merge is #1194 at
   2026-09-22T16:34Z, so window 3 is the first complete half-open UTC week
