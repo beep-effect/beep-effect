@@ -984,7 +984,7 @@ const discoverFullMetadataCheckPackages = Effect.fn("DocgenLocal.discoverFullMet
 ) {
   const packages = yield* discoverConfiguredPackages();
   const configured = yield* Effect.forEach(packages, loadConfiguredPackage, { concurrency: localParallel(parallel) });
-  const [skipped, checked] = A.partition(configured, canonicalConfigResult);
+  const [checked, skipped] = A.partition(configured, canonicalConfigResult);
   yield* Effect.forEach(skipped, logSkippedMetadataCheck, { discard: true });
   return checked;
 });

@@ -12,8 +12,11 @@ in AWS cost operations; the 14-worker deployment evidence below is historical.
 The current `beep-ec2-heavy` pool uses Spot capacity with
 `price-capacity-optimized` allocation and automatic On-Demand fallback disabled.
 This September 15 containment supersedes the September 9 On-Demand posture.
-Keep the two-instance cap, existing 64 GiB choices and ephemeral one-job-per-VM
-teardown. A budget alert does not enforce a monthly worker-hour limit. Diagnose
+Keep the two-instance cap, 64 GiB instance choices and ephemeral one-job-per-VM
+teardown. The October 1 source change below moves the pool to
+`capacity-optimized` across eight 64 GiB types and five availability zones,
+still all-Spot with the same cap; until it is deployed, the live pool keeps
+the September 15 settings. A budget alert does not enforce a monthly worker-hour limit. Diagnose
 interrupted jobs before retrying; changing the alert does not change running workers.
 
 ## Admission and capacity
@@ -47,6 +50,29 @@ and is unchanged by admission (time-to-certainty ruling 57).
    system or runner diagnostics before attributing an unexplained loss to OOM.
 5. Count only the matching fleet instances. Terminated EC2 and Spot request
    records have limited retention; preserve a sanitized incident receipt early.
+6. Once the Spot request record has expired, prove a reclaim from CloudTrail and
+   the termination watcher. The eviction is a `BidEvictedEvent` with a null
+   `userIdentity` whose `serviceEventDetails.instanceIdSet` names the instance:
+   `aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=BidEvictedEvent`.
+   About two minutes earlier the watcher logs the interruption warning with
+   `instanceState:"running"`:
+   `aws logs filter-log-events --log-group-name /aws/lambda/beep-ci-spot-termination-notification --filter-pattern '"<instance-id>"'`.
+   `aws cloudtrail lookup-events --lookup-attributes AttributeKey=ResourceName,AttributeValue=<instance-id>`
+   then shows the launch and no `TerminateInstances` call from any principal.
+   GitHub fails the job with the "lost communication" annotation 9 to 10
+   minutes after the eviction, its runner-heartbeat timeout.
+
+On 2026-10-01, all 28 "lost communication" heavy jobs between 2026-09-29 20:00Z
+and 2026-10-01 00:00Z matched this pattern: each instance had a
+`BidEvictedEvent`, a watcher warning two minutes before it, and a GitHub failure
+9.0 to 9.9 minutes after it. No principal called `TerminateInstances` on them,
+which rules out scale-down and the reaper. The window had 41 evictions across
+564 launches. `price-capacity-optimized` kept choosing the cheapest pool:
+`r7i.2xlarge` took 279 launches (198 in `us-east-1a`) and 25 evictions (19 in
+`us-east-1a`). The scale-up Lambda also logged 136
+`InsufficientInstanceCapacity` errors on 2026-09-30, while the fleet could use
+only `us-east-1a` and `us-east-1b`. Loss rate tracked job duration: Coverage
+Regression lost 19.7% of executions and Lint Policy 18.0%.
 
 On 2026-09-09, four workflows supplied nine distinct runner-loss examples.
 Every matching Spot request reported capacity reclamation. A broader retained
@@ -117,6 +143,33 @@ This fixes Spot-specific interruption and the known cleanup permission defect.
 Normal host, network, application, or timeout failures still require diagnosis.
 The 14-instance cap limits concurrency, not a monthly budget: billing continues
 for each running VM until its ephemeral teardown completes.
+
+## Deployment evidence — pending (2026-10-01 Spot pool spread)
+
+The source change sets `instance_allocation_strategy` to `capacity-optimized`,
+widens `runnerInstanceTypes` to eight 64 GiB x86_64 types (`r7a.2xlarge`,
+`r7i.2xlarge`, `r6i.2xlarge`, `r6a.2xlarge`, `m7a.4xlarge`, `m7i.4xlarge`,
+`m6a.4xlarge`, `m6i.4xlarge`), and adds public subnets C, D and E in
+`us-east-1c`, `us-east-1d` and `us-east-1f` (`10.88.32.0/20`,
+`10.88.48.0/20`, `10.88.64.0/20`) on the existing public route table. Purchase
+model, the two-worker cap and the empty On-Demand failover list are unchanged.
+It is not deployed. The operator runs the steps from "Deploy and verify":
+
+1. `op run --env-file=<path> -- true >/dev/null`, then use the same wrapper for
+   Pulumi against the S3 backend and the `production` stack in
+   `infra/ci-runners`.
+2. `bun run beep quality package-verify @beep/infra`.
+3. Review a saved Pulumi preview. Expected changes: three new subnets and three
+   route-table associations, and scale-up Lambda environment updates for the
+   strategy, instance types and subnet list. Existing subnets
+   A and B, the security groups, the AMI, the cap and the purchase model must
+   not change.
+4. Apply the reviewed plan with the operator attending (`pulumi up -s
+   production`), then confirm with `pulumi preview --expect-no-changes`.
+5. Confirm a heavy job succeeds on a newly launched Spot worker, and record
+   the launch types and zones here. Over the following days, repeat the
+   reclaim count from "Attribute a runner loss" to compare with the 41
+   evictions per 564 launches baseline.
 
 ## Deployment evidence — 2026-09-09
 
