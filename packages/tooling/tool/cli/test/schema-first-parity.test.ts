@@ -3,6 +3,10 @@ import {
   diffSchemaFirstParity,
   makeSchemaFirstEntryKey,
   SchemaFirstInventoryDocument,
+  SchemaFirstInventoryEntry,
+  SchemaFirstLintOptions,
+  SchemaFirstParityFindings,
+  SchemaFirstRender,
   schemaFirstParityEntriesFromSourceFile,
   toSchemaFirstBacklog,
 } from "@beep/repo-cli/test/Lint";
@@ -12,14 +16,15 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
+import { Effect, FileSystem, flow, Layer, Path, pipe, Result } from "effect";
 import { Command } from "effect/cli";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Project } from "ts-morph";
+import { Project, SyntaxKind } from "ts-morph";
 import { expectReportedExit } from "./support/CommandTest.ts";
-import type { SchemaFirstInventoryEntry } from "@beep/repo-cli/test/Lint";
+import type { SourceFile } from "ts-morph";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
@@ -40,6 +45,69 @@ const parityEntriesIn = (project: Project, sourceLines: ReadonlyArray<string>) =
 
 const parityEntries = (sourceLines: ReadonlyArray<string>) =>
   parityEntriesIn(new Project({ useInMemoryFileSystem: true }), sourceLines);
+
+// A project where `@beep/schema` resolves to declarations at the real SchemaUtils source paths, so
+// detection runs through the checker rather than the unresolved-import fallback.
+const schemaUtilsProject = () => {
+  const project = new Project({
+    useInMemoryFileSystem: true,
+    compilerOptions: { baseUrl: ".", paths: { "@beep/schema": ["packages/foundation/modeling/schema/src/index.ts"] } },
+  });
+  const schemaSource = "packages/foundation/modeling/schema/src";
+  project.createSourceFile(`${schemaSource}/index.ts`, 'export * as SchemaUtils from "./SchemaUtils/index.ts";');
+  project.createSourceFile(
+    `${schemaSource}/SchemaUtils/index.ts`,
+    A.join(
+      [
+        'export * from "./optionalKeyWithDefaults.ts";',
+        'export * from "./withEncodeDefault.ts";',
+        'export * from "./withKeyDefaults.ts";',
+      ],
+      "\n"
+    )
+  );
+  project.createSourceFile(
+    `${schemaSource}/SchemaUtils/optionalKeyWithDefaults.ts`,
+    "export const optionalKeyWithDefault = <A>(value: A) => <S>(schema: S): S => schema;"
+  );
+  project.createSourceFile(
+    `${schemaSource}/SchemaUtils/withEncodeDefault.ts`,
+    A.join(
+      [
+        "export const withEncodeDefault = <S, A>(schema: S, thunk: () => A): S => schema;",
+        "export const boolWithDefault = (value: boolean) => withEncodeDefault(value, () => value);",
+      ],
+      "\n"
+    )
+  );
+  project.createSourceFile(
+    `${schemaSource}/SchemaUtils/withKeyDefaults.ts`,
+    A.join(
+      [
+        "export const boolKeyWithDefault = (value: boolean) => value;",
+        "export const BoolKeyDefaultFalse = boolKeyWithDefault(false);",
+      ],
+      "\n"
+    )
+  );
+  return project;
+};
+
+// The schema-package-relative files that declare the first identifier named `name` in a source file.
+const declarationPathsOf =
+  (sourceFile: SourceFile) =>
+  (name: string): ReadonlyArray<string> =>
+    pipe(
+      sourceFile.getDescendantsOfKind(SyntaxKind.Identifier),
+      A.findFirst((identifier) => identifier.getText() === name),
+      O.flatMap((identifier) => O.fromUndefinedOr(identifier.getSymbol())),
+      O.map((symbol) =>
+        A.map(symbol.getDeclarations(), (declaration) =>
+          Str.replace(/^.*\/modeling\/schema\//u, "")(declaration.getSourceFile().getFilePath())
+        )
+      ),
+      O.getOrElse(A.empty<string>)
+    );
 
 // Anchors end in a content hash; tests compare the readable part and check the hash separately.
 const readable = (entries: ReadonlyArray<SchemaFirstInventoryEntry>): ReadonlyArray<string> =>
@@ -189,6 +257,85 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
       ).toEqual(["SFV4-default-wrapper title::withNoneDefault@<hash>"]);
     })
   );
+  it.effect("names the upstream form for every live SchemaUtils default wrapper, resolved to its declaration", () =>
+    Effect.gen(function* () {
+      const project = schemaUtilsProject();
+      const entries = yield* parityEntriesIn(project, [
+        'import * as S from "effect/Schema";',
+        'import { SchemaUtils } from "@beep/schema";',
+        "export const Widget = S.Struct({",
+        '  keyed: S.String.pipe(SchemaUtils.optionalKeyWithDefault("none")),',
+        '  encoded: SchemaUtils.withEncodeDefault(S.String, () => "none"),',
+        "  flag: SchemaUtils.boolWithDefault(false),",
+        "  keyFlag: SchemaUtils.boolKeyWithDefault(true),",
+        "  kept: SchemaUtils.BoolKeyDefaultFalse,",
+        "});",
+      ]);
+
+      // Detection must come from the checker: every wrapper resolves to its SchemaUtils declaration.
+      expect(
+        A.map(
+          ["optionalKeyWithDefault", "withEncodeDefault", "boolWithDefault", "boolKeyWithDefault"],
+          declarationPathsOf(project.getSourceFileOrThrow(fixtureFile))
+        )
+      ).toEqual([
+        ["src/SchemaUtils/optionalKeyWithDefaults.ts"],
+        ["src/SchemaUtils/withEncodeDefault.ts"],
+        ["src/SchemaUtils/withEncodeDefault.ts"],
+        ["src/SchemaUtils/withKeyDefaults.ts"],
+      ]);
+      expect(readable(entries)).toEqual([
+        "SFV4-default-wrapper Widget.keyed::optionalKeyWithDefault@<hash>",
+        "SFV4-default-wrapper Widget.encoded::withEncodeDefault@<hash>",
+        "SFV4-default-wrapper Widget.flag::boolWithDefault@<hash>",
+        "SFV4-default-wrapper Widget.keyFlag::boolKeyWithDefault@<hash>",
+      ]);
+      expect(A.map(entries, (entry) => entry.reason)).toEqual([
+        "SchemaUtils.optionalKeyWithDefault wraps an upstream schema default; use S.withDecodingDefaultTypeKey(Effect.succeed(value)) directly so the default stays on Effect's own combinators.",
+        "SchemaUtils.withEncodeDefault wraps an upstream schema default; use S.withDecodingDefaultTypeKey(Effect.sync(thunk)) directly so the default stays on Effect's own combinators.",
+        "SchemaUtils.boolWithDefault wraps an upstream schema default; use S.Boolean.pipe(S.withDecodingDefaultTypeKey(Effect.succeed(value))) directly so the default stays on Effect's own combinators.",
+        "SchemaUtils.boolKeyWithDefault wraps an upstream schema default; use S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(value)), S.withDecodingDefaultTypeKey(Effect.succeed(value))) directly so the default stays on Effect's own combinators.",
+      ]);
+    })
+  );
+
+  it.effect("reaches SchemaUtils through a namespace import of the @beep/schema root", () =>
+    Effect.gen(function* () {
+      expect(
+        readable(
+          yield* parityEntries([
+            'import * as S from "effect/Schema";',
+            'import * as BeepSchema from "@beep/schema";',
+            'import * as Opaque from "@beep/schema/Opaque";',
+            "export const Widget = S.Struct({",
+            "  byMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema.SchemaUtils.withEncodeDefault),",
+            '  byElement: S.OptionFromOptionalKey(S.Finite).pipe(BeepSchema["SchemaUtils"].withEncodeDefault),',
+            "  otherMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema.Other.withEncodeDefault),",
+            "  computedMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema[key].withEncodeDefault),",
+            "  notRoot: S.OptionFromOptionalKey(S.String).pipe(Opaque.SchemaUtils.withEncodeDefault),",
+            "});",
+          ])
+        )
+      ).toEqual([
+        "SFV4-default-wrapper Widget.byMember::withEncodeDefault@<hash>",
+        "SFV4-default-wrapper Widget.byElement::withEncodeDefault@<hash>",
+      ]);
+    })
+  );
+
+  it.effect("anchors a wrapper outside any named declaration at <module>", () =>
+    Effect.gen(function* () {
+      expect(
+        readable(
+          yield* parityEntries([
+            'import * as S from "effect/Schema";',
+            'import { SchemaUtils } from "@beep/schema";',
+            "void S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);",
+          ])
+        )
+      ).toEqual(["SFV4-default-wrapper <module>::withNoneDefault@<hash>"]);
+    })
+  );
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-opaque-wrapper", (it) => {
@@ -280,6 +427,39 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("parity occurrence ident
       expect(A.map(findings.introduced, (entry) => entry.line)).toEqual([5]);
       expect(anchors(findings.introduced)).not.toEqual(anchors(before));
       expect(findings.resolved).toEqual([]);
+    })
+  );
+
+  it.effect("groups the backlog into rows sorted by file then rule, with sorted anchors", () =>
+    Effect.sync(() => {
+      const entry = (file: string, ruleId: "SFV4-default-wrapper" | "SFV4-opaque-wrapper", occurrence: string) =>
+        SchemaFirstInventoryEntry.make({
+          file,
+          symbol: "Widget",
+          kind: "schema-policy-advisory",
+          status: "advisory",
+          ruleId,
+          occurrence,
+          owner: "@beep/example",
+          reason: "parity occurrence",
+        });
+
+      const rows = toSchemaFirstBacklog([
+        entry("packages/b/src/B.ts", "SFV4-default-wrapper", "Widget::withEncodeDefault@bbbbbbbbbbbb"),
+        entry("packages/a/src/A.ts", "SFV4-opaque-wrapper", "Widget::Defect@aaaaaaaaaaaa"),
+        entry("packages/a/src/A.ts", "SFV4-default-wrapper", "Widget::withEncodeDefault@cccccccccccc"),
+        entry("packages/a/src/A.ts", "SFV4-default-wrapper", "Widget::boolWithDefault@111111111111"),
+      ]);
+
+      expect(A.map(rows, (row) => [row.file, row.ruleId, row.occurrences])).toEqual([
+        [
+          "packages/a/src/A.ts",
+          "SFV4-default-wrapper",
+          ["Widget::boolWithDefault@111111111111", "Widget::withEncodeDefault@cccccccccccc"],
+        ],
+        ["packages/a/src/A.ts", "SFV4-opaque-wrapper", ["Widget::Defect@aaaaaaaaaaaa"]],
+        ["packages/b/src/B.ts", "SFV4-default-wrapper", ["Widget::withEncodeDefault@bbbbbbbbbbbb"]],
+      ]);
     })
   );
 
@@ -441,6 +621,59 @@ it.layer(testLayer, { timeout: "60 seconds" })("schema-first parity ratchet comm
         "[schema-first] parity backlog written: occurrences=3 previous_baseline=4 dropped=1"
       );
       expect(A.length(yield* backlogAnchors)).toBe(3);
+    })
+  );
+});
+
+const unanchoredEntry = SchemaFirstInventoryEntry.make({
+  file: fixtureFile,
+  symbol: "Widget",
+  kind: "schema-policy-advisory",
+  status: "candidate",
+  owner: "@beep/example",
+  reason: "Legacy entry without a rule, line, or anchor.",
+});
+
+it.layer(TestConsole.layer, { timeout: "30 seconds" })("schema-first parity rendering", (it) => {
+  it.effect("keys an anchored entry without a rule id under an empty rule", () =>
+    Effect.sync(() => {
+      expect(
+        makeSchemaFirstEntryKey(
+          SchemaFirstInventoryEntry.make({ ...unanchoredEntry, occurrence: "Widget::withNoneDefault@0123456789ab" })
+        )
+      ).toBe(`${fixtureFile}::::Widget::withNoneDefault@0123456789ab`);
+    })
+  );
+
+  it.effect("renders an introduced entry without a rule, line, or anchor with neutral fallbacks", () =>
+    Effect.gen(function* () {
+      const input = yield* SchemaFirstRender.parityRatchetInput(
+        SchemaFirstParityFindings.make({
+          introduced: [unanchoredEntry],
+          resolved: [],
+          rules: [],
+          liveCount: 1,
+          baselineCount: 0,
+        }),
+        SchemaFirstLintOptions.make({})
+      );
+      const [regression] = input.regressions;
+
+      expect(regression?.present).toBe(true);
+      expect(regression?.lines).toContain(
+        `- ${fixtureFile}:0 :: Widget [] Legacy entry without a rule, line, or anchor.`
+      );
+      expect(A.some(regression?.lines ?? [], Str.includes('"ruleId":"schema-first-inventory"'))).toBe(true);
+    })
+  );
+
+  it.effect("lists stale inventory entries with a policy finding each", () =>
+    Effect.gen(function* () {
+      yield* SchemaFirstRender.logStaleEntries([unanchoredEntry]);
+      const errorLines = consoleLines(yield* TestConsole.errorLines);
+
+      expect(errorLines).toContain("[schema-first] stale inventory entries:");
+      expect(errorLines).toContain(`- ${fixtureFile} :: Widget [schema-policy-advisory]`);
     })
   );
 });
