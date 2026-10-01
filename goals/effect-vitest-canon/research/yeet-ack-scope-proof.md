@@ -1,7 +1,7 @@
 # Yeet acknowledgement fixture qualification
 
-This is a privately qualified candidate, not yet applied or counted as a
-campaign fix. The active restoration/inbox package proof retains its inputs.
+The qualified candidate is applied after restoration/inbox commit
+`795328b6d5`. Full package proof passes; campaign findings await the source commit.
 
 Twelve live tests move from manual providers to public instrumented layer
 registrations with live services preserved and explicit ten-second hook
@@ -26,3 +26,10 @@ Restoring the original ignored cleanup makes the control fail as expected
 (Node, 3.29 seconds), demonstrating sensitivity to the suppressed error.
 Candidate hashes and detailed logs are retained privately. Applied package
 verification and a source commit remain required before ledger reconciliation.
+
+Applied combined acknowledgement/resume tests pass 41 cases on Node
+(6.98 seconds) and Bun (4.23 seconds); root test types pass. Detector candidates
+for shorter inTempRepo ownership carry explicit reviewed exception reasons.
+
+Final full package audit passes in 646.7 seconds and docgen in 23.2 seconds.
+The applied detector ratchet reports zero introduced findings.

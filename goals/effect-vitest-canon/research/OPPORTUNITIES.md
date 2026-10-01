@@ -6218,3 +6218,12 @@ symlink cases native; qualify only the three read-only view fixtures for Memory.
 Node-only green evidence would have missed this boundary. A future test helper
 could declare native subprocess requirements so platform promotion reviews do
 not have to discover them from a runtime-specific failure.
+
+### Persisted Option assertions can pass without examining state
+
+While qualifying `yeet-remediation.test.ts` for L-PROP-04, injecting absent
+persisted state let both original conditional head/update checks pass. Explicit
+presence assertions make the same two cases fail. Consider a targeted review
+of assertions nested under `Option.isSome` without a preceding presence check;
+a syntax-only detector should report candidates rather than assume intent.
+The private control receipts are summarized in `yeet-remediation-scope-proof.md`.
