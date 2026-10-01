@@ -130,6 +130,11 @@ const laneOutcome = (
 /**
  * Append the zero-files diagnostic for a lane expected to measure every staged
  * file (Biome, or any lane whose tool did not run).
+ *
+ * @param lane - The law lane being reported.
+ * @param filesProcessed - How many staged files the lane measured.
+ * @param environmentDiagnostics - Diagnostics collected for the lane so far.
+ * @returns The diagnostics, plus the zero-files diagnostic when nothing was processed.
  */
 const requireProcessedFiles = (
   lane: AgentEffectivenessEvalLawLane,
@@ -143,6 +148,11 @@ const requireProcessedFiles = (
  * only a subset of the staged files (schema-first, tsgo). Measuring none of a
  * non-empty staged set is the agent's doing and scores as `unmeasured-file`
  * violations; only an empty staged set is an environment failure.
+ *
+ * @param lane - The law lane being reported.
+ * @param sourceFiles - The staged source files the lane was asked to measure.
+ * @param environmentDiagnostics - Diagnostics collected for the lane so far.
+ * @returns The diagnostics, plus the zero-staged diagnostic when nothing was staged.
  */
 const requireStagedFiles = (
   lane: AgentEffectivenessEvalLawLane,
