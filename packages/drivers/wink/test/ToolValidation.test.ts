@@ -163,9 +163,9 @@ describe("Tool validation", () => {
       const vectorizerError = VectorizerError.fromMessage("Document index is out of range", "tf");
       const winkError = WinkEngineError.fromCause(new Error("missing model"), "initialize");
 
-      expect(EntityGroupName.is(entityGroupName)).toBe(true);
-      expect(InstanceId.is(instanceId)).toBe(true);
-      expect(WinkError.is(winkError)).toBe(true);
+      expect(Schema.is(EntityGroupName)(entityGroupName)).toBe(true);
+      expect(Schema.is(InstanceId)(instanceId)).toBe(true);
+      expect(Schema.is(WinkError)(winkError)).toBe(true);
       expect(yield* encodeEntityGroupName(entityGroupName)).toBe("ProductName");
       expect(yield* encodeInstanceId(instanceId)).toBe("wink-engine-example-4");
       expect(yield* encodeCustomEntityExample(customEntityExample)).toEqual({

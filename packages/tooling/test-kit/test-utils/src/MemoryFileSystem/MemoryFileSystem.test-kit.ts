@@ -168,7 +168,7 @@ const isFinite = S.is(S.Finite);
 const isNonEmptyString = S.is(S.NonEmptyString);
 
 const EntryName = S.NonEmptyString.check(
-  S.makeFilter((value) => value !== "." && value !== ".." && !Str.includes("/")(value) && !HasNullByte.is(value), {
+  S.makeFilter((value) => value !== "." && value !== ".." && !Str.includes("/")(value) && !S.is(HasNullByte)(value), {
     identifier: $I`EntryNameCheck`,
     title: "Directory entry name",
     description: "Reject only dot names, separators and embedded NUL.",
@@ -696,7 +696,7 @@ const resolvePathComponent = Effect.fnUntraced(function* (
 const resolve = Effect.fnUntraced(function* (state: State, path: string, options?: ResolveOptions) {
   const policy = ResolutionPolicy.make(options ?? {});
   const { method } = policy;
-  if (path.length === 0 || HasNullByte.is(path)) return yield* notFound(method, path);
+  if (path.length === 0 || S.is(HasNullByte)(path)) return yield* notFound(method, path);
   const walk: ResolutionWalk = {
     components: Str.split("/")(path),
     stack: [RootInode],
@@ -825,7 +825,7 @@ const resolveParent = Effect.fnUntraced(function* (
   method: string,
   errorPath: string = path
 ) {
-  if (path.length === 0 || path === "/" || Str.endsWith("/")(path) || HasNullByte.is(path)) {
+  if (path.length === 0 || path === "/" || Str.endsWith("/")(path) || S.is(HasNullByte)(path)) {
     return yield* badResource(method, errorPath);
   }
   const components = A.filter(Str.split("/")(path), (component) => component.length > 0);
@@ -977,7 +977,7 @@ const makeDirectory = (volume: Volume) =>
         let nextState = state;
         const recursive = options?.recursive === true;
         const pieces = A.filter(Str.split("/")(path), (piece) => piece.length > 0);
-        if (pieces.length === 0 || HasNullByte.is(path)) return yield* badResource(method, path);
+        if (pieces.length === 0 || S.is(HasNullByte)(path)) return yield* badResource(method, path);
         const prefix = Str.startsWith("/")(path) ? "/" : "";
         const events: Array<FileSystem.WatchEvent> = [];
         for (let index = 0; index < pieces.length; index++) {
@@ -1029,7 +1029,7 @@ const symlink = (volume: Volume) =>
     return yield* volume.mutate(
       Effect.fnUntraced(function* (state) {
         const parent = yield* resolveParent(state, path, method);
-        if (HasNullByte.is(target)) {
+        if (S.is(HasNullByte)(target)) {
           return yield* argumentError(method, "target must not contain a null byte");
         }
         if (!isNonEmptyString(target)) return yield* notFound(method, target);
@@ -2808,7 +2808,7 @@ const parseGlobSegment = Effect.fnUntraced(function* (method: string, segment: s
 });
 
 const compileGlobPattern = Effect.fnUntraced(function* (method: string, pattern: string) {
-  if (pattern.length === 0 || HasNullByte.is(pattern) || Str.startsWith("/")(pattern)) {
+  if (pattern.length === 0 || S.is(HasNullByte)(pattern) || Str.startsWith("/")(pattern)) {
     return yield* argumentError(method, "pattern must be a root-relative POSIX glob");
   }
   const directoryOnly = Str.endsWith("/")(pattern);

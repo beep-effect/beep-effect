@@ -261,7 +261,7 @@ export const loadReflection: {
   const bytes = yield* fs
     .readFile(reflectionPath)
     .pipe(Effect.mapError((cause) => ReflectionReadFailed.make({ path: reflectionPath, cause })));
-  yield* Sha256HexFromBytes.decodeEffect(bytes).pipe(
+  yield* S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(
     Effect.mapError((cause) => ReflectionReadFailed.make({ path: reflectionPath, cause })),
     Effect.filterOrFail(
       (digest) => sha256Equivalence(digest, entry.reflectionDigest),
@@ -273,7 +273,7 @@ export const loadReflection: {
         })
     )
   );
-  return yield* TypeDocProjectReflectionFromBytes.decodeEffect(bytes).pipe(
+  return yield* S.decodeEffect(TypeDocProjectReflectionFromBytes)(bytes).pipe(
     Effect.mapError((cause) => ReflectionDecodeFailed.make({ path: reflectionPath, cause }))
   );
   })

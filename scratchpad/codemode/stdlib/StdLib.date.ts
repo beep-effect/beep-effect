@@ -29,7 +29,7 @@ export {
   dateStatics,
 } from "../Codemode.method-names.ts";
 
-const DirectDateStatic = LiteralKit(dateStatics.omitOptions(["now"]));
+const DirectDateStatic = LiteralKit(dateStatics.pick(["parse", "UTC"]).literals);
 type DirectDateStatic = Exclude<DateStatic, "now">;
 
 /**

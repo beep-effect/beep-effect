@@ -10,11 +10,10 @@
  * @since 0.0.0
  */
 
-import { LiteralKit, SafeObject } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { dual } from "effect/Function";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R } from "@beep/utils";
-import { Effect } from "effect";
+import { Effect, flow, Result } from "effect";
 import * as S from "effect/Schema";
 import {
   type ArrayMethod,
@@ -37,6 +36,7 @@ import {
   CodeModeSet,
   type CodeModeURLSearchParams,
   isCodeModeValue,
+  SafeObject,
 } from "../Codemode.values.ts";
 import { dateSetterArgumentCount, invokeDateMethod, invokeDateStatic } from "../stdlib/StdLib.date.ts";
 import { invokeMathMethod } from "../stdlib/StdLib.math.ts";
@@ -74,7 +74,7 @@ import {
   typeofValue,
 } from "./Interpreter.references.ts";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 /**
  * Capability used to invoke guest functions and settle guest promises.
@@ -170,7 +170,7 @@ const isSupportedRuntimeCallback = RuntimeReference.isAnyOf([
  * @since 0.0.0
  */
 export const isSupportedCallback = (value: unknown): value is SupportedCallback =>
-  RuntimeReference.is(value) &&
+  S.is(RuntimeReference)(value) &&
   isSupportedRuntimeCallback(value) &&
   // Callable namespaces dispatch like JS: Array/Object/Date/RegExp construct,
   // new-requiring constructors throw a TypeError. Math/JSON/console stay non-callable.
@@ -393,7 +393,7 @@ const requireDataArgument = (name: StringMethod, index: number, arg: unknown, no
   return arg;
 };
 
-const DirectStringMethod = LiteralKit(stringMethods.omitOptions(["match", "matchAll"]));
+const DirectStringMethod = LiteralKit(stringMethods.pick(["toLowerCase", "toUpperCase", "trim", "trimStart", "trimEnd", "split", "slice", "substring", "includes", "startsWith", "endsWith", "indexOf", "lastIndexOf", "replace", "replaceAll", "repeat", "padStart", "padEnd", "charAt", "charCodeAt", "codePointAt", "at", "concat", "toString", "search", "localeCompare", "normalize"]).literals);
 type DirectStringMethod = Exclude<StringMethod, "match" | "matchAll">;
 const CallbackArrayMethodOptions = [
   "map",
@@ -409,8 +409,8 @@ const CallbackArrayMethodOptions = [
   "flatMap",
   "forEach",
 ] as const;
-const CallbackArrayMethod = LiteralKit(arrayMethods.pickOptions(CallbackArrayMethodOptions));
-const DirectArrayMethod = LiteralKit(arrayMethods.omitOptions(CallbackArrayMethodOptions));
+const CallbackArrayMethod = LiteralKit(arrayMethods.pick(CallbackArrayMethodOptions).literals);
+const DirectArrayMethod = LiteralKit(arrayMethods.pick(["includes", "join", "sort", "toSorted", "slice", "concat", "indexOf", "lastIndexOf", "at", "flat", "reverse", "toReversed", "with", "push", "pop", "shift", "unshift", "splice", "toSpliced", "fill", "copyWithin", "keys", "values", "entries"]).literals);
 const isDirectArrayMethod = S.is(DirectArrayMethod);
 type DirectArrayStatic = Exclude<ArrayStatic, "from">;
 
@@ -537,7 +537,7 @@ const invokeStringMethod = (value: string, name: StringMethod, args: Array<unkno
 
 export { arrayStatics } from "../Codemode.method-names.ts";
 
-const DirectArrayStatic = LiteralKit(arrayStatics.omitOptions(["from"]));
+const DirectArrayStatic = LiteralKit(arrayStatics.pick(["isArray", "of"]).literals);
 
 const invokeArrayStatic = (name: DirectArrayStatic, args: Array<unknown>, _node: AstNode): unknown =>
   DirectArrayStatic.$match(name, {
@@ -1056,7 +1056,7 @@ const invokeSetMethod = <R>(
 };
 
 const SetOperationMethod = LiteralKit(
-  setMethods.pickOptions([
+  setMethods.pick([
     "union",
     "intersection",
     "difference",
@@ -1064,7 +1064,7 @@ const SetOperationMethod = LiteralKit(
     "isSubsetOf",
     "isSupersetOf",
     "isDisjointFrom",
-  ])
+  ]).literals
 );
 type SetOperationMethod = typeof SetOperationMethod.Type;
 

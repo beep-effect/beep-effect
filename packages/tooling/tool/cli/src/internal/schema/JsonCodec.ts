@@ -8,10 +8,8 @@
  * one combinator that turns a JSON `SchemaError` into a caller-owned domain
  * error at a boundary.
  *
- * `@beep/schema`'s {@link https://npmjs.com/@beep/schema | SchemaUtils} carries
- * `withCodecStatics` (guard + unknown decoders), but that operates on already
- * parsed unknown values, not JSON text — so it is not an equivalent and this
- * module is the JSON-string owner.
+ * The `effect/Schema` codec functions operate on already parsed values, not
+ * JSON text, so this module is the JSON-string owner.
  *
  * @internal
  * @packageDocumentation

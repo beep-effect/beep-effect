@@ -16,11 +16,12 @@
 
 import { $ExiftoolId } from "@beep/identity/packages";
 import { Fn, LiteralKit } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, N, O, P, pipe, Str } from "@beep/utils";
-import { Effect } from "effect";
+import { Effect, flow, Result } from "effect";
 import * as S from "effect/Schema";
 import { BeepQaProvenance, EpochMilliseconds, TagAssignment } from "./Exiftool.models.ts";
+
+const decodeEpochMillisecondsOption = S.decodeUnknownOption(EpochMilliseconds);
 
 const $I = $ExiftoolId.create("ExiftoolConfig");
 
@@ -81,7 +82,7 @@ export const BEEP_QA_XMP_GROUP = `XMP-${BEEP_QA_XMP_NAMESPACE_PREFIX}`;
  * ```ts
  * import { BeepQaTagName } from "@beep/exiftool"
  *
- * console.log(BeepQaTagName.Options)
+ * console.log(BeepQaTagName.literals)
  * ```
  *
  * @category schemas
@@ -292,8 +293,8 @@ export class RenderBeepQaConfigOptions extends S.Class<RenderBeepQaConfigOptions
       })
     ),
     propertyNames: S.Array(XmpPropertyName).pipe(
-      S.withConstructorDefault(Effect.succeed(BeepQaTagName.Options)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(BeepQaTagName.Options)),
+      S.withConstructorDefault(Effect.succeed(BeepQaTagName.literals)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(BeepQaTagName.literals)),
       $I.annoteKey("RenderBeepQaConfigOptions.propertyNames", {
         description: "String-writable property names declared inside the namespace.",
       })
@@ -358,7 +359,7 @@ ${propertyLines}
 `;
   });
 
-const encodeJsonText = UnknownFromJsonString.encodeUnknownSync;
+const encodeJsonText = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const decodeToolVersions = S.decodeUnknownOption(S.fromJsonString(S.Record(S.String, S.String)));
 
 const qualifiedTagName = (name: BeepQaTagName): string => `${BEEP_QA_XMP_GROUP}:${name}`;
@@ -486,7 +487,7 @@ export const provenanceFromRawTags = (raw: Readonly<Record<string, unknown>>): O
   pipe(
     O.all({
       actionId: rawTextAt(raw, "actionId"),
-      capturedAtEpochMs: pipe(rawNumberAt(raw, "capturedAtEpochMs"), O.flatMap(EpochMilliseconds.decodeUnknownOption)),
+      capturedAtEpochMs: pipe(rawNumberAt(raw, "capturedAtEpochMs"), O.flatMap(decodeEpochMillisecondsOption)),
       scenarioName: rawTextAt(raw, "scenarioName"),
       sessionId: rawTextAt(raw, "sessionId"),
     }),

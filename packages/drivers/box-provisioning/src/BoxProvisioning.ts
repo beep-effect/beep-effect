@@ -12,7 +12,7 @@ import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import { identity } from "effect/Function";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import {
   BoxProvisioningApplier,
   validateBoxProvisioningBlockerContract,
@@ -27,7 +27,7 @@ import {
 import { BoxAdoption, BoxDesiredState, BoxLogicalKey, mergeBoxAdoptions } from "./BoxProvisioningIntent.ts";
 import { BoxProvisioningInventory } from "./BoxProvisioningInventory.ts";
 import { BoxProvisioningPlanner } from "./BoxProvisioningPlanner.ts";
-import { BoxReviewedApplyResult } from "./BoxProvisioningReceipt.ts";
+import { BoxActionApplied, BoxReviewedApplyResult } from "./BoxProvisioningReceipt.ts";
 import { digestText, hasValidBoxProvisioningPlanDigest } from "./internal/canonical.ts";
 import type * as B from "@beep/box";
 import type * as PlatformError from "effect/PlatformError";
@@ -41,7 +41,6 @@ import type {
 } from "./BoxProvisioningErrors.ts";
 import type { BoxObservedState } from "./BoxProvisioningObserved.ts";
 import type { BoxProvisioningPlan } from "./BoxProvisioningPlan.ts";
-import type { BoxActionApplied, BoxApplyOutcome } from "./BoxProvisioningReceipt.ts";
 
 const $I = $BoxProvisioningId.create("BoxProvisioning");
 
@@ -59,7 +58,7 @@ type ApplyError =
   | BoxProvisioningBlockerContractError
   | BoxProvisioningApplyJournalError;
 
-const isAppliedOutcome = (outcome: BoxApplyOutcome): outcome is BoxActionApplied => P.isTagged(outcome, "Applied");
+const isAppliedOutcome = S.is(BoxActionApplied);
 
 /** Keeps platform digest failures intact and reports every schema issue as a plan-stage failure. */
 const toPlanStageFailure = Match.type<PlatformError.PlatformError | SchemaIssue.Issue>().pipe(

@@ -21,7 +21,7 @@ const $I = $FileProcessingId.create("Operation");
  * ```ts import.meta.vitest name="Check reason options membership"
  * import { FileProcessingOperationErrorReason } from "@beep/file-processing/Operation"
  *
- * FileProcessingOperationErrorReason.Options.includes("engine-unavailable") // => true
+ * FileProcessingOperationErrorReason.literals.includes("engine-unavailable") // => true
  * ```
  *
  * @category errors

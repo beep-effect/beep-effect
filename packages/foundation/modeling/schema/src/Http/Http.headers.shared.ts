@@ -12,7 +12,6 @@ import { Effect, identity, Option, Result, SchemaIssue, SchemaTransformation } f
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Http/headers");
 
@@ -166,10 +165,7 @@ export const EncodedStrictURIFromStrOrURL = StringOrUrl.pipe(
   ),
   $I.annoteSchema("EncodedStrictURIFromStrOrURL", {
     description: "A destructively transformed encoded strict URI string from a string or URL.",
-  }),
-  SchemaUtils.withStatics((self) => ({
-    decodeResult: S.decodeUnknownResult(self),
-  }))
+  })
 );
 
 /**
@@ -211,7 +207,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  * @since 0.0.0
  */
 export const encodeStrictURI = (value: StringOrUrl): EncodedStrictURIFromStrOrURL =>
-  Result.getOrThrowWith(EncodedStrictURIFromStrOrURL.decodeResult(value), schemaIssueToError);
+  Result.getOrThrowWith(S.decodeResult(EncodedStrictURIFromStrOrURL)(value), schemaIssueToError);
 
 /**
  * Wraps a single value in an array while preserving arrays.

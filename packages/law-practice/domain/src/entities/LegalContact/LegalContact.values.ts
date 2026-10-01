@@ -7,7 +7,6 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("entities/LegalContact/LegalContact.values");
 const LegalContactRoleBase = LiteralKit(["founder"]);
@@ -32,11 +31,7 @@ export const LegalContactRole = LegalContactRoleBase.pipe(
   $I.annoteSchema("LegalContactRole", {
     description: "Legal contact role accepted by law-practice proof fixtures.",
   }),
-  SchemaUtils.withLiteralKitStatics(LegalContactRoleBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownResult(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(LegalContactRoleBase)
 );
 
 /**

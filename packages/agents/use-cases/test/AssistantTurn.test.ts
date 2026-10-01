@@ -14,7 +14,6 @@ import {
   fixtureEventsFor,
   fixtureProviderUsage,
 } from "@beep/agents-use-cases/test";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -36,7 +35,7 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
 
 describe("@beep/agents-use-cases AssistantTurn", () => {
   it("models history as a role-tagged union of user and assistant items", () => {
-    const decoded = TurnHistoryItem.decodeSync({ role: "user", text: "hello" });
+    const decoded = Result.getOrThrow(S.decodeResult(TurnHistoryItem)({ role: "user", text: "hello" }));
     const user = userItem("hello");
     const assistant = assistantItem("hi");
 
@@ -55,7 +54,7 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
     const block = ParagraphBlock.make({ children: [TextInline.make({ text: "Hello" })] });
     const indexed = IndexedBlock.make({ block, index: 0 });
 
-    expect(Result.getOrThrow(TurnHistoryItem.encodeResult(userItem("hello")))).toStrictEqual({
+    expect(Result.getOrThrow(S.encodeResult(TurnHistoryItem)(userItem("hello")))).toStrictEqual({
       role: "user",
       text: "hello",
     });
@@ -101,11 +100,9 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
         stopReason: null,
       });
 
-      const JsonProviderUsage = S.fromJsonString(ProviderUsageMetadata).pipe(
-        SchemaUtils.withCodecStatics(["encodeEffect", "decodeEffect"])
-      );
-      const json = yield* JsonProviderUsage.encodeEffect(usage);
-      const decoded = yield* JsonProviderUsage.decodeEffect(json);
+      const JsonProviderUsage = S.fromJsonString(ProviderUsageMetadata);
+      const json = yield* S.encodeEffect(JsonProviderUsage)(usage);
+      const decoded = yield* S.decodeEffect(JsonProviderUsage)(json);
 
       expect(decoded).toStrictEqual(usage);
       assertNone(decoded.stopReason);

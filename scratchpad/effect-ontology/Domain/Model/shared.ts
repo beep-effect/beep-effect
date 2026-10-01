@@ -30,9 +30,10 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
  * **Example** (Use AttributeValue)
  * ```ts
  * import { AttributeValue } from "@effect-ontology/Model/shared"
+ * import * as S from "effect/Schema"
  *
- * console.log(AttributeValue.is("Seattle")) // true
- * console.log(AttributeValue.is(Number.POSITIVE_INFINITY)) // false
+ * console.log(S.is(AttributeValue)("Seattle")) // true
+ * console.log(S.is(AttributeValue)(Number.POSITIVE_INFINITY)) // false
  * ```
  *
  * @invariant A string, boolean, or finite number.
@@ -42,8 +43,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
 export const AttributeValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
     $I.annoteSchema("AttributeValue", {
       description: "JSON-safe scalar attribute value consisting of a string, boolean, or finite number.",
-    }),
-    SchemaUtils.withCodecStatics(["is"])
+    })
   );
 
 /**
@@ -90,7 +90,6 @@ export const Attributes = S.Record(S.String, AttributeValue).pipe(
     $I.annoteSchema("Attributes", {
       description: "Open string-keyed attribute record whose values are JSON-safe scalars.",
     }),
-    SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics(() => ({
       empty: (): Attributes => ({}),
     }))
@@ -191,9 +190,10 @@ export const ENTITY_ID_PATTERN = /^[a-z][a-z0-9_]*$/;
  * **Example** (Use EntityId)
  * ```ts
  * import { EntityId } from "@effect-ontology/Model/shared"
+ * import * as S from "effect/Schema"
  *
  * const id = EntityId.make("cristiano_ronaldo")
- * console.log(EntityId.is(id)) // true
+ * console.log(S.is(EntityId)(id)) // true
  * ```
  *
  * @invariant Snake case beginning with a lowercase ASCII letter.
@@ -212,11 +212,7 @@ export const EntityId = S.String.check(
     S.brand("EntityId"),
     $I.annoteSchema("EntityId", {
       description: "Validated snake-case local identifier for an extracted or resolved entity.",
-    }),
-    SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
-    SchemaUtils.withStatics((schema) => ({
-      equivalence: SchemaUtils.toEquivalence(schema),
-    }))
+    })
   );
 
 /**

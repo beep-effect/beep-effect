@@ -19,8 +19,7 @@ import {
   PhoenixPromptChatMessage,
   PhoenixPromptCreateInput,
 } from "@beep/phoenix";
-import { Defect, LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { DateTime, Duration, Effect, FileSystem, flow, HashMap, Match, Path, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -31,6 +30,8 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { AiMetricsDeployTarget, CountRow } from "./models.ts";
 import type { PhoenixError, PhoenixShape } from "@beep/phoenix";
+
+const decodeUnknownJsonResult = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const $I = $RepoAiMetricsId.create("agent-effectiveness");
 const defaultPhoenixBaseUrl = "https://dankserver.tailc7c348.ts.net:8447";
@@ -398,9 +399,10 @@ export type AgentEffectivenessArtifactSchemaVersion = typeof AgentEffectivenessA
  *
  * ```ts
  * import { AgentEffectivenessAnnotationValue } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
  *
- * console.log(AgentEffectivenessAnnotationValue.is(0.98)) // true
- * console.log(AgentEffectivenessAnnotationValue.is({ score: 0.98 })) // false
+ * console.log(S.is(AgentEffectivenessAnnotationValue)(0.98)) // true
+ * console.log(S.is(AgentEffectivenessAnnotationValue)({ score: 0.98 })) // false
  * ```
  *
  * @category models
@@ -409,8 +411,7 @@ export type AgentEffectivenessArtifactSchemaVersion = typeof AgentEffectivenessA
 export const AgentEffectivenessAnnotationValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
   $I.annoteSchema("AgentEffectivenessAnnotationValue", {
     description: "Sanitized primitive value allowed in an agent-effectiveness annotation plan.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -459,7 +460,7 @@ export type AgentEffectivenessAnnotationValue = typeof AgentEffectivenessAnnotat
 export class AgentEffectivenessError extends S.TaggedError<AgentEffectivenessError>($I`AgentEffectivenessError`)(
   "AgentEffectivenessError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AgentEffectivenessError>("AgentEffectivenessError", {
@@ -1112,7 +1113,7 @@ export class AgentEffectivenessDoctorReport extends S.Class<AgentEffectivenessDo
     jsdocWorkerEval: AgentEffectivenessJsdocWorkerSection,
     phoenix: AgentEffectivenessPhoenixSection,
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-doctor/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-doctor/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-doctor/v1"])
@@ -1296,7 +1297,7 @@ export class AgentEffectivenessAnnotationPlan extends S.Class<AgentEffectiveness
     generatedAt: S.String,
     mutationPolicy: AgentEffectivenessMutationPolicy,
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-annotation-plan/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-annotation-plan/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-annotation-plan/v1"])
@@ -1397,7 +1398,7 @@ export class AgentEffectivenessAnnotationCheckReport extends S.Class<AgentEffect
     findings: S.Array(AgentEffectivenessAnnotationCheckFinding),
     generatedAt: S.String,
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-annotation-check/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-annotation-check/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-annotation-check/v1"])
@@ -1497,7 +1498,7 @@ export const AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION = "agent-effectivene
  * import { AgentEffectivenessDatasetKind } from "@beep/repo-ai-metrics"
  *
  * console.log(AgentEffectivenessDatasetKind.Enum["agent-loop-health"]) // agent-loop-health
- * console.log(AgentEffectivenessDatasetKind.Options.length) // 5
+ * console.log(AgentEffectivenessDatasetKind.literals.length) // 5
  * ```
  *
  * @category models
@@ -1661,7 +1662,7 @@ export class AgentEffectivenessDatasetBundle extends S.Class<AgentEffectivenessD
     generatedAt: S.String,
     projectName: S.String,
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-datasets/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-datasets/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-datasets/v1"])
@@ -1691,7 +1692,7 @@ export class AgentEffectivenessDatasetBundle extends S.Class<AgentEffectivenessD
  * import { AgentEffectivenessPromptRole } from "@beep/repo-ai-metrics"
  *
  * console.log(AgentEffectivenessPromptRole.Enum.user) // user
- * console.log(AgentEffectivenessPromptRole.Options.length) // 2
+ * console.log(AgentEffectivenessPromptRole.literals.length) // 2
  * ```
  *
  * @category models
@@ -1830,7 +1831,7 @@ export class AgentEffectivenessPromptBundle extends S.Class<AgentEffectivenessPr
     projectName: S.String,
     prompts: S.Array(AgentEffectivenessPromptSpec),
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-prompts/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-prompts/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-prompts/v1"])
@@ -1924,7 +1925,7 @@ export class AgentEffectivenessExperimentBundle extends S.Class<AgentEffectivene
     generatedAt: S.String,
     projectName: S.String,
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-experiments/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-experiments/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-experiments/v1"])
@@ -4107,7 +4108,7 @@ const forbiddenPatterns = [
   { code: "raw-worker-draft", pattern: /draftJsDoc|@example|```ts/u },
 ] as const;
 
-const decodeUnknownRecordOption = S.decodeUnknownOption(UnknownRecord);
+const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const maxPrivacyScanDepth = 16;
 
 const checkText = (
@@ -4186,22 +4187,16 @@ function checkRecordText(
 const checkPlanPayload = (
   plan: AgentEffectivenessAnnotationPlan
 ): ReadonlyArray<AgentEffectivenessAnnotationCheckFinding> =>
-  Result.match(
-    pipe(
-      AgentEffectivenessAnnotationPlan.encodeJsonResult(plan),
-      Result.flatMap(UnknownFromJsonString.decodeUnknownResult)
-    ),
-    {
-      onFailure: () => [
-        AgentEffectivenessAnnotationCheckFinding.make({
-          annotationId: "plan",
-          code: AgentEffectivenessAnnotationCheckFindingCode.Enum["plan-encode-failed"],
-          message: "Plan payload could not be encoded for scanning.",
-        }),
-      ],
-      onSuccess: (payload) => checkUnknownText("plan", payload, "Plan payload"),
-    }
-  );
+  Result.match(pipe(AgentEffectivenessAnnotationPlan.encodeJsonResult(plan), Result.flatMap(decodeUnknownJsonResult)), {
+    onFailure: () => [
+      AgentEffectivenessAnnotationCheckFinding.make({
+        annotationId: "plan",
+        code: AgentEffectivenessAnnotationCheckFindingCode.Enum["plan-encode-failed"],
+        message: "Plan payload could not be encoded for scanning.",
+      }),
+    ],
+    onSuccess: (payload) => checkUnknownText("plan", payload, "Plan payload"),
+  });
 
 const checkDatasetExample = (
   dataset: AgentEffectivenessDatasetSpec,

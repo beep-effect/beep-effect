@@ -22,9 +22,9 @@ import * as S from "effect/Schema";
 import {
   VersionCategoryReport,
   VersionCategoryStatusEnum,
-  VersionCategoryStatusThunk,
   VersionDriftItem,
   VersionSyncError,
+  versionCategoryStatusFromDrift,
 } from "../../VersionSync.schemas.ts";
 import { resolveInstalledToolVersion } from "./RootCatalog.ts";
 import type { FsUtils } from "@beep/repo-utils";
@@ -273,10 +273,7 @@ export const buildTurboReport: (state: TurboSchemaState) => VersionCategoryRepor
   );
 
   return VersionCategoryReport.cases.turbo.make({
-    status: A.match(items, {
-      onEmpty: VersionCategoryStatusThunk.ok,
-      onNonEmpty: VersionCategoryStatusThunk.drift,
-    }),
+    status: versionCategoryStatusFromDrift(items),
     items,
     latest: O.some(expectedVersion),
     error: O.none(),

@@ -63,7 +63,7 @@ export const NoSniffValue = NoSniffValueBase.pipe(
 export type NoSniffValue = typeof NoSniffValue.Type;
 const isNoSniffValue = S.is(NoSniffValue);
 
-const NoSniffOptionBase = LiteralKit([false, ...NoSniffValueBase.Options]);
+const NoSniffOptionBase = LiteralKit([false, ...NoSniffValueBase.literals]);
 
 /**
  * Schema for `X-Content-Type-Options` option values, including `false` to disable.

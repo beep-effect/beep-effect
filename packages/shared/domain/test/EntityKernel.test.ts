@@ -104,14 +104,14 @@ describe("EntityId", () => {
       assertFalse(DocumentId.equivalence(cast(1), cast(2)));
       expect(yield* decodeEffect(DocumentId)(1)).toBe(1);
 
-      assertTrue(DocumentId.is(1));
-      assertFalse(DocumentId.is(0));
-      expect(DocumentId.decodeUnknownSync(1)).toBe(1);
-      DocumentId.decodeUnknownOption(1).pipe(O.isSome, assertTrue);
-      assertNone(DocumentId.decodeUnknownOption(0));
-      const decoded = yield* DocumentId.decodeUnknownEffect(1);
+      assertTrue(S.is(DocumentId)(1));
+      assertFalse(S.is(DocumentId)(0));
+      expect(Result.getOrThrow(S.decodeResult(DocumentId)(1))).toBe(1);
+      S.decodeOption(DocumentId)(1).pipe(O.isSome, assertTrue);
+      assertNone(S.decodeOption(DocumentId)(0));
+      const decoded = yield* S.decodeEffect(DocumentId)(1);
       expect(decoded).toBe(1);
-      expect(yield* DocumentId.encodeEffect(decoded)).toBe(1);
+      expect(yield* S.encodeEffect(DocumentId)(decoded)).toBe(1);
       assertTrue(DocumentId.equivalence(decoded, decoded));
       assertFalse(DocumentId.equivalence(decoded, cast(2)));
       // The canonical static is the schema's own (per-AST memoized) equivalence, not the
@@ -122,11 +122,10 @@ describe("EntityId", () => {
 
       const Annotated = DocumentId.annotate({ description: "proof" });
       expect(Annotated).not.toBe(DocumentId);
-      assertTrue(hasFunctionStatic(Annotated, "is"));
-      assertTrue(hasFunctionStatic(Annotated, "decodeUnknownSync"));
-      assertTrue(hasFunctionStatic(Annotated, "decodeUnknownEffect"));
-      assertFalse(hasFunctionStatic(Annotated, "fromUnknown"));
-      expect(O.getOrThrow(invokeStatic(Annotated, "decodeUnknownSync", 1))).toBe(1);
+      assertFalse(hasFunctionStatic(Annotated, "is"));
+      assertFalse(hasFunctionStatic(Annotated, "decodeUnknownSync"));
+      assertFalse(hasFunctionStatic(Annotated, "decodeUnknownEffect"));
+      assertTrue(S.is(Annotated)(1));
       invokeStatic(Annotated, "equivalence", decoded, decoded).pipe(O.getOrThrow, assertTrue);
       expect(O.getOrThrow(invokeStatic(Annotated, "equivalence", decoded, 2))).toBe(false);
       invokeStatic(Annotated, "equivalence").pipe(O.getOrThrow, P.isFunction, assertFalse);
@@ -174,7 +173,7 @@ describe("PublicEntityId", () => {
       Effect.fnUntraced(function* () {
         const publicId = yield* PublicEntityId.generate(DocumentId);
 
-        assertTrue(DocumentPublicId.is(publicId));
+        assertTrue(S.is(DocumentPublicId)(publicId));
         assertTrue(publicId.startsWith(`${DocumentId.tableName}_`));
       })
     );

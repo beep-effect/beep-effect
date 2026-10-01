@@ -7,7 +7,6 @@
 import { $LangExtractId } from "@beep/identity";
 import { LangExtractError } from "@beep/langextract/Extraction";
 import { ExtractionExample } from "@beep/langextract/Target";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import { Effect } from "effect";
@@ -23,9 +22,7 @@ const PromptExampleEnvelope = ExtractionExample.mapFields(({ extractions }) => (
   })
 );
 
-const PromptExampleEnvelopeFromJsonString = S.fromJsonString(PromptExampleEnvelope).pipe(
-  SchemaUtils.withCodecStatics(["encodeEffect"])
-);
+const PromptExampleEnvelopeFromJsonString = S.fromJsonString(PromptExampleEnvelope);
 
 const renderTarget = (target: LangExtractRequest["targets"][number]): string => {
   const attributes = A.match(target.attributes, {
@@ -40,7 +37,7 @@ const renderTarget = (target: LangExtractRequest["targets"][number]): string => 
 };
 
 const renderExample = Effect.fnUntraced(function* (example: ExtractionExample) {
-  const encoded = yield* PromptExampleEnvelopeFromJsonString.encodeEffect({
+  const encoded = yield* S.encodeEffect(PromptExampleEnvelopeFromJsonString)({
     extractions: example.extractions,
   }).pipe(
     Effect.mapError(() =>

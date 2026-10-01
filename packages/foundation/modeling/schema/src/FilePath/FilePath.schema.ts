@@ -6,10 +6,10 @@
  */
 import { Str, thunkTrue } from "@beep/utils";
 import { Match } from "effect";
+import * as F from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HasNullByte, SupportedWindowsNamespace, UsesPosixSeparator, UsesWindowsSeparator } from "./FilePath.guards.ts";
 import { HasLeafSegment } from "./FilePath.roots.ts";
 import { $I, isWindowsDrivePrefix } from "./FilePath.shared.ts";
@@ -31,7 +31,7 @@ const SupportedPathFamilyKit = LiteralKit([
  * ```ts
  * import { SupportedPathFamily } from "@beep/schema/FilePath"
  *
- * console.log(SupportedPathFamily.Options.includes("posixAbsolute"))
+ * console.log(SupportedPathFamily.literals.includes("posixAbsolute"))
  * ```
  *
  * @category validation
@@ -61,22 +61,22 @@ export const SupportedPathFamily = SupportedPathFamilyKit.pipe(
  */
 export type SupportedPathFamily = typeof SupportedPathFamily.Type;
 
-const isSupportedWindowsNamespace = SupportedWindowsNamespace.is;
-const isUsesPosixSeparator = UsesPosixSeparator.is;
-const isUsesWindowsSeparator = UsesWindowsSeparator.is;
-const isWindowsDrivePath = WindowsDrivePath.is;
-const isWindowsUncPath = WindowsUncPath.is;
-const isWindowsRelativePath = WindowsRelativePath.is;
-const isHasNullByte = HasNullByte.is;
-const isHasLeafSegment = HasLeafSegment.is;
+const isSupportedWindowsNamespace = S.is(SupportedWindowsNamespace);
+const isUsesPosixSeparator = S.is(UsesPosixSeparator);
+const isUsesWindowsSeparator = S.is(UsesWindowsSeparator);
+const isWindowsDrivePath = S.is(WindowsDrivePath);
+const isWindowsUncPath = S.is(WindowsUncPath);
+const isWindowsRelativePath = S.is(WindowsRelativePath);
+const isHasNullByte = S.is(HasNullByte);
+const isHasLeafSegment = S.is(HasLeafSegment);
 
 const classifyPathFamily = Match.type<string>().pipe(
-  Match.when(Str.startsWith("\\\\"), SupportedPathFamilyKit.thunk.windowsUnc),
-  Match.when(isWindowsDrivePrefix, SupportedPathFamilyKit.thunk.windowsDrive),
-  Match.whenAnd(isUsesPosixSeparator, Str.startsWith("/"), SupportedPathFamilyKit.thunk.posixAbsolute),
-  Match.when(isUsesPosixSeparator, SupportedPathFamilyKit.thunk.posixRelative),
-  Match.when(isUsesWindowsSeparator, SupportedPathFamilyKit.thunk.windowsRelative),
-  Match.orElse(SupportedPathFamilyKit.thunk.posixRelative)
+  Match.when(Str.startsWith("\\\\"), F.constant(SupportedPathFamilyKit.Enum.windowsUnc)),
+  Match.when(isWindowsDrivePrefix, F.constant(SupportedPathFamilyKit.Enum.windowsDrive)),
+  Match.whenAnd(isUsesPosixSeparator, Str.startsWith("/"), F.constant(SupportedPathFamilyKit.Enum.posixAbsolute)),
+  Match.when(isUsesPosixSeparator, F.constant(SupportedPathFamilyKit.Enum.posixRelative)),
+  Match.when(isUsesWindowsSeparator, F.constant(SupportedPathFamilyKit.Enum.windowsRelative)),
+  Match.orElse(F.constant(SupportedPathFamilyKit.Enum.posixRelative))
 );
 
 const matchesSupportedPathFamily = (value: string): boolean =>
@@ -137,9 +137,10 @@ const FilePathChecks = S.makeFilterGroup(
  * ```ts import.meta.vitest name="Decode valid file paths"
  * import * as Effect from "effect/Effect"
  * import { FilePath } from "@beep/schema/FilePath"
+ * import * as S from "effect/Schema"
  *
- * const posix = await Effect.runPromise(FilePath.decodeUnknownEffect("/usr/local/bin/node"))
- * const relative = await Effect.runPromise(FilePath.decodeUnknownEffect("src/index.ts"))
+ * const posix = await Effect.runPromise(S.decodeUnknownEffect(FilePath)("/usr/local/bin/node"))
+ * const relative = await Effect.runPromise(S.decodeUnknownEffect(FilePath)("src/index.ts"))
  * ```
  *
  * **Example** (Reject bare root paths)
@@ -159,7 +160,6 @@ const FilePathChecks = S.makeFilterGroup(
  */
 export const FilePath = S.String.check(FilePathChecks).pipe(
   S.brand("FilePath"),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"]),
   $I.annoteSchema("FilePath", {
     description: "A file path string valid for at least one supported operating-system path family.",
   })

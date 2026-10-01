@@ -6,12 +6,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/Yeet.errors");
 
@@ -45,7 +45,7 @@ export class YeetCommandError extends S.TaggedError<YeetCommandError>($I`YeetCom
     command: S.optionalKey(S.String),
     exitCode: S.optionalKey(S.Finite),
     file: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<YeetCommandError>("YeetCommandError", {
     description: "Failure raised while planning or executing a yeet run.",

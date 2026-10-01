@@ -15,9 +15,9 @@
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import { segmentInlineRuns } from "@beep/md/Md.behavior";
 import * as Md from "@beep/md/Md.model";
-import { MappedLiteralKit, SchemaUtils } from "@beep/schema";
+import { MappedLiteralKit } from "@beep/schema";
 import { A, dual, N, O, P, Str } from "@beep/utils";
-import { Effect, flow, Match, pipe } from "effect";
+import { Effect, flow, Match, pipe, Result } from "effect";
 import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
@@ -95,8 +95,7 @@ export const ARTIFACT_URI_PREFIX = "artifact://";
 export const ArtifactUri = S.TemplateLiteral([ARTIFACT_URI_PREFIX, ArtifactRefId]).pipe(
   $I.annoteSchema("ArtifactUri", {
     description: "artifact:// URI carrying a package-owned artifact reference id through the Md link projection.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
+  })
 );
 
 /**
@@ -116,9 +115,7 @@ export const ArtifactUri = S.TemplateLiteral([ARTIFACT_URI_PREFIX, ArtifactRefId
  */
 export type ArtifactUri = typeof ArtifactUri.Type;
 
-const ArtifactUriParts = S.TemplateLiteralParser([ARTIFACT_URI_PREFIX, ArtifactRefId]).pipe(
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
-);
+const ArtifactUriParts = S.TemplateLiteralParser([ARTIFACT_URI_PREFIX, ArtifactRefId]);
 
 const emptyTextFormat = TextFormatMask.make(0);
 const emptyTextDetail = TextDetailMask.make(0);
@@ -179,7 +176,7 @@ const mdInlinesText: (inlines: ReadonlyArray<Md.Inline>) => string = flow(A.map(
 const mdListItemChildrenText = (children: ReadonlyArray<Md.ListItemChild>): string =>
   pipe(
     segmentInlineRuns(children, {
-      isInline: Md.Inline.is,
+      isInline: S.is(Md.Inline),
       renderInlineRun: mdInlinesText,
       renderBlock: mdBlockText,
     }),
@@ -329,7 +326,7 @@ const listItemChildrenToLexical = (
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   Effect.map(
     Effect.forEach(children, (child) =>
-      Md.Inline.is(child)
+      S.is(Md.Inline)(child)
         ? inlineToLexical(child, emptyTextFormat)
         : P.isTagged("ul")(child) || P.isTagged("ol")(child) || P.isTagged("taskList")(child)
           ? Effect.map(asSchemaError(blockToLexical(child)), A.of<LexicalNode>)
@@ -360,7 +357,7 @@ const artifactRefFromLink = (child: Md.A): O.Option<ArtifactRef> =>
     O.filter(({ value }) => Str.isNonEmpty(value) && O.isNone(child.title)),
     O.flatMap(({ value: label }) =>
       pipe(
-        ArtifactUriParts.decodeUnknownOption(child.href),
+        S.decodeUnknownOption(ArtifactUriParts)(child.href),
         O.map(([, artifactId]) => ({
           artifactId,
           label: label === artifactId ? O.none<string>() : O.some(label),
@@ -371,8 +368,8 @@ const artifactRefFromLink = (child: Md.A): O.Option<ArtifactRef> =>
 
 // A single inline child that is an `a` node whose href is an artifact:// URI.
 const isArtifactLink: P.Refinement<Md.Inline, Md.A> = P.chainRefinements([
-  (child: Md.Inline): child is Md.A => P.isTagged("a")(child),
-  (child: Md.A): child is Md.A => ArtifactUri.is(child.href),
+  Md.Inline.guards.a,
+  (child: Md.A): child is Md.A => S.is(ArtifactUri)(child.href),
 ]);
 
 const paragraphArtifactRef = (block: Md.P): O.Option<ArtifactRef> =>
@@ -421,7 +418,7 @@ export const blockToLexical = Match.typeTags<Md.Block>()({
     const texts = yield* Effect.forEach(Str.split(node.value, "\n"), (line) => textLeaf(line, emptyTextFormat));
     const brk = yield* lineBreak();
     return yield* CodeNode.makeEffect({
-      language: O.flatMap(node.language, Md.CodeFenceLanguage.decodeOption),
+      language: O.flatMap(node.language, S.decodeOption(Md.CodeFenceLanguage)),
       children: A.intersperse(texts, brk),
     });
   }),
@@ -540,7 +537,7 @@ const inlineNodeToMd: (node: LexicalNode) => Md.Inline = LexicalNode.match({
   link: (node) => Md.A.make({ href: node.url, children: textRunToInlines(node.children), title: node.title }),
   "artifact-ref": (node) =>
     Md.A.make({
-      href: ArtifactUri.decodeUnknownSync(`${ARTIFACT_URI_PREFIX}${node.artifactId}`),
+      href: Result.getOrThrow(S.decodeUnknownResult(ArtifactUri)(`${ARTIFACT_URI_PREFIX}${node.artifactId}`)),
       children: [Md.Text.make({ value: O.getOrElse(node.label, () => node.artifactId) })],
     }),
   // Element nodes have no inline Md equivalent; they degrade to their plain text
@@ -645,7 +642,7 @@ const tableToBlock = (node: TableNode): Md.Table =>
 // is presentation-only, so omitting it keeps the document valid) so the
 // Lexical -> Md projection stays total on arbitrary/untrusted input.
 const youtubeToBlocks = (node: YouTubeNode): ReadonlyArray<Md.Block> =>
-  Md.YouTubeVideoId.is(node.videoID) ? [Md.YouTube.make({ videoId: node.videoID })] : A.empty<Md.Block>();
+  S.is(Md.YouTubeVideoId)(node.videoID) ? [Md.YouTube.make({ videoId: node.videoID })] : A.empty<Md.Block>();
 
 /**
  * Project one serialized Lexical node onto Md blocks.

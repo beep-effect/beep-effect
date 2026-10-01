@@ -18,7 +18,7 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -296,24 +296,24 @@ const ExistsSqlRow = S.Struct({ exists: S.Boolean }).pipe(
   })
 );
 
-const OneEmbeddingSqlRow = S.Tuple([EmbeddingSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
-const OneCountSqlRow = S.Tuple([CountSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
-const OneExistsSqlRow = S.Tuple([ExistsSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const OneEmbeddingSqlRow = S.Tuple([EmbeddingSqlRow]);
+const OneCountSqlRow = S.Tuple([CountSqlRow]);
+const OneExistsSqlRow = S.Tuple([ExistsSqlRow]);
 
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const normalizeExecution = normalizeDrizzleError("execute");
 const decodeEmbeddingSqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownEmbeddingSqlRowArray(rows));
-const decodeOneEmbeddingSqlRow = (rows: unknown) => normalizeDecodedRows(OneEmbeddingSqlRow.decodeUnknownEffect(rows));
+const decodeOneEmbeddingSqlRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(OneEmbeddingSqlRow)(rows));
 const decodeEmbeddingVectorSqlRows = (rows: unknown) =>
   normalizeDecodedRows(decodeUnknownEmbeddingVectorSqlRowArray(rows));
 const decodeSimilaritySqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownSimilaritySqlRowArray(rows));
 const decodeHybridSearchSqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownHybridSearchSqlRowArray(rows));
 const decodeTextSearchSqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownTextSearchSqlRowArray(rows));
-const decodeOneCountSqlRow = (rows: unknown) => normalizeDecodedRows(OneCountSqlRow.decodeUnknownEffect(rows));
+const decodeOneCountSqlRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(OneCountSqlRow)(rows));
 const decodeEmbeddingTypeCountSqlRows = (rows: unknown) =>
   normalizeDecodedRows(decodeUnknownEmbeddingTypeCountSqlRowArray(rows));
 const decodeModelCountSqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownModelCountSqlRowArray(rows));
-const decodeOneExistsSqlRow = (rows: unknown) => normalizeDecodedRows(OneExistsSqlRow.decodeUnknownEffect(rows));
+const decodeOneExistsSqlRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(OneExistsSqlRow)(rows));
 
 // =============================================================================
 // Service

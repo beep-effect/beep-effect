@@ -31,7 +31,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Shacl");
  * @category errors
  * @since 0.0.0
  */
-export const ValidationPolicySeverity = S.Literals(ShaclSeverity.pickOptions(["violation", "warning"])).pipe(
+export const ValidationPolicySeverity = S.Literals(ShaclSeverity.pick(["violation", "warning"]).literals).pipe(
   $I.annoteSchema("ValidationPolicySeverity", {
     description: "Severity threshold that caused SHACL validation policy rejection.",
   })

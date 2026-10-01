@@ -57,7 +57,7 @@ const unalignedExtraction = (extraction: GroundedExtraction): IrToLawExtractionE
 
 type AlignedGroundedExtraction = Exclude<GroundedExtraction, { readonly alignmentStatus: "unaligned" }>;
 
-const isAlignedExtraction = GroundedExtraction.isAnyOf(AlignedStatus.Options);
+const isAlignedExtraction = GroundedExtraction.isAnyOf(AlignedStatus.literals);
 
 const requiredExtraction = Effect.fn("law_practice.ir_to_law.required_extraction")(function* (
   extractions: ReadonlyArray<GroundedExtraction>,

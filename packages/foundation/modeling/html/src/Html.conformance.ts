@@ -10,7 +10,6 @@
 /// <reference path="./whatwg-url.d.ts" />
 
 import { $HtmlId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import * as Conformance from "@beep/schema/Conformance";
 import { A, Eq, Struct } from "@beep/utils";
 import { color as parseCssColor } from "@csstools/css-color-parser";
@@ -161,9 +160,10 @@ const issueConformantHtml = (root: HtmlRoot.Type): ConformantHtmlValue => {
  * import { conform, ConformantHtml, conformantRoot } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
  * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
  * const proof = Effect.runSync(conform(Fragment.make({ children: [] })))
- * ConformantHtml.is(proof) // => true
+ * S.is(ConformantHtml)(proof) // => true
  * conformantRoot(proof)._tag // => "#fragment"
  * ```
  *
@@ -174,7 +174,6 @@ const issueConformantHtml = (root: HtmlRoot.Type): ConformantHtmlValue => {
  */
 export const ConformantHtml = S.declare(ConformantHtmlValue.is).pipe(
   Conformance.annotateConformance(HtmlWhatwgConformanceAnnotation),
-  SchemaUtils.withStatics(() => ({ is: ConformantHtmlValue.is })),
   $I.annoteSchema("ConformantHtml", {
     description: "Runtime-issued proof of HTML AST conformance.",
   })
@@ -206,9 +205,10 @@ export type ConformantHtml = typeof ConformantHtml.Type;
  * ```ts import.meta.vitest name="Check a conformance-proven node"
  * import { conform, ConformantHtmlNode, Fragment } from "@beep/html"
  * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
  * const proof = Effect.runSync(conform(Fragment.make({ children: [] })))
- * ConformantHtmlNode.is(proof) // => true
+ * S.is(ConformantHtmlNode)(proof) // => true
  * ```
  *
  * @category schemas

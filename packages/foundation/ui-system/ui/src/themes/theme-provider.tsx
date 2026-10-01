@@ -110,7 +110,7 @@ export type ThemeMode = typeof ThemeMode.Type;
  * @category configuration
  * @since 0.0.0
  */
-export const ResolvedThemeMode = LiteralKit(ThemeMode.omitOptions(["system"])).pipe(
+export const ResolvedThemeMode = LiteralKit(ThemeMode.pick(["light", "dark"]).literals).pipe(
   $I.annoteSchema("ResolvedThemeMode", {
     description: "The resolved mode of the theme, excluding 'system'.",
   })

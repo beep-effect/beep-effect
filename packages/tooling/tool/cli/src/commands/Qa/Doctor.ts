@@ -46,7 +46,7 @@ export const OBS_WEBSOCKET_PORT = 4455;
  * ```ts
  * import { QaProbeStatus } from "@beep/repo-cli/commands/Qa/Doctor"
  *
- * console.log(QaProbeStatus.Options.length) // 3
+ * console.log(QaProbeStatus.literals.length) // 3
  * ```
  *
  * @category schemas

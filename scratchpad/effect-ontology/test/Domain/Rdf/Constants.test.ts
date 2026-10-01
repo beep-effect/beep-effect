@@ -5,6 +5,7 @@ import { RDF_TERMS, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { SKOS_PREF_LABEL, SKOS_TERMS } from "@beep/rdf/Vocab/Skos";
 import { describe, expect, it } from "@effect/vitest";
 import { CLAIMS, CORE, CORRECTIONS, EXTR } from "../../../Domain/Rdf/Constants.ts";
+import * as S from "effect/Schema";
 
 describe("effect-ontology RDF vocabulary constants", () => {
   it("uses canonical package constants for standards vocabularies", () => {
@@ -17,7 +18,7 @@ describe("effect-ontology RDF vocabulary constants", () => {
     expect(CLAIMS.Claim.value).toBe("https://effect-ontology.dev/claims#Claim");
     expect(CORRECTIONS.Retraction.value).toBe("https://effect-ontology.dev/corrections#Retraction");
     expect(EXTR.confidence.value).toBe("https://example.org/kg/confidence");
-    expect(IRI.is(CORE.Mention.value)).toBe(true);
+    expect(S.is(IRI)(CORE.Mention.value)).toBe(true);
   });
 
   it("uses generated term inventories backed by identity CoreVocab", () => {

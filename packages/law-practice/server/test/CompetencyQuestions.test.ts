@@ -765,7 +765,7 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
         // whose claim was superseded out from under it.
         const stored = HashSet.fromIterable(A.map(relators, (relation) => relation.positionKind));
         pipe(HashSet.has(stored, "claim"), assertTrue);
-        pipe(HashSet.has(HashSet.fromIterable(HohfeldPositionKind.Options), "duty"), assertTrue);
+        pipe(HashSet.has(HashSet.fromIterable(HohfeldPositionKind.literals), "duty"), assertTrue);
         pipe(
           A.some(relators, (relation) => isAdvantagePositionKind(relation.positionKind)),
           assertTrue
@@ -821,7 +821,10 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
         expect(policy.correlativeView(power).position.kind).toBe("liability");
         expect(policy.correlativeView(power).bearer.name).toBe("lessor");
         pipe(
-          Equal.equals(PotestativePositionKind.HashSet, HashSet.make("power", "liability", "immunity", "disability")),
+          Equal.equals(
+            HashSet.fromIterable(PotestativePositionKind.literals),
+            HashSet.make("power", "liability", "immunity", "disability")
+          ),
           assertTrue
         );
       })
@@ -867,7 +870,7 @@ describe("UFO-L power-subjection competency questions — expressed in this runt
         // Stored kinds are advantage-side only; the readings derived from them
         // are what reach the burden side.
         const stored = HashSet.fromIterable(A.map(relators, (relation) => relation.positionKind));
-        pipe(HashSet.isSubset(AdvantagePositionKind.HashSet)(stored), assertTrue);
+        pipe(HashSet.isSubset(HashSet.fromIterable(AdvantagePositionKind.literals))(stored), assertTrue);
 
         const reached = HashSet.fromIterable(
           A.flatMap(relators, (relation) => [
@@ -1069,7 +1072,7 @@ describe("FLINT's out-of-scope competency questions are excluded from porting", 
         // vocabulary comes from the other donor and is closed at eight, so
         // those four kinds are live members rather than absences of a duty or
         // a power.
-        const eight = HashSet.fromIterable(HohfeldPositionKind.Options);
+        const eight = HashSet.fromIterable(HohfeldPositionKind.literals);
         expect(HashSet.size(eight)).toBe(8);
         for (const kind of ["immunity", "disability", "privilege", "noRight"]) {
           pipe(HashSet.has(eight, kind), assertTrue);

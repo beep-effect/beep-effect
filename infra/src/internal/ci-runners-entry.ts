@@ -15,7 +15,13 @@ const stack = new CiRunnersStack("ci-runners", loadCiRunnersStackArgs());
 const controller = new CiFleetController("ci-fleet-controller", {
   config: loadCiFleetControllerConfig(),
   region: stack.region,
-  subnetIds: [stack.publicSubnetAId, stack.publicSubnetBId],
+  subnetIds: [
+    stack.publicSubnetAId,
+    stack.publicSubnetBId,
+    stack.publicSubnetCId,
+    stack.publicSubnetDId,
+    stack.publicSubnetEId,
+  ],
   vpcId: stack.vpcId,
   workerSecurityGroupId: stack.workerSecurityGroupId,
 });
@@ -51,7 +57,17 @@ export const vpcCidr = stack.vpcCidr;
 export const region = stack.region;
 
 /**
- * Public subnet id in the first availability zone.
+ * Public subnet id in the first availability zone, resolved only once the
+ * subnet is routed to the internet gateway.
+ *
+ * **Example** (Read the subnet A stack output from another Pulumi program)
+ *
+ * ```ts
+ * import * as pulumi from "@pulumi/pulumi"
+ *
+ * const runners = new pulumi.StackReference("organization/beep-ci-runners/production")
+ * runners.getOutput("publicSubnetAId").apply((subnetId) => console.log(subnetId))
+ * ```
  *
  * @category resources
  * @since 0.0.0
@@ -59,12 +75,76 @@ export const region = stack.region;
 export const publicSubnetAId = stack.publicSubnetAId;
 
 /**
- * Public subnet id in the second availability zone.
+ * Public subnet id in the second availability zone, resolved only once the
+ * subnet is routed to the internet gateway.
+ *
+ * **Example** (Read the subnet B stack output from another Pulumi program)
+ *
+ * ```ts
+ * import * as pulumi from "@pulumi/pulumi"
+ *
+ * const runners = new pulumi.StackReference("organization/beep-ci-runners/production")
+ * runners.getOutput("publicSubnetBId").apply((subnetId) => console.log(subnetId))
+ * ```
  *
  * @category resources
  * @since 0.0.0
  */
 export const publicSubnetBId = stack.publicSubnetBId;
+
+/**
+ * Public subnet id in the third availability zone, resolved only once the
+ * subnet is routed to the internet gateway.
+ *
+ * **Example** (Read the subnet C stack output from another Pulumi program)
+ *
+ * ```ts
+ * import * as pulumi from "@pulumi/pulumi"
+ *
+ * const runners = new pulumi.StackReference("organization/beep-ci-runners/production")
+ * runners.getOutput("publicSubnetCId").apply((subnetId) => console.log(subnetId))
+ * ```
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const publicSubnetCId = stack.publicSubnetCId;
+
+/**
+ * Public subnet id in the fourth availability zone, resolved only once the
+ * subnet is routed to the internet gateway.
+ *
+ * **Example** (Read the subnet D stack output from another Pulumi program)
+ *
+ * ```ts
+ * import * as pulumi from "@pulumi/pulumi"
+ *
+ * const runners = new pulumi.StackReference("organization/beep-ci-runners/production")
+ * runners.getOutput("publicSubnetDId").apply((subnetId) => console.log(subnetId))
+ * ```
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const publicSubnetDId = stack.publicSubnetDId;
+
+/**
+ * Public subnet id in the fifth availability zone, resolved only once the
+ * subnet is routed to the internet gateway.
+ *
+ * **Example** (Read the subnet E stack output from another Pulumi program)
+ *
+ * ```ts
+ * import * as pulumi from "@pulumi/pulumi"
+ *
+ * const runners = new pulumi.StackReference("organization/beep-ci-runners/production")
+ * runners.getOutput("publicSubnetEId").apply((subnetId) => console.log(subnetId))
+ * ```
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const publicSubnetEId = stack.publicSubnetEId;
 
 /**
  * Zero-ingress worker security group id.

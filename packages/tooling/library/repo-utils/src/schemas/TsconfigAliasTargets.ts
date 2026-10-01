@@ -6,7 +6,6 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
@@ -28,7 +27,8 @@ const wildcardFileStemPattern = /(?:^|\/)\*\.tsx?$/u;
  *
  * ```ts
  * import { RootAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
- * const isRootTarget = RootAliasTarget.is("./packages/example/src/index.ts")
+ * import * as S from "effect/Schema"
+ * const isRootTarget = S.is(RootAliasTarget)("./packages/example/src/index.ts")
  * console.log(isRootTarget)
  * ```
  *
@@ -38,8 +38,7 @@ const wildcardFileStemPattern = /(?:^|\/)\*\.tsx?$/u;
 export const RootAliasTarget = S.String.check(S.isPattern(rootAliasTargetPattern)).pipe(
   $I.annoteSchema("RootAliasTarget", {
     description: "A repo-relative alias target beginning with ./ and containing no wildcard segment.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -65,7 +64,8 @@ export type RootAliasTarget = typeof RootAliasTarget.Type;
  *
  * ```ts
  * import { WildcardAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
- * const isWildcardTarget = WildcardAliasTarget.is("./packages/example/src/*")
+ * import * as S from "effect/Schema"
+ * const isWildcardTarget = S.is(WildcardAliasTarget)("./packages/example/src/*")
  * console.log(isWildcardTarget)
  * ```
  *
@@ -75,8 +75,7 @@ export type RootAliasTarget = typeof RootAliasTarget.Type;
 export const WildcardAliasTarget = S.String.check(S.isPattern(wildcardAliasTargetPattern)).pipe(
   $I.annoteSchema("WildcardAliasTarget", {
     description: "A repo-relative alias target beginning with ./ and containing a wildcard segment.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

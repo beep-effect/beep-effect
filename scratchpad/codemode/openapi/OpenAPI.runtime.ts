@@ -8,7 +8,6 @@
 import { $ScratchpadId } from "@beep/identity";
 import { dual } from "effect/Function";
 import { MappedLiteralKit } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, N, O, P, pipe, R, Str, Struct, thunkEmptyStr, thunkFalse, thunkTrue } from "@beep/utils";
 import { Chunk, Effect, flow, HashMap, HashSet, Redacted, Result, Stream } from "effect";
 import * as Base64 from "effect/encoding/Base64";
@@ -31,13 +30,15 @@ import {
   type SecurityScheme as SecuritySchemeType,
 } from "./OpenAPI.types.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.runtime");
 const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 
 const maxErrorBodyChars = 1_024;
 const maxResponseBodyBytes = 50 * 1_024 * 1_024;
-const decodeJson = UnknownFromJsonString.decodeUnknownOption;
-const encodeJson = UnknownFromJsonString.encodeUnknownOption;
+const decodeJson = S.decodeUnknownOption(UnknownJson);
+const encodeJson = S.encodeUnknownOption(UnknownJson);
 const decodeNonNegativeInt = S.decodeUnknownOption(S.Natural);
 
 const EncodedPathPunctuation = MappedLiteralKit([
@@ -49,8 +50,8 @@ const EncodedPathPunctuation = MappedLiteralKit([
 ]);
 
 const encodePathPunctuation = (value: string): string =>
-  A.reduce(EncodedPathPunctuation.Options, value, (encoded, punctuation) =>
-    pipe(encoded, Str.replaceAll(punctuation, EncodedPathPunctuation.Enum[punctuation]))
+  A.reduce(EncodedPathPunctuation.Pairs, value, (encoded, [punctuation, escaped]) =>
+    pipe(encoded, Str.replaceAll(punctuation, escaped))
   );
 
 const mediaTypeBase: (mediaType: string) => string = flow(

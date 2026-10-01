@@ -7,7 +7,6 @@
 
 import { $WinkId } from "@beep/identity";
 import { MarkRange } from "@beep/nlp/Core/Pattern";
-import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Chunk, Effect, Match, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -38,8 +37,7 @@ const $I = $WinkId.create("Wink/WinkPattern");
 export const WinkStringArray = S.Array(S.String).pipe(
   $I.annoteSchema("WinkStringArray", {
     description: "Array of strings returned by Wink NLP accessors.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -71,8 +69,9 @@ const patternElementToBracketString = (pattern: Pattern): ReadonlyArray<string> 
  *
  * ```ts
  * import { EntityGroupName } from "@beep/wink"
+ * import * as S from "effect/Schema"
  *
- * const entityGroupName = EntityGroupName.decodeUnknownSync("ProductName")
+ * const entityGroupName = S.decodeUnknownSync(EntityGroupName)("ProductName")
  * console.log(entityGroupName)
  * ```
  *
@@ -83,8 +82,7 @@ export const EntityGroupName = S.NonEmptyString.pipe(
   S.brand("EntityGroupName"),
   $I.annoteSchema("EntityGroupName", {
     description: "Stable identifier for a learned wink custom-entity group.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
+  })
 );
 
 /**

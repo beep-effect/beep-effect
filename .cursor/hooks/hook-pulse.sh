@@ -8,9 +8,13 @@
 # permission event an EMPTY stdout is treated as malformed JSON and BLOCKS the tool, and the
 # hook has a 5 s budget in `.cursor/hooks.json`. `allow` is the lowest priority, so a deny
 # from another hook (deny-shell.sh, yeet-inbox P0) still wins.
-# Only events with a `HookPulseEvent` literal are registered for this adapter;
-# `sessionStart` has none and must not be wired here. Without `timeout` the writer would run
-# uncapped against the 5 s hook budget, so the row is skipped instead.
+# Only events with a `HookPulseEvent` literal are registered for this adapter. `SessionStart`
+# is one now (the shared body stamps the harness hash on it), but Cursor's `sessionStart` is
+# deliberately left unmapped below: its payload shape is unmeasured, and the stamp walks the
+# repo, which could outlast the 3 s cap. An unmapped name matches no literal, so the shared
+# writer drops it and Cursor sessions stay unstamped (outside the prune-proposals window).
+# Without `timeout` the writer would run uncapped against the 5 s hook budget, so the row is
+# skipped instead.
 # `BEEP_CURSOR_HOOK_PULSE_WRITER_CAP` overrides the 3 s cap for conformance tests on a loaded
 # host; a live hook leaves it unset. Always exits 0.
 set -u

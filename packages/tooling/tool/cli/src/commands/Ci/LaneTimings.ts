@@ -78,7 +78,7 @@ const $I = $RepoCliId.create("commands/Ci/LaneTimings");
  * ```ts
  * import { CiRunnerClass } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(CiRunnerClass.Options)
+ * console.log(CiRunnerClass.literals)
  * ```
  *
  * @category models
@@ -991,7 +991,7 @@ export const collectCiLaneTimings = Effect.fn("Ci.collectCiLaneTimings")(functio
  * ```ts
  * import { CiLaneTimingWindowEvent } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(CiLaneTimingWindowEvent.Options)
+ * console.log(CiLaneTimingWindowEvent.literals)
  * ```
  *
  * @category models
@@ -1077,31 +1077,132 @@ export class CiLaneTimingWindowOptions extends S.Class<CiLaneTimingWindowOptions
 ) {}
 
 /**
+ * One ruleset history version and the instant it took effect.
+ *
+ * **Details**
+ *
+ * GitHub reports `updated_at` with a UTC offset; decoding normalizes it to a
+ * UTC instant so window-end selection compares moments, not strings. The
+ * window report exposes the selected version as `rulesetVersion`.
+ *
+ * **Example** (Decode a history version)
+ *
+ * ```ts
+ * import { CiRulesetHistoryVersion } from "@beep/repo-cli/commands/Ci"
+ * import * as S from "effect/Schema"
+ *
+ * const version = S.decodeUnknownSync(CiRulesetHistoryVersion)({
+ *   version_id: 48600030,
+ *   updated_at: "2026-09-03T12:12:53.589-05:00",
+ * })
+ * console.log(version.version_id)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiRulesetHistoryVersion extends S.Class<CiRulesetHistoryVersion>($I`CiRulesetHistoryVersion`)(
+  {
+    version_id: S.Int.check(S.isGreaterThan(0)),
+    updated_at: S.DateTimeUtcFromString,
+  },
+  $I.annote("CiRulesetHistoryVersion", {
+    description: "Ruleset history version and its effective instant, normalized from the API UTC offset.",
+  })
+) {}
+
+/**
+ * A ruleset history version that took effect inside a census window, diffed
+ * against the version it replaced.
+ *
+ * **Details**
+ *
+ * The census measures the whole window against the population effective at
+ * its exclusive end, so a version that lands strictly after `since` and
+ * before `until` means
+ * part of the window ran under a different required-context set. Context
+ * names are normalized the way the report's `requiredContexts` are, so a
+ * `Heavy / ` rename is not a population change. `previousVersion` is absent
+ * only when no history version precedes the window start, in which case every
+ * context counts as added. Empty `addedContexts` and `removedContexts` record
+ * a ruleset edit that left the required checks alone.
+ *
+ * **Example** (Record a removed required context)
+ *
+ * ```ts
+ * import { CiRulesetHistoryVersion, CiRulesetPopulationChange } from "@beep/repo-cli/commands/Ci"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ *
+ * const change = CiRulesetPopulationChange.make({
+ *   addedContexts: [],
+ *   previousVersion: O.some(
+ *     CiRulesetHistoryVersion.make({ version_id: 49479116, updated_at: DateTime.makeUnsafe("2026-09-12T01:46:53.354Z") })
+ *   ),
+ *   removedContexts: ["Lint Policy"],
+ *   version: CiRulesetHistoryVersion.make({
+ *     version_id: 50918272,
+ *     updated_at: DateTime.makeUnsafe("2026-09-25T14:46:59.802Z"),
+ *   }),
+ * })
+ * console.log(change.removedContexts)
+ * // [ 'Lint Policy' ]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiRulesetPopulationChange extends S.Class<CiRulesetPopulationChange>($I`CiRulesetPopulationChange`)(
+  {
+    addedContexts: S.Array(S.NonEmptyString),
+    previousVersion: S.Option(CiRulesetHistoryVersion),
+    removedContexts: S.Array(S.NonEmptyString),
+    version: CiRulesetHistoryVersion,
+  },
+  $I.annote("CiRulesetPopulationChange", {
+    description:
+      "Ruleset version effective inside a census window with the normalized required contexts it added and removed.",
+  })
+) {}
+
+const ciRulesetPopulationChangesDefault = A.empty<CiRulesetPopulationChange>();
+
+/**
  * Bound a census window breaches when it cannot yet be admission evidence.
  *
  * **Details**
  *
  * `future-cutoff` means `--until` is still ahead of the wall clock, so the
  * interval keeps filling after the read. `short-span` means the interval is
- * under the seven-day census week the packets admit on. Both are reasons a
- * result is a preview; neither is a reason the numbers are wrong.
+ * under the seven-day census week the packets admit on. `population-change`
+ * means a ruleset version that added or removed a required context took
+ * effect inside the window, so part of the window ran under a population the
+ * census does not measure. All three are reasons a result is a preview;
+ * none is a reason the numbers are wrong.
  *
  * **Example** (List the guarded bounds)
  *
  * ```ts
  * import { CiLaneTimingWindowGuardReason } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(CiLaneTimingWindowGuardReason.Options)
+ * console.log(CiLaneTimingWindowGuardReason.literals)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const CiLaneTimingWindowGuardReason = LiteralKit(["future-cutoff", "short-span"]).pipe(
+export const CiLaneTimingWindowGuardReason = LiteralKit(["future-cutoff", "short-span", "population-change"]).pipe(
   $I.annoteSchema("CiLaneTimingWindowGuardReason", {
-    description: "Bound a bounded lane-timing census window breaches: a future cutoff, or a span under seven days.",
+    description:
+      "Bound a bounded lane-timing census window breaches: a future cutoff, a span under seven days, or a required-context change inside it.",
   })
 );
+
+// The bounds judged from the decoded interval and the clock alone, before any
+// GitHub read; `population-change` needs the ruleset history.
+const CiLaneTimingWindowBoundReason = CiLaneTimingWindowGuardReason.pick(["future-cutoff", "short-span"]);
+
+type CiLaneTimingWindowBoundReason = typeof CiLaneTimingWindowBoundReason.Type;
 
 /**
  * Bound a census window breaches when it cannot yet be admission evidence.
@@ -1130,6 +1231,8 @@ export type CiLaneTimingWindowGuardReason = typeof CiLaneTimingWindowGuardReason
  * the preview banner names the same facts the refusal would have named.
  * `reasons` is empty for a complete past week, and `preview` records that the
  * operator accepted a partial read rather than that the read is admissible.
+ * `populationChanges` carries every ruleset version effective inside the
+ * window, so a `population-change` refusal or banner can name each one.
  *
  * **Example** (Describe an unbreached preview verdict)
  *
@@ -1153,6 +1256,9 @@ export class CiLaneTimingWindowGuardVerdict extends S.Class<CiLaneTimingWindowGu
   $I`CiLaneTimingWindowGuardVerdict`
 )(
   {
+    populationChanges: S.Array(CiRulesetPopulationChange).pipe(
+      S.withConstructorDefault(Effect.succeed(ciRulesetPopulationChangesDefault))
+    ),
     preview: S.Boolean,
     reasons: S.Array(CiLaneTimingWindowGuardReason),
     since: S.DateTimeUtc,
@@ -1424,41 +1530,6 @@ export class CiLaneTimingPickupStat extends S.Class<CiLaneTimingPickupStat>($I`C
 ) {}
 
 /**
- * One ruleset history version and the instant it took effect.
- *
- * **Details**
- *
- * GitHub reports `updated_at` with a UTC offset; decoding normalizes it to a
- * UTC instant so window-end selection compares moments, not strings. The
- * window report exposes the selected version as `rulesetVersion`.
- *
- * **Example** (Decode a history version)
- *
- * ```ts
- * import { CiRulesetHistoryVersion } from "@beep/repo-cli/commands/Ci"
- * import * as S from "effect/Schema"
- *
- * const version = S.decodeUnknownSync(CiRulesetHistoryVersion)({
- *   version_id: 48600030,
- *   updated_at: "2026-09-03T12:12:53.589-05:00",
- * })
- * console.log(version.version_id)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class CiRulesetHistoryVersion extends S.Class<CiRulesetHistoryVersion>($I`CiRulesetHistoryVersion`)(
-  {
-    version_id: S.Int.check(S.isGreaterThan(0)),
-    updated_at: S.DateTimeUtcFromString,
-  },
-  $I.annote("CiRulesetHistoryVersion", {
-    description: "Ruleset history version and its effective instant, normalized from the API UTC offset.",
-  })
-) {}
-
-/**
  * Reproducible admission-census report over one bounded UTC window.
  *
  * **Details**
@@ -1466,7 +1537,9 @@ export class CiRulesetHistoryVersion extends S.Class<CiRulesetHistoryVersion>($I
  * Raw Actions pages and job buffers are not retained. The report holds only
  * schema-classified duration, attribution, and shard-pickup rows plus their
  * aggregates, preserving provenance without turning API payloads into a
- * long-lived in-memory corpus.
+ * long-lived in-memory corpus. `populationChanges` lists every ruleset version
+ * that took effect inside the window; every renderer stamps them above its
+ * output.
  *
  * **Example** (Build a report effect)
  *
@@ -1487,6 +1560,9 @@ export class CiLaneTimingWindowReport extends S.Class<CiLaneTimingWindowReport>(
     contextCount: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     laneStats: S.Array(CiLaneTimingWindowStat),
     pickup: CiLaneTimingPickupStat,
+    populationChanges: S.Array(CiRulesetPopulationChange).pipe(
+      S.withConstructorDefault(Effect.succeed(ciRulesetPopulationChangesDefault))
+    ),
     requiredContexts: S.Array(S.NonEmptyString),
     rulesetVersion: S.Option(CiRulesetHistoryVersion),
     rows: S.Array(CiLaneTimingWindowRow),
@@ -1725,7 +1801,7 @@ const windowRunOrder = Order.combine(
 
 const windowEventsFor = (event: CiLaneTimingWindowEvent): ReadonlyArray<typeof CiLaneTimingWindowRunEvent.Type> =>
   CiLaneTimingWindowEvent.$match(event, {
-    all: () => CiLaneTimingWindowRunEvent.Options,
+    all: () => CiLaneTimingWindowRunEvent.literals,
     pull_request: () => [CiLaneTimingWindowRunEvent.Enum.pull_request],
     push: () => [CiLaneTimingWindowRunEvent.Enum.push],
   });
@@ -1892,13 +1968,25 @@ export const collectRequiredContexts = Effect.fn("Ci.collectRequiredContexts")(f
   );
 });
 
-class CiWindowPopulation extends S.Class<CiWindowPopulation>($I`CiWindowPopulation`)(
+class CiRulesetVersionPopulation extends S.Class<CiRulesetVersionPopulation>($I`CiRulesetVersionPopulation`)(
   {
     requiredContextSet: S.HashSet(S.NonEmptyString),
     version: CiRulesetHistoryVersion,
   },
+  $I.annote("CiRulesetVersionPopulation", {
+    description: "Normalized required contexts read from one historical ruleset version snapshot.",
+  })
+) {}
+
+class CiWindowPopulation extends S.Class<CiWindowPopulation>($I`CiWindowPopulation`)(
+  {
+    changes: S.Array(CiRulesetPopulationChange),
+    requiredContextSet: S.HashSet(S.NonEmptyString),
+    version: CiRulesetHistoryVersion,
+  },
   $I.annote("CiWindowPopulation", {
-    description: "Normalized required contexts and the historical ruleset version selected for the window end.",
+    description:
+      "Normalized required contexts and ruleset version selected for the window end, with every version effective inside the window.",
   })
 ) {}
 
@@ -1928,28 +2016,83 @@ const collectCiRulesetHistory = Effect.fn("Ci.collectCiRulesetHistory")(function
   return yield* collectCiRulesetHistory(repoRoot, pageNumber + 1, history);
 });
 
-const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function* (
+const rulesetHistoryOrder = Order.mapInput(Order.Number, (entry: CiRulesetHistoryVersion) =>
+  DateTime.toEpochMillis(entry.updated_at)
+);
+
+const isEffectiveBefore =
+  (instant: DateTime.Utc) =>
+  (entry: CiRulesetHistoryVersion): boolean =>
+    DateTime.isLessThan(entry.updated_at, instant);
+
+const isEffectiveAtOrBefore =
+  (instant: DateTime.Utc) =>
+  (entry: CiRulesetHistoryVersion): boolean =>
+    DateTime.isLessThanOrEqualTo(entry.updated_at, instant);
+
+const sortedContexts = (contexts: HashSet.HashSet<string>): ReadonlyArray<string> =>
+  A.sort(A.fromIterable(contexts), Order.String);
+
+const rulesetVersionPopulation = Effect.fn("Ci.rulesetVersionPopulation")(function* (
   repoRoot: string,
-  until: DateTime.Utc
+  version: CiRulesetHistoryVersion
 ) {
-  const history = yield* collectCiRulesetHistory(repoRoot);
-  const version = yield* pipe(
-    history,
-    A.filter((entry) => DateTime.toEpochMillis(entry.updated_at) < DateTime.toEpochMillis(until)),
-    A.sort(Order.mapInput(Order.Number, (entry: CiRulesetHistoryVersion) => DateTime.toEpochMillis(entry.updated_at))),
-    A.last,
-    O.match({
-      onNone: () =>
-        CiCommandError.make({
-          message: `Ruleset ${CI_LANE_TIMING_RULESET_ID} has no history version strictly before ${DateTime.formatIso(until)}.`,
-        }),
-      onSome: Effect.succeed,
-    })
-  );
   const contexts = yield* collectRequiredContexts(repoRoot, O.some(version));
-  return CiWindowPopulation.make({
+  return CiRulesetVersionPopulation.make({
     requiredContextSet: HashSet.fromIterable(A.map(contexts, normalizeRequiredLaneName)),
     version,
+  });
+});
+
+const rulesetPopulationChange = (
+  previous: O.Option<CiRulesetVersionPopulation>,
+  current: CiRulesetVersionPopulation
+): CiRulesetPopulationChange => {
+  const previousSet = O.match(previous, {
+    onNone: HashSet.empty<string>,
+    onSome: (population) => population.requiredContextSet,
+  });
+  return CiRulesetPopulationChange.make({
+    addedContexts: sortedContexts(HashSet.difference(current.requiredContextSet, previousSet)),
+    previousVersion: O.map(previous, (population) => population.version),
+    removedContexts: sortedContexts(HashSet.difference(previousSet, current.requiredContextSet)),
+    version: current.version,
+  });
+};
+
+// Snapshot the version in force at the window start plus every version that
+// took effect inside `(since, until)`; a version effective exactly at `since`
+// governs the whole window, so it is the starting population, not a change. The last snapshot is the window-end
+// population the census measures; each in-window snapshot is diffed against
+// the one before it so a mid-window change can be named, not just detected.
+const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function* (
+  repoRoot: string,
+  options: CiLaneTimingWindowOptions
+) {
+  const history = A.sort(yield* collectCiRulesetHistory(repoRoot), rulesetHistoryOrder);
+  const baseline = A.last(A.filter(history, isEffectiveAtOrBefore(options.since)));
+  const inWindow = A.filter(
+    history,
+    (entry) => !isEffectiveAtOrBefore(options.since)(entry) && isEffectiveBefore(options.until)(entry)
+  );
+  const populations = yield* Effect.forEach(A.appendAll(O.toArray(baseline), inWindow), (version) =>
+    rulesetVersionPopulation(repoRoot, version)
+  );
+  const windowEnd = yield* O.match(A.last(populations), {
+    onNone: () =>
+      CiCommandError.make({
+        message: `Ruleset ${CI_LANE_TIMING_RULESET_ID} has no history version strictly before ${DateTime.formatIso(options.until)}.`,
+      }),
+    onSome: Effect.succeed,
+  });
+  const changes = A.takeRight(
+    A.zipWith(A.prepend(A.map(populations, O.some), O.none()), populations, rulesetPopulationChange),
+    A.length(inWindow)
+  );
+  return CiWindowPopulation.make({
+    changes,
+    requiredContextSet: windowEnd.requiredContextSet,
+    version: windowEnd.version,
   });
 });
 
@@ -2311,7 +2454,8 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
   requiredContextSet: HashSet.HashSet<string>,
   runCount: number,
   rows: ReadonlyArray<CiLaneTimingWindowRow>,
-  rulesetVersion: O.Option<CiRulesetHistoryVersion> = O.none()
+  rulesetVersion: O.Option<CiRulesetHistoryVersion> = O.none(),
+  populationChanges: ReadonlyArray<CiRulesetPopulationChange> = ciRulesetPopulationChangesDefault
 ): Effect.fn.Return<CiLaneTimingWindowReport, CiCommandError> {
   yield* assertRequiredContextCount(requiredContextSet, rulesetVersion);
   const requiredContexts = A.sort(A.fromIterable(requiredContextSet), Order.String);
@@ -2323,6 +2467,7 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
     contextCount: HashSet.size(requiredContextSet),
     laneStats: A.map(requiredContexts, (lane) => timingWindowStat(durationRows, lane)),
     pickup: timingPickupStat(pickupRows),
+    populationChanges,
     requiredContexts,
     rulesetVersion,
     rows,
@@ -2372,13 +2517,15 @@ export const buildCiLaneTimingWindowReport = Effect.fn("Ci.buildCiLaneTimingWind
 
 const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWindowWithClient")(function* (
   repoRoot: string,
-  options: CiLaneTimingWindowOptions
+  options: CiLaneTimingWindowOptions,
+  preview: boolean
 ): Effect.fn.Return<CiLaneTimingWindowReport, CiCommandError, CiLaneTimingGithubClient> {
   if (DateTime.toEpochMillis(options.since) >= DateTime.toEpochMillis(options.until)) {
     return yield* CiCommandError.make({ message: "--since must be earlier than --until." });
   }
-  const { requiredContextSet, version } = yield* resolveWindowPopulation(repoRoot, options.until);
+  const { changes, requiredContextSet, version } = yield* resolveWindowPopulation(repoRoot, options);
   yield* assertRequiredContextCount(requiredContextSet, O.some(version));
+  yield* refuseCiLaneTimingWindowPopulationChange(options, changes, preview);
   const runs = yield* collectCiWorkflowWindowRuns(repoRoot, options);
   const rows = yield* pipe(
     Stream.fromIterable(runs),
@@ -2393,7 +2540,7 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
       A.appendAll(collected, rowsForRun(requiredContextSet, runJobs))
     )
   );
-  return yield* reportFromRows(requiredContextSet, A.length(runs), rows, O.some(version));
+  return yield* reportFromRows(requiredContextSet, A.length(runs), rows, O.some(version), changes);
 });
 
 /**
@@ -2401,7 +2548,10 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
  *
  * **Details**
  *
- * The latest ruleset version strictly before the window end is checked before workflow runs are fetched. Run pages are
+ * The latest ruleset version strictly before the window end is checked before workflow runs are fetched, and so is
+ * every version that took effect after `since` and before `until`: one that added or removed a required context refuses the
+ * window unless `preview` is set, because the census would measure part of the window against a population that was
+ * not in force. Run pages are
  * de-duplicated and ordered, then each run's paginated jobs are fetched with
  * bounded concurrency into an isolated buffer. Ordered stream reduction keeps
  * concurrent writers away from shared output while retaining derived row
@@ -2428,15 +2578,17 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
  *
  * @param repoRoot - Repository root from which the captured `gh api` calls run.
  * @param options - Validated workflow, event, interval, branch, and head filters.
+ * @param preview - Whether the operator accepted a preview, which admits a mid-window population change.
  * @returns The derived report after complete pagination and fail-closed ruleset validation.
  * @category use-cases
  * @since 0.0.0
  */
 export const collectCiLaneTimingWindow = Effect.fn("Ci.collectCiLaneTimingWindow")(function* (
   repoRoot: string,
-  options: CiLaneTimingWindowOptions
+  options: CiLaneTimingWindowOptions,
+  preview = false
 ): Effect.fn.Return<CiLaneTimingWindowReport, CiCommandError, CiLaneTimingGithubClient> {
-  return yield* collectCiLaneTimingWindowWithClient(repoRoot, options);
+  return yield* collectCiLaneTimingWindowWithClient(repoRoot, options, preview);
 });
 
 const roundedDuration = (seconds: number): string => {
@@ -2470,6 +2622,65 @@ const renderRequiredPopulation = (report: CiLaneTimingWindowReport): string =>
     onSome: (version) =>
       `; ruleset ${CI_LANE_TIMING_RULESET_ID} version ${version.version_id} effective ${DateTime.formatIso(version.updated_at)}`,
   })})`;
+
+const isRequiredContextChange = (change: CiRulesetPopulationChange): boolean =>
+  A.isReadonlyArrayNonEmpty(change.addedContexts) || A.isReadonlyArrayNonEmpty(change.removedContexts);
+
+const renderContextDelta = (change: CiRulesetPopulationChange): string =>
+  A.match(
+    A.getSomes([
+      O.map(
+        A.match(change.addedContexts, { onEmpty: O.none, onNonEmpty: O.some }),
+        (added) => `added ${A.join(added, ", ")}`
+      ),
+      O.map(
+        A.match(change.removedContexts, { onEmpty: O.none, onNonEmpty: O.some }),
+        (removed) => `removed ${A.join(removed, ", ")}`
+      ),
+    ]),
+    { onEmpty: () => "left the required contexts unchanged", onNonEmpty: (clauses) => A.join(clauses, " and ") }
+  );
+
+const renderRulesetPopulationChange = (change: CiRulesetPopulationChange): string =>
+  `ruleset ${CI_LANE_TIMING_RULESET_ID} version ${change.version.version_id} effective ${DateTime.formatIso(change.version.updated_at)} (${O.match(
+    change.previousVersion,
+    {
+      onNone: () => "no earlier version",
+      onSome: (previous) => `after version ${previous.version_id}`,
+    }
+  )}) ${renderContextDelta(change)}`;
+
+const CI_LANE_TIMING_POPULATION_CHANGE_CONSEQUENCE =
+  "this census measures the window-end population for the whole window";
+
+// One stamp per in-window version, rendered above every output format: the
+// title names whether the population moved, the sentence names the version,
+// its effective instant, the version it replaced, and the contexts it moved.
+const renderPopulationChangeTitle = (change: CiRulesetPopulationChange): string =>
+  isRequiredContextChange(change) ? "Required contexts changed inside the window." : "Ruleset edit inside the window.";
+
+const renderPopulationChangeSentence = (change: CiRulesetPopulationChange): string =>
+  isRequiredContextChange(change)
+    ? `${Str.capitalize(renderRulesetPopulationChange(change))}; ${CI_LANE_TIMING_POPULATION_CHANGE_CONSEQUENCE}.`
+    : `${Str.capitalize(renderRulesetPopulationChange(change))}.`;
+
+const renderPopulationChangeBlockquotes = (report: CiLaneTimingWindowReport): ReadonlyArray<string> =>
+  A.match(report.populationChanges, {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (changes) => [
+      ...A.map(
+        changes,
+        (change) => `> **${renderPopulationChangeTitle(change)}** ${renderPopulationChangeSentence(change)}`
+      ),
+      "",
+    ],
+  });
+
+const renderPopulationChangeComments = (report: CiLaneTimingWindowReport): ReadonlyArray<string> =>
+  A.map(
+    report.populationChanges,
+    (change) => `# ${renderPopulationChangeTitle(change)} ${renderPopulationChangeSentence(change)}`
+  );
 
 const renderSuccessfulDurationsMarkdown = (report: CiLaneTimingWindowReport): ReadonlyArray<string> => [
   "## Successful attempt-one durations",
@@ -2541,6 +2752,7 @@ const renderQueueTripwire = (pickup: CiLaneTimingPickupStat): string =>
 export const renderCiLaneTimingWindowMarkdown = (report: CiLaneTimingWindowReport): string =>
   A.join(
     [
+      ...renderPopulationChangeBlockquotes(report),
       renderRequiredPopulation(report),
       "",
       ...renderSuccessfulDurationsMarkdown(report),
@@ -2685,7 +2897,14 @@ const renderWindowRowTsv = (row: CiLaneTimingWindowRow): string =>
  * @since 0.0.0
  */
 export const renderCiLaneTimingWindowTsv = (report: CiLaneTimingWindowReport): string =>
-  A.join([A.join(WINDOW_TSV_COLUMNS, "\t"), ...A.map(report.rows, renderWindowRowTsv)], "\n");
+  A.join(
+    [
+      ...renderPopulationChangeComments(report),
+      A.join(WINDOW_TSV_COLUMNS, "\t"),
+      ...A.map(report.rows, renderWindowRowTsv),
+    ],
+    "\n"
+  );
 
 const CI_LANE_TIMING_CENSUS_SPAN = Duration.days(7);
 
@@ -2693,7 +2912,7 @@ const censusWindowSpan = (verdict: CiLaneTimingWindowGuardVerdict): Duration.Dur
   DateTime.distance(verdict.since, verdict.until);
 
 const CI_LANE_TIMING_WINDOW_GUARD_BREACH: Record<
-  CiLaneTimingWindowGuardReason,
+  CiLaneTimingWindowBoundReason,
   (options: CiLaneTimingWindowOptions, now: DateTime.Utc) => boolean
 > = {
   "future-cutoff": (options, now) => DateTime.isGreaterThan(options.until, now),
@@ -2707,6 +2926,11 @@ const CI_LANE_TIMING_WINDOW_GUARD_REFUSAL: Record<
 > = {
   "future-cutoff": (verdict) => `--until ${DateTime.formatIso(verdict.until)} is in the future`,
   "short-span": (verdict) => `window spans ${Duration.format(censusWindowSpan(verdict))}, under seven days`,
+  "population-change": (verdict) =>
+    `required contexts changed inside the window: ${A.join(
+      A.map(A.filter(verdict.populationChanges, isRequiredContextChange), renderRulesetPopulationChange),
+      "; "
+    )}`,
 };
 
 const CI_LANE_TIMING_WINDOW_GUARD_BANNER: Record<
@@ -2715,6 +2939,7 @@ const CI_LANE_TIMING_WINDOW_GUARD_BANNER: Record<
 > = {
   "future-cutoff": () => "cutoff is in the future",
   "short-span": () => "span under seven days",
+  "population-change": () => "required contexts changed inside the window",
 };
 
 const CI_LANE_TIMING_WINDOW_PREVIEW_HEADER = "ci lane timing window (PREVIEW, not an admission census)";
@@ -2779,10 +3004,52 @@ export const assessCiLaneTimingWindowBounds: {
 } = dual(
   2,
   (options: CiLaneTimingWindowOptions, now: DateTime.Utc): ReadonlyArray<CiLaneTimingWindowGuardReason> =>
-    A.filter(CiLaneTimingWindowGuardReason.Options, (reason) =>
+    A.filter(CiLaneTimingWindowBoundReason.literals, (reason) =>
       CI_LANE_TIMING_WINDOW_GUARD_BREACH[reason](options, now)
     )
 );
+
+/**
+ * Report whether ruleset versions effective inside a window changed its population.
+ *
+ * **Details**
+ *
+ * Only a version that added or removed a normalized required context breaches;
+ * a ruleset edit that left the required checks alone is still listed by every
+ * renderer but never refuses the window. This is the history-backed half of
+ * the guard: {@link assessCiLaneTimingWindowBounds} judges the interval before
+ * any GitHub read, and this judges what the ruleset history says about it.
+ *
+ * **Example** (Judge an edit that kept the required checks)
+ *
+ * ```ts
+ * import {
+ *   assessCiLaneTimingWindowPopulation,
+ *   CiRulesetHistoryVersion,
+ *   CiRulesetPopulationChange,
+ * } from "@beep/repo-cli/commands/Ci"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ *
+ * const edit = CiRulesetPopulationChange.make({
+ *   addedContexts: [],
+ *   previousVersion: O.none(),
+ *   removedContexts: [],
+ *   version: CiRulesetHistoryVersion.make({ version_id: 1, updated_at: DateTime.makeUnsafe("2026-09-25T00:00:00Z") }),
+ * })
+ * console.log(assessCiLaneTimingWindowPopulation([edit]))
+ * // []
+ * ```
+ *
+ * @param changes - Every ruleset version effective inside the window, diffed against its predecessor.
+ * @returns `["population-change"]` when any version added or removed a required context, else empty.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const assessCiLaneTimingWindowPopulation = (
+  changes: ReadonlyArray<CiRulesetPopulationChange>
+): ReadonlyArray<CiLaneTimingWindowGuardReason> =>
+  A.some(changes, isRequiredContextChange) ? ["population-change"] : A.empty();
 
 /**
  * Render the line that marks census output as a preview.
@@ -2869,6 +3136,37 @@ export const guardCiLaneTimingWindowBounds = Effect.fn("Ci.guardCiLaneTimingWind
   return verdict;
 });
 
+const refuseCiLaneTimingWindowPopulationChange = (
+  options: CiLaneTimingWindowOptions,
+  populationChanges: ReadonlyArray<CiRulesetPopulationChange>,
+  preview: boolean
+): Effect.Effect<void, CiCommandError> => {
+  const verdict = CiLaneTimingWindowGuardVerdict.make({
+    populationChanges,
+    preview,
+    reasons: assessCiLaneTimingWindowPopulation(populationChanges),
+    since: options.since,
+    until: options.until,
+  });
+  return !preview && A.isReadonlyArrayNonEmpty(verdict.reasons)
+    ? CiCommandError.make({ message: renderCiLaneTimingWindowGuardRefusal(verdict) })
+    : Effect.void;
+};
+
+// Fold the history-backed judgement into the interval verdict so the preview
+// banner names a population change next to any breached bound.
+const withCiLaneTimingWindowPopulation = (
+  verdict: CiLaneTimingWindowGuardVerdict,
+  report: CiLaneTimingWindowReport
+): CiLaneTimingWindowGuardVerdict =>
+  CiLaneTimingWindowGuardVerdict.make({
+    populationChanges: report.populationChanges,
+    preview: verdict.preview,
+    reasons: A.appendAll(verdict.reasons, assessCiLaneTimingWindowPopulation(report.populationChanges)),
+    since: verdict.since,
+    until: verdict.until,
+  });
+
 const withCiLaneTimingWindowPreview = (
   verdict: CiLaneTimingWindowGuardVerdict,
   header: ReadonlyArray<string>,
@@ -2913,7 +3211,7 @@ const workflowFlag = Flag.String("workflow").pipe(
   Flag.withDescription("Workflow file used by the bounded census")
 );
 
-const eventFlag = Flag.Literals("event", CiLaneTimingWindowEvent.Options).pipe(
+const eventFlag = Flag.Literals("event", CiLaneTimingWindowEvent.literals).pipe(
   Flag.withDefault(CiLaneTimingWindowEvent.Enum.all),
   Flag.withDescription("Workflow event population used by the bounded census")
 );
@@ -3013,11 +3311,12 @@ export const ciLaneTimingsCommand = Command.make(
       workflow,
       ...O.getSomesStruct({ branch, headSha, since, until }),
     });
-    const verdict = yield* guardCiLaneTimingWindowBounds(options, preview);
+    const boundsVerdict = yield* guardCiLaneTimingWindowBounds(options, preview);
     const githubClient = yield* makeCiLaneTimingGithubClient();
-    const windowReport = yield* collectCiLaneTimingWindow(repoRoot, options).pipe(
+    const windowReport = yield* collectCiLaneTimingWindow(repoRoot, options, preview).pipe(
       Effect.provideService(CiLaneTimingGithubClient, githubClient)
     );
+    const verdict = withCiLaneTimingWindowPopulation(boundsVerdict, windowReport);
     yield* Console.log(
       tsv
         ? withCiLaneTimingWindowPreviewComment(verdict, renderCiLaneTimingWindowTsv(windowReport))

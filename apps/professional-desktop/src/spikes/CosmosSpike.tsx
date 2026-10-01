@@ -231,7 +231,7 @@ const spikeSizeFor = (label: SpikeSizeLabel): CosmosSpikeSize =>
     "100k": () => CosmosSpikeSize.make({ label: "100k", elementCount: 100_000, nodeCount: 50_000, edgeCount: 50_000 }),
   });
 
-const spikeSizes = A.map(SpikeSizeLabel.Options, spikeSizeFor);
+const spikeSizes = A.map(SpikeSizeLabel.literals, spikeSizeFor);
 const spikeSizeEquivalence = S.toEquivalence(CosmosSpikeSize);
 const initialSpikeSize = pipe(
   S.decodeUnknownOption(InitialSpikeSizeLabel)(import.meta.env.VITE_COSMOS_SPIKE_SIZE),

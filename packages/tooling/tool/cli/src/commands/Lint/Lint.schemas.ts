@@ -117,6 +117,7 @@ export const SchemaFirstPolicyRuleId = LiteralKit([
   "SFV4-getsomes-struct",
   "SFV4-default-wrapper",
   "SFV4-opaque-wrapper",
+  "SFV4-codec-static",
 ]).pipe(
   $I.annoteSchema("SchemaFirstPolicyRuleId", {
     description: "Stable schema-first policy rule identifiers emitted for lint and Yeet issue routing.",
@@ -168,6 +169,7 @@ export type SchemaFirstPolicyRuleId = typeof SchemaFirstPolicyRuleId.Type;
 export const SchemaFirstParityRuleId = SchemaFirstPolicyRuleId.pick([
   "SFV4-default-wrapper",
   "SFV4-opaque-wrapper",
+  "SFV4-codec-static",
 ]).pipe(
   $I.annoteSchema("SchemaFirstParityRuleId", {
     description: "Upstream-parity schema-first rules whose findings ratchet on occurrence membership.",
@@ -499,6 +501,10 @@ export class SchemaFirstInventoryDocument extends S.Class<SchemaFirstInventoryDo
 export class SchemaFirstLintOptions extends S.Class<SchemaFirstLintOptions>($I`SchemaFirstLintOptions`)(
   {
     write: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
+    reportScannedFiles: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),
@@ -1086,7 +1092,7 @@ export class EffectVitestReplacement extends S.Class<EffectVitestReplacement>($I
 ) {}
 
 const EffectVitestFindingLensRule = S.Union([
-  S.Struct({ lens: LiteralKit(EffectVitestLens.pickOptions(["detector", "resource"])), ruleId: EffectVitestRuleId }),
+  S.Struct({ lens: LiteralKit(EffectVitestLens.pick(["detector", "resource"]).literals), ruleId: EffectVitestRuleId }),
   S.Struct({ lens: S.Literal("resource"), ruleId: EffectVitestLensRuleId.check(S.isStartingWith("L-RES-")) }),
   S.Struct({ lens: S.Literal("flake"), ruleId: EffectVitestLensRuleId.check(S.isStartingWith("L-FLAKE-")) }),
   S.Struct({ lens: S.Literal("property"), ruleId: EffectVitestLensRuleId.check(S.isStartingWith("L-PROP-")) }),
@@ -1328,7 +1334,7 @@ const EffectVitestPrimitiveGraphFields = S.Struct({
         document.tag === `${document.package}@${document.version}` &&
         !A.isReadonlyArrayEmpty(document.entries) &&
         A.length(A.dedupe(ids)) === A.length(ids) &&
-        A.every(EffectVitestRuleId.Options, (ruleId) => A.contains(replacements, ruleId))
+        A.every(EffectVitestRuleId.literals, (ruleId) => A.contains(replacements, ruleId))
       );
     },
     {

@@ -8,7 +8,7 @@
 import { $SharedDomainId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { Cuid, cuid } from "@beep/schema/Cuid";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { SegmentValue } from "@beep/identity";
@@ -80,10 +80,11 @@ export type PrefixFor<Entity extends EntityId.Any> = Entity["tableName"];
  * import type { PublicEntityIdValueFor } from "@beep/shared-domain/entity/PublicEntityId"
  * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ * import * as S from "effect/Schema"
  *
  * const id: PublicEntityIdValueFor<"shared_organization", "SharedOrganizationPublicId"> = fromCuid(
  *   OrganizationId,
- *   Cuid.decodeUnknownSync("a123")
+ *   S.decodeUnknownSync(Cuid)("a123")
  * )
  * console.log(id)
  * ```
@@ -106,8 +107,9 @@ export type PublicEntityIdValueFor<Prefix extends string, TBrand extends string>
  * import type { PublicEntityIdFor } from "@beep/shared-domain/entity/PublicEntityId"
  * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ * import * as S from "effect/Schema"
  *
- * const id: PublicEntityIdFor<typeof OrganizationId> = fromCuid(OrganizationId, Cuid.decodeUnknownSync("a123"))
+ * const id: PublicEntityIdFor<typeof OrganizationId> = fromCuid(OrganizationId, S.decodeUnknownSync(Cuid)("a123"))
  * console.log(id)
  * ```
  *
@@ -124,14 +126,7 @@ type PublicEntityIdSchema<Prefix extends string, TBrand extends string> = S.Code
   string
 >;
 
-type PublicEntityIdStatics<
-  Entity extends EntityId.Any,
-  Prefix extends string,
-  TBrand extends string,
-> = SchemaUtils.SelectedCodecStatics<
-  PublicEntityIdSchema<Prefix, TBrand>,
-  readonly ["decodeUnknownOption", "decodeUnknownSync", "is"]
-> & {
+type PublicEntityIdStatics<Entity extends EntityId.Any, Prefix extends string, TBrand extends string> = {
   readonly brand: TBrand;
   readonly entityType: Entity["entityType"];
   readonly equivalence: PublicEntityIdEquivalence<Prefix, TBrand>;
@@ -193,18 +188,8 @@ const attachPublicEntityIdStatics = <
   const TBrand extends string,
 >(
   schema: PublicEntityIdSchema<Prefix, TBrand>,
-  statics: Omit<
-    PublicEntityIdStatics<Entity, Prefix, TBrand>,
-    keyof SchemaUtils.SelectedCodecStatics<
-      PublicEntityIdSchema<Prefix, TBrand>,
-      readonly ["decodeUnknownOption", "decodeUnknownSync", "is"]
-    >
-  >
-): PublicEntityId<Entity, Prefix, TBrand> =>
-  SchemaUtils.withStatics(
-    schema.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync", "is"])),
-    () => statics
-  );
+  statics: PublicEntityIdStatics<Entity, Prefix, TBrand>
+): PublicEntityId<Entity, Prefix, TBrand> => SchemaUtils.withStatics(schema, () => statics);
 
 /**
  * Build a public id schema from an existing numeric entity-id schema.
@@ -255,8 +240,9 @@ export const factory = <const Entity extends EntityId.Any>(
  * import { Cuid } from "@beep/schema/Cuid"
  * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ * import * as S from "effect/Schema"
  *
- * const id = fromCuid(OrganizationId, Cuid.decodeUnknownSync("a123"))
+ * const id = fromCuid(OrganizationId, S.decodeUnknownSync(Cuid)("a123"))
  * console.log(id)
  * ```
  *
@@ -269,7 +255,7 @@ export const fromCuid: {
 } = dual(
   2,
   <const Entity extends EntityId.Any>(entityId: Entity, id: Cuid): PublicEntityIdFor<Entity> =>
-    factory(entityId).decodeUnknownSync(`${entityId.tableName}_${id}`)
+    Result.getOrThrow(S.decodeResult(factory(entityId))(`${entityId.tableName}_${id}`))
 );
 
 /**

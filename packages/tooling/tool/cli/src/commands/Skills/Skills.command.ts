@@ -8,8 +8,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { decodeTomlTextAs } from "@beep/schema/Toml";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Console, Crypto, Effect, FileSystem, Order, Path, pipe, Result } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
@@ -21,6 +19,7 @@ import * as S from "effect/Schema";
 import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { formatJsonValue } from "../../internal/cli/Json.ts";
+import { decodeTomlTextWith } from "../../internal/schema/TextCodec.ts";
 import { SkillsCommandError, SkillsDriftError } from "./Skills.errors.ts";
 import { renderSkillProvenanceJson, renderSkillProvenanceSummary } from "./Skills.render.ts";
 import { runSkillProvenance, SkillProvenanceServiceLive } from "./Skills.service.ts";
@@ -37,7 +36,7 @@ const SKILLS_LOCK_PATH = "skills-lock.json";
 
 const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
-const encodeUnknownJsonResult = UnknownFromJsonString.encodeUnknownResult;
+const encodeUnknownJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 type SkillsRunMode = "write" | "check" | "dry-run";
 
@@ -227,7 +226,7 @@ const SuspendCodexSkillsConfig = S.suspend(() => CodexSkillsConfig);
 
 const decodeLockText = S.decodeUnknownEffect(S.fromJsonString(SuspendSkillLockFile));
 const decodeGitHubTree = S.decodeUnknownEffect(S.fromJsonString(SuspendGitHubTree));
-const decodeCodexSkillsConfig = decodeTomlTextAs(SuspendCodexSkillsConfig);
+const decodeCodexSkillsConfig = decodeTomlTextWith(S.decodeUnknownEffect(SuspendCodexSkillsConfig));
 
 const skillSource = (source: {
   readonly name: string;

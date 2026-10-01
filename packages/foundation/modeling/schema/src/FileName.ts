@@ -24,7 +24,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { flow, HashSet, pipe } from "effect";
+import { flow, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -35,12 +35,11 @@ import { HasNullByte, UsesPosixSeparator, UsesWindowsSeparator } from "./FilePat
 
 const $I = $SchemaId.create("FileName");
 
-const fileExtensionSet = HashSet.fromIterable(FileExtension.Options);
-const isHasNullByte = HasNullByte.is;
-const isFileExtension = (value: string): value is FileExtension => HashSet.has(fileExtensionSet, value);
+const isHasNullByte = S.is(HasNullByte);
+const isFileExtension = S.is(FileExtension);
 const isNonEmptyString = S.is(S.NonEmptyString);
-const isUsesPosixSeparator = UsesPosixSeparator.is;
-const isUsesWindowsSeparator = UsesWindowsSeparator.is;
+const isUsesPosixSeparator = S.is(UsesPosixSeparator);
+const isUsesWindowsSeparator = S.is(UsesWindowsSeparator);
 
 const fileNameLastDotIndex = (value: string): number =>
   pipe(
@@ -87,7 +86,7 @@ const FileNameChecks = S.makeFilterGroup(
     S.makeFilter(flow(fileNameExtension, isFileExtension), {
       identifier: $I`FileNameKnownExtensionCheck`,
       arbitraryConstraint: {
-        patterns: [{ source: `^[a-zA-Z0-9_-]{1,16}\\.(?:${A.join(FileExtension.Options, "|")})$`, flags: "" }],
+        patterns: [{ source: `^[a-zA-Z0-9_-]{1,16}\\.(?:${A.join(FileExtension.literals, "|")})$`, flags: "" }],
       },
       title: "File Name Known Extension",
       description: "A file name whose final extension segment is a known file extension.",

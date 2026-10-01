@@ -16,7 +16,6 @@ import {
   hashPublicTextSha256,
   hookPulseHashSalt,
 } from "@beep/repo-ai-metrics";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -27,6 +26,8 @@ import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const baseRawEventFixture = {
   session_id: "ccd-session-raw-1",
@@ -63,6 +64,14 @@ const autoApprovedPostToolUse = rawInput("2026-08-01T08:39:56.000Z", {
 });
 
 const autoApprovedSequence = [autoApprovedPreToolUse, autoApprovedPostToolUse];
+
+// Harness-hash fixture (goals/harness-evidence-ledger, D9). The writer stamps the
+// digest on SessionStart; the codec only passes it through.
+const harnessHashStamp = "e".repeat(64);
+
+const sessionStart = rawInput("2026-08-01T06:20:00.000Z", {
+  hook_event_name: HookPulseEvent.Enum.SessionStart,
+});
 
 // Context-surface fixtures (goals/harness-evidence-ledger, D8). The raw skill
 // name and paths below must never appear in a row; only the unsalted digest of
@@ -315,11 +324,11 @@ const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect
 
 const decodeRawHookPulse = HookPulseRawEvent.decodeEffect;
 const encodeRawHookPulse = HookPulseRawEvent.encodeEffect;
-const decodeHookPulseFromRaw = HookPulseV1FromRawEvent.decodeUnknownEffect;
-const decodeHookPulseFromLegacy = HookPulseV1FromLegacyRecord.decodeUnknownEffect;
+const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
+const decodeHookPulseFromLegacy = S.decodeUnknownEffect(HookPulseV1FromLegacyRecord);
 const decodeHookPulse = HookPulseV1.decodeEffect;
 const encodeHookPulse = HookPulseV1.encodeEffect;
-const encodeHookPulseToRaw = HookPulseV1FromRawEvent.encodeUnknownEffect;
+const encodeHookPulseToRaw = S.encodeUnknownEffect(HookPulseV1FromRawEvent);
 const encodeHookPulseToLegacy = S.encodeUnknownEffect(HookPulseV1FromLegacyRecord);
 const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 const isHookPulseWaitReason = S.is(HookPulseWaitReason);
@@ -360,7 +369,7 @@ describe("HookPulseV1", () => {
       // was pinned by construction; now an unpinned decode would mean the
       // developer's environment here and the empty one in CI.
       const decoded = yield* withSaltEnv({}, decodeHookPulseFromLegacy(legacy));
-      const serialized = yield* UnknownFromJsonString.encodeUnknownEffect(yield* encodeHookPulse(decoded));
+      const serialized = yield* encodeUnknownJsonEffect(yield* encodeHookPulse(decoded));
 
       expect(decoded).toBeInstanceOf(HookPulseV1);
       expect(decoded.sessionId).toMatch(/^[0-9a-f]{64}$/u);
@@ -395,9 +404,9 @@ describe("HookPulseV1", () => {
       "round-trips arbitrary encodable canonical values through the raw-event codec",
       [arbitrary],
       ([value]) => {
-        const encoded = Result.getOrThrow(HookPulseV1FromRawEvent.encodeResult(value));
+        const encoded = Result.getOrThrow(S.encodeResult(HookPulseV1FromRawEvent)(value));
 
-        const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(encoded));
+        const decoded = Result.getOrThrow(S.decodeResult(HookPulseV1FromRawEvent)(encoded));
 
         pipe(hookPulseEquivalent(decoded, value), assertTrue);
       },
@@ -436,7 +445,7 @@ describe("HookPulseV1", () => {
         )
       );
       const encoded = yield* encodeHookPulse(decoded);
-      const serialized = yield* UnknownFromJsonString.encodeUnknownEffect(encoded);
+      const serialized = yield* encodeUnknownJsonEffect(encoded);
 
       expect(decoded.sessionId).toMatch(/^[0-9a-f]{64}$/u);
       expect(decoded.cwd).toMatch(/^[0-9a-f]{64}$/u);
@@ -775,7 +784,7 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "round-trips all nine hook events and all three observed wait classes after derivation",
+    "round-trips all ten hook events and all three observed wait classes after derivation",
     Effect.fn("HookPulseTest.roundTripsDerivedEvents")(function* () {
       const fixtures = [
         autoApprovedPreToolUse,
@@ -788,6 +797,7 @@ describe("HookPulseV1", () => {
         sessionEnd,
         permissionDenied,
         approvedPlanPermissionRequest,
+        { ...sessionStart, harnessHash: harnessHashStamp },
       ];
       const derived = yield* Effect.forEach(fixtures, (fixture) => decodeHookPulseFromRaw(fixture), {
         concurrency: 1,
@@ -808,11 +818,12 @@ describe("HookPulseV1", () => {
         "SessionEnd",
         "PermissionDenied",
         "PermissionRequest",
+        "SessionStart",
       ]);
       // Every member of `HookPulseEvent` survives derivation and both round-trip
       // hops; a member added to the literal domain without a fixture here would
       // otherwise ride along untested.
-      expect(A.dedupe(A.map(roundTripped, (record) => record.hookEvent)).length).toBe(HookPulseEvent.Options.length);
+      expect(A.dedupe(A.map(roundTripped, (record) => record.hookEvent)).length).toBe(HookPulseEvent.literals.length);
       expect(A.map(roundTripped, (record) => record.waitReason)).toEqual([
         "none",
         "tool-permission",
@@ -824,7 +835,9 @@ describe("HookPulseV1", () => {
         "none",
         "none",
         "plan-approval",
+        "none",
       ]);
+      assertSome(O.getOrThrow(A.last(roundTripped)).harnessHash, harnessHashStamp);
     })
   );
 
@@ -1110,7 +1123,7 @@ describe("HookPulseV1", () => {
 
   it("decodes an already-hashed raw event synchronously", () => {
     // The Result adapter proves the already-hashed fast path stays synchronous.
-    const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(alreadyHashedRawInput));
+    const decoded = Result.getOrThrow(S.decodeResult(HookPulseV1FromRawEvent)(alreadyHashedRawInput));
 
     expect(decoded).toBeInstanceOf(HookPulseV1);
     expect(decoded.sessionId).toBe(alreadyHashedRawEventFixture.session_id);
@@ -1132,7 +1145,7 @@ describe("HookPulseV1", () => {
           { concurrency: 1 }
         )
       );
-      const serialized = yield* UnknownFromJsonString.encodeUnknownEffect(yield* encodeHookPulse(decoded.skill));
+      const serialized = yield* encodeUnknownJsonEffect(yield* encodeHookPulse(decoded.skill));
 
       // The leading slash of a slash-command invocation is not part of the name.
       assertSome(decoded.skill.surface, yield* hashPublicTextSha256(`skill:${surfaceSkillName}`));
@@ -1163,6 +1176,49 @@ describe("HookPulseV1", () => {
       expect(failure.message).toContain("surface");
       expect(failure.message).toContain("PostToolUse");
       expect(failure.message).toContain("PreToolUse");
+    })
+  );
+
+  it.effect(
+    "passes a harnessHash stamp through on SessionStart and drops it on every other event",
+    Effect.fn("HookPulseTest.ownsHarnessHash")(function* () {
+      const decoded = yield* withSaltEnv(
+        {},
+        Effect.all(
+          {
+            stamped: decodeHookPulseFromRaw({ ...sessionStart, harnessHash: harnessHashStamp }),
+            unstamped: decodeHookPulseFromRaw(sessionStart),
+            misowned: decodeHookPulseFromRaw({ ...stop, harnessHash: harnessHashStamp }),
+          },
+          { concurrency: 1 }
+        )
+      );
+      const raw = yield* encodeHookPulseToRaw(decoded.stamped);
+      const roundTripped = yield* decodeHookPulseFromRaw(raw);
+
+      assertSome(decoded.stamped.harnessHash, harnessHashStamp);
+      expect(decoded.stamped.waitReason).toBe(HookPulseWaitReason.Enum.none);
+      // Absence stays absence: the codec has no repo root to recompute a hash from.
+      assertNone(decoded.unstamped.harnessHash);
+      assertNone(decoded.misowned.harnessHash);
+      expect(raw.harnessHash).toBe(harnessHashStamp);
+      pipe(hookPulseEquivalent(roundTripped, decoded.stamped), assertTrue);
+    })
+  );
+
+  it.effect(
+    "rejects harnessHash on a non-SessionStart event and decodes rows written before the stamp",
+    Effect.fn("HookPulseTest.rejectsMisownedHarnessHash")(function* () {
+      const canonical = yield* decodeHookPulseFromRaw(autoApprovedPreToolUse);
+      const encoded = yield* encodeHookPulse(canonical);
+      const failure = yield* Effect.flip(decodeHookPulse({ ...encoded, harnessHash: harnessHashStamp }));
+      const started = yield* encodeHookPulse(yield* decodeHookPulseFromRaw(sessionStart));
+      const legacyStart = yield* decodeHookPulse(started);
+
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain("harnessHash belongs to SessionStart");
+      expect(started).not.toHaveProperty("harnessHash");
+      assertNone(legacyStart.harnessHash);
     })
   );
 

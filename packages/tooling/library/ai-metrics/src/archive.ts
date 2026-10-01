@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, Path, Redacted, Result } from "effect";
 import * as Base64 from "effect/encoding/Base64";
@@ -212,7 +212,7 @@ export type AiMetricsArchiveAlgorithm = typeof AiMetricsArchiveAlgorithm.Type;
 export class AiMetricsArchiveError extends S.TaggedError<AiMetricsArchiveError>($I`AiMetricsArchiveError`)(
   "AiMetricsArchiveError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsArchiveError>("AiMetricsArchiveError", {
@@ -265,9 +265,7 @@ export class AiMetricsEncryptedRawArchiveEnvelope extends S.Class<AiMetricsEncry
   })
 ) {}
 
-const AiMetricsEncryptedRawArchiveEnvelopeFromJsonString = S.fromJsonString(AiMetricsEncryptedRawArchiveEnvelope).pipe(
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "encodeUnknownEffect"])
-);
+const AiMetricsEncryptedRawArchiveEnvelopeFromJsonString = S.fromJsonString(AiMetricsEncryptedRawArchiveEnvelope);
 
 /**
  * Safe archive object metadata returned after an encrypted write or lookup.
@@ -429,7 +427,7 @@ const readArchiveEnvelopeText = Effect.fn("AiMetrics.readArchiveEnvelopeText")(f
 
 const readExistingArchiveObject = Effect.fn("AiMetrics.readExistingArchiveObject")(function* (archivePath: string) {
   const envelopeText = yield* readArchiveEnvelopeText(archivePath, "Failed to read existing archive object");
-  const envelope = yield* AiMetricsEncryptedRawArchiveEnvelopeFromJsonString.decodeUnknownEffect(envelopeText).pipe(
+  const envelope = yield* S.decodeEffect(AiMetricsEncryptedRawArchiveEnvelopeFromJsonString)(envelopeText).pipe(
     Effect.mapError((cause) => archiveFailure(`Failed to decode existing archive object "${archivePath}".`, cause))
   );
 
@@ -526,9 +524,9 @@ export const writeEncryptedRawArchiveObject = Effect.fn("AiMetrics.writeEncrypte
       sourceKind,
       sourcePathHash,
     }).pipe(Effect.mapError((cause) => archiveFailure("Failed to validate raw archive envelope.", cause)));
-    const envelopeText = yield* AiMetricsEncryptedRawArchiveEnvelopeFromJsonString.encodeUnknownEffect(envelope).pipe(
-      Effect.mapError((cause) => archiveFailure("Failed to encode raw archive envelope.", cause))
-    );
+    const envelopeText = yield* S.encodeUnknownEffect(AiMetricsEncryptedRawArchiveEnvelopeFromJsonString)(
+      envelope
+    ).pipe(Effect.mapError((cause) => archiveFailure("Failed to encode raw archive envelope.", cause)));
 
     yield* fs
       .makeDirectory(pathApi.dirname(archivePath), { recursive: true })
@@ -642,7 +640,7 @@ export const readEncryptedRawArchiveEnvelope = Effect.fn("AiMetrics.readEncrypte
 ) {
   const envelopeText = yield* readArchiveEnvelopeText(archivePath, "Failed to read archive envelope");
 
-  return yield* AiMetricsEncryptedRawArchiveEnvelopeFromJsonString.decodeUnknownEffect(envelopeText).pipe(
+  return yield* S.decodeEffect(AiMetricsEncryptedRawArchiveEnvelopeFromJsonString)(envelopeText).pipe(
     Effect.mapError((cause) => archiveFailure(`Failed to decode archive envelope "${archivePath}".`, cause))
   );
 });

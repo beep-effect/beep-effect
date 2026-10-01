@@ -6,7 +6,7 @@
  */
 
 import { $ExiftoolId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
@@ -103,8 +103,7 @@ export const EpochMilliseconds = S.Finite.check(
 ).pipe(
   $I.annoteSchema("EpochMilliseconds", {
     description: "Non-negative epoch timestamp measured in milliseconds.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**
@@ -251,7 +250,7 @@ export type SafeTagName = typeof SafeTagName.Type;
  * ```ts
  * import { ExiftoolWritableExtension } from "@beep/exiftool"
  *
- * console.log(ExiftoolWritableExtension.Options)
+ * console.log(ExiftoolWritableExtension.literals)
  * ```
  *
  * @category schemas

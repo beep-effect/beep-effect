@@ -20,6 +20,7 @@ import {
   UriFunctionName,
 } from "../interpreter/Interpreter.model.ts";
 import { boundedData, coerceToString } from "./StdLib.value.ts";
+import * as S from "effect/Schema";
 
 export {
   UrlMethod,
@@ -90,7 +91,7 @@ export type urlProperties = typeof urlProperties.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const urlWritableProperties = LiteralKit(urlProperties.omitOptions(["origin"])).pipe(
+export const urlWritableProperties = LiteralKit(urlProperties.pick(["href", "protocol", "username", "password", "host", "hostname", "port", "pathname", "search", "hash"]).literals).pipe(
   $I.annoteSchema("urlWritableProperties", {
     description: "Writable URL instance property names; origin is computed.",
   })
@@ -159,7 +160,7 @@ export const invokeUriFunction: {
   const value = Result.try({
     try: () => uriArgument(args[0], `${ref.name} input`),
     catch: (error) =>
-      InterpreterFailure.is(error)
+      S.is(InterpreterFailure)(error)
         ? error
         : InterpreterRuntimeError.new(`${ref.name} input could not be converted to data.`, node),
   });

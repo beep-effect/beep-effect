@@ -6,9 +6,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { pipe, Result, Effect } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import { flow } from "effect/Function";
@@ -33,7 +32,7 @@ const $I = $ScratchpadId.create("effect-ontology/Prompt/PromptGenerator");
 const optionText = (fallback: string): ((value: O.Option<string>) => string) => O.getOrElse(() => fallback);
 
 const renderUnknownJson: (value: unknown) => string = flow(
-  UnknownFromJsonString.encodeUnknownResult,
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown)),
   Result.getOrElse(() => "null")
 );
 
@@ -237,7 +236,6 @@ const NegativeExampleOutput = S.Struct({
     })
   ),
 }).pipe(
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"]),
   $I.annoteSchema("NegativeExampleOutput", {
     description: "Optional structured metadata carried by a negative extraction example.",
   })
@@ -808,7 +806,7 @@ const buildNegativeExamplesSection = (examples: ReadonlyArray<ScoredExample>): P
   const lines: Array<PromptDoc> = [Doc.text("=== EXTRACTION WARNINGS (Avoid These Mistakes) ==="), Doc.empty];
 
   for (const neg of negatives) {
-    const output = NegativeExampleOutput.decodeUnknownOption(neg.expectedOutput);
+    const output = S.decodeUnknownOption(NegativeExampleOutput)(neg.expectedOutput);
 
     lines.push(Doc.text(`❌ DO NOT: ${optionText("Avoid this pattern")(neg.explanation)}`));
 

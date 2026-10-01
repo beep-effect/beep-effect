@@ -138,7 +138,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
     });
 
     expect(Object.keys(PracticeKgToolkit.tools)).toHaveLength(9);
-    pipe(PracticeKgCandidateClaimsResult.is(notLoaded), assertTrue);
+    pipe(S.is(PracticeKgCandidateClaimsResult)(notLoaded), assertTrue);
   });
 
   it.effect(
@@ -221,8 +221,8 @@ describe("@beep/law-practice-use-cases schema parity", () => {
 
       const encoded = yield* encodeOfficeActionReviewError(error);
 
-      pipe(OfficeActionReviewError.is(error), assertTrue);
-      pipe(OfficeActionReviewError.decodeUnknownOption(encoded), O.isSome, assertTrue);
+      pipe(S.is(OfficeActionReviewError)(error), assertTrue);
+      pipe(S.decodeOption(OfficeActionReviewError)(encoded), O.isSome, assertTrue);
     })
   );
 

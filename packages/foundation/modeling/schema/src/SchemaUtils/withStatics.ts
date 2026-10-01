@@ -35,9 +35,7 @@ const attachStatics = <S extends object, M extends Record<string, unknown>>(
       })
     )
   );
-  staticDescriptorInstaller.install(schema, statics, "legacy", undefined, (key) =>
-    A.contains(nextSchemaOwnedKeys, key)
-  );
+  staticDescriptorInstaller.install(schema, statics, (key) => A.contains(nextSchemaOwnedKeys, key));
 
   if (P.isFunction(originalAnnotate)) {
     Reflect.defineProperty(schema, "annotate", {

@@ -18,7 +18,7 @@ import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import type { Config } from "effect";
-import { Context, DateTime, Effect, Layer, Random } from "effect";
+import { Context, DateTime, Effect, Layer, Random, Result } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -323,8 +323,8 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
     const toReifiedTriples = (claim: ClaimRow, graphUri?: string) =>
       Effect.sync(() => {
         const quads: Array<Quad> = [];
-        const claimIri = IRI.decodeUnknownSync(`${CLAIMS.namespace}${claim.id}`);
-        const graph = P.isUndefined(graphUri) ? undefined : IRI.decodeUnknownSync(graphUri);
+        const claimIri = Result.getOrThrow(S.decodeResult(IRI)(`${CLAIMS.namespace}${claim.id}`));
+        const graph = P.isUndefined(graphUri) ? undefined : Result.getOrThrow(S.decodeResult(IRI)(graphUri));
 
         // Type assertion
         quads.push(
@@ -343,7 +343,7 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
           canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.claimSubject,
-            object: IRI.decodeUnknownSync(claim.subjectIri),
+            object: Result.getOrThrow(S.decodeResult(IRI)(claim.subjectIri)),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -352,7 +352,7 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
           canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.claimPredicate,
-            object: IRI.decodeUnknownSync(claim.predicateIri),
+            object: Result.getOrThrow(S.decodeResult(IRI)(claim.predicateIri)),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -364,7 +364,7 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
             canonicalQuad({
               subject: claimIri,
               predicate: CLAIMS.claimObject,
-              object: IRI.decodeUnknownSync(claim.objectValue),
+              object: Result.getOrThrow(S.decodeResult(IRI)(claim.objectValue)),
               graph: O.fromNullishOr(graph),
             })
           );
@@ -431,7 +431,7 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
           canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.statedIn,
-            object: IRI.decodeUnknownSync(`${CLAIMS.namespace}article/${claim.articleId}`),
+            object: Result.getOrThrow(S.decodeResult(IRI)(`${CLAIMS.namespace}article/${claim.articleId}`)),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -482,7 +482,7 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
 
         // Evidence
         if (P.isNotNull(claim.evidenceText)) {
-          const evidenceIri = IRI.decodeUnknownSync(`${claimIri}/evidence`);
+          const evidenceIri = Result.getOrThrow(S.decodeResult(IRI)(`${claimIri}/evidence`));
 
           quads.push(
             canonicalQuad({

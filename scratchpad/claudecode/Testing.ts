@@ -13,7 +13,6 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import {
   Cause,
   Effect,
@@ -50,6 +49,8 @@ import { HookEnvelope } from "./Hook/Envelope.ts";
 import type * as Events from "./Hook/Events/index.ts";
 import { type HookDefinition, runHookProgram } from "./Hook/Runner.ts";
 import * as Plugin from "./Plugin.ts";
+
+const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 const isHookControlledExit = S.is(HookControlledExit);
 const isHookHandlerError = S.is(HookHandlerError);
@@ -349,7 +350,7 @@ export const runHookWithMockStdin: {
       const trimmed = stdout.trim();
       const output: unknown =
         trimmed.length > 0
-          ? yield* UnknownFromJsonString.decodeEffect(trimmed).pipe(Effect.orElseSucceed(() => undefined))
+          ? yield* decodeJsonEffect(trimmed).pipe(Effect.orElseSucceed(() => undefined))
           : undefined;
 
       const { exitCode, errorTag } = classifyExit(exit);

@@ -10,12 +10,13 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Effect, Runtime } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
 import { UUID } from "../schema/Uuid.ts";
 import { RunScopeRecord } from "./RunScope.schemas.ts";
 
@@ -61,7 +62,7 @@ export type AdmissionWorkKind = typeof AdmissionWorkKind.Type;
  * ```ts
  * import { AdmissionPriority } from "@beep/repo-cli/test/RepoRun"
  *
- * console.log(AdmissionPriority.Options.length) // 2
+ * console.log(AdmissionPriority.literals.length) // 2
  * ```
  *
  * @category models
@@ -832,7 +833,7 @@ export class QualitySchedulerError extends S.TaggedError<QualitySchedulerError>(
     message: S.String,
     exitCode: S.optionalKey(S.Finite),
     reason: S.optionalKey(QualitySchedulerErrorReason),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<QualitySchedulerError>("QualitySchedulerError", {
     description: "Failure raised while coordinating machine-wide quality admission.",

@@ -27,6 +27,7 @@ import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { Atom, AtomRegistry } from "effect/reactivity";
+import * as S from "effect/Schema";
 import { groupOne, groupThree, groupTwo, panelOne, panelThree, panelTwo, splitOne, splitTwo } from "./Fixtures.ts";
 import type { DockWorkspace, GroupMinimaRecord, SplitId } from "@beep/dock";
 
@@ -233,7 +234,7 @@ describe("per-group minimum lookup", () => {
   it("honors a per-group minimum on the trailing side", () => {
     const geometry = project(split("horizontal", 9_000, tabsOne, tabsTwo), {
       container: box,
-      minima: (groupId) => (GroupId.equals(groupId, groupTwo) ? 50 : 0),
+      minima: (groupId) => (S.toEquivalence(GroupId)(groupId, groupTwo) ? 50 : 0),
       options: gapThree,
     });
     const [left, right] = geometry.groups;
@@ -284,7 +285,7 @@ describe("per-group minimum lookup", () => {
     const crossed = split("horizontal", 9_000, tabsOne, split("vertical", 5_000, tabsTwo, tabsThree, splitTwo));
     const geometry = project(crossed, {
       container: box,
-      minima: (groupId) => (GroupId.equals(groupId, groupThree) ? 40 : 0),
+      minima: (groupId) => (S.toEquivalence(GroupId)(groupId, groupThree) ? 40 : 0),
       options: gapThree,
     });
     const widths = A.map(geometry.groups, (group) => group.box.width);

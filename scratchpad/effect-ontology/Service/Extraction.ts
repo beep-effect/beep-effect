@@ -13,8 +13,7 @@ import * as Crypto from "effect/Crypto";
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { Chunk, Context, Effect, Inspectable, Layer, Match, MutableHashMap } from "effect";
+import { Chunk, Context, Effect, Inspectable, Layer, Match, MutableHashMap, Result } from "effect";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
@@ -46,6 +45,8 @@ import { buildLocalNameToIriMapSafe, expandLocalNameToIri, expandTypesToIris } f
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
 import { generateObjectWithRetry } from "./LlmWithRetry.ts";
+
+const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Extraction");
 
@@ -130,7 +131,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           promptPreview: structuredPrompt.systemMessage.slice(0, 500),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
-        const jsonSchemaText = yield* UnknownFromJsonString.encodeUnknownEffect(jsonSchema);
+        const jsonSchemaText = yield* encodeUnknownJsonEffect(jsonSchema);
         const schemaHash = yield* sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Entity extraction schema", {
           stage: "entity-extraction",
@@ -184,7 +185,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
             })
           )
         );
-        const propertyIris: ReadonlyArray<IRI> = (datatypeProps ?? []).map((p) => IRI.decodeUnknownSync(p.id));
+        const propertyIris: ReadonlyArray<IRI> = (datatypeProps ?? []).map((p) => Result.getOrThrow(S.decodeResult(IRI)(p.id)));
         const propertyMapResult = buildLocalNameToIriMapSafe(propertyIris);
         const propertyLocalNameToIriMap = propertyMapResult.map;
         if (propertyMapResult.hasCollisions) {
@@ -292,7 +293,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
               mention: "Test Entity",
               types: [
                 O.match(A.head(candidates), {
-                  onNone: () => IRI.decodeUnknownSync("https://example.org/TestEntity"),
+                  onNone: () => Result.getOrThrow(S.decodeResult(IRI)("https://example.org/TestEntity")),
                   onSome: (candidate) => candidate.id,
                 }),
               ],
@@ -494,7 +495,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           promptPreview: structuredPrompt.systemMessage.slice(0, 500),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
-        const jsonSchemaText = yield* UnknownFromJsonString.encodeUnknownEffect(jsonSchema);
+        const jsonSchemaText = yield* encodeUnknownJsonEffect(jsonSchema);
         const schemaHash = yield* sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Relation extraction schema", {
           stage: "relation-extraction",
@@ -535,7 +536,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
             })
           )
         );
-        const propertyIris: ReadonlyArray<IRI> = properties.map((p) => IRI.decodeUnknownSync(p.id));
+        const propertyIris: ReadonlyArray<IRI> = properties.map((p) => Result.getOrThrow(S.decodeResult(IRI)(p.id)));
         const relationPropertyMapResult = buildLocalNameToIriMapSafe(propertyIris);
         const localNameToIriMap = relationPropertyMapResult.map;
         if (relationPropertyMapResult.hasCollisions) {
@@ -700,9 +701,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           Chunk.fromIterable([
             Relation.make({
               subjectId: entityArray[0].id,
-              predicate: IRI.decodeUnknownSync(
-                _properties.length > 0 ? _properties[0].id : "https://example.org/relatedTo"
-              ),
+              predicate: Result.getOrThrow(S.decodeResult(IRI)(_properties.length > 0 ? _properties[0].id : "https://example.org/relatedTo")),
               object: RelationObject.cases.EntityReference.make({ value: entityArray[1].id }),
             }),
           ])

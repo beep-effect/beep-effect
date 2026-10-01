@@ -174,7 +174,7 @@ export type IsoTimestamp = typeof IsoTimestamp.Type;
  * ```ts
  * import { OntologyClassName } from "@/domain/Ontology"
  *
- * console.log(OntologyClassName.Options.length) // 12
+ * console.log(OntologyClassName.literals.length) // 12
  * ```
  *
  * @category schemas

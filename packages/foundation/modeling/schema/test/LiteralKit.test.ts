@@ -1,30 +1,22 @@
 import { fcRuns } from "@beep/fc-runs";
-import { $RepoCliId, $SchemaId } from "@beep/identity";
-import {
-  LiteralKit,
-  LiteralKitEnumMappingCoverageError,
-  LiteralKitEnumMappingDuplicateLiteralError,
-  LiteralKitKeyCollisionError,
-  LiteralNotInSetError,
-} from "@beep/schema/LiteralKit";
+import { LiteralKit, LiteralKitKeyCollisionError } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import { assertInstanceOf, deepStrictEqual } from "@effect/vitest/utils";
+import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Eq from "effect/Equal";
-import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
-
-const createRuntimeLiteralKit = (
-  literals: ReadonlyArray<unknown>,
-  enumMapping: ReadonlyArray<readonly [unknown, string]>
-): unknown => Function.prototype.apply.call(LiteralKit, undefined, [{ literals, enumMapping }]);
 
 const Status = LiteralKit([1, 20n, true, false, "hello"]);
 const decodeUnknownStatusEffect = S.decodeUnknownEffect(Status);
 const encodeStatusEffect = S.encodeEffect(Status);
 const Direction = LiteralKit(["up", "down", "left", "right"]);
+const notDown = S.makeFilter((direction: "up" | "down" | "left" | "right") => direction !== "down" || "down is closed");
+const CheckedDirection = Direction.check(notDown);
+const PipedDirection = Direction.pipe(S.check(notDown), S.annotate({ title: "Open direction" }));
+const isCheckedDirection = S.is(CheckedDirection);
+const isPipedDirection = S.is(PipedDirection);
 const EventKind = LiteralKit(["created", "deleted"]);
 const Event = EventKind.toTaggedUnion("kind")({
   created: { value: S.Literal(1) },
@@ -33,21 +25,8 @@ const Event = EventKind.toTaggedUnion("kind")({
 const decodeEventEffect = S.decodeEffect(Event);
 
 describe("LiteralKit", () => {
-  it("exposes Options with the original literal tuple", () => {
-    expect(Status.Options).toEqual([1, 20n, true, false, "hello"]);
-  });
-
-  it("exposes an Effect HashSet derived from Options", () => {
-    expect(HashSet.isHashSet(Status.HashSet)).toBe(true);
-    expect(Eq.equals(Status.HashSet, HashSet.fromIterable(Status.Options))).toBe(true);
-  });
-
-  it("preserves HashSet through annotation and static reattachment", () => {
-    const Annotated = Status.annotate({ title: "Annotated status" });
-    const Reattached = S.Literals(Status.Options).pipe(SchemaUtils.withLiteralKitStatics(Status));
-
-    expect(Annotated.HashSet).toBe(Status.HashSet);
-    expect(Reattached.HashSet).toBe(Status.HashSet);
+  it("exposes the original literal tuple through upstream literals", () => {
+    expect(Status.literals).toEqual([1, 20n, true, false, "hello"]);
   });
 
   {
@@ -56,7 +35,7 @@ describe("LiteralKit", () => {
       "round-trips schema-derived literal samples",
       [arbitrary],
       Effect.fnUntraced(function* ([literal]) {
-        expect(Status.Options).toContain(literal);
+        expect(Status.literals).toContain(literal);
         expect(yield* decodeUnknownStatusEffect(yield* encodeStatusEffect(literal))).toBe(literal);
 
         return true;
@@ -88,39 +67,22 @@ describe("LiteralKit", () => {
   });
 
   it("defines helper properties as readonly and non-configurable", () => {
-    const enumDescriptor = Object.getOwnPropertyDescriptor(Status, "Enum");
-    const hashSetDescriptor = Object.getOwnPropertyDescriptor(Status, "HashSet");
-    const matchDescriptor = Object.getOwnPropertyDescriptor(Status, "$match");
+    const readonlyStatic = { enumerable: true, writable: false, configurable: false };
 
-    expect(enumDescriptor?.enumerable).toBe(true);
-    expect(enumDescriptor?.writable).toBe(false);
-    expect(enumDescriptor?.configurable).toBe(false);
-    expect(hashSetDescriptor?.enumerable).toBe(true);
-    expect(hashSetDescriptor?.writable).toBe(false);
-    expect(hashSetDescriptor?.configurable).toBe(false);
-    expect(matchDescriptor?.writable).toBe(false);
-    expect(matchDescriptor?.configurable).toBe(false);
+    expect(Object.getOwnPropertyDescriptor(Status, "Enum")).toMatchObject(readonlyStatic);
+    expect(Object.getOwnPropertyDescriptor(Status, "is")).toMatchObject(readonlyStatic);
+    expect(Object.getOwnPropertyDescriptor(Status, "$match")).toMatchObject(readonlyStatic);
+    expect(Object.getOwnPropertyDescriptor(Status, "rebuild")).toMatchObject({ enumerable: false });
   });
 
-  it("returns the provided subset with pickOptions", () => {
-    const picked = Status.pickOptions([1, "hello"] as const);
-    expect(picked).toEqual([1, "hello"]);
+  it("no longer carries the retired facets", () => {
+    for (const retired of ["Options", "HashSet", "pickOptions", "omitOptions", "thunk"]) {
+      expect(Reflect.has(Status, retired)).toBe(false);
+    }
   });
 
-  it("omits literals outside the provided subset", () => {
-    const omitted = Status.omitOptions([1, 20n, true] as const);
-    expect(omitted).toEqual([false, "hello"]);
-  });
-
-  it("throws LiteralNotInSetError when omitOptions removes every literal", () => {
-    expect(() => Status.omitOptions([1, 20n, true, false, "hello"] as const)).toThrow(LiteralNotInSetError);
-  });
-
-  it("throws LiteralKitKeyCollisionError when different literals encode to the same helper key", () => {
-    expect(() => LiteralKit([true, "true"])).toThrow(LiteralKitKeyCollisionError);
-    expect(() => LiteralKit([1, "number1"])).toThrow(LiteralKitKeyCollisionError);
-    expect(() => LiteralKit([1n, "bigint1n"])).toThrow(LiteralKitKeyCollisionError);
-    expect(() => LiteralKit([0, -0])).toThrow(LiteralKitKeyCollisionError);
+  it("derives subsets through upstream pick", () => {
+    expect(Status.pick([1, "hello"]).literals).toEqual([1, "hello"]);
   });
 
   it("matches literals in uncurried form", () => {
@@ -177,6 +139,27 @@ describe("LiteralKit", () => {
   });
 });
 
+describe("LiteralKit helper-key collisions", () => {
+  it("rejects a mixed pair that derives the same helper key", () => {
+    const error = Result.merge(Result.try(() => LiteralKit([1, "number1"])));
+    assertInstanceOf(error, LiteralKitKeyCollisionError);
+    deepStrictEqual(
+      { key: error.key, existing: error.existing, incoming: error.incoming },
+      { key: "number1", existing: 1, incoming: "number1" }
+    );
+  });
+
+  it("rejects distinct string and bigint literals that derive the same helper key", () => {
+    expect(() => LiteralKit([1n, "bigint1n"])).toThrow(LiteralKitKeyCollisionError);
+  });
+
+  it("keeps a repeated identical literal, which maps its key to the same value", () => {
+    const Kit = LiteralKit(["draft", "live", "draft"]);
+    expect(Kit.Enum.draft).toBe("draft");
+    expect(Kit.is.draft("draft")).toBe(true);
+  });
+});
+
 describe("LiteralKit (string-only)", () => {
   it("uses string values as-is for keys (same as StringLiteralKit)", () => {
     expect(Direction.Enum.up).toBe("up");
@@ -222,137 +205,46 @@ describe("LiteralKit (string-only)", () => {
   );
 });
 
-describe("LiteralKit (manual Enum mapping)", () => {
-  const Status = LiteralKit({
-    literals: ["one", "two"],
-    enumMapping: [
-      ["one", "ONE"],
-      ["two", "TWO"],
-    ],
+describe("LiteralKit statics across derivations", () => {
+  const expectKitStatics = (derived: typeof Direction): void => {
+    expect(derived).not.toBe(Direction);
+    expect(derived.Enum).toBe(Direction.Enum);
+    expect(derived.is).toBe(Direction.is);
+    expect(derived.$match).toBe(Direction.$match);
+    expect(derived.toTaggedUnion).toBe(Direction.toTaggedUnion);
+    expect(derived.literals).toEqual(Direction.literals);
+  };
+
+  it("keeps statics through the check method", () => {
+    expectKitStatics(CheckedDirection);
+    expect(isCheckedDirection("up")).toBe(true);
+    expect(isCheckedDirection("down")).toBe(false);
   });
 
-  it("maps Enum keys from the provided manual names", () => {
-    expect(Status.Enum.ONE).toBe("one");
-    expect(Status.Enum.TWO).toBe("two");
+  it("keeps statics through annotate and annotateKey", () => {
+    const Annotated = Direction.annotate({ title: "Direction" });
+    const KeyAnnotated = Direction.annotateKey({ description: "Direction key" });
+    expectKitStatics(Annotated);
+    expectKitStatics(KeyAnnotated);
+    expect(Annotated.ast.annotations?.title).toBe("Direction");
   });
 
-  it("maps is, thunk, and $match to the provided manual keys", () => {
-    expect(Status.is.ONE("one")).toBe(true);
-    expect(Status.thunk.TWO()).toBe("two");
-    expect(
-      Status.$match("one", {
-        ONE: () => "first",
-        TWO: () => "second",
-      })
-    ).toBe("first");
+  it("keeps statics through pipe(S.check(...)) and pipe(S.annotate(...))", () => {
+    expectKitStatics(PipedDirection);
+    expect(isPipedDirection("down")).toBe(false);
+    expect(PipedDirection.Enum.left).toBe("left");
   });
 
-  it("maps toTaggedUnion case keys to the provided manual keys", () => {
-    const Event = Status.toTaggedUnion("kind")({
-      ONE: {
-        value: S.Literal(1),
-      },
-      TWO: {
-        value: S.Literal(2),
-      },
-    });
-
-    expect(Event.guards.one({ kind: "one", value: 1 })).toBe(true);
-    expect(Event.guards.two({ kind: "one", value: 1 })).toBe(false);
+  it("keeps statics through chained derivations", () => {
+    const Chained = Direction.annotate({ title: "a" }).check(notDown).annotateKey({ description: "b" });
+    expectKitStatics(Chained);
+    expect(Chained.$match("left", { up: () => 0, down: () => 1, left: () => 2, right: () => 3 })).toBe(2);
   });
 
-  it("uses mapped keys for branded string helper objects", () => {
-    const RepoPkg = LiteralKit({
-      literals: [$RepoCliId.identifier, $SchemaId.identifier],
-      enumMapping: [
-        [$RepoCliId.identifier, "@beep/repo-cli"],
-        [$SchemaId.identifier, "@beep/schema"],
-      ],
-    });
-
-    expect(RepoPkg.Enum["@beep/repo-cli"]).toBe("@beep/repo-cli");
-    expect(RepoPkg.thunk["@beep/repo-cli"]()).toBe("@beep/repo-cli");
-    expect(RepoPkg.is["@beep/repo-cli"]("@beep/repo-cli")).toBe(true);
-    expect(
-      RepoPkg.$match($RepoCliId.identifier, {
-        "@beep/repo-cli": () => "repo-cli",
-        "@beep/schema": () => "schema",
-      })
-    ).toBe("repo-cli");
-
-    const Event = RepoPkg.toTaggedUnion("pkg")({
-      "@beep/repo-cli": {
-        enabled: S.Literal(true),
-      },
-      "@beep/schema": {
-        enabled: S.Literal(false),
-      },
-    });
-
-    expect(Event.cases).toBeDefined();
-  });
-
-  it("preserves mapped Enum keys after annotate", () => {
-    const Annotated = Status.annotate({
-      title: "Annotated status",
-    });
-
-    expect(Annotated.Enum.ONE).toBe("one");
-    expect(Annotated.Enum.TWO).toBe("two");
-  });
-
-  it("supports mixed source literal types", () => {
-    const Mixed = LiteralKit({
-      literals: [1, true, "two"],
-      enumMapping: [
-        [1, "ONE"],
-        [true, "TRUE"],
-        ["two", "TWO"],
-      ],
-    });
-
-    expect(Mixed.Enum.ONE).toBe(1);
-    expect(Mixed.Enum.TRUE).toBe(true);
-    expect(Mixed.Enum.TWO).toBe("two");
-    expect(Mixed.is.ONE(1)).toBe(true);
-    expect(Mixed.is.TRUE(true)).toBe(true);
-    expect(Mixed.is.TWO("two")).toBe(true);
-  });
-
-  it("throws LiteralKitEnumMappingDuplicateLiteralError for duplicate source literals at runtime", () => {
-    expect(() =>
-      createRuntimeLiteralKit(
-        ["one", "two"],
-        [
-          ["one", "ONE"],
-          ["one", "UNO"],
-        ]
-      )
-    ).toThrow(LiteralKitEnumMappingDuplicateLiteralError);
-  });
-
-  it("throws LiteralKitKeyCollisionError for duplicate mapped Enum keys at runtime", () => {
-    expect(() =>
-      createRuntimeLiteralKit(
-        ["one", "two"],
-        [
-          ["one", "SAME"],
-          ["two", "SAME"],
-        ]
-      )
-    ).toThrow(LiteralKitKeyCollisionError);
-  });
-
-  it("throws LiteralKitEnumMappingCoverageError when the mapping does not exactly cover the literals", () => {
-    expect(() =>
-      createRuntimeLiteralKit(
-        ["one", "two"],
-        [
-          ["one", "ONE"],
-          ["three", "THREE"],
-        ]
-      )
-    ).toThrow(LiteralKitEnumMappingCoverageError);
+  it("still reattaches keyed helpers onto derivations that build a new schema", () => {
+    const Branded = Direction.pipe(S.brand("Direction"), SchemaUtils.withLiteralKitStatics(Direction));
+    expect(Branded.Enum).toBe(Direction.Enum);
+    expect(Branded.is.up("up")).toBe(true);
   });
 });
 

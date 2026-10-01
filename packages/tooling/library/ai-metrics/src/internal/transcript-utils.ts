@@ -19,6 +19,7 @@ import type { AiMetricsTranscriptEventName } from "../models.ts";
 
 export { repoPathToClaudeProjectName };
 
+import * as S from "effect/Schema";
 import type * as Path from "effect/Path";
 
 const isEventNameForSource = (
@@ -26,9 +27,9 @@ const isEventNameForSource = (
   value: unknown
 ): value is AiMetricsTranscriptEventName =>
   AiMetricsTranscriptSource.$match(sourceKind, {
-    claude: () => ClaudeTranscriptEventName.isAny(value),
-    codex: () => CodexTranscriptEventName.isAny(value),
-    openclaw: () => OpenClawTranscriptEventName.isAny(value),
+    claude: () => S.is(ClaudeTranscriptEventName)(value),
+    codex: () => S.is(CodexTranscriptEventName)(value),
+    openclaw: () => S.is(OpenClawTranscriptEventName)(value),
   });
 
 type TranscriptSourceRootInput = {

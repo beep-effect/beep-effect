@@ -275,7 +275,7 @@ export const computeIdempotencyKeyEffect = computeIdempotencyKey;
  * @category predicates
  * @since 0.0.0
  */
-export const isValidIdempotencyKey = IdempotencyKey.is;
+export const isValidIdempotencyKey = S.is(IdempotencyKey);
 
 /**
  * Decodes an unknown value as a branded {@link IdempotencyKey}.
@@ -303,7 +303,7 @@ export const isValidIdempotencyKey = IdempotencyKey.is;
  * @category parsing
  * @since 0.0.0
  */
-export const parseIdempotencyKey = (input: unknown) => IdempotencyKey.decodeUnknownEffect(input);
+export const parseIdempotencyKey = (input: unknown) => S.decodeUnknownEffect(IdempotencyKey)(input);
 
 // =============================================================================
 // Short Key (for display/logging)

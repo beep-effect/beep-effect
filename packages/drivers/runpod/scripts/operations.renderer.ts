@@ -12,7 +12,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import openApiPatchInput from "../openapi.patch.json" with { type: "json" };
 import type { ExtraRenderer, GenerateConfig } from "@beep/codegen-kit";
-import type { CodecStaticKeys } from "@beep/schema/SchemaUtils/withCodecStatics";
 
 const $I = $RunpodId.create("scripts/operations.renderer");
 
@@ -183,7 +182,7 @@ type RequestField = {
   readonly schemaExpression: string;
 };
 
-const HTTP_METHODS = RunpodGeneratorHttpMethod.From.Options;
+const HTTP_METHODS = A.map(RunpodGeneratorHttpMethod.Pairs, ([method]) => method);
 const UnauthenticatedOperationId = LiteralKit(["GetOpenAPI", "GetDocs"]);
 const DYNAMIC_ENUM_HINTS = [
   "accelerator",
@@ -548,57 +547,22 @@ const $I = $RunpodId.create("Runpod.generated");
 
 const isLiteralKitExpression: (expression: string) => boolean = Str.startsWith("LiteralKit(");
 
-const generatedCodecStaticOverrides: Readonly<Record<string, CodecStaticKeys | undefined>> = {};
-
-const generatedCodecStaticOperation = (name: string): O.Option<string> =>
-  pipe(
-    O.fromUndefinedOr(generatedCodecStaticOverrides[name]),
-    O.map(
-      (keys) =>
-        `SchemaUtils.withCodecStatics([${pipe(
-          keys,
-          A.map((key) => `"${key}"`),
-          A.join(", ")
-        )}])`
-    )
-  );
-
 const isMultilineArrayPipeExpression = (expression: string): boolean =>
   pipe(expression, Str.endsWith(".pipe(S.Array)")) && pipe(expression, Str.includes("\n"));
 
-const renderLiteralKitAliasExpression = (name: string, annotation: string): string =>
-  pipe(
-    generatedCodecStaticOperation(name),
-    O.match({
-      onNone: () => `${name}Base.pipe(
+const renderLiteralKitAliasExpression = (name: string, annotation: string): string => `${name}Base.pipe(
   ${annotation},
   SchemaUtils.withLiteralKitStatics(${name}Base)
-)`,
-      onSome: (operation) => `${name}Base.pipe(
-  ${annotation},
-  ${operation},
-  SchemaUtils.withLiteralKitStatics(${name}Base)
-)`,
-    })
-  );
+)`;
 
-const renderAnnotatedExpression = (name: string, expression: string, annotation: string): string =>
-  pipe(
-    generatedCodecStaticOperation(name),
-    O.match({
-      onNone: () => pipeExpression(expression, annotation),
-      onSome: (operation) => pipeExpression(pipeExpression(expression, annotation), operation),
-    })
-  );
-
-const renderArrayAliasExpression = (name: string, expression: string, annotation: string): string =>
-  renderAnnotatedExpression(name, `${Str.slice(0, -".pipe(S.Array)".length)(expression)}.pipe(S.Array)`, annotation);
+const renderArrayAliasExpression = (expression: string, annotation: string): string =>
+  pipeExpression(`${Str.slice(0, -".pipe(S.Array)".length)(expression)}.pipe(S.Array)`, annotation);
 
 const renderAliasExpressionWithAnnotation = (name: string, expression: string, annotation: string): string =>
   Match.value(expression).pipe(
     Match.when(isLiteralKitExpression, () => renderLiteralKitAliasExpression(name, annotation)),
-    Match.when(isMultilineArrayPipeExpression, (value) => renderArrayAliasExpression(name, value, annotation)),
-    Match.orElse((value) => renderAnnotatedExpression(name, value, annotation))
+    Match.when(isMultilineArrayPipeExpression, (value) => renderArrayAliasExpression(value, annotation)),
+    Match.orElse((value) => pipeExpression(value, annotation))
   );
 
 const renderLiteralKitBaseExpression = (name: string, expression: string): string =>
@@ -818,11 +782,7 @@ export const RunpodHttpMethod = RunpodHttpMethodBase.pipe(
   $I.annoteSchema("RunpodHttpMethod", {
     description: "Supported Runpod HTTP methods.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodHttpMethodBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodHttpMethodBase)
 );
 
 /**
@@ -860,11 +820,7 @@ export const RunpodOperationId = RunpodOperationIdBase.pipe(
   $I.annoteSchema("RunpodOperationId", {
     description: "Operation ids exposed by Runpod REST API v1.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodOperationIdBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodOperationIdBase)
 );
 
 /**
@@ -883,7 +839,7 @@ export const RunpodOperationId = RunpodOperationIdBase.pipe(
  */
 export type RunpodOperationId = typeof RunpodOperationId.Type;
 
-const RunpodRequestBodyKindBase = LiteralKit(${JSON.stringify(OperationRequestBodyKind.Options)});
+const RunpodRequestBodyKindBase = LiteralKit(${JSON.stringify(OperationRequestBodyKind.literals)});
 /**
  * Request body encoding used by a Runpod operation.
  *
@@ -902,11 +858,7 @@ export const RunpodRequestBodyKind = RunpodRequestBodyKindBase.pipe(
   $I.annoteSchema("RunpodRequestBodyKind", {
     description: "Request body encoding used by a Runpod operation.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodRequestBodyKindBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodRequestBodyKindBase)
 );
 
 /**
@@ -925,7 +877,7 @@ export const RunpodRequestBodyKind = RunpodRequestBodyKindBase.pipe(
  */
 export type RunpodRequestBodyKind = typeof RunpodRequestBodyKind.Type;
 
-const RunpodResponseBodyKindBase = LiteralKit(${JSON.stringify(OperationResponseBodyKind.Options)});
+const RunpodResponseBodyKindBase = LiteralKit(${JSON.stringify(OperationResponseBodyKind.literals)});
 /**
  * Response body decoding used by a Runpod operation.
  *
@@ -944,11 +896,7 @@ export const RunpodResponseBodyKind = RunpodResponseBodyKindBase.pipe(
   $I.annoteSchema("RunpodResponseBodyKind", {
     description: "Response body decoding used by a Runpod operation.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodResponseBodyKindBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodResponseBodyKindBase)
 );
 
 /**

@@ -31779,30 +31779,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpMethod/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/HttpProtocol/HttpProtocol.schema.ts": {
           "lines": 0,
           "statements": 0,
@@ -31827,198 +31803,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.category.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.client-error.core.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.client-error.extended.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.client-error.resource.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.client-error.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.informational.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.redirection.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.server-error.aggregate.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.server-error.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.shared.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.success.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.unofficial.aggregate.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.unofficial.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HttpStatus/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Json.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/Jsonc.ts": {
           "lines": 100,
           "statements": 100,
@@ -32029,18 +31813,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Jsonl.ts": {
-          "lines": 84.21,
-          "statements": 84.61,
-          "branches": 57.14,
-          "functions": 69.23,
-          "uncovered": {
-            "lines": 6,
-            "statements": 6,
-            "branches": 6,
-            "functions": 4
           }
         },
         "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts": {
@@ -32187,30 +31959,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/Opaque.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Options.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts": {
           "lines": 86.36,
           "statements": 86.95,
@@ -32331,42 +32079,6 @@
             "functions": 1
           }
         },
-        "packages/foundation/modeling/schema/src/Primitive.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Record/Record.schema.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Record/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts": {
           "lines": 89.65,
           "statements": 90,
@@ -32380,30 +32092,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/ReferrerPolicy/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/SafeObject/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -32475,42 +32163,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/SchemaUtils/optional.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/SchemaUtils/optionalKeyWithDefaults.ts": {
-          "lines": 50,
-          "statements": 50,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/SchemaUtils/pluck.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/SchemaUtils/toEquivalence.ts": {
           "lines": 100,
           "statements": 100,
@@ -32521,30 +32173,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/SchemaUtils/withEncodeDefault.ts": {
-          "lines": 100,
-          "statements": 87.5,
-          "branches": 100,
-          "functions": 66.66,
-          "uncovered": {
-            "lines": 0,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
           }
         },
         "packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts": {
@@ -32763,30 +32391,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/Toml.ts": {
-          "lines": 89.28,
-          "statements": 90,
-          "branches": 63.63,
-          "functions": 84.61,
-          "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 4,
-            "functions": 2
-          }
-        },
-        "packages/foundation/modeling/schema/src/Transformations.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/URL.ts": {
           "lines": 100,
           "statements": 95,
@@ -32809,18 +32413,6 @@
             "statements": 7,
             "branches": 0,
             "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/Unknown.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/foundation/modeling/schema/src/Xml.ts": {
@@ -32857,18 +32449,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Yaml.ts": {
-          "lines": 100,
-          "statements": 90.47,
-          "branches": 0,
-          "functions": 75,
-          "uncovered": {
-            "lines": 0,
-            "statements": 2,
-            "branches": 2,
-            "functions": 2
           }
         },
         "packages/foundation/modeling/schema/src/index.ts": {
@@ -32941,30 +32521,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/internal/yaml.ts": {
-          "lines": 84.61,
-          "statements": 80.64,
-          "branches": 25,
-          "functions": 77.27,
-          "uncovered": {
-            "lines": 4,
-            "statements": 6,
-            "branches": 6,
-            "functions": 5
           }
         }
       }

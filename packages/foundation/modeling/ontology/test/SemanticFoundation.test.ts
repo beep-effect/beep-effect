@@ -595,7 +595,7 @@ it.layer(Layer.merge(TaxonomyLoader.layer, BunFileSystem.layer), { timeout: "30 
           "vault/acme/aurora/email-messages/received/intake-email.eml",
           "box-mirror/acme/aurora/email-messages/received/intake-email.eml",
         ]);
-        expect(DocumentClass.Options).toEqual([
+        expect(DocumentClass.literals).toEqual([
           "draft",
           "redline",
           "filed",

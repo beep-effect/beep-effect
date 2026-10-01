@@ -1,6 +1,5 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils/Root";
-import { encodeJsonString } from "@beep/schema/Json";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -9,6 +8,8 @@ import { Effect, FileSystem, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const $I = $RepoCliId.create("test/test-tsgo-turbo-inputs");
 
@@ -79,7 +80,7 @@ const writeFixtureJson = Effect.fn("TestTsgoTurboInputsTest.writeFixtureJson")(f
   relativePath: string,
   document: unknown
 ) {
-  yield* writeFixtureFile(root, relativePath, `${yield* encodeJsonString(document)}\n`);
+  yield* writeFixtureFile(root, relativePath, `${yield* encodeUnknownJsonEffect(document)}\n`);
 });
 
 const testTsgoHashFromSummary = Effect.fn("TestTsgoTurboInputsTest.testTsgoHashFromSummary")(function* (

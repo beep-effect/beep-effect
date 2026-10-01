@@ -6,7 +6,7 @@
  */
 
 import { $HubspotId } from "@beep/identity";
-import { Defect, LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, thunkUndefined } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -195,7 +195,9 @@ export class HubSpotError extends S.TaggedError<HubSpotError>($I`HubSpotError`)(
  */
 export class HubSpotErrorOptions extends S.Class<HubSpotErrorOptions>($I`HubSpotErrorOptions`)(
   {
-    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
+    cause: S.optionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).annotateKey({
       description: "Original native or third-party defect when one was available.",
     }),
     email: S.optionalKey(S.String).annotateKey({

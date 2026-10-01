@@ -7,15 +7,17 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { flow, Order, pipe } from "effect";
+import { Effect, flow, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
+  AgentEffectivenessEvalLaneReport,
+  AgentEffectivenessEvalLaneStatus,
   AgentEffectivenessEvalScoreBreakdown,
   AgentEffectivenessEvalScoreReport,
   AgentEffectivenessEvalViolation,
 } from "../AgentEffectiveness.schemas.ts";
-import type { SkillOptTaskManifest } from "../AgentEffectiveness.schemas.ts";
+import type { AgentEffectivenessEvalLawLane, SkillOptTaskManifest } from "../AgentEffectiveness.schemas.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalScoring");
 const SCORE_FORMAT_DIGITS = 6;
@@ -58,7 +60,12 @@ export class CompletionResult extends S.Class<CompletionResult>($I`CompletionRes
 
 /**
  * Law-evaluation violations for one eval task, grouped by the schema-first,
- * tsgo, and biome lanes.
+ * tsgo, and biome lanes, plus the per-lane run evidence.
+ *
+ * **Details**
+ *
+ * `lanes` defaults to empty so pure report builders can pass violations only;
+ * the scorer always supplies one report per lane.
  *
  * **Example** (Make empty law evaluation)
  *
@@ -76,6 +83,9 @@ export class LawEvaluation extends S.Class<LawEvaluation>($I`LawEvaluation`)(
     schemaFirst: S.Array(AgentEffectivenessEvalViolation),
     tsgo: S.Array(AgentEffectivenessEvalViolation),
     biome: S.Array(AgentEffectivenessEvalViolation),
+    lanes: S.Array(AgentEffectivenessEvalLaneReport).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<AgentEffectivenessEvalLaneReport>()))
+    ),
   },
   $I.annote("LawEvaluation", {
     description: "Result of a law evaluation.",
@@ -194,12 +204,17 @@ export const lawComponentScore = (violationCount: number): number => roundScore(
 const aggregateLawFraction = ({ biome, schemaFirst, tsgo }: LawComponentScores): number =>
   roundScore((schemaFirst + tsgo + biome) / 3);
 
+const isEnvironmentFailure = (report: AgentEffectivenessEvalLaneReport): boolean =>
+  AgentEffectivenessEvalLaneStatus.is["environment-failure"](report.status);
+
 /**
  * Build the final score report from completion and law evaluations.
  *
  * The contract formula is fixed as `score = completion_frac * law_frac`.
  * `law_frac` is the arithmetic mean of schema-first, tsgo, and biome
- * component scores, where each component is `1 / (1 + violations)`.
+ * component scores, where each component is `1 / (1 + violations)`. A lane
+ * reported as an environment failure scores `0` and marks the report
+ * `environment-failure`, so a lane that could not run never reads as a pass.
  *
  * @param task - Task manifest the fixture was scored against.
  * @param completion - Completion-check outcome for the fixture.
@@ -213,9 +228,13 @@ const buildAgentEffectivenessEvalScoreReport = (
   completion: CompletionResult,
   law: LawEvaluation
 ): AgentEffectivenessEvalScoreReport => {
-  const schemaFirst = lawComponentScore(A.length(law.schemaFirst));
-  const tsgo = lawComponentScore(A.length(law.tsgo));
-  const biome = lawComponentScore(A.length(law.biome));
+  const environmentFailed = (lane: AgentEffectivenessEvalLawLane): boolean =>
+    A.some(law.lanes, (report) => report.lane === lane && isEnvironmentFailure(report));
+  const componentScore = (lane: AgentEffectivenessEvalLawLane, violations: ReadonlyArray<unknown>): number =>
+    environmentFailed(lane) ? 0 : lawComponentScore(A.length(violations));
+  const schemaFirst = componentScore("schema-first", law.schemaFirst);
+  const tsgo = componentScore("tsgo", law.tsgo);
+  const biome = componentScore("biome", law.biome);
   const lawFraction = aggregateLawFraction({ biome, schemaFirst, tsgo });
   const violations = sortViolations([...completion.violations, ...law.schemaFirst, ...law.tsgo, ...law.biome]);
   return AgentEffectivenessEvalScoreReport.make({
@@ -228,6 +247,8 @@ const buildAgentEffectivenessEvalScoreReport = (
       biome,
     }),
     violations,
+    status: A.some(law.lanes, isEnvironmentFailure) ? "environment-failure" : "scored",
+    lanes: law.lanes,
   });
 };
 

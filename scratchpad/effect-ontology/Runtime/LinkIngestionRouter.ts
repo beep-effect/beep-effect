@@ -10,8 +10,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Context, DateTime, Effect, FiberSet, HashSet, Inspectable, Layer, Random, Schedule } from "effect";
+import { Context, DateTime, Effect, FiberSet, HashSet, Inspectable, Layer, Random, Schedule, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -32,9 +31,9 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/LinkIngestionRouter");
 const CreateBatchFromLinksBody = S.Struct({
   linkIds: S.Array(S.String),
   targetNamespace: S.optionalKey(S.String),
-}).pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
+});
 
-const NonTerminalBatchStage = BatchStage.pick(BatchStage.omitOptions(["Complete", "Failed"]));
+const NonTerminalBatchStage = BatchStage.pick(["Pending", "Preprocessing", "Extracting", "Resolving", "Validating", "Ingesting"]);
 
 class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError>($I`BatchNotTerminalError`)(
   "BatchNotTerminalError",
@@ -128,7 +127,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       }
 
       const httpRequest = yield* HttpServerRequest.HttpServerRequest;
-      const request = CreateBatchFromLinksBody.decodeUnknownOption(yield* httpRequest.json);
+      const request = S.decodeUnknownOption(CreateBatchFromLinksBody)(yield* httpRequest.json);
       if (O.isNone(request)) {
         return yield* HttpServerResponse.json(
           { error: "VALIDATION_ERROR", message: "Invalid create-batch request" },
@@ -169,16 +168,16 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       const bucket = O.getOrElse(config.storage.bucket, () => "local-bucket");
       const randomA = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
       const randomB = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
-      const batchId = BatchId.decodeUnknownSync(`batch-${randomA}${randomB}`);
-      const targetNamespace = Namespace.decodeUnknownSync(request.value.targetNamespace ?? entry.value.targetNamespace);
-      const ontologyUri = GcsUri.resolve(entry.value.storagePath, GcsBucket.decodeUnknownSync(bucket));
-      const shaclUri = O.map(entry.value.shapesPath, (path) => GcsUri.resolve(path, GcsBucket.decodeUnknownSync(bucket)));
+      const batchId = Result.getOrThrow(S.decodeResult(BatchId)(`batch-${randomA}${randomB}`));
+      const targetNamespace = Result.getOrThrow(S.decodeResult(Namespace)(request.value.targetNamespace ?? entry.value.targetNamespace));
+      const ontologyUri = GcsUri.resolve(entry.value.storagePath, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket)));
+      const shaclUri = O.map(entry.value.shapesPath, (path) => GcsUri.resolve(path, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket))));
       const embeddingsUri = O.map(entry.value.embeddingsPath, (path) =>
-        GcsUri.resolve(path, GcsBucket.decodeUnknownSync(bucket))
+        GcsUri.resolve(path, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket)))
       );
       const documents = links.map((link) => ({
-        documentId: DocumentId.fromContentHash(ContentHash.decodeUnknownSync(link.contentHash)),
-        sourceUri: GcsUri.resolve(link.storageUri, GcsBucket.decodeUnknownSync(bucket)),
+        documentId: DocumentId.fromContentHash(Result.getOrThrow(S.decodeResult(ContentHash)(link.contentHash))),
+        sourceUri: GcsUri.resolve(link.storageUri, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket))),
         contentType: "text/markdown",
         sizeBytes: S.Natural.make(P.isNotNull(link.wordCount) ? link.wordCount * 5 : 0),
       }));
@@ -197,7 +196,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       });
       const manifestPath = PathLayout.batch.manifest(batchId);
       yield* storage.set(manifestPath, yield* BatchManifest.encodeEffectFromJsonString(manifest));
-      const manifestUri = GcsUri.decodeUnknownSync(`gs://${bucket}/${manifestPath}`);
+      const manifestUri = Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${manifestPath}`));
       const payload = yield* BatchWorkflowPayload.decodeUnknownEffect({
         batchId,
         ontologyId: entry.value.id,

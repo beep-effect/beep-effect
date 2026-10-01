@@ -1,5 +1,4 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as Bool from "effect/Boolean";
 import { Command, Flag } from "effect/cli";
@@ -84,7 +83,7 @@ const outputDirectory = Flag.Path("out").pipe(
   Flag.optional,
   Flag.withDescription("Output directory for eval-report.json and eval-telemetry.json.")
 );
-const selection = Flag.Literals("selection", EvalSelectionMode.Options).pipe(
+const selection = Flag.Literals("selection", EvalSelectionMode.literals).pipe(
   Flag.withDefault(EvalSelectionMode.Enum["f1+w1"]),
   Flag.withDescription("Select committed F1 fixtures only, or F1 plus verified W1 papers.")
 );
@@ -135,9 +134,7 @@ const makeStageCommand = (stage: CanaryStage) =>
     Command.withDescription(stageDescriptions[stage])
   );
 
-const ManifestJson = S.fromJsonString(CorpusManifest, { space: 2 }).pipe(
-  SchemaUtils.withCodecStatics(["encodeEffect"])
-);
+const ManifestJson = S.fromJsonString(CorpusManifest, { space: 2 });
 
 const manifestOutput = Flag.Path("out").pipe(
   Flag.withDescription("Output path for the generated, pretty-printed W1 manifest.")
@@ -153,7 +150,7 @@ const buildManifest = Effect.fn("SemanticaCanary.buildManifest")(function* ({ ou
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const built = yield* builder.build;
-  const json = yield* ManifestJson.encodeEffect(built).pipe(Effect.orDie);
+  const json = yield* S.encodeEffect(ManifestJson)(built).pipe(Effect.orDie);
   yield* fs.makeDirectory(path.dirname(out), { recursive: true }).pipe(
     Effect.mapError(() =>
       ManifestWriteFailed.make({

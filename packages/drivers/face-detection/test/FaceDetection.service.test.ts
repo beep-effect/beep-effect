@@ -214,9 +214,9 @@ describe("@beep/face-detection", () => {
   );
 
   it("normalizes raw model confidence at the schema boundary", () => {
-    expect(RawFaceDetectionConfidence.decodeUnknownSync(-0.2)).toBe(0);
-    expect(RawFaceDetectionConfidence.decodeUnknownSync(0.5)).toBe(0.5);
-    expect(RawFaceDetectionConfidence.decodeUnknownSync(1.2)).toBe(1);
+    expect(Result.getOrThrow(S.decodeResult(RawFaceDetectionConfidence)(-0.2))).toBe(0);
+    expect(Result.getOrThrow(S.decodeResult(RawFaceDetectionConfidence)(0.5))).toBe(0.5);
+    expect(Result.getOrThrow(S.decodeResult(RawFaceDetectionConfidence)(1.2))).toBe(1);
   });
 
   it("computes padded and fixed-model preprocessing geometry", () => {

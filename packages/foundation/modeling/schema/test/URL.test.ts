@@ -2,7 +2,7 @@ import { HttpsUrl, URLStr } from "@beep/schema/URL";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Array as A, Effect } from "effect";
+import { Array as A, Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 
@@ -24,9 +24,11 @@ describe("URL", () => {
     Effect.fnUntraced(function* () {
       const samples = yield* Arbitrary.sampleEffect(Arbitrary.schema(HttpsUrl), { count: 20, seed: 0x5eed });
       A.forEach(samples, (sample, index) => {
-        assertTrue(HttpsUrl.is(sample), `HttpsUrl sample ${index}: ${sample}`);
+        assertTrue(S.is(HttpsUrl)(sample), `HttpsUrl sample ${index}: ${sample}`);
       });
-      expect(HttpsUrl.decodeUnknownSync("https://example.com/resource")).toBe("https://example.com/resource");
+      expect(Result.getOrThrow(S.decodeResult(HttpsUrl)("https://example.com/resource"))).toBe(
+        "https://example.com/resource"
+      );
     })
   );
 

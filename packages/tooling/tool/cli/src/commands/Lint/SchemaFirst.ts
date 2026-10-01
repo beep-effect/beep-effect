@@ -413,7 +413,7 @@ export const getsomesStructEntryFromCallExpression: {
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile(
  *   "Widget.ts",
- *   'import { SchemaUtils } from "@beep/schema"\nexport const Widget = S.Struct({ title: S.String.pipe(SchemaUtils.withNoneDefault) })'
+ *   'import { SchemaUtils } from "@beep/schema"\nexport const Widget = S.Struct({ title: S.String.pipe(SchemaUtils.withEncodeDefault) })'
  * )
  * const program = schemaFirstParityEntriesFromSourceFile(sourceFile, { file: "Widget.ts", owner: "@beep/test" })
  * // Provide Crypto (for example NodeServices.layer) to run it; the entry's symbol is "Widget.title".
@@ -472,8 +472,12 @@ export const lintSchemaFirstCommand = Command.make(
         "With --write, also admit new upstream-parity occurrences into the backlog (initial capture only)"
       )
     ),
+    reportScannedFiles: Flag.Boolean("report-scanned-files").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print the files the scan ran its detectors over as one [schema-first:scanned] JSON line")
+    ),
   },
-  Effect.fn(function* ({ write, admitParityBacklog }) {
-    yield* runSchemaFirstLint(SchemaFirstLintOptions.make({ write, admitParityBacklog }));
+  Effect.fn(function* ({ write, admitParityBacklog, reportScannedFiles }) {
+    yield* runSchemaFirstLint(SchemaFirstLintOptions.make({ write, admitParityBacklog, reportScannedFiles }));
   })
 ).pipe(Command.withDescription("Verify the repo-wide schema-first inventory baseline"));

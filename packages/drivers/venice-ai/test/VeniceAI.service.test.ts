@@ -1,9 +1,8 @@
+import { fileURLToPath } from "node:url";
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { HttpStatus } from "@beep/schema/HttpStatus";
-import { decodeJsonString } from "@beep/schema/Json";
+import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { URLStr } from "@beep/schema/URL";
-import { parseYaml } from "@beep/schema/Yaml";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str, thunkEmptyStr, thunkTrue } from "@beep/utils";
@@ -22,9 +21,11 @@ import {
   VeniceAiChat,
   VeniceAiLanguageModel,
 } from "@beep/venice-ai";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
+import * as NodeFileSystem from "@effect/platform-node-shared/NodeFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Deferred, Effect, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
+import { Context, Deferred, Effect, FileSystem, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
@@ -36,6 +37,9 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
+import swaggerFixture from "./fixtures/swagger.json" with { type: "json" };
+
+const decodeUnknownJsonEffect = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const descriptorAt = (index: number) => O.getOrThrow(A.get(VENICE_AI_OPERATION_DESCRIPTORS, index));
 
@@ -155,21 +159,16 @@ const expectRoundTrip = Effect.fnUntraced(function* <Codec extends S.Codec<unkno
 });
 
 const sortStrings = A.sort(Order.String);
-const swaggerFile = new URL("../swagger.yaml", import.meta.url);
 
 const descriptorIds = () => sortStrings(A.map(VENICE_AI_OPERATION_DESCRIPTORS, (descriptor) => descriptor.operationId));
 
-const readSwagger = Effect.gen(function* () {
-  const raw = yield* Effect.tryPromise({
-    try: () => Bun.file(swaggerFile).text(),
-    catch: () =>
-      VeniceAIError.make({
-        path: O.some("swagger.yaml"),
-        reason: "request encoding",
-      }),
-  });
-  return yield* decodeOpenApiSpec(parseYaml(raw));
-});
+// JSON snapshot of `swagger.yaml`, so the fixture loads on Node and Bun without a YAML parser.
+// `x-beep-source-sha256` records the SHA-256 of the swagger.yaml bytes it was generated from.
+const readSwagger = decodeOpenApiSpec(swaggerFixture);
+const swaggerSourcePath = fileURLToPath(new URL("../swagger.yaml", import.meta.url));
+const hashSwaggerSource = S.decodeEffect(Sha256HexFromBytes);
+const regenerateSwaggerSnapshot =
+  "test/fixtures/swagger.json is stale for swagger.yaml: regenerate it from swagger.yaml (JSON with the jwt.io example token redacted) and set x-beep-source-sha256 to the new sha256 of swagger.yaml";
 
 const hasOperationId = (operation: unknown): operation is { readonly operationId: string } =>
   P.isObject(operation) && P.hasProperty(operation, "operationId") && P.isString(operation.operationId);
@@ -462,7 +461,7 @@ describe("@beep/venice-ai", () => {
             body: { ok: true },
             contentType: O.some("application/json"),
             headers: {},
-            status: HttpStatus.make(200),
+            status: 200,
           })
         )
       ).toEqual({
@@ -477,7 +476,7 @@ describe("@beep/venice-ai", () => {
           VeniceAITextResponse.make({
             contentType: O.none(),
             headers: {},
-            status: HttpStatus.make(200),
+            status: 200,
             text: "ok",
           })
         )
@@ -506,7 +505,7 @@ describe("@beep/venice-ai", () => {
         yield* encodeVeniceAIError(
           VeniceAIError.make({
             reason: "response status",
-            status: O.some(HttpStatus.make(500)),
+            status: O.some(500),
           })
         )
       ).toEqual({
@@ -536,6 +535,17 @@ describe("@beep/venice-ai", () => {
       yield* expectRoundTrip(VeniceAIError, error);
     }),
     { arbitrary: fcRuns(15) }
+  );
+
+  it.layer(Layer.mergeAll(NodeFileSystem.layer, NodeCrypto.layer), { timeout: "5 seconds" })((it) =>
+    it.effect(
+      "pins the JSON OpenAPI snapshot to the swagger.yaml bytes it was generated from",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const sourceHash = yield* hashSwaggerSource(yield* fs.readFile(swaggerSourcePath));
+        expect(swaggerFixture["x-beep-source-sha256"], regenerateSwaggerSnapshot).toBe(sourceHash);
+      })
+    )
   );
 
   it.layer(makeVeniceAIUnitLayer(), { timeout: "5 seconds" })((it) =>
@@ -714,7 +724,7 @@ describe("@beep/venice-ai", () => {
         );
         const body = yield* pipe(
           bodyTextFromCapture(jsonCapture, "expected JSON body text"),
-          Effect.flatMap(decodeJsonString),
+          Effect.flatMap(decodeUnknownJsonEffect),
           Effect.flatMap(decodePromptBody)
         );
 

@@ -30,8 +30,8 @@ describe("TerritoryCode", () => {
     Effect.fnUntraced(function* () {
       expect(yield* decodeTerritoryCode("US")).toBe("US");
       expect(yield* decodeTerritoryName("United States")).toBe("United States");
-      expect(TerritoryCode.Options).toContain("GB");
-      expect(TerritoryName.Options).toContain("United Kingdom");
+      expect(TerritoryCode.literals).toContain("GB");
+      expect(TerritoryName.literals).toContain("United Kingdom");
     })
   );
 
@@ -71,8 +71,8 @@ describe("ContinentCode", () => {
     Effect.fnUntraced(function* () {
       expect(yield* decodeContinentCode("019")).toBe("019");
       expect(yield* decodeContinentName("Americas")).toBe("Americas");
-      expect(ContinentCode.Options).toContain("150");
-      expect(ContinentName.Options).toContain("Europe");
+      expect(ContinentCode.literals).toContain("150");
+      expect(ContinentName.literals).toContain("Europe");
     })
   );
 

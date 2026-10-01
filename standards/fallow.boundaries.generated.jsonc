@@ -1279,7 +1279,6 @@
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-use-cases",
           "@beep/identity",
-          "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -1289,7 +1288,6 @@
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-use-cases",
           "@beep/identity",
-          "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -2313,7 +2311,6 @@
           "@beep/effect-drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
@@ -2321,7 +2318,6 @@
           "@beep/effect-drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ]
@@ -3477,7 +3473,6 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/types",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3486,7 +3481,6 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/types",
           "@beep/utils"
         ]
       },
@@ -4045,7 +4039,6 @@
         "allow": [
           "@beep/identity",
           "@beep/md",
-          "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -4055,7 +4048,6 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/md",
-          "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",

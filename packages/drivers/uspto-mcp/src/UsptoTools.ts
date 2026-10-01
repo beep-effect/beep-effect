@@ -52,11 +52,7 @@ export const UsptoToolErrorReason = UsptoToolErrorReasonBase.pipe(
   $I.annoteSchema("UsptoToolErrorReason", {
     description: "Redacted technical failure reasons surfaced by a USPTO MCP tool after the credential gate passes.",
   }),
-  SchemaUtils.withLiteralKitStatics(UsptoToolErrorReasonBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(UsptoToolErrorReasonBase)
 );
 
 /**
@@ -124,13 +120,14 @@ export class UsptoToolError extends S.Class<UsptoToolError>($I`UsptoToolError`)(
  *
  * ```ts
  * import { UsptoMcpFailure, UsptoToolError } from "@beep/uspto-mcp/UsptoTools"
+ * import * as S from "effect/Schema"
  *
  * const failure = UsptoToolError.make({
  *   message: "USPTO request failed",
  *   reason: "transport",
  *   tool: "uspto_get_documents"
  * })
- * console.log(UsptoMcpFailure.is(failure))
+ * console.log(S.is(UsptoMcpFailure)(failure))
  * // true
  * ```
  *
@@ -140,8 +137,7 @@ export class UsptoToolError extends S.Class<UsptoToolError>($I`UsptoToolError`)(
 export const UsptoMcpFailure = S.Union([ApiKeyRequiredFailure, UsptoToolError]).pipe(
   $I.annoteSchema("UsptoMcpFailure", {
     description: "Union of the api_key_required envelope and post-gate USPTO driver failures.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -151,13 +147,14 @@ export const UsptoMcpFailure = S.Union([ApiKeyRequiredFailure, UsptoToolError]).
  *
  * ```ts
  * import { UsptoMcpFailure, UsptoToolError } from "@beep/uspto-mcp/UsptoTools"
+ * import * as S from "effect/Schema"
  *
  * const failure: UsptoMcpFailure = UsptoToolError.make({
  *   message: "USPTO request failed",
  *   reason: "transport",
  *   tool: "uspto_get_documents"
  * })
- * console.log(UsptoMcpFailure.is(failure))
+ * console.log(S.is(UsptoMcpFailure)(failure))
  * // true
  * ```
  *

@@ -6,8 +6,6 @@
  */
 
 import { $XaiId } from "@beep/identity";
-import { decodeJsonString, encodeJsonString } from "@beep/schema/Json";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Context, Effect, flow, Layer, Match, pipe, Queue, Redacted, Stream } from "effect";
@@ -16,6 +14,7 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import WebSocket from "ws";
 import { XAI_API_URL, XAI_MANAGEMENT_API_URL, XAI_WEBSOCKET_URL, XAiConfigInput } from "./XAi.config.ts";
 import { XAiError } from "./XAi.errors.ts";
@@ -38,6 +37,8 @@ import {
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type { XAiQueryValue, XAiResponse, XAiWebSocketEvent } from "./XAi.models.ts";
 import type { XAiEndpointDescriptor, XAiEndpointMethodName } from "./XAiEndpoints.models.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $XaiId.create("XAi.service");
 
@@ -566,9 +567,9 @@ const makeStreamingRequest = (request = XAiRequestOptions.make({})): XAiRequestO
     body: addStreamFlag(request.body),
   });
 
-const decodeSseJson = decodeJsonString;
-const decodeJsonOption = UnknownFromJsonString.decodeUnknownOption;
-const encodeJson = encodeJsonString;
+const decodeSseJson = S.decodeUnknownEffect(UnknownJson);
+const decodeJsonOption = S.decodeUnknownOption(UnknownJson);
+const encodeJson = S.encodeUnknownEffect(UnknownJson);
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
 // fallow-ignore-next-line code-duplication -- xAI keeps data-line parsing local to its provider SSE decoder
@@ -687,14 +688,14 @@ const queryValueToStrings = (value: XAiQueryValue): ReadonlyArray<string> => {
   if (A.isArray(value)) {
     return pipe(
       value,
-      A.map((entry) => XAiQueryScalar.decodeUnknownOption(entry)),
+      A.map((entry) => S.decodeUnknownOption(XAiQueryScalar)(entry)),
       A.getSomes,
       A.map(queryScalarToString)
     );
   }
 
   return pipe(
-    XAiQueryScalar.decodeUnknownOption(value),
+    S.decodeUnknownOption(XAiQueryScalar)(value),
     O.map((scalar) => A.make(queryScalarToString(scalar))),
     O.getOrElse(A.empty<string>)
   );

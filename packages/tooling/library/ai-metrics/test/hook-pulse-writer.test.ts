@@ -1,6 +1,9 @@
 import * as NodeURL from "node:url";
 import {
+  AiMetricsConfigSnapshotInput,
   agentEvidenceRoot,
+  deriveHarnessHash,
+  HarnessFingerprintInput,
   HookPulseAgentKind,
   HookPulseDisarmSentinel,
   HookPulseDisarmWindow,
@@ -19,8 +22,9 @@ import {
   hookPulseDisarmSentinelPath,
   hookPulseDisarmWindowsPath,
   hookPulseLedgerDir,
+  makeAiMetricsConfigSnapshot,
+  makeHarnessFingerprint,
 } from "@beep/repo-ai-metrics";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -111,7 +115,7 @@ const CODEC_PARITY_SALT = "hook-pulse-writer-codec-parity-salt";
 const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
   Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
 
-const decodeHookPulseFromRaw = HookPulseV1FromRawEvent.decodeUnknownEffect;
+const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
 const decodeHookPulseRow = HookPulseV1.decodeJsonEffect;
 const decodeRowKeys = S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.Unknown)));
 const decodeRowString = S.decodeUnknownEffect(S.String);
@@ -119,7 +123,7 @@ const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 // Fixture payloads are raw harness shapes, not a schema this package owns, so the
 // unknown-shaped encoder is the right rung: it renders stdin without pretending the
 // content-bearing keys we deliberately never model are part of the contract.
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 // Exactly the canonical `HookPulseV1` encoded surface. Any other key on a row is
 // a leak or a drift, whichever it turns out to be. Stated by hand so the leak
@@ -148,6 +152,7 @@ const canonicalRowKeys = [
   "sessionEndReason",
   "isInterrupt",
   "surface",
+  "harnessHash",
 ];
 
 // Pulls a `def <name>: [ "a", "b" ];` allowlist back out of the writer. The
@@ -557,6 +562,68 @@ const expectSilentRefusal = (run: WriterRun): void => {
   expect(run.rows).toEqual([]);
 };
 
+// A repo root shaped to hit every rule the shell harness-hash walk mirrors from
+// `makeAiMetricsConfigSnapshot`: a root `AGENTS.md` with `CLAUDE.md` symlinked to
+// it, a nested agent doc the root walk reaches, both session-scope and
+// baseline-scope config files, a nested git root under `.claude` and another
+// under `packages` (both must drop out with everything beneath them), excluded
+// directory names, a non-UTF-8 binary, and a byte-order-marked script (both
+// hashed through the decoder TypeScript's `readFileString` applies).
+const makeHarnessFixtureRoot = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-hook-pulse-harness-" });
+  const writeBytes = Effect.fnUntraced(function* (relative: string, content: Uint8Array) {
+    const file = path.join(root, relative);
+    yield* fs.makeDirectory(path.dirname(file), { recursive: true });
+    yield* fs.writeFile(file, content);
+  });
+  const write = (relative: string, content: string) => writeBytes(relative, new TextEncoder().encode(content));
+  yield* write("AGENTS.md", "# Fixture guide\n");
+  yield* fs.symlink("AGENTS.md", path.join(root, "CLAUDE.md"));
+  yield* write(".git/HEAD", "ref: refs/heads/main\n");
+  yield* write("packages/foo/AGENTS.md", "# foo guide\n");
+  yield* write("packages/foo/README.md", "# not an agent doc\n");
+  yield* write("packages/bar/.git", "gitdir: /elsewhere/bar\n");
+  yield* write("packages/bar/AGENTS.md", "# nested checkout guide\n");
+  yield* write("dist/AGENTS.md", "# excluded by name\n");
+  yield* write(".claude/settings.json", '{ "hooks": {} }\n');
+  yield* write(".claude/skills/alpha/SKILL.md", "# alpha\n");
+  yield* writeBytes(
+    ".claude/skills/alpha/logo.png",
+    new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0x00, 0xc3])
+  );
+  yield* writeBytes(
+    ".claude/hooks/pulse.sh",
+    new Uint8Array([0xef, 0xbb, 0xbf, 0x23, 0x21, 0x2f, 0x62, 0x69, 0x6e, 0x0a])
+  );
+  yield* write(".claude/worktrees/wt1/.git", "gitdir: /elsewhere/wt1\n");
+  yield* write(".claude/worktrees/wt1/AGENTS.md", "# nested worktree guide\n");
+  yield* write(".claude/worktrees/wt1/.claude/settings.json", "{}\n");
+  yield* write(".claude/node_modules/pkg/index.js", "module.exports = 1\n");
+  yield* write(".claude/logs/session.log", "log line\n");
+  yield* write(".codex/config.toml", 'model = "fixture"\n');
+  return root;
+});
+
+// The TypeScript oracle for the shell stamp: the same snapshot the harness ledger
+// fingerprints, reduced to the harness hash.
+const typescriptHarnessHash = Effect.fnUntraced(function* (root: string) {
+  const snapshot = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot: root }));
+  return {
+    snapshot,
+    harnessHash: yield* deriveHarnessHash(yield* makeHarnessFingerprint(HarnessFingerprintInput.make({ snapshot }))),
+  };
+});
+
+const sessionStartPayload = (cwd: string) => ({
+  ...baseFields,
+  cwd,
+  hook_event_name: HookPulseEvent.Enum.SessionStart,
+  model: CANARY,
+  source: "startup",
+});
+
 it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("tags Codex hook rows as codex-cli", () =>
     Effect.gen(function* () {
@@ -614,8 +681,8 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         onSome: (body) => A.map(body.split("|"), (kind) => kind.trim()),
       });
 
-      expect(A.difference(admitted, HookPulseAgentKind.Options)).toEqual([]);
-      expect(A.difference(HookPulseAgentKind.Options, admitted)).toEqual([]);
+      expect(A.difference(admitted, HookPulseAgentKind.literals)).toEqual([]);
+      expect(A.difference(HookPulseAgentKind.literals, admitted)).toEqual([]);
     })
   );
 
@@ -643,7 +710,7 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         onSome: (body) =>
           A.getSomes(A.map(A.fromIterable(body.matchAll(/([a-z-]+)\) title=/g)), (match) => O.fromNullishOr(match[1]))),
       });
-      const schemaKinds = HookPulseAgentKind.Options;
+      const schemaKinds = HookPulseAgentKind.literals;
 
       expect(A.difference(admitted, schemaKinds)).toEqual([]);
       expect(A.difference(schemaKinds, admitted)).toEqual([]);
@@ -737,10 +804,10 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       // wholesale; a name only in jq is an event that reaches the ledger and
       // then fails to decode. Neither shows up in any example fixture, because
       // fixtures only ever exercise names both halves already agree on.
-      expect(A.difference(events, HookPulseEvent.Options)).toEqual([]);
-      expect(A.difference(HookPulseEvent.Options, events)).toEqual([]);
-      expect(A.difference(notificationTypes, HookPulseNotificationType.Options)).toEqual([]);
-      expect(A.difference(HookPulseNotificationType.Options, notificationTypes)).toEqual([]);
+      expect(A.difference(events, HookPulseEvent.literals)).toEqual([]);
+      expect(A.difference(HookPulseEvent.literals, events)).toEqual([]);
+      expect(A.difference(notificationTypes, HookPulseNotificationType.literals)).toEqual([]);
+      expect(A.difference(HookPulseNotificationType.literals, notificationTypes)).toEqual([]);
     })
   );
 
@@ -854,6 +921,75 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         }),
         { discard: true }
       );
+    })
+  );
+
+  it.effect("stamps SessionStart with the harness hash the TypeScript snapshot derives", () =>
+    Effect.gen(function* () {
+      const root = yield* makeHarnessFixtureRoot();
+      const path = yield* Path.Path;
+      // A cwd below the root: the writer walks up to the nearest AGENTS.md + .git.
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(path.join(root, "packages", "foo"))));
+      const row = expectSingleRow(run);
+      const decoded = yield* decodeHookPulseRow(row);
+      const oracle = yield* typescriptHarnessHash(root);
+      const relativePaths = A.map(oracle.snapshot.files, (file) => file.relativePath);
+
+      expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.SessionStart);
+      expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum.none);
+      assertSome(decoded.harnessHash, oracle.harnessHash);
+      expect(row).not.toContain(CANARY);
+      // The fixture exercises what it claims to: both nested roots are excluded,
+      // the symlinked CLAUDE.md, the binary, and the BOM file are all hashed, and
+      // both scopes are populated.
+      expect(oracle.snapshot.bounds.excludedNestedRootPaths).toEqual([".claude/worktrees/wt1", "packages/bar"]);
+      expect(relativePaths).toEqual([
+        ".claude/hooks/pulse.sh",
+        ".claude/settings.json",
+        ".claude/skills/alpha/SKILL.md",
+        ".claude/skills/alpha/logo.png",
+        ".codex/config.toml",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "packages/foo/AGENTS.md",
+      ]);
+      expect(A.dedupe(A.map(oracle.snapshot.files, (file) => file.scope))).toEqual(["baseline", "session"]);
+    })
+  );
+
+  it.effect("stamps only SessionStart and refuses to stamp what it cannot mirror", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeHarnessFixtureRoot();
+      const stampOf = Effect.fnUntraced(function* (payload: unknown) {
+        const run = yield* runWriter(yield* encodeJson(payload));
+        return (yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash;
+      });
+
+      // Owned by SessionStart: the same root on any other event carries no stamp.
+      assertNone(yield* stampOf({ ...preToolUsePayload, cwd: root }));
+      // No repo root above cwd: no fallback root, no stamp, but still a row.
+      assertNone(yield* stampOf(sessionStartPayload(baseFields.cwd)));
+
+      // A path outside printable ASCII: JS and C sort orders may disagree, so the
+      // shell refuses even though TypeScript can hash it.
+      yield* fs.makeDirectory(path.join(root, ".claude", "skills", "caf\u00e9"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, ".claude", "skills", "caf\u00e9", "SKILL.md"), "# cafe\n");
+      yield* typescriptHarnessHash(root);
+      assertNone(yield* stampOf(sessionStartPayload(root)));
+      yield* fs.remove(path.join(root, ".claude", "skills", "caf\u00e9"), { recursive: true });
+
+      // The file budget: TypeScript truncates at 1000 collected files, so the
+      // shell refuses rather than guess which files the truncation kept.
+      yield* fs.makeDirectory(path.join(root, ".claude", "bulk"), { recursive: true });
+      yield* Effect.forEach(
+        A.makeBy(1000, (index) => index),
+        (index) => fs.writeFileString(path.join(root, ".claude", "bulk", `f${index}.md`), "x\n"),
+        { concurrency: 32, discard: true }
+      );
+      pipe((yield* typescriptHarnessHash(root)).snapshot.bounds.truncationReason, O.isSome, assertTrue);
+      assertNone(yield* stampOf(sessionStartPayload(root)));
     })
   );
 

@@ -6,7 +6,6 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { Config, Context, Effect, Layer, Match, pipe, Result, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
@@ -71,7 +70,7 @@ export const RunpodQueryScalar = S.Union([S.Boolean, S.Finite, S.String]).pipe(
  */
 export type RunpodQueryScalar = typeof RunpodQueryScalar.Type;
 
-const RunpodQueryScalarArray = S.Array(RunpodQueryScalar).pipe(SchemaUtils.withCodecStatics(["is"]));
+const RunpodQueryScalarArray = S.Array(RunpodQueryScalar);
 
 /**
  * Query value accepted by the raw Runpod request escape hatch.
@@ -90,8 +89,7 @@ const RunpodQueryScalarArray = S.Array(RunpodQueryScalar).pipe(SchemaUtils.withC
 export const RunpodQueryValue = S.Union([RunpodQueryScalar, RunpodQueryScalarArray]).pipe(
   $I.annoteSchema("RunpodQueryValue", {
     description: "Query value accepted by the raw Runpod request escape hatch.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**
@@ -247,7 +245,7 @@ interface VoidOperationSpec<Request> {
 const resolveConfig = (config: RunpodConfigInput): ResolvedRunpodConfig =>
   ResolvedRunpodConfig.make({
     apiKey: O.fromUndefinedOr(config.apiKey),
-    apiUrl: RunpodConfigUrl.decodeUnknownSync(config.apiUrl),
+    apiUrl: Result.getOrThrow(S.decodeResult(RunpodConfigUrl)(config.apiUrl)),
     headers: config.headers,
   });
 
@@ -260,7 +258,7 @@ const queryScalarToString = (value: RunpodQueryScalar): string =>
   )(value);
 
 const queryValueToStrings = (value: RunpodQueryValue): ReadonlyArray<string> => {
-  if (RunpodQueryScalarArray.is(value)) {
+  if (S.is(RunpodQueryScalarArray)(value)) {
     return pipe(value, A.map(queryScalarToString));
   }
 
@@ -339,7 +337,7 @@ const queryEntry: {
   (request: unknown, key: string): O.Option<readonly [string, string | ReadonlyArray<string>]> =>
     pipe(
       readProperty(request, key),
-      O.flatMap(RunpodQueryValue.decodeUnknownOption),
+      O.flatMap(S.decodeUnknownOption(RunpodQueryValue)),
       O.map(queryValueToStrings),
       O.filter(A.isReadonlyArrayNonEmpty),
       O.map((values) => [key, A.length(values) === 1 ? values[0] : values] as const)

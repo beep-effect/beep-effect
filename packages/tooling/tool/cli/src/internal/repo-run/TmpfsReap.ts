@@ -1220,7 +1220,7 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
   const rootResolution = yield* resolveTmpfsRoots(requestedTmpRoot, O.fromUndefinedOr(options.systemTmpRoot));
   const tmpRoots = rootResolution.roots;
   const tmpRoot = O.getOrThrow(A.head(tmpRoots));
-  const classes = O.getOrElse(O.fromUndefinedOr(options.classes), () => TmpfsReapClass.Options);
+  const classes = O.getOrElse(O.fromUndefinedOr(options.classes), () => TmpfsReapClass.literals);
   const includeClass = (reapClass: TmpfsReapClass): boolean => A.contains(classes, reapClass);
   const explicitGitWorktreePaths = O.fromUndefinedOr(options.gitWorktreePaths);
 

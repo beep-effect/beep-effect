@@ -6,9 +6,9 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { Fn, SchemaUtils, URLStr } from "@beep/schema";
+import { Fn, URLStr } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
-import { Config, Context, Effect, flow, Layer, pipe, SchemaIssue } from "effect";
+import { Config, Context, Effect, flow, Layer, pipe, Result, SchemaIssue } from "effect";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
@@ -22,8 +22,7 @@ const defaultDocsSection = "Docs";
 const RunpodDocsUrl = S.String.check(URLStr.filter).pipe(
   $I.annoteSchema("RunpodDocsUrl", {
     description: "Absolute URL parsed from Runpod documentation index links.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -137,7 +136,7 @@ const normalizeUrl = Str.replace(/\/+$/, "");
 const resolveConfig = (config: RunpodDocsConfigInput): ResolvedRunpodDocsConfig =>
   ResolvedRunpodDocsConfig.make({
     headers: config.headers,
-    indexUrl: RunpodConfigUrl.decodeUnknownSync(config.indexUrl),
+    indexUrl: Result.getOrThrow(S.decodeResult(RunpodConfigUrl)(config.indexUrl)),
   });
 
 const nonEmptyTrimmed: (value: string) => O.Option<string> = flow(Str.trim, O.liftPredicate(Str.isNonEmpty));
@@ -166,7 +165,7 @@ const parseEntry = (section: string, line: string): O.Option<RunpodDocsIndexEntr
           return pipe(
             O.all({
               title: nonEmptyTrimmed(Str.slice(0, titleEnd)(body)),
-              url: pipe(nonEmptyTrimmed(Str.slice(0, urlEnd)(afterTitle)), O.filter(RunpodDocsUrl.is)),
+              url: pipe(nonEmptyTrimmed(Str.slice(0, urlEnd)(afterTitle)), O.filter(S.is(RunpodDocsUrl))),
             }),
             O.map(({ title, url }) =>
               RunpodDocsIndexEntry.make({

@@ -17,11 +17,7 @@ import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, pipe, Result } from "effect";
 import * as S from "effect/Schema";
-import {
-  optionalPulumiConfigFields,
-  pulumiConfigSchemaIssueError,
-  withPulumiConfigDecodeEffect,
-} from "./internal/PulumiConfigSchema.ts";
+import { optionalPulumiConfigFields, pulumiConfigSchemaIssueError } from "./internal/PulumiConfigSchema.ts";
 import type { AiMetricsInstallSpec, AiMetricsOtlpEndpointSpec, AiMetricsServiceSpec } from "@beep/repo-ai-metrics";
 
 const $I = $InfraId.create("AIMetrics");
@@ -273,9 +269,7 @@ export const AIMetricsPulumiConfigValues = S.Class<AIMetricsPulumiConfigValuesFi
     target: AiMetricsDeployTarget,
   },
   $I.annote("AIMetricsPulumiConfigValues", { description: "Configuration values for AIMetrics Pulumi resources" })
-)
-  .mapFields(optionalPulumiConfigFields)
-  .pipe(withPulumiConfigDecodeEffect);
+).mapFields(optionalPulumiConfigFields);
 
 /**
  * SSH connection inputs for native Pulumi command resources.

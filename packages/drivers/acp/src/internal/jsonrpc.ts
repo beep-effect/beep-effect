@@ -58,7 +58,7 @@ const JsonRpcResponseFrame = S.Struct({
 const JsonRpcCauseEntry = S.Union([
   S.TaggedStruct("Fail", { error: S.Unknown }),
   S.TaggedStruct("Die", { defect: S.Unknown }),
-  S.TaggedStruct("Interrupt", { fiberId: S.optionalKey(S.Finite) }),
+  S.TaggedStruct("Interrupt", { fiberId: S.Finite.pipe(S.NullOr, S.optionalKey) }),
 ]);
 
 type ExitCause = Extract<RpcMessage.ExitEncoded<unknown, unknown>, { readonly _tag: "Failure" }>["cause"];

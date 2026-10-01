@@ -23,7 +23,7 @@ import {
 
 const encodeDockCommandEnvelope = S.encodeEffect(DockCommandEnvelope);
 
-const workspaceEquals = DockWorkspace.equals;
+const workspaceEquals = S.toEquivalence(DockWorkspace);
 
 describe("DockAtoms", () => {
   it.effect("owns one registry lifetime and refreshes service-backed persistence", () =>

@@ -15,7 +15,6 @@
 
 import { isPathWithinRoot, writeFileWithinCanonicalRootAtomically } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -36,7 +35,7 @@ import type { CodexDisposition } from "./Findings.triage.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Codex/Findings.refresh");
 const encoder = new TextEncoder();
-const parseJsonText = UnknownFromJsonString.decodeUnknownEffect;
+const parseJsonText = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const encodeTriageFinding = S.encodeUnknownEffect(CodexTriageFinding);
 
 const RefreshManifestInitiative = S.Struct({ id: S.String, status: S.String }).pipe(
@@ -440,7 +439,7 @@ const severityPhrase = (records: ReadonlyArray<{ readonly severity: CodexFinding
   const counts = severityCountsOf(records);
   return A.join(
     A.map(
-      A.filter(CodexFindingSeverity.Options, (severity) => (counts[severity] ?? 0) > 0),
+      A.filter(CodexFindingSeverity.literals, (severity) => (counts[severity] ?? 0) > 0),
       (severity) => `${counts[severity] ?? 0} ${severity}`
     ),
     ", "
@@ -567,7 +566,7 @@ const dispositionCountsOf = (findings: ReadonlyArray<{ readonly disposition: Cod
 const severityCountsEqual = (
   left: Readonly<Record<string, number>>,
   right: ReturnType<typeof severityCountsOf>
-): boolean => A.every(CodexFindingSeverity.Options, (severity) => (left[severity] ?? 0) === (right[severity] ?? 0));
+): boolean => A.every(CodexFindingSeverity.literals, (severity) => (left[severity] ?? 0) === (right[severity] ?? 0));
 
 const dispositionCountsEqual = (
   left: ReturnType<typeof dispositionCountsOf>,
@@ -755,7 +754,7 @@ const validatePublishedIndexRows = Effect.fnUntraced(function* (
 
 const mergeIndexSeverityRows = (text: string, plan: CodexPacketPlan): string => {
   let merged = text;
-  for (const severity of CodexFindingSeverity.Options) {
+  for (const severity of CodexFindingSeverity.literals) {
     const count = plan.severityCounts[severity] ?? 0;
     const row = new RegExp(`\\| ${severity} \\| \\d+ \\|`, "u");
     if (row.test(merged)) {

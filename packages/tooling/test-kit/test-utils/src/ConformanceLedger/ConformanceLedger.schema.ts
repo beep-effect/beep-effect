@@ -8,7 +8,6 @@
 import { $TestUtilsId } from "@beep/identity/packages";
 import * as Conformance from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as S from "effect/Schema";
 
 const $I = $TestUtilsId.create("ConformanceLedger");
@@ -29,12 +28,6 @@ const SourcesLedger = S.Struct({
   sources: S.NonEmptyArray(Conformance.SpecificationSource),
   profiles: S.NonEmptyArray(Conformance.ConformanceProfile),
 }).pipe(
-  SchemaUtils.withStatics((schema) => {
-    const fromJson = S.fromJsonString(schema);
-    return {
-      decodeUnknownEffectFromJsonString: S.decodeUnknownEffect(fromJson),
-    };
-  }),
   $I.annoteSchema("SourcesLedger", {
     description: "Package-owned source and conformance-profile registries.",
   })
@@ -146,12 +139,6 @@ const InventoryLedger = S.Struct({
   ...LedgerHeader.fields,
   items: S.NonEmptyArray(InventoryItem),
 }).pipe(
-  SchemaUtils.withStatics((schema) => {
-    const fromJson = S.fromJsonString(schema);
-    return {
-      decodeUnknownEffectFromJsonString: S.decodeUnknownEffect(fromJson),
-    };
-  }),
   $I.annoteSchema("InventoryLedger", {
     description: "Package-owned public AST and TaggedUnion candidate inventory.",
   })
@@ -161,12 +148,6 @@ const InvariantsLedger = S.Struct({
   ...LedgerHeader.fields,
   invariants: S.NonEmptyArray(Conformance.InvariantDescriptor),
 }).pipe(
-  SchemaUtils.withStatics((schema) => {
-    const fromJson = S.fromJsonString(schema);
-    return {
-      decodeUnknownEffectFromJsonString: S.decodeUnknownEffect(fromJson),
-    };
-  }),
   $I.annoteSchema("InvariantsLedger", {
     description: "Package-owned specification-backed invariant registry.",
   })
@@ -196,12 +177,6 @@ const CoverageLedger = S.Struct({
   ...LedgerHeader.fields,
   coverage: S.NonEmptyArray(CoverageEntry),
 }).pipe(
-  SchemaUtils.withStatics((schema) => {
-    const fromJson = S.fromJsonString(schema);
-    return {
-      decodeUnknownEffectFromJsonString: S.decodeUnknownEffect(fromJson),
-    };
-  }),
   $I.annoteSchema("CoverageLedger", {
     description: "Package-owned invariant coverage and executable test evidence.",
   })

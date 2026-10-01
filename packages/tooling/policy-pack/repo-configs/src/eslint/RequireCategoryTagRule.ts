@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { thunkFalse, thunkUndefined } from "@beep/utils/thunk";
 import { flow, HashSet, pipe } from "effect";
@@ -23,7 +22,7 @@ import type ESTree from "estree";
 
 const CATEGORY_PATTERN = /@category\s+\S+/;
 
-const CategoryTaggedComment = S.String.check(S.isPattern(CATEGORY_PATTERN)).pipe(SchemaUtils.withCodecStatics(["is"]));
+const CategoryTaggedComment = S.String.check(S.isPattern(CATEGORY_PATTERN));
 
 const EXPORT_DECLARATION_TYPES = HashSet.fromIterable(["ExportNamedDeclaration", "ExportDefaultDeclaration"]);
 
@@ -139,7 +138,7 @@ export const requireCategoryTagRule: Rule.RuleModule = {
       const missingCategorySymbol = pipe(
         O.liftPredicate(isExportedNode)(node),
         O.filter(
-          (exportedNode) => !A.some(getCandidateComments(context.sourceCode, exportedNode), CategoryTaggedComment.is)
+          (exportedNode) => !A.some(getCandidateComments(context.sourceCode, exportedNode), S.is(CategoryTaggedComment))
         ),
         O.map(getNodeName)
       );

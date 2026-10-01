@@ -11,10 +11,10 @@
  */
 
 import { findRepoRoot } from "@beep/repo-utils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as S from "effect/Schema";
 import { dryRunFlag, forceFlag, jsonFlag } from "../../internal/cli/Flags.ts";
 import { printJsonOrLines, printLines } from "../../internal/cli/Printer.ts";
 import { writePortfolioIndex } from "../Goals/PortfolioIndex.ts";
@@ -41,6 +41,8 @@ import { CodexSecurityError } from "./Security.errors.ts";
 import { verifySecurityBundleContract } from "./Security.runtime.ts";
 import type { CodexFindingsRefreshReconciliation, CodexRefreshLedgerSource } from "./Findings.refresh.ts";
 import type { CodexPacketPlan } from "./Findings.schemas.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const SOURCE_URL = "https://chatgpt.com/codex/cloud/security/findings/";
 
@@ -74,8 +76,8 @@ export const captureDateFromFileName = (fileName: string): O.Option<string> => {
   return match === null ? O.none() : O.fromUndefinedOr(match[1]);
 };
 
-const encodePayload = UnknownFromJsonString.encodeUnknownEffect;
-const parseJsonText = UnknownFromJsonString.decodeUnknownEffect;
+const encodePayload = S.encodeUnknownEffect(UnknownJson);
+const parseJsonText = S.decodeUnknownEffect(UnknownJson);
 
 const encodeRawPayloadJson = Effect.fnUntraced(function* (payload: unknown) {
   const encoded = yield* encodePayload(payload).pipe(
@@ -359,7 +361,7 @@ const regeneratePortfolioIndex = Effect.fn("CodexFindings.regeneratePortfolioInd
 const renderSeveritySummary = (plan: CodexPacketPlan): string =>
   A.join(
     A.map(
-      A.filter(CodexFindingSeverity.Options, (severity) => (plan.severityCounts[severity] ?? 0) > 0),
+      A.filter(CodexFindingSeverity.literals, (severity) => (plan.severityCounts[severity] ?? 0) > 0),
       (severity) => `${severity} ${plan.severityCounts[severity] ?? 0}`
     ),
     " · "
@@ -497,7 +499,10 @@ const findingsIngestCommand = Command.make(
   {
     source: Flag.ChoiceWithValue(
       "source",
-      A.map(CodexCaptureSource.Options, (source): readonly [CodexCaptureSource, CodexCaptureSource] => [source, source])
+      A.map(CodexCaptureSource.literals, (source): readonly [CodexCaptureSource, CodexCaptureSource] => [
+        source,
+        source,
+      ])
     ).pipe(Flag.withDefault("cloud-csv")),
     from: fromFlag,
     slug: slugFlag,

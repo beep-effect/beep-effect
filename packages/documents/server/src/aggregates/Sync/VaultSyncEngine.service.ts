@@ -88,7 +88,6 @@ import type {
   DmsRemoteItem,
   MarkConflictReviewedInput,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
-import type { UnknownRecord } from "@beep/schema";
 import type * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
@@ -112,7 +111,7 @@ const contentDigestOf = (bytes: Uint8Array): DocumentContentDigest =>
  */
 const PAYLOAD_SNAPSHOT_LIMIT = 8192;
 
-const truncatedPayload = (payload: UnknownRecord): UnknownRecord => {
+const truncatedPayload = (payload: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>> => {
   const encoded = JSON.stringify(payload);
   return encoded.length <= PAYLOAD_SNAPSHOT_LIMIT
     ? payload
@@ -279,11 +278,11 @@ type EchoClass = typeof EchoClass.Type;
 
 const echoClassForOperation = (operationType: DomainSyncOperation.SyncOperationType): EchoClass =>
   SyncOperationType.$match(operationType, {
-    createFolder: EchoClass.thunk.content,
-    moveItem: EchoClass.thunk.moved,
-    renameItem: EchoClass.thunk.renamed,
-    uploadFile: EchoClass.thunk.content,
-    uploadFileVersion: EchoClass.thunk.content,
+    createFolder: F.constant(EchoClass.Enum.content),
+    moveItem: F.constant(EchoClass.Enum.moved),
+    renameItem: F.constant(EchoClass.Enum.renamed),
+    uploadFile: F.constant(EchoClass.Enum.content),
+    uploadFileVersion: F.constant(EchoClass.Enum.content),
   });
 
 const echoClassForEvent = (eventType: DmsEventType): O.Option<EchoClass> =>

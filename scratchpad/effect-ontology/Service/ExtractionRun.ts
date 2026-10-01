@@ -20,8 +20,8 @@ import * as Crypto from "effect/Crypto";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils, Sha256Hex } from "@beep/schema";
-import { Context, DateTime, Effect, Layer } from "effect";
+import { Sha256Hex } from "@beep/schema";
+import { Context, DateTime, Effect, Layer, Result, flow } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -309,19 +309,10 @@ const makeExtractionRunService = Effect.gen(function* () {
   const storage = yield* StorageService;
   const crypto = yield* Crypto.Crypto;
 
-  const KeyIndex = S.Record(S.String, DocumentId).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
-  const KeyIndexJson = S.fromJsonString(KeyIndex, { space: 2 }).pipe(
-    SchemaUtils.withStatics((schema) => ({
-      decodeKeyIndex: S.decodeUnknownEffect(schema),
-      encodeKeyIndex: S.encodeEffect(schema),
-    }))
-  );
+  const KeyIndex = S.Record(S.String, DocumentId);
+  const KeyIndexJson = S.fromJsonString(KeyIndex, { space: 2 });
 
-  const JsonRecord = S.Record(S.String, S.Json).pipe(
-    SchemaUtils.withStatics((schema) => ({
-      decodeUnknownEffect: S.decodeUnknownEffect(schema),
-    }))
-  );
+  const JsonRecord = S.Record(S.String, S.Json);
 
   const mapRunError = (message: string, runId?: ExtractionRunId) => (cause: unknown) =>
     ExtractionRunError.is(cause)
@@ -354,11 +345,11 @@ const makeExtractionRunService = Effect.gen(function* () {
     Effect.flatMap(
       O.match({
         onNone: () =>
-          KeyIndex.decodeEffect({}).pipe(
+          S.decodeEffect(KeyIndex)({}).pipe(
             Effect.mapError(mapRunError("Failed to initialize extraction idempotency index"))
           ),
         onSome: (content) =>
-          KeyIndexJson.decodeKeyIndex(content).pipe(
+          S.decodeEffect(KeyIndexJson)(content).pipe(
             Effect.mapError(mapRunError("Failed to decode extraction idempotency index"))
           ),
       })
@@ -371,7 +362,7 @@ const makeExtractionRunService = Effect.gen(function* () {
   ) {
     const index = yield* getKeyIndex;
     const updated = { ...index, [key]: runId };
-    yield* storage.set(KEY_INDEX_FILE, yield* KeyIndexJson.encodeKeyIndex(updated));
+    yield* storage.set(KEY_INDEX_FILE, yield* S.encodeEffect(KeyIndexJson)(updated));
   });
 
   const createRunRaw = Effect.fn("ExtractionRunService.createRun")(function* (
@@ -406,7 +397,7 @@ const makeExtractionRunService = Effect.gen(function* () {
       events: [AuditEvent.make({ timestamp: now, type: "started" })],
       errors: [],
       idempotencyKey: O.fromNullishOr(options?.idempotencyKey),
-      ontologyVersion: O.map(O.fromNullishOr(options?.ontologyVersion), OntologyVersion.decodeUnknownSync),
+      ontologyVersion: O.map(O.fromNullishOr(options?.ontologyVersion), flow(S.decodeUnknownResult(OntologyVersion), Result.getOrThrow)),
     });
     yield* storage.set(metadataKey(runId), yield* ExtractionRun.encodeJsonStringEffect(run));
     if (P.isNotUndefined(options?.idempotencyKey)) yield* updateKeyIndex(options.idempotencyKey, runId);
@@ -509,7 +500,7 @@ const makeExtractionRunService = Effect.gen(function* () {
         keys.flatMap((key): Array<ExtractionRunId> => {
           const match = /^runs\/([^/]+)\/metadata\.json$/.exec(key);
           const runId = match?.[1];
-          return P.isUndefined(runId) || !DocumentId.is(runId) ? [] : [runId];
+          return P.isUndefined(runId) || !S.is(DocumentId)(runId) ? [] : [runId];
         }),
         (runId) => getRun(runId),
         { concurrency: 10 }
@@ -546,7 +537,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     data?: Record<string, unknown>
   ) {
     const now = yield* DateTime.now;
-    const decodedData = P.isUndefined(data) ? {} : yield* JsonRecord.decodeUnknownEffect(data);
+    const decodedData = P.isUndefined(data) ? {} : yield* S.decodeUnknownEffect(JsonRecord)(data);
     yield* updateMetadata(runId, (run) =>
       ExtractionRun.make({
         ...run,
@@ -571,7 +562,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     context?: Record<string, unknown>
   ) {
     const now = yield* DateTime.now;
-    const decodedContext = P.isUndefined(context) ? {} : yield* JsonRecord.decodeUnknownEffect(context);
+    const decodedContext = P.isUndefined(context) ? {} : yield* S.decodeUnknownEffect(JsonRecord)(context);
     return {
       now,
       error: AuditError.make({ timestamp: now, type, message, context: decodedContext }),

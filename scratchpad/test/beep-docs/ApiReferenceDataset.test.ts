@@ -53,8 +53,8 @@ const writeDataset = Effect.fnUntraced(function* (fixture: Fixture) {
 
   const indexJson = yield* encodeReflection(yield* reflectionFor("@effect/platform"));
   const httpClientJson = yield* encodeReflection(yield* reflectionFor("@effect/platform/HttpClient"));
-  const indexDigest = yield* Sha256HexFromBytes.decodeEffect(utf8.encode(indexJson));
-  const httpClientDigest = yield* Sha256HexFromBytes.decodeEffect(utf8.encode(httpClientJson));
+  const indexDigest = yield* S.decodeEffect(Sha256HexFromBytes)(utf8.encode(indexJson));
+  const httpClientDigest = yield* S.decodeEffect(Sha256HexFromBytes)(utf8.encode(httpClientJson));
   yield* fs.writeFileString(path.join(packageDirectory, "index.json"), indexJson);
   yield* fs.writeFileString(path.join(packageDirectory, "HttpClient.json"), httpClientJson);
 

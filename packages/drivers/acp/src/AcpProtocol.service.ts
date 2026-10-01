@@ -181,8 +181,9 @@ type AcpProtocolLogEventMember<T extends AcpProtocolLogDirection> = {
  *
  * ```ts
  * import { AcpProtocolLogEvent } from "@beep/acp/protocol"
+ * import * as S from "effect/Schema"
  *
- * const event = AcpProtocolLogEvent.decodeUnknownSync({
+ * const event = S.decodeUnknownSync(AcpProtocolLogEvent)({
  *   direction: "incoming",
  *   stage: "raw",
  *   payload: "{}"
@@ -235,12 +236,7 @@ export const AcpProtocolLogEvent = pipe(
   $I.annoteSchema("AcpProtocolLogEvent", {
     description: "Structured log event emitted by the ACP protocol adapter.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("direction"),
-      SchemaUtils.withStatics(() => ({ decodeUnknownSync: schema.decodeUnknownSync }))
-    )
+  S.toTaggedUnion("direction")
 );
 
 /**
@@ -327,8 +323,9 @@ const AcpExtensionNotification = S.TaggedStruct("ExtNotification", {
  *
  * ```ts
  * import { AcpIncomingNotification } from "@beep/acp/protocol"
+ * import * as S from "effect/Schema"
  *
- * const notification = AcpIncomingNotification.decodeUnknownSync({
+ * const notification = S.decodeUnknownSync(AcpIncomingNotification)({
  *   _tag: "ExtNotification",
  *   method: "x/custom",
  *   params: { ok: true }
@@ -344,12 +341,7 @@ export const AcpIncomingNotification = pipe(
   $I.annoteSchema("AcpIncomingNotification", {
     description: "Schema for notifications decoded from the ACP peer stream.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ decodeUnknownSync: schema.decodeUnknownSync }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**
@@ -814,7 +806,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     ),
     Effect.matchEffect({
       onFailure: (error) => {
-        const normalized: AcpError.AcpError = AcpError.AcpError.is(error)
+        const normalized: AcpError.AcpError = S.is(AcpError.AcpError)(error)
           ? error
           : AcpError.AcpTransportError.make({
               cause: O.some(error),
@@ -905,7 +897,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       id: requestIdString,
       payload,
       tag: method,
-    }).pipe(Effect.catch((error) => removeExtPending(requestIdString).pipe(Effect.andThen(Effect.fail(error)))));
+    }).pipe(Effect.tapError(() => removeExtPending(requestIdString)));
     return yield* Deferred.await(deferred).pipe(Effect.onInterrupt(() => removeExtPending(requestIdString)));
   });
 
