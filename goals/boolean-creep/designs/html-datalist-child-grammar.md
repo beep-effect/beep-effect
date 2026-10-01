@@ -112,14 +112,14 @@ Enum/is access uses the existing SchemaUtils.withLiteralKitStatics helper after 
 
 | Current writer/reader/boundary | Required change or preservation |
 | --- | --- |
-| `Html.conformance.ts:13`, `:81` | Reuse schema import and identity composer for the private literal owner; no public export or new role file. |
+| `Html.conformance.ts:12-25`, `:80` | Add dedicated `LiteralKit` and `SchemaUtils` imports from `@beep/schema`; reuse the identity composer for the private literal owner. No public export or new role file. |
 | `Html.conformance.ts:1894-1910` | Replace the only optionMode/mixed writes and mixed reader with one derived classification and generated guard. |
 | `Html.conformance.ts:1743-1764`, `:1651` | Preserve original child/tag preprocessing and other grammar readers. Do not substitute significantChildren for the original children scan or trim using general Unicode whitespace. |
 | `Html.conformance.ts:1768`; issue constructor and contracts | Retain makeIssue(path, elementOrder, exact message), issue field order, full path array, and issue schema. |
 | `Html.conformance.ts:2160-2182` | Preserve child-model validation before order validation, then descendant traversal; mixed grammar must not suppress other issues or reorder them. |
 | `Html.conformance.ts:2201-2243`, `:2267-2277` | Keep inspectConformance root handling and conform's supplied-tree plus detached-snapshot checks and typed error conversion. |
 | `Html.ts:15-16`, `:44-52`; `index.ts:76-91`; package exports | Keep Html.Conformant.decode/issues and direct public functions unchanged. The new literal remains private. |
-| `Html.policy.ts:866-875`, `:895`; `Html.serialize.ts:636-654` | Preserve policy's conformance proof consumption, serializeConformant, and safe-AST conformance revalidation. They never receive the local grammar value. |
+| `Html.policy.ts:861-870`, `:890`; `Html.serialize.ts:636-654` | Preserve policy's conformance proof consumption, serializeConformant, and safe-AST conformance revalidation. They never receive the local grammar value. |
 | `test/Html.coverage-matrix.test.ts:154-177` | Extend actual datalist mixed/option-plus-comment witnesses with the full matrix below. |
 | `test/Html.conformance-hardening.test.ts:680-682`, `:1236-1258` | Preserve mixed-text error and empty-datalist no-order-error fixtures, then assert exact nested path/order and conform failure behavior. |
 
