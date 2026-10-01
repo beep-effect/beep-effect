@@ -10,7 +10,6 @@ import { CONTRADICTION_REVIEW_REASON_MAX_LENGTH } from "@beep/epistemic-domain/v
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
 import { $EpistemicUiId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "@beep/ui/components/alert";
 import {
   AlertDialog,
@@ -45,6 +44,7 @@ import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { EvidenceSourcePanel } from "./EvidenceSourcePanel.tsx";
 import type { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
@@ -204,7 +204,7 @@ interface BeliefCardProps {
   readonly side: "left" | "right";
 }
 
-const encodeFact = UnknownFromJsonString.encodeUnknownResult;
+const encodeFact = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const shortDigest = (digest: string): string => `${Str.takeLeft(12)(digest)}…`;
 

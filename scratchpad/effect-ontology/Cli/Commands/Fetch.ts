@@ -10,7 +10,6 @@
  * @since 0.0.0
  */
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Unknown } from "@beep/schema/Unknown";
 import { getSomesStruct } from "@beep/utils/Option";
 import { thunkEmptyStr } from "@beep/utils/thunk";
 import type { DrizzleError } from "drizzle-orm";
@@ -58,7 +57,7 @@ const truncateOption = Flag.Int("truncate").pipe(
   Flag.withDescription("Truncate content to N characters (default: show all)")
 );
 
-const OutputJSON = S.fromJsonString(Unknown, { space: 2 }).pipe(
+const OutputJSON = S.fromJsonString(S.Unknown, { space: 2 }).pipe(
   SchemaUtils.withStatics((schema) => ({
     decodeUnknownEffect: S.decodeUnknownEffect(schema),
   }))

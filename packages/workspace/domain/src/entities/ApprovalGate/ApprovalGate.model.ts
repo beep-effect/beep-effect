@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Workspace from "@beep/shared-domain/identity/Workspace";
 import { ApprovalDecision, CandidateLifecycle } from "@beep/workspace-domain/values";
@@ -39,9 +38,11 @@ export class ApprovalGate extends ProductEntity.Entity<ApprovalGate>()(Workspace
     lifecycle: CandidateLifecycle.annotateKey({
       description: "Candidate lifecycle state when the gate was recorded.",
     }).pipe(pg.text()),
-    snapshot: UnknownRecord.annotateKey({
-      description: "Opaque runtime proof snapshot captured for the approval gate.",
-    }).pipe(pg.jsonb()),
+    snapshot: S.Record(S.String, S.Unknown)
+      .annotateKey({
+        description: "Opaque runtime proof snapshot captured for the approval gate.",
+      })
+      .pipe(pg.jsonb()),
   },
   $I.annote("ApprovalGate", {
     description: "Human approval gate for candidate work.",

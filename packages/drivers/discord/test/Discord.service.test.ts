@@ -8,7 +8,6 @@ import {
   DiscordErrorReason,
   DiscordMessageProof,
 } from "@beep/discord";
-import { decodeJsonString } from "@beep/schema/Json";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -20,6 +19,8 @@ import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const decodeUnknownJsonEffect = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const decodeDiscordConfigInputResult = S.decodeResult(DiscordConfigInput);
 const decodeDiscordErrorResult = S.decodeResult(DiscordError);
@@ -282,7 +283,7 @@ describe("@beep/discord", () => {
           })
         );
         const rawBody = O.getOrElse(messageCapture.bodyText, () => "{}");
-        const body = yield* decodeJsonString(rawBody).pipe(Effect.flatMap(decodeMessageBody));
+        const body = yield* decodeUnknownJsonEffect(rawBody).pipe(Effect.flatMap(decodeMessageBody));
 
         expect(channel.channelId).toBe(channelId);
         expect(message.messageId).toBe(messageId);

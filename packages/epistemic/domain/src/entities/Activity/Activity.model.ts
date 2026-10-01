@@ -7,9 +7,9 @@
 
 import { EpistemicFixtureKey } from "@beep/epistemic-domain/values";
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
+import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("entities/Activity/Activity.model");
 const pg = ProductEntity.pg;
@@ -50,7 +50,7 @@ export class Activity extends ProductEntity.Entity<Activity>()(Epistemic.Activit
     fixtureKey: EpistemicFixtureKey.annotateKey({
       description: "Stable fixture key for the provenance activity.",
     }).pipe(pg.text(), pg.columnName("fixture_key")),
-    snapshot: UnknownRecord.pipe(pg.jsonb()),
+    snapshot: S.Record(S.String, S.Unknown).pipe(pg.jsonb()),
   },
   $I.annote("Activity", {
     description: "Provenance activity produced by the runtime proof.",

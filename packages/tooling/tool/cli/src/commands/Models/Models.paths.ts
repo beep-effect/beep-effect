@@ -13,7 +13,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, pipe, Str } from "@beep/utils";
 import { Match } from "effect";
 import * as S from "effect/Schema";
@@ -98,7 +97,7 @@ export const defaultManifestRelativePath = ".config/beep/models.yaml";
  * @category utilities
  * @since 0.0.0
  */
-export const parseJsonText: (input: unknown) => O.Option<unknown> = S.decodeUnknownOption(UnknownFromJsonString);
+export const parseJsonText: (input: unknown) => O.Option<unknown> = S.decodeUnknownOption(S.fromJsonString(S.Unknown));
 
 /**
  * Where a projection target's path resolves on this box.

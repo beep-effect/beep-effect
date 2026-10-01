@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Config, Console, Effect, MutableHashMap, Order, pipe, Redacted, Semaphore } from "effect";
 import * as HttpClient from "effect/http/HttpClient";
@@ -30,6 +29,8 @@ import {
 } from "./JSDocMigrateData.ts";
 import type { FileSystem, Path } from "effect";
 import type { JSDocMigrateExtractRecord } from "./JSDocMigrate.schemas.ts";
+
+const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocMigrateTitles");
 
@@ -456,7 +457,7 @@ const chatCompletionContent = (
             const snippet = Str.slice(0, 240)(bodyText);
             return Effect.fail(migrateTitlesError(`Proxy returned HTTP ${candidate.status}: ${snippet}`));
           }
-          return UnknownFromJsonString.decodeEffect(bodyText).pipe(
+          return decodeJsonEffect(bodyText).pipe(
             Effect.mapError((cause) => QualityScriptCommandError.new(cause, "Proxy response body is not JSON.")),
             Effect.flatMap((body) =>
               decodeChatCompletion(body).pipe(

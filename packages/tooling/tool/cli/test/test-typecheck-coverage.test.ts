@@ -1,6 +1,5 @@
 import { runTestTsgoChecksAt, testTsgoPlanningForTesting } from "@beep/repo-cli/test/Quality";
 import { checkScriptTestTypecheckCoverage } from "@beep/repo-cli/test/SharedInternals";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -8,7 +7,8 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
@@ -20,7 +20,7 @@ const PlatformLayer = Layer.mergeAll(
 );
 
 const isString = (value: unknown): value is string => typeof value === "string";
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 // A package whose `check` script delegates to a project that includes `test`
 // (the shape `beep create-package` scaffolds) next to one whose project only

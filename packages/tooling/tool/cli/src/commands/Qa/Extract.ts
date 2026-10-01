@@ -40,7 +40,6 @@ import {
   SessionStore,
   videoSecondsToEpochMs,
 } from "@beep/qa-capture";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, flow, Match, Number as N, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -67,6 +66,8 @@ import type {
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 import type { QaExtractOptions } from "./Qa.schemas.ts";
+
+const decodeUnknownJsonEffect = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const decodeRoundNumber = S.decodeEffect(RoundNumber);
 
@@ -265,7 +266,7 @@ export const readExtractionPlan = Effect.fn("QaExtract.readExtractionPlan")(func
   return yield* fs
     .readFileString(planPath)
     .pipe(
-      Effect.flatMap(UnknownFromJsonString.decodeUnknownEffect),
+      Effect.flatMap(decodeUnknownJsonEffect),
       Effect.flatMap(decodeExtractionPlan),
       Effect.asSome,
       Effect.orElseSucceed(O.none<ExtractionPlan>)

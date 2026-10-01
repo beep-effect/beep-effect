@@ -13,7 +13,6 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
  */
 
 import * as Pacer from "@beep/pacer";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
@@ -29,7 +28,7 @@ import * as Str from "effect/String";
 const cfg = Pacer.mockPacerConfig();
 const initialToken = Str.repeat(128)("Q");
 const rotatedToken = Str.repeat(128)("R");
-const encodeUnknownJson = S.encodeEffect(UnknownFromJsonString);
+const encodeUnknownJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const mockLayer = (options: Parameters<typeof Pacer.makePacerMockHttpClient>[0] = {}) =>
   Pacer.makePacerLayer(cfg, Pacer.makePacerMockHttpClient(options)).full;

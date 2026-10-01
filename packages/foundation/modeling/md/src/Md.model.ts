@@ -8,7 +8,6 @@
 import * as HtmlModel from "@beep/html/Html.model";
 import { Text as HtmlText } from "@beep/html/Html.nodes";
 import { $MdId } from "@beep/identity/packages";
-import { JsonObject } from "@beep/schema/Json";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as Arr from "@beep/utils/Array";
@@ -3458,7 +3457,7 @@ export declare namespace Block {
 export class Document extends S.TaggedClass<Document>($I`Document`)(
   "document",
   {
-    frontmatter: S.OptionFromOptionalKey(JsonObject).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+    frontmatter: S.OptionFromOptionalKey(S.JsonObject).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional JSON-compatible document metadata rendered as deterministic frontmatter.",
     }),
     children: BlockChildren.annotateKey({
@@ -3501,7 +3500,7 @@ export declare namespace Document {
   export interface Type {
     readonly _tag: "document";
     readonly children: BlockChildren.Type;
-    readonly frontmatter: O.Option<JsonObject>;
+    readonly frontmatter: O.Option<S.JsonObject>;
   }
 
   /**
@@ -3510,6 +3509,6 @@ export declare namespace Document {
   export interface Encoded {
     readonly _tag: "document";
     readonly children: BlockChildren.Encoded;
-    readonly frontmatter?: JsonObject;
+    readonly frontmatter?: S.JsonObject;
   }
 }

@@ -19,13 +19,14 @@
 
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect, LiteralKit, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
 import { Effect, FileSystem, HashSet, MutableHashSet, Path } from "effect";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
 import type { Sha256Hex } from "@beep/schema";
 import type * as Crypto from "effect/Crypto";
 
@@ -89,7 +90,7 @@ class ContainedTarget extends S.Class<ContainedTarget>($I`ContainedTarget`)(
 export class FsGuardError extends S.TaggedError<FsGuardError>($I`FsGuardError`)(
   "FsGuardError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(OpaqueDefect),
     message: S.String,
     path: S.String,
     reason: FsGuardFailureReason,

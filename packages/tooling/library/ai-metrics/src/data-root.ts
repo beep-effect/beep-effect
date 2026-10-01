@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, FilePath, Fn, LiteralKit, SchemaUtils, WindowsDrivePath, WindowsUncPath } from "@beep/schema";
+import { FilePath, Fn, LiteralKit, SchemaUtils, WindowsDrivePath, WindowsUncPath } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, pipe, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
@@ -245,7 +245,7 @@ export class AiMetricsDataRoot extends S.Class<AiMetricsDataRoot>($I`AiMetricsDa
 export class AiMetricsDataRootError extends S.TaggedError<AiMetricsDataRootError>($I`AiMetricsDataRootError`)(
   "AiMetricsDataRootError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsDataRootError>("AiMetricsDataRootError", {

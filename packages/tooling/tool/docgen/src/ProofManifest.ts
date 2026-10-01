@@ -9,9 +9,8 @@ import { $RepoDocgenId } from "@beep/identity/packages";
 import { FsUtils } from "@beep/repo-utils";
 import { sha256Hex as utf8Sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str, thunkFalse } from "@beep/utils";
-import { DateTime, Effect, FileSystem, Order, Path } from "effect";
+import { DateTime, Effect, FileSystem, flow, Order, Path, Result } from "effect";
 import * as S from "effect/Schema";
 import * as Configuration from "./Configuration.ts";
 import * as Domain from "./Domain.ts";
@@ -311,7 +310,7 @@ export class DocgenProofManifestVerification extends S.Class<DocgenProofManifest
   })
 ) {}
 
-const encodeUnknownJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeUnknownJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const DOCGEN_PROOF_MANIFEST_PATH = ".beep/docgen/proof.json" as const;
 const DOCGEN_PROOF_INPUT_GLOBS = [
   "src/**/*.{ts,tsx,mts,cts,md,mdx}",
