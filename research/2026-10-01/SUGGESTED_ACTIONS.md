@@ -11,6 +11,8 @@ bun run beep research capture https://www.gov.ca.gov/2026/09/30/californias-nati
 bun run beep research capture https://leginfo.legislature.ca.gov/faces/billTextClient.xhtml?bill_id=202520260SB574 --tags law,california,sb574,statute
 bun run beep research capture https://www.npmjs.com/package/effect/v/4.0.0 --tags effect,npm,stable,4.0.0
 bun run beep research capture https://github.com/Effect-TS/effect/pull/8577 --tags effect,github,changesets,8577
+# #8577 merged 2026-10-01 (effect@4.0.0). Refresh a prior capture of this URL;
+# a skip would leave the vault card on the open / rc.119 state.
 bun run beep research capture https://www.npmjs.com/package/@rocicorp/zero/v/1.11.0-canary.21 --tags zero,canary,local-first
 bun run beep research capture https://www.npmjs.com/package/@evolu/common/v/8.14.0 --tags evolu,npm,local-first
 bun run beep research capture https://arxiv.org/abs/2609.39607 --tags agents,skills,security,arxiv,pretext
@@ -22,13 +24,16 @@ bun run beep research capture https://arxiv.org/abs/2609.38822 --tags agents,ski
 
 ## Ledger / watchlist ops (after admit)
 
-- Stamp: apply `LEDGER_PATCH/stamp.json` → `lastSuccessfulRun: 2026-10-01T08:19:00-05:00`, `lastSuccessfulPacket: research/2026-10-01` (set `lastSuccessfulPr` when PR opens).
-- Retire `w-effect-rc118` / any `w-effect-rc119` staging → add/keep tip watch on **effect@4.0.0**.
-- Retarget `w-zero-canary` → **1.11.0-canary.21**; head → **20261001**.
-- Retarget Evolu tip watch → **@evolu/common@8.14.0** (retire 8.12.0).
-- Keep HOLDs: USPTO four-field, Harvey–Everlaw fall 2026, iManage/TR coming soon, Instant 2027-08-31, drizzle #6162, MCP #3306, SEP-3004 closed, SEP-2640 SDK ship, jazz alpha.58, Patlytics MCP.
-- Add watches: Clio judiciary / Learned Hand; CA SB 574 compliance; Pretext / ActionGuard / TrustProbe skill-security papers.
-- See `WATCHLIST_PATCH.md` for row deltas.
+Publisher-only sidecars (`LEDGER_PATCH/stamp.json`, `WATCHLIST_PATCH.md`) are not
+in this packet. The admit deltas are already on the tip:
+
+- Stamp: `research/ledger/stamp.json` — `lastSuccessfulRun: 2026-10-01T08:19:00-05:00`, `lastSuccessfulPacket: research/2026-10-01`, `lastSuccessfulPr: 1391`, `lastAttemptedStatus: partial` (lastAttempted* mirrors lastSuccessful*).
+- Watchlist: `research/ledger/WATCHLIST.md` (`updated: 2026-10-01`).
+- Retired `w-effect-rc118` / `w-effect-rc119`; tip watch is **effect@4.0.0** (`w-effect-400`).
+- Retargeted `w-zero-canary` → **1.11.0-canary.21**; head → **20261001**.
+- Retargeted Evolu tip → **@evolu/common@8.14.0** (`w-evolu-8140`; 8.12.0 retired).
+- Kept HOLDs: USPTO four-field, Harvey–Everlaw fall 2026, iManage/TR coming soon, Instant 2027-08-31, drizzle #6162, MCP #3306, SEP-3004 closed, SEP-2640 SDK ship, jazz alpha.58, Patlytics MCP.
+- Added watches: Clio judiciary / Learned Hand; CA SB 574 compliance; Pretext / ActionGuard / TrustProbe.
 
 ## Do not
 
