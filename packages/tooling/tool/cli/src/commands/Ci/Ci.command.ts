@@ -18,6 +18,7 @@ import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../inter
 import { CiCommandError } from "./Ci.errors.ts";
 import { ciAdmissionCommand } from "./CiAdmission.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
+import { ciRerunRunnerLossCommand } from "./CiRerunRunnerLoss.ts";
 import { ciLaneTimingsCommand } from "./LaneTimings.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Ci.command");
@@ -346,6 +347,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci lane <id> [flags] (or --list)",
     "- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [--preview] [filters]",
     "- bun run beep ci local [--lanes ids] [--fast] [--affected]",
+    "- bun run beep ci rerun-runner-loss --run-id <id> [--attempt n] [--max-attempt n] [--dry-run]",
   ])
 ).pipe(
   Command.withDescription("Continuous integration helper commands"),
@@ -355,5 +357,6 @@ export const ciCommand = Command.make("ci", {}, () =>
     ciLaneCommand,
     ciLaneTimingsCommand,
     ciLocalCommand,
+    ciRerunRunnerLossCommand,
   ])
 );

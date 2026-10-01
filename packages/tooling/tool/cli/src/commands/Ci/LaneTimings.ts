@@ -427,7 +427,34 @@ export const ciRunnerClassForLabels = (labels: ReadonlyArray<string>): CiRunnerC
     : CiRunnerClass.Enum.unknown;
 };
 
-const jobShapeRecord = (job: CiWorkflowJob): GithubJobRecord =>
+/**
+ * Project an Actions REST job row onto the record the job-shape classes read.
+ *
+ * **Example** (Classify a REST job row)
+ *
+ * ```ts
+ * import { CiWorkflowJob, ciWorkflowJobShapeRecord } from "@beep/repo-cli/commands/Ci"
+ *
+ * const job = CiWorkflowJob.make({
+ *   completed_at: null,
+ *   conclusion: "failure",
+ *   created_at: "2026-09-30T20:00:00Z",
+ *   id: 1,
+ *   name: "Heavy / Docgen",
+ *   run_attempt: 1,
+ *   run_id: 2,
+ *   started_at: null,
+ *   status: "completed",
+ * })
+ * console.log(ciWorkflowJobShapeRecord(job).databaseId) // 1
+ * ```
+ *
+ * @param job - One job row from the Actions jobs REST endpoint.
+ * @returns The same job as a {@link GithubJobRecord}.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const ciWorkflowJobShapeRecord = (job: CiWorkflowJob): GithubJobRecord =>
   GithubJobRecord.make({
     conclusion: job.conclusion,
     databaseId: job.id,
@@ -475,7 +502,7 @@ export const ciLaneTimingRow = (job: CiWorkflowJob): CiLaneTimingRow =>
   CiLaneTimingRow.make({
     conclusion: O.getOrElse(O.fromNullishOr(job.conclusion), () => job.status),
     durationSeconds: ciTimestampSpanSeconds(job.started_at, job.completed_at),
-    infraFailure: O.isSome(detectGithubJobShapeClass(jobShapeRecord(job))),
+    infraFailure: O.isSome(detectGithubJobShapeClass(ciWorkflowJobShapeRecord(job))),
     installSeconds: stepSecondsMatching(job, INSTALL_STEP_PATTERN),
     jobId: job.id,
     jobName: job.name,
@@ -853,7 +880,35 @@ const ghApiJsonAttempt = Effect.fn("Ci.laneTimingsGhApiAttempt")(function* (
   return result.output;
 });
 
-const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
+/**
+ * Run `gh api <endpoint>` with an optional `--jq` projection, retrying
+ * transient transport and secondary-rate-limit exits.
+ *
+ * **Details**
+ *
+ * Transport blips retry from 250ms and secondary rate limits from one minute,
+ * doubling with upward jitter, five attempts in total. Any other non-zero
+ * exit and any truncated capture fail at once as a {@link CiCommandError}.
+ *
+ * **Example** (Build a run lookup)
+ *
+ * ```ts
+ * import { ghApiJson } from "@beep/repo-cli/commands/Ci"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const program = ghApiJson(".", "repos/{owner}/{repo}/actions/runs/1", O.some("{id}"))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - Checkout `gh` runs in; it resolves `{owner}/{repo}` from it.
+ * @param endpoint - REST endpoint path.
+ * @param jqProjection - Optional `--jq` filter applied by `gh`.
+ * @returns The captured stdout.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
   repoRoot: string,
   endpoint: string,
   jqProjection: O.Option<string>
