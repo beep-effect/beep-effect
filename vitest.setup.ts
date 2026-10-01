@@ -215,7 +215,7 @@ const spawnSync = (commandOrOptions: BunSpawnSyncObject | ReadonlyArray<string>,
   const stdinIsMode = stdin === "ignore" || stdin === "inherit" || stdin === "pipe";
   const result = nodeSpawnSync(normalized.command, [...normalized.args], {
     cwd: normalized.options.cwd,
-    env: { ...process.env, ...normalized.options.env },
+    env: normalized.options.env,
     input: stdinIsMode ? undefined : stdin,
     stdio: [stdinIsMode ? stdin : "pipe", stdioMode(normalized.options.stdout), stdioMode(normalized.options.stderr)],
   });
@@ -234,7 +234,7 @@ const spawn = (commandOrOptions: BunSpawnSyncObject | ReadonlyArray<string>, opt
   const normalized = normalizeSpawnInput(commandOrOptions, options);
   const child = nodeSpawn(normalized.command, [...normalized.args], {
     cwd: normalized.options.cwd,
-    env: { ...process.env, ...normalized.options.env },
+    env: normalized.options.env,
     stdio: ["ignore", stdioMode(normalized.options.stdout), stdioMode(normalized.options.stderr)],
   });
 

@@ -35607,6 +35607,28 @@
       "reason": "Native dependency compatibility boundary: the scoped child process resolves the installed Box SDK dependency graph and opens loopback FTP control/data sockets. MemoryFileSystem cannot represent module resolution or OS sockets. The public live-services layer owns the child; a 10-second child deadline bounds protocol hangs. CI=true Node/Bun tests and a corrupt-payload negative control pass. See research/basic-ftp-security-repair.md."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/bun-spawn-env-parity.test.ts:4:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/bun-spawn-env-parity.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native runtime conformance subject: child processes execute actual Node and Bun against the root compatibility shim. Public NodeServices layer owns scoped reporter roots and StepExec child lifetimes. Memory cannot represent OS child environments or executable identity. Applied generated package script passes both twenty-case reports; see research/spawn-env-scope-proof.md."
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/cache-command.test.ts:4:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
