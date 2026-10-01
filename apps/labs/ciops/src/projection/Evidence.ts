@@ -8,7 +8,7 @@
 
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem } from "effect";
+import { Console, Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Hex from "effect/encoding/Hex";
@@ -152,6 +152,15 @@ const sha256 = Effect.fn("Evidence.sha256")(function* (
 /**
  * Outcome of one replay-evidence run: the validated report and its rendering.
  *
+ * **Example** (Describe a passing check run)
+ *
+ * ```ts
+ * import { EvidenceRun } from "@/projection/Evidence"
+ *
+ * const run = EvidenceRun.make({ mode: "check", rendered: "# S7 replay evidence\n\nPASS" })
+ * console.log(run.mode) // "check"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -172,8 +181,10 @@ export class EvidenceRun extends S.Class<EvidenceRun>($I`EvidenceRun`)(
  * **Details**
  *
  * `requireReplayMatch` runs before any write, so a diverging replay can never
- * overwrite a good committed record. `check` mode never touches the file
- * system beyond reading its inputs.
+ * overwrite a good committed record. The rendering is computed first and
+ * printed when the replay diverges, so the FAIL table (expected versus
+ * projected nonces) stays available for diagnosis. `check` mode never touches
+ * the file system beyond reading its inputs.
  *
  * **Example** (Validate without writing)
  *
@@ -204,12 +215,13 @@ export const generateReplayEvidence = Effect.fn("Evidence.generateReplayEvidence
   const events = yield* decodeAdmissionJournal(artifacts.journal);
   const policyDigest = yield* sha256(artifacts.abox);
   const journalDigest = yield* sha256(artifacts.journal);
-  const report: ReplayReport = yield* replayAdmissionJournal(policy, events, policyDigest, journalDigest).pipe(
-    Effect.flatMap(requireReplayMatch)
-  );
-  const rendered = renderReplayEvidence(report, journalDigest);
+  const replayed: ReplayReport = yield* replayAdmissionJournal(policy, events, policyDigest, journalDigest);
+  const rendered = renderReplayEvidence(replayed, journalDigest);
+  // A diverging replay fails typed before any write; its FAIL table is printed
+  // first so the expected/projected nonces remain diagnosable from the run.
+  const report = yield* requireReplayMatch(replayed).pipe(Effect.tapError(() => Console.log(rendered)));
   if (EvidenceMode.is.write(mode)) {
     yield* writeEvidence(paths.evidence, rendered);
   }
-  return EvidenceRun.make({ mode, rendered });
+  return EvidenceRun.make({ mode, rendered: renderReplayEvidence(report, journalDigest) });
 });
