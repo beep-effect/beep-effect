@@ -6384,3 +6384,11 @@ The current-cohort publish completed all 32 local proof lanes, including coverag
 ### 2026-10-01 — Spawn environment oracle missed selective inheritance
 
 The bounded Grok review identified that the two-marker regression could miss a parent merge that removed only those markers. A third synthetic parent marker now checks omission inheritance and replacement for every explicit environment scenario, including override and undefined entries. The selective-merge control passed all 20 original Node cases and failed 16 strengthened cases; the old full merge failed eight original and 16 strengthened cases. Both runtime fixtures and wrappers passed privately. The stronger regression is now applied; ordinary package and hosted proof remain pending. Tests observe only synthetic markers and emit no environment values.
+
+### Reflection command routing ambiguity
+
+During the nine-suite proof closeout, `bun run beep lint reflection` selected the broad ten-step policy lane instead of the intended artifact gate. The owned run was interrupted with exit 130; `bun run beep lint reflection-artifacts` then passed with zero blocking or advisory findings. Rejecting unknown lint subjects, or printing a correction before selecting the default lane, would prevent unintended heavy work.
+
+### Bun external validation configuration diagnostic
+
+The private strict ledger decoder validated 4,579 rows with zero invalid rows or duplicate IDs and exited 0, then Bun printed `Internal error: directory mismatch` for the root tsconfig override. Keep this runtime diagnostic separate from the successful schema result. A cache-local tsconfig with explicit root aliases would avoid the override boundary; the reproducible engine diagnostic can inform a later Bun issue.
