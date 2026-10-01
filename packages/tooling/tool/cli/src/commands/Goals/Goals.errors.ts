@@ -6,8 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Goals.errors");
 
@@ -249,7 +249,7 @@ export class GoalPlanOperationalError extends S.TaggedError<GoalPlanOperationalE
   "GoalPlanOperationalError",
   {
     message: S.String,
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<GoalPlanOperationalError>("GoalPlanOperationalError", {
     description: "A packet-snapshot read failure that must fail plan compilation closed.",

@@ -915,6 +915,18 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
         requestId: "13",
         exit: { _tag: "Failure", cause: [{ _tag: "Interrupt", fiberId: undefined }] },
       });
+      // Effect's JSON RPC codec encodes a missing interrupt fiberId as null; it stays an Interrupt.
+      yield* Queue.offer(
+        input,
+        encoder.encode(
+          '{"jsonrpc":"2.0","id":113,"error":{"_tag":"Cause","code":1,"message":"stop","data":[{"_tag":"Interrupt","fiberId":null}]}}\n'
+        )
+      );
+      assert.deepEqual(yield* Queue.take(clientSeen), {
+        _tag: "Exit",
+        requestId: "113",
+        exit: { _tag: "Failure", cause: [{ _tag: "Interrupt", fiberId: null }] },
+      });
       yield* Queue.offer(
         input,
         encoder.encode('{"jsonrpc":"2.0","id":14,"error":{"_tag":"Cause","code":2,"message":"odd","data":"oops"}}\n')

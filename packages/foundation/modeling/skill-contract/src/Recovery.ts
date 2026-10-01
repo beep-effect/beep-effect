@@ -132,7 +132,7 @@ export class RecoveryBudgetConsumed extends S.Class<RecoveryBudgetConsumed>($I`R
  * ```ts import.meta.vitest name="Inspect attempt outcomes"
  * import { RecoveryAttemptOutcome } from "@beep/skill-contract"
  *
- * RecoveryAttemptOutcome.Options // => ["succeeded", "failed", "aborted"]
+ * RecoveryAttemptOutcome.literals // => ["succeeded", "failed", "aborted"]
  * ```
  *
  * @category schemas
@@ -189,7 +189,7 @@ export class RecoveryAttemptReceipt extends S.Class<RecoveryAttemptReceipt>($I`R
  * ```ts
  * import { FailureTerminalReason } from "@beep/skill-contract"
  *
- * console.log(FailureTerminalReason.Options)
+ * console.log(FailureTerminalReason.literals)
  * ```
  *
  * @category schemas

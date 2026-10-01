@@ -32,11 +32,7 @@ export const SystemComponent = SystemComponentBase.pipe(
   $I.annoteSchema("SystemComponent", {
     description: "System component allowed to appear in a system principal.",
   }),
-  SchemaUtils.withLiteralKitStatics(SystemComponentBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownResult(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(SystemComponentBase)
 );
 
 /**

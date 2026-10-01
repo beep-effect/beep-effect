@@ -176,13 +176,13 @@ Tests retain their existing Effect-based harness and NodeCrypto layer. In qualit
 
 ### Current named test locations
 
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3266` — leaves test and coverage without a static root plan
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7097` — builds the integration lane command with shared SQL environment
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7142` — forwards shared SQL env vars to the integration child process
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7165` — fails nonzero integration children and releases the shared SQL resource
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7538` — limits root integration test filters to script-owning workspaces
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7846` — selects the flagged lanes and keeps the remaining arguments in order
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7855` — runs both lanes when no lane flag is present
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3377` — leaves test and coverage without a static root plan
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7208` — builds the integration lane command with shared SQL environment
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7253` — forwards shared SQL env vars to the integration child process
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7276` — fails nonzero integration children and releases the shared SQL resource
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7649` — limits root integration test filters to script-owning workspaces
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7957` — selects the flagged lanes and keeps the remaining arguments in order
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7966` — runs both lanes when no lane flag is present
 
 The private review also supplies source-location-maps.json with exact unchanged
 line blocks and explicit changed blocks, plus symbol-locations.json/test-locations.json.

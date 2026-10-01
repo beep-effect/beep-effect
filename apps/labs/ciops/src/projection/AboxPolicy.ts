@@ -12,6 +12,8 @@ import * as Str from "effect/String";
 import { PosInt } from "./PosInt.ts";
 import { AdmissionPolicyParams, AdmissionPriority, AdmissionTokenWeights, PolicyDecodeError } from "./Schemas.ts";
 
+const decodeAdmissionPriority = S.decodeUnknownEffect(AdmissionPriority);
+
 // The pattern binds the complete committed document shape while leaving every
 // policy value and declared priority to be decoded from artifact bytes.
 const knownAboxShape =
@@ -49,7 +51,7 @@ const decodePositiveInteger = Effect.fnUntraced(function* (
 const decodePriority = Effect.fnUntraced(function* (
   raw: string
 ): Effect.fn.Return<AdmissionPriority, PolicyDecodeError> {
-  return yield* AdmissionPriority.decodeUnknownEffect(raw).pipe(
+  return yield* decodeAdmissionPriority(raw).pipe(
     Effect.mapError(() => schemaFailure("A-Box declared an unknown admission priority."))
   );
 });

@@ -11,13 +11,15 @@
  * @since 0.0.0
  */
 import { IRI, makeNamedNode } from "@beep/rdf";
+import * as S from "effect/Schema";
+import { Result } from "effect";
 
 const vocabularyTerm = (namespace: string, localName: string) => makeNamedNode(`${namespace}${localName}`);
 
-const extractionNamespace = IRI.decodeUnknownSync("https://example.org/kg/");
-const claimsNamespace = IRI.decodeUnknownSync("https://effect-ontology.dev/claims#");
-const correctionsNamespace = IRI.decodeUnknownSync("https://effect-ontology.dev/corrections#");
-const coreNamespace = IRI.decodeUnknownSync("https://effect-ontology.dev/core#");
+const extractionNamespace = Result.getOrThrow(S.decodeResult(IRI)("https://example.org/kg/"));
+const claimsNamespace = Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/claims#"));
+const correctionsNamespace = Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/corrections#"));
+const coreNamespace = Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/core#"));
 
 /**
  * Legacy extraction-metadata vocabulary.

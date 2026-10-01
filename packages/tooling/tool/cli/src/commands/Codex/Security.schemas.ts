@@ -283,7 +283,7 @@ export const SecuritySeverityToPacket = MappedLiteralKit([
 export type SecuritySeverityToPacket = typeof SecuritySeverityToPacket.Type;
 
 class Severity extends S.Class<Severity>($I`Severity`)(
-  { level: LiteralKit(SecuritySeverityToPacket.Options) },
+  { level: LiteralKit(A.map(SecuritySeverityToPacket.Pairs, ([level]) => level)) },
   $I.annote("Severity", { description: "Severity reported by the scanner, before human triage." })
 ) {}
 class Location extends S.Class<Location>($I`Location`)(

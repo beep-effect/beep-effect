@@ -10,12 +10,12 @@ Effect compiler is patched over one of them.
 | --- | --- | --- |
 | `typescript` | `^6.0.3` | Programmatic (JS) compiler API only. Never runs a repo typecheck; its `bin/tsc` is shadowed. |
 | `@typescript/native` | `npm:typescript@^7.0.2` | The TypeScript 7 Go compiler. Owns the hoisted `node_modules/.bin/tsc`. |
-| `@effect/tsgo` + seven `@effect/tsgo-<platform>` packages | `0.45.0` | The Effect language service build of TypeScript 7. Ships one binary per upstream TypeScript version. |
+| `@effect/tsgo` + seven `@effect/tsgo-<platform>` packages | `0.47.2` | The Effect language service build of TypeScript 7. Ships one binary per upstream TypeScript version. |
 
 The root `prepare` script (`effect-tsgo unpatch && node scripts/prune-tsgo-backups.mjs && effect-tsgo patch`)
 copies the Effect binary over the native package's Go binary, keeping the stock
 one beside it as `tsc.original`. After install, both of these print
-`Version 7.0.2+effect-tsgo.0.45.0`:
+`Version 7.0.2+effect-tsgo.0.47.2`:
 
 ```text
 node_modules/.bin/tsc      -> @typescript/native/bin/tsc  (patched Go binary)

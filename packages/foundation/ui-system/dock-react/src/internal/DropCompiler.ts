@@ -103,16 +103,18 @@ const floatingHit = (geometry: DockGeometry, point: PointerPosition) =>
 
 const groupBox = (geometry: DockGeometry, groupId: GroupId): O.Option<DockBox> =>
   pipe(
-    A.findFirst(geometry.groups, (candidate) => GroupId.equals(candidate.groupId, groupId)),
+    A.findFirst(geometry.groups, (candidate) => S.toEquivalence(GroupId)(candidate.groupId, groupId)),
     O.map((candidate) => candidate.box),
     O.orElse(() =>
       pipe(
         geometry.floating,
-        A.findFirst((member) => A.some(member.groups, (candidate) => GroupId.equals(candidate.groupId, groupId))),
+        A.findFirst((member) =>
+          A.some(member.groups, (candidate) => S.toEquivalence(GroupId)(candidate.groupId, groupId))
+        ),
         O.flatMap((member) =>
           pipe(
             member.groups,
-            A.findFirst((candidate) => GroupId.equals(candidate.groupId, groupId)),
+            A.findFirst((candidate) => S.toEquivalence(GroupId)(candidate.groupId, groupId)),
             O.map((candidate) => candidate.box)
           )
         )
@@ -310,7 +312,7 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
         })
       );
     }
-    return GroupId.equals(groupId, drag.fromGroupId)
+    return S.toEquivalence(GroupId)(groupId, drag.fromGroupId)
       ? O.none()
       : O.some(
           MovePanelCommandSchema.make({
@@ -398,7 +400,7 @@ export const dropPreview: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<D
 
 const isTabsWithId = (node: DockNode, groupId: GroupId): boolean =>
   DockNode.match(node, {
-    Tabs: (tabs) => GroupId.equals(tabs.groupId, groupId),
+    Tabs: (tabs) => S.toEquivalence(GroupId)(tabs.groupId, groupId),
     Split: () => false,
   });
 
@@ -459,7 +461,7 @@ export const splitExtent: Dual3<DockAtomGraph, AdapterState, SplitNode, number> 
     const geometry = graph.registry.get(state.geometry.geometryAtom);
     const boxes = A.flatMap(DockNode.tabs(split), (tabs) =>
       O.match(
-        A.findFirst(geometry.groups, (group) => GroupId.equals(group.groupId, tabs.groupId)),
+        A.findFirst(geometry.groups, (group) => S.toEquivalence(GroupId)(group.groupId, tabs.groupId)),
         {
           onNone: A.empty,
           onSome: (group) => A.of(group.box),

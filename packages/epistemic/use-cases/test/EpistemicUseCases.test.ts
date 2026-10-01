@@ -161,7 +161,7 @@ describe("@beep/epistemic-use-cases", () => {
       const decoded = yield* decodeClaimProjectionOutput(encoded);
 
       expect(encoded.total).toBe(A.length(authority));
-      for (const state of ClaimLifecycle.Options) {
+      for (const state of ClaimLifecycle.literals) {
         expect(encoded.counts[state]).toBe(A.length(A.filter(authority, (claim) => claim.lifecycle === state)));
       }
       pipe(sameClaimProjectionView(decoded, view), assertTrue);

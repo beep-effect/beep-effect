@@ -15,9 +15,6 @@
       "path": "../../foundation/modeling/md/tsconfig.json"
     },
     {
-      "path": "../../foundation/modeling/schema/tsconfig.json"
-    },
-    {
       "path": "../../shared/domain/tsconfig.json"
     },
     {

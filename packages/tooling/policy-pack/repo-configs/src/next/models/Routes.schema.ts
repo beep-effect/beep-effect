@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoConfigsId.create("next/models/Routes.schema");
@@ -90,8 +90,7 @@ const RouteHasDefinition = RouteHasType.toTaggedUnion("type")({
 export const RouteHas = S.make<(typeof RouteHasDefinition)["Rebuild"]>(RouteHasDefinition.ast).pipe(
   $I.annoteSchema("RouteHas", {
     description: "Match predicate used by Next.js rewrites, headers, redirects, and middleware.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -346,8 +345,7 @@ export const Redirect = S.Union([RedirectPermanent, RedirectStatusCode]).pipe(
   $I.annoteSchema("Redirect", {
     description: "User-facing Next.js redirect route configuration.",
     documentation: "Models the public Next.js redirect fields and omits internal routing fields such as internal.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**

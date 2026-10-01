@@ -9,11 +9,11 @@ import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { MappedLiteralKit } from "@beep/schema/MappedLiteralKit";
 import { Effect, SchemaGetter, SchemaIssue } from "effect";
+import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 const $I = $ScratchpadId.create("beep-docs/api-reference/CodeSnippet");
 
 /**
@@ -106,7 +106,7 @@ export type CodeSnippetLanguageFromExtension = typeof CodeSnippetLanguageFromExt
  * @category schemas
  * @since 0.0.0
  */
-export const CodeSnippetLanguage = LiteralKit(CodeSnippetLanguageFromExtension.To.Options).pipe(
+export const CodeSnippetLanguage = LiteralKit(A.map(CodeSnippetLanguageFromExtension.Pairs, ([, language]) => language)).pipe(
   $I.annoteSchema("CodeSnippetLanguage", {
     description: "Canonical snippet language names accepted for fenced code examples.",
   })
@@ -175,7 +175,6 @@ export const CodeSnippetLanguageFromInfoString = S.String.pipe(
     decode: SchemaGetter.transformEffect(decodeInfoString),
     encode: SchemaGetter.passthrough({ strict: false }),
   }),
-  SchemaUtils.withCodecStatics(["decodeOption"]),
   $I.annoteSchema("CodeSnippetLanguageFromInfoString", {
     description: "Normalizes a fenced-code info string into a canonical snippet language name.",
   })

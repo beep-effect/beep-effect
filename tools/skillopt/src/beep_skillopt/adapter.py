@@ -18,6 +18,10 @@ from skillopt.envs.base import EnvAdapter
 from skillopt.model.codex_harness import render_skill_md, run_target_exec
 from skillopt.prompts import load_prompt
 
+from beep_skillopt.controls import SCORER_ENVIRONMENT_FAILURE as _SCORER_ENVIRONMENT_FAILURE
+from beep_skillopt.controls import LoopControls
+from beep_skillopt.controls import is_scorer_environment_failure as _is_scorer_environment_failure
+
 
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 _SOURCE_SUFFIXES = {
@@ -257,6 +261,7 @@ class BeepLawAdapter(EnvAdapter):
         max_completion_tokens: int = 16384,
         repo_root: str = "",
         stub_scorer: bool | str = False,
+        skip_exec: bool | str = False,
         codex_exec_sandbox: str = "workspace-write",
     ) -> None:
         self.max_turns = int(max_turns)
@@ -272,6 +277,9 @@ class BeepLawAdapter(EnvAdapter):
         self.stub_scorer = _truthy(stub_scorer) or _truthy(
             os.environ.get("BEEP_SKILLOPT_STUB_SCORER")
         )
+        # Test-only: skip the rollout target entirely (pairs with stub_scorer).
+        self.skip_exec = _truthy(skip_exec) or _truthy(os.environ.get("BEEP_SKILLOPT_SKIP_EXEC"))
+        self.controls: LoopControls | None = None
         self.repo_root = _find_repo_root(repo_root or None)
         self.target_model = ""
         self.reasoning_effort = ""
@@ -307,6 +315,9 @@ class BeepLawAdapter(EnvAdapter):
             cfg.get("codex_exec_sandbox") or self.codex_exec_sandbox or "workspace-write"
         )
         self.dataloader.setup(cfg)
+        self.skip_exec = self.skip_exec or _truthy(cfg.get("skip_exec"))
+        if cfg.get("out_root"):
+            self.controls = LoopControls(cfg, self.repo_root)
 
     def get_dataloader(self):
         return self.dataloader
@@ -336,15 +347,23 @@ class BeepLawAdapter(EnvAdapter):
         **kwargs,
     ) -> list[dict]:
         items: list[dict] = list(env_manager or [])
-        return _run_batch(
-            adapter=self,
-            items=items,
-            out_root=out_dir,
-            skill_content=skill_content,
-            workers=self.workers,
-            task_timeout=self.task_timeout,
-            skip_exec=bool(kwargs.get("skip_exec", False)),
-        )
+        skip_exec = bool(kwargs.get("skip_exec", False)) or self.skip_exec
+
+        def run(batch: list[dict], skill: str, target_dir: str) -> list[dict]:
+            return _run_batch(
+                adapter=self,
+                items=batch,
+                out_root=target_dir,
+                skill_content=skill,
+                workers=self.workers,
+                task_timeout=self.task_timeout,
+                skip_exec=skip_exec,
+            )
+
+        if self.controls is None:
+            return run(items, skill_content, out_dir)
+        # Screen + baseline-noise seam: see beep_skillopt.controls.
+        return self.controls.rollout(items, skill_content, out_dir, run)
 
     def get_task_types(self) -> list[str]:
         return ["beeplaw"]
@@ -379,6 +398,9 @@ class BeepLawAdapter(EnvAdapter):
             timeout=self.score_timeout,
         )
         if proc.returncode != 0:
+            environment_failure = _scorer_environment_failure(proc.stdout)
+            if environment_failure is not None:
+                return environment_failure
             detail = (proc.stderr or proc.stdout or "").strip()
             raise RuntimeError(
                 f"scorer exited {proc.returncode}: {detail[:4000]}"
@@ -390,6 +412,28 @@ class BeepLawAdapter(EnvAdapter):
         if not isinstance(payload, dict) or "score" not in payload:
             raise RuntimeError(f"scorer JSON missing score: {payload!r}")
         return payload
+
+
+
+
+def _scorer_environment_failure(stdout: str) -> dict | None:
+    """Return the scorer report when it says its own lanes could not measure the fixture.
+
+    The scorer prints the report and then exits non-zero when a law lane could not
+    run (a broken tool). That is a fault of the scoring environment, not evidence
+    about the candidate, so the caller keeps the report and tags the item; any
+    tagged item stops the batch in `_raise_on_systemic_failure`, because a 0 for
+    an unmeasured item would let the gate decide on a partial measurement.
+    """
+    try:
+        payload = json.loads((stdout or "").strip())
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    if payload.get("status") != _SCORER_ENVIRONMENT_FAILURE:
+        return None
+    return {**payload, "score": 0.0}
 
 
 def _scorer_model_args(target_model: str, reasoning_effort: str) -> list[str]:
@@ -486,6 +530,13 @@ def _score_stub(scratch_dir: Path, manifest: dict) -> dict:
 
 
 def _score_failure_reason(score_payload: dict) -> str:
+    if score_payload.get("status") == _SCORER_ENVIRONMENT_FAILURE:
+        lanes = [
+            str(lane.get("lane"))
+            for lane in score_payload.get("lanes") or []
+            if isinstance(lane, dict) and lane.get("status") == _SCORER_ENVIRONMENT_FAILURE
+        ]
+        return "scorer environment failure: " + (", ".join(lanes) or "unknown lane")
     score = float(score_payload.get("score", 0.0) or 0.0)
     violations = score_payload.get("violations") or []
     if not violations:
@@ -577,6 +628,7 @@ def _process_one(
         _write_text(pred_dir / "target_system_prompt.txt", system_prompt)
         _write_text(pred_dir / "target_user_prompt.txt", task_text)
 
+        exec_started = time.time()
         if skip_exec:
             response = "[skip_exec] target execution skipped for stub scorer validation."
             raw = response
@@ -593,6 +645,7 @@ def _process_one(
                 # The harness default is Read,Bash, which cannot edit the fixture.
                 allowed_tools=CLAUDE_TARGET_TOOLS,
             )
+        result["exec_seconds"] = round(time.time() - exec_started, 3)
         result["response"] = response
         result["agent_ok"] = True
         result["n_turns"] = 0 if skip_exec else 1
@@ -604,11 +657,13 @@ def _process_one(
         _write_text(pred_dir / "conversation.json", json.dumps(conversation, indent=2))
         return result
 
+    score_started = time.time()
     try:
         if adapter.stub_scorer:
             score_payload = adapter.score_stub(scratch_dir, manifest)
         else:
             score_payload = adapter.score_with_cli(scratch_dir, manifest_path)
+        result["score_seconds"] = round(time.time() - score_started, 3)
         score = max(0.0, min(1.0, float(score_payload.get("score", 0.0) or 0.0)))
         result["soft"] = score
         result["hard"] = 1.0 if score >= 0.999 else 0.0
@@ -624,6 +679,7 @@ def _process_one(
         conversation.append({"role": "system", "content": verification})
         _write_text(pred_dir / "scorer.json", json.dumps(score_payload, indent=2))
     except Exception as exc:  # noqa: BLE001
+        result["score_seconds"] = round(time.time() - score_started, 3)
         result["fail_reason"] = f"scorer error: {type(exc).__name__}: {exc}"
         conversation.append({"role": "system", "content": result["fail_reason"]})
 
@@ -632,6 +688,14 @@ def _process_one(
 
 
 def _raise_on_systemic_failure(results: list[dict]) -> None:
+    unmeasured = [str(row.get("id", "")) for row in results if _is_scorer_environment_failure(row)]
+    if unmeasured:
+        raise RuntimeError(
+            f"Beeplaw scorer could not measure {len(unmeasured)} of {len(results)} items "
+            f"({', '.join(sorted(unmeasured))}): the law-lane report is an environment failure. "
+            "Fix the scoring environment and resume; a partial batch says nothing about the "
+            "candidate, so it never reaches the gate."
+        )
     if not results or not all(row.get("agent_ok") is False for row in results):
         return
     reasons = Counter(str(row.get("fail_reason") or "unknown error") for row in results)
@@ -679,10 +743,13 @@ def _run_batch(
             for line in f:
                 try:
                     row = json.loads(line)
-                    done_ids.add(str(row["id"]))
-                    existing.append(row)
                 except Exception:
-                    pass
+                    continue
+                # An environment failure is not a measurement: re-measure it on resume.
+                if not isinstance(row, dict) or "id" not in row or _is_scorer_environment_failure(row):
+                    continue
+                done_ids.add(str(row["id"]))
+                existing.append(row)
 
     pending = [item for item in items if str(item["id"]) not in done_ids]
     if not pending:

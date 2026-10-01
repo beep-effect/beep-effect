@@ -35,15 +35,16 @@ import {
 } from "../../beep/MemoryApply.ts";
 import { MemoryOperation, OperationLogicalPayload, logicalPayloadDigest } from "../../beep/MemoryOperations.ts";
 import { MemoryItem } from "../../beep/ProductMemory.ts";
+import { Result, flow } from "effect";
 
 const isWriterAdmissionError = S.is(WriterAdmissionError);
 const isMemoryApplyError = S.is(MemoryApplyError);
 const isString = S.is(S.String);
 const isStringArray = S.is(S.Array(S.String));
-const decodeUnknownSyncJsonObject = S.decodeUnknownSync(S.JsonObject);
+const decodeUnknownSyncJsonObject = flow(S.decodeUnknownResult(S.JsonObject), Result.getOrThrow);
 
 const decode = <Sch extends S.ConstraintDecoder<unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
-  S.decodeUnknownSync(schema)(input);
+  Result.getOrThrow(S.decodeUnknownResult(schema)(input));
 
 const decodeFails = <Sch extends S.ConstraintDecoder<unknown>>(schema: Sch, input: unknown): boolean =>
   S.decodeUnknownExit(schema)(input)._tag === "Failure";

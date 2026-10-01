@@ -7,7 +7,6 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -197,8 +196,7 @@ export const JsonLdBlankNodeIdentifier = S.String.check(jsonLdBlankNodeIdentifie
       canonicalizationRequired: true,
       representations: [{ kind: "JSON-LD" }, { kind: "RDF/JS", note: "Bridges to RDF blank-node labels." }],
     }),
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -247,8 +245,7 @@ export const JsonLdNodeIdentifier = S.Union([IRIReference, JsonLdBlankNodeIdenti
       canonicalizationRequired: true,
       representations: [{ kind: "JSON-LD" }, { kind: "RDF/JS", note: "Bridges to named nodes or blank nodes." }],
     }),
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -367,8 +364,7 @@ export class JsonLdLiteralValue extends S.Class<JsonLdLiteralValue>($I`JsonLdLit
 export const JsonLdPropertyValue = S.Union([JsonLdReferenceValue, JsonLdLiteralValue]).pipe(
   $I.annoteSchema("JsonLdPropertyValue", {
     description: "JSON-LD property value union used by bounded node objects.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**

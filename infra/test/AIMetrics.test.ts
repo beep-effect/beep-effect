@@ -127,21 +127,21 @@ describe("@beep/infra AIMetrics", () => {
   it.effect(
     "decodes numeric Pulumi tailnet HTTPS port values",
     Effect.fnUntraced(function* () {
-      const decoded = yield* AIMetricsPulumiConfigValues.decodeEffect({
+      const decoded = yield* S.decodeEffect(AIMetricsPulumiConfigValues)({
         phoenixTailnetHttpsPort: 9446,
       });
 
       expect(decoded.phoenixTailnetHttpsPort).toBe(9446);
       expect(
         (yield* Effect.flip(
-          AIMetricsPulumiConfigValues.decodeEffect({
+          S.decodeUnknownEffect(AIMetricsPulumiConfigValues)({
             phoenixTailnetHttpsPort: "9446",
           })
         ))._tag
       ).toBe("SchemaError");
       expect(
         (yield* Effect.flip(
-          AIMetricsPulumiConfigValues.decodeEffect({
+          S.decodeEffect(AIMetricsPulumiConfigValues)({
             phoenixTailnetHttpsPort: 0,
           })
         ))._tag

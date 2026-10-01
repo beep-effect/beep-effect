@@ -116,9 +116,10 @@ export class FilingDecisionInput extends S.Class<FilingDecisionInput>($I`FilingD
  * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
  * import type { FilingDecisionShape } from "@beep/documents-use-cases/aggregates/Document/server"
  * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
  * const service: FilingDecisionShape = {
- *   decide: () => Effect.succeed(FilingOutcome.decodeUnknownSync({
+ *   decide: () => Effect.succeed(S.decodeUnknownSync(FilingOutcome)({
  *     kind: "filed",
  *     confidence: 1,
  *     rationale: "Matched deterministic taxonomy token for pleadings.",

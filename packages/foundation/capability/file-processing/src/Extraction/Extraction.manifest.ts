@@ -233,10 +233,7 @@ export const SourceProcessingRecord = S.Union([
   S.toTaggedUnion("status"),
   $I.annoteSchema("SourceProcessingRecord", {
     description: "JSONL-safe source processing record emitted by the CLI proof.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    encodeJson: S.encodeUnknownEffect(S.fromJsonString(schema)),
-  }))
+  })
 );
 
 /**
@@ -448,10 +445,7 @@ export const FileProcessingFailureRecord = S.Union([
   S.toTaggedUnion("status"),
   $I.annoteSchema("FileProcessingFailureRecord", {
     description: "JSONL-safe sanitized skipped or failed source record.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    encodeJson: S.encodeUnknownEffect(S.fromJsonString(schema)),
-  }))
+  })
 );
 
 /**

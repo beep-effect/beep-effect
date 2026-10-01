@@ -42,6 +42,7 @@ import { sql } from "drizzle-orm";
 import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import type { AiProviderCliRunner } from "@beep/ai-provider-cli";
 
 const { makePgliteLayer, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
@@ -155,7 +156,7 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
         yield* prepareTable();
         const useCases = yield* ProviderInstanceUseCases;
         yield* Ref.set(runnerRequests, []);
-        const envVars = yield* Domain.EnvVars.decodeEffect({ NO_PROXY: "localhost" });
+        const envVars = yield* S.decodeEffect(Domain.EnvVars)({ NO_PROXY: "localhost" });
         const added = yield* useCases.add(
           AddProviderInstanceCommand.make({
             binaryPath: Domain.BinaryPath.make("/opt/bin/claude"),
@@ -228,7 +229,7 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
 
         expect(A.length(A.dedupe(ids))).toBe(concurrency);
         expect(A.length(A.dedupe(publicIds))).toBe(concurrency);
-        expect(A.every(publicIds, ProviderInstancePublicId.is)).toBe(true);
+        expect(A.every(publicIds, S.is(ProviderInstancePublicId))).toBe(true);
         expect(A.every(publicIds, (publicId) => Str.length(publicId) === generatedPublicIdLength)).toBe(true);
       }),
       pgliteIntegrationTimeoutMillis

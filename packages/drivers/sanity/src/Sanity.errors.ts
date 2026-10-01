@@ -6,7 +6,7 @@
  */
 
 import { $SanityId } from "@beep/identity";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, thunkFalse, thunkUndefined } from "@beep/utils";
 import { pipe, Result } from "effect";
 import * as HttpClientError from "effect/http/HttpClientError";
@@ -61,9 +61,10 @@ const SanityErrorReasonBase = LiteralKit([
  * ```ts
  * import { SanityErrorReason } from "@beep/sanity"
  * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * console.log(O.isSome(SanityErrorReason.decodeOption("transport"))) // true
- * console.log(O.isSome(SanityErrorReason.decodeOption("unexpected"))) // false
+ * console.log(O.isSome(S.decodeUnknownOption(SanityErrorReason)("transport"))) // true
+ * console.log(O.isSome(S.decodeUnknownOption(SanityErrorReason)("unexpected"))) // false
  * ```
  *
  * @category errors
@@ -73,11 +74,7 @@ export const SanityErrorReason = SanityErrorReasonBase.pipe(
   $I.annoteSchema("SanityErrorReason", {
     description: "Redacted technical error reasons emitted by the Sanity API driver.",
   }),
-  SchemaUtils.withLiteralKitStatics(SanityErrorReasonBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(SanityErrorReasonBase)
 );
 
 /**
@@ -187,7 +184,9 @@ export class SanityError extends S.TaggedError<SanityError>($I`SanityError`)(
  */
 export class SanityErrorOptions extends S.Class<SanityErrorOptions>($I`SanityErrorOptions`)(
   {
-    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
+    cause: S.optionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).annotateKey({
       description: "Original unknown cause used to derive a redacted diagnostic label.",
     }),
     status: S.optionalKey(SanityHttpStatus).annotateKey({

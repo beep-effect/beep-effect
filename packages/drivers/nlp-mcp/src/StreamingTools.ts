@@ -15,7 +15,6 @@
 import { $NlpMcpId } from "@beep/identity";
 import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { AiToolError } from "@beep/nlp-processing/Tools";
-import { SchemaUtils } from "@beep/schema";
 import { Tool, Toolkit } from "effect/ai";
 import * as S from "effect/Schema";
 import { DatasetMeta } from "./Streaming/DatasetLoader.ts";
@@ -26,14 +25,6 @@ import { TextEncoding, TextStreamStats } from "./Streaming/TextStream.ts";
 const $I = $NlpMcpId.create("StreamingTools");
 const NonNegativeInteger = S.Int.check(S.isGreaterThanOrEqualTo(0));
 const PositiveInteger = S.Int.check(S.isGreaterThan(0));
-
-const withOutputCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(self: Sch) =>
-  self.pipe(
-    SchemaUtils.withStatics((schema) => ({
-      decodeResult: S.decodeUnknownResult(schema),
-    }))
-  );
-
 const JsonlLineErrorOutput = JsonlLineError.mapFields((fields) => fields).pipe(
   $I.annoteSchema("JsonlLineErrorOutput", {
     description: "A JSONL line parse failure with its zero-based line number.",
@@ -86,8 +77,7 @@ export const LinesOutput = S.Class<{
   .pipe(
     $I.annoteSchema("LinesOutput", {
       description: "Lines returned from a streaming file operation with a truncation flag.",
-    }),
-    withOutputCodecStatics
+    })
   );
 
 /**
@@ -147,8 +137,7 @@ export const FileInfoOutput = S.Class<{
   .pipe(
     $I.annoteSchema("FileInfoOutput", {
       description: "File existence with optional line count and byte size.",
-    }),
-    withOutputCodecStatics
+    })
   );
 
 /**
@@ -194,8 +183,7 @@ export type FileInfoOutput = typeof FileInfoOutput.Type;
 export const TextStatsOutput = TextStreamStats.mapFields((fields) => fields).pipe(
   $I.annoteSchema("TextStatsOutput", {
     description: "Aggregate line-length and byte statistics for a text file.",
-  }),
-  withOutputCodecStatics
+  })
 );
 
 /**
@@ -266,8 +254,7 @@ export const JsonlOutput = S.Class<{
   .pipe(
     $I.annoteSchema("JsonlOutput", {
       description: "JSONL records returned from a streaming operation with optional parse errors.",
-    }),
-    withOutputCodecStatics
+    })
   );
 
 /**
@@ -311,8 +298,7 @@ export type JsonlOutput = typeof JsonlOutput.Type;
 export const JsonlStatsOutput = JsonlStatsModel.mapFields((fields) => fields).pipe(
   $I.annoteSchema("JsonlStatsOutput", {
     description: "Aggregate parse statistics for a JSONL file.",
-  }),
-  withOutputCodecStatics
+  })
 );
 
 /**
@@ -361,8 +347,7 @@ export type JsonlStatsOutput = typeof JsonlStatsOutput.Type;
 export const DatasetMetaOutput = DatasetMeta.mapFields((fields) => fields).pipe(
   $I.annoteSchema("DatasetMetaOutput", {
     description: "Provenance metadata describing a loaded dataset.",
-  }),
-  withOutputCodecStatics
+  })
 );
 
 /**
@@ -428,8 +413,7 @@ export const DataOutput = S.Class<{
   .pipe(
     $I.annoteSchema("DataOutput", {
       description: "A loaded dataset payload paired with its provenance metadata.",
-    }),
-    withOutputCodecStatics
+    })
   );
 
 /**
@@ -482,8 +466,7 @@ export const PipelineOutput = PipelineResult.mapFields((fields) => ({
 })).pipe(
   $I.annoteSchema("PipelineOutput", {
     description: "Result of running a line-transform pipeline over a file.",
-  }),
-  withOutputCodecStatics
+  })
 );
 
 /**

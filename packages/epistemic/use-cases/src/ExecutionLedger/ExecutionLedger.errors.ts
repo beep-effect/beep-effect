@@ -10,13 +10,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-// fallow-ignore-file code-duplication -- consumer-local composition that replaces the retired `@beep/schema` `SchemaUtils.withNoneDefault` (optionalDefect); the upstream-first doctrine (standards/architecture/DECISIONS.md, 2026-09-29) forbids a shared replacement.
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import { LiteralKit } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { optionalDefect } from "../internal/OptionalDefect.ts";
 
 const $I = $EpistemicUseCasesId.create("ExecutionLedger/ExecutionLedger.errors");
 
@@ -62,13 +61,6 @@ export const ExecutionLedgerOperation = LiteralKit([
  * @since 0.0.0
  */
 export type ExecutionLedgerOperation = typeof ExecutionLedgerOperation.Type;
-
-const optionalDefect = (description: string) =>
-  S.OptionFromOptionalKey(Defect({ includeStack: true }))
-    .pipe(S.withConstructorDefault(Effect.succeedNone))
-    .annotateKey({
-      description,
-    });
 
 /**
  * A ledger write the database rejected by constraint name.
@@ -197,8 +189,9 @@ export class ExecutionLedgerUnavailable extends S.TaggedError<ExecutionLedgerUna
  *
  * ```ts
  * import { ExecutionLedgerError, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger"
+ * import * as S from "effect/Schema"
  *
- * console.log(ExecutionLedgerError.is(ExecutionLedgerUnavailable.during("appendDecision", "write failed")))
+ * console.log(S.is(ExecutionLedgerError)(ExecutionLedgerUnavailable.during("appendDecision", "write failed")))
  * ```
  *
  * @category errors
@@ -207,8 +200,7 @@ export class ExecutionLedgerUnavailable extends S.TaggedError<ExecutionLedgerUna
 export const ExecutionLedgerError = S.Union([ExecutionLedgerConstraintViolation, ExecutionLedgerUnavailable]).pipe(
   $I.annoteSchema("ExecutionLedgerError", {
     description: "Every failure an execution ledger write can produce.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

@@ -11,7 +11,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as vercel from "@pulumiverse/vercel";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
-import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
+import { optionalPulumiConfigFields } from "./internal/PulumiConfigSchema.ts";
 import { VercelAuthenticationDeploymentType } from "./Vercel.ts";
 
 const $I = $InfraId.create("Storybook");
@@ -87,7 +87,7 @@ const storybookVercelAuthenticationDeploymentTypeFromPulumiConfig = (
   value === undefined
     ? undefined
     : Result.getOrThrowWith(
-        StorybookVercelAuthenticationDeploymentType.decodeResult(value),
+        S.decodeUnknownResult(StorybookVercelAuthenticationDeploymentType)(value),
         schemaIssueToPulumiConfigError("vercelAuthenticationDeploymentType", value)
       );
 
@@ -119,9 +119,7 @@ export const StorybookPulumiConfigValues = S.Class<StorybookPulumiConfigValuesFi
   $I.annote("StorybookPulumiConfigValues", {
     description: "Optional Pulumi config values before Storybook deploy defaults are applied.",
   })
-)
-  .mapFields(optionalPulumiConfigFields)
-  .pipe(withPulumiConfigDecodeEffect);
+).mapFields(optionalPulumiConfigFields);
 
 /**
  * Runtime type for {@link StorybookPulumiConfigValues}.

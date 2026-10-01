@@ -37,7 +37,7 @@ describe("beep identity", () => {
   );
 
   it("shares every brand step between schemes except the two light accents", () => {
-    const differing = A.filter(ScaleStep.Options, (step) => beep.light.brand[step] !== beep.dark.brand[step]);
+    const differing = A.filter(ScaleStep.literals, (step) => beep.light.brand[step] !== beep.dark.brand[step]);
 
     expect(differing).toStrictEqual(["300", "400"]);
   });
@@ -45,8 +45,8 @@ describe("beep identity", () => {
   it("names five mark paths: two strokes, one frame, two lenses", () => {
     expect(beep.mark.strokes.length).toBe(2);
     expect(beep.mark.glasses.lenses.length).toBe(2);
-    expect(SvgPaint.is("currentColor")).toBe(true);
-    expect(SvgPaint.is("green")).toBe(false);
+    expect(S.is(SvgPaint)("currentColor")).toBe(true);
+    expect(S.is(SvgPaint)("green")).toBe(false);
   });
 });
 
@@ -59,11 +59,11 @@ describe("renderThemeCss", () => {
   });
 
   it("declares every scale step and surface step in both schemes", () => {
-    for (const step of ScaleStep.Options) {
+    for (const step of ScaleStep.literals) {
       expect(css).toContain(`--color-brand-${step}: ${beep.light.brand[step]};`);
       expect(css).toContain(`--color-brand-${step}: ${beep.dark.brand[step]};`);
     }
-    for (const step of SurfaceStep.Options) {
+    for (const step of SurfaceStep.literals) {
       expect(css).toContain(`--color-surface-${step}: ${beep.dark.surface[step]};`);
     }
   });

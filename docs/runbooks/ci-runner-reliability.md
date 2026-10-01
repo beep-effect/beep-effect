@@ -9,12 +9,14 @@ is 1, and the launch/retry queue mappings remain enabled. The earlier emergency
 pause blocked PR job pickup and has been superseded. Follow the current policy
 in AWS cost operations; the 14-worker deployment evidence below is historical.
 
-The current `beep-ec2-heavy` pool uses Spot capacity with
-`price-capacity-optimized` allocation and automatic On-Demand fallback disabled.
-This September 15 containment supersedes the September 9 On-Demand posture.
-Keep the two-instance cap, existing 64 GiB choices and ephemeral one-job-per-VM
-teardown. A budget alert does not enforce a monthly worker-hour limit. Diagnose
-interrupted jobs before retrying; changing the alert does not change running workers.
+The current `beep-ec2-heavy` pool uses Spot capacity with `capacity-optimized`
+allocation across eight 64 GiB instance types and five availability zones, and
+automatic On-Demand fallback disabled. This is the October 1, 2026 pool spread
+(deployment evidence below), on top of the September 15 containment that
+superseded the September 9 On-Demand posture. Keep the two-instance cap, 64 GiB
+instance choices and ephemeral one-job-per-VM teardown. A budget alert does not
+enforce a monthly worker-hour limit. Diagnose interrupted jobs before retrying;
+changing the alert does not change running workers.
 
 ## Admission and capacity
 
@@ -47,6 +49,29 @@ and is unchanged by admission (time-to-certainty ruling 57).
    system or runner diagnostics before attributing an unexplained loss to OOM.
 5. Count only the matching fleet instances. Terminated EC2 and Spot request
    records have limited retention; preserve a sanitized incident receipt early.
+6. Once the Spot request record has expired, prove a reclaim from CloudTrail and
+   the termination watcher. The eviction is a `BidEvictedEvent` with a null
+   `userIdentity` whose `serviceEventDetails.instanceIdSet` names the instance:
+   `aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=BidEvictedEvent`.
+   About two minutes earlier the watcher logs the interruption warning with
+   `instanceState:"running"`:
+   `aws logs filter-log-events --log-group-name /aws/lambda/beep-ci-spot-termination-notification --filter-pattern '"<instance-id>"'`.
+   `aws cloudtrail lookup-events --lookup-attributes AttributeKey=ResourceName,AttributeValue=<instance-id>`
+   then shows the launch and no `TerminateInstances` call from any principal.
+   GitHub fails the job with the "lost communication" annotation 9 to 10
+   minutes after the eviction, its runner-heartbeat timeout.
+
+On 2026-10-01, all 28 "lost communication" heavy jobs between 2026-09-29 20:00Z
+and 2026-10-01 00:00Z matched this pattern: each instance had a
+`BidEvictedEvent`, a watcher warning two minutes before it, and a GitHub failure
+9.0 to 9.9 minutes after it. No principal called `TerminateInstances` on them,
+which rules out scale-down and the reaper. The window had 41 evictions across
+564 launches. `price-capacity-optimized` kept choosing the cheapest pool:
+`r7i.2xlarge` took 279 launches (198 in `us-east-1a`) and 25 evictions (19 in
+`us-east-1a`). The scale-up Lambda also logged 136
+`InsufficientInstanceCapacity` errors on 2026-09-30, while the fleet could use
+only `us-east-1a` and `us-east-1b`. Loss rate tracked job duration: Coverage
+Regression lost 19.7% of executions and Lint Policy 18.0%.
 
 On 2026-09-09, four workflows supplied nine distinct runner-loss examples.
 Every matching Spot request reported capacity reclamation. A broader retained
@@ -115,8 +140,52 @@ runner workload identity.
 
 This fixes Spot-specific interruption and the known cleanup permission defect.
 Normal host, network, application, or timeout failures still require diagnosis.
-The 14-instance cap limits concurrency, not a monthly budget: billing continues
+The instance cap (14 in this September 9 procedure; two in source since
+September 15, raised only by a time-boxed burst) limits concurrency, not a
+monthly budget: billing continues
 for each running VM until its ephemeral teardown completes.
+
+## Deployment evidence — 2026-10-01 (Spot pool spread)
+
+Source: `instance_allocation_strategy` `capacity-optimized`, eight 64 GiB
+x86_64 instance types (`r7a.2xlarge`, `r7i.2xlarge`, `r6i.2xlarge`,
+`r6a.2xlarge`, `m7a.4xlarge`, `m7i.4xlarge`, `m6a.4xlarge`, `m6i.4xlarge`), and
+public subnets C, D and E in `us-east-1c`, `us-east-1d` and `us-east-1f`
+(`10.88.32.0/20`, `10.88.48.0/20`, `10.88.64.0/20`) on the existing public
+route table. Purchase model, the two-worker cap and the empty On-Demand
+failover list are unchanged.
+
+- Applied 2026-10-01 12:03–12:05 UTC from a clean `origin/main` checkout with a
+  saved plan (`pulumi preview --diff --refresh --save-plan`, then
+  `pulumi up --plan`), the operator confirming the reviewed preview first:
+  6 created (three subnets, three route-table associations), 4 updated (AWS
+  provider version, the runner module, the scale-up Lambda environment and a
+  new launch-template version), 210 unchanged, no deletions or replacements.
+- Pulumi's recorded state predated the 2026-09-15 containment, which had been
+  applied as live Lambda edits. The preview therefore also showed On-Demand to
+  Spot, cap 14 to 2, the failover list removal and
+  `scale_up_reserved_concurrent_executions: 1`. Each was compared with the live
+  Lambda configuration and concurrency before the apply and was already live;
+  the apply only brought the state in line. Diff a preview against the live
+  configuration, not against the state alone.
+- A second `pulumi preview --refresh --expect-no-changes` reported 220
+  unchanged resources.
+- The apply resets `RUNNERS_MAXIMUM_COUNT` to the source value. A temporary
+  burst cap that was live during the apply was re-applied afterwards with that
+  burst's own `set-cap.sh`, after the no-drift check, and its restore guard was
+  left in place.
+- Live check after the apply: the scale-up Lambda environment carries
+  `capacity-optimized`, `spot`, all eight types and five subnet ids; all five
+  subnets are `available` and route `0.0.0.0/0` to the internet gateway.
+- Job execution on the new pools: in the first 25 minutes after the apply, 25
+  workers launched in `us-east-1a`, `us-east-1c` and `us-east-1d` as
+  `m7i.4xlarge` (14), `r6a.2xlarge` (6) and `m6a.4xlarge` (5), all Spot. Of the
+  17 heavy jobs that finished on them, 16 succeeded and one was cancelled by a
+  newer push; none was lost to an eviction.
+- Open: repeat the reclaim count from "Attribute a runner loss" over the
+  following days and compare with the baseline of 41 evictions per 564
+  launches before deciding whether to shard the Coverage Regression and Lint
+  Policy lanes.
 
 ## Deployment evidence — 2026-09-09
 

@@ -45,7 +45,7 @@ const NullableInputDigest = S.OptionFromNullOr(S.String).pipe(
  * ```ts
  * import { YeetLaneStatus } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetLaneStatus.Options)
+ * console.log(YeetLaneStatus.literals)
  * ```
  *
  * @category models
@@ -205,23 +205,24 @@ export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
  * **Details**
  *
  * Only hard criteria appear here, in the order the protocol names a blocker.
- * `threads-resolved` covers review threads alone: live outstanding threads and
- * closeout issues a thread raised. `closeout-gates-passed` covers every other
- * gate the last closeout run was asked to enforce (the Greptile score and
- * issue-count gates today), so a bot gate is never reported as an open thread.
- * It comes last because it is the one criterion whose threshold is an
- * operator's closeout flag and whose unmet state usually means a review bot has
- * not posted yet; every structural blocker ahead of it is named first. The
- * Greptile score itself is a displayed value rather than a criterion, so it is
- * carried on {@link YeetMergeReadyCriteria} for the operator to read and can
- * never be the value of {@link YeetMergeReady.failing}.
+ * `threads-resolved` covers review threads from every reviewer, human or bot:
+ * live outstanding threads and closeout issues a thread raised. A threaded
+ * comment is the one review signal every reviewer produces the same way, so it
+ * is the only review signal that gates.
+ *
+ * No review bot's own verdict is a criterion. Which bots review a pull request
+ * rotates with the operator's available quota, so a bot score, and any closeout
+ * gate an operator asked for on one (`--require-greptile-*`), is advisory: a
+ * bot that has not posted must never hold a merge. The Greptile score is carried
+ * on {@link YeetMergeReadyCriteria} for display and can never be the value of
+ * {@link YeetMergeReady.failing}.
  *
  * **Example** (List the merge-ready criteria)
  *
  * ```ts
  * import { YeetMergeReadyCriterion } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetMergeReadyCriterion.Options)
+ * console.log(YeetMergeReadyCriterion.literals)
  * ```
  *
  * @category models
@@ -236,7 +237,6 @@ export const YeetMergeReadyCriterion = LiteralKit([
   "mergeable",
   "merge-state-acceptable",
   "review-decision-acceptable",
-  "closeout-gates-passed",
 ]).pipe(
   $I.annoteSchema("YeetMergeReadyCriterion", {
     title: "Yeet Merge Ready Criterion",
@@ -270,7 +270,6 @@ export type YeetMergeReadyCriterion = typeof YeetMergeReadyCriterion.Type;
  *   mergeable: true,
  *   mergeStateAcceptable: true,
  *   reviewDecisionAcceptable: true,
- *   closeoutGatesPassed: true,
  *   greptileScore: O.some("5/5"),
  * })
  * console.log(criteria.requiredChecksGreen)
@@ -289,7 +288,6 @@ export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`Y
     mergeable: S.Boolean,
     mergeStateAcceptable: S.Boolean,
     reviewDecisionAcceptable: S.Boolean,
-    closeoutGatesPassed: S.Boolean,
     greptileScore: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetMergeReadyCriteria", {
@@ -307,8 +305,7 @@ export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`Y
  *
  * const criteria = YeetMergeReadyCriteria.make({
  *   prOpen: true, notDraft: true, closeoutRun: true, requiredChecksGreen: false,
- *   threadsResolved: true, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true,
- *   closeoutGatesPassed: true
+ *   threadsResolved: true, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true
  * })
  * console.log(mergeReadyCriterionHolds(criteria, "required-checks-green")) // false
  * ```
@@ -332,7 +329,6 @@ export const mergeReadyCriterionHolds: {
     mergeable: () => criteria.mergeable,
     "merge-state-acceptable": () => criteria.mergeStateAcceptable,
     "review-decision-acceptable": () => criteria.reviewDecisionAcceptable,
-    "closeout-gates-passed": () => criteria.closeoutGatesPassed,
   })
 );
 
@@ -356,7 +352,7 @@ const YeetMergeReadyCoherenceCheck = S.makeFilter(
     O.match(value.failing, {
       onNone: () =>
         value.ready &&
-        A.every(YeetMergeReadyCriterion.Options, (criterion) => mergeReadyCriterionHolds(value.criteria, criterion))
+        A.every(YeetMergeReadyCriterion.literals, (criterion) => mergeReadyCriterionHolds(value.criteria, criterion))
           ? undefined
           : {
               path: ["failing"],
@@ -378,9 +374,18 @@ const YeetMergeReadyCoherenceCheck = S.makeFilter(
   }
 );
 
+// Blocker names older verdict artifacts may carry: `checks-green` was renamed to
+// `required-checks-green`, and `closeout-gates-passed` was retired when review
+// bot gates became advisory.
+const LegacyMergeReadyCriterion = LiteralKit(["checks-green", "closeout-gates-passed"]).pipe(
+  $I.annoteSchema("LegacyMergeReadyCriterion", {
+    description: "A merge-ready blocker name written by an older verdict artifact.",
+  })
+);
+
 const YeetMergeReadyEncoded = S.Struct({
   ready: S.Boolean,
-  failing: S.Union([YeetMergeReadyCriterion, S.Literal("checks-green")]).pipe(S.optionalKey),
+  failing: S.Union([YeetMergeReadyCriterion, LegacyMergeReadyCriterion]).pipe(S.optionalKey),
   criteria: S.Struct({
     prOpen: S.optionalKey(S.Boolean),
     notDraft: S.optionalKey(S.Boolean),
@@ -391,6 +396,7 @@ const YeetMergeReadyEncoded = S.Struct({
     mergeable: S.optionalKey(S.Boolean),
     mergeStateAcceptable: S.optionalKey(S.Boolean),
     reviewDecisionAcceptable: S.optionalKey(S.Boolean),
+    // Written while `closeout-gates-passed` was a criterion; read and dropped.
     closeoutGatesPassed: S.optionalKey(S.Boolean),
     greptileScore: S.optionalKey(S.String),
   }),
@@ -411,10 +417,6 @@ const normalizeLegacyMergeReadyCriteria = (value: EncodedMergeReady) => ({
   mergeable: value.criteria.mergeable ?? false,
   mergeStateAcceptable: value.criteria.mergeStateAcceptable ?? false,
   reviewDecisionAcceptable: value.criteria.reviewDecisionAcceptable ?? false,
-  // Records written before the split folded every closeout issue into
-  // `threadsResolved`, so a resolved record there had no unmet closeout gate
-  // and an unresolved one cannot rule one out: the old value is exact.
-  closeoutGatesPassed: value.criteria.closeoutGatesPassed ?? value.criteria.threadsResolved,
   ...O.getSomesStruct({ greptileScore: O.fromUndefinedOr(value.criteria.greptileScore) }),
 });
 
@@ -427,11 +429,21 @@ const legacyMergeReadyCriteriaComplete = (value: EncodedMergeReady): boolean =>
   value.criteria.mergeStateAcceptable !== undefined &&
   value.criteria.reviewDecisionAcceptable !== undefined;
 
+const currentMergeReadyCriterion = (
+  criterion: YeetMergeReadyCriterion | typeof LegacyMergeReadyCriterion.Type
+): O.Option<YeetMergeReadyCriterion> =>
+  S.is(YeetMergeReadyCriterion)(criterion)
+    ? O.some(criterion)
+    : LegacyMergeReadyCriterion.$match(criterion, {
+        "checks-green": () => O.some(YeetMergeReadyCriterion.Enum["required-checks-green"]),
+        "closeout-gates-passed": O.none,
+      });
+
 const normalizeLegacyYeetMergeReady = (value: typeof YeetMergeReadyEncoded.Type): typeof YeetMergeReady.Encoded => {
   const criteria = normalizeLegacyMergeReadyCriteria(value);
   const complete = legacyMergeReadyCriteriaComplete(value);
   const firstFailing = A.findFirst(
-    YeetMergeReadyCriterion.Options,
+    YeetMergeReadyCriterion.literals,
     (criterion) =>
       !mergeReadyCriterionHolds(
         YeetMergeReadyCriteria.make({
@@ -442,12 +454,13 @@ const normalizeLegacyYeetMergeReady = (value: typeof YeetMergeReadyEncoded.Type)
       )
   );
   const encodedFailing = O.fromUndefinedOr(value.failing);
-  const currentFailing = O.map(encodedFailing, (criterion) =>
-    criterion === "checks-green" ? YeetMergeReadyCriterion.Enum["required-checks-green"] : criterion
-  );
+  const currentFailing = O.flatMap(encodedFailing, currentMergeReadyCriterion);
+  // A record blocked only by the retired criterion names no current blocker,
+  // so its readiness is re-read from the hard criteria it recorded.
+  const retiredBlocker = O.isSome(encodedFailing) && O.isNone(currentFailing);
   return {
-    ready: complete ? value.ready : false,
-    ...O.getSomesStruct({ failing: complete ? currentFailing : firstFailing }),
+    ready: complete && (retiredBlocker ? O.isNone(firstFailing) : value.ready),
+    ...O.getSomesStruct({ failing: complete && !retiredBlocker ? currentFailing : firstFailing }),
     criteria,
   };
 };
@@ -482,8 +495,7 @@ const normalizeLegacyYeetMergeReady = (value: typeof YeetMergeReadyEncoded.Type)
  *   failing: O.some("threads-resolved"),
  *   criteria: YeetMergeReadyCriteria.make({
  *     prOpen: true, notDraft: true, closeoutRun: true, requiredChecksGreen: true,
- *     threadsResolved: false, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true,
- *     closeoutGatesPassed: true
+ *     threadsResolved: false, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true
  *   }),
  * })
  * console.log(mergeReady.ready)
@@ -513,9 +525,10 @@ export class YeetMergeReady extends S.Class<YeetMergeReady>($I`YeetMergeReady`)(
  * This codec accepts the legacy encoded shape, supplies `closeoutRun: false`,
  * and downgrades a formerly ready record to `failing: "closeout-run"` before
  * the coherence check runs, so old readiness is safely blocked while the
- * artifact's outcome and repair guidance stay readable. Records written before
- * `closeoutGatesPassed` existed take it from their `threadsResolved`, which
- * then counted every closeout issue, so their verdict and blocker are unchanged.
+ * artifact's outcome and repair guidance stay readable. A `checks-green`
+ * blocker reads as `required-checks-green`. The retired `closeout-gates-passed`
+ * criterion is dropped: a record it blocked is re-read against the hard
+ * criteria it recorded, since an unmet review-bot gate no longer holds a merge.
  * Construction stays on {@link YeetMergeReady} — this codec exists only at
  * decode boundaries.
  *

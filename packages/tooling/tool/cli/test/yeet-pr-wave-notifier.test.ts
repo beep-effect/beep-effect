@@ -35,7 +35,6 @@ import {
   YeetWatchCheck,
   yeetInboxRowId,
 } from "@beep/repo-cli/test/Yeet";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
@@ -54,7 +53,7 @@ const at = "2026-09-28T00:00:00.000Z";
 const head = "abc1234def5678";
 const prUrl = "https://github.com/beep/repo/pull/7";
 const repository = PrRepository.make({ host: "github.com", owner: "beep", name: "repo" });
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const LedgerRow = S.Struct({
   stage: S.String,
   transport: S.String,
@@ -600,7 +599,6 @@ const snapshot = (root: string, checks: ReadonlyArray<YeetWatchCheck>, state = "
     mergeable: true,
     mergeStateAcceptable: true,
     reviewDecisionAcceptable: true,
-    closeoutGatesPassed: true,
     greptileScore: O.none(),
   });
   return YeetStatusSnapshot.make({

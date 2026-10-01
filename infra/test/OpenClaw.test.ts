@@ -29,7 +29,6 @@ import {
   renderOpenClawUnit,
 } from "@beep/infra";
 import { OpenclawSecretReference, OpenclawSha256Hex } from "@beep/openclaw";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
@@ -44,6 +43,8 @@ import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+
+const decodeJsonResult = S.decodeResult(S.fromJsonString(S.Unknown));
 
 const decodeOpenClawHostedProviderConfigResult = S.decodeResult(OpenClawHostedProviderConfig);
 const encodeUnknownOpenClawBackupConfig = S.encodeUnknownEffect(OpenClawBackupConfig);
@@ -134,7 +135,7 @@ const runCrypto = <A, E>(effect: Effect.Effect<A, E, Crypto.Crypto>) =>
 const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
 const defaultGeneration = runCrypto(makeOpenClawGeneration(defaultArgs));
 const parseDocument = (json: string): { readonly [key: string]: unknown } =>
-  O.getOrThrow(pipe(Result.getOrThrow(UnknownFromJsonString.decodeResult(json)), O.liftPredicate(P.isObject)));
+  O.getOrThrow(pipe(Result.getOrThrow(decodeJsonResult(json)), O.liftPredicate(P.isObject)));
 
 /**
  * Unwrap a rendered `/bin/bash --noprofile --norc -p -c '<body>'` command back into the body the
@@ -329,28 +330,30 @@ describe("@beep/infra OpenClaw", () => {
   it.effect(
     "decodes typed Pulumi config values and rejects wrong types",
     Effect.fnUntraced(function* () {
-      const decoded = yield* OpenClawPulumiConfigValues.decodeEffect({
+      const decoded = yield* S.decodeEffect(OpenClawPulumiConfigValues)({
         expectedUid: 1000,
         gatewayPort: 19_040,
       });
 
       expect(decoded.expectedUid).toBe(1000);
       expect(decoded.gatewayPort).toBe(19_040);
-      expect((yield* Effect.flip(OpenClawPulumiConfigValues.decodeEffect({ gatewayPort: "19040" })))._tag).toBe(
-        "SchemaError"
-      );
-      expect((yield* Effect.flip(OpenClawPulumiConfigValues.decodeEffect({ gatewayPort: 80 })))._tag).toBe(
+      expect(
+        (yield* Effect.flip(S.decodeUnknownEffect(OpenClawPulumiConfigValues)({ gatewayPort: "19040" })))._tag
+      ).toBe("SchemaError");
+      expect((yield* Effect.flip(S.decodeEffect(OpenClawPulumiConfigValues)({ gatewayPort: 80 })))._tag).toBe(
         "SchemaError"
       );
       expect(
-        (yield* Effect.flip(OpenClawPulumiConfigValues.decodeEffect({ expectedMachineId: "not-a-machine-id" })))._tag
+        (yield* Effect.flip(S.decodeEffect(OpenClawPulumiConfigValues)({ expectedMachineId: "not-a-machine-id" })))._tag
       ).toBe("SchemaError");
       expect(
         (yield* Effect.flip(
-          OpenClawPulumiConfigValues.decodeEffect({ localProviderBaseUrl: "https://remote.example.test/v1" })
+          S.decodeEffect(OpenClawPulumiConfigValues)({ localProviderBaseUrl: "https://remote.example.test/v1" })
         ))._tag
       ).toBe("SchemaError");
-      expect(yield* OpenClawPulumiConfigValues.decodeEffect({ configWrites: true })).not.toHaveProperty("configWrites");
+      expect(yield* S.decodeUnknownEffect(OpenClawPulumiConfigValues)({ configWrites: true })).not.toHaveProperty(
+        "configWrites"
+      );
     })
   );
 

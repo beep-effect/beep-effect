@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, flow, Result } from "effect";
+import * as S from "effect/Schema";
 import { headers } from "next/headers";
 import { connection } from "next/server";
 import { ContactSubmissionStatus } from "@/contact";
@@ -15,13 +15,16 @@ import { getOipSiteContent, makeJsonLdGraph, oipTwitterHandle } from "@/content"
 import { OipHomePage } from "../components/OipHomePage";
 import type { Metadata } from "next";
 
+const decodeContactSubmissionStatusOption = S.decodeUnknownOption(ContactSubmissionStatus);
+
+const encodeUnknownJsonSync = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
+
 type HomeProps = {
   readonly searchParams?: Promise<Record<string, ReadonlyArray<string> | string | undefined>>;
 };
 
 // TODO(effect-native-migration): model schema
-const safeJsonScript = (value: unknown) =>
-  Str.replaceAll("<", "\\u003c")(UnknownFromJsonString.encodeUnknownSync(value));
+const safeJsonScript = (value: unknown) => Str.replaceAll("<", "\\u003c")(encodeUnknownJsonSync(value));
 
 /**
  * Allows the search-param aware home route to block during the first render.
@@ -118,7 +121,7 @@ export default function Home({ searchParams }: HomeProps) {
     .then(([params, requestHeaders, content]) => {
       const nonce = requestHeaders.get("x-nonce") ?? undefined;
       const contactStatusValue = A.isArray(params?.contact) ? params.contact[0] : params?.contact;
-      const contactStatus = O.getOrUndefined(ContactSubmissionStatus.decodeOption(contactStatusValue));
+      const contactStatus = O.getOrUndefined(decodeContactSubmissionStatusOption(contactStatusValue));
       const initialContactSubmittedAt = Effect.runSync(Clock.currentTimeMillis);
 
       return (

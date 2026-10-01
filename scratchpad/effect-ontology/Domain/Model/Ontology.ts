@@ -8,7 +8,6 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf/Iri";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { PrimaryKey, Result, Effect } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -389,8 +388,7 @@ class ClassDefinitionModel extends S.Class<ClassDefinitionModel>($I`ClassDefinit
 export const ClassDefinition = ClassDefinitionModel.pipe(
   $I.annoteSchema("ClassDefinition", {
     description: "OWL or RDFS class metadata normalized for lookup and semantic search.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -592,7 +590,7 @@ export type PropertyDefinition = typeof PropertyDefinition.Type;
  * @since 0.0.0
  */
 export const partitionPropertiesByRangeType = (properties: ReadonlyArray<PropertyDefinition>) => {
-  const [objectProperties, datatypeProperties] = A.partition(properties, (property) =>
+  const [datatypeProperties, objectProperties] = A.partition(properties, (property) =>
     Bool.match(property.isDatatypeProperty, {
       onFalse: () => Result.fail(property),
       onTrue: () => Result.succeed(property),
@@ -638,12 +636,12 @@ const childrenFor: {
     pipe(
       R.toEntries(hierarchy),
       A.filter(([, parents]) => A.contains(parents, parent)),
-      A.map(([child]) => IRI.decodeUnknownSync(child))
+      A.map(([child]) => Result.getOrThrow(S.decodeResult(IRI)(child)))
     )
 );
 
 const IriRecordKey = S.String.check(
-  S.makeFilter(IRI.is, {
+  S.makeFilter(S.is(IRI), {
     identifier: $I`IriRecordKeyCheck`,
     title: "IRI Record Key",
     description: "A string record key accepted by the canonical RDF IRI schema.",
@@ -984,7 +982,7 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * @returns Applicable property definitions in ontology order.
    */
   getPropertiesForClass(classIri: string): ReadonlyArray<PropertyDefinition> {
-    const canonicalIri = O.filter(IRI.decodeUnknownOption(classIri), IRI.is);
+    const canonicalIri = O.filter(S.decodeOption(IRI)(classIri), S.is(IRI));
     const superClasses = pipe(
       canonicalIri,
       O.map((iri) => this.getAllSuperClasses(iri)),

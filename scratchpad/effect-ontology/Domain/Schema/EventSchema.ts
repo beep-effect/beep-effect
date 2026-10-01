@@ -14,7 +14,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NamedNode } from "@beep/rdf";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Tuple, Effect } from "effect";
 import * as S from "effect/Schema";
 import type * as Event from "effect/eventlog/Event";
@@ -309,7 +309,6 @@ const OntologyEventEntryDefinition: S.toTaggedUnion<"event", OntologyEventEntryM
  * @since 0.0.0
  */
 export const OntologyEventEntry = OntologyEventEntryDefinition.pipe(
-  SchemaUtils.withStatics((schema) => ({ decodeUnknownEffect: S.decodeUnknownEffect(schema) })),
   $I.annoteSchema("OntologyEventEntry", {
     description: "Schema-validated journal entry whose event tag determines its canonical payload.",
   })

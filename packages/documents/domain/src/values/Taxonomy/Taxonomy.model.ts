@@ -7,7 +7,7 @@
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
 import { IRIReference } from "@beep/rdf";
-import { LiteralKit, UnknownRecord } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath";
 import * as S from "effect/Schema";
 
@@ -239,7 +239,7 @@ export class LegalDocumentTaxonomy extends S.Class<LegalDocumentTaxonomy>($I`Leg
     concepts: S.Array(LegalDocumentTaxonomyConcept).annotateKey({
       description: "Ordered legal document taxonomy concepts.",
     }),
-    jsonLdContext: UnknownRecord.annotateKey({
+    jsonLdContext: S.Record(S.String, S.Unknown).annotateKey({
       description: "JSON-LD context used to publish the taxonomy seed.",
     }),
     schemaVersion: S.NonEmptyString.annotateKey({

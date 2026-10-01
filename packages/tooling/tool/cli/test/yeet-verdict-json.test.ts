@@ -105,7 +105,6 @@ describe("YeetVerdictJson", () => {
               mergeable: true,
               mergeStateAcceptable: true,
               reviewDecisionAcceptable: true,
-              closeoutGatesPassed: true,
               greptileScore: O.some("5/5"),
             }),
           })
@@ -129,7 +128,7 @@ describe("YeetVerdictJson", () => {
   );
 
   it("keeps the Greptile score out of the hard criterion domain", () => {
-    expect(YeetMergeReadyCriterion.Options).toEqual([
+    expect(YeetMergeReadyCriterion.literals).toEqual([
       "pr-open",
       "not-draft",
       "closeout-run",
@@ -138,7 +137,6 @@ describe("YeetVerdictJson", () => {
       "mergeable",
       "merge-state-acceptable",
       "review-decision-acceptable",
-      "closeout-gates-passed",
     ]);
   });
 });

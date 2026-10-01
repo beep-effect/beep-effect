@@ -19,7 +19,6 @@ import {
   RenderedOpenclawConfig,
   renderOpenclawConfig,
 } from "@beep/openclaw/OpenclawRender";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
@@ -40,18 +39,22 @@ import {
   goldenIntentContentHash,
 } from "./fixtures/golden-intent.expected.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+const decodeJsonResult = S.decodeResult(UnknownJson);
+const encodeJsonResult = S.encodeResult(UnknownJson);
+
 const encodeOpenclawSchemaPlaceholderFindingResult = S.encodeResult(OpenclawSchemaPlaceholderFinding);
 const isRenderedOpenclawConfig = S.is(RenderedOpenclawConfig);
 
 const IntentArbitrary = Arbitrary.schema(OpenclawDeploymentIntent);
 
-const decodeJsonDocument = (json: string): unknown => Result.getOrThrow(UnknownFromJsonString.decodeResult(json));
+const decodeJsonDocument = (json: string): unknown => Result.getOrThrow(decodeJsonResult(json));
 
 const parseDocument = (json: string): { readonly [key: string]: unknown } =>
   O.getOrThrow(pipe(decodeJsonDocument(json), O.liftPredicate(P.isObject)));
 
 const withoutSecretsJson = (json: string): string =>
-  Result.getOrThrow(UnknownFromJsonString.encodeResult(R.remove(parseDocument(json), "secrets")));
+  Result.getOrThrow(encodeJsonResult(R.remove(parseDocument(json), "secrets")));
 
 const secretReferenceCount = (json: string): number => Str.split(json, "op://").length - 1;
 
@@ -365,7 +368,7 @@ it.layer(Layer.succeed(Crypto.Crypto, NodeCrypto.make))("@beep/openclaw render a
 
         expect(second.canonicalJson).toBe(first.canonicalJson);
         expect(second.contentHash).toBe(first.contentHash);
-        pipe(UnknownFromJsonString.decodeResult(first.canonicalJson), Result.isSuccess, assertTrue);
+        pipe(decodeJsonResult(first.canonicalJson), Result.isSuccess, assertTrue);
       }),
     { arbitrary: fcRuns(25) }
   );

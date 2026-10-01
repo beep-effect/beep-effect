@@ -154,7 +154,7 @@ const hostedFailureLayer = (reason: "model-generation-failed" | "model-output-pa
 
 describe("C0 hosted extractor", () => {
   it("keeps the frozen target vocabulary separate from the legacy-preview relation contract", () => {
-    expect(FrozenRelationPredicate.Options).toEqual([
+    expect(FrozenRelationPredicate.literals).toEqual([
       "affiliated with",
       "authored by",
       "located in",

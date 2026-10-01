@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Effect, FileSystem, pipe } from "effect";
 import * as A from "effect/Array";
+import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -24,7 +25,7 @@ const $I = $RepoCliId.create("internal/repo-run/ProcessIdentity");
  * ```ts
  * import { ProcessIdentitySource } from "@beep/repo-cli/test/RepoRun"
  *
- * console.log(ProcessIdentitySource.Options) // ["proc", "ps", "win"]
+ * console.log(ProcessIdentitySource.literals) // ["proc", "ps", "win"]
  * ```
  *
  * @category models
@@ -99,8 +100,8 @@ interface ProcessIdentityOwner {
 }
 
 const processIdentitySource = (identity: string): ProcessIdentitySource =>
-  A.findFirst(ProcessIdentitySource.Options, (source) => Str.startsWith(`${source}:`)(identity)).pipe(
-    O.getOrElse(ProcessIdentitySource.thunk.proc)
+  A.findFirst(ProcessIdentitySource.literals, (source) => Str.startsWith(`${source}:`)(identity)).pipe(
+    O.getOrElse(F.constant(ProcessIdentitySource.Enum.proc))
   );
 
 const normalizeRecordedProcessIdentity = (identity: string): string =>

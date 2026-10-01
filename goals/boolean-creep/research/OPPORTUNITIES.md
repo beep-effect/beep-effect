@@ -1925,3 +1925,74 @@ candidate's exact-source binding. Checking header provenance against each
 design's latest evidence section during install review would have prevented
 this extra refresh. Preserve the prior bytes and refresh the binding; no
 semantic or acceptance credit follows from this metadata repair.
+
+## 2026-09-29: R46 scripted probe changed a repeated-character payload
+
+The single admitted `probe_runner.py execute` attempt exited 3 in run A with
+`Refusal: script-sequence-mismatch`. All 30 tool calls occurred in the expected
+order. The first sequence discrepancy was P07 `write.content`: the expected
+2,692-character synthetic JSON payload became 4,452 characters. The runner
+rejected the run before per-case evaluation; five remaining runs were not
+executed. No census or probe acceptance credit follows.
+
+Evidence remains under
+`~/.cache/beep/boolean-creep/refresh-2026-09-28/r46-safe-probe-controller/results/`,
+including `receipt.json`, `A/verdict.json` and the original stream. Independent
+diagnosis is checking the remaining evidence and a successor design. A payload
+fixture that tests the required byte boundary without asking a model to copy
+thousands of repeated characters exactly would have prevented this particular
+failure. Preserve exact tool ordering, payload and escaping coverage, confinement
+checks, and the failed attempt when reviewing a correction.
+
+## 2026-10-01: continuation drift after the workstation interruption
+
+The previous monitor terminated before closeout. Its proof-job inbox row was
+observed on continuation, and a new hosted monitor now follows PR #1339.
+Main changed 746 candidate source paths while the R47 correction awaited
+review, invalidating current-source admission from the saved preparation.
+Preserve the candidate for correction review and refresh the full input set.
+A continuation preflight that checks job termination, source identity and
+review threads together prevents stale runner evidence from becoming launch
+permission. PR #1339 also exposed a stale separate-closeout-PR instruction in
+SPEC P5; the corrected text follows the one-successor-PR decision.
+
+## 2026-10-01: source anchors outlived a retained owner
+
+The LiteralKit keyed-API migration shortened its schema file while preserving
+two disqualified PropertyDescriptor owners. R49 preparation caught their old
+line numbers only after a full source refresh. A packet validator that compares
+stored symbol names with Graft spans after each main merge would distinguish a
+simple re-anchor from a removed owner before rebuilding every prompt.
+
+## 2026-10-01: main drift invalidated reviewed admission preparation
+
+R49 reached independent input and runtime approval, including two complete
+105-case verifier runs, but main advanced before any census stage materialized.
+The fresh source partition then exposed 76 inventory-anchor conflicts and
+required 72 reviewed row edits. A source-refresh step that binds owners to
+symbols or syntax nodes before preparing the runtime would have isolated this
+line drift earlier and avoided reviewing a launch package that could not be
+used. The first R50 patch also selected `bundleOut` rather than the
+`PracticeKgOptions` declaration; hosted review caught that one-line owner
+citation before launch. The R49 artifacts remain historical; no provider call
+was spent.
+
+## 2026-10-01: hosted lint found an inherited malformed code span
+
+The exact-head Heavy / Lint Policy job found an unterminated TSDoc code span in
+`CheckCensusGate.ts` that arrived from main and was outside the packet diff.
+Keeping the command in one code span fixes the documentation without changing
+runtime behavior. A changed-source TSDoc syntax check after each main merge
+would have caught the inherited defect before the heavy matrix and before R50
+finished an exact-source admission review.
+
+## 2026-10-01: test-map validation accepted suite headings as tests
+
+The R52 input builder treated `describe(` as a test-call opener, so seven
+design locators one line above their named tests passed its current-map check.
+Independent review found the false positives while adjudicating 1,032 map
+bullets and supplied the exact successor lines. A second review also showed
+that the repaired matcher still accepted `it.layer`, `test.describe` and
+prefix-only title matches, although no frozen input depended on those gaps.
+A syntax-aware title owner check, with negative cases for suite/layer openers
+and closing-quote equality, would have prevented both review cycles.

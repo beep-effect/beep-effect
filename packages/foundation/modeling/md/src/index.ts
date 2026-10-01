@@ -29,7 +29,7 @@ export * from "./Md.behavior.ts";
  * ```ts import.meta.vitest name="Inspect CommonMark conformance"
  * import { inspectMarkdownDocumentLosslessly, MarkdownConformanceProfile, Md } from "@beep/md"
  *
- * const report = inspectMarkdownDocumentLosslessly(Md.make([Md.p("Hello")]), MarkdownConformanceProfile.Enum.CommonMark)
+ * const report = inspectMarkdownDocumentLosslessly(Md.make([Md.p("Hello")]), MarkdownConformanceProfile.Enum["commonmark-0.31.2"])
  * report.issues.length // => 0
  * ```
  *

@@ -99,7 +99,7 @@ const HOSTED_TARGETS: A.NonEmptyReadonlyArray<ExtractionTarget> = [
     name: "relation",
     attributes: ["predicate", "subject", "object"],
     description: O.some(
-      `A relation explicitly stated in the source. Copy one verbatim contiguous source span as the extraction text; never paraphrase or synthesize it. Copy subject and object as exact entity surface strings from that span. Predicate must be exactly one of: ${A.join(FrozenRelationPredicate.Options, ", ")}.`
+      `A relation explicitly stated in the source. Copy one verbatim contiguous source span as the extraction text; never paraphrase or synthesize it. Copy subject and object as exact entity surface strings from that span. Predicate must be exactly one of: ${A.join(FrozenRelationPredicate.literals, ", ")}.`
     ),
   }),
 ];
@@ -328,7 +328,7 @@ const hostedCacheKey = Effect.fn("Extractor.hostedCacheKey")(function* (
   model: ModelIdentity
 ) {
   const prompt = yield* buildPrompt(request);
-  const inputDigest = yield* Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(prompt));
+  const inputDigest = yield* S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(prompt));
   return yield* contentDigest(ProviderCacheKey)(
     ProviderCacheKey.make({ inputDigest, model, requestKind: "generate-text", schemaVersion: "provider-cache/v1" })
   );

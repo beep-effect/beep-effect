@@ -265,7 +265,7 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
                     targetPath: O.none(),
                   })
                 ),
-                Effect.flatMap(() => createLink)
+                Effect.andThen(createLink)
               ),
       }
     );
@@ -351,7 +351,7 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
       [
         makeDirectory(context.sharedHomePath),
         makeDirectory(context.effectiveHomePath),
-        ...A.map(AiProviderCliCodexSharedDirectory.Options, (directory) =>
+        ...A.map(AiProviderCliCodexSharedDirectory.literals, (directory) =>
           makeDirectory(path.join(context.sharedHomePath, directory))
         ),
       ],
@@ -373,7 +373,7 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
 
     const linkedEntries = A.dedupe(
       A.appendAll(
-        AiProviderCliCodexSharedDirectory.Options,
+        AiProviderCliCodexSharedDirectory.literals,
         A.filter(sharedEntryNames, (entryName) => !isPrivateEntry(entryName) && !isLocalEntry(entryName))
       )
     );
@@ -381,7 +381,7 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
     // Stale private symlinks other than auth.json are silently removed;
     // auth.json is validated below and refused when it is a symlink.
     yield* Effect.forEach(
-      AiProviderCliCodexPrivateEntry.omitOptions(["auth.json"]),
+      AiProviderCliCodexPrivateEntry.pick(["models_cache.json"]).literals,
       (entryName) => removePrivateSymlink({ context, entryName }),
       { discard: true }
     );

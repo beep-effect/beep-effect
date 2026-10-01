@@ -109,7 +109,7 @@ export const compareAgentConventionTrials: {
   (candidate: AgentConventionTrial): (baseline: AgentConventionTrial) => AgentConventionComparison;
 } = dual(2, (baseline: AgentConventionTrial, candidate: AgentConventionTrial): AgentConventionComparison => {
   const changedSurfaces = A.filter(
-    Surface.Options,
+    Surface.literals,
     (surface) => !Eq.equals(baseline.variant[surface], candidate.variant[surface])
   );
   let reasons = A.empty<typeof Refusal.Type>();

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Workspace from "@beep/shared-domain/identity/Workspace";
 import { CandidateLifecycle } from "@beep/workspace-domain/values";
@@ -36,9 +35,11 @@ export class CandidateTask extends ProductEntity.Entity<CandidateTask>()(Workspa
     lifecycle: CandidateLifecycle.annotateKey({
       description: "Lifecycle state for the candidate task.",
     }).pipe(pg.text()),
-    snapshot: UnknownRecord.annotateKey({
-      description: "Opaque runtime proof snapshot for the candidate task.",
-    }).pipe(pg.jsonb()),
+    snapshot: S.Record(S.String, S.Unknown)
+      .annotateKey({
+        description: "Opaque runtime proof snapshot for the candidate task.",
+      })
+      .pipe(pg.jsonb()),
   },
   $I.annote("CandidateTask", {
     description: "Candidate task proposed by an agent.",

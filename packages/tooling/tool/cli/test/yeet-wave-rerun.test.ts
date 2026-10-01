@@ -127,7 +127,6 @@ const snapshot = (root: string, checks: ReadonlyArray<YeetWatchCheck>, state: st
     mergeable: true,
     mergeStateAcceptable: true,
     reviewDecisionAcceptable: true,
-    closeoutGatesPassed: true,
     greptileScore: O.none(),
   });
   return YeetStatusSnapshot.make({
@@ -158,7 +157,7 @@ const snapshot = (root: string, checks: ReadonlyArray<YeetWatchCheck>, state: st
         ready: false,
         criteria,
         failing: A.findFirst(
-          YeetMergeReadyCriterion.Options,
+          YeetMergeReadyCriterion.literals,
           (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
         ),
       })

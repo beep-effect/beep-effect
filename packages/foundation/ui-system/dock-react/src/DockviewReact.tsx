@@ -9,6 +9,7 @@ import { DockNode, DockWorkspace, PanelId } from "@beep/dock";
 import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { adapterState } from "./internal/AdapterState.ts";
 import { dropPreview, px } from "./internal/DropCompiler.ts";
 import { FloatingPane } from "./internal/FloatingPane.tsx";
@@ -125,7 +126,7 @@ const DragGhost = (props: { readonly graph: DockviewReactProps["graph"]; readonl
   if (O.isNone(drag) || !drag.value.moved || drag.value.concluded) return null;
   const placement = ghostPlacement(drag.value.pointer, container);
   return O.match(
-    A.findFirst(panels, (candidate) => PanelId.equals(candidate.id, drag.value.panelId)),
+    A.findFirst(panels, (candidate) => S.toEquivalence(PanelId)(candidate.id, drag.value.panelId)),
     {
       onNone: () => null,
       onSome: (panel) => (

@@ -82,7 +82,7 @@ const textParts = (message: Prompt.Message): ReadonlyArray<string> => {
 export const promptText = (prompt: Prompt.Prompt): string => A.join(A.flatMap(prompt.content, textParts), "\n");
 
 const hashText = Effect.fn("LanguageModelCache.hashText")((text: string) =>
-  Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(text)).pipe(Effect.orDie)
+  S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(text)).pipe(Effect.orDie)
 );
 
 const makeKey = Effect.fn("LanguageModelCache.makeKey")(function* (model: ModelIdentity, prompt: string) {

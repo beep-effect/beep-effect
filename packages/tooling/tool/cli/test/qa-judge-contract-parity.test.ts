@@ -31,7 +31,6 @@ import {
   renderCrossCheckFailure,
 } from "@beep/repo-cli/commands/Qa";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema/Sha256";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { URLStr } from "@beep/schema/URL";
 import {
   AttestationResource,
@@ -64,6 +63,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { EvidencePredicateType, GateDeclaration } from "@beep/skill-contract";
+
+const encodeJsonEffect = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const decodeGateRegistry = S.decodeEffect(GateRegistry);
 const decodeSha256HexFromBytes = S.decodeEffect(Sha256HexFromBytes);
@@ -406,12 +407,12 @@ describe("commands/Qa complete judge contract parity", () => {
         schemaVersion: "qa-inventory/v1",
         sessionRef: "session.json",
       };
-      const validCandidate = yield* UnknownFromJsonString.encodeEffect(inventory);
-      const emptyEvidenceCandidate = yield* UnknownFromJsonString.encodeEffect({
+      const validCandidate = yield* encodeJsonEffect(inventory);
+      const emptyEvidenceCandidate = yield* encodeJsonEffect({
         ...inventory,
         findings: [{ ...finding, evidence: [] }],
       });
-      const wrongCountCandidate = yield* UnknownFromJsonString.encodeEffect({ ...inventory, requiredCount: 0 });
+      const wrongCountCandidate = yield* encodeJsonEffect({ ...inventory, requiredCount: 0 });
       const allowed = yield* evaluateJudgeOutputInventoryDecodes(
         JudgeOutputInventoryDecodesInput.make({ candidate: validCandidate })
       );
@@ -456,7 +457,7 @@ describe("commands/Qa complete judge contract parity", () => {
         severity,
         title: id,
       });
-      const candidate = yield* UnknownFromJsonString.encodeEffect({
+      const candidate = yield* encodeJsonEffect({
         findings: [finding("R4-01", "P0"), finding("R4-02", "P1"), finding("R4-03", "P2")],
         judge: { effort: "high", model: "gpt-daybreak-blue-latest" },
         requiredCount: 2,

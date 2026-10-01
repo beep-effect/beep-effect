@@ -18,7 +18,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Duration, Effect, Inspectable, Layer, Match, Number as Num, Order, Redacted, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -59,7 +59,7 @@ const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
  * ```ts
  * import { VoyageModel } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
- * console.log(VoyageModel.Options)
+ * console.log(VoyageModel.literals)
  * ```
  *
  * @category schemas
@@ -73,7 +73,6 @@ export const VoyageModel = LiteralKit([
   "voyage-multilingual-2",
   "voyage-law-2",
 ]).pipe(
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
   $I.annoteSchema("VoyageModel", {
     description: "Voyage embedding models with known output dimensions.",
   })
@@ -590,7 +589,7 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
         provider: "voyage",
       })
     );
-    const model = yield* VoyageModel.decodeUnknownEffect(config.embedding.voyageModel).pipe(
+    const model = yield* S.decodeUnknownEffect(VoyageModel)(config.embedding.voyageModel).pipe(
       Effect.mapError((cause) =>
         EmbeddingError.make({
           message: `Unsupported Voyage embedding model: ${config.embedding.voyageModel}`,

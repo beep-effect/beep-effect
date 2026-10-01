@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 
-import { Effect, Number as N, pipe } from "effect";
+import { Effect, Number as N, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
@@ -120,7 +120,7 @@ const sameString = S.toEquivalence(S.String);
 const acceptanceFailure = (step: OpenclawLiveAcceptanceStep, diagnostics: string): OpenclawLiveAcceptanceFailed =>
   OpenclawLiveAcceptanceFailed.make({
     _tag: "Failed",
-    diagnostics: OpenclawDiagnosticText.decodeUnknownSync(diagnostics),
+    diagnostics: Result.getOrThrow(S.decodeResult(OpenclawDiagnosticText)(diagnostics)),
     step,
   });
 

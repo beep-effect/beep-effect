@@ -11,7 +11,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { dual } from "effect/Function";
-import { SafeObject } from "@beep/schema/SafeObject";
 import { A, Eq, O, P, pipe } from "@beep/utils";
 import {
   Cause,
@@ -27,7 +26,7 @@ import {
 } from "effect";
 import * as S from "effect/Schema";
 import { DiagnosticModel } from "../Codemode.result.ts";
-import { CodeModePromise, makeEmptySafeObject } from "../Codemode.values.ts";
+import { CodeModePromise, makeEmptySafeObject, SafeObject } from "../Codemode.values.ts";
 import { createAggregateErrorValue } from "../stdlib/StdLib.value.ts";
 import { caughtErrorValue, normalizeError } from "./Interpreter.errors.ts";
 import type { SyncIteratorRunner } from "./Interpreter.iterator.ts";
@@ -55,7 +54,7 @@ const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.promises");
 
 const failureFromCause = (cause: Cause.Cause<InterpreterFailure>): InterpreterFailure => {
   const squashed = Cause.squash(cause);
-  return InterpreterFailure.is(squashed) ? squashed : InterpreterRuntimeError.new(normalizeError(squashed).message);
+  return S.is(InterpreterFailure)(squashed) ? squashed : InterpreterRuntimeError.new(normalizeError(squashed).message);
 };
 
 /**

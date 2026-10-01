@@ -270,7 +270,7 @@ const githubCheckLaneInTier: {
 // policy gates as higher-yield and JSDoc/Docgen as the slowest low-failure tail.
 const githubCheckLaneWaves = (lanes: ReadonlyArray<GithubCheckLaneSpec>): ReadonlyArray<GithubCheckLaneWaveSpec> =>
   pipe(
-    GithubCheckLaneWave.Options,
+    GithubCheckLaneWave.literals,
     A.map((wave) => {
       const waveLanes = A.filter(lanes, (lane) => lane.wave === wave);
       return A.isReadonlyArrayEmpty(waveLanes)

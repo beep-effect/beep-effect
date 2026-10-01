@@ -6,6 +6,7 @@ import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { createPortal } from "react-dom";
 import type { Panel } from "@beep/dock";
 import type { DockAtomGraph, DockRenderer } from "../DockReact.types.ts";
@@ -45,7 +46,7 @@ export const PanelPortal = (props: {
   const workspace = useAtomValue(props.graph.workspaceAtom);
   const active = O.exists(DockWorkspace.findTabsForPanel(workspace, props.panel.id), ({ groupId }) =>
     O.exists(props.graph.registry.get(props.graph.activePanelAtom(groupId)), (panel) =>
-      PanelId.equals(panel.id, props.panel.id)
+      S.toEquivalence(PanelId)(panel.id, props.panel.id)
     )
   );
   const target = targetFor(props.state, props.panel.id);
@@ -70,11 +71,11 @@ export const ContentHost = (props: {
     for (const panel of props.graph.registry.get(props.graph.panelsAtom)) {
       if (
         O.exists(DockWorkspace.findTabsForPanel(workspace, panel.id), ({ groupId }) =>
-          GroupId.equals(groupId, props.groupId)
+          S.toEquivalence(GroupId)(groupId, props.groupId)
         )
       ) {
         const active = O.exists(props.graph.registry.get(props.graph.activePanelAtom(props.groupId)), (candidate) =>
-          PanelId.equals(candidate.id, panel.id)
+          S.toEquivalence(PanelId)(candidate.id, panel.id)
         );
         if (active || Eq.equals(panel.renderMode, "always")) host.appendChild(targetFor(props.state, panel.id));
         else targetFor(props.state, panel.id).remove();

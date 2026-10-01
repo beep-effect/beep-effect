@@ -8,14 +8,14 @@ import {
   runChangesetStatus,
   uncoveredWorkspacePackageNames,
 } from "@beep/repo-cli/test/Quality";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
+import { Effect, FileSystem, flow, Layer, Path, Result, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { ChildProcessSpawner } from "effect/process";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const REPO_ROOT = "/repo";
@@ -27,7 +27,7 @@ const provideScopedLayer =
   <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const makeHandle = (output: string) =>
   ChildProcessSpawner.makeHandle({

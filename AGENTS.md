@@ -144,6 +144,11 @@ Runbook: `docs/runbooks/agent-pools.md`.
 - Attribute verification failures before repairing — introduced / inherited /
   unrelated / environment-only; attribution decides fix vs rebase vs report,
   not blind rerun.
+- Read a completed red job's log at once with
+  `gh api --allow-escape-sequences repos/<o>/<r>/actions/jobs/<id>/logs`;
+  never wait for the run to finish. `gh run view --log` refuses mid-run, and
+  plain `gh api` prints nothing on ANSI output. Commands: yeet skill, "Read a
+  failed job's log without waiting for the run".
 - “Mergeable” describes the complete PR state, not GitHub's structural
   `MERGEABLE` field alone. It requires both of the following:
   - no outstanding review thread — one that is unresolved, or one the author

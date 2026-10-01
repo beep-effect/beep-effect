@@ -13,7 +13,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ts } from "ts-morph";
 import { GENERATED_MANAGERS, GENERATED_OPERATIONS } from "./box.surface.ts";
-import type { CodecStaticKeys } from "@beep/schema/SchemaUtils/withCodecStatics";
 import type { PlatformError } from "effect";
 
 const $I = $BoxId.create("scripts/generate");
@@ -251,14 +250,6 @@ const renderStructFields = (fields: string): string => (Str.length(fields) === 0
 
 const isLiteralKitExpression = (expression: string): boolean => Str.startsWith("LiteralKit(")(expression);
 
-const generatedCodecStaticOverrides: Readonly<Record<string, CodecStaticKeys | undefined>> = {};
-
-const codecStaticOperation = (name: string): O.Option<string> =>
-  pipe(
-    O.fromUndefinedOr(generatedCodecStaticOverrides[name]),
-    O.map((keys) => `SchemaUtils.withCodecStatics([${pipe(keys, A.map(stringLiteral), A.join(", "))}])`)
-  );
-
 const annotatedGeneratedSchemaExpression = (name: string, description: string, schemaExpression: string): string =>
   pipeExpression(
     schemaExpression,
@@ -267,33 +258,20 @@ const annotatedGeneratedSchemaExpression = (name: string, description: string, s
   })`
   );
 
-const withGeneratedCodecStatics = (name: string, expression: string): string =>
-  pipe(
-    codecStaticOperation(name),
-    O.match({ onNone: () => expression, onSome: (operation) => pipeExpression(expression, operation) })
-  );
-
 const renderGeneratedSchemaConst = (name: string, description: string, schemaExpression: string): string => {
   if (isLiteralKitExpression(schemaExpression)) {
-    const selectedCodecStatic = pipe(
-      codecStaticOperation(name),
-      O.match({ onNone: () => "", onSome: (operation) => `\n      ${operation},` })
-    );
     return `export const ${name} = ${schemaExpression}.pipe(
   (schema) =>
     schema.pipe(
       $I.annoteSchema(${stringLiteral(name)}, {
         description: ${stringLiteral(description)}
-      }),${selectedCodecStatic}
+      }),
       SchemaUtils.withLiteralKitStatics(schema)
     )
 )`;
   }
 
-  return `export const ${name} = ${withGeneratedCodecStatics(
-    name,
-    annotatedGeneratedSchemaExpression(name, description, schemaExpression)
-  )}`;
+  return `export const ${name} = ${annotatedGeneratedSchemaExpression(name, description, schemaExpression)}`;
 };
 
 const isIdentifierName = (value: string): boolean => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(value);

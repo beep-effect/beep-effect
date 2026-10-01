@@ -17,7 +17,6 @@ import {
   FieldTierName,
   FourHintAnnotations,
 } from "@beep/mcp-kit";
-import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
@@ -253,6 +252,7 @@ export class PracticeKgCandidateClaimsNotLoadedResult extends S.Class<PracticeKg
  *
  * ```ts
  * import { PracticeKgCandidateClaimsNotLoadedResult, PracticeKgCandidateClaimsResult } from "@beep/law-practice-use-cases/server"
+ * import * as S from "effect/Schema"
  *
  * const result = PracticeKgCandidateClaimsNotLoadedResult.make({
  *   available: false,
@@ -260,7 +260,7 @@ export class PracticeKgCandidateClaimsNotLoadedResult extends S.Class<PracticeKg
  *   epistemic_status: "candidate-unreviewed",
  *   reason: "claims batch not yet loaded"
  * })
- * console.log(PracticeKgCandidateClaimsResult.is(result)) // true
+ * console.log(S.is(PracticeKgCandidateClaimsResult)(result)) // true
  * ```
  *
  * @category models
@@ -272,8 +272,7 @@ export const PracticeKgCandidateClaimsResult = S.Union([
 ]).pipe(
   $I.annoteSchema("PracticeKgCandidateClaimsResult", {
     description: "Loaded candidate-claim rows or a typed not-loaded bundle state.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

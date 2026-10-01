@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Context, Effect, Equal, FileSystem, HashSet, Layer, Number as N, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -166,7 +166,7 @@ export type FixtureExpectation = typeof FixtureExpectation.Type;
  * @since 0.0.0
  */
 export const FixtureDegradedKind = LiteralKit(
-  DegradedKind.pickOptions(["invalid-utf8", "truncated", "extraction-failed"])
+  DegradedKind.pick(["invalid-utf8", "truncated", "extraction-failed"]).literals
 ).annotate(
   $I.annote("FixtureDegradedKind", {
     description: "Invalid UTF-8, truncation, or extraction failure declared by a degraded F1 fixture.",
@@ -287,10 +287,10 @@ const countFixtures = (index: F1IndexFields, mediaType: FixtureMediaType, expect
   );
 
 const f1HasOneDegradedPerMediaType = (index: F1IndexFields): boolean =>
-  A.every(FixtureMediaType.Options, (mediaType) => Equal.equals(countFixtures(index, mediaType, "degraded"), 1));
+  A.every(FixtureMediaType.literals, (mediaType) => Equal.equals(countFixtures(index, mediaType, "degraded"), 1));
 
 const f1HasTwoParsingFixturesPerMediaType = (index: F1IndexFields): boolean =>
-  A.every(FixtureMediaType.Options, (mediaType) =>
+  A.every(FixtureMediaType.literals, (mediaType) =>
     N.isGreaterThanOrEqualTo(countFixtures(index, mediaType, "parses"), 2)
   );
 
@@ -500,11 +500,7 @@ export interface F1CatalogShape {
 export class F1Catalog extends Context.Service<F1Catalog, F1CatalogShape>()($I`F1Catalog`) {}
 
 const F1_INDEX_PATH = "fixtures/f1/index.json";
-const F1IndexFromJsonString = S.fromJsonString(F1Index).pipe(
-  SchemaUtils.withStatics((self) => ({
-    decodeEffect: S.decodeEffect(self),
-  }))
-);
+const F1IndexFromJsonString = S.fromJsonString(F1Index);
 
 const toF1Diff = (fixture: F1Fixture, drift: ByteDrift): F1Diff =>
   ByteDrift.match(drift, {
@@ -542,7 +538,7 @@ const makeF1Catalog = Effect.gen(function* () {
         })
       )
     );
-    const index = yield* F1IndexFromJsonString.decodeEffect(source).pipe(
+    const index = yield* S.decodeEffect(F1IndexFromJsonString)(source).pipe(
       Effect.mapError(() =>
         F1IndexDecodeFailed.make({
           message: "The committed F1 index is not valid f1-index/v1 JSON.",

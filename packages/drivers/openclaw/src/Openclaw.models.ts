@@ -30,9 +30,6 @@ const OpenclawSystemdActiveStateBase = LiteralKit(["active", "inactive", "failed
 const OpenclawHttpProbeStatusBase = LiteralKit(["healthy", "unreachable"]);
 const OpenclawSchemaPlaceholderReasonBase = LiteralKit(["missing", "placeholder"]);
 const OpenclawLiveAcceptanceStepBase = LiteralKit(["hosted-model", "local-model", "skill", "reload", "telegram"]);
-const withActiveStateDecodeOption = SchemaUtils.withStatics((schema: typeof OpenclawSystemdActiveStateBase) => ({
-  decodeOption: S.decodeUnknownOption(schema),
-}));
 const OpenclawNpmShasum = S.String.check(
   S.isPattern(npmShasumPattern, {
     identifier: "OpenclawNpmShasum",
@@ -112,8 +109,9 @@ export type OpenclawExitCode = typeof OpenclawExitCode.Type;
  * **Example** (Usage)
  * ```ts
  * import { OpenclawDiagnosticText } from "@beep/openclaw/Openclaw.models"
+ * import * as S from "effect/Schema"
  *
- * const diagnostic = OpenclawDiagnosticText.decodeUnknownSync(" secrets.reload failed\n")
+ * const diagnostic = S.decodeUnknownSync(OpenclawDiagnosticText)(" secrets.reload failed\n")
  * console.log(diagnostic) // "secrets.reload failed"
  * ```
  *
@@ -130,8 +128,7 @@ export const OpenclawDiagnosticText = S.String.pipe(
   ),
   $I.annoteSchema("OpenclawDiagnosticText", {
     description: "Trim-normalized redacted diagnostic text capped at 2000 characters.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -140,8 +137,9 @@ export const OpenclawDiagnosticText = S.String.pipe(
  * **Example** (Usage)
  * ```ts
  * import { OpenclawDiagnosticText } from "@beep/openclaw/Openclaw.models"
+ * import * as S from "effect/Schema"
  *
- * const diagnostic: OpenclawDiagnosticText = OpenclawDiagnosticText.decodeUnknownSync("Gateway did not respond")
+ * const diagnostic: OpenclawDiagnosticText = S.decodeUnknownSync(OpenclawDiagnosticText)("Gateway did not respond")
  * console.log(diagnostic)
  * ```
  *
@@ -960,7 +958,7 @@ export class OpenclawLocalModels extends S.Class<OpenclawLocalModels>($I`Opencla
  * ```ts
  * import { OpenclawLiveAcceptanceStep } from "@beep/openclaw"
  *
- * console.log(OpenclawLiveAcceptanceStep.Options)
+ * console.log(OpenclawLiveAcceptanceStep.literals)
  * // ["hosted-model", "local-model", "skill", "reload", "telegram"]
  * ```
  *
@@ -1252,7 +1250,7 @@ export class OpenclawInvocationContext extends S.Class<OpenclawInvocationContext
  * ```ts
  * import { OpenclawSystemdActiveState } from "@beep/openclaw/Openclaw.models"
  *
- * console.log(OpenclawSystemdActiveState.Options)
+ * console.log(OpenclawSystemdActiveState.literals)
  * // ["active", "inactive", "failed", "activating", "deactivating"]
  * ```
  *
@@ -1263,8 +1261,7 @@ export const OpenclawSystemdActiveState = OpenclawSystemdActiveStateBase.pipe(
   $I.annoteSchema("OpenclawSystemdActiveState", {
     description: "Recognized systemd unit active states.",
   }),
-  SchemaUtils.withLiteralKitStatics(OpenclawSystemdActiveStateBase),
-  withActiveStateDecodeOption
+  SchemaUtils.withLiteralKitStatics(OpenclawSystemdActiveStateBase)
 );
 
 /**
@@ -1326,7 +1323,7 @@ export class OpenclawSystemdUnitState extends S.Class<OpenclawSystemdUnitState>(
    * @since 0.0.0
    */
   get knownActiveState(): O.Option<OpenclawSystemdActiveState> {
-    return OpenclawSystemdActiveState.decodeOption(this.activeState);
+    return S.decodeUnknownOption(OpenclawSystemdActiveState)(this.activeState);
   }
 }
 
@@ -1337,7 +1334,7 @@ export class OpenclawSystemdUnitState extends S.Class<OpenclawSystemdUnitState>(
  * ```ts
  * import { OpenclawHttpProbeStatus } from "@beep/openclaw/Openclaw.models"
  *
- * console.log(OpenclawHttpProbeStatus.Options) // ["healthy", "unreachable"]
+ * console.log(OpenclawHttpProbeStatus.literals) // ["healthy", "unreachable"]
  * ```
  *
  * @category models
@@ -1412,7 +1409,7 @@ export class OpenclawHttpProbe extends S.Class<OpenclawHttpProbe>($I`OpenclawHtt
  * ```ts
  * import { OpenclawSchemaPlaceholderReason } from "@beep/openclaw/Openclaw.models"
  *
- * console.log(OpenclawSchemaPlaceholderReason.Options) // ["missing", "placeholder"]
+ * console.log(OpenclawSchemaPlaceholderReason.literals) // ["missing", "placeholder"]
  * ```
  *
  * @category models

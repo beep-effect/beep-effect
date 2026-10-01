@@ -19,6 +19,7 @@ import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { useCallback, useEffect, useRef } from "react";
 import { makeOperation } from "./AdapterState.ts";
 import {
@@ -38,7 +39,7 @@ import type React from "react";
 import type { DockAtomGraph, DockTabRenderer, DockviewReactProps } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
 
-const panelIdsEqual = A.makeEquivalence(PanelId.equals);
+const panelIdsEqual = A.makeEquivalence(S.toEquivalence(PanelId));
 
 const tabWidthsFor = (state: AdapterState, groupId: GroupId): MutableHashMap.MutableHashMap<PanelId, number> =>
   O.getOrElse(MutableHashMap.get(state.tabWidths, groupId), () => {
@@ -105,7 +106,7 @@ const Tab = (props: {
       // cancellation or steal focus on its behalf.
       const current = O.filter(
         props.graph.registry.get(props.state.dragAtom),
-        (drag) => !drag.concluded && PanelId.equals(drag.panelId, props.panel.id)
+        (drag) => !drag.concluded && S.toEquivalence(PanelId)(drag.panelId, props.panel.id)
       );
       if (O.isNone(current)) return;
       props.graph.registry.set(
@@ -130,7 +131,7 @@ const Tab = (props: {
     };
     const click = (event: MouseEvent): void => {
       const current = props.graph.registry.get(props.state.dragAtom);
-      if (O.exists(current, (drag) => drag.concluded && PanelId.equals(drag.panelId, props.panel.id))) {
+      if (O.exists(current, (drag) => drag.concluded && S.toEquivalence(PanelId)(drag.panelId, props.panel.id))) {
         props.graph.registry.set(props.state.dragAtom, O.none());
         // The capture target receives a click for the cancelled drag's
         // release; it is not an activation click.
@@ -140,7 +141,11 @@ const Tab = (props: {
     };
     const move = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.dragAtom);
-      if (O.isSome(current) && !current.value.concluded && PanelId.equals(current.value.panelId, props.panel.id)) {
+      if (
+        O.isSome(current) &&
+        !current.value.concluded &&
+        S.toEquivalence(PanelId)(current.value.panelId, props.panel.id)
+      ) {
         const pointer = relativePositionOf(props.state, event);
         props.graph.registry.set(
           props.state.dragAtom,
@@ -154,7 +159,7 @@ const Tab = (props: {
     };
     const up = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.dragAtom);
-      if (O.isNone(current) || !PanelId.equals(current.value.panelId, props.panel.id)) return;
+      if (O.isNone(current) || !S.toEquivalence(PanelId)(current.value.panelId, props.panel.id)) return;
       if (current.value.concluded) {
         // The concluded record stays for the trailing click to consume.
         releaseCapture(node, event.pointerId);
@@ -367,7 +372,7 @@ const TabStrip = (
         const capacity = N.max(0, N.subtract(N.subtract(width, actionsWidth), 32));
         const availableForInactive = N.max(0, N.subtract(capacity, activeWidth));
         const visibleInactive = A.reduce(panels, { ids: A.empty<PanelId>(), width: 0 }, (visible, panel) => {
-          if (PanelId.equals(panel.id, tabs.active.id)) return visible;
+          if (S.toEquivalence(PanelId)(panel.id, tabs.active.id)) return visible;
           const panelWidth = pipe(
             MutableHashMap.get(tabWidths, panel.id),
             O.getOrElse(() => 0)
@@ -378,7 +383,7 @@ const TabStrip = (
         const visibleIds = A.append(visibleInactive.ids, tabs.active.id);
         return pipe(
           panels,
-          A.filter((panel) => A.every(visibleIds, (panelId) => Bool.not(PanelId.equals(panelId, panel.id)))),
+          A.filter((panel) => A.every(visibleIds, (panelId) => Bool.not(S.toEquivalence(PanelId)(panelId, panel.id)))),
           A.map((panel) => panel.id)
         );
       },
@@ -434,8 +439,8 @@ const TabStrip = (
       A.filter(
         panels,
         (panel) =>
-          Bool.not(PanelId.equals(panel.id, tabs.active.id)) &&
-          A.some(overflowed, (panelId) => PanelId.equals(panelId, panel.id))
+          Bool.not(S.toEquivalence(PanelId)(panel.id, tabs.active.id)) &&
+          A.some(overflowed, (panelId) => S.toEquivalence(PanelId)(panelId, panel.id))
       ),
   });
   return (
@@ -449,14 +454,16 @@ const TabStrip = (
       }}
     >
       {A.map(
-        A.filter(panels, (panel) => A.every(hiddenPanels, (hidden) => Bool.not(PanelId.equals(hidden.id, panel.id)))),
+        A.filter(panels, (panel) =>
+          A.every(hiddenPanels, (hidden) => Bool.not(S.toEquivalence(PanelId)(hidden.id, panel.id)))
+        ),
         (panel) => (
           <Tab
             key={panel.id}
             graph={props.graph}
             groupId={props.groupId}
             panel={panel}
-            active={PanelId.equals(panel.id, tabs.active.id)}
+            active={S.toEquivalence(PanelId)(panel.id, tabs.active.id)}
             state={props.state}
             tabComponents={props.tabComponents}
             defaultTabComponent={props.defaultTabComponent}
@@ -521,7 +528,7 @@ export const GroupPane = (
   const toggleMaximized = (): void =>
     submit(
       makeOperation(
-        O.exists(maximized, (groupId) => GroupId.equals(groupId, props.groupId))
+        O.exists(maximized, (groupId) => S.toEquivalence(GroupId)(groupId, props.groupId))
           ? RestoreMaximizedCommand.make()
           : MaximizeGroupCommand.make({ groupId: props.groupId })
       )

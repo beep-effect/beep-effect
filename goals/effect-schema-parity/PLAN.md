@@ -2,10 +2,10 @@
 
 ## Status
 
-Status: `pending`
+Status: `complete`
 
-Execution is open. This packet and its source exploration landed on `main`
-through PR #1154 (2026-09-16); P0 starts after that merge. Each phase is
+Execution closed 2026-10-01 with the P5 PR. This packet and its source
+exploration landed on `main` through PR #1154 (2026-09-16). Each phase is
 one or more Yeet PRs; the phase is complete when its last PR reports
 `merge-ready: yes` and its done-signal in `SPEC.md` §Phase Contract holds.
 P0 plus P1 are the first vertical slice.
@@ -14,12 +14,12 @@ P0 plus P1 are the first vertical slice.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Doctrine PR | pending | Land the dated "Upstream-First Foundation/Modeling" entry in `standards/architecture/DECISIONS.md` and its rule text in §11, narrow the AGENTS.md line, add the `@beep/schema` README rule and the same clause in standards and skill prose. | Merged; citable by heading. |
-| P1 Knowledge layer | pending | Move the inventory generator, verifier and rows into repo-cli; commit `fixtures/effect-schema-rc118/inventory/` with the full `inventoryPin` sha in its pin line and rows; build the prompt generator that inlines docs from `file:line`. | `--check` byte-identical locally; hosted shape and sha verification green; Node and Bun tests green; one Role A module prompt generated with inlined docs under `ops/prompts/`. |
-| P2 LiteralKit trim | pending | Delete the four covered facets and `enumMapping`, override `rebuild`, codemod about 250 consumer files, trim MappedLiteralKit alike. | Type check green; zero hits for retired names; statics survive every derivation; before/after number attached with no instantiation increase. |
-| P3 Retirement train | pending | Retire groups A–G with consumers, behind the facet census (B, C) and the boundary table (D, E). | Every group merged or flipped to ADAPT with a logged ruling; each PR carries before/after numbers with no instantiation increase; KEEP untouched. |
-| P4 Gate cut | pending | Add `SFV4-*` rules for F03 and F24 with occurrence anchors and membership baselines (F13 dropped below the reach floor, SPEC goal-time row 2026-09-29); delete the F26 rule; rewrite remediation strings. | Baselines committed; no parallel lane; Yeet routing shows the groups. |
-| P5 Statics and performance close | pending | F15 rule, `withCodecStatics` retirement, `check-census` instantiation ratchet, typeperf mirror, reflection, lifecycle flip. | Selective-statics merged first; backlog zero; no instantiation increase on the three packages; check-time band reported. |
+| P0 Doctrine PR | complete | Land the dated "Upstream-First Foundation/Modeling" entry in `standards/architecture/DECISIONS.md` and its rule text in §11, narrow the AGENTS.md line, add the `@beep/schema` README rule and the same clause in standards and skill prose. | Merged; citable by heading. |
+| P1 Knowledge layer | complete | Move the inventory generator, verifier and rows into repo-cli; commit `fixtures/effect-schema-rc118/inventory/` with the full `inventoryPin` sha in its pin line and rows; build the prompt generator that inlines docs from `file:line`. | `--check` byte-identical locally; hosted shape and sha verification green; Node and Bun tests green; one Role A module prompt generated with inlined docs under `ops/prompts/`. |
+| P2 LiteralKit trim | complete | Delete the four covered facets and `enumMapping`, override `rebuild`, codemod about 250 consumer files, trim MappedLiteralKit alike. | Type check green; zero hits for retired names; statics survive every derivation; before/after number attached with no instantiation increase. |
+| P3 Retirement train | complete | Retire groups A–G with consumers, behind the facet census (B, C) and the boundary table (D, E). | Every group merged or flipped to ADAPT with a logged ruling; each PR carries before/after numbers with no instantiation increase; KEEP untouched. |
+| P4 Gate cut | complete | Add `SFV4-*` rules for F03 and F24 with occurrence anchors and membership baselines (F13 dropped below the reach floor, SPEC goal-time row 2026-09-29); delete the F26 rule; rewrite remediation strings. | Baselines committed; no parallel lane; Yeet routing shows the groups. |
+| P5 Statics and performance close | complete | F15 rule, `withCodecStatics` retirement, `check-census` instantiation ratchet, typeperf mirror, reflection, lifecycle flip. | Selective-statics merged first; backlog zero; no instantiation increase on the three packages; check-time band reported. |
 
 <!-- Phase ids match ops/manifest.json `phases[]`. This packet uses its own
 six-phase scheme; Yeet-to-mergeable is the exit of every phase, not a phase. -->
@@ -135,8 +135,8 @@ Groups and upstream targets are in `explorations/effect-schema-parity/MAP.md`
 | 3b | C SchemaUtils defaults codemod (`withNoneDefault` 281 files / 1,897 occurrences, `withKeyDefaults` 110 / 427, `withConstantDefault` 26 / 85, `withEmptyArrayDefaults` 20 / 38) to `S.withConstructorDefault` plus `S.withDecodingDefaultTypeKey`, or `S.withDecodingDefaultType` for `withEmptyArrayDefaults` | P2 codemod engine landed; one-facet census for `withNoneDefault` and `withKeyDefaults` (over 100 consumers) |
 | 4 | D time and duration (Timestamp, DateTimeUtcFromValid, Duration, Timezone) | boundary table rows filled for every concept in the group |
 | 5 | E binary and collections (ArrayBuffer, Bytes, ArrayOf, HashSet, MutableHashMap, MutableHashSet, Graph, RegExp) | boundary table rows filled for every concept in the group |
-| 6 | F text and misc (String, CommonTextSchemas, case brands, URL, BigDecimal, Logs, StatusCauseError, FileInfo, JSONSchema; SchemaUtils zero-consumer DELETEs: the ten `encode*` facades, `split`, `classStatics` with its allowlist entry `standards/effect-laws.allowlist.jsonc:45-52` and generated snapshot) | none |
-| 7 | G Role B (HttpMethod, HttpStatus, MimeType, Jsonl, Toml, Yaml) | none; losses recorded in the PR |
+| 6 | F text and misc (String, CommonTextSchemas, case brands, URL (ruled ADAPT by the operator 2026-10-01, kept), BigDecimal, Logs, StatusCauseError, FileInfo, JSONSchema; SchemaUtils zero-consumer DELETEs: the ten `encode*` facades, `split`, `classStatics` with its allowlist entry `standards/effect-laws.allowlist.jsonc:45-52` and generated snapshot) | none |
+| 7 | G Role B (HttpMethod, HttpStatus, MimeType (ruled KEEP by the operator 2026-10-01, kept), Jsonl, Toml, Yaml) | none; losses recorded in the PR |
 
 - Each PR: closure-sized with `graft callers --depth all` plus a type check;
   cites the P0 entry; regenerates the tracked generated baselines; runs

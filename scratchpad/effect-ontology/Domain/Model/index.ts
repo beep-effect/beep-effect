@@ -16,7 +16,8 @@
  * **Example** (Use index)
  * ```ts
  * import { AgentId } from "@effect-ontology/Model/index"
- * console.log(AgentId.is("validator")) // true
+ * import * as S from "effect/Schema"
+ * console.log(S.is(AgentId)("validator")) // true
  * ```
  *
  * @category models

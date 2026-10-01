@@ -5,13 +5,15 @@ import {
   runCheckCensus,
 } from "@beep/repo-cli/test/Quality";
 import { findRepoRoot } from "@beep/repo-utils/Root";
-import { encodeJsonString } from "@beep/schema/Json";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const writeFixtureFile = Effect.fn("CheckCensusTest.writeFixtureFile")(function* (
   root: string,
@@ -31,7 +33,7 @@ const writeFixtureJson = Effect.fn("CheckCensusTest.writeFixtureJson")(function*
   relativePath: string,
   document: unknown
 ) {
-  yield* writeFixtureFile(root, relativePath, `${yield* encodeJsonString(document)}\n`);
+  yield* writeFixtureFile(root, relativePath, `${yield* encodeUnknownJsonEffect(document)}\n`);
 });
 
 const baseCompilerOptions = {

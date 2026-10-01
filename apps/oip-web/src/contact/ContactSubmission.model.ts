@@ -84,11 +84,7 @@ export const ContactSubmissionStatus = ContactSubmissionStatusBase.pipe(
   $I.annoteSchema("ContactSubmissionStatus", {
     description: "Public contact submission result status.",
   }),
-  SchemaUtils.withLiteralKitStatics(ContactSubmissionStatusBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(ContactSubmissionStatusBase)
 );
 
 /**

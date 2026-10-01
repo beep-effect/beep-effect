@@ -7,7 +7,6 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, Order, pipe } from "effect";
@@ -21,6 +20,8 @@ import type * as Crypto from "effect/Crypto";
 export { QualityArtifactGeneratorError } from "./QualityArtifactSupport.ts";
 
 import type { ChildProcessSpawner } from "effect/process";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");
 
@@ -284,9 +285,9 @@ type CommandOutput = {
 };
 
 const UnknownStringRecord = S.Record(S.String, S.Unknown);
-const decodeJsonText = UnknownFromJsonString.decodeUnknownEffect;
+const decodeJsonText = S.decodeUnknownEffect(UnknownJson);
 const decodeUnknownRecordOption = S.decodeUnknownOption(UnknownStringRecord);
-const encodeReportJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeReportJson = S.encodeUnknownEffect(UnknownJson);
 const isProofTaskName = S.is(TurboConfigProofTaskName);
 
 const emptySummary = () =>

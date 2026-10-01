@@ -1,144 +1,74 @@
-import { fcRuns } from "@beep/fc-runs";
 import { $SchemaId } from "@beep/identity/packages";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
-import { optional } from "@beep/schema/SchemaUtils/optional";
-import { optionalKeyWithDefault } from "@beep/schema/SchemaUtils/optionalKeyWithDefaults";
-import { pluck } from "@beep/schema/SchemaUtils/pluck";
-import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
+import { staticDescriptorInstaller } from "@beep/schema/SchemaUtils/internal/staticDescriptors";
+import { alwaysEquivalent } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, pipe } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
-import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
-const isNonEmptyString = S.is(S.NonEmptyString);
-const OptionalKeySettings = S.Struct({ retries: optionalKeyWithDefault(S.FiniteFromString, 3) });
-const decodeOptionalKeySettings = S.decodeEffect(OptionalKeySettings);
-const encodeOptionalKeySettings = S.encodeEffect(OptionalKeySettings);
-const encodeUnknownOptionalKeySettings = S.encodeUnknownEffect(OptionalKeySettings);
-const OptionalPatch = S.Struct({ file: optional(S.String) });
-const decodeOptionalPatch = S.decodeUnknownEffect(OptionalPatch);
-const encodeOptionalPatch = S.encodeEffect(OptionalPatch);
+const BoolKeySettings = S.Struct({
+  visible: SchemaUtils.BoolKeyDefaultFalse,
+  enabled: SchemaUtils.BoolKeyDefaultTrue,
+});
+const decodeBoolKeySettingsEffect = S.decodeUnknownEffect(BoolKeySettings);
+const encodeBoolKeySettingsEffect = S.encodeEffect(BoolKeySettings);
 
-describe("optionalKeyWithDefault", () => {
-  it.effect(
-    "defaults absent keys while decoding present encoded values",
-    Effect.fnUntraced(function* () {
-      expect(yield* decodeOptionalKeySettings({})).toEqual({ retries: 3 });
-      expect(yield* decodeOptionalKeySettings({ retries: "0" })).toEqual({ retries: 0 });
-      pipe(yield* Effect.exit(decodeOptionalKeySettings({ retries: "invalid" })), Exit.isFailure, assertTrue);
-    })
-  );
+describe("BoolKeyDefaultFalse and BoolKeyDefaultTrue", () => {
+  it("default omitted constructor input", () => {
+    expect(BoolKeySettings.make({})).toEqual({ visible: false, enabled: true });
+    expect(BoolKeySettings.make({ visible: true, enabled: false })).toEqual({ visible: true, enabled: false });
+  });
 
   it.effect(
-    "encodes decoded values and requires the decoded key",
+    "default missing keys on decode and encode the decoded booleans",
     Effect.fnUntraced(function* () {
-      expect(yield* encodeOptionalKeySettings({ retries: 3 })).toEqual({ retries: "3" });
-      pipe(yield* Effect.exit(encodeUnknownOptionalKeySettings({})), Exit.isFailure, assertTrue);
+      expect(yield* decodeBoolKeySettingsEffect({})).toEqual({ visible: false, enabled: true });
+      expect(yield* decodeBoolKeySettingsEffect({ visible: true })).toEqual({ visible: true, enabled: true });
+      expect(yield* encodeBoolKeySettingsEffect({ visible: false, enabled: true })).toEqual({
+        visible: false,
+        enabled: true,
+      });
     })
   );
 });
 
-describe("pluck", () => {
-  it.effect(
-    "decodes a one-property struct into the selected field value",
-    Effect.fnUntraced(function* () {
-      const schema = S.Struct({
-        column1: S.FiniteFromString,
-        column2: S.String,
-      }).pipe(pluck("column1"));
-
-      expect(yield* S.decodeEffect(schema)({ column1: "1" })).toBe(1);
-    })
-  );
-
-  it.effect(
-    "encodes the selected field value back into a one-property struct",
-    Effect.fnUntraced(function* () {
-      const schema = S.Struct({
-        column1: S.FiniteFromString,
-        column2: S.String,
-      }).pipe(pluck("column1"));
-
-      expect(yield* S.encodeEffect(schema)(2)).toEqual({ column1: "2" });
-    })
-  );
-});
-
-describe("toEquivalence", () => {
-  const Tags = S.Array(S.String);
+describe("alwaysEquivalent", () => {
+  const Failure = S.Struct({
+    url: S.String,
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
+    payload: S.Unknown.pipe(S.overrideToEquivalence(alwaysEquivalent)),
+  });
+  const sameFailure = S.toEquivalence(Failure);
 
   it("is exported from the SchemaUtils barrel", () => {
-    expect(SchemaUtils.toEquivalence).toBe(toEquivalence);
+    expect(SchemaUtils.alwaysEquivalent).toBe(alwaysEquivalent);
   });
 
-  it("compares decoded schema values with the data-first signature", () => {
-    const sameTags = toEquivalence(Tags);
-
-    expect(sameTags(["docs", "tests"], ["docs", "tests"])).toBe(true);
-    expect(sameTags(["docs", "tests"], ["tests", "docs"])).toBe(false);
+  it("leaves opaque fields out of the owning schema's identity", () => {
+    expect(
+      sameFailure(
+        { url: "https://example.com", cause: new Error("first"), payload: { id: 1 } },
+        { url: "https://example.com", cause: new Error("second"), payload: "other" }
+      )
+    ).toBe(true);
   });
 
-  it("compares decoded schema values with the data-last signature", () => {
-    const sameTask = SchemaUtils.toEquivalence(
-      S.Struct({
-        name: S.String,
-        tags: Tags,
-      })
-    );
-    const expected = {
-      name: "document toEquivalence",
-      tags: ["docs", "tests"],
-    };
-    const sameAsExpected = sameTask(expected);
-
-    expect(pipe({ name: "document toEquivalence", tags: ["docs", "tests"] }, sameAsExpected)).toBe(true);
-    expect(pipe({ name: "document toEquivalence", tags: ["tests", "docs"] }, sameAsExpected)).toBe(false);
+  it("keeps the declared fields in the owning schema's identity", () => {
+    expect(
+      sameFailure(
+        { url: "https://example.com", cause: new Error("same"), payload: 1 },
+        { url: "https://example.org", cause: new Error("same"), payload: 1 }
+      )
+    ).toBe(false);
   });
-});
-
-describe("optional", () => {
-  it("is exported from the SchemaUtils barrel", () => {
-    expect(SchemaUtils.optional).toBe(optional);
-  });
-
-  it.effect(
-    "decodes omitted optional keys as undefined",
-    Effect.fnUntraced(function* () {
-      const decoded = yield* decodeOptionalPatch({});
-
-      expect(decoded.file).toBeUndefined();
-    })
-  );
-
-  it.effect(
-    "decodes present optional keys with the inner schema",
-    Effect.fnUntraced(function* () {
-      const decoded = yield* decodeOptionalPatch({ file: "src/schema.ts" });
-
-      expect(decoded.file).toBe("src/schema.ts");
-    })
-  );
-
-  it.effect(
-    "omits undefined values when encoding",
-    Effect.fnUntraced(function* () {
-      expect(yield* encodeOptionalPatch({})).toEqual({});
-      expect(yield* encodeOptionalPatch({ file: undefined })).toEqual({});
-      expect(yield* encodeOptionalPatch({ file: "src/schema.ts" })).toEqual({ file: "src/schema.ts" });
-    })
-  );
 });
 
 describe("withStatics", () => {
   it("preserves statics when identity annotations run later in the pipeline", () => {
     const TenantName = S.String.pipe(
-      SchemaUtils.withStatics((schema) => ({
+      SchemaUtils.withStatics(() => ({
         empty: "" as const,
-        isTenantName: S.is(schema),
       })),
       $SchemaId.annoteSchema("TenantName", {
         description: "Tenant name with helper statics.",
@@ -146,46 +76,48 @@ describe("withStatics", () => {
     );
 
     expect(TenantName.empty).toBe("");
-    expect(TenantName.isTenantName("tenant")).toBe(true);
-  });
-});
-
-describe("withCodecStatics", () => {
-  const Slug = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync", "is"]));
-
-  it.effect.prop(
-    "attached statics agree with the raw schema codecs over schema-derived samples",
-    [Arbitrary.schema(S.NonEmptyString)],
-    Effect.fnUntraced(function* ([sampled]) {
-      expect(Slug.is(sampled)).toBe(isNonEmptyString(sampled));
-      expect(Slug.decodeUnknownSync(sampled)).toBe(sampled);
-      pipe(Slug.decodeUnknownOption(sampled), O.isSome, assertTrue);
-
-      return true;
-    }),
-    { arbitrary: fcRuns(50) }
-  );
-
-  it("attaches a working `is` guard", () => {
-    expect(Slug.is("post")).toBe(true);
-    expect(Slug.is("")).toBe(false);
-    expect(Slug.is(42)).toBe(false);
+    expect(S.is(TenantName)("tenant")).toBe(true);
   });
 
-  it("attaches `fromUnknown` (throws on invalid) and `decodeOption` (None on invalid)", () => {
-    expect(Slug.decodeUnknownSync("post")).toBe("post");
-    expect(() => Slug.decodeUnknownSync("")).toThrow();
-    assertSome(Slug.decodeUnknownOption("post"), "post");
-    pipe(Slug.decodeUnknownOption(""), O.isNone, assertTrue);
+  it("keeps an identical existing static and replaces a configurable one", () => {
+    const shared = (): string => "shared";
+    const target = { keep: shared, replace: "old" };
+    const attached = SchemaUtils.withStatics(target, () => ({ keep: shared, replace: "new" }));
+
+    expect(attached.keep).toBe(shared);
+    expect(attached.replace).toBe("new");
   });
 
-  it("preserves statics when identity annotations run later in the pipeline", () => {
-    const Tagged = S.NonEmptyString.pipe(
-      SchemaUtils.withCodecStatics(["decodeUnknownOption", "is"]),
-      $SchemaId.annoteSchema("TaggedSlug", { description: "Slug with codec statics." })
+  it("skips an identical existing static when no owner preserves it", () => {
+    const target = { same: 1 };
+    Reflect.defineProperty(target, "same", { value: 1, configurable: false, enumerable: true });
+
+    expect(staticDescriptorInstaller.install(target, { same: 1 }).same).toBe(1);
+  });
+
+  it("copies accessor statics as accessors", () => {
+    const attached = SchemaUtils.withStatics({}, () => ({
+      get computed(): number {
+        return 2;
+      },
+    }));
+
+    expect(attached.computed).toBe(2);
+    expect(Reflect.getOwnPropertyDescriptor(attached, "computed")?.get).toBeTypeOf("function");
+  });
+
+  it("rejects a conflicting non-configurable static", () => {
+    const target = {};
+    Reflect.defineProperty(target, "locked", { value: "old", configurable: false, enumerable: true });
+
+    expect(() => SchemaUtils.withStatics(target, () => ({ locked: "new" }))).toThrow(
+      "Cannot redefine non-configurable static 'locked'."
     );
+  });
 
-    expect(Tagged.is("post")).toBe(true);
-    pipe(Tagged.decodeUnknownOption(""), O.isNone, assertTrue);
+  it("rejects a static on a non-extensible target", () => {
+    const target = Object.preventExtensions({});
+
+    expect(() => SchemaUtils.withStatics(target, () => ({ added: 1 }))).toThrow("Cannot define static 'added'.");
   });
 });

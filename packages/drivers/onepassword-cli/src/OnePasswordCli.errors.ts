@@ -6,7 +6,7 @@
  */
 
 import { $OnepasswordCliId } from "@beep/identity";
-import { Defect } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { P } from "@beep/utils";
 import { Effect } from "effect";
 import { dual } from "effect/Function";
@@ -15,7 +15,9 @@ import * as S from "effect/Schema";
 import { OnePasswordCliDiagnosticText, OnePasswordCliExitCode } from "./OnePasswordCli.models.ts";
 
 const $I = $OnepasswordCliId.create("OnePasswordCli.errors");
-const OnePasswordCliDefect = Defect({ includeStack: true });
+const OnePasswordCliDefect = S.Defect({ includeStack: true }).pipe(
+  S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)
+);
 const isOnePasswordCliDefect = S.is(OnePasswordCliDefect);
 
 type OnePasswordCliErrorContextInput = {
@@ -32,7 +34,7 @@ const normalizeCause = (cause: unknown | undefined): O.Option<typeof OnePassword
   );
 
 const diagnosticTextOption = (value: string | undefined): O.Option<OnePasswordCliDiagnosticText> =>
-  O.flatMap(O.fromUndefinedOr(value), OnePasswordCliDiagnosticText.decodeUnknownOption);
+  O.flatMap(O.fromUndefinedOr(value), S.decodeUnknownOption(OnePasswordCliDiagnosticText));
 
 const errorOptionsFromInput = (options: OnePasswordCliErrorContextInput): OnePasswordCliErrorOptions =>
   OnePasswordCliErrorOptions.make({

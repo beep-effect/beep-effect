@@ -8,7 +8,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
-import { Effect, Number as N } from "effect";
+import { Effect, Number as N, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import { flow, pipe } from "effect/Function";
@@ -160,17 +160,15 @@ const OntologyEmbeddingsDefinition = OntologyEmbeddingsFieldsModel.check(
 
 const computeOntologyVersion = flow(
   encodeUtf8,
-  Sha256HexFromBytes.decodeEffect,
+  S.decodeEffect(Sha256HexFromBytes),
   Effect.withSpan("OntologyEmbeddings.computeVersion")
 );
 
 const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
-  GcsUri.decodeUnknownSync(
-    Bool.match(Str.endsWith(".ttl")(ontologyUri), {
+  Result.getOrThrow(S.decodeUnknownResult(GcsUri)(Bool.match(Str.endsWith(".ttl")(ontologyUri), {
       onFalse: () => `${ontologyUri}-embeddings.json`,
       onTrue: () => Str.replace(/\.ttl$/, "-embeddings.json")(ontologyUri),
-    })
-  );
+    })));
 
 /**
  * Versioned embedding artifact for one ontology.
@@ -202,7 +200,6 @@ export const OntologyEmbeddings = OntologyEmbeddingsDefinition.pipe(
   $I.annoteSchema("OntologyEmbeddings", {
     description: "Versioned ontology embedding artifact with uniform finite vector dimensions.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
   SchemaUtils.withStatics(() => ({
     computeVersion: computeOntologyVersion,
     storagePathFor: embeddingsPathFromOntology,
@@ -250,7 +247,6 @@ const OntologyEmbeddingsJsonDefinition = OntologyEmbeddings.pipe(S.fromJsonStrin
  * @since 0.0.0
  */
 export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
-  SchemaUtils.withCodecStatics(["encodeEffect"]),
   $I.annoteSchema("OntologyEmbeddingsJson", {
     description: "JSON string codec for versioned ontology-embedding artifacts.",
   })

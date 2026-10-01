@@ -248,7 +248,7 @@ const parsePdf = Effect.fn("LeJeuneFixtures.parsePdf")(function* (id: string, di
 });
 
 const hashBytes = (bytes: Uint8Array) =>
-  Sha256HexFromBytes.decodeEffect(bytes).pipe(
+  S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(
     Effect.mapError((cause) => fixtureErrorWithCause("sha256", "Failed to hash synthetic fixture bytes.", cause))
   );
 

@@ -1355,7 +1355,7 @@ const codegenDriverStep = (repoRoot: string, packageDir: CodegenDriverPackageDir
   });
 
 const codegenDriverSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>
-  A.map(CODEGEN_DRIVER_PACKAGE_DIRS.Options, (packageDir) => codegenDriverStep(repoRoot, packageDir));
+  A.map(CODEGEN_DRIVER_PACKAGE_DIRS.literals, (packageDir) => codegenDriverStep(repoRoot, packageDir));
 
 const FALLOW_BLOCKING_LANES = ["audit", "dead-code", "health"] as const;
 const FALLOW_ADVISORY_LANES = ["boundaries", "flags", "security", "fix-preview"] as const;
@@ -2171,7 +2171,7 @@ const docgenModeFlagChoices: ReadonlyArray<readonly [DocgenLaneMode, DocgenLaneM
 );
 
 const partitionFlagChoices: ReadonlyArray<readonly [CiLanePartitionId, CiLanePartitionId]> = A.map(
-  CiLanePartitionId.Options,
+  CiLanePartitionId.literals,
   (partition) => [partition, partition] as const
 );
 

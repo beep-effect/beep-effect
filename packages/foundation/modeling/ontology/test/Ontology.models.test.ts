@@ -113,7 +113,9 @@ describe("@beep/ontology models", () => {
         (yield* Arbitrary.sampleEffect(Arbitrary.schema(HttpUrl), { count: 20, seed: 0x5eed })).every(isHttpUrl),
         assertTrue
       );
-      expect(HttpUrl.decodeUnknownSync("https://example.com/ontology.owl")).toBe("https://example.com/ontology.owl");
+      expect(Result.getOrThrow(S.decodeResult(HttpUrl)("https://example.com/ontology.owl"))).toBe(
+        "https://example.com/ontology.owl"
+      );
     })
   );
 

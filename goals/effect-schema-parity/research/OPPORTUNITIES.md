@@ -320,3 +320,155 @@ machine ids, quote only the minimal identifying error text.
 - **What would have prevented it:** A checkpoint message in the brief that
   passes commitlint (for example `chore(repo-cli): checkpoint …`), or a
   `wip` type accepted on non-`main` branches.
+## 2026-09-29 — Fresh lane gives invalid `--extendedDiagnostics` numbers until the dependency closure is built
+
+- **What I was doing:** P2 before-measurement on a newly cut lane, using the
+  recipe in `explorations/effect-schema-parity/research/performance-verification-supplement.md`.
+- **Evidence:** all three `bun run tsc -p <pkg>/tsconfig.json --noEmit
+  --extendedDiagnostics` runs exited 1 with thousands of `TS6305: Output file
+  '.../dist/*.d.ts' has not been built from source file` errors and reported
+  about half the real instantiation count (repo-cli 5,411,078 instead of
+  8,433,860). The numbers look plausible, so nothing flags them.
+- **What would have prevented it:** The recipe (and the P5 `check-census`
+  harness) should run `bunx turbo run build --filter='<pkg>^...'` first and
+  refuse to record a sample whose log contains any `error TS`.
+
+## 2026-09-29 — A type-directed codemod can only run before the facet it matches is deleted
+
+- **What I was doing:** Rewriting the last LiteralKit consumers in
+  `apps/labs/semantica` and `apps/labs/lejeune-bolt-workbench` with
+  `beep lint schema-parity-codemod` after the kit trim had landed in the tree.
+- **Evidence:** the root-tsconfig run matched nothing in those apps (they
+  import their own modules through an app-local `@/*` alias the root config
+  does not map); after adding `--tsconfig`, the run still matched nothing
+  because `.Options` no longer resolved to a kit declaration. The sites were
+  rewritten by temporarily restoring the three pre-trim kit files.
+- **What would have prevented it:** Run every root (including each app with
+  its own `--tsconfig`) to zero sites before editing the retired surface; P3
+  groups should treat "codemod dry run reports zero sites everywhere" as the
+  gate that unlocks the deletion commit.
+
+## 2026-09-29 — Two tracked baselines were far behind main before P2 touched them
+
+- **What I was doing:** Regenerating `standards/schema-catalog.generated.jsonc`
+  and `standards/jsdoc-documentation.inventory.{jsonc,md}` for P2.
+- **Evidence:** `bun run beep lint schema-catalog --write` moved the catalog
+  from 5,256 to 6,299 entries; 15 additions and 4 removals are P2's, the rest
+  predate it. `bun run beep quality jsdoc-inventory` rewrote about 7k lines of
+  the inventory (last generated 2026-09-25). The catalog check compares the
+  whole file, so no scoped update is possible.
+- **What would have prevented it:** Gate the catalog check (or regenerate on
+  merge to main) so a feature PR does not carry a thousand unrelated entries.
+## 2026-09-29 — The first use of an upstream facet costs instantiations the retired wrapper hid
+
+- **What I was doing:** P3 PR 3-ii, retiring `Defect` onto
+  `S.Defect(o).pipe(S.overrideToEquivalence(() => () => true))` under the
+  single-checker instantiation gate.
+- **Evidence:** `@beep/repo-cli` rose +482 with the override inline at its 44
+  cause fields and +139 with one shared const; the same const without the
+  override measured −13, so the first use of `S.overrideToEquivalence` in the
+  program costs about 150 instantiations the retired `Defect()` hid behind its
+  declared return type. `$I.annoteSchema` on that const cost +323 more than
+  `.annotate({ identifier, description })`. Logs under
+  `~/.cache/beep/effect-schema-parity/p3c2/`.
+- **What would have prevented it:** A per-combinator cost table in the P5
+  census: the first-use cost of each upstream combinator a retirement recipe
+  introduces, and the per-const cost of `$I.annoteSchema`, so a recipe picks
+  the shared-const shape and the annotation form before the gate bounces.
+
+## 2026-10-01 — A failed hosted job's log could not be read until its run finished
+
+- **What I was doing:** Attributing a red `Heavy / *` job on a train PR while
+  the rest of its run was still going.
+- **Evidence:** `gh run view --log --job <id>` refuses while the run is in
+  progress; `gh api repos/<owner>/<repo>/actions/jobs/<id>/logs` printed
+  nothing because the log is ANSI-coloured and `gh` drops escape sequences by
+  default. Only `gh api --allow-escape-sequences .../jobs/<id>/logs` works.
+  PR #1363 (merged 2026-10-01) teaches the Yeet monitor that per-job endpoint.
+- **What would have prevented it:** The monitor reading the per-job endpoint
+  from the start, and the yeet skill naming the flag.
+
+## 2026-10-01 — Merging while a non-required check was pending left main red for about nine hours
+
+- **What I was doing:** Landing P4 (#1345) while its Coverage check, which is
+  not a required check, was still running.
+- **Evidence:** the merge went through; Coverage then failed on main, and every
+  sibling PR inherited the red until #1360 added the missing tests about nine
+  hours later.
+- **What would have prevented it:** The "mergeable" bar in AGENTS.md (no
+  failing CI jobs) applied to pending non-required jobs too: wait for every
+  job, not only the required ones, before merging a train PR.
+
+## 2026-10-01 — Re-running a job on a superseded run cancelled the current head's run
+
+- **What I was doing:** Re-running one failed heavy job on an older run of a
+  train branch after a newer push.
+- **Evidence:** the re-run joined the branch's workflow concurrency group and
+  cancelled the in-progress run for the current head SHA, which then had to be
+  re-run in full.
+- **What would have prevented it:** Never re-run a job of a superseded run
+  (now in the lane brief); a monitor guard that refuses a re-run whose
+  `head_sha` is not the PR head.
+
+## 2026-10-01 — Parallel lane agents overwrote each other's helper scripts in a shared scratchpad
+
+- **What I was doing:** Running several P3 lanes at once from one session,
+  each with its own measurement and probe scripts.
+- **Evidence:** lanes wrote helpers with the same file names into the shared
+  session scratchpad root and overwrote each other's copies, so a lane could
+  run a sibling's script without noticing.
+- **What would have prevented it:** A per-lane scratch subdirectory in every
+  lane brief (P5 used `scratchpad/p5/` and the lane's ignored `.beep/p5/`).
+
+## 2026-10-01 — Spot evictions killed 28 heavy jobs in three days
+
+- **What I was doing:** Driving the last train PRs to merge-ready between
+  2026-09-29 and 2026-10-01.
+- **Evidence:** 28 `Heavy / *` jobs ended with the runner lost to Spot
+  reclamation rather than a test failure, and each had to be re-run. PR #1364 (merged 2026-10-01, deploy by the operator) spreads the heavy fleet across
+  capacity-optimized Spot pools; a companion PR re-runs runner-loss failures
+  automatically. Both await operator deploy.
+- **What would have prevented it:** Diversified Spot pools and an automatic
+  runner-loss re-run before the train started.
+
+## 2026-10-01 — Every merge re-conflicted every open sibling through shared generated files
+
+- **What I was doing:** Keeping the parallel P3 PRs mergeable as their
+  siblings landed.
+- **Evidence:** each landed PR rewrote `standards/jsdoc-documentation.inventory.{jsonc,md}`,
+  `standards/schema-first.inventory.jsonc`, `standards/schema-catalog.generated.jsonc`,
+  the coverage baseline, the schema barrel and this packet's ledgers, so with
+  N open PRs every merge forced N-1 re-merges (O(N²) over the train). Lanes
+  that took main's copy of the JSDoc inventory verbatim left it drifted on
+  main. The 2026-09-30 ruling (regenerate the JSDoc inventory once, in P5,
+  after #1370 merged on 2026-10-01) removed one class.
+- **What would have prevented it:** Generated inventories regenerated on main
+  after merge (or merge-driver regenerated), not carried in feature PRs; one
+  ledger file per PR instead of appending to shared tables.
+
+## 2026-10-01 — The type-directed codemod engine is too slow for a whole-repo retirement
+
+- **What I was doing:** Dry-running a `codec-statics` rule on the P2 engine
+  (`beep lint schema-parity-codemod`) to find every read of a codec static.
+- **Evidence:** the rule has to ask the checker for the symbol of every
+  `.is` / `.decode*` access; on the root tsconfig (aliases to source) the
+  ts-morph checker ran 14 minutes at 100% CPU and 2.7 GB for one package
+  (`packages/workspace/use-cases`) without finishing. A whole-repo tsgo
+  program over the same files type-checks in 72 seconds.
+- **What would have prevented it:** For retirements whose removal turns every
+  orphaned read into a compiler error, remove first and drive the rewrite from
+  tsgo's `TS2339` positions (what P5 did); keep the ts-morph engine for
+  rewrites the compiler cannot locate.
+
+## 2026-10-01 — The committed check-census baseline was stale on main
+
+- **What I was doing:** Taking the P5 "before" numbers with
+  `bun run beep quality check-census --gate-only` at `e324f01e1e`.
+- **Evidence:** the gate failed on an unchanged main: `@beep/repo-cli`
+  4,186,449 against the committed 4,172,933 (+13,516), and +13,387 again at
+  the P5 base 90517df719 (4,186,320), while `@beep/schema`
+  sat 236,325 below its row. No PR after P5a (#1354) re-measured the
+  baseline, and the gate does not run in hosted CI.
+- **What would have prevented it:** Run `check-census --gate-only` in a hosted
+  lane (or in Yeet verify for the three baseline packages) so every PR either
+  keeps the rows or re-measures them.

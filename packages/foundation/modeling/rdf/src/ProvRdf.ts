@@ -137,7 +137,7 @@ const selectGraph = (options: ProvRdfCodecOptions): GraphTerm => O.getOrElse(opt
 
 const makeNamedNodeResult = (value: string): Result.Result<NamedNode, ProvRdfCodecError> =>
   pipe(
-    IRI.decodeUnknownResult(value),
+    S.decodeResult(IRI)(value),
     Result.map((iri) => NamedNode.make({ termType: "NamedNode", value: iri })),
     Result.mapError(() => codecError(`Invalid deterministic PROV IRI: ${value}`))
   );
@@ -619,7 +619,7 @@ const decodeRefNode = (term: ObjectTerm | Subject): Result.Result<ObjectRef, Pro
           : Result.succeed(term.value),
         Result.flatMap((value) =>
           pipe(
-            ObjectRefSchema.decodeResult(value),
+            S.decodeResult(ObjectRefSchema)(value),
             Result.mapError(() => codecError(`Invalid PROV object reference: ${value}`))
           )
         )
@@ -688,7 +688,7 @@ const decodeTimestamp = (value: O.Option<ObjectTerm>): Result.Result<O.Option<Pr
     onSome: (term) =>
       Literal.is(term) && term.datatype.value === XSD_DATE_TIME.value && O.isNone(term.language)
         ? pipe(
-            ProvDateTime.decodeResult(term.value),
+            S.decodeResult(ProvDateTime)(term.value),
             Result.map(O.some),
             Result.mapError(() => codecError(`Invalid PROV timestamp: ${term.value}`))
           )

@@ -14,7 +14,7 @@
  * @since 0.0.0
  */
 
-import { LiteralKit, SchemaUtils, Unknown } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
 import { Config, Console, Effect, Layer, Match } from "effect";
 import * as S from "effect/Schema";
@@ -34,15 +34,13 @@ import {
 import { makeStreamingExtractionActivity } from "../Workflow/StreamingExtractionActivity.ts";
 import { ActivityDependenciesLayer, ConfigServiceDefault, EmbeddingBundleOpen } from "./WorkflowLayers.ts";
 
-const encodePrettyUnknown = S.encodeUnknownEffect(S.fromJsonString(Unknown, { space: 2 }));
+const encodePrettyUnknown = S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }));
 
 // -----------------------------------------------------------------------------
 // Activity Name Schema
 // -----------------------------------------------------------------------------
 
-const ActivityName = LiteralKit(["extraction", "resolution", "validation", "ingestion"]).pipe(
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
-);
+const ActivityName = LiteralKit(["extraction", "resolution", "validation", "ingestion"]);
 type ActivityName = typeof ActivityName.Type;
 
 // -----------------------------------------------------------------------------
@@ -116,7 +114,7 @@ const program = Effect.gen(function* () {
   yield* Console.log(`  ACTIVITY_PAYLOAD length: ${payloadJson.length} chars`);
 
   // Parse and validate activity name
-  const activityName = yield* ActivityName.decodeUnknownEffect(activityNameRaw);
+  const activityName = yield* S.decodeUnknownEffect(ActivityName)(activityNameRaw);
 
   // Dispatch to activity
   const result = yield* dispatchActivity(activityName, payloadJson).pipe(

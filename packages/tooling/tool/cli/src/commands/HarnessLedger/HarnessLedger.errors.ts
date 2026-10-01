@@ -6,8 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/HarnessLedger/HarnessLedger.errors");
 
@@ -104,7 +104,7 @@ export class HarnessLedgerChainError extends S.TaggedError<HarnessLedgerChainErr
 export class HarnessLedgerIoError extends S.TaggedError<HarnessLedgerIoError>($I`HarnessLedgerIoError`)(
   "HarnessLedgerIoError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: OpaqueDefect,
     message: S.String,
   },
   $I.annoteError<HarnessLedgerIoError>("HarnessLedgerIoError", {

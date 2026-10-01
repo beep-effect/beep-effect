@@ -125,7 +125,7 @@ export type EffortLevel = typeof EffortLevel.Type;
  * @category models
  * @since 0.0.0
  */
-export const EffortLevelOptions = EffortLevelKit.Options;
+export const EffortLevelOptions = EffortLevelKit.literals;
 
 /**
  * Derived per-literal guards for {@link EffortLevel}.
@@ -214,7 +214,7 @@ export type ProviderSection = typeof ProviderSection.Type;
  * @category models
  * @since 0.0.0
  */
-export const ProviderSectionOptions = ProviderSectionKit.Options;
+export const ProviderSectionOptions = ProviderSectionKit.literals;
 
 const CatalogSourceKit = LiteralKit(["router-for-me", "codex-cache", "grok-cache", "cursor-agent", "proxy-v1-models"]);
 
@@ -275,7 +275,7 @@ export type CatalogSource = typeof CatalogSource.Type;
  * @category models
  * @since 0.0.0
  */
-export const CatalogSourceOptions = CatalogSourceKit.Options;
+export const CatalogSourceOptions = CatalogSourceKit.literals;
 
 /**
  * Optional key that also tolerates an explicit `null`.

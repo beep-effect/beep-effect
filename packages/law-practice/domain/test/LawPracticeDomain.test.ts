@@ -66,7 +66,9 @@ import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -197,19 +199,19 @@ describe("@beep/law-practice-domain", () => {
 
   it("exports value schemas from the package identity", () => {
     expect(LegalClientStatus.is.active_client("active_client")).toBe(true);
-    assertSuccess(LegalClientStatus.fromUnknown("active_client"), "active_client");
-    expect(LegalClientStatus.decodeOption("active_client")._tag).toBe("Some");
+    assertSuccess(S.decodeResult(LegalClientStatus)("active_client"), "active_client");
+    expect(S.decodeOption(LegalClientStatus)("active_client")._tag).toBe("Some");
     expect(LegalContactRole.is.founder("founder")).toBe(true);
-    assertSuccess(LegalContactRole.fromUnknown("founder"), "founder");
-    expect(LegalContactRole.decodeOption("founder")._tag).toBe("Some");
+    assertSuccess(S.decodeResult(LegalContactRole)("founder"), "founder");
+    expect(S.decodeOption(LegalContactRole)("founder")._tag).toBe("Some");
     expect(MatterType.is.patent_application("patent_application")).toBe(true);
-    assertSuccess(MatterType.fromUnknown("patent_application"), "patent_application");
-    expect(MatterType.decodeOption("patent_application")._tag).toBe("Some");
+    assertSuccess(S.decodeResult(MatterType)("patent_application"), "patent_application");
+    expect(S.decodeOption(MatterType)("patent_application")._tag).toBe("Some");
     expect(PatentAssetStatus.is.pre_filing("pre_filing")).toBe(true);
-    assertSuccess(PatentAssetStatus.fromUnknown("pre_filing"), "pre_filing");
-    expect(PatentAssetStatus.decodeOption("pre_filing")._tag).toBe("Some");
-    expect(RejectionGround.is({ referenceFixtureKey: "prior-art.smith", statute: "102" })).toBe(true);
-    expect(DistinctionDetail.is({ kind: "missing_limitation", limitation: "a hinge" })).toBe(true);
+    assertSuccess(S.decodeResult(PatentAssetStatus)("pre_filing"), "pre_filing");
+    expect(S.decodeOption(PatentAssetStatus)("pre_filing")._tag).toBe("Some");
+    expect(S.is(RejectionGround)({ referenceFixtureKey: "prior-art.smith", statute: "102" })).toBe(true);
+    expect(S.is(DistinctionDetail)({ kind: "missing_limitation", limitation: "a hinge" })).toBe(true);
   });
 
   it("validates law-practice entity field schemas", () => {
@@ -390,6 +392,18 @@ describe("@beep/law-practice-domain", () => {
       }),
     { arbitrary: fcRuns(3) }
   );
+
+  it("keeps the WIPO ST.13 office set equal to every ST.3 office except US and XX", () => {
+    // WipoSt13OfficeCode spells its complement out as an explicit pick; this
+    // fails when OfficeCode gains a code the pick does not list.
+    const expected = HashSet.fromIterable(
+      A.filter(OfficeCode.literals, (code) => !OfficeCode.is.US(code) && !OfficeCode.is.XX(code))
+    );
+    const actual = HashSet.fromIterable(WipoSt13OfficeCode.literals);
+
+    expect(HashSet.size(actual)).toBe(WipoSt13OfficeCode.literals.length);
+    assertTrue(Equal.equals(actual, expected));
+  });
 
   it("wires Matter to the law-practice product-entity identity", () => {
     expect(Matter.sql.tableName).toBe(LawPractice.MatterId.tableName);

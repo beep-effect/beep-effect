@@ -12,7 +12,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
 import { Clock, Context, Duration, Effect, Layer, Order, Ref, Semaphore } from "effect";
 import * as A from "effect/Array";
@@ -112,7 +112,7 @@ export class WikidataRateLimitError extends S.TaggedError<WikidataRateLimitError
  * ```ts
  * import { WikidataMatchType } from "@effect-ontology/Service/WikidataClient"
  *
- * console.log(WikidataMatchType.Options)
+ * console.log(WikidataMatchType.literals)
  * ```
  *
  * @category schemas
@@ -202,7 +202,7 @@ export type WikidataCandidate = typeof WikidataCandidate.Type;
  * ```ts
  * import { WikidataEntityType } from "@effect-ontology/Service/WikidataClient"
  *
- * console.log(WikidataEntityType.Options)
+ * console.log(WikidataEntityType.literals)
  * ```
  *
  * @category schemas
@@ -311,7 +311,7 @@ const WikidataSearchResponse = S.Struct({
   search: S.Array(WikidataSearchResult),
   success: S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   "search-continue": S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-}).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+});
 
 const WikidataEntityText = S.Struct({
   value: S.String,
@@ -325,7 +325,7 @@ const WikidataEntity = S.Struct({
 
 const WikidataEntityResponse = S.Struct({
   entities: S.Record(S.String, WikidataEntity),
-}).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+});
 
 type WikidataSearchResultType = typeof WikidataSearchResult.Type;
 
@@ -488,7 +488,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
       );
 
       // Parse response
-      const parsed = yield* WikidataSearchResponse.decodeUnknownEffect(response).pipe(
+      const parsed = yield* S.decodeUnknownEffect(WikidataSearchResponse)(response).pipe(
         Effect.mapError((error) =>
           WikidataApiError.make({
             message: `Failed to parse Wikidata response: ${error}`,
@@ -554,7 +554,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
         )
       );
 
-      const decoded = yield* WikidataEntityResponse.decodeUnknownEffect(response).pipe(
+      const decoded = yield* S.decodeUnknownEffect(WikidataEntityResponse)(response).pipe(
         Effect.mapError((error) =>
           WikidataApiError.make({
             message: "Failed to decode entity response",

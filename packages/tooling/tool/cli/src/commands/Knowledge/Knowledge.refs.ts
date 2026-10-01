@@ -62,7 +62,7 @@ const nfc = Str.normalize("NFC");
  * import { KnowledgeRefKind } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefKind.is["repo-path"]("repo-path")) // true
- * console.log(KnowledgeRefKind.Options.length) // 4
+ * console.log(KnowledgeRefKind.literals.length) // 4
  * ```
  *
  * @category models
@@ -116,7 +116,7 @@ export const isKnowledgeRefKind = S.is(KnowledgeRefKind);
  * import { KnowledgeHostAnchor } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeHostAnchor.is["home-relative"]("home-relative")) // true
- * console.log(KnowledgeHostAnchor.Options.length) // 5
+ * console.log(KnowledgeHostAnchor.literals.length) // 5
  * ```
  *
  * @category models
@@ -175,7 +175,7 @@ export const isKnowledgeHostAnchor = S.is(KnowledgeHostAnchor);
  * import { KnowledgeRefSurface } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefSurface.is.archival("archival")) // true
- * console.log(KnowledgeRefSurface.Options.length) // 2
+ * console.log(KnowledgeRefSurface.literals.length) // 2
  * ```
  *
  * @category models
@@ -228,7 +228,7 @@ export const isKnowledgeRefSurface = S.is(KnowledgeRefSurface);
  * import { KnowledgeRefSurfaceFilter } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefSurfaceFilter.is.all("all")) // true
- * console.log(KnowledgeRefSurfaceFilter.Options.length) // 3
+ * console.log(KnowledgeRefSurfaceFilter.literals.length) // 3
  * ```
  *
  * @see {@link KnowledgeRefSurface} for the per-observation disposition it filters on.
@@ -266,7 +266,7 @@ export type KnowledgeRefSurfaceFilter = typeof KnowledgeRefSurfaceFilter.Type;
  * import { KnowledgeRefClassification } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefClassification.is["broken-target"]("broken-target")) // true
- * console.log(KnowledgeRefClassification.Options.length) // 12
+ * console.log(KnowledgeRefClassification.literals.length) // 12
  * ```
  *
  * @see {@link classifyKnowledgeRef} for the ordered rule table that assigns them.
@@ -337,7 +337,7 @@ export const isKnowledgeRefClassification = S.is(KnowledgeRefClassification);
  * import { KnowledgeRefQuietClassification } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefQuietClassification.is.verified("verified")) // true
- * console.log(KnowledgeRefQuietClassification.Options.length) // 5
+ * console.log(KnowledgeRefQuietClassification.literals.length) // 5
  * ```
  *
  * @see {@link isKnowledgeRefQuietClassification} for the derived guard the listing filters with.
@@ -398,7 +398,7 @@ export const isKnowledgeRefQuietClassification = S.is(KnowledgeRefQuietClassific
  * import { KnowledgeRefResolutionStatus } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefResolutionStatus.is["not-applicable"]("not-applicable")) // true
- * console.log(KnowledgeRefResolutionStatus.Options.length) // 5
+ * console.log(KnowledgeRefResolutionStatus.literals.length) // 5
  * ```
  *
  * @category models
@@ -440,7 +440,7 @@ export type KnowledgeRefResolutionStatus = typeof KnowledgeRefResolutionStatus.T
  * import { KnowledgeSkipReason } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeSkipReason.is.symlink("symlink")) // true
- * console.log(KnowledgeSkipReason.Options.length) // 3
+ * console.log(KnowledgeSkipReason.literals.length) // 3
  * ```
  *
  * @category models

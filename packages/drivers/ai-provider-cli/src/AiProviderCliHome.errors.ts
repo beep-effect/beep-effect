@@ -9,7 +9,7 @@
  */
 
 import { $AiProviderCliId } from "@beep/identity";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -94,7 +94,9 @@ export class AiProviderCliHomeFileSystemError extends S.TaggedError<AiProviderCl
 )(
   "AiProviderCliHomeFileSystemError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    )
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Underlying platform failure, when one was captured.",

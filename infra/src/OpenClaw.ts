@@ -51,11 +51,7 @@ import * as Crypto from "effect/Crypto";
 import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import {
-  optionalPulumiConfigFields,
-  pulumiConfigSchemaIssueError,
-  withPulumiConfigDecodeEffect,
-} from "./internal/PulumiConfigSchema.ts";
+import { optionalPulumiConfigFields, pulumiConfigSchemaIssueError } from "./internal/PulumiConfigSchema.ts";
 import {
   openClawLegalSoulMarkdown,
   openClawProofSkillMarkdown,
@@ -231,7 +227,7 @@ const heredocLines = (input: {
  * ```ts
  * import { OpenClawFileMode } from "@beep/infra"
  *
- * console.log(OpenClawFileMode.Options) // ["0644", "0755"]
+ * console.log(OpenClawFileMode.literals) // ["0644", "0755"]
  * ```
  *
  * @category models
@@ -371,9 +367,7 @@ export const OpenClawPulumiConfigValues = S.Class<OpenClawPulumiConfigValuesFiel
     unitName: S.String,
   },
   $I.annote("OpenClawPulumiConfigValues", { description: "Configuration values for OpenClaw Pulumi resources" })
-)
-  .mapFields(optionalPulumiConfigFields)
-  .pipe(withPulumiConfigDecodeEffect);
+).mapFields(optionalPulumiConfigFields);
 
 /**
  * Declared identity of the single workstation this stack may mutate.

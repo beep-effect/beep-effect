@@ -42,6 +42,7 @@ import { TextItalicIcon } from "@phosphor-icons/react/TextItalic";
 import { TextStrikethroughIcon } from "@phosphor-icons/react/TextStrikethrough";
 import { TextUnderlineIcon } from "@phosphor-icons/react/TextUnderline";
 import { Match } from "effect";
+import * as F from "effect/Function";
 import { Atom } from "effect/reactivity";
 import {
   $createParagraphNode,
@@ -132,11 +133,11 @@ const blockTypeFromListType = (listType: "number" | "bullet" | "check"): BlockTy
 const blockTypeFromNode = Match.type<LexicalNode>().pipe(
   Match.when($isListNode, (node) => blockTypeFromListType(node.getListType())),
   Match.when($isHeadingNode, (node) => node.getTag()),
-  Match.when($isQuoteNode, BlockType.thunk.quote),
-  Match.when($isCodeNode, BlockType.thunk.code),
+  Match.when($isQuoteNode, F.constant(BlockType.Enum.quote)),
+  Match.when($isCodeNode, F.constant(BlockType.Enum.code)),
   // A table cell is the local block boundary. Do not climb to the table's
   // top-level node: classify the nearest supported block inside this cell.
-  Match.when($isTableCellNode, BlockType.thunk.paragraph),
+  Match.when($isTableCellNode, F.constant(BlockType.Enum.paragraph)),
   Match.orElse(() => undefined)
 );
 

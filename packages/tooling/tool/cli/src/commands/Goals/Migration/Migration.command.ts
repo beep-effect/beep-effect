@@ -95,7 +95,7 @@ const repairSlugArgument = Argument.String("slug").pipe(
   Argument.withDescription("Packet slug under the selected root"),
   Argument.optional
 );
-const repairRootFlag = Flag.Literals("root", PacketRoot.Options).pipe(
+const repairRootFlag = Flag.Literals("root", PacketRoot.literals).pipe(
   Flag.withDefault(PacketRoot.Enum.goals),
   Flag.withDescription("Packet root containing the stream")
 );

@@ -47,7 +47,7 @@ describe("@beep/agents-server schema parity", () => {
     });
 
     expect(
-      Result.getOrThrow(PatchOpSummary.encodeResult(ReplacePatchOpSummary.make({ path: "/children/0/text" })))
+      Result.getOrThrow(S.encodeResult(PatchOpSummary)(ReplacePatchOpSummary.make({ path: "/children/0/text" })))
     ).toStrictEqual({
       path: "/children/0/text",
       op: "replace",

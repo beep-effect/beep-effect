@@ -472,8 +472,8 @@ const workbenchState = <A>(initialValue: A) => Atom.keepAlive(Atom.make(initialV
  * @category constants
  * @since 0.0.0
  */
-export const ontologyWorkbenchSeedPath: OntologyFilePath = OntologyFilePath.decodeUnknownSync(
-  "tmp/ontology-workbench/pizza-tutorial.ttl"
+export const ontologyWorkbenchSeedPath: OntologyFilePath = Result.getOrThrow(
+  S.decodeResult(OntologyFilePath)("tmp/ontology-workbench/pizza-tutorial.ttl")
 );
 
 /**
@@ -497,7 +497,7 @@ export const ontologyWorkbenchSeedPath: OntologyFilePath = OntologyFilePath.deco
  * @since 0.0.0
  */
 export const ontologySessionIdForPath = (path: OntologyFilePath): SessionId =>
-  SessionId.decodeUnknownSync(`ontology:${path}`);
+  Result.getOrThrow(S.decodeResult(SessionId)(`ontology:${path}`));
 
 /**
  * Workspace-relative path entered in the ontology document toolbar.
@@ -2919,15 +2919,15 @@ export const exportOntologyProvenanceAtom = OntologyClient.runtime.fn<void>()(
         const client = yield* OntologyClient;
         const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
         const basePath = O.getOrElse(ctx(ontologyPathAtom), () =>
-          OntologyFilePath.decodeUnknownSync(`tmp/${session.id}.ttl`)
+          Result.getOrThrow(S.decodeResult(OntologyFilePath)(`tmp/${session.id}.ttl`))
         );
         const exported = yield* Reactivity.mutation(
           client(
             "ExportOntologyProvenance",
             ExportOntologyProvenanceCommand.make({
               session,
-              provPath: OntologyFilePath.decodeUnknownSync(`${basePath}.prov.ttl`),
-              datasetPath: OntologyFilePath.decodeUnknownSync(`${basePath}.dataset.ttl`),
+              provPath: Result.getOrThrow(S.decodeResult(OntologyFilePath)(`${basePath}.prov.ttl`)),
+              datasetPath: Result.getOrThrow(S.decodeResult(OntologyFilePath)(`${basePath}.dataset.ttl`)),
             })
           ),
           [PROVENANCE_KEY]

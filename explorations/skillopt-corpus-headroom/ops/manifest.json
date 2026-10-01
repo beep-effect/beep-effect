@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "skillopt-corpus-headroom",
+    "title": "SkillOpt Corpus Headroom",
+    "status": "parked",
+    "stage": "capture",
+    "openQuestions": [
+      "What corpus gives a measurable gap at the current target model: more validation items, harder tasks, or both?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-01",
+    "updated": "2026-10-01"
+  }
+}

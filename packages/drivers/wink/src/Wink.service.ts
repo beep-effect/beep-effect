@@ -7,7 +7,6 @@
 
 import { createRequire } from "node:module";
 import { $WinkId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Clock, Context, Effect, Layer, pipe, Ref } from "effect";
 import * as O from "effect/Option";
@@ -44,8 +43,9 @@ type WinkCustomEntityRecord = {
  *
  * ```ts
  * import { InstanceId } from "@beep/wink"
+ * import * as S from "effect/Schema"
  *
- * const instanceId = InstanceId.decodeUnknownSync("wink-engine-example-1")
+ * const instanceId = S.decodeUnknownSync(InstanceId)("wink-engine-example-1")
  * console.log(instanceId)
  * ```
  *
@@ -56,8 +56,7 @@ export const InstanceId = S.NonEmptyString.pipe(
   S.brand("InstanceId"),
   $I.annoteSchema("InstanceId", {
     description: "Stable identifier for one live wink engine instance.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
+  })
 );
 
 /**

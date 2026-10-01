@@ -32,7 +32,6 @@ import {
   validateRepoSafetyPolicy,
 } from "@beep/ai-sync";
 import { renderGeneratedSchemas } from "@beep/ai-sync/generator";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
@@ -100,7 +99,7 @@ const repoSafeClaudePermissions = {
   defaultMode: "default",
   deny: requiredClaudeRepoDenyPermissions,
 };
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const expectSchemaRoundTrip = Effect.fn("expectSchemaRoundTrip")(function* <Schema extends S.Codec<unknown>>(
   schema: Schema,
@@ -368,7 +367,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
     "renders generated literal domains through LiteralKit",
     Effect.fn(function* () {
       const generatedSchemas = renderGeneratedSchemas();
-      expect(generatedSchemas).toContain('import { LiteralKit, UnknownRecord } from "@beep/schema";');
+      expect(generatedSchemas).toContain('import { LiteralKit } from "@beep/schema";');
       expect(generatedSchemas).toContain("approval_policy: LiteralKit([");
       expect(generatedSchemas).toContain("sandbox_mode: LiteralKit([");
       expect(generatedSchemas).toContain("type: LiteralKit([");
@@ -556,6 +555,10 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
         const invalid = yield* Effect.exit(validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" }));
         assertTrue(Exit.isFailure(invalid));
         expect(String(invalid)).toContain('["skills"]["include_instructions"]');
+
+        yield* writeText(path.join(tmpDir, ".codex/config.toml"), 'model = "gpt-5\n[skills\n');
+        const malformed = yield* Effect.flip(validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" }));
+        assert.include(String(malformed), "Invalid TOML input");
       })
     );
 

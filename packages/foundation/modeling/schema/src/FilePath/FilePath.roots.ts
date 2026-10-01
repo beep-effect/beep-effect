@@ -7,7 +7,6 @@
 import * as Eq from "effect/Equal";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { EndsWithSeparator } from "./FilePath.guards.ts";
 import { $I, windowsDriveRootRegExp, windowsUncRootRegExp } from "./FilePath.shared.ts";
 
@@ -38,8 +37,7 @@ export const WindowsDriveRoot = S.String.check(
   S.brand("WindowsDriveRoot"),
   $I.annoteSchema("WindowsDriveRoot", {
     description: "A Windows drive root such as C: or C:\\.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -87,8 +85,7 @@ export const WindowsUncRoot = S.String.check(
   S.brand("WindowsUncRoot"),
   $I.annoteSchema("WindowsUncRoot", {
     description: "A Windows UNC root such as \\\\server\\share.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -109,9 +106,9 @@ export const WindowsUncRoot = S.String.check(
  */
 export type WindowsUncRoot = typeof WindowsUncRoot.Type;
 
-const isEndsWithSeparator = EndsWithSeparator.is;
-const isWindowsDriveRoot = WindowsDriveRoot.is;
-const isWindowsUncRoot = WindowsUncRoot.is;
+const isEndsWithSeparator = S.is(EndsWithSeparator);
+const isWindowsDriveRoot = S.is(WindowsDriveRoot);
+const isWindowsUncRoot = S.is(WindowsUncRoot);
 
 /**
  * Branded schema for path strings that include a non-root leaf segment.
@@ -167,8 +164,7 @@ export const HasLeafSegment = S.NonEmptyString.check(
   S.brand("HasLeafSegment"),
   $I.annoteSchema("HasLeafSegment", {
     description: "A non-empty path string that is not just a root and does not end with a separator.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

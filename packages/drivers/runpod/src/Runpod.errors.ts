@@ -6,7 +6,7 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -32,8 +32,9 @@ const RunpodDocsErrorReasonBase = LiteralKit(["config", "parse", "response decod
  *
  * ```ts
  * import { RunpodHttpStatusCode } from "@beep/runpod"
+ * import * as S from "effect/Schema"
  *
- * console.log(RunpodHttpStatusCode.is(200))
+ * console.log(S.is(RunpodHttpStatusCode)(200))
  * ```
  *
  * @category models
@@ -42,8 +43,7 @@ const RunpodDocsErrorReasonBase = LiteralKit(["config", "parse", "response decod
 export const RunpodHttpStatusCode = S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
   $I.annoteSchema("RunpodHttpStatusCode", {
     description: "Numeric HTTP status code emitted by Runpod driver boundaries.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -81,11 +81,7 @@ export const RunpodErrorReason = RunpodErrorReasonBase.pipe(
   $I.annoteSchema("RunpodErrorReason", {
     description: "Redacted technical error reasons emitted by the Runpod REST API driver.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodErrorReasonBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodErrorReasonBase)
 );
 
 /**
@@ -123,11 +119,7 @@ export const RunpodDocsErrorReason = RunpodDocsErrorReasonBase.pipe(
   $I.annoteSchema("RunpodDocsErrorReason", {
     description: "Redacted technical error reasons emitted by the Runpod documentation driver.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodDocsErrorReasonBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodDocsErrorReasonBase)
 );
 
 /**
@@ -309,7 +301,7 @@ export class RunpodErrorOptions extends S.Class<RunpodErrorOptions>($I`RunpodErr
 
 class RunpodErrorOptionsInput extends S.Class<RunpodErrorOptionsInput>($I`RunpodErrorOptionsInput`)(
   {
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
     status: S.optionalKey(RunpodHttpStatusCode),
   },
   $I.annote("RunpodErrorOptionsInput", {
@@ -338,7 +330,7 @@ class RunpodErrorOptionsInput extends S.Class<RunpodErrorOptionsInput>($I`Runpod
  */
 export class RunpodRawErrorOptions extends S.Class<RunpodRawErrorOptions>($I`RunpodRawErrorOptions`)(
   {
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
     method: RunpodHttpMethod,
     path: S.String,
     reason: RunpodErrorReason,
@@ -383,7 +375,7 @@ export class RunpodDocsErrorOptions extends S.Class<RunpodDocsErrorOptions>($I`R
 
 class RunpodDocsErrorOptionsInput extends S.Class<RunpodDocsErrorOptionsInput>($I`RunpodDocsErrorOptionsInput`)(
   {
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
     status: S.optionalKey(RunpodHttpStatusCode),
     url: S.optionalKey(S.String),
   },

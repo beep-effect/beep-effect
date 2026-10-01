@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/SyncDataToTs.errors");
 
@@ -35,7 +35,7 @@ export class SyncDataToTsError extends S.TaggedError<SyncDataToTsError>($I`SyncD
     message: S.String,
     targetId: S.optionalKey(S.String),
     file: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<SyncDataToTsError>("SyncDataToTsError", {
     title: "Sync Data To TypeScript Error",

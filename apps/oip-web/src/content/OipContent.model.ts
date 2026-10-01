@@ -77,11 +77,7 @@ export const ReviewStatus = ReviewStatusBase.pipe(
   $I.annoteSchema("ReviewStatus", {
     description: "Review state for public OIP website claims.",
   }),
-  SchemaUtils.withLiteralKitStatics(ReviewStatusBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(ReviewStatusBase)
 );
 
 /**

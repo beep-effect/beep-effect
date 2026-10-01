@@ -11,6 +11,7 @@ import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { DockCommand } from "./Dock.commands.ts";
 import { DockCommandRejected } from "./Dock.errors.ts";
 import { GroupId } from "./Dock.ids.ts";
@@ -137,7 +138,7 @@ export const lockedGroupsPolicy: DualDockCommandPolicy = dual(
           tab: ({ groupId }) =>
             Bool.match(
               O.exists(DockWorkspace.findTabsForPanel(state, panelId), (source) =>
-                GroupId.equals(source.groupId, groupId)
+                S.toEquivalence(GroupId)(source.groupId, groupId)
               ),
               {
                 onTrue: thunkEffectVoid,

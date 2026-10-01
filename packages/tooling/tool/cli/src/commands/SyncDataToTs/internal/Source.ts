@@ -9,7 +9,6 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { CSV } from "@beep/schema/Csv";
 import { parseCsvRows } from "@beep/schema/CsvParser";
 import { ParserOptions } from "@beep/schema/ParserOptions";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { XmlTextToUnknown } from "@beep/schema/Xml";
 import { A, Str } from "@beep/utils";
 import { cast } from "@beep/utils/Function";
@@ -23,13 +22,15 @@ import { formatJsonValue } from "../../../internal/cli/Json.ts";
 import { SyncDataToTsError } from "../SyncDataToTs.errors.ts";
 import { SyncDataOutputFile, SyncDataSourceMetadata } from "../SyncDataToTs.schemas.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $RepoCliId.create("commands/SyncDataToTs/internal/Source");
 
 const textDecoder = new TextDecoder();
-const decodeJsonText = UnknownFromJsonString.decodeUnknownEffect;
+const decodeJsonText = S.decodeUnknownEffect(UnknownJson);
 const decodeJsonTextResult = S.decodeUnknownResult(S.fromJsonString(S.Json));
 const decodeXmlText = S.decodeUnknownEffect(XmlTextToUnknown);
-const encodeUnknownJsonResult = UnknownFromJsonString.encodeUnknownResult;
+const encodeUnknownJsonResult = S.encodeUnknownResult(UnknownJson);
 const defaultCsvParserOptions = ParserOptions.new();
 
 const ParsedCsvRecord = S.Record(S.String, S.String).pipe(

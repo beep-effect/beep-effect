@@ -719,7 +719,7 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
    * @returns The matching entity, or `Option.none()` when it is absent.
    */
   getEntity(id: EntityId): O.Option<Entity> {
-    return A.findFirst(this.entities, (entity) => EntityId.equivalence(entity.id, id));
+    return A.findFirst(this.entities, (entity) => S.toEquivalence(EntityId)(entity.id, id));
   }
 
   /**
@@ -742,7 +742,7 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
    * @returns Relations whose subject equals `subjectId`, preserving graph order.
    */
   getRelationsFrom(subjectId: EntityId): ReadonlyArray<Relation> {
-    return A.filter(this.relations, (relation) => EntityId.equivalence(relation.subjectId, subjectId));
+    return A.filter(this.relations, (relation) => S.toEquivalence(EntityId)(relation.subjectId, subjectId));
   }
 
   /**
@@ -768,7 +768,7 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
     return A.filter(
       this.relations,
       (relation) =>
-        RelationObject.guards.EntityReference(relation.object) && EntityId.equivalence(relation.object.value, entityId)
+        RelationObject.guards.EntityReference(relation.object) && S.toEquivalence(EntityId)(relation.object.value, entityId)
     );
   }
 }

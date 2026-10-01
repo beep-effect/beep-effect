@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { SpanKind, SpanStatusCode, TraceFlags } from "@opentelemetry/api";
@@ -101,7 +101,7 @@ const isAiMetricsOtlpAttributeKey = S.is(AiMetricsOtlpAttributeKey);
  * @category constants
  * @since 0.0.0
  */
-export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = AiMetricsOtlpAttributeKey.Options;
+export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = AiMetricsOtlpAttributeKey.literals;
 
 const OpenInferenceSpanKind = LiteralKit(["AGENT", "CHAIN", "LLM", "TOOL"]);
 const OtlpTraceId = S.String.check(S.isPattern(/^[0-9a-f]{32}$/u)).pipe(
@@ -118,8 +118,9 @@ const OtlpSpanId = S.String.check(S.isPattern(/^[0-9a-f]{16}$/u)).pipe(
  *
  * ```ts
  * import { AiMetricsOtlpAttributeValue } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
  *
- * const isAttributeValue = AiMetricsOtlpAttributeValue.is(42)
+ * const isAttributeValue = S.is(AiMetricsOtlpAttributeValue)(42)
  * console.log(isAttributeValue)
  * ```
  *
@@ -129,8 +130,7 @@ const OtlpSpanId = S.String.check(S.isPattern(/^[0-9a-f]{16}$/u)).pipe(
 export const AiMetricsOtlpAttributeValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
   $I.annoteSchema("AiMetricsOtlpAttributeValue", {
     description: "Low-cardinality or hashed attribute value emitted on AI metrics OTLP spans.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -170,7 +170,7 @@ export type AiMetricsOtlpAttributeValue = typeof AiMetricsOtlpAttributeValue.Typ
 export class AiMetricsOtlpExportError extends S.TaggedError<AiMetricsOtlpExportError>($I`AiMetricsOtlpExportError`)(
   "AiMetricsOtlpExportError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsOtlpExportError>("AiMetricsOtlpExportError", {

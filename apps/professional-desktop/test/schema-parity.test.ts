@@ -64,7 +64,7 @@ describe("@beep/professional-desktop schema parity", () => {
       expect(yield* encodeSidecarTransport(sidecarTransport)).toStrictEqual(sidecarTransportWire);
 
       const inboundFrameWire = '{"jsonrpc":"2.0"}\n';
-      const inboundFrame = yield* InboundFrame.decodeUnknownEffect(inboundFrameWire);
+      const inboundFrame = yield* S.decodeEffect(InboundFrame)(inboundFrameWire);
       expect(yield* encodeInboundFrame(inboundFrame)).toStrictEqual(inboundFrameWire);
 
       const inboundEventWire = { _tag: "Rx", payload: inboundFrameWire };

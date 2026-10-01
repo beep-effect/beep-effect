@@ -941,15 +941,14 @@ const RelationPart = S.String.check(
 ).pipe(
   $I.annoteSchema("RelationPart", {
     description: "One validated segment in a slash-qualified skill relation.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const RelationInput = S.String.check(
   S.makeFilter(
     (raw: string) => {
       const value = Str.trim(raw);
-      return isRelationUri(value) || A.every(RelationPart.is)(Str.split("/")(value));
+      return isRelationUri(value) || A.every(S.is(RelationPart))(Str.split("/")(value));
     },
     {
       identifier: $I`RelationInputCheck`,
@@ -965,7 +964,7 @@ const RelationInput = S.String.check(
 );
 
 const RelationValue = S.String.check(
-  S.makeFilter((value: string) => isRelationUri(value) || RelationPart.is(value), {
+  S.makeFilter((value: string) => isRelationUri(value) || S.is(RelationPart)(value), {
     identifier: $I`RelationValueCheck`,
     title: "Normalized relation identifier",
     description: "Accepts a pass-through URI or the final canonical segment of a qualified relation path.",

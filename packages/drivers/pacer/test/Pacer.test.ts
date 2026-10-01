@@ -13,8 +13,6 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
  */
 
 import * as Pacer from "@beep/pacer";
-import * as HttpStatus from "@beep/schema/HttpStatus";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
@@ -22,6 +20,7 @@ import { Cause, Deferred, Effect, Exit, Fiber, Layer, Match, pipe, Redacted, Ref
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as HttpClient from "effect/http/HttpClient";
+import * as HttpStatus from "effect/http/HttpStatus";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -29,7 +28,7 @@ import * as Str from "effect/String";
 const cfg = Pacer.mockPacerConfig();
 const initialToken = Str.repeat(128)("Q");
 const rotatedToken = Str.repeat(128)("R");
-const encodeUnknownJson = S.encodeEffect(UnknownFromJsonString);
+const encodeUnknownJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const mockLayer = (options: Parameters<typeof Pacer.makePacerMockHttpClient>[0] = {}) =>
   Pacer.makePacerLayer(cfg, Pacer.makePacerMockHttpClient(options)).full;
@@ -100,23 +99,23 @@ describe("PACER schema round-trips (generated)", () => {
 describe("PACER error mappings (property-based)", () => {
   const statusArbitrary = Arbitrary.schema(
     S.Literals([
-      HttpStatus.BadRequest.literal,
-      HttpStatus.Unauthorized.literal,
-      HttpStatus.NotFound.literal,
-      HttpStatus.NotAcceptable.literal,
-      HttpStatus.TooManyRequests.literal,
-      HttpStatus.InternalServerError.literal,
-      HttpStatus.ServiceUnavailable.literal,
+      HttpStatus.fromLiteral("BadRequest"),
+      HttpStatus.fromLiteral("Unauthorized"),
+      HttpStatus.fromLiteral("NotFound"),
+      HttpStatus.fromLiteral("NotAcceptable"),
+      HttpStatus.fromLiteral("TooManyRequests"),
+      HttpStatus.fromLiteral("InternalServerError"),
+      HttpStatus.fromLiteral("ServiceUnavailable"),
     ])
   );
 
   const expectedPclReason = (status: number): Pacer.PacerPclErrorReason =>
     Match.value(status).pipe(
-      Match.when(HttpStatus.BadRequest.literal, () => Pacer.PacerPclErrorReason.Enum["bad-request"]),
-      Match.when(HttpStatus.Unauthorized.literal, () => Pacer.PacerPclErrorReason.Enum.unauthorized),
-      Match.when(HttpStatus.NotFound.literal, () => Pacer.PacerPclErrorReason.Enum["not-found"]),
-      Match.when(HttpStatus.NotAcceptable.literal, () => Pacer.PacerPclErrorReason.Enum["invalid-parameter"]),
-      Match.when(HttpStatus.TooManyRequests.literal, () => Pacer.PacerPclErrorReason.Enum["too-many-requests"]),
+      Match.when(HttpStatus.fromLiteral("BadRequest"), () => Pacer.PacerPclErrorReason.Enum["bad-request"]),
+      Match.when(HttpStatus.fromLiteral("Unauthorized"), () => Pacer.PacerPclErrorReason.Enum.unauthorized),
+      Match.when(HttpStatus.fromLiteral("NotFound"), () => Pacer.PacerPclErrorReason.Enum["not-found"]),
+      Match.when(HttpStatus.fromLiteral("NotAcceptable"), () => Pacer.PacerPclErrorReason.Enum["invalid-parameter"]),
+      Match.when(HttpStatus.fromLiteral("TooManyRequests"), () => Pacer.PacerPclErrorReason.Enum["too-many-requests"]),
       Match.orElse(() => Pacer.PacerPclErrorReason.Enum["server-error"])
     );
 

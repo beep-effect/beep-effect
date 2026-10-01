@@ -13,7 +13,6 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Context, Equal, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -49,10 +48,10 @@ const CorrectionSelectRows = Corrections.select.pipe(S.Array, S.mutable);
 const decodeCorrectionRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(CorrectionSelectRows)(rows));
 
-const ClaimCountRows = S.Tuple([ClaimCountDatabaseRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const ClaimCountRows = S.Tuple([ClaimCountDatabaseRow]);
 
 const decodeClaimCountRows = (rows: unknown) =>
-  normalizeDecodedRows(ClaimCountRows.decodeUnknownEffect(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(ClaimCountRows)(rows));
 
 // =============================================================================
 // Types

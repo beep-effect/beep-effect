@@ -1,16 +1,15 @@
 import { buildCacheDashboard, CacheCommandError, CacheWarmLane } from "@beep/repo-cli/commands/Cache";
 import { runCacheWarmForTesting, runCacheWarmLaneForTesting } from "@beep/repo-cli/test/Cache";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { Effect, FileSystem, Order, Path } from "effect";
+import { Effect, FileSystem, flow, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const initializeWarmRepository = Effect.fn("CacheCommandTest.initializeWarmRepository")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

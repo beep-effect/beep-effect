@@ -781,7 +781,7 @@ const DesktopShell = ({
       onNone: () => isPanelActive(workspace, key),
       onSome: (groupId) =>
         O.exists(DockWorkspace.findTabs(workspace, groupId), (tabs) =>
-          PanelId.equals(tabs.active.id, desktopPanelId(key))
+          S.toEquivalence(PanelId)(tabs.active.id, desktopPanelId(key))
         ),
     });
   const navigate = useAtomSet(navigateDesktopPanelAtom);
