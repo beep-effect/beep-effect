@@ -111,13 +111,23 @@ describe("withStatics", () => {
     Reflect.defineProperty(target, "locked", { value: "old", configurable: false, enumerable: true });
 
     expect(() => SchemaUtils.withStatics(target, () => ({ locked: "new" }))).toThrow(
-      "Cannot redefine non-configurable static 'locked'."
+      expect.objectContaining({
+        _tag: "StaticDescriptorRedefinitionError",
+        key: "locked",
+        message: "Cannot redefine non-configurable static 'locked'.",
+      })
     );
   });
 
   it("rejects a static on a non-extensible target", () => {
     const target = Object.preventExtensions({});
 
-    expect(() => SchemaUtils.withStatics(target, () => ({ added: 1 }))).toThrow("Cannot define static 'added'.");
+    expect(() => SchemaUtils.withStatics(target, () => ({ added: 1 }))).toThrow(
+      expect.objectContaining({
+        _tag: "StaticDescriptorRedefinitionError",
+        key: "added",
+        message: "Cannot define static 'added'.",
+      })
+    );
   });
 });
