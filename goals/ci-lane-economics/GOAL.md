@@ -4,24 +4,29 @@ You are executing `goals/ci-lane-economics`. Read `SPEC.md` and `PLAN.md`
 first; the ledger is `research/OPPORTUNITIES.md` (record friction at the
 moment it happens).
 
-Current phase: P3 repair path. Two admission windows are denied:
+Current phase: P3 repair path. Three admission windows are denied:
 
-- Window 1, `2026-09-04T00:00:00Z` → `2026-09-11T00:00:00Z` (18 contexts),
-  censused 2026-09-21: `Check` 20m19s p95, `Coverage Regression` 30m58s p95,
-  shard pickup 8m22s p95. See `research/admission-week-p95.md`.
-- Window 2, `2026-09-13T00:00:00Z` → `2026-09-20T00:00:00Z` (ratified 17
-  contexts, ruleset `10240248` version `49479116`), censused 2026-09-22:
-  `Test Unit` 22m02s p95 (p50 17m54s), `Lint Policy` 21m59s p95 (p50 16m59s),
-  shard pickup 7m47s p95. `Check` recovered to 8m22s. See
-  `research/admission-week-2-p95.md`.
+- Window 1 (`2026-09-04` → `09-11`, 18 contexts): `Check`, `Coverage
+  Regression`, and pickup breached (`research/admission-week-p95.md`).
+- Window 2 (`2026-09-13` → `09-20`, 17 contexts): `Test Unit`, `Lint
+  Policy`, and pickup breached (`research/admission-week-2-p95.md`).
+- Window 3, `2026-09-23T00:00:00Z` → `2026-09-30T00:00:00Z` (ratified 16
+  contexts, ruleset `10240248` version `50918272`, `Lint Policy` removed
+  2026-09-25T14:46:59Z), censused 2026-10-01: `Test Unit` 35m00s p95, `Lint`
+  29m16s p95, shard pickup 23m58s p95. Shard bodies held (repo-cli-1/2 p95
+  748 s/735 s); the breach is hosted-runner queue saturation under agent
+  fan-out from 09-25. See `research/admission-week-3-p95.md`. The next move
+  is proposed, unsigned, in `research/repair-decision-3-proposed.md`; window
+  4 is the first complete half-open UTC week after a signed move merges.
+  Since #1369 the census refuses a window that a ruleset change straddles.
 
 The repair path is signed in `research/repair-decision-2.md`. Moves: #1195
 (`Test Unit` shard split: `repo-cli` becomes `repo-cli-1`/`repo-cli-2` via
 an optional `shard {index,total}` partition field; free hosted runners stay
 the placement) merged 2026-09-22T12:49Z; #1194 (refs-check quiet listing)
-merged 2026-09-22T16:34Z. `Lint Policy` is measured, not repaired, here; its
-wall-clock debt is handed to `goals/time-to-certainty` C4 and the window-3
-verdict decides whether C4 is pulled forward. Do not add a shard or a fleet
+merged 2026-09-22T16:34Z. `Lint Policy` left the required set on
+2026-09-25 and window 3 did not measure it, so the C4 trigger is unresolved:
+the debt stays with `goals/time-to-certainty` C4 at its own pace. Do not add a shard or a fleet
 move without a new signed decision.
 
 Window 3 is the first complete half-open UTC week that starts after the last
