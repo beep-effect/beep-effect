@@ -90,7 +90,7 @@ export class LinkInline extends S.Class<LinkInline>($I`LinkInline`)(
   })
 ) {}
 
-const InlineNodeWithCodecStatics = pipe(
+const InlineNodeUntagged = pipe(
   S.Union([TextInline, LinkInline]),
   $I.annoteSchema("InlineNode", {
     description: "Inline content held by an assistant block.",
@@ -113,7 +113,7 @@ const InlineNodeWithCodecStatics = pipe(
  * @category value-objects
  * @since 0.0.0
  */
-export const InlineNode = InlineNodeWithCodecStatics.pipe(S.toTaggedUnion("type"));
+export const InlineNode = InlineNodeUntagged.pipe(S.toTaggedUnion("type"));
 
 /**
  * Type accepted by the {@link InlineNode} schema.

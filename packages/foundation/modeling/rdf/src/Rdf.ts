@@ -535,7 +535,7 @@ export class DefaultGraph extends S.Class<DefaultGraph>($I`DefaultGraph`)(
 ) {}
 
 const TermDefinition = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]);
-const TermWithCodecStatics = TermDefinition.pipe(
+const TermUntagged = TermDefinition.pipe(
   $I.annoteSchema("Term", {
     description: "RDF term union aligned with RDF/JS.",
     semanticSchemaMetadata: makeSemanticSchemaMetadata({
@@ -576,7 +576,7 @@ const TermWithCodecStatics = TermDefinition.pipe(
  * @category models
  * @since 0.0.0
  */
-export const Term = TermWithCodecStatics.pipe(S.toTaggedUnion("termType"));
+export const Term = TermUntagged.pipe(S.toTaggedUnion("termType"));
 
 /**
  * Type for {@link Term}.
@@ -596,7 +596,7 @@ export const Term = TermWithCodecStatics.pipe(S.toTaggedUnion("termType"));
 export type Term = typeof Term.Type;
 
 const SubjectDefinition = S.Union([NamedNode, BlankNode]);
-const SubjectWithCodecStatics = SubjectDefinition.pipe((schema) =>
+const SubjectUntagged = SubjectDefinition.pipe((schema) =>
   pipe(
     schema,
     $I.annoteSchema("Subject", {
@@ -624,7 +624,7 @@ const SubjectWithCodecStatics = SubjectDefinition.pipe((schema) =>
  * @category models
  * @since 0.0.0
  */
-export const Subject = SubjectWithCodecStatics.pipe(S.toTaggedUnion("termType"));
+export const Subject = SubjectUntagged.pipe(S.toTaggedUnion("termType"));
 
 /**
  * Type for {@link Subject}.
@@ -644,7 +644,7 @@ export const Subject = SubjectWithCodecStatics.pipe(S.toTaggedUnion("termType"))
 export type Subject = typeof Subject.Type;
 
 const ObjectTermDefinition = S.Union([NamedNode, BlankNode, Literal]);
-const ObjectTermWithCodecStatics = ObjectTermDefinition.pipe(
+const ObjectTermUntagged = ObjectTermDefinition.pipe(
   $I.annoteSchema("ObjectTerm", {
     description: "RDF object term union.",
   })
@@ -670,7 +670,7 @@ const ObjectTermWithCodecStatics = ObjectTermDefinition.pipe(
  * @category models
  * @since 0.0.0
  */
-export const ObjectTerm = ObjectTermWithCodecStatics.pipe(S.toTaggedUnion("termType"));
+export const ObjectTerm = ObjectTermUntagged.pipe(S.toTaggedUnion("termType"));
 
 /**
  * Type for {@link ObjectTerm}.
@@ -690,7 +690,7 @@ export const ObjectTerm = ObjectTermWithCodecStatics.pipe(S.toTaggedUnion("termT
 export type ObjectTerm = typeof ObjectTerm.Type;
 
 const GraphTermDefinition = S.Union([NamedNode, BlankNode, DefaultGraph]);
-const GraphTermWithCodecStatics = GraphTermDefinition.pipe(
+const GraphTermUntagged = GraphTermDefinition.pipe(
   $I.annoteSchema("GraphTerm", {
     description: "RDF graph term union.",
   })
@@ -715,7 +715,7 @@ const GraphTermWithCodecStatics = GraphTermDefinition.pipe(
  * @category models
  * @since 0.0.0
  */
-export const GraphTerm = GraphTermWithCodecStatics.pipe(S.toTaggedUnion("termType"));
+export const GraphTerm = GraphTermUntagged.pipe(S.toTaggedUnion("termType"));
 
 /**
  * Type for {@link GraphTerm}.

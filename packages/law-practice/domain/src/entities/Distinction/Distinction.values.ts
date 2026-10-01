@@ -26,7 +26,7 @@ const DistinctionDetailDefinition = DistinctionKind.toTaggedUnion("kind")({
   },
 });
 
-const DistinctionDetailWithCodecStatics = S.make<(typeof DistinctionDetailDefinition)["Rebuild"]>(
+const DistinctionDetailUntagged = S.make<(typeof DistinctionDetailDefinition)["Rebuild"]>(
   DistinctionDetailDefinition.ast
 ).pipe(
   $I.annoteSchema("DistinctionDetail", {
@@ -56,7 +56,7 @@ const DistinctionDetailWithCodecStatics = S.make<(typeof DistinctionDetailDefini
  * @category value-objects
  * @since 0.0.0
  */
-export const DistinctionDetail = DistinctionDetailWithCodecStatics.pipe(S.toTaggedUnion("kind"));
+export const DistinctionDetail = DistinctionDetailUntagged.pipe(S.toTaggedUnion("kind"));
 
 /**
  * Type-level tagged union produced by {@link DistinctionDetail}.

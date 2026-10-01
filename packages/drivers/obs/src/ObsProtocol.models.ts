@@ -709,7 +709,7 @@ export const ObsIncomingMessage = S.Union([
  */
 export type ObsIncomingMessage = typeof ObsIncomingMessage.Type;
 
-const ObsOutgoingMessageWithCodecStatics = S.Union([ObsIdentifyMessage, ObsRequestMessage]).pipe(
+const ObsOutgoingMessageUntagged = S.Union([ObsIdentifyMessage, ObsRequestMessage]).pipe(
   $I.annoteSchema("ObsOutgoingMessage", {
     description: "obs-websocket messages sent from this client to the server.",
   })
@@ -731,7 +731,7 @@ const ObsOutgoingMessageWithCodecStatics = S.Union([ObsIdentifyMessage, ObsReque
  * @category schemas
  * @since 0.0.0
  */
-export const ObsOutgoingMessage = ObsOutgoingMessageWithCodecStatics.pipe(S.toTaggedUnion("op"));
+export const ObsOutgoingMessage = ObsOutgoingMessageUntagged.pipe(S.toTaggedUnion("op"));
 
 /**
  * Messages this client sends to the obs-websocket server.
