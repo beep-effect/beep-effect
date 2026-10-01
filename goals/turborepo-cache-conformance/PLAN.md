@@ -166,3 +166,18 @@ retained report relationships were verified independently. Eighteen focused
 tests pass, including JSON event round trips. Full package verification passed on the integrated runner: audit 653.4 seconds
 and docgen 20.0 seconds. No real-pilot, protected producer, full-corpus
 or qualification acceptance follows from this checkpoint.
+
+## Frozen workflow: stable 2.11.5
+
+The [current stable protocol checkpoint](./research/frozen-workflow-stable-protocol.json)
+passed all nine native fixture cases from the frozen workflow at `3865e09ba3`,
+with 23 bounded wire events. The exact stable binary is 2.11.5; previous 2.11.4
+receipts retain their historical identity. The initial namespace setup failure
+and corrected rerun are attributed in the friction ledger. This is synthetic
+conformance evidence; operational import and real-pilot qualification remain open.
+
+The separate [exact-canary checkpoint](./research/frozen-workflow-canary-protocol.json)
+also passed nine native cases and 23 wire events. Its binary remains
+2.11.5-canary.2 with the previously recorded SHA-256; the version was checked
+outside the workspace to avoid local-version inference. Channel namespaces and
+receipts remain separate.

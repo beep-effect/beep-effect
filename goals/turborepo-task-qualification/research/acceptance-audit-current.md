@@ -33,6 +33,15 @@ reader exclusion for those component runs.
 now bind live declared sources before and after issuance. Accepted policy
 approval, complete workflow execution-profile closure and operational
 qualification import remain incomplete.
+The [frozen workflow profile](../../turborepo-cache-trust-observability/research/owned-producer-frozen-profile.json)
+now enforces clean declared sources, rejects ignored module overrides and
+ambient dotenv names, and binds issuance to the loaded supervisor's checkout.
+Native controls and full CLI package verification passed. Fresh synthetic
+conformance runs passed for stable 2.11.5 and exact canary 2.11.5-canary.2;
+the real supervised issuer control still records its own stable 2.11.4 pilot.
+These results are separate from accepted operational imports and the final
+signed-profile matrix.
+
 The qualified transition is still rejected; no criterion is marked complete.
 
 A subsequent real-run attempt correctly rejected the retained activation after

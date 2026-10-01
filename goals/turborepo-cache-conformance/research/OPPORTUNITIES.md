@@ -88,3 +88,24 @@ on `runCapturedStreams`. The owned runner uses scoped `Effect.timeout` for
 120-second native cases and a 15-minute supervisor deadline. Private probe
 results remain scoped to their actual controls; no stronger timeout guarantee
 is retroactively assigned to them.
+
+### Native fixture namespace setup caused a rejected replay
+
+The Turbo 2.11.5 fixture probe initially used a non-team namespace and failed
+with `Protocol outcome omitted output or allowed rejected fallback execution.`
+An isolated diagnostic emitted only fixed error labels and reached producer
+then replay. The same binary passed all nine cases after changing only the
+namespace to a `team_` identifier. The failure is attributed to probe setup,
+not a demonstrated client regression. A request preflight documenting the
+fixture's native team identifier requirement would have avoided the attempt.
+No raw child logs or synthetic credentials were published.
+
+### Exact binary version checks must avoid workspace inference
+
+The retained canary executable reported `2.11.5` when `--version` ran inside
+the workspace containing that stable installation. Its unchanged recorded
+SHA-256 and a version query from `/` confirmed `2.11.5-canary.2`. The preliminary
+probe assertion stopped request creation; no canary observation was accepted.
+Version checks now run outside a workspace, while native fixture summaries
+still must match the requested exact version. This avoids confusing Turbo's
+workspace inference with a changed executable.

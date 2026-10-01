@@ -210,5 +210,7 @@ and root dotenv names. Issuance also checks that the named checkout supplies
 the loaded supervisor module. Signed workers disable Bun dotenv loading and
 runtime automatic installs. Eleven workflow tests and the broader 33-test
 focused set pass, as does the source check. Native dotenv suppression passed.
-Full package verification and supervised issuance under the new profile are
-pending. These checks do not grant policy approval or qualify a computation.
+Supervised issuance and reopening passed under the new profile. Native
+controls rejected a different claimed checkout, an ignored workspace module,
+changed workflow identities and a revoked issuer. Full package verification
+passed (audit 638.8 seconds, docgen 27.0 seconds). These checks do not grant policy approval or qualify a computation.

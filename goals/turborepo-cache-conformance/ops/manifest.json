@@ -51,7 +51,9 @@
     "research/owned-fixture-implementation.json",
     "research/owned-fixture-expanded-stable.json",
     "research/owned-fixture-expanded-canary.json",
-    "research/owned-protocol-runner.json"
+    "research/owned-protocol-runner.json",
+    "research/frozen-workflow-stable-protocol.json",
+    "research/frozen-workflow-canary-protocol.json"
   ],
   "agentLaunchers": [
     {

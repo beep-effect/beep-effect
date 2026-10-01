@@ -19,8 +19,35 @@
       "workflowTests": 11
     },
     "sourceCheck": "passed",
-    "fullPackage": "pending",
-    "nativeSupervisedIssuance": "pending",
+    "fullPackage": {
+      "status": "passed",
+      "command": "bun run beep quality package-verify @beep/repo-cli",
+      "revision": "3865e09ba3c54c455a4b0eb3da0a181a3be9ec8e",
+      "auditSeconds": 638.8,
+      "docgenSeconds": 27.0,
+      "exitCode": 0
+    },
+    "nativeSupervisedIssuance": {
+      "status": "passed",
+      "exitCode": 0,
+      "workflowRevision": "3865e09ba3c54c455a4b0eb3da0a181a3be9ec8e",
+      "workflowImplementation": "984f80d279ba397abb4c7cea40459fb5f8eac95fdfceeaa98fef0b2f2daad924",
+      "client": {
+        "version": "2.11.4",
+        "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+        "namespace": "qualification-patched-local-stable-b410-matrix"
+      },
+      "receiptSha256": "eded1ba338bceedb6a9cbbe7b8dd755602ad59ca471f736cd087620fd080a8e3",
+      "closedOwnedIssuance": "passed",
+      "reopenedVerification": "passed",
+      "claimedOtherCheckout": "rejected-at-loaded-location-gate",
+      "ignoredWorkspaceModule": "rejected-at-profile-gate",
+      "wrongWorkflowRevision": "rejected-at-live-identity-gate",
+      "wrongWorkflowImplementation": "rejected-at-live-identity-gate",
+      "revocation": "rejected",
+      "policyApproval": "Synthetic fixture only; operational policy approval remains required.",
+      "temporaryIssuerMaterialRemoved": true
+    },
     "nativeDotenvControl": {
       "schemaVersion": "workflow-dotenv-control/v1",
       "authority": "component-verification-only",
@@ -42,11 +69,12 @@
   "preparation": {
     "frozenCheckoutCreatedFrom": "3cc02d12bfe9ca5abd566f88d3b3597c067ba221",
     "localOnlyFilesCopied": false,
-    "rootDependencies": "Independent reflink copy; physical directory. Full identity inspection remains required.",
+    "rootDependencies": "Independent physical reflink copy, inspected and bound before and after owned execution.",
     "workspaceLocalDependencyDirectories": 0,
     "ignoredPackageOrScriptFiles": 0,
     "ambientDotenvFiles": 0,
-    "clearedEnvironmentImport": "passed with --no-env-file --no-install"
+    "clearedEnvironmentImport": "passed with --no-env-file --no-install",
+    "frozenCheckoutAdvancedTo": "3865e09ba3c54c455a4b0eb3da0a181a3be9ec8e"
   },
   "sourceFiles": [
     {
