@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -35,14 +35,22 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Doctrine PR, not started. The pin catch-up PR (inventory regenerated at
-`df77fff939`, SPEC goal-time row 2026-09-29) goes first; P0 follows it.
-Next concrete action: from a lane branch off main, write the dated entry in `standards/architecture/DECISIONS.md` and the
-rule text in `standards/architecture/11-evolution-and-deprecation.md` per
-`SPEC.md` §Phase Contract, narrow the AGENTS.md LiteralKit line, add the
-`@beep/schema` README rule, and publish through Yeet.
+Closed. All six phases shipped through thirteen train PRs plus the P5 close
+(2026-10-01). Two operator rulings remain open and are recorded in the
+`SPEC.md` exception ledger: URL (`URLStr`, `HttpsUrl`: ADAPT or RETIRE) and
+MimeType (KEEP or a migration goal). Standing behaviour after close: every
+Effect pin change regenerates the inventory in the bump PR and works the
+parity lane (`bun run beep lint schema-first`) to zero.
 
 ## Latest Evidence
+
+2026-10-01: P5 retired `SchemaUtils.withCodecStatics` and every codec facade
+attached through `withStatics` (390 steps in 170 files; 833 compiler-located
+reads rewritten by the codemod, 25 by hand), added the `SFV4-codec-static`
+(F15) rule, fixed the F13 guard sites, and drove the schema-first parity
+backlog to zero (`parity ratchet ok: current=0`). Decision rows, the
+single-checker numbers and the reflection are in `SPEC.md` (goal-time rows
+2026-10-01) and `history/reflections/2026-10-01-claude.md`.
 
 2026-09-29: PR #1330 bumped the Effect snapshot to `df77fff939` without
 regenerating the inventory. The catch-up PR regenerated it with the

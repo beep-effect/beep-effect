@@ -4,13 +4,13 @@
     "id": "effect-schema-parity",
     "packetId": "goal-packet/v1:aaba078d01d3a09a3d1f8664b73b681bde37502f21d5ce9c0af125d5d230e9cb",
     "title": "Effect Schema Parity",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-15",
-    "updated": "2026-09-29",
+    "updated": "2026-10-01",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-schema-parity",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Retire or trim every @beep/schema concept upstream Effect covers at the main snapshot df77fff939 (rc.118 line), migrate consumers by codemod, and leave an rc-pinned inventory plus a schema-first gate that hold parity on every effect bump.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -42,7 +42,9 @@
   "researchReports": [
     "research/SOURCES.md",
     "research/OPPORTUNITIES.md",
-    "research/2026-09-29-p3-gates.md"
+    "research/2026-09-29-p3-gates.md",
+    "research/2026-09-29-p4-gate-cut.md",
+    "research/2026-09-29-p5a-check-census.md"
   ],
   "agentLaunchers": [
     {
@@ -54,12 +56,16 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Doctrine PR", "status": "pending" },
-    { "id": "P1", "name": "Knowledge layer", "status": "pending" },
-    { "id": "P2", "name": "LiteralKit trim", "status": "pending" },
-    { "id": "P3", "name": "Retirement train", "status": "pending" },
-    { "id": "P4", "name": "Gate cut", "status": "pending" },
-    { "id": "P5", "name": "Statics and performance close", "status": "pending" }
+    { "id": "P0", "name": "Doctrine PR", "status": "complete" },
+    { "id": "P1", "name": "Knowledge layer", "status": "complete" },
+    { "id": "P2", "name": "LiteralKit trim", "status": "complete" },
+    { "id": "P3", "name": "Retirement train", "status": "complete" },
+    { "id": "P4", "name": "Gate cut", "status": "complete" },
+    {
+      "id": "P5",
+      "name": "Statics and performance close",
+      "status": "complete"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/effect-schema-parity/GOAL.md)\" -le 4000",
