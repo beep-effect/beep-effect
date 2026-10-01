@@ -172,5 +172,5 @@
     "fixed": 1946,
     "exception": 12
   },
-  "fullPackageProof": "pending grouped CLI proof"
+  "fullPackageProof": "passed grouped CLI package verification against source 9d96c2670e: audit 666.8 seconds; docgen 20.5 seconds"
 }

@@ -45,7 +45,7 @@ const contextAt = (repoRoot: string): RepoRunContext =>
 const temporaryDirectory = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   return yield* Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>
-    fs.remove(directory, { recursive: true }).pipe(Effect.orDie)
+    fs.remove(directory, { force: true, recursive: true }).pipe(Effect.orDie)
   );
 });
 

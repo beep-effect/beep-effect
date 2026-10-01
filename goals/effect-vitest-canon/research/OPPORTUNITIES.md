@@ -6095,3 +6095,21 @@ these proof paths' diagnostic configuration and cache inputs so a quick pass
 does not conceal an error the authoritative gate will later report. The cause
 of the discrepancy is not yet established; the full test-type gate remains
 required evidence.
+
+## 2026-10-01: Historical proof receipts drifted from their reports
+
+PR #1365 review found two lineage JSON receipts still marking full package
+verification pending, while their companion proof reports recorded successful
+audit and docgen runs. Updated the receipts with the original source commits
+and timings. A receipt/report consistency check would prevent this stale state;
+historical package proof must remain distinct from current-head acceptance.
+
+## 2026-10-01: Unexpected branch detachment interrupted closeout
+
+During PR #1365 closeout, Git reported detached HEAD at the identical published
+commit, with a clean index and worktree and the feature branch still pointing to
+that commit. The reflog confirmed a checkout; its initiating process remains
+unknown. Reattaching the existing branch restored closeout without changing
+content. Better checkout-operation attribution and a pre-closeout branch check
+would shorten diagnosis. This is not attributed to another task or reported as
+a reproduced product defect.

@@ -468,5 +468,5 @@
     "fixed": 1833,
     "exception": 12
   },
-  "fullPackageProof": "pending grouped CLI proof"
+  "fullPackageProof": "passed grouped CLI package verification against source 37e76036e5: audit 683.8 seconds; docgen 21.0 seconds"
 }
