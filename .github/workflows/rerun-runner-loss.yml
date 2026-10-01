@@ -1,0 +1,70 @@
+name: Rerun Runner Loss
+
+# Re-run jobs that failed because their runner died, not because their code
+# failed. A Spot eviction of a `beep-ec2-heavy` runner surfaces 9-10 minutes
+# later as a `failure` carrying the check-run annotation "The self-hosted
+# runner lost communication with the server". `bun run beep ci
+# rerun-runner-loss` decides from the run, its jobs and their annotations;
+# runbook: docs/runbooks/ci-runner-reliability.md ("Automatic runner-loss
+# rerun").
+#
+# Security posture: `workflow_run` runs the default branch's copy of this file
+# with a write-capable token, whatever the triggering run's pull request
+# contains. This job therefore never checks out or executes pull-request code:
+# the checkout is the default branch, and the triggering run is read only
+# through the GitHub API. The token can re-run workflow runs and read checks,
+# contents and pull requests; it receives no repository secrets.
+#
+# A `workflow_run` workflow takes effect only once it is on the default
+# branch. Disable it with the repository variable
+# BEEP_RERUN_RUNNER_LOSS=false or `gh workflow disable "Rerun Runner Loss"`.
+
+on:
+  workflow_run:
+    workflows: [Check, Heavy Admit]
+    types: [completed]
+
+# One evaluation per triggering run at a time. A rerun's own completion
+# arrives as a later event for the same run id and must queue behind this one,
+# never cancel it.
+concurrency:
+  group: rerun-runner-loss-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  rerun:
+    name: Rerun Runner Loss
+    if: >-
+      github.event.workflow_run.conclusion == 'failure' &&
+      vars.BEEP_RERUN_RUNNER_LOSS != 'false'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: write
+      checks: read
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+          free-disk: "false"
+
+      - name: Re-run jobs lost to a dead runner
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+        run: bun run beep ci rerun-runner-loss --run-id "$RUN_ID" --attempt "$RUN_ATTEMPT"

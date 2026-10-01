@@ -286,6 +286,41 @@ export const detectGithubJobShapeClass = (job: GithubJobRecord): O.Option<Github
 };
 
 /**
+ * Whether any step of a job concluded `failure`.
+ *
+ * **When to use**
+ *
+ * Use as the safety half of a runner-loss verdict that rests on other
+ * evidence, such as GitHub's "lost communication" check-run annotation. A
+ * runner evicted mid-job leaves its earlier steps `success` and the running
+ * step `null`, so {@link detectGithubJobShapeClass} cannot see it; a step that
+ * concluded `failure` is real output, and its job is not runner loss whatever
+ * the annotation says.
+ *
+ * **Example** (Refuse a job with a failed step)
+ *
+ * ```ts
+ * import { GithubJobRecord, GithubJobStepRecord, githubJobHasFailedStep } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const job = GithubJobRecord.make({
+ *   conclusion: "failure",
+ *   databaseId: 991,
+ *   name: "Heavy / Check",
+ *   status: "completed",
+ *   steps: [GithubJobStepRecord.make({ name: "Run verification lane", conclusion: "failure" })],
+ * })
+ * console.log(githubJobHasFailedStep(job)) // true
+ * ```
+ *
+ * @param job - One job record from either GitHub job API.
+ * @returns `true` when at least one step concluded `failure`.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const githubJobHasFailedStep = (job: GithubJobRecord): boolean =>
+  A.some(job.steps, (step) => O.exists(githubConclusion(step.conclusion), (value) => value === "failure"));
+
+/**
  * The one-line evidence an operator needs to act on a shape class.
  *
  * **When to use**

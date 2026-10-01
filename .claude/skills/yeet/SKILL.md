@@ -908,6 +908,11 @@ turbo work, so they are cheap to run mid-loop.
   Yeet still requires exact reusable proof state and a clean worktree, and it
   pushes with `git push -u origin HEAD` so upstream branch naming cannot block
   agent-created feature branches.
+- A red job lost to a dead runner ("lost communication with the server") is
+  re-run automatically by the hosted `Rerun Runner Loss` workflow, one job per
+  attempt, at most 3 times per job and only while the head is current; check
+  the run's `run_attempt` (`gh run view <id> --json attempt`) and its
+  `Rerun Runner Loss` summary before re-running it by hand.
 - There is no pre-push git hook; `yeet publish` runs the full local pre-push
   proof itself before pushing, so the proof is the gate. (The former pre-push
   catalog hook was removed with the repo-exports catalog.)
