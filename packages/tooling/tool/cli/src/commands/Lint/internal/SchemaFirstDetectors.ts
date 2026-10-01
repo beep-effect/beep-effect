@@ -1212,14 +1212,24 @@ const codecFacadeWrapper = (key: string): ParityWrapper => ({
   reason: `SchemaUtils.withStatics attaches "${key}" as a codec facade over an effect/Schema codec function; call that S.* function over the schema at the use site (Effect caches parsers per AST) and keep withStatics for non-codec helpers.`,
 });
 
+// The parity wrapper a SchemaUtils export of this name is: a default wrapper or a codec-static one.
+const schemaUtilsWrapper = (name: string): O.Option<ParityWrapper> =>
+  pipe(
+    name,
+    O.liftPredicate(isSchemaUtilsDefaultWrapper),
+    O.map(defaultWrapper),
+    O.orElse(() => pipe(name, O.liftPredicate(isCodecStaticWrapper), O.map(codecStaticWrapper)))
+  );
+
+const opaqueWrapperNamed = (name: string): O.Option<ParityWrapper> =>
+  pipe(name, O.liftPredicate(isOpaqueSchemaWrapper), O.map(opaqueWrapper));
+
 const wrapperDeclaredAt = (name: string, sourcePath: string): O.Option<ParityWrapper> =>
-  isSchemaUtilsDefaultWrapper(name) && SCHEMA_UTILS_SOURCE_PATTERN.test(sourcePath)
-    ? O.some(defaultWrapper(name))
-    : isCodecStaticWrapper(name) && SCHEMA_UTILS_SOURCE_PATTERN.test(sourcePath)
-      ? O.some(codecStaticWrapper(name))
-      : isOpaqueSchemaWrapper(name) && OPAQUE_SOURCE_PATTERN.test(sourcePath)
-        ? O.some(opaqueWrapper(name))
-        : O.none();
+  SCHEMA_UTILS_SOURCE_PATTERN.test(sourcePath)
+    ? schemaUtilsWrapper(name)
+    : OPAQUE_SOURCE_PATTERN.test(sourcePath)
+      ? opaqueWrapperNamed(name)
+      : O.none();
 
 const wrapperModuleOf = (moduleSpecifier: string): O.Option<ParityWrapperModule> =>
   Str.Equivalence(moduleSpecifier, BEEP_SCHEMA_ROOT_MODULE)
@@ -1234,15 +1244,9 @@ const wrapperExportedBy =
   (member: string) =>
   (module: ParityWrapperModule): O.Option<ParityWrapper> =>
     ParityWrapperModule.$match(module, {
-      "schema-root": () => pipe(member, O.liftPredicate(isOpaqueSchemaWrapper), O.map(opaqueWrapper)),
-      "schema-utils": () =>
-        pipe(
-          member,
-          O.liftPredicate(isSchemaUtilsDefaultWrapper),
-          O.map(defaultWrapper),
-          O.orElse(() => pipe(member, O.liftPredicate(isCodecStaticWrapper), O.map(codecStaticWrapper)))
-        ),
-      opaque: () => pipe(member, O.liftPredicate(isOpaqueSchemaWrapper), O.map(opaqueWrapper)),
+      "schema-root": () => opaqueWrapperNamed(member),
+      "schema-utils": () => schemaUtilsWrapper(member),
+      opaque: () => opaqueWrapperNamed(member),
     });
 
 const aliasedTarget = (symbol: MorphSymbol): O.Option<MorphSymbol> =>
