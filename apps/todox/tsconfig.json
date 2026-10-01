@@ -82,6 +82,8 @@
           "catchChainToFirstSuccessOf": "error",
           "catchConditionalRefailToCatchIf": "error",
           "catchDieToOrDie": "error",
+          "catchIfTagToCatchTag": "error",
+          "catchRefailToTapError": "error",
           "catchTagToCatchReason": "error",
           "catchToIgnore": "error",
           "catchToOrElseSucceed": "error",
@@ -101,8 +103,10 @@
           "effectMapFlatten": "error",
           "effectMapVoid": "error",
           "effectSucceedWithVoid": "error",
+          "experimentalApiUsage": "off",
           "extendsNativeError": "error",
           "flatMapConditionalToFilterOrFail": "error",
+          "flatMapIgnoredParamToAndThen": "error",
           "flatMapToMap": "error",
           "floatingEffect": "error",
           "floatingEffectInVitest": "error",
@@ -184,7 +188,8 @@
           "unnecessaryPipe": "error",
           "unnecessaryPipeChain": "error",
           "unnecessaryTypeofType": "error",
-          "unsafeEffectTypeAssertion": "error"
+          "unsafeEffectTypeAssertion": "error",
+          "unstableApiUsage": "off"
         }
       },
       {

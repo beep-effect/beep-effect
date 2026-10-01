@@ -50742,9 +50742,9 @@
       "line": 119,
       "endLine": 129,
       "symbol": "scoped",
-      "occurrence": "v2:4f3489a84cf218e6a29b8927371af9d7fdaece6c56bab27966c17e2c8a684259",
+      "occurrence": "v2:fed765aa0dd85294c3778b3fc64e727d87af16b4993a16cd1d5cba11443fdc63",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "scoped( fnUntraced(function* () { const probe = yield* acquireProbe([ Bun.which(\"bun\") ?? \"bun\", \"--eval\", \"process.stdout.write('ready'); process.stderr.write('waiting'); setInterval(() => {}, 1000)\"",
+      "evidence": "scoped( gen(function* () { const probe = yield* acquireProbe([ Bun.which(\"bun\") ?? \"bun\", \"--eval\", \"process.stdout.write('ready'); process.stderr.write('waiting'); setInterval(() => {}, 1000)\", ]); y",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."

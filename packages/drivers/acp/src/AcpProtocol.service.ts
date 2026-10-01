@@ -905,7 +905,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       id: requestIdString,
       payload,
       tag: method,
-    }).pipe(Effect.catch((error) => removeExtPending(requestIdString).pipe(Effect.andThen(Effect.fail(error)))));
+    }).pipe(Effect.tapError(() => removeExtPending(requestIdString)));
     return yield* Deferred.await(deferred).pipe(Effect.onInterrupt(() => removeExtPending(requestIdString)));
   });
 

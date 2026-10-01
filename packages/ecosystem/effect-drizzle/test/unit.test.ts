@@ -8,7 +8,7 @@ import { describe, expect } from "@effect/vitest";
 import { defineRelations, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { findFirst, head, sort } from "effect/Array";
-import { catchTag, exit, fail as failEffect, fnUntraced, succeed } from "effect/Effect";
+import { catchTag, exit, fail as failEffect, fnUntraced, gen, succeed } from "effect/Effect";
 import { equals } from "effect/Equal";
 import { isFailure } from "effect/Exit";
 import { flatMap, fromUndefinedOr, getOrThrowWith, getOrUndefined, none } from "effect/Option";
@@ -178,7 +178,7 @@ describe("PostgreSQL Wave E value and structure invariants", () => {
     "round-trips schema-derived PostgreSQL array insert variants",
     [ArrayRecord.insert],
     ([value]) =>
-      fnUntraced(function* () {
+      gen(function* () {
         const encoded = yield* encodeEffect(ArrayRecord.insert)(value);
         const decoded = yield* decodeEffect(ArrayRecord.insert)(encoded);
         expect(decoded).toEqual(value);
@@ -189,7 +189,7 @@ describe("PostgreSQL Wave E value and structure invariants", () => {
         expect(omitted.matrix).toBeUndefined();
         expect((yield* encodeEffect(ArrayRecord.insert)(omitted)).matrix).toBeUndefined();
         expect(omitted.labels).toEqual(value.labels);
-      })(),
+      }),
     { arbitrary: fcRuns(100) }
   );
 
