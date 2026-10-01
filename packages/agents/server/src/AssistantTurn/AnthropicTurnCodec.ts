@@ -124,7 +124,7 @@ const CheckedCodeBlock = CodeBlock.check(
     identifier: $I`CheckedMermaidCodeBlock`,
     title: "Checked Mermaid Code Block",
     description: "Checks mermaid code blocks for a non-empty recognized mermaid diagram declaration.",
-    message: `Mermaid code blocks must start with one of: ${A.join(MermaidDiagramType.Options, ", ")}`,
+    message: `Mermaid code blocks must start with one of: ${A.join(MermaidDiagramType.literals, ", ")}`,
   })
 );
 

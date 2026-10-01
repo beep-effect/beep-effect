@@ -232,7 +232,7 @@ const jsonSizeEncoder = new TextEncoder();
 export const estimateJsonSize = (value: unknown): number =>
   jsonSizeEncoder.encode(Result.getOrThrowWith(encodeJsonSizeInput(value), identity)).byteLength;
 
-const TIER_ORDER: ReadonlyArray<FieldTierName> = A.reverse(FieldTierName.Options);
+const TIER_ORDER: ReadonlyArray<FieldTierName> = A.reverse(FieldTierName.literals);
 
 /**
  * A payload too large for even the `minimal` tier, handed to the caller's

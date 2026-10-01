@@ -1003,7 +1003,7 @@ export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsCon
     return AiMetricsConfigSnapshotResult.make({
       baselineHash,
       bounds,
-      excludedDirectoryNames: ConfigSnapshotExcludedDirName.Options,
+      excludedDirectoryNames: ConfigSnapshotExcludedDirName.literals,
       diff,
       fileCount: A.length(files),
       files,

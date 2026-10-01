@@ -203,7 +203,7 @@ describe("vault sync panel", () => {
     Effect.fnUntraced(function* () {
       // Totality over the reason union: a new member without panel copy must
       // fail here, not silently fall through to a blank panel.
-      for (const reason of DmsMirrorDisconnectReason.Options) {
+      for (const reason of DmsMirrorDisconnectReason.literals) {
         const { container, unmount } = renderWithStatus(yield* statusWith(false, O.some(reason)));
         expect(within(container).getByTestId("vault-sync-setup-note")).toBeInTheDocument();
         unmount();

@@ -361,7 +361,7 @@ const regeneratePortfolioIndex = Effect.fn("CodexFindings.regeneratePortfolioInd
 const renderSeveritySummary = (plan: CodexPacketPlan): string =>
   A.join(
     A.map(
-      A.filter(CodexFindingSeverity.Options, (severity) => (plan.severityCounts[severity] ?? 0) > 0),
+      A.filter(CodexFindingSeverity.literals, (severity) => (plan.severityCounts[severity] ?? 0) > 0),
       (severity) => `${severity} ${plan.severityCounts[severity] ?? 0}`
     ),
     " · "
@@ -499,7 +499,10 @@ const findingsIngestCommand = Command.make(
   {
     source: Flag.ChoiceWithValue(
       "source",
-      A.map(CodexCaptureSource.Options, (source): readonly [CodexCaptureSource, CodexCaptureSource] => [source, source])
+      A.map(CodexCaptureSource.literals, (source): readonly [CodexCaptureSource, CodexCaptureSource] => [
+        source,
+        source,
+      ])
     ).pipe(Flag.withDefault("cloud-csv")),
     from: fromFlag,
     slug: slugFlag,

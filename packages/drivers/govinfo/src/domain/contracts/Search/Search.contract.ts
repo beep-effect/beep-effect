@@ -6,8 +6,8 @@
  */
 import { $GovinfoId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { HttpStatus2XX, HttpStatus4XX, HttpStatus5XX } from "@beep/schema/HttpStatus";
 import { Effect } from "effect";
+import * as HttpStatus from "effect/http/HttpStatus";
 import { HttpApiSchema } from "effect/http-api";
 import * as S from "effect/Schema";
 import { SearchBody } from "../..//values/index.ts";
@@ -89,7 +89,7 @@ export class Success extends SearchResponse.extend<Success>($I`Success`)(
   {},
   $I.annote("Success", {
     description: "Successful GovInfo search response body.",
-    status: HttpStatus2XX.From.Enum.Ok,
+    status: HttpStatus.fromLiteral("Ok"),
   })
 ) {}
 
@@ -118,7 +118,7 @@ export class FailureBadRequest extends S.TaggedError<FailureBadRequest>($I`Failu
     cause: S.OptionFromOptionalKey(S.Defect().pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
-    status: S.tag(HttpStatus4XX.From.Enum.BadRequest),
+    status: S.tag(HttpStatus.fromLiteral("BadRequest")),
   },
   $I.annoteError<FailureBadRequest>("FailureBadRequest", {
     description: "Bad-request failure returned when GovInfo rejects the submitted search payload.",
@@ -150,7 +150,7 @@ export class FailureNotFound extends S.TaggedError<FailureNotFound>($I`FailureNo
     cause: S.OptionFromOptionalKey(S.Defect().pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
-    status: S.tag(HttpStatus4XX.From.Enum.NotFound),
+    status: S.tag(HttpStatus.fromLiteral("NotFound")),
   },
   $I.annoteError<FailureNotFound>("FailureNotFound", {
     description: "Not-found failure returned when the GovInfo search route or resource is unavailable.",
@@ -184,7 +184,7 @@ export class FailureInternalServerError extends S.TaggedError<FailureInternalSer
     cause: S.OptionFromOptionalKey(S.Defect().pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
-    status: S.tag(HttpStatus5XX.From.Enum.InternalServerError),
+    status: S.tag(HttpStatus.fromLiteral("InternalServerError")),
   },
   $I.annoteError<FailureInternalServerError>("FailureInternalServerError", {
     description: "Internal-server-error failure returned when GovInfo reports an unexpected server-side error.",

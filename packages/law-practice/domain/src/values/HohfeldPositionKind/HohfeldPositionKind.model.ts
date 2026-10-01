@@ -75,7 +75,7 @@ export const HohfeldPositionKind = HohfeldPositionKindBase.pipe(
 export type HohfeldPositionKind = typeof HohfeldPositionKind.Type;
 
 const AdvantagePositionKindBase = LiteralKit(
-  HohfeldPositionKindBase.pickOptions(["claim", "privilege", "power", "immunity"])
+  HohfeldPositionKindBase.pick(["claim", "privilege", "power", "immunity"]).literals
 );
 
 /**
@@ -148,7 +148,7 @@ export const isAdvantagePositionKind: (kind: HohfeldPositionKind) => kind is Adv
   S.is(AdvantagePositionKind);
 
 const DeonticPositionKindBase = LiteralKit(
-  HohfeldPositionKindBase.pickOptions(["claim", "duty", "privilege", "noRight"])
+  HohfeldPositionKindBase.pick(["claim", "duty", "privilege", "noRight"]).literals
 );
 
 /**
@@ -208,7 +208,7 @@ export const isDeonticPositionKind: (kind: HohfeldPositionKind) => kind is Deont
   S.is(DeonticPositionKind);
 
 const PotestativePositionKindBase = LiteralKit(
-  HohfeldPositionKindBase.pickOptions(["power", "liability", "immunity", "disability"])
+  HohfeldPositionKindBase.pick(["power", "liability", "immunity", "disability"]).literals
 );
 
 /**

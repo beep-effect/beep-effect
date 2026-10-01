@@ -320,6 +320,45 @@ machine ids, quote only the minimal identifying error text.
 - **What would have prevented it:** A checkpoint message in the brief that
   passes commitlint (for example `chore(repo-cli): checkpoint …`), or a
   `wip` type accepted on non-`main` branches.
+## 2026-09-29 — Fresh lane gives invalid `--extendedDiagnostics` numbers until the dependency closure is built
+
+- **What I was doing:** P2 before-measurement on a newly cut lane, using the
+  recipe in `explorations/effect-schema-parity/research/performance-verification-supplement.md`.
+- **Evidence:** all three `bun run tsc -p <pkg>/tsconfig.json --noEmit
+  --extendedDiagnostics` runs exited 1 with thousands of `TS6305: Output file
+  '.../dist/*.d.ts' has not been built from source file` errors and reported
+  about half the real instantiation count (repo-cli 5,411,078 instead of
+  8,433,860). The numbers look plausible, so nothing flags them.
+- **What would have prevented it:** The recipe (and the P5 `check-census`
+  harness) should run `bunx turbo run build --filter='<pkg>^...'` first and
+  refuse to record a sample whose log contains any `error TS`.
+
+## 2026-09-29 — A type-directed codemod can only run before the facet it matches is deleted
+
+- **What I was doing:** Rewriting the last LiteralKit consumers in
+  `apps/labs/semantica` and `apps/labs/lejeune-bolt-workbench` with
+  `beep lint schema-parity-codemod` after the kit trim had landed in the tree.
+- **Evidence:** the root-tsconfig run matched nothing in those apps (they
+  import their own modules through an app-local `@/*` alias the root config
+  does not map); after adding `--tsconfig`, the run still matched nothing
+  because `.Options` no longer resolved to a kit declaration. The sites were
+  rewritten by temporarily restoring the three pre-trim kit files.
+- **What would have prevented it:** Run every root (including each app with
+  its own `--tsconfig`) to zero sites before editing the retired surface; P3
+  groups should treat "codemod dry run reports zero sites everywhere" as the
+  gate that unlocks the deletion commit.
+
+## 2026-09-29 — Two tracked baselines were far behind main before P2 touched them
+
+- **What I was doing:** Regenerating `standards/schema-catalog.generated.jsonc`
+  and `standards/jsdoc-documentation.inventory.{jsonc,md}` for P2.
+- **Evidence:** `bun run beep lint schema-catalog --write` moved the catalog
+  from 5,256 to 6,299 entries; 15 additions and 4 removals are P2's, the rest
+  predate it. `bun run beep quality jsdoc-inventory` rewrote about 7k lines of
+  the inventory (last generated 2026-09-25). The catalog check compares the
+  whole file, so no scoped update is possible.
+- **What would have prevented it:** Gate the catalog check (or regenerate on
+  merge to main) so a feature PR does not carry a thousand unrelated entries.
 ## 2026-09-29 — The first use of an upstream facet costs instantiations the retired wrapper hid
 
 - **What I was doing:** P3 PR 3-ii, retiring `Defect` onto

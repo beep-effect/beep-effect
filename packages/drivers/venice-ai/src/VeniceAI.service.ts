@@ -7,7 +7,6 @@
 
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { HttpStatus } from "@beep/schema/HttpStatus";
 import { URLStr } from "@beep/schema/URL";
 import { A, O, Str } from "@beep/utils";
 import { Config, Context, Effect, flow, Layer, pipe, Result, SchemaGetter, Stream } from "effect";
@@ -16,6 +15,7 @@ import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpStatus from "effect/http/HttpStatus";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -59,17 +59,97 @@ export const VENICE_CHAT_MODEL = "venice-uncensored-1-2";
 const normalizeBaseUrl = Str.replace(/\/+$/, "");
 const makeVeniceAIBaseUrl = flow(normalizeBaseUrl, URLStr.make);
 const defaultVeniceAIBaseUrl = makeVeniceAIBaseUrl(VENICE_API_URL);
-const VeniceAIHttpStatusArbitraryValues = R.values(HttpStatus.From.Enum) as [HttpStatus, ...Array<HttpStatus>];
-const isVeniceAIHttpStatus = (status: number): status is HttpStatus =>
-  pipe(VeniceAIHttpStatusArbitraryValues as ReadonlyArray<number>, A.contains(status));
-const makeHttpStatus: (status: number) => HttpStatus = flow(
-  O.liftPredicate(isVeniceAIHttpStatus),
-  O.getOrElse(() => HttpStatus.From.Enum.InternalServerError)
-);
-const VeniceAIHttpStatus = S.Literals(VeniceAIHttpStatusArbitraryValues).pipe(
+// The retired `@beep/schema` `HttpStatus` catalog: every name `effect/http/HttpStatus` knows plus the
+// twelve unofficial codes the catalog carried. A status outside it is reported as 500, as before.
+// fallow-ignore-next-line code-duplication -- consumer-local copy of the retired @beep/schema HttpStatus catalog; the upstream-first doctrine (standards/architecture/DECISIONS.md, 2026-09-29) forbids a shared replacement
+const VeniceAIHttpStatus = S.Literals([
+  ...A.map(
+    [
+      "Continue",
+      "SwitchingProtocols",
+      "Processing",
+      "EarlyHints",
+      "Ok",
+      "Created",
+      "Accepted",
+      "NonAuthoritativeInformation",
+      "NoContent",
+      "ResetContent",
+      "PartialContent",
+      "MultiStatus",
+      "AlreadyReported",
+      "ImUsed",
+      "MultipleChoices",
+      "MovedPermanently",
+      "Found",
+      "SeeOther",
+      "NotModified",
+      "TemporaryRedirect",
+      "PermanentRedirect",
+      "BadRequest",
+      "Unauthorized",
+      "PaymentRequired",
+      "Forbidden",
+      "NotFound",
+      "MethodNotAllowed",
+      "NotAcceptable",
+      "ProxyAuthenticationRequired",
+      "RequestTimeout",
+      "Conflict",
+      "Gone",
+      "LengthRequired",
+      "PreconditionFailed",
+      "PayloadTooLarge",
+      "UriTooLong",
+      "UnsupportedMediaType",
+      "RangeNotSatisfiable",
+      "ExpectationFailed",
+      "ImATeapot",
+      "MisdirectedRequest",
+      "UnprocessableEntity",
+      "Locked",
+      "FailedDependency",
+      "TooEarly",
+      "UpgradeRequired",
+      "PreconditionRequired",
+      "TooManyRequests",
+      "RequestHeaderFieldsTooLarge",
+      "UnavailableForLegalReasons",
+      "InternalServerError",
+      "NotImplemented",
+      "BadGateway",
+      "ServiceUnavailable",
+      "GatewayTimeout",
+      "HttpVersionNotSupported",
+      "VariantAlsoNegotiates",
+      "InsufficientStorage",
+      "LoopDetected",
+      "NotExtended",
+      "NetworkAuthenticationRequired",
+    ] satisfies ReadonlyArray<HttpStatus.Literal>,
+    HttpStatus.fromLiteral
+  ),
+  305,
+  306,
+  430,
+  440,
+  494,
+  495,
+  496,
+  499,
+  520,
+  521,
+  525,
+  526,
+]).pipe(
   $I.annoteSchema("VeniceAIHttpStatus", {
     description: "Numeric HTTP status code accepted by the Venice AI driver.",
   })
+);
+type VeniceAIHttpStatus = typeof VeniceAIHttpStatus.Type;
+const makeHttpStatus: (status: number) => VeniceAIHttpStatus = flow(
+  S.decodeUnknownOption(VeniceAIHttpStatus),
+  O.getOrElse(() => HttpStatus.fromLiteral("InternalServerError"))
 );
 
 const VeniceAIBaseUrl = URLStr.pipe(
@@ -654,7 +734,6 @@ export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I
  * **Example** (Make response status error)
  *
  * ```ts
- * import { HttpStatus } from "@beep/schema/HttpStatus"
  * import { VeniceAIError } from "@beep/venice-ai"
  * import * as O from "effect/Option"
  *
@@ -663,7 +742,7 @@ export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I
  *   operation: O.some("listModels"),
  *   path: O.some("/models"),
  *   reason: "response status",
- *   status: O.some(HttpStatus.make(500))
+ *   status: O.some(500)
  * })
  *
  * console.log(error)
@@ -813,7 +892,7 @@ class VeniceAIErrorOptions extends S.Class<VeniceAIErrorOptions>($I`VeniceAIErro
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Original native or third-party cause when one was available." })
     ),
-    status: S.OptionFromOptionalKey(HttpStatus).pipe(
+    status: S.OptionFromOptionalKey(VeniceAIHttpStatus).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "HTTP response status code associated with the failure when one was available." })
     ),

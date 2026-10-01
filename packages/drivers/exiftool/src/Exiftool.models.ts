@@ -251,7 +251,7 @@ export type SafeTagName = typeof SafeTagName.Type;
  * ```ts
  * import { ExiftoolWritableExtension } from "@beep/exiftool"
  *
- * console.log(ExiftoolWritableExtension.Options)
+ * console.log(ExiftoolWritableExtension.literals)
  * ```
  *
  * @category schemas

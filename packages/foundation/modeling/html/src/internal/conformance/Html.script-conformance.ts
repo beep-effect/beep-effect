@@ -34,13 +34,13 @@ const ScriptContextualAttributeName = LiteralKit([
 
 type ScriptContextualAttributeName = typeof ScriptContextualAttributeName.Type;
 
-const SCRIPT_EXTERNAL_CLASSIC_ATTRIBUTES = ScriptContextualAttributeName.Options;
-const SCRIPT_INLINE_CLASSIC_ATTRIBUTES = ScriptContextualAttributeName.pickOptions([
+const SCRIPT_EXTERNAL_CLASSIC_ATTRIBUTES = ScriptContextualAttributeName.literals;
+const SCRIPT_INLINE_CLASSIC_ATTRIBUTES = ScriptContextualAttributeName.pick([
   "nomodule",
   "crossorigin",
   "referrerpolicy",
-]);
-const SCRIPT_EXTERNAL_MODULE_ATTRIBUTES = ScriptContextualAttributeName.pickOptions([
+]).literals;
+const SCRIPT_EXTERNAL_MODULE_ATTRIBUTES = ScriptContextualAttributeName.pick([
   "src",
   "async",
   "blocking",
@@ -48,12 +48,12 @@ const SCRIPT_EXTERNAL_MODULE_ATTRIBUTES = ScriptContextualAttributeName.pickOpti
   "referrerpolicy",
   "integrity",
   "fetchpriority",
-]);
-const SCRIPT_INLINE_MODULE_ATTRIBUTES = ScriptContextualAttributeName.pickOptions([
+]).literals;
+const SCRIPT_INLINE_MODULE_ATTRIBUTES = ScriptContextualAttributeName.pick([
   "async",
   "crossorigin",
   "referrerpolicy",
-]);
+]).literals;
 const noScriptContextualAttributes = (): ReadonlyArray<ScriptContextualAttributeName> => A.emptyReadonly();
 
 const scriptAllowedContextualAttributes = (
@@ -102,7 +102,7 @@ export const inspectScriptConformance: {
       onSuccess: (state): ReadonlyArray<HtmlConformanceIssue> => {
         const hasSource = hasHtmlAttribute(node.src);
         const allowed = scriptAllowedContextualAttributes(hasSource)(state);
-        return A.flatMap(ScriptContextualAttributeName.Options, (name) =>
+        return A.flatMap(ScriptContextualAttributeName.literals, (name) =>
           hasHtmlAttribute(readProperty(node, name)) && !A.contains(allowed, name)
             ? [
                 makeHtmlConformanceIssue(

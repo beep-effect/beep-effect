@@ -5,6 +5,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const SqlState = MappedLiteralKit([
@@ -16,6 +17,15 @@ const decodeSqlStateToEffect = S.decodeEffect(SqlState.To);
 const decodeUnknownSqlStateEffect = S.decodeUnknownEffect(SqlState);
 const encodeSqlStateEffect = S.encodeEffect(SqlState);
 const encodeSqlStateToEffect = S.encodeEffect(SqlState.To);
+const notWarningCode = S.makeFilter((code: "00000" | "01000") => code !== "01000" || "warnings are rejected");
+const CheckedSqlState = SqlState.check(notWarningCode);
+const KeyAnnotatedSqlState = SqlState.annotateKey({ description: "SQL state key" });
+const PipedSqlState = SqlState.pipe(S.check(notWarningCode), S.annotate({ title: "Successful SQL state" }));
+const decodeCheckedSqlStateEffect = S.decodeEffect(CheckedSqlState);
+const isPipedSqlState = S.is(PipedSqlState);
+const CheckedSqlStateName = SqlState.To.check(S.makeFilter((name) => name !== "WARNING" || "warnings are rejected"));
+const AnnotatedSqlStateName = SqlState.To.annotate({ title: "SQL state name" });
+const isCheckedSqlStateName = S.is(CheckedSqlStateName);
 
 describe("MappedLiteralKit", () => {
   it.effect(
@@ -40,7 +50,7 @@ describe("MappedLiteralKit", () => {
       "round-trips schema-derived mapped literal samples",
       [arbitrary],
       Effect.fnUntraced(function* ([literal]) {
-        expect(SqlState.To.Options).toContain(literal);
+        expect(A.map(SqlState.Pairs, ([, code]) => code)).toContain(literal);
         expect(yield* decodeUnknownSqlStateEffect(yield* encodeSqlStateEffect(literal))).toBe(literal);
 
         return true;
@@ -59,7 +69,6 @@ describe("MappedLiteralKit", () => {
   it("aliases top-level helper surface to From", () => {
     expect(SqlState.From).toBe(SqlState);
     expect(SqlState.Enum.SUCCESSFUL_COMPLETION).toBe("00000");
-    expect(SqlState.Options).toEqual(["SUCCESSFUL_COMPLETION", "WARNING"]);
     expect(SqlState.is.SUCCESSFUL_COMPLETION("SUCCESSFUL_COMPLETION")).toBe(true);
     expect(SqlState.is.SUCCESSFUL_COMPLETION("WARNING")).toBe(false);
   });
@@ -101,13 +110,14 @@ describe("MappedLiteralKit", () => {
     expect(enumDescriptor?.configurable).toBe(false);
   });
 
+  it("no longer carries the retired facets on either direction", () => {
+    for (const retired of ["Options", "pickOptions", "omitOptions"]) {
+      expect(Reflect.has(SqlState, retired)).toBe(false);
+      expect(Reflect.has(SqlState.To, retired)).toBe(false);
+    }
+  });
+
   it("retains LiteralKit helper behavior on directional kits", () => {
-    expect(SqlState.pickOptions(["WARNING"] as const)).toEqual(["WARNING"]);
-    expect(SqlState.To.pickOptions(["01000"] as const)).toEqual(["01000"]);
-
-    expect(SqlState.omitOptions(["WARNING"] as const)).toEqual(["SUCCESSFUL_COMPLETION"]);
-    expect(SqlState.To.omitOptions(["01000"] as const)).toEqual(["00000"]);
-
     const fromMatch = SqlState.$match("SUCCESSFUL_COMPLETION", {
       SUCCESSFUL_COMPLETION: () => "ok" as const,
       WARNING: () => "warn" as const,
@@ -147,49 +157,52 @@ describe("MappedLiteralKit", () => {
     ).toThrow(MappedLiteralDuplicateError);
   });
 
-  it("rejects from-side helper key collisions", () => {
+  it("rejects from-side literals that derive the same helper key", () => {
     expect(() =>
       MappedLiteralKit([
-        [true, "00000"],
-        ["true", "01000"],
-      ] as const)
-    ).toThrow(LiteralKitKeyCollisionError);
-
-    expect(() =>
-      MappedLiteralKit([
-        [1, "00000"],
-        ["number1", "01000"],
-      ] as const)
-    ).toThrow(LiteralKitKeyCollisionError);
-
-    expect(() =>
-      MappedLiteralKit([
-        [1n, "00000"],
-        ["bigint1n", "01000"],
+        [1, "one"],
+        ["number1", "also-one"],
       ] as const)
     ).toThrow(LiteralKitKeyCollisionError);
   });
 
-  it("rejects to-side helper key collisions", () => {
+  it("rejects to-side literals that derive the same helper key", () => {
     expect(() =>
       MappedLiteralKit([
-        ["A", true],
-        ["B", "true"],
+        ["one", 1],
+        ["also-one", "number1"],
       ] as const)
     ).toThrow(LiteralKitKeyCollisionError);
+  });
+});
 
-    expect(() =>
-      MappedLiteralKit([
-        ["A", 1],
-        ["B", "number1"],
-      ] as const)
-    ).toThrow(LiteralKitKeyCollisionError);
+describe("MappedLiteralKit statics across derivations", () => {
+  it.effect(
+    "keeps top-level and From statics through check, annotateKey and pipe(S.check(...))",
+    Effect.fnUntraced(function* () {
+      for (const derived of [CheckedSqlState, KeyAnnotatedSqlState, PipedSqlState]) {
+        expect(derived).not.toBe(SqlState);
+        expect(derived.From).toBe(derived);
+        expect(derived.To).toBe(SqlState.To);
+        expect(derived.Pairs).toBe(SqlState.Pairs);
+        expect(derived.Enum).toBe(SqlState.Enum);
+        expect(derived.is).toBe(SqlState.is);
+        expect(derived.$match).toBe(SqlState.$match);
+      }
+      expect(yield* decodeCheckedSqlStateEffect("SUCCESSFUL_COMPLETION")).toBe("00000");
+      expect(isPipedSqlState("01000")).toBe(false);
+      expect(PipedSqlState.Enum.WARNING).toBe("01000");
+    })
+  );
 
-    expect(() =>
-      MappedLiteralKit([
-        ["A", 1n],
-        ["B", "bigint1n"],
-      ] as const)
-    ).toThrow(LiteralKitKeyCollisionError);
+  it("keeps To statics through check and annotate", () => {
+    for (const derived of [CheckedSqlStateName, AnnotatedSqlStateName]) {
+      expect(derived).not.toBe(SqlState.To);
+      expect(derived.Enum).toBe(SqlState.To.Enum);
+      expect(derived.is).toBe(SqlState.To.is);
+      expect(derived.$match).toBe(SqlState.To.$match);
+    }
+    expect(CheckedSqlStateName.Enum["00000"]).toBe("SUCCESSFUL_COMPLETION");
+    expect(isCheckedSqlStateName("WARNING")).toBe(false);
   });
 });

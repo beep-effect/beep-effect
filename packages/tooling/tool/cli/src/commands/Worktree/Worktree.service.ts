@@ -1332,7 +1332,7 @@ const assertQuiescentFence = Effect.fnUntraced(function* (
   request: WorktreeRemovalRequest,
   fencedPath: string
 ): Effect.fn.Return<void, WorktreeCommandError, FileSystem.FileSystem> {
-  const scan = yield* scanProcessAttachments({ directory: fencedPath, kinds: ProcessAttachmentKind.Options });
+  const scan = yield* scanProcessAttachments({ directory: fencedPath, kinds: ProcessAttachmentKind.literals });
   if (O.isNone(scan)) {
     return yield* WorktreeCommandError.make({
       message: `Refusing to retire ${request.targetPath}: the processes attached to it could not be enumerated, so the archive cannot be proven complete.`,

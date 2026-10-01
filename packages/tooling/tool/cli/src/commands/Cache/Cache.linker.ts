@@ -161,7 +161,7 @@ export const collectCacheRuntimeLinker = Effect.fn("CacheLinker.collect")(functi
   const loaderBefore = yield* inspectCacheLinkedFile(loader);
   const resolutions = R.fromEntries(
     yield* Effect.forEach(
-      CacheRuntimeExecutable.Options,
+      CacheRuntimeExecutable.literals,
       Effect.fn("CacheLinker.role")(function* (role) {
         return Tuple.make(role, yield* inspectCacheLinkerResolution(root, executables[role]));
       }),

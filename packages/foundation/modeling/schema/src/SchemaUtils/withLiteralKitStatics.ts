@@ -1,5 +1,5 @@
 /**
- * Reattach LiteralKit statics after a schema transformation or annotation.
+ * Reattach LiteralKit keyed helpers after a schema derivation that builds a new schema.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -12,24 +12,31 @@ import type { LiteralKit as LiteralKitSchema } from "../LiteralKit/index.ts";
 
 type LiteralKitStatics<L extends A.NonEmptyReadonlyArray<SchemaAST.LiteralValue>> = Pick<
   LiteralKitSchema<L>,
-  "Options" | "HashSet" | "is" | "Enum" | "pickOptions" | "omitOptions" | "$match" | "thunk" | "toTaggedUnion"
+  "is" | "Enum" | "$match" | "toTaggedUnion"
 >;
 
 /**
- * `LiteralKit` augments the underlying schema object with runtime helpers like
- * `Enum`, `Options`, `HashSet`, and `pickOptions`. Schema annotations rebuild
- * the schema, so those helpers need to be copied back onto the annotated value.
+ * Copies a kit's keyed helpers (`is`, `Enum`, `$match`, `toTaggedUnion`) onto
+ * a schema derived from it.
  *
- * **Example** (Reattach statics after pipe)
+ * **Details**
+ *
+ * A `LiteralKit` keeps its helpers across `annotate`, `annotateKey`, and
+ * `check` on its own. This decorator is for derivations that build a new
+ * schema, such as `S.brand(...)`, where the result is no longer the kit. The
+ * literal tuple is not copied: read it from the kit, `Base.literals`.
+ *
+ * **Example** (Reattach helpers after a brand)
  *
  * ```ts
  * import { LiteralKit } from "@beep/schema/LiteralKit"
  * import { withLiteralKitStatics } from "@beep/schema/SchemaUtils/withLiteralKitStatics"
+ * import * as S from "effect/Schema"
  *
  * const StatusBase = LiteralKit(["draft", "published"])
- * const Status = StatusBase.pipe(withLiteralKitStatics(StatusBase))
+ * const Status = StatusBase.pipe(S.brand("Status"), withLiteralKitStatics(StatusBase))
  *
- * console.log(Status.Options.includes("published"))
+ * console.log(Status.is.published("published"), StatusBase.literals.length)
  * ```
  *
  * @category utilities
@@ -40,14 +47,9 @@ export const withLiteralKitStatics = <const L extends A.NonEmptyReadonlyArray<Sc
 ): (<S extends object>(schema: S) => S & LiteralKitStatics<L>) =>
   withStatics(
     (): LiteralKitStatics<L> => ({
-      Options: literalKit.Options,
-      HashSet: literalKit.HashSet,
       is: literalKit.is,
       Enum: literalKit.Enum,
-      pickOptions: literalKit.pickOptions,
-      omitOptions: literalKit.omitOptions,
       $match: literalKit.$match,
-      thunk: literalKit.thunk,
       toTaggedUnion: literalKit.toTaggedUnion,
     })
   );

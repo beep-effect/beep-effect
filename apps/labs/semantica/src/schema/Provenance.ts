@@ -11,7 +11,7 @@ import { ModelIdentity } from "@/schema/Model";
 
 const $I = $SemanticaId.create("schema/Provenance");
 
-const ParseEventOutcome = LiteralKit(["parsed", ...DegradedKind.Options]);
+const ParseEventOutcome = LiteralKit(["parsed", ...DegradedKind.literals]);
 
 class IngestedEventBody extends S.Class<IngestedEventBody>($I`IngestedEventBody`)(
   {

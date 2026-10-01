@@ -1457,7 +1457,7 @@ export const generateAiMetricsWeeklyReport: (
       const coverageGaps = pipe(
         A.flatMap(scorecards, (scorecard) => scorecard.coverageGaps),
         A.appendAll(
-          A.isReadonlyArrayNonEmpty(scorecards) ? A.empty<AiMetricsCoverageGap>() : AiMetricsCoverageGap.Options
+          A.isReadonlyArrayNonEmpty(scorecards) ? A.empty<AiMetricsCoverageGap>() : AiMetricsCoverageGap.literals
         ),
         A.dedupe,
         A.sort(Order.String)

@@ -613,8 +613,8 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         onSome: (body) => A.map(body.split("|"), (kind) => kind.trim()),
       });
 
-      expect(A.difference(admitted, HookPulseAgentKind.Options)).toEqual([]);
-      expect(A.difference(HookPulseAgentKind.Options, admitted)).toEqual([]);
+      expect(A.difference(admitted, HookPulseAgentKind.literals)).toEqual([]);
+      expect(A.difference(HookPulseAgentKind.literals, admitted)).toEqual([]);
     })
   );
 
@@ -642,7 +642,7 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         onSome: (body) =>
           A.getSomes(A.map(A.fromIterable(body.matchAll(/([a-z-]+)\) title=/g)), (match) => O.fromNullishOr(match[1]))),
       });
-      const schemaKinds = HookPulseAgentKind.Options;
+      const schemaKinds = HookPulseAgentKind.literals;
 
       expect(A.difference(admitted, schemaKinds)).toEqual([]);
       expect(A.difference(schemaKinds, admitted)).toEqual([]);
@@ -736,10 +736,10 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       // wholesale; a name only in jq is an event that reaches the ledger and
       // then fails to decode. Neither shows up in any example fixture, because
       // fixtures only ever exercise names both halves already agree on.
-      expect(A.difference(events, HookPulseEvent.Options)).toEqual([]);
-      expect(A.difference(HookPulseEvent.Options, events)).toEqual([]);
-      expect(A.difference(notificationTypes, HookPulseNotificationType.Options)).toEqual([]);
-      expect(A.difference(HookPulseNotificationType.Options, notificationTypes)).toEqual([]);
+      expect(A.difference(events, HookPulseEvent.literals)).toEqual([]);
+      expect(A.difference(HookPulseEvent.literals, events)).toEqual([]);
+      expect(A.difference(notificationTypes, HookPulseNotificationType.literals)).toEqual([]);
+      expect(A.difference(HookPulseNotificationType.literals, notificationTypes)).toEqual([]);
     })
   );
 

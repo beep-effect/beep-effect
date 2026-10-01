@@ -138,37 +138,10 @@ export * from "./Glob/index.ts";
  */
 export * from "./Html.ts";
 /**
- * HTTP method schemas and literal-kit helpers.
- *
- * **Example** (Check HTTP method literal)
- *
- * ```ts
- * import { HttpMethod } from "@beep/schema"
- *
- * console.log(HttpMethod.Schema.is.OPTIONS("OPTIONS"))
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export * as HttpMethod from "./HttpMethod/index.ts";
-/**
- * Canonical schema for any three-digit HTTP response status.
- *
- * @category validation
- * @since 0.0.0
- */
-export { HttpStatusCode } from "./HttpStatus/index.ts";
-/**
  * @since 0.0.0
  * @category validation
  */
 export * from "./Jsonc.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Jsonl.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -261,11 +234,6 @@ export * from "./TerritoryCode.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Toml.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./URL.ts";
 /**
  * Current `@beep/schema` package version.
@@ -279,8 +247,3 @@ export { VERSION } from "./Version.ts";
  * @category validation
  */
 export * from "./Xml.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Yaml.ts";

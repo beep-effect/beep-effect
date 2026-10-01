@@ -15,28 +15,16 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/OutputType");
 
-const OutputTypeDefinition = LiteralKit({
-  literals: [
-    "knowledge-graph",
-    "entity-resolution-graph",
-    "rdf-turtle",
-    "rdf-jsonld",
-    "mermaid-diagram",
-    "metadata",
-    "entities",
-    "relations",
-  ],
-  enumMapping: [
-    ["knowledge-graph", "knowledgeGraph"],
-    ["entity-resolution-graph", "entityResolutionGraph"],
-    ["rdf-turtle", "rdfTurtle"],
-    ["rdf-jsonld", "rdfJsonld"],
-    ["mermaid-diagram", "mermaidDiagram"],
-    ["metadata", "metadata"],
-    ["entities", "entities"],
-    ["relations", "relations"],
-  ],
-}).pipe(
+const OutputTypeDefinition = LiteralKit([
+  "knowledge-graph",
+  "entity-resolution-graph",
+  "rdf-turtle",
+  "rdf-jsonld",
+  "mermaid-diagram",
+  "metadata",
+  "entities",
+  "relations",
+]).pipe(
     $I.annoteSchema("OutputType", {
       description: "Finite set of artifacts produced by an ontology extraction run.",
     })
@@ -51,36 +39,24 @@ type OutputTypeValue = typeof OutputTypeDefinition.Type;
  * ```ts
  * import { OutputFilename } from "@effect-ontology/Model/OutputType"
  *
- * console.log(OutputFilename.is.graphJsonld("graph.jsonld")) // true
- * console.log(OutputFilename.is.graphJsonld("arbitrary.txt")) // false
+ * console.log(OutputFilename.is["graph.jsonld"]("graph.jsonld")) // true
+ * console.log(OutputFilename.is["graph.jsonld"]("arbitrary.txt")) // false
  * ```
  *
  * @invariant Belongs to the exact filename set assigned by {@link OutputType}.
  * @category value-objects
  * @since 0.0.0
  */
-export const OutputFilename = LiteralKit({
-  literals: [
-    "knowledge-graph.json",
-    "entity-resolution-graph.json",
-    "graph.ttl",
-    "graph.jsonld",
-    "erg-diagram.md",
-    "metadata.json",
-    "entities.json",
-    "relations.json",
-  ],
-  enumMapping: [
-    ["knowledge-graph.json", "knowledgeGraph"],
-    ["entity-resolution-graph.json", "entityResolutionGraph"],
-    ["graph.ttl", "graphTurtle"],
-    ["graph.jsonld", "graphJsonld"],
-    ["erg-diagram.md", "mermaidDiagram"],
-    ["metadata.json", "metadata"],
-    ["entities.json", "entities"],
-    ["relations.json", "relations"],
-  ],
-}).pipe(
+export const OutputFilename = LiteralKit([
+  "knowledge-graph.json",
+  "entity-resolution-graph.json",
+  "graph.ttl",
+  "graph.jsonld",
+  "erg-diagram.md",
+  "metadata.json",
+  "entities.json",
+  "relations.json",
+]).pipe(
     $I.annoteSchema("OutputFilename", {
       description: "Stable persisted filename assigned to an extraction-run output artifact.",
     })
@@ -93,7 +69,7 @@ export const OutputFilename = LiteralKit({
  * ```ts
  * import { OutputFilename, type OutputFilename as OutputFilenameValue } from "@effect-ontology/Model/OutputType"
  *
- * const filename: OutputFilenameValue = OutputFilename.Enum.graphJsonld
+ * const filename: OutputFilenameValue = OutputFilename.Enum["graph.jsonld"]
  * console.log(filename) // "graph.jsonld"
  * ```
  *
@@ -158,7 +134,7 @@ const outputTypeRegistry = {
  * import { OutputType } from "@effect-ontology/Model/OutputType"
  *
  * console.log(OutputType.filename("knowledge-graph")) // "knowledge-graph.json"
- * console.log(OutputType.is.rdfTurtle("rdf-turtle")) // true
+ * console.log(OutputType.is["rdf-turtle"]("rdf-turtle")) // true
  * ```
  *
  * @invariant Every output type has exactly one stable filename and
@@ -181,7 +157,7 @@ export const OutputType = OutputTypeDefinition.pipe(
  * ```ts
  * import { OutputType, type OutputType as OutputTypeValue } from "@effect-ontology/Model/OutputType"
  *
- * const output: OutputTypeValue = OutputType.Enum.knowledgeGraph
+ * const output: OutputTypeValue = OutputType.Enum["knowledge-graph"]
  * console.log(output) // "knowledge-graph"
  * ```
  *

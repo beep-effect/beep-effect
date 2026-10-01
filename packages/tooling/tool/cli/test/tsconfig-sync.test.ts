@@ -514,7 +514,6 @@ describe("tsconfig-sync", () => {
               "@beep/schema/test/Markdown": [
                 "./packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts",
               ],
-              "@beep/schema/test/Yaml": ["./packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"],
             },
             syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
           });
@@ -629,7 +628,6 @@ describe("tsconfig-sync", () => {
                 "@beep/schema/test/Markdown": [
                   "./packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts",
                 ],
-                "@beep/schema/test/Yaml": ["./packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"],
                 "@beep/example-protocol": ["./packages/example/protocol/src/index.ts"],
                 "@beep/example-protocol/*": ["./packages/example/protocol/src/*"],
               },

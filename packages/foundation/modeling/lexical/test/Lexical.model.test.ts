@@ -33,6 +33,7 @@ import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -636,9 +637,9 @@ describe("Lexical.model", { concurrent: false }, () => {
           };
           const source = yield* encodeJsonEffect(state);
           const canonicalTag = ListType.$match(listType, {
-            number: ListTag.thunk.ol,
-            bullet: ListTag.thunk.ul,
-            check: ListTag.thunk.ul,
+            number: F.constant(ListTag.Enum.ol),
+            bullet: F.constant(ListTag.Enum.ul),
+            check: F.constant(ListTag.Enum.ul),
           });
           const semanticNode = yield* decodeUnknownListNode({ ...node, tag: canonicalTag });
           const semanticMismatch = { ...semanticNode, tag };
@@ -673,9 +674,9 @@ describe("Lexical.model", { concurrent: false }, () => {
     { node: ListNodeArbitrary },
     ({ node }) => {
       const expectedTag = ListType.$match(node.listType, {
-        number: ListTag.thunk.ol,
-        bullet: ListTag.thunk.ul,
-        check: ListTag.thunk.ul,
+        number: F.constant(ListTag.Enum.ol),
+        bullet: F.constant(ListTag.Enum.ul),
+        check: F.constant(ListTag.Enum.ul),
       });
       expect(node.tag).toBe(expectedTag);
     },

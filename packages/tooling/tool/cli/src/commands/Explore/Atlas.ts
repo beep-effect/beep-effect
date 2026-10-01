@@ -412,7 +412,7 @@ export const renderExplorationAtlas: {
     "",
     `${A.length(ordered) + A.length(invalid)} exploration packets.`,
   ];
-  for (const status of ExplorationStatus.Options) {
+  for (const status of ExplorationStatus.literals) {
     const statusRows = A.filter(ordered, (row) => row.status === status);
     if (A.isReadonlyArrayEmpty(statusRows)) continue;
     lines = A.appendAll(lines, [

@@ -319,7 +319,7 @@ const scanRootStreams = Effect.fn("Explore.scanRootStreams")(function* (root: Pa
 
 const printCheckReport = Effect.fn("Explore.printCheckReport")(function* (scan: RootScan) {
   yield* Console.log(
-    `[explore:check] roots=${A.length(PacketRoot.Options)} streams=${scan.streams} findings=${A.length(scan.findings)}`
+    `[explore:check] roots=${A.length(PacketRoot.literals)} streams=${scan.streams} findings=${A.length(scan.findings)}`
   );
   for (const summary of scan.summaries) {
     yield* Console.log(summary);
@@ -357,7 +357,7 @@ const printCheckReport = Effect.fn("Explore.printCheckReport")(function* (scan: 
  */
 export const runExploreCheck = Effect.fn("Explore.runExploreCheck")(function* () {
   let merged: RootScan = { streams: 0, summaries: A.empty<string>(), findings: A.empty<GoalDoctorFinding>() };
-  for (const root of PacketRoot.Options) {
+  for (const root of PacketRoot.literals) {
     const scan = yield* scanRootStreams(root);
     merged = {
       streams: merged.streams + scan.streams,

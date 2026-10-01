@@ -21,10 +21,6 @@ const withLiteralKitHelpers =
     SchemaUtils.withStatics(schema, () => ({
       $match: kit.$match,
       Enum: kit.Enum,
-      omitOptions: kit.omitOptions,
-      Options: kit.Options,
-      pickOptions: kit.pickOptions,
-      thunk: kit.thunk,
       toTaggedUnion: kit.toTaggedUnion,
     }));
 

@@ -545,7 +545,7 @@ export class Interpreter<R> {
     for (const [name, value] of globals) {
       MutableHashMap.set(globalScope, name, Binding.new(false, value));
     }
-    for (const name of ErrorConstructorName.Options) {
+    for (const name of ErrorConstructorName.literals) {
       MutableHashMap.set(globalScope, name, Binding.new(false, ErrorConstructorReference.new(name)));
     }
   }

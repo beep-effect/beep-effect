@@ -608,7 +608,7 @@ const hookExemptKindsIn = (hookText: string): O.Option<ReadonlyArray<string>> =>
 };
 
 const kitExemptKinds = A.sort(
-  [...YeetInboxWaveExemptRowKind.Options, ...YeetInboxObservedRowKind.Options],
+  [...YeetInboxWaveExemptRowKind.literals, ...YeetInboxObservedRowKind.literals],
   Order.String
 );
 

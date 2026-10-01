@@ -94,7 +94,7 @@ describe("harness-ledger", () => {
     it("keys surfaces as kind:name with no trailing newline", () => {
       expect(contextSurfaceKey("skill", "yeet")).toBe("skill:yeet");
       expect(contextSurfaceKey("mcp-server", "graft")).toBe("mcp-server:graft");
-      expect(ContextSurfaceKind.Options).toContain("jsdoc");
+      expect(ContextSurfaceKind.literals).toContain("jsdoc");
     });
 
     it.effect("hashes the key exactly as `printf '%s' key | sha256sum` does", () =>

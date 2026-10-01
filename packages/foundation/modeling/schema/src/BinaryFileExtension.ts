@@ -184,7 +184,7 @@ export const BinaryFileExtension = LiteralKit(binaryFileExtensionOptions).pipe(
   })
 );
 
-const binaryFileExtensionSet = HashSet.fromIterable(BinaryFileExtension.Options);
+const binaryFileExtensionSet = HashSet.fromIterable(BinaryFileExtension.literals);
 
 /**
  * Union of literals accepted by {@link BinaryFileExtension}.

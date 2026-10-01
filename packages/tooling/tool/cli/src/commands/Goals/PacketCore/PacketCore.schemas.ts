@@ -74,7 +74,7 @@ export type PacketEventSchemaVersion = typeof PacketEventSchemaVersion.Type;
  * ```ts
  * import { PacketRoot } from "@beep/repo-cli/test/Goals"
  *
- * console.log(PacketRoot.Options) // ["goals", "explorations"]
+ * console.log(PacketRoot.literals) // ["goals", "explorations"]
  * ```
  *
  * @category models
@@ -510,7 +510,7 @@ export type PacketStageOrdinal = typeof PacketStageOrdinal.Type;
  * ```ts
  * import { PacketRiskTier } from "@beep/repo-cli/test/Goals"
  *
- * console.log(PacketRiskTier.Options) // ["light", "standard", "full"]
+ * console.log(PacketRiskTier.literals) // ["light", "standard", "full"]
  * ```
  *
  * @category models

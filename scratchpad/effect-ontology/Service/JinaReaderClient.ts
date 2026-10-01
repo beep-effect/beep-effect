@@ -13,7 +13,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils, URLStr } from "@beep/schema";
-import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import { Clock, Context, Duration, Effect, Layer, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -22,7 +21,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
-import { Milliseconds } from "../Domain/Error/Base.ts";
+import { HttpStatusCode, Milliseconds } from "../Domain/Error/Base.ts";
 import { JinaApiError, JinaParseError, JinaRateLimitError, JinaTimeoutError } from "../Domain/Error/Jina.ts";
 import { JinaContent } from "../Domain/Model/EnrichedContent.ts";
 import { ConfigService } from "./Config.ts";

@@ -482,7 +482,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
       expect(A.map(ranked, (entry) => entry.lane.id)).toEqual(A.map(handoff.lanes, (lane) => lane.laneId));
 
       const indexed = A.map(ranked, (entry) => [entry.declarationIndex, entry.lane] as const);
-      expect(A.map(WAVE_ORDER_KEYS, ([key]) => key)).toEqual(GateOrderSortKey.Options);
+      expect(A.map(WAVE_ORDER_KEYS, ([key]) => key)).toEqual(GateOrderSortKey.literals);
       assertNone(O.getOrThrow(A.head(handoff.lanes)).decidedBy);
       for (const [previousRank, lane] of A.drop(handoff.lanes, 1).entries()) {
         expectDecidingKeySeparates(

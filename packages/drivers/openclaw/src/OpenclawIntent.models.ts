@@ -93,7 +93,7 @@ export type OpenclawSecretReference = typeof OpenclawSecretReference.Type;
  * ```ts
  * import { OpenclawTargetVersion } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawTargetVersion.Options) // ["2026.7.1-2"]
+ * console.log(OpenclawTargetVersion.literals) // ["2026.7.1-2"]
  * ```
  *
  * @category models
@@ -208,7 +208,7 @@ export type OpenclawGatewayPort = typeof OpenclawGatewayPort.Type;
  * ```ts
  * import { OpenclawGatewayBind } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawGatewayBind.Options) // ["loopback"]
+ * console.log(OpenclawGatewayBind.literals) // ["loopback"]
  * ```
  *
  * @category models
@@ -281,7 +281,7 @@ export class OpenclawGatewayIntent extends S.Class<OpenclawGatewayIntent>($I`Ope
  * ```ts
  * import { OpenclawConfidentialityPolicy } from "@beep/openclaw"
  *
- * console.log(OpenclawConfidentialityPolicy.Options) // ["advisory"]
+ * console.log(OpenclawConfidentialityPolicy.literals) // ["advisory"]
  * ```
  *
  * @category models
@@ -317,7 +317,7 @@ export type OpenclawConfidentialityPolicy = typeof OpenclawConfidentialityPolicy
  * ```ts
  * import { OpenclawClientDataPolicy } from "@beep/openclaw"
  *
- * console.log(OpenclawClientDataPolicy.Options) // ["synthetic-only"]
+ * console.log(OpenclawClientDataPolicy.literals) // ["synthetic-only"]
  * ```
  *
  * @category models
@@ -455,7 +455,7 @@ export class OpenclawAgentIntent extends S.Class<OpenclawAgentIntent>($I`Opencla
  * ```ts
  * import { OpenclawProviderApi } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawProviderApi.Options) // ["ollama", "openai-compat"]
+ * console.log(OpenclawProviderApi.literals) // ["ollama", "openai-compat"]
  * ```
  *
  * @category models
@@ -491,7 +491,7 @@ export type OpenclawProviderApi = typeof OpenclawProviderApi.Type;
  * ```ts
  * import { OpenclawModelInputKind } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawModelInputKind.Options) // ["text", "image"]
+ * console.log(OpenclawModelInputKind.literals) // ["text", "image"]
  * ```
  *
  * @category models
@@ -763,7 +763,7 @@ export class OpenclawModelProviderIntent extends S.Class<OpenclawModelProviderIn
  * ```ts
  * import { OpenclawAuthProfileMode } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawAuthProfileMode.Options) // ["api_key", "oauth"]
+ * console.log(OpenclawAuthProfileMode.literals) // ["api_key", "oauth"]
  * ```
  *
  * @category models
@@ -834,7 +834,7 @@ export class OpenclawAuthProfileIntent extends S.Class<OpenclawAuthProfileIntent
  * ```ts
  * import { OpenclawTelegramDmPolicy } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawTelegramDmPolicy.Options) // ["pairing", "disabled", "open"]
+ * console.log(OpenclawTelegramDmPolicy.literals) // ["pairing", "disabled", "open"]
  * ```
  *
  * @category models
@@ -870,7 +870,7 @@ export type OpenclawTelegramDmPolicy = typeof OpenclawTelegramDmPolicy.Type;
  * ```ts
  * import { OpenclawTelegramGroupPolicy } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawTelegramGroupPolicy.Options) // ["open", "disabled"]
+ * console.log(OpenclawTelegramGroupPolicy.literals) // ["open", "disabled"]
  * ```
  *
  * @category models
