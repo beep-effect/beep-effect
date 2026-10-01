@@ -222,6 +222,26 @@ const DockStory = (props: {
   </div>
 );
 
+// A selector that stops matching is a story bug, not a geometry bug: fail loud
+// before any geometry assertion runs.
+const requireElement = (canvasElement: HTMLElement, selector: string): HTMLElement => {
+  const element = canvasElement.querySelector<HTMLElement>(selector);
+  if (element === null) {
+    throw new Error(`Missing workspace story geometry: ${selector}`);
+  }
+  return element;
+};
+
+// Every positioned dock box must resolve its --dock-* properties through the package stylesheet.
+const expectPositionedByDockProperties = (box: HTMLElement): void => {
+  const computed = getComputedStyle(box);
+  void expect(computed.position).toBe("absolute");
+  void expect(computed.left).toBe(box.style.getPropertyValue("--dock-left"));
+  void expect(computed.top).toBe(box.style.getPropertyValue("--dock-top"));
+  void expect(computed.width).toBe(box.style.getPropertyValue("--dock-width"));
+  void expect(computed.height).toBe(box.style.getPropertyValue("--dock-height"));
+};
+
 const meta = {
   title: "Dock/DockviewReact",
   component: DockStory,
@@ -258,21 +278,12 @@ export const Workspace: Story = {
     // (`@beep/dock-react/dock.css`) has to turn them into positioned, sized boxes. A missing
     // import or a selector that stops matching leaves every pane static, and only a real
     // browser with the stylesheet loaded can see that.
-    const root = canvasElement.querySelector<HTMLElement>("[data-dock-root]");
-    const group = canvasElement.querySelector<HTMLElement>("[data-dock-root] > section[data-group-id]");
-    const floating = canvasElement.querySelector<HTMLElement>("[data-dock-root] > [data-floating-pane]");
-    if (root === null || group === null || floating === null) {
-      throw new Error("Missing workspace story geometry");
-    }
+    const root = requireElement(canvasElement, "[data-dock-root]");
+    const group = requireElement(canvasElement, "[data-dock-root] > section[data-group-id]");
+    const floating = requireElement(canvasElement, "[data-dock-root] > [data-floating-pane]");
     void expect(getComputedStyle(root).position).toBe("relative");
-    for (const box of [group, floating]) {
-      const computed = getComputedStyle(box);
-      void expect(computed.position).toBe("absolute");
-      void expect(computed.left).toBe(box.style.getPropertyValue("--dock-left"));
-      void expect(computed.top).toBe(box.style.getPropertyValue("--dock-top"));
-      void expect(computed.width).toBe(box.style.getPropertyValue("--dock-width"));
-      void expect(computed.height).toBe(box.style.getPropertyValue("--dock-height"));
-    }
+    expectPositionedByDockProperties(group);
+    expectPositionedByDockProperties(floating);
     void expect(getComputedStyle(group).display).toBe("flex");
     void expect(getComputedStyle(floating).zIndex).toBe(floating.style.getPropertyValue("--dock-z"));
   },

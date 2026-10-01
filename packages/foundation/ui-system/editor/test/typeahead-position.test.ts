@@ -1,4 +1,4 @@
-import { shouldOpenUpward, typeaheadMenuPosition } from "@beep/editor/chat/typeahead";
+import { shouldOpenUpward, typeaheadInsetPx, typeaheadMenuPosition } from "@beep/editor/chat/typeahead";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
@@ -47,5 +47,15 @@ describe("typeaheadMenuPosition", () => {
         viewportWidth: 1280,
       })
     ).toStrictEqual({ left: 1280 - 256 - 4, top: 124 });
+  });
+});
+
+describe("typeaheadInsetPx", () => {
+  it("renders a resolved edge as a pixel length", () => {
+    expect(typeaheadInsetPx(124)).toBe("124px");
+  });
+
+  it("leaves an omitted edge unset so the inset resolves to auto", () => {
+    expect(typeaheadInsetPx(undefined)).toBeUndefined();
   });
 });

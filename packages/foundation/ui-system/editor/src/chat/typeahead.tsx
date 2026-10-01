@@ -304,10 +304,29 @@ const caretViewportRect = (
   return anchorRect.top !== 0 || anchorRect.bottom !== 0 ? anchorRect : undefined;
 };
 
-// The menu's fixed coordinates ride in CSS custom properties consumed by the
-// `left-(--typeahead-left)` / `top-(--typeahead-top)` / `bottom-(--typeahead-bottom)`
-// classes. An omitted edge leaves its property unset, so that inset resolves to `auto`.
-const cssPx = (value: number | undefined): string | undefined => (value === undefined ? undefined : `${value}px`);
+/**
+ * Pixel length for one edge of a positioned typeahead surface.
+ *
+ * **Details**
+ *
+ * The menu's fixed coordinates ride in CSS custom properties consumed by the
+ * `left-(--typeahead-left)` / `top-(--typeahead-top)` / `bottom-(--typeahead-bottom)`
+ * classes. An omitted edge leaves its property unset, so that inset resolves to `auto`.
+ *
+ * **Example** (Edge values for a menu anchored below the caret)
+ *
+ * ```ts import.meta.vitest name="Inset lengths"
+ * import { typeaheadInsetPx } from "@beep/editor/chat/typeahead"
+ *
+ * typeaheadInsetPx(124) // => "124px"
+ * typeaheadInsetPx(undefined) // => undefined
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const typeaheadInsetPx = (value: number | undefined): string | undefined =>
+  value === undefined ? undefined : `${value}px`;
 
 /**
  * Renders the open typeahead as a `listbox` portal pinned to the viewport at
@@ -351,9 +370,9 @@ function TypeaheadMenuList<TOption extends MenuOption>({
       {...typeaheadMenuMarker(editor)}
       style={
         {
-          "--typeahead-left": cssPx(menuPosition.left),
-          "--typeahead-top": cssPx(menuPosition.top),
-          "--typeahead-bottom": cssPx(menuPosition.bottom),
+          "--typeahead-left": typeaheadInsetPx(menuPosition.left),
+          "--typeahead-top": typeaheadInsetPx(menuPosition.top),
+          "--typeahead-bottom": typeaheadInsetPx(menuPosition.bottom),
         } as CSSProperties
       }
       className="bg-popover text-popover-foreground fixed top-(--typeahead-top) bottom-(--typeahead-bottom) left-(--typeahead-left) z-50 max-h-72 w-64 overflow-auto rounded-md border p-1 shadow-md"
@@ -427,9 +446,9 @@ function MentionLookupNotice({
         <div
           style={
             {
-              "--typeahead-left": cssPx(noticePosition.left),
-              "--typeahead-top": cssPx(noticePosition.top),
-              "--typeahead-bottom": cssPx(noticePosition.bottom),
+              "--typeahead-left": typeaheadInsetPx(noticePosition.left),
+              "--typeahead-top": typeaheadInsetPx(noticePosition.top),
+              "--typeahead-bottom": typeaheadInsetPx(noticePosition.bottom),
             } as CSSProperties
           }
           className="bg-popover text-muted-foreground fixed top-(--typeahead-top) bottom-(--typeahead-bottom) left-(--typeahead-left) z-50 w-64 rounded-md border p-2 text-sm shadow-md"

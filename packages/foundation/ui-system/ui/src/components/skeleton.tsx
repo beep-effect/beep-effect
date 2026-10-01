@@ -47,11 +47,7 @@ const skeletonVariants = cva("bg-muted animate-pulse", {
  * @category components
  * @since 0.0.0
  */
-function Skeleton({
-  className,
-  shape = "default",
-  ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof skeletonVariants>) {
+function Skeleton({ className, shape, ...props }: React.ComponentProps<"div"> & VariantProps<typeof skeletonVariants>) {
   return <div data-slot="skeleton" className={cn(skeletonVariants({ shape, className }))} {...props} />;
 }
 
