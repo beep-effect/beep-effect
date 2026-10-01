@@ -1,0 +1,6 @@
+{"schemaVersion":"yeet-admission-journal/v1","_tag":"admission-admitted","nonce":"phantom-a","kind":"review-fix","weightTokens":1,"priority":"verify","originKey":"origin-test","enqueuedAtMillis":999,"admittedAtMillis":1000}
+{"schemaVersion":"yeet-admission-journal/v1","_tag":"admission-admitted","nonce":"released-b","kind":"merged-preview","weightTokens":5,"priority":"verify","originKey":"origin-test","enqueuedAtMillis":1999,"admittedAtMillis":2000}
+{"schemaVersion":"yeet-admission-journal/v1","_tag":"admission-admitted","nonce":"released-c","kind":"full-proof","weightTokens":3,"priority":"verify","originKey":"origin-test","enqueuedAtMillis":2999,"admittedAtMillis":3000}
+{"schemaVersion":"yeet-admission-journal/v1","_tag":"admission-admitted","nonce":"blocked-d","kind":"merged-preview","weightTokens":5,"priority":"verify","originKey":"origin-test","enqueuedAtMillis":3999,"admittedAtMillis":4000}
+{"schemaVersion":"yeet-admission-journal/v1","_tag":"admission-released","nonce":"released-b","releasedAtMillis":5000}
+{"schemaVersion":"yeet-admission-journal/v1","_tag":"admission-released","nonce":"released-c","releasedAtMillis":6000}
