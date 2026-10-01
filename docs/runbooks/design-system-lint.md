@@ -221,6 +221,39 @@ anticipates the class (for example a `[.border-b]:pb-6` hook).
 | Date | Decision | Scope | Why |
 | --- | --- | --- | --- |
 | 2026-10-01 | Strict policy adopted: all six rules at `error`, `no-restyle` allows `layout` only, no contracts or allow-lists. | `apps/**`, `packages/**` | Initial adoption of `@shadcn/lint`. |
+| 2026-10-01 | Semantic color tokens `info`, `info-text`, `highlight`, `highlight-foreground`, `rating`, `keyword`, `destructive-foreground`, `canvas`, `canvas-text`, and the `bubble-*` tints. | `@beep/ui` theme | Blue, amber-mark, star, syntax-keyword and system-color uses had no semantic token; each replaces a raw palette class with light and dark values. |
+| 2026-10-01 | Scale and structure tokens: `text-3xs`/`2xs`/`xs-plus`/`sm-plus`, `rounded-control`/`control-sm`/`nested`/`checkbox`, sidebar, combobox and drawer sizes, grid templates, easings, transition property sets, `shadow-sidebar-outline`. | `@beep/ui` theme | Registry components carried arbitrary values with no scale step; a named token keeps the value in one place. |
+| 2026-10-01 | Component props instead of consumer classes: `Button` `disabledTone`, `CardHeader` `bordered`, `Textarea` `variant` and `font`, `Input` `font`, `Skeleton` `shape`, `Avatar` `size` and `shape`, `ContentEditable` `variant`. | `@beep/ui` components | Each treatment had two or more consumers or is a standard variant of its family. The `mono` font variants keep the base `md:text-sm` step so existing screens render unchanged. |
+| 2026-10-01 | No brand variants in `@beep/ui`. OIP declares `--color-oip-*` tokens in its own `globals.css` and renders its carousel arrows as app-local buttons on `useCarousel()`. | `apps/oip-web` | A brand color is an app theme concern; a scoped retheme of `--primary` would also repaint the slide cards. |
+| 2026-10-01 | `@beep/dock-react` ships `@beep/dock-react/dock.css` and writes geometry as `--dock-*` custom properties. Hosts must import the stylesheet. | `@beep/dock-react`, `apps/professional-desktop` | The adapter stays Tailwind-free: a library package's utilities are generated only when every host `@source`s it. |
+| 2026-10-01 | Chart series colors are set through the CSSOM (`chartColorProperties` plus a ref callback) with `light-dark()` for per-theme pairs; the runtime `<style>` element is gone. | `@beep/ui/components/chart` | The property names come from the chart config, and the rule accepts only literal `--custom` keys. The values are outside the linter's view, so keep them theme variables. |
+| 2026-10-01 | `todox` is a Tailwind entry without preflight (`tailwindcss/theme` and `tailwindcss/utilities` layers, scanning `src` only). | `apps/todox` | Its hand-written BEM classes become vocabulary the lane can check; unlayered site rules still win. |
+
+## Gotchas
+
+- A clean run prints nothing and exits 0. Use `--format json` and count `diagnostics` to prove zero.
+- Keep class strings visible. The linter follows literals, same-file constants and ternaries one hop.
+  A class selected through `LiteralKit.$match`, a `Record[key]` lookup or a helper call disappears
+  from the scan: the count falls and nothing was fixed.
+- `@utility` names must be plain identifiers. Biome parses the theme CSS and rewrites a dotted name
+  such as `border-1.5` into invalid CSS.
+- A `style` value must be an object literal whose keys are all `--custom` properties (inline, or a
+  same-file `const`). A spread of a call or a computed key is reported. React does not type custom
+  properties, so the literal needs `as CSSProperties`.
+- Moving an inline style to a class breaks jsdom assertions on `element.style.x` and
+  `toHaveStyle(...)`: jsdom does not resolve stylesheets. Assert the class or the custom property.
+- A library package that gains Tailwind utilities needs an `@source` line in every host stylesheet,
+  or the class is silently unstyled. Prefer a package stylesheet keyed by data attributes.
+- A plain-CSS app that imports `tailwindcss/theme` inherits Tailwind's `spin`, `ping`, `pulse` and
+  `bounce` keyframes. A site keyframes rule with the same name is displaced after minification. Diff
+  the built CSS before and after.
+- Story play tests live in `apps/storybook`:
+  `cd apps/storybook && bunx vitest run --config vitest.storybook.config.ts <story files>`.
+- Rewriting classes inside repeated story markup re-attributes the pre-existing clone groups to the
+  branch in `fallow audit`. Stories repeat markup on purpose, so the story file carries the reasoned
+  `// fallow-ignore-file code-duplication -- ...` directive.
+- Adding a root script changes the scripts digest of every cached root task. Re-record
+  `standards/cache-qualification-baseline.json` through a reviewed `beep cache baseline --request`.
 
 ## CI
 

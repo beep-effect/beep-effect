@@ -233,6 +233,9 @@
     "eslint-plugin-tsdoc",
     "tailwindcss",
     "@tailwindcss/postcss",
+    // @shadcn/lint: the oxlint JS plugin named by `jsPlugins` in .oxlintrc.shadcn.json
+    // (`bun run lint:shadcn`); oxlint loads it by package name, nothing imports it.
+    "@shadcn/lint",
     "tsgo",
     "ws",
     "@types/ws",

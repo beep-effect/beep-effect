@@ -201,6 +201,11 @@ const createEdgeGradient = (ctx: CanvasRenderingContext2D, width: number, fadeWi
   return gradient;
 };
 
+// The container height as a CSS length: a number is pixels, a string passes through,
+// and an omitted height fills the parent.
+const waveformHeight = (height: undefined | string | number): string =>
+  P.isNumber(height) ? `${height}px` : (height ?? "100%");
+
 /**
  * Live waveform component.
  *
@@ -256,7 +261,7 @@ export const LiveWaveform = ({
   const lastWidthRef = useRef(0);
   const hasDeviceId = deviceId !== undefined && deviceId.length > 0;
 
-  const heightStyle = P.isNumber(height) ? `${height}px` : height;
+  const heightStyle = waveformHeight(height);
 
   // Handle canvas resizing
   useEffect(() => {
@@ -539,7 +544,7 @@ export const LiveWaveform = ({
     <div
       className={cn("relative h-(--waveform-height) w-full", className)}
       ref={containerRef}
-      style={{ "--waveform-height": heightStyle ?? "100%" } as CSSProperties}
+      style={{ "--waveform-height": heightStyle } as CSSProperties}
       aria-label={waveformAriaLabel(active, processing)}
       role="img"
       {...props}

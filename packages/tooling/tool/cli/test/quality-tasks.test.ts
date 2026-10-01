@@ -986,12 +986,13 @@ describe("quality task adapter", () => {
     ]);
     expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(expectedTurboArgs("knip:check", ["--summarize"]));
     expect(qualityLaneArgs(lanes, "quality:shadcn-lint")).toEqual(["run", "beep", "ci", "lane", "shadcn-lint"]);
-    expect(
+    assert.deepStrictEqual(
       O.map(
         A.findFirst(lanes, (lane) => lane.id === "quality:shadcn-lint"),
         (lane) => lane.wave
-      )
-    ).toEqual(O.some("preflight"));
+      ),
+      O.some("preflight")
+    );
     expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
     // The repo-wide tsgo extras ride inside `quality:check` (root `bun run check`
     // keeps them under `--affected`), so no lane runs `test-tsgo` or `tsgo-smoke` again.
