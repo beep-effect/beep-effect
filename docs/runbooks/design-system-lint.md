@@ -205,6 +205,8 @@ command over the new workspace before opening the PR.
    `--breakpoint-<name>`) under `@theme` in the shared theme, with light and
    dark values when it is a color. App-only tokens go in the app's
    `globals.css` after its `@import "@beep/ui/styles/globals.css"`.
+   Register any new font-size, radius, shadow, leading, tracking, font, ease,
+   animate or size name with tailwind-merge in `ui/src/lib/utils.ts` as well.
 3. Variants: add the variant to the component's `cva` definition in
    `packages/foundation/ui-system/ui/src/components/<name>.tsx`, then update
    consumers to pass the prop.
@@ -253,6 +255,13 @@ anticipates the class (for example a `[.border-b]:pb-6` hook).
 - Rewriting classes inside repeated story markup re-attributes the pre-existing clone groups to the
   branch in `fallow audit`. Stories repeat markup on purpose, so the story file carries the reasoned
   `// fallow-ignore-file code-duplication -- ...` directive.
+- A new theme scale name must also be registered with tailwind-merge in
+  `packages/foundation/ui-system/ui/src/lib/utils.ts` (`extendTailwindMerge`). tailwind-merge
+  only knows Tailwind's stock names: an unregistered `text-<name>` reads as a text color, so
+  `cn("text-xs-plus", "text-muted-foreground")` silently drops the font size, and unregistered
+  radius, shadow, leading, size and grid names never resolve against their stock siblings.
+  The screenshot diff is what caught this; a `--text-*` token without a `cn` registration
+  renders at the inherited size.
 - Adding a root script changes the scripts digest of every cached root task. Re-record
   `standards/cache-qualification-baseline.json` through a reviewed `beep cache baseline --request`.
 
