@@ -682,9 +682,7 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
 
       const freshDest = path.join(root, "archive", "fresh.bin");
       const fresh = yield* writer.archiveObject(source, freshDest, identity);
-      expect(fresh.kind).toBe("copied");
-      expect(fresh.kind === "copied" && fresh.sha256).toBe(expectedSha);
-      expect(fresh.kind === "copied" && fresh.bytesCopied).toBe(sourceBytes.byteLength);
+      expect(fresh).toMatchObject({ kind: "copied", sha256: expectedSha, bytesCopied: sourceBytes.byteLength });
 
       const complete = yield* writer.archiveObject(source, freshDest, identity);
       expect(complete.kind).toBe("already-complete");
@@ -784,9 +782,11 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
       const prefixLength = 2 * 1024 * 1024;
       yield* fs.writeFile(prefixDest, sourceBytes.subarray(0, prefixLength));
       const resumed = yield* writer.archiveObject(source, prefixDest, identity);
-      expect(resumed.kind).toBe("resume-completed");
-      expect(resumed.kind === "resume-completed" && resumed.bytesReused).toBe(prefixLength);
-      expect(resumed.kind === "resume-completed" && resumed.bytesCopied).toBe(sourceBytes.byteLength - prefixLength);
+      expect(resumed).toMatchObject({
+        kind: "resume-completed",
+        bytesReused: prefixLength,
+        bytesCopied: sourceBytes.byteLength - prefixLength,
+      });
 
       const corruptDest = path.join(root, "archive", "corrupt.bin");
       const corrupt = sourceBytes.slice(0, prefixLength);

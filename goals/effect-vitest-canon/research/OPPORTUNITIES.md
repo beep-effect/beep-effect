@@ -6242,11 +6242,33 @@ turning transport or quota failures into an absent-PR conclusion. Detached
 monitoring was unavailable because the systemd user manager was unreachable.
 
 The hosted Security job also found inherited `basic-ftp@5.3.1` advisory
-GHSA-c475-qrg2-pj4r, reporting 6.2.1 as fixed. This PR does not change bun.lock;
-track dependency remediation separately from test migration regressions.
+GHSA-c475-qrg2-pj4r, reporting 6.2.1 as fixed. The initial migration head
+left bun.lock unchanged; follow-up e3999b4b8c repairs the inherited dependency
+in this PR with the override and lockfile update described below. Hosted
+Security passed on that repair head.
 
 The inherited basic-ftp advisory is repaired through a 6.2.1 override after
 local get-uri download/error/cache compatibility checks. The v6 transfer-host
 restriction remains enabled. A dependency-chain check is necessary here:
 even current get-uri metadata still requests basic-ftp 5.x, so updating the
 parent alone would not remove this advisory. See `basic-ftp-security-repair.md`.
+
+
+### CI trace isolation after CLI runner migration
+
+PR 1390 jobs 110449355268 and 110449355276 failed command-output assertions
+when CI enabled runner lifecycle tracing. Shared TestConsole layers captured
+the runner start event before the test callback. Focused local runs without
+CI did not exercise this behavior. Give command-output assertions a fresh
+TestConsole inside the callback through the existing provideServiceEffect
+pattern; retain runner tracing and exact output assertions. Future migration
+qualification should include CI=true in both runtimes. The repaired four-file
+selection passes all 80 tests on Node and Bun with CI=true, and root test
+typechecking passes. The Effect Vitest ratchet reports zero introductions.
+
+Fallow also caught cognitive complexity in the preservation scenario's
+short-circuit payload assertions. Match the expected discriminant and payload
+fields together with toMatchObject, retaining all value checks without redundant
+branches. Fallow audit now passes. Schema inventory regeneration reset two
+fixture-codec exception dispositions after their source lines moved; preserve
+the reviewed reasons and update only those line references.

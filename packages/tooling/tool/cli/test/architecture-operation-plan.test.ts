@@ -18,6 +18,7 @@ import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, pipe } from "effect";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -715,59 +716,68 @@ describe("architecture operation plan", () => {
   it.layer(CommandTestLayer, { timeout: "10 seconds" })((it) => {
     it.effect(
       "architecture plan command emits decoded JSON with operation metadata",
-      Effect.fnUntraced(function* () {
-        yield* runArchitectureCommand(["plan", "--stage", "core"]);
-        const output = pipe(yield* TestConsole.logLines, A.filter(isString), A.join("\n"));
-        const decoded = yield* decodeCanonicalSliceOperationPlanJson(output);
+      Effect.fnUntraced(
+        function* () {
+          yield* runArchitectureCommand(["plan", "--stage", "core"]);
+          const output = pipe(yield* TestConsole.logLines, A.filter(isString), A.join("\n"));
+          const decoded = yield* decodeCanonicalSliceOperationPlanJson(output);
 
-        expect(decoded.target.stage).toBe("core");
-        expect(decoded.operations[0]?.operationId).toContain(":");
-        expect(decoded.operations[0]?.operationSource).toBe("accepted-proof");
-      })
+          expect(decoded.target.stage).toBe("core");
+          expect(decoded.operations[0]?.operationId).toContain(":");
+          expect(decoded.operations[0]?.operationSource).toBe("accepted-proof");
+        },
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
     );
   });
 
   it.layer(CommandTestLayer, { timeout: "10 seconds" })((it) => {
     it.effect(
       "architecture create package dry-run prints a plan without writing files",
-      Effect.fnUntraced(function* () {
-        const uniqueDir = yield* makeTempDirectory("dry-run-lab-");
-        const sliceName = Str.replace(/^.*\//u, "")(uniqueDir);
-        const targetDir = joinPath(repoRoot, "packages", sliceName);
-        yield* removePath(uniqueDir);
-        expect(pathExistsSync(targetDir)).toBe(false);
+      Effect.fnUntraced(
+        function* () {
+          const uniqueDir = yield* makeTempDirectory("dry-run-lab-");
+          const sliceName = Str.replace(/^.*\//u, "")(uniqueDir);
+          const targetDir = joinPath(repoRoot, "packages", sliceName);
+          yield* removePath(uniqueDir);
+          expect(pathExistsSync(targetDir)).toBe(false);
 
-        yield* runArchitectureCommand(["create", "package", sliceName, "domain", "--dry-run"]);
-        const output = pipe(yield* TestConsole.logLines, A.filter(isString), A.join("\n"));
-        const decoded = yield* decodeCanonicalSliceOperationPlanJson(output);
+          yield* runArchitectureCommand(["create", "package", sliceName, "domain", "--dry-run"]);
+          const output = pipe(yield* TestConsole.logLines, A.filter(isString), A.join("\n"));
+          const decoded = yield* decodeCanonicalSliceOperationPlanJson(output);
 
-        expect(decoded.target.boundedContext).toBe(sliceName);
-        expect(decoded.operations[0]?.operationSource).toBe("package-shell");
-        expect(A.map(decoded.operations, (operation) => operation.path)).toContain(
-          `packages/${sliceName}/domain/src/index.ts`
-        );
-        expect(pathExistsSync(targetDir)).toBe(false);
-      })
+          expect(decoded.target.boundedContext).toBe(sliceName);
+          expect(decoded.operations[0]?.operationSource).toBe("package-shell");
+          expect(A.map(decoded.operations, (operation) => operation.path)).toContain(
+            `packages/${sliceName}/domain/src/index.ts`
+          );
+          expect(pathExistsSync(targetDir)).toBe(false);
+        },
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
     );
   });
 
   it.layer(CommandTestLayer, { timeout: "10 seconds" })((it) => {
     it.effect(
       "architecture check command validates an operation-plan file",
-      Effect.fnUntraced(function* () {
-        const tempRoot = yield* makeTempDirectory("beep-architecture-check-");
-        const planPath = joinPath(tempRoot, "plan.json");
-        const plan = makeCanonicalSliceOperationPlan();
-        const json = yield* encodeCanonicalSliceOperationPlanJson(plan);
-        yield* writeText(planPath, json);
+      Effect.fnUntraced(
+        function* () {
+          const tempRoot = yield* makeTempDirectory("beep-architecture-check-");
+          const planPath = joinPath(tempRoot, "plan.json");
+          const plan = makeCanonicalSliceOperationPlan();
+          const json = yield* encodeCanonicalSliceOperationPlanJson(plan);
+          yield* writeText(planPath, json);
 
-        yield* runArchitectureCommand(["check", "--file", planPath]);
-        const output = pipe(yield* TestConsole.logLines, A.filter(isString), A.join("\n"));
+          yield* runArchitectureCommand(["check", "--file", planPath]);
+          const output = pipe(yield* TestConsole.logLines, A.filter(isString), A.join("\n"));
 
-        yield* removePath(tempRoot);
-        expect(output).toContain("idempotent=true");
-        expect(output).toContain(`operations=${plan.operations.length}`);
-      })
+          yield* removePath(tempRoot);
+          expect(output).toContain("idempotent=true");
+          expect(output).toContain(`operations=${plan.operations.length}`);
+        },
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
     );
   });
 });

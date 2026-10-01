@@ -31,6 +31,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Context, Effect, FileSystem, Layer, Match, Path, pipe, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
@@ -348,7 +349,7 @@ describe("runner image manifest checks", () => {
       expect(yield* TestConsole.logLines).toStrictEqual([
         "AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no",
       ]);
-    })
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 });
 
@@ -408,7 +409,7 @@ describe("runner bake planning and argv", () => {
         "AMI: ami-0123456789abcdef0\nlockfile: fresh\nbun version: fresh\nfresh: yes",
         "baked AMI: ami-0123456789abcdef0\nbase AMI: ami-0fedcba9876543210\nlockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\npin: cd infra/ci-runners && pulumi config set ciFleetController:amiId ami-0123456789abcdef0 --stack production",
       ]);
-    })
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
   it.effect("fails a stale check after rendering its report", () =>
@@ -418,7 +419,7 @@ describe("runner bake planning and argv", () => {
       expect(yield* TestConsole.logLines).toStrictEqual([
         "AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no",
       ]);
-    })
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
   it.effect("reports each missing required bake flag", () =>

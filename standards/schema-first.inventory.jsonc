@@ -901,7 +901,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 44,
+      "line": 45,
       "owner": "@beep/repo-cli",
       "reason": "CI lane regression writes fixed JSON fixture documents through the compact S.fromJsonString(S.Unknown) codec; the codec calls serialize fixtures and assert no schema law, so schema-derived arbitrary coverage does not apply."
     },
@@ -911,7 +911,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 54,
+      "line": 59,
       "owner": "@beep/repo-cli",
       "reason": "Corpus-preservation regression serializes fixed JSON fixtures through the compact S.fromJsonString(S.Unknown) codec; the codec calls build inputs and assert no schema law, so schema-derived arbitrary coverage does not apply."
     },
