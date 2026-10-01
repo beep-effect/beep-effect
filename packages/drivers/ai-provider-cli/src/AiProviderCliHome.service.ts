@@ -265,7 +265,7 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
                     targetPath: O.none(),
                   })
                 ),
-                Effect.flatMap(() => createLink)
+                Effect.andThen(createLink)
               ),
       }
     );

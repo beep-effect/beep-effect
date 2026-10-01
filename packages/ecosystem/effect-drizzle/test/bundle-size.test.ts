@@ -117,7 +117,7 @@ describe.runIf(hasBunSpawn)("bundle size probe process", () => {
     fnUntraced(function* () {
       const acquired = yield* Deferred.make<Effect.Success<ReturnType<typeof acquireProbe>>>();
       const fiber = yield* scoped(
-        fnUntraced(function* () {
+        gen(function* () {
           const probe = yield* acquireProbe([
             Bun.which("bun") ?? "bun",
             "--eval",
@@ -125,7 +125,7 @@ describe.runIf(hasBunSpawn)("bundle size probe process", () => {
           ]);
           yield* Deferred.succeed(acquired, probe);
           return yield* never;
-        })()
+        })
       ).pipe(forkChild);
       const probe = yield* Deferred.await(acquired);
       yield* addFinalizer(() =>
