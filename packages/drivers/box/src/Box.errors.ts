@@ -485,7 +485,7 @@ const readString =
   (value: unknown): O.Option<string> =>
     pipe(readProperty(key)(value), O.filter(P.isString));
 
-const isFiniteNumber = (value: unknown): value is number => P.isNumber(value) && Number.isFinite(value);
+const isFiniteNumber = S.is(S.Finite);
 
 const readNumber =
   (key: PropertyKey) =>

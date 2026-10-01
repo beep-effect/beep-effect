@@ -371,7 +371,7 @@ const artifactRefFromLink = (child: Md.A): O.Option<ArtifactRef> =>
 
 // A single inline child that is an `a` node whose href is an artifact:// URI.
 const isArtifactLink: P.Refinement<Md.Inline, Md.A> = P.chainRefinements([
-  (child: Md.Inline): child is Md.A => P.isTagged("a")(child),
+  Md.Inline.guards.a,
   (child: Md.A): child is Md.A => ArtifactUri.is(child.href),
 ]);
 

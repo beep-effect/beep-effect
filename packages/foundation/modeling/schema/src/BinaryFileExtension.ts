@@ -26,9 +26,10 @@
  */
 import { $SchemaId } from "@beep/identity/packages";
 import { A, Str, thunkEmptyStr, thunkFalse, thunkTrue } from "@beep/utils";
-import { HashSet, pipe } from "effect";
+import { pipe } from "effect";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { LiteralKit } from "./LiteralKit/index.ts";
 
 const $I = $SchemaId.create("BinaryFileExtension");
@@ -184,8 +185,6 @@ export const BinaryFileExtension = LiteralKit(binaryFileExtensionOptions).pipe(
   })
 );
 
-const binaryFileExtensionSet = HashSet.fromIterable(BinaryFileExtension.literals);
-
 /**
  * Union of literals accepted by {@link BinaryFileExtension}.
  *
@@ -221,8 +220,7 @@ export type BinaryFileExtension = typeof BinaryFileExtension.Type;
  * @category validation
  * @since 0.0.0
  */
-export const isBinaryFileExtension = (value: string): value is BinaryFileExtension =>
-  HashSet.has(binaryFileExtensionSet, value);
+export const isBinaryFileExtension: (value: string) => value is BinaryFileExtension = S.is(BinaryFileExtension);
 
 /**
  * Detects whether a file path ends in a known binary file extension.
@@ -247,7 +245,7 @@ export const isBinaryFileExtension = (value: string): value is BinaryFileExtensi
  * @since 0.0.0
  */
 export function hasBinaryExtension(filePath: string): boolean {
-  return HashSet.has(binaryFileExtensionSet, extractNormalizedExtension(filePath));
+  return isBinaryFileExtension(extractNormalizedExtension(filePath));
 }
 
 /**
