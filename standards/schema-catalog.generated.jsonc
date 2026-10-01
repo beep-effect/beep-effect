@@ -33750,11 +33750,43 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
+      "symbol": "AgentEffectivenessEvalLaneReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AgentEffectivenessEvalLaneReport",
+      "description": "Run evidence for one law lane, separating environment failures from agent law violations."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
+      "symbol": "AgentEffectivenessEvalLaneStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "AgentEffectivenessEvalLaneStatus",
+      "description": "Whether a law lane measured the staged source files or failed for environment reasons."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
+      "symbol": "AgentEffectivenessEvalLawLane",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "AgentEffectivenessEvalLawLane",
+      "description": "Law lanes the SkillOpt eval scorer runs over a staged fixture."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
       "symbol": "AgentEffectivenessEvalRecordResult",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "AgentEffectivenessEvalRecordResult",
       "description": "Identifiers written by --record after a SkillOpt eval scorer run."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
+      "symbol": "AgentEffectivenessEvalReportStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "AgentEffectivenessEvalReportStatus",
+      "description": "Scored when every law lane measured the source; environment-failure when any lane could not."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
@@ -34633,7 +34665,7 @@
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
       "identity": "CiLaneTimingWindowGuardReason",
-      "description": "Bound a bounded lane-timing census window breaches: a future cutoff, or a span under seven days."
+      "description": "Bound a bounded lane-timing census window breaches: a future cutoff, a span under seven days, or a required-context change inside it."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
@@ -34682,6 +34714,14 @@
       "owner": "@beep/repo-cli",
       "identity": "CiRulesetHistoryVersion",
       "description": "Ruleset history version and its effective instant, normalized from the API UTC offset."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+      "symbol": "CiRulesetPopulationChange",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CiRulesetPopulationChange",
+      "description": "Ruleset version effective inside a census window with the normalized required contexts it added and removed."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
@@ -38564,7 +38604,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "HarnessLedgerPruneReport",
-      "description": "Session window, decode tallies, and the zero-touch proposals of one pruning scan."
+      "description": "Current-harness session window, skip and decode tallies, the zero-touch proposals of one pruning scan, and whether they were appended."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.schemas.ts",
@@ -38580,7 +38620,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "ObservedSessionWindow",
-      "description": "Last N hook-pulse sessions, the surface ids they touched, and shard decode tallies."
+      "description": "Last N hook-pulse sessions under the current harness hash, their touched surface ids, skip counts, and shard decode tallies."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.schemas.ts",
@@ -40974,6 +41014,14 @@
       "owner": "@beep/repo-cli",
       "identity": "EffectDiagnosticsDirectiveExemption",
       "description": "A repository path and the exact Effect diagnostics skip-file rules the quality gate admits there."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "symbol": "TsgoDisabledRule",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "TsgoDisabledRule",
+      "description": "An installed @effect/tsgo rule the root profile configures off, with the reason it is off."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
