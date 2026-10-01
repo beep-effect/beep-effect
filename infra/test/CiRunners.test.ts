@@ -102,7 +102,12 @@ const provisionCiRunnersStack = Effect.fnUntraced(function* (
         );
         return observe(probe);
       }),
-    () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+    // Open the gate before disconnecting: an assertion that fails while the
+    // held association is still pending must not leave teardown waiting on it.
+    () =>
+      Deferred.succeed(associationGate, undefined).pipe(
+        Effect.andThen(Effect.tryPromise(() => pulumi.runtime.disconnect()))
+      )
   );
 
   return { routeTableSubnets, subnets };
