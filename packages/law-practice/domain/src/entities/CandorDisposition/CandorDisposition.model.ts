@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitingApplicationIdentity } from "../../values/CitingApplicationIdentity/index.ts";
 import { ObservationVersionRef } from "../../values/ObservationVersionRef/index.ts";
@@ -75,19 +75,19 @@ export class CandorDisposition extends ProductEntity.Entity<CandorDisposition>()
       description: "Declared standing of this appended record within its append-only history.",
     }).pipe(pg.text()),
     litigationFrameJudgment: S.OptionFromNullOr(CandorJudgment)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Separately-reached decision recorded under a litigation frame; never derived from Rule 56.",
       })
       .pipe(pg.text(), pg.columnName("litigation_frame_judgment")),
     rule56Judgment: S.OptionFromNullOr(CandorJudgment)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Decision recorded under the duty of candor; its absence leaves the event uncovered.",
       })
       .pipe(pg.text(), pg.columnName("rule56_judgment")),
     supersedes: S.OptionFromNullOr(LawPractice.CandorDispositionId)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Prior disposition this record retires, appended rather than edited." })
       .pipe(pg.integer()),
   },

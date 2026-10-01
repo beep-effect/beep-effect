@@ -12,7 +12,6 @@
  * @since 0.0.0
  */
 import { $ProvenanceId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { identity, Number as N } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -22,7 +21,7 @@ import * as Str from "effect/String";
 import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $ProvenanceId.create("TextAnchor");
-const isNonNegativeInt = S.is(NonNegativeInt);
+const isNonNegativeInt = S.is(S.Natural);
 const isHighSurrogate = N.between({ minimum: 0xd800, maximum: 0xdbff });
 const isLowSurrogate = N.between({ minimum: 0xdc00, maximum: 0xdfff });
 
@@ -48,10 +47,10 @@ const isLowSurrogate = N.between({ minimum: 0xdc00, maximum: 0xdfff });
  * @since 0.0.0
  */
 export const TextAnchorFields = {
-  startChar: NonNegativeInt.annotateKey({
+  startChar: S.Natural.annotateKey({
     description: "Inclusive start character offset into the source text.",
   }),
-  endChar: NonNegativeInt.annotateKey({
+  endChar: S.Natural.annotateKey({
     description: "Exclusive end character offset into the source text.",
   }),
   quote: S.NonEmptyString.annotateKey({
@@ -155,12 +154,12 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
     toCodecArbitrary: (): SchemaAST.Link =>
       S.link<TextAnchor>()(
         S.Struct({
-          startChar: NonNegativeInt.check(S.isLessThanOrEqualTo(10_000)),
+          startChar: S.Natural.check(S.isLessThanOrEqualTo(10_000)),
           quote: S.NonEmptyString.check(S.isMaxLength(256)),
         }),
         SchemaTransformation.transform({
           decode: (value) =>
-            TextAnchor.make({ ...value, endChar: NonNegativeInt.make(value.startChar + Str.length(value.quote)) }),
+            TextAnchor.make({ ...value, endChar: S.Natural.make(value.startChar + Str.length(value.quote)) }),
           encode: identity,
         })
       ),

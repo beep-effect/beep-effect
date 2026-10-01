@@ -12,7 +12,6 @@
  */
 
 import { $PretextId } from "@beep/identity/packages";
-import { isNonNegative } from "@beep/schema/Number";
 import { A, O, pipe, R, Str } from "@beep/utils";
 import { Effect, Result } from "effect";
 import { dual } from "effect/Function";
@@ -21,8 +20,8 @@ import { PretextSnapshotCodecError } from "./Pretext.errors.ts";
 
 const $I = $PretextId.create("Pretext.models");
 
-const NonNegativeAdvance = S.Finite.check(isNonNegative);
-const NonNegativeLineCount = S.Int.check(isNonNegative);
+const NonNegativeAdvance = S.Finite.check(S.isGreaterThanOrEqualTo(0));
+const NonNegativeLineCount = S.Int.check(S.isGreaterThanOrEqualTo(0));
 
 /**
  * Per-engine layout quirk fences, mirroring upstream pretext's

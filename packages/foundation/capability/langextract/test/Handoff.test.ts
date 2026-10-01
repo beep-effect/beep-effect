@@ -2,12 +2,12 @@ import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { toAnnotatedDocument } from "@beep/langextract/Handoff";
 import { DocumentId } from "@beep/nlp/Core";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as O from "@beep/utils/Option";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 describe("toAnnotatedDocument", () => {
@@ -17,7 +17,7 @@ describe("toAnnotatedDocument", () => {
       confidence: O.some(UnitInterval.make(0.98)),
       label: "person",
       matchedText: "Ada Lovelace",
-      span: Contract.Span.make({ end: NonNegativeInt.make(12), start: NonNegativeInt.make(0) }),
+      span: Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(0) }),
       text: "Ada Lovelace",
     });
     const unaligned = GroundedExtraction.cases.unaligned.make({
@@ -44,7 +44,7 @@ describe("toAnnotatedDocument", () => {
   it("emits one mention per aligned extraction carrying the aligned span into the document chunk", () => {
     const documentId = DocumentId.make("doc-1");
     const sourceText = "Ada Lovelace wrote notes.";
-    const span = Contract.Span.make({ end: NonNegativeInt.make(12), start: NonNegativeInt.make(0) });
+    const span = Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(0) });
     const aligned = GroundedExtraction.cases.match_exact.make({
       label: "person",
       matchedText: "Ada Lovelace",

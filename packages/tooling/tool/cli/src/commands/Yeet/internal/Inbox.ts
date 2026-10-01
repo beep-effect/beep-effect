@@ -40,7 +40,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, FileSystem, Match, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -464,7 +464,10 @@ export class YeetBaseConflictCapsule extends S.Class<YeetBaseConflictCapsule>($I
     mergeable: S.NullOr(S.String),
     mergeStateStatus: S.NullOr(S.String),
     prNumber: S.Finite,
-    generation: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(SchemaUtils.withKeyDefaults(0)),
+    generation: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ),
   },
   $I.annote("YeetBaseConflictCapsule", {
     description: "One pull request head that no longer merges into its base, with the raw merge fields observed.",
@@ -862,7 +865,7 @@ export class YeetProofJobFinishedRow extends S.Class<YeetProofJobFinishedRow>($I
  * **Example** (Derive an id)
  * ```ts
  * import { yeetProofJobRowId } from "@beep/repo-cli/test/Yeet"
- * import { UUID } from "@beep/schema/String"
+ * import { UUID } from "@beep/repo-cli/test/SharedInternals"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * const jobId = Effect.runSync(S.decodeEffect(UUID)("0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60"))

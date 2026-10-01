@@ -20,6 +20,7 @@ export {
   uncoveredWorkspacePackageNames,
 } from "@beep/repo-cli/commands/Quality/ChangesetStatus";
 export * from "@beep/repo-cli/commands/Quality/CheckCensus";
+export * from "@beep/repo-cli/commands/Quality/CheckCensusGate";
 export * from "@beep/repo-cli/commands/Quality/Quality.command";
 export * from "@beep/repo-cli/commands/Quality/Quality.render";
 export {
@@ -57,6 +58,7 @@ export {
 } from "@beep/repo-cli/commands/Quality/Quality.schemas";
 export * from "@beep/repo-cli/commands/Quality/Tasks";
 export { reportInvariantDiagnosticsForTesting } from "../commands/Quality/FallowQuality.command.ts";
+export * from "../commands/Quality/internal/CheckCensusOutput.ts";
 export * from "../commands/Quality/internal/CoverageRegression.ts";
 export * from "../commands/Quality/internal/CoverageScope.ts";
 export * from "../commands/Quality/internal/FallowEnvelope.schema.ts";

@@ -34,7 +34,6 @@ import {
   TextEdge,
   TextNode,
 } from "@beep/nlp/Graph/Schema";
-import { SchemaUtils } from "@beep/schema";
 import { A, O as OptionUtils, P } from "@beep/utils";
 import { Clock, Effect, Graph } from "effect";
 import { dual } from "effect/Function";
@@ -315,16 +314,32 @@ export const empty = (): AnnotatedTextGraph => Graph.directed<AnnotatedNode, Tex
  */
 class AnnotationOptions extends S.Class<AnnotationOptions>($I`AnnotationOptions`)(
   {
-    includeDependencies: S.Boolean.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(false)).annotateKey({
+    includeDependencies: S.Boolean.pipe(
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ).annotateKey({
       description: "Add syntactic-dependency annotations (default `false`; expensive).",
     }),
-    includeEntities: S.Boolean.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(true)).annotateKey({
+    includeEntities: S.Boolean.pipe(
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ).annotateKey({
       description: "Add named-entity annotations (default `true`).",
     }),
-    includeLemmas: S.Boolean.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(true)).annotateKey({
+    includeLemmas: S.Boolean.pipe(
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ).annotateKey({
       description: "Add lemma annotations (default `true`).",
     }),
-    includePOS: S.Boolean.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(true)).annotateKey({
+    includePOS: S.Boolean.pipe(
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ).annotateKey({
       description: "Add part-of-speech annotations (default `true`).",
     }),
   },

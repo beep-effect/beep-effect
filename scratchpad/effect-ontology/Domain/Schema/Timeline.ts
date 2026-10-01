@@ -8,13 +8,15 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { UUID } from "@beep/schema/String";
-import { DateTime, SchemaGetter } from "effect";
+import { DateTime, Effect, SchemaGetter } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { OptionalConfidence } from "../Model/shared.ts";
 import { ClaimRank, RdfObject, TextSpan } from "./KnowledgeModel.ts";
+import { UUID } from "../Identity.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Timeline");
 const Sha256HexString = Sha256Hex.pipe(S.decodeTo(S.String));
@@ -91,8 +93,8 @@ const BooleanQueryValue = BooleanQueryValueDefinition.pipe(
 );
 
 const NonNegativeIntQuery = S.FiniteFromString.pipe(
-  S.decodeTo(NonNegativeInt, {
-    decode: SchemaGetter.transform(NonNegativeInt.make),
+  S.decodeTo(S.Natural, {
+    decode: SchemaGetter.transform(S.Natural.make),
     encode: SchemaGetter.transform((value): number => value),
   }),
   $I.annoteSchema("NonNegativeIntQuery", {
@@ -210,11 +212,11 @@ export class ArticleSummary extends S.Class<ArticleSummary>($I`ArticleSummary`)(
     id: S.NonEmptyString.annotateKey({ description: "Persistent article identifier." }),
     uri: IRI.annotateKey({ description: "Canonical source resource IRI." }),
     headline: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional non-empty article headline." })
     ),
     sourceName: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional publisher or source name." })
     ),
     publishedAt: S.DateTimeUtcFromString.annotateKey({
@@ -281,14 +283,14 @@ export class ClaimWithRank extends S.Class<ClaimWithRank>($I`ClaimWithRank`)(
     object: RdfObject,
     rank: ClaimRank,
     source: ArticleSummary,
-    validTime: S.OptionFromOptionalKey(OrderedUtcRange).pipe(SchemaUtils.withNoneDefault),
+    validTime: S.OptionFromOptionalKey(OrderedUtcRange).pipe(S.withConstructorDefault(Effect.succeedNone)),
     transactionTime: S.Struct({
       assertedAt: S.DateTimeUtcFromString,
-      derivedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-      deprecatedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
+      derivedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+      deprecatedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     }),
     confidence: OptionalConfidence,
-    evidence: S.OptionFromNullishOr(TextSpan).pipe(SchemaUtils.withNoneDefault),
+    evidence: S.OptionFromNullishOr(TextSpan).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ClaimWithRank", {
     description:
@@ -323,16 +325,17 @@ export class CorrectionSummary extends S.Class<CorrectionSummary>($I`CorrectionS
   {
     id: PersistedCorrectionId,
     correctionType: S.NonEmptyString,
-    reason: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    reason: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     correctionDate: S.DateTimeUtcFromString,
     originalClaimId: PersistedClaimId,
-    newClaimId: S.OptionFromNullishOr(PersistedClaimId).pipe(SchemaUtils.withNoneDefault),
+    newClaimId: S.OptionFromNullishOr(PersistedClaimId).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CorrectionSummary", {
     description: "Compact correction record linking an original claim to an optional replacement.",
   })
 ) {}
 
+const articleDetailResponseClaimsDefault = A.empty<ClaimWithRank>();
 /**
  * Article detail response with its timeline claims and aggregate counts.
  *
@@ -361,9 +364,9 @@ export class CorrectionSummary extends S.Class<CorrectionSummary>($I`CorrectionS
 export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`ArticleDetailResponse`)(
   {
     article: ArticleSummary,
-    claims: S.Array(ClaimWithRank).pipe(SchemaUtils.withEmptyArrayDefaults<ClaimWithRank>()),
-    entityCount: NonNegativeInt,
-    conflictCount: NonNegativeInt,
+    claims: S.Array(ClaimWithRank).pipe(S.withConstructorDefault(Effect.succeed(articleDetailResponseClaimsDefault)), S.withDecodingDefaultType(Effect.succeed(articleDetailResponseClaimsDefault))),
+    entityCount: S.Natural,
+    conflictCount: S.Natural,
   },
   $I.annote("ArticleDetailResponse", {
     description: "Detailed source article with ranked claims and non-negative entity and conflict counts.",
@@ -389,15 +392,17 @@ export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`Art
 export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`TimelineEntityQuery`)(
   {
     ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for the timeline query." }),
-    asOf: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    range: S.OptionFromOptionalKey(TimelineRangeQuery).pipe(SchemaUtils.withNoneDefault),
-    includeDeprecated: BooleanQueryValue.pipe(SchemaUtils.withKeyDefaults(false)),
+    asOf: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    range: S.OptionFromOptionalKey(TimelineRangeQuery).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    includeDeprecated: BooleanQueryValue.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
   },
   $I.annote("TimelineEntityQuery", {
     description: "Entity-timeline query with optional UTC snapshot/range and a false deprecated-claim default.",
   })
 ) {}
 
+const timelineEntityResponseClaimsDefault = A.empty<ClaimWithRank>();
+const timelineEntityResponseCorrectionsDefault = A.empty<CorrectionSummary>();
 /**
  * Timeline response for one entity IRI.
  *
@@ -419,15 +424,17 @@ export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`Timelin
 export class TimelineEntityResponse extends S.Class<TimelineEntityResponse>($I`TimelineEntityResponse`)(
   {
     iri: IRI,
-    asOf: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    claims: S.Array(ClaimWithRank).pipe(SchemaUtils.withEmptyArrayDefaults<ClaimWithRank>()),
-    corrections: S.Array(CorrectionSummary).pipe(SchemaUtils.withEmptyArrayDefaults<CorrectionSummary>()),
+    asOf: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    claims: S.Array(ClaimWithRank).pipe(S.withConstructorDefault(Effect.succeed(timelineEntityResponseClaimsDefault)), S.withDecodingDefaultType(Effect.succeed(timelineEntityResponseClaimsDefault))),
+    corrections: S.Array(CorrectionSummary).pipe(S.withConstructorDefault(Effect.succeed(timelineEntityResponseCorrectionsDefault)), S.withDecodingDefaultType(Effect.succeed(timelineEntityResponseCorrectionsDefault))),
   },
   $I.annote("TimelineEntityResponse", {
     description: "Entity timeline state with normalized snapshot time, claims, and correction history.",
   })
 ) {}
 
+const timelineClaimsQueryLimitDefault = PosInt.make(20);
+const timelineClaimsQueryOffsetDefault = S.Natural.make(0);
 /**
  * Filter and pagination query for timeline claims.
  *
@@ -447,19 +454,20 @@ export class TimelineEntityResponse extends S.Class<TimelineEntityResponse>($I`T
 export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`TimelineClaimsQuery`)(
   {
     ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for the claim query." }),
-    subject: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
-    predicate: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
-    asOf: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    source: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    rank: S.OptionFromOptionalKey(ClaimRank).pipe(SchemaUtils.withNoneDefault),
-    limit: PositiveIntQuery.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-    offset: NonNegativeIntQuery.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    subject: S.OptionFromOptionalKey(IRI).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    predicate: S.OptionFromOptionalKey(IRI).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    asOf: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    source: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    rank: S.OptionFromOptionalKey(ClaimRank).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    limit: PositiveIntQuery.pipe(S.withConstructorDefault(Effect.succeed(timelineClaimsQueryLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(timelineClaimsQueryLimitDefault))),
+    offset: NonNegativeIntQuery.pipe(S.withConstructorDefault(Effect.succeed(timelineClaimsQueryOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(timelineClaimsQueryOffsetDefault))),
   },
   $I.annote("TimelineClaimsQuery", {
     description: "Timeline-claim filters with Option-normalized criteria and constrained pagination defaults.",
   })
 ) {}
 
+const timelineClaimsResponseClaimsDefault = A.empty<ClaimWithRank>();
 /**
  * Paginated response containing timeline claims.
  *
@@ -483,10 +491,10 @@ export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`Timelin
  */
 export class TimelineClaimsResponse extends S.Class<TimelineClaimsResponse>($I`TimelineClaimsResponse`)(
   {
-    claims: S.Array(ClaimWithRank).pipe(SchemaUtils.withEmptyArrayDefaults<ClaimWithRank>()),
-    total: NonNegativeInt,
+    claims: S.Array(ClaimWithRank).pipe(S.withConstructorDefault(Effect.succeed(timelineClaimsResponseClaimsDefault)), S.withDecodingDefaultType(Effect.succeed(timelineClaimsResponseClaimsDefault))),
+    total: S.Natural,
     limit: PosInt,
-    offset: NonNegativeInt,
+    offset: S.Natural,
     hasMore: S.Boolean,
   },
   $I.annote("TimelineClaimsResponse", {
@@ -509,7 +517,7 @@ export class TimelineClaimsResponse extends S.Class<TimelineClaimsResponse>($I`T
  */
 export class CorrectionHistoryQuery extends S.Class<CorrectionHistoryQuery>($I`CorrectionHistoryQuery`)(
   {
-    includeOriginalClaims: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    includeOriginalClaims: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
   },
   $I.annote("CorrectionHistoryQuery", {
     description: "Correction-history controls with an explicit false original-claim default.",
@@ -518,9 +526,10 @@ export class CorrectionHistoryQuery extends S.Class<CorrectionHistoryQuery>($I`C
 
 const AffectedClaim = S.Struct({
   originalClaim: ClaimWithRank,
-  newClaim: S.OptionFromNullishOr(ClaimWithRank).pipe(SchemaUtils.withNoneDefault),
+  newClaim: S.OptionFromNullishOr(ClaimWithRank).pipe(S.withConstructorDefault(Effect.succeedNone)),
 });
 
+const correctionWithClaimsAffectedClaimsDefault = A.empty<typeof AffectedClaim.Type>();
 /**
  * Full correction record and the claims it affected.
  *
@@ -545,16 +554,17 @@ export class CorrectionWithClaims extends S.Class<CorrectionWithClaims>($I`Corre
   {
     id: S.NonEmptyString,
     correctionType: S.NonEmptyString,
-    reason: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    reason: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     correctionDate: S.DateTimeUtcFromString,
-    sourceArticle: S.OptionFromNullishOr(ArticleSummary).pipe(SchemaUtils.withNoneDefault),
-    affectedClaims: S.Array(AffectedClaim).pipe(SchemaUtils.withEmptyArrayDefaults<typeof AffectedClaim.Type>()),
+    sourceArticle: S.OptionFromNullishOr(ArticleSummary).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    affectedClaims: S.Array(AffectedClaim).pipe(S.withConstructorDefault(Effect.succeed(correctionWithClaimsAffectedClaimsDefault)), S.withDecodingDefaultType(Effect.succeed(correctionWithClaimsAffectedClaimsDefault))),
   },
   $I.annote("CorrectionWithClaims", {
     description: "Correction record with optional source article and normalized original/replacement claim pairs.",
   })
 ) {}
 
+const correctionHistoryResponseCorrectionsDefault = A.empty<CorrectionWithClaims>();
 /**
  * Correction-history response for one article.
  *
@@ -572,7 +582,7 @@ export class CorrectionWithClaims extends S.Class<CorrectionWithClaims>($I`Corre
 export class CorrectionHistoryResponse extends S.Class<CorrectionHistoryResponse>($I`CorrectionHistoryResponse`)(
   {
     articleId: S.NonEmptyString,
-    corrections: S.Array(CorrectionWithClaims).pipe(SchemaUtils.withEmptyArrayDefaults<CorrectionWithClaims>()),
+    corrections: S.Array(CorrectionWithClaims).pipe(S.withConstructorDefault(Effect.succeed(correctionHistoryResponseCorrectionsDefault)), S.withDecodingDefaultType(Effect.succeed(correctionHistoryResponseCorrectionsDefault))),
   },
   $I.annote("CorrectionHistoryResponse", {
     description: "Article correction-history response with an always-present correction collection.",
@@ -661,6 +671,8 @@ export class ConflictActor extends S.Class<ConflictActor>($I`ConflictActor`)(
   })
 ) {}
 
+const conflictsQueryLimitDefault = PosInt.make(20);
+const conflictsQueryOffsetDefault = S.Natural.make(0);
 /**
  * Filter and pagination query for detected claim conflicts.
  *
@@ -680,11 +692,11 @@ export class ConflictActor extends S.Class<ConflictActor>($I`ConflictActor`)(
 export class ConflictsQuery extends S.Class<ConflictsQuery>($I`ConflictsQuery`)(
   {
     ontologyId: S.NonEmptyString,
-    status: S.OptionFromOptionalKey(ConflictStatus).pipe(SchemaUtils.withNoneDefault),
-    subject: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
-    articleId: S.OptionFromOptionalKey(UUID).pipe(SchemaUtils.withNoneDefault),
-    limit: PositiveIntQuery.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-    offset: NonNegativeIntQuery.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    status: S.OptionFromOptionalKey(ConflictStatus).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    subject: S.OptionFromOptionalKey(IRI).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    articleId: S.OptionFromOptionalKey(UUID).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    limit: PositiveIntQuery.pipe(S.withConstructorDefault(Effect.succeed(conflictsQueryLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(conflictsQueryLimitDefault))),
+    offset: NonNegativeIntQuery.pipe(S.withConstructorDefault(Effect.succeed(conflictsQueryOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(conflictsQueryOffsetDefault))),
   },
   $I.annote("ConflictsQuery", {
     description: "Conflict filters with Option-normalized criteria and constrained pagination defaults.",
@@ -706,7 +718,7 @@ const ClaimConflictDefinition = S.TaggedUnion({
     resolution: S.Struct({
       resolvedBy: S.NonEmptyString,
       resolvedAt: S.DateTimeUtcFromString,
-      notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+      notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     }),
   },
   resolved: {
@@ -716,7 +728,7 @@ const ClaimConflictDefinition = S.TaggedUnion({
       acceptedClaimId: PersistedClaimId,
       resolvedBy: S.NonEmptyString,
       resolvedAt: S.DateTimeUtcFromString,
-      notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+      notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     }),
   },
 });
@@ -788,12 +800,12 @@ export type ClaimConflict = typeof ClaimConflict.Type;
 
 const ConflictTransitionDefinition = S.TaggedUnion({
   ignore: {
-    notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   resolve: {
     acceptedClaim: LiteralKit(["claimA", "claimB"]),
     strategy: S.NonEmptyString,
-    notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
 });
 
@@ -827,6 +839,7 @@ export const ConflictTransition = ConflictTransitionDefinition.pipe(
  */
 export type ConflictTransition = typeof ConflictTransition.Type;
 
+const conflictsResponseConflictsDefault = A.empty<ClaimConflict>();
 /**
  * Response containing detected claim conflicts and aggregate counts.
  *
@@ -849,9 +862,9 @@ export type ConflictTransition = typeof ConflictTransition.Type;
  */
 export class ConflictsResponse extends S.Class<ConflictsResponse>($I`ConflictsResponse`)(
   {
-    conflicts: S.Array(ClaimConflict).pipe(SchemaUtils.withEmptyArrayDefaults<ClaimConflict>()),
-    total: NonNegativeInt,
-    pendingCount: NonNegativeInt,
+    conflicts: S.Array(ClaimConflict).pipe(S.withConstructorDefault(Effect.succeed(conflictsResponseConflictsDefault)), S.withDecodingDefaultType(Effect.succeed(conflictsResponseConflictsDefault))),
+    total: S.Natural,
+    pendingCount: S.Natural,
   },
   $I.annote("ConflictsResponse", {
     description: "Detected-conflict response with tagged conflicts and non-negative aggregate counts.",

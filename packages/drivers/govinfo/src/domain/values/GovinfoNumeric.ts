@@ -5,13 +5,16 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
-import { Int64 } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $GovinfoId.create("domain/values/GovinfoNumeric");
 
 /**
  * Non-negative signed 64-bit integer reported by GovInfo count fields.
+ *
+ * **Details**
+ *
+ * A `bigint` held to the signed int64 range, then to zero or more.
  *
  * **Example** (Decode BigInt count value)
  *
@@ -26,7 +29,11 @@ const $I = $GovinfoId.create("domain/values/GovinfoNumeric");
  * @category models
  * @since 0.0.0
  */
-export const NonNegativeInt64 = Int64.check(
+export const NonNegativeInt64 = S.BigInt.check(
+  S.isBetweenBigInt(
+    { minimum: BigInt("-9223372036854775808"), maximum: BigInt("9223372036854775807") },
+    { expected: "a signed 64-bit integer", message: "Expected a signed 64-bit integer" }
+  ),
   S.isGreaterThanOrEqualToBigInt(BigInt(0), {
     description: "A non-negative signed 64-bit integer.",
     identifier: $I`NonNegativeInt64MinimumCheck`,

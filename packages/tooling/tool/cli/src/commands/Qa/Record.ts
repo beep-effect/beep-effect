@@ -26,7 +26,6 @@ import {
   SessionStore,
   Viewport,
 } from "@beep/qa-capture";
-import { SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Clock, Effect, FileSystem, Layer, Path } from "effect";
 import * as S from "effect/Schema";
@@ -197,13 +196,13 @@ export class RecordOutcome extends S.Class<RecordOutcome>($I`RecordOutcome`)(
       })
     ),
     recordStartEpochMs: S.OptionFromOptionalKey(S.Finite).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("RecordOutcome.recordStartEpochMs", {
         description: "OBS RecordStateChanged STARTED receipt, the lane B clock anchor.",
       })
     ),
     videoPath: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("RecordOutcome.videoPath", {
         description: "Recorded container path, when the lane produced one.",
       })

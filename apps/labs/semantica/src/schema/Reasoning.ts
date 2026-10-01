@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, PosInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Equal, identity, Result, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -9,6 +9,7 @@ import { ExtractOutcome } from "@/schema/Evidence";
 import { InferenceEventId, StatementId } from "@/schema/Ids";
 import { C1EvalReport } from "@/schema/Projection";
 import { ProvenanceEvent } from "@/schema/Provenance";
+import { PosInt } from "./PosInt.ts";
 
 const $I = $SemanticaId.create("schema/Reasoning");
 

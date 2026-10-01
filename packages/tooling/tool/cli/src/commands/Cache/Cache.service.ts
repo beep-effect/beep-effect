@@ -22,14 +22,14 @@ import {
   cacheLedgerFailures,
   isCacheTransitionAllowed,
 } from "@beep/repo-configs/cache";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readContainedFileBytesNoFollow, writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { PosInt } from "../../internal/schema/PosInt.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
 import { readCacheEvidenceBytes } from "./Cache.evidence.ts";
 import { collectCacheToolchain, fingerprintCacheComputation, projectCacheActivation } from "./Cache.fingerprint.ts";
@@ -62,7 +62,7 @@ const decodeUtf8 = (bytes: Uint8Array) =>
     catch: (cause) => CacheCommandError.new("Qualification text is not valid UTF-8.", cause),
   });
 const readOptionalBytes = (root: string, target: string) =>
-  readContainedFileBytesNoFollow(root, target, NonNegativeInt.make(8 * 1024 * 1024)).pipe(
+  readContainedFileBytesNoFollow(root, target, S.Natural.make(8 * 1024 * 1024)).pipe(
     Effect.map((read) => read.contents),
     CacheCommandError.mapError("Cannot read bounded qualification file.")
   );
@@ -308,7 +308,7 @@ const writeBaseline = Effect.fn("CacheQualification.writeBaseline")(function* (
             "The qualification ledger is missing; baseline review cannot reset qualification state."
           );
         const initial = yield* StoreJson.encode(
-          CacheQualificationStore.make({ revision: NonNegativeInt.make(0), entries: [], history: [] })
+          CacheQualificationStore.make({ revision: S.Natural.make(0), entries: [], history: [] })
         );
         yield* writeContainedFileString(root, storePath, `${initial}\n`);
       } else {
@@ -432,7 +432,7 @@ const transition = Effect.fn("CacheQualification.transition")(function* (
       yield* verifyReference(root, status.review.basis);
       yield* validateTransitionContract(root, request, prior);
       const next = CacheQualificationStore.make({
-        revision: NonNegativeInt.make(store.revision + 1),
+        revision: S.Natural.make(store.revision + 1),
         history: A.append(
           store.history,
           CacheQualificationEvent.make({ revision: PosInt.make(store.revision + 1), entry: request.entry })

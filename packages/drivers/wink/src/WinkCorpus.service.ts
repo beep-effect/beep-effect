@@ -8,7 +8,7 @@
 import { $WinkId } from "@beep/identity";
 import { Document, DocumentId } from "@beep/nlp/Core/Document";
 import { BM25Config, BM25Norm, DefaultBM25Config, DocumentVector, PositiveNumber } from "@beep/nlp/Core/Vectorization";
-import { Defect, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, thunk0, thunkEffectVoid } from "@beep/utils";
 import { Chunk, Clock, Context, Effect, HashMap, HashSet, Layer, pipe, Ref } from "effect";
@@ -25,25 +25,46 @@ import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts
 import { WinkSimilarity } from "./WinkSimilarity.service.ts";
 import type { BM25VectorizerInstance } from "./internal/bm25.ts";
 
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
+
 const decodeUnknownWinkStringArrayOption = S.decodeUnknownOption(WinkStringArray);
 
 const $I = $WinkId.create("Wink/WinkCorpusManager");
 
 class CreateCorpusBM25Config extends S.Class<CreateCorpusBM25Config>($I`CreateCorpusBM25Config`)(
   {
-    b: UnitInterval.pipe(SchemaUtils.withKeyDefaults(DefaultBM25Config.b)),
-    k: PositiveNumber.pipe(SchemaUtils.withKeyDefaults(DefaultBM25Config.k)),
-    k1: PositiveNumber.pipe(SchemaUtils.withKeyDefaults(DefaultBM25Config.k1)),
-    norm: BM25Norm.pipe(SchemaUtils.withKeyDefaults(DefaultBM25Config.norm)),
+    b: UnitInterval.pipe(
+      S.withConstructorDefault(Effect.succeed(DefaultBM25Config.b)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DefaultBM25Config.b))
+    ),
+    k: PositiveNumber.pipe(
+      S.withConstructorDefault(Effect.succeed(DefaultBM25Config.k)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DefaultBM25Config.k))
+    ),
+    k1: PositiveNumber.pipe(
+      S.withConstructorDefault(Effect.succeed(DefaultBM25Config.k1)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DefaultBM25Config.k1))
+    ),
+    norm: BM25Norm.pipe(
+      S.withConstructorDefault(Effect.succeed(DefaultBM25Config.norm)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DefaultBM25Config.norm))
+    ),
   },
   $I.annote("CreateCorpusBM25Config", {
     description: "Optional BM25 hyperparameter overrides used when creating a managed corpus.",
   })
 ) {}
 
+const createCorpusParamsBm25ConfigDefault = CreateCorpusBM25Config.make({});
 class CreateCorpusParams extends S.Class<CreateCorpusParams>($I`CreateCorpusParams`)(
   {
-    bm25Config: CreateCorpusBM25Config.pipe(SchemaUtils.withKeyDefaults(CreateCorpusBM25Config.make({}))),
+    bm25Config: CreateCorpusBM25Config.pipe(
+      S.withConstructorDefault(Effect.succeed(createCorpusParamsBm25ConfigDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(createCorpusParamsBm25ConfigDefault))
+    ),
     corpusId: S.String.pipe(S.UndefinedOr, S.optionalKey),
   },
   $I.annote("CreateCorpusParams", {
@@ -54,7 +75,10 @@ class CreateCorpusParams extends S.Class<CreateCorpusParams>($I`CreateCorpusPara
 class LearnCorpusParams extends S.Class<LearnCorpusParams>($I`LearnCorpusParams`)(
   {
     corpusId: S.String,
-    dedupeById: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    dedupeById: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
     documents: S.Array(Document),
   },
   $I.annote("LearnCorpusParams", {
@@ -65,7 +89,10 @@ class LearnCorpusParams extends S.Class<LearnCorpusParams>($I`LearnCorpusParams`
 class QueryCorpusParams extends S.Class<QueryCorpusParams>($I`QueryCorpusParams`)(
   {
     corpusId: S.String,
-    includeText: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    includeText: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     query: S.String,
     topN: S.optionalKey(PosInt),
   },
@@ -77,8 +104,14 @@ class QueryCorpusParams extends S.Class<QueryCorpusParams>($I`QueryCorpusParams`
 class CorpusStatsParams extends S.Class<CorpusStatsParams>($I`CorpusStatsParams`)(
   {
     corpusId: S.String,
-    includeIdf: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    includeMatrix: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    includeIdf: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    includeMatrix: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     topIdfTerms: S.optionalKey(PosInt),
   },
   $I.annote("CorpusStatsParams", {
@@ -90,9 +123,9 @@ class CorpusSummary extends S.Class<CorpusSummary>($I`CorpusSummary`)(
   {
     config: BM25Config,
     corpusId: S.String,
-    createdAtMs: NonNegativeInt,
-    documentCount: NonNegativeInt,
-    vocabularySize: NonNegativeInt,
+    createdAtMs: S.Natural,
+    documentCount: S.Natural,
+    vocabularySize: S.Natural,
   },
   $I.annote("CorpusSummary", {
     description: "Summary of a corpus learned with Wink.",
@@ -102,11 +135,11 @@ class CorpusSummary extends S.Class<CorpusSummary>($I`CorpusSummary`)(
 class LearnCorpusResult extends S.Class<LearnCorpusResult>($I`LearnCorpusResult`)(
   {
     corpusId: S.String,
-    learnedCount: NonNegativeInt,
+    learnedCount: S.Natural,
     reindexRequired: S.Boolean,
-    skippedCount: NonNegativeInt,
-    totalDocuments: NonNegativeInt,
-    vocabularySize: NonNegativeInt,
+    skippedCount: S.Natural,
+    totalDocuments: S.Natural,
+    vocabularySize: S.Natural,
   },
   $I.annote("LearnCorpusResult", {
     description: "Result metadata returned after learning documents into a managed corpus.",
@@ -116,7 +149,7 @@ class LearnCorpusResult extends S.Class<LearnCorpusResult>($I`LearnCorpusResult`
 class RankedCorpusDocument extends S.Class<RankedCorpusDocument>($I`RankedCorpusDocument`)(
   {
     id: S.String,
-    index: NonNegativeInt,
+    index: S.Natural,
     score: UnitInterval,
     text: S.optionalKey(S.String),
   },
@@ -131,8 +164,8 @@ class QueryCorpusResult extends S.Class<QueryCorpusResult>($I`QueryCorpusResult`
     method: S.Literal("vector.cosine"),
     query: S.String,
     ranked: S.Array(RankedCorpusDocument),
-    returned: NonNegativeInt,
-    totalDocuments: NonNegativeInt,
+    returned: S.Natural,
+    totalDocuments: S.Natural,
   },
   $I.annote("QueryCorpusResult", {
     description: "Ranked corpus query results and result-count metadata.",
@@ -151,8 +184,8 @@ class CorpusIdfValue extends S.Class<CorpusIdfValue>($I`CorpusIdfValue`)(
 
 class CorpusMatrixShape extends S.Class<CorpusMatrixShape>($I`CorpusMatrixShape`)(
   {
-    cols: NonNegativeInt,
-    rows: NonNegativeInt,
+    cols: S.Natural,
+    rows: S.Natural,
   },
   $I.annote("CorpusMatrixShape", {
     description: "Shape metadata for a corpus document-term matrix.",
@@ -167,8 +200,8 @@ class CorpusStatsResult extends S.Class<CorpusStatsResult>($I`CorpusStatsResult`
     idfValues: S.Array(CorpusIdfValue),
     matrixShape: CorpusMatrixShape,
     terms: S.Array(S.String),
-    totalDocuments: NonNegativeInt,
-    vocabularySize: NonNegativeInt,
+    totalDocuments: S.Natural,
+    vocabularySize: S.Natural,
   },
   $I.annote("CorpusStatsResult", {
     description: "Detailed statistics for a managed Wink BM25 corpus session.",
@@ -331,7 +364,7 @@ const removeCorpusSession = (
 export class CorpusManagerError extends S.TaggedError<CorpusManagerError>($I`CorpusManagerError`)(
   "CorpusManagerError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(S.withConstructorDefault(Effect.succeedNone)),
     corpusId: S.OptionFromOptionalKey(S.String),
     message: S.String,
   },
@@ -538,9 +571,9 @@ const makeWinkCorpusManager = Effect.gen(function* () {
       return {
         config,
         corpusId,
-        createdAtMs: NonNegativeInt.make(nowMs),
-        documentCount: NonNegativeInt.make(0),
-        vocabularySize: NonNegativeInt.make(0),
+        createdAtMs: S.Natural.make(nowMs),
+        documentCount: S.Natural.make(0),
+        vocabularySize: S.Natural.make(0),
       };
     }, observeCorpus("create")),
 
@@ -566,10 +599,10 @@ const makeWinkCorpusManager = Effect.gen(function* () {
           corpusId: params.corpusId,
           documentTermMatrix: [],
           idfValues: [],
-          matrixShape: { cols: NonNegativeInt.make(0), rows: NonNegativeInt.make(0) },
+          matrixShape: { cols: S.Natural.make(0), rows: S.Natural.make(0) },
           terms: [],
-          totalDocuments: NonNegativeInt.make(0),
-          vocabularySize: NonNegativeInt.make(0),
+          totalDocuments: S.Natural.make(0),
+          vocabularySize: S.Natural.make(0),
         };
       }
 
@@ -629,15 +662,15 @@ const makeWinkCorpusManager = Effect.gen(function* () {
         documentTermMatrix,
         idfValues,
         matrixShape: {
-          cols: NonNegativeInt.make(compiled.terms.length),
+          cols: S.Natural.make(compiled.terms.length),
           rows: Bool.match(params.includeMatrix, {
-            onFalse: () => NonNegativeInt.make(compiledState.documents.length),
-            onTrue: () => NonNegativeInt.make(documentTermMatrix.length),
+            onFalse: () => S.Natural.make(compiledState.documents.length),
+            onTrue: () => S.Natural.make(documentTermMatrix.length),
           }),
         },
         terms: compiled.terms,
-        totalDocuments: NonNegativeInt.make(compiledState.documents.length),
-        vocabularySize: NonNegativeInt.make(HashSet.size(compiledState.vocabulary)),
+        totalDocuments: S.Natural.make(compiledState.documents.length),
+        vocabularySize: S.Natural.make(HashSet.size(compiledState.vocabulary)),
       };
     }, observeCorpus("stats")),
 
@@ -689,11 +722,11 @@ const makeWinkCorpusManager = Effect.gen(function* () {
 
       return {
         corpusId: params.corpusId,
-        learnedCount: NonNegativeInt.make(learnedDocuments.length),
+        learnedCount: S.Natural.make(learnedDocuments.length),
         reindexRequired: true,
-        skippedCount: NonNegativeInt.make(skippedCount),
-        totalDocuments: NonNegativeInt.make(updatedState.documents.length),
-        vocabularySize: NonNegativeInt.make(HashSet.size(updatedState.vocabulary)),
+        skippedCount: S.Natural.make(skippedCount),
+        totalDocuments: S.Natural.make(updatedState.documents.length),
+        vocabularySize: S.Natural.make(HashSet.size(updatedState.vocabulary)),
       };
     }, observeCorpus("learn_documents")),
 
@@ -714,8 +747,8 @@ const makeWinkCorpusManager = Effect.gen(function* () {
           method: "vector.cosine" as const,
           query: params.query,
           ranked: [],
-          returned: NonNegativeInt.make(0),
-          totalDocuments: NonNegativeInt.make(0),
+          returned: S.Natural.make(0),
+          totalDocuments: S.Natural.make(0),
         };
       }
 
@@ -759,13 +792,13 @@ const makeWinkCorpusManager = Effect.gen(function* () {
             onFalse: () =>
               Effect.succeed({
                 id: document.id,
-                index: NonNegativeInt.make(index),
+                index: S.Natural.make(index),
                 score: score.score,
               }),
             onTrue: () =>
               Effect.succeed({
                 id: document.id,
-                index: NonNegativeInt.make(index),
+                index: S.Natural.make(index),
                 score: score.score,
                 text: document.text,
               }),
@@ -787,8 +820,8 @@ const makeWinkCorpusManager = Effect.gen(function* () {
         method: "vector.cosine" as const,
         query: params.query,
         ranked,
-        returned: NonNegativeInt.make(A.length(ranked)),
-        totalDocuments: NonNegativeInt.make(A.length(compiledState.documents)),
+        returned: S.Natural.make(A.length(ranked)),
+        totalDocuments: S.Natural.make(A.length(compiledState.documents)),
       };
     }, observeCorpus("query")),
   });

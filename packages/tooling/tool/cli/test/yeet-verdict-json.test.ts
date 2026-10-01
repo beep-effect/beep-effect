@@ -1,3 +1,4 @@
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   YeetMergeReady,
   YeetMergeReadyCriteria,
@@ -6,7 +7,6 @@ import {
   YeetVerdictJson,
   YeetVerdictLane,
 } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -105,6 +105,7 @@ describe("YeetVerdictJson", () => {
               mergeable: true,
               mergeStateAcceptable: true,
               reviewDecisionAcceptable: true,
+              closeoutGatesPassed: true,
               greptileScore: O.some("5/5"),
             }),
           })
@@ -137,6 +138,7 @@ describe("YeetVerdictJson", () => {
       "mergeable",
       "merge-state-acceptable",
       "review-decision-acceptable",
+      "closeout-gates-passed",
     ]);
   });
 });

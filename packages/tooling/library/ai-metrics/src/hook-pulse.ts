@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegNum, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, flow, Match, SchemaIssue, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -675,7 +675,7 @@ export class HookPulseRawEvent extends S.Class<HookPulseRawEvent>($I`HookPulseRa
     transcript_path: S.String,
     permission_mode: S.OptionFromOptionalKey(S.String),
     notification_type: S.OptionFromOptionalKey(S.String),
-    duration_ms: S.OptionFromOptionalKey(NonNegNum),
+    duration_ms: S.OptionFromOptionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0))),
     reason: S.OptionFromOptionalKey(S.String),
     is_interrupt: S.OptionFromOptionalKey(S.Boolean),
     tool_input: S.OptionFromOptionalKey(HookPulseRawToolInput).pipe(
@@ -1161,7 +1161,7 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     transcriptPath: S.OptionFromOptionalKey(Sha256Hex),
     permissionMode: S.OptionFromOptionalKey(S.String),
     notificationType: S.OptionFromOptionalKey(HookPulseNotificationType),
-    durationMs: S.OptionFromOptionalKey(NonNegNum),
+    durationMs: S.OptionFromOptionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0))),
     sessionEndReason: S.OptionFromOptionalKey(S.String),
     // Separates "the human hit escape" from "the tool errored". The first is a
     // human action and belongs in a human-wait instrument; the raw `error`
@@ -1297,7 +1297,7 @@ const HookPulseLegacyV1Record = S.Struct({
   transcriptPath: S.optionalKey(S.String),
   permissionMode: S.optionalKey(S.String),
   notificationType: S.optionalKey(HookPulseNotificationType),
-  durationMs: S.optionalKey(NonNegNum),
+  durationMs: S.optionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0))),
   sessionEndReason: S.optionalKey(S.String),
 });
 

@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, flow, Order } from "effect";
+import { Effect, flow, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -109,13 +109,14 @@ export const SchemaFirstPolicyRuleId = LiteralKit([
   "SFV4-precision-audit",
   "SFV4-arbitrary-tests",
   "SFV4-equivalence",
-  "SFV4-tagged-error-equivalence",
   "SFV4-numeric-domain",
   "SFV4-boundary-codec",
   "SFV4-fn-schema",
   "SFV4-normalization",
   "SFV4-null-return",
   "SFV4-getsomes-struct",
+  "SFV4-default-wrapper",
+  "SFV4-opaque-wrapper",
 ]).pipe(
   $I.annoteSchema("SchemaFirstPolicyRuleId", {
     description: "Stable schema-first policy rule identifiers emitted for lint and Yeet issue routing.",
@@ -138,6 +139,149 @@ export const SchemaFirstPolicyRuleId = LiteralKit([
  * @since 0.0.0
  */
 export type SchemaFirstPolicyRuleId = typeof SchemaFirstPolicyRuleId.Type;
+
+/**
+ * Upstream-parity rules whose findings ratchet on occurrence membership.
+ *
+ * **Details**
+ *
+ * These rules gate the Effect Schema parity backlog: every live occurrence is
+ * keyed by its line-free occurrence anchor, the committed `backlog` rows of
+ * `standards/schema-first.inventory.jsonc` are the membership floor, a new
+ * occurrence fails the lint, and a removed one only asks for a tighter
+ * baseline.
+ *
+ * **Example** (Guard a parity rule id)
+ *
+ * ```ts
+ * import { SchemaFirstParityRuleId } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * const isParityRule = S.is(SchemaFirstParityRuleId)
+ * console.log(isParityRule("SFV4-default-wrapper")) // true
+ * console.log(isParityRule("SFV4-defaults")) // false
+ * ```
+ *
+ * @category schema
+ * @since 0.0.0
+ */
+export const SchemaFirstParityRuleId = SchemaFirstPolicyRuleId.pick([
+  "SFV4-default-wrapper",
+  "SFV4-opaque-wrapper",
+]).pipe(
+  $I.annoteSchema("SchemaFirstParityRuleId", {
+    description: "Upstream-parity schema-first rules whose findings ratchet on occurrence membership.",
+  })
+);
+
+/**
+ * Upstream-parity schema-first rule identifier.
+ *
+ * **Example** (Type an opaque-wrapper rule id)
+ *
+ * ```ts
+ * import type { SchemaFirstParityRuleId } from "@beep/repo-cli/commands/Lint"
+ *
+ * const ruleId: SchemaFirstParityRuleId = "SFV4-opaque-wrapper"
+ * console.log(ruleId) // "SFV4-opaque-wrapper"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SchemaFirstParityRuleId = typeof SchemaFirstParityRuleId.Type;
+
+/**
+ * Content anchor that identifies one parity occurrence inside a file.
+ *
+ * **Details**
+ *
+ * The anchor is `<lexical path>::<export>@<hash>`, with `#<n>` appended only
+ * to the second and later of byte-identical calls on one path. The lexical
+ * path names the enclosing declarations and property keys (for example
+ * `Widget.title`) for display; the export names the flagged wrapper; the hash
+ * is the first 12 hex digits of the SHA-256 of the wrapper call's tokens
+ * (widened to the call that receives it as an argument), ignoring whitespace,
+ * comments, trailing commas and quote style. Line shifts and reformatting
+ * leave every anchor unchanged, and adding or removing one occurrence never
+ * re-keys another unless the two calls are byte-identical on the same path.
+ *
+ * **Example** (Validate an occurrence anchor)
+ *
+ * ```ts
+ * import { SchemaFirstOccurrenceAnchor } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * const isAnchor = S.is(SchemaFirstOccurrenceAnchor)
+ * console.log(isAnchor("Widget.title::withNoneDefault@3f2a9c41b0de")) // true
+ * console.log(isAnchor("Widget.title::withNoneDefault@3f2a9c41b0de#2")) // true
+ * console.log(isAnchor("Widget.title::withNoneDefault#1")) // false
+ * ```
+ *
+ * @category schema
+ * @since 0.0.0
+ */
+export const SchemaFirstOccurrenceAnchor = S.String.check(
+  S.isPattern(/^[^\n]+::[A-Za-z_$][\w$]*@[0-9a-f]{12}(?:#(?:[2-9]|[1-9]\d+))?$/u)
+).pipe(
+  $I.annoteSchema("SchemaFirstOccurrenceAnchor", {
+    description:
+      "Content anchor `<lexical path>::<export>@<hash>` (plus `#<n>` for byte-identical calls on one path) for one parity occurrence in a file.",
+  })
+);
+
+/**
+ * Line-free anchor that identifies one parity occurrence inside a file.
+ *
+ * **Example** (Type an occurrence anchor)
+ *
+ * ```ts
+ * import type { SchemaFirstOccurrenceAnchor } from "@beep/repo-cli/commands/Lint"
+ *
+ * const anchor: SchemaFirstOccurrenceAnchor = "Widget.cause::Defect@9b1c02de77aa"
+ * console.log(anchor) // "Widget.cause::Defect@9b1c02de77aa"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SchemaFirstOccurrenceAnchor = typeof SchemaFirstOccurrenceAnchor.Type;
+
+/**
+ * Committed parity-backlog membership for one source file and rule.
+ *
+ * **Details**
+ *
+ * Rows group occurrence anchors by file so the baseline stays compact; each
+ * anchor is one tracked occurrence. The live scan writes these rows with
+ * `--write`; the check compares memberships and never counts.
+ *
+ * **Example** (Make a backlog row)
+ *
+ * ```ts
+ * import { SchemaFirstBacklogRow } from "@beep/repo-cli/commands/Lint"
+ *
+ * const row = SchemaFirstBacklogRow.make({
+ *   ruleId: "SFV4-default-wrapper",
+ *   file: "packages/example/src/Widget.ts",
+ *   occurrences: ["Widget.title::withNoneDefault@3f2a9c41b0de"]
+ * })
+ * console.log(row.occurrences.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SchemaFirstBacklogRow extends S.Class<SchemaFirstBacklogRow>($I`SchemaFirstBacklogRow`)(
+  {
+    ruleId: SchemaFirstParityRuleId,
+    file: S.String,
+    occurrences: S.Array(SchemaFirstOccurrenceAnchor),
+  },
+  $I.annote("SchemaFirstBacklogRow", {
+    description: "Committed parity-backlog membership for one source file and rule, one anchor per occurrence.",
+  })
+) {}
 
 /**
  * Kinds of schema-first inventory findings.
@@ -252,6 +396,7 @@ export class SchemaFirstInventoryEntry extends S.Class<SchemaFirstInventoryEntry
     status: SchemaFirstEntryStatus,
     ruleId: S.optionalKey(SchemaFirstPolicyRuleId),
     line: S.optionalKey(S.Finite),
+    occurrence: S.optionalKey(SchemaFirstOccurrenceAnchor),
     owner: S.String,
     reason: S.String,
   },
@@ -318,6 +463,10 @@ export class SchemaFirstInventoryDocument extends S.Class<SchemaFirstInventoryDo
       S.withConstructorDefault(Effect.succeed(A.empty<SchemaFirstInventoryEntry>())),
       S.withDecodingDefault(Effect.succeed(A.empty<SchemaFirstInventoryEntry.Encoded>()))
     ),
+    backlog: S.Array(SchemaFirstBacklogRow).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<SchemaFirstBacklogRow>())),
+      S.withDecodingDefault(Effect.succeed(A.empty<typeof SchemaFirstBacklogRow.Encoded>()))
+    ),
   },
   $I.annote("SchemaFirstInventoryDocument", {
     description: "Committed schema-first inventory baseline for repo-wide lint enforcement.",
@@ -326,6 +475,13 @@ export class SchemaFirstInventoryDocument extends S.Class<SchemaFirstInventoryDo
 
 /**
  * CLI options for schema-first inventory verification.
+ *
+ * **Details**
+ *
+ * `write` refreshes the committed inventory; for the parity backlog it only
+ * removes resolved occurrences and still fails on new ones.
+ * `admitParityBacklog` (with `write`) also admits new parity occurrences into
+ * the backlog; it exists for the initial capture, not for routine repair.
  *
  * **Example** (Validate lint options)
  *
@@ -350,9 +506,95 @@ export class SchemaFirstLintOptions extends S.Class<SchemaFirstLintOptions>($I`S
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),
+    admitParityBacklog: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
   },
   $I.annote("SchemaFirstLintOptions", {
     description: "CLI options for schema-first inventory verification.",
+  })
+) {}
+
+/**
+ * Occurrence-membership counts for one upstream-parity rule.
+ *
+ * **Details**
+ *
+ * `live` counts current occurrences and `baseline` counts committed backlog
+ * anchors. `introduced` occurrences fail the check; `resolved` ones only ask
+ * for `--write` to tighten the committed backlog.
+ *
+ * **Example** (Make a parity rule summary)
+ *
+ * ```ts
+ * import { SchemaFirstParityRuleSummary } from "@beep/repo-cli/commands/Lint"
+ *
+ * const summary = SchemaFirstParityRuleSummary.make({
+ *   ruleId: "SFV4-opaque-wrapper",
+ *   live: 3,
+ *   baseline: 4,
+ *   introduced: 0,
+ *   resolved: 1
+ * })
+ * console.log(summary.resolved) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SchemaFirstParityRuleSummary extends S.Class<SchemaFirstParityRuleSummary>(
+  $I`SchemaFirstParityRuleSummary`
+)(
+  {
+    ruleId: SchemaFirstParityRuleId,
+    live: S.Finite,
+    baseline: S.Finite,
+    introduced: S.Finite,
+    resolved: S.Finite,
+  },
+  $I.annote("SchemaFirstParityRuleSummary", {
+    description: "Occurrence-membership counts for one upstream-parity schema-first rule.",
+  })
+) {}
+
+/**
+ * Classified parity-ratchet outcome shared by the scan and render stages.
+ *
+ * **Details**
+ *
+ * `introduced` holds the live entries whose occurrence anchors are missing
+ * from the committed backlog; `resolved` holds committed rows whose anchors no
+ * longer occur. The floor is membership, so only `introduced` fails the check.
+ *
+ * **Example** (Make an empty parity outcome)
+ *
+ * ```ts
+ * import { SchemaFirstParityFindings } from "@beep/repo-cli/commands/Lint"
+ *
+ * const findings = SchemaFirstParityFindings.make({
+ *   introduced: [],
+ *   resolved: [],
+ *   rules: [],
+ *   liveCount: 0,
+ *   baselineCount: 0
+ * })
+ * console.log(findings.introduced.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SchemaFirstParityFindings extends S.Class<SchemaFirstParityFindings>($I`SchemaFirstParityFindings`)(
+  {
+    introduced: S.Array(SchemaFirstInventoryEntry),
+    resolved: S.Array(SchemaFirstBacklogRow),
+    rules: S.Array(SchemaFirstParityRuleSummary),
+    liveCount: S.Finite,
+    baselineCount: S.Finite,
+  },
+  $I.annote("SchemaFirstParityFindings", {
+    description: "Parity-ratchet outcome: introduced live occurrences, resolved backlog rows, and per-rule counts.",
   })
 ) {}
 
@@ -384,7 +626,6 @@ export class SchemaFirstLintSummary extends S.Class<SchemaFirstLintSummary>($I`S
     defaultsAdvisories: S.Finite,
     staticApiAdvisories: S.Finite,
     equivalenceAdvisories: S.Finite,
-    taggedErrorEquivalenceAdvisories: S.Finite,
     precisionAuditAdvisories: S.Finite,
     arbitraryTestsAdvisories: S.Finite,
     numericDomainAdvisories: S.Finite,
@@ -392,6 +633,7 @@ export class SchemaFirstLintSummary extends S.Class<SchemaFirstLintSummary>($I`S
     normalizationAdvisories: S.Finite,
     nullReturnAdvisories: S.Finite,
     getsomesStructAdvisories: S.Finite,
+    parityRules: S.Array(SchemaFirstParityRuleSummary),
     crispeningPolicyExempt: S.Finite,
     wroteInventory: S.Boolean,
   },
@@ -543,7 +785,7 @@ export class LiteralKitConstAssertionViolation extends S.Class<LiteralKitConstAs
  *
  * ```ts
  * import { encodeSchemaFirstInventoryDocument } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.succeed(encodeSchemaFirstInventoryDocument)
  * console.log(Effect.isEffect(program)) // true
@@ -562,8 +804,18 @@ export const encodeSchemaFirstInventoryDocument: {
   ): (input: unknown) => Effect.Effect<S.Codec.Encoded<typeof SchemaFirstInventoryDocument>, S.SchemaError>;
 } = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SchemaFirstInventoryDocument));
 
+const makeParityMembershipKey = (file: string, ruleId: string, occurrence: string): string =>
+  `${file}::${ruleId}::${occurrence}`;
+
 /**
  * Stable key used to reconcile live schema-first scan results with the baseline.
+ *
+ * **Details**
+ *
+ * An entry that carries an occurrence anchor (the upstream-parity rules) is
+ * keyed by file, rule id and anchor only, so line shifts never change its
+ * membership. Every other entry keeps the historical key, which includes the
+ * symbol, kind and line.
  *
  * **Example** (Build reconciliation entry key)
  *
@@ -583,12 +835,47 @@ export const encodeSchemaFirstInventoryDocument: {
  * ```
  *
  * @param entry - The schema-first inventory entry to derive a reconciliation key for.
- * @returns A stable string key combining the entry's file, symbol, kind, rule id, and line.
+ * @returns The anchored membership key, or the historical file, symbol, kind, rule id, and line key.
  * @category utilities
  * @since 0.0.0
  */
 export const makeSchemaFirstEntryKey = (entry: SchemaFirstInventoryEntry): string =>
-  `${entry.file}::${entry.symbol}::${entry.kind}::${entry.ruleId ?? ""}::${entry.line ?? ""}`;
+  pipe(
+    O.fromUndefinedOr(entry.occurrence),
+    O.map((occurrence) => makeParityMembershipKey(entry.file, entry.ruleId ?? "", occurrence)),
+    O.getOrElse(() => `${entry.file}::${entry.symbol}::${entry.kind}::${entry.ruleId ?? ""}::${entry.line ?? ""}`)
+  );
+
+/**
+ * Membership keys for every occurrence a committed backlog row tracks.
+ *
+ * **Details**
+ *
+ * The keys match {@link makeSchemaFirstEntryKey} for the live entry that
+ * reported the same occurrence, so a backlog row and a live scan compare as
+ * plain key sets.
+ *
+ * **Example** (Expand a backlog row into membership keys)
+ *
+ * ```ts
+ * import { SchemaFirstBacklogRow, schemaFirstBacklogRowKeys } from "@beep/repo-cli/commands/Lint"
+ *
+ * const row = SchemaFirstBacklogRow.make({
+ *   ruleId: "SFV4-opaque-wrapper",
+ *   file: "packages/example/src/Widget.ts",
+ *   occurrences: ["WidgetError.cause::Defect@9b1c02de77aa"]
+ * })
+ * console.log(schemaFirstBacklogRowKeys(row))
+ * // ["packages/example/src/Widget.ts::SFV4-opaque-wrapper::WidgetError.cause::Defect@9b1c02de77aa"]
+ * ```
+ *
+ * @param row - The committed backlog row to expand.
+ * @returns One membership key per tracked occurrence, in row order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const schemaFirstBacklogRowKeys = (row: SchemaFirstBacklogRow): ReadonlyArray<string> =>
+  A.map(row.occurrences, (occurrence) => makeParityMembershipKey(row.file, row.ruleId, occurrence));
 
 /**
  * Sort order for schema-first inventory entries.
@@ -780,7 +1067,7 @@ const EffectVitestOccurrence = S.String.check(S.isPattern(/^v2:[a-f0-9]{64}$/u))
       "Versioned SHA-256 anchor of lexical registration titles and the complete containing statement token stream.",
   })
 );
-const optionalText = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const optionalText = S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
 
 /**
  * Names the pinned primitive and concise built-in remediation available before P0d.
@@ -836,10 +1123,10 @@ const EffectVitestFindingFields = S.Struct({
   package: S.NonEmptyString,
   file: S.NonEmptyString,
   line: EffectVitestPositiveLine,
-  endLine: EffectVitestPositiveLine.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  endLine: EffectVitestPositiveLine.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   symbol: optionalText,
   testName: optionalText,
-  occurrence: EffectVitestOccurrence.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  occurrence: EffectVitestOccurrence.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   class: S.NonEmptyString,
   evidence: EffectVitestEvidence,
   replacement: EffectVitestReplacement,

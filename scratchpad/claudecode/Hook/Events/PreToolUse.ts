@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -59,7 +59,7 @@ export class Input extends S.Class<Input>($I`PreToolUseInput`)(
     hook_event_name: S.Literal("PreToolUse"),
     tool_name: S.String,
     tool_input: S.Record(S.String, S.Unknown),
-    tool_use_id: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    tool_use_id: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PreToolUseInput", {
     description: "Input for the PreToolUse hook event.",
@@ -133,9 +133,9 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PreToolUs
   {
     hookEventName: S.Literal("PreToolUse"),
     permissionDecision: PermissionDecision,
-    permissionDecisionReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    updatedInput: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault),
-    additionalContext: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    permissionDecisionReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    updatedInput: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    additionalContext: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PreToolUseHookSpecificOutput", {
     description: "PreToolUse-specific response returned to Claude Code.",
@@ -162,12 +162,12 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PreToolUs
  */
 export class Output extends S.Class<Output>($I`PreToolUseOutput`)(
   {
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(SchemaUtils.withNoneDefault),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PreToolUseOutput", {
     description: "Output returned by a PreToolUse hook handler.",

@@ -173,7 +173,7 @@ const isMappedDirectionFacet = (access: PropertyAccessExpression): boolean =>
  *
  * @param site - The node whose scope chain the lookup starts from.
  * @param name - The identifier text to resolve.
- * @returns The resolved symbol, or none when the name is free at the site.
+ * @returns The resolved symbol, or `None` when `name` is free at `site`.
  */
 const resolveAt = (site: Node, name: string): O.Option<ts.Symbol> =>
   O.fromNullishOr(
@@ -355,19 +355,6 @@ const importedBaseRewrite = (receiver: Expression, baseName: string): Result.Res
     }))
   );
 
-/**
- * Resolve the kit a decorated schema was built from.
- *
- * `Base.pipe(S.brand(...), withLiteralKitStatics(Base))` is not an
- * `S.Literals`, so it has no `.literals`; the rewrite reads the underlying
- * kit instead. Same-module bases are referenced directly; cross-module bases
- * are imported from the module the receiver itself was imported from, when
- * that module exports them.
- *
- * @param receiver - The decorated schema expression the rewrite replaces.
- * @param base - The identifier of the kit the decorator was applied to.
- * @returns The receiver rewrite, or the reason the base cannot be referenced here.
- */
 const sameModuleBaseRewrite = (receiver: Expression, base: Identifier): Result.Result<ReceiverRewrite, string> =>
   pipe(
     O.fromNullishOr(base.getSymbol()?.getValueDeclaration()),
@@ -379,6 +366,19 @@ const sameModuleBaseRewrite = (receiver: Expression, base: Identifier): Result.R
     }))
   );
 
+/**
+ * Resolve the kit a decorated schema was built from.
+ *
+ * `Base.pipe(S.brand(...), withLiteralKitStatics(Base))` is not an
+ * `S.Literals`, so it has no `.literals`; the rewrite reads the underlying
+ * kit instead. Same-module bases are referenced directly; cross-module bases
+ * are imported from the module the receiver itself was imported from, when
+ * that module exports them.
+ *
+ * @param receiver - The facet receiver whose type is a decorated schema.
+ * @returns The receiver replacement and the imports it needs, or a
+ * `decorated-base-*` residue reason when the base cannot be referenced safely.
+ */
 const resolveDecoratedBase = (receiver: Expression): Result.Result<ReceiverRewrite, string> =>
   pipe(
     decoratedDeclaration(receiver),

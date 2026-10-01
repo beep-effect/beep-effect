@@ -13,7 +13,6 @@ import {
   OpenAiLanguageModelOptions,
   OpenAiLive,
 } from "@beep/openai";
-import { PosInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { OpenAiClient } from "@effect/ai-openai";
 import { describe, expect } from "@effect/vitest";
@@ -26,6 +25,8 @@ import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
 import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 type TestRespond = (
   request: HttpClientRequest.HttpClientRequest
@@ -347,5 +348,20 @@ describe("OpenAI model Layers", () => {
         })
       );
     }
+  );
+});
+
+describe("makeOpenAiEmbeddingModelLive boundary", () => {
+  it.effect(
+    "fails the Layer with a SchemaError instead of a defect when dimensions is not a positive integer",
+    Effect.fnUntraced(function* () {
+      const layer = makeOpenAiEmbeddingModelLive(0).pipe(
+        Layer.provide(makeConfigProviderLayer({ [OPENAI_API_KEY_ENV]: "fixture", [OPENAI_EMBEDDING_MODEL_ENV]: "" }))
+      );
+      // Acquisition failure is the subject; the test runner owns its scope.
+      const failure = yield* Layer.build(layer).pipe(Effect.flip);
+      expect(failure._tag).toBe("SchemaError");
+      expect(String(failure)).toContain("Expected a positive integer");
+    })
   );
 });

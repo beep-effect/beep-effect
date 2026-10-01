@@ -11,7 +11,6 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
 import { getSomesStruct } from "@beep/utils/Option";
 import { Config, Context, Duration, Effect, flow, Layer, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
@@ -37,6 +36,11 @@ import {
 } from "./M365.schemas.ts";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type { M365AuthShape, M365InteractiveAuthorizer } from "./M365.auth.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const decodeM365ConfigInput = S.decodeEffect(M365ConfigInput);
 
@@ -383,7 +387,7 @@ export type M365EventCollection = typeof M365EventCollection.Type;
  */
 export class M365ListDrivesRequest extends S.Class<M365ListDrivesRequest>($I`M365ListDrivesRequest`)(
   {
-    siteId: S.OptionFromOptionalKey(GraphPathSegment).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    siteId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional SharePoint composite site id; omitted to list the signed-in user's drives.",
     }),
   },
@@ -409,7 +413,10 @@ export class M365ListDrivesRequest extends S.Class<M365ListDrivesRequest>($I`M36
  */
 export class M365ListSitesRequest extends S.Class<M365ListSitesRequest>($I`M365ListSitesRequest`)(
   {
-    search: S.String.pipe(SchemaUtils.withKeyDefaults(ALL_SITES_SEARCH)).annotateKey({
+    search: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(ALL_SITES_SEARCH)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ALL_SITES_SEARCH))
+    ).annotateKey({
       description: "Optional search text; defaults to `*` because Graph v1.0 site listing is search-based.",
     }),
   },
@@ -459,7 +466,7 @@ export class M365GetSiteRequest extends S.Class<M365GetSiteRequest>($I`M365GetSi
  */
 export class M365DeltaDriveItemsRequest extends S.Class<M365DeltaDriveItemsRequest>($I`M365DeltaDriveItemsRequest`)(
   {
-    deltaLink: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    deltaLink: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional Graph-provided delta continuation URL; must target the configured Graph v1.0 origin.",
     }),
     driveId: GraphPathSegment.annotateKey({
@@ -557,9 +564,11 @@ export class M365ListDriveItemVersionsRequest extends S.Class<M365ListDriveItemV
  * **Example** (List messages with top)
  *
  * ```ts
- * import { PosInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { M365ListMessagesRequest } from "@beep/m365"
  * import * as O from "effect/Option"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const request = M365ListMessagesRequest.make({ top: O.some(PosInt.make(10)) })
  * console.log(request.top)
@@ -571,12 +580,12 @@ export class M365ListDriveItemVersionsRequest extends S.Class<M365ListDriveItemV
 export class M365ListMessagesRequest extends S.Class<M365ListMessagesRequest>($I`M365ListMessagesRequest`)(
   {
     filter: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Optional Graph OData `$filter` query value." }),
     top: S.OptionFromOptionalKey(PosInt)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Optional Graph `$top` page size." }),
-    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional user id/mailbox; omitted to read the signed-in user's messages.",
     }),
   },
@@ -603,7 +612,7 @@ export class M365ListMessagesRequest extends S.Class<M365ListMessagesRequest>($I
 export class M365GetMessageRequest extends S.Class<M365GetMessageRequest>($I`M365GetMessageRequest`)(
   {
     messageId: GraphPathSegment.annotateKey({ description: "Graph message id." }),
-    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional user id/mailbox; omitted to read the signed-in user's message.",
     }),
   },
@@ -618,9 +627,11 @@ export class M365GetMessageRequest extends S.Class<M365GetMessageRequest>($I`M36
  * **Example** (List events with top)
  *
  * ```ts
- * import { PosInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { M365ListEventsRequest } from "@beep/m365"
  * import * as O from "effect/Option"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const request = M365ListEventsRequest.make({ top: O.some(PosInt.make(10)) })
  * console.log(request.top)
@@ -632,9 +643,9 @@ export class M365GetMessageRequest extends S.Class<M365GetMessageRequest>($I`M36
 export class M365ListEventsRequest extends S.Class<M365ListEventsRequest>($I`M365ListEventsRequest`)(
   {
     top: S.OptionFromOptionalKey(PosInt)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Optional Graph `$top` page size." }),
-    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional user id/mailbox; omitted to read the signed-in user's calendar events.",
     }),
   },
@@ -661,7 +672,7 @@ export class M365ListEventsRequest extends S.Class<M365ListEventsRequest>($I`M36
 export class M365GetEventRequest extends S.Class<M365GetEventRequest>($I`M365GetEventRequest`)(
   {
     eventId: GraphPathSegment.annotateKey({ description: "Graph event id." }),
-    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional user id/mailbox; omitted to read the signed-in user's calendar event.",
     }),
   },

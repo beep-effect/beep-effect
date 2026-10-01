@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Random, Ref } from "effect";
@@ -292,7 +292,7 @@ export class AiMetricsConfigSnapshotBoundsReport extends S.Class<AiMetricsConfig
     totalBytes: S.Natural,
     truncated: S.Boolean,
     truncationReason: S.OptionFromOptionalKey(AiMetricsConfigSnapshotTruncationReason).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
   },
   $I.annote("AiMetricsConfigSnapshotBoundsReport", {
@@ -345,7 +345,7 @@ export class AiMetricsConfigSnapshotInput extends S.Class<AiMetricsConfigSnapsho
       S.withConstructorDefault(Effect.succeed("repo-local-agent-config")),
       S.withDecodingDefaultKey(Effect.succeed("repo-local-agent-config"))
     ),
-    previousSnapshotPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    previousSnapshotPath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     repoRoot: S.String,
   },
   $I.annote("AiMetricsConfigSnapshotInput", {
@@ -502,12 +502,15 @@ export class AiMetricsConfigSnapshotResult extends S.Class<AiMetricsConfigSnapsh
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultKey(Effect.succeed(""))
     ),
-    bounds: AiMetricsConfigSnapshotBoundsReport.pipe(SchemaUtils.withKeyDefaults(emptyConfigSnapshotBoundsReport)),
+    bounds: AiMetricsConfigSnapshotBoundsReport.pipe(
+      S.withConstructorDefault(Effect.succeed(emptyConfigSnapshotBoundsReport)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(emptyConfigSnapshotBoundsReport))
+    ),
     excludedDirectoryNames: S.Array(ConfigSnapshotExcludedDirName),
     diff: AiMetricsConfigSnapshotDiff.pipe(S.withDecodingDefaultKey(Effect.succeed(emptyConfigSnapshotDiff))),
     fileCount: S.Natural,
     files: S.Array(AiMetricsConfigSnapshotFile),
-    previousSnapshotId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    previousSnapshotId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     sessionHash: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultKey(Effect.succeed(""))

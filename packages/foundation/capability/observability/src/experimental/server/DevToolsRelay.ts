@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { A, thunk0 } from "@beep/utils";
 import { Clock, Context, Effect, HashMap, Layer, Match, MutableRef, Queue } from "effect";
 import * as DevToolsServer from "effect/devtools/DevToolsServer";
@@ -25,11 +24,10 @@ const maxSpanEvents = 200;
  * **Example** (Make zero-count snapshot)
  *
  * ```ts import.meta.vitest name="Make zero-count snapshot"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { DevToolsSnapshot } from "@beep/observability/experimental/server"
  *
- * const count = S.decodeUnknownSync(NonNegativeInt)(0)
+ * const count = S.decodeUnknownSync(S.Natural)(0)
  * const snapshot = DevToolsSnapshot.make({
  *   lastUpdatedAtMs: count,
  *   metricCount: count,
@@ -44,10 +42,10 @@ const maxSpanEvents = 200;
  */
 export class DevToolsSnapshot extends S.Class<DevToolsSnapshot>($I`DevToolsSnapshot`)(
   {
-    spanCount: NonNegativeInt,
-    spanEventCount: NonNegativeInt,
-    metricCount: NonNegativeInt,
-    lastUpdatedAtMs: NonNegativeInt,
+    spanCount: S.Natural,
+    spanEventCount: S.Natural,
+    metricCount: S.Natural,
+    lastUpdatedAtMs: S.Natural,
   },
   $I.annote("DevToolsSnapshot", {
     description: "Summary of the in-memory relay state.",

@@ -13,7 +13,6 @@ import {
   SourceArtifact,
 } from "@beep/file-processing/Artifact";
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -69,7 +68,7 @@ const makeOperation = Effect.fn("DocTextTest.makeOperation")(function* (
       locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
       name: `fixture.${extension}`,
       relativePath,
-      sizeBytes: NonNegativeInt.make(bytes.byteLength),
+      sizeBytes: S.Natural.make(bytes.byteLength),
     }),
   });
 });

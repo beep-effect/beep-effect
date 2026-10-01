@@ -9,7 +9,6 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
@@ -203,11 +202,11 @@ export class GraphDeleted extends S.Class<GraphDeleted>($I`GraphDeleted`)(
  */
 export class GraphQuota extends S.Class<GraphQuota>($I`GraphQuota`)(
   {
-    deleted: opt(NonNegativeInt, "Bytes consumed by recycled items."),
-    remaining: opt(NonNegativeInt, "Remaining bytes."),
+    deleted: opt(S.Natural, "Bytes consumed by recycled items."),
+    remaining: opt(S.Natural, "Remaining bytes."),
     state: opt(S.String, "Quota state (normal/nearing/critical/exceeded)."),
-    total: opt(NonNegativeInt, "Total bytes."),
-    used: opt(NonNegativeInt, "Used bytes."),
+    total: opt(S.Natural, "Total bytes."),
+    used: opt(S.Natural, "Used bytes."),
   },
   $I.annote("GraphQuota", { description: "A drive storage quota summary." })
 ) {}

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, flow, HashSet, Number as N, pipe, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -158,7 +158,7 @@ export class ComponentPanelView extends S.Class<ComponentPanelView>($I`Component
   {
     kind: S.tag("component"),
     renderer: S.toType(RendererKey),
-    input: PanelParameters.pipe(SchemaUtils.withConstantDefault<PanelParameters>({})),
+    input: PanelParameters.pipe(S.withConstructorDefault(Effect.succeed<PanelParameters>({}))),
   },
   $I.annote("ComponentPanelView", {
     description: "Panel content resolved by a host renderer registry.",
@@ -258,10 +258,10 @@ const PositiveFiniteExtent = S.Finite.check(S.isGreaterThan(0)).pipe(
  */
 export class PanelConstraints extends S.Class<PanelConstraints>($I`PanelConstraints`)(
   {
-    minWidth: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    minHeight: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    maxWidth: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    maxHeight: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    minWidth: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    minHeight: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    maxWidth: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    maxHeight: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PanelConstraints", {
     description: "Optional positive finite minimum and maximum pixel extents for one panel.",
@@ -288,9 +288,9 @@ export class Panel extends S.Class<Panel>($I`Panel`)(
     id: S.toType(PanelId),
     title: S.NonEmptyString,
     view: PanelView,
-    renderMode: PanelRenderMode.pipe(SchemaUtils.withConstantDefault<PanelRenderMode>("onlyWhenVisible")),
-    tabComponent: S.toType(RendererKey).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    constraints: PanelConstraints.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    renderMode: PanelRenderMode.pipe(S.withConstructorDefault(Effect.succeed<PanelRenderMode>("onlyWhenVisible"))),
+    tabComponent: S.toType(RendererKey).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    constraints: PanelConstraints.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Panel", {
     description: "A renderer-neutral panel owned directly by one tab group.",
@@ -336,11 +336,15 @@ export class Panel extends S.Class<Panel>($I`Panel`)(
  */
 export class PanelPatch extends S.Class<PanelPatch>($I`PanelPatch`)(
   {
-    title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    view: S.OptionFromOptionalKey(PanelView).pipe(SchemaUtils.withNoneDefault),
-    renderMode: S.OptionFromOptionalKey(PanelRenderMode).pipe(SchemaUtils.withNoneDefault),
-    tabComponent: S.toType(RendererKey).pipe(S.Option, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    constraints: PanelConstraints.pipe(S.Option, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    view: S.OptionFromOptionalKey(PanelView).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    renderMode: S.OptionFromOptionalKey(PanelRenderMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    tabComponent: S.toType(RendererKey).pipe(
+      S.Option,
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    constraints: PanelConstraints.pipe(S.Option, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PanelPatch", {
     description: "Optional whole-value replacements for persistable panel facets.",
@@ -434,10 +438,10 @@ export type GroupHeaderPosition = typeof GroupHeaderPosition.Type;
  */
 export class GroupMetadata extends S.Class<GroupMetadata>($I`GroupMetadata`)(
   {
-    visible: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(true)),
-    locked: GroupLockedMode.pipe(SchemaUtils.withConstantDefault<GroupLockedMode>("unlocked")),
-    hideHeader: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(false)),
-    headerPosition: GroupHeaderPosition.pipe(SchemaUtils.withConstantDefault<GroupHeaderPosition>("top")),
+    visible: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed<boolean>(true))),
+    locked: GroupLockedMode.pipe(S.withConstructorDefault(Effect.succeed<GroupLockedMode>("unlocked"))),
+    hideHeader: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed<boolean>(false))),
+    headerPosition: GroupHeaderPosition.pipe(S.withConstructorDefault(Effect.succeed<GroupHeaderPosition>("top"))),
   },
   $I.annote("GroupMetadata", {
     description: "Serializable display and future policy metadata for one tab group.",
@@ -464,10 +468,10 @@ export class GroupMetadata extends S.Class<GroupMetadata>($I`GroupMetadata`)(
  */
 export class GroupPatch extends S.Class<GroupPatch>($I`GroupPatch`)(
   {
-    visible: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    locked: S.OptionFromOptionalKey(GroupLockedMode).pipe(SchemaUtils.withNoneDefault),
-    hideHeader: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    headerPosition: S.OptionFromOptionalKey(GroupHeaderPosition).pipe(SchemaUtils.withNoneDefault),
+    visible: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    locked: S.OptionFromOptionalKey(GroupLockedMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hideHeader: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    headerPosition: S.OptionFromOptionalKey(GroupHeaderPosition).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("GroupPatch", {
     description: "Optional whole-value replacements for persistable group metadata.",
@@ -503,9 +507,9 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
   "Tabs",
   {
     groupId: S.toType(GroupId),
-    before: S.Array(Panel).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<Panel>>([])),
+    before: S.Array(Panel).pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<Panel>>([]))),
     active: Panel,
-    after: S.Array(Panel).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<Panel>>([])),
+    after: S.Array(Panel).pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<Panel>>([]))),
     metadata: GroupMetadata.pipe(S.withConstructorDefault(Effect.succeed(GroupMetadata.make()))),
   },
   $I.annote("TabsNode", {
@@ -642,7 +646,7 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
 }
 
 const DockNodeRef = S.suspend((): S.Codec<DockNode.Type, DockNode.Encoded> => DockNode);
-const DefaultSplitRatio = S.toType(SplitRatio).pipe(SchemaUtils.withConstantDefault<number>(5_000));
+const DefaultSplitRatio = S.toType(SplitRatio).pipe(S.withConstructorDefault(Effect.succeed<number>(5_000)));
 
 /**
  * Horizontal binary layout with semantic left and right children.
@@ -1184,8 +1188,8 @@ export class FloatingMember extends S.Class<FloatingMember>($I`FloatingMember`)(
 export class EmptyWorkspace extends S.Class<EmptyWorkspace>($I`EmptyWorkspace`)(
   {
     kind: S.tag("empty"),
-    revision: NonNegativeInt.pipe(SchemaUtils.withConstantDefault<number>(0)),
-    floating: S.Array(FloatingMember).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<FloatingMember>>([])),
+    revision: S.Natural.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
+    floating: S.Array(FloatingMember).pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<FloatingMember>>([]))),
   },
   $I.annote("EmptyWorkspace", {
     description: "A dock workspace with no docked tree; floating subtrees may still exist.",
@@ -1212,10 +1216,10 @@ export class EmptyWorkspace extends S.Class<EmptyWorkspace>($I`EmptyWorkspace`)(
 export class PopulatedWorkspace extends S.Class<PopulatedWorkspace>($I`PopulatedWorkspace`)(
   {
     kind: S.tag("populated"),
-    revision: NonNegativeInt.pipe(SchemaUtils.withConstantDefault<number>(0)),
+    revision: S.Natural.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
     root: DockNode,
-    maximized: S.toType(GroupId).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    floating: S.Array(FloatingMember).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<FloatingMember>>([])),
+    maximized: S.toType(GroupId).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    floating: S.Array(FloatingMember).pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<FloatingMember>>([]))),
   },
   $I.annote("PopulatedWorkspace", {
     description: "A dock workspace containing a non-empty binary layout tree.",
@@ -1448,9 +1452,9 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
         })
     );
 
-    const withRevision: Dual2<DockWorkspaceShape, NonNegativeInt, DockWorkspaceShape> = dual(
+    const withRevision: Dual2<DockWorkspaceShape, number, DockWorkspaceShape> = dual(
       2,
-      (workspace: DockWorkspaceShape, revision: NonNegativeInt): DockWorkspaceShape =>
+      (workspace: DockWorkspaceShape, revision: number): DockWorkspaceShape =>
         DockWorkspaceBase.match(workspace, {
           empty: ({ floating }) => EmptyWorkspace.make({ revision, floating }),
           populated: ({ floating, maximized, root }) =>

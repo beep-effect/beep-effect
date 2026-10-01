@@ -8,6 +8,7 @@
 
 import { $OntologyId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -177,7 +178,7 @@ export class GraphInfo extends S.Class<GraphInfo>($I`GraphInfo`)(
     }),
     http_url: HttpUrl.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         title: "Http Url",
         description: "HTTP URL of the ontology source (when source_type is 'http')",
@@ -185,7 +186,7 @@ export class GraphInfo extends S.Class<GraphInfo>($I`GraphInfo`)(
     ),
     github_repo_owner: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         title: "Github Repo Owner",
         description: "GitHub repository owner (when source_type is 'github')",
@@ -194,7 +195,7 @@ export class GraphInfo extends S.Class<GraphInfo>($I`GraphInfo`)(
     ),
     github_repo_name: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         title: "Github Repo Name",
         description: "GitHub repository name (when source_type is 'github')",
@@ -203,7 +204,7 @@ export class GraphInfo extends S.Class<GraphInfo>($I`GraphInfo`)(
     ),
     github_repo_branch: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         title: "Github Repo Branch",
         description: "GitHub repository branch (when source_type is 'github')",
@@ -306,7 +307,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     }),
     label: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "rdfs:label",
         title: "Label",
@@ -315,7 +316,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     sub_class_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "rdfs:subClassOf",
         title: "Sub Class Of",
@@ -324,7 +325,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     parent_class_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "^rdfs:subClassOf",
         title: "Parent Class Of",
@@ -332,7 +333,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     is_defined_by: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "rdfs:isDefinedBy",
         title: "Is Defined By",
@@ -341,7 +342,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     see_also: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "rdfs:seeAlso",
         title: "See Also",
@@ -349,14 +350,15 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     comment: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "rdfs:comment",
         title: "Comment",
       })
     ),
     deprecated: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       $I.key({
         term: "owl:deprecated",
         title: "Deprecated",
@@ -365,7 +367,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     preferred_label: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:prefLabel",
         title: "Preferred Label",
@@ -374,7 +376,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     alternative_labels: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:altLabel",
         title: "Alternative Labels",
@@ -382,7 +384,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     translations: S.Record(S.String, S.String).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         title: "Translations",
         description: "translations from other languages",
@@ -390,7 +392,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     hidden_label: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:hiddenLabel",
         title: "Hidden Label",
@@ -398,7 +400,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     definition: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:definition",
         title: "Definition",
@@ -407,7 +409,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     examples: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:example",
         title: "Examples",
@@ -416,7 +418,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     notes: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:note",
         title: "Notes",
@@ -424,7 +426,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     history_note: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:historyNote",
         title: "History Note",
@@ -432,7 +434,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     editorial_note: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:editorialNote",
         title: "Editorial Note",
@@ -440,7 +442,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     in_scheme: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:inScheme",
         title: "In Scheme",
@@ -448,7 +450,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     identifier: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "dcterms:identifier",
         title: "Identifier",
@@ -456,7 +458,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     description: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "dcterms:description",
         title: "Description",
@@ -464,7 +466,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     source: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "dcterms:source",
         title: "Source",
@@ -472,7 +474,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
     ),
     country: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         title: "Country",
         documentation: "https://www.loc.gov/standards/mads/mads-outline-2-1.html#country",
@@ -506,7 +508,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
     }),
     label: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "rdfs:label",
         title: "Label",
@@ -515,7 +517,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
     sub_property_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "rdfs:subPropertyOf",
         title: "Sub Property Of",
@@ -524,7 +526,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
     domain: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "rdfs:domain",
         title: "Domain",
@@ -533,7 +535,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
     range: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "rdfs:range",
         title: "Range",
@@ -541,7 +543,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
     ),
     inverse_of: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "owl:inverseOf",
         title: "Inverse Of",
@@ -549,7 +551,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
     ),
     preferred_label: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:prefLabel",
         title: "Preferred Label",
@@ -558,7 +560,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
     alternative_labels: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:altLabel",
         title: "Alternative Labels",
@@ -566,7 +568,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
     ),
     definition: S.String.pipe(
       S.OptionFromOptionalNullOr,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:definition",
         title: "Definition",
@@ -575,7 +577,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
     examples: S.String.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.key({
         term: "skos:example",
         title: "Examples",
@@ -620,7 +622,7 @@ export class OWLClassList extends S.Class<OWLClassList>($I`OWLClassList`)(
     properties: OWLObjectProperty.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         title: "Properties",
         description: "List of OWLObjectProperty objects matching the search",
@@ -845,14 +847,14 @@ export class ValidationError extends S.Class<ValidationError>($I`ValidationError
     }),
     input: S.Unknown.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         title: "Input",
       })
     ),
     ctx: S.Record(S.String, S.Unknown).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         title: "Context",
       })
@@ -882,7 +884,7 @@ export class HTTPValidationError extends S.Class<HTTPValidationError>($I`HTTPVal
     detail: ValidationError.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         title: "Detail",
       })

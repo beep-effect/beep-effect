@@ -10,12 +10,10 @@ import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Documen
 import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import { DmsProvider, RemoteItemId, SyncItemKind, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
 import type * as O from "effect/Option";
 
 const $I = $DocumentsUseCasesId.create("entities/SyncItem/SyncItem.repository");
@@ -28,13 +26,12 @@ const $I = $DocumentsUseCasesId.create("entities/SyncItem/SyncItem.repository");
  * ```ts
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"
  * import { SyncItemSeed } from "@beep/documents-use-cases/entities/SyncItem/server"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
  *
  * const seed = SyncItemSeed.make({
  *   itemKind: "file",
- *   localGeneration: S.decodeUnknownSync(NonNegativeInt)(1),
+ *   localGeneration: S.decodeUnknownSync(S.Natural)(1),
  *   localRelPath: S.decodeUnknownSync(VaultRelPath)("matters/client-default/complaint.pdf"),
  *   provider: "box",
  *   syncState: "pending",
@@ -48,25 +45,25 @@ const $I = $DocumentsUseCasesId.create("entities/SyncItem/SyncItem.repository");
  */
 export class SyncItemSeed extends S.Class<SyncItemSeed>($I`SyncItemSeed`)(
   {
-    contentDigest: S.Option(DocumentContentDigest).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    contentDigest: S.Option(DocumentContentDigest).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Digest of the local bytes last observed for this item; none for folders.",
     }),
-    contentSizeBytes: S.Option(NonNegativeInt).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    contentSizeBytes: S.Option(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Size in bytes of the local content last observed; none for folders.",
     }),
     itemKind: SyncItemKind.annotateKey({
       description: "Whether the mirrored vault item is a file or a folder.",
     }),
-    lastError: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    lastError: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Most recent push failure message; none when the item is healthy.",
     }),
-    lastPushedDigest: S.Option(DocumentContentDigest).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    lastPushedDigest: S.Option(DocumentContentDigest).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Digest of the content most recently pushed to the provider; none before first push.",
     }),
-    lastPushedGeneration: S.Option(NonNegativeInt).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    lastPushedGeneration: S.Option(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Local generation counter captured by the most recent successful push.",
     }),
-    localGeneration: NonNegativeInt.annotateKey({
+    localGeneration: S.Natural.annotateKey({
       description: "Monotonic counter incremented per observed local change.",
     }),
     localRelPath: VaultRelPath.annotateKey({
@@ -75,13 +72,13 @@ export class SyncItemSeed extends S.Class<SyncItemSeed>($I`SyncItemSeed`)(
     provider: DmsProvider.annotateKey({
       description: "DMS provider receiving the one-way mirror for this item.",
     }),
-    remoteId: S.Option(RemoteItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    remoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider item identifier assigned by the DMS; none before first push.",
     }),
-    remoteName: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    remoteName: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Item name last observed on the provider side; none before first push.",
     }),
-    remoteParentId: S.Option(RemoteItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    remoteParentId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider identifier of the remote parent folder; none before first push.",
     }),
     syncState: DomainSyncItem.SyncItemState.annotateKey({

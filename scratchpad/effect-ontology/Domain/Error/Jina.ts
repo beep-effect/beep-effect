@@ -10,8 +10,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils, URLStr } from "@beep/schema";
-import { Duration } from "effect";
+import { URLStr } from "@beep/schema";
+import { Duration, Effect } from "effect";
 import * as S from "effect/Schema";
 import { ErrorMessage, Milliseconds, OptionalErrorCause, OptionalErrorUrl, OptionalHttpStatusCode } from "./Base.ts";
 
@@ -59,7 +59,7 @@ const JinaRateLimitErrorFields = {
   retryAfterMs: Milliseconds.annotateKey({
     description: "Provider-directed retry delay in milliseconds.",
   }),
-  message: ErrorMessage.pipe(SchemaUtils.withKeyDefaults("Jina API rate limit exceeded")).annotateKey({
+  message: ErrorMessage.pipe(S.withConstructorDefault(Effect.succeed("Jina API rate limit exceeded")), S.withDecodingDefaultTypeKey(Effect.succeed("Jina API rate limit exceeded"))).annotateKey({
     description: "Human-readable rate-limit diagnostic with a schema-owned default.",
   }),
 } satisfies S.Struct.Fields;
@@ -175,7 +175,7 @@ export class JinaTimeoutError extends S.TaggedError<JinaTimeoutError>($I`JinaTim
     timeoutMs: Milliseconds.annotateKey({
       description: "Configured Jina request deadline in milliseconds.",
     }),
-    message: ErrorMessage.pipe(SchemaUtils.withKeyDefaults("Jina API request timed out")).annotateKey({
+    message: ErrorMessage.pipe(S.withConstructorDefault(Effect.succeed("Jina API request timed out")), S.withDecodingDefaultTypeKey(Effect.succeed("Jina API request timed out"))).annotateKey({
       description: "Human-readable timeout diagnostic with a schema-owned default.",
     }),
   },

@@ -91,7 +91,9 @@ export const SchemaFirstPolicySeverity = LiteralKit(["warn", "warning", "error"]
  *
  * The single decoded/encoded shape for `[schema-first:issue]` JSON. `severity`
  * and `remediation` are optional to reconcile the diverged consumer copies while
- * remaining a superset that decodes every currently-emitted line.
+ * remaining a superset that decodes every currently-emitted line. `occurrence`
+ * carries the line-free anchor of an upstream-parity finding, so consumers key
+ * the finding by content instead of by `line`.
  *
  * **Example** (Make finding with remediation)
  *
@@ -120,6 +122,7 @@ export class SchemaFirstPolicyFinding extends S.Class<SchemaFirstPolicyFinding>(
     file: S.String,
     line: S.optionalKey(S.Finite),
     symbol: S.optionalKey(S.String),
+    occurrence: S.optionalKey(S.String),
     message: S.String,
     remediation: S.optionalKey(S.String),
   },

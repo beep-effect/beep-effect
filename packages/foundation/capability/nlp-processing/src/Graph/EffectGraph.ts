@@ -25,7 +25,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { A, thunk0 } from "@beep/utils";
 import { Clock, Effect, Graph, HashMap, MutableHashMap, MutableHashSet, Random } from "effect";
 import { dual } from "effect/Function";
@@ -132,12 +131,12 @@ export class NodeNotFoundError extends S.TaggedError<NodeNotFoundError>($I`NodeN
  * **Example** (Building NodeMetadata values)
  *
  * ```ts import.meta.vitest name="Building NodeMetadata values"
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { NodeMetadata } from "@beep/nlp-processing/Graph/EffectGraph"
  * import * as O from "effect/Option"
  *
  * const metadata = NodeMetadata.make({
- *   depth: NonNegativeInt.make(0),
+ *   depth: S.Natural.make(0),
  *   operation: O.none(),
  *   timestamp: 0
  * })
@@ -150,7 +149,7 @@ export class NodeNotFoundError extends S.TaggedError<NodeNotFoundError>($I`NodeN
  */
 export class NodeMetadata extends S.Class<NodeMetadata>($I`NodeMetadata`)(
   {
-    depth: NonNegativeInt,
+    depth: S.Natural,
     operation: S.Option(S.String),
     timestamp: S.Finite,
   },
@@ -282,7 +281,7 @@ export const makeNode: {
         operation,
         timestamp,
         // recalculated when added to a graph under a parent
-        depth: NonNegativeInt.make(O.match(parentId, { onNone: thunk0, onSome: () => 1 })),
+        depth: S.Natural.make(O.match(parentId, { onNone: thunk0, onSome: () => 1 })),
       },
     };
   })
@@ -385,7 +384,7 @@ export const addNode: {
         O.map(parentNode, (p) => p.metadata.depth),
         thunk0
       );
-      return { ...node, metadata: { ...node.metadata, depth: NonNegativeInt.make(parentDepth + 1) } };
+      return { ...node, metadata: { ...node.metadata, depth: S.Natural.make(parentDepth + 1) } };
     },
   });
 

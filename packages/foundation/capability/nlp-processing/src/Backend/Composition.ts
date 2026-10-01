@@ -17,12 +17,12 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Cache, Duration, Effect } from "effect";
 import { dual, flow } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Obs from "../internal/observability.ts";
+import { PosInt } from "../internal/PosInt.ts";
 import { NLPBackend } from "./NLPBackend.ts";
 import type * as EffectCache from "effect/Cache";
 import type * as O from "effect/Option";
@@ -197,15 +197,19 @@ export const withFallback: {
   });
 });
 
+const cachingOptionsCapacityDefault = PosInt.make(1024);
+const cachingOptionsTimeToLiveDefault = Duration.minutes(10);
 /**
  * Cache settings for memoized backend composition.
  *
  * **Example** (Caching options capacity TTL)
  *
  * ```ts import.meta.vitest name="Caching options capacity TTL"
+ * import * as S from "effect/Schema"
  * import { Duration } from "effect"
- * import { PosInt } from "@beep/schema"
  * import type { CachingOptions } from "@beep/nlp-processing/Backend/Composition"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options: CachingOptions = { capacity: PosInt.make(64), timeToLive: Duration.minutes(5) }
  * options.capacity // => 64
@@ -216,8 +220,14 @@ export const withFallback: {
  */
 export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
   {
-    capacity: SchemaUtils.withKeyDefaults(PosInt, PosInt.make(1024)),
-    timeToLive: SchemaUtils.withKeyDefaults(S.Duration, Duration.minutes(10)),
+    capacity: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(cachingOptionsCapacityDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(cachingOptionsCapacityDefault))
+    ),
+    timeToLive: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(cachingOptionsTimeToLiveDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(cachingOptionsTimeToLiveDefault))
+    ),
   },
   $I.annote("CachingOptions", {
     description: "Cache settings for memoized backend composition.",
@@ -236,10 +246,12 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
  * **Example** (Memoized backend tokenize cache)
  *
  * ```ts import.meta.vitest name="Memoized backend tokenize cache"
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { PosInt } from "@beep/schema"
  * import { withCaching } from "@beep/nlp-processing/Backend/Composition"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const backend: NLPBackendShape = {
  *   name: "minimal",

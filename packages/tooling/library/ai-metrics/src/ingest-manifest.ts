@@ -6,9 +6,10 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, PosInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import { combineOipTaints, EvidenceTier, OipTaint, SkipReason, weakestEvidenceTier } from "./telemetry-v2.ts";
 

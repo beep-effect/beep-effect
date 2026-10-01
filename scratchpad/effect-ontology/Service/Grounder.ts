@@ -16,7 +16,7 @@ import * as Crypto from "effect/Crypto";
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Str as BeepStr } from "@beep/utils";
 import { Context, Effect, HashMap, Layer, Stream } from "effect";
 import * as A from "effect/Array";
@@ -30,6 +30,7 @@ import { EntityId } from "../Domain/Model/shared.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithRetry } from "./LlmWithRetry.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Grounder");
 const noConfidence: () => O.Option<Confidence> = O.none;
@@ -58,7 +59,7 @@ const Verification = S.Struct({
 const BatchVerification = S.Struct({
   results: S.Array(
     S.Struct({
-      index: NonNegativeInt.annotate({
+      index: S.Natural.annotate({
         description: "Index of the triple in the input list (0-based)",
       }),
       grounded: S.Boolean.annotate({
@@ -98,7 +99,7 @@ const EntityVerification = S.Struct({
 const BatchEntityVerification = S.Struct({
   results: S.Array(
     S.Struct({
-      index: NonNegativeInt.annotate({
+      index: S.Natural.annotate({
         description: "Index of the entity in the input list (0-based)",
       }),
       grounded: S.Boolean.annotate({
@@ -248,6 +249,7 @@ export class EntityGrounderResult extends S.Class<EntityGrounderResult>($I`Entit
   }
 }
 
+const relationEntityContextTypesDefault = A.empty();
 /**
  * Display metadata for an entity occupying a relation position.
  *
@@ -272,7 +274,7 @@ export class RelationEntityContext extends S.Class<RelationEntityContext>($I`Rel
   {
     entityId: EntityId,
     mention: S.NonEmptyString,
-    types: S.Array(IRI).pipe(SchemaUtils.withEmptyArrayDefaults()),
+    types: S.Array(IRI).pipe(S.withConstructorDefault(Effect.succeed(relationEntityContextTypesDefault)), S.withDecodingDefaultType(Effect.succeed(relationEntityContextTypesDefault))),
   },
   $I.annote("RelationEntityContext", {
     description: "Optional display metadata for an entity occupying a relation position.",
@@ -308,9 +310,9 @@ export class RelationVerificationInput extends S.Class<RelationVerificationInput
   {
     context: S.NonEmptyString,
     relation: Relation,
-    subject: S.OptionFromOptionalKey(RelationEntityContext).pipe(SchemaUtils.withNoneDefault),
-    predicate: S.OptionFromOptionalKey(PropertyDefinition).pipe(SchemaUtils.withNoneDefault),
-    object: S.OptionFromOptionalKey(RelationEntityContext).pipe(SchemaUtils.withNoneDefault),
+    subject: S.OptionFromOptionalKey(RelationEntityContext).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    predicate: S.OptionFromOptionalKey(PropertyDefinition).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    object: S.OptionFromOptionalKey(RelationEntityContext).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("RelationVerificationInput", {
     description: "Canonical relation plus optional decoded ontology and entity display metadata.",
@@ -588,14 +590,14 @@ const GroundingBatchKind = LiteralKit(["entity", "relation"]);
  *
  * **Example** (Construct an incomplete-batch failure)
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { GroundingProtocolError } from "@effect-ontology/Service/Grounder"
  *
  * const error = GroundingProtocolError.make({
  *   kind: "entity",
- *   expectedCount: NonNegativeInt.make(2),
- *   receivedCount: NonNegativeInt.make(1),
- *   missingIndexes: [NonNegativeInt.make(1)]
+ *   expectedCount: S.Natural.make(2),
+ *   receivedCount: S.Natural.make(1),
+ *   missingIndexes: [S.Natural.make(1)]
  * })
  * console.log(error._tag) // "GroundingProtocolError"
  * ```
@@ -607,9 +609,9 @@ export class GroundingProtocolError extends S.TaggedError<GroundingProtocolError
   "GroundingProtocolError",
   {
     kind: GroundingBatchKind,
-    expectedCount: NonNegativeInt,
-    receivedCount: NonNegativeInt,
-    missingIndexes: S.Array(NonNegativeInt),
+    expectedCount: S.Natural,
+    receivedCount: S.Natural,
+    missingIndexes: S.Array(S.Natural),
   },
   $I.annote("GroundingProtocolError", {
     description: "Incomplete or malformed indexed response from batched grounding verification.",
@@ -630,7 +632,7 @@ const groundingDecision = (grounded: boolean, confidence: Confidence): Grounding
 const missingIndexes = <TValue>(inputs: ReadonlyArray<TValue>, results: HashMap.HashMap<number, unknown>) =>
   A.getSomes(
     A.map(inputs, (_, index) =>
-      HashMap.has(results, index) ? O.none<NonNegativeInt>() : O.some(NonNegativeInt.make(index))
+      HashMap.has(results, index) ? O.none<number>() : O.some(S.Natural.make(index))
     )
   );
 
@@ -649,8 +651,8 @@ const validateRelationBatch = Effect.fn("Grounder.validateRelationBatch")(functi
   ) {
     return yield* GroundingProtocolError.make({
       kind: "relation",
-      expectedCount: NonNegativeInt.make(inputs.length),
-      receivedCount: NonNegativeInt.make(results.length),
+      expectedCount: S.Natural.make(inputs.length),
+      receivedCount: S.Natural.make(results.length),
       missingIndexes: missing,
     });
   }
@@ -659,9 +661,9 @@ const validateRelationBatch = Effect.fn("Grounder.validateRelationBatch")(functi
       onNone: () =>
         GroundingProtocolError.make({
           kind: "relation",
-          expectedCount: NonNegativeInt.make(inputs.length),
-          receivedCount: NonNegativeInt.make(results.length),
-          missingIndexes: [NonNegativeInt.make(index)],
+          expectedCount: S.Natural.make(inputs.length),
+          receivedCount: S.Natural.make(results.length),
+          missingIndexes: [S.Natural.make(index)],
         }),
       onSome: (result) =>
         Effect.succeed(
@@ -689,8 +691,8 @@ const validateEntityBatch = Effect.fn("Grounder.validateEntityBatch")(function* 
   ) {
     return yield* GroundingProtocolError.make({
       kind: "entity",
-      expectedCount: NonNegativeInt.make(entities.length),
-      receivedCount: NonNegativeInt.make(results.length),
+      expectedCount: S.Natural.make(entities.length),
+      receivedCount: S.Natural.make(results.length),
       missingIndexes: missing,
     });
   }
@@ -699,9 +701,9 @@ const validateEntityBatch = Effect.fn("Grounder.validateEntityBatch")(function* 
       onNone: () =>
         GroundingProtocolError.make({
           kind: "entity",
-          expectedCount: NonNegativeInt.make(entities.length),
-          receivedCount: NonNegativeInt.make(results.length),
-          missingIndexes: [NonNegativeInt.make(index)],
+          expectedCount: S.Natural.make(entities.length),
+          receivedCount: S.Natural.make(results.length),
+          missingIndexes: [S.Natural.make(index)],
         }),
       onSome: (result) =>
         Effect.succeed(

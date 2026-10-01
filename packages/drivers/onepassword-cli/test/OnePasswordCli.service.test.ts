@@ -9,7 +9,6 @@ import {
   OnePasswordReferenceProbe,
   OnePasswordReferenceProbeStatus,
 } from "@beep/onepassword-cli";
-import { NonNegativeInt } from "@beep/schema";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -102,7 +101,7 @@ describe("@beep/onepassword-cli", () => {
       stdout: " raw stdout\n",
     });
     const probe = OnePasswordReferenceProbe.make({
-      byteLength: NonNegativeInt.make(19),
+      byteLength: S.Natural.make(19),
       reference: OnePasswordReference.make("op://Private/Discord Bot/token"),
       status: "resolved",
     });

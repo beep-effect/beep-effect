@@ -12,7 +12,6 @@ import {
   OpenAiCompatChatCompletionResponse,
   OpenAiCompatLanguageModelConfig,
 } from "@beep/openai-compat";
-import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
 import { Effect, Layer, pipe, Result, Stream } from "effect";
@@ -51,7 +50,7 @@ export class VeniceAiLanguageModelOptions extends S.Class<VeniceAiLanguageModelO
 )(
   {
     config: S.OptionFromOptionalKey(OpenAiCompatLanguageModelConfig).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional OpenAI-compatible adapter configuration." })
     ),
     model: S.NonEmptyString.annotateKey({ description: "Venice model id forwarded to chat-completion requests." }),

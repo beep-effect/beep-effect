@@ -8,12 +8,11 @@
 import { $SkillContractId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { URLStr } from "@beep/schema/URL";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { EvidencePredicateType, GateId, GateOutcome, GateSeverity } from "./Gate.ts";
+import { EvidencePredicateType, GateId, GateOutcome, GateSeverity, IsoDateTimeString } from "./Gate.ts";
 
 const $I = $SkillContractId.create("EvidenceReceipt");
 
@@ -306,7 +305,7 @@ const GateSummaryFields = S.Struct({
   inputAttestations: S.NonEmptyArray(AttestationResource),
   policy: AttestationResource,
   resourceUri: URLStr,
-  timeVerified: ISOStr,
+  timeVerified: IsoDateTimeString,
   verificationResult: GateVerificationResult,
   verifiedLevels: S.NonEmptyArray(GateVerifiedLevel),
   verifier: GateSummaryVerifier,

@@ -8,7 +8,6 @@
 import { $SemanticWebId } from "@beep/identity/packages";
 import { makeLiteral } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { NonNegativeInt } from "@beep/schema";
 import { Effect, HashSet, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -62,12 +61,12 @@ const RequiredIdentityFibers = S.Array(S.String).pipe(S.check(IdentityRequiredFi
 const addressPropertyShapes = (path: NamedNode, value: string): ReadonlyArray<ShaclPropertyShape> => [
   ShaclPropertyShape.make({
     path,
-    minCount: O.some(NonNegativeInt.make(1)),
-    maxCount: O.some(NonNegativeInt.make(1)),
+    minCount: O.some(S.Natural.make(1)),
+    maxCount: O.some(S.Natural.make(1)),
   }),
   ShaclPropertyShape.make({
     path,
-    minCount: O.some(NonNegativeInt.make(1)),
+    minCount: O.some(S.Natural.make(1)),
     hasValue: O.some(makeLiteral(value, XSD_STRING.value)),
   }),
 ];
@@ -145,7 +144,7 @@ export const projectShapes: {
                   Effect.succeed(
                     ShaclPropertyShape.make({
                       path,
-                      minCount: O.some(NonNegativeInt.make(1)),
+                      minCount: O.some(S.Natural.make(1)),
                     })
                   ),
               })

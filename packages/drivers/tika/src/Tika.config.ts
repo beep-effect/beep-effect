@@ -6,10 +6,11 @@
  */
 
 import { $TikaId } from "@beep/identity";
-import { PosInt, SchemaUtils, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { SchemaGetter } from "effect";
+import { Effect, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 
 const $I = $TikaId.create("Tika.config");
 
@@ -151,6 +152,8 @@ export const BEEP_TIKA_TIMEOUT_MILLIS_ENV = "BEEP_TIKA_TIMEOUT_MILLIS";
  */
 export const BEEP_TIKA_MAX_OUTPUT_BYTES_ENV = "BEEP_TIKA_MAX_OUTPUT_BYTES";
 
+const tikaServerEngineConfigBaseUrlDefault = URLStr.make(TIKA_SERVER_URL);
+const tikaServerEngineConfigTimeoutMillisDefault = PosInt.make(defaultTimeoutMillis);
 /**
  * Configuration for the Tika Server HTTP engine.
  *
@@ -175,18 +178,24 @@ export const BEEP_TIKA_MAX_OUTPUT_BYTES_ENV = "BEEP_TIKA_MAX_OUTPUT_BYTES";
  */
 export class TikaServerEngineConfig extends S.Class<TikaServerEngineConfig>($I`TikaServerEngineConfig`)(
   {
-    baseUrl: TikaServerBaseUrl.pipe(SchemaUtils.withKeyDefaults(URLStr.make(TIKA_SERVER_URL))).annotateKey({
+    baseUrl: TikaServerBaseUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(tikaServerEngineConfigBaseUrlDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(tikaServerEngineConfigBaseUrlDefault))
+    ).annotateKey({
       description:
         "Base URL of the Tika Server instance serving /version and /rmeta/text; trailing slashes are stripped and query strings or fragments are rejected.",
     }),
     maxOutputBytes: S.OptionFromOptionalKey(PosInt).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Driver-level ceiling in bytes on the whole Tika Server response body, metadata included; absent means unbounded.",
       })
     ),
-    timeoutMillis: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(defaultTimeoutMillis))).annotateKey({
+    timeoutMillis: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(tikaServerEngineConfigTimeoutMillisDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(tikaServerEngineConfigTimeoutMillisDefault))
+    ).annotateKey({
       description: "Per-file Tika Server extraction timeout in milliseconds.",
     }),
   },

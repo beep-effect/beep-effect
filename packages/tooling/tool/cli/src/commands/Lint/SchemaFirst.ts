@@ -11,9 +11,11 @@ import { dual } from "effect/Function";
 import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.ts";
 import { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";
 import { SchemaFirstLintOptions } from "./Lint.schemas.ts";
+import type * as Crypto from "effect/Crypto";
 import type * as O from "effect/Option";
-import type { CallExpression } from "ts-morph";
+import type { CallExpression, SourceFile } from "ts-morph";
 import type { FunctionLikeDeclarationNode } from "./internal/SchemaFirstDetectors.ts";
+import type { SchemaFirstInventoryReadError } from "./Lint.errors.ts";
 import type { SchemaFirstInventoryEntry } from "./Lint.schemas.ts";
 
 type SchemaFirstDetectorContext = Pick<SchemaFirstInventoryEntry, "file" | "owner">;
@@ -52,6 +54,36 @@ export {
   literalMemberEquals,
   sourceTextHasSchemaArbitraryPropertyCoverage,
 } from "./internal/SchemaFirstArbitraryCoverage.ts";
+/**
+ * Diff live parity entries against the committed backlog by occurrence membership.
+ *
+ * **Example** (Diff an empty scan against an empty backlog)
+ *
+ * ```ts
+ * import { diffSchemaFirstParity } from "@beep/repo-cli/commands/Lint"
+ *
+ * const findings = diffSchemaFirstParity([], [])
+ * console.log(findings.introduced.length, findings.resolved.length) // 0 0
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+/**
+ * Group live parity entries into the compact backlog rows committed with `--write`.
+ *
+ * **Example** (Group parity entries into backlog rows)
+ *
+ * ```ts
+ * import { toSchemaFirstBacklog } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(toSchemaFirstBacklog([]).length) // 0
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export { diffSchemaFirstParity, toSchemaFirstBacklog } from "./internal/SchemaFirstParity.ts";
 /**
  * Schema-crispening policy exemption predicate.
  *
@@ -361,6 +393,54 @@ export const getsomesStructEntryFromCallExpression: {
 );
 
 /**
+ * Detect every upstream-parity occurrence in one source file.
+ *
+ * **Details**
+ *
+ * Runs `SFV4-default-wrapper` and `SFV4-opaque-wrapper` over the file. A
+ * reference counts only when its binding resolves to the `@beep/schema`
+ * declaration of that export. Each entry carries a content anchor
+ * (`<lexical path>::<export>@<hash>`), which is the membership key the
+ * committed parity backlog ratchets on; hashing needs the `Crypto` service.
+ *
+ * **Example** (Detect a SchemaUtils default wrapper)
+ *
+ * ```ts
+ * import { schemaFirstParityEntriesFromSourceFile } from "@beep/repo-cli/commands/Lint"
+ * import * as Effect from "effect/Effect"
+ * import { Project } from "ts-morph"
+ *
+ * const project = new Project({ useInMemoryFileSystem: true })
+ * const sourceFile = project.createSourceFile(
+ *   "Widget.ts",
+ *   'import { SchemaUtils } from "@beep/schema"\nexport const Widget = S.Struct({ title: S.String.pipe(SchemaUtils.withNoneDefault) })'
+ * )
+ * const program = schemaFirstParityEntriesFromSourceFile(sourceFile, { file: "Widget.ts", owner: "@beep/test" })
+ * // Provide Crypto (for example NodeServices.layer) to run it; the entry's symbol is "Widget.title".
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param sourceFile - The ts-morph source file to scan.
+ * @param context - Repo-relative source path and owning package recorded on every emitted entry.
+ * @returns An effect with one advisory entry per parity occurrence, in document order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const schemaFirstParityEntriesFromSourceFile: {
+  (
+    context: SchemaFirstDetectorContext
+  ): (
+    sourceFile: SourceFile
+  ) => Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, Crypto.Crypto>;
+  (
+    sourceFile: SourceFile,
+    context: SchemaFirstDetectorContext
+  ): Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, Crypto.Crypto>;
+} = dual(2, (sourceFile: SourceFile, context: SchemaFirstDetectorContext) =>
+  SchemaFirstDetectors.parityEntriesFromSourceFile(sourceFile, context.file, context.owner)
+);
+
+/**
  * Repo-wide schema-first lint command.
  *
  * **Example** (Run schema-first command)
@@ -382,14 +462,22 @@ export const lintSchemaFirstCommand = Command.make(
   {
     write: Flag.Boolean("write").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Refresh standards/schema-first.inventory.jsonc")
+      Flag.withDescription(
+        "Refresh standards/schema-first.inventory.jsonc; the parity backlog only drops resolved occurrences"
+      )
+    ),
+    admitParityBacklog: Flag.Boolean("admit-parity-backlog").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "With --write, also admit new upstream-parity occurrences into the backlog (initial capture only)"
+      )
     ),
     reportScannedFiles: Flag.Boolean("report-scanned-files").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Print the files the scan ran its detectors over as one [schema-first:scanned] JSON line")
     ),
   },
-  Effect.fn(function* ({ write, reportScannedFiles }) {
-    yield* runSchemaFirstLint(SchemaFirstLintOptions.make({ write, reportScannedFiles }));
+  Effect.fn(function* ({ write, admitParityBacklog, reportScannedFiles }) {
+    yield* runSchemaFirstLint(SchemaFirstLintOptions.make({ write, admitParityBacklog, reportScannedFiles }));
   })
 ).pipe(Command.withDescription("Verify the repo-wide schema-first inventory baseline"));

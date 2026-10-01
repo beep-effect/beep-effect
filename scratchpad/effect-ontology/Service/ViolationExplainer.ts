@@ -13,8 +13,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { Dataset } from "@beep/rdf";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import { NonNegNum } from "@beep/schema/Number";
 import { ShaclSeverity, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import { Clock, Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -26,6 +24,7 @@ import { LanguageModel } from "effect/ai";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
 
@@ -83,6 +82,7 @@ export class ExplanationError extends S.TaggedError<ExplanationError>($I`Explana
 // Domain Models
 // =============================================================================
 
+const explanationContextMaxTokensDefault = PosInt.make(500);
 /**
  * Context for generating explanations
  *
@@ -101,17 +101,17 @@ export class ExplanationError extends S.TaggedError<ExplanationError>($I`Explana
 export class ExplanationContext extends S.Class<ExplanationContext>($I`ExplanationContext`)({
   /** The canonical RDF dataset containing the data graph */
   dataStore: S.OptionFromOptionalKey(Dataset).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({
       description: "Optional canonical RDF dataset containing the data graph used for explanation context.",
     })
   ),
   /** Turtle representation of relevant triples around the focus node */
-  neighborhoodTurtle: S.String.pipe(SchemaUtils.withKeyDefaults("")),
+  neighborhoodTurtle: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultTypeKey(Effect.succeed(""))),
   /** Domain description for additional context */
-  domainDescription: S.String.pipe(SchemaUtils.withKeyDefaults("")),
+  domainDescription: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultTypeKey(Effect.succeed(""))),
   /** Maximum tokens for the explanation */
-  maxTokens: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(500))),
+  maxTokens: PosInt.pipe(S.withConstructorDefault(Effect.succeed(explanationContextMaxTokensDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(explanationContextMaxTokensDefault))),
   },
   $I.annote("ExplanationContext", {
     description: "Neighborhood triples, domain description, and token bound for a SHACL explanation.",
@@ -155,6 +155,7 @@ export class ExplanationContext extends S.Class<ExplanationContext>($I`Explanati
   }
 }
 
+const llmViolationExplanationConfidenceDefault = Confidence.make(0.8);
 /**
  * LLM-generated explanation for a SHACL violation
  *
@@ -180,7 +181,7 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>($I
   /** Original violation */
   focusNode: S.String,
   /** Path that was violated (if any) */
-  path: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  path: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   /** Human-readable explanation of what went wrong */
   explanation: S.String,
   /** Suggested fix action */
@@ -190,7 +191,7 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>($I
   /** Affected entity IRIs */
   affectedEntities: S.Array(S.String),
   /** Confidence in the explanation (0-1) */
-  confidence: Confidence.pipe(SchemaUtils.withKeyDefaults(Confidence.make(0.8))),
+  confidence: Confidence.pipe(S.withConstructorDefault(Effect.succeed(llmViolationExplanationConfidenceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(llmViolationExplanationConfidenceDefault))),
   },
   $I.annote("LlmViolationExplanation", {
     description: "Human-readable SHACL explanation, suggested fix, severity, and confidence.",
@@ -227,16 +228,15 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>($I
  * **Example** (Inspect batch explanation result)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
  *
- * import { NonNegativeInt } from "@beep/schema"
- * import { NonNegNum } from "@beep/schema/Number"
  *
  * const batch = BatchExplanationResult.make({
  *   explanations: [],
- *   totalViolations: NonNegativeInt.make(1),
- *   explainedCount: NonNegativeInt.make(0),
- *   durationMs: NonNegNum.make(20)
+ *   totalViolations: S.Natural.make(1),
+ *   explainedCount: S.Natural.make(0),
+ *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(20)
  * })
  * console.log(batch.explainedCount) // 0
  * ```
@@ -247,9 +247,9 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>($I
 export class BatchExplanationResult extends S.Class<BatchExplanationResult>($I`BatchExplanationResult`)(
   {
     explanations: S.Array(LlmViolationExplanation),
-    totalViolations: NonNegativeInt,
-    explainedCount: NonNegativeInt,
-    durationMs: NonNegNum,
+    totalViolations: S.Natural,
+    explainedCount: S.Natural,
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("BatchExplanationResult", {
     description: "Per-violation explanations plus explained and elapsed counters.",
@@ -261,15 +261,14 @@ export class BatchExplanationResult extends S.Class<BatchExplanationResult>($I`B
    * **Example** (Inspect batch explanation result.is complete)
    *
    * ```ts
-   * import { NonNegativeInt } from "@beep/schema"
-   * import { NonNegNum } from "@beep/schema/Number"
+   * import * as S from "effect/Schema"
    * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
    *
    * const batch = BatchExplanationResult.make({
    *   explanations: [],
-   *   totalViolations: NonNegativeInt.make(1),
-   *   explainedCount: NonNegativeInt.make(0),
-   *   durationMs: NonNegNum.make(20)
+   *   totalViolations: S.Natural.make(1),
+   *   explainedCount: S.Natural.make(0),
+   *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(20)
    * })
    * console.log(batch.explainedCount) // 0
    * ```
@@ -427,8 +426,8 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
 
       return BatchExplanationResult.make({
         explanations: [...explanations],
-        totalViolations: NonNegativeInt.make(violations.length),
-        explainedCount: NonNegativeInt.make(explanations.length),
+        totalViolations: S.Natural.make(violations.length),
+        explainedCount: S.Natural.make(explanations.length),
         durationMs,
       });
     });

@@ -6,7 +6,6 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { isPositive } from "@beep/schema";
 
 export { UnitInterval } from "@beep/schema/UnitInterval";
 
@@ -29,7 +28,7 @@ const $I = $NlpId.create("internal/numbers");
  * @since 0.0.0
  */
 export const PositiveNumber = S.Finite.check(
-  isPositive.annotate({
+  S.isGreaterThan(0).annotate({
     description: "A number greater than 0.",
     message: "Expected a number greater than 0",
   })

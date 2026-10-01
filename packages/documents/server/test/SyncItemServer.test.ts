@@ -13,7 +13,6 @@ import {
   SyncItemRepositoryNotFound,
   SyncItemSeed,
 } from "@beep/documents-use-cases/entities/SyncItem/server";
-import { NonNegativeInt } from "@beep/schema";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
@@ -29,7 +28,7 @@ import * as S from "effect/Schema";
 const decodeUnknownSyncItem = S.decodeUnknownEffect(DomainSyncItem.SyncItem);
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const remoteId = RemoteItemId.make("9001");
-const localGeneration = NonNegativeInt.make(1);
+const localGeneration = S.Natural.make(1);
 
 const itemSeed = (localRelPath: string) =>
   SyncItemSeed.make({

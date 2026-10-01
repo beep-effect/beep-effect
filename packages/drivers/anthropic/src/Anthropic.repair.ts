@@ -6,7 +6,6 @@
  */
 
 import { $AnthropicId } from "@beep/identity";
-import { PosInt } from "@beep/schema";
 import { Duration, Effect, ExecutionPlan, pipe, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
 import { AiError, LanguageModel, Response } from "effect/ai";
@@ -16,6 +15,7 @@ import * as Str from "effect/String";
 import { AnthropicLanguageModelOptions } from "./Anthropic.config.ts";
 import { RepairError } from "./Anthropic.errors.ts";
 import { makeAnthropicLanguageModelLayer } from "./Anthropic.service.ts";
+import { PosInt } from "./internal/PosInt.ts";
 import type { Config } from "effect";
 import type { Tool, Toolkit } from "effect/ai";
 import type { GenerateTextOptions } from "effect/ai/LanguageModel";
@@ -49,9 +49,11 @@ export const ANTHROPIC_REPAIR_MODEL = "claude-haiku-4-5" as const;
  * **Example** (Set repair max tokens)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_REPAIR_MAX_TOKENS, AnthropicLanguageModelOptions } from "@beep/anthropic"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const repairOptions = AnthropicLanguageModelOptions.make({
  *   maxTokens: PosInt.make(ANTHROPIC_REPAIR_MAX_TOKENS),
@@ -123,9 +125,11 @@ const toRepairError =
  * **Example** (Create plan with options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelOptions, makeAnthropicRepairPlan } from "@beep/anthropic"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const plan = makeAnthropicRepairPlan(
  *   AnthropicLanguageModelOptions.make({

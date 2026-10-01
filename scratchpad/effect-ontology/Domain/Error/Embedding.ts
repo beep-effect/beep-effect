@@ -10,7 +10,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import {
   ErrorMessage,
@@ -190,13 +189,12 @@ export class EmbeddingInvalidResponseError extends S.TaggedError<EmbeddingInvali
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const error = S.decodeUnknownOption(EmbeddingDimensionMismatchError)({
  *   _tag: "EmbeddingDimensionMismatchError",
  *   message: "Expected 1536 dimensions.",
- *   expected: NonNegativeInt.make(1536),
- *   actual: NonNegativeInt.make(768)
+ *   expected: S.Natural.make(1536),
+ *   actual: S.Natural.make(768)
  * })
  * console.log(O.isSome(error)) // true
  * ```
@@ -213,10 +211,10 @@ export class EmbeddingDimensionMismatchError extends S.TaggedError<EmbeddingDime
     message: ErrorMessage.annotateKey({
       description: "Human-readable dimension-mismatch diagnostic.",
     }),
-    expected: NonNegativeInt.annotateKey({
+    expected: S.Natural.annotateKey({
       description: "Vector dimension required by the consumer.",
     }),
-    actual: NonNegativeInt.annotateKey({
+    actual: S.Natural.annotateKey({
       description: "Vector dimension returned by the provider.",
     }),
   },
@@ -234,13 +232,12 @@ export class EmbeddingDimensionMismatchError extends S.TaggedError<EmbeddingDime
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const error = S.decodeUnknownOption(EmbeddingTokenLimitError)({
  *   _tag: "EmbeddingTokenLimitError",
  *   message: "Input is too large.",
  *   provider: "openai",
- *   maxTokens: NonNegativeInt.make(8192)
+ *   maxTokens: S.Natural.make(8192)
  * })
  * console.log(O.isSome(error)) // true
  * ```
@@ -258,7 +255,7 @@ export class EmbeddingTokenLimitError extends S.TaggedError<EmbeddingTokenLimitE
     provider: S.NonEmptyString.annotateKey({
       description: "Embedding provider enforcing the limit.",
     }),
-    maxTokens: NonNegativeInt.annotateKey({
+    maxTokens: S.Natural.annotateKey({
       description: "Maximum input token count accepted by the provider.",
     }),
     actualTokens: OptionalNonNegativeInt.annotateKey({

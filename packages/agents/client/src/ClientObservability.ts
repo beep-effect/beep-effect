@@ -29,16 +29,16 @@
  * @since 0.0.0
  */
 
-import { LogLevel } from "@beep/schema";
 import { O, P, Str, thunkEmptyReadonlyRecord } from "@beep/utils";
 import { Effect, Layer, Metric, References } from "effect";
 import { FetchHttpClient } from "effect/http";
+import * as LogLevel from "effect/LogLevel";
 import { Otlp, OtlpSerialization } from "effect/observability";
 import * as S from "effect/Schema";
 import { resolveBrowserHttpUrl } from "./internal/BrowserHttpUrl.ts";
 import type { R } from "@beep/utils";
 
-const isLogLevel = S.is(LogLevel);
+const isLogLevel = S.is(S.Literals(LogLevel.values));
 
 const readRuntimeString = (key: string): O.Option<string> => {
   const runtime: unknown = globalThis;
@@ -57,10 +57,10 @@ const runtimeAttribute = (key: string, attribute: string): R.ReadonlyRecord<stri
 const resolveOtlpBaseUrl = (): O.Option<string> =>
   O.orElse(readRuntimeString("__BEEP_OTLP_URL__"), () => resolveBrowserHttpUrl(globalThis.window, "/otlp"));
 
-const resolveMinimumLogLevel = (): LogLevel =>
+const resolveMinimumLogLevel = (): LogLevel.LogLevel =>
   O.match(readRuntimeString("__BEEP_LOG_LEVEL__"), {
-    onNone: () => LogLevel.Enum.Info,
-    onSome: (value) => (isLogLevel(value) ? value : LogLevel.Enum.Info),
+    onNone: () => "Info",
+    onSome: (value) => (isLogLevel(value) ? value : "Info"),
   });
 
 const resourceAttributes = (): R.ReadonlyRecord<string, string> => ({

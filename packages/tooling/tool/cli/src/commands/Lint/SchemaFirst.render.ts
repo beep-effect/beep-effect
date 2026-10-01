@@ -5,8 +5,11 @@
  * @since 0.0.0
  */
 
-import { Console, Effect } from "effect";
+import { A, Str } from "@beep/utils";
+import { Console, Effect, flow, identity } from "effect";
 import * as O from "effect/Option";
+import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
+import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
   renderSchemaFirstPolicyFindingLine,
@@ -20,6 +23,8 @@ import type {
   SchemaFirstInventoryDocument,
   SchemaFirstInventoryEntry,
   SchemaFirstLintOptions,
+  SchemaFirstParityFindings,
+  SchemaFirstParityRuleSummary,
 } from "./Lint.schemas.ts";
 
 const renderPolicyFindingLine = renderSchemaFirstPolicyFindingLine;
@@ -46,7 +51,6 @@ export type SchemaFirstLintFindings = {
   readonly defaultsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly staticApiAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly equivalenceAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly taggedErrorEquivalenceAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly precisionAuditAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly arbitraryTestsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly numericDomainAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
@@ -55,6 +59,7 @@ export type SchemaFirstLintFindings = {
   readonly nullReturnAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly getsomesStructAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly activeAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
+  readonly parity: SchemaFirstParityFindings;
   readonly policyExemptCount: number;
 };
 
@@ -108,7 +113,6 @@ const makeSchemaFirstLintSummary = (input: {
     defaultsAdvisories: input.findings.defaultsAdvisories.length,
     staticApiAdvisories: input.findings.staticApiAdvisories.length,
     equivalenceAdvisories: input.findings.equivalenceAdvisories.length,
-    taggedErrorEquivalenceAdvisories: input.findings.taggedErrorEquivalenceAdvisories.length,
     precisionAuditAdvisories: input.findings.precisionAuditAdvisories.length,
     arbitraryTestsAdvisories: input.findings.arbitraryTestsAdvisories.length,
     numericDomainAdvisories: input.findings.numericDomainAdvisories.length,
@@ -116,6 +120,7 @@ const makeSchemaFirstLintSummary = (input: {
     normalizationAdvisories: input.findings.normalizationAdvisories.length,
     nullReturnAdvisories: input.findings.nullReturnAdvisories.length,
     getsomesStructAdvisories: input.findings.getsomesStructAdvisories.length,
+    parityRules: input.findings.parity.rules,
     crispeningPolicyExempt: input.findings.policyExemptCount,
     wroteInventory: input.options.write,
   });
@@ -131,9 +136,6 @@ const logSchemaFirstSummary = Effect.fn("logSchemaFirstSummary")(function* (summ
   yield* Console.log(`[schema-first] sfv4_defaults_advisories=${summary.defaultsAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_static_api_advisories=${summary.staticApiAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_equivalence_advisories=${summary.equivalenceAdvisories}`);
-  yield* Console.log(
-    `[schema-first] sfv4_tagged_error_equivalence_advisories=${summary.taggedErrorEquivalenceAdvisories}`
-  );
   yield* Console.log(`[schema-first] sfv4_precision_audit_advisories=${summary.precisionAuditAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_arbitrary_tests_advisories=${summary.arbitraryTestsAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_numeric_domain_advisories=${summary.numericDomainAdvisories}`);
@@ -141,6 +143,7 @@ const logSchemaFirstSummary = Effect.fn("logSchemaFirstSummary")(function* (summ
   yield* Console.log(`[schema-first] sfv4_normalization_advisories=${summary.normalizationAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_null_return_advisories=${summary.nullReturnAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_getsomes_struct_advisories=${summary.getsomesStructAdvisories}`);
+  yield* Effect.forEach(summary.parityRules, flow(renderParityRuleSummaryLine, Console.log), { discard: true });
   yield* Console.log(`[schema-first] crispening_policy_exempt=${summary.crispeningPolicyExempt}`);
   if (summary.wroteInventory) {
     yield* Console.log(`[schema-first] wrote ${SchemaFirstInventoryPath}`);
@@ -227,6 +230,89 @@ const logScannedFiles = Effect.fn("logScannedFiles")(function* (files: ReadonlyA
   yield* Console.log(yield* renderSchemaFirstScannedFilesLine(files));
 });
 
+const parityRuleSummaryKey: (ruleId: string) => string = flow(Str.replaceAll("-", "_"), Str.toLowerCase);
+
+const renderParityRuleSummaryLine = (rule: SchemaFirstParityRuleSummary): string =>
+  `[schema-first] ${parityRuleSummaryKey(rule.ruleId)}_occurrences=${rule.live} baseline=${rule.baseline} introduced=${rule.introduced} resolved=${rule.resolved}`;
+
+const parityIntroducedFinding = (entry: SchemaFirstInventoryEntry): SchemaFirstPolicyFinding =>
+  SchemaFirstPolicyFinding.make({
+    category: "schema-first-policy",
+    ruleId: entry.ruleId ?? "schema-first-inventory",
+    severity: "error",
+    file: entry.file,
+    symbol: entry.symbol,
+    message: entry.reason,
+    remediation: missingEntryRemediation(entry),
+    ...optionalProp("line", O.fromUndefinedOr(entry.line)),
+    ...optionalProp("occurrence", O.fromUndefinedOr(entry.occurrence)),
+  });
+
+const parityIntroducedLines = Effect.fn("parityIntroducedLines")(function* (entry: SchemaFirstInventoryEntry) {
+  return [
+    `- ${entry.file}:${entry.line ?? 0} :: ${entry.occurrence ?? entry.symbol} [${entry.ruleId ?? ""}] ${entry.reason}`,
+    yield* renderSchemaFirstPolicyFindingLine(parityIntroducedFinding(entry)),
+  ];
+});
+
+const PARITY_TIGHTEN_LIMIT = 20;
+
+/**
+ * Build the parity-ratchet enforcement input: fail on a new occurrence, nudge
+ * a tighter backlog for a resolved one.
+ *
+ * **Details**
+ *
+ * The floor is membership. An occurrence anchor absent from the committed
+ * backlog is a regression that fails the check and `--write` alike; only
+ * `--write --admit-parity-backlog` records it. An anchor the scan no longer
+ * finds is resolved: the check prints a tighten-baseline nudge and `--write`
+ * drops it from the backlog.
+ *
+ * @param parity - The classified parity-ratchet findings.
+ * @param options - The lint options; only `--write --admit-parity-backlog` admits growth.
+ * @returns The ordered regression checks, ok line, and tighten block for `enforceRatchet`.
+ * @category utilities
+ * @since 0.0.0
+ */
+const parityRatchetInput = Effect.fn("parityRatchetInput")(function* (
+  parity: SchemaFirstParityFindings,
+  options: SchemaFirstLintOptions
+) {
+  const introducedLines = A.flatten(yield* Effect.forEach(parity.introduced, parityIntroducedLines));
+  const resolvedOccurrences = A.flatMap(parity.resolved, (row) =>
+    A.map(row.occurrences, (occurrence) => `  - ${row.file} :: ${occurrence} [${row.ruleId}]`)
+  );
+  return {
+    regressions: [
+      {
+        present: A.isReadonlyArrayNonEmpty(parity.introduced) && !(options.write && options.admitParityBacklog),
+        lines: [
+          `[schema-first] parity ratchet: ${parity.introduced.length} new occurrence(s) outside the committed backlog:`,
+          ...introducedLines,
+          "[schema-first] Migrate each occurrence to its upstream form; the parity backlog only shrinks, and `--write` drops resolved occurrences but never admits new ones.",
+        ],
+        error: CliReportedExit.make({
+          message: "schema-first: parity ratchet failed on new occurrences.",
+          exitCode: 1,
+        }),
+      },
+    ],
+    okLine: options.write
+      ? options.admitParityBacklog
+        ? `[schema-first] parity backlog admitted: occurrences=${parity.liveCount} previous_baseline=${parity.baselineCount} admitted=${parity.introduced.length}`
+        : `[schema-first] parity backlog written: occurrences=${parity.liveCount} previous_baseline=${parity.baselineCount} dropped=${resolvedOccurrences.length}`
+      : `[schema-first] parity ratchet ok: current=${parity.liveCount} baseline=${parity.baselineCount} introduced=0 resolved=${resolvedOccurrences.length}`,
+    tighten: O.liftPredicate(
+      [
+        `[schema-first] tighten-baseline: ${resolvedOccurrences.length} parity occurrence(s) resolved; run \`bun run beep lint schema-first --write\` to shrink the committed backlog.`,
+        ...renderTruncatedLines({ items: resolvedOccurrences, render: identity, limit: PARITY_TIGHTEN_LIMIT }),
+      ],
+      () => !options.write && A.isReadonlyArrayNonEmpty(resolvedOccurrences)
+    ),
+  };
+});
+
 /**
  * Internal rendering adapter for schema-first lint output.
  *
@@ -248,4 +334,5 @@ export const SchemaFirstRender = {
   logSchemaFirstSummary,
   logStaleEntries,
   makeSchemaFirstLintSummary,
+  parityRatchetInput,
 } as const;

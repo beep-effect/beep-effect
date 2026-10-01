@@ -6,16 +6,15 @@
  */
 
 import { $AgentsServerId } from "@beep/identity";
-import { Fn, SchemaUtils } from "@beep/schema";
-import { isNonNegative } from "@beep/schema/Number";
-import { Match } from "effect";
+import { Fn } from "@beep/schema";
+import { Effect, Match } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $AgentsServerId.create("AssistantTurn/ScanState");
 
-const NonNegativeScanDepth = S.Int.check(isNonNegative).pipe(
+const NonNegativeScanDepth = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("NonNegativeScanDepth", {
     description: "Non-negative integer nesting depth in the incremental assistant-block scanner.",
   })
@@ -39,19 +38,34 @@ const NonNegativeScanDepth = S.Int.check(isNonNegative).pipe(
  */
 export class ScanState extends S.Class<ScanState>($I`ScanState`)(
   {
-    current: S.String.pipe(SchemaUtils.withKeyDefaults("")).annotateKey({
+    current: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ).annotateKey({
       description: "Current JSON object slice being accumulated while scanner depth is positive.",
     }),
-    depth: NonNegativeScanDepth.pipe(SchemaUtils.withKeyDefaults(0)).annotateKey({
+    depth: NonNegativeScanDepth.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ).annotateKey({
       description: "Current non-negative JSON nesting depth inside the blocks array.",
     }),
-    escaped: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)).annotateKey({
+    escaped: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ).annotateKey({
       description: "Whether the previous character was an escape marker inside a JSON string.",
     }),
-    inBlocksArray: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)).annotateKey({
+    inBlocksArray: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ).annotateKey({
       description: "Whether the scanner has entered the top-level blocks array.",
     }),
-    inString: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)).annotateKey({
+    inString: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ).annotateKey({
       description: "Whether the scanner is currently inside a JSON string literal.",
     }),
   },

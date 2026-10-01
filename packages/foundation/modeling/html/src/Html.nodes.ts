@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -223,13 +223,13 @@ export class Doctype extends S.TaggedClass<Doctype>($I`Doctype`)(
   "#doctype",
   {
     name: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: 'Document type name (e.g. "html").' }),
     publicId: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Legacy public identifier." }),
     systemId: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Legacy system identifier." }),
   },
   $I.annote("Doctype", { description: "A document type declaration." })

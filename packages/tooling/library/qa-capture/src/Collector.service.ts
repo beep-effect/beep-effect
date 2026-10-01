@@ -13,7 +13,7 @@
  */
 
 import { $QaCaptureId } from "@beep/identity/packages";
-import { SchemaUtils, UnknownRecord } from "@beep/schema";
+import { UnknownRecord } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import { Clock, Context, Deferred, Effect, Fiber, FileSystem, Layer, Match, Path, pipe, Queue, Ref } from "effect";
@@ -125,6 +125,7 @@ export const CollectorBindPort = S.Int.check(
  */
 export type CollectorBindPort = typeof CollectorBindPort.Type;
 
+const collectorServeOptionsAllowedOriginsDefault = ["*"];
 /**
  * Options accepted by {@link Collector} `serve`.
  *
@@ -149,7 +150,8 @@ export type CollectorBindPort = typeof CollectorBindPort.Type;
 export class CollectorServeOptions extends S.Class<CollectorServeOptions>($I`CollectorServeOptions`)(
   {
     allowedOrigins: S.Array(S.String).pipe(
-      SchemaUtils.withKeyDefaults(["*"]),
+      S.withConstructorDefault(Effect.succeed(collectorServeOptionsAllowedOriginsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(collectorServeOptionsAllowedOriginsDefault)),
       $I.annoteKey("CollectorServeOptions.allowedOrigins", {
         description: "CORS origins allowed to post witness events; the CLI scopes this to app origins.",
       })
@@ -167,13 +169,15 @@ export class CollectorServeOptions extends S.Class<CollectorServeOptions>($I`Col
       })
     ),
     hostname: S.String.pipe(
-      SchemaUtils.withKeyDefaults("127.0.0.1"),
+      S.withConstructorDefault(Effect.succeed("127.0.0.1")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("127.0.0.1")),
       $I.annoteKey("CollectorServeOptions.hostname", {
         description: "Loopback hostname to bind.",
       })
     ),
     port: CollectorBindPort.pipe(
-      SchemaUtils.withKeyDefaults(43117),
+      S.withConstructorDefault(Effect.succeed(43117)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(43117)),
       $I.annoteKey("CollectorServeOptions.port", {
         description: "TCP port to bind; 0 requests an ephemeral port.",
       })

@@ -13,7 +13,6 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import type { NonNegativeInt } from "@beep/schema";
 import { SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Match } from "effect";
 import type * as Brand from "effect/Brand";
@@ -855,7 +854,7 @@ export const ChunkId = S.String.check(
     }),
     SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics((schema) => ({
-      fromDocument: dual(2, (documentId: DocumentId, index: NonNegativeInt): typeof schema.Type =>
+      fromDocument: dual(2, (documentId: DocumentId, index: number): typeof schema.Type =>
         schema.make(`${documentId}-chunk-${index}`)
       ),
     }))
@@ -968,3 +967,45 @@ export const BatchId = S.String.check(
  * @since 0.0.0
  */
 export type BatchId = typeof BatchId.Type;
+
+/**
+ * Trimmed RFC 4122 UUID string used for database row ids and progress events.
+ *
+ * **Details**
+ *
+ * Decoding trims surrounding whitespace, rejects an empty string, then
+ * requires the UUID shape; encoding writes the string unchanged.
+ *
+ * **Example** (Use UUID)
+ * ```ts
+ * import { UUID } from "@effect-ontology/Identity"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(UUID)("550e8400-e29b-41d4-a716-446655440000")) // true
+ * console.log(S.is(UUID)("not-a-uuid")) // false
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const UUID = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }), S.isUUID()).pipe(
+  $I.annoteSchema("UUID", {
+    description: "Trimmed RFC 4122 UUID string used for database row ids and progress events.",
+  })
+);
+
+/**
+ * Runtime value type decoded by {@link UUID}. {@inheritDoc UUID}
+ *
+ * **Example** (Use UUID)
+ * ```ts
+ * import { UUID, type UUID as UUIDValue } from "@effect-ontology/Identity"
+ *
+ * const id: UUIDValue = UUID.make("550e8400-e29b-41d4-a716-446655440000")
+ * console.log(id)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type UUID = typeof UUID.Type;

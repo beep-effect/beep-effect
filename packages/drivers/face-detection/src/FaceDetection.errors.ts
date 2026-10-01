@@ -6,9 +6,9 @@
  */
 
 import { $FaceDetectionId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { P } from "@beep/utils";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -93,15 +93,15 @@ export const FaceDetectionOperation = LiteralKit([
 export type FaceDetectionOperation = typeof FaceDetectionOperation.Type;
 
 const FaceDetectionErrorLeadingContextFields = {
-  cause: S.OptionFromOptionalKey(FaceDetectionDefect).pipe(SchemaUtils.withNoneDefault).annotateKey({
+  cause: S.OptionFromOptionalKey(FaceDetectionDefect).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
     description: "Inspectable originating defect, when available.",
   }),
-  imagePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+  imagePath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
     description: "Image path active when the failure occurred.",
   }),
 } satisfies S.Struct.Fields;
 const FaceDetectionErrorTrailingContextFields = {
-  modelPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+  modelPath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
     description: "Model path active when the failure occurred.",
   }),
 } satisfies S.Struct.Fields;

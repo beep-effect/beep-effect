@@ -10,7 +10,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { CitationId } from "../CitationId/index.ts";
 import { CitationSignal } from "../CitationSignal/index.ts";
@@ -20,6 +21,7 @@ import { StringCitationGroup } from "../StringCitationGroup/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/CitationBase/CitationBase.model");
 
+const citationBaseWarningsDefault = A.empty<CitationWarning>();
 /**
  * Base fields shared by all citation types.
  *
@@ -33,22 +35,22 @@ const $I = $LawPracticeDomainId.create("values/CitationBase/CitationBase.model")
  * **Example** (Make CitationBase with fields)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CitationBase, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const base = CitationBase.make({
  *   text: "410 U.S. 113",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(12),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(12),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(12),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(12),
  *   }),
  *   confidence: 1,
  *   matchedText: "410 U.S. 113",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(3),
+ *   patternsChecked: S.Natural.make(3),
  * })
  *
  * console.log(base.text) // "410 U.S. 113"
@@ -62,7 +64,7 @@ export class CitationBase extends S.Class<CitationBase>($I`CitationBase`)(
   {
     id: CitationId.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Stable identity within one extractCitations() result set. Populated by extractCitations() for every citation; optional because granular per-type extractors do not assign one (#858).",
@@ -84,46 +86,47 @@ export class CitationBase extends S.Class<CitationBase>($I`CitationBase`)(
     processTimeMs: S.Finite.annotateKey({
       description: "Time spent processing this citation (milliseconds).",
     }),
-    patternsChecked: NonNegativeInt.annotateKey({
+    patternsChecked: S.Natural.annotateKey({
       description: "Number of regex patterns checked before match.",
     }),
     warnings: S.Array(CitationWarning).pipe(
-      SchemaUtils.withEmptyArrayDefaults<CitationWarning>(),
+      S.withConstructorDefault(Effect.succeed(citationBaseWarningsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(citationBaseWarningsDefault)),
       S.annotateKey({
         description: "Warnings for malformed or ambiguous regions.",
       })
     ),
     signal: CitationSignal.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Introductory signal word (e.g., "see", "see also", "but see").',
       })
     ),
     stringCitationGroupId: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Group ID for string citations sharing the same proposition.",
       })
     ),
-    stringCitationIndex: NonNegativeInt.pipe(
+    stringCitationIndex: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Position within the string citation group (0-indexed).",
       })
     ),
-    stringCitationGroupSize: NonNegativeInt.pipe(
+    stringCitationGroupSize: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Total number of citations in this string citation group.",
       })
     ),
     stringCitationGroup: StringCitationGroup.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "String-citation group (#857): all members (incl. self) by stable id, in document order, plus the group's leading signal.",
@@ -131,14 +134,14 @@ export class CitationBase extends S.Class<CitationBase>($I`CitationBase`)(
     ),
     inFootnote: S.Boolean.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Whether this citation appears in a footnote (only populated when detectFootnotes enabled).",
       })
     ),
-    footnoteNumber: NonNegativeInt.pipe(
+    footnoteNumber: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Footnote number, if applicable (only populated when detectFootnotes enabled).",
       })

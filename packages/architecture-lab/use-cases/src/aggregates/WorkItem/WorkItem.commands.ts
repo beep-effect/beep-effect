@@ -9,8 +9,8 @@
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import * as DomainWorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.commands");
@@ -46,9 +46,11 @@ export class CreateWorkItemCommand extends S.Class<CreateWorkItemCommand>($I`Cre
     title: DomainWorkItem.WorkItemTitle.annotateKey({
       description: "Human-readable WorkItem title.",
     }),
-    priority: S.OptionFromOptionalKey(DomainWorkPriority.WorkPriority).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional requested WorkItem priority.",
-    }),
+    priority: S.OptionFromOptionalKey(DomainWorkPriority.WorkPriority)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Optional requested WorkItem priority.",
+      }),
   },
   $I.annote("CreateWorkItemCommand", {
     title: "Create WorkItem command",
@@ -240,9 +242,11 @@ export class GetWorkItemQuery extends S.Class<GetWorkItemQuery>($I`GetWorkItemQu
  */
 export class ListWorkItemsQuery extends S.Class<ListWorkItemsQuery>($I`ListWorkItemsQuery`)(
   {
-    status: S.OptionFromOptionalKey(DomainWorkItem.WorkItemStatus).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional lifecycle status filter applied after repository listing.",
-    }),
+    status: S.OptionFromOptionalKey(DomainWorkItem.WorkItemStatus)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Optional lifecycle status filter applied after repository listing.",
+      }),
   },
   $I.annote("ListWorkItemsQuery", {
     title: "List WorkItems query",

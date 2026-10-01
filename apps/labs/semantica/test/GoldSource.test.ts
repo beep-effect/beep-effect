@@ -2,7 +2,7 @@
 
 import { ResolvedSourceText } from "@beep/file-processing/SourceText";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -245,7 +245,7 @@ describe("C0 gold source", () => {
         });
         const document = SourceDocument.make({
           acquired: ProvenanceEventId.make(Str.repeat(64)("e")),
-          bytes: NonNegativeInt.make(4),
+          bytes: S.Natural.make(4),
           id: documentId,
           mediaType: "application/pdf",
           origin: Origin.cases.W1Paper.make({

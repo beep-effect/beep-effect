@@ -7,15 +7,13 @@
 
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { TrimmedNonEmptyText } from "@beep/schema/CommonTextSchemas";
-import { PosInt } from "@beep/schema/Int";
 import { JsonObject } from "@beep/schema/Json";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import { P, R } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { DateTime, flow, identity, Order, pipe, Result } from "effect";
+import { DateTime, flow, identity, Order, pipe, Result, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -24,12 +22,14 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "../../internal/PosInt.ts";
 import { Confidence } from "../EvidenceSpan/index.ts";
 import { canonicalJson } from "../internal/CanonicalJson.ts";
 import { LogicalEdgeKey } from "../LogicalEdgeIdentity/index.ts";
 import type { JsonObject as JsonObjectValue } from "@beep/schema/Json";
 
 const $I = $EpistemicDomainId.create("values/Contradiction/Contradiction.model");
+const TrimmedText = S.String.pipe(S.decodeTo(S.NonEmptyString, SchemaTransformation.trim()));
 
 /**
  * Digest identifying one contradiction candidate independent of submission
@@ -509,7 +509,7 @@ export const CONTRADICTION_EVIDENCE_SET_MAX_COUNT = 32;
  */
 export const CONTRADICTION_DETECTOR_MAX_LENGTH = 256;
 
-const ContradictionDetectorIdentity = TrimmedNonEmptyText.check(
+const ContradictionDetectorIdentity = TrimmedText.check(
   S.isMaxLength(CONTRADICTION_DETECTOR_MAX_LENGTH, {
     identifier: $I`ContradictionDetectorIdentityMaximumLengthCheck`,
     arbitraryConstraint: { patterns: [{ source: "^[a-zA-Z0-9_-]{1,256}$", flags: "" }] },
@@ -709,7 +709,7 @@ const ContradictionProposalFact = JsonObject.check(
   })
 );
 
-const ContradictionProposalRationale = TrimmedNonEmptyText.check(
+const ContradictionProposalRationale = TrimmedText.check(
   S.isMaxLength(CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH, {
     identifier: $I`ContradictionProposalRationaleMaximumLengthCheck`,
     arbitraryConstraint: { patterns: [{ source: "^[a-zA-Z0-9_-]{1,2000}$", flags: "" }] },
@@ -997,7 +997,7 @@ export const CONTRADICTION_REVIEW_REASON_MAX_LENGTH = 2_000;
  * @category validation
  * @since 0.0.0
  */
-export const ContradictionReviewReason = TrimmedNonEmptyText.check(
+export const ContradictionReviewReason = TrimmedText.check(
   S.isMaxLength(CONTRADICTION_REVIEW_REASON_MAX_LENGTH, {
     identifier: $I`ContradictionReviewReasonMaximumLengthCheck`,
     title: "Contradiction Review Reason Maximum Length",
@@ -1325,18 +1325,20 @@ const encodeProposalContent = S.encodeResult(ContradictionProposalContent.mapFie
  * **Example** (Compute proposal digest)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import {
  *   BeliefVersionRef,
  *   ContradictionProposalId,
  *   contradictionProposalDigest,
  * } from "@beep/epistemic-domain/values/Contradiction"
  * import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity"
- * import { PosInt } from "@beep/schema/Int"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  * import { DateTime } from "effect"
  * import * as O from "effect/Option"
  * import * as Result from "effect/Result"
  * import * as Str from "effect/String"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const digest = contradictionProposalDigest({
  *   fact: { amount: "125" },
@@ -1442,6 +1444,7 @@ const encodeCandidateContent = S.encodeResult(ContradictionCandidateContent.mapF
  * **Example** (Compute candidate payload digest)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import {
  *   BeliefVersionRef,
  *   ContradictionAssessment,
@@ -1455,12 +1458,13 @@ const encodeCandidateContent = S.encodeResult(ContradictionCandidateContent.mapF
  * } from "@beep/epistemic-domain/values/Contradiction"
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity"
- * import { PosInt } from "@beep/schema/Int"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  * import { DateTime } from "effect"
  * import * as O from "effect/Option"
  * import * as Result from "effect/Result"
  * import * as Str from "effect/String"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const leftEvidenceIds: readonly [Epistemic.EvidenceId] = [Epistemic.EvidenceId.make(1)]
  * const rightEvidenceIds: readonly [Epistemic.EvidenceId] = [Epistemic.EvidenceId.make(2)]

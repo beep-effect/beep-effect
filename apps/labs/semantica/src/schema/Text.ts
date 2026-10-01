@@ -1,7 +1,7 @@
 import { ResolvedSourceText } from "@beep/file-processing/SourceText";
 import { $SemanticaId } from "@beep/identity/packages";
 import { SourceTextDigest, SourceTextExtractor, TextAnchor, TextAnchorVerificationReceipt } from "@beep/provenance";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { identity, Result, Tuple } from "effect";
 import * as S from "effect/Schema";
@@ -168,7 +168,7 @@ const ChunkFields = S.Struct({
   id: ChunkId,
   document: DocumentId,
   kind: ChunkKind,
-  ordinal: NonNegativeInt,
+  ordinal: S.Natural,
   anchor: TextAnchor,
   receipt: TextAnchorVerificationReceipt,
 });
@@ -176,8 +176,8 @@ const ChunkFields = S.Struct({
 const ChunkIdPreimage = S.Struct({
   document: DocumentId,
   textDigest: SourceTextDigest,
-  startChar: NonNegativeInt,
-  endChar: NonNegativeInt,
+  startChar: S.Natural,
+  endChar: S.Natural,
 }).pipe(SchemaUtils.withCodecStatics(["encodeResult"]));
 
 type ChunkIdSource = Pick<typeof ChunkFields.Type, "anchor" | "document" | "receipt">;

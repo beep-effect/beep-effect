@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { Cause, Config, Effect, Exit, flow, Match, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -884,7 +883,7 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
     return GraftDeepSiblingRebuild.make({
       root,
       exitCode: Result.isSuccess(attempted) ? exitCodeOf(attempted.success.exitCode) : REBUILD_UNFINISHED_EXIT,
-      seconds: NonNegativeInt.make(Num.round(Dur.toSeconds(elapsed), 0)),
+      seconds: S.Natural.make(Num.round(Dur.toSeconds(elapsed), 0)),
     });
   });
 

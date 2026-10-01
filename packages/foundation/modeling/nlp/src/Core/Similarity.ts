@@ -7,6 +7,7 @@
 
 import { $NlpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { UnitInterval } from "../internal/numbers.ts";
 import { DocumentId } from "./Document.ts";
@@ -146,7 +147,9 @@ export class SimilarityScore extends S.Class<SimilarityScore>($I`SimilarityScore
     document1Id: DocumentId,
     document2Id: DocumentId,
     method: SimilarityMethod,
-    parameters: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault),
+    parameters: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     score: UnitInterval,
   },
   $I.annote("SimilarityScore", {

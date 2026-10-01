@@ -18,7 +18,7 @@ P0 plus P1 are the first vertical slice.
 | P1 Knowledge layer | pending | Move the inventory generator, verifier and rows into repo-cli; commit `fixtures/effect-schema-rc118/inventory/` with the full `inventoryPin` sha in its pin line and rows; build the prompt generator that inlines docs from `file:line`. | `--check` byte-identical locally; hosted shape and sha verification green; Node and Bun tests green; one Role A module prompt generated with inlined docs under `ops/prompts/`. |
 | P2 LiteralKit trim | pending | Delete the four covered facets and `enumMapping`, override `rebuild`, codemod about 250 consumer files, trim MappedLiteralKit alike. | Type check green; zero hits for retired names; statics survive every derivation; before/after number attached with no instantiation increase. |
 | P3 Retirement train | pending | Retire groups A–G with consumers, behind the facet census (B, C) and the boundary table (D, E). | Every group merged or flipped to ADAPT with a logged ruling; each PR carries before/after numbers with no instantiation increase; KEEP untouched. |
-| P4 Gate cut | pending | Add `SFV4-*` rules for F03, F13, F24 with occurrence anchors and membership baselines; delete the F26 rule; rewrite remediation strings. | Baselines committed; no parallel lane; Yeet routing shows the groups. |
+| P4 Gate cut | pending | Add `SFV4-*` rules for F03 and F24 with occurrence anchors and membership baselines (F13 dropped below the reach floor, SPEC goal-time row 2026-09-29); delete the F26 rule; rewrite remediation strings. | Baselines committed; no parallel lane; Yeet routing shows the groups. |
 | P5 Statics and performance close | pending | F15 rule, `withCodecStatics` retirement, `check-census` instantiation ratchet, typeperf mirror, reflection, lifecycle flip. | Selective-statics merged first; backlog zero; no instantiation increase on the three packages; check-time band reported. |
 
 <!-- Phase ids match ops/manifest.json `phases[]`. This packet uses its own
@@ -48,8 +48,8 @@ six-phase scheme; Yeet-to-mergeable is the exit of every phase, not a phase. -->
 
 ## P1 — Knowledge layer
 
-- Move `explorations/effect-schema-parity/research/tools/schema-inventory.ts`
-  and `verify-schema-inventory.ts` into `packages/tooling/tool/cli/src/commands/Lint/`
+- Move the exploration's research generator (research/tools/schema-inventory.ts)
+  and verifier (verify-schema-inventory.ts) into `packages/tooling/tool/cli/src/commands/Lint/`
   beside `EffectVitest.ts` as `beep lint effect-schema-inventory` (a new `lint`
   subcommand P1 adds, invoked through the beep CLI)
   with `--write` and `--check`; keep the `schema-inventory/v1` contract from
@@ -155,10 +155,14 @@ Groups and upstream targets are in `explorations/effect-schema-parity/MAP.md`
 ## P4 — Gate cut
 
 - Extend `commands/Lint/internal/SchemaFirstDetectors.ts` with `SFV4-*` rules
-  for F03, F13, F24 (`research/idiom-families.md` §F03 :158, §F13 :298,
-  §F24 :452); register ids in `Lint.schemas.ts:104`; remediation strings in
+  for F03 and F24 (`research/idiom-families.md` §F03 :158, §F24 :452);
+  register ids in `Lint.schemas.ts:104`; remediation strings in
   `SchemaFirstPolicy.ts`; render groups in `SchemaFirst.render.ts`; advisory
   gating in `SchemaFirstScan.ts`.
+- F13 (§F13 :298) is dropped from the gate cut (SPEC goal-time row
+  2026-09-29): the precise rule measured 10 occurrences in 10 files, below the
+  100-file reach floor. Its ten sites are hand-fixed in P5; counts, the site
+  list and the anchor design are in `research/2026-09-29-p4-gate-cut.md`.
 - Identity: port the effect-vitest membership shape that keeps line numbers
   out (`Lint.schemas.ts:1292`); ratchet through `RatchetDiff.ts:71` and
   `RatchetLifecycle.ts:67`; baseline in `standards/schema-first.inventory.jsonc`.
@@ -230,6 +234,10 @@ Groups and upstream targets are in `explorations/effect-schema-parity/MAP.md`
   mirror one or two suites from
   `.repos/effect/packages/effect/typeperf/suites/schema`.
 - Drive `bun run beep lint schema-first` parity backlog to zero.
+- Hand-fix the ten F13 guard sites listed in
+  `research/2026-09-29-p4-gate-cut.md` (derive each guard from its schema with
+  `S.is` or the tagged-union guards); there is no F13 detector (SPEC goal-time
+  row 2026-09-29).
 - Closeout in the same PR (checklist below).
 
 ## P5 Closeout Checklist

@@ -1,4 +1,3 @@
-import { PosInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { assert, describe, it } from "@effect/vitest";
 import { Duration, Effect, Ref } from "effect";
@@ -8,6 +7,8 @@ import { BackpressureConfig } from "../../Contract/ProgressStreaming.ts";
 import { ExtractionRunId } from "../../Domain/Identity.ts";
 import { makeBackpressureHandler, makeProgressBuilder } from "../../Service/ProgressStreaming.ts";
 import { EntityResolutionConfig } from "../../Workflow/EntityResolution.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 const decodeUnknownBackpressureConfigResult = S.decodeUnknownResult(BackpressureConfig);
 const decodeUnknownEntityResolutionConfigResult = S.decodeUnknownResult(EntityResolutionConfig);
 

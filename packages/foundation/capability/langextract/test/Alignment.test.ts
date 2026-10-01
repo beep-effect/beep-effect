@@ -14,7 +14,6 @@ import {
 } from "@beep/langextract/Alignment";
 import { ExtractionCandidate, GroundedExtraction, LangExtractOptions } from "@beep/langextract/Extraction";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
@@ -44,9 +43,9 @@ const sourceOf = (sourceText: string) => AlignmentSource.make({ sourceText });
 
 describe("alignCandidate", () => {
   it("constructs alignment sources through the data-last options form", () => {
-    const source = AlignmentSource.fromOptions(
-      LangExtractOptions.make({ maxExtractions: O.some(NonNegativeInt.make(3)) })
-    )("Ada Lovelace");
+    const source = AlignmentSource.fromOptions(LangExtractOptions.make({ maxExtractions: O.some(S.Natural.make(3)) }))(
+      "Ada Lovelace"
+    );
 
     expect(source.maxExtractions).toBe(3);
   });
@@ -355,7 +354,7 @@ describe("alignCandidate", () => {
       const aligned = alignCandidates(
         candidates,
         AlignmentSource.make({
-          maxExtractions: NonNegativeInt.make(maxExtractions),
+          maxExtractions: S.Natural.make(maxExtractions),
           sourceText: "",
         })
       );
@@ -373,7 +372,7 @@ describe("alignCandidate", () => {
   it("returns an empty batch when the resolved extraction cap is zero", () => {
     const aligned = alignCandidates(
       [ExtractionCandidate.make({ label: "person", text: "Ada" })],
-      AlignmentSource.make({ maxExtractions: NonNegativeInt.make(0), sourceText: "Ada" })
+      AlignmentSource.make({ maxExtractions: S.Natural.make(0), sourceText: "Ada" })
     );
 
     expect(aligned).toEqual([]);
@@ -396,14 +395,14 @@ describe("SpanFromMatch", () => {
 
       expect(span.start).toBe(4);
       expect(span.end).toBe(12);
-      expect(span).toStrictEqual(spanFromMatch([NonNegativeInt.make(4), "Lovelace"]));
+      expect(span).toStrictEqual(spanFromMatch([S.Natural.make(4), "Lovelace"]));
     })
   );
 
   it.effect(
     "encodes a span back to its matched slice through the current alignment source",
     Effect.fnUntraced(function* () {
-      const span = Contract.Span.make({ end: NonNegativeInt.make(12), start: NonNegativeInt.make(4) });
+      const span = Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(4) });
       const match = yield* encodeSpanFromMatch(span).pipe(
         Effect.provideService(CurrentAlignmentSource, sourceOf("Ada Lovelace wrote notes."))
       );
@@ -415,7 +414,7 @@ describe("SpanFromMatch", () => {
   it.effect(
     "fails closed when a span exceeds the current alignment source",
     Effect.fnUntraced(function* () {
-      const span = Contract.Span.make({ end: NonNegativeInt.make(99), start: NonNegativeInt.make(4) });
+      const span = Contract.Span.make({ end: S.Natural.make(99), start: S.Natural.make(4) });
       const error = yield* encodeSpanFromMatch(span).pipe(
         Effect.provideService(CurrentAlignmentSource, sourceOf("Ada")),
         Effect.flip
@@ -511,7 +510,7 @@ describe("GroundedExtractionsFromCandidates", () => {
         Effect.provideService(
           CurrentAlignmentSource,
           AlignmentSource.make({
-            maxExtractions: NonNegativeInt.make(1),
+            maxExtractions: S.Natural.make(1),
             sourceText: "Ada Lovelace wrote notes.",
           })
         )

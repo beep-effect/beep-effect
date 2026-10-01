@@ -8,10 +8,8 @@
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
-import { NonNegativeInt } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { UUID } from "@beep/schema/String";
 import { aliasedTable, and, count, desc, eq, or } from "drizzle-orm";
 import { Context, DateTime, Effect, Equal, Layer, Match, Order } from "effect";
 import * as A from "effect/Array";
@@ -22,6 +20,7 @@ import type { ConflictActor, ConflictKind, ConflictsQuery, ConflictTransition } 
 import { normalizeDrizzleError } from "../Utils/Sql.ts";
 import type { ConflictInsertRow } from "./schema.ts";
 import { Claims, Conflicts, claims, conflicts } from "./schema.ts";
+import { UUID } from "../Domain/Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Conflict");
 const UUIDString = UUID.pipe(S.decodeTo(S.String));
@@ -108,14 +107,14 @@ export const ConflictRecord = ConflictRecordDefinition.pipe(
  */
 export type ConflictRecord = typeof ConflictRecord.Type;
 
-const ConflictCounts = S.Struct({ total: NonNegativeInt, pending: NonNegativeInt }).pipe(
+const ConflictCounts = S.Struct({ total: S.Natural, pending: S.Natural }).pipe(
   $I.annoteSchema("ConflictCounts", {
     description: "Unpaginated total and pending conflict counts for one query scope.",
   })
 );
 const decodeConflictCounts = S.decodeEffect(ConflictCounts);
 
-const CountRow = S.Struct({ count: NonNegativeInt });
+const CountRow = S.Struct({ count: S.Natural });
 
 type ConflictComparableClaim = {
   readonly objectValue: string;
@@ -167,11 +166,13 @@ export class EqualConflictPairError extends S.TaggedError<EqualConflictPairError
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const normalizeQueryError = normalizeDrizzleError("execute");
 
+const ConflictRecordRows = ConflictRecord.pipe(S.Array, S.mutable);
 const decodeConflictRecords = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(ConflictRecord.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(ConflictRecordRows)(rows));
 
+const ConflictSelectRows = Conflicts.select.pipe(S.Array, S.mutable);
 const decodeConflictRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(Conflicts.select.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(ConflictSelectRows)(rows));
 
 const CountRows = S.Tuple([CountRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 

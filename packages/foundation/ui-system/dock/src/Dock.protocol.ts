@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
 import { DockCommandEnvelope, RestoreSnapshotRequest } from "./Dock.commands.ts";
@@ -213,10 +213,10 @@ export type DockAtomOperation = typeof DockAtomOperation.Type;
  * **Example** (Make mutation completed result)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ApiCommandOrigin, CommandId, DockMutationCompleted, DockMutationOutcome, DockUnchanged } from "@beep/dock"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const value = DockMutationCompleted.make({ outcome: DockMutationOutcome.make({ commandId: CommandId.make("command-activate"), origin: ApiCommandOrigin.make({ requestId: "request-one" }), result: DockUnchanged.make({ revision: NonNegativeInt.make(2), reason: "panel-already-active" }) }) })
+ * const value = DockMutationCompleted.make({ outcome: DockMutationOutcome.make({ commandId: CommandId.make("command-activate"), origin: ApiCommandOrigin.make({ requestId: "request-one" }), result: DockUnchanged.make({ revision: S.Natural.make(2), reason: "panel-already-active" }) }) })
  * console.log(value.kind)
  * ```
  *
@@ -351,10 +351,10 @@ export type DockAtomSessionError = typeof DockAtomSessionError.Type;
  * **Example** (Make feed success entry)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { DockAtomFeedSuccess, DockSnapshotSaved } from "@beep/dock"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const value = DockAtomFeedSuccess.make({ submission: NonNegativeInt.make(1), operationKind: "saveSnapshot", outcome: DockSnapshotSaved.make({ snapshot: "{\"version\":1}" }) })
+ * const value = DockAtomFeedSuccess.make({ submission: S.Natural.make(1), operationKind: "saveSnapshot", outcome: DockSnapshotSaved.make({ snapshot: "{\"version\":1}" }) })
  * console.log(value)
  * ```
  *
@@ -364,7 +364,7 @@ export type DockAtomSessionError = typeof DockAtomSessionError.Type;
 export class DockAtomFeedSuccess extends S.TaggedClass<DockAtomFeedSuccess>($I`DockAtomFeedSuccess`)(
   "Success",
   {
-    submission: NonNegativeInt,
+    submission: S.Natural,
     operationKind: DockAtomOperationKind,
     outcome: DockAtomOperationOutcome,
   },
@@ -379,10 +379,10 @@ export class DockAtomFeedSuccess extends S.TaggedClass<DockAtomFeedSuccess>($I`D
  * **Example** (Make feed failure entry)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { DockAtomFeedFailure, DockSnapshotMissing } from "@beep/dock"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const value = DockAtomFeedFailure.make({ submission: NonNegativeInt.make(1), operationKind: "restoreSnapshot", error: DockSnapshotMissing.make({ message: "No snapshot exists" }) })
+ * const value = DockAtomFeedFailure.make({ submission: S.Natural.make(1), operationKind: "restoreSnapshot", error: DockSnapshotMissing.make({ message: "No snapshot exists" }) })
  * console.log(value)
  * ```
  *
@@ -392,7 +392,7 @@ export class DockAtomFeedSuccess extends S.TaggedClass<DockAtomFeedSuccess>($I`D
 export class DockAtomFeedFailure extends S.TaggedClass<DockAtomFeedFailure>($I`DockAtomFeedFailure`)(
   "Failure",
   {
-    submission: NonNegativeInt,
+    submission: S.Natural,
     operationKind: DockAtomOperationKind,
     error: DockAtomSessionError,
   },
@@ -407,10 +407,10 @@ export class DockAtomFeedFailure extends S.TaggedClass<DockAtomFeedFailure>($I`D
  * **Example** (Use feed failure entry)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { DockAtomFeedEntry, DockSnapshotMissing, DockAtomFeedFailure } from "@beep/dock"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const value = DockAtomFeedFailure.make({ submission: NonNegativeInt.make(1), operationKind: "restoreSnapshot", error: DockSnapshotMissing.make({ message: "No snapshot exists" }) })
+ * const value = DockAtomFeedFailure.make({ submission: S.Natural.make(1), operationKind: "restoreSnapshot", error: DockSnapshotMissing.make({ message: "No snapshot exists" }) })
  * console.log(value)
  * ```
  *
@@ -429,10 +429,10 @@ export const DockAtomFeedEntry = S.Union([DockAtomFeedSuccess, DockAtomFeedFailu
  * **Example** (Type feed failure entry)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { DockAtomFeedEntry, DockSnapshotMissing, DockAtomFeedFailure } from "@beep/dock"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const value: DockAtomFeedEntry = DockAtomFeedFailure.make({ submission: NonNegativeInt.make(1), operationKind: "restoreSnapshot", error: DockSnapshotMissing.make({ message: "No snapshot exists" }) })
+ * const value: DockAtomFeedEntry = DockAtomFeedFailure.make({ submission: S.Natural.make(1), operationKind: "restoreSnapshot", error: DockSnapshotMissing.make({ message: "No snapshot exists" }) })
  * console.log(value)
  * ```
  *

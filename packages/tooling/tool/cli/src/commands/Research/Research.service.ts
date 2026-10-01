@@ -330,14 +330,14 @@ export const cognifyResearchCards = Effect.fn("Research.cognifyResearchCards")(f
  * **Example** (Daily pipeline with options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { runResearchDaily, ResearchDailyOptions } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const options = ResearchDailyOptions.make({
  *   browser: "all",
  *   commit: false,
- *   sinceDays: NonNegativeInt.make(2),
+ *   sinceDays: S.Natural.make(2),
  *   vaultRoot: "/home/user/knowledge"
  * })
  * const ran = runResearchDaily(options).pipe(Effect.map((summary) => summary.ran))
@@ -390,13 +390,13 @@ export const writeResearchDigest = Effect.fn("Research.writeResearchDigest")(fun
  * **Example** (Sift history to stubs)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { siftResearchHistory, ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const options = ResearchHistorySiftOptions.make({
  *   browser: "all",
- *   sinceDays: NonNegativeInt.make(7),
+ *   sinceDays: S.Natural.make(7),
  *   vaultRoot: "/home/user/knowledge"
  * })
  * const stubs = siftResearchHistory(options).pipe(Effect.map((summary) => summary.stubsWritten))

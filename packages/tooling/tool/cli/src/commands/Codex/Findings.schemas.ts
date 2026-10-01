@@ -14,6 +14,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
@@ -26,7 +27,6 @@ import {
   GitCommitSha,
   GitHubRepoSlug,
 } from "./Findings.capture.schemas.ts";
-import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Codex/Findings.schemas");
@@ -309,7 +309,10 @@ export class CodexPacketPlan extends S.Class<CodexPacketPlan>($I`CodexPacketPlan
         description: "Repository the findings view was scoped to.",
       })
     ),
-    source: CodexCaptureSource.pipe(SchemaUtils.withKeyDefaults("cloud-csv")),
+    source: CodexCaptureSource.pipe(
+      S.withConstructorDefault(Effect.succeed("cloud-csv" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("cloud-csv" as const))
+    ),
     sourceUrl: S.String.pipe(
       $I.annoteKey("CodexPacketPlan.sourceUrl", {
         description: "Dashboard URL recorded as packet provenance.",
@@ -376,16 +379,31 @@ export class CodexPacketPlan extends S.Class<CodexPacketPlan>($I`CodexPacketPlan
  */
 export class CodexFindingsIngestOptions extends S.Class<CodexFindingsIngestOptions>($I`CodexFindingsIngestOptions`)(
   {
-    source: CodexCaptureSource.pipe(SchemaUtils.withKeyDefaults("cloud-csv")),
-    from: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    slug: S.OptionFromOptionalKey(CodexPacketSlug).pipe(SchemaUtils.withNoneDefault),
-    date: S.OptionFromOptionalKey(CaptureDate).pipe(SchemaUtils.withNoneDefault),
-    branch: S.OptionFromOptionalKey(CodexPacketBranch).pipe(SchemaUtils.withNoneDefault),
-    expectedCount: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    refresh: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    force: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    dryRun: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    json: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    source: CodexCaptureSource.pipe(
+      S.withConstructorDefault(Effect.succeed("cloud-csv" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("cloud-csv" as const))
+    ),
+    from: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    slug: S.OptionFromOptionalKey(CodexPacketSlug).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    date: S.OptionFromOptionalKey(CaptureDate).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    branch: S.OptionFromOptionalKey(CodexPacketBranch).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    expectedCount: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    refresh: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    force: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    dryRun: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    json: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
   },
   $I.annote("CodexFindingsIngestOptions", {
     description: "Validated options accepted by `beep codex findings ingest`.",

@@ -9,7 +9,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { SchemaGetter } from "effect";
+import { SchemaGetter, Effect } from "effect";
 import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -298,7 +298,7 @@ export class ApiReferenceEntry extends S.Class<ApiReferenceEntry>($I`ApiReferenc
     packageNpmUrl: S.URLFromString,
     packageSourceUrl: S.URLFromString,
     modulePath: ModulePath,
-    barrelPath: ModulePath.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    barrelPath: ModulePath.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     exportPath: S.NonEmptyString,
     sourcePath: S.NonEmptyString,
     reflectionPath: S.NonEmptyString,
@@ -591,7 +591,7 @@ export class ApiReferenceModule extends S.Class<ApiReferenceModule>($I`ApiRefere
     source: S.NonEmptyString,
     json: S.NonEmptyString,
     sha256: Sha256Hex,
-    barrel: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    barrel: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ApiReferenceModule", {
     description: "A generated module: its export path, source file, reflection JSON path, digest, and optional owning barrel.",

@@ -8,7 +8,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { Context, Effect, HashMap, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -20,6 +19,7 @@ import { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import type { FindSimilarOptions } from "./EntityIndex.ts";
 import { EntityIndex } from "./EntityIndex.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
 
@@ -29,11 +29,11 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
  * **Example** (Create a measured node distance)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { EntityId } from "@effect-ontology/Domain/Model/shared"
  * import { NodeDistance } from "@effect-ontology/Service/SubgraphExtractor"
  *
- * const distance = NodeDistance.make({ entityId: EntityId.make("alice"), hops: NonNegativeInt.make(0) })
+ * const distance = NodeDistance.make({ entityId: EntityId.make("alice"), hops: S.Natural.make(0) })
  * console.log(distance.hops)
  * ```
  *
@@ -43,7 +43,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
 export class NodeDistance extends S.Class<NodeDistance>($I`NodeDistance`)(
   {
     entityId: EntityId.annotateKey({ description: "Entity whose breadth-first distance was measured." }),
-    hops: NonNegativeInt.annotateKey({ description: "Shortest number of traversed relations from any seed." }),
+    hops: S.Natural.annotateKey({ description: "Shortest number of traversed relations from any seed." }),
   },
   $I.annote("NodeDistance", {
     description: "Shortest breadth-first hop count from any accepted subgraph seed to one entity.",
@@ -56,10 +56,10 @@ export class NodeDistance extends S.Class<NodeDistance>($I`NodeDistance`)(
  * **Example** (Create an empty subgraph)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Subgraph } from "@effect-ontology/Service/SubgraphExtractor"
  *
- * const subgraph = Subgraph.make({ nodes: [], edges: [], centerNodes: [], depth: NonNegativeInt.make(0), distances: [] })
+ * const subgraph = Subgraph.make({ nodes: [], edges: [], centerNodes: [], depth: S.Natural.make(0), distances: [] })
  * console.log(subgraph.nodes.length)
  * ```
  *
@@ -71,7 +71,7 @@ export class Subgraph extends S.Class<Subgraph>($I`Subgraph`)(
     nodes: S.Array(Entity).annotateKey({ description: "Entities admitted by the traversal bound." }),
     edges: S.Array(Relation).annotateKey({ description: "Relations whose entity endpoints are both admitted." }),
     centerNodes: S.Array(EntityId).annotateKey({ description: "Valid seed IDs admitted before traversal began." }),
-    depth: NonNegativeInt.annotateKey({ description: "Deepest hop distance actually reached." }),
+    depth: S.Natural.annotateKey({ description: "Deepest hop distance actually reached." }),
     distances: S.Array(NodeDistance).annotateKey({
       description: "Shortest measured hop distance for every admitted entity.",
     }),
@@ -89,6 +89,7 @@ export class Subgraph extends S.Class<Subgraph>($I`Subgraph`)(
  */
 export type SubgraphInput = (typeof Subgraph)["~type.make.in"];
 
+const extractOptionsMaxNodesDefault = PosInt.make(50);
 /**
  * Options controlling bounded breadth-first traversal.
  *
@@ -107,15 +108,15 @@ export type SubgraphInput = (typeof Subgraph)["~type.make.in"];
 export class ExtractOptions extends S.Class<ExtractOptions>($I`ExtractOptions`)(
   {
     maxNodes: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(50)),
+      S.withConstructorDefault(Effect.succeed(extractOptionsMaxNodesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractOptionsMaxNodesDefault)),
       S.annotateKey({ description: "Maximum entities admitted, including seeds." })
     ),
     followOutgoing: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether traversal follows entity-reference objects from each subject." })
     ),
     followIncoming: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether traversal follows subjects of relations targeting each entity." })
     ),
   },
@@ -132,6 +133,10 @@ export class ExtractOptions extends S.Class<ExtractOptions>($I`ExtractOptions`)(
  */
 export type ExtractOptionsInput = (typeof ExtractOptions)["~type.make.in"];
 
+const extractRelevantOptionsTopKDefault = PosInt.make(5);
+const extractRelevantOptionsHopsDefault = S.Natural.make(1);
+const extractRelevantOptionsMinSimilarityDefault = Confidence.make(0.3);
+const extractRelevantOptionsFilterTypesDefault = A.empty<IRI>();
 /**
  * Options controlling semantic seed selection before graph traversal.
  *
@@ -150,19 +155,19 @@ export type ExtractOptionsInput = (typeof ExtractOptions)["~type.make.in"];
 export class ExtractRelevantOptions extends S.Class<ExtractRelevantOptions>($I`ExtractRelevantOptions`)(
   {
     topK: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(5)),
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsTopKDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsTopKDefault)),
       S.annotateKey({ description: "Maximum embedding matches used as traversal seeds." })
     ),
-    hops: NonNegativeInt.pipe(
-      SchemaUtils.withKeyDefaults(NonNegativeInt.make(1)),
+    hops: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsHopsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsHopsDefault)),
       S.annotateKey({ description: "Maximum breadth-first distance from a seed." })
     ),
     minSimilarity: Confidence.pipe(
-      SchemaUtils.withKeyDefaults(Confidence.make(0.3)),
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsMinSimilarityDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsMinSimilarityDefault)),
       S.annotateKey({ description: "Minimum embedding similarity admitted as a seed." })
     ),
     filterTypes: S.Array(IRI).pipe(
-      SchemaUtils.withEmptyArrayDefaults<IRI>(),
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsFilterTypesDefault)), S.withDecodingDefaultType(Effect.succeed(extractRelevantOptionsFilterTypesDefault)),
       S.annotateKey({ description: "Optional ontology classes restricting semantic seed candidates." })
     ),
   },
@@ -195,12 +200,12 @@ export interface SubgraphExtractorService {
     (
       graph: KnowledgeGraph,
       seeds: ReadonlyArray<EntityId>,
-      hops: NonNegativeInt,
+      hops: number,
       options: ExtractOptionsInput
     ): Effect.Effect<Subgraph>;
     (
       seeds: ReadonlyArray<EntityId>,
-      hops: NonNegativeInt,
+      hops: number,
       options: ExtractOptionsInput
     ): (graph: KnowledgeGraph) => Effect.Effect<Subgraph>;
   };
@@ -224,22 +229,22 @@ const emptySubgraph = (centerNodes: ReadonlyArray<EntityId>): Subgraph =>
     nodes: [],
     edges: [],
     centerNodes,
-    depth: NonNegativeInt.make(0),
+    depth: S.Natural.make(0),
     distances: [],
   });
 
 interface TraversalState {
   readonly nodes: HashSet.HashSet<EntityId>;
   readonly edges: HashSet.HashSet<Relation>;
-  readonly distances: HashMap.HashMap<EntityId, NonNegativeInt>;
-  readonly depth: NonNegativeInt;
+  readonly distances: HashMap.HashMap<EntityId, number>;
+  readonly depth: number;
   readonly seeds: ReadonlyArray<EntityId>;
 }
 
 const traverseHops = (
   graph: KnowledgeGraph,
   seeds: ReadonlyArray<EntityId>,
-  hops: NonNegativeInt,
+  hops: number,
   options: ExtractOptions
 ): TraversalState => {
   const validSeeds = A.filter(seeds, (id) => O.isSome(graph.getEntity(id)));
@@ -247,8 +252,8 @@ const traverseHops = (
   let visited = HashSet.fromIterable(acceptedSeeds);
   let frontier = HashSet.fromIterable(acceptedSeeds);
   let edges = HashSet.empty<Relation>();
-  let distances = HashMap.fromIterable(A.map(acceptedSeeds, (entityId) => [entityId, NonNegativeInt.make(0)]));
-  let actualDepth = NonNegativeInt.make(0);
+  let distances = HashMap.fromIterable(A.map(acceptedSeeds, (entityId) => [entityId, S.Natural.make(0)]));
+  let actualDepth = S.Natural.make(0);
 
   for (let hop = 1; hop <= hops && HashSet.size(frontier) > 0; hop += 1) {
     let nextFrontier = HashSet.empty<EntityId>();
@@ -257,8 +262,8 @@ const traverseHops = (
       if (!HashSet.has(visited, entityId) && HashSet.size(visited) < options.maxNodes) {
         visited = HashSet.add(visited, entityId);
         nextFrontier = HashSet.add(nextFrontier, entityId);
-        distances = HashMap.set(distances, entityId, NonNegativeInt.make(hop));
-        actualDepth = NonNegativeInt.make(hop);
+        distances = HashMap.set(distances, entityId, S.Natural.make(hop));
+        actualDepth = S.Natural.make(hop);
       }
     };
 
@@ -339,7 +344,7 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()($I`S
       (
         graph: KnowledgeGraph,
         seeds: ReadonlyArray<EntityId>,
-        hops: NonNegativeInt,
+        hops: number,
         optionsInput: ExtractOptionsInput
       ) =>
         Effect.suspend(() => {

@@ -35,7 +35,6 @@ import {
   withId,
   withMark,
 } from "@beep/nlp/Core/index";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
@@ -67,7 +66,7 @@ const firstIncludes = (values: ReadonlyArray<string>, searchString: string): boo
   const first = values[0];
   return first !== undefined && Str.includes(searchString)(first);
 };
-const mark = (start: number, end: number) => [NonNegativeInt.make(start), NonNegativeInt.make(end)] as const;
+const mark = (start: number, end: number) => [Schema.Natural.make(start), Schema.Natural.make(end)] as const;
 
 describe("Core Pattern", () => {
   it("creates element builders with optional values", () => {

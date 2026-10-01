@@ -13,7 +13,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Tuple } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -191,9 +191,9 @@ export const sameFeatureFamily: {
  */
 export class FindingAttributionSummary extends S.Class<FindingAttributionSummary>($I`FindingAttributionSummary`)(
   {
-    introduced: NonNegativeInt,
-    inheritedAdjacent: NonNegativeInt,
-    notApplicable: NonNegativeInt,
+    introduced: S.Natural,
+    inheritedAdjacent: S.Natural,
+    notApplicable: S.Natural,
   },
   $I.annote("FindingAttributionSummary", {
     description: "Count summary for normalized Fallow finding attribution.",
@@ -231,7 +231,7 @@ export class FallowReportFinding extends S.Class<FallowReportFinding>($I`FallowR
  */
 export class FallowReportPayload extends S.Class<FallowReportPayload>($I`FallowReportPayload`)(
   {
-    findingCount: NonNegativeInt,
+    findingCount: S.Natural,
     findings: S.Array(FallowReportFinding),
   },
   $I.annote("FallowReportPayload", {
@@ -294,7 +294,7 @@ export class FallowReportOk extends S.Class<FallowReportOk>($I`FallowReportOk`)(
   {
     ...FallowReportBaseFields,
     status: S.Literal("ok"),
-    exitStatus: NonNegativeInt,
+    exitStatus: S.Natural,
     report: FallowReportPayload,
   },
   $I.annote("FallowReportOk", {
@@ -332,7 +332,7 @@ export class FallowReportInvalidJson extends S.Class<FallowReportInvalidJson>($I
   {
     ...FallowReportBaseFields,
     status: S.Literal("invalid-json"),
-    exitStatus: NonNegativeInt,
+    exitStatus: S.Natural,
     stderrExcerpt: S.String,
   },
   $I.annote("FallowReportInvalidJson", {
@@ -351,7 +351,7 @@ export class FallowReportInvalidReport extends S.Class<FallowReportInvalidReport
   {
     ...FallowReportBaseFields,
     status: S.Literal("invalid-report"),
-    exitStatus: NonNegativeInt,
+    exitStatus: S.Natural,
     stderrExcerpt: S.String,
   },
   $I.annote("FallowReportInvalidReport", {

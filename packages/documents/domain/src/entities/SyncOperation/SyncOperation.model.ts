@@ -6,7 +6,6 @@
  */
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import { SyncItemId } from "@beep/shared-domain/identity/Documents/SyncItemId";
 import { SyncOperationId } from "@beep/shared-domain/identity/Documents/SyncOperationId";
@@ -63,7 +62,7 @@ const pg = ProductEntity.pg;
  */
 export class SyncOperation extends ProductEntity.Entity<SyncOperation>()(SyncOperationId)(
   {
-    attemptCount: NonNegativeInt.annotateKey({
+    attemptCount: S.Natural.annotateKey({
       description: "Number of push attempts already made for this operation.",
     }).pipe(pg.integer(), pg.columnName("attempt_count")),
     idempotencyKey: S.NonEmptyString.annotateKey({
@@ -74,7 +73,7 @@ export class SyncOperation extends ProductEntity.Entity<SyncOperation>()(SyncOpe
         description: "Digest of the local content captured when the operation was queued; none for folders.",
       })
       .pipe(pg.text(), pg.columnName("input_content_digest")),
-    inputGeneration: NonNegativeInt.annotateKey({
+    inputGeneration: S.Natural.annotateKey({
       description: "Local generation counter captured when the operation was queued.",
     }).pipe(pg.integer(), pg.columnName("input_generation")),
     lastError: S.NonEmptyString.pipe(S.OptionFromNullOr)

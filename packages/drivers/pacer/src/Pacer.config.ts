@@ -10,7 +10,6 @@
  */
 
 import { $PacerId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Config, Effect, Redacted } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -108,7 +107,7 @@ export class PacerConfigBase extends S.Class<PacerConfigBase>($I`PacerConfigBase
     password: S.Redacted(S.String),
     clientCode: S.Option(S.String),
     otpCode: S.String.pipe(S.Redacted, S.Option),
-    isFiler: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    isFiler: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PacerConfigBase", {
     description: "Base PACER configuration consumed by the auth + PCL services",
@@ -225,7 +224,7 @@ export type PacerConfig = typeof PacerConfig.Type;
 export class PacerConfigLoadOptions extends S.Class<PacerConfigLoadOptions>($I`PacerConfigLoadOptions`)(
   {
     environment: PacerEnvironment,
-    otpCode: S.String.pipe(S.Redacted, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    otpCode: S.String.pipe(S.Redacted, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PacerConfigLoadOptions", {
     description: "Options used when loading PACER config from an Effect ConfigProvider.",

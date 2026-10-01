@@ -28,7 +28,6 @@ import * as ProvVocabulary from "@beep/rdf/Vocab/Prov";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_DATE_TIME, XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -47,11 +46,11 @@ const isGeneration = S.is(Generation);
 const isUsage = S.is(Usage);
 
 const RoundTripEntitySeed = S.Struct({
-  index: NonNegativeInt,
+  index: S.Natural,
   value: S.String,
 });
 const SupportedCoreSeed = S.Struct({
-  index: NonNegativeInt,
+  index: S.Natural,
   value: Entity.fields.value,
   name: Agent.fields.name,
   atTime: Usage.fields.atTime,

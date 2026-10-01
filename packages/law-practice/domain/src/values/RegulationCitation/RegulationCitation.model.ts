@@ -5,7 +5,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { StatuteComponentSpan } from "../ComponentSpan/index.ts";
@@ -26,21 +27,21 @@ const $I = $LawPracticeDomainId.create("values/RegulationCitation/RegulationCita
  * **Example** (Make a regulation citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RegulationCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = RegulationCitation.make({
  *   text: "42 C.F.R. § 405.1",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "42 C.F.R. § 405.1",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  * })
  *
  * console.log(citation.type) // "regulation"
@@ -53,65 +54,65 @@ export class RegulationCitation extends S.Class<RegulationCitation>($I`Regulatio
   {
     ...CitationBase.fields,
     type: S.tag("regulation"),
-    title: NonNegativeInt.pipe(
+    title: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Title number (e.g. 42 for 42 C.F.R.).",
       })
     ),
     code: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Code identifier (C.F.R., etc.).",
       })
     ),
     section: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Section identifier.",
       })
     ),
     sectionRange: S.Struct({ start: S.String, end: S.String }).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Structured §§ N-M section range.",
       })
     ),
     chapter: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Chapter for chapter+section regulatory codes (rare).",
       })
     ),
     subsection: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Subsection/pincite chain, e.g. "(c)(2)"',
       })
     ),
     subsectionRange: S.Struct({ start: S.String, end: S.String }).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Structured subsection range ((a)-(b)).",
       })
     ),
     jurisdiction: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: '2-letter state code or "US".',
       })
     ),
     pincite: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Alias for subsection.",
       })
@@ -121,37 +122,37 @@ export class RegulationCitation extends S.Class<RegulationCitation>($I`Regulatio
         description: 'True when "et seq." follows.',
       })
     ),
-    year: NonNegativeInt.pipe(
+    year: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Year of the regulatory edition cited.",
       })
     ),
     publisher: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Publisher of an annotated edition.",
       })
     ),
-    recompiledYear: NonNegativeInt.pipe(
+    recompiledYear: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Recompilation year.",
       })
     ),
     editionLabel: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Edition-volume label (Repl., Supp., Cum. Supp.).",
       })
     ),
     spans: StatuteComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating the regulation's sub-parts within the source text.",
       })

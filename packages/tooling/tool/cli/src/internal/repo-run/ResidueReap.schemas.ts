@@ -7,7 +7,6 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { NonEmptyTrimmedStr } from "@beep/schema/String";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/repo-run/ResidueReap.schemas");
@@ -272,7 +271,10 @@ export class QualificationViewReceipt extends S.Class<QualificationViewReceipt>(
  * @category models
  * @since 0.0.0
  */
-export const ResidueReapHomeRoot = NonEmptyTrimmedStr.check(S.isPattern(/^\//u)).pipe(
+export const ResidueReapHomeRoot = S.Trim.check(
+  S.isNonEmpty({ message: "String must not be empty" }),
+  S.isPattern(/^\//u)
+).pipe(
   $I.annoteSchema("ResidueReapHomeRoot", {
     description: "Absolute, non-empty home directory accepted as a residue cleanup root.",
   })
