@@ -19,8 +19,7 @@ import {
   PhoenixPromptChatMessage,
   PhoenixPromptCreateInput,
 } from "@beep/phoenix";
-import { Defect, LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { DateTime, Duration, Effect, FileSystem, flow, HashMap, Match, Path, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -31,6 +30,8 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { AiMetricsDeployTarget, CountRow } from "./models.ts";
 import type { PhoenixError, PhoenixShape } from "@beep/phoenix";
+
+const decodeUnknownJsonResult = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const $I = $RepoAiMetricsId.create("agent-effectiveness");
 const defaultPhoenixBaseUrl = "https://dankserver.tailc7c348.ts.net:8447";
@@ -459,7 +460,7 @@ export type AgentEffectivenessAnnotationValue = typeof AgentEffectivenessAnnotat
 export class AgentEffectivenessError extends S.TaggedError<AgentEffectivenessError>($I`AgentEffectivenessError`)(
   "AgentEffectivenessError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AgentEffectivenessError>("AgentEffectivenessError", {
@@ -4107,7 +4108,7 @@ const forbiddenPatterns = [
   { code: "raw-worker-draft", pattern: /draftJsDoc|@example|```ts/u },
 ] as const;
 
-const decodeUnknownRecordOption = S.decodeUnknownOption(UnknownRecord);
+const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const maxPrivacyScanDepth = 16;
 
 const checkText = (
@@ -4186,22 +4187,16 @@ function checkRecordText(
 const checkPlanPayload = (
   plan: AgentEffectivenessAnnotationPlan
 ): ReadonlyArray<AgentEffectivenessAnnotationCheckFinding> =>
-  Result.match(
-    pipe(
-      AgentEffectivenessAnnotationPlan.encodeJsonResult(plan),
-      Result.flatMap(UnknownFromJsonString.decodeUnknownResult)
-    ),
-    {
-      onFailure: () => [
-        AgentEffectivenessAnnotationCheckFinding.make({
-          annotationId: "plan",
-          code: AgentEffectivenessAnnotationCheckFindingCode.Enum["plan-encode-failed"],
-          message: "Plan payload could not be encoded for scanning.",
-        }),
-      ],
-      onSuccess: (payload) => checkUnknownText("plan", payload, "Plan payload"),
-    }
-  );
+  Result.match(pipe(AgentEffectivenessAnnotationPlan.encodeJsonResult(plan), Result.flatMap(decodeUnknownJsonResult)), {
+    onFailure: () => [
+      AgentEffectivenessAnnotationCheckFinding.make({
+        annotationId: "plan",
+        code: AgentEffectivenessAnnotationCheckFindingCode.Enum["plan-encode-failed"],
+        message: "Plan payload could not be encoded for scanning.",
+      }),
+    ],
+    onSuccess: (payload) => checkUnknownText("plan", payload, "Plan payload"),
+  });
 
 const checkDatasetExample = (
   dataset: AgentEffectivenessDatasetSpec,

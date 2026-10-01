@@ -13,7 +13,6 @@ import * as Crypto from "effect/Crypto";
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Chunk, Context, Effect, Inspectable, Layer, Match, MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
@@ -46,6 +45,8 @@ import { buildLocalNameToIriMapSafe, expandLocalNameToIri, expandTypesToIris } f
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
 import { generateObjectWithRetry } from "./LlmWithRetry.ts";
+
+const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Extraction");
 
@@ -130,7 +131,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           promptPreview: structuredPrompt.systemMessage.slice(0, 500),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
-        const jsonSchemaText = yield* UnknownFromJsonString.encodeUnknownEffect(jsonSchema);
+        const jsonSchemaText = yield* encodeUnknownJsonEffect(jsonSchema);
         const schemaHash = yield* sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Entity extraction schema", {
           stage: "entity-extraction",
@@ -494,7 +495,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           promptPreview: structuredPrompt.systemMessage.slice(0, 500),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
-        const jsonSchemaText = yield* UnknownFromJsonString.encodeUnknownEffect(jsonSchema);
+        const jsonSchemaText = yield* encodeUnknownJsonEffect(jsonSchema);
         const schemaHash = yield* sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Relation extraction schema", {
           stage: "relation-extraction",

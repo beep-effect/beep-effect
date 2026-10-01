@@ -7,7 +7,6 @@ import {
   circuitBreakerOpenStateDir,
   circuitBreakerRoot,
 } from "@beep/repo-ai-metrics";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
@@ -16,12 +15,13 @@ import { Effect, FileSystem, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import { ChildProcess } from "effect/process";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const claudeBreakerPath = `${repoRoot}.claude/hooks/circuit-breaker.sh`;
 const codexBreakerPath = `${repoRoot}.codex/hooks/circuit-breaker.sh`;
 const CANARY = "CIRCUIT-BREAKER-COMMAND-CONTENT-CANARY";
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const canonicalEventKeys = ["schemaVersion", "ts", "probe", "caller", "breakerRev", "evidenceTier", "outcome"];
 const canonicalOpenStateKeys = [

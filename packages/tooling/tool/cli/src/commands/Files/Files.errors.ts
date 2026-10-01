@@ -6,17 +6,17 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Effect, Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Files/Files.errors");
 
 class PlatformErrorOptions extends S.Class<PlatformErrorOptions>($I`PlatformErrorOptions`)(
   {
-    cause: Defect({ includeStack: true }),
+    cause: OpaqueDefect,
   },
   $I.annote("PlatformErrorOptions", {
     description: "Options for platform errors, including a cause.",
@@ -42,7 +42,7 @@ export class FilesCommandError extends S.TaggedError<FilesCommandError>($I`Files
   "FilesCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
     exitCode: S.optionalKey(S.Literals([1, 2])).annotateKey({
       description:
         "Process exit-code hint per the file-processing SPEC: 2 for configuration/engine-discovery failures, 1 (default) otherwise.",

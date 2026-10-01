@@ -1,5 +1,4 @@
 import { inspect } from "node:util";
-import { encodeJsonString } from "@beep/schema/Json";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
@@ -78,7 +77,7 @@ class XAiTestHttp extends Context.Service<XAiTestHttp, XAiTestHttpShape>()(
 ) {}
 
 const sortStrings = A.sort(Order.String);
-const encodeJson = encodeJsonString;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));

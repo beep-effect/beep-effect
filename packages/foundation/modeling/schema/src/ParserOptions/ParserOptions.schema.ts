@@ -13,8 +13,8 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { BuffEncoding } from "../BufferEncoding.ts";
-import { Defect } from "../Opaque.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
+import { alwaysEquivalent } from "../SchemaUtils/toEquivalence.ts";
 import { HeaderArray, HeaderTransformFunction } from "./ParserOptions.types.ts";
 import type * as AST from "effect/SchemaAST";
 
@@ -110,7 +110,9 @@ export type HeaderValueInput = typeof HeaderValueInput.Type;
 export class ParserOptionsError extends S.TaggedError<ParserOptionsError>($I.make("ParserOptionsError"))(
   "ParserOptionsError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(alwaysEquivalent))
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
     message: S.String,
   },
   $I.annoteError<ParserOptionsError>("ParserOptionsError", {

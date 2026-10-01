@@ -92,7 +92,6 @@ import {
   writeAiMetricsConfigSnapshotArtifacts,
   writeAiMetricsDerivedStorage,
 } from "@beep/repo-ai-metrics";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
@@ -107,6 +106,8 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import { TestClock } from "effect/testing";
+
+const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
   const formatIssue = SchemaIssue.makeFormatterDefault();
@@ -2951,7 +2952,7 @@ volumes:
           yield* writeText(
             path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json"),
             // TODO(effect-native-migration): model schema
-            yield* UnknownFromJsonString.encodeUnknownEffect({
+            yield* encodeUnknownJsonEffect({
               excludedDirectoryNames: [],
               fileCount: 1,
               files: [

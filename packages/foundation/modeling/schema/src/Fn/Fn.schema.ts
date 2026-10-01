@@ -15,6 +15,7 @@ import { Cause, Effect, Result, SchemaIssue, SchemaParser } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
+import { alwaysEquivalent } from "../SchemaUtils/toEquivalence.ts";
 
 const $I = $SchemaId.create("Fn");
 type NoArgInputSchema = typeof S.Never | typeof S.Undefined | typeof S.Void;
@@ -26,7 +27,7 @@ const isVoidKeyword = P.isTagged("Void");
 const isFunctionValue = <A>(value: unknown): value is A => P.isFunction(value);
 const schemaIssueToError = (cause: S.SchemaError["issue"]): S.SchemaError => new S.SchemaError(cause);
 const withNeverEquivalence = <Schema extends S.Top>(schema: Schema): Schema =>
-  isNeverKeyword(schema.ast) ? (schema.pipe(S.overrideToEquivalence(() => () => true)) as Schema) : schema;
+  isNeverKeyword(schema.ast) ? (schema.pipe(S.overrideToEquivalence(alwaysEquivalent)) as Schema) : schema;
 
 const validateOutputEffect = <Output extends S.Top>(
   outputSchema: Output,

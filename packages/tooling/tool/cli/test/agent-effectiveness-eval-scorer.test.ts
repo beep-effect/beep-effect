@@ -17,7 +17,6 @@ import {
   SkillOptTaskManifest,
 } from "@beep/repo-cli/test/AgentEffectiveness";
 import { findRepoRoot } from "@beep/repo-utils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -25,7 +24,22 @@ import { NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit, FileSystem, Layer, Match, Path, PlatformError, pipe, Ref, Sink, Stream } from "effect";
+import {
+  Cause,
+  Effect,
+  Exit,
+  FileSystem,
+  flow,
+  Layer,
+  Match,
+  Path,
+  PlatformError,
+  pipe,
+  Ref,
+  Result,
+  Sink,
+  Stream,
+} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -35,8 +49,9 @@ import * as Str from "effect/String";
 const decodeUnknownSkillOptTaskManifestJson = S.decodeUnknownEffect(S.fromJsonString(SkillOptTaskManifest));
 
 const TestLayer = NodeServices.layer;
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
-const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
+const UnknownJson = S.fromJsonString(S.Unknown);
+const encodeJson = flow(S.encodeUnknownResult(UnknownJson), Result.getOrThrow);
+const decodeUnknownJson = S.decodeUnknownEffect(UnknownJson);
 const isScorerError = S.is(AgentEffectivenessEvalScorerError);
 const decodeTaskManifest = S.decodeUnknownEffect(SkillOptTaskManifest);
 const decodeScoreReportJson = S.decodeEffect(S.fromJsonString(AgentEffectivenessEvalScoreReport));

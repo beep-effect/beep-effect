@@ -8,7 +8,7 @@
 import { createRequire } from "node:module";
 import { $WinkId } from "@beep/identity";
 import { SimilarityScore } from "@beep/nlp/Core/Similarity";
-import { Defect } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Inspectable, Layer } from "effect";
 import { dual } from "effect/Function";
@@ -103,7 +103,7 @@ const toNativeTermSet = (terms: ReadonlyArray<string>): Set<string> => new Set(t
 export class SimilarityError extends S.TaggedError<SimilarityError>($I`SimilarityError`)(
   "SimilarityError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
     operation: S.String,
   },

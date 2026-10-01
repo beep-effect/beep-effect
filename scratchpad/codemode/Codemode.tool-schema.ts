@@ -7,7 +7,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, Str } from "@beep/utils";
 import { Effect, flow, HashSet, JsonPointer, Result, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
@@ -108,7 +107,7 @@ const decodeNode = S.decodeResult(Node);
 const decodeDocument = S.decodeResult(Document);
 const isNode = S.is(Node);
 const isTypeName: P.Refinement<unknown, JsonSchemaType> = S.is(TypeName);
-const encodeJsonString = UnknownFromJsonString.encodeUnknownResult;
+const encodeJsonString = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const renderLiteral = (value: unknown): string =>
   pipe(

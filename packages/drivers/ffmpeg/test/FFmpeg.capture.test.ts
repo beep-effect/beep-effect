@@ -36,14 +36,27 @@ import {
   WriteContainerMetadataRequest,
   WriteContainerMetadataResult,
 } from "@beep/ffmpeg";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Deferred, Effect, Equal, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
+import {
+  Context,
+  Deferred,
+  Effect,
+  Equal,
+  FileSystem,
+  flow,
+  Layer,
+  Order,
+  Path,
+  pipe,
+  Result,
+  Sink,
+  Stream,
+} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -63,7 +76,10 @@ const assertRoundTrip = Effect.fn("FFmpegTest.assertRoundTrip")(function* <Schem
   expect(Equal.equals(decoded, value)).toBe(true);
 });
 
-const ffprobeJson = UnknownFromJsonString.encodeUnknownSync({
+const ffprobeJson = flow(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown)),
+  Result.getOrThrow
+)({
   format: { duration: "2.0", start_time: "0.000000" },
   streams: [
     {

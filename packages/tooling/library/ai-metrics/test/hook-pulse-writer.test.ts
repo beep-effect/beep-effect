@@ -25,7 +25,6 @@ import {
   makeAiMetricsConfigSnapshot,
   makeHarnessFingerprint,
 } from "@beep/repo-ai-metrics";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -124,7 +123,7 @@ const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 // Fixture payloads are raw harness shapes, not a schema this package owns, so the
 // unknown-shaped encoder is the right rung: it renders stdin without pretending the
 // content-bearing keys we deliberately never model are part of the contract.
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 // Exactly the canonical `HookPulseV1` encoded surface. Any other key on a row is
 // a leak or a drift, whichever it turns out to be. Stated by hand so the leak

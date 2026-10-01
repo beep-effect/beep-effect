@@ -9,7 +9,6 @@
 import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
 import { DmsProvider, RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context, Effect } from "effect";
@@ -57,7 +56,7 @@ export class SyncConflictSeed extends S.Class<SyncConflictSeed>($I`SyncConflictS
     remoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider identifier of the drifted remote item; none when the event omits it.",
     }),
-    remotePayload: UnknownRecord.annotateKey({
+    remotePayload: S.Record(S.String, S.Unknown).annotateKey({
       description: "Remote event snapshot preserved verbatim for review.",
     }),
     resolutionStatus: DomainSyncConflict.SyncConflictResolution.annotateKey({

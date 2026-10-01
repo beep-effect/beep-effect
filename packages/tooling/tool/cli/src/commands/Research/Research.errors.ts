@@ -6,10 +6,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Research/Research.errors");
 
@@ -32,7 +32,7 @@ export class ResearchCommandError extends S.TaggedError<ResearchCommandError>($I
   "ResearchCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<ResearchCommandError>("ResearchCommandError", {
     description: "A failure raised while preparing or applying a research knowledge-vault operation.",

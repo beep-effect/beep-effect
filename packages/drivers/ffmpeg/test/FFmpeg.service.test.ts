@@ -21,13 +21,12 @@ import {
   VideoDimension,
   VideoProbe,
 } from "@beep/ffmpeg";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Context, Effect, Equal, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
+import { Context, Effect, Equal, FileSystem, flow, Layer, Order, Path, pipe, Result, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -52,7 +51,10 @@ const assertRoundTrip = Effect.fn("FFmpegTest.assertRoundTrip")(function* <Schem
 });
 
 // TODO(effect-native-migration): model schema
-const ffprobeJson = UnknownFromJsonString.encodeUnknownSync({
+const ffprobeJson = flow(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown)),
+  Result.getOrThrow
+)({
   format: { duration: "2.0" },
   streams: [
     {

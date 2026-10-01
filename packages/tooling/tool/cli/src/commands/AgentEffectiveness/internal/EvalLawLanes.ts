@@ -7,7 +7,6 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -30,6 +29,8 @@ import type { ChildProcessSpawner } from "effect/process";
 import type { SchemaFirstPolicyFinding } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
 import type { AgentEffectivenessEvalLawLane } from "../AgentEffectiveness.schemas.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalLawLanes");
 const LAW_SANDBOX_FIXTURE_DIR = "packages/fixture";
 const LAW_SANDBOX_FIXTURE_PREFIX = `${LAW_SANDBOX_FIXTURE_DIR}/`;
@@ -41,7 +42,7 @@ const ENVIRONMENT_EXCERPT_LENGTH = 2000;
 const BIOME_MAX_FILE_SIZE = 1024 * 1024 * 1024;
 const UNMEASURED_FILE_RULE_ID = "unmeasured-file";
 const BIOME_SHORTFALL_FILE = ".";
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(UnknownJson);
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeJsonObjectOption = S.decodeUnknownOption(S.JsonObject);
 const decodeJsonArrayOption = S.decodeUnknownOption(S.Array(S.Json));

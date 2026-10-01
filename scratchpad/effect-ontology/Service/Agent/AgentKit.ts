@@ -12,7 +12,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { UnknownRecord } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -31,6 +30,8 @@ import { StorageService, StorageServiceLive } from "../Storage.ts";
 import { AgentCoordinator } from "./AgentCoordinator.ts";
 import { CorrectorAgent } from "./CorrectorAgent.ts";
 import { AgentTask } from "./types.ts";
+
+const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Agent/AgentKit");
 
@@ -181,7 +182,7 @@ const makeAgentKit = Effect.gen(function* () {
       }
       const extraOptions = O.match(task.ingestionOptions, {
         onNone: () => ({}),
-        onSome: (value): Record<string, unknown> => O.getOrElse(UnknownRecord.decodeUnknownOption(value), () => ({})),
+        onSome: (value): Record<string, unknown> => O.getOrElse(decodeUnknownRecordOption(value), () => ({})),
       });
       const ingestResult = yield* ingestionOpt.value.ingestUrl(task.sourceUrl.value, {
         ontologyId: task.ontologyId.value,

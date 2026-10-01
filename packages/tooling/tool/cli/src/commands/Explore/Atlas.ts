@@ -18,7 +18,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Console, Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
 import { Command, Flag } from "effect/cli";
@@ -31,6 +30,8 @@ import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { PacketSlug } from "../Goals/PacketCore/PacketCore.schemas.ts";
 import { PacketEventStore, PacketStreamLocator } from "../Goals/PacketCore/PacketEventStore.ts";
 import { foldPacketEvents } from "../Goals/PacketCore/PacketFold.ts";
+
+const decodeUnknownJsonEffect = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const $I = $RepoCliId.create("commands/Explore/Atlas");
 
@@ -550,7 +551,7 @@ export const buildExplorationProjection = Effect.fn("Explore.buildExplorationPro
     const manifest = yield* fs
       .readFileString(manifestPath)
       .pipe(
-        Effect.flatMap(UnknownFromJsonString.decodeUnknownEffect),
+        Effect.flatMap(decodeUnknownJsonEffect),
         Effect.flatMap(decodeManifest),
         Effect.asSome,
         Effect.orElseSucceed(O.none<ExplorationManifest>)

@@ -31,7 +31,6 @@ import {
   VersionSyncResolution,
 } from "@beep/repo-cli/test/VersionSync";
 import { FsUtilsLive } from "@beep/repo-utils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
@@ -39,7 +38,10 @@ import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const UnknownJson = S.fromJsonString(S.Unknown);
+const decodeJsonEffect = S.decodeEffect(UnknownJson);
+
+const encodeJson = S.encodeUnknownEffect(UnknownJson);
 
 import * as Arbitrary from "effect/Arbitrary";
 
@@ -191,7 +193,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
             snapshot("@effect/vitest"),
             snapshot("effect"),
           ]);
-          const updated = yield* UnknownFromJsonString.decodeEffect(yield* fs.readFileString(packageJsonPath));
+          const updated = yield* decodeJsonEffect(yield* fs.readFileString(packageJsonPath));
           expect(updated).toMatchObject({ catalog: independent });
         })
       );
@@ -222,7 +224,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
           versionSpecifier: "^4.0.0-beta.28",
         });
         const updated = yield* fs.readFileString(packageJsonPath);
-        const decodedUpdated = (yield* UnknownFromJsonString.decodeEffect(updated)) as {
+        const decodedUpdated = (yield* decodeJsonEffect(updated)) as {
           readonly catalog: Record<string, string>;
         };
 

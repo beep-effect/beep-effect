@@ -118,7 +118,7 @@ Keep `Schema` as the source of truth for pure data models.
   `description`.
 - Use `S.is(schema)` for guards, `S.toEquivalence(schema)` for comparisons, and
   `S.toArbitrary(schema)` for schema-modeled property tests.
-- Use `S.UnknownFromJsonString` or `S.fromJsonString(schema)` for JSON string
+- Use `S.fromJsonString(S.Unknown)` or `S.fromJsonString(schema)` for JSON string
   boundaries.
 - Use `S.decodeUnknownEffect` / `S.decodeEffect` and `S.encodeUnknownEffect` /
   `S.encodeEffect` by default. Reach for `S.decodeUnknownResult`,

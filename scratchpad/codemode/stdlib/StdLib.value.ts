@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MappedLiteralKit, type SafeObject } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit } from "@beep/schema";
 import { A, P } from "@beep/utils";
 import { DateTime } from "effect";
 import { dual } from "effect/Function";
@@ -21,6 +21,7 @@ import {
   CodeModeURLSearchParams,
   isCodeModeValue,
   makeEmptySafeObject,
+  type SafeObject,
 } from "../Codemode.values.ts";
 import {
   type AstNode,
