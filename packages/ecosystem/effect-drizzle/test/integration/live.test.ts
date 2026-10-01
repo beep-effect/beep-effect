@@ -78,6 +78,85 @@ const invokeFindMany = (query: unknown, config: unknown): Promise<unknown> => {
   return Promise.reject(new Error("RQBv2 findMany is unavailable"));
 };
 
+const seedRelationGraph = fn("seedRelationGraph")(function* () {
+  const organizations = yield* organizationRepository;
+  const users = yield* userOptimisticRepository;
+  const rootRequest = yield* makeEffect(Organization.insert)({
+    parentOrgId: null,
+    slug: "round-five-root",
+    name: "Round Five Root",
+    code: "R5-ROOT",
+  });
+  const root = yield* organizations.insert(rootRequest);
+  const childRequest = yield* makeEffect(Organization.insert)({
+    parentOrgId: root.id,
+    slug: "round-five-child",
+    name: "Round Five Child",
+    code: "R5-CHILD",
+  });
+  const child = yield* organizations.insert(childRequest);
+  const directRequest = yield* makeEffect(User.insert)({
+    orgId: root.id,
+    email: "round-five-direct@example.com",
+    name: "Round Five Direct",
+    bio: null,
+    nickname: none(),
+    settings: { theme: "direct" },
+    active: true,
+    status: "active",
+  });
+  const direct = yield* users.insert(directRequest);
+  const memberRequest = yield* makeEffect(User.insert)({
+    orgId: child.id,
+    email: "round-five-member@example.com",
+    name: "Round Five Member",
+    bio: null,
+    nickname: none(),
+    settings: { theme: "member" },
+    active: true,
+    status: "draft",
+  });
+  const member = yield* users.insert(memberRequest);
+  const sql = yield* SqlClient;
+  yield* sql`
+          insert into membership (organization_id, user_id, role)
+          values (${root.id}, ${member.id}, ${"member"})
+        `;
+  return { root, child, direct, member };
+});
+
+const queryRelationRows = fn("queryRelationRows")(function* () {
+  const client = yield* PgliteClient;
+  if (!(client.pglite instanceof PGlite)) {
+    throw new Error("PgliteTestLayer did not expose a concrete PGlite client");
+  }
+  const db = drizzle({
+    client: client.pglite,
+    relations: effectDrizzleSchema.relations,
+  });
+  const usersUnknown = yield* tryPromise(() =>
+    invokeFindMany(db.query.user, {
+      with: {
+        org: true,
+        organizationsThroughMembership: true,
+      },
+    })
+  );
+  const organizationsUnknown = yield* tryPromise(() =>
+    invokeFindMany(db.query.organization, {
+      with: {
+        parentOrg: true,
+        childOrgs: true,
+        users: true,
+        usersThroughMembership: true,
+      },
+    })
+  );
+  const users = yield* decodeUnknownEffect(UserRelationRows)(usersUnknown);
+  const organizations = yield* decodeUnknownEffect(OrganizationRelationRows)(organizationsUnknown);
+  return { users, organizations };
+});
+
 const drizzleExports = effectDrizzleSchema.drizzleSchema;
 
 class PgliteHarness extends Service<
@@ -491,84 +570,9 @@ it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGl
   it.effect(
     "queries forward, reverse, self, and junction relations through RQBv2",
     fnUntraced(function* () {
-      const seeded = yield* gen(function* () {
-        const organizations = yield* organizationRepository;
-        const users = yield* userOptimisticRepository;
-        const rootRequest = yield* makeEffect(Organization.insert)({
-          parentOrgId: null,
-          slug: "round-five-root",
-          name: "Round Five Root",
-          code: "R5-ROOT",
-        });
-        const root = yield* organizations.insert(rootRequest);
-        const childRequest = yield* makeEffect(Organization.insert)({
-          parentOrgId: root.id,
-          slug: "round-five-child",
-          name: "Round Five Child",
-          code: "R5-CHILD",
-        });
-        const child = yield* organizations.insert(childRequest);
-        const directRequest = yield* makeEffect(User.insert)({
-          orgId: root.id,
-          email: "round-five-direct@example.com",
-          name: "Round Five Direct",
-          bio: null,
-          nickname: none(),
-          settings: { theme: "direct" },
-          active: true,
-          status: "active",
-        });
-        const direct = yield* users.insert(directRequest);
-        const memberRequest = yield* makeEffect(User.insert)({
-          orgId: child.id,
-          email: "round-five-member@example.com",
-          name: "Round Five Member",
-          bio: null,
-          nickname: none(),
-          settings: { theme: "member" },
-          active: true,
-          status: "draft",
-        });
-        const member = yield* users.insert(memberRequest);
-        const sql = yield* SqlClient;
-        yield* sql`
-                insert into membership (organization_id, user_id, role)
-                values (${root.id}, ${member.id}, ${"member"})
-              `;
-        return { root, child, direct, member };
-      });
+      const seeded = yield* seedRelationGraph();
 
-      const queried = yield* gen(function* () {
-        const client = yield* PgliteClient;
-        if (!(client.pglite instanceof PGlite)) {
-          throw new Error("PgliteTestLayer did not expose a concrete PGlite client");
-        }
-        const db = drizzle({
-          client: client.pglite,
-          relations: effectDrizzleSchema.relations,
-        });
-        const usersUnknown = yield* tryPromise(() =>
-          invokeFindMany(db.query.user, {
-            with: {
-              org: true,
-              organizationsThroughMembership: true,
-            },
-          })
-        );
-        const organizationsUnknown = yield* tryPromise(() =>
-          invokeFindMany(db.query.organization, {
-            with: {
-              parentOrg: true,
-              childOrgs: true,
-              users: true,
-              usersThroughMembership: true,
-            },
-          })
-        );
-        const users = yield* decodeUnknownEffect(UserRelationRows)(usersUnknown);
-        const organizations = yield* decodeUnknownEffect(OrganizationRelationRows)(organizationsUnknown);
-        return { users, organizations };
-      });
+      const queried = yield* queryRelationRows();
 
       const direct = getOrThrow(findFirst(queried.users, (row) => row.id === seeded.direct.id));
       const member = getOrThrow(findFirst(queried.users, (row) => row.id === seeded.member.id));

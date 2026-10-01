@@ -35,7 +35,6 @@ import {
   ObsVersionInfo,
 } from "./ObsProtocol.models.ts";
 import { ObsProtocol } from "./ObsProtocol.service.ts";
-import type { UnknownRecord } from "@beep/schema";
 import type { Stream } from "effect";
 import type * as Scope from "effect/Scope";
 import type { Socket } from "effect/socket";
@@ -59,7 +58,7 @@ const filterResourceNotFound = <E>(error: E): Result.Result<ObsError, E> =>
 
 const decodeResponseData =
   <T, E>(operation: string, requestType: ObsRequestType, decode: (input: unknown) => Effect.Effect<T, E>) =>
-  (responseData: O.Option<UnknownRecord>): Effect.Effect<T, ObsError> =>
+  (responseData: O.Option<Readonly<Record<string, unknown>>>): Effect.Effect<T, ObsError> =>
     O.match(responseData, {
       onNone: () =>
         Effect.fail(

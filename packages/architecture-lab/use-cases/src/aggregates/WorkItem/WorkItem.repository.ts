@@ -8,7 +8,6 @@
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
@@ -132,8 +131,9 @@ export class WorkItemRepositoryUnavailable extends S.TaggedError<WorkItemReposit
  *   WorkItemRepositoryError,
  *   WorkItemRepositoryUnavailable,
  * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
+ * import * as S from "effect/Schema"
  *
- * const isRepositoryError = WorkItemRepositoryError.is
+ * const isRepositoryError = S.is(WorkItemRepositoryError)
  *
  * console.log(isRepositoryError(WorkItemRepositoryUnavailable.make({ reason: "maintenance" }))) // true
  * ```
@@ -151,12 +151,7 @@ export const WorkItemRepositoryError = S.Union([
     title: "WorkItem repository error",
     description: "Tagged union of WorkItem repository port failures.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**

@@ -288,7 +288,7 @@ files.
 
 A utility-oriented `@beep/schema` namespace whose public concept is a helper or
 combinator rather than a reusable data schema. `SchemaUtils` may expose helper
-leaves such as `@beep/schema/SchemaUtils/pluck` when direct helper imports are
+leaves such as `@beep/schema/SchemaUtils/collectAnnotationsAt` when direct helper imports are
 the intended API.
 
 ## Port

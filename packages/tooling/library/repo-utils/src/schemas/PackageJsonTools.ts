@@ -8,7 +8,7 @@
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, flow, identity, JsonPointer, Order, pipe, SchemaIssue, Tuple } from "effect";
+import { Effect, flow, identity, JsonPointer, Order, pipe, Result, SchemaIssue, Tuple } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -125,7 +125,7 @@ const canonicalizePublishConfig = (
     out = R.set(out, key, canonicalizeUnknownValue(entryValue));
   }
 
-  return PublishConfig.decodeUnknownSync(out);
+  return Result.getOrThrow(S.decodeUnknownResult(PublishConfig)(out));
 };
 
 const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJson.Encoded =>
@@ -156,17 +156,19 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ typings: O.fromUndefinedOr(encoded.typings) }),
     ...O.getSomesStruct({
       exports: O.map(O.fromUndefinedOr(encoded.exports), (exports) =>
-        PackageExports.decodeUnknownSync(canonicalizeUnknownValue(exports))
+        Result.getOrThrow(S.decodeUnknownResult(PackageExports)(canonicalizeUnknownValue(exports)))
       ),
     }),
     ...O.getSomesStruct({
       imports: O.map(O.fromUndefinedOr(encoded.imports), (imports) =>
-        PackageImports.decodeUnknownSync(canonicalizeUnknownValue(imports))
+        Result.getOrThrow(S.decodeUnknownResult(PackageImports)(canonicalizeUnknownValue(imports)))
       ),
     }),
     ...O.getSomesStruct({
       browser: O.map(O.fromUndefinedOr(encoded.browser), (browser) =>
-        P.isString(browser) ? browser : Browser.decodeUnknownSync(canonicalizeUnknownValue(browser))
+        P.isString(browser)
+          ? browser
+          : Result.getOrThrow(S.decodeUnknownResult(Browser)(canonicalizeUnknownValue(browser)))
       ),
     }),
     ...O.getSomesStruct({ bin: O.fromUndefinedOr(encoded.bin) }),
@@ -197,7 +199,7 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     }),
     ...O.getSomesStruct({
       peerDependenciesMeta: O.map(O.fromUndefinedOr(encoded.peerDependenciesMeta), (peerDependenciesMeta) =>
-        PeerDependenciesMeta.decodeUnknownSync(canonicalizeUnknownValue(peerDependenciesMeta))
+        Result.getOrThrow(S.decodeUnknownResult(PeerDependenciesMeta)(canonicalizeUnknownValue(peerDependenciesMeta)))
       ),
     }),
     ...O.getSomesStruct({
@@ -231,7 +233,7 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ readme: O.fromUndefinedOr(encoded.readme) }),
     ...O.getSomesStruct({
       typesVersions: O.map(O.fromUndefinedOr(encoded.typesVersions), (typesVersions) =>
-        TypesVersions.decodeUnknownSync(canonicalizeUnknownValue(typesVersions))
+        Result.getOrThrow(S.decodeUnknownResult(TypesVersions)(canonicalizeUnknownValue(typesVersions)))
       ),
     }),
   }) satisfies PackageJson.Encoded;

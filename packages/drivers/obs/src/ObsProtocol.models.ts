@@ -13,12 +13,14 @@
  */
 
 import { $ObsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type * as SchemaAST from "effect/SchemaAST";
+
+const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $ObsId.create("ObsProtocol.models");
 
@@ -670,8 +672,9 @@ export class ObsRequestResponseMessage extends S.Class<ObsRequestResponseMessage
  *
  * ```ts
  * import { ObsIncomingMessage } from "@beep/obs"
+ * import * as S from "effect/Schema"
  *
- * console.log(ObsIncomingMessage.is({ op: 2, d: { negotiatedRpcVersion: 1 } }))
+ * console.log(S.is(ObsIncomingMessage)({ op: 2, d: { negotiatedRpcVersion: 1 } }))
  * ```
  *
  * @category schemas
@@ -686,12 +689,7 @@ export const ObsIncomingMessage = S.Union([
   $I.annoteSchema("ObsIncomingMessage", {
     description: "obs-websocket messages sent from the server to this client.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("op"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("op")
 );
 
 /**
@@ -711,11 +709,10 @@ export const ObsIncomingMessage = S.Union([
  */
 export type ObsIncomingMessage = typeof ObsIncomingMessage.Type;
 
-const ObsOutgoingMessageWithCodecStatics = S.Union([ObsIdentifyMessage, ObsRequestMessage]).pipe(
+const ObsOutgoingMessageUntagged = S.Union([ObsIdentifyMessage, ObsRequestMessage]).pipe(
   $I.annoteSchema("ObsOutgoingMessage", {
     description: "obs-websocket messages sent from this client to the server.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -726,17 +723,15 @@ const ObsOutgoingMessageWithCodecStatics = S.Union([ObsIdentifyMessage, ObsReque
  *
  * ```ts
  * import { ObsOutgoingMessage } from "@beep/obs"
+ * import * as S from "effect/Schema"
  *
- * console.log(ObsOutgoingMessage.is({ op: 1, d: { rpcVersion: 1, eventSubscriptions: 79 } }))
+ * console.log(S.is(ObsOutgoingMessage)({ op: 1, d: { rpcVersion: 1, eventSubscriptions: 79 } }))
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const ObsOutgoingMessage = ObsOutgoingMessageWithCodecStatics.pipe(
-  S.toTaggedUnion("op"),
-  SchemaUtils.withStatics(() => ({ is: ObsOutgoingMessageWithCodecStatics.is }))
-);
+export const ObsOutgoingMessage = ObsOutgoingMessageUntagged.pipe(S.toTaggedUnion("op"));
 
 /**
  * Messages this client sends to the obs-websocket server.

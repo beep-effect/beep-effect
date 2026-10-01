@@ -7,7 +7,7 @@
 
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 
@@ -98,12 +98,7 @@ export const TurnHistoryItem = S.Union([UserTurnHistoryItem, AssistantTurnHistor
   $I.annoteSchema("TurnHistoryItem", {
     description: "Plain-text prompt projection of a thread item consumed by the turn kernel.",
   }),
-  SchemaUtils.withCodecStatics(["decodeSync", "encodeResult"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("role"),
-      SchemaUtils.withStatics(() => ({ decodeSync: schema.decodeSync, encodeResult: schema.encodeResult }))
-    )
+  S.toTaggedUnion("role")
 );
 
 /**

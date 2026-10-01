@@ -1,14 +1,14 @@
 import { fileURLToPath } from "node:url";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, pipe, Stream } from "effect";
+import { Effect, FileSystem, flow, Layer, Path, pipe, Result, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
+import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 import typescript from "typescript";
 
@@ -18,7 +18,7 @@ const tsgoBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsgo
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = Layer.mergeAll(PlatformLayer, NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer)));
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
   stream.pipe(

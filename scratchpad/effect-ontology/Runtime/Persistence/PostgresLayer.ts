@@ -18,7 +18,6 @@
 import { $ScratchpadId } from "@beep/identity";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { Port } from "@beep/schema/Port";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { PgClient } from "@effect/sql-pg";
 import { Config, Effect, Layer} from "effect";
 import * as S from "effect/Schema";
@@ -73,8 +72,7 @@ export const PostgresConfig = S.Struct({
 }).pipe(
   $I.annoteSchema("PostgresConfig", {
     description: "PostgreSQL host, port, database, username, redacted password, and optional TLS flag.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeEffect"])
+  })
 );
 
 /**
@@ -89,7 +87,7 @@ export type PostgresConfig = typeof PostgresConfig.Type;
 const PostgresPortConfig = Config.Number("POSTGRES_PORT").pipe(
   Config.withDefault(5432),
   Config.mapEffect(
-    flow(Port.decodeEffect, Effect.mapError((error) => new Config.ConfigError(error)))
+    flow(S.decodeEffect(Port), Effect.mapError((error) => new Config.ConfigError(error)))
   )
 );
 
@@ -146,7 +144,7 @@ export const PostgresConfigFromEnv = Config.all({
   ssl: Config.Boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
 }).pipe(
   Config.mapEffect(
-    flow(PostgresConfig.decodeEffect, Effect.mapError((error) => new Config.ConfigError(error)))
+    flow(S.decodeEffect(PostgresConfig), Effect.mapError((error) => new Config.ConfigError(error)))
   )
 );
 

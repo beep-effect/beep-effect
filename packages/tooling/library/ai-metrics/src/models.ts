@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -198,7 +198,6 @@ export const CodexTranscriptEventName = LiteralKit([
   "turn_context",
   "user_message",
 ]).pipe(
-  SchemaUtils.withStatics((schema) => ({ isAny: S.is(schema) })),
   $I.annoteSchema("CodexTranscriptEventName", {
     description: "Bounded event-name vocabulary accepted from Codex transcript records.",
   })
@@ -235,7 +234,6 @@ export const ClaudeTranscriptEventName = LiteralKit([
   "tool_use",
   "user",
 ]).pipe(
-  SchemaUtils.withStatics((schema) => ({ isAny: S.is(schema) })),
   $I.annoteSchema("ClaudeTranscriptEventName", {
     description: "Bounded event-name vocabulary accepted from Claude transcript records.",
   })
@@ -274,7 +272,6 @@ export const OpenClawTranscriptEventName = LiteralKit([
   "tool_call",
   "tool_result",
 ]).pipe(
-  SchemaUtils.withStatics((schema) => ({ isAny: S.is(schema) })),
   $I.annoteSchema("OpenClawTranscriptEventName", {
     description: "Bounded event-name vocabulary accepted from OpenClaw transcript records.",
   })
@@ -1181,7 +1178,7 @@ export class OpenClawTranscriptLine extends S.Class<OpenClawTranscriptLine>($I`O
   {
     event: OptionalTranscriptString,
     message: OptionalTranscriptString,
-    payload: S.OptionFromOptionalKey(UnknownRecord).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    payload: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(S.withConstructorDefault(Effect.succeedNone)),
     timestamp: OptionalTranscriptString,
     type: OptionalTranscriptString,
   },

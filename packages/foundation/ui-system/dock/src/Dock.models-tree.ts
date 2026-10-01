@@ -296,13 +296,13 @@ export class Panel extends S.Class<Panel>($I`Panel`)(
     description: "A renderer-neutral panel owned directly by one tab group.",
   })
 ) {
-  static readonly equals = SchemaUtils.toEquivalence(Panel);
+  static readonly equals = S.toEquivalence(Panel);
   static readonly findInNode: Dual2<DockNode.Type, PanelId, O.Option<Panel>> = dual(
     2,
     (node: DockNode.Type, panelId: PanelId): O.Option<Panel> =>
       pipe(
         DockNode.panels(node),
-        A.findFirst((panel) => PanelId.equals(panel.id, panelId))
+        A.findFirst((panel) => S.toEquivalence(PanelId)(panel.id, panelId))
       )
   );
 
@@ -311,7 +311,7 @@ export class Panel extends S.Class<Panel>($I`Panel`)(
     (tabs: TabsNode, panelId: PanelId): O.Option<Panel> =>
       pipe(
         TabsNode.panels(tabs),
-        A.findFirst((panel) => PanelId.equals(panel.id, panelId))
+        A.findFirst((panel) => S.toEquivalence(PanelId)(panel.id, panelId))
       )
   );
 
@@ -447,7 +447,7 @@ export class GroupMetadata extends S.Class<GroupMetadata>($I`GroupMetadata`)(
     description: "Serializable display and future policy metadata for one tab group.",
   })
 ) {
-  static readonly equals = SchemaUtils.toEquivalence(GroupMetadata);
+  static readonly equals = S.toEquivalence(GroupMetadata);
 }
 
 /**
@@ -530,7 +530,9 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
       activePanelId: PanelId,
       metadata: GroupMetadata
     ): TabsNode => {
-      const [before, activeAndAfter] = A.splitWhere(panels, (panel) => PanelId.equals(panel.id, activePanelId));
+      const [before, activeAndAfter] = A.splitWhere(panels, (panel) =>
+        S.toEquivalence(PanelId)(panel.id, activePanelId)
+      );
       return A.match(activeAndAfter, {
         onEmpty: () =>
           TabsNode.make({ groupId, active: A.headNonEmpty(panels), after: A.tailNonEmpty(panels), metadata }),
@@ -559,7 +561,9 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
   static readonly activate: Dual2<TabsNode, PanelId, O.Option<TabsNode>> = dual(
     2,
     (tabs: TabsNode, panelId: PanelId): O.Option<TabsNode> => {
-      const [before, fromMatch] = A.splitWhere(TabsNode.panels(tabs), (panel) => PanelId.equals(panel.id, panelId));
+      const [before, fromMatch] = A.splitWhere(TabsNode.panels(tabs), (panel) =>
+        S.toEquivalence(PanelId)(panel.id, panelId)
+      );
       return A.match(fromMatch, {
         onEmpty: O.none,
         onNonEmpty: (activeAndAfter) =>
@@ -604,7 +608,7 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
   static readonly remove: Dual2<TabsNode, PanelId, O.Option<TabsNode>> = dual(
     2,
     (tabs: TabsNode, panelId: PanelId): O.Option<TabsNode> =>
-      Bool.match(PanelId.equals(tabs.active.id, panelId), {
+      Bool.match(S.toEquivalence(PanelId)(tabs.active.id, panelId), {
         onTrue: () =>
           A.match(tabs.after, {
             onNonEmpty: (after) =>
@@ -635,9 +639,9 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
           O.some(
             TabsNode.make({
               groupId: tabs.groupId,
-              before: A.filter(tabs.before, (panel) => Bool.not(PanelId.equals(panel.id, panelId))),
+              before: A.filter(tabs.before, (panel) => Bool.not(S.toEquivalence(PanelId)(panel.id, panelId))),
               active: tabs.active,
-              after: A.filter(tabs.after, (panel) => Bool.not(PanelId.equals(panel.id, panelId))),
+              after: A.filter(tabs.after, (panel) => Bool.not(S.toEquivalence(PanelId)(panel.id, panelId))),
               metadata: tabs.metadata,
             })
           ),
@@ -932,7 +936,7 @@ export const DockNode = DockNodeBase.pipe(
       (node: DockNodeShape, groupId: GroupId): O.Option<TabsNode> =>
         pipe(
           tabs(node),
-          A.findFirst((candidate) => GroupId.equals(candidate.groupId, groupId))
+          A.findFirst((candidate) => S.toEquivalence(GroupId)(candidate.groupId, groupId))
         )
     );
 
@@ -941,7 +945,7 @@ export const DockNode = DockNodeBase.pipe(
       (node: DockNodeShape, splitId: SplitId): O.Option<SplitNode> =>
         pipe(
           splits(node),
-          A.findFirst((candidate) => SplitId.equals(candidate.splitId, splitId))
+          A.findFirst((candidate) => S.toEquivalence(SplitId)(candidate.splitId, splitId))
         )
     );
 
@@ -950,7 +954,7 @@ export const DockNode = DockNodeBase.pipe(
       (node: DockNodeShape, groupId: GroupId, replacement: DockNodeShape): DockNodeShape =>
         schema.match(node, {
           Tabs: (candidate) =>
-            Bool.match(GroupId.equals(candidate.groupId, groupId), {
+            Bool.match(S.toEquivalence(GroupId)(candidate.groupId, groupId), {
               onTrue: () => replacement,
               onFalse: () => candidate,
             }),
@@ -970,7 +974,7 @@ export const DockNode = DockNodeBase.pipe(
         schema.match(node, {
           Tabs: (tabsNode) => tabsNode,
           Split: (split) =>
-            Bool.match(SplitId.equals(split.splitId, replacement.splitId), {
+            Bool.match(S.toEquivalence(SplitId)(split.splitId, replacement.splitId), {
               onTrue: () => replacement,
               onFalse: () =>
                 SplitNode.make({
@@ -988,7 +992,7 @@ export const DockNode = DockNodeBase.pipe(
       (node: DockNodeShape, groupId: GroupId): O.Option<DockNodeShape> =>
         schema.match(node, {
           Tabs: (candidate) =>
-            Bool.match(GroupId.equals(candidate.groupId, groupId), {
+            Bool.match(S.toEquivalence(GroupId)(candidate.groupId, groupId), {
               onTrue: O.none,
               onFalse: () => O.some(candidate),
             }),
@@ -1023,10 +1027,8 @@ export const DockNode = DockNodeBase.pipe(
     );
 
     return {
-      equals: SchemaUtils.toEquivalence(schema),
       findSplit,
       findTabs,
-      is: S.is(schema),
       panels,
       removeTabs,
       replaceAtGroup,
@@ -1299,7 +1301,7 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
   $I.annoteSchema("DockWorkspace", {
     description: "Complete dock state discriminated between empty and populated layouts.",
   }),
-  SchemaUtils.withStatics((schema) => {
+  SchemaUtils.withStatics(() => {
     const asPopulated = O.liftPredicate(DockWorkspaceBase.guards.populated);
     const empty: DockWorkspaceShape = EmptyWorkspace.make();
 
@@ -1421,7 +1423,7 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
                   PopulatedWorkspace.make({
                     revision,
                     root: nextRoot,
-                    maximized: O.filter(maximized, (id) => !GroupId.equals(id, groupId)),
+                    maximized: O.filter(maximized, (id) => !S.toEquivalence(GroupId)(id, groupId)),
                     floating,
                   })
                 ),
@@ -1444,7 +1446,7 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
               asPopulated,
               O.exists((candidate) =>
                 Bool.and(
-                  DockNode.equals(root, candidate.root),
+                  S.toEquivalence(DockNode)(root, candidate.root),
                   Bool.and(Eq.equals(floating, candidate.floating), Eq.equals(maximized, candidate.maximized))
                 )
               )
@@ -1464,7 +1466,6 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
 
     return {
       empty,
-      equals: SchemaUtils.toEquivalence(schema),
       findActivePanel,
       findPanel,
       findSplit,
@@ -1479,7 +1480,6 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
         }),
       guards: DockWorkspaceBase.guards,
       hasSameContent,
-      is: S.is(schema),
       match: DockWorkspaceBase.match,
       panels: (workspace: DockWorkspaceShape): ReadonlyArray<Panel> =>
         DockWorkspaceBase.match(workspace, {

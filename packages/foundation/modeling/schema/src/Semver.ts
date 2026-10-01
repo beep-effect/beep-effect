@@ -51,8 +51,7 @@ const SemverNumberSegmentString = S.String.check(
 ).pipe(
   $I.annoteSchema("SemverNumberSegmentString", {
     description: "A SemVer numeric identifier string.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const SemverNumberSegment = S.Int.check(
@@ -65,8 +64,7 @@ const SemverNumberSegment = S.Int.check(
 ).pipe(
   $I.annoteSchema("SemverNumberSegment", {
     description: "A safe non-negative integer segment in a semantic version.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const SemverPrereleaseIdentifier = S.String.check(
@@ -80,8 +78,7 @@ const SemverPrereleaseIdentifier = S.String.check(
 ).pipe(
   $I.annoteSchema("SemverPrereleaseIdentifier", {
     description: "A SemVer prerelease identifier.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const SemverBuildIdentifier = S.String.check(
@@ -94,15 +91,13 @@ const SemverBuildIdentifier = S.String.check(
 ).pipe(
   $I.annoteSchema("SemverBuildIdentifier", {
     description: "A SemVer build metadata identifier.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const RangeComparatorOperator = S.Literals(["^", ">=", ">", "<=", "<", "="]).pipe(
   $I.annoteSchema("RangeComparatorOperator", {
     description: "Comparator operator supported by the lightweight SemVer range checker.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 type RangeComparatorOperator = typeof RangeComparatorOperator.Type;
@@ -112,11 +107,11 @@ type RangeComparator = {
   readonly version: Semver;
 };
 
-const isSemverNumberSegmentString = SemverNumberSegmentString.is;
-const isSemverNumberSegment = SemverNumberSegment.is;
-const isSemverPrereleaseIdentifier = SemverPrereleaseIdentifier.is;
-const isSemverBuildIdentifier = SemverBuildIdentifier.is;
-const decodeRangeComparatorOperator = RangeComparatorOperator.decodeUnknownOption;
+const isSemverNumberSegmentString = S.is(SemverNumberSegmentString);
+const isSemverNumberSegment = S.is(SemverNumberSegment);
+const isSemverPrereleaseIdentifier = S.is(SemverPrereleaseIdentifier);
+const isSemverBuildIdentifier = S.is(SemverBuildIdentifier);
+const decodeRangeComparatorOperator = S.decodeUnknownOption(RangeComparatorOperator);
 
 const equalOrdering: Ordering.Ordering = 0;
 const greaterThanOrdering: Ordering.Ordering = 1;

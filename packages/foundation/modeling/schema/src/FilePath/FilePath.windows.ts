@@ -8,7 +8,6 @@ import { Str } from "@beep/utils";
 import { flow, pipe } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { SupportedWindowsNamespace, UsesPosixSeparator, UsesWindowsSeparator } from "./FilePath.guards.ts";
 import { HasLeafSegment } from "./FilePath.roots.ts";
 import { ValidWindowsUncSegments, WindowsSegments } from "./FilePath.segments.ts";
@@ -20,12 +19,12 @@ import {
   windowsUncPrefixRegExp,
 } from "./FilePath.shared.ts";
 
-const isSupportedWindowsNamespace = SupportedWindowsNamespace.is;
-const isUsesPosixSeparator = UsesPosixSeparator.is;
-const isUsesWindowsSeparator = UsesWindowsSeparator.is;
-const isHasLeafSegment = HasLeafSegment.is;
-const isWindowsSegments = WindowsSegments.is;
-const isValidWindowsUncSegments = ValidWindowsUncSegments.is;
+const isSupportedWindowsNamespace = S.is(SupportedWindowsNamespace);
+const isUsesPosixSeparator = S.is(UsesPosixSeparator);
+const isUsesWindowsSeparator = S.is(UsesWindowsSeparator);
+const isHasLeafSegment = S.is(HasLeafSegment);
+const isWindowsSegments = S.is(WindowsSegments);
+const isValidWindowsUncSegments = S.is(ValidWindowsUncSegments);
 
 /**
  * Branded schema for Windows drive paths with a leaf segment.
@@ -81,8 +80,7 @@ export const WindowsDrivePath = S.NonEmptyString.check(
   S.brand("WindowsDrivePath"),
   $I.annoteSchema("WindowsDrivePath", {
     description: "A Windows drive path with a drive prefix and at least one leaf segment.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -164,8 +162,7 @@ export const WindowsUncPath = S.NonEmptyString.check(
   S.brand("WindowsUncPath"),
   $I.annoteSchema("WindowsUncPath", {
     description: "A Windows UNC file path with valid server, share, and leaf segments.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -259,8 +256,7 @@ export const WindowsRelativePath = S.NonEmptyString.check(
   S.brand("WindowsRelativePath"),
   $I.annoteSchema("WindowsRelativePath", {
     description: "A Windows relative path that uses backslashes and contains a leaf segment.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

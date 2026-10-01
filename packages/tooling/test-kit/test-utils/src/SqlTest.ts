@@ -6,7 +6,7 @@
  */
 
 import { $TestUtilsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -115,8 +115,9 @@ const PgExternalSchemaPrefix = S.String.check(
  *
  * ```ts
  * import { PgExternalConnectionUri } from "@beep/test-utils"
+ * import * as S from "effect/Schema"
  *
- * console.log(PgExternalConnectionUri.is("postgres://postgres:postgres@127.0.0.1:5432/postgres"))
+ * console.log(S.is(PgExternalConnectionUri)("postgres://postgres:postgres@127.0.0.1:5432/postgres"))
  * ```
  *
  * @category models
@@ -132,8 +133,7 @@ export const PgExternalConnectionUri = S.NonEmptyString.check(
 ).pipe(
   $I.annoteSchema("PgExternalConnectionUri", {
     description: "PostgreSQL-compatible connection URI accepted by the external SQL test driver.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -536,7 +536,9 @@ export class TestDatabaseInfo extends Context.Service<TestDatabaseInfo, TestData
 export class SqlTestHarnessError extends S.TaggedError<SqlTestHarnessError>($I`SqlTestHarnessError`)(
   "SqlTestHarnessError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("SqlTestHarnessError.cause", {
         description: "Optional underlying defect captured while provisioning or preparing the SQL test harness.",

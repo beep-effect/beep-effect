@@ -673,12 +673,12 @@ describe("@beep/html proof provenance", () => {
       expect(isConformantHtml(conformant)).toBe(true);
       expect(isSafeHtmlAst(safeAst)).toBe(true);
       expect(isSafeHtml(safeHtml)).toBe(true);
-      expect(ConformantHtml.is(conformant)).toBe(true);
-      expect(SafeHtmlAst.is(safeAst)).toBe(true);
-      expect(SafeHtml.is(safeHtml)).toBe(true);
-      expect(ConformantHtml.is({ ...conformant })).toBe(false);
-      expect(SafeHtmlAst.is({ ...safeAst })).toBe(false);
-      expect(SafeHtml.is({ ...safeHtml })).toBe(false);
+      expect(S.is(ConformantHtml)(conformant)).toBe(true);
+      expect(S.is(SafeHtmlAst)(safeAst)).toBe(true);
+      expect(S.is(SafeHtml)(safeHtml)).toBe(true);
+      expect(S.is(ConformantHtml)({ ...conformant })).toBe(false);
+      expect(S.is(SafeHtmlAst)({ ...safeAst })).toBe(false);
+      expect(S.is(SafeHtml)({ ...safeHtml })).toBe(false);
       expect(safeHtmlValue(safeHtml)).toBe("<p>safe</p>");
 
       for (const [schema, value] of [

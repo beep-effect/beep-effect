@@ -9,7 +9,6 @@ import { $SchemaId } from "@beep/identity/packages";
 import { Str } from "@beep/utils";
 import { identity, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
-import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("PosixPath");
 const POSIX_PATH_PATTERN = /^[^\\]*$/;
@@ -81,10 +80,7 @@ export const NativePathToPosixPath = S.String.pipe(
   ),
   $I.annoteSchema("NativePathToPosixPath", {
     description: "Schema transformation that normalizes native path separators to posix format.",
-  }),
-  SchemaUtils.withStatics((self) => ({
-    decodeResult: S.decodeUnknownResult(self),
-  }))
+  })
 );
 
 /**
@@ -115,4 +111,4 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  * @since 0.0.0
  */
 export const normalizePath = (value: string): PosixPath =>
-  Result.getOrThrowWith(NativePathToPosixPath.decodeResult(value), schemaIssueToError);
+  Result.getOrThrowWith(S.decodeResult(NativePathToPosixPath)(value), schemaIssueToError);

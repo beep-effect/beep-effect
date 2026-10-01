@@ -63,7 +63,6 @@ export const AdmissionPriority = S.Literals(AdmissionPriorityKit.literals).pipe(
   $I.annoteSchema("AdmissionPriority", {
     description: "Priority class attached to a pending admission request.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
   SchemaUtils.withStatics(() => ({
     $match: AdmissionPriorityKit.$match,
     Enum: AdmissionPriorityKit.Enum,

@@ -117,6 +117,7 @@ export const SchemaFirstPolicyRuleId = LiteralKit([
   "SFV4-getsomes-struct",
   "SFV4-default-wrapper",
   "SFV4-opaque-wrapper",
+  "SFV4-codec-static",
 ]).pipe(
   $I.annoteSchema("SchemaFirstPolicyRuleId", {
     description: "Stable schema-first policy rule identifiers emitted for lint and Yeet issue routing.",
@@ -168,6 +169,7 @@ export type SchemaFirstPolicyRuleId = typeof SchemaFirstPolicyRuleId.Type;
 export const SchemaFirstParityRuleId = SchemaFirstPolicyRuleId.pick([
   "SFV4-default-wrapper",
   "SFV4-opaque-wrapper",
+  "SFV4-codec-static",
 ]).pipe(
   $I.annoteSchema("SchemaFirstParityRuleId", {
     description: "Upstream-parity schema-first rules whose findings ratchet on occurrence membership.",
@@ -499,6 +501,10 @@ export class SchemaFirstInventoryDocument extends S.Class<SchemaFirstInventoryDo
 export class SchemaFirstLintOptions extends S.Class<SchemaFirstLintOptions>($I`SchemaFirstLintOptions`)(
   {
     write: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
+    reportScannedFiles: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),

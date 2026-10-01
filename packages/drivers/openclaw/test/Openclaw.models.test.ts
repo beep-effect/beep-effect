@@ -219,11 +219,11 @@ describe("@beep/openclaw models", () => {
     });
     const doctor = OpenclawDoctorReport.make({
       exitCode: 1,
-      findings: OpenclawDiagnosticText.decodeUnknownSync("Doctor config writes are disabled\n"),
+      findings: Result.getOrThrow(S.decodeResult(OpenclawDiagnosticText)("Doctor config writes are disabled\n")),
     });
     const validation = OpenclawConfigInvalid.make({
       _tag: "Invalid",
-      diagnostics: OpenclawDiagnosticText.decodeUnknownSync("Unknown top-level key: unexpected"),
+      diagnostics: Result.getOrThrow(S.decodeResult(OpenclawDiagnosticText)("Unknown top-level key: unexpected")),
       exitCode: 1,
     });
     const reloaded = OpenclawSecretsReloaded.make({
@@ -232,7 +232,7 @@ describe("@beep/openclaw models", () => {
     });
     const degraded = OpenclawSecretsReloadDegraded.make({
       _tag: "Degraded",
-      diagnostics: OpenclawDiagnosticText.decodeUnknownSync("secrets.reload failed"),
+      diagnostics: Result.getOrThrow(S.decodeResult(OpenclawDiagnosticText)("secrets.reload failed")),
       exitCode: 1,
     });
 
@@ -280,12 +280,16 @@ describe("@beep/openclaw models", () => {
   });
 
   it("caps and trims diagnostic text", () => {
-    expect(OpenclawDiagnosticText.decodeUnknownSync(" secrets.reload failed\n")).toBe("secrets.reload failed");
+    expect(Result.getOrThrow(S.decodeResult(OpenclawDiagnosticText)(" secrets.reload failed\n"))).toBe(
+      "secrets.reload failed"
+    );
 
-    const capped = OpenclawDiagnosticText.decodeUnknownSync("x".repeat(5_000));
+    const capped = Result.getOrThrow(S.decodeResult(OpenclawDiagnosticText)("x".repeat(5_000)));
     expect(capped.length).toBe(2_000);
 
-    const trimmedAfterCap = OpenclawDiagnosticText.decodeUnknownSync(`${"a".repeat(1_999)} ${"b".repeat(3_000)}`);
+    const trimmedAfterCap = Result.getOrThrow(
+      S.decodeResult(OpenclawDiagnosticText)(`${"a".repeat(1_999)} ${"b".repeat(3_000)}`)
+    );
     expect(trimmedAfterCap).toBe("a".repeat(1_999));
   });
 
@@ -310,7 +314,9 @@ describe("@beep/openclaw models", () => {
       subcommand: "config validate",
     });
     const exit = OpenclawCommandExitError.make({
-      diagnostics: O.some(OpenclawDiagnosticText.decodeUnknownSync("Unknown top-level key: unexpected")),
+      diagnostics: O.some(
+        Result.getOrThrow(S.decodeResult(OpenclawDiagnosticText)("Unknown top-level key: unexpected"))
+      ),
       executable: "openclaw",
       exitCode: 1,
       stderrLength: 34,

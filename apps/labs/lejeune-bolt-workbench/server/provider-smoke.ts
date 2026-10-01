@@ -321,7 +321,7 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
       )
     )
   );
-  const responseSha256 = yield* Sha256HexFromBytes.decodeEffect(strToU8(candidateJson)).pipe(
+  const responseSha256 = yield* S.decodeEffect(Sha256HexFromBytes)(strToU8(candidateJson)).pipe(
     Effect.mapError((cause) =>
       providerSmokeErrorWithCause("hashing", "The sanitized provider candidates could not be hashed.", cause)
     )

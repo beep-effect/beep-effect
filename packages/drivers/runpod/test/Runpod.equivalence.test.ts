@@ -1,4 +1,10 @@
-import { RunpodDocsError } from "@beep/runpod";
+import {
+  RunpodDocsError,
+  RunpodHttpMethod,
+  RunpodOperationId,
+  RunpodRequestBodyKind,
+  RunpodResponseBodyKind,
+} from "@beep/runpod";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
@@ -27,5 +33,23 @@ describe("Runpod declared-field equivalence", () => {
 
     // the defect cause is payload, never identity
     expect(sameRunpodDocsError(a, b)).toBe(true);
+  });
+});
+
+describe("generated literal schemas carry no codec statics", () => {
+  const schemas = {
+    RunpodHttpMethod,
+    RunpodOperationId,
+    RunpodRequestBodyKind,
+    RunpodResponseBodyKind,
+  };
+
+  it("keeps the LiteralKit keyed helpers and attaches no decode facade", () => {
+    for (const [name, schema] of Object.entries(schemas)) {
+      expect(Reflect.has(schema, "decodeOption"), name).toBe(false);
+      expect(Reflect.has(schema, "fromUnknown"), name).toBe(false);
+      expect(Reflect.has(schema, "Enum"), name).toBe(true);
+    }
+    expect(S.is(RunpodHttpMethod)("GET")).toBe(true);
   });
 });

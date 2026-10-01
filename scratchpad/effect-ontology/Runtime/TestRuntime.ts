@@ -42,6 +42,7 @@ import type { ValidationPolicy } from "../Service/Shacl.ts";
 import { ShaclValidationReport, ShaclWorkflowService } from "../Service/Shacl.ts";
 import { StorageServiceTest } from "../Service/Storage.ts";
 import { MetricsService } from "../Telemetry/Metrics.ts";
+import * as S from "effect/Schema";
 
 /**
  * Mock LanguageModel for testing
@@ -179,7 +180,7 @@ export const MockShaclService = (options?: {
         : {}),
       ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: Rdf.makeNamedNode(violation.sourceShape) } : {}),
     }));
-    return yield* ShaclValidationReport.decodeEffect({
+    return yield* S.decodeEffect(ShaclValidationReport)({
       validation: { conforms: A.isReadonlyArrayEmpty(violations), violations, truncated: false },
       validatedAt: DateTime.formatIso(yield* DateTime.now),
       dataGraphTripleCount: rdfStoreSize(dataStore),

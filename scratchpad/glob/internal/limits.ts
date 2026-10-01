@@ -299,7 +299,6 @@ const PositiveSafeInteger = S.Int.check(S.isGreaterThan(0)).pipe(
 	$I.annoteSchema("PositiveSafeInteger", {
 		description: "Positive safe integer accepted by internal glob recursion and expansion caps.",
 	}),
-	SchemaUtils.withCodecStatics(["is"]),
 );
 
 /**
@@ -334,7 +333,7 @@ export const assertCap: {
 	(name: string): (value: number) => number;
 	(value: number, name: string): number;
 } = dual(2, (value: number, name: string): number => {
-	if (!PositiveSafeInteger.is(value)) {
+	if (!S.is(PositiveSafeInteger)(value)) {
 		throw GlobInvariantError.make({
 			operation: "assertCap",
 			detail: `@effected/glob internal cap ${name} must be a positive integer, received ${value}`,

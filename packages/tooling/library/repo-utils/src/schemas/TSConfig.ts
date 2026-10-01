@@ -232,7 +232,6 @@ const TSConfigJsonKey = S.String.check(
 );
 
 const JsonRecord = S.Record(TSConfigJsonKey, S.Json).pipe(
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
   SchemaUtils.withStatics((schema) => ({
     empty: schema.make({}),
   })),
@@ -319,7 +318,7 @@ const makeLooseJsonObject = <Fields extends S.Struct.Fields>(fields: Fields, nam
         isLooseJsonRecord(input)
           ? Effect.zipWith(
               decodeStrict(pickKnownKeys(input), options).pipe(Effect.mapError((error) => error.issue)),
-              JsonRecord.decodeUnknownEffect(pickUnknownKeys(input), options).pipe(
+              S.decodeUnknownEffect(JsonRecord)(pickUnknownKeys(input), options).pipe(
                 Effect.mapError((error) => error.issue)
               ),
               (decodedValue, decodedRest) => mergeLooseJsonObject(decodedRest, decodedValue)
@@ -334,7 +333,9 @@ const makeLooseJsonObject = <Fields extends S.Struct.Fields>(fields: Fields, nam
           encodeStrict(pickKnownKeys(input) as typeof strict.Type, options).pipe(
             Effect.mapError((error) => error.issue)
           ),
-          JsonRecord.decodeUnknownEffect(pickUnknownKeys(input), options).pipe(Effect.mapError((error) => error.issue)),
+          S.decodeUnknownEffect(JsonRecord)(pickUnknownKeys(input), options).pipe(
+            Effect.mapError((error) => error.issue)
+          ),
           (encodedValue, encodedRest) => mergeLooseJsonObject(encodedRest, encodedValue)
         )
       ),
@@ -1660,7 +1661,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
    * @since 0.0.0
    */
   static readonly decodeStrictResult = (input: unknown): Result.Result<TSConfig.Type, S.SchemaError> =>
-    TSConfigSemantic.decodeUnknownResult(input, strictDecodeOptions);
+    S.decodeUnknownResult(TSConfigSemantic)(input, strictDecodeOptions);
 
   /**
    * Strictly decode an unknown value into `TSConfig`, preserving failures in an `Exit`.
@@ -1679,7 +1680,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
    * @since 0.0.0
    */
   static readonly decodeStrictExit = (input: unknown): Exit.Exit<TSConfig.Type, S.SchemaError> =>
-    TSConfigSemantic.decodeUnknownExit(input, strictDecodeOptions);
+    S.decodeUnknownExit(TSConfigSemantic)(input, strictDecodeOptions);
 
   /**
    * Strictly decode an unknown value into `TSConfig` as an Effect.
@@ -1699,7 +1700,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
    * @since 0.0.0
    */
   static readonly decodeStrictEffect = (input: unknown): Effect.Effect<TSConfig.Type, S.SchemaError> =>
-    TSConfigSemantic.decodeUnknownEffect(input, strictDecodeOptions).pipe(
+    S.decodeUnknownEffect(TSConfigSemantic)(input, strictDecodeOptions).pipe(
       // Not a trivial lambda: S.Class `make` runs `new this(...)`, so a bare
       // `TSConfig.make` reference detaches `this` and throws at decode time.
       Effect.map((decoded) => TSConfig.make(decoded))
@@ -1724,7 +1725,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
     "RepoUtils.TSConfig.decodeJsoncText"
   )(function* (input) {
     const parsed = yield* decodeJsoncUnknownText(input);
-    const decoded = yield* TSConfigSemantic.decodeUnknownEffect(parsed, strictDecodeOptions);
+    const decoded = yield* S.decodeUnknownEffect(TSConfigSemantic)(parsed, strictDecodeOptions);
     return TSConfig.make(decoded);
   });
 
@@ -1862,14 +1863,13 @@ const TSConfigSemanticChecks = S.makeFilterGroup(
 const TSConfigSemantic = S.make<(typeof TSConfig)["Rebuild"]>(TSConfig.ast)
   .check(TSConfigSemanticChecks)
   .pipe(
-    SchemaUtils.withCodecStatics(["decodeUnknownEffect", "decodeUnknownExit", "decodeUnknownResult"]),
     $I.annoteSchema("TSConfigSemantic", {
       description: "Strict tsconfig shape with cross-field semantic checks used by the decode helpers.",
     })
   );
 
 const decodeJsoncUnknownText = (input: string): Effect.Effect<unknown, S.SchemaError> => {
-  const exit = JsoncTextToUnknown.decodeUnknownExit(input);
+  const exit = S.decodeExit(JsoncTextToUnknown)(input);
 
   if (Exit.isSuccess(exit)) {
     return Effect.succeed(exit.value);

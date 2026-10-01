@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, FilePath, Fn, LiteralKit, SchemaUtils, WindowsDrivePath, WindowsUncPath } from "@beep/schema";
+import { FilePath, Fn, LiteralKit, SchemaUtils, WindowsDrivePath, WindowsUncPath } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, pipe, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
@@ -40,11 +40,11 @@ const OptionalNonBlank = S.optionalKey(NonBlankStringInput).pipe(
 
 const startsWithWindowsRootSeparator = P.or(Str.startsWith("\\"), Str.startsWith("/"));
 const isWindowsAbsoluteDrivePath = (value: FilePath): boolean =>
-  WindowsDrivePath.is(value) && pipe(value, Str.substring(2), startsWithWindowsRootSeparator);
+  S.is(WindowsDrivePath)(value) && pipe(value, Str.substring(2), startsWithWindowsRootSeparator);
 
 const AiMetricsAbsoluteDataRootCheck = S.makeFilter(
   (value: FilePath) =>
-    pipe(value, Str.startsWith("/")) || isWindowsAbsoluteDrivePath(value) || WindowsUncPath.is(value),
+    pipe(value, Str.startsWith("/")) || isWindowsAbsoluteDrivePath(value) || S.is(WindowsUncPath)(value),
   {
     identifier: $I`AiMetricsAbsoluteDataRootCheck`,
     title: "AI Metrics Absolute Data Root",
@@ -72,7 +72,6 @@ export const AiMetricsAbsoluteDataRoot = S.make<(typeof FilePath)["Rebuild"]>(Fi
   .check(AiMetricsAbsoluteDataRootCheck)
   .pipe(
     S.brand("AiMetricsAbsoluteDataRoot"),
-    SchemaUtils.withCodecStatics(["decodeEffect"]),
     $I.annoteSchema("AiMetricsAbsoluteDataRoot", {
       description: "Absolute non-root filesystem path accepted for an AI metrics data root.",
     })
@@ -245,7 +244,7 @@ export class AiMetricsDataRoot extends S.Class<AiMetricsDataRoot>($I`AiMetricsDa
 export class AiMetricsDataRootError extends S.TaggedError<AiMetricsDataRootError>($I`AiMetricsDataRootError`)(
   "AiMetricsDataRootError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsDataRootError>("AiMetricsDataRootError", {
@@ -496,7 +495,7 @@ export const requireAbsoluteAiMetricsDataRoot: (
 ) => Effect.Effect<AiMetricsAbsoluteDataRoot, AiMetricsDataRootError> = Effect.fn(
   "AiMetrics.requireAbsoluteAiMetricsDataRoot"
 )(function* (dataRoot: string) {
-  return yield* AiMetricsAbsoluteDataRoot.decodeEffect(dataRoot).pipe(
+  return yield* S.decodeEffect(AiMetricsAbsoluteDataRoot)(dataRoot).pipe(
     Effect.mapError((cause) =>
       AiMetricsDataRootError.make({
         cause,

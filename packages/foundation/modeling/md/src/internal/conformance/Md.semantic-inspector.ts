@@ -444,7 +444,7 @@ const scanListItemChild = (
   child: ListItemChild,
   profile: MarkdownConformanceProfile,
   path: MarkdownConformancePath
-): MarkdownScan => (Inline.is(child) ? scanInline(child, profile, path, false) : scanBlock(child, profile, path));
+): MarkdownScan => (S.is(Inline)(child) ? scanInline(child, profile, path, false) : scanBlock(child, profile, path));
 
 const scanListItems = (
   children: ReadonlyArray<{ readonly children: ReadonlyArray<ListItemChild> }>,

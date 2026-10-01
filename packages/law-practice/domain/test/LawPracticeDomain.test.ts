@@ -199,19 +199,19 @@ describe("@beep/law-practice-domain", () => {
 
   it("exports value schemas from the package identity", () => {
     expect(LegalClientStatus.is.active_client("active_client")).toBe(true);
-    assertSuccess(LegalClientStatus.fromUnknown("active_client"), "active_client");
-    expect(LegalClientStatus.decodeOption("active_client")._tag).toBe("Some");
+    assertSuccess(S.decodeResult(LegalClientStatus)("active_client"), "active_client");
+    expect(S.decodeOption(LegalClientStatus)("active_client")._tag).toBe("Some");
     expect(LegalContactRole.is.founder("founder")).toBe(true);
-    assertSuccess(LegalContactRole.fromUnknown("founder"), "founder");
-    expect(LegalContactRole.decodeOption("founder")._tag).toBe("Some");
+    assertSuccess(S.decodeResult(LegalContactRole)("founder"), "founder");
+    expect(S.decodeOption(LegalContactRole)("founder")._tag).toBe("Some");
     expect(MatterType.is.patent_application("patent_application")).toBe(true);
-    assertSuccess(MatterType.fromUnknown("patent_application"), "patent_application");
-    expect(MatterType.decodeOption("patent_application")._tag).toBe("Some");
+    assertSuccess(S.decodeResult(MatterType)("patent_application"), "patent_application");
+    expect(S.decodeOption(MatterType)("patent_application")._tag).toBe("Some");
     expect(PatentAssetStatus.is.pre_filing("pre_filing")).toBe(true);
-    assertSuccess(PatentAssetStatus.fromUnknown("pre_filing"), "pre_filing");
-    expect(PatentAssetStatus.decodeOption("pre_filing")._tag).toBe("Some");
-    expect(RejectionGround.is({ referenceFixtureKey: "prior-art.smith", statute: "102" })).toBe(true);
-    expect(DistinctionDetail.is({ kind: "missing_limitation", limitation: "a hinge" })).toBe(true);
+    assertSuccess(S.decodeResult(PatentAssetStatus)("pre_filing"), "pre_filing");
+    expect(S.decodeOption(PatentAssetStatus)("pre_filing")._tag).toBe("Some");
+    expect(S.is(RejectionGround)({ referenceFixtureKey: "prior-art.smith", statute: "102" })).toBe(true);
+    expect(S.is(DistinctionDetail)({ kind: "missing_limitation", limitation: "a hinge" })).toBe(true);
   });
 
   it("validates law-practice entity field schemas", () => {

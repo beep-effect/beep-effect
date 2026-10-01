@@ -43,7 +43,7 @@ import {
   ShaclValidationService,
 } from "@beep/semantic-web/services/shacl-validation";
 import { A, O } from "@beep/utils";
-import { Context, Effect, Layer, pipe } from "effect";
+import { Context, Effect, Layer, pipe, Result } from "effect";
 import * as S from "effect/Schema";
 import {
   OntologyFilePath,
@@ -812,14 +812,16 @@ const datasetDescriptionDataset = (session: Session): Dataset => {
 };
 
 const exportPrefixes = (): PrefixMap =>
-  PrefixMap.decodeUnknownSync({
-    dcat: DCAT_NAMESPACE,
-    dcterms: DCTERMS_NAMESPACE,
-    prov: PROV_NAMESPACE,
-    rdf: RDF_NAMESPACE,
-    void: VOID_NAMESPACE,
-    xsd: "http://www.w3.org/2001/XMLSchema#",
-  });
+  Result.getOrThrow(
+    S.decodeResult(PrefixMap)({
+      dcat: DCAT_NAMESPACE,
+      dcterms: DCTERMS_NAMESPACE,
+      prov: PROV_NAMESPACE,
+      rdf: RDF_NAMESPACE,
+      void: VOID_NAMESPACE,
+      xsd: "http://www.w3.org/2001/XMLSchema#",
+    })
+  );
 
 const exportOntologyProvenance = Effect.fn("Ontology.Validation.exportProvenance")(function* (
   command: ExportOntologyProvenanceCommand

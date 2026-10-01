@@ -15,11 +15,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Models/Models.errors");
 
@@ -50,7 +50,7 @@ export class ModelsCatalogError extends S.TaggedError<ModelsCatalogError>($I`Mod
   {
     message: S.String,
     source: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<ModelsCatalogError>("ModelsCatalogError", {
     title: "Models Catalog Error",
@@ -93,7 +93,7 @@ export class ModelsManifestError extends S.TaggedError<ModelsManifestError>($I`M
   {
     message: S.String,
     path: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<ModelsManifestError>("ModelsManifestError", {
     title: "Models Manifest Error",
@@ -142,7 +142,7 @@ export class ModelsLocatorError extends S.TaggedError<ModelsLocatorError>($I`Mod
   {
     message: S.String,
     path: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<ModelsLocatorError>("ModelsLocatorError", {
     title: "Models Locator Error",
@@ -185,7 +185,7 @@ export class ModelsLedgerError extends S.TaggedError<ModelsLedgerError>($I`Model
   {
     message: S.String,
     path: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<ModelsLedgerError>("ModelsLedgerError", {
     title: "Models Ledger Error",
@@ -235,7 +235,7 @@ export class ModelsCommandError extends S.TaggedError<ModelsCommandError>($I`Mod
   {
     message: S.String,
     detail: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<ModelsCommandError>("ModelsCommandError", {
     title: "Models Command Error",

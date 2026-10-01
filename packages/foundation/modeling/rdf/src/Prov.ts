@@ -7,7 +7,6 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { DateTime, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -92,7 +91,6 @@ const provDateTimeChecks = S.makeFilterGroup(
  */
 export const ObjectRef = S.String.check(provObjectRefChecks).pipe(
   S.brand("ProvObjectRef"),
-  SchemaUtils.withCodecStatics(["decodeResult"]),
   $I.annoteSchema("ObjectRef", {
     description: "PROV object reference encoded as an IRI, CURIE, or local identifier.",
     semanticSchemaMetadata: makeSemanticSchemaMetadata({
@@ -198,7 +196,6 @@ export type ProvDateTimeEncoded = typeof ProvDateTimeEncoded.Type;
  */
 export const ProvDateTime = ProvDateTimeEncoded.pipe(
   S.decodeTo(S.DateTimeUtcFromString.check(provDateTimeCanonicalYearCheck)),
-  SchemaUtils.withCodecStatics(["decodeResult"]),
   $I.annoteSchema("ProvDateTime", {
     description: "PROV timestamp decoded to DateTime.Utc.",
     semanticSchemaMetadata: makeSemanticSchemaMetadata({

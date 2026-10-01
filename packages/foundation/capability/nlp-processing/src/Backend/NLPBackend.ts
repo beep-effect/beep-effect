@@ -17,7 +17,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Context, Inspectable, pipe, Struct } from "effect";
 import { dual } from "effect/Function";
@@ -109,7 +109,7 @@ export class BackendInitError extends S.TaggedError<BackendInitError>($I`Backend
   "BackendInitError",
   {
     backend: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<BackendInitError>("BackendInitError", {
@@ -154,7 +154,7 @@ export class BackendOperationError extends S.TaggedError<BackendOperationError>(
   "BackendOperationError",
   {
     backend: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
     operation: S.String,
   },
@@ -187,9 +187,10 @@ export class BackendOperationError extends S.TaggedError<BackendOperationError>(
  *
  * ```ts import.meta.vitest name="Check union membership"
  * import { notSupported, NLPBackendError } from "@beep/nlp-processing/Backend/NLPBackend"
+ * import * as S from "effect/Schema"
  *
  * const error = notSupported("minimal", "ner")
- * NLPBackendError.is(error) // => true
+ * S.is(NLPBackendError)(error) // => true
  * ```
  *
  * @category errors
@@ -198,8 +199,7 @@ export class BackendOperationError extends S.TaggedError<BackendOperationError>(
 export const NLPBackendError = S.Union([BackendNotSupported, BackendInitError, BackendOperationError]).pipe(
   $I.annoteSchema("NLPBackendError", {
     description: "A backend failure.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

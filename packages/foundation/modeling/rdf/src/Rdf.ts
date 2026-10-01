@@ -6,7 +6,6 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, R, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, Match, Order, pipe, Result } from "effect";
@@ -199,8 +198,7 @@ const BlankNodeLabelChecks = S.makeFilterGroup(
 const BlankNodeLabel = S.String.check(BlankNodeLabelChecks).pipe(
   $I.annoteSchema("BlankNodeLabel", {
     description: "Blank node label accepted by RDF/JS blank nodes.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -238,8 +236,7 @@ export const PrefixLabel = S.String.check(PrefixLabelChecks).pipe(
       ],
       equivalenceBasis: "Exact string equality; the empty string denotes the default prefix.",
     }),
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
+  })
 );
 
 /**
@@ -263,7 +260,7 @@ const PrefixMapKeyChecks = S.makeFilterGroup(
   [
     S.makeFilter(
       (prefixes: Readonly<Record<string, unknown>>) =>
-        R.every(prefixes, (_namespace, prefix) => PrefixLabel.is(prefix)),
+        R.every(prefixes, (_namespace, prefix) => S.is(PrefixLabel)(prefix)),
       {
         identifier: $I`PrefixMapKeyCheck`,
         title: "Prefix Map Keys",
@@ -301,8 +298,7 @@ export const Curie = S.String.check(CurieChecks).pipe(
   $I.annoteSchema("Curie", {
     description: "CURIE-style compact IRI expression.",
     semanticSchemaMetadata: curieMetadata,
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -356,8 +352,7 @@ export const LanguageTag = S.String.check(LanguageTagChecks).pipe(
       ],
       equivalenceBasis: "Lower-cased language-tag equality.",
     }),
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -540,7 +535,7 @@ export class DefaultGraph extends S.Class<DefaultGraph>($I`DefaultGraph`)(
 ) {}
 
 const TermDefinition = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]);
-const TermWithCodecStatics = TermDefinition.pipe(
+const TermUntagged = TermDefinition.pipe(
   $I.annoteSchema("Term", {
     description: "RDF term union aligned with RDF/JS.",
     semanticSchemaMetadata: makeSemanticSchemaMetadata({
@@ -559,8 +554,7 @@ const TermWithCodecStatics = TermDefinition.pipe(
       canonicalizationRequired: true,
       representations: [{ kind: "RDF/JS" }, { kind: "JSON-LD" }],
     }),
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -582,10 +576,7 @@ const TermWithCodecStatics = TermDefinition.pipe(
  * @category models
  * @since 0.0.0
  */
-export const Term = TermWithCodecStatics.pipe(
-  S.toTaggedUnion("termType"),
-  SchemaUtils.withStatics(() => ({ is: TermWithCodecStatics.is }))
-);
+export const Term = TermUntagged.pipe(S.toTaggedUnion("termType"));
 
 /**
  * Type for {@link Term}.
@@ -605,15 +596,13 @@ export const Term = TermWithCodecStatics.pipe(
 export type Term = typeof Term.Type;
 
 const SubjectDefinition = S.Union([NamedNode, BlankNode]);
-const SubjectWithCodecStatics = SubjectDefinition.pipe(
-  (schema) =>
-    pipe(
-      schema,
-      $I.annoteSchema("Subject", {
-        description: "RDF subject term union.",
-      })
-    ),
-  SchemaUtils.withCodecStatics(["is"])
+const SubjectUntagged = SubjectDefinition.pipe((schema) =>
+  pipe(
+    schema,
+    $I.annoteSchema("Subject", {
+      description: "RDF subject term union.",
+    })
+  )
 );
 
 /**
@@ -635,10 +624,7 @@ const SubjectWithCodecStatics = SubjectDefinition.pipe(
  * @category models
  * @since 0.0.0
  */
-export const Subject = SubjectWithCodecStatics.pipe(
-  S.toTaggedUnion("termType"),
-  SchemaUtils.withStatics(() => ({ is: SubjectWithCodecStatics.is }))
-);
+export const Subject = SubjectUntagged.pipe(S.toTaggedUnion("termType"));
 
 /**
  * Type for {@link Subject}.
@@ -658,11 +644,10 @@ export const Subject = SubjectWithCodecStatics.pipe(
 export type Subject = typeof Subject.Type;
 
 const ObjectTermDefinition = S.Union([NamedNode, BlankNode, Literal]);
-const ObjectTermWithCodecStatics = ObjectTermDefinition.pipe(
+const ObjectTermUntagged = ObjectTermDefinition.pipe(
   $I.annoteSchema("ObjectTerm", {
     description: "RDF object term union.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -685,10 +670,7 @@ const ObjectTermWithCodecStatics = ObjectTermDefinition.pipe(
  * @category models
  * @since 0.0.0
  */
-export const ObjectTerm = ObjectTermWithCodecStatics.pipe(
-  S.toTaggedUnion("termType"),
-  SchemaUtils.withStatics(() => ({ is: ObjectTermWithCodecStatics.is }))
-);
+export const ObjectTerm = ObjectTermUntagged.pipe(S.toTaggedUnion("termType"));
 
 /**
  * Type for {@link ObjectTerm}.
@@ -708,11 +690,10 @@ export const ObjectTerm = ObjectTermWithCodecStatics.pipe(
 export type ObjectTerm = typeof ObjectTerm.Type;
 
 const GraphTermDefinition = S.Union([NamedNode, BlankNode, DefaultGraph]);
-const GraphTermWithCodecStatics = GraphTermDefinition.pipe(
+const GraphTermUntagged = GraphTermDefinition.pipe(
   $I.annoteSchema("GraphTerm", {
     description: "RDF graph term union.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -734,10 +715,7 @@ const GraphTermWithCodecStatics = GraphTermDefinition.pipe(
  * @category models
  * @since 0.0.0
  */
-export const GraphTerm = GraphTermWithCodecStatics.pipe(
-  S.toTaggedUnion("termType"),
-  SchemaUtils.withStatics(() => ({ is: GraphTermWithCodecStatics.is }))
-);
+export const GraphTerm = GraphTermUntagged.pipe(S.toTaggedUnion("termType"));
 
 /**
  * Type for {@link GraphTerm}.
@@ -893,8 +871,7 @@ export const PrefixMap = S.Record(S.String, IRI).pipe(
       ],
       equivalenceBasis: "Prefix and namespace string equality.",
     }),
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -962,7 +939,7 @@ export const makeNamedNode = (value: string): NamedNode =>
 export const makeBlankNode = (value: string): BlankNode =>
   BlankNode.make({
     termType: "BlankNode",
-    value: BlankNodeLabel.decodeUnknownSync(value),
+    value: Result.getOrThrow(S.decodeResult(BlankNodeLabel)(value)),
   });
 
 /**

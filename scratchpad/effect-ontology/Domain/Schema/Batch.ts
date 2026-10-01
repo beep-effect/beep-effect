@@ -23,11 +23,11 @@ import {
   PreprocessingOptions,
 } from "./DocumentMetadata.ts";
 import { ValidationPolicy } from "./Shacl.ts";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Batch");
-const defaultValidationPolicy = ValidationPolicy.decodeUnknownSync({});
+const defaultValidationPolicy = Result.getOrThrow(S.decodeResult(ValidationPolicy)({}));
 
 /**
  * One immutable source entry in a stored batch manifest.

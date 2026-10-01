@@ -159,8 +159,8 @@ describe("@beep/ui schema parity", () => {
   it("keeps schema-derived guards aligned with helper surfaces", () => {
     pipe(isCountryCode2("US"), assertTrue);
     pipe(isCountryCode2("NOPE"), assertFalse);
-    pipe(PhoneNumberE164.is("+14155552671"), assertTrue);
-    pipe(PhoneNumberE164.is(""), assertFalse);
+    pipe(S.is(PhoneNumberE164)("+14155552671"), assertTrue);
+    pipe(S.is(PhoneNumberE164)(""), assertFalse);
     expect(O.getOrUndefined(normalizeHexColorInput("#3bf"))).toBe("#33bbff");
     assertNone(normalizeHexColorInput("not-a-color"));
     pipe(isNumberInputError(NumberInputError.Enum["below-min"]), assertTrue);

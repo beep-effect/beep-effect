@@ -62,8 +62,7 @@ export const OpenclawSecretReference = S.String.check(
   S.brand("OpenclawSecretReference"),
   $I.annoteSchema("OpenclawSecretReference", {
     description: "Driver-local op://vault/item/field 1Password secret reference.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**

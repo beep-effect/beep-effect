@@ -10,7 +10,6 @@
  * @since 0.0.0
  */
 
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Effect, Inspectable } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -19,6 +18,9 @@ import { BatchId, DocumentId } from "../Domain/Identity.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
 import { LinkIngestionService } from "../Service/LinkIngestionService.ts";
 import { StorageService } from "../Service/Storage.ts";
+import * as S from "effect/Schema";
+
+const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 // =============================================================================
 // Asset Router
@@ -63,7 +65,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      if (!DocumentId.is(docId)) {
+      if (!S.is(DocumentId)(docId)) {
         return yield* HttpServerResponse.json(
           { error: "VALIDATION_ERROR", message: "docId must be a canonical document identifier" },
           { status: 400 }
@@ -118,7 +120,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      if (!DocumentId.is(docId)) {
+      if (!S.is(DocumentId)(docId)) {
         return yield* HttpServerResponse.json(
           { error: "VALIDATION_ERROR", message: "docId must be a canonical document identifier" },
           { status: 400 }
@@ -247,7 +249,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = BatchId.decodeOption(rawBatchId);
+      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
       if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {
@@ -283,7 +285,7 @@ export const AssetRouter = HttpRouter.addAll([
       }
 
       // Parse and return as JSON using Effect
-      const report = yield* UnknownFromJsonString.decodeEffect(content.value).pipe(Effect.option);
+      const report = yield* decodeJsonEffect(content.value).pipe(Effect.option);
 
       if (O.isNone(report)) {
         return yield* HttpServerResponse.json(
@@ -319,7 +321,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = BatchId.decodeOption(rawBatchId);
+      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
       if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {

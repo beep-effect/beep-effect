@@ -28,7 +28,6 @@ import {
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema/Sha256";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -63,7 +62,7 @@ const declaredLanes: ReadonlyArray<GithubCheckLaneSpec> = githubCheckPrePushLane
 
 const encodeHandoffPretty = S.encodeEffect(S.fromJsonString(GateOrderHandoff, { space: 2 }));
 const encodeHandoff = S.encodeEffect(GateOrderHandoff);
-const encodeJsonText = S.encodeEffect(UnknownFromJsonString);
+const encodeJsonText = S.encodeEffect(S.fromJsonString(S.Unknown));
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 // Every GateOrderHandoffCoherence issue. A must-fail in fixture 7 names one of these (or a

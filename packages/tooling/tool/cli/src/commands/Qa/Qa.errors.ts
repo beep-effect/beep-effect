@@ -6,10 +6,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Qa/Qa.errors");
 
@@ -32,7 +32,7 @@ export class QaCommandError extends S.TaggedError<QaCommandError>($I`QaCommandEr
   "QaCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<QaCommandError>("QaCommandError", {
     description: "A failure raised while recording, extracting, or judging a QA capture round.",

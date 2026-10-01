@@ -412,7 +412,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
     "round-trips schema-derived artifact URIs without grammar drift",
     { uri: ArtifactUriArbitrary },
     ({ uri }) => {
-      expect(ArtifactUri.is(uri)).toBe(true);
+      expect(S.is(ArtifactUri)(uri)).toBe(true);
       expect(decoded(decodeArtifactUriResult(decoded(encodeArtifactUriResult(uri))))).toBe(uri);
     },
     { arbitrary: fcRuns(50) }

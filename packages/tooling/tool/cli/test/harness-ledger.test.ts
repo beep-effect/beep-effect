@@ -1,12 +1,22 @@
-import { contextSurfaceId, HarnessLedgerRow, HookPulseV1 } from "@beep/repo-ai-metrics";
+import {
+  AiMetricsConfigSnapshotInput,
+  contextSurfaceId,
+  deriveHarnessHash,
+  HarnessFingerprintInput,
+  HarnessLedgerRow,
+  HookPulseV1,
+  makeAiMetricsConfigSnapshot,
+  makeHarnessFingerprint,
+  makeHarnessLedgerRowId,
+} from "@beep/repo-ai-metrics";
 import {
   HarnessLedgerDispositionOptions,
-  HarnessLedgerInputError,
   HarnessLedgerListOptions,
   HarnessLedgerProposeOptions,
   HarnessLedgerPruneOptions,
   HarnessLedgerService,
   HarnessLedgerServiceLive,
+  harnessLedgerPruneReportLines,
   parseHarnessEditSpec,
   parseHarnessSurfaceSpec,
 } from "@beep/repo-cli/commands/HarnessLedger";
@@ -14,16 +24,21 @@ import { Sha256Hex } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { assertFailure } from "@effect/vitest/utils";
 import { DateTime, Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import type { HarnessLedgerPruneReport } from "@beep/repo-cli/commands/HarnessLedger";
 
 const TestLayer = HarnessLedgerServiceLive.pipe(Layer.provideMerge(NodeServices.layer));
 
 const sessionA = Sha256Hex.make("a".repeat(64));
 const sessionB = Sha256Hex.make("b".repeat(64));
+const sessionC = Sha256Hex.make("d".repeat(64));
+const sessionD = Sha256Hex.make("e".repeat(64));
+const sessionE = Sha256Hex.make("1".repeat(64));
+const sessionF = Sha256Hex.make("2".repeat(64));
 const cwdHash = Sha256Hex.make("c".repeat(64));
+const otherHarness = Sha256Hex.make("f".repeat(64));
 
 const makeRepo = Effect.fn("test.makeRepo")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -50,20 +65,26 @@ const readLedgerLines = Effect.fn("test.readLedgerLines")(function* (root: strin
   return pipe(texts, A.join(""), Str.split("\n"), A.filter(Str.isNonEmpty));
 });
 
-const pulse = (sessionId: Sha256Hex, ts: string, surface: O.Option<Sha256Hex>) =>
+const pulseRow = (
+  sessionId: Sha256Hex,
+  ts: string,
+  hookEvent: "PostToolUse" | "SessionStart",
+  surface: O.Option<Sha256Hex>,
+  harnessHash: O.Option<Sha256Hex>
+) =>
   HookPulseV1.encodeJsonEffect(
     HookPulseV1.make({
       schemaVersion: "hook-pulse/v1",
       ts: DateTime.makeUnsafe(ts),
       sessionId,
       agentKind: "claude-code",
-      hookEvent: "PostToolUse",
+      hookEvent,
       cwd: cwdHash,
       notifierRev: "test",
       instrumentClass: "production",
       evidenceTier: "derived",
       waitReason: "none",
-      toolName: O.some("Skill"),
+      toolName: hookEvent === "PostToolUse" ? O.some("Skill") : O.none(),
       toolUseId: O.none(),
       promptId: O.none(),
       transcriptPath: O.none(),
@@ -73,8 +94,33 @@ const pulse = (sessionId: Sha256Hex, ts: string, surface: O.Option<Sha256Hex>) =
       sessionEndReason: O.none(),
       isInterrupt: O.none(),
       surface,
+      harnessHash,
     })
   );
+
+const pulse = (sessionId: Sha256Hex, ts: string, surface: O.Option<Sha256Hex>) =>
+  pulseRow(sessionId, ts, "PostToolUse", surface, O.none());
+
+const sessionStart = (sessionId: Sha256Hex, ts: string, harnessHash: Sha256Hex) =>
+  pulseRow(sessionId, ts, "SessionStart", O.none(), O.some(harnessHash));
+
+// The harness hash `prune-proposals` computes for a fixture repo: the same
+// snapshot the fingerprint is built from, reduced by `deriveHarnessHash`.
+const repoHarnessHash = Effect.fn("test.repoHarnessHash")(function* (repoRoot: string) {
+  const snapshot = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
+  return yield* deriveHarnessHash(yield* makeHarnessFingerprint(HarnessFingerprintInput.make({ snapshot })));
+});
+
+const writeShard = Effect.fn("test.writeShard")(function* (
+  stateDir: string,
+  date: string,
+  sessionId: Sha256Hex,
+  lines: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.writeFileString(path.join(stateDir, `hook-pulse-${date}-${sessionId}.ndjson`), `${A.join(lines, "\n")}\n`);
+});
 
 const proposePending = (repoRoot: string) =>
   Effect.flatMap(HarnessLedgerService, (ledger) =>
@@ -327,37 +373,53 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     }).pipe(Effect.scoped)
   );
 
-  it.effect("prune-proposals proposes zero-touch skills, hooks, and MCP servers", () =>
+  it.effect("prune-proposals proposes zero-touch skills and MCP servers from in-regime sessions only", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
       const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-state-" });
       const alphaId = yield* contextSurfaceId("skill", "alpha");
-      yield* fs.writeFileString(
-        path.join(stateDir, `hook-pulse-2026-09-25-${sessionA}.ndjson`),
-        A.join(
-          [
-            yield* pulse(sessionA, "2026-09-25T10:00:00.000Z", O.some(alphaId)),
-            yield* pulse(sessionA, "2026-09-25T10:05:00.000Z", O.none()),
-            "{not json",
-            "",
-          ],
-          "\n"
-        )
-      );
-      yield* fs.writeFileString(
-        path.join(stateDir, `hook-pulse-2026-09-24-${sessionB}.ndjson`),
-        `${yield* pulse(sessionB, "2026-09-24T08:00:00.000Z", O.none())}\n`
-      );
+      const betaId = yield* contextSurfaceId("skill", "beta");
+      const notionId = yield* contextSurfaceId("mcp-server", "notion");
+      // A: in regime, touches alpha, plus an undecodable line.
+      yield* writeShard(stateDir, "2026-09-25", sessionA, [
+        yield* sessionStart(sessionA, "2026-09-25T09:59:00.000Z", current),
+        yield* pulse(sessionA, "2026-09-25T10:00:00.000Z", O.some(alphaId)),
+        yield* pulse(sessionA, "2026-09-25T10:05:00.000Z", O.none()),
+        "{not json",
+      ]);
+      // B: in regime, touches nothing.
+      yield* writeShard(stateDir, "2026-09-24", sessionB, [
+        yield* sessionStart(sessionB, "2026-09-24T07:59:00.000Z", current),
+        yield* pulse(sessionB, "2026-09-24T08:00:00.000Z", O.none()),
+      ]);
+      // C: restarted across a harness edit (mixed stamps); its beta touch must not protect beta.
+      yield* writeShard(stateDir, "2026-09-26", sessionC, [
+        yield* sessionStart(sessionC, "2026-09-26T08:00:00.000Z", otherHarness),
+        yield* sessionStart(sessionC, "2026-09-26T09:00:00.000Z", current),
+        yield* pulse(sessionC, "2026-09-26T09:05:00.000Z", O.some(betaId)),
+      ]);
+      // D: never stamped; its notion touch must not protect notion.
+      yield* writeShard(stateDir, "2026-09-27", sessionD, [
+        yield* pulse(sessionD, "2026-09-27T09:05:00.000Z", O.some(notionId)),
+      ]);
       const ledger = yield* HarnessLedgerService;
       const options = HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 5 });
 
       const dryRun = yield* ledger.pruneProposals(options);
+      expect(dryRun.harnessHash).toBe(current);
       expect(dryRun.sessionsObserved).toBe(2);
+      expect(dryRun.sessionsSkippedOutOfRegime).toBe(1);
+      expect(dryRun.sessionsSkippedUnstamped).toBe(1);
+      expect(dryRun.shardsRead).toBe(4);
       expect(dryRun.undecodableLines).toBe(1);
       expect(dryRun.candidates).toBe(3);
       expect(dryRun.touchedCandidates).toBe(1);
+      expect(dryRun.written).toBe(false);
+      expect(dryRun.windowFull).toBe(false);
+      expect(dryRun.decidedUnderHarness).toBe(0);
       const proposed = A.map(dryRun.proposals, (proposal) => `${proposal.candidate.kind}:${proposal.candidate.name}`);
       expect(proposed).toStrictEqual(["skill:beta", "mcp-server:notion"]);
       expect(A.map(dryRun.proposals, (proposal) => proposal.row.mechanismClass)).toStrictEqual([
@@ -366,21 +428,20 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       ]);
       const [first] = dryRun.proposals;
       expect(first?.row.dispositionEvidence).toStrictEqual(
-        O.some("zero touches across 2 sessions ending 2026-09-25T10:05:00.000Z")
-      );
-      expect(first?.row.edit.kind).toBe("pending");
-      expect(first?.row.windowSessions).toStrictEqual(O.some(5));
-      expect(yield* fs.exists(path.join(root, "harness-ledger"))).toBe(false);
-
-      const denied = yield* Effect.result(
-        ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, write: true }))
-      );
-      assertFailure(
-        denied,
-        HarnessLedgerInputError.new(
-          "Cannot append pruning proposals until hook-pulse sessions are scoped by the current harness hash."
+        O.some(
+          `zero touches across 2 sessions under harness hash ${Str.slice(0, 12)(current)} ending 2026-09-25T10:05:00.000Z`
         )
       );
+      expect(first?.row.edit.kind).toBe("pending");
+      // The row records the observed count, not the requested window.
+      expect(first?.row.windowSessions).toStrictEqual(O.some(2));
+      expect(A.last(harnessLedgerPruneReportLines(dryRun, false))).toStrictEqual(
+        O.some(
+          "dry run: nothing written; partial window (2 of 5 sessions under the current harness hash), so --write would append nothing."
+        )
+      );
+      expect(harnessLedgerPruneReportLines(dryRun, false)[0]).toContain("observed 2 (partial window) ending");
+      // Dry run: nothing written, not even the ledger directory or its lock.
       expect(yield* fs.exists(path.join(root, "harness-ledger"))).toBe(false);
 
       // An open chain head without a target surface is read but never dedupes a candidate.
@@ -388,10 +449,336 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const again = yield* ledger.pruneProposals(options);
       expect(again.proposals).toHaveLength(2);
       expect(again.alreadyProposed).toBe(0);
+      expect(yield* readLedgerLines(root)).toHaveLength(1);
 
       const narrow = yield* ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, windowSessions: 1 }));
       expect(narrow.sessionsObserved).toBe(1);
-    })
+      expect(narrow.windowFull).toBe(true);
+      expect(A.last(harnessLedgerPruneReportLines(narrow, false))).toStrictEqual(
+        O.some("dry run: nothing written (pass --write to append these proposals).")
+      );
+      // Only the skipped sessions newer than the window's oldest session count.
+      expect([narrow.sessionsSkippedOutOfRegime, narrow.sessionsSkippedUnstamped]).toStrictEqual([1, 1]);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("prune-proposals --write appends each proposal once under the fence", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-write-" });
+      const alphaId = yield* contextSurfaceId("skill", "alpha");
+      yield* writeShard(stateDir, "2026-09-25", sessionA, [
+        yield* sessionStart(sessionA, "2026-09-25T09:59:00.000Z", current),
+        yield* pulse(sessionA, "2026-09-25T10:00:00.000Z", O.some(alphaId)),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const options = HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1, write: true });
+      const lockFile = path.join(root, "harness-ledger", ".write.lock");
+
+      // A partial window (1 of 30 sessions) lists its proposals but writes nothing.
+      const partial = yield* ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, windowSessions: 30 }));
+      expect(partial.windowFull).toBe(false);
+      expect(partial.written).toBe(false);
+      expect(A.map(partial.proposals, (proposal) => proposal.candidate.name)).toStrictEqual(["beta", "notion"]);
+      expect(yield* fs.exists(path.join(root, "harness-ledger"))).toBe(false);
+      expect(A.last(harnessLedgerPruneReportLines(partial, true))).toStrictEqual(
+        O.some("nothing written: window not full (1 of 30 sessions under the current harness hash).")
+      );
+
+      // A held fence refuses the write, appends nothing, and leaves the lock alone.
+      yield* fs.makeDirectory(path.join(root, "harness-ledger"), { recursive: true });
+      yield* fs.writeFileString(lockFile, "held by another writer\n");
+      const busy = yield* Effect.flip(ledger.pruneProposals(options));
+      expect(busy._tag).toBe("HarnessLedgerBusyError");
+      expect(yield* fs.exists(path.join(root, "harness-ledger", "rows"))).toBe(false);
+      expect(yield* fs.readFileString(lockFile)).toBe("held by another writer\n");
+      // A dry run never takes the fence.
+      const dryRun = yield* ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, write: false }));
+      expect(dryRun.proposals).toHaveLength(2);
+      yield* fs.remove(lockFile);
+
+      const written = yield* ledger.pruneProposals(options);
+      expect(written.written).toBe(true);
+      expect(written.windowFull).toBe(true);
+      expect(A.map(written.proposals, (proposal) => proposal.candidate.name)).toStrictEqual(["beta", "notion"]);
+      expect(A.last(harnessLedgerPruneReportLines(written, true))).toStrictEqual(
+        O.some("written: appended 2 proposed rows to harness-ledger/rows.")
+      );
+      const lines = yield* readLedgerLines(root);
+      expect(lines).toHaveLength(2);
+      const rows = yield* Effect.forEach(lines, (line) => HarnessLedgerRow.decodeJsonEffect(line));
+      expect(A.map(rows, (row) => row.rowId)).toStrictEqual(A.map(written.proposals, (proposal) => proposal.row.rowId));
+      expect(A.every(rows, (row) => row.disposition === "proposed")).toBe(true);
+      expect(A.map(rows, (row) => row.windowSessions)).toStrictEqual([O.some(1), O.some(1)]);
+      // No paths in the evidence: only counts, a hash prefix, and an instant.
+      expect(A.some(lines, (line) => pipe(line, Str.includes(root)))).toBe(false);
+      expect(yield* fs.exists(lockFile)).toBe(false);
+
+      const second = yield* ledger.pruneProposals(options);
+      expect(second.written).toBe(false);
+      expect(second.proposals).toHaveLength(0);
+      expect(second.alreadyProposed).toBe(2);
+      expect(second.decidedUnderHarness).toBe(0);
+      expect(A.last(harnessLedgerPruneReportLines(second, true))).toStrictEqual(
+        O.some("nothing written: no fresh proposals.")
+      );
+      expect(yield* readLedgerLines(root)).toHaveLength(2);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("prune-proposals respects decisions under the current harness until the harness changes", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-decided-" });
+      const alphaId = yield* contextSurfaceId("skill", "alpha");
+      yield* writeShard(stateDir, "2026-09-25", sessionA, [
+        yield* sessionStart(sessionA, "2026-09-25T09:59:00.000Z", current),
+        yield* pulse(sessionA, "2026-09-25T10:00:00.000Z", O.none()),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const options = HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1, write: true });
+      const namesOf = (report: HarnessLedgerPruneReport) =>
+        A.map(report.proposals, (proposal) => proposal.candidate.name);
+      const rowIdOf = (report: HarnessLedgerPruneReport, name: string) =>
+        pipe(
+          A.findFirst(report.proposals, (proposal) => proposal.candidate.name === name),
+          O.map((proposal) => proposal.row.rowId),
+          O.getOrThrow
+        );
+      const decide = (rowId: string, to: "accepted" | "deferred" | "rejected" | "tombstoned" | "waived") =>
+        ledger.disposition(HarnessLedgerDispositionOptions.make({ repoRoot: root, rowId, to, evidence: "human call" }));
+      const first = yield* ledger.pruneProposals(options);
+      expect(namesOf(first)).toStrictEqual(["alpha", "beta", "notion"]);
+      yield* decide(rowIdOf(first, "alpha"), "waived");
+      const betaDeferred = yield* decide(rowIdOf(first, "beta"), "deferred");
+      yield* decide(rowIdOf(first, "notion"), "rejected");
+
+      // Same hook-pulse data, same harness: the standing decisions block a re-proposal.
+      const again = yield* ledger.pruneProposals(options);
+      expect(again.proposals).toHaveLength(0);
+      expect(again.alreadyProposed).toBe(0);
+      expect(again.decidedUnderHarness).toBe(3);
+      expect(again.written).toBe(false);
+      expect(harnessLedgerPruneReportLines(again, true)[3]).toBe(
+        "candidates: 3; touched: 0; already proposed: 0; decided under this harness: 3"
+      );
+      expect(yield* readLedgerLines(root)).toHaveLength(6);
+
+      // A tombstone never blocks: beta is proposed afresh, and accepting it blocks again.
+      yield* decide(betaDeferred.rowId, "tombstoned");
+      const afterTombstone = yield* ledger.pruneProposals(options);
+      expect(namesOf(afterTombstone)).toStrictEqual(["beta"]);
+      expect(afterTombstone.decidedUnderHarness).toBe(2);
+      yield* decide(rowIdOf(afterTombstone, "beta"), "accepted");
+      const afterAccept = yield* ledger.pruneProposals(options);
+      expect(afterAccept.proposals).toHaveLength(0);
+      expect(afterAccept.decidedUnderHarness).toBe(3);
+      expect(yield* readLedgerLines(root)).toHaveLength(9);
+
+      // A harness edit expires every decision: a full window under the new hash proposes again.
+      yield* fs.writeFileString(path.join(root, "AGENTS.md"), "# Changed guidance\n");
+      const next = yield* repoHarnessHash(root);
+      expect(next).not.toBe(current);
+      yield* writeShard(stateDir, "2026-09-26", sessionB, [
+        yield* sessionStart(sessionB, "2026-09-26T09:59:00.000Z", next),
+        yield* pulse(sessionB, "2026-09-26T10:00:00.000Z", O.some(alphaId)),
+      ]);
+      const expired = yield* ledger.pruneProposals(options);
+      expect(expired.harnessHash).toBe(next);
+      expect(namesOf(expired)).toStrictEqual(["beta", "notion"]);
+      expect([expired.alreadyProposed, expired.decidedUnderHarness]).toStrictEqual([0, 0]);
+      expect(expired.written).toBe(true);
+
+      // An open proposal blocks under any harness: another edit does not re-propose it.
+      yield* fs.writeFileString(path.join(root, "AGENTS.md"), "# Changed guidance again\n");
+      const latest = yield* repoHarnessHash(root);
+      yield* writeShard(stateDir, "2026-09-27", sessionC, [
+        yield* sessionStart(sessionC, "2026-09-27T09:59:00.000Z", latest),
+        yield* pulse(sessionC, "2026-09-27T10:00:00.000Z", O.some(alphaId)),
+      ]);
+      const open = yield* ledger.pruneProposals(options);
+      expect(open.harnessHash).toBe(latest);
+      expect(open.proposals).toHaveLength(0);
+      expect([open.alreadyProposed, open.decidedUnderHarness]).toStrictEqual([2, 0]);
+      expect(yield* readLedgerLines(root)).toHaveLength(11);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("prune-proposals counts a decision under the harness it was made in, not the proposal's", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      const proposedUnder = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-decided-later-" });
+      const alphaId = yield* contextSurfaceId("skill", "alpha");
+      const betaId = yield* contextSurfaceId("skill", "beta");
+      yield* writeShard(stateDir, "2026-09-25", sessionA, [
+        yield* sessionStart(sessionA, "2026-09-25T09:59:00.000Z", proposedUnder),
+        yield* pulse(sessionA, "2026-09-25T10:00:00.000Z", O.some(alphaId)),
+        yield* pulse(sessionA, "2026-09-25T10:01:00.000Z", O.some(betaId)),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const options = HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1, write: true });
+      const first = yield* ledger.pruneProposals(options);
+      const notion = pipe(A.head(first.proposals), O.getOrThrow);
+      expect(notion.candidate.name).toBe("notion");
+
+      // The harness changes while the proposal is open; the human then rejects it.
+      yield* fs.writeFileString(path.join(root, "AGENTS.md"), "# Changed guidance\n");
+      const decidedUnder = yield* repoHarnessHash(root);
+      expect(decidedUnder).not.toBe(proposedUnder);
+      const rejected = yield* ledger.disposition(
+        HarnessLedgerDispositionOptions.make({
+          repoRoot: root,
+          rowId: notion.row.rowId,
+          to: "rejected",
+          evidence: "human call",
+        })
+      );
+      expect(rejected.fingerprint).toStrictEqual(notion.row.fingerprint);
+      expect(rejected.decidedUnder).toStrictEqual(O.some(decidedUnder));
+
+      // A full window under the decision's harness: the rejection stands.
+      yield* writeShard(stateDir, "2026-09-26", sessionB, [
+        yield* sessionStart(sessionB, "2026-09-26T09:59:00.000Z", decidedUnder),
+        yield* pulse(sessionB, "2026-09-26T10:00:00.000Z", O.some(alphaId)),
+        yield* pulse(sessionB, "2026-09-26T10:01:00.000Z", O.some(betaId)),
+      ]);
+      const again = yield* ledger.pruneProposals(options);
+      expect(again.harnessHash).toBe(decidedUnder);
+      expect(again.proposals).toHaveLength(0);
+      expect([again.alreadyProposed, again.decidedUnderHarness]).toStrictEqual([0, 1]);
+      expect(again.written).toBe(false);
+      expect(yield* readLedgerLines(root)).toHaveLength(2);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("prune-proposals falls back to the fingerprint's harness for a decision row without decidedUnder", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-legacy-decision-" });
+      const alphaId = yield* contextSurfaceId("skill", "alpha");
+      const betaId = yield* contextSurfaceId("skill", "beta");
+      yield* writeShard(stateDir, "2026-09-25", sessionA, [
+        yield* sessionStart(sessionA, "2026-09-25T09:59:00.000Z", current),
+        yield* pulse(sessionA, "2026-09-25T10:00:00.000Z", O.some(alphaId)),
+        yield* pulse(sessionA, "2026-09-25T10:01:00.000Z", O.some(betaId)),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const options = HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1, write: true });
+      const first = yield* ledger.pruneProposals(options);
+      const notion = pipe(A.head(first.proposals), O.getOrThrow);
+      // A decision row written before rows carried `decidedUnder`: same chain,
+      // the proposal's fingerprint, and no decision-time harness hash.
+      const legacy = HarnessLedgerRow.make({
+        ...notion.row,
+        rowId: yield* makeHarnessLedgerRowId(notion.row.createdAt),
+        disposition: "rejected",
+        dispositionEvidence: O.some("human call"),
+        previousRowId: O.some(notion.row.rowId),
+      });
+      expect(legacy.decidedUnder).toStrictEqual(O.none());
+      const line = yield* HarnessLedgerRow.encodeJsonEffect(legacy);
+      expect(line).not.toContain("decidedUnder");
+      // Same createdAt as the proposal, so the same (only) month file.
+      const dir = path.join(root, "harness-ledger", "rows");
+      const files = yield* fs.readDirectory(dir);
+      expect(files).toHaveLength(1);
+      yield* fs.writeFileString(path.join(dir, ...files), `${line}\n`, { flag: "a" });
+
+      const again = yield* ledger.pruneProposals(options);
+      expect(again.proposals).toHaveLength(0);
+      expect([again.alreadyProposed, again.decidedUnderHarness]).toStrictEqual([0, 1]);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("prune-proposals reads a shard whose name spells no calendar day instead of dying", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-baddate-" });
+      const alphaId = yield* contextSurfaceId("skill", "alpha");
+      yield* fs.writeFileString(
+        path.join(stateDir, `hook-pulse-2026-99-99-${sessionA}.ndjson`),
+        `${yield* sessionStart(sessionA, "2026-09-25T09:59:00.000Z", current)}\n`
+      );
+      yield* fs.writeFileString(
+        path.join(stateDir, `hook-pulse-2026-02-30-${sessionA}.ndjson`),
+        `${yield* pulse(sessionA, "2026-09-25T10:00:00.000Z", O.some(alphaId))}\n`
+      );
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(report.shardsRead).toBe(2);
+      expect(report.sessionsObserved).toBe(1);
+      expect(A.map(report.proposals, (proposal) => proposal.candidate.name)).toStrictEqual(["beta", "notion"]);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("prune-proposals reaches an older in-regime session past newer out-of-regime days", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-reach-" });
+      const betaId = yield* contextSurfaceId("skill", "beta");
+      // The two newest sessions ran under another harness; the in-regime one is days older.
+      yield* writeShard(stateDir, "2026-09-27", sessionC, [
+        yield* sessionStart(sessionC, "2026-09-27T08:00:00.000Z", otherHarness),
+      ]);
+      yield* writeShard(stateDir, "2026-09-26", sessionD, [
+        yield* pulse(sessionD, "2026-09-26T08:00:00.000Z", O.none()),
+      ]);
+      yield* writeShard(stateDir, "2026-09-20", sessionB, [
+        yield* sessionStart(sessionB, "2026-09-20T08:00:00.000Z", current),
+        yield* pulse(sessionB, "2026-09-20T08:05:00.000Z", O.some(betaId)),
+      ]);
+      // Spread across two days: every shard of a visited session is read.
+      yield* writeShard(stateDir, "2026-09-19", sessionB, [
+        yield* pulse(sessionB, "2026-09-19T23:59:00.000Z", O.none()),
+      ]);
+      // Older than the day before the window filled: never read.
+      yield* writeShard(stateDir, "2026-09-10", sessionA, [
+        yield* sessionStart(sessionA, "2026-09-10T08:00:00.000Z", current),
+      ]);
+      // A shard outside the naming scheme is always read, and its rows date their session.
+      yield* fs.writeFileString(
+        path.join(stateDir, "hook-pulse-legacy.ndjson"),
+        `${yield* pulse(sessionE, "2026-09-21T08:00:00.000Z", O.none())}\n`
+      );
+      // Its older named shard is still read when the session is visited.
+      yield* writeShard(stateDir, "2026-09-15", sessionE, [
+        yield* pulse(sessionE, "2026-09-15T08:00:00.000Z", O.none()),
+      ]);
+      // A named shard with no decodable row names a session that never materializes.
+      yield* writeShard(stateDir, "2026-09-28", sessionF, ["{not json"]);
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+
+      expect(report.sessionsObserved).toBe(1);
+      expect(report.windowEnd).toStrictEqual(O.some(DateTime.makeUnsafe("2026-09-20T08:05:00.000Z")));
+      expect(report.sessionsSkippedOutOfRegime).toBe(1);
+      expect(report.sessionsSkippedUnstamped).toBe(2);
+      expect(report.shardsRead).toBe(7);
+      expect(report.undecodableLines).toBe(1);
+      expect(A.map(report.proposals, (proposal) => proposal.candidate.name)).toStrictEqual(["alpha", "notion"]);
+    }).pipe(Effect.scoped)
   );
 
   it.effect("prune-proposals proposes nothing when no session was observed", () =>
@@ -405,6 +792,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       );
       expect(report.sessionsObserved).toBe(0);
       expect(report.proposals).toHaveLength(0);
+      expect(report.written).toBe(false);
     }).pipe(Effect.scoped)
   );
 });

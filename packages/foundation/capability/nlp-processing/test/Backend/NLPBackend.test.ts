@@ -110,9 +110,9 @@ describe("Tagged errors are schema-decodable", () => {
   );
 
   it("recognizes constructed backend errors through the union statics", () => {
-    expect(Backend.NLPBackendError.is(Backend.notSupported("wink", "posTag"))).toBe(true);
-    expect(Backend.NLPBackendError.is(Backend.initError("wink", new Error("boom")))).toBe(true);
-    expect(Backend.NLPBackendError.is(Backend.operationError("wink", "posTag", new Error("boom")))).toBe(true);
+    expect(S.is(Backend.NLPBackendError)(Backend.notSupported("wink", "posTag"))).toBe(true);
+    expect(S.is(Backend.NLPBackendError)(Backend.initError("wink", new Error("boom")))).toBe(true);
+    expect(S.is(Backend.NLPBackendError)(Backend.operationError("wink", "posTag", new Error("boom")))).toBe(true);
   });
 
   it.effect(

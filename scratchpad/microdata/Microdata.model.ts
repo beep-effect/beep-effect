@@ -313,8 +313,9 @@ const isAbsoluteUrlString = flow(S.decodeUnknownOption(S.URLFromString), O.isSom
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlYearString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlYearString.decodeUnknownEffect("2024"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlYearString)("2024"))
  *
  * console.log(value)
  * ```
@@ -329,8 +330,7 @@ export const HtmlYearString = S.String.check(
   S.brand("HtmlYearString"),
   $I.annoteSchema("HtmlYearString", {
     description: "Positive proleptic-Gregorian year in the WHATWG HTML lexical form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -350,8 +350,9 @@ export type HtmlYearString = typeof HtmlYearString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlMonthString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlMonthString.decodeUnknownEffect("2024-02"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlMonthString)("2024-02"))
  *
  * console.log(value)
  * ```
@@ -366,8 +367,7 @@ export const HtmlMonthString = S.String.check(
   S.brand("HtmlMonthString"),
   $I.annoteSchema("HtmlMonthString", {
     description: "Proleptic-Gregorian year and month in the WHATWG HTML lexical form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -387,8 +387,9 @@ export type HtmlMonthString = typeof HtmlMonthString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlDateString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlDateString.decodeUnknownEffect("2024-02-29"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlDateString)("2024-02-29"))
  *
  * console.log(value)
  * ```
@@ -403,8 +404,7 @@ export const HtmlDateString = S.String.check(
   S.brand("HtmlDateString"),
   $I.annoteSchema("HtmlDateString", {
     description: "Calendar-valid proleptic-Gregorian date in the WHATWG HTML lexical form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -424,8 +424,9 @@ export type HtmlDateString = typeof HtmlDateString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlYearlessDateString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlYearlessDateString.decodeUnknownEffect("--02-29"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlYearlessDateString)("--02-29"))
  *
  * console.log(value)
  * ```
@@ -439,8 +440,7 @@ export const HtmlYearlessDateString = S.String.check(
   S.brand("HtmlYearlessDateString"),
   $I.annoteSchema("HtmlYearlessDateString", {
     description: "Month and day in the WHATWG HTML yearless-date lexical form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -460,8 +460,9 @@ export type HtmlYearlessDateString = typeof HtmlYearlessDateString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlTimeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlTimeString.decodeUnknownEffect("12:30:45.125"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlTimeString)("12:30:45.125"))
  *
  * console.log(value)
  * ```
@@ -476,8 +477,7 @@ export const HtmlTimeString = S.String.check(
   S.brand("HtmlTimeString"),
   $I.annoteSchema("HtmlTimeString", {
     description: "Time of day in the WHATWG HTML lexical form at millisecond precision.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -497,8 +497,9 @@ export type HtmlTimeString = typeof HtmlTimeString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlLocalDateTimeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlLocalDateTimeString.decodeUnknownEffect("2024-02-29 12:30"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlLocalDateTimeString)("2024-02-29 12:30"))
  *
  * console.log(value)
  * ```
@@ -511,8 +512,7 @@ export const HtmlLocalDateTimeString = S.String.check(
   makeStringCheck($I`HtmlLocalDateTimeStringCheck`, "a valid HTML local date and time string", isHtmlLocalDateTime)
 ).pipe(
   S.brand("HtmlLocalDateTimeString"),
-  $I.annoteSchema("HtmlLocalDateTimeString", { description: "Local date and time in the WHATWG HTML lexical form." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  $I.annoteSchema("HtmlLocalDateTimeString", { description: "Local date and time in the WHATWG HTML lexical form." })
 );
 
 /**
@@ -536,8 +536,9 @@ export type HtmlLocalDateTimeString = typeof HtmlLocalDateTimeString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlTimeZoneOffsetString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlTimeZoneOffsetString.decodeUnknownEffect("+05:30"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlTimeZoneOffsetString)("+05:30"))
  *
  * console.log(value)
  * ```
@@ -550,8 +551,7 @@ export const HtmlTimeZoneOffsetString = S.String.check(
   makePatternCheck($I`HtmlTimeZoneOffsetStringCheck`, "a valid HTML time-zone offset string", htmlTimeZoneOffsetPattern)
 ).pipe(
   S.brand("HtmlTimeZoneOffsetString"),
-  $I.annoteSchema("HtmlTimeZoneOffsetString", { description: "Time-zone offset in the WHATWG HTML lexical form." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("HtmlTimeZoneOffsetString", { description: "Time-zone offset in the WHATWG HTML lexical form." })
 );
 
 /**
@@ -571,8 +571,9 @@ export type HtmlTimeZoneOffsetString = typeof HtmlTimeZoneOffsetString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlGlobalDateTimeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlGlobalDateTimeString.decodeUnknownEffect("2024-02-29T12:30:45Z"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlGlobalDateTimeString)("2024-02-29T12:30:45Z"))
  *
  * console.log(value)
  * ```
@@ -587,8 +588,7 @@ export const HtmlGlobalDateTimeString = S.String.check(
   S.brand("HtmlGlobalDateTimeString"),
   $I.annoteSchema("HtmlGlobalDateTimeString", {
     description: "Globally qualified date and time in the WHATWG HTML lexical form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -608,8 +608,9 @@ export type HtmlGlobalDateTimeString = typeof HtmlGlobalDateTimeString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlWeekString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlWeekString.decodeUnknownEffect("2024-W01"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlWeekString)("2024-W01"))
  *
  * console.log(value)
  * ```
@@ -621,8 +622,7 @@ export const HtmlWeekString = S.String.check(
   makeStringCheck($I`HtmlWeekStringCheck`, "a valid HTML week string", isHtmlWeek)
 ).pipe(
   S.brand("HtmlWeekString"),
-  $I.annoteSchema("HtmlWeekString", { description: "Calendar-valid ISO week in the WHATWG HTML lexical form." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("HtmlWeekString", { description: "Calendar-valid ISO week in the WHATWG HTML lexical form." })
 );
 
 /**
@@ -680,8 +680,9 @@ const htmlDurationUnit = flow(Str.toUpperCase, O.liftPredicate(S.is(HtmlDuration
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlIsoDurationString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlIsoDurationString.decodeUnknownEffect("PT1H"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlIsoDurationString)("PT1H"))
  *
  * console.log(value)
  * ```
@@ -696,8 +697,7 @@ export const HtmlIsoDurationString = S.String.check(
   S.brand("HtmlIsoDurationString"),
   $I.annoteSchema("HtmlIsoDurationString", {
     description: "Restricted ISO 8601 duration lexical form admitted by HTML.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -722,8 +722,9 @@ export type HtmlIsoDurationString = typeof HtmlIsoDurationString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlHumanDurationString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlHumanDurationString.decodeUnknownEffect("1h 30m"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlHumanDurationString)("1h 30m"))
  *
  * console.log(value)
  * ```
@@ -736,8 +737,7 @@ export const HtmlHumanDurationString = S.String.check(
   makeStringCheck($I`HtmlHumanDurationStringCheck`, "a valid HTML human-readable duration string", isHtmlHumanDuration)
 ).pipe(
   S.brand("HtmlHumanDurationString"),
-  $I.annoteSchema("HtmlHumanDurationString", { description: "Human-readable duration lexical form admitted by HTML." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("HtmlHumanDurationString", { description: "Human-readable duration lexical form admitted by HTML." })
 );
 
 /**
@@ -757,8 +757,9 @@ export type HtmlHumanDurationString = typeof HtmlHumanDurationString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlDurationString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlDurationString.decodeUnknownEffect("PT1H"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlDurationString)("PT1H"))
  *
  * console.log(value)
  * ```
@@ -768,8 +769,7 @@ export type HtmlHumanDurationString = typeof HtmlHumanDurationString.Type;
  * @since 0.0.0
  */
 export const HtmlDurationString = S.Union([HtmlIsoDurationString, HtmlHumanDurationString]).pipe(
-  $I.annoteSchema("HtmlDurationString", { description: "Either duration lexical form admitted by the HTML Standard." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("HtmlDurationString", { description: "Either duration lexical form admitted by the HTML Standard." })
 );
 
 /**
@@ -789,8 +789,9 @@ export type HtmlDurationString = typeof HtmlDurationString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlUrlTokenString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlUrlTokenString.decodeUnknownEffect("/item"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlUrlTokenString)("/item"))
  *
  * console.log(value)
  * ```
@@ -810,8 +811,7 @@ export const HtmlUrlTokenString = S.String.pipe(
   S.brand("HtmlUrlTokenString"),
   $I.annoteSchema("HtmlUrlTokenString", {
     description: "URL parser input after HTML ASCII-whitespace preprocessing, including an empty relative URL.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -831,8 +831,9 @@ export type HtmlUrlTokenString = typeof HtmlUrlTokenString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { HtmlUrlPotentiallySurroundedBySpaces } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(HtmlUrlPotentiallySurroundedBySpaces.decodeUnknownEffect("  /item  "))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlUrlPotentiallySurroundedBySpaces)("  /item  "))
  *
  * console.log(value)
  * ```
@@ -848,8 +849,7 @@ export const HtmlUrlPotentiallySurroundedBySpaces = S.String.pipe(
   }),
   $I.annoteSchema("HtmlUrlPotentiallySurroundedBySpaces", {
     description: "HTML URL text decoded after stripping surrounding ASCII whitespace.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -875,9 +875,10 @@ export type HtmlUrlPotentiallySurroundedBySpaces = typeof HtmlUrlPotentiallySurr
  * ```ts
  * import { Effect } from "effect"
  * import { makeHtmlUrlFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
  * const HtmlUrlFromString = makeHtmlUrlFromString(new URL("https://example.com/base/"))
- * const value = Effect.runSync(HtmlUrlFromString.decodeUnknownEffect("../item"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(HtmlUrlFromString)("../item"))
  *
  * console.log(value.href) // "https://example.com/item"
  * ```
@@ -897,8 +898,7 @@ export const makeHtmlUrlFromString = (base: URL) =>
       ),
       encode: SchemaGetter.transformEffect(SchemaParser.decodeEffect(HtmlUrlTokenString)),
     }),
-    $I.annoteSchema("HtmlUrlFromString", { description: "WHATWG URL resolved against an explicit document base." }),
-    SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+    $I.annoteSchema("HtmlUrlFromString", { description: "WHATWG URL resolved against an explicit document base." })
   );
 
 /**
@@ -909,8 +909,9 @@ export const makeHtmlUrlFromString = (base: URL) =>
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataSerializedUrlString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataSerializedUrlString.decodeUnknownEffect("https://example.com/item"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataSerializedUrlString)("https://example.com/item"))
  *
  * console.log(value)
  * ```
@@ -924,14 +925,13 @@ export const MicrodataSerializedUrlString = S.String.pipe(
     makeStringCheck(
       $I`MicrodataSerializedUrlStringCheck`,
       "an absolute serialized URL without surrounding ASCII whitespace",
-      (value) => HtmlUrlTokenString.is(value) && isAbsoluteUrlString(value)
+      (value) => S.is(HtmlUrlTokenString)(value) && isAbsoluteUrlString(value)
     )
   ),
   S.brand("MicrodataSerializedUrlString"),
   $I.annoteSchema("MicrodataSerializedUrlString", {
     description: "Absolute serialized URL emitted by the HTML microdata value algorithm.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -951,8 +951,9 @@ export type MicrodataSerializedUrlString = typeof MicrodataSerializedUrlString.T
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataUrlFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataUrlFromString.decodeUnknownEffect("https://example.com/item"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataUrlFromString)("https://example.com/item"))
  *
  * console.log(value)
  * ```
@@ -968,8 +969,7 @@ export const MicrodataUrlFromString = MicrodataSerializedUrlString.pipe(
   }),
   $I.annoteSchema("MicrodataUrlFromString", {
     description: "Microdata URL-property string decoded to a platform URL.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1060,7 +1060,7 @@ const parseHtmlIsoDuration = (value: string): O.Option<Duration.Duration> => {
 };
 
 const parseHtmlDuration = (value: HtmlDurationString): O.Option<Duration.Duration> =>
-  HtmlIsoDurationString.is(value) ? parseHtmlIsoDuration(value) : parseHtmlHumanDuration(value);
+  S.is(HtmlIsoDurationString)(value) ? parseHtmlIsoDuration(value) : parseHtmlHumanDuration(value);
 
 const isHtmlDurationValue = (value: Duration.Duration): boolean =>
   pipe(
@@ -1103,8 +1103,9 @@ const formatHtmlDuration = (value: Duration.Duration): O.Option<string> =>
  * ```ts
  * import { Duration } from "effect"
  * import { HtmlDurationValue } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * console.log(HtmlDurationValue.is(Duration.seconds(1))) // true
+ * console.log(S.is(HtmlDurationValue)(Duration.seconds(1))) // true
  * ```
  *
  * @see {@link MicrodataDurationFromString} to decode either HTML duration lexeme to this duration type.
@@ -1124,7 +1125,6 @@ export const HtmlDurationValue = S.Duration.check(
   $I.annoteSchema("HtmlDurationValue", {
     description: "Finite non-negative Effect duration representable at HTML millisecond precision.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
   SchemaUtils.withStatics(() => ({
     parse: parseHtmlDuration,
     format: formatHtmlDuration,
@@ -1153,9 +1153,10 @@ export type HtmlDurationValue = typeof HtmlDurationValue.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataDurationFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataDurationFromString.decodeUnknownEffect("1h 30m"))
- * const encoded = Effect.runSync(MicrodataDurationFromString.encodeEffect(value))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataDurationFromString)("1h 30m"))
+ * const encoded = Effect.runSync(S.encodeEffect(MicrodataDurationFromString)(value))
  *
  * console.log(encoded) // "PT1H30M"
  * ```
@@ -1182,8 +1183,7 @@ export const MicrodataDurationFromString = HtmlDurationString.pipe(
   }),
   $I.annoteSchema("MicrodataDurationFromString", {
     description: "HTML duration lexical value decoded to an Effect duration.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "encodeEffect"])
+  })
 );
 
 /**
@@ -1213,8 +1213,9 @@ const normalizeHtmlGlobalDateTime: (value: HtmlGlobalDateTimeString) => string =
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataDateTimeFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataDateTimeFromString.decodeUnknownEffect("2024-02-29T12:30:45Z"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataDateTimeFromString)("2024-02-29T12:30:45Z"))
  *
  * console.log(value)
  * ```
@@ -1230,8 +1231,7 @@ export const MicrodataDateTimeFromString = HtmlGlobalDateTimeString.pipe(
   }),
   $I.annoteSchema("MicrodataDateTimeFromString", {
     description: "HTML global date-time lexical value decoded to DateTime.Utc.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1251,8 +1251,9 @@ export type MicrodataDateTimeFromString = typeof MicrodataDateTimeFromString.Typ
  * ```ts
  * import { Effect } from "effect"
  * import { XsdIntegerString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(XsdIntegerString.decodeUnknownEffect("+42"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(XsdIntegerString)("+42"))
  *
  * console.log(value)
  * ```
@@ -1267,8 +1268,7 @@ export const XsdIntegerString = S.String.check(
   S.brand("XsdIntegerString"),
   $I.annoteSchema("XsdIntegerString", {
     description: "XML Schema integer lexical value recognized by the Microdata-to-RDF algorithm.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -1287,8 +1287,9 @@ export type XsdIntegerString = typeof XsdIntegerString.Type;
  *
  * ```ts
  * import { XsdIntegerValue } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * console.log(XsdIntegerValue.is(42n)) // true
+ * console.log(S.is(XsdIntegerValue)(42n)) // true
  * ```
  *
  * @see {@link VCardIntegerValue} for the Int64-bounded vCard integer; {@link XsdIntegerFromString} to decode xsd:integer lexemes to this type.
@@ -1299,8 +1300,7 @@ export const XsdIntegerValue = S.BigInt.pipe(
   S.brand("XsdIntegerValue"),
   $I.annoteSchema("XsdIntegerValue", {
     description: "Arbitrary-precision integer decoded from XML Schema integer lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -1320,8 +1320,9 @@ export type XsdIntegerValue = typeof XsdIntegerValue.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { XsdIntegerFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(XsdIntegerFromString.decodeUnknownEffect("+42"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(XsdIntegerFromString)("+42"))
  *
  * console.log(value)
  * ```
@@ -1342,8 +1343,7 @@ export const XsdIntegerFromString = XsdIntegerString.pipe(
   }),
   $I.annoteSchema("XsdIntegerFromString", {
     description: "XML Schema integer string decoded to a branded arbitrary-precision integer.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1385,8 +1385,9 @@ const formatXsdDouble = Match.type<number>().pipe(
  * ```ts
  * import { Effect } from "effect"
  * import { XsdDoubleString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(XsdDoubleString.decodeUnknownEffect("1.25E2"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(XsdDoubleString)("1.25E2"))
  *
  * console.log(value)
  * ```
@@ -1401,7 +1402,6 @@ export const XsdDoubleString = S.String.check(
   $I.annoteSchema("XsdDoubleString", {
     description: "XML Schema double lexical value recognized by the Microdata-to-RDF algorithm.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"]),
   SchemaUtils.withStatics(() => ({
     parse: parseXsdDouble,
     format: formatXsdDouble,
@@ -1430,9 +1430,10 @@ export type XsdDoubleString = typeof XsdDoubleString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { XsdDoubleFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(XsdDoubleFromString.decodeUnknownEffect("1.25E2"))
- * const encoded = Effect.runSync(XsdDoubleFromString.encodeEffect(value))
+ * const value = Effect.runSync(S.decodeUnknownEffect(XsdDoubleFromString)("1.25E2"))
+ * const encoded = Effect.runSync(S.encodeEffect(XsdDoubleFromString)(value))
  *
  * console.log(value) // 125
  * console.log(encoded) // "125.0"
@@ -1449,8 +1450,7 @@ export const XsdDoubleFromString = XsdDoubleString.pipe(
   }),
   $I.annoteSchema("XsdDoubleFromString", {
     description: "XML Schema double string decoded to a branded IEEE-754 binary64 value.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "encodeEffect"])
+  })
 );
 
 /**
@@ -1470,8 +1470,9 @@ export type XsdDoubleFromString = typeof XsdDoubleFromString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataNumericValueFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataNumericValueFromString.decodeUnknownEffect("42"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataNumericValueFromString)("42"))
  *
  * console.log(value)
  * ```
@@ -1483,8 +1484,7 @@ export type XsdDoubleFromString = typeof XsdDoubleFromString.Type;
 export const MicrodataNumericValueFromString = S.Union([XsdIntegerFromString, XsdDoubleFromString]).pipe(
   $I.annoteSchema("MicrodataNumericValueFromString", {
     description: "Integer-first numeric codec used for microdata data and meter values.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1500,7 +1500,7 @@ const MicrodataNonNumericString = S.String.check(
   makeStringCheck(
     $I`MicrodataNonNumericStringCheck`,
     "a non-numeric microdata string",
-    (value) => !XsdIntegerString.is(value) && !XsdDoubleString.is(value)
+    (value) => !S.is(XsdIntegerString)(value) && !S.is(XsdDoubleString)(value)
   )
 ).pipe(
   $I.annoteSchema("MicrodataNonNumericString", {
@@ -1516,8 +1516,9 @@ const MicrodataNonNumericString = S.String.check(
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataDataValueFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataDataValueFromString.decodeUnknownEffect("plain text"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataDataValueFromString)("plain text"))
  *
  * console.log(value)
  * ```
@@ -1533,8 +1534,7 @@ export const MicrodataDataValueFromString = S.Union([
 ]).pipe(
   $I.annoteSchema("MicrodataDataValueFromString", {
     description: "Microdata data or meter value with numeric typing and a string fallback.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1561,8 +1561,9 @@ const xsdDateTimeFromHtmlPattern =
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataXsdDateString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataXsdDateString.decodeUnknownEffect("2024-02-29"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataXsdDateString)("2024-02-29"))
  *
  * console.log(value)
  * ```
@@ -1577,8 +1578,7 @@ export const MicrodataXsdDateString = HtmlDateString.check(
   S.brand("MicrodataXsdDateString"),
   $I.annoteSchema("MicrodataXsdDateString", {
     description: "HTML date value that also inhabits XML Schema date lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1598,8 +1598,9 @@ export type MicrodataXsdDateString = typeof MicrodataXsdDateString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataXsdYearMonthString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataXsdYearMonthString.decodeUnknownEffect("2024-02"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataXsdYearMonthString)("2024-02"))
  *
  * console.log(value)
  * ```
@@ -1618,8 +1619,7 @@ export const MicrodataXsdYearMonthString = HtmlMonthString.check(
   S.brand("MicrodataXsdYearMonthString"),
   $I.annoteSchema("MicrodataXsdYearMonthString", {
     description: "HTML month value that also inhabits XML Schema gYearMonth lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1639,8 +1639,9 @@ export type MicrodataXsdYearMonthString = typeof MicrodataXsdYearMonthString.Typ
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataXsdYearString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataXsdYearString.decodeUnknownEffect("2024"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataXsdYearString)("2024"))
  *
  * console.log(value)
  * ```
@@ -1655,8 +1656,7 @@ export const MicrodataXsdYearString = HtmlYearString.check(
   S.brand("MicrodataXsdYearString"),
   $I.annoteSchema("MicrodataXsdYearString", {
     description: "HTML year value that also inhabits XML Schema gYear lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1676,8 +1676,9 @@ export type MicrodataXsdYearString = typeof MicrodataXsdYearString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataXsdTimeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataXsdTimeString.decodeUnknownEffect("12:30:45"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataXsdTimeString)("12:30:45"))
  *
  * console.log(value)
  * ```
@@ -1692,8 +1693,7 @@ export const MicrodataXsdTimeString = HtmlTimeString.check(
   S.brand("MicrodataXsdTimeString"),
   $I.annoteSchema("MicrodataXsdTimeString", {
     description: "HTML time value that also inhabits XML Schema time lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1706,7 +1706,7 @@ export const MicrodataXsdTimeString = HtmlTimeString.check(
 export type MicrodataXsdTimeString = typeof MicrodataXsdTimeString.Type;
 
 const isMicrodataXsdDateTime = (value: string): boolean =>
-  xsdDateTimeFromHtmlPattern.test(value) && (HtmlLocalDateTimeString.is(value) || HtmlGlobalDateTimeString.is(value));
+  xsdDateTimeFromHtmlPattern.test(value) && (S.is(HtmlLocalDateTimeString)(value) || S.is(HtmlGlobalDateTimeString)(value));
 
 /**
  * HTML date-time values that also inhabit xsd:dateTime lexical space.
@@ -1716,8 +1716,9 @@ const isMicrodataXsdDateTime = (value: string): boolean =>
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataXsdDateTimeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataXsdDateTimeString.decodeUnknownEffect("2024-02-29T12:30:45Z"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataXsdDateTimeString)("2024-02-29T12:30:45Z"))
  *
  * console.log(value)
  * ```
@@ -1736,8 +1737,7 @@ export const MicrodataXsdDateTimeString = S.String.check(
   S.brand("MicrodataXsdDateTimeString"),
   $I.annoteSchema("MicrodataXsdDateTimeString", {
     description: "HTML date-time value that also inhabits XML Schema dateTime lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1762,8 +1762,9 @@ export type MicrodataXsdDateTimeString = typeof MicrodataXsdDateTimeString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataRdfTimeValueFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataRdfTimeValueFromString.decodeUnknownEffect("2024-02-29"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataRdfTimeValueFromString)("2024-02-29"))
  *
  * console.log(value)
  * ```
@@ -1783,8 +1784,7 @@ export const MicrodataRdfTimeValueFromString = S.Union([
 ]).pipe(
   $I.annoteSchema("MicrodataRdfTimeValueFromString", {
     description: "W3C Microdata-to-RDF value-typing order for HTML time elements.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1809,8 +1809,9 @@ export type MicrodataRdfTimeValueFromString = typeof MicrodataRdfTimeValueFromSt
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataRuntimeValueFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataRuntimeValueFromString.decodeUnknownEffect("PT1H"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataRuntimeValueFromString)("PT1H"))
  *
  * console.log(value)
  * ```
@@ -1827,8 +1828,7 @@ export const MicrodataRuntimeValueFromString = S.Union([
 ]).pipe(
   $I.annoteSchema("MicrodataRuntimeValueFromString", {
     description: "Non-URL microdata string decoded to supported Effect-first runtime values.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1980,8 +1980,9 @@ const isVCardPredefinedValueType = flow(Str.toLowerCase, S.is(VCardValueType));
  * ```ts
  * import { Effect } from "effect"
  * import { VCardValueTypeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardValueTypeString.decodeUnknownEffect("TEXT"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardValueTypeString)("TEXT"))
  *
  * console.log(value)
  * ```
@@ -1997,8 +1998,7 @@ export const VCardValueTypeString = S.String.pipe(
   S.brand("VCardValueTypeString"),
   $I.annoteSchema("VCardValueTypeString", {
     description: "Case-insensitive lexical spelling of a predefined RFC 6350 VALUE type.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2018,8 +2018,9 @@ export type VCardValueTypeString = typeof VCardValueTypeString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardValueTypeFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardValueTypeFromString.decodeUnknownEffect("TEXT"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardValueTypeFromString)("TEXT"))
  *
  * console.log(value)
  * ```
@@ -2035,8 +2036,7 @@ export const VCardValueTypeFromString = VCardValueTypeString.pipe(
   }),
   $I.annoteSchema("VCardValueTypeFromString", {
     description: "Predefined RFC 6350 VALUE type normalized to its lowercase literal.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2056,8 +2056,9 @@ export type VCardValueTypeFromString = typeof VCardValueTypeFromString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardIanaValueTypeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardIanaValueTypeString.decodeUnknownEffect("vendor-token"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardIanaValueTypeString)("vendor-token"))
  *
  * console.log(value)
  * ```
@@ -2078,8 +2079,7 @@ export const VCardIanaValueTypeString = S.String.check(
   S.brand("VCardIanaValueTypeString"),
   $I.annoteSchema("VCardIanaValueTypeString", {
     description: "Syntactically valid registered RFC 6350 VALUE extension token.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2099,8 +2099,9 @@ export type VCardIanaValueTypeString = typeof VCardIanaValueTypeString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardExperimentalValueTypeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardExperimentalValueTypeString.decodeUnknownEffect("x-example"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardExperimentalValueTypeString)("x-example"))
  *
  * console.log(value)
  * ```
@@ -2118,8 +2119,7 @@ export const VCardExperimentalValueTypeString = S.String.check(
   S.brand("VCardExperimentalValueTypeString"),
   $I.annoteSchema("VCardExperimentalValueTypeString", {
     description: "Experimental RFC 6350 VALUE extension token beginning with x-.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2139,8 +2139,9 @@ export type VCardExperimentalValueTypeString = typeof VCardExperimentalValueType
  * ```ts
  * import { Effect } from "effect"
  * import { VCardDeclaredValueTypeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardDeclaredValueTypeString.decodeUnknownEffect("text"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardDeclaredValueTypeString)("text"))
  *
  * console.log(value)
  * ```
@@ -2156,8 +2157,7 @@ export const VCardDeclaredValueTypeString = S.Union([
 ]).pipe(
   $I.annoteSchema("VCardDeclaredValueTypeString", {
     description: "Any predefined, registered, or experimental RFC 6350 VALUE type token.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2177,8 +2177,9 @@ export type VCardDeclaredValueTypeString = typeof VCardDeclaredValueTypeString.T
  * ```ts
  * import { Effect } from "effect"
  * import { VCardTextString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardTextString.decodeUnknownEffect("hello\\, world"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardTextString)("hello\\, world"))
  *
  * console.log(value)
  * ```
@@ -2190,8 +2191,7 @@ export const VCardTextString = S.String.check(
   makePatternCheck($I`VCardTextStringCheck`, "an RFC 6350 text value", vCardTextPattern)
 ).pipe(
   S.brand("VCardTextString"),
-  $I.annoteSchema("VCardTextString", { description: "RFC 6350 TEXT-CHAR lexical value after content-line unfolding." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardTextString", { description: "RFC 6350 TEXT-CHAR lexical value after content-line unfolding." })
 );
 
 /**
@@ -2217,8 +2217,9 @@ export type VCardTextString = typeof VCardTextString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardUriString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardUriString.decodeUnknownEffect("urn:example:item"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardUriString)("urn:example:item"))
  *
  * console.log(value)
  * ```
@@ -2234,8 +2235,7 @@ export const VCardUriString = S.String.pipe(
     makePatternCheck($I`VCardUriStringCheck`, "an absolute RFC 3986 URI", vCardUriSchemePattern)
   ),
   S.brand("VCardUriString"),
-  $I.annoteSchema("VCardUriString", { description: "Absolute RFC 3986 URI lexical value admitted by RFC 6350." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardUriString", { description: "Absolute RFC 3986 URI lexical value admitted by RFC 6350." })
 );
 
 /**
@@ -2255,8 +2255,9 @@ export type VCardUriString = typeof VCardUriString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardDateString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardDateString.decodeUnknownEffect("20240229"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardDateString)("20240229"))
  *
  * console.log(value)
  * ```
@@ -2270,8 +2271,7 @@ export const VCardDateString = S.String.check(
   S.brand("VCardDateString"),
   $I.annoteSchema("VCardDateString", {
     description: "RFC 6350 DATE lexical value, including reduced and truncated forms.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -2293,8 +2293,9 @@ export type VCardDateString = typeof VCardDateString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardTimeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardTimeString.decodeUnknownEffect("123045Z"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardTimeString)("123045Z"))
  *
  * console.log(value)
  * ```
@@ -2308,8 +2309,7 @@ export const VCardTimeString = S.String.check(
   S.brand("VCardTimeString"),
   $I.annoteSchema("VCardTimeString", {
     description: "RFC 6350 TIME lexical value, including reduced, truncated, and zoned forms.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -2329,8 +2329,9 @@ export type VCardTimeString = typeof VCardTimeString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardDateTimeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardDateTimeString.decodeUnknownEffect("20240229T123045Z"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardDateTimeString)("20240229T123045Z"))
  *
  * console.log(value)
  * ```
@@ -2342,8 +2343,7 @@ export const VCardDateTimeString = S.String.check(
   makeStringCheck($I`VCardDateTimeStringCheck`, "an RFC 6350 date-time value", isVCardDateTime)
 ).pipe(
   S.brand("VCardDateTimeString"),
-  $I.annoteSchema("VCardDateTimeString", { description: "RFC 6350 DATE-TIME lexical value." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  $I.annoteSchema("VCardDateTimeString", { description: "RFC 6350 DATE-TIME lexical value." })
 );
 
 /**
@@ -2356,9 +2356,9 @@ export const VCardDateTimeString = S.String.check(
 export type VCardDateTimeString = typeof VCardDateTimeString.Type;
 
 const isVCardDateAndOrTime = (value: string): boolean =>
-  VCardDateTimeString.is(value) ||
-  VCardDateString.is(value) ||
-  (Str.startsWith("T")(value) && VCardTimeString.is(Str.slice(1)(value)));
+  S.is(VCardDateTimeString)(value) ||
+  S.is(VCardDateString)(value) ||
+  (Str.startsWith("T")(value) && S.is(VCardTimeString)(Str.slice(1)(value)));
 
 /**
  * RFC 6350 DATE-AND-OR-TIME lexical space.
@@ -2368,8 +2368,9 @@ const isVCardDateAndOrTime = (value: string): boolean =>
  * ```ts
  * import { Effect } from "effect"
  * import { VCardDateAndOrTimeString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardDateAndOrTimeString.decodeUnknownEffect("T123045Z"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardDateAndOrTimeString)("T123045Z"))
  *
  * console.log(value)
  * ```
@@ -2381,8 +2382,7 @@ export const VCardDateAndOrTimeString = S.String.check(
   makeStringCheck($I`VCardDateAndOrTimeStringCheck`, "an RFC 6350 date-and-or-time value", isVCardDateAndOrTime)
 ).pipe(
   S.brand("VCardDateAndOrTimeString"),
-  $I.annoteSchema("VCardDateAndOrTimeString", { description: "RFC 6350 DATE-AND-OR-TIME lexical value." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardDateAndOrTimeString", { description: "RFC 6350 DATE-AND-OR-TIME lexical value." })
 );
 
 /**
@@ -2402,8 +2402,9 @@ export type VCardDateAndOrTimeString = typeof VCardDateAndOrTimeString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardTimestampString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardTimestampString.decodeUnknownEffect("20240229T123045Z"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardTimestampString)("20240229T123045Z"))
  *
  * console.log(value)
  * ```
@@ -2415,8 +2416,7 @@ export type VCardDateAndOrTimeString = typeof VCardDateAndOrTimeString.Type;
 export const VCardTimestampString = S.String.pipe(
   S.check(makeStringCheck($I`VCardTimestampStringCheck`, "an RFC 6350 timestamp value", isVCardTimestamp)),
   S.brand("VCardTimestampString"),
-  $I.annoteSchema("VCardTimestampString", { description: "Complete basic-format RFC 6350 TIMESTAMP lexical value." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardTimestampString", { description: "Complete basic-format RFC 6350 TIMESTAMP lexical value." })
 );
 
 /**
@@ -2436,8 +2436,9 @@ export type VCardTimestampString = typeof VCardTimestampString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardZonedTimestampString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardZonedTimestampString.decodeUnknownEffect("20240229T123045Z"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardZonedTimestampString)("20240229T123045Z"))
  *
  * console.log(value)
  * ```
@@ -2456,8 +2457,7 @@ export const VCardZonedTimestampString = VCardTimestampString.check(
   S.brand("VCardZonedTimestampString"),
   $I.annoteSchema("VCardZonedTimestampString", {
     description: "Zoned RFC 6350 TIMESTAMP lexical value convertible to an absolute instant.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2477,8 +2477,9 @@ export type VCardZonedTimestampString = typeof VCardZonedTimestampString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardBooleanString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardBooleanString.decodeUnknownEffect("true"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardBooleanString)("true"))
  *
  * console.log(value)
  * ```
@@ -2489,8 +2490,7 @@ export type VCardZonedTimestampString = typeof VCardZonedTimestampString.Type;
 export const VCardBooleanString = S.String.pipe(
   S.check(makePatternCheck($I`VCardBooleanStringCheck`, "an RFC 6350 boolean value", /^(?:TRUE|FALSE)$/i)),
   S.brand("VCardBooleanString"),
-  $I.annoteSchema("VCardBooleanString", { description: "Case-insensitive RFC 6350 BOOLEAN lexical value." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardBooleanString", { description: "Case-insensitive RFC 6350 BOOLEAN lexical value." })
 );
 
 /**
@@ -2514,8 +2514,9 @@ export type VCardBooleanString = typeof VCardBooleanString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardIntegerString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardIntegerString.decodeUnknownEffect("+42"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardIntegerString)("+42"))
  *
  * console.log(value)
  * ```
@@ -2527,8 +2528,7 @@ export type VCardBooleanString = typeof VCardBooleanString.Type;
 export const VCardIntegerString = S.String.pipe(
   S.check(makePatternCheck($I`VCardIntegerStringCheck`, "an RFC 6350 integer lexical value", vCardIntegerPattern)),
   S.brand("VCardIntegerString"),
-  $I.annoteSchema("VCardIntegerString", { description: "Signed decimal RFC 6350 INTEGER lexical value." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardIntegerString", { description: "Signed decimal RFC 6350 INTEGER lexical value." })
 );
 
 /**
@@ -2548,8 +2548,9 @@ export type VCardIntegerString = typeof VCardIntegerString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardFloatString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardFloatString.decodeUnknownEffect("12.50"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardFloatString)("12.50"))
  *
  * console.log(value)
  * ```
@@ -2562,8 +2563,7 @@ export const VCardFloatString = S.String.pipe(
   S.brand("VCardFloatString"),
   $I.annoteSchema("VCardFloatString", {
     description: "Plain-decimal RFC 6350 FLOAT lexical value without exponent notation.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2583,8 +2583,9 @@ export type VCardFloatString = typeof VCardFloatString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardUtcOffsetString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardUtcOffsetString.decodeUnknownEffect("+0530"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardUtcOffsetString)("+0530"))
  *
  * console.log(value)
  * ```
@@ -2597,8 +2598,7 @@ export const VCardUtcOffsetString = S.String.pipe(
   S.brand("VCardUtcOffsetString"),
   $I.annoteSchema("VCardUtcOffsetString", {
     description: "RFC 6350 UTC-OFFSET lexical value from negative 23:59 through positive 23:59.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2618,8 +2618,9 @@ export type VCardUtcOffsetString = typeof VCardUtcOffsetString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardLanguageTagString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardLanguageTagString.decodeUnknownEffect("en-US"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardLanguageTagString)("en-US"))
  *
  * console.log(value)
  * ```
@@ -2631,8 +2632,7 @@ export const VCardLanguageTagString = S.String.check(
   makeStringCheck($I`VCardLanguageTagStringCheck`, "an RFC 5646 language tag", isValidBcp47LanguageTag)
 ).pipe(
   S.brand("VCardLanguageTagString"),
-  $I.annoteSchema("VCardLanguageTagString", { description: "RFC 5646 language tag admitted by RFC 6350." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardLanguageTagString", { description: "RFC 5646 language tag admitted by RFC 6350." })
 );
 
 /**
@@ -2656,9 +2656,10 @@ export type VCardLanguageTagString = typeof VCardLanguageTagString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardBooleanFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardBooleanFromString.decodeUnknownEffect("true"))
- * const encoded = Effect.runSync(VCardBooleanFromString.encodeEffect(value))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardBooleanFromString)("true"))
+ * const encoded = Effect.runSync(S.encodeEffect(VCardBooleanFromString)(value))
  *
  * console.log(value) // true
  * console.log(encoded) // "TRUE"
@@ -2676,8 +2677,7 @@ export const VCardBooleanFromString = VCardBooleanString.pipe(
   }),
   $I.annoteSchema("VCardBooleanFromString", {
     description: "RFC 6350 BOOLEAN string decoded to boolean with canonical uppercase encoding.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "encodeEffect"])
+  })
 );
 
 /**
@@ -2700,8 +2700,9 @@ export type VCardBooleanFromString = typeof VCardBooleanFromString.Type;
  *
  * ```ts
  * import { VCardIntegerValue } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * console.log(VCardIntegerValue.is(42n)) // true
+ * console.log(S.is(VCardIntegerValue)(42n)) // true
  * ```
  *
  * @see {@link XsdIntegerValue} for unbounded xsd:integer bigint; {@link VCardIntegerFromString} to decode RFC 6350 INTEGER lexemes into this Int64 type.
@@ -2717,8 +2718,7 @@ export const VCardIntegerValue = S.BigInt.check(
   S.brand("VCardIntegerValue"),
   $I.annoteSchema("VCardIntegerValue", {
     description: "Signed 64-bit integer decoded from an RFC 6350 INTEGER value.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -2744,8 +2744,9 @@ export type VCardIntegerValue = typeof VCardIntegerValue.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardIntegerFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardIntegerFromString.decodeUnknownEffect("+42"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardIntegerFromString)("+42"))
  *
  * console.log(value)
  * ```
@@ -2766,8 +2767,7 @@ export const VCardIntegerFromString = VCardIntegerString.pipe(
   }),
   $I.annoteSchema("VCardIntegerFromString", {
     description: "RFC 6350 INTEGER string decoded to a signed 64-bit branded bigint.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2787,8 +2787,9 @@ export type VCardIntegerFromString = typeof VCardIntegerFromString.Type;
  * ```ts
  * import { BigDecimal } from "effect"
  * import { VCardFloatValue } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * console.log(VCardFloatValue.is(BigDecimal.make(125n, 2))) // true
+ * console.log(S.is(VCardFloatValue)(BigDecimal.make(125n, 2))) // true
  * ```
  *
  * @category schemas
@@ -2799,7 +2800,6 @@ export const VCardFloatValue = S.BigDecimal.pipe(
   $I.annoteSchema("VCardFloatValue", {
     description: "Arbitrary-precision decimal decoded from an RFC 6350 FLOAT value.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
   SchemaUtils.withStatics(() => ({
     format: (value: BigDecimal.BigDecimal): string => {
       const normalized = BigDecimal.normalize(value);
@@ -2840,8 +2840,9 @@ export type VCardFloatValue = typeof VCardFloatValue.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardFloatFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardFloatFromString.decodeUnknownEffect("12.50"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardFloatFromString)("12.50"))
  *
  * console.log(value)
  * ```
@@ -2862,8 +2863,7 @@ export const VCardFloatFromString = VCardFloatString.pipe(
   }),
   $I.annoteSchema("VCardFloatFromString", {
     description: "RFC 6350 FLOAT string decoded to an arbitrary-precision branded decimal.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2929,8 +2929,9 @@ const formatVCardUtcOffset = (value: Duration.Duration): O.Option<string> =>
  * ```ts
  * import { Duration } from "effect"
  * import { VCardUtcOffsetValue } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * console.log(VCardUtcOffsetValue.is(Duration.minutes(330))) // true
+ * console.log(S.is(VCardUtcOffsetValue)(Duration.minutes(330))) // true
  * ```
  *
  * @category schemas
@@ -2949,7 +2950,6 @@ export const VCardUtcOffsetValue = S.Duration.check(
   $I.annoteSchema("VCardUtcOffsetValue", {
     description: "Effect duration constrained to the RFC 6350 UTC-OFFSET range and minute precision.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
   SchemaUtils.withStatics(() => ({
     parse: parseVCardUtcOffset,
     format: formatVCardUtcOffset,
@@ -2977,9 +2977,10 @@ export type VCardUtcOffsetValue = typeof VCardUtcOffsetValue.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardUtcOffsetFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardUtcOffsetFromString.decodeUnknownEffect("+05"))
- * const encoded = Effect.runSync(VCardUtcOffsetFromString.encodeEffect(value))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardUtcOffsetFromString)("+05"))
+ * const encoded = Effect.runSync(S.encodeEffect(VCardUtcOffsetFromString)(value))
  *
  * console.log(encoded) // "+0500"
  * ```
@@ -3005,8 +3006,7 @@ export const VCardUtcOffsetFromString = VCardUtcOffsetString.pipe(
   }),
   $I.annoteSchema("VCardUtcOffsetFromString", {
     description: "RFC 6350 UTC-OFFSET string decoded to an Effect duration.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "encodeEffect"])
+  })
 );
 
 /**
@@ -3051,8 +3051,9 @@ const isWholeSecondDateTimeUtc = (value: DateTime.Utc): boolean => DateTime.toEp
  * ```ts
  * import { DateTime } from "effect"
  * import { VCardTimestampValue } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * console.log(VCardTimestampValue.is(DateTime.makeUnsafe("2024-02-29T12:30:45.000Z"))) // true
+ * console.log(S.is(VCardTimestampValue)(DateTime.makeUnsafe("2024-02-29T12:30:45.000Z"))) // true
  * ```
  *
  * @category schemas
@@ -3070,8 +3071,7 @@ export const VCardTimestampValue = S.DateTimeUtc.check(
   S.brand("VCardTimestampValue"),
   $I.annoteSchema("VCardTimestampValue", {
     description: "UTC instant constrained to the whole-second precision representable by RFC 6350 TIMESTAMP.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -3098,8 +3098,9 @@ export type VCardTimestampValue = typeof VCardTimestampValue.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardTimestampFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardTimestampFromString.decodeUnknownEffect("20240229T123045Z"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardTimestampFromString)("20240229T123045Z"))
  *
  * console.log(value)
  * ```
@@ -3117,8 +3118,7 @@ export const VCardTimestampFromString = VCardZonedTimestampString.pipe(
       flow(DateTime.formatIso, isoUtcToVCardTimestamp, SchemaParser.decodeEffect(VCardZonedTimestampString))
     ),
   }),
-  $I.annoteSchema("VCardTimestampFromString", { description: "RFC 6350 TIMESTAMP string decoded to DateTime.Utc." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardTimestampFromString", { description: "RFC 6350 TIMESTAMP string decoded to DateTime.Utc." })
 );
 
 /**
@@ -3143,8 +3143,9 @@ export type VCardTimestampFromString = typeof VCardTimestampFromString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { VCardUrlFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardUrlFromString.decodeUnknownEffect("https://example.com/item"))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardUrlFromString)("https://example.com/item"))
  *
  * console.log(value)
  * ```
@@ -3160,8 +3161,7 @@ export const VCardUrlFromString = VCardUriString.pipe(
   }),
   $I.annoteSchema("VCardUrlFromString", {
     description: "RFC 6350 URI value in the URL-compatible subset decoded to a platform URL.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -3186,8 +3186,9 @@ export type VCardUrlFromString = typeof VCardUrlFromString.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataContextualValueFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(MicrodataContextualValueFromString.decodeUnknownEffect({ _tag: "TextProperty", value: "plain text" }))
+ * const value = Effect.runSync(S.decodeUnknownEffect(MicrodataContextualValueFromString)({ _tag: "TextProperty", value: "plain text" }))
  *
  * console.log(value)
  * ```
@@ -3205,8 +3206,7 @@ export const MicrodataContextualValueFromString = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("MicrodataContextualValueFromString", {
     description: "Microdata property value discriminated by the DOM or vocabulary context that determines typing.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -3239,8 +3239,9 @@ export type MicrodataContextualValueFromString = typeof MicrodataContextualValue
  * ```ts
  * import { Effect } from "effect"
  * import { VCardTypedScalarFromString } from "@beep/scratchpad/microdata"
+ * import * as S from "effect/Schema"
  *
- * const value = Effect.runSync(VCardTypedScalarFromString.decodeUnknownEffect({ _tag: "text", value: "plain text" }))
+ * const value = Effect.runSync(S.decodeUnknownEffect(VCardTypedScalarFromString)({ _tag: "text", value: "plain text" }))
  *
  * console.log(value)
  * ```
@@ -3265,8 +3266,7 @@ export const VCardTypedScalarFromString = VCardValueType.toTaggedUnion("_tag")({
 }).pipe(
   $I.annoteSchema("VCardTypedScalarFromString", {
     description: "RFC 6350 scalar value discriminated by its declared VALUE type.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**

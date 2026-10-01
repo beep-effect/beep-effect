@@ -115,7 +115,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Equal, Exit, pipe, Result } from "effect";
+import { Cause, Effect, Equal, Exit, flow, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -167,17 +167,17 @@ const isSemanticSchemaMetadataKind = S.is(SemanticSchemaMetadataKind);
 const isSemanticSchemaSpecificationDisposition = S.is(SemanticSchemaSpecificationDisposition);
 const isSemanticSchemaStatus = S.is(SemanticSchemaStatus);
 
-const decodeIri = IRI.decodeUnknownSync;
-const decodeAbsoluteIri = AbsoluteIRI.decodeUnknownSync;
-const decodeIriReference = IRIReference.decodeUnknownSync;
-const decodeRelativeIriReference = RelativeIRIReference.decodeUnknownSync;
+const decodeIri = flow(S.decodeUnknownResult(IRI), Result.getOrThrow);
+const decodeAbsoluteIri = flow(S.decodeUnknownResult(AbsoluteIRI), Result.getOrThrow);
+const decodeIriReference = flow(S.decodeUnknownResult(IRIReference), Result.getOrThrow);
+const decodeRelativeIriReference = flow(S.decodeUnknownResult(RelativeIRIReference), Result.getOrThrow);
 const decodeJsonLdLiteralValue = S.decodeUnknownEffect(JsonLdLiteralValue);
-const decodeUri = URI.decodeUnknownSync;
-const decodeAbsoluteUri = AbsoluteURI.decodeUnknownSync;
-const decodeUriReference = URIReference.decodeUnknownSync;
-const decodeRelativeUriReference = RelativeURIReference.decodeUnknownSync;
-const decodePrefixLabel = PrefixLabel.decodeUnknownSync;
-const decodePrefixMap = PrefixMap.decodeUnknownSync;
+const decodeUri = flow(S.decodeUnknownResult(URI), Result.getOrThrow);
+const decodeAbsoluteUri = flow(S.decodeUnknownResult(AbsoluteURI), Result.getOrThrow);
+const decodeUriReference = flow(S.decodeUnknownResult(URIReference), Result.getOrThrow);
+const decodeRelativeUriReference = flow(S.decodeUnknownResult(RelativeURIReference), Result.getOrThrow);
+const decodePrefixLabel = flow(S.decodeUnknownResult(PrefixLabel), Result.getOrThrow);
+const decodePrefixMap = flow(S.decodeUnknownResult(PrefixMap), Result.getOrThrow);
 const encodePrefixMap = S.encodeEffect(PrefixMap);
 
 const canParseWithNativeUrl = (value: string): boolean => {
@@ -409,7 +409,7 @@ describe("@beep/rdf URI schemas and helpers", () => {
   it.effect("publishes a canonical arbitrary for URI values", () =>
     Effect.gen(function* () {
       pipe(
-        (yield* Arbitrary.sampleEffect(Arbitrary.schema(URI), { count: 20, seed: 0x5eed })).every(URI.is),
+        (yield* Arbitrary.sampleEffect(Arbitrary.schema(URI), { count: 20, seed: 0x5eed })).every(S.is(URI)),
         assertTrue
       );
     })
@@ -471,11 +471,11 @@ describe("@beep/rdf RDF term and dataset models", () => {
 
   it.effect("decodes scalar RDF helpers and rejects malformed labels", () =>
     Effect.gen(function* () {
-      expect(PrefixLabel.decodeUnknownSync("schema")).toBe("schema");
-      expect(PrefixLabel.decodeUnknownSync("")).toBe("");
-      expect(Curie.decodeUnknownSync("schema:Thing")).toBe("schema:Thing");
-      expect(LanguageTag.decodeUnknownSync("en-US")).toBe("en-US");
-      expect(() => PrefixLabel.decodeUnknownSync("bad prefix")).toThrow(
+      expect(Result.getOrThrow(S.decodeResult(PrefixLabel)("schema"))).toBe("schema");
+      expect(Result.getOrThrow(S.decodeResult(PrefixLabel)(""))).toBe("");
+      expect(Result.getOrThrow(S.decodeResult(Curie)("schema:Thing"))).toBe("schema:Thing");
+      expect(Result.getOrThrow(S.decodeResult(LanguageTag)("en-US"))).toBe("en-US");
+      expect(() => Result.getOrThrow(S.decodeResult(PrefixLabel)("bad prefix"))).toThrow(
         "Prefix labels must be empty for the default prefix or begin with an ASCII letter"
       );
       const invalidCurie = yield* Effect.exit(decodeCurie("missing-colon"));
@@ -483,7 +483,9 @@ describe("@beep/rdf RDF term and dataset models", () => {
       if (Exit.isFailure(invalidCurie)) {
         expect(Cause.pretty(invalidCurie.cause)).toContain("CURIE values must be of the form");
       }
-      expect(() => LanguageTag.decodeUnknownSync("en_US")).toThrow("Language tags must use alphanumeric subtags");
+      expect(() => Result.getOrThrow(S.decodeResult(LanguageTag)("en_US"))).toThrow(
+        "Language tags must use alphanumeric subtags"
+      );
       expect(() => makeBlankNode("")).toThrow("Blank node labels must not be empty");
       const emptyBlank = yield* Effect.exit(decodeBlankNode({ termType: "BlankNode", value: "" }));
       pipe(emptyBlank, Exit.isFailure, assertTrue);
@@ -523,18 +525,18 @@ describe("@beep/rdf RDF term and dataset models", () => {
     assertSome<string>(label.language, "EN");
     assertNone(typed.language);
     expect(quad.graph).toEqual(graph);
-    pipe(Term.is(alice), assertTrue);
-    pipe(Term.is(blank), assertTrue);
-    pipe(Term.is(label), assertTrue);
-    pipe(Term.is(defaultGraph), assertTrue);
-    pipe(Subject.is(alice), assertTrue);
-    pipe(Subject.is(blank), assertTrue);
-    pipe(ObjectTerm.is(person), assertTrue);
-    pipe(ObjectTerm.is(blank), assertTrue);
-    pipe(ObjectTerm.is(label), assertTrue);
-    pipe(GraphTerm.is(graph), assertTrue);
-    pipe(GraphTerm.is(blank), assertTrue);
-    pipe(GraphTerm.is(defaultGraph), assertTrue);
+    pipe(S.is(Term)(alice), assertTrue);
+    pipe(S.is(Term)(blank), assertTrue);
+    pipe(S.is(Term)(label), assertTrue);
+    pipe(S.is(Term)(defaultGraph), assertTrue);
+    pipe(S.is(Subject)(alice), assertTrue);
+    pipe(S.is(Subject)(blank), assertTrue);
+    pipe(S.is(ObjectTerm)(person), assertTrue);
+    pipe(S.is(ObjectTerm)(blank), assertTrue);
+    pipe(S.is(ObjectTerm)(label), assertTrue);
+    pipe(S.is(GraphTerm)(graph), assertTrue);
+    pipe(S.is(GraphTerm)(blank), assertTrue);
+    pipe(S.is(GraphTerm)(defaultGraph), assertTrue);
     pipe(isQuad(quad), assertTrue);
   });
 
@@ -617,16 +619,16 @@ describe("@beep/rdf JSON-LD models", () => {
       pipe(isJsonLdKeyword("@invalid"), assertFalse);
       assertSome(context["@base"], decodeAbsoluteIri("https://example.com/"));
       assertNone((yield* decodeJsonLdTermDefinition({ "@id": "https://schema.org/name" }))["@type"]);
-      expect(JsonLdBlankNodeIdentifier.decodeUnknownSync("_:alice")).toBe("_:alice");
-      expect(JsonLdNodeIdentifier.decodeUnknownSync("_:alice")).toBe("_:alice");
+      expect(Result.getOrThrow(S.decodeResult(JsonLdBlankNodeIdentifier)("_:alice"))).toBe("_:alice");
+      expect(Result.getOrThrow(S.decodeResult(JsonLdNodeIdentifier)("_:alice"))).toBe("_:alice");
       expect((yield* decodeJsonLdReferenceValue({ "@id": "https://example.com/alice" }))["@id"]).toBe(
         "https://example.com/alice"
       );
       pipe((yield* decodeJsonLdLiteralValue({ "@value": true }))["@value"], assertTrue);
-      expect(JsonLdPropertyValue.decodeUnknownSync({ "@id": "_:bob" })).toEqual(
+      expect(Result.getOrThrow(S.decodeResult(JsonLdPropertyValue)({ "@id": "_:bob" }))).toEqual(
         yield* decodeJsonLdReferenceValue({ "@id": "_:bob" })
       );
-      expect(JsonLdPropertyValue.decodeUnknownSync({ "@value": 1 })).toEqual(
+      expect(Result.getOrThrow(S.decodeResult(JsonLdPropertyValue)({ "@value": 1 }))).toEqual(
         yield* decodeJsonLdLiteralValue({ "@value": 1 })
       );
       expect(document["@graph"]).toEqual([node]);
@@ -635,13 +637,13 @@ describe("@beep/rdf JSON-LD models", () => {
   );
 
   it("rejects malformed JSON-LD identifiers", () => {
-    expect(() => JsonLdBlankNodeIdentifier.decodeUnknownSync("alice")).toThrow(
+    expect(() => Result.getOrThrow(S.decodeResult(JsonLdBlankNodeIdentifier)("alice"))).toThrow(
       "Blank-node identifiers must begin with `_:`, and must not contain whitespace"
     );
-    expect(() => JsonLdBlankNodeIdentifier.decodeUnknownSync("_:bad node")).toThrow(
+    expect(() => Result.getOrThrow(S.decodeResult(JsonLdBlankNodeIdentifier)("_:bad node"))).toThrow(
       "Blank-node identifiers must begin with `_:`, and must not contain whitespace"
     );
-    expect(() => JsonLdNodeIdentifier.decodeUnknownSync("\u202Ebad")).toThrow();
+    expect(() => Result.getOrThrow(S.decodeResult(JsonLdNodeIdentifier)("\u202Ebad"))).toThrow();
   });
 });
 
@@ -726,11 +728,11 @@ describe("@beep/rdf crispening parity", () => {
       const quoteSelector = TextQuoteSelector.make({ kind: "text-quote", exact: "quoted text" });
       const fragmentSelector = FragmentSelector.make({ kind: "fragment", value: "section-1" });
       const target = EvidenceTarget.make({
-        source: IRIReference.decodeUnknownSync("https://example.org/document"),
+        source: Result.getOrThrow(S.decodeResult(IRIReference)("https://example.org/document")),
         selector: fragmentSelector,
       });
       const anchor = EvidenceAnchor.make({
-        id: IRIReference.decodeUnknownSync("https://example.org/annotation/1"),
+        id: Result.getOrThrow(S.decodeResult(IRIReference)("https://example.org/annotation/1")),
         target,
       });
       const specification = SemanticSchemaSpecification.make({
@@ -781,25 +783,25 @@ describe("@beep/rdf crispening parity", () => {
         end: S.Natural.make(5),
       });
       const target = EvidenceTarget.make({
-        source: IRIReference.decodeUnknownSync("https://example.org/document"),
+        source: Result.getOrThrow(S.decodeResult(IRIReference)("https://example.org/document")),
         selector,
       });
       const anchor = EvidenceAnchor.make({
-        id: IRIReference.decodeUnknownSync("https://example.org/annotation/1"),
+        id: Result.getOrThrow(S.decodeResult(IRIReference)("https://example.org/annotation/1")),
         target,
       });
       const encodedSelector = yield* encodeEvidenceSelector(selector);
       const encodedTarget = yield* encodeEvidenceTarget(target);
       const encodedAnchor = yield* encodeEvidenceAnchor(anchor);
 
-      const annotation = WebAnnotationFromEvidenceAnchor.decodeUnknownSync(encodedAnchor);
+      const annotation = Result.getOrThrow(S.decodeResult(WebAnnotationFromEvidenceAnchor)(encodedAnchor));
 
-      expect(WebAnnotationSelectorFromEvidenceSelector.decodeUnknownSync(encodedSelector).type).toBe(
+      expect(Result.getOrThrow(S.decodeResult(WebAnnotationSelectorFromEvidenceSelector)(encodedSelector)).type).toBe(
         "TextPositionSelector"
       );
-      expect(WebAnnotationTargetFromEvidenceTarget.decodeUnknownSync(encodedTarget).selector.type).toBe(
-        "TextPositionSelector"
-      );
+      expect(
+        Result.getOrThrow(S.decodeResult(WebAnnotationTargetFromEvidenceTarget)(encodedTarget)).selector.type
+      ).toBe("TextPositionSelector");
       expect(evidenceAnchorToWebAnnotation(anchor)).toEqual(annotation);
       expect(webAnnotationToEvidenceAnchor(annotation)).toEqual(anchor);
       expect(yield* encodeWebAnnotationFromEvidenceAnchor(annotation)).toEqual({

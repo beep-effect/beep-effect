@@ -20,8 +20,8 @@ describe("BackpressureConfig", () => {
     expect(config.samplingThreshold).toBe(0.8);
     expect(config.samplingRate).toBe(0.1);
     expect(isPosInt(config.maxQueuedEvents)).toBe(true);
-    expect(UnitInterval.is(config.samplingThreshold)).toBe(true);
-    expect(UnitInterval.is(config.samplingRate)).toBe(true);
+    expect(S.is(UnitInterval)(config.samplingThreshold)).toBe(true);
+    expect(S.is(UnitInterval)(config.samplingRate)).toBe(true);
   });
 
   it("rejects invalid capacities and sampling ratios", () => {

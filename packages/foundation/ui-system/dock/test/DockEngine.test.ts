@@ -27,7 +27,6 @@ import {
   TopLeftAnchoredBox,
 } from "@beep/dock";
 import { fcRuns } from "@beep/fc-runs";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -58,13 +57,15 @@ import {
 } from "./Fixtures.ts";
 import type { DockChanged, DockMutationOutcome } from "@beep/dock";
 
+const encodeJsonEffect = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const decodeDockSnapshotJson = S.decodeEffect(S.fromJsonString(DockSnapshot));
 const decodeUnknownDockSnapshotJsonOption = S.decodeUnknownOption(S.fromJsonString(DockSnapshot));
 const encodeDockWorkspaceJson = S.encodeEffect(S.fromJsonString(DockWorkspace));
 const encodePopulatedWorkspaceJson = S.encodeEffect(S.fromJsonString(PopulatedWorkspace));
 const encodeDockSnapshotJsonOption = S.encodeOption(S.fromJsonString(DockSnapshot));
 
-const workspaceEquals = DockWorkspace.equals;
+const workspaceEquals = S.toEquivalence(DockWorkspace);
 
 const requireChanged = (outcome: DockMutationOutcome): Effect.Effect<DockChanged> =>
   DockMutationResult.match(outcome.result, {
@@ -93,8 +94,8 @@ describe("DockEngine", () => {
     expect(layout.axis).toBe("horizontal");
     expect(layout.leftRatio).toBe(5_000);
     expect(split._tag).toBe("Split");
-    expect(PanelId.is(panelOne.id)).toBe(true);
-    expect(PanelId.equals(panelOne.id)(panelOne.id)).toBe(true);
+    expect(S.is(PanelId)(panelOne.id)).toBe(true);
+    expect(S.toEquivalence(PanelId)(panelOne.id, panelOne.id)).toBe(true);
     assertSome(Panel.findInTabs(left, panelOne.id), panelOne);
     assertSome(TabsNode.findForPanel(split, panelTwo.id), right);
   });
@@ -154,7 +155,7 @@ describe("DockEngine", () => {
       "rejects snapshots with an unsupported version",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const wrongVersion = yield* UnknownFromJsonString.encodeEffect({
+        const wrongVersion = yield* encodeJsonEffect({
           version: 2,
           workspace: DockWorkspace.empty,
         });

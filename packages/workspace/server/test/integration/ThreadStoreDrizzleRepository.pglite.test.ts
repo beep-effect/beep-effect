@@ -90,8 +90,8 @@ if (!shouldRunPgliteIntegration) {
             content: docOf("Hello"),
           });
           expect(first.turn.turnIndex).toBe(0);
-          expect(TurnPublicId.is(first.turn.publicId)).toBe(true);
-          expect(MessagePublicId.is(first.message.publicId)).toBe(true);
+          expect(S.is(TurnPublicId)(first.turn.publicId)).toBe(true);
+          expect(S.is(MessagePublicId)(first.message.publicId)).toBe(true);
 
           const second = yield* store.appendTurn({
             threadId: thread.id,
@@ -101,8 +101,8 @@ if (!shouldRunPgliteIntegration) {
           });
           expect(second.turn.turnIndex).toBe(1);
           expect(O.getOrNull(second.turn.parentTurnId)).toStrictEqual(first.turn.id);
-          expect(TurnPublicId.is(second.turn.publicId)).toBe(true);
-          expect(MessagePublicId.is(second.message.publicId)).toBe(true);
+          expect(S.is(TurnPublicId)(second.turn.publicId)).toBe(true);
+          expect(S.is(MessagePublicId)(second.message.publicId)).toBe(true);
           expect(second.turn.publicId).not.toBe(first.turn.publicId);
           expect(second.message.publicId).not.toBe(first.message.publicId);
 
@@ -139,7 +139,7 @@ if (!shouldRunPgliteIntegration) {
           const publicIds = A.map(threads, (thread) => thread.publicId);
           const generatedPublicIdLength = Str.length(WorkspaceIdentity.ThreadId.tableName) + 25;
 
-          expect(A.every(publicIds, ThreadPublicId.is)).toBe(true);
+          expect(A.every(publicIds, S.is(ThreadPublicId))).toBe(true);
           expect(A.every(publicIds, (publicId) => Str.length(publicId) === generatedPublicIdLength)).toBe(true);
           expect(A.length(A.dedupe(publicIds))).toBe(8);
 
@@ -159,10 +159,10 @@ if (!shouldRunPgliteIntegration) {
           const generatedTurnPublicIdLength = Str.length(WorkspaceIdentity.TurnId.tableName) + 25;
           const generatedMessagePublicIdLength = Str.length(WorkspaceIdentity.MessageId.tableName) + 25;
 
-          expect(A.every(turnPublicIds, TurnPublicId.is)).toBe(true);
+          expect(A.every(turnPublicIds, S.is(TurnPublicId))).toBe(true);
           expect(A.every(turnPublicIds, (publicId) => Str.length(publicId) === generatedTurnPublicIdLength)).toBe(true);
           expect(A.length(A.dedupe(turnPublicIds))).toBe(8);
-          expect(A.every(messagePublicIds, MessagePublicId.is)).toBe(true);
+          expect(A.every(messagePublicIds, S.is(MessagePublicId))).toBe(true);
           expect(A.every(messagePublicIds, (publicId) => Str.length(publicId) === generatedMessagePublicIdLength)).toBe(
             true
           );

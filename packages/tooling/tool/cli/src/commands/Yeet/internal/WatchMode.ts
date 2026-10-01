@@ -41,7 +41,6 @@ import { Console, DateTime, Duration, Effect, FileSystem, flow, HashSet, pipe, R
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
@@ -443,14 +442,11 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   // Same predicates the status gate uses: a thread the author resolved with a
   // human reviewer speaking last still owes an answer, so a watch that only
   // asked `isResolved` would call the pull request ready while the gate held.
-  // Closeout issues split by source, so an unmet Greptile gate blocks
-  // `closeout-gates-passed` and never reads as an open thread.
+  // Only closeout issues a thread raised count: review-bot gates such as an
+  // unmet Greptile score are advisory and never read as an open thread.
   const threadsResolved =
     !A.some(threadStates, yeetReviewThreadStateOutstanding) &&
     !O.exists(closeout, (report) => A.some(report.issues, closeoutIssueFromReviewThread));
-  const closeoutGatesPassed = !O.exists(closeout, (report) =>
-    A.some(report.issues, P.not(closeoutIssueFromReviewThread))
-  );
   const mergeStateStatus = view.mergeStateStatus ?? "UNKNOWN";
   const criteria = YeetMergeReadyCriteria.make({
     prOpen: Str.toUpperCase(view.state) === "OPEN",
@@ -464,7 +460,6 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
       view.reviewDecision === null ||
       Str.isEmpty(view.reviewDecision) ||
       Str.toUpperCase(view.reviewDecision) === "APPROVED",
-    closeoutGatesPassed,
     greptileScore: O.none(),
   });
 

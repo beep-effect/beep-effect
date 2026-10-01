@@ -159,8 +159,9 @@ export * from "./EvidenceSpan/index.ts";
  *
  * ```ts
  * import { EvidenceVerificationManifestationKey } from "@beep/epistemic-domain/values"
+ * import * as S from "effect/Schema"
  *
- * console.log(EvidenceVerificationManifestationKey.is("a".repeat(64)))
+ * console.log(S.is(EvidenceVerificationManifestationKey)("a".repeat(64)))
  * ```
  *
  * @category value-objects

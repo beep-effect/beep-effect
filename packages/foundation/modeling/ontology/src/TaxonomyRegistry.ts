@@ -14,6 +14,8 @@ import * as S from "effect/Schema";
 import { ConceptAlignment, DocumentClass, FilingRootKind, FilingSegment } from "./SemanticFoundation.models.ts";
 import type { TaxonomyConcept, TaxonomySeed } from "./SemanticFoundation.models.ts";
 
+const iriReferenceEquivalence = S.toEquivalence(IRIReference);
+
 const $I = $OntologyId.create("TaxonomyRegistry");
 
 /**
@@ -160,7 +162,7 @@ export const runLibrarianLoop = Effect.fn("TaxonomyRegistry.runLibrarianLoop")(f
   const concept = yield* A.findFirst(
     seed.concepts,
     P.Struct({
-      iri: IRIReference.equivalence(input.conceptIri),
+      iri: (iri: IRIReference) => iriReferenceEquivalence(iri, input.conceptIri),
     })
   ).pipe(Effect.fromOption(() => TaxonomyConceptNotFound.make({ conceptIri: input.conceptIri })));
   yield* Effect.filterOrFail(

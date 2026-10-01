@@ -18,7 +18,7 @@
 // cspell:word youtu
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
-import { Defect, LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, pipe, Result, SchemaGetter, SchemaTransformation, Struct } from "effect";
 import { dual } from "effect/Function";
@@ -42,7 +42,7 @@ const decodeYouTubeVideoId = S.decodeUnknownEffect(Md.YouTubeVideoId);
 
 const CodeNodeLanguage = S.OptionFromOptionalNullOr(S.String).pipe(
   S.decodeTo(S.Option(Md.CodeFenceLanguage), {
-    decode: SchemaGetter.transform((language) => O.flatMap(language, Md.CodeFenceLanguage.decodeOption)),
+    decode: SchemaGetter.transform((language) => O.flatMap(language, S.decodeOption(Md.CodeFenceLanguage))),
     encode: SchemaGetter.transform((language) => language),
   }),
   $I.annoteSchema("CodeNodeLanguage", {
@@ -588,8 +588,9 @@ export type TableDimension = typeof TableDimension.Type;
  *
  * ```ts
  * import { ArtifactRefId } from "@beep/lexical-schema/Lexical.model"
+ * import * as S from "effect/Schema"
  *
- * console.log(ArtifactRefId.decodeUnknownSync("artifact-123"))
+ * console.log(S.decodeUnknownSync(ArtifactRefId)("artifact-123"))
  * ```
  *
  * @category models
@@ -606,8 +607,7 @@ export const ArtifactRefId = S.NonEmptyString.check(
 ).pipe(
   $I.annoteSchema("ArtifactRefId", {
     description: "Non-empty artifact reference id accepted by package-owned Lexical artifact-ref nodes.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -2673,15 +2673,7 @@ export const LexicalNode = pipe(
     description:
       "The strict tagged union of v1 serialized Lexical nodes, including recursive parent-child grammar and non-empty root validation.",
   }),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("type"),
-      SchemaUtils.withStatics(() => ({
-        decodeUnknownOption: S.decodeUnknownOption(schema, strictSemanticParseOptions),
-        decodeUnknownResult: S.decodeUnknownResult(schema, strictSemanticParseOptions),
-        decodeUnknownEffect: S.decodeUnknownEffect(schema, strictSemanticParseOptions),
-      }))
-    )
+  S.toTaggedUnion("type")
 );
 
 /**
@@ -3103,7 +3095,7 @@ export class LexicalDecodeError extends S.TaggedError<LexicalDecodeError>($I`Lex
   "LexicalDecodeError",
   {
     message: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
   },
   $I.annoteError<LexicalDecodeError>("LexicalDecodeError", {
     description: "Typed failure raised when a Lexical semantic or wire payload cannot be decoded.",

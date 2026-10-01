@@ -12,10 +12,10 @@
  */
 
 import { SessionStore } from "@beep/qa-capture";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
 import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { encodeQaInventory } from "./Inventory.schemas.ts";
 import { crossCheckAgainstRound, extractLastJsonBlock, raiseCrossCheckFailure } from "./JudgeCheck.ts";
@@ -34,6 +34,8 @@ import { qaRootPath, readEventLog } from "./Qa.session.ts";
 import type { RoundLayout } from "@beep/qa-capture";
 import type { QaInventory } from "./Inventory.schemas.ts";
 import type { QaJudgeIngestOptions } from "./Qa.schemas.ts";
+
+const encodeJsonEffect = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 /**
  * File name of the schema-validated inventory inside a round.
@@ -199,7 +201,7 @@ export const runQaJudgeIngest = Effect.fn("QaJudgeIngest.run")(function* (
   const encoded = yield* encodeQaInventory(inventory).pipe(
     QaCommandError.mapError("qa judge-ingest could not encode the inventory.")
   );
-  const json = yield* UnknownFromJsonString.encodeEffect(encoded).pipe(
+  const json = yield* encodeJsonEffect(encoded).pipe(
     QaCommandError.mapError("qa judge-ingest could not serialize the inventory.")
   );
 

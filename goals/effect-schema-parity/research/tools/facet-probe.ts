@@ -8,8 +8,9 @@
 //    one const), against the census upstream composition, compared on
 //    construction, missing-key decode, undefined-key decode and encode (JSON bytes).
 //
-// Deterministic, no network. Run from the repo root:
-//   bun run goals/effect-schema-parity/research/tools/facet-probe.ts
+// Archival, non-runnable: PR 3-ii (#1347) deleted `@beep/schema/Opaque`, which this probe
+// imports to compare the retired wrappers against upstream. It is kept unchanged as the
+// source of the output recorded in goals/effect-schema-parity/research/2026-09-29-p3-gates.md.
 import { Defect, OpaqueUnknown } from "@beep/schema/Opaque";
 import { Effect } from "effect";
 import * as A from "effect/Array";

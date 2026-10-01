@@ -71,7 +71,7 @@ const makeDocumentSource = Effect.gen(function* () {
   const path = yield* Path.Path;
 
   const hashBytes = Effect.fn("DocumentSource.hashBytes")((bytes: Uint8Array) =>
-    Sha256HexFromBytes.decodeEffect(bytes).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.orDie)
+    S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.orDie)
   );
 
   const makeAcquiredId = Effect.fn("DocumentSource.makeAcquiredId")(function* (document: DocumentId) {

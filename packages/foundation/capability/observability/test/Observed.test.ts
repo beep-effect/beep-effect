@@ -73,7 +73,7 @@ describe("Observed", () => {
     "schema-derived arbitrary values are members of ObservedCause",
     [Arbitrary.schema(ObservedCause)],
     Effect.fnUntraced(function* ([cause]) {
-      expect(ObservedCause.is(cause)).toBe(true);
+      expect(S.is(ObservedCause)(cause)).toBe(true);
     }),
     { arbitrary: fcRuns(50) }
   );
@@ -82,7 +82,7 @@ describe("Observed", () => {
     "schema-derived arbitrary values are members of ObservedExit",
     [Arbitrary.schema(ObservedExit)],
     Effect.fnUntraced(function* ([exit]) {
-      expect(ObservedExit.is(exit)).toBe(true);
+      expect(S.is(ObservedExit)(exit)).toBe(true);
     }),
     { arbitrary: fcRuns(50) }
   );

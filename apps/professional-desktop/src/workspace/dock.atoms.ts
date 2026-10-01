@@ -44,6 +44,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { KeyValueStore } from "effect/persistence";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { professionalBrowserRuntime, professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type { DockPersistenceOperation } from "@beep/dock/Dock.errors";
@@ -646,7 +647,7 @@ export const isPanelActive: {
 } = dual(2, (workspace: DockWorkspace, key: DesktopPanelKey): boolean => {
   const panelId = desktopPanelId(key);
   return O.exists(DockWorkspace.findTabsForPanel(workspace, panelId), (tabs) =>
-    PanelId.equals(tabs.active.id, panelId)
+    S.toEquivalence(PanelId)(tabs.active.id, panelId)
   );
 });
 

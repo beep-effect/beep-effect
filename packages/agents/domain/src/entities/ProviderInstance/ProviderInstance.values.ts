@@ -7,7 +7,7 @@
  */
 
 import { $AgentsDomainId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, pipe, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
@@ -205,9 +205,10 @@ export type HomePath = typeof HomePath.Type;
  *
  * ```ts
  * import { EnvVarName } from "@beep/agents-domain/entities/ProviderInstance"
+ * import * as S from "effect/Schema"
  *
- * console.log(EnvVarName.is("NO_PROXY")) // true
- * console.log(EnvVarName.is("ANTHROPIC_API_KEY")) // false
+ * console.log(S.is(EnvVarName)("NO_PROXY")) // true
+ * console.log(S.is(EnvVarName)("ANTHROPIC_API_KEY")) // false
  * ```
  *
  * @category schemas
@@ -231,8 +232,7 @@ export const EnvVarName = S.NonEmptyString.check(
   S.brand("EnvVarName"),
   $I.annoteSchema("EnvVarName", {
     description: "Environment-variable name safe to persist on a provider instance; token-bearing names rejected.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -290,8 +290,7 @@ export const EnvVars = TokenSafeEnvVarRecord.pipe(
   S.decodeTo(S.Record(EnvVarName, S.NonEmptyString), SchemaTransformation.passthrough()),
   $I.annoteSchema("EnvVars", {
     description: "Extra child-process environment injected when spawning the provider CLI, token-safe names only.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeEffect"])
+  })
 );
 
 /**
@@ -468,12 +467,13 @@ export class ProbeFailedSnapshot extends S.Class<ProbeFailedSnapshot>($I`ProbeFa
  *
  * ```ts
  * import { AuthSnapshot } from "@beep/agents-domain/entities/ProviderInstance"
+ * import * as S from "effect/Schema"
  *
- * const snapshot = AuthSnapshot.decodeUnknownSync({
+ * const snapshot = S.decodeUnknownSync(AuthSnapshot)({
  *   status: "unauthenticated",
  *   probedAt: "2026-07-11T00:00:00.000Z",
  * })
- * console.log(AuthSnapshot.is(snapshot))
+ * console.log(S.is(AuthSnapshot)(snapshot))
  * ```
  *
  * @category schemas
@@ -484,15 +484,7 @@ export const AuthSnapshot = pipe(
   $I.annoteSchema("AuthSnapshot", {
     description: "Tagged union of provider auth-probe outcomes, discriminated by status.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("status"),
-      SchemaUtils.withStatics(() => ({
-        decodeUnknownSync: schema.decodeUnknownSync,
-        is: schema.is,
-      }))
-    )
+  S.toTaggedUnion("status")
 );
 
 /**

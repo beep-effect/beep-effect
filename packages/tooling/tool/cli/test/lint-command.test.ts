@@ -2,21 +2,21 @@ import { lintCommand } from "@beep/repo-cli";
 import { LintCommandTestKit } from "@beep/repo-cli/test/Lint";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, pipe } from "effect";
+import { Effect, FileSystem, flow, Layer, Path, pipe, Result } from "effect";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const deprecatedApiLintShards = [
   "apps/architecture-lab-proof",
   "apps/labs",
@@ -341,6 +341,30 @@ describe("schema-first lint command", { concurrent: false }, () => {
           ]);
 
           yield* runSchemaFirstAndExpectNoErrors();
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it("reports the scanned files, leaving out excluded paths, only when asked", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeSchemaFirstSourceFixture(["export const example = 1;", ""]);
+          yield* writeSchemaFirstFileFixture("packages/example/src/generated/Hidden.ts", [
+            "export const hidden = 1;",
+            "",
+          ]);
+          yield* writeSchemaFirstFileFixture("packages/example/src/Types.d.ts", ["export type X = 1;", ""]);
+
+          yield* runLintCommand(["schema-first"]);
+          const scannedLine = (lines: ReadonlyArray<unknown>) =>
+            A.filter(lines, (line) => P.isString(line) && Str.startsWith("[schema-first:scanned] ")(line));
+          expect(scannedLine(yield* TestConsole.logLines)).toEqual([]);
+
+          yield* runLintCommand(["schema-first", "--report-scanned-files"]);
+          expect(scannedLine(yield* TestConsole.logLines)).toEqual([
+            '[schema-first:scanned] ["packages/example/src/Example.ts"]',
+          ]);
         })
       ).pipe(provideScopedLayer(testLayer))
     ));

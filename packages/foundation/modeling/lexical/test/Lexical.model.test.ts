@@ -23,7 +23,6 @@ import {
   TextNode,
 } from "@beep/lexical-schema";
 import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -42,7 +41,13 @@ import * as SchemaAST from "effect/SchemaAST";
 import { createEditor } from "lexical";
 import type { SerializedTableCellNode } from "@lexical/table";
 
+// LexicalNode's strict decoders reject excess properties, as the retired statics did.
+const strictSemanticParseOptions = { onExcessProperty: "error" } satisfies SchemaAST.ParseOptions;
+const decodeStrictLexicalNodeResult = S.decodeUnknownResult(LexicalNode, strictSemanticParseOptions);
+const decodeStrictLexicalNodeOption = S.decodeUnknownOption(LexicalNode, strictSemanticParseOptions);
+
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
+const encodeJsonEffect = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const decodeEditorStateWireFromJson = S.decodeEffect(EditorStateWireFromJson);
 const decodeEditorStateFromJsonResult = S.decodeResult(EditorStateFromJson, { onExcessProperty: "error" });
@@ -347,7 +352,7 @@ describe("Lexical.model", { concurrent: false }, () => {
     { node: NodeArbitrary },
     ({ node }) => {
       expect(matchedNodeType(node)).toBe(node.type);
-      expect(decoded(LexicalNode.decodeUnknownResult(decoded(encodeLexicalNodeResult(node))))).toEqual(node);
+      expect(decoded(decodeStrictLexicalNodeResult(decoded(encodeLexicalNodeResult(node))))).toEqual(node);
     },
     { arbitrary: fcRuns(50) }
   );
@@ -524,9 +529,9 @@ describe("Lexical.model", { concurrent: false }, () => {
       ] as const;
 
       expect(decodeLexicalNodeResult(nodeWithExtension)._tag).toBe("Failure");
-      assertNone(LexicalNode.decodeUnknownOption(nodeWithExtension));
+      assertNone(decodeStrictLexicalNodeOption(nodeWithExtension));
       expect(decodeLexicalNodeResult(rootWithNestedExtension)._tag).toBe("Failure");
-      assertNone(LexicalNode.decodeUnknownOption(rootWithNestedExtension));
+      assertNone(decodeStrictLexicalNodeOption(rootWithNestedExtension));
       yield* Effect.forEach(
         cases,
         Effect.fnUntraced(function* ([stateWithExtension, jsonWithExtension]) {
@@ -635,7 +640,7 @@ describe("Lexical.model", { concurrent: false }, () => {
               children: [node],
             },
           };
-          const source = yield* UnknownFromJsonString.encodeEffect(state);
+          const source = yield* encodeJsonEffect(state);
           const canonicalTag = ListType.$match(listType, {
             number: F.constant(ListTag.Enum.ol),
             bullet: F.constant(ListTag.Enum.ul),

@@ -7,13 +7,14 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, Path } from "effect";
 import { dual } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
 import type { FileSystem } from "effect";
 import type * as Scope from "effect/Scope";
 
@@ -86,7 +87,7 @@ export class DirectoryHandleError extends S.TaggedError<DirectoryHandleError>($I
     message: S.String,
     operation: DirectoryHandleOperation,
     path: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: OpaqueDefect,
   },
   $I.annoteError<DirectoryHandleError>("DirectoryHandleError", {
     description: "A descriptor-bound directory operation failed.",

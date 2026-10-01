@@ -6,11 +6,11 @@ import {
 } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, HashMap, HashSet, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { DeletePackageDataResource } from "../../../commands/DeletePackage/internal/DataResource.ts";
 import { isCanonicalDeletionChangeset } from "../../../commands/DeletePackage/internal/DeletionChangeset.ts";
@@ -28,6 +28,8 @@ import type {
   RegistrationObservationStatus,
   RegistrationTarget,
 } from "./RegistrationGeometry.schemas.ts";
+
+const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 const SCAN_ROOTS = [
   "packages",
@@ -487,7 +489,7 @@ const decodedRootManifest = Effect.fn("RegistrationGeometry.decodedRootManifest"
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const content = yield* fs.readFileString(path.join(repoRoot, "package.json"));
-  const unknown = yield* UnknownFromJsonString.decodeEffect(content).pipe(
+  const unknown = yield* decodeJsonEffect(content).pipe(
     Effect.mapError(RegistrationGeometryError.newCause("Failed to parse root package.json during E15 scanning."))
   );
   return yield* decodePackageJsonEffect(unknown).pipe(

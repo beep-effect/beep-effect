@@ -78,7 +78,7 @@ describe("@beep/infra Storybook", () => {
   it.effect(
     "decodes optional Pulumi config shape",
     Effect.fnUntraced(function* () {
-      const decoded = yield* StorybookPulumiConfigValues.decodeEffect({
+      const decoded = yield* S.decodeEffect(StorybookPulumiConfigValues)({
         outputDirectory: "storybook-static-preview",
         projectName: "beep-storybook-preview",
         vercelAuthenticationDeploymentType: "none",

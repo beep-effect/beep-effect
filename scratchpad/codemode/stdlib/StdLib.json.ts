@@ -6,13 +6,12 @@
  * @since 0.0.0
  */
 
-import type { SafeObject } from "@beep/schema";
 import { dual } from "effect/Function";
 import { A, P, pipe, R } from "@beep/utils";
 import { DateTime, Effect, MutableHashSet, Result } from "effect";
 import * as S from "effect/Schema";
 import { copyIn, copyOut, ToolRuntimeError } from "../Codemode.tool-runtime.ts";
-import { CodeModeDate, CodeModeURL, isCodeModeValue, makeEmptySafeObject } from "../Codemode.values.ts";
+import { CodeModeDate, CodeModeURL, isCodeModeValue, makeEmptySafeObject, type SafeObject } from "../Codemode.values.ts";
 import type { CallbackRunner } from "../interpreter/Interpreter.methods.ts";
 import { applyCollectionCallback } from "../interpreter/Interpreter.methods.ts";
 import {
