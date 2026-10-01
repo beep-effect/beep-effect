@@ -1,13 +1,13 @@
 import { runTerseEffectRules, TerseEffectRulesOptions } from "@beep/repo-cli/test/Laws";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import { Console, Effect } from "effect";
+import * as TestConsole from "effect/testing/TestConsole";
 import {
   NodeTestLayer,
   readProjectFile,
-  withTempWorkingDirectory,
+  temporaryWorkingDirectory,
   writeDefaultTsconfig,
   writeProjectFile,
 } from "./support/CommandTest.ts";
@@ -107,10 +107,11 @@ const expectFlowThunkFindings = (summary: TerseEffectSummary) => {
   expect(summary.informationalFindings).toEqual([]);
 };
 
-describe("terse effect laws", () => {
-  it("exempts ecosystem members in full and explicit include scans", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+it.layer(NodeTestLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
+  describe("terse effect laws", () => {
+    it.effect("exempts ecosystem members in full and explicit include scans", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           const source = A.join(
@@ -140,12 +141,12 @@ describe("terse effect laws", () => {
           expect(explicitSummary.changedFiles).toEqual([]);
           expect(explicitSummary.strictFailure).toBe(false);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports helper simplifications in dry-run check mode without rewriting files", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports helper simplifications in dry-run check mode without rewriting files", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeHelperWrapperFixture;
@@ -163,12 +164,12 @@ describe("terse effect laws", () => {
           expect(source).toContain("onNone: () => A.empty<string>()");
           expect(source).toContain("onSome: (reference) => A.make<string>(reference)");
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rewrites supported helper wrappers in write mode", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("rewrites supported helper wrappers in write mode", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeHelperWrapperFixture;
@@ -185,12 +186,12 @@ describe("terse effect laws", () => {
           expect(source).toContain("onNone: A.empty<string>");
           expect(source).toContain("onSome: A.of<string>");
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("leaves bare nullary generic constructor thunks alone in check and write modes", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("leaves bare nullary generic constructor thunks alone in check and write modes", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           const source = A.join(
@@ -232,12 +233,12 @@ describe("terse effect laws", () => {
           expect(rewritten).toContain("onBare: () => A.empty()");
           expect(rewritten).toContain("onRef: (value) => O.some(value)");
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("leaves already-terse code unchanged", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("leaves already-terse code unchanged", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -260,12 +261,12 @@ describe("terse effect laws", () => {
 
           expectCleanTerseSummary(summary);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("detects flow candidates and shared thunk helpers in dry-run mode", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("detects flow candidates and shared thunk helpers in dry-run mode", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeFlowThunkFixture;
@@ -283,12 +284,12 @@ describe("terse effect laws", () => {
           expect(source).toContain("onNone: () => undefined");
           expect(source).toContain("parse: (input: string) => pipe(input, parse, render)");
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rewrites shared thunk helper cases while keeping flow-only candidates blocking", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("rewrites shared thunk helper cases while keeping flow-only candidates blocking", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeFlowThunkFixture;
@@ -306,12 +307,12 @@ describe("terse effect laws", () => {
           expect(source).toContain("onNone: thunkUndefined");
           expect(source).toContain("parse: (input: string) => pipe(input, parse, render)");
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("ignores type-only thunk imports when checking shared helper availability", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("ignores type-only thunk imports when checking shared helper availability", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -332,12 +333,12 @@ describe("terse effect laws", () => {
 
           expectCleanTerseSummary(summary);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports whole-object Option match compaction candidates without rewriting files", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports whole-object Option match compaction candidates without rewriting files", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -375,12 +376,12 @@ describe("terse effect laws", () => {
           expectStrictDemoChange(summary);
           expect(source).toContain("onNone: () => ({})");
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports object-spread Option match compaction candidates", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports object-spread Option match compaction candidates", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -410,12 +411,12 @@ describe("terse effect laws", () => {
           expect(summary.optionObjectCompactionCandidatesDetected).toBe(1);
           expectStrictDemoChange(summary);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports conditional optional object spread candidates", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports conditional optional object spread candidates", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -443,12 +444,12 @@ describe("terse effect laws", () => {
           expect(summary.conditionalOptionalObjectSpreadCandidatesDetected).toBe(2);
           expectStrictDemoChange(summary);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("ignores JSX prop spreads and non-object optional spreads", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("ignores JSX prop spreads and non-object optional spreads", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -489,12 +490,12 @@ describe("terse effect laws", () => {
           expect(summary.conditionalOptionalObjectSpreadCandidatesDetected).toBe(0);
           expect(summary.strictFailure).toBe(false);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports nested Option and Bool match candidates", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports nested Option and Bool match candidates", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -533,12 +534,12 @@ describe("terse effect laws", () => {
           expect(summary.dualOverloadCandidatesDetected).toBe(0);
           expectStrictDemoChange(summary);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports explicit dual-overload helper candidates", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports explicit dual-overload helper candidates", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -583,12 +584,12 @@ describe("terse effect laws", () => {
           expect(summary.dualOverloadCandidatesDetected).toBe(1);
           expectStrictDemoChange(summary);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("does not enforce broad nested ternary or if shapes", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("does not enforce broad nested ternary or if shapes", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -622,12 +623,12 @@ describe("terse effect laws", () => {
           expect(summary.nestedBoolMatchCandidatesDetected).toBe(0);
           expect(summary.dualOverloadCandidatesDetected).toBe(0);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("ignores clean Option object helpers and schema-boundary Option helpers", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("ignores clean Option object helpers and schema-boundary Option helpers", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
@@ -654,6 +655,7 @@ describe("terse effect laws", () => {
 
           expectCleanTerseSummary(summary);
         })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 });

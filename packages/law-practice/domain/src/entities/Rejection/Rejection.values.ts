@@ -6,7 +6,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
@@ -66,8 +66,7 @@ export const RejectionGround = S.make<(typeof RejectionGroundDefinition)["Rebuil
   $I.annoteSchema("RejectionGround", {
     description:
       "Statutory ground of a rejection, encoding prior-art cardinality per statute section (§102 = 1 reference, §103 = >=1 references + rationale, §101/§112 = 0 references).",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

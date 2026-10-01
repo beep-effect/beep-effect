@@ -18,9 +18,7 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import { loadYeetInboxView } from "@beep/repo-cli/test/Yeet";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -28,8 +26,11 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, FileSystem, Layer, Path } from "effect";
+import { Cause, Console, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
+import * as TestConsole from "effect/testing/TestConsole";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
@@ -38,7 +39,7 @@ const PlatformLayer = Layer.mergeAll(
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
   FsUtilsLive.pipe(Layer.provideMerge(FileSystemLayer))
 );
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const demoWorkspace = PackageVerifyWorkspace.make({
   name: "@beep/demo",
@@ -98,54 +99,50 @@ const seedWorkspaceRepository = Effect.fn("seedWorkspaceRepository")(function* (
   return packageDir;
 });
 
-const withTempDirectory = <Result, Error, Requirements>(
-  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>
-) =>
-  Effect.acquireUseRelease(
+const temporaryDirectory = Effect.acquireRelease(
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return yield* fs.makeTempDirectory();
+  }),
+  (tmpDir) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      return yield* fs.makeTempDirectory();
-    }),
-    use,
-    (tmpDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(tmpDir, { recursive: true });
-      })
-  ).pipe(provideScopedLayer(PlatformLayer));
+      yield* fs.remove(tmpDir, { recursive: true });
+    }).pipe(Effect.orDie)
+);
 
-describe("package verify", () => {
-  it("builds quick and default step specs", () => {
-    expect(A.map(packageVerifyStepSpecsForTesting(true), (spec) => spec.step)).toEqual(["lint", "check"]);
-    expect(A.map(packageVerifyStepSpecsForTesting(false), (spec) => spec.step)).toEqual(["audit", "docgen"]);
-  });
+it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
+  describe("package verify", () => {
+    it("builds quick and default step specs", () => {
+      expect(A.map(packageVerifyStepSpecsForTesting(true), (spec) => spec.step)).toEqual(["lint", "check"]);
+      expect(A.map(packageVerifyStepSpecsForTesting(false), (spec) => spec.step)).toEqual(["audit", "docgen"]);
+    });
 
-  it("builds upstream audit dependencies through Turbo before the package script", () => {
-    const plan = packageVerifyStepPlanForTesting(
-      "/repo",
-      demoWorkspace,
-      PackageVerifyStepSpec.make({ step: "audit", script: "beep:audit" })
-    );
+    it("builds upstream audit dependencies through Turbo before the package script", () => {
+      const plan = packageVerifyStepPlanForTesting(
+        "/repo",
+        demoWorkspace,
+        PackageVerifyStepSpec.make({ step: "audit", script: "beep:audit" })
+      );
 
-    expect(A.map(plan, ({ args, command, cwd, label }) => ({ args, command, cwd, label }))).toEqual([
-      {
-        label: "audit:build-closure",
-        command: "bun",
-        args: ["x", "turbo", "run", "build", "--filter=@beep/demo^..."],
-        cwd: "/repo",
-      },
-      {
-        label: "audit",
-        command: "bun",
-        args: ["run", "beep:audit"],
-        cwd: "/repo/packages/demo",
-      },
-    ]);
-  });
+      expect(A.map(plan, ({ args, command, cwd, label }) => ({ args, command, cwd, label }))).toEqual([
+        {
+          label: "audit:build-closure",
+          command: "bun",
+          args: ["x", "turbo", "run", "build", "--filter=@beep/demo^..."],
+          cwd: "/repo",
+        },
+        {
+          label: "audit",
+          command: "bun",
+          args: ["run", "beep:audit"],
+          cwd: "/repo/packages/demo",
+        },
+      ]);
+    });
 
-  it("does not run the package audit when its closure build fails", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("does not run the package audit when its closure build fails", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -170,12 +167,11 @@ describe("package verify", () => {
           expect(result.output).not.toContain("touch audit-ran");
           expect(yield* fs.exists(markerPath)).toBe(false);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("refreshes environment-only stale upstream output before running the audit", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("refreshes environment-only stale upstream output before running the audit", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -201,12 +197,11 @@ describe("package verify", () => {
           expect(result.output).toContain("audit-ok");
           expect(yield* fs.readFileString(distStatePath)).toBe("fresh");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("runs the audit when Turbo skips fresh upstream builds from cache", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("runs the audit when Turbo skips fresh upstream builds from cache", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -230,12 +225,11 @@ describe("package verify", () => {
           expect(result.output).toContain("cache hit, replaying logs");
           expect(yield* fs.exists(markerPath)).toBe(true);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("attributes an audit failure after a successful dependency build", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("attributes an audit failure after a successful dependency build", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           const result = yield* runPackageVerifyStepPlanForTesting([
             QualityTaskStep.make({
@@ -257,12 +251,11 @@ describe("package verify", () => {
           expect(result.output).toContain("audit-failed");
           expect(result.output).toContain("sh -c printf audit-failed; exit 9");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("maps dependency-build spawn failures to the package-verify error surface", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("maps dependency-build spawn failures to the package-verify error surface", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         runPackageVerifyStepPlanForTesting([
           QualityTaskStep.make({
             label: "audit:build-closure",
@@ -277,12 +270,11 @@ describe("package verify", () => {
             expect(error.command).toBe("missing-package-verify-command build");
           })
         )
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("runs quick verification and records the repository head", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("runs quick verification and records the repository head", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.acquireUseRelease(
           Effect.sync(() => vi.spyOn(process, "cwd").mockReturnValue(tmpDir)),
           () =>
@@ -302,12 +294,11 @@ describe("package verify", () => {
             }),
           (cwdSpy) => Effect.sync(() => cwdSpy.mockRestore())
         )
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("skips the dependency build when the package has no audit script", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("skips the dependency build when the package has no audit script", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           yield* seedWorkspaceRepository(tmpDir, { docgen: "true" });
 
@@ -325,12 +316,11 @@ describe("package verify", () => {
           });
           expect(report.results[1]).toMatchObject({ step: "docgen", skipped: false, ok: true });
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("surfaces malformed workspace manifests", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("surfaces malformed workspace manifests", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -346,12 +336,11 @@ describe("package verify", () => {
           const workspace = yield* readPackageWorkspaceForTesting("@beep/demo", packageDir);
           expect(workspace.scripts).toEqual({});
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("surfaces a missing repository HEAD after verification", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("surfaces a missing repository HEAD after verification", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           yield* seedWorkspaceRepository(tmpDir, { "beep:lint": "true", "beep:check": "true" }, { commit: false });
 
@@ -363,22 +352,20 @@ describe("package verify", () => {
           expect(error.message).toContain("git rev-parse HEAD failed with exit code");
           expect(error.command).toBe("git rev-parse HEAD");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("rejects more than one package argument before discovery", () =>
-    Effect.runPromise(
+    it.effect("rejects more than one package argument before discovery", () =>
       runPackageVerifyCli({ packageArgs: ["@beep/a", "@beep/b"], quick: true }).pipe(
         Effect.flip,
         Effect.map((error) => {
           expect(error.message).toContain("expected at most one package argument");
         }),
-        provideScopedLayer(PlatformLayer)
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )
-    ));
+    );
 
-  it("selects an explicit workspace package", () =>
-    Effect.runPromise(
+    it.effect("selects an explicit workspace package", () =>
       Effect.gen(function* () {
         const selected = yield* selectPackageVerifyTargetForTesting({
           changedFiles: [],
@@ -388,11 +375,10 @@ describe("package verify", () => {
         });
 
         expect(selected.name).toBe("@beep/demo");
-      })
-    ));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("fails when changed files span multiple packages", () =>
-    Effect.runPromise(
+    it.effect("fails when changed files span multiple packages", () =>
       Effect.gen(function* () {
         const exit = yield* Effect.exit(
           selectPackageVerifyTargetForTesting({
@@ -410,12 +396,11 @@ describe("package verify", () => {
             message: "pkg-verify: changed files span multiple packages: @beep/app, @beep/demo.",
           });
         }
-      })
-    ));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("collects deleted package paths for workspace auto-detection", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("collects deleted package paths for workspace auto-detection", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -435,51 +420,50 @@ describe("package verify", () => {
 
           expect(changedFiles).toEqual(["packages/demo/src/index.ts"]);
         })
-      )
-    ));
-
-  it("renders compact summaries and failed step output", () => {
-    const lines = renderPackageVerifyReportForTesting(
-      PackageVerifyReport.make({
-        headSha: "abc123",
-        packageName: "@beep/demo",
-        packageDir: "/repo/packages/demo",
-        quick: true,
-        repoRoot: "/repo",
-        results: [
-          PackageVerifyStepResult.make({
-            step: "lint",
-            script: "beep:lint",
-            skipped: false,
-            ok: true,
-            durationMillis: 15,
-            exitCode: O.some(0),
-            output: "",
-          }),
-          PackageVerifyStepResult.make({
-            step: "check",
-            script: "beep:check",
-            skipped: false,
-            ok: false,
-            durationMillis: 20,
-            exitCode: O.some(1),
-            output: "type error",
-          }),
-        ],
-      })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
 
-    const rendered = A.join(lines, "\n");
-    expect(rendered).toContain("pkg-verify @beep/demo (/repo/packages/demo) [quick]");
-    expect(rendered).toContain("ok lint");
-    expect(rendered).toContain("fail check");
-    expect(rendered).toContain("-------- check (failed) --------");
-    expect(Str.endsWith("type error\n")(rendered)).toBe(true);
-  });
+    it("renders compact summaries and failed step output", () => {
+      const lines = renderPackageVerifyReportForTesting(
+        PackageVerifyReport.make({
+          headSha: "abc123",
+          packageName: "@beep/demo",
+          packageDir: "/repo/packages/demo",
+          quick: true,
+          repoRoot: "/repo",
+          results: [
+            PackageVerifyStepResult.make({
+              step: "lint",
+              script: "beep:lint",
+              skipped: false,
+              ok: true,
+              durationMillis: 15,
+              exitCode: O.some(0),
+              output: "",
+            }),
+            PackageVerifyStepResult.make({
+              step: "check",
+              script: "beep:check",
+              skipped: false,
+              ok: false,
+              durationMillis: 20,
+              exitCode: O.some(1),
+              output: "type error",
+            }),
+          ],
+        })
+      );
 
-  it("writes package failures to the shared inbox and clears them on success", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+      const rendered = A.join(lines, "\n");
+      expect(rendered).toContain("pkg-verify @beep/demo (/repo/packages/demo) [quick]");
+      expect(rendered).toContain("ok lint");
+      expect(rendered).toContain("fail check");
+      expect(rendered).toContain("-------- check (failed) --------");
+      expect(Str.endsWith("type error\n")(rendered)).toBe(true);
+    });
+
+    it.effect("writes package failures to the shared inbox and clears them on success", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           const result = (ok: boolean) =>
             PackageVerifyStepResult.make({
@@ -533,12 +517,11 @@ describe("package verify", () => {
             })
           );
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("clears quick lint and check poison after a successful full audit", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("clears quick lint and check poison after a successful full audit", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           const step = (name: "lint" | "check" | "audit", ok: boolean) =>
             PackageVerifyStepResult.make({
@@ -567,12 +550,11 @@ describe("package verify", () => {
           expect(repaired.entries).toHaveLength(2);
           expect(repaired.entries.every((entry) => entry.ack.acked)).toBe(true);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("records the Turbo closure build in a genuine audit failure capsule", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("records the Turbo closure build in a genuine audit failure capsule", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           yield* recordPackageVerifyInboxForTesting(
             PackageVerifyReport.make({
@@ -603,6 +585,7 @@ describe("package verify", () => {
             expect(row.capsule.command).toBe("bun x turbo run build --filter=@beep/demo^... && bun run beep:audit");
           }
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 });

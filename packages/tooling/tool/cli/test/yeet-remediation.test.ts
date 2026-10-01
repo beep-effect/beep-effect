@@ -28,6 +28,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -271,17 +272,17 @@ describe("loadYeetRemediationWave", () => {
     inTempRepo((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        expect(O.isNone(yield* loadYeetRemediationWave(root))).toBe(true);
+        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
 
         const statePath = yield* yeetDispatchStatePath(root);
         yield* fs.makeDirectory(`${root}/.beep/inbox`, { recursive: true });
         yield* fs.writeFileString(statePath, "garbage");
-        expect(O.isNone(yield* loadYeetRemediationWave(root))).toBe(true);
+        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
 
         const json = yield* YeetRemediationWaveJson.encode(wave());
         yield* fs.writeFileString(statePath, `${json}\n`);
         const loaded = yield* loadYeetRemediationWave(root);
-        expect(O.isSome(loaded)).toBe(true);
+        loaded.pipe(O.isSome, assertTrue);
         if (O.isSome(loaded)) {
           expect(loaded.value.schemaVersion).toBe(YEET_DISPATCH_SCHEMA_VERSION);
           expect(loaded.value).toStrictEqual(wave());
@@ -409,7 +410,7 @@ describe("dispatchYeetCheckFailure", () => {
         expect(entry.capsule.state).toBe("CANCELLED");
 
         const persisted = yield* loadYeetRemediationWave(root);
-        expect(O.isSome(persisted)).toBe(true);
+        persisted.pipe(O.isSome, assertTrue);
         const errors = A.map(yield* TestConsole.errorLines, String);
         expect(A.some(errors, (line) => Str.includes("repair session opened")(line))).toBe(true);
       })
@@ -443,7 +444,7 @@ describe("dispatchYeetCheckFailure", () => {
 
         yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
 
-        expect(O.isNone(yield* loadYeetRemediationWave(root))).toBe(true);
+        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
         const errors = A.map(yield* TestConsole.errorLines, String);
         expect(A.some(errors, (line) => Str.includes("failed to deliver capsule")(line))).toBe(true);
         expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
@@ -461,7 +462,7 @@ describe("dispatchYeetCheckFailure", () => {
         );
 
         expect(A.length(yield* readInboxRows(root))).toBe(0);
-        expect(O.isNone(yield* loadYeetRemediationWave(root))).toBe(true);
+        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
         const errors = A.map(yield* TestConsole.errorLines, String);
         expect(A.some(errors, (line) => Str.includes("failed to derive inbox row id")(line))).toBe(true);
         expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);

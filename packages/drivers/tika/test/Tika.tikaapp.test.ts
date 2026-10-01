@@ -94,7 +94,7 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("makeTikaAppFileProc
       javaPath: "java",
       timeoutMillis: 120_000,
     });
-    expect(TikaContentText.decodeUnknownSync("\n  hello corpus world\n\n")).toBe("hello corpus world");
+    expect(Result.getOrThrow(S.decodeResult(TikaContentText)("\n  hello corpus world\n\n"))).toBe("hello corpus world");
   });
 
   it.prop(

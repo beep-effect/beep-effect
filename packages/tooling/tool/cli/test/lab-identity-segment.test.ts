@@ -7,18 +7,17 @@ import {
   LabIdentitySegment,
 } from "@beep/repo-cli/commands/CreatePackage/internal/LabIdentitySegment";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { withTempWorkingDirectory } from "./support/CommandTest.ts";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const segmentLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
 
@@ -220,14 +219,11 @@ describe("lab identity segment", () => {
           );
           yield* writeLabsFixture({ labPackages: [], registryContent: withoutExportsStart });
 
-          const outcome = yield* Effect.result(LabIdentitySegment.syncLabIdentitySegment("."));
+          const outcome = yield* LabIdentitySegment.syncLabIdentitySegment(".").pipe(Effect.flip);
 
-          assertTrue(Result.isFailure(outcome));
-          if (Result.isFailure(outcome)) {
-            expect(outcome.failure.message).toContain(LAB_EXPORTS_START_MARKER);
-            expect(outcome.failure.message).toContain("is missing");
-            expect(outcome.failure.message).toContain("bun run beep lint identity-registry --fix");
-          }
+          expect(outcome.message).toContain(LAB_EXPORTS_START_MARKER);
+          expect(outcome.message).toContain("is missing");
+          expect(outcome.message).toContain("bun run beep lint identity-registry --fix");
         })
       ).pipe(provideScopedLayer(segmentLayer))
     ));
@@ -242,13 +238,10 @@ describe("lab identity segment", () => {
           );
           yield* writeLabsFixture({ labPackages: [], registryContent: duplicated });
 
-          const outcome = yield* Effect.result(LabIdentitySegment.diffLabIdentitySegment("."));
+          const outcome = yield* LabIdentitySegment.diffLabIdentitySegment(".").pipe(Effect.flip);
 
-          assertTrue(Result.isFailure(outcome));
-          if (Result.isFailure(outcome)) {
-            expect(outcome.failure.message).toContain(LAB_COMPOSERS_START_MARKER);
-            expect(outcome.failure.message).toContain("appears more than once");
-          }
+          expect(outcome.message).toContain(LAB_COMPOSERS_START_MARKER);
+          expect(outcome.message).toContain("appears more than once");
         })
       ).pipe(provideScopedLayer(segmentLayer))
     ));

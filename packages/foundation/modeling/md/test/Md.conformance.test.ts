@@ -184,7 +184,7 @@ describe("Markdown semantic conformance", () => {
   });
 
   it("formats every conformance issue variant as a stable diagnostic", () => {
-    const identifier = FootnoteIdentifier.decodeUnknownSync("note");
+    const identifier = Result.getOrThrow(S.decodeResult(FootnoteIdentifier)("note"));
     const issues: ReadonlyArray<MarkdownConformanceIssue> = [
       MarkdownConformanceIssue.cases.NestedLink.make({ path: [] }),
       MarkdownConformanceIssue.cases.UnsupportedNode.make({
@@ -270,7 +270,7 @@ describe("Markdown semantic conformance", () => {
     const zero = Md.make([Md.ol(["zero"], { start: 0 })]);
     const tooLarge = Md.make([Md.ol(["large"], { start: 1_000_000_000 })]);
 
-    expect(OrderedListStart.is(0)).toBe(true);
+    expect(S.is(OrderedListStart)(0)).toBe(true);
     expect(markdownConformanceIssues(zero, CommonMarkProfile)).toHaveLength(0);
     expect(tags(markdownConformanceIssues(tooLarge, CommonMarkProfile))).toEqual(["OrderedListStart"]);
   });

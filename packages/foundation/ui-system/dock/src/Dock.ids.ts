@@ -18,9 +18,10 @@ const $I = $DockId.create("Dock.ids");
  *
  * ```ts import.meta.vitest name="Make and check PanelId"
  * import { PanelId } from "@beep/dock"
+ * import * as S from "effect/Schema"
  *
  * const id = PanelId.make("panel-one")
- * PanelId.is(id) // => true
+ * S.is(PanelId)(id) // => true
  * ```
  *
  * @category identifiers
@@ -30,11 +31,7 @@ export const PanelId = S.NonEmptyString.pipe(
   S.brand("DockPanelId"),
   $I.annoteSchema("PanelId", {
     description: "Stable identity for one panel instance in a dock workspace.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 /**
  * Decoded panel identifier.
@@ -60,9 +57,10 @@ export type PanelId = typeof PanelId.Type;
  *
  * ```ts import.meta.vitest name="Make and check GroupId"
  * import { GroupId } from "@beep/dock"
+ * import * as S from "effect/Schema"
  *
  * const id = GroupId.make("group-one")
- * GroupId.is(id) // => true
+ * S.is(GroupId)(id) // => true
  * ```
  *
  * @category identifiers
@@ -72,11 +70,7 @@ export const GroupId = S.NonEmptyString.pipe(
   S.brand("DockGroupId"),
   $I.annoteSchema("GroupId", {
     description: "Stable identity for one non-empty tab group.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 /**
  * Decoded tab-group identifier.
@@ -102,9 +96,10 @@ export type GroupId = typeof GroupId.Type;
  *
  * ```ts import.meta.vitest name="Make and check SplitId"
  * import { SplitId } from "@beep/dock"
+ * import * as S from "effect/Schema"
  *
  * const id = SplitId.make("split-one")
- * SplitId.is(id) // => true
+ * S.is(SplitId)(id) // => true
  * ```
  *
  * @category identifiers
@@ -114,11 +109,7 @@ export const SplitId = S.NonEmptyString.pipe(
   S.brand("DockSplitId"),
   $I.annoteSchema("SplitId", {
     description: "Stable identity for one binary layout split.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 /**
  * Decoded binary-split identifier.
@@ -144,9 +135,10 @@ export type SplitId = typeof SplitId.Type;
  *
  * ```ts import.meta.vitest name="Make and check CommandId"
  * import { CommandId } from "@beep/dock"
+ * import * as S from "effect/Schema"
  *
  * const id = CommandId.make("command-open-one")
- * CommandId.is(id) // => true
+ * S.is(CommandId)(id) // => true
  * ```
  *
  * @category identifiers
@@ -156,11 +148,7 @@ export const CommandId = S.NonEmptyString.pipe(
   S.brand("DockCommandId"),
   $I.annoteSchema("CommandId", {
     description: "Causal identity shared by a command and its emitted events.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 /**
  * Decoded command identifier.
@@ -186,9 +174,10 @@ export type CommandId = typeof CommandId.Type;
  *
  * ```ts import.meta.vitest name="Make and check RendererKey"
  * import { RendererKey } from "@beep/dock"
+ * import * as S from "effect/Schema"
  *
  * const key = RendererKey.make("markdown-preview")
- * RendererKey.is(key) // => true
+ * S.is(RendererKey)(key) // => true
  * ```
  *
  * @category identifiers
@@ -198,11 +187,7 @@ export const RendererKey = S.NonEmptyString.pipe(
   S.brand("DockRendererKey"),
   $I.annoteSchema("RendererKey", {
     description: "Renderer-neutral key resolved by a host adapter outside dockview-core.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 /**
  * Decoded renderer registry key.
@@ -249,8 +234,6 @@ export const SplitRatio = S.Int.check(
   }),
   SchemaUtils.withStatics((schema) => ({
     complement: (ratio: typeof schema.Type) => schema.make(N.subtract(10_000, ratio)),
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
   }))
 );
 /**

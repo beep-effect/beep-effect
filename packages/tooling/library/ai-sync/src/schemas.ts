@@ -6,7 +6,7 @@
  */
 
 import { $AiSyncId } from "@beep/identity/packages";
-import { SchemaUtils, UnknownRecord } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, flow, identity, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -47,9 +47,7 @@ export const AgentInstructionDocument = S.NonEmptyString.pipe(
   $I.annoteSchema("AgentInstructionDocument", {
     description: "Non-empty markdown instructions read by agents such as Codex, Claude Code, Grok Build, and Junie.",
   }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeEffect: S.decodeUnknownEffect(schema),
-    is: S.is(schema),
+  SchemaUtils.withStatics(() => ({
     normalize: normalizeInstructionText,
   }))
 );
@@ -78,8 +76,9 @@ export type AgentInstructionDocument = typeof AgentInstructionDocument.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { NormalizedAgentInstructionDocument } from "@beep/ai-sync"
+ * import * as S from "effect/Schema"
  *
- * const program = NormalizedAgentInstructionDocument.decodeEffect("# Rules  ")
+ * const program = S.decodeUnknownEffect(NormalizedAgentInstructionDocument)("# Rules  ")
  * Effect.runPromise(program).then((document) => console.log(document))
  * ```
  *
@@ -96,11 +95,7 @@ export const NormalizedAgentInstructionDocument = S.String.pipe(
   ),
   $I.annoteSchema("NormalizedAgentInstructionDocument", {
     description: "Markdown instruction document normalized by trimming trailing line whitespace and outer whitespace.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeEffect: S.decodeUnknownEffect(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 
 /**
@@ -227,7 +222,7 @@ export class AgentPluginManifestMetadata extends S.Class<AgentPluginManifestMeta
     name: S.String,
     version: S.String,
     description: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    metadata: UnknownRecord.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    metadata: S.Record(S.String, S.Unknown).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentPluginManifestMetadata", {
     description: "Plugin manifest metadata for documented plugin surfaces.",

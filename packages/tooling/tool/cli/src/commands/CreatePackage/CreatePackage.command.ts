@@ -18,7 +18,7 @@ import {
   findRepoRoot,
   readPackageJsonFile,
 } from "@beep/repo-utils";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { today } from "@beep/schema/LocalDate";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -222,7 +222,7 @@ const PackageType = LiteralKit(VALID_TYPES).pipe(
 );
 type PackageType = typeof PackageType.Type;
 const isPackageType = S.is(PackageType);
-const packageTypeEquivalence = SchemaUtils.toEquivalence(PackageType);
+const packageTypeEquivalence = S.toEquivalence(PackageType);
 
 const AppKind = LiteralKit(VALID_APP_KINDS).pipe(
   $I.annoteSchema("AppKind", {
@@ -238,7 +238,7 @@ const decodeAppKindEffect = (input: unknown) =>
       DomainError.newCause(`Invalid app kind "${input}". Must be one of: ${A.join(VALID_APP_KINDS, ", ")}`)
     )
   );
-const appKindEquivalence = SchemaUtils.toEquivalence(AppKind);
+const appKindEquivalence = S.toEquivalence(AppKind);
 
 const PackageFamily = LiteralKit(VALID_FAMILIES).pipe(
   $I.annoteSchema("PackageFamily", {
@@ -254,7 +254,7 @@ const decodePackageFamilyEffect = (input: unknown) =>
       DomainError.newCause(`Invalid package family "${input}". Must be one of: ${A.join(VALID_FAMILIES, ", ")}`)
     )
   );
-const packageFamilyEquivalence = SchemaUtils.toEquivalence(PackageFamily);
+const packageFamilyEquivalence = S.toEquivalence(PackageFamily);
 
 const FoundationKind = LiteralKit(VALID_FOUNDATION_KINDS).pipe(
   $I.annoteSchema("FoundationKind", {
@@ -306,16 +306,14 @@ const ParentDir = S.String.check(S.isPattern(PARENT_DIR_PATTERN)).pipe(
   S.brand("ParentDir"),
   $I.annoteSchema("ParentDir", {
     description: "Validated repo-relative parent directory for package scaffolding.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const PackageName = S.String.check(S.isPattern(PACKAGE_NAME_PATTERN)).pipe(
   S.brand("PackageName"),
   $I.annoteSchema("PackageName", {
     description: "Package name segment used for @beep scoped package creation.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -1299,7 +1297,7 @@ export const createPackageCommand = Command.make(
     );
     const inferredToolingKind = pipe(
       [
-        pipe(inferableToolingPackageType, O.filter(packageTypeEquivalence("tool")), O.as("tool" as const)),
+        pipe(inferableToolingPackageType, O.filter(PackageType.is.tool), O.as("tool" as const)),
         pipe(inferableToolingPackageType, O.as("library" as const)),
       ] satisfies ReadonlyArray<O.Option<ToolingKind>>,
       O.firstSomeOf
@@ -1335,7 +1333,7 @@ export const createPackageCommand = Command.make(
     }
 
     // ── Validate package name ─────────────────────────────────────────
-    if (!PackageName.is(name)) {
+    if (!S.is(PackageName)(name)) {
       return yield* DomainError.make({
         message: `Invalid package name "${name}". Must start with a lowercase letter or underscore, contain only [a-z0-9._-].`,
       });
@@ -1343,7 +1341,7 @@ export const createPackageCommand = Command.make(
 
     // ── Resolve directory name ─────────────────────────────────────────
     const dirName = Str.isNonEmpty(dirNameOverride) ? dirNameOverride : name;
-    if (Str.isNonEmpty(dirNameOverride) && !PackageName.is(dirName)) {
+    if (Str.isNonEmpty(dirNameOverride) && !S.is(PackageName)(dirName)) {
       return yield* DomainError.make({
         message: `Invalid dir name "${dirName}". Must start with a lowercase letter or underscore, contain only [a-z0-9._-].`,
       });
@@ -1367,20 +1365,20 @@ export const createPackageCommand = Command.make(
           toolingKind,
           O.map((kind) => `packages/tooling/${kind}`)
         ),
-        pipe(requestedPackageFamily, O.filter(packageFamilyEquivalence("drivers")), O.as("packages/drivers")),
-        pipe(requestedPackageFamily, O.filter(packageFamilyEquivalence("ecosystem")), O.as("packages/ecosystem")),
+        pipe(requestedPackageFamily, O.filter(PackageFamily.is.drivers), O.as("packages/drivers")),
+        pipe(requestedPackageFamily, O.filter(PackageFamily.is.ecosystem), O.as("packages/ecosystem")),
         pipe(
           packageType,
           O.liftPredicate((candidate) => lab && packageTypeEquivalence(candidate, "app")),
           O.as(LABS_WORKSPACE_ROOT)
         ),
-        pipe(packageType, O.liftPredicate(packageTypeEquivalence("app")), O.as("apps")),
+        pipe(packageType, O.liftPredicate(PackageType.is.app), O.as("apps")),
       ] satisfies ReadonlyArray<O.Option<string>>,
       O.firstSomeOf,
       O.getOrElse(() => "packages/tooling/library")
     );
     const parentDir = Str.isNonEmpty(parentDirOverride) ? parentDirOverride : defaultParentDir;
-    if (!ParentDir.is(parentDir)) {
+    if (!S.is(ParentDir)(parentDir)) {
       return yield* DomainError.make({
         message: `Invalid parent dir "${parentDir}". Use a repo-relative path like "packages/tooling/library", "apps", or "packages/shared".`,
       });
@@ -1471,7 +1469,7 @@ export const createPackageCommand = Command.make(
     const currentYear = `${DateTime.getPartUtc(DateTime.nowUnsafe(), "year")}`;
     const rootRelative = toRootRelative(packagePath);
     const portlessLabel = portlessLabelFor(name, lab);
-    const isEcosystem = O.exists(packageFamily, packageFamilyEquivalence("ecosystem"));
+    const isEcosystem = O.exists(packageFamily, PackageFamily.is.ecosystem);
     const languageServicePluginProfiles =
       isEcosystem || appKindIs(appKind, "nextjs")
         ? yield* readLanguageServicePluginProfiles(repoRoot)

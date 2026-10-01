@@ -1,5 +1,4 @@
 import { Sha256Hex } from "@beep/schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Crypto, Effect, Equal, Layer, Match, Order, Result } from "effect";
 import * as A from "effect/Array";
 import * as EmbeddingModel from "effect/ai/EmbeddingModel";
@@ -17,9 +16,7 @@ import type { EmbeddingInput } from "@/schema/Projection";
 
 const decodeEmbeddingVectorType = S.decodeEffect(S.toType(EmbeddingVector));
 
-const EmbeddingVectorJson = S.fromJsonString(EmbeddingVector).pipe(
-  SchemaUtils.withCodecStatics(["encodeEffect", "decodeEffect"])
-);
+const EmbeddingVectorJson = S.fromJsonString(EmbeddingVector);
 const modelEquivalence = S.toEquivalence(ModelIdentity);
 const vectorOrder = Order.mapInput(Order.String, (vector: EmbeddingVector) => vector.chunk);
 const degradedOrder = Order.mapInput(Order.String, (degraded: DegradedEmbedding) => degraded.chunk);
@@ -81,7 +78,7 @@ const cachedVector = Effect.fn("Embedder.cachedVector")(function* (
             key,
           }),
         onSome: (entry) =>
-          EmbeddingVectorJson.decodeEffect(entry.response).pipe(
+          S.decodeEffect(EmbeddingVectorJson)(entry.response).pipe(
             Effect.match({
               onFailure: () =>
                 ({
@@ -118,7 +115,7 @@ const storeVector = Effect.fn("Embedder.storeVector")(function* (
   vector: EmbeddingVector,
   cache: ProviderCache["Service"]
 ): Effect.fn.Return<Result.Result<EmbeddingVector, DegradedEmbedding>, never, Crypto.Crypto> {
-  const response = yield* EmbeddingVectorJson.encodeEffect(vector).pipe(Effect.orDie);
+  const response = yield* S.encodeEffect(EmbeddingVectorJson)(vector).pipe(Effect.orDie);
   const cacheKey = yield* contentDigest(ProviderCacheKey)(key).pipe(Effect.orDie);
   return yield* cache
     .store(

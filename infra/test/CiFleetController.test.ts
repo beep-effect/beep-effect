@@ -157,6 +157,8 @@ describe("@beep/infra CiFleetController", () => {
       const moduleCapacityTypes = MutableHashMap.empty<string, unknown>();
       const moduleRunnerCaps = MutableHashMap.empty<string, unknown>();
       const moduleAllocationStrategies = MutableHashMap.empty<string, unknown>();
+      const moduleInstanceTypes = MutableHashMap.empty<string, unknown>();
+      const moduleSubnetIds = MutableHashMap.empty<string, unknown>();
       const moduleOnDemandFailover = MutableHashMap.empty<string, unknown>();
       const moduleScaleUpConcurrency = MutableHashMap.empty<string, unknown>();
       const moduleScaleDownSchedules = MutableHashMap.empty<string, unknown>();
@@ -198,6 +200,8 @@ describe("@beep/infra CiFleetController", () => {
                   MutableHashMap.set(moduleCapacityTypes, args.name, args.inputs.instance_target_capacity_type);
                   MutableHashMap.set(moduleRunnerCaps, args.name, args.inputs.runners_maximum_count);
                   MutableHashMap.set(moduleAllocationStrategies, args.name, args.inputs.instance_allocation_strategy);
+                  MutableHashMap.set(moduleInstanceTypes, args.name, args.inputs.instance_types);
+                  MutableHashMap.set(moduleSubnetIds, args.name, args.inputs.subnet_ids);
                   MutableHashMap.set(
                     moduleOnDemandFailover,
                     args.name,
@@ -245,7 +249,7 @@ describe("@beep/infra CiFleetController", () => {
                 })
               ),
               region: pulumi.output("us-east-1"),
-              subnetIds: ["subnet-abc"],
+              subnetIds: ["subnet-a", "subnet-b", "subnet-c", "subnet-d", "subnet-e"],
               vpcId: "vpc-123",
               workerSecurityGroupId: "sg-456",
             });
@@ -284,10 +288,24 @@ describe("@beep/infra CiFleetController", () => {
       pipe(capturedOrganizationRunnerEnabled.value, assertTrue);
       expect(capturedRunnerGroupName.value).toBe("beep-ec2-heavy");
       assertSome(MutableHashMap.get(moduleCapacityTypes, "ci-fleet-controller-test"), "spot");
-      assertSome(
-        MutableHashMap.get(moduleAllocationStrategies, "ci-fleet-controller-test"),
-        "price-capacity-optimized"
-      );
+      assertSome(MutableHashMap.get(moduleAllocationStrategies, "ci-fleet-controller-test"), "capacity-optimized");
+      assertSome(MutableHashMap.get(moduleInstanceTypes, "ci-fleet-controller-test"), [
+        "r7a.2xlarge",
+        "r7i.2xlarge",
+        "r6i.2xlarge",
+        "r6a.2xlarge",
+        "m7a.4xlarge",
+        "m7i.4xlarge",
+        "m6a.4xlarge",
+        "m6i.4xlarge",
+      ]);
+      assertSome(MutableHashMap.get(moduleSubnetIds, "ci-fleet-controller-test"), [
+        "subnet-a",
+        "subnet-b",
+        "subnet-c",
+        "subnet-d",
+        "subnet-e",
+      ]);
       assertSome(MutableHashMap.get(moduleOnDemandFailover, "ci-fleet-controller-test"), []);
       assertSome(MutableHashMap.get(moduleRunnerCaps, "ci-fleet-controller-test"), 2);
       assertSome(MutableHashMap.get(moduleScaleUpConcurrency, "ci-fleet-controller-test"), 1);

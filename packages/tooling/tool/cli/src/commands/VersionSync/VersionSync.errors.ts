@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/VersionSync.errors");
 
@@ -33,7 +33,7 @@ export class VersionSyncError extends S.TaggedError<VersionSyncError>($I`Version
   {
     message: S.String,
     file: S.String,
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<VersionSyncError>("VersionSyncError", {
     title: "Version Sync Error",

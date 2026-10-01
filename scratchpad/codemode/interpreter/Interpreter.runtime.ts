@@ -11,9 +11,7 @@
  * @since 0.0.0
  */
 
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { type SafeObject, SafeObject as SafeObjectSchema } from "@beep/schema/SafeObject";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { LiteralKit } from "@beep/schema";
 import { A, O, P, pipe, R, thunkFalse } from "@beep/utils";
 import {
   Cause,
@@ -27,8 +25,7 @@ import {
   MutableHashSet,
   MutableRef,
   Random,
-  Result,
-} from "effect";
+  Result, flow } from "effect";
 import * as S from "effect/Schema";
 import {
   arrayMethods,
@@ -62,6 +59,8 @@ import {
   CodeModeURLSearchParams,
   isCodeModeValue,
   makeEmptySafeObject,
+  type SafeObject,
+  SafeObject as SafeObjectSchema,
 } from "../Codemode.values.ts";
 import {
   AppliedBinaryOperator,
@@ -188,7 +187,7 @@ const isUrlSearchParamsMethod = S.is(UrlSearchParamsMethod);
 const isUrlStatic = S.is(UrlStatic);
 
 const MAX_ARRAY_LENGTH = 4_294_967_295;
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const StatementNodeType = LiteralKit([
   "ExpressionStatement",
@@ -332,7 +331,7 @@ const collectPatternNames = (pattern: AstNode): Array<string> =>
 const collectHoistedVariables = (value: unknown): Array<readonly [name: string, node: AstNode]> => {
   if (A.isArray(value)) return A.flatMap(value, collectHoistedVariables);
   if (
-    !AstNode.is(value) ||
+    !S.is(AstNode)(value) ||
     value.type === "FunctionDeclaration" ||
     value.type === "FunctionExpression" ||
     value.type === "ArrowFunctionExpression" ||
@@ -379,8 +378,7 @@ const OpaqueMemberReference = S.Union([
   JsonMethodReference,
   GeneratorMethodReference,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
-  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
+  S.toTaggedUnion("_tag")
 );
 
 type OpaqueMemberReference = typeof OpaqueMemberReference.Type;
@@ -853,7 +851,7 @@ export class Interpreter<R> {
    */
   private hoistFunctions(statements: ReadonlyArray<unknown>): void {
     for (const statementValue of statements) {
-      if (!AstNode.is(statementValue) || statementValue.type !== "FunctionDeclaration") continue;
+      if (!S.is(AstNode)(statementValue) || statementValue.type !== "FunctionDeclaration") continue;
       const node = statementValue;
       this.scopes.declare(getString(getNode(node, "id"), "name"), this.createFunction(node), true, node);
     }
@@ -912,7 +910,7 @@ export class Interpreter<R> {
    */
   private predeclareLexical(statements: ReadonlyArray<unknown>): void {
     for (const statementValue of statements) {
-      if (!AstNode.is(statementValue) || statementValue.type !== "VariableDeclaration") continue;
+      if (!S.is(AstNode)(statementValue) || statementValue.type !== "VariableDeclaration") continue;
       const statement = statementValue;
       const kind = getString(statement, "kind");
       if (kind === "var") continue;
@@ -4847,7 +4845,7 @@ export class Interpreter<R> {
     return Effect.map(this.getMemberReference(node), (reference) => {
       if (reference === OptionalShortCircuit) return OptionalShortCircuit;
       if (ComputedValue.is(reference)) return reference.value;
-      if (P.isUndefined(reference) || OpaqueMemberReference.is(reference)) return reference;
+      if (P.isUndefined(reference) || S.is(OpaqueMemberReference)(reference)) return reference;
       if (A.isArray(reference.target)) {
         if (reference.key === "length") return reference.target.length;
         if (P.isString(reference.key) && S.is(arrayMethods)(reference.key)) {
@@ -4927,7 +4925,7 @@ export class Interpreter<R> {
       if (
         ComputedValue.is(reference) ||
         P.isUndefined(reference) ||
-        OpaqueMemberReference.is(reference) ||
+        S.is(OpaqueMemberReference)(reference) ||
         CodeModeURL.is(reference.target)
       ) {
         throw InterpreterRuntimeError.new("Only data fields may be deleted.", target, "InvalidDataValue");
@@ -4980,7 +4978,7 @@ export class Interpreter<R> {
         reference === OptionalShortCircuit ||
         ComputedValue.is(reference) ||
         P.isUndefined(reference) ||
-        OpaqueMemberReference.is(reference)
+        S.is(OpaqueMemberReference)(reference)
       ) {
         throw InterpreterRuntimeError.new("Only data fields may be assigned.", node);
       }

@@ -4,7 +4,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, pipe } from "effect";
+import { Cause, Effect, Exit, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -115,21 +115,25 @@ describe("schema.org namespace canonicalization", () => {
   });
 
   it("preserves RDF-distinct schema.org IRIs across the generic IRI facade", () => {
-    expect(IRI.decodeUnknownSync("http://schema.org/name")).toBe("http://schema.org/name");
-    expect(AbsoluteIRI.decodeUnknownSync("http://schema.org/Person")).toBe("http://schema.org/Person");
-    expect(IRIReference.decodeUnknownSync("http://www.schema.org/Thing")).toBe("http://www.schema.org/Thing");
+    expect(Result.getOrThrow(S.decodeResult(IRI)("http://schema.org/name"))).toBe("http://schema.org/name");
+    expect(Result.getOrThrow(S.decodeResult(AbsoluteIRI)("http://schema.org/Person"))).toBe("http://schema.org/Person");
+    expect(Result.getOrThrow(S.decodeResult(IRIReference)("http://www.schema.org/Thing"))).toBe(
+      "http://www.schema.org/Thing"
+    );
     expect(makeNamedNode("http://schema.org/name").value).toBe("http://schema.org/name");
   });
 
   it("keeps canonical schema.org and unrelated legacy-http IRIs unchanged on decode", () => {
-    expect(IRI.decodeUnknownSync("https://schema.org/name")).toBe("https://schema.org/name");
-    expect(IRI.decodeUnknownSync("http://purl.org/dc/terms/creator")).toBe("http://purl.org/dc/terms/creator");
+    expect(Result.getOrThrow(S.decodeResult(IRI)("https://schema.org/name"))).toBe("https://schema.org/name");
+    expect(Result.getOrThrow(S.decodeResult(IRI)("http://purl.org/dc/terms/creator"))).toBe(
+      "http://purl.org/dc/terms/creator"
+    );
   });
 
   it("accepts valid legacy schema.org forms on the type side", () => {
-    pipe(IRI.is("http://schema.org/name"), assertTrue);
-    pipe(IRI.is("https://schema.org/name"), assertTrue);
-    assertNone(IRI.decodeUnknownOption("https://example.com/%ZZ"));
+    pipe(S.is(IRI)("http://schema.org/name"), assertTrue);
+    pipe(S.is(IRI)("https://schema.org/name"), assertTrue);
+    assertNone(S.decodeOption(IRI)("https://example.com/%ZZ"));
     pipe(IRI.makeOption("http://schema.org/name"), O.isSome, assertTrue);
     expect(() => IRI.make("http://schema.org/name")).not.toThrow();
   });

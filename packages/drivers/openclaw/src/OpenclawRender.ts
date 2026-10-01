@@ -16,7 +16,6 @@
  */
 
 import { $OpenclawId } from "@beep/identity";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { O } from "@beep/utils";
 import { Effect, flow, Match, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
@@ -44,7 +43,7 @@ const indentUnit = "  ";
 const gatewaySecretsProviderName = "op_gateway";
 const telegramSecretsProviderName = "op_telegram";
 const modelProviderSecretsName = (providerId: string): string => `op_provider_${providerId}`;
-const encodeCompactJson = UnknownFromJsonString.encodeResult;
+const encodeCompactJson = S.encodeResult(S.fromJsonString(S.Unknown));
 const encodeJsonLeaf: (value: unknown) => string = flow(encodeCompactJson, Result.getOrThrow);
 const jsonEntryOrder = Order.mapInput(Order.String, ([key]: readonly [string, unknown]) => key);
 

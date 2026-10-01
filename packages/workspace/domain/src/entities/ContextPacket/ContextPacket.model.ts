@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Workspace from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
@@ -35,9 +34,11 @@ export class ContextPacket extends ProductEntity.Entity<ContextPacket>()(Workspa
     scenarioFixtureKey: S.NonEmptyString.annotateKey({
       description: "Stable fixture key for the scenario that produced the packet.",
     }).pipe(pg.text(), pg.columnName("scenario_fixture_key")),
-    snapshot: UnknownRecord.annotateKey({
-      description: "Opaque context snapshot returned through the SDK facade.",
-    }).pipe(pg.jsonb()),
+    snapshot: S.Record(S.String, S.Unknown)
+      .annotateKey({
+        description: "Opaque context snapshot returned through the SDK facade.",
+      })
+      .pipe(pg.jsonb()),
   },
   $I.annote("ContextPacket", {
     description: "Bounded context packet returned through the SDK facade.",

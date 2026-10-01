@@ -31,15 +31,18 @@ import {
   VersionSyncResolution,
 } from "@beep/repo-cli/test/VersionSync";
 import { FsUtilsLive } from "@beep/repo-utils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const UnknownJson = S.fromJsonString(S.Unknown);
+const decodeJsonEffect = S.decodeEffect(UnknownJson);
+
+const encodeJson = S.encodeUnknownEffect(UnknownJson);
 
 import * as Arbitrary from "effect/Arbitrary";
 
@@ -86,7 +89,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         const report = buildEffectReport(state);
 
         expect(report.status).toBe("drift");
-        expect(O.isSome(report.latest)).toBe(true);
+        report.latest.pipe(O.isSome, assertTrue);
         if (O.isSome(report.latest)) {
           expect(report.latest.value).toBe("^4.0.0-beta.28");
         }
@@ -191,7 +194,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
             snapshot("@effect/vitest"),
             snapshot("effect"),
           ]);
-          const updated = yield* UnknownFromJsonString.decodeEffect(yield* fs.readFileString(packageJsonPath));
+          const updated = yield* decodeJsonEffect(yield* fs.readFileString(packageJsonPath));
           expect(updated).toMatchObject({ catalog: independent });
         })
       );
@@ -222,7 +225,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
           versionSpecifier: "^4.0.0-beta.28",
         });
         const updated = yield* fs.readFileString(packageJsonPath);
-        const decodedUpdated = (yield* UnknownFromJsonString.decodeEffect(updated)) as {
+        const decodedUpdated = (yield* decodeJsonEffect(updated)) as {
           readonly catalog: Record<string, string>;
         };
 
@@ -355,10 +358,10 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
         expect(state.bunVersionFile).toBe("1.4.0");
         expect(state.packageManagerField).toBe("1.4.0");
-        expect(state.vercelInstallVersion).toEqual(O.some("1.3.14"));
-        expect(state.vercelBuildVersion).toEqual(O.some("1.3.14"));
-        expect(state.bunArchiveSha256).toEqual(O.some(digest));
-        expect(state.expectedBunArchiveSha256).toEqual(O.none());
+        assertSome(state.vercelInstallVersion, "1.3.14");
+        assertSome(state.vercelBuildVersion, "1.3.14");
+        assertSome(state.bunArchiveSha256, digest);
+        assertNone(state.expectedBunArchiveSha256);
 
         yield* fs.remove(tmpDir, { recursive: true });
       })
@@ -379,9 +382,9 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
         const state = yield* resolveBunVersions(tmpDir, true);
 
-        expect(state.vercelInstallVersion).toEqual(O.none());
-        expect(state.vercelBuildVersion).toEqual(O.none());
-        expect(state.bunArchiveSha256).toEqual(O.none());
+        assertNone(state.vercelInstallVersion);
+        assertNone(state.vercelBuildVersion);
+        assertNone(state.bunArchiveSha256);
 
         yield* fs.remove(tmpDir, { recursive: true });
       })
@@ -440,8 +443,8 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
     it("extracts the Linux x64 archive digest from Bun's checksum manifest", () => {
       const digest = "2d03fb5fb83ac8b567aca0a281b2ce1a1a19d488f56c2968d88c3f25e92fe452";
-      expect(extractBunArchiveChecksum(`${digest}  bun-linux-x64.zip\n`)).toEqual(O.some(digest));
-      expect(extractBunArchiveChecksum(`${digest}  bun-linux-aarch64.zip\n`)).toEqual(O.none());
+      assertSome(extractBunArchiveChecksum(`${digest}  bun-linux-x64.zip\n`), digest);
+      assertNone(extractBunArchiveChecksum(`${digest}  bun-linux-aarch64.zip\n`));
     });
   });
 
@@ -659,7 +662,7 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
         ]);
         expect(report.category).toBe("turbo");
         expect(report.status).toBe("drift");
-        expect(report.latest).toEqual(O.some("2.10.14"));
+        assertSome(report.latest, "2.10.14");
         expect(A.map(report.items, (item) => [item.file, item.field, item.current, item.expected])).toEqual([
           [
             "turbo.json",
@@ -721,7 +724,7 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
 
         expect(report.status).toBe("error");
         expect(report.items).toHaveLength(0);
-        expect(report.error).toEqual(O.some("Unsupported turbo version specifier: 2.11.0-canary.1"));
+        assertSome(report.error, "Unsupported turbo version specifier: 2.11.0-canary.1");
       })
     );
   });
@@ -906,8 +909,8 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
           yield* encodeJson({ lockfileVersion: 1, packages: { turbo: [{ unexpected: true }, ""] } })
         );
 
-        expect(yield* readLockfileResolvedVersion(tmpDir, "turbo")).toEqual(O.none());
-        expect(yield* readLockfileResolvedVersion(tmpDir, "@biomejs/biome")).toEqual(O.none());
+        assertNone(yield* readLockfileResolvedVersion(tmpDir, "turbo"));
+        assertNone(yield* readLockfileResolvedVersion(tmpDir, "@biomejs/biome"));
         expect(yield* resolveInstalledToolVersion(tmpDir, "turbo")).toBe("2.10.13");
         expect(yield* resolveInstalledToolVersion(tmpDir, "@biomejs/biome")).toBe("");
 
@@ -939,7 +942,7 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
 
       expect(report.status).toBe("ok");
       expect(report.items).toHaveLength(0);
-      expect(report.error).toEqual(O.some("turbo not found in bun.lock, the root catalog, or devDependencies"));
+      assertSome(report.error, "turbo not found in bun.lock, the root catalog, or devDependencies");
     });
 
     it.effect(

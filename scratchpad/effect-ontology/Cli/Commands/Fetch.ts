@@ -9,8 +9,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Unknown } from "@beep/schema/Unknown";
 import { getSomesStruct } from "@beep/utils/Option";
 import { thunkEmptyStr } from "@beep/utils/thunk";
 import type { DrizzleError } from "drizzle-orm";
@@ -58,11 +56,7 @@ const truncateOption = Flag.Int("truncate").pipe(
   Flag.withDescription("Truncate content to N characters (default: show all)")
 );
 
-const OutputJSON = S.fromJsonString(Unknown, { space: 2 }).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    decodeUnknownEffect: S.decodeUnknownEffect(schema),
-  }))
-);
+const OutputJSON = S.fromJsonString(S.Unknown, { space: 2 });
 
 const fetchHandler = Effect.fn("fetchHandler")(function* (
   url: string,
@@ -324,7 +318,7 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
       fetchedAt: doc.fetchedAt?.toISOString(),
       wordCount: doc.wordCount,
     }));
-    const outputJson = yield* OutputJSON.decodeUnknownEffect(output);
+    const outputJson = yield* S.decodeUnknownEffect(OutputJSON)(output);
     yield* Console.log(outputJson);
   } else {
     const formatDocument = (doc: (typeof documents)[number]): string => {

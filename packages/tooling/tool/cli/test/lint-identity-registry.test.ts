@@ -8,24 +8,22 @@ import {
 } from "@beep/repo-cli/commands/CreatePackage/internal/LabIdentitySegment";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Console, Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import { Command } from "effect/cli";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
+import { expectReportedExit, temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
-  TestConsole.layer,
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
   TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
 );
@@ -123,12 +121,13 @@ const writeWorkspaceFixture = Effect.fn("writeWorkspaceFixture")(function* (opti
   }
 });
 
-describe("identity-registry lint command", { concurrent: false }, () => {
-  it(
-    "passes when every workspace package is registered and no local roots exist",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
+  describe("identity-registry lint command", { concurrent: false }, () => {
+    it.effect(
+      "passes when every workspace package is registered and no local roots exist",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeWorkspaceFixture({
               registrySlugs: ["identity", "widget"],
@@ -148,16 +147,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               "[lint:identity-registry] OK: 2 workspace packages registered; 0 lab(s) in the generated labs segment; no orphan or local root composers."
             );
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "reports composer and export registrations with no live workspace owner",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports composer and export registrations with no live workspace owner",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget", "retired-widget"] });
 
@@ -172,16 +170,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               )
             ).toBe(true);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "reports an export-only orphan whose compose slug is already gone",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports an export-only orphan whose compose slug is already gone",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
@@ -221,16 +218,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               )
             ).toBe(true);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "reports workspace packages missing from the registry",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports workspace packages missing from the registry",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeWorkspaceFixture({ registrySlugs: ["identity"] });
 
@@ -246,16 +242,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               )
             ).toBe(true);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "reports local root composers built from the identity make export",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports local root composers built from the identity make export",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeWorkspaceFixture({
               registrySlugs: ["identity", "widget"],
@@ -291,16 +286,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               )
             ).toBe(true);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "registers missing workspace packages with --fix",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "registers missing workspace packages with --fix",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* writeWorkspaceFixture({ registrySlugs: ["identity"] });
@@ -316,16 +310,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               true
             );
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "passes when a live lab is registered in the generated labs segment",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "passes when a live lab is registered in the generated labs segment",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeWorkspaceFixture({
               registrySlugs: ["identity", "widget"],
@@ -340,16 +333,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               "[lint:identity-registry] OK: 3 workspace packages registered; 1 lab(s) in the generated labs segment; no orphan or local root composers."
             );
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "reports a live lab registered in the flat group as misplaced",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports a live lab registered in the flat group as misplaced",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeWorkspaceFixture({
               registrySlugs: ["identity", "widget", "probe-lab"],
@@ -368,16 +360,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               )
             ).toBe(true);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "reports an unregistered lab as missing from both the registry and the labs segment",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports an unregistered lab as missing from both the registry and the labs segment",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeWorkspaceFixture({
               registrySlugs: ["identity", "widget"],
@@ -401,16 +392,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               )
             ).toBe(true);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "reports a labs segment entry with no live lab as extra alongside the orphan check",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports a labs segment entry with no live lab as extra alongside the orphan check",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeWorkspaceFixture({
               registrySlugs: ["identity", "widget"],
@@ -434,16 +424,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               )
             ).toBe(true);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "reports a live non-lab workspace inside the labs segment as extra without an orphan",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports a live non-lab workspace inside the labs segment as extra without an orphan",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeWorkspaceFixture({
               registrySlugs: ["identity"],
@@ -462,16 +451,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               )
             ).toBe(true);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "registers a missing lab and prunes a ghost from the labs segment with --fix",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "registers a missing lab and prunes a ghost from the labs segment with --fix",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* writeWorkspaceFixture({
@@ -500,16 +488,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
 
             yield* runLintCommand(["identity-registry"]);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "consolidates a misplaced lab into the generated labs segment with --fix",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "consolidates a misplaced lab into the generated labs segment with --fix",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeWorkspaceFixture({
               registrySlugs: ["identity", "widget", "probe-lab"],
@@ -531,16 +518,15 @@ describe("identity-registry lint command", { concurrent: false }, () => {
 
             yield* runLintCommand(["identity-registry"]);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
 
-  it(
-    "fails with the substrate remediation when the labs segment markers are missing",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "fails with the substrate remediation when the labs segment markers are missing",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
@@ -571,8 +557,8 @@ describe("identity-registry lint command", { concurrent: false }, () => {
               )
             ).toBe(true);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    LINT_TIMEOUT
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+  });
 });

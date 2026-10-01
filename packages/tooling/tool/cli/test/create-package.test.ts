@@ -1,28 +1,25 @@
 import { CreatePackageScripts, createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
 import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
+import { flow } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as jsonc from "jsonc-parser";
+import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
-  TestConsole.layer,
   FsUtilsLive.pipe(Layer.provideMerge(CommandPlatformLayer)),
   TSMorphServiceLive.pipe(Layer.provideMerge(CommandPlatformLayer))
 );
@@ -31,11 +28,9 @@ const shouldAppendSkipLockfile = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, (arg) => arg === "--dry-run" || arg === "--skip-lockfile");
 const runCreatePackageCommand = (args: ReadonlyArray<string>) =>
   runCreatePackageCommandRaw(shouldAppendSkipLockfile(args) ? [...args, "--skip-lockfile"] : args);
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
-const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(UnknownJson);
+const decodeUnknownJson = S.decodeUnknownEffect(UnknownJson);
 const CreatePackageTestTimeoutMs = 30_000;
-const TestFileCwd = process.cwd();
-
 const RootPackage = S.Struct({
   workspaces: S.Array(S.String),
 });
@@ -284,112 +279,105 @@ const ExpectedTauriAppScripts = {
   test: "bun run beep:test",
 } as const;
 
-describe("create-package script writers", () => {
-  it("renders the literal canonical block for library, tool and ecosystem packages", () => {
-    for (const kind of ["library", "ecosystem"] as const) {
-      expect(CreatePackageScripts.package(kind, false)).toEqual(ExpectedGeneratedQualityScripts);
-    }
-    expect(CreatePackageScripts.package("tool", false)).toEqual(
-      R.remove(ExpectedGeneratedQualityScripts, "test:integration")
-    );
-    expect(CreatePackageScripts.package("library", true)).toEqual(ExpectedGeneratedStoriesQualityScripts);
-  });
-  it("renders application and lab blocks without codegen placeholders or unneeded derived tasks", () => {
-    expect({
-      ...CreatePackageScripts.app("portless marketing-web.beep next dev --turbopack", "next build --turbopack", false),
-      start: "next start",
-    }).toEqual(ExpectedNextjsAppScripts);
-    expect({
-      ...CreatePackageScripts.app(
-        "portless desktop-shell.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
-        "vite build",
-        false
-      ),
-      "dev:tauri": "tauri dev",
-    }).toEqual(ExpectedTauriAppScripts);
-    expect(
-      CreatePackageScripts.app("portless example.labs.beep bun src/main.ts", "tsgo -p tsconfig.check.json", true)
-    ).toEqual({
-      audit: "bun run --if-present beep:audit",
-      dev: "portless example.labs.beep bun src/main.ts",
-      "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-      "beep:build": "tsgo -p tsconfig.check.json",
-      "beep:check": "tsgo -p tsconfig.check.json",
-      "beep:lint": "biome check .",
-      "beep:lint:fix": "biome check . --write",
-      "beep:test": "bunx --bun vitest run",
-      build: "bun run beep:build",
-      check: "bun run beep:check",
-      lint: "bun run beep:lint",
-      "lint:fix": "bun run beep:lint:fix",
-      "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
-      "lint:laws": "beep-cli lint laws --package .",
-      "package-test-typecheck": "beep-cli quality test-tsgo-package",
-      test: "bun run beep:test",
+it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  describe("create-package script writers", () => {
+    it("renders the literal canonical block for library, tool and ecosystem packages", () => {
+      for (const kind of ["library", "ecosystem"] as const) {
+        expect(CreatePackageScripts.package(kind, false)).toEqual(ExpectedGeneratedQualityScripts);
+      }
+      expect(CreatePackageScripts.package("tool", false)).toEqual(
+        R.remove(ExpectedGeneratedQualityScripts, "test:integration")
+      );
+      expect(CreatePackageScripts.package("library", true)).toEqual(ExpectedGeneratedStoriesQualityScripts);
     });
-    expect(CreatePackageScripts.app("portless api.beep bun src/main.ts", "tsgo -p tsconfig.check.json", false)).toEqual(
-      {
+    it("renders application and lab blocks without codegen placeholders or unneeded derived tasks", () => {
+      expect({
+        ...CreatePackageScripts.app(
+          "portless marketing-web.beep next dev --turbopack",
+          "next build --turbopack",
+          false
+        ),
+        start: "next start",
+      }).toEqual(ExpectedNextjsAppScripts);
+      expect({
+        ...CreatePackageScripts.app(
+          "portless desktop-shell.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
+          "vite build",
+          false
+        ),
+        "dev:tauri": "tauri dev",
+      }).toEqual(ExpectedTauriAppScripts);
+      expect(
+        CreatePackageScripts.app("portless example.labs.beep bun src/main.ts", "tsgo -p tsconfig.check.json", true)
+      ).toEqual({
+        audit: "bun run --if-present beep:audit",
+        dev: "portless example.labs.beep bun src/main.ts",
+        "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+        "beep:build": "tsgo -p tsconfig.check.json",
+        "beep:check": "tsgo -p tsconfig.check.json",
+        "beep:lint": "biome check .",
+        "beep:lint:fix": "biome check . --write",
+        "beep:test": "bunx --bun vitest run",
+        build: "bun run beep:build",
+        check: "bun run beep:check",
+        lint: "bun run beep:lint",
+        "lint:fix": "bun run beep:lint:fix",
+        "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+        "lint:laws": "beep-cli lint laws --package .",
+        "package-test-typecheck": "beep-cli quality test-tsgo-package",
+        test: "bun run beep:test",
+      });
+      expect(
+        CreatePackageScripts.app("portless api.beep bun src/main.ts", "tsgo -p tsconfig.check.json", false)
+      ).toEqual({
         ...R.remove(ExpectedNextjsAppScripts, "start"),
         dev: "portless api.beep bun src/main.ts",
         "beep:build": "tsgo -p tsconfig.check.json",
-      }
-    );
+      });
+    });
   });
-});
 
-const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const tmpDir = yield* fs.makeTempDirectory();
-
-      process.chdir(tmpDir);
-      yield* fs.makeDirectory(path.join(tmpDir, ".git"), { recursive: true });
-
-      return { fs, tmpDir } as const;
-    }),
-    () => use,
-    ({ fs, tmpDir }) =>
-      Effect.gen(function* () {
-        process.chdir(TestFileCwd);
-        yield* fs.remove(tmpDir, { recursive: true, force: true });
-      })
-  ).pipe(provideScopedLayer(CommandTestLayer), Effect.orDie);
-
-const writeTextFile = Effect.fn(function* (filePath: string, content: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  yield* fs.makeDirectory(path.dirname(filePath), { recursive: true });
-  yield* fs.writeFileString(filePath, content);
-});
-
-const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
-  yield* writeTextFile(filePath, `${yield* encodeJson(value)}\n`);
-});
-
-const readJsonFile = Effect.fn(function* (filePath: string) {
-  const fs = yield* FileSystem.FileSystem;
-  return yield* decodeUnknownJson(yield* fs.readFileString(filePath));
-});
-
-const readJsoncFile = Effect.fn(function* (filePath: string) {
-  const fs = yield* FileSystem.FileSystem;
-  return jsonc.parse(yield* fs.readFileString(filePath), undefined, {
-    allowTrailingComma: true,
-    disallowComments: false,
+  const temporaryRepository = Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const directory = yield* temporaryWorkingDirectory;
+    yield* fs.makeDirectory(path.join(directory, ".git"), { recursive: true });
+    return directory;
   });
-});
 
-const toFailureMessage = (error: unknown): string =>
-  typeof error === "object" && error !== null && "message" in error && typeof error.message === "string"
-    ? error.message
-    : String(error);
+  const writeTextFile = Effect.fn(function* (filePath: string, content: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    yield* fs.makeDirectory(path.dirname(filePath), { recursive: true });
+    yield* fs.writeFileString(filePath, content);
+  });
 
-const writeSyncpackConfig = (filePath: string, sources: ReadonlyArray<string>) =>
-  writeTextFile(
-    filePath,
-    `import type { RcFile } from "syncpack";
+  const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
+    yield* writeTextFile(filePath, `${yield* encodeJson(value)}\n`);
+  });
+
+  const readJsonFile = Effect.fn(function* (filePath: string) {
+    const fs = yield* FileSystem.FileSystem;
+    return yield* decodeUnknownJson(yield* fs.readFileString(filePath));
+  });
+
+  const readJsoncFile = Effect.fn(function* (filePath: string) {
+    const fs = yield* FileSystem.FileSystem;
+    return jsonc.parse(yield* fs.readFileString(filePath), undefined, {
+      allowTrailingComma: true,
+      disallowComments: false,
+    });
+  });
+
+  const toFailureMessage = (error: unknown): string =>
+    typeof error === "object" && error !== null && "message" in error && typeof error.message === "string"
+      ? error.message
+      : String(error);
+
+  const writeSyncpackConfig = (filePath: string, sources: ReadonlyArray<string>) =>
+    writeTextFile(
+      filePath,
+      `import type { RcFile } from "syncpack";
 
 const config = {
   source: [
@@ -404,67 +392,70 @@ ${A.join(
 
 export default config;
 `
-  );
+    );
 
-const withBunShim = <A, E, R>(binDir: string, argsFilePath: string, use: Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.sync(() => {
-      const previousPath = Bun.env.PATH;
-      const previousArgsFilePath = Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE;
-      Bun.env.PATH = previousPath === undefined ? binDir : `${binDir}:${previousPath}`;
-      Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE = argsFilePath;
-      return { previousArgsFilePath, previousPath } as const;
-    }),
-    () => use,
-    ({ previousArgsFilePath, previousPath }) =>
+  const withBunShim = <A, E, R>(binDir: string, argsFilePath: string, use: Effect.Effect<A, E, R>) =>
+    Effect.acquireUseRelease(
       Effect.sync(() => {
-        Bun.env.PATH = previousPath;
-        Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE = previousArgsFilePath;
-      })
-  );
+        const previousPath = Bun.env.PATH;
+        const previousArgsFilePath = Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE;
+        Bun.env.PATH = previousPath === undefined ? binDir : `${binDir}:${previousPath}`;
+        Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE = argsFilePath;
+        return { previousArgsFilePath, previousPath } as const;
+      }),
+      () => use,
+      ({ previousArgsFilePath, previousPath }) =>
+        Effect.sync(() => {
+          Bun.env.PATH = previousPath;
+          Bun.env.BEEP_CREATE_PACKAGE_BUN_ARGS_FILE = previousArgsFilePath;
+        })
+    );
 
-const writeBunShim = Effect.fn(function* (binDir: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const shimPath = path.join(binDir, "bun");
-  yield* writeTextFile(
-    shimPath,
-    `#!/usr/bin/env bash
+  const writeBunShim = Effect.fn(function* (binDir: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const shimPath = path.join(binDir, "bun");
+    yield* writeTextFile(
+      shimPath,
+      `#!/usr/bin/env bash
 set -euo pipefail
 : "\${BEEP_CREATE_PACKAGE_BUN_ARGS_FILE:?}"
 printf '%s\\n' "$@" > "$BEEP_CREATE_PACKAGE_BUN_ARGS_FILE"
 `
-  );
-  yield* fs.chmod(shimPath, 0o755);
-});
-
-const bootstrapIdentityWorkspace = Effect.fn(function* (
-  rootDir: string,
-  relativeDir = "packages/foundation/modeling/identity"
-) {
-  const path = yield* Path.Path;
-  const identityDir = path.join(rootDir, ...Str.split("/")(relativeDir));
-
-  yield* writeJsonFile(path.join(identityDir, "package.json"), {
-    name: "@beep/identity",
-    version: "0.0.0",
-    exports: {
-      ".": "./src/index.ts",
-      "./*": "./src/*.ts",
-    },
+    );
+    yield* fs.chmod(shimPath, 0o755);
   });
-  yield* writeJsonFile(path.join(identityDir, "tsconfig.json"), {
-    compilerOptions: {
-      outDir: "dist",
-      rootDir: "src",
-    },
-    include: ["src/**/*.ts"],
-  });
-  yield* writeTextFile(path.join(identityDir, "src", "index.ts"), `export * from "./packages.ts";\n`);
-  yield* writeTextFile(path.join(identityDir, "src", "Id.ts"), `export type IdentityComposer<T extends string> = T;\n`);
-  yield* writeTextFile(
-    path.join(identityDir, "src", "packages.ts"),
-    `import * as Identity from "./Id.ts";
+
+  const bootstrapIdentityWorkspace = Effect.fn(function* (
+    rootDir: string,
+    relativeDir = "packages/foundation/modeling/identity"
+  ) {
+    const path = yield* Path.Path;
+    const identityDir = path.join(rootDir, ...Str.split("/")(relativeDir));
+
+    yield* writeJsonFile(path.join(identityDir, "package.json"), {
+      name: "@beep/identity",
+      version: "0.0.0",
+      exports: {
+        ".": "./src/index.ts",
+        "./*": "./src/*.ts",
+      },
+    });
+    yield* writeJsonFile(path.join(identityDir, "tsconfig.json"), {
+      compilerOptions: {
+        outDir: "dist",
+        rootDir: "src",
+      },
+      include: ["src/**/*.ts"],
+    });
+    yield* writeTextFile(path.join(identityDir, "src", "index.ts"), `export * from "./packages.ts";\n`);
+    yield* writeTextFile(
+      path.join(identityDir, "src", "Id.ts"),
+      `export type IdentityComposer<T extends string> = T;\n`
+    );
+    yield* writeTextFile(
+      path.join(identityDir, "src", "packages.ts"),
+      `import * as Identity from "./Id.ts";
 
 export const $I = {
   compose: (..._segments: ReadonlyArray<string>) => ({
@@ -478,141 +469,144 @@ const composers = $I.compose(
 
 export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composers.$IdentityId;
 `
-  );
-});
-
-type RootConfigOptions = {
-  readonly workspaces: ReadonlyArray<string>;
-  readonly references: ReadonlyArray<string>;
-  readonly paths: Record<string, ReadonlyArray<string>>;
-  readonly syncpackSources: ReadonlyArray<string>;
-};
-
-type TempRepoCommandContext = {
-  readonly fs: FileSystem.FileSystem;
-  readonly path: Path.Path;
-  readonly rootDir: string;
-};
-
-// See create-package-lab.test.ts: without a root biome config the fixture gets
-// biome's default tab indentation, which desynchronizes generated JSON from the
-// repo's canonical two-space renderer.
-const TestRootBiomeConfig = {
-  formatter: { enabled: true, lineWidth: 120, indentStyle: "space", indentWidth: 2 },
-  json: {
-    formatter: { indentStyle: "space", indentWidth: 2, trailingCommas: "none", lineWidth: 80 },
-    parser: { allowComments: true },
-  },
-} as const;
-
-const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootConfigOptions) {
-  const path = yield* Path.Path;
-
-  yield* writeJsonFile(path.join(rootDir, "package.json"), {
-    name: "@beep/test-root",
-    private: true,
-    catalog: {
-      effect: "4.0.0-beta.106",
-    },
-    workspaces: options.workspaces,
-  });
-  yield* writeJsonFile(path.join(rootDir, "tsconfig.json"), {
-    compilerOptions: {
-      paths: options.paths,
-    },
-  });
-  yield* writeJsonFile(path.join(rootDir, "tsconfig.base.json"), {
-    compilerOptions: {
-      plugins: TestRootTypeScriptPlugins,
-    },
-  });
-  yield* writeJsonFile(path.join(rootDir, "tsconfig.packages.json"), {
-    references: A.map(options.references, (referencePath) => ({ path: referencePath })),
-  });
-  yield* writeJsonFile(path.join(rootDir, "biome.json"), TestRootBiomeConfig);
-  yield* writeSyncpackConfig(path.join(rootDir, "syncpack.config.ts"), options.syncpackSources);
-});
-
-describe("create-package", { concurrent: false }, () => {
-  const FoundationIdentityRootConfig = {
-    workspaces: ["packages/foundation/*/*"],
-    references: ["packages/foundation/modeling/identity"],
-    paths: {
-      "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
-      "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
-    },
-    syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
-  } satisfies RootConfigOptions;
-
-  const PackageParentRootConfig = {
-    workspaces: ["packages/foundation/*/*"],
-    references: ["packages/foundation/modeling/identity"],
-    paths: {
-      "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
-      "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
-    },
-    syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
-  } satisfies RootConfigOptions;
-
-  const IdentityOnlyRootConfig = {
-    workspaces: ["packages/foundation/modeling/identity"],
-    references: ["packages/foundation/modeling/identity"],
-    paths: {
-      "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
-      "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
-    },
-    syncpackSources: ["package.json", "packages/foundation/modeling/identity/package.json"],
-  } satisfies RootConfigOptions;
-
-  const withBootstrappedRootConfig = <A, E, R>(
-    options: RootConfigOptions,
-    use: (context: TempRepoCommandContext) => Effect.Effect<A, E, R>
-  ) =>
-    withTempRepoCommand(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const rootDir = process.cwd();
-        yield* bootstrapRootConfig(rootDir, options);
-        return yield* use({ fs, path, rootDir });
-      })
     );
-
-  const expectIdentityRegistration = Effect.fn(function* (
-    context: TempRepoCommandContext,
-    packageName: string,
-    composerName: string
-  ) {
-    const identityPackages = yield* context.fs.readFileString(
-      context.path.join(context.rootDir, "packages", "foundation", "modeling", "identity", "src", "packages.ts")
-    );
-    expect(identityPackages).toContain(`"${packageName}"`);
-    expect(identityPackages).toContain(`export const $${composerName}Id`);
   });
 
-  const bootstrapFoundationIdentityRoot = Effect.fn(function* (rootDir: string) {
-    yield* bootstrapRootConfig(rootDir, FoundationIdentityRootConfig);
-    yield* bootstrapIdentityWorkspace(rootDir);
+  type RootConfigOptions = {
+    readonly workspaces: ReadonlyArray<string>;
+    readonly references: ReadonlyArray<string>;
+    readonly paths: Record<string, ReadonlyArray<string>>;
+    readonly syncpackSources: ReadonlyArray<string>;
+  };
+
+  type TempRepoCommandContext = {
+    readonly fs: FileSystem.FileSystem;
+    readonly path: Path.Path;
+    readonly rootDir: string;
+  };
+
+  // See create-package-lab.test.ts: without a root biome config the fixture gets
+  // biome's default tab indentation, which desynchronizes generated JSON from the
+  // repo's canonical two-space renderer.
+  const TestRootBiomeConfig = {
+    formatter: { enabled: true, lineWidth: 120, indentStyle: "space", indentWidth: 2 },
+    json: {
+      formatter: { indentStyle: "space", indentWidth: 2, trailingCommas: "none", lineWidth: 80 },
+      parser: { allowComments: true },
+    },
+  } as const;
+
+  const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootConfigOptions) {
+    const path = yield* Path.Path;
+
+    yield* writeJsonFile(path.join(rootDir, "package.json"), {
+      name: "@beep/test-root",
+      private: true,
+      catalog: {
+        effect: "4.0.0-beta.106",
+      },
+      workspaces: options.workspaces,
+    });
+    yield* writeJsonFile(path.join(rootDir, "tsconfig.json"), {
+      compilerOptions: {
+        paths: options.paths,
+      },
+    });
+    yield* writeJsonFile(path.join(rootDir, "tsconfig.base.json"), {
+      compilerOptions: {
+        plugins: TestRootTypeScriptPlugins,
+      },
+    });
+    yield* writeJsonFile(path.join(rootDir, "tsconfig.packages.json"), {
+      references: A.map(options.references, (referencePath) => ({ path: referencePath })),
+    });
+    yield* writeJsonFile(path.join(rootDir, "biome.json"), TestRootBiomeConfig);
+    yield* writeSyncpackConfig(path.join(rootDir, "syncpack.config.ts"), options.syncpackSources);
   });
 
-  it.effect.prop(
-    "property: Storybook tsconfig schemas round-trip derived values",
-    [StoriesTsconfigArbitrary, StoriesDirectoryTsconfigArbitrary],
-    Effect.fnUntraced(function* ([storiesTsconfig, storiesDirectory]) {
-      expect(yield* decodeStoriesTsconfig(yield* encodeStoriesTsconfigEffect(storiesTsconfig))).toEqual(
-        storiesTsconfig
+  describe("create-package", { concurrent: false }, () => {
+    const FoundationIdentityRootConfig = {
+      workspaces: ["packages/foundation/*/*"],
+      references: ["packages/foundation/modeling/identity"],
+      paths: {
+        "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
+        "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
+      },
+      syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
+    } satisfies RootConfigOptions;
+
+    const PackageParentRootConfig = {
+      workspaces: ["packages/foundation/*/*"],
+      references: ["packages/foundation/modeling/identity"],
+      paths: {
+        "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
+        "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
+      },
+      syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
+    } satisfies RootConfigOptions;
+
+    const IdentityOnlyRootConfig = {
+      workspaces: ["packages/foundation/modeling/identity"],
+      references: ["packages/foundation/modeling/identity"],
+      paths: {
+        "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
+        "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
+      },
+      syncpackSources: ["package.json", "packages/foundation/modeling/identity/package.json"],
+    } satisfies RootConfigOptions;
+
+    const withBootstrappedRootConfig = <A, E, R>(
+      options: RootConfigOptions,
+      use: (context: TempRepoCommandContext) => Effect.Effect<A, E, R>
+    ) =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const rootDir = process.cwd();
+          yield* bootstrapRootConfig(rootDir, options);
+          return yield* use({ fs, path, rootDir });
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), Effect.orDie);
+
+    const expectIdentityRegistration = Effect.fn(function* (
+      context: TempRepoCommandContext,
+      packageName: string,
+      composerName: string
+    ) {
+      const identityPackages = yield* context.fs.readFileString(
+        context.path.join(context.rootDir, "packages", "foundation", "modeling", "identity", "src", "packages.ts")
       );
-      expect(
-        yield* decodeStoriesDirectoryTsconfig(yield* encodeStoriesDirectoryTsconfigEffect(storiesDirectory))
-      ).toEqual(storiesDirectory);
-    }),
-    { arbitrary: fcRuns(16) }
-  );
+      expect(identityPackages).toContain(`"${packageName}"`);
+      expect(identityPackages).toContain(`export const $${composerName}Id`);
+    });
 
-  it(
-    "keeps the checked-in OIP plugin profile aligned with the canonical root profile",
-    () =>
-      Effect.runPromise(
+    const bootstrapFoundationIdentityRoot = Effect.fn(function* (rootDir: string) {
+      yield* bootstrapRootConfig(rootDir, FoundationIdentityRootConfig);
+      yield* bootstrapIdentityWorkspace(rootDir);
+    });
+
+    it.effect.prop(
+      "property: Storybook tsconfig schemas round-trip derived values",
+      [StoriesTsconfigArbitrary, StoriesDirectoryTsconfigArbitrary],
+      flow(
+        Effect.fnUntraced(function* ([storiesTsconfig, storiesDirectory]) {
+          expect(yield* decodeStoriesTsconfig(yield* encodeStoriesTsconfigEffect(storiesTsconfig))).toEqual(
+            storiesTsconfig
+          );
+          expect(
+            yield* decodeStoriesDirectoryTsconfig(yield* encodeStoriesDirectoryTsconfigEffect(storiesDirectory))
+          ).toEqual(storiesDirectory);
+        }),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      ),
+      { arbitrary: fcRuns(16) }
+    );
+
+    it.effect(
+      "keeps the checked-in OIP plugin profile aligned with the canonical root profile",
+      () =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const repoRoot = yield* findRepoRoot();
@@ -626,15 +620,17 @@ describe("create-package", { concurrent: false }, () => {
           expect(oipConfig.compilerOptions.plugins).toEqual(
             A.append(rootConfig.compilerOptions.plugins, { name: "next" })
           );
-        }).pipe(provideScopedLayer(CommandTestLayer), Effect.orDie)
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        }).pipe(
+          Effect.provideServiceEffect(Console.Console, TestConsole.make),
+          Effect.orDie,
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "refreshes bun.lock with bun install --lockfile-only by default",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "refreshes bun.lock with bun install --lockfile-only by default",
+      () =>
         withBootstrappedRootConfig(PackageParentRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
             const binDir = path.join(rootDir, ".bin");
@@ -652,15 +648,13 @@ describe("create-package", { concurrent: false }, () => {
 
             expect(yield* fs.readFileString(bunArgsPath)).toBe("install\n--lockfile-only\n");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "scaffolds tool packages with the tool script block and the platform-node dependency",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "scaffolds tool packages with the tool script block and the platform-node dependency",
+      () =>
         withBootstrappedRootConfig(PackageParentRootConfig, ({ path, rootDir }) =>
           Effect.gen(function* () {
             yield* bootstrapIdentityWorkspace(rootDir);
@@ -681,15 +675,13 @@ describe("create-package", { concurrent: false }, () => {
             expect(manifest.scripts).toEqual(CreatePackageScripts.package("tool", false));
             expect(manifest.dependencies["@effect/platform-node"]).toBe("catalog:");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "adds top-level package workspaces, identity exports, and shared config sync outputs",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "adds top-level package workspaces, identity exports, and shared config sync outputs",
+      () =>
         withBootstrappedRootConfig(PackageParentRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
             yield* bootstrapIdentityWorkspace(rootDir);
@@ -748,16 +740,15 @@ describe("create-package", { concurrent: false }, () => {
 
             yield* expectIdentityRegistration({ fs, path, rootDir }, "example-domain", "ExampleDomain");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "requires an explicit app kind for app scaffolds",
-    () =>
-      Effect.runPromise(
-        withTempRepoCommand(
+    it.effect(
+      "requires an explicit app kind for app scaffolds",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const result = yield* runCreatePackageCommand(["proof-app", "--type", "app"]).pipe(
               Effect.match({
@@ -768,15 +759,17 @@ describe("create-package", { concurrent: false }, () => {
 
             expect(result).toContain("--type app requires --app-kind nextjs, vite, service, tauri, or runtime-proof");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(
+          Effect.provideServiceEffect(Console.Console, TestConsole.make),
+          Effect.orDie,
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "refuses to scaffold into a directory that already exists",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "refuses to scaffold into a directory that already exists",
+      () =>
         withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
             yield* bootstrapIdentityWorkspace(rootDir);
@@ -819,15 +812,13 @@ describe("create-package", { concurrent: false }, () => {
             // skip-if-present branch.
             expect(yield* fs.readFileString(sentinel)).toBe("author-replaced");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "creates Next.js apps without package API boilerplate",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "creates Next.js apps without package API boilerplate",
+      () =>
         withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
             yield* bootstrapIdentityWorkspace(rootDir);
@@ -882,15 +873,13 @@ describe("create-package", { concurrent: false }, () => {
 
             yield* expectIdentityRegistration({ fs, path, rootDir }, "marketing-web", "MarketingWeb");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "creates Tauri apps without package API boilerplate",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "creates Tauri apps without package API boilerplate",
+      () =>
         withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
             yield* bootstrapIdentityWorkspace(rootDir);
@@ -961,15 +950,13 @@ describe("create-package", { concurrent: false }, () => {
 
             yield* expectIdentityRegistration({ fs, path, rootDir }, "desktop-shell", "DesktopShell");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "creates Vite apps without package API boilerplate and skips workspace append when apps/* covers the path",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "creates Vite apps without package API boilerplate and skips workspace append when apps/* covers the path",
+      () =>
         withBootstrappedRootConfig(
           {
             workspaces: ["packages/foundation/modeling/identity", "apps/*"],
@@ -1029,15 +1016,13 @@ describe("create-package", { concurrent: false }, () => {
 
               yield* expectIdentityRegistration({ fs, path, rootDir }, "vite-shell", "ViteShell");
             })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "creates service apps with canonical composite checks and JSON dependencies",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "creates service apps with canonical composite checks and JSON dependencies",
+      () =>
         withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ path, rootDir }) =>
           Effect.gen(function* () {
             yield* bootstrapIdentityWorkspace(rootDir);
@@ -1077,15 +1062,13 @@ describe("create-package", { concurrent: false }, () => {
             expect(checkOverlay.compilerOptions).not.toHaveProperty("module");
             expect(checkOverlay.compilerOptions).not.toHaveProperty("moduleResolution");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "keeps runtime-proof apps package-like",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "keeps runtime-proof apps package-like",
+      () =>
         withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
             yield* bootstrapIdentityWorkspace(rootDir);
@@ -1128,16 +1111,15 @@ describe("create-package", { concurrent: false }, () => {
 
             yield* expectIdentityRegistration({ fs, path, rootDir }, "runtime-proof-lab", "RuntimeProofLab");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "creates canonical foundation packages with family metadata and workspace-resolved identity registration",
-    () =>
-      Effect.runPromise(
-        withTempRepoCommand(
+    it.effect(
+      "creates canonical foundation packages with family metadata and workspace-resolved identity registration",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const rootDir = process.cwd();
             const fs = yield* FileSystem.FileSystem;
@@ -1184,16 +1166,19 @@ describe("create-package", { concurrent: false }, () => {
 
             yield* expectIdentityRegistration({ fs, path, rootDir }, "schema-kit", "SchemaKit");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(
+          Effect.provideServiceEffect(Console.Console, TestConsole.make),
+          Effect.orDie,
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "generates opt-in Storybook story typecheck config for foundation ui-system packages",
-    () =>
-      Effect.runPromise(
-        withTempRepoCommand(
+    it.effect(
+      "generates opt-in Storybook story typecheck config for foundation ui-system packages",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const path = yield* Path.Path;
             const rootDir = process.cwd();
@@ -1254,16 +1239,19 @@ describe("create-package", { concurrent: false }, () => {
             expect(dryRunOutput).toContain("tsconfig.stories.json");
             expect(dryRunOutput).toContain("stories/tsconfig.json");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(
+          Effect.provideServiceEffect(Console.Console, TestConsole.make),
+          Effect.orDie,
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "rejects stories tsconfig generation outside foundation ui-system package scaffolds",
-    () =>
-      Effect.runPromise(
-        withTempRepoCommand(
+    it.effect(
+      "rejects stories tsconfig generation outside foundation ui-system package scaffolds",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const result = yield* runCreatePackageCommand([
               "schema-kit",
@@ -1283,15 +1271,17 @@ describe("create-package", { concurrent: false }, () => {
 
             expect(result).toContain("--with-stories-tsconfig is only valid for --family foundation --kind ui-system");
           })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(
+          Effect.provideServiceEffect(Console.Console, TestConsole.make),
+          Effect.orDie,
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "creates canonical tooling packages with family metadata",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "creates canonical tooling packages with family metadata",
+      () =>
         withBootstrappedRootConfig(
           {
             workspaces: ["packages/foundation/*/*", "packages/tooling/tool/cli"],
@@ -1371,15 +1361,13 @@ describe("create-package", { concurrent: false }, () => {
               expect(syncpackConfig).toContain(`"packages/tooling/library/repo-utils/package.json"`);
               expect(syncpackConfig).not.toContain(`"packages/tooling/*/*/package.json"`);
             })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "creates canonical driver packages with flat family metadata",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "creates canonical driver packages with flat family metadata",
+      () =>
         withBootstrappedRootConfig(
           {
             workspaces: ["packages/foundation/*/*", "packages/drivers/*"],
@@ -1432,15 +1420,13 @@ describe("create-package", { concurrent: false }, () => {
 
               yield* expectIdentityRegistration({ fs, path, rootDir }, "runpod", "Runpod");
             })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
 
-  it(
-    "creates polarity-correct ecosystem packages with flat family metadata",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "creates polarity-correct ecosystem packages with flat family metadata",
+      () =>
         withBootstrappedRootConfig(
           {
             workspaces: ["packages/foundation/*/*", "packages/ecosystem/*"],
@@ -1524,8 +1510,8 @@ describe("create-package", { concurrent: false }, () => {
               expect(syncpackConfig).toContain(`"packages/ecosystem/*/package.json"`);
               expect(syncpackConfig).not.toContain(`"packages/ecosystem/portable-effect/package.json"`);
             })
-        )
-      ),
-    CreatePackageTestTimeoutMs
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
+  });
 });

@@ -34,9 +34,10 @@ const PipelineStageBase = LiteralKit(["lowercase", "normalizeWhitespace", "remov
  * import { PipelineStage } from "@beep/nlp-mcp/Streaming/Pipeline"
  *
  * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
- *   const stage = yield* PipelineStage.fromUnknown("normalizeWhitespace")
+ *   const stage = yield* S.decodeUnknownEffect(PipelineStage)("normalizeWhitespace")
  *   console.log(stage) // "normalizeWhitespace"
  * })
  * ```
@@ -47,11 +48,7 @@ const PipelineStageBase = LiteralKit(["lowercase", "normalizeWhitespace", "remov
 export const PipelineStage = PipelineStageBase.pipe(
   $I.annoteSchema("PipelineStage", {
     description: "Identifier of a supported, pure line transform stage.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  })
 );
 
 /**

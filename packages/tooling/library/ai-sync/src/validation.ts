@@ -339,7 +339,7 @@ const validateByRelativePath = (relativePath: ValidateRepoConfigInput["config"],
     );
   }
   if (relativePath === "AGENTS.md" || relativePath === "CLAUDE.md") {
-    return NormalizedAgentInstructionDocument.decodeEffect(content).pipe(
+    return S.decodeEffect(NormalizedAgentInstructionDocument)(content).pipe(
       Effect.as(AiSyncValidationResult.make({ relativePath, schemaId: "agent-instruction-document" })),
       Effect.mapError(validationError(relativePath, "agent-instruction-document"))
     );

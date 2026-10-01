@@ -6,7 +6,7 @@
  */
 
 import { $MdId } from "@beep/identity";
-import { Defect, HtmlFragment } from "@beep/schema";
+import { HtmlFragment, SchemaUtils } from "@beep/schema";
 import { A, Html, R, thunkEmptyStr } from "@beep/utils";
 import { replaceAllWith } from "@beep/utils/Str";
 import { Effect, flow, identity, Match, Number as N, Order, Result, Tuple } from "effect";
@@ -135,7 +135,7 @@ export class RenderError extends S.TaggedError<RenderError>($I`RenderError`)(
   {
     adapter: S.String,
     message: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
   },
   $I.annoteError<RenderError>("RenderError", {
     description: "Typed error raised when a Markdown render adapter fails.",
@@ -206,7 +206,7 @@ const renderHtmlInlines: (children: ReadonlyArray<Inline>) => string = flow(A.ma
 const renderMarkdownListItemChildren: (children: ReadonlyArray<ListItemChild>) => string = flow(
   (items: ReadonlyArray<ListItemChild>) =>
     segmentInlineRuns(items, {
-      isInline: InlineSchema.is,
+      isInline: S.is(InlineSchema),
       renderInlineRun: renderMarkdownInlines,
       renderBlock: renderMarkdownBlock,
     }),
@@ -218,7 +218,7 @@ const renderMarkdownListItem = (item: Li): string => renderMarkdownListItemChild
 const renderHtmlListItemChildren: (children: ReadonlyArray<ListItemChild>) => string = flow(
   (items: ReadonlyArray<ListItemChild>) =>
     segmentInlineRuns(items, {
-      isInline: InlineSchema.is,
+      isInline: S.is(InlineSchema),
       renderInlineRun: renderHtmlInlines,
       renderBlock: renderHtmlBlock,
     }),
@@ -1101,7 +1101,7 @@ const renderMarkdownListItemChildrenWithPolicy = (
 ): string =>
   pipe(
     segmentInlineRuns<Inline, Block>(children, {
-      isInline: InlineSchema.is,
+      isInline: S.is(InlineSchema),
       renderInlineRun: (inlines) => renderMarkdownInlinesWithPolicy(policy, inlines),
       renderBlock: (block: Block) => renderMarkdownBlockWithPolicy(policy, block),
     }),
@@ -1111,7 +1111,7 @@ const renderMarkdownListItemChildrenWithPolicy = (
 const renderHtmlListItemChildrenWithPolicy = (policy: UrlPolicySpec, children: ReadonlyArray<ListItemChild>): string =>
   pipe(
     segmentInlineRuns<Inline, Block>(children, {
-      isInline: InlineSchema.is,
+      isInline: S.is(InlineSchema),
       renderInlineRun: (inlines) => renderHtmlInlinesWithPolicy(policy, inlines),
       renderBlock: (block: Block) => renderHtmlBlockWithPolicy(policy, block),
     }),

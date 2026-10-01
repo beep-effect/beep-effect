@@ -34,7 +34,7 @@ import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertFalse, assertInclude, assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import { assertInclude, assertNone, assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -297,7 +297,10 @@ describe("yeet review-thread classification", () => {
         })
       );
 
-      expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+      assertSome(
+        O.flatMap(mergeReady, (value) => value.failing),
+        "threads-resolved"
+      );
     })
   );
 
@@ -364,7 +367,10 @@ describe("yeet review-thread classification", () => {
         })
       );
 
-      expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+      assertSome(
+        O.map(mergeReady, (value) => value.ready),
+        true
+      );
     })
   );
 
@@ -479,12 +485,12 @@ describe("yeet review-thread classification against a captured pull request", ()
 
 describe("yeet merge readiness", () => {
   it("is unknown, not blocked, when the pull request was not read", () => {
-    expect(
+    assertNone(
       deriveYeetMergeReady(
         closeoutArtifact(0, O.some("5/5")),
         YeetStatusRemote.make({ available: false, checked: false, detail: "pass --remote" })
       )
-    ).toStrictEqual(O.none());
+    );
   });
 
   it("names required-checks-green first when the pipeline is red and threads are also open", () => {
@@ -493,8 +499,14 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 1, unresolvedReviewThreadCount: 2 })
     );
 
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(false));
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("required-checks-green"));
+    assertSome(
+      O.map(mergeReady, (value) => value.ready),
+      false
+    );
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "required-checks-green"
+    );
   });
 
   it("treats a still-pending pipeline as not green", () => {
@@ -503,7 +515,10 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 3 })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("required-checks-green"));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "required-checks-green"
+    );
   });
 
   it("names threads-resolved once the pipeline is green", () => {
@@ -512,7 +527,10 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 1 })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "threads-resolved"
+    );
   });
 
   it("charges every issue of a closeout summary written before the gate split to threads", () => {
@@ -537,9 +555,18 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 0 })
     );
 
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(false));
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("closeout-run"));
-    expect(O.map(mergeReady, (value) => value.criteria.threadsResolved)).toStrictEqual(O.some(true));
+    assertSome(
+      O.map(mergeReady, (value) => value.ready),
+      false
+    );
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "closeout-run"
+    );
+    assertSome(
+      O.map(mergeReady, (value) => value.criteria.threadsResolved),
+      true
+    );
   });
 
   it("blocks on closeout-run when the reviewed head no longer matches the remote head", () => {
@@ -554,7 +581,10 @@ describe("yeet merge readiness", () => {
       })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("closeout-run"));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "closeout-run"
+    );
   });
 
   it("satisfies closeout-run when the reviewed and remote heads match", () => {
@@ -569,8 +599,14 @@ describe("yeet merge readiness", () => {
       })
     );
 
-    expect(O.map(mergeReady, (value) => value.criteria.closeoutRun)).toStrictEqual(O.some(true));
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+    assertSome(
+      O.map(mergeReady, (value) => value.criteria.closeoutRun),
+      true
+    );
+    assertSome(
+      O.map(mergeReady, (value) => value.ready),
+      true
+    );
   });
 
   it.effect("decodes a legacy headless closeout report and treats it as stale", () =>
@@ -597,8 +633,11 @@ describe("yeet merge readiness", () => {
         openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 })
       );
 
-      expect(report.reviewedHeadSha).toStrictEqual(O.none());
-      expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("closeout-run"));
+      assertNone(report.reviewedHeadSha);
+      assertSome(
+        O.flatMap(mergeReady, (value) => value.failing),
+        "closeout-run"
+      );
     })
   );
 
@@ -681,9 +720,15 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 0 })
     );
 
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.none());
-    expect(O.flatMap(mergeReady, (value) => value.criteria.greptileScore)).toStrictEqual(O.some("4/5"));
+    assertSome(
+      O.map(mergeReady, (value) => value.ready),
+      true
+    );
+    assertNone(O.flatMap(mergeReady, (value) => value.failing));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.criteria.greptileScore),
+      "4/5"
+    );
   });
 
   it("treats gh's empty review decision as absent", () => {
@@ -698,8 +743,11 @@ describe("yeet merge readiness", () => {
       })
     );
 
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.none());
+    assertSome(
+      O.map(mergeReady, (value) => value.ready),
+      true
+    );
+    assertNone(O.flatMap(mergeReady, (value) => value.failing));
   });
 
   it("blocks readiness for an optional failure without exemption evidence", () => {
@@ -774,7 +822,10 @@ describe("yeet merge readiness", () => {
       })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some(criterion));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      criterion
+    );
   });
 });
 
@@ -843,9 +894,20 @@ const publishedVerdict = YeetStatusArtifact.make({
   state: "present",
 });
 
-describe("yeet merge readiness with closeout gates split from review threads", () => {
+describe("yeet merge readiness with review-bot gates as advisories", () => {
+  it("suggests a closeout that gates on review threads, never on a review bot", () => {
+    const next = yeetStatusNextCommandForTesting(
+      cleanWorktree,
+      publishedVerdict,
+      YeetStatusArtifact.make({ detail: "missing", path: "pr-closeout.json", state: "missing" }),
+      openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 })
+    );
+
+    strictEqual(next, "run `bun run beep yeet closeout --summary --require-review-comments 0`");
+  });
+
   it.effect(
-    "names closeout-gates-passed, not threads-resolved, when zero threads leave only Greptile's unknown gates",
+    "is merge-ready when only Greptile's unknown gates are unmet, and shows them as advisories",
     Effect.fnUntraced(function* () {
       const closeout = yield* persistedGreptileGatedCloseout(A.empty());
       const remote = openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 });
@@ -858,25 +920,16 @@ describe("yeet merge readiness with closeout gates split from review threads", (
       ]);
       assertSome(
         O.map(mergeReady, (value) => value.ready),
-        false
+        true
       );
-      assertSome(
-        O.flatMap(mergeReady, (value) => value.failing),
-        "closeout-gates-passed"
-      );
+      assertNone(O.flatMap(mergeReady, (value) => value.failing));
       assertSome(
         O.map(mergeReady, (value) => value.criteria.threadsResolved),
         true
       );
-      assertSome(
-        O.map(mergeReady, (value) => value.criteria.closeoutGatesPassed),
-        false
-      );
 
       const next = yeetStatusNextCommandForTesting(cleanWorktree, publishedVerdict, closeout, remote);
-      assertInclude(next, "closeout gate(s) unmet (Expected Greptile score 5/5; found unknown.");
-      assertInclude(next, "bun run beep yeet closeout");
-      assertFalse(Str.includes("yeet reply")(next));
+      strictEqual(next, "confirm GitHub mergeability, then merge the PR");
 
       const summary = renderYeetStatusSummary(
         YeetStatusSnapshot.make({
@@ -896,13 +949,17 @@ describe("yeet merge readiness with closeout gates split from review threads", (
         })
       );
       assertInclude(summary, "- review threads: 0 unresolved");
-      assertInclude(summary, "- merge-ready: no, blocked on closeout-gates-passed");
-      assertInclude(summary, "0 actionable thread(s), 2 unmet gate(s)");
+      assertInclude(summary, "- merge-ready: yes");
+      assertInclude(
+        summary,
+        "- review-bot advisories (never block merge-ready): Expected Greptile score 5/5; found unknown."
+      );
+      assertInclude(summary, "0 actionable thread(s), 2 advisory bot gate(s)");
     })
   );
 
   it.effect(
-    "names threads-resolved and suggests yeet reply for a real unresolved thread while the Greptile gates also wait",
+    "names threads-resolved and suggests yeet reply for a real unresolved thread whatever the Greptile gates say",
     Effect.fnUntraced(function* () {
       const closeout = yield* persistedGreptileGatedCloseout([openReviewThread]);
       const remote = openRemote({
@@ -923,10 +980,6 @@ describe("yeet merge readiness with closeout gates split from review threads", (
       );
       assertSome(
         O.map(mergeReady, (value) => value.criteria.threadsResolved),
-        false
-      );
-      assertSome(
-        O.map(mergeReady, (value) => value.criteria.closeoutGatesPassed),
         false
       );
       assertInclude(
@@ -963,8 +1016,8 @@ describe("yeet remote check partitions", () => {
     const summary = summarizeRemoteChecksForTesting(O.some([required]), O.none());
 
     expect(O.getOrThrow(summary.checkCount)).toBe(1);
-    expect(summary.requiredCheckCount).toStrictEqual(O.none());
-    expect(summary.optionalCheckCount).toStrictEqual(O.none());
+    assertNone(summary.requiredCheckCount);
+    assertNone(summary.optionalCheckCount);
   });
 });
 
@@ -1063,10 +1116,14 @@ describe("yeet status snapshot rendering and encoding", () => {
       // snapshot, which rendered Option fields as {"_id":"Option",...} and
       // produced an artifact that no longer decoded.
       expect(json).not.toContain('"_id":"Option"');
-      expect(O.flatMap(decoded.mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
-      expect(
-        O.map(decoded.remote.unresolvedThreads, (threads) => A.map(threads, (thread) => thread.commentDatabaseId))
-      ).toStrictEqual(O.some([O.some(2412551122)]));
+      assertSome(
+        O.flatMap(decoded.mergeReady, (value) => value.failing),
+        "threads-resolved"
+      );
+      assertSome(
+        O.map(decoded.remote.unresolvedThreads, (threads) => A.map(threads, (thread) => thread.commentDatabaseId)),
+        [O.some(2412551122)]
+      );
     })
   );
 
@@ -1082,9 +1139,9 @@ describe("yeet status snapshot rendering and encoding", () => {
       ].join("");
       const decoded = yield* YeetStatusSnapshotJson.decode(legacy);
 
-      expect(decoded.mergeReady).toStrictEqual(O.none());
-      expect(decoded.remote.unresolvedThreads).toStrictEqual(O.none());
-      expect(decoded.remote.headSha).toStrictEqual(O.none());
+      assertNone(decoded.mergeReady);
+      assertNone(decoded.remote.unresolvedThreads);
+      assertNone(decoded.remote.headSha);
       expect(decoded.remote.checks).toStrictEqual([]);
       expect(decoded.unprovenGates).toStrictEqual([]);
     })

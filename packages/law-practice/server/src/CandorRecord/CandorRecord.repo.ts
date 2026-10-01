@@ -37,10 +37,13 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { makeRowDecoders, sortByIdAscending } from "../internal/RepoSupport.ts";
 import type { CandorDisposition, IdsSubmissionFact, PatentCitationEvent } from "@beep/law-practice-domain";
 import type { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy";
 import type { CandorRecordOperation } from "@beep/law-practice-use-cases/CandorRecord";
+
+const citingApplicationEquivalence = S.toEquivalence(CitingApplicationIdentity);
 
 const dispositionTable = DbSchema.candorDisposition;
 const eventTable = DbSchema.patentCitationEvent;
@@ -103,7 +106,8 @@ const filedUnder = <
     A.filter(
       P.Struct({
         orgId: Eq.equals(scope.orgId),
-        citingApplication: CitingApplicationIdentity.equivalence(scope.citingApplication),
+        citingApplication: (citingApplication: CitingApplicationIdentity) =>
+          citingApplicationEquivalence(citingApplication, scope.citingApplication),
       })
     ),
     sortByIdAscending
@@ -238,7 +242,7 @@ export const makeCandorRecordRepository = Effect.fn("CandorRecord.makeDrizzle")(
 
   return CandorRecordRepositoryShape.make({
     listDispositions: Effect.fn("CandorRecord.drizzleListDispositions")(function* (scope: CandorFilingScope) {
-      const filing = yield* CitingApplicationIdentity.encodeEffect(scope.citingApplication).pipe(
+      const filing = yield* S.encodeEffect(CitingApplicationIdentity)(scope.citingApplication).pipe(
         repositoryUnavailable("listDispositions")
       );
       const rows = yield* db
@@ -250,7 +254,7 @@ export const makeCandorRecordRepository = Effect.fn("CandorRecord.makeDrizzle")(
       return yield* decodeRows(rows, "listDispositions", fromCandorDispositionRow);
     }),
     listEvents: Effect.fn("CandorRecord.drizzleListEvents")(function* (scope: CandorFilingScope) {
-      const filing = yield* CitingApplicationIdentity.encodeEffect(scope.citingApplication).pipe(
+      const filing = yield* S.encodeEffect(CitingApplicationIdentity)(scope.citingApplication).pipe(
         repositoryUnavailable("listEvents")
       );
       const rows = yield* db
@@ -262,7 +266,7 @@ export const makeCandorRecordRepository = Effect.fn("CandorRecord.makeDrizzle")(
       return yield* decodeRows(rows, "listEvents", fromPatentCitationEventRow);
     }),
     listSubmissionFacts: Effect.fn("CandorRecord.drizzleListSubmissionFacts")(function* (scope: CandorFilingScope) {
-      const filing = yield* CitingApplicationIdentity.encodeEffect(scope.citingApplication).pipe(
+      const filing = yield* S.encodeEffect(CitingApplicationIdentity)(scope.citingApplication).pipe(
         repositoryUnavailable("listSubmissionFacts")
       );
       const rows = yield* db
@@ -303,7 +307,7 @@ export const makeCandorRecordRepository = Effect.fn("CandorRecord.makeDrizzle")(
       return yield* decodeAppended(rows, "recordSubmissionFact", fromIdsSubmissionFactRow, fact);
     }),
     readSnapshot: Effect.fn("CandorRecord.drizzleReadSnapshot")(function* (scope: CandorFilingScope) {
-      const filing = yield* CitingApplicationIdentity.encodeEffect(scope.citingApplication).pipe(
+      const filing = yield* S.encodeEffect(CitingApplicationIdentity)(scope.citingApplication).pipe(
         repositoryUnavailable("readSnapshot")
       );
       return yield* db

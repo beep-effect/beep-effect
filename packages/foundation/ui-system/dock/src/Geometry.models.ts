@@ -162,7 +162,7 @@ export class DockGeometry extends S.Class<DockGeometry>($I`DockGeometry`)(
     (geometry: DockGeometry, groupId: GroupId): O.Option<DockBox> =>
       pipe(
         geometry.groups,
-        A.findFirst((group) => GroupId.equals(group.groupId, groupId)),
+        A.findFirst((group) => S.toEquivalence(GroupId)(group.groupId, groupId)),
         O.map((group) => group.box)
       )
   );

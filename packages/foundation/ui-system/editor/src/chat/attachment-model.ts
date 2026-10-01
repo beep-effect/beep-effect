@@ -19,7 +19,7 @@
  */
 
 import { $EditorId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { ImageMimeType, MimeType } from "@beep/schema/MimeType";
 import { dual, P } from "@beep/utils";
 import { flow, identity, Number as N, Result, SchemaTransformation } from "effect";
@@ -58,8 +58,9 @@ export const IMAGE_MIME_TYPES = ImageMimeType.pick(["image/png", "image/jpeg", "
  *
  * ```ts import.meta.vitest name="Validating image MIME type"
  * import { ImageAttachmentMimeType } from "@beep/editor/chat/attachment-model"
+ * import * as S from "effect/Schema"
  *
- * ImageAttachmentMimeType.is("image/png") // => true
+ * S.is(ImageAttachmentMimeType)("image/png") // => true
  * ```
  *
  * @category schemas
@@ -68,8 +69,7 @@ export const IMAGE_MIME_TYPES = ImageMimeType.pick(["image/png", "image/jpeg", "
 export const ImageAttachmentMimeType = S.Literals(IMAGE_MIME_TYPES).pipe(
   $I.annoteSchema("ImageAttachmentMimeType", {
     description: "The vision-eligible image MIME subset captured as thumbnailed attachments.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -239,7 +239,9 @@ export class AttachmentPortFailed extends S.TaggedError<AttachmentPortFailed>($I
   "AttachmentPortFailed",
   {
     message: S.String.annotateKey({ description: "User-safe upload-port failure message." }),
-    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
+    cause: S.optionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).annotateKey({
       description: "Optional underlying defect retained for structured logs, never rendered directly.",
     }),
   },
@@ -500,7 +502,7 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
  * @since 0.0.0
  */
 export const isImageAttachment = (attachment: ComposerAttachment): boolean =>
-  ImageAttachmentMimeType.is(attachment.mimeType);
+  S.is(ImageAttachmentMimeType)(attachment.mimeType);
 
 /**
  * Read a captured `File` into a {@link ComposerAttachment} synchronously, or a

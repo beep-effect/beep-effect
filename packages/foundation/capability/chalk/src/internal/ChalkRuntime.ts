@@ -7,7 +7,7 @@
 
 import { $ChalkId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { pipe, Tuple } from "effect";
+import { pipe, Result, Tuple } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -130,7 +130,9 @@ class MissingBuilderMetadataError extends S.TaggedError<MissingBuilderMetadataEr
 ) {}
 
 const normalizeColorSupportLevel = (level: unknown): ColorSupportLevelType =>
-  ColorSupportLevel.decodeUnknownSync(ColorSupportLevelInput.decodeUnknownSync(level));
+  Result.getOrThrow(
+    S.decodeUnknownResult(ColorSupportLevel)(Result.getOrThrow(S.decodeUnknownResult(ColorSupportLevelInput)(level)))
+  );
 
 const setChalkStateLevel = (state: ChalkState, level: unknown): void => {
   (state as MutableChalkState).level = normalizeColorSupportLevel(level);

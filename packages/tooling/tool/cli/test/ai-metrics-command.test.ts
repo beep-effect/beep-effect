@@ -10,12 +10,11 @@ import {
   AiMetricsWeeklyReportResult,
 } from "@beep/repo-ai-metrics";
 import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, ConfigProvider, Duration, Effect, Exit, FileSystem, Layer, Path, pipe, Result, Schedule } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
@@ -59,7 +58,7 @@ const LabelQueueArbitrary = Arbitrary.schema(AiMetricsLabelQueueResult);
 const MirrorBundleArbitrary = Arbitrary.schema(AiMetricsMirrorBundleResult);
 const OtlpExportResultArbitrary = Arbitrary.schema(AiMetricsOtlpExportResult);
 const WeeklyReportArbitrary = Arbitrary.schema(AiMetricsWeeklyReportResult);
-const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
+const decodeUnknownJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const isString = (value: unknown): value is string => typeof value === "string";
 const farFutureUntilEpochMs = 4_102_444_800_000;
 const isCoverageRatchetRun = Bun.env.VITEST_COVERAGE_RATCHET === "1";
@@ -919,8 +918,8 @@ describe("ai-metrics command", () => {
           A.findFirst((source) => source.sourceKind === "codex")
         );
         const output = yield* loggedText();
-        expect(result.maxFileBytes).toEqual(O.some(128));
-        expect(O.isSome(codex)).toBe(true);
+        assertSome(result.maxFileBytes, 128);
+        codex.pipe(O.isSome, assertTrue);
         if (O.isSome(codex)) {
           expect(codex.value.fileCount).toBe(1);
           expect(codex.value.files[0]?.sizeBytes).toBeLessThanOrEqual(128);
@@ -1100,7 +1099,7 @@ describe("ai-metrics command", () => {
             const otlpExport = result.otlpExport;
             const traceRequest = yield* waitForCapturedOtlpTraceRequest(requests);
 
-            expect(O.isSome(otlpExport)).toBe(true);
+            otlpExport.pipe(O.isSome, assertTrue);
             if (O.isSome(otlpExport)) {
               expect(otlpExport.value.status).toBe("exported");
               if (otlpExport.value.status === "exported") {
@@ -1176,7 +1175,7 @@ describe("ai-metrics command", () => {
 
               expect(result.sourceFileCount).toBe(1);
               expect(result.turnCount).toBeGreaterThan(0);
-              expect(O.isSome(otlpExport)).toBe(true);
+              otlpExport.pipe(O.isSome, assertTrue);
               if (O.isSome(otlpExport)) {
                 expect(otlpExport.value.status).toBe("failed");
                 if (otlpExport.value.status === "failed") {
@@ -1302,7 +1301,7 @@ describe("ai-metrics command", () => {
           ]);
           const queue = yield* decodeLabelQueue(yield* lastLoggedLine());
           const firstTask = A.head(queue.items);
-          expect(O.isSome(firstTask)).toBe(true);
+          firstTask.pipe(O.isSome, assertTrue);
           if (O.isNone(firstTask)) {
             return;
           }

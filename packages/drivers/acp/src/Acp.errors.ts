@@ -6,7 +6,7 @@
  */
 
 import { $AcpId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -34,7 +34,9 @@ const $I = $AcpId.create("errors");
 export class AcpSpawnError extends S.TaggedError<AcpSpawnError>($I`AcpSpawnError`)(
   "AcpSpawnError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    )
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Original spawn failure cause, when one was available.",
@@ -74,7 +76,9 @@ export class AcpSpawnError extends S.TaggedError<AcpSpawnError>($I`AcpSpawnError
 export class AcpProcessExitedError extends S.TaggedError<AcpProcessExitedError>($I`AcpProcessExitedError`)(
   "AcpProcessExitedError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    )
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Original process-exit cause, when one was available.",
@@ -115,7 +119,9 @@ export class AcpProcessExitedError extends S.TaggedError<AcpProcessExitedError>(
 export class AcpProtocolParseError extends S.TaggedError<AcpProtocolParseError>($I`AcpProtocolParseError`)(
   "AcpProtocolParseError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    )
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Original parse failure cause, when one was available.",
@@ -163,7 +169,9 @@ export class AcpProtocolParseError extends S.TaggedError<AcpProtocolParseError>(
 export class AcpTransportError extends S.TaggedError<AcpTransportError>($I`AcpTransportError`)(
   "AcpTransportError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    )
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Original transport failure cause, when one was available.",
@@ -434,8 +442,9 @@ export class AcpRequestError extends S.TaggedError<AcpRequestError>($I`AcpReques
  *
  * ```ts
  * import { AcpError, AcpRequestError } from "@beep/acp/errors"
+ * import * as S from "effect/Schema"
  *
- * console.log(AcpError.is(AcpRequestError.methodNotFound("x/test")))
+ * console.log(S.is(AcpError)(AcpRequestError.methodNotFound("x/test")))
  * ```
  *
  * @category errors
@@ -447,12 +456,7 @@ export const AcpError = pipe(
   $I.annoteSchema("AcpError", {
     description: "Union of typed technical failures emitted by the ACP driver.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**

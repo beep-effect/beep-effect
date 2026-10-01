@@ -11,19 +11,19 @@ import {
   packetEventFileName,
   renderPacketEventFile,
 } from "@beep/repo-cli/test/Goals";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { strictEqual } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { assertTrue, strictEqual } from "@effect/vitest/utils";
+import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { permutedDirectoryReadsFileSystem } from "./support/CommandTest.ts";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
@@ -198,7 +198,7 @@ describe("exploration projections", () => {
           expect(projection.issues[0]?.detail).toContain("manifest is missing or invalid");
 
           const alpha = A.findFirst(projection.readmes, (item) => item.path.endsWith("/alpha/README.md"));
-          expect(O.isSome(alpha)).toBe(true);
+          alpha.pipe(O.isSome, assertTrue);
           if (O.isSome(alpha)) {
             expect(alpha.value.projected).toContain("<!-- BEGIN GENERATED: EXPLORATION STATUS -->");
             expect(alpha.value.projected).toContain("Which question survives projection?");

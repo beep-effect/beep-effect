@@ -61,9 +61,9 @@ describe("ExecutionLedger", () => {
       const violation = ExecutionLedgerConstraintViolation.on("appendDecision", "epistemic_execution_outcome_pk");
       const unavailable = ExecutionLedgerUnavailable.during("readUnsettledAllowed", "read failed");
 
-      pipe(ExecutionLedgerError.is(violation), assertTrue);
-      pipe(ExecutionLedgerError.is(unavailable), assertTrue);
-      pipe(ExecutionLedgerError.is({ _tag: "SomethingElse" }), assertFalse);
+      pipe(S.is(ExecutionLedgerError)(violation), assertTrue);
+      pipe(S.is(ExecutionLedgerError)(unavailable), assertTrue);
+      pipe(S.is(ExecutionLedgerError)({ _tag: "SomethingElse" }), assertFalse);
       pipe(isExecutionLedgerError(new Error("plain")), assertFalse);
     });
   });

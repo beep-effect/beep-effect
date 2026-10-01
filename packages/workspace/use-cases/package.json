@@ -74,7 +74,6 @@
   "dependencies": {
     "@beep/identity": "workspace:^",
     "@beep/md": "workspace:^",
-    "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/workspace-domain": "workspace:^",
     "effect": "catalog:"

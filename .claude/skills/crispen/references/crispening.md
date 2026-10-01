@@ -21,8 +21,7 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 | `S.withConstructorDefault(Effect.succeed(v))` + `S.withDecodingDefaultTypeKey(Effect.succeed(v))` | upstream pair; bind a constructed `v` to one const first | double-wiring a default for **both** make and missing-key decode | `ScanState.ts` |
 | `S.withConstructorDefault(Effect.succeed(empty))` + `S.withDecodingDefaultType(Effect.succeed(empty))` | upstream pair over one `const empty = A.empty<T>()` | repeated `[]` default wiring on array fields | `Md.model.ts` |
 | `SchemaUtils.BoolKeyDefaultFalse` / `BoolKeyDefaultTrue` | annotated boolean field defaulting make + missing key | `O.getOrElse(O.fromUndefinedOr(...), thunkFalse)` plumbing | `Md.model.ts:1101,1468` |
-| `SchemaUtils.withEncodeDefault` | `dual` decode-only default, keeps encode strict | a decode fallback that must NOT leak into the encoded shape | `SchemaUtils/withEncodeDefault.ts:40` |
-| `SchemaUtils.optionalKeyWithDefault` | `dual` optional key + default | v4 replacement for `S.optionalWith(s, { exact, default })` | `SchemaUtils/optionalKeyWithDefaults.ts:29` |
+| `S.withDecodingDefaultTypeKey(Effect.succeed(v))` | upstream decode-only default for a missing key; encode stays strict | a decode fallback that must NOT leak into the encoded shape; the v4 form of `S.optionalWith(s, { exact, default })` | `effect/Schema` |
 
 > `S.withConstructorDefault` alone is **constructor-only**, so the encoded/wire
 > contract stays unchanged. Add `S.withDecodingDefaultTypeKey` (same value) when a
@@ -35,15 +34,14 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 
 | Symbol | Signature (abridged) | Kills | Live site |
 |--------|----------------------|-------|-----------|
-| `SchemaUtils.withCodecStatics` | `<Sch extends S.Top & S.ConstraintDecoder<unknown>>(self) => Sch & { is; fromUnknown; decodeOption }` | the wall of `const isX = S.is(X)` / `const decodeX = S.decodeUnknownOption(X)` | `Md.model.ts:1612` (`Block` union) |
 | in-body `static readonly is = S.is(Self)` | attach on `S.Class`/`S.TaggedClass` (they lose piped statics) | a free-floating guard next to the class | `Md.model.ts:873` (`Heading.is`) |
-| `SchemaUtils.withStatics` | `dual` `(self, (schema) => methods) => self & methods` | ad-hoc `Object.assign(schema, {...})` + statics lost on `.annotate` | `SchemaUtils/withStatics.ts:91` |
+| `S.is` / `S.decodeUnknownOption` / `S.toEquivalence` | upstream free functions over the schema | a hand-written guard, decoder or `===` comparison | call at the use site; Effect caches parsers per AST |
+| `SchemaUtils.withStatics` | `dual` `(self, (schema) => methods) => self & methods` | ad-hoc `Object.assign(schema, {...})` + domain helpers lost on `.annotate`; never for codecs (`SFV4-codec-static`) | `SchemaUtils/withStatics.ts:91` |
 | `SchemaUtils.withLiteralKitStatics` | `(literalKit) => (self) => self & kitHelpers` | LiteralKit helpers dropped after an annotation rebuild | `SchemaUtils/withLiteralKitStatics.ts:37` |
-| `SchemaUtils.toEquivalence` | `dual` `(schema) => (a, b) => boolean` | manual `===` / `!==` on decoded values | `SchemaUtils/toEquivalence.ts:64` |
 
-> `withCodecStatics.fromUnknown` is a **trusted-boundary sync decode** (throws on bad
-> input); `decodeOption` is the soft-boundary form (returns `O.Option`). Both come from
-> the schema, so there is nothing to keep in sync by hand.
+> Codec statics (`withCodecStatics`, codec facades attached with `withStatics`) were
+> retired under the Upstream-First Foundation/Modeling decision: a decode/guard wall
+> collapses into `S.*` calls at the use site, not into schema statics.
 
 ### Literal domains — collapse repeated variant families
 
@@ -131,12 +129,10 @@ export class Heading extends S.TaggedClass<Heading>($I`Heading`)("heading",
 // Md.h1…h6 stay as thin builders that construct Heading with a level.
 ```
 
-**2. Decode/guard header wall → colocated statics.**
+**2. Decode/guard header wall → upstream calls at the use site.**
 ```ts
-// before: const isBlock = S.is(Block); const decodeBlock = S.decodeUnknownOption(Block); // ×N at file top
-// after:
-export const Block = S.Union([Heading, P, BlockQuote, /* … */]).pipe(SchemaUtils.withCodecStatics); // Md.model.ts:1612
-// call sites: Block.is(x) / Block.decodeOption(raw) — nothing to keep in sync.
+// before: const isBlock = S.is(Block); const decodeBlock = S.decodeUnknownOption(Block); // ×N at file top, used once each
+// after: call sites read S.is(Block)(x) / S.decodeUnknownOption(Block)(raw); the parser is cached per AST.
 ```
 
 **3. `*Defaults` spreads → schema-field defaults.** ~30 construction sites collapse.

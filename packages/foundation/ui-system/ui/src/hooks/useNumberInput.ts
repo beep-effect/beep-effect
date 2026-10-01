@@ -144,8 +144,7 @@ const NumberInputText = S.String.check(
 ).pipe(
   $I.annoteSchema("NumberInputText", {
     description: "Editable text accepted by the number input during typing.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const isCoarseStepModifier = P.Tuple([P.isTruthy, P.isUnknown]);
@@ -970,7 +969,7 @@ export const useNumberInput = (options: UseNumberInputOptions = {}) => {
 
     const result = parser(event.target.value);
 
-    if (NumberInputText.is(result)) {
+    if (S.is(NumberInputText)(result)) {
       setInterfaceValue(result);
     }
   };

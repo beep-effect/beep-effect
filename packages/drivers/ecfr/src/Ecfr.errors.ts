@@ -6,7 +6,7 @@
  */
 
 import { $EcfrId } from "@beep/identity";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -38,11 +38,7 @@ export const EcfrErrorReason = EcfrErrorReasonBase.pipe(
   $I.annoteSchema("EcfrErrorReason", {
     description: "Redacted technical error reasons emitted by the eCFR REST API driver.",
   }),
-  SchemaUtils.withLiteralKitStatics(EcfrErrorReasonBase),
-  SchemaUtils.withStatics((schema: typeof EcfrErrorReasonBase) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(EcfrErrorReasonBase)
 );
 
 /**
@@ -81,7 +77,9 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
  */
 export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOptions`)(
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
@@ -117,7 +115,9 @@ export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOpti
 export class EcfrError extends S.TaggedError<EcfrError>($I`EcfrError`)(
   "EcfrError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",

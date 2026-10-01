@@ -14,8 +14,7 @@
  */
 
 import { $NlpMcpId } from "@beep/identity";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Clock, Duration, Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as HttpClient from "effect/http/HttpClient";
@@ -41,9 +40,10 @@ const DatasetFormatBase = LiteralKit(["json", "jsonl", "lines", "text"]);
  * import { DatasetFormat } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
  * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
- *   const format = yield* DatasetFormat.fromUnknown("jsonl")
+ *   const format = yield* S.decodeUnknownEffect(DatasetFormat)("jsonl")
  *   console.log(format) // "jsonl"
  * })
  * ```
@@ -54,11 +54,7 @@ const DatasetFormatBase = LiteralKit(["json", "jsonl", "lines", "text"]);
 export const DatasetFormat = DatasetFormatBase.pipe(
   $I.annoteSchema("DatasetFormat", {
     description: "Dataset formats supported by the file and URL loaders.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  })
 );
 
 /**
@@ -89,9 +85,10 @@ const DatasetSourceTypeBase = LiteralKit(["file", "url"]);
  * import { DatasetSourceType } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
  * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
- *   const sourceType = yield* DatasetSourceType.fromUnknown("file")
+ *   const sourceType = yield* S.decodeUnknownEffect(DatasetSourceType)("file")
  *   console.log(sourceType) // "file"
  * })
  * ```
@@ -102,11 +99,7 @@ const DatasetSourceTypeBase = LiteralKit(["file", "url"]);
 export const DatasetSourceType = DatasetSourceTypeBase.pipe(
   $I.annoteSchema("DatasetSourceType", {
     description: "Provenance source channels supported by dataset loaders.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  })
 );
 
 /**
@@ -384,7 +377,9 @@ export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.S
 export class DatasetLoadError extends S.TaggedError<DatasetLoadError>($I`DatasetLoadError`)(
   "DatasetLoadError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    )
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Underlying platform, HTTP, timeout, or schema failure when available.",
@@ -406,7 +401,7 @@ const LinesDatasetResult = DatasetResult(S.String.pipe(S.Array));
 const JsonDatasetResult = DatasetResult(S.Unknown);
 const JsonlDatasetResult = DatasetResult(S.Unknown.pipe(S.Array));
 
-const decodeJson = UnknownFromJsonString.decodeEffect;
+const decodeJson = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 const byteLength = (value: string): number => new TextEncoder().encode(value).length;
 

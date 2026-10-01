@@ -30,12 +30,13 @@ import { renderKnowledgeRefsCheckSection } from "@beep/repo-cli/test/Knowledge";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Crypto, Effect, Exit, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import type {
@@ -626,7 +627,10 @@ describe("knowledge refs check gate", () => {
           "Run it from /home/example/checkouts/beep-effect and sync the mirror at ~/mirrors/firecrawl.\n",
       });
       expect(A.length(knowledgeRefsLiveDebt(report))).toBe(2);
-      expect(O.map(knowledgeRefsCheckFailure(report), (error) => error.liveDebtCount)).toEqual(O.some(2));
+      assertSome(
+        O.map(knowledgeRefsCheckFailure(report), (error) => error.liveDebtCount),
+        S.Natural.make(2)
+      );
       const section = renderKnowledgeRefsCheckSection(report);
       expect(Str.startsWith("check: 2 live gated observation(s)")(section)).toBe(true);
       expect(section).toContain("actionable-host-path");
@@ -643,7 +647,7 @@ describe("knowledge refs check gate", () => {
         "goals/example/data/extract.jsonl": '{"blockText":"see /home/user/knowledge for the vault"}\n',
       });
       expect(A.length(knowledgeRefsLiveDebt(report))).toBe(0);
-      expect(O.isNone(knowledgeRefsCheckFailure(report))).toBe(true);
+      knowledgeRefsCheckFailure(report).pipe(assertNone);
       expect(renderKnowledgeRefsCheckSection(report)).toBe("check: 0 live gated observation(s)");
     })
   );
@@ -1139,7 +1143,7 @@ const generatedDocuments = Effect.fnUntraced(function* (finding: EffectVitestFin
   const inventory = yield* encodeEffectVitestInventoryDocument(
     EffectVitestInventoryDocument.make({
       schemaVersion: "effect-vitest-inventory/v1",
-      effectVitestVersion: "4.0.0-rc.118",
+      effectVitestVersion: "4.0.0",
       scope: [],
       findings: [finding],
     })

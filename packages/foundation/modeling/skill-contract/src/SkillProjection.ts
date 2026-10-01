@@ -8,7 +8,6 @@
 import { $SkillContractId } from "@beep/identity/packages";
 import { Md } from "@beep/md";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Duration, Effect, Result, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -19,6 +18,8 @@ import { RecoveryPolicy } from "./Recovery.ts";
 import { SkillContract } from "./SkillContract.ts";
 import type { Document, RenderError } from "@beep/md";
 import type { Markdown } from "@beep/schema";
+
+const decodeUnknownJsonResult = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const $I = $SkillContractId.create("SkillProjection");
 const projectionKind = LiteralKit(["skill-contract/skill-md/v1"]).pipe(
@@ -456,7 +457,7 @@ export const decodeSkillFrontmatter = (
   }
 
   const frontmatter = Str.slice(0, closeIndex.value)(afterOpen);
-  return UnknownFromJsonString.decodeUnknownResult(frontmatter).pipe(
+  return decodeUnknownJsonResult(frontmatter).pipe(
     Result.flatMap(decodeUnknownSkillMarkdownProjectionResult),
     Result.mapError((error) =>
       frontmatterDenied("frontmatter-decode-failed", `The leading frontmatter failed schema decode: ${error.message}`)

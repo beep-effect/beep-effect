@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
@@ -90,7 +90,7 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
 export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderError>($I`AiMetricsForwarderError`)(
   "AiMetricsForwarderError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsForwarderError>("AiMetricsForwarderError", {
@@ -333,6 +333,7 @@ export class AiMetricsForwarderOtlpExportFailed extends S.Class<AiMetricsForward
  *   AiMetricsForwarderOtlpExport,
  *   AiMetricsForwarderOtlpExported
  * } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
  *
  * const exported = AiMetricsForwarderOtlpExported.make({
  *   endpointTraceUrl: "http://127.0.0.1:6006/projects/default/traces",
@@ -344,7 +345,7 @@ export class AiMetricsForwarderOtlpExportFailed extends S.Class<AiMetricsForward
  *   turnSpanCount: 2
  * })
  *
- * console.log(AiMetricsForwarderOtlpExport.is(exported)) // true
+ * console.log(S.is(AiMetricsForwarderOtlpExport)(exported)) // true
  * console.log(exported.status) // "exported"
  * ```
  *
@@ -358,12 +359,7 @@ export const AiMetricsForwarderOtlpExport = S.Union([
   $I.annoteSchema("AiMetricsForwarderOtlpExport", {
     description: "Tagged post-forwarder derived OTLP export status for the same ingest run.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("status"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("status")
 );
 
 /**

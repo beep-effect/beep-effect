@@ -7,7 +7,6 @@
 import { $SchemaId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Conformance/profile");
 
@@ -70,5 +69,5 @@ export class ConformanceProfile extends S.Class<ConformanceProfile>($I`Conforman
     description: "Versioned set of sources and invariants implemented as one conformance profile.",
   })
 ) {
-  static readonly toEquivalenceArray = ConformanceProfile.pipe(S.Array, SchemaUtils.toEquivalence);
+  static readonly toEquivalenceArray = ConformanceProfile.pipe(S.Array, S.toEquivalence);
 }

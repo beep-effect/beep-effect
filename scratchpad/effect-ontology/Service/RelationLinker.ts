@@ -12,7 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { Chunk, Context, Effect, HashSet, Layer } from "effect";
+import { Chunk, Context, Effect, HashSet, Layer, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -142,9 +142,7 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
 
         for (const relation of relations) {
           // Canonicalize subject - unwrap Option with fallback to original
-          const canonicalSubjectId = EntityId.decodeUnknownSync(
-            O.getOrElse(getCanonicalId(erg, relation.subjectId), () => relation.subjectId)
-          );
+          const canonicalSubjectId = Result.getOrThrow(S.decodeResult(EntityId)(O.getOrElse(getCanonicalId(erg, relation.subjectId), () => relation.subjectId)));
           const subjectRemapped = canonicalSubjectId !== relation.subjectId;
 
           if (subjectRemapped) {
@@ -158,7 +156,7 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
           if (RelationObject.guards.EntityReference(relation.object)) {
             // Entity reference - canonicalize
             const resolved = O.getOrElse(getCanonicalId(erg, relation.object.value), () => relation.object.value);
-            canonicalObject = RelationObject.cases.EntityReference.make({ value: EntityId.decodeUnknownSync(resolved) });
+            canonicalObject = RelationObject.cases.EntityReference.make({ value: Result.getOrThrow(S.decodeUnknownResult(EntityId)(resolved)) });
             objectRemapped = resolved !== relation.object.value;
             if (objectRemapped) {
               remappedCount++;

@@ -54,7 +54,7 @@ import {
   Effect,
   Layer,
   Match,
-  MutableHashSet
+  MutableHashSet, Result
 } from "effect";
 import * as A from "effect/Array";
 import {dual} from "effect/Function";
@@ -93,7 +93,7 @@ interface RdfConstructionPrefixes {
   readonly schema?: string;
 }
 
-const n3NamedNode = (value: string): N3.NamedNode => N3.DataFactory.namedNode(IRI.decodeUnknownSync(value));
+const n3NamedNode = (value: string): N3.NamedNode => N3.DataFactory.namedNode(Result.getOrThrow(S.decodeResult(IRI)(value)));
 const isIriObjectString = P.some([Str.startsWith("https://"), Str.startsWith("https://"), Str.startsWith("urn:")]);
 
 const valueToN3Literal = (value: string | number | boolean, prefixes: RdfConstructionPrefixes): N3.Literal => {
@@ -121,7 +121,7 @@ const entityToN3Quads = (
     N3.DataFactory.literal(entity.mention)
   );
   const attributeQuads = A.map(R.toEntries(entity.attributes), ([predicate, value]) => {
-    const predicateIri = IRI.is(predicate) ? predicate : `${prefixes.schema ?? baseNamespace}${predicate}`;
+    const predicateIri = S.is(IRI)(predicate) ? predicate : `${prefixes.schema ?? baseNamespace}${predicate}`;
     return N3.DataFactory.quad(subject, n3NamedNode(predicateIri), valueToN3Literal(value, prefixes));
   });
   return A.append(A.appendAll(typeQuads, attributeQuads), labelQuad);
@@ -1084,7 +1084,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @returns IRI domain type
        */
       createIri: (iri: string) =>
-        IRI.decodeEffect(iri).pipe(
+        S.decodeEffect(IRI)(iri).pipe(
           Effect.mapError((cause) =>
             RdfError.make({
               message: "Invalid IRI.",

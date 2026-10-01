@@ -6,7 +6,7 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { SchemaUtils, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { Effect, SchemaGetter } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -22,8 +22,9 @@ const normalizeConfigUrl = Str.replace(/\/+$/, "");
  *
  * ```ts
  * import { RunpodConfigUrl } from "@beep/runpod"
+ * import * as S from "effect/Schema"
  *
- * const url = RunpodConfigUrl.decodeUnknownSync("https://rest.runpod.io/v1/")
+ * const url = S.decodeUnknownSync(RunpodConfigUrl)("https://rest.runpod.io/v1/")
  * console.log(url)
  * ```
  *
@@ -37,8 +38,7 @@ export const RunpodConfigUrl = S.String.pipe(
   }),
   $I.annoteSchema("RunpodConfigUrl", {
     description: "Validated Runpod configuration URL with trailing slash separators removed.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -48,8 +48,9 @@ export const RunpodConfigUrl = S.String.pipe(
  *
  * ```ts
  * import { RunpodConfigUrl } from "@beep/runpod"
+ * import * as S from "effect/Schema"
  *
- * const url: RunpodConfigUrl = RunpodConfigUrl.decodeUnknownSync("https://rest.runpod.io/v1/")
+ * const url: RunpodConfigUrl = S.decodeUnknownSync(RunpodConfigUrl)("https://rest.runpod.io/v1/")
  * console.log(url)
  * ```
  *

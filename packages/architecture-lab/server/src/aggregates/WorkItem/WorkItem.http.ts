@@ -18,10 +18,6 @@ const serviceUnavailableBody = WorkItemUseCases.WorkItemActionFailed.make({
   reason: WorkItemUseCases.WORK_ITEM_ACTION_UNAVAILABLE_REASON,
 });
 const WorkItemHttpStatusBase = LiteralKit([200, 201, 404, 409, 422, 503]);
-const withWorkItemHttpStatusCodecStatics = SchemaUtils.withStatics((schema: typeof WorkItemHttpStatusBase) => ({
-  decodeOption: S.decodeUnknownOption(schema),
-  fromUnknown: S.decodeUnknownResult(schema),
-}));
 
 /**
  * HTTP status values emitted by the WorkItem proof protocol adapter.
@@ -34,8 +30,9 @@ const withWorkItemHttpStatusCodecStatics = SchemaUtils.withStatics((schema: type
  *   type WorkItemHttpStatus as WorkItemHttpStatusType
  * } from "@beep/architecture-lab-server/aggregates/WorkItem"
  * import * as Result from "effect/Result"
+ * import * as S from "effect/Schema"
  *
- * const decoded = WorkItemHttpStatus.fromUnknown(201)
+ * const decoded = S.decodeUnknownResult(WorkItemHttpStatus)(201)
  *
  * if (Result.isFailure(decoded)) {
  *   throw new Error("expected HTTP status")
@@ -54,8 +51,7 @@ export const WorkItemHttpStatus = WorkItemHttpStatusBase.pipe(
     title: "WorkItem HTTP status",
     description: "HTTP status vocabulary emitted by the WorkItem proof protocol adapter.",
   }),
-  SchemaUtils.withLiteralKitStatics(WorkItemHttpStatusBase),
-  withWorkItemHttpStatusCodecStatics
+  SchemaUtils.withLiteralKitStatics(WorkItemHttpStatusBase)
 );
 
 /**

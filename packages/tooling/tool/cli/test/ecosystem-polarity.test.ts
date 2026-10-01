@@ -1,14 +1,14 @@
 import { EcosystemPolarityOptions, runEcosystemPolarityCheck } from "@beep/repo-cli/commands/Lint/EcosystemPolarity";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
+import { Console, Effect, FileSystem, flow, Path, Result } from "effect";
 import * as R from "effect/Record";
-import { NodeTestLayer, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import * as S from "effect/Schema";
+import * as TestConsole from "effect/testing/TestConsole";
+import { NodeTestLayer, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const writeJson = Effect.fn(function* (filePath: string, value: unknown) {
   yield* writeProjectFile(filePath, `${encodeJson(value)}\n`);
@@ -28,125 +28,117 @@ const writeMember = Effect.fn(function* (
     yield* writeProjectFile(`packages/ecosystem/member/${file}`, content);
   }
 });
-
-const withFixtureRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
-  withTempWorkingDirectory(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      yield* fs.makeDirectory(path.join(process.cwd(), ".git"));
-      return yield* use;
-    })
-  );
-
 const runFullCheck = runEcosystemPolarityCheck(EcosystemPolarityOptions.make({}));
 
-describe("ecosystem polarity lint", () => {
-  it("finds static and interpolated @beep source edges", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        Effect.gen(function* () {
-          yield* writeMember(
-            {},
-            {
-              "src/index.ts": A.join(
-                [
-                  'import "@beep/imported";',
-                  'export * from "@beep/exported";',
-                  'export const dynamic = import("@beep/dynamic");',
-                  'export const required = require("@beep/required");',
-                  "export const interpolatedDynamic = import(`@beep/${member}`);",
-                  "export const interpolatedRequired = require(`@beep/${member}`);",
-                ],
-                "\n"
-              ),
-            }
-          );
-
-          const summary = yield* runFullCheck;
-          expect(A.map(summary.violations, (violation) => violation.detail)).toEqual([
-            "@beep/imported",
-            "@beep/exported",
-            "@beep/dynamic",
-            "@beep/required",
-            "@beep/",
-            "@beep/",
-          ]);
-        })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
-
-  it("rejects runtime manifest edges and bundled dependency fields", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        Effect.gen(function* () {
-          yield* writeMember({
-            peerDependencies: {
-              "@beep/internal": "workspace:^",
-              effect: "4.0.0",
-              portable: "npm:@beep/internal-alias@^1.0.0",
-            },
-            bundledDependencies: [],
-          });
-
-          const summary = yield* runFullCheck;
-          expect(A.map(summary.violations, (violation) => violation.kind)).toEqual([
-            "runtime-dependency",
-            "runtime-dependency",
-            "bundled-dependencies",
-          ]);
-          expect(A.map(summary.violations, (violation) => violation.detail)).toEqual([
-            "peerDependencies.@beep/internal",
-            "peerDependencies.portable -> npm:@beep/internal-alias@^1.0.0",
-            "bundledDependencies",
-          ]);
-        })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
-
-  it("ignores devDependencies, tests, and unrelated changed files", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        Effect.gen(function* () {
-          yield* writeMember(
-            { devDependencies: { "@beep/test-utils": "workspace:^" } },
-            { "test/index.test.ts": 'import "@beep/test-utils";\n' }
-          );
-
-          const fullSummary = yield* runFullCheck;
-          expect(fullSummary.checkedMembers).toBe(1);
-          expect(fullSummary.violations).toEqual([]);
-
-          const changedSummary = yield* runEcosystemPolarityCheck(
-            EcosystemPolarityOptions.make({ includePaths: ["packages/demo/src/index.ts"] })
-          );
-          expect(changedSummary.checkedMembers).toBe(0);
-          expect(changedSummary.violations).toEqual([]);
-        })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
-
-  it("expands a member src or manifest change to the member's full check", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        Effect.gen(function* () {
-          yield* writeMember(
-            {},
-            { "src/violation.ts": 'import "@beep/internal";\n', "src/changed.ts": "export {};\n" }
-          );
-
-          for (const changedFile of [
-            "packages/ecosystem/member/src/changed.ts",
-            "packages/ecosystem/member/package.json",
-          ]) {
-            const summary = yield* runEcosystemPolarityCheck(
-              EcosystemPolarityOptions.make({ includePaths: [changedFile] })
-            );
-            expect(summary.checkedMembers).toBe(1);
-            expect(summary.violations).toHaveLength(1);
-            expect(summary.violations[0]?.detail).toBe("@beep/internal");
+it.layer(NodeTestLayer, { timeout: "10 seconds" })((it) => {
+  describe("ecosystem polarity lint", { concurrent: false }, () => {
+    it.effect("finds static and interpolated @beep source edges", () =>
+      Effect.gen(function* () {
+        const directory = yield* temporaryWorkingDirectory;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.makeDirectory(path.join(directory, ".git"));
+        yield* writeMember(
+          {},
+          {
+            "src/index.ts": A.join(
+              [
+                'import "@beep/imported";',
+                'export * from "@beep/exported";',
+                'export const dynamic = import("@beep/dynamic");',
+                'export const required = require("@beep/required");',
+                "export const interpolatedDynamic = import(`@beep/${member}`);",
+                "export const interpolatedRequired = require(`@beep/${member}`);",
+              ],
+              "\n"
+            ),
           }
-        })
-      ).pipe(provideScopedLayer(NodeTestLayer))
-    ));
+        );
+
+        const summary = yield* runFullCheck;
+        expect(A.map(summary.violations, (violation) => violation.detail)).toEqual([
+          "@beep/imported",
+          "@beep/exported",
+          "@beep/dynamic",
+          "@beep/required",
+          "@beep/",
+          "@beep/",
+        ]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("rejects runtime manifest edges and bundled dependency fields", () =>
+      Effect.gen(function* () {
+        const directory = yield* temporaryWorkingDirectory;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.makeDirectory(path.join(directory, ".git"));
+        yield* writeMember({
+          peerDependencies: {
+            "@beep/internal": "workspace:^",
+            effect: "4.0.0",
+            portable: "npm:@beep/internal-alias@^1.0.0",
+          },
+          bundledDependencies: [],
+        });
+
+        const summary = yield* runFullCheck;
+        expect(A.map(summary.violations, (violation) => violation.kind)).toEqual([
+          "runtime-dependency",
+          "runtime-dependency",
+          "bundled-dependencies",
+        ]);
+        expect(A.map(summary.violations, (violation) => violation.detail)).toEqual([
+          "peerDependencies.@beep/internal",
+          "peerDependencies.portable -> npm:@beep/internal-alias@^1.0.0",
+          "bundledDependencies",
+        ]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("ignores devDependencies, tests, and unrelated changed files", () =>
+      Effect.gen(function* () {
+        const directory = yield* temporaryWorkingDirectory;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.makeDirectory(path.join(directory, ".git"));
+        yield* writeMember(
+          { devDependencies: { "@beep/test-utils": "workspace:^" } },
+          { "test/index.test.ts": 'import "@beep/test-utils";\n' }
+        );
+
+        const fullSummary = yield* runFullCheck;
+        expect(fullSummary.checkedMembers).toBe(1);
+        expect(fullSummary.violations).toEqual([]);
+
+        const changedSummary = yield* runEcosystemPolarityCheck(
+          EcosystemPolarityOptions.make({ includePaths: ["packages/demo/src/index.ts"] })
+        );
+        expect(changedSummary.checkedMembers).toBe(0);
+        expect(changedSummary.violations).toEqual([]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("expands a member src or manifest change to the member's full check", () =>
+      Effect.gen(function* () {
+        const directory = yield* temporaryWorkingDirectory;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.makeDirectory(path.join(directory, ".git"));
+        yield* writeMember({}, { "src/violation.ts": 'import "@beep/internal";\n', "src/changed.ts": "export {};\n" });
+
+        for (const changedFile of [
+          "packages/ecosystem/member/src/changed.ts",
+          "packages/ecosystem/member/package.json",
+        ]) {
+          const summary = yield* runEcosystemPolarityCheck(
+            EcosystemPolarityOptions.make({ includePaths: [changedFile] })
+          );
+          expect(summary.checkedMembers).toBe(1);
+          expect(summary.violations).toHaveLength(1);
+          expect(summary.violations[0]?.detail).toBe("@beep/internal");
+        }
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 });

@@ -283,10 +283,10 @@ describe("FilePath", () => {
     Effect.fnUntraced(function* () {
       expect(
         (yield* Arbitrary.sampleEffect(Arbitrary.schema(FilePathSchema.FilePath), { count: 20, seed: 0x5eed })).every(
-          FilePathSchema.FilePath.is
+          S.is(FilePathSchema.FilePath)
         )
       ).toBe(true);
-      expect(yield* FilePathSchema.FilePath.decodeUnknownEffect("data/ontology.ttl")).toBe("data/ontology.ttl");
+      expect(yield* S.decodeEffect(FilePathSchema.FilePath)("data/ontology.ttl")).toBe("data/ontology.ttl");
     })
   );
 

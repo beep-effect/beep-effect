@@ -1,0 +1,590 @@
+{
+  "sourceFixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f",
+  "closedHistorical": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:129:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:158:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:182:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:231:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:256:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:301:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:326:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:350:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:378:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:411:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:444:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:472:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:510:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:541:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:1098:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:1186:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:206:runSync@6#1",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:222:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:250:runPromise@4#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:348:runPromise@4#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:416:runPromise@4#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:465:runPromise@4#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:582:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:725:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:795:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:898:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:978:runPromise@6#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:207:checkEffect@8#1",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c"
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:45:withTempRepo@21#1",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f"
+    }
+  ],
+  "lineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:129:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "passes when every workspace package is registered and no local roots exist",
+      "currentTitle": "passes when every workspace package is registered and no local roots exist",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 130,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeWorkspaceFixture({ registrySlugs: [\"identity\", \"widget\"], widgetSourceLines: ['import { $WidgetId } from \"@beep/ident"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:158:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports composer and export registrations with no live workspace owner",
+      "currentTitle": "reports composer and export registrations with no live workspace owner",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 159,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeWorkspaceFixture({ registrySlugs: [\"identity\", \"widget\", \"retired-widget\"] }); const exit = yield* Effect.exit(runLin"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:182:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports an export-only orphan whose compose slug is already gone",
+      "currentTitle": "reports an export-only orphan whose compose slug is already gone",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 183,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeWorkspaceFixture({ registrySlugs: [\"identity\", \"widget\"] }); const registryC"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:231:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports workspace packages missing from the registry",
+      "currentTitle": "reports workspace packages missing from the registry",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 232,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeWorkspaceFixture({ registrySlugs: [\"identity\"] }); const exit = yield* Effect.exit(runLintCommand([\"identity-registry"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:256:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports local root composers built from the identity make export",
+      "currentTitle": "reports local root composers built from the identity make export",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 257,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeWorkspaceFixture({ registrySlugs: [\"identity\", \"widget\"], widgetSourceLines: [ 'import { make as makeIdentity } from"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:301:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "registers missing workspace packages with --fix",
+      "currentTitle": "registers missing workspace packages with --fix",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 302,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeWorkspaceFixture({ registrySlugs: [\"identity\"] }); yield* runLintCommand([\"i"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:326:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "passes when a live lab is registered in the generated labs segment",
+      "currentTitle": "passes when a live lab is registered in the generated labs segment",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 327,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeWorkspaceFixture({ registrySlugs: [\"identity\", \"widget\"], registryLabSlugs: [\"probe-lab\"], labPackages: [\"probe-lab\"]"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:350:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports a live lab registered in the flat group as misplaced",
+      "currentTitle": "reports a live lab registered in the flat group as misplaced",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 351,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeWorkspaceFixture({ registrySlugs: [\"identity\", \"widget\", \"probe-lab\"], labPackages: [\"probe-lab\"], }); const exit = y"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:378:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports an unregistered lab as missing from both the registry and the labs segment",
+      "currentTitle": "reports an unregistered lab as missing from both the registry and the labs segment",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 379,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeWorkspaceFixture({ registrySlugs: [\"identity\", \"widget\"], labPackages: [\"probe-lab\"], }); const exit = yield* Effect."
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:411:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports a labs segment entry with no live lab as extra alongside the orphan check",
+      "currentTitle": "reports a labs segment entry with no live lab as extra alongside the orphan check",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 412,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeWorkspaceFixture({ registrySlugs: [\"identity\", \"widget\"], registryLabSlugs: [\"ghost-lab\"], }); const exit = yield* Ef"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:444:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports a live non-lab workspace inside the labs segment as extra without an orphan",
+      "currentTitle": "reports a live non-lab workspace inside the labs segment as extra without an orphan",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 445,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeWorkspaceFixture({ registrySlugs: [\"identity\"], registryLabSlugs: [\"widget\"], }); const exit = yield* Effect.exit(run"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:472:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "registers a missing lab and prunes a ghost from the labs segment with --fix",
+      "currentTitle": "registers a missing lab and prunes a ghost from the labs segment with --fix",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 473,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeWorkspaceFixture({ registrySlugs: [\"identity\", \"widget\"], registryLabSlugs:"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:510:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "consolidates a misplaced lab into the generated labs segment with --fix",
+      "currentTitle": "consolidates a misplaced lab into the generated labs segment with --fix",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 511,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeWorkspaceFixture({ registrySlugs: [\"identity\", \"widget\", \"probe-lab\"], labPackages: [\"probe-lab\"], }); yield* runLint"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-identity-registry.test.ts:541:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "fails with the substrate remediation when the labs segment markers are missing",
+      "currentTitle": "fails with the substrate remediation when the labs segment markers are missing",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 542,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeWorkspaceFixture({ registrySlugs: [\"identity\", \"widget\"] }); yield* fs.write"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:1098:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "excludes lab workspaces from root references while keeping package-local refs and syncpack visibility",
+      "currentTitle": "excludes lab workspaces from root references while keeping package-local refs and syncpack visibility",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1134,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, {"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:1186:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports a hand-added lab root reference as drift in check mode",
+      "currentTitle": "reports a hand-added lab root reference as drift in check mode",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1222,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const path = yield* Path.Path; const rootDir = process.cwd(); // Aliases, syncpack sources, and the lab's package-local reference // are pre-"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:206:runSync@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "round-trips arbitrary tsconfig reference documents",
+      "currentTitle": "round-trips arbitrary tsconfig reference documents",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:222:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "accepts --write as explicit sync mode",
+      "currentTitle": "accepts --write as explicit sync mode",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 217,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, { workspaces: [\"packages/example-domain\"],"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:250:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "synchronizes root references, aliases, and syncpack from workspace discovery",
+      "currentTitle": "synchronizes root references, aliases, and syncpack from workspace discovery",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 247,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, {"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:348:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "does not synthesize wildcard aliases for packages without wildcard exports",
+      "currentTitle": "does not synthesize wildcard aliases for packages without wildcard exports",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 383,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, { workspaces: [\"packages/example-use-cases\""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:416:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "emits scoped aliases only for file-stem scoped wildcard exports",
+      "currentTitle": "emits scoped aliases only for file-stem scoped wildcard exports",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 451,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, { workspaces: [\"packages/example-slices\"],"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:465:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "syncs managed docgen fields, preserves extras, and respects filter",
+      "currentTitle": "syncs managed docgen fields, preserves extras, and respects filter",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 500,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, { workspaces: [\"packages/foundation/*/*\"],"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:582:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports docgen drift in check mode and backfills missing managed fields in sync mode",
+      "currentTitle": "reports docgen drift in check mode and backfills missing managed fields in sync mode",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 617,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, { workspaces: [\"packages/foundation/*/*\", \""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:725:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "prunes package references with no declared dependency and reports them as drift",
+      "currentTitle": "prunes package references with no declared dependency and reports them as drift",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 760,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, { workspaces: [\"packages/foundation/*/*\", \""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:795:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "mirrors package tsconfig references into tsconfig.check.json overlays in the same run",
+      "currentTitle": "mirrors package tsconfig references into tsconfig.check.json overlays in the same run",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 830,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const rootDir = process.cwd(); // Root references, aliases, and syncp"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:898:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports an overlay whose references drift from its canonical tsconfig.json",
+      "currentTitle": "reports an overlay whose references drift from its canonical tsconfig.json",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 934,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, { workspaces: [\"packages/foundation/*/*\", \""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:978:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "treats lint-only docgen formatting drift as sync drift",
+      "currentTitle": "treats lint-only docgen formatting drift as sync drift",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1014,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, {"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:207:checkEffect@8#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "round-trips arbitrary tsconfig reference documents",
+      "currentTitle": "round-trips arbitrary tsconfig reference documents",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    }
+  ],
+  "priorFixes": [
+    {
+      "title": "round-trips arbitrary tsconfig reference documents",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+      "before": {
+        "ref": "cb155fd11c33db27011fe8a34040ac5231eab53d",
+        "form": "it",
+        "boundaries": ["Effect.runSync"]
+      },
+      "after": {
+        "ref": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+        "form": "it.effect.prop",
+        "boundaries": []
+      }
+    }
+  ],
+  "wrapperMatch": {
+    "ledgerId": "EV003:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:45:withTempRepo@21#1",
+    "detectorId": "EV003:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:46:withTempRepo@21#1",
+    "occurrence": "v2:ff75dc010b303c23d210f7f6e6362f7196f2a633b782ecf1ebbc233c3e6b6f67",
+    "evidence": "<A, E, R>(use: Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = yield* fs.makeTempD"
+  },
+  "addedCurrentRows": 0,
+  "counts": {
+    "open": 1678,
+    "fixed": 1805,
+    "exception": 12
+  },
+  "fullPackageProof": "passed: audit 686.2s; docgen 25.6s; exit 0; source 058e59a474"
+}

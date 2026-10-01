@@ -4,32 +4,11 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+import { Console, Effect, FileSystem, Layer, Path } from "effect";
+import * as TestConsole from "effect/testing/TestConsole";
+import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const testLayer = Layer.mergeAll(NodeServices.layer, TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer)));
-
-const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tmpDir = yield* fs.makeTempDirectory();
-      const previousCwd = process.cwd();
-      process.chdir(tmpDir);
-      return { fs, previousCwd, tmpDir } as const;
-    }),
-    () => use,
-    ({ fs, previousCwd, tmpDir }) =>
-      Effect.gen(function* () {
-        process.chdir(previousCwd);
-        yield* fs.remove(tmpDir, { recursive: true });
-      })
-  );
-
 const writeProjectFile = Effect.fn(function* (relativePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -63,10 +42,11 @@ const writeProjectScaffold = Effect.gen(function* () {
   );
 });
 
-describe("frozen grant set laws", () => {
-  it("flags FrozenGrantSet.make calls outside the defining module", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  describe("frozen grant set laws", () => {
+    it.effect("flags FrozenGrantSet.make calls outside the defining module", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
@@ -99,12 +79,12 @@ describe("frozen grant set laws", () => {
           ]);
           expect(A.map(summary.diagnostics, (diagnostic) => diagnostic.severity)).toEqual(["error"]);
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      ).pipe(Effect.orDie, Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("exempts the defining module", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("exempts the defining module", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
@@ -133,12 +113,12 @@ describe("frozen grant set laws", () => {
           expect(summary.affectedFiles).toEqual([]);
           expect(summary.diagnostics).toEqual([]);
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      ).pipe(Effect.orDie, Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("flags a nested copy of the canonical defining-module suffix", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("flags a nested copy of the canonical defining-module suffix", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
@@ -166,12 +146,12 @@ describe("frozen grant set laws", () => {
           expect(summary.strictFailure).toBe(true);
           expect(summary.affectedFiles).toEqual(["packages/evil/src/values/GrantSet/GrantSet.model.ts"]);
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      ).pipe(Effect.orDie, Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("flags make calls through an import alias", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("flags make calls through an import alias", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
@@ -198,12 +178,12 @@ describe("frozen grant set laws", () => {
           expect(summary.strictFailure).toBe(true);
           expect(summary.affectedFiles).toEqual(["packages/demo/src/index.ts"]);
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      ).pipe(Effect.orDie, Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("flags make calls through a variable alias", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("flags make calls through a variable alias", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
@@ -231,12 +211,12 @@ describe("frozen grant set laws", () => {
           expect(summary.violationCount).toBe(1);
           expect(summary.strictFailure).toBe(true);
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      ).pipe(Effect.orDie, Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("flags calls of a destructured make binding", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("flags calls of a destructured make binding", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
@@ -264,12 +244,12 @@ describe("frozen grant set laws", () => {
           expect(summary.violationCount).toBe(1);
           expect(summary.strictFailure).toBe(true);
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      ).pipe(Effect.orDie, Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("flags calls of an extracted make reference", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("flags calls of an extracted make reference", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
@@ -297,12 +277,12 @@ describe("frozen grant set laws", () => {
           expect(summary.violationCount).toBe(1);
           expect(summary.strictFailure).toBe(true);
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      ).pipe(Effect.orDie, Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("flags direct new FrozenGrantSet expressions", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("flags direct new FrozenGrantSet expressions", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
@@ -328,12 +308,12 @@ describe("frozen grant set laws", () => {
           expect(summary.violationCount).toBe(1);
           expect(summary.strictFailure).toBe(true);
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      ).pipe(Effect.orDie, Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("flags new expressions on a tainted alias", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("flags new expressions on a tainted alias", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
@@ -361,12 +341,12 @@ describe("frozen grant set laws", () => {
           expect(summary.violationCount).toBe(1);
           expect(summary.strictFailure).toBe(true);
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      ).pipe(Effect.orDie, Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("ignores unrelated make calls", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("ignores unrelated make calls", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
@@ -395,6 +375,7 @@ describe("frozen grant set laws", () => {
           expect(summary.strictFailure).toBe(false);
           expect(summary.diagnostics).toEqual([]);
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      ).pipe(Effect.orDie, Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 });

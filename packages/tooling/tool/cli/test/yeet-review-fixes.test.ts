@@ -15,13 +15,15 @@ import {
   runProofPhaseForTesting,
   runWithFullProofCoordinatorForTesting,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { ConfigProvider, Console, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import * as TestClock from "effect/testing/TestClock";
+import * as TestConsole from "effect/testing/TestConsole";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
@@ -40,21 +42,12 @@ const contextAt = (repoRoot: string): RepoRunContext =>
     turbo: emptyTurboPlanSnapshot([]),
   });
 
-const withTempDirectory = <Success, Error, Requirements>(
-  use: (tmpDir: string) => Effect.Effect<Success, Error, Requirements>
-) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      return yield* fs.makeTempDirectory();
-    }),
-    use,
-    (tmpDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(tmpDir, { recursive: true });
-      })
-  ).pipe(provideScopedLayer(PlatformLayer));
+const temporaryDirectory = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>
+    fs.remove(directory, { force: true, recursive: true }).pipe(Effect.orDie)
+  );
+});
 
 const runGit = Effect.fnUntraced(function* (cwd: string, args: ReadonlyArray<string>) {
   const result = yield* Effect.sync(() =>
@@ -67,47 +60,24 @@ const runGit = Effect.fnUntraced(function* (cwd: string, args: ReadonlyArray<str
   expect(result.exitCode).toBe(0);
 });
 
-const memoryStatsTestLayer = (availableGib = 50, totalGib = 128) =>
-  Layer.succeed(
-    MemoryStats,
-    MemoryStats.of({ availableGib: Effect.succeed(availableGib), totalGib: Effect.succeed(totalGib) })
-  );
+const memoryStatsTestService = (availableGib: number, totalGib: number) =>
+  MemoryStats.of({ availableGib: Effect.succeed(availableGib), totalGib: Effect.succeed(totalGib) });
 
-const withProofCoordinatorRepo = <Success, Error, Requirements>(
-  use: (repo: {
-    readonly context: RepoRunContext;
-    readonly lockPath: string;
-    readonly repositoryIdentity: string;
-  }) => Effect.Effect<Success, Error, Requirements>,
-  availableGib = 50,
-  totalGib = 128
-) =>
-  withTempDirectory((tmpDir) =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      yield* runGit(tmpDir, ["init"]);
-      const repositoryIdentity = `https://example.test/review-fixes/${path.basename(tmpDir)}.git`;
-      yield* runGit(tmpDir, ["remote", "add", "origin", repositoryIdentity]);
-      const context = contextAt(tmpDir);
-      const lockPath = yield* proofLockPathForContext(context);
-      yield* fs.remove(lockPath, { force: true });
-      return yield* Effect.acquireUseRelease(
-        Effect.succeed({ context, lockPath, repositoryIdentity }),
-        use,
-        ({ lockPath: acquiredPath }) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            yield* fs.remove(acquiredPath, { force: true });
-          })
-      );
-    }).pipe(
-      // Coordinator locks and admission leases both live under the temp
-      // runtime root, so removing tmpDir cleans every artifact.
-      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${tmpDir}/runtime` })),
-      provideScopedLayer(memoryStatsTestLayer(availableGib, totalGib))
-    )
+const prepareProofCoordinatorRepo = Effect.fnUntraced(function* (tmpDir: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* runGit(tmpDir, ["init"]);
+  const repositoryIdentity = `https://example.test/review-fixes/${path.basename(tmpDir)}.git`;
+  yield* runGit(tmpDir, ["remote", "add", "origin", repositoryIdentity]);
+  const context = contextAt(tmpDir);
+  const lockPath = yield* proofLockPathForContext(context);
+  yield* fs.remove(lockPath, { force: true });
+  // The test scope releases this lock before its enclosing temporary directory.
+  return yield* Effect.acquireRelease(
+    Effect.succeed({ context, lockPath, repositoryIdentity }),
+    ({ lockPath: acquiredPath }) => fs.remove(acquiredPath, { force: true }).pipe(Effect.orDie)
   );
+});
 
 const proofStep = (repoRoot: string, id: string, source: string): RepoPlanStep =>
   RepoPlanStep.make({
@@ -146,10 +116,10 @@ const equivalentOriginCases = [
   },
 ];
 
-describe("yeet review fixes", () => {
-  it("stops the proof phase after a failing cheap-gates step", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  describe("yeet review fixes", () => {
+    it.effect("stops the proof phase after a failing cheap-gates step", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
           const cheapGates = proofStep(tmpDir, "full:cheap-gates", "process.exitCode = 23");
@@ -162,12 +132,11 @@ describe("yeet review fixes", () => {
           expect(A.map(executed, (entry) => entry.step.id)).toEqual(["full:cheap-gates"]);
           expect(results[0]?.exitCode).toBe(23);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("poisons the checkout on a local shard failure and clears it after the shard succeeds", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("poisons the checkout on a local shard failure and clears it after the shard succeeds", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           yield* runGit(tmpDir, ["init"]);
           yield* runGit(tmpDir, [
@@ -205,12 +174,11 @@ describe("yeet review fixes", () => {
           expect(repairedView.entries[0]?.ack.acked).toBe(true);
           expect(repairedView.entries[0]?.ack.receipt?.resolution.kind).toBe("fix-sha");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("runs every proof step when each step succeeds", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("runs every proof step when each step succeeds", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
           const cheapGates = proofStep(tmpDir, "full:cheap-gates", "process.exitCode = 0");
@@ -223,94 +191,101 @@ describe("yeet review fixes", () => {
           expect(A.map(executed, (entry) => entry.step.id)).toEqual(["full:cheap-gates", "full:pre-push"]);
           expect(A.every(results, (result) => result.exitCode === 0)).toBe(true);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("installs a persistent scheduler-retirement marker across success and failure", () =>
-    Effect.runPromise(
-      withProofCoordinatorRepo(({ context, lockPath }) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const plannedProof = proofStep(context.repoRoot, "full:pre-push", 'console.log("proof")');
+    it.effect("installs a persistent scheduler-retirement marker across success and failure", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
+        Effect.flatMap(prepareProofCoordinatorRepo(tmpDir), ({ context, lockPath }) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const plannedProof = proofStep(context.repoRoot, "full:pre-push", 'console.log("proof")');
 
-          const checkpoints = yield* runWithFullProofCoordinatorForTesting(
-            context,
-            [plannedProof],
-            Effect.gen(function* () {
-              const preflight = yield* fs.exists(lockPath);
-              const proof = yield* fs.exists(lockPath);
-              return { preflight, proof };
-            })
-          );
-
-          expect(checkpoints).toEqual({ preflight: true, proof: true });
-          expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
-
-          const failure = yield* runWithFullProofCoordinatorForTesting(
-            context,
-            [plannedProof],
-            Effect.gen(function* () {
-              expect(yield* fs.exists(lockPath)).toBe(true);
-              return yield* Effect.fail("expected proof failure");
-            })
-          ).pipe(Effect.flip);
-
-          expect(failure).toBe("expected proof failure");
-          expect(yield* fs.readFileString(lockPath)).toContain('"coordination":"quality-scheduler/v1"');
-        })
-      )
-    ));
-
-  it("allows two same-origin full proofs to overlap under weighted admission", () =>
-    Effect.runPromise(
-      withProofCoordinatorRepo(({ context, lockPath, repositoryIdentity }) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const siblingRoot = path.join(context.repoRoot, "sibling-checkout");
-          yield* fs.makeDirectory(siblingRoot);
-          yield* runGit(siblingRoot, ["init"]);
-          yield* runGit(siblingRoot, ["remote", "add", "origin", repositoryIdentity]);
-          const siblingContext = contextAt(siblingRoot);
-          const plannedProof = proofStep(context.repoRoot, "full:pre-push", 'console.log("proof")');
-          const siblingProof = proofStep(siblingRoot, "full:pre-push", 'console.log("proof")');
-          const firstEntered = yield* Deferred.make<void>();
-          const secondEntered = yield* Deferred.make<void>();
-          const first = yield* Effect.forkChild(
-            runWithFullProofCoordinatorForTesting(
-              siblingContext,
-              [siblingProof],
-              Effect.gen(function* () {
-                yield* Deferred.succeed(firstEntered, undefined);
-                yield* Deferred.await(secondEntered);
-                return "first";
-              })
-            )
-          );
-          yield* Deferred.await(firstEntered);
-          const second = yield* Effect.forkChild(
-            runWithFullProofCoordinatorForTesting(
+            const checkpoints = yield* runWithFullProofCoordinatorForTesting(
               context,
               [plannedProof],
               Effect.gen(function* () {
-                yield* Deferred.succeed(secondEntered, undefined);
-                return "second";
+                const preflight = yield* fs.exists(lockPath);
+                const proof = yield* fs.exists(lockPath);
+                return { preflight, proof };
               })
-            )
-          );
+            );
 
-          yield* Deferred.await(secondEntered).pipe(Effect.timeout("2 seconds"));
-          expect(yield* Fiber.join(first)).toBe("first");
-          expect(yield* Fiber.join(second)).toBe("second");
-          expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
-        })
-      )
-    ));
+            expect(checkpoints).toEqual({ preflight: true, proof: true });
+            expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
 
-  it("serializes same-origin proofs through the fallback lock below the scheduler envelope", () =>
-    Effect.runPromise(
-      withProofCoordinatorRepo(
-        ({ context, lockPath }) =>
+            const failure = yield* runWithFullProofCoordinatorForTesting(
+              context,
+              [plannedProof],
+              Effect.gen(function* () {
+                expect(yield* fs.exists(lockPath)).toBe(true);
+                return yield* Effect.fail("expected proof failure");
+              })
+            ).pipe(Effect.flip);
+
+            expect(failure).toBe("expected proof failure");
+            expect(yield* fs.readFileString(lockPath)).toContain('"coordination":"quality-scheduler/v1"');
+          })
+        ).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${tmpDir}/runtime` })),
+          Effect.provideService(MemoryStats, memoryStatsTestService(50, 128))
+        )
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    it.effect("allows two same-origin full proofs to overlap under weighted admission", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
+        Effect.flatMap(prepareProofCoordinatorRepo(tmpDir), ({ context, lockPath, repositoryIdentity }) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const siblingRoot = path.join(context.repoRoot, "sibling-checkout");
+            yield* fs.makeDirectory(siblingRoot);
+            yield* runGit(siblingRoot, ["init"]);
+            yield* runGit(siblingRoot, ["remote", "add", "origin", repositoryIdentity]);
+            const siblingContext = contextAt(siblingRoot);
+            const plannedProof = proofStep(context.repoRoot, "full:pre-push", 'console.log("proof")');
+            const siblingProof = proofStep(siblingRoot, "full:pre-push", 'console.log("proof")');
+            const firstEntered = yield* Deferred.make<void>();
+            const secondEntered = yield* Deferred.make<void>();
+            const first = yield* Effect.forkChild(
+              runWithFullProofCoordinatorForTesting(
+                siblingContext,
+                [siblingProof],
+                Effect.gen(function* () {
+                  yield* Deferred.succeed(firstEntered, undefined);
+                  yield* Deferred.await(secondEntered);
+                  return "first";
+                })
+              )
+            );
+            yield* Deferred.await(firstEntered);
+            const second = yield* Effect.forkChild(
+              runWithFullProofCoordinatorForTesting(
+                context,
+                [plannedProof],
+                Effect.gen(function* () {
+                  yield* Deferred.succeed(secondEntered, undefined);
+                  return "second";
+                })
+              )
+            );
+
+            yield* Deferred.await(secondEntered).pipe(Effect.timeout("2 seconds"));
+            expect(yield* Fiber.join(first)).toBe("first");
+            expect(yield* Fiber.join(second)).toBe("second");
+            expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
+          })
+        ).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${tmpDir}/runtime` })),
+          Effect.provideService(MemoryStats, memoryStatsTestService(50, 128))
+        )
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    it.effect("serializes same-origin proofs through the fallback lock below the scheduler envelope", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
+        Effect.flatMap(prepareProofCoordinatorRepo(tmpDir), ({ context, lockPath }) =>
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
@@ -349,39 +324,37 @@ describe("yeet review fixes", () => {
             expect(yield* Fiber.join(second)).toBe("second");
             expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
             expect(yield* fs.exists(path.join(path.dirname(lockPath), "scheduler-fallback.lock"))).toBe(false);
-          }),
-        6,
-        8
-      )
-    ));
+          })
+        ).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${tmpDir}/runtime` })),
+          Effect.provideService(MemoryStats, memoryStatsTestService(6, 8))
+        )
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it.each(equivalentOriginCases)("maps equivalent $label origins to one lock path", ({ origins }) =>
-    Effect.runPromise(
+    it.effect.each(equivalentOriginCases)("maps equivalent $label origins to one lock path", ({ origins }) =>
       Effect.gen(function* () {
         const paths = yield* Effect.forEach(origins, proofCoordinatorLockPath, { concurrency: 1 });
         expect(A.dedupe(paths)).toHaveLength(1);
-      }).pipe(provideScopedLayer(PlatformLayer))
-    )
-  );
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("maps distinct repositories to distinct lock paths", () =>
-    Effect.runPromise(
+    it.effect("maps distinct repositories to distinct lock paths", () =>
       Effect.gen(function* () {
         const repository = yield* proofCoordinatorLockPath("https://github.com/acme/repo.git");
         const other = yield* proofCoordinatorLockPath("https://github.com/acme/other.git");
         expect(repository).not.toBe(other);
-      }).pipe(provideScopedLayer(PlatformLayer))
-    ));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("uses one canonical runtime root and supports an isolated override", () =>
-    Effect.runPromise(
+    it.effect("uses one canonical runtime root and supports an isolated override", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const repositoryIdentity = "https://github.com/acme/repo.git";
         const resolveWithEnvironment = (environment: Readonly<Record<string, string>>) =>
           proofCoordinatorLockPath(repositoryIdentity).pipe(
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment)),
-            provideScopedLayer(FileSystem.layerNoop({}))
+            Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({}))
           );
         const canonicalPrefix = path.join(
           canonicalRuntimeRootForTesting(process.platform, userInfo().homedir),
@@ -402,14 +375,13 @@ describe("yeet review fixes", () => {
 
         const overridden = yield* proofCoordinatorLockPath(repositoryIdentity).pipe(
           provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: configuredRoot })),
-          provideScopedLayer(FileSystem.layerNoop({}))
+          Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({}))
         );
         expect(overridden).toContain(path.join(configuredRoot, "beep-yeet-proof-locks-"));
-      }).pipe(provideScopedLayer(PlatformLayer))
-    ));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("preserves a non-default HTTPS port in the canonical repository authority", () =>
-    Effect.runPromise(
+    it.effect("preserves a non-default HTTPS port in the canonical repository authority", () =>
       Effect.gen(function* () {
         const nonDefault = yield* proofCoordinatorLockPath("https://Example.test:8443/acme/repo.git");
         const equivalent = yield* proofCoordinatorLockPath("https://example.test:8443/acme/repo/");
@@ -417,11 +389,10 @@ describe("yeet review fixes", () => {
 
         expect(nonDefault).toBe(equivalent);
         expect(nonDefault).not.toBe(defaultPort);
-      }).pipe(provideScopedLayer(PlatformLayer))
-    ));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("falls back to trimmed raw text for unsupported repository URL protocols", () =>
-    Effect.runPromise(
+    it.effect("falls back to trimmed raw text for unsupported repository URL protocols", () =>
       Effect.gen(function* () {
         const raw = yield* proofCoordinatorLockPath("http://Example.test/acme/repo.git");
         const padded = yield* proofCoordinatorLockPath("  http://Example.test/acme/repo.git  ");
@@ -429,11 +400,10 @@ describe("yeet review fixes", () => {
 
         expect(raw).toBe(padded);
         expect(raw).not.toBe(canonicalLooking);
-      }).pipe(provideScopedLayer(PlatformLayer))
-    ));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("falls back to trimmed raw text when a supported repository URL has no hostname", () =>
-    Effect.runPromise(
+    it.effect("falls back to trimmed raw text when a supported repository URL has no hostname", () =>
       Effect.gen(function* () {
         const raw = yield* proofCoordinatorLockPath("git:///acme/repo.git");
         const padded = yield* proofCoordinatorLockPath("  git:///acme/repo.git  ");
@@ -441,11 +411,10 @@ describe("yeet review fixes", () => {
 
         expect(raw).toBe(padded);
         expect(raw).not.toBe(other);
-      }).pipe(provideScopedLayer(PlatformLayer))
-    ));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("falls back deterministically to trimmed unparseable origin text", () =>
-    Effect.runPromise(
+    it.effect("falls back deterministically to trimmed unparseable origin text", () =>
       Effect.gen(function* () {
         const raw = yield* proofCoordinatorLockPath("local mirror alias");
         const padded = yield* proofCoordinatorLockPath("  local mirror alias  ");
@@ -453,6 +422,7 @@ describe("yeet review fixes", () => {
 
         expect(raw).toBe(padded);
         expect(raw).not.toBe(other);
-      }).pipe(provideScopedLayer(PlatformLayer))
-    ));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 });

@@ -1,7 +1,7 @@
 import { Semver, SemverFromString } from "@beep/schema/Semver";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -102,7 +102,7 @@ describe("Semver", () => {
 
   it("parses prerelease identifiers with SemVer numeric rules", () => {
     assertSome(Semver.preReleaseSegmentsFromStr("alpha.1"), ["alpha", "1"]);
-    pipe(Semver.preReleaseSegmentsFromStr("alpha.01"), O.isNone, assertTrue);
+    pipe(Semver.preReleaseSegmentsFromStr("alpha.01"), assertNone);
   });
 
   it("orders prerelease identifiers according to SemVer precedence", () => {

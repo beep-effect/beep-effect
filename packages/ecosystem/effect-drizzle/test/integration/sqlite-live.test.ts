@@ -18,6 +18,7 @@ import {
   addFinalizer,
   exit,
   flip,
+  fn,
   fnUntraced,
   forEach,
   gen,
@@ -189,12 +190,11 @@ const organizationRepository = makeSqlRepository(SqliteOrganization, {
   idColumn: "id",
 });
 
-const createOrganization = (name: string) =>
-  gen(function* () {
-    const repository = yield* organizationRepository;
-    const request = yield* makeEffect(SqliteOrganization.insert)({ name });
-    return yield* repository.insert(request);
-  });
+const createOrganization = fn("createOrganization")(function* (name: string) {
+  const repository = yield* organizationRepository;
+  const request = yield* makeEffect(SqliteOrganization.insert)({ name });
+  return yield* repository.insert(request);
+});
 
 const SqliteHarnessState = effectLayer(
   SqliteHarness,

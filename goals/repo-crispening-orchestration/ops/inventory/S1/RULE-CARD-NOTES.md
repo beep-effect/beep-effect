@@ -447,8 +447,8 @@ Package/scope scanned:
   `S.fromJsonString`.
 - Repo-local `Fn.implementSync` was verified in
   `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts`.
-- Repo-local schema statics exemplars were verified at
-  `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts`,
+- Repo-local schema statics exemplars were verified at `SchemaUtils.withCodecStatics`
+  (retired by goals/effect-schema-parity P5, 2026-10-01),
   `packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts`,
   and `packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts`.
 

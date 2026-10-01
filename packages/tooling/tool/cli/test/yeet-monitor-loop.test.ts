@@ -10,6 +10,7 @@ import {
   collectYeetMonitorFailedJobs,
   detectYeetMonitorFlakeClass,
   emptyYeetMonitorRerunBudget,
+  isolateYeetMonitorJobLogFailure,
   planYeetMonitorReruns,
   RepoRunContext,
   renderYeetMonitorJobDecision,
@@ -24,8 +25,10 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, HashSet, Layer, Sink, Stream } from "effect";
+import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
+import { Effect, HashMap, HashSet, Layer, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -80,6 +83,48 @@ const ts2306TornReadLog = ghLog("Build", "Run bun run beep ci lane build", [
   "Failed:    @beep/ontology-config#build",
 ]);
 
+// The per-job logs endpoint (`gh api --allow-escape-sequences
+// repos/{owner}/{repo}/actions/jobs/<id>/logs`) serves the whole job: a BOM on
+// the first line, `<timestamp> <line>` with no job/step prefix, colour escapes
+// intact, and every step. The install step's retry chatter would read as a
+// `ci-timeout` if the failing step were not isolated.
+const endpointLog = (failingStepLines: ReadonlyArray<string>): string =>
+  A.join(
+    A.map(
+      [
+        "Current runner version: '2.330.0'",
+        "##[group]Run bun install --frozen-lockfile",
+        "bun install --frozen-lockfile",
+        "##[endgroup]",
+        "registry request timed out after 5 seconds, retrying",
+        "##[group]Run bun run check",
+        "bun run check",
+        "##[endgroup]",
+        ...failingStepLines,
+        "##[error]Process completed with exit code 1.",
+        "Post job cleanup.",
+        "Cleaning up orphan processes",
+      ],
+      (line, index) => `${index === 0 ? "\uFEFF" : ""}2026-10-01T12:00:${`${index}`.padStart(2, "0")}.1234567Z ${line}`
+    ),
+    "\n"
+  );
+
+const ts2589EndpointLog = endpointLog([
+  "\u001B[31m@beep/box:build: error TS2589: Type instantiation is excessively deep and possibly infinite.\u001B[0m",
+  "\u001B[1mFailed:    @beep/box#build\u001B[0m",
+]);
+
+const genuineEndpointLog = endpointLog([
+  "\u001B[31m@beep/ui:check: src/Panel.tsx(3,5): error TS2322: Type 'string' is not assignable to type 'number'.\u001B[0m",
+  "Failed:    @beep/ui#check",
+]);
+
+const ghRunInProgress = {
+  exitCode: 1,
+  output: "run 7 is still in progress; logs will be available when it is complete",
+};
+
 const failedJob = (
   databaseId: number,
   name: string,
@@ -105,34 +150,34 @@ describe("yeet monitor flake fingerprints", () => {
   });
 
   it("recognizes the no-location TS2589 signature through GitHub log decoration", () => {
-    expect(detectYeetMonitorFlakeClass(ts2589FlakeLog)).toStrictEqual(O.some("ts2589-no-location"));
+    assertSome(detectYeetMonitorFlakeClass(ts2589FlakeLog), "ts2589-no-location");
   });
 
   it("refuses a TS2589 that carries a file location", () => {
     // A located TS2589 is a real depth problem in a real file, not the
     // scheduling-dependent instantiation-count flake.
-    expect(detectYeetMonitorFlakeClass(locatedTs2589Log)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(locatedTs2589Log));
   });
 
   it("refuses an ordinary type error", () => {
-    expect(detectYeetMonitorFlakeClass(genuineTypeErrorLog)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(genuineTypeErrorLog));
   });
 
   it("recognizes both suite-level and job-level timeouts", () => {
-    expect(detectYeetMonitorFlakeClass(suiteTimeoutLog)).toStrictEqual(O.some("ci-timeout"));
-    expect(detectYeetMonitorFlakeClass(jobTimeoutLog)).toStrictEqual(O.some("ci-timeout"));
+    assertSome(detectYeetMonitorFlakeClass(suiteTimeoutLog), "ci-timeout");
+    assertSome(detectYeetMonitorFlakeClass(jobTimeoutLog), "ci-timeout");
   });
 
   it("refuses a bare cancellation", () => {
     // A job cancelled because a sibling failed carries no timeout evidence;
     // classifying it would spend a rerun on a fail-fast side effect.
-    expect(detectYeetMonitorFlakeClass(cancelledSiblingLog)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(cancelledSiblingLog));
   });
 
   it("refuses the retired torn-read TS2306 signature", () => {
     // Retired with the single-project emit law: no build can tear a sibling's
     // dist anymore, so a TS2306 is a genuine defect and must not buy a rerun.
-    expect(detectYeetMonitorFlakeClass(ts2306TornReadLog)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(ts2306TornReadLog));
   });
 });
 
@@ -143,19 +188,17 @@ describe("yeet monitor job-shape fingerprints", () => {
     // rerun cannot paper over branch state.
     const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Run bun run test", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+    assertSome(detectGithubJobShapeClass(job), "setup-5xx");
   });
 
   it("recognizes the setup failure under the runner-setup step name too", () => {
-    expect(detectGithubJobShapeClass(jobRecord("failure", [jobStep("Set up runner", "failure")]))).toStrictEqual(
-      O.some("setup-5xx")
-    );
+    assertSome(detectGithubJobShapeClass(jobRecord("failure", [jobStep("Set up runner", "failure")])), "setup-5xx");
   });
 
   it("recognizes runner loss when the job failed and no step ever concluded", () => {
     const job = jobRecord("failure", [jobStep("Set up job", null), jobStep("Run bun run test", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("runner-loss"));
+    assertSome(detectGithubJobShapeClass(job), "runner-loss");
   });
 
   it("refuses runner loss when any step reached a conclusion", () => {
@@ -163,12 +206,12 @@ describe("yeet monitor job-shape fingerprints", () => {
     // red: the runner was present for the whole job.
     const job = jobRecord("failure", [jobStep("Set up job", "success"), jobStep("Run bun run test", "failure")]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(job));
   });
 
   it("refuses a job with no steps rather than reading absent evidence as runner loss", () => {
     // An empty `steps` list is missing evidence, not evidence of absence.
-    expect(detectGithubJobShapeClass(jobRecord("failure", []))).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(jobRecord("failure", [])));
   });
 
   it("refuses a cancelled job, whose steps are null for a reason that is not runner loss", () => {
@@ -176,11 +219,11 @@ describe("yeet monitor job-shape fingerprints", () => {
     // job-level conclusion is what separates them.
     const job = jobRecord("cancelled", [jobStep("Set up job", null), jobStep("Run bun run test", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(job));
   });
 
   it("refuses a job that has not concluded at all", () => {
-    expect(detectGithubJobShapeClass(jobRecord(null, [jobStep("Set up job", null)]))).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(jobRecord(null, [jobStep("Set up job", null)])));
   });
 
   it("prefers the setup class when a failed setup step coexists with unconcluded steps", () => {
@@ -188,7 +231,7 @@ describe("yeet monitor job-shape fingerprints", () => {
     // names the actual remedy in the operator line.
     const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Complete job", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+    assertSome(detectGithubJobShapeClass(job), "setup-5xx");
   });
 
   it("recognizes an install step that failed before any lane ran", () => {
@@ -201,7 +244,7 @@ describe("yeet monitor job-shape fingerprints", () => {
       jobStep("Run bun run codegen", null),
     ]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("install-failure"));
+    assertSome(detectGithubJobShapeClass(job), "install-failure");
   });
 
   it("still recognizes an install failure past GitHub's own cleanup steps", () => {
@@ -215,7 +258,7 @@ describe("yeet monitor job-shape fingerprints", () => {
       jobStep("Complete job", "success"),
     ]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("install-failure"));
+    assertSome(detectGithubJobShapeClass(job), "install-failure");
   });
 
   it("refuses an install failure when a lane afterwards actually ran", () => {
@@ -226,7 +269,7 @@ describe("yeet monitor job-shape fingerprints", () => {
       jobStep("Run bun run codegen", "failure"),
     ]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(job));
   });
 
   it("prefers the setup class over the install class when setup is what failed", () => {
@@ -234,7 +277,7 @@ describe("yeet monitor job-shape fingerprints", () => {
     // vaguer class shadow the precise one.
     const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Install dependencies", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+    assertSome(detectGithubJobShapeClass(job), "setup-5xx");
   });
 
   it("carries every shape class into the rerun plan with its evidence", () => {
@@ -436,8 +479,9 @@ interface MonitorGhScript {
 }
 
 // Routes the merge loop's gh reads: `run list` for the branch, `run view 7
-// --json jobs` for the one candidate run, `--log-failed` for a red job's log,
-// and `run rerun` for an executed rerun. Anything else — notably a job fetch
+// --json jobs` for the one candidate run, `--log-failed` for a red job's log
+// (the per-job endpoint fallback never has one), and `run rerun` for an
+// executed rerun. Anything else — notably a job fetch
 // for a run the selection should have excluded — dies the test.
 const monitorSpawnerLayer = (script: MonitorGhScript) =>
   Layer.mergeAll(
@@ -454,6 +498,11 @@ const monitorSpawnerLayer = (script: MonitorGhScript) =>
         }
         if (Str.includes("--log-failed")(line)) {
           return Effect.succeed(stubHandle(script.jobLog.exitCode, script.jobLog.output));
+        }
+        if (Str.includes("actions/jobs/991/logs")(line)) {
+          // The per-job endpoint answers like a log that has not materialized,
+          // so a refused primary read keeps its pending/conservative reading.
+          return Effect.succeed(stubHandle(1, "gh: Not Found (HTTP 404)"));
         }
         if (Str.includes("run rerun")(line)) {
           const rerun = script.rerun ?? { exitCode: 0, output: "" };
@@ -493,6 +542,90 @@ const runJobsJson = (
       ],
     })),
   });
+
+const stampedLog = (lines: ReadonlyArray<string>): string =>
+  A.join(
+    A.map(lines, (line, index) => `2026-10-01T12:00:${`${index}`.padStart(2, "0")}.1234567Z ${line}`),
+    "\n"
+  );
+
+// An `::error::` annotation in a step that passed, then the step that failed
+// the job: the cut must follow the exit-code marker, not the first `##[error]`.
+const annotatedThenTimedOutLog = stampedLog([
+  "##[group]Run bun run lint",
+  "##[error]src/Box.ts: prefer HashMap",
+  "lint finished with annotations",
+  "##[group]Run bun run test",
+  "Error: Test timed out in 30000ms.",
+  "##[error]Process completed with exit code 1.",
+  "Post job cleanup.",
+]);
+
+// A `uses:` step failing on its own message, after a run step whose retry
+// chatter would read as a `ci-timeout` if it leaked into the region.
+const actionStepFailureLog = stampedLog([
+  "##[group]Run bun install --frozen-lockfile",
+  "registry request timed out after 5 seconds, retrying",
+  "##[group]Run actions/cache/restore@v4",
+  "##[error]Cache service responded with 503",
+  "##[start-action display=Save cache;id=__self.cache]",
+]);
+
+describe("isolateYeetMonitorJobLogFailure", () => {
+  it("cuts the failing step out of a whole-job log and strips escapes, timestamps and markers", () => {
+    assertSome(
+      isolateYeetMonitorJobLogFailure(ts2589EndpointLog),
+      A.join(
+        [
+          "Run bun run check",
+          "bun run check",
+          "",
+          "@beep/box:build: error TS2589: Type instantiation is excessively deep and possibly infinite.",
+          "Failed:    @beep/box#build",
+          "Process completed with exit code 1.",
+        ],
+        "\n"
+      )
+    );
+  });
+
+  it("keys the cut on the job-failing exit code, not an earlier annotation", () => {
+    assertSome(
+      isolateYeetMonitorJobLogFailure(annotatedThenTimedOutLog),
+      "Run bun run test\nError: Test timed out in 30000ms.\nProcess completed with exit code 1."
+    );
+  });
+
+  it("bounds a failing action step between its own header and the next step marker", () => {
+    assertSome(
+      isolateYeetMonitorJobLogFailure(actionStepFailureLog),
+      "Run actions/cache/restore@v4\nCache service responded with 503"
+    );
+  });
+
+  it("runs to the end of the log when no step follows the failing one", () => {
+    assertSome(
+      isolateYeetMonitorJobLogFailure(stampedLog(["##[group]Run bun test", "##[error]boom", "tail"])),
+      "Run bun test\nboom\ntail"
+    );
+  });
+
+  it("cannot classify a log without any error marker", () => {
+    assertNone(
+      isolateYeetMonitorJobLogFailure(
+        "\uFEFF2026-10-01T12:00:00.1Z \u001B[33mwarn\u001B[0m\n2026-10-01T12:00:01.1Z done"
+      )
+    );
+  });
+
+  it("cannot classify a failure that no step boundary precedes", () => {
+    assertNone(
+      isolateYeetMonitorJobLogFailure(
+        stampedLog(["request timed out after 5 seconds", "##[error]The job was not acquired by Runner"])
+      )
+    );
+  });
+});
 
 // The mid-run selection: an in-progress run's completed red job is collected
 // and classified while its sibling still runs; a green completed run and an
@@ -586,6 +719,187 @@ describe("collectYeetMonitorFailedJobs", () => {
   );
 });
 
+type ScriptedGhAnswer = { readonly exitCode: number; readonly output: string } | "spawn-fails";
+
+interface JobLogFallbackScenario {
+  readonly endpoint: ScriptedGhAnswer | "unreachable";
+  readonly name: string;
+  readonly primary: ScriptedGhAnswer;
+}
+
+// One red job per fallback scenario inside one in-progress run, keyed by job
+// id, so the whole primary-then-endpoint matrix shares a single spawner layer.
+// "unreachable" dies the test if the endpoint is asked after a primary success.
+// Listed in id order, which is the order the run reports its jobs in.
+const jobLogFallbackScenarioList: ReadonlyArray<readonly [number, JobLogFallbackScenario]> = [
+  [981, { name: "Mid-run TS2589", primary: ghRunInProgress, endpoint: { exitCode: 0, output: ts2589EndpointLog } }],
+  [982, { name: "Mid-run genuine", primary: ghRunInProgress, endpoint: { exitCode: 0, output: genuineEndpointLog } }],
+  [
+    983,
+    {
+      name: "Mid-run oversized",
+      primary: ghRunInProgress,
+      endpoint: {
+        exitCode: 0,
+        output: endpointLog([Str.repeat(600 * 1024)("x"), "Error: Test timed out in 30000ms."]),
+      },
+    },
+  ],
+  [
+    984,
+    {
+      name: "Mid-run escape refusal",
+      primary: ghRunInProgress,
+      endpoint: {
+        exitCode: 1,
+        output: "the response contains terminal escape sequences; pass --allow-escape-sequences to output it anyway",
+      },
+    },
+  ],
+  [985, { name: "Mid-run no gh", primary: "spawn-fails", endpoint: "spawn-fails" }],
+  [986, { name: "Primary read", primary: { exitCode: 0, output: genuineTypeErrorLog }, endpoint: "unreachable" }],
+  [
+    987,
+    {
+      name: "Primary read quoting gh",
+      primary: {
+        exitCode: 0,
+        output: ghLog("Test Unit", "Run vitest", [
+          "fixture: run 12 is still in progress; logs will be available when it is complete",
+          "Error: Test timed out in 30000ms.",
+        ]),
+      },
+      endpoint: "unreachable",
+    },
+  ],
+  [
+    988,
+    {
+      name: "Mid-run annotated",
+      primary: ghRunInProgress,
+      endpoint: { exitCode: 0, output: annotatedThenTimedOutLog },
+    },
+  ],
+  [
+    989,
+    { name: "Mid-run action step", primary: ghRunInProgress, endpoint: { exitCode: 0, output: actionStepFailureLog } },
+  ],
+  [
+    990,
+    {
+      name: "Mid-run unbounded",
+      primary: ghRunInProgress,
+      endpoint: { exitCode: 0, output: stampedLog(["timed out after 5 seconds", "##[error]boom"]) },
+    },
+  ],
+];
+
+const jobLogFallbackScenarios = HashMap.fromIterable(jobLogFallbackScenarioList);
+
+const scriptedGhAnswer = (answer: ScriptedGhAnswer) =>
+  answer === "spawn-fails"
+    ? Effect.fail(
+        PlatformError.systemError({
+          _tag: "NotFound",
+          module: "ChildProcess",
+          method: "spawn",
+          description: "gh is not installed",
+        })
+      )
+    : Effect.succeed(stubHandle(answer.exitCode, answer.output));
+
+const JOB_LOG_REQUEST_PATTERN = /(?:--job |actions\/jobs\/)(\d+)/u;
+
+const jobLogFallbackSpawnerLayer = Layer.mergeAll(
+  BunCrypto.layer,
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) {
+        return Effect.die("the merge loop never spawns a piped command");
+      }
+      const line = A.join([command.command, ...command.args], " ");
+      if (Str.includes("run list")(line)) {
+        return Effect.succeed(
+          stubHandle(0, runListJson([{ conclusion: null, databaseId: 7, headSha: "abc123", status: "in_progress" }]))
+        );
+      }
+      if (Str.includes("run view 7")(line)) {
+        return Effect.succeed(
+          stubHandle(
+            0,
+            runJobsJson(
+              A.map(jobLogFallbackScenarioList, ([databaseId, scenario]) => ({
+                conclusion: "failure",
+                databaseId,
+                name: scenario.name,
+                status: "completed",
+              }))
+            )
+          )
+        );
+      }
+      const scenario = pipe(
+        O.fromNullishOr(JOB_LOG_REQUEST_PATTERN.exec(line)?.[1]),
+        O.flatMap((id) => HashMap.get(jobLogFallbackScenarios, Number(id)))
+      );
+      if (O.isNone(scenario)) {
+        return Effect.die(`unexpected gh invocation: ${line}`);
+      }
+      if (Str.includes("--log-failed")(line)) {
+        return scriptedGhAnswer(scenario.value.primary);
+      }
+      return scenario.value.endpoint === "unreachable"
+        ? Effect.die(`the primary log read should have sufficed: ${line}`)
+        : scriptedGhAnswer(scenario.value.endpoint);
+    })
+  )
+);
+
+// `gh run view --log-failed` refuses while the parent run is in progress, so
+// each red job's classification must come from the per-job endpoint instead.
+it.layer(jobLogFallbackSpawnerLayer, { timeout: "30 seconds" })("per-job log endpoint fallback", (it) => {
+  it.effect("classifies mid-run red jobs through the endpoint and keeps a primary success unchanged", () =>
+    Effect.gen(function* () {
+      const jobs = yield* collectYeetMonitorFailedJobs(monitorContext, "abc123");
+
+      assertSome(jobs[0]!.flakeClass, "ts2589-no-location");
+      assertNone(jobs[1]!.flakeClass);
+      deepStrictEqual(
+        A.map(jobs, (job) => [job.databaseId, O.getOrNull(job.flakeClass), job.logPending]),
+        [
+          [981, "ts2589-no-location", false],
+          [982, null, false],
+          [983, null, false],
+          [984, null, true],
+          [985, null, true],
+          [986, null, false],
+          [987, "ci-timeout", false],
+          [988, "ci-timeout", false],
+          [989, null, false],
+          [990, null, true],
+        ]
+      );
+      const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
+      deepStrictEqual(
+        A.map(plan.decisions, (decision) => decision.status),
+        [
+          "awaiting-run",
+          "needs-code-fix",
+          "needs-code-fix",
+          "awaiting-log",
+          "awaiting-log",
+          "needs-code-fix",
+          "awaiting-run",
+          "awaiting-run",
+          "needs-code-fix",
+          "awaiting-log",
+        ]
+      );
+    })
+  );
+});
+
 describe("applyYeetMonitorJobDecision", () => {
   const rerunDecision = () => {
     const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [
@@ -639,10 +953,10 @@ describe("applyYeetMonitorJobDecision", () => {
 
 describe("yeet monitor loop control", () => {
   it("reads the terminal state out of a gh pr view state string", () => {
-    expect(yeetMonitorTerminalState(O.some("MERGED"))).toStrictEqual(O.some("merged"));
-    expect(yeetMonitorTerminalState(O.some("closed"))).toStrictEqual(O.some("closed"));
-    expect(yeetMonitorTerminalState(O.some("OPEN"))).toStrictEqual(O.none());
-    expect(yeetMonitorTerminalState(O.none())).toStrictEqual(O.none());
+    assertSome(yeetMonitorTerminalState(O.some("MERGED")), "merged");
+    assertSome(yeetMonitorTerminalState(O.some("closed")), "closed");
+    O.some("OPEN").pipe(yeetMonitorTerminalState, assertNone);
+    O.none().pipe(yeetMonitorTerminalState, assertNone);
   });
 
   it("renders each decision so the operator sees the classification, not a bare exit", () => {

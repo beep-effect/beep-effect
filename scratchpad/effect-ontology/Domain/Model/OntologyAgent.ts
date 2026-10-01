@@ -12,7 +12,7 @@ import { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
 import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import { thunkTrue } from "@beep/utils/thunk";
-import { Number as Num, Effect } from "effect";
+import { Number as Num, Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -43,7 +43,7 @@ const AgentConcurrency = PosInt.check(
     })
   );
 
-const ontologyAgentConfigModelValidationPolicyDefault = ValidationPolicy.decodeUnknownSync({});
+const ontologyAgentConfigModelValidationPolicyDefault = Result.getOrThrow(S.decodeResult(ValidationPolicy)({}));
 const ontologyAgentConfigModelConcurrencyDefault = AgentConcurrency.make(4);
 const ontologyAgentConfigModelChunkingDefault = ChunkingConfig.default();
 class OntologyAgentConfigModel extends S.Class<OntologyAgentConfigModel>($I`OntologyAgentConfig`)(

@@ -1,0 +1,251 @@
+{
+  "sourceFixSha": "8410b6eb98924f2913a5cd3edd5ea720c134f88d",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:151:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:169:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:210:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:228:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:263:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:309:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:357:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:366:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:375:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:410:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:422:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:434:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:446:runPromise@4#1",
+    "EV003:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:43:withTempDirectory@26#1",
+    "EV003:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:76:withProofCoordinatorRepo@33#1"
+  ],
+  "lineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:151:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "stops the proof phase after a failing cheap-gates step",
+      "currentTitle": "stops the proof phase after a failing cheap-gates step",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 151,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty()); const cheapGates = proofStep(tmpDir, \"full:chea"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:169:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "poisons the checkout on a local shard failure and clears it after the shard succeeds",
+      "currentTitle": "poisons the checkout on a local shard failure and clears it after the shard succeeds",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 169,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { yield* runGit(tmpDir, [\"init\"]); yield* runGit(tmpDir, [ \"-c\", \"user.name=Yeet Test\", \"-c\", \"user.email=yeet@example.test\", \""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:210:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "runs every proof step when each step succeeds",
+      "currentTitle": "runs every proof step when each step succeeds",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 212,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty()); const cheapGates = proofStep(tmpDir, \"full:chea"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:228:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "installs a persistent scheduler-retirement marker across success and failure",
+      "currentTitle": "installs a persistent scheduler-retirement marker across success and failure",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 230,
+          "evidence": "Effect.runPromise( withProofCoordinatorRepo(({ context, lockPath }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const plannedProof = proofStep(context.repoRoot, \"full:pre-pus"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:263:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "allows two same-origin full proofs to overlap under weighted admission",
+      "currentTitle": "allows two same-origin full proofs to overlap under weighted admission",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 265,
+          "evidence": "Effect.runPromise( withProofCoordinatorRepo(({ context, lockPath, repositoryIdentity }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const sibli"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:309:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "serializes same-origin proofs through the fallback lock below the scheduler envelope",
+      "currentTitle": "serializes same-origin proofs through the fallback lock below the scheduler envelope",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 311,
+          "evidence": "Effect.runPromise( withProofCoordinatorRepo( ({ context, lockPath }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const plannedProof = proofStep"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:357:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "maps equivalent $label origins to one lock path",
+      "currentTitle": "maps equivalent $label origins to one lock path",
+      "beforeRegistrations": ["it.each(equivalentOriginCases)"],
+      "afterRegistrations": ["it.effect.each(equivalentOriginCases)"],
+      "beforeMatches": [
+        {
+          "line": 359,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const paths = yield* Effect.forEach(origins, proofCoordinatorLockPath, { concurrency: 1 }); expect(A.dedupe(paths)).toHaveLength(1); }).pipe(provideScopedL"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:366:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "maps distinct repositories to distinct lock paths",
+      "currentTitle": "maps distinct repositories to distinct lock paths",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 368,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const repository = yield* proofCoordinatorLockPath(\"https://github.com/acme/repo.git\"); const other = yield* proofCoordinatorLockPath(\"https://github.com/a"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:375:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "uses one canonical runtime root and supports an isolated override",
+      "currentTitle": "uses one canonical runtime root and supports an isolated override",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 377,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const path = yield* Path.Path; const repositoryIdentity = \"https://github.com/acme/repo.git\"; const resolveWithEnvironment = (environment: Readonly<Record<"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:410:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "preserves a non-default HTTPS port in the canonical repository authority",
+      "currentTitle": "preserves a non-default HTTPS port in the canonical repository authority",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 412,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const nonDefault = yield* proofCoordinatorLockPath(\"https://Example.test:8443/acme/repo.git\"); const equivalent = yield* proofCoordinatorLockPath(\"https://"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:422:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "falls back to trimmed raw text for unsupported repository URL protocols",
+      "currentTitle": "falls back to trimmed raw text for unsupported repository URL protocols",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 424,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const raw = yield* proofCoordinatorLockPath(\"http://Example.test/acme/repo.git\"); const padded = yield* proofCoordinatorLockPath(\" http://Example.test/acme"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:434:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "falls back to trimmed raw text when a supported repository URL has no hostname",
+      "currentTitle": "falls back to trimmed raw text when a supported repository URL has no hostname",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 436,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const raw = yield* proofCoordinatorLockPath(\"git:///acme/repo.git\"); const padded = yield* proofCoordinatorLockPath(\" git:///acme/repo.git \"); const other"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:446:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "falls back deterministically to trimmed unparseable origin text",
+      "currentTitle": "falls back deterministically to trimmed unparseable origin text",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 448,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const raw = yield* proofCoordinatorLockPath(\"local mirror alias\"); const padded = yield* proofCoordinatorLockPath(\" local mirror alias \"); const other = yi"
+        }
+      ],
+      "afterMatches": []
+    }
+  ],
+  "wrapperMatches": [
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:43:withTempDirectory@26#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:43:withTempDirectory@26#1",
+      "occurrence": "v2:453e6051937dc3f745add1739df8ec39ba3387c33551f2f36ba1c454e7ada278",
+      "evidence": "<Success, Error, Requirements>( use: (tmpDir: string) => Effect.Effect<Success, Error, Requirements> ) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; r"
+    },
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:76:withProofCoordinatorRepo@33#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:76:withProofCoordinatorRepo@33#1",
+      "occurrence": "v2:0c6ad743193e979a1cbae4b2a676464ef541ca765d3416f51d9ca5ed43b1068f",
+      "evidence": "<Success, Error, Requirements>( use: (repo: { readonly context: RepoRunContext; readonly lockPath: string; readonly repositoryIdentity: string; }) => Effect.Effect<Success, Error, Requirements>, avail"
+    }
+  ],
+  "addedCurrentRows": 0,
+  "counts": {
+    "open": 1587,
+    "fixed": 1896,
+    "exception": 12
+  },
+  "fullPackageProof": "passed: audit 702.1s, docgen 20.0s; package source unchanged"
+}

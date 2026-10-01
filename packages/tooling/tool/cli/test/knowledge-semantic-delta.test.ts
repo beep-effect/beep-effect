@@ -1,8 +1,3 @@
-const probeWarningStderr = "\u001B[31mwarning\u001B[0m at /home/operator/private/runtime.ts\u0001";
-const probeFailureStdout = "unsafe stdout from /home/operator/private/stdout.ts";
-const probeFailureStderr =
-  "\u001B[31mSyntaxError\u001B[0m in /home/operator/private/stderr.ts\u0001\r\nsecond\rspoof at /secret and C:\\secret and /home/üser/prójects/tökens.ts:3:7 plus /données/été near /var/💼client-secret/config.ts:3:7 (see https://example.com/keep-this-path)";
-
 import {
   decodeKnowledgeUtf8,
   encodeKnowledgeSemanticDeltaReportJson,
@@ -30,7 +25,7 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Crypto, Effect, Exit, FileSystem, HashSet, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
@@ -47,6 +42,11 @@ import type {
   KnowledgeProbePolicy,
   KnowledgeSemanticDeltaReport,
 } from "@beep/repo-cli/commands/Knowledge";
+
+const malformedProbeStderr = "\u001B[31mwarning\u001B[0m at /home/operator/private/runtime.ts\u0001";
+const unsafeProbeStdout = "unsafe stdout from /home/operator/private/stdout.ts";
+const unsafeProbeStderr =
+  "\u001B[31mSyntaxError\u001B[0m in /home/operator/private/stderr.ts\u0001\r\nsecond\rspoof at /secret and C:\\secret and /home/üser/prójects/tökens.ts:3:7 plus /données/été near /var/💼client-secret/config.ts:3:7 (see https://example.com/keep-this-path)";
 
 const textEncoder = new TextEncoder();
 const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.String));
@@ -739,7 +739,7 @@ describe("knowledge semantic-delta negative controls", () => {
         fixture({ [hostilePath]: "No command.\n" }, { [hostilePath]: `Run \`bun run beep ${hostileCommand}\`.\n` })
       );
       const introduced = A.head(report.introduced);
-      assert.isTrue(O.isSome(introduced));
+      introduced.pipe(O.isSome, assertTrue);
       if (O.isSome(introduced)) {
         const finding = introduced.value;
         assert.strictEqual(
@@ -772,7 +772,10 @@ describe("knowledge semantic-delta gate semantics", () => {
       const failure = knowledgeSemanticDeltaFailure(report);
 
       expect(A.length(report.introduced)).toBe(1);
-      expect(O.map(failure, (error) => error.introducedCount)).toEqual(O.some(1));
+      assertSome(
+        O.map(failure, (error) => error.introducedCount),
+        S.Natural.make(1)
+      );
     })
   );
 
@@ -783,7 +786,7 @@ describe("knowledge semantic-delta gate semantics", () => {
 
       expect(A.length(report.unchanged)).toBe(1);
       expect(report.introduced).toEqual([]);
-      expect(O.isNone(knowledgeSemanticDeltaFailure(report))).toBe(true);
+      knowledgeSemanticDeltaFailure(report).pipe(assertNone);
     })
   );
 
@@ -794,7 +797,7 @@ describe("knowledge semantic-delta gate semantics", () => {
       );
 
       expect(A.length(report.resolved)).toBe(1);
-      expect(O.isNone(knowledgeSemanticDeltaFailure(report))).toBe(true);
+      knowledgeSemanticDeltaFailure(report).pipe(assertNone);
     })
   );
 });
@@ -1385,7 +1388,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
   it.effect("reports malformed command output with labeled sanitized stderr and expected counts", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const harness = yield* makeProbeHarness("resolved\tgoals\tdoctor\nextra", probeWarningStderr);
+        const harness = yield* makeProbeHarness("resolved\tgoals\tdoctor\nextra", malformedProbeStderr);
         const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
 
         assert.strictEqual(error._tag, "KnowledgeOperationalError");
@@ -1437,7 +1440,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
   it.effect("redacts checkout archive scratch and arbitrary absolute paths from boot failures", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const harness = yield* makeProbeHarness(probeFailureStdout, probeFailureStderr, 1);
+        const harness = yield* makeProbeHarness(unsafeProbeStdout, unsafeProbeStderr, 1);
         const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
 
         assert.strictEqual(error._tag, "KnowledgeProbeBootError");
@@ -1561,9 +1564,9 @@ describe("knowledge semantic-delta base probe boot failure", () => {
 
       assert.strictEqual(degraded.probePolicy, "skipped-base-boot-failure");
       assert.deepEqual(degraded.introduced, []);
-      assert.isTrue(O.isNone(knowledgeSemanticDeltaFailure(degraded)));
+      knowledgeSemanticDeltaFailure(degraded).pipe(assertNone);
       assert.deepEqual(sortedKinds(probed.introduced), ["index-drift"]);
-      assert.isTrue(O.isSome(knowledgeSemanticDeltaFailure(probed)));
+      knowledgeSemanticDeltaFailure(probed).pipe(O.isSome, assertTrue);
     })
   );
 

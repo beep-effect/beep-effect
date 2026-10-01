@@ -7,7 +7,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { SchemaGetter, Effect } from "effect";
 import { pipe } from "effect/Function";
@@ -454,7 +453,6 @@ export type Utf8TextFromBytes = typeof Utf8TextFromBytes.Type;
  */
 export const TypeDocProjectReflectionFromBytes = Utf8TextFromBytes.pipe(
   S.decodeTo(TypeDocProjectReflectionFromJsonString),
-  SchemaUtils.withCodecStatics(["decodeEffect"]),
   $I.annoteSchema("TypeDocProjectReflectionFromBytes", {
     description: "Byte codec for a TypeDoc project reflection: UTF-8 bytes, then JSON, then the reflection envelope.",
   })

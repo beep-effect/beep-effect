@@ -14,7 +14,6 @@
  */
 
 import { $PacerId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Context, Duration, Effect, Layer, pipe, Redacted, Ref, Schedule, Stream, Tuple } from "effect";
 import { constant } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
@@ -50,8 +49,7 @@ type ReportIdValue = ReportInfoType["reportId"];
 const ReportId = S.Union([S.Int, S.FiniteFromString.pipe(S.check(S.isInt()))]).pipe(
   $I.annoteSchema("PacerReportId", {
     description: "PCL batch report id accepted as a number or numeric string.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 const invalidReportIdError = (): PacerPclError =>
@@ -60,7 +58,7 @@ const invalidReportIdError = (): PacerPclError =>
 const formatReportDeletePathSegment = (reportId: ReportIdValue): O.Option<string> =>
   P.isNumber(reportId)
     ? pipe(
-        ReportId.decodeUnknownOption(reportId),
+        S.decodeOption(ReportId)(reportId),
         O.map((value) => `${value}`)
       )
     : pipe(O.liftPredicate(Str.isNonEmpty)(reportId), O.map(globalThis.encodeURIComponent), O.filter(Str.isNonEmpty));
@@ -289,7 +287,7 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
           return yield* Effect.acquireUseRelease(
             startCaseDownload(payload),
             Effect.fnUntraced(function* (started) {
-              const reportId = yield* Effect.fromOption(ReportId.decodeUnknownOption(started.reportId), () =>
+              const reportId = yield* Effect.fromOption(S.decodeOption(ReportId)(started.reportId), () =>
                 invalidReportIdError()
               );
               const completed = yield* pollUntilComplete(reportId);

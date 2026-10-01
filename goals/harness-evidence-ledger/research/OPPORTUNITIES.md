@@ -87,3 +87,82 @@
 - **Proposal:** drive that case with `TestClock` (or a timeout in the seconds
   range with the poll interval as the only fast knob) so the property lane
   cannot fail on scheduler jitter; land it on main independently of #1253.
+
+## Rollout agents wrote outside their scratch workspace (2026-09-29)
+
+- **Work:** reading the finished P4 rerun (`history/p4-rerun/`).
+- **Friction:** four corpus fixture directories under
+  `goals/skillopt-training-pilot/corpus/fixtures/` gained a
+  `node_modules/.tmp/tsconfig.tsbuildinfo` stamped inside rollout windows
+  (05:54 to 06:02 local), and one rollout's final message reports a temp
+  directory `corpus/fixtures/.tc-tmp-n003/` that it "didn't create". The scratch
+  copy keeps the fixture's relative `extends`, which dangles there, so rollout
+  agents type-check by going to a directory at the right depth: the corpus
+  itself. The rollout workspace sits inside the repo and the target has Bash, so
+  nothing stops it. The task manifests with their completion patterns sit two
+  directories away from where the agents were working. No tracked file
+  changed (`git status` clean), and no rollout trace names `corpus/tasks`, but
+  the channel exists.
+- **Evidence:** `find goals/skillopt-training-pilot/corpus -name node_modules`
+  before cleanup; `claude_raw.txt` of baseline-noise run 2, item
+  `sfv4-fn-schema-003`; one of 38 rollout workspaces also edited its own
+  `tsconfig.json`, which the scorer now ignores.
+- **Proposal:** run rollouts in a workspace outside the repo tree with a
+  self-contained tsconfig, and mount the corpus read-only or keep task manifests
+  out of reach of the target. Until then a selection score is an upper bound.
+
+## The loop gate accepted a tie made by rounding (2026-09-29)
+
+- **Work:** same run, step 2.
+- **Friction:** the gate is strict-greater on the mean of per-item scores that
+  the scorer rounds to six decimals. The baseline mean was 0.9166665 and the
+  candidate mean 0.91666675, so the candidate was accepted as a "new best" on a
+  gap of 0.00000025 while three baseline passes on identical inputs spread over
+  0.0833. The skill grew by 668 characters on that accept.
+- **Evidence:** `history/p4-rerun/steps.jsonl` step 2;
+  `history/p4-rerun/baseline-noise.json`; run log line
+  `ACCEPT (new best) soft=0.9167 > prev best 0.9167`.
+- **Proposal:** a gate margin at least as wide as the measured baseline spread.
+  The packet keeps noise-band gating out of shipped code, so this stays a
+  recommendation for the next loop design.
+
+## The Agent tool rejects the model id the repo law requires (2026-09-29)
+
+- **Work:** delegating the three implementation slices on Opus 5.5.
+- **Friction:** `AGENTS.md` Volume pools requires
+  `model: "claude-opus-5-5"` on native subagents, and the Agent tool's `model`
+  field is an enum of aliases that rejects the full id
+  (`InputValidationError ... "values": ["sonnet","opus","haiku","fable"]`).
+  Three launches failed before the work moved to a Workflow, whose `agent()`
+  accepts the id.
+- **Evidence:** the three rejected tool calls in this session; the workflow
+  transcripts record `claude-opus-5-5` on every child.
+- **Proposal:** the law and the runbook should name the Workflow route as the
+  only one that can pin the id, or the alias should be pinned in settings.
+
+## The session could not wire its own SessionStart hook (2026-09-29)
+
+- **Work:** adding hook-pulse to the `SessionStart` hooks in
+  `.claude/settings.json` so sessions carry the harness hash stamp.
+- **Friction:** the permission classifier denied the edit as self-modification.
+  The stamp code, the conformance test, and the regime filter ship, but no live
+  session is stamped until a human adds the entry. This matches D2 (a human
+  admits harness edits), so the wiring is filed as a `proposed` ledger row and
+  the exact entry is in the packet README.
+- **Evidence:** the denied tool call; `jq '.hooks.SessionStart'` lists
+  packet-projections, yeet-inbox, and graft hooks only.
+- **Proposal:** none needed; the boundary held. Packets that change hook
+  wiring should plan the human step from the start.
+
+## An inventory refresh rewrote 107,241 lines for 38 rows (2026-09-29)
+
+- **Work:** recording effect-vitest findings for five touched test files.
+- **Friction:** `bun run beep lint effect-vitest --write` on a branch cut from
+  current `main` rewrote the whole inventory (48,144 insertions, 59,097
+  deletions) because it reorders rows and drops 529 rows `main` has resolved
+  but not removed. The reviewable change was 38 rows.
+- **Evidence:** `git diff --stat standards/effect-vitest.inventory.jsonc` after
+  `--write`; check mode on the spliced file printed `introduced=0 resolved=529`.
+- **Proposal:** a `--write --only <file...>` mode that touches only the rows of
+  the named files, and a scheduled job that lands the resolved-row cleanup on
+  `main` by itself.

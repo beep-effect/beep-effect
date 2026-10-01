@@ -905,7 +905,7 @@ const reconstructPath = (
 ): O.Option<ReadonlyArray<ReasoningStep>> => {
   let current = target;
   let path = A.empty<ReasoningStep>();
-  while (!EntityId.equivalence(current, start)) {
+  while (!S.toEquivalence(EntityId)(current, start)) {
     const predecessor = HashMap.get(predecessors, current);
     if (O.isNone(predecessor)) {
       return O.none();
@@ -921,7 +921,7 @@ const shortestPath = (
   start: EntityId,
   target: EntityId
 ): O.Option<ReadonlyArray<ReasoningStep>> => {
-  if (EntityId.equivalence(start, target)) {
+  if (S.toEquivalence(EntityId)(start, target)) {
     return O.some([]);
   }
   let visited = HashSet.make(start);
@@ -933,11 +933,11 @@ const shortestPath = (
     for (const current of frontier) {
       const adjacent = O.getOrElse(HashMap.get(adjacency, current), A.empty<ReasoningStep>);
       for (const step of adjacent) {
-        const next = EntityId.equivalence(current, step.from.id) ? step.to.id : step.from.id;
+        const next = S.toEquivalence(EntityId)(current, step.from.id) ? step.to.id : step.from.id;
         if (!HashSet.has(visited, next)) {
           visited = HashSet.add(visited, next);
           predecessors = HashMap.set(predecessors, next, { previous: current, step });
-          if (EntityId.equivalence(next, target)) {
+          if (S.toEquivalence(EntityId)(next, target)) {
             return reconstructPath(predecessors, start, target);
           }
           nextFrontier = A.append(nextFrontier, next);

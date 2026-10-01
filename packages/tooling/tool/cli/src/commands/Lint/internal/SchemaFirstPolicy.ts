@@ -42,7 +42,9 @@ const MISSING_ENTRY_REMEDIATIONS: Readonly<Record<string, string>> = {
   "SFV4-getsomes-struct":
     "Replace R.getSomes over an inline Option-struct literal with O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; inventory the exception only for intentionally homogeneous dynamic-key dictionaries.",
   "SFV4-default-wrapper":
-    "Replace the SchemaUtils default wrapper with Effect's own combinators: S.withConstructorDefault for construction, S.withDecodingDefaultTypeKey for a missing key, and S.withDecodingDefaultType where missing or undefined input takes the default (the withEmptyArrayDefaults case); keep a thunk lazy with Effect.sync.",
+    "Replace the SchemaUtils default wrapper with Effect's own combinators: S.withConstructorDefault for construction, S.withDecodingDefaultTypeKey for a missing key, and S.withDecodingDefaultType where missing or undefined input takes the default; keep a thunk lazy with Effect.sync.",
+  "SFV4-codec-static":
+    "Call the effect/Schema codec function over the schema (S.is(X), S.decodeUnknownOption(X), S.toEquivalence(X)) at the use site, or hoist it once as a module-level const; Effect caches parsers per AST, so codec statics on the schema value buy nothing. Keep SchemaUtils.withStatics for non-codec domain helpers only.",
   "SFV4-opaque-wrapper":
     "Use S.Defect(options) or S.Unknown from effect/Schema; where a field's payload must stay out of equality, put S.overrideToEquivalence on that field instead of an always-equal wrapper.",
 };

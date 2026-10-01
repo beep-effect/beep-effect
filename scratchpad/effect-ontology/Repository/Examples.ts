@@ -13,7 +13,7 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Layer, SchemaTransformation } from "effect";
 import * as P from "effect/Predicate";
@@ -331,17 +331,17 @@ const ExampleStatsSqlRow = S.Struct({
 
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const normalizeQueryError = normalizeDrizzleError("execute");
-const LlmExampleRows = S.Tuple([LlmExamples.select]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
-const ExampleStatsRows = S.Tuple([ExampleStatsSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const LlmExampleRows = S.Tuple([LlmExamples.select]);
+const ExampleStatsRows = S.Tuple([ExampleStatsSqlRow]);
 
-const decodeOneLlmExampleRow = (rows: unknown) => normalizeDecodedRows(LlmExampleRows.decodeUnknownEffect(rows));
+const decodeOneLlmExampleRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(LlmExampleRows)(rows));
 const LlmExampleSelectRows = LlmExamples.select.pipe(S.Array, S.mutable);
 const decodeLlmExampleRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(LlmExampleSelectRows)(rows));
 const ScoredExampleSqlRows = ScoredExample.pipe(S.Array, S.mutable);
 const decodeScoredExampleSqlRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(ScoredExampleSqlRows)(rows));
-const decodeOneExampleStatsSqlRow = (rows: unknown) => normalizeDecodedRows(ExampleStatsRows.decodeUnknownEffect(rows));
+const decodeOneExampleStatsSqlRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(ExampleStatsRows)(rows));
 
 // =============================================================================
 // Service

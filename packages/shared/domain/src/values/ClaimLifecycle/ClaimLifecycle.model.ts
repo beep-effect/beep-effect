@@ -48,11 +48,7 @@ export const ClaimLifecycle = ClaimLifecycleBase.pipe(
   $I.annoteSchema("ClaimLifecycle", {
     description: "Admission lifecycle state for a claim: candidate -> shape_valid -> consistency_checked -> admitted.",
   }),
-  SchemaUtils.withLiteralKitStatics(ClaimLifecycleBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownResult(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(ClaimLifecycleBase)
 );
 
 /**

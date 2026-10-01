@@ -211,7 +211,7 @@ export class TsMorphSourceFileError extends S.TaggedError<TsMorphSourceFileError
   ): TsMorphSourceFileError {
     return TsMorphSourceFileError.make({
       scopeId,
-      filePath: TypeScriptFilePath.decodeUnknownOption(filePathInput),
+      filePath: S.decodeOption(TypeScriptFilePath)(filePathInput),
       message,
     });
   }
@@ -321,6 +321,13 @@ export type TSMorphServiceError = typeof TSMorphServiceError.Type;
 
 /**
  * Read-only v1 service contract for ts-morph-backed scope, symbol, source, and diagnostic operations.
+ *
+ * **Details**
+ *
+ * Project and symbol caches are isolated by repository root. Public scope ids
+ * remain repository-relative. If an id has been resolved in multiple roots,
+ * id-based lookups use the current repository; an unmatched current repository
+ * produces a typed scope-resolution error instead of selecting another root.
  *
  * **Example** (Import service shape type)
  *
@@ -472,11 +479,19 @@ const ensureExists = Effect.fn("ensureExists")(function* <E extends TSMorphServi
 });
 
 const createProjectPool = (pathApi: Path.Path): ProjectPool => {
-  const projects = MutableHashMap.empty<ProjectCacheKey, Project>();
-  const explicitFileProjects = MutableHashMap.empty<ProjectCacheKey, Project>();
+  const projects = MutableHashMap.empty<RepoRootPath, MutableHashMap.MutableHashMap<ProjectCacheKey, Project>>();
+  const explicitFileProjects = MutableHashMap.empty<
+    RepoRootPath,
+    MutableHashMap.MutableHashMap<ProjectCacheKey, Project>
+  >();
 
   const getOrCreate: ProjectPool["getOrCreate"] = Effect.fn(function* (scope, loadTsconfigFiles) {
-    const pool = loadTsconfigFiles === false ? explicitFileProjects : projects;
+    const rootPools = loadTsconfigFiles === false ? explicitFileProjects : projects;
+    const pool = O.getOrElse(MutableHashMap.get(rootPools, scope.repoRootPath), () => {
+      const created = MutableHashMap.empty<ProjectCacheKey, Project>();
+      MutableHashMap.set(rootPools, scope.repoRootPath, created);
+      return created;
+    });
     const cachedProject = MutableHashMap.get(pool, scope.cacheKey);
     if (O.isSome(cachedProject)) {
       return cachedProject.value;
@@ -517,19 +532,19 @@ const normalizeOutlineSymbol = Effect.fn("normalizeOutlineSymbol")(function* (
     return O.none<ScopeSymbolEntry>();
   }
 
-  if (!SymbolNameSegment.is(declarationName.value.name)) {
+  if (!S.is(SymbolNameSegment)(declarationName.value.name)) {
     return O.none<ScopeSymbolEntry>();
   }
 
   const qualifiedName = pipeQualifiedName(parentSymbol, declarationName.value.name);
-  if (!SymbolQualifiedName.is(qualifiedName)) {
+  if (!S.is(SymbolQualifiedName)(qualifiedName)) {
     return O.none<ScopeSymbolEntry>();
   }
 
   const startOffset = declaration.getStart(true);
   const endOffset = declaration.getEnd();
   const symbolText = yield* decodeOrFail(
-    SourceText.decodeEffect,
+    S.decodeUnknownEffect(SourceText),
     Str.slice(startOffset, endOffset)(sourceFileText),
     (message) =>
       TsMorphSourceFileError.at(
@@ -537,7 +552,7 @@ const normalizeOutlineSymbol = Effect.fn("normalizeOutlineSymbol")(function* (
         `Failed to decode extracted symbol source for "${qualifiedName}": ${message}`
       )
   );
-  const contentHash = yield* ContentHashFromSourceText.decodeEffect(symbolText).pipe(
+  const contentHash = yield* S.decodeEffect(ContentHashFromSourceText)(symbolText).pipe(
     Effect.mapError((error) =>
       TsMorphSourceFileError.at(
         symbolFilePath,
@@ -550,13 +565,13 @@ const normalizeOutlineSymbol = Effect.fn("normalizeOutlineSymbol")(function* (
   const byteSpan = utf8Encoder.encode(symbolText);
   const docstring = readDocstring(declaration);
   const symbol = makeSymbol({
-    filePath: yield* decodeOrFail(SymbolFilePath.decodeEffect, symbolFilePath, (message) =>
+    filePath: yield* decodeOrFail(S.decodeUnknownEffect(SymbolFilePath), symbolFilePath, (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode symbol file path for "${qualifiedName}": ${message}`)
     ),
-    name: yield* decodeOrFail(SymbolNameSegment.decodeEffect, declarationName.value.name, (message) =>
+    name: yield* decodeOrFail(S.decodeUnknownEffect(SymbolNameSegment), declarationName.value.name, (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode symbol name for "${qualifiedName}": ${message}`)
     ),
-    qualifiedName: yield* decodeOrFail(SymbolQualifiedName.decodeEffect, qualifiedName, (message) =>
+    qualifiedName: yield* decodeOrFail(S.decodeUnknownEffect(SymbolQualifiedName), qualifiedName, (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode qualified name "${qualifiedName}": ${message}`)
     ),
     kind: declarationName.value.kind,
@@ -566,16 +581,16 @@ const normalizeOutlineSymbol = Effect.fn("normalizeOutlineSymbol")(function* (
     decorators: readDecorators(declaration),
     keywords: makeKeywords(declarationName.value.name, qualifiedName, { kind: declarationName.value.kind }),
     parentId: O.map(parentSymbol, (parent) => parent.id),
-    startLine: yield* decodeOrFail(LineNumber.decodeEffect, declaration.getStartLineNumber(true), (message) =>
+    startLine: yield* decodeOrFail(S.decodeUnknownEffect(LineNumber), declaration.getStartLineNumber(true), (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode start line for "${qualifiedName}": ${message}`)
     ),
-    endLine: yield* decodeOrFail(LineNumber.decodeEffect, declaration.getEndLineNumber(), (message) =>
+    endLine: yield* decodeOrFail(S.decodeUnknownEffect(LineNumber), declaration.getEndLineNumber(), (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode end line for "${qualifiedName}": ${message}`)
     ),
-    byteOffset: yield* decodeOrFail(ByteOffset.decodeEffect, bytePrefix.length, (message) =>
+    byteOffset: yield* decodeOrFail(S.decodeUnknownEffect(ByteOffset), bytePrefix.length, (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode byte offset for "${qualifiedName}": ${message}`)
     ),
-    byteLength: yield* decodeOrFail(ByteLength.decodeEffect, byteSpan.length, (message) =>
+    byteLength: yield* decodeOrFail(S.decodeUnknownEffect(ByteLength), byteSpan.length, (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode byte length for "${qualifiedName}": ${message}`)
     ),
     contentHash,
@@ -593,7 +608,7 @@ const resolveSymbolFilePath = Effect.fn(function* (
   filePath: TypeScriptFilePath
 ): Effect.fn.Return<SymbolFilePath, TsMorphUnsupportedFileError> {
   const implementationFilePath = yield* decodeOrFail(
-    TypeScriptImplementationFilePath.decodeEffect,
+    S.decodeUnknownEffect(TypeScriptImplementationFilePath),
     filePath,
     (message) =>
       TsMorphUnsupportedFileError.make({
@@ -603,7 +618,7 @@ const resolveSymbolFilePath = Effect.fn(function* (
   );
 
   return yield* decodeOrFail(
-    TypeScriptImplementationFilePathToSymbolFilePath.decodeEffect,
+    S.decodeUnknownEffect(TypeScriptImplementationFilePathToSymbolFilePath),
     implementationFilePath,
     (message) =>
       TsMorphUnsupportedFileError.make({
@@ -719,16 +734,22 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
   const pathApi = yield* Path.Path;
   const cryptoContext = yield* Effect.context<Crypto.Crypto>();
 
-  const resolvedScopes = MutableHashMap.empty<string, TsMorphProjectScope>();
+  const resolvedScopes = MutableHashMap.empty<
+    string,
+    MutableHashMap.MutableHashMap<RepoRootPath, TsMorphProjectScope>
+  >();
   const projectPool = createProjectPool(pathApi);
-  const symbolIndexPool = MutableHashMap.empty<ProjectCacheKey, ScopeSymbolIndex>();
+  const symbolIndexPool = MutableHashMap.empty<
+    RepoRootPath,
+    MutableHashMap.MutableHashMap<ProjectCacheKey, ScopeSymbolIndex>
+  >();
 
   const resolveRepoRoot = Effect.fn("TSMorphService.resolveRepoRoot")(function* (
     repoRootPath: O.Option<RepoRootPath>
   ): Effect.fn.Return<RepoRootPath, TsMorphScopeResolutionError> {
     if (O.isSome(repoRootPath)) {
       return yield* decodeOrFail(
-        RepoRootPath.decodeEffect,
+        S.decodeUnknownEffect(RepoRootPath),
         pathApi.normalize(
           pathApi.isAbsolute(repoRootPath.value)
             ? repoRootPath.value
@@ -752,7 +773,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
       )
     );
 
-    return yield* decodeOrFail(RepoRootPath.decodeEffect, pathApi.normalize(discoveredRepoRoot), (message) =>
+    return yield* decodeOrFail(S.decodeUnknownEffect(RepoRootPath), pathApi.normalize(discoveredRepoRoot), (message) =>
       TsMorphScopeResolutionError.make({
         entrypoint: discoveredRepoRoot,
         message: `Failed to normalize discovered repository root "${discoveredRepoRoot}": ${message}`,
@@ -773,7 +794,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
     );
 
     const repoRelativeTsConfigPath = yield* decodeRepoRelativePath(pathApi, repoRootPath, absoluteTsConfigPath);
-    return yield* decodeOrFail(TsConfigFilePath.decodeEffect, repoRelativeTsConfigPath, (message) =>
+    return yield* decodeOrFail(S.decodeUnknownEffect(TsConfigFilePath), repoRelativeTsConfigPath, (message) =>
       TsMorphScopeResolutionError.make({
         entrypoint: tsConfigPath,
         message: `Resolved tsconfig path "${repoRelativeTsConfigPath}" is not a valid TsConfigFilePath: ${message}`,
@@ -799,7 +820,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
     const repoRelativeFilePath = yield* decodeRepoRelativePath(pathApi, repoRootPath, absoluteFilePath);
     return {
       absoluteFilePath,
-      filePath: yield* decodeOrFail(TypeScriptFilePath.decodeEffect, repoRelativeFilePath, (message) =>
+      filePath: yield* decodeOrFail(S.decodeUnknownEffect(TypeScriptFilePath), repoRelativeFilePath, (message) =>
         TsMorphSourceFileError.at(
           filePath,
           `Resolved file path "${repoRelativeFilePath}" is not a valid TypeScriptFilePath: ${message}`
@@ -821,7 +842,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
 
       if (candidateExists) {
         const repoRelativeTsConfigPath = yield* decodeRepoRelativePath(pathApi, repoRootPath, candidateTsConfigPath);
-        return yield* decodeOrFail(TsConfigFilePath.decodeEffect, repoRelativeTsConfigPath, (message) =>
+        return yield* decodeOrFail(S.decodeUnknownEffect(TsConfigFilePath), repoRelativeTsConfigPath, (message) =>
           TsMorphScopeResolutionError.make({
             entrypoint: filePath,
             message: `Resolved tsconfig path "${repoRelativeTsConfigPath}" is not a valid TsConfigFilePath: ${message}`,
@@ -854,7 +875,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
   ) {
     const absoluteTsConfigPath = resolveAbsolutePath(pathApi, repoRootPath, tsConfigPath);
     const workspaceDirectoryPath = yield* decodeOrFail(
-      WorkspaceDirectoryPath.decodeEffect,
+      S.decodeUnknownEffect(WorkspaceDirectoryPath),
       pathApi.dirname(absoluteTsConfigPath),
       (message) =>
         TsMorphScopeResolutionError.make({
@@ -883,7 +904,12 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
       referencePolicy,
     });
 
-    MutableHashMap.set(resolvedScopes, scope.scopeId, scope);
+    const scopesByRoot = O.getOrElse(MutableHashMap.get(resolvedScopes, scope.scopeId), () => {
+      const created = MutableHashMap.empty<RepoRootPath, TsMorphProjectScope>();
+      MutableHashMap.set(resolvedScopes, scope.scopeId, created);
+      return created;
+    });
+    MutableHashMap.set(scopesByRoot, scope.repoRootPath, scope);
     return scope;
   });
 
@@ -904,13 +930,23 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
   const resolveScopeById = Effect.fnUntraced(function* (
     scopeId: string
   ): Effect.fn.Return<TsMorphProjectScope, TSMorphServiceError> {
-    const cachedScope = MutableHashMap.get(resolvedScopes, scopeId);
-    if (O.isSome(cachedScope)) {
-      return cachedScope.value;
+    const cachedScopes = MutableHashMap.get(resolvedScopes, scopeId);
+    if (O.isSome(cachedScopes)) {
+      if (MutableHashMap.size(cachedScopes.value) === 1) {
+        return O.getOrThrow(A.head(A.fromIterable(MutableHashMap.values(cachedScopes.value))));
+      }
+      const currentRoot = yield* resolveRepoRoot(O.none()).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
+      const matchingScope = O.flatMap(currentRoot, (root) => MutableHashMap.get(cachedScopes.value, root));
+      return yield* Effect.fromOption(matchingScope, () =>
+        TsMorphScopeResolutionError.make({
+          entrypoint: scopeId,
+          message: `Scope id "${scopeId}" is ambiguous across repository roots; run the lookup within its repository or use a separate service instance.`,
+        })
+      );
     }
 
     const [tsConfigPath, _scopeSeparator, mode, _policySeparator, referencePolicy] = yield* decodeOrFail(
-      ProjectScopeIdParts.decodeEffect,
+      S.decodeUnknownEffect(ProjectScopeIdParts),
       scopeId,
       (message) =>
         TsMorphScopeResolutionError.make({
@@ -964,7 +1000,9 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
     }
 
     if (existingSourceFile === undefined) {
-      MutableHashMap.remove(symbolIndexPool, scope.cacheKey);
+      MutableHashMap.modify(symbolIndexPool, scope.repoRootPath, (indexes) =>
+        MutableHashMap.remove(indexes, scope.cacheKey)
+      );
     }
 
     return {
@@ -997,7 +1035,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
         continue;
       }
 
-      const implementationFilePath = TypeScriptImplementationFilePath.decodeUnknownOption(repoRelativeFilePath);
+      const implementationFilePath = S.decodeOption(TypeScriptImplementationFilePath)(repoRelativeFilePath);
       if (O.isSome(implementationFilePath)) {
         const sourceEntries = yield* collectOutlineEntries(implementationFilePath.value, sourceFile).pipe(
           Effect.provide(cryptoContext)
@@ -1032,13 +1070,18 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
   const getOrCreateScopeSymbolIndex = Effect.fnUntraced(function* (
     scope: TsMorphProjectScope
   ): Effect.fn.Return<ScopeSymbolIndex, TSMorphServiceError> {
-    const cachedSymbolIndex = MutableHashMap.get(symbolIndexPool, scope.cacheKey);
+    const indexesByKey = O.getOrElse(MutableHashMap.get(symbolIndexPool, scope.repoRootPath), () => {
+      const created = MutableHashMap.empty<ProjectCacheKey, ScopeSymbolIndex>();
+      MutableHashMap.set(symbolIndexPool, scope.repoRootPath, created);
+      return created;
+    });
+    const cachedSymbolIndex = MutableHashMap.get(indexesByKey, scope.cacheKey);
     if (O.isSome(cachedSymbolIndex)) {
       return cachedSymbolIndex.value;
     }
 
     const symbolIndex = yield* collectScopeSymbolIndex(scope);
-    MutableHashMap.set(symbolIndexPool, scope.cacheKey, symbolIndex);
+    MutableHashMap.set(indexesByKey, scope.cacheKey, symbolIndex);
     return symbolIndex;
   });
 
@@ -1080,7 +1123,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
     );
     const loadedSourceFile = yield* loadSourceFile(scope, request.filePath);
     const sourceText = yield* decodeOrFail(
-      SourceText.decodeEffect,
+      S.decodeUnknownEffect(SourceText),
       loadedSourceFile.sourceFile.getFullText(),
       (message) =>
         TsMorphSourceFileError.at(
@@ -1089,7 +1132,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
           O.some(scope.scopeId)
         )
     );
-    const contentHash = yield* ContentHashFromSourceText.decodeEffect(sourceText).pipe(
+    const contentHash = yield* S.decodeEffect(ContentHashFromSourceText)(sourceText).pipe(
       Effect.mapError((error) =>
         TsMorphSourceFileError.at(
           loadedSourceFile.filePath,
@@ -1198,7 +1241,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
           const startPosition = loadedSourceFile.sourceFile.getLineAndColumnAtPos(start);
           const endPosition = loadedSourceFile.sourceFile.getLineAndColumnAtPos(end);
           const source = diagnostic.getSource();
-          const filePathOption = TypeScriptFilePath.decodeUnknownOption(loadedSourceFile.filePath);
+          const filePathOption = S.decodeOption(TypeScriptFilePath)(loadedSourceFile.filePath);
           const decodeDiagnosticField = <A>(
             decode: (value: unknown) => Effect.Effect<A, S.SchemaError>,
             value: unknown,
@@ -1213,20 +1256,28 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
             );
 
           return yield* decodeOrFail(
-            TsMorphDiagnostic.decodeEffect,
+            S.decodeUnknownEffect(TsMorphDiagnostic),
             {
               category: normalizeDiagnosticCategory(diagnostic.getCategory()),
               code: yield* decodeDiagnosticField(decodeNonNegativeInt, diagnostic.getCode(), "code"),
               message: flattenDiagnosticMessageText(diagnostic.getMessageText()),
               source: source ?? null,
-              startLine: yield* decodeDiagnosticField(LineNumber.decodeEffect, startPosition.line, "start line"),
+              startLine: yield* decodeDiagnosticField(
+                S.decodeUnknownEffect(LineNumber),
+                startPosition.line,
+                "start line"
+              ),
               startColumn: yield* decodeDiagnosticField(
-                ColumnNumber.decodeEffect,
+                S.decodeUnknownEffect(ColumnNumber),
                 startPosition.column,
                 "start column"
               ),
-              endLine: yield* decodeDiagnosticField(LineNumber.decodeEffect, endPosition.line, "end line"),
-              endColumn: yield* decodeDiagnosticField(ColumnNumber.decodeEffect, endPosition.column, "end column"),
+              endLine: yield* decodeDiagnosticField(S.decodeUnknownEffect(LineNumber), endPosition.line, "end line"),
+              endColumn: yield* decodeDiagnosticField(
+                S.decodeUnknownEffect(ColumnNumber),
+                endPosition.column,
+                "end column"
+              ),
             },
             (message) =>
               TsMorphSourceFileError.make({
@@ -1274,7 +1325,9 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
       }
 
       if (!A.isReadonlyArrayEmpty(request.sourceFileGlobs)) {
-        MutableHashMap.remove(symbolIndexPool, scope.cacheKey);
+        MutableHashMap.modify(symbolIndexPool, scope.repoRootPath, (indexes) =>
+          MutableHashMap.remove(indexes, scope.cacheKey)
+        );
       }
 
       for (const filePath of request.filePaths) {
@@ -1347,7 +1400,9 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
           ),
       });
 
-      MutableHashMap.remove(symbolIndexPool, scope.cacheKey);
+      MutableHashMap.modify(symbolIndexPool, scope.repoRootPath, (indexes) =>
+        MutableHashMap.remove(indexes, scope.cacheKey)
+      );
       return true;
     }
   );

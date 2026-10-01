@@ -6,7 +6,7 @@
  */
 
 import { $XaiId } from "@beep/identity";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as HttpClientError from "effect/http/HttpClientError";
@@ -53,10 +53,6 @@ export const XAiErrorReason = XAiErrorReasonBase.pipe(
   $I.annoteSchema("XAiErrorReason", {
     description: "Redacted technical error reasons emitted by the xAI driver.",
   }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  })),
   SchemaUtils.withLiteralKitStatics(XAiErrorReasonBase)
 );
 
@@ -220,7 +216,9 @@ const causeFromUnknown = (cause: unknown): O.Option<string> =>
  */
 export class XAiErrorOptions extends S.Class<XAiErrorOptions>($I`XAiErrorOptions`)(
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
     status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("XAiErrorOptions", {

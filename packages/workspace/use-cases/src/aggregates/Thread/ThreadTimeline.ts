@@ -8,7 +8,6 @@
 
 import { $WorkspaceUseCasesId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
-import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Effect, Order, pipe } from "effect";
@@ -131,12 +130,7 @@ export const TimelineItem = pipe(
   $I.annoteSchema("TimelineItem", {
     description: "Resolved timeline item for a turn.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("kind"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("kind")
 );
 
 /**

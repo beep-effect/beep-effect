@@ -122,7 +122,7 @@ export const verifyByteExpectations = Effect.fn("ByteWitness.verifyByteExpectati
       const cryptoContext = yield* Layer.build(BunCrypto.layer);
       const crypto = Context.get(cryptoContext, Crypto.Crypto);
       const hashBytes = Effect.fn("ByteWitness.hashBytes")((bytes: Uint8Array) =>
-        Sha256HexFromBytes.decodeEffect(bytes).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.orDie)
+        S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.orDie)
       );
       return yield* Effect.forEach(
         expectations,

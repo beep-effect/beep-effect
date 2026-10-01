@@ -2,21 +2,20 @@ import { lintCommand } from "@beep/repo-cli";
 import { LintCommandTestKit } from "@beep/repo-cli/test/Lint";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, flow, Layer, Path, pipe, Result } from "effect";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
+import { expectReportedExit, temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const deprecatedApiLintShards = [
   "apps/architecture-lab-proof",
   "apps/labs",
@@ -50,7 +49,6 @@ const deprecatedApiLintShards = [
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
-  TestConsole.layer,
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
   TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
 );
@@ -142,167 +140,180 @@ const argumentAfter = (line: string, argument: string): O.Option<string> => {
   );
 };
 
-describe("tooling schema-first lint detectors", () => {
-  it("reports runtime and schema metadata violations through the pure test seam", () => {
-    const kinds = LintCommandTestKit.runtimeSchemaFirstViolationKinds(
-      "packages/tooling/tool/cli/src/commands/Lint/index.ts",
-      A.join(
-        [
-          'import * as Fs from "node:fs";',
-          "export class MissingMetadata extends S.Class<MissingMetadata>($I`MissingMetadata`)({ value: S.String }) {}",
-          'export class MissingIdentity extends Context.Service<MissingIdentity, {}>()("missing") {}',
-          "const values = [2, 1];",
-          "values.sort();",
-          'const text = " value ";',
-          "text.trim();",
-          'const request = fetch("https://example.com");',
-          "void request;",
-        ],
-        "\n"
-      )
-    );
+it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
+  describe("tooling schema-first lint detectors", () => {
+    it("reports runtime and schema metadata violations through the pure test seam", () => {
+      const kinds = LintCommandTestKit.runtimeSchemaFirstViolationKinds(
+        "packages/tooling/tool/cli/src/commands/Lint/index.ts",
+        A.join(
+          [
+            'import * as Fs from "node:fs";',
+            "export class MissingMetadata extends S.Class<MissingMetadata>($I`MissingMetadata`)({ value: S.String }) {}",
+            'export class MissingIdentity extends Context.Service<MissingIdentity, {}>()("missing") {}',
+            "const values = [2, 1];",
+            "values.sort();",
+            'const text = " value ";',
+            "text.trim();",
+            'const request = fetch("https://example.com");',
+            "void request;",
+          ],
+          "\n"
+        )
+      );
 
-    expect(kinds).toEqual(
-      expect.arrayContaining([
-        "native-fetch",
-        "native-sort",
-        "node-runtime-import",
-        "schema-annotation",
-        "service-id",
-        "string-method",
-      ])
+      expect(kinds).toEqual(
+        expect.arrayContaining([
+          "native-fetch",
+          "native-sort",
+          "node-runtime-import",
+          "schema-annotation",
+          "service-id",
+          "string-method",
+        ])
+      );
+    });
+  });
+
+  const checkShardCacheCommands = Effect.fnUntraced(function* () {
+    yield* writeDeprecatedApiLintFixture();
+    yield* runLintCommand(["deprecated-apis", "--full"]);
+
+    const logLines = A.filter(yield* TestConsole.logLines, P.isString);
+    const invocationLines = A.filter(
+      logLines,
+      (line) => Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
+    );
+    const cacheLocations = A.getSomes(A.map(invocationLines, (line) => argumentAfter(line, "--cache-location")));
+
+    expect(logLines).toContain("[lint:deprecated-apis] running 28 shards with concurrency 4");
+    expect(invocationLines).toHaveLength(28);
+    expect(A.dedupe(cacheLocations)).toHaveLength(28);
+    expect(A.every(invocationLines, (line) => Str.includes("--cache-strategy content")(line))).toBe(true);
+    expect(A.every(cacheLocations, Str.startsWith("node_modules/.cache/eslint-deprecated-apis/.eslintcache-"))).toBe(
+      true
     );
   });
-});
 
-const checkShardCacheCommands = Effect.fnUntraced(function* () {
-  yield* writeDeprecatedApiLintFixture();
-  yield* runLintCommand(["deprecated-apis", "--full"]);
+  const checkShardFailure = Effect.fnUntraced(function* () {
+    yield* writeDeprecatedApiLintFixture({ failingShard: "packages/agents" });
 
-  const logLines = A.filter(yield* TestConsole.logLines, P.isString);
-  const invocationLines = A.filter(
-    logLines,
-    (line) => Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
-  );
-  const cacheLocations = A.getSomes(A.map(invocationLines, (line) => argumentAfter(line, "--cache-location")));
+    const exit = yield* Effect.exit(runLintCommand(["deprecated-apis", "--full"]));
 
-  expect(logLines).toContain("[lint:deprecated-apis] running 28 shards with concurrency 4");
-  expect(invocationLines).toHaveLength(28);
-  expect(A.dedupe(cacheLocations)).toHaveLength(28);
-  expect(A.every(invocationLines, (line) => Str.includes("--cache-strategy content")(line))).toBe(true);
-  expect(A.every(cacheLocations, Str.startsWith("node_modules/.cache/eslint-deprecated-apis/.eslintcache-"))).toBe(
-    true
-  );
-});
+    expectReportedExit(exit, 7);
+    expect(A.filter(yield* TestConsole.logLines, P.isString)).not.toContain(
+      "[lint:deprecated-apis] OK: no deprecated vendor API usage found."
+    );
+  });
 
-const checkShardFailure = Effect.fnUntraced(function* () {
-  yield* writeDeprecatedApiLintFixture({ failingShard: "packages/agents" });
+  const checkMissingLabsShard = Effect.fnUntraced(function* () {
+    yield* writeDeprecatedApiLintFixture({ omitShard: "apps/labs" });
+    yield* runLintCommand(["deprecated-apis", "--full"]);
 
-  const exit = yield* Effect.exit(runLintCommand(["deprecated-apis", "--full"]));
+    const logLines = A.filter(yield* TestConsole.logLines, P.isString);
+    const invocationLines = A.filter(
+      logLines,
+      (line) => Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
+    );
 
-  expectReportedExit(exit, 7);
-  expect(A.filter(yield* TestConsole.logLines, P.isString)).not.toContain(
-    "[lint:deprecated-apis] OK: no deprecated vendor API usage found."
-  );
-});
+    expect(logLines).toContain("[lint:deprecated-apis] skipping missing shard: apps/labs");
+    expect(invocationLines).toHaveLength(27);
+    expect(logLines).toContain("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
+  });
 
-const checkMissingLabsShard = Effect.fnUntraced(function* () {
-  yield* writeDeprecatedApiLintFixture({ omitShard: "apps/labs" });
-  yield* runLintCommand(["deprecated-apis", "--full"]);
+  const checkLabsShardTolerance = Effect.fnUntraced(function* () {
+    yield* writeDeprecatedApiLintFixture();
+    yield* runLintCommand(["deprecated-apis", "--full"]);
 
-  const logLines = A.filter(yield* TestConsole.logLines, P.isString);
-  const invocationLines = A.filter(
-    logLines,
-    (line) => Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
-  );
+    const logLines = A.filter(yield* TestConsole.logLines, P.isString);
+    const invocationLines = A.filter(
+      logLines,
+      (line) => Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
+    );
+    const labsLines = A.filter(invocationLines, Str.startsWith("[lint:deprecated-apis] apps/labs: "));
+    const flaggedLines = A.filter(invocationLines, Str.includes("--no-error-on-unmatched-pattern"));
 
-  expect(logLines).toContain("[lint:deprecated-apis] skipping missing shard: apps/labs");
-  expect(invocationLines).toHaveLength(27);
-  expect(logLines).toContain("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
-});
+    expect(labsLines).toHaveLength(1);
+    expect(flaggedLines).toEqual(labsLines);
+  });
 
-const checkLabsShardTolerance = Effect.fnUntraced(function* () {
-  yield* writeDeprecatedApiLintFixture();
-  yield* runLintCommand(["deprecated-apis", "--full"]);
+  describe("deprecated-apis lint command", { concurrent: false }, () => {
+    it.effect(
+      "constructs unique content-cache shard commands at concurrency four",
+      () =>
+        Effect.andThen(temporaryWorkingDirectory, checkShardCacheCommands()).pipe(
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+      10_000
+    );
 
-  const logLines = A.filter(yield* TestConsole.logLines, P.isString);
-  const invocationLines = A.filter(
-    logLines,
-    (line) => Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
-  );
-  const labsLines = A.filter(invocationLines, Str.startsWith("[lint:deprecated-apis] apps/labs: "));
-  const flaggedLines = A.filter(invocationLines, Str.includes("--no-error-on-unmatched-pattern"));
+    it.effect(
+      "fails the aggregate when any shard exits nonzero",
+      () =>
+        Effect.andThen(temporaryWorkingDirectory, checkShardFailure()).pipe(
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+      10_000
+    );
 
-  expect(labsLines).toHaveLength(1);
-  expect(flaggedLines).toEqual(labsLines);
-});
+    it.effect(
+      "skips the labs shard when the labs root is absent",
+      () =>
+        Effect.andThen(temporaryWorkingDirectory, checkMissingLabsShard()).pipe(
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+      10_000
+    );
 
-describe("deprecated-apis lint command", { concurrent: false }, () => {
-  it(
-    "constructs unique content-cache shard commands at concurrency four",
-    () => Effect.runPromise(withTempWorkingDirectory(checkShardCacheCommands()).pipe(provideScopedLayer(testLayer))),
-    10_000
-  );
+    it.effect(
+      "passes --no-error-on-unmatched-pattern to the labs shard only",
+      () =>
+        Effect.andThen(temporaryWorkingDirectory, checkLabsShardTolerance()).pipe(
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+      10_000
+    );
+  });
 
-  it(
-    "fails the aggregate when any shard exits nonzero",
-    () => Effect.runPromise(withTempWorkingDirectory(checkShardFailure()).pipe(provideScopedLayer(testLayer))),
-    10_000
-  );
+  const writePrecisionAuditInventory = Effect.fn("writePrecisionAuditInventory")(function* (
+    status: "advisory" | "exception",
+    reason: string
+  ) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
 
-  it(
-    "skips the labs shard when the labs root is absent",
-    () => Effect.runPromise(withTempWorkingDirectory(checkMissingLabsShard()).pipe(provideScopedLayer(testLayer))),
-    10_000
-  );
+    yield* fs.makeDirectory("standards");
+    yield* fs.writeFileString(
+      path.join("standards", "schema-first.inventory.jsonc"),
+      `${encodeJson({
+        version: 1,
+        generatedOn: "2026-06-08",
+        scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/{src,test}/**/*.ts"],
+        entries: [
+          {
+            file: "packages/example/src/Example.ts",
+            symbol: "Contact.email",
+            kind: "schema-policy-advisory",
+            status,
+            ruleId: "SFV4-precision-audit",
+            line: 3,
+            owner: "@beep/example",
+            reason,
+          },
+        ],
+      })}\n`
+    );
+  });
 
-  it(
-    "passes --no-error-on-unmatched-pattern to the labs shard only",
-    () => Effect.runPromise(withTempWorkingDirectory(checkLabsShardTolerance()).pipe(provideScopedLayer(testLayer))),
-    10_000
-  );
-});
+  const runSchemaFirstAndExpectNoErrors = Effect.fn("runSchemaFirstAndExpectNoErrors")(function* () {
+    yield* runLintCommand(["schema-first"]);
+    const errorLines = yield* TestConsole.errorLines;
+    expect(errorLines).toEqual([]);
+  });
 
-const writePrecisionAuditInventory = Effect.fn("writePrecisionAuditInventory")(function* (
-  status: "advisory" | "exception",
-  reason: string
-) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-
-  yield* fs.makeDirectory("standards");
-  yield* fs.writeFileString(
-    path.join("standards", "schema-first.inventory.jsonc"),
-    `${encodeJson({
-      version: 1,
-      generatedOn: "2026-06-08",
-      scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/{src,test}/**/*.ts"],
-      entries: [
-        {
-          file: "packages/example/src/Example.ts",
-          symbol: "Contact.email",
-          kind: "schema-policy-advisory",
-          status,
-          ruleId: "SFV4-precision-audit",
-          line: 3,
-          owner: "@beep/example",
-          reason,
-        },
-      ],
-    })}\n`
-  );
-});
-
-const runSchemaFirstAndExpectNoErrors = Effect.fn("runSchemaFirstAndExpectNoErrors")(function* () {
-  yield* runLintCommand(["schema-first"]);
-  const errorLines = yield* TestConsole.errorLines;
-  expect(errorLines).toEqual([]);
-});
-
-describe("schema-first lint command", { concurrent: false }, () => {
-  it("reports redundant LiteralKit const assertions", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+  describe("schema-first lint command", { concurrent: false }, () => {
+    it.effect("reports redundant LiteralKit const assertions", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import { LiteralKit } from "@beep/schema";',
@@ -326,12 +337,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"remediation":"Remove the redundant as const assertion; LiteralKit already uses const type parameters."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("accepts direct LiteralKit inline arrays without const assertions", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("accepts direct LiteralKit inline arrays without const assertions", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import { LiteralKit } from "@beep/schema";',
@@ -342,12 +353,36 @@ describe("schema-first lint command", { concurrent: false }, () => {
 
           yield* runSchemaFirstAndExpectNoErrors();
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports untracked SFV4 numeric-domain advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports the scanned files, leaving out excluded paths, only when asked", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeSchemaFirstSourceFixture(["export const example = 1;", ""]);
+          yield* writeSchemaFirstFileFixture("packages/example/src/generated/Hidden.ts", [
+            "export const hidden = 1;",
+            "",
+          ]);
+          yield* writeSchemaFirstFileFixture("packages/example/src/Types.d.ts", ["export type X = 1;", ""]);
+
+          yield* runLintCommand(["schema-first"]);
+          const scannedLine = (lines: ReadonlyArray<unknown>) =>
+            A.filter(lines, (line) => P.isString(line) && Str.startsWith("[schema-first:scanned] ")(line));
+          expect(scannedLine(yield* TestConsole.logLines)).toEqual([]);
+
+          yield* runLintCommand(["schema-first", "--report-scanned-files"]);
+          expect(scannedLine(yield* TestConsole.logLines)).toEqual([
+            '[schema-first:scanned] ["packages/example/src/Example.ts"]',
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("reports untracked SFV4 numeric-domain advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -375,12 +410,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"remediation":"Review the numeric domain and replace broad S.Number/S.NumberFromString with S.Finite, S.Int, or checks; then run bun run beep lint schema-first --write if the broad domain is intentional."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports untracked SFV4 static-api discriminator switch advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports untracked SFV4 static-api discriminator switch advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -413,12 +448,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"remediation":"Prefer schema-derived .match/.guards/.cases, or LiteralKit\'s $match, is, Enum, or toTaggedUnion, or run bun run beep lint schema-first --write with a justification when behavior intentionally differs."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports untracked SFV4 precision-audit broad email advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports untracked SFV4 precision-audit broad email advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -444,12 +479,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"remediation":"Replace broad email S.String fields with @beep/schema Email or a local precise email schema; inventory only external protocol fields that intentionally allow non-email strings."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("accepts precise email schemas without precision-audit advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("accepts precise email schemas without precision-audit advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import { Email } from "@beep/schema";',
@@ -462,12 +497,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
 
           yield* runSchemaFirstAndExpectNoErrors();
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports untracked SFV4 fn-schema advisories for a .ts function (R17-2 still-fires case)", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports untracked SFV4 fn-schema advisories for a .ts function (R17-2 still-fires case)", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -494,12 +529,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"remediation":"Model inline object parameter/return contracts with Fn({ input, output }) from @beep/schema or an S.Class, or run bun run beep lint schema-first --write with a justification when the shape intentionally stays inline."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("does not report SFV4 fn-schema advisories for a .tsx component (R17-2 newly-excluded case)", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("does not report SFV4 fn-schema advisories for a .tsx component (R17-2 newly-excluded case)", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstFileFixture("packages/example/src/Example.tsx", [
             'import * as S from "effect/Schema";',
@@ -512,12 +547,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
 
           yield* runSchemaFirstAndExpectNoErrors();
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("excludes inventoried precision-audit exceptions from active advisory counts", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("excludes inventoried precision-audit exceptions from active advisory counts", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -538,12 +573,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
           expect(logLines).toContain("[schema-first] sfv4_precision_audit_advisories=0");
           expect(errorLines).toEqual([]);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("blocks tracked active schema-first advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("blocks tracked active schema-first advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -575,12 +610,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"remediation":"Resolve the schema-first advisory or move the entry to exception with a documented reason."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports untracked SFV4 arbitrary-tests static-only schema test advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports untracked SFV4 arbitrary-tests static-only schema test advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstFileFixture("packages/example/test/Example.test.ts", [
             'import * as S from "effect/Schema";',
@@ -609,12 +644,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"remediation":"Add a focused property test using Arbitrary.schema(sourceSchema) and Arbitrary.checkEffect, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("accepts schema-derived property tests without arbitrary-tests advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("accepts schema-derived property tests without arbitrary-tests advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstFileFixture("packages/example/test/Example.test.ts", [
             'import * as fc from "fast-check";',
@@ -632,12 +667,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
 
           yield* runSchemaFirstAndExpectNoErrors();
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("does not treat a non-schema-derived fast-check property as arbitrary-tests coverage", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("does not treat a non-schema-derived fast-check property as arbitrary-tests coverage", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstFileFixture("packages/example/test/Example.test.ts", [
             'import * as fc from "fast-check";',
@@ -660,12 +695,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             "- packages/example/test/Example.test.ts :: schema-codec-tests [schema-policy-advisory] Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
           );
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("counts class-local static codec calls toward the arbitrary-tests threshold", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("counts class-local static codec calls toward the arbitrary-tests threshold", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstFileFixture("packages/example/test/Example.test.ts", [
             'import * as S from "effect/Schema";',
@@ -688,12 +723,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             "- packages/example/test/Example.test.ts :: schema-codec-tests [schema-policy-advisory] Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
           );
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports SFV4 arbitrary-tests advisories for synchronous schema codec helpers", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports SFV4 arbitrary-tests advisories for synchronous schema codec helpers", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstFileFixture("packages/example/test/Sync.test.ts", [
             'import * as S from "effect/Schema";',
@@ -721,12 +756,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"remediation":"Add a focused property test using Arbitrary.schema(sourceSchema) and Arbitrary.checkEffect, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("accepts schema-derived static match usage without static-api advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("accepts schema-derived static match usage without static-api advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -741,12 +776,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
 
           yield* runSchemaFirstAndExpectNoErrors();
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports untracked SFV4 equivalence manual equals advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports untracked SFV4 equivalence manual equals advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -774,12 +809,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"remediation":"Derive comparison from S.toEquivalence(schema); use S.overrideToEquivalence only when schema semantics intentionally differ."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("accepts schema-derived equivalence helpers without equivalence advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("accepts schema-derived equivalence helpers without equivalence advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -793,12 +828,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
 
           yield* runSchemaFirstAndExpectNoErrors();
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports untracked SFV4 boundary-codec JSON.parse advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports untracked SFV4 boundary-codec JSON.parse advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             "export const parseConfig = (text: string) => {",
@@ -823,12 +858,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"remediation":"Replace direct JSON.parse with S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("accepts schema JSON codecs without boundary-codec advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("accepts schema JSON codecs without boundary-codec advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -839,12 +874,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
 
           yield* runSchemaFirstAndExpectNoErrors();
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports untracked SFV4 defaults parameter object advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports untracked SFV4 defaults parameter object advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -871,12 +906,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
             '"remediation":"Move option/request fallback values into schema fields with S.withConstructorDefault and S.withDecodingDefaultTypeKey (or S.withDecodingDefaultType for missing-or-undefined input); inventory the exception only when the fallback intentionally differs from schema construction semantics."}';
           expect(errorLines).toContain(structuredIssueLine);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("accepts schema-owned constructor defaults without defaults advisories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("accepts schema-owned constructor defaults without defaults advisories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import { Effect } from "effect";',
@@ -890,12 +925,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
 
           yield* runSchemaFirstAndExpectNoErrors();
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("writes SFV4 numeric-domain advisories to the schema-first inventory", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("writes SFV4 numeric-domain advisories to the schema-first inventory", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -921,12 +956,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
           expect(inventory).toContain('"symbol": "WorkerOptions.timeoutMs"');
           expect(inventory).not.toContain("retryCount");
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("filters generic and wholly runtime declarations before inventory comparison", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("filters generic and wholly runtime declarations before inventory comparison", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             "interface BaseData { readonly inheritedId: string }",
@@ -1044,12 +1079,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
           expect(inventory).not.toContain('"symbol": "RuntimeAlias"');
           expect(inventory).not.toContain('"symbol": "SchemaOwned"');
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("limits normalization advisories to exported schema-boundary helpers", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("limits normalization advisories to exported schema-boundary helpers", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -1089,12 +1124,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
           expect(inventory).not.toContain("protectedNormalize");
           expect(inventory).not.toContain("Normalizer.toLowerCase");
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("omits render contracts without hiding pure data declared in TSX", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("omits render contracts without hiding pure data declared in TSX", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstFileFixture("packages/example/src/Example.tsx", [
             "export interface WidgetProps {",
@@ -1128,12 +1163,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
           expect(inventory).not.toContain('"symbol": "PanelProps"');
           expect(inventory).not.toContain('"symbol": "RendererProps"');
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("recognizes local export lists for declarations, schema companions, structs, and functions", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("recognizes local export lists for declarations, schema companions, structs, and functions", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -1181,12 +1216,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
           expect(inventory).toContain('"symbol": "listedArrow"');
           expect(inventory).not.toContain('"symbol": "ListedSchemaOwned"');
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("recognizes anonymous direct default exports with stable fallback symbols", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("recognizes anonymous direct default exports with stable fallback symbols", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstFileFixture("packages/example/src/DefaultInterface.ts", [
             "export default interface { readonly id: string }",
@@ -1226,12 +1261,12 @@ describe("schema-first lint command", { concurrent: false }, () => {
           expect(inventory.match(/"symbol": "default@\d+"/g)).toHaveLength(4);
           expect(inventory).not.toContain('"symbol": ""');
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("inventories only exported top-level plain S.Struct object models", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("inventories only exported top-level plain S.Struct object models", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeSchemaFirstSourceFixture([
             'import * as S from "effect/Schema";',
@@ -1265,14 +1300,14 @@ describe("schema-first lint command", { concurrent: false }, () => {
           expect(inventory).not.toContain('"symbol": "spread"');
           expect(inventory).not.toContain('"symbol": "build"');
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
-});
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 
-describe("package test import lint command", { concurrent: false }, () => {
-  it("rejects conflicting and out-of-package scan scopes", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+  describe("package test import lint command", { concurrent: false }, () => {
+    it.effect("rejects conflicting and out-of-package scan scopes", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           const conflicting = yield* Effect.exit(
             runLintCommand([
@@ -1288,12 +1323,12 @@ describe("package test import lint command", { concurrent: false }, () => {
           expectReportedExit(conflicting);
           expectReportedExit(outside);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("scopes the scan to one package root", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("scopes the scan to one package root", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -1315,12 +1350,12 @@ describe("package test import lint command", { concurrent: false }, () => {
           ]);
           expect(yield* TestConsole.errorLines).toEqual([]);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("reports same-package relative imports into src", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("reports same-package relative imports into src", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -1344,12 +1379,12 @@ describe("package test import lint command", { concurrent: false }, () => {
             "packages/foundation/modeling/example/test/Example.test.ts:1 ../src/index.ts -> @beep/example"
           );
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("allows relative imports to local test fixtures", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("allows relative imports to local test fixtures", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -1373,12 +1408,12 @@ describe("package test import lint command", { concurrent: false }, () => {
           expect(logLines).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
           expect(errorLines).toEqual([]);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("allows source test-kit files under src internal test directories", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("allows source test-kit files under src internal test directories", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -1402,12 +1437,12 @@ describe("package test import lint command", { concurrent: false }, () => {
           expect(logLines).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
           expect(errorLines).toEqual([]);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("allows internal package alias imports", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("allows internal package alias imports", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -1427,73 +1462,73 @@ describe("package test import lint command", { concurrent: false }, () => {
           expect(logLines).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
           expect(errorLines).toEqual([]);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
-});
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 
-const BASELINE_FILE = "baseline.jsonc";
+  const BASELINE_FILE = "baseline.jsonc";
 
-const blindSpotBaselineText = (input: {
-  readonly findings: ReadonlyArray<{
-    readonly package: string;
+  const blindSpotBaselineText = (input: {
+    readonly findings: ReadonlyArray<{
+      readonly package: string;
+      readonly directory: string;
+      readonly kind: string;
+    }>;
+    readonly notes?: Readonly<Record<string, string>>;
+  }): string =>
+    `${encodeJson({
+      schema_version: 1,
+      command: "bun run beep lint package-test-typecheck",
+      regeneration_command: "bun run beep lint package-test-typecheck --write-baseline",
+      comparison: "fail-on-growth: every blind-spot package must already be listed in the committed baseline",
+      new_package_handling: "New packages are compliant by construction.",
+      notes: input.notes ?? {},
+      check: {
+        total_findings: A.length(input.findings),
+        missing_test_tsconfig: A.length(A.filter(input.findings, (f) => f.kind === "missing-test-tsconfig")),
+        unwired_test_tsconfig: A.length(A.filter(input.findings, (f) => f.kind === "unwired-test-tsconfig")),
+      },
+      findings: input.findings,
+    })}\n`;
+
+  const writeTestTypecheckPackage = Effect.fn("writeTestTypecheckPackage")(function* (input: {
     readonly directory: string;
-    readonly kind: string;
-  }>;
-  readonly notes?: Readonly<Record<string, string>>;
-}): string =>
-  `${encodeJson({
-    schema_version: 1,
-    command: "bun run beep lint package-test-typecheck",
-    regeneration_command: "bun run beep lint package-test-typecheck --write-baseline",
-    comparison: "fail-on-growth: every blind-spot package must already be listed in the committed baseline",
-    new_package_handling: "New packages are compliant by construction.",
-    notes: input.notes ?? {},
-    check: {
-      total_findings: A.length(input.findings),
-      missing_test_tsconfig: A.length(A.filter(input.findings, (f) => f.kind === "missing-test-tsconfig")),
-      unwired_test_tsconfig: A.length(A.filter(input.findings, (f) => f.kind === "unwired-test-tsconfig")),
-    },
-    findings: input.findings,
-  })}\n`;
+    readonly name: string;
+    readonly scripts: Readonly<Record<string, string>>;
+    readonly tsconfigs: ReadonlyArray<{ readonly fileName: string; readonly include: ReadonlyArray<string> }>;
+  }) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
 
-const writeTestTypecheckPackage = Effect.fn("writeTestTypecheckPackage")(function* (input: {
-  readonly directory: string;
-  readonly name: string;
-  readonly scripts: Readonly<Record<string, string>>;
-  readonly tsconfigs: ReadonlyArray<{ readonly fileName: string; readonly include: ReadonlyArray<string> }>;
-}) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
+    yield* fs.makeDirectory(path.join(input.directory, "src"), { recursive: true });
+    yield* fs.makeDirectory(path.join(input.directory, "test"), { recursive: true });
+    yield* fs.writeFileString(
+      path.join(input.directory, "package.json"),
+      `${encodeJson({ name: input.name, version: "0.0.0", type: "module", scripts: input.scripts })}\n`
+    );
+    yield* fs.writeFileString(path.join(input.directory, "src", "index.ts"), "export const example = 1;\n");
+    yield* fs.writeFileString(
+      path.join(input.directory, "test", "Example.test.ts"),
+      'import { example } from "@beep/example";\nvoid example;\n'
+    );
 
-  yield* fs.makeDirectory(path.join(input.directory, "src"), { recursive: true });
-  yield* fs.makeDirectory(path.join(input.directory, "test"), { recursive: true });
-  yield* fs.writeFileString(
-    path.join(input.directory, "package.json"),
-    `${encodeJson({ name: input.name, version: "0.0.0", type: "module", scripts: input.scripts })}\n`
-  );
-  yield* fs.writeFileString(path.join(input.directory, "src", "index.ts"), "export const example = 1;\n");
-  yield* fs.writeFileString(
-    path.join(input.directory, "test", "Example.test.ts"),
-    'import { example } from "@beep/example";\nvoid example;\n'
-  );
+    yield* Effect.forEach(
+      input.tsconfigs,
+      Effect.fnUntraced(function* (config) {
+        yield* fs.writeFileString(
+          path.join(input.directory, config.fileName),
+          `${encodeJson({ include: config.include })}\n`
+        );
+      })
+    );
+  });
 
-  yield* Effect.forEach(
-    input.tsconfigs,
-    Effect.fnUntraced(function* (config) {
-      yield* fs.writeFileString(
-        path.join(input.directory, config.fileName),
-        `${encodeJson({ include: config.include })}\n`
-      );
-    })
-  );
-});
-
-describe("package test-typecheck lint command", { concurrent: false }, () => {
-  it(
-    "reports a package whose check script never typechecks its test sources",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+  describe("package test-typecheck lint command", { concurrent: false }, () => {
+    it.effect(
+      "reports a package whose check script never typechecks its test sources",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
 
@@ -1511,16 +1546,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             expectReportedExit(exit);
             expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
 
-  it(
-    "accepts a package whose check script transitively runs a test-covering project",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "accepts a package whose check script transitively runs a test-covering project",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
 
@@ -1544,16 +1578,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             const logLines = yield* TestConsole.logLines;
             expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
 
-  it(
-    "reports a test-covering project the check script never runs",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports a test-covering project the check script never runs",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
 
@@ -1578,16 +1611,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             expectReportedExit(exit);
             expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [unwired-test-tsconfig]");
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
 
-  it(
-    "does not treat compiler names echoed as script text as test typechecking",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "does not treat compiler names echoed as script text as test typechecking",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
 
@@ -1611,16 +1643,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             expectReportedExit(exit);
             expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [unwired-test-tsconfig]");
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
 
-  it(
-    "treats a baselined blind spot as green",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "treats a baselined blind spot as green",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
 
@@ -1642,16 +1673,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             const logLines = yield* TestConsole.logLines;
             expect(logLines).toEqual(["[package-test-typecheck] ok: current=1 baseline=1 introduced=0"]);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
 
-  it(
-    "reports a tail-filtered include that leaves a sibling helper unselected",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports a tail-filtered include that leaves a sibling helper unselected",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
@@ -1684,16 +1714,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             expectReportedExit(exit);
             expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
 
-  it(
-    "accepts a tail-filtered include when it selects every test source",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "accepts a tail-filtered include when it selects every test source",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
 
@@ -1719,16 +1748,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             const logLines = yield* TestConsole.logLines;
             expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
 
-  it(
-    "reports a one-level include because nested sources stay unselected",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports a one-level include because nested sources stay unselected",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
@@ -1759,16 +1787,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             expectReportedExit(exit);
             expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
 
-  it(
-    "accepts a bare test directory include as a recursive subtree",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "accepts a bare test directory include as a recursive subtree",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
@@ -1802,16 +1829,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             const logLines = yield* TestConsole.logLines;
             expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
 
-  it(
-    "honors exclude when deciding which test sources a project selects",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "honors exclude when deciding which test sources a project selects",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
@@ -1844,16 +1870,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             expectReportedExit(exit);
             expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
 
-  it(
-    "follows check-script delegation through bun run flags",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "follows check-script delegation through bun run flags",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
 
@@ -1879,16 +1904,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             const logLines = yield* TestConsole.logLines;
             expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
 
-  it(
-    "preserves hand-authored notes when rewriting the baseline",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "preserves hand-authored notes when rewriting the baseline",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
 
@@ -1909,8 +1933,8 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             expect(rewritten).toContain('"@beep/example": "Deferred deliberately."');
             expect(rewritten).toContain('"kind": "missing-test-tsconfig"');
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      15_000
+    );
+  });
 });

@@ -8,7 +8,7 @@
  */
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Context, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -84,7 +84,9 @@ export class ClaimDispositionRepositoryUnavailable extends S.TaggedError<ClaimDi
 )(
   "ClaimDispositionRepositoryUnavailable",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    )
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Optional underlying driver defect captured when the repository could not serve a request.",

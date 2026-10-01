@@ -195,7 +195,7 @@ export const verifyPublicationReadback = Effect.fn("LeJeuneBundle.verifyPublicat
   const [bundle, bundleIdentity, mutableLedger, projectionMetadata, receipt, retentionMetadata] = yield* Effect.all(
     [
       decodeImmutableDemoBundleFromJsonString(input.bundleText),
-      Sha256HexFromBytes.decodeEffect(strToU8(input.bundleText)),
+      S.decodeEffect(Sha256HexFromBytes)(strToU8(input.bundleText)),
       decodeMutableReviewLedgerFromJsonString(input.ledgerText),
       decodeProjectionStoreMetadataFromJsonString(input.projectionMetadataText),
       decodeGoldenReplayReceiptFromJsonString(input.receiptText),
