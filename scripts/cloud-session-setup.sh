@@ -197,7 +197,7 @@ install_tool typos "https://github.com/crate-ci/typos/releases/download/v${TYPOS
 install_tool shellcheck "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" "$SHELLCHECK_SHA256" \
   || warn "shellcheck not provisioned (verification-only; setup continues)"
 # Report from BIN_DIR by path: it is not necessarily on this script's PATH.
-# shellcheck is verification-only: an unreadable binary must not stop setup.
+# The shellcheck tool is verification-only: an unreadable binary must not stop setup.
 shellcheck_version="missing"
 if [ -x "${BIN_DIR}/shellcheck" ]; then
   shellcheck_version="$("${BIN_DIR}/shellcheck" --version 2>/dev/null | sed -n 's/^version: //p')" || shellcheck_version="unreadable"
