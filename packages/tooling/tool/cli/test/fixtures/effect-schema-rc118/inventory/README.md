@@ -108,7 +108,7 @@ Hosted CI never reads `.repos/effect`, graft, or a model. `packages/tooling/tool
 - every row's `sha` equals the `INDEX.md` pin line and the root `package.json` catalog pin, so an Effect bump PR fails until it regenerates this fixture with `--write`;
 - the `INDEX.md` row digest matches the JSONL bytes, and re-rendering `INDEX.md` from the committed rows reproduces it byte for byte.
 
-Hosted CI cannot verify the lane prompts: re-rendering a prompt needs the pinned sources, so prompt verification runs only in local `--check`, which splices each committed prompt's graft section (local graft output) into the re-render and compares every other byte. `--check` is the local byte-for-byte proof against the pinned sources; the effect-vitest fixture beside this one (`../../effect-vitest-rc118/`) follows the same local-regenerate, hosted-verify split.
+Hosted CI cannot verify the lane prompts: re-rendering a prompt needs the pinned sources, so prompt verification runs only in local `--check`, which splices each committed prompt's graft section (local graft output) into the re-render and compares every other byte. `--check` is the local byte-for-byte proof against the pinned sources; the effect-vitest fixture beside this one (`../../effect-vitest-400/`) follows the same local-regenerate, hosted-verify split.
 
 ## Verification
 

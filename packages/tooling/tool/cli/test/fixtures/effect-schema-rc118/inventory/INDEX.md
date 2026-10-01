@@ -1,8 +1,8 @@
 # Schema inventory index
 
-Pin: `df77fff9396fe31de72d1947ecb5b74f8cee89e1` (inventoryPin: root package.json catalog `effect`; sources read with `git -C .repos/effect show <pin>:<file>`). TypeScript parser: `6.0.2`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: `packages/tooling/tool/cli/src/commands/Lint/internal/EffectSchemaInventoryModules.ts`.
+Pin: `b5a2d4c1d62c9620a68d72b7f20248c69ef7663b` (inventoryPin: root package.json catalog `effect`; sources read with `git -C .repos/effect show <pin>:<file>`). TypeScript parser: `6.0.2`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: `packages/tooling/tool/cli/src/commands/Lint/internal/EffectSchemaInventoryModules.ts`.
 
-Row digest: `519a2ee22549217f9afcd6d1e015d50f97b045cdbf59449fe3d866821ecd90b4` (SHA-256 over the module JSONL files concatenated byte for byte in Module totals order).
+Row digest: `66d8dbe1c44e0de25508931fcd132c3a6421839289678d8451c09e9a02890c16` (SHA-256 over the module JSONL files concatenated byte for byte in Module totals order).
 
 Regenerate from repo root (offline):
 
@@ -18,8 +18,8 @@ Importable `no` marks provenance-only modules whose path effect's exports map nu
 
 | Module | Importable | Rows | Bytes |
 | --- | --- | ---: | ---: |
-| [effect/Schema](effect-Schema.jsonl) | yes | 1109 | 494031 |
-| [effect/SchemaAST](effect-SchemaAST.jsonl) | yes | 315 | 127436 |
+| [effect/Schema](effect-Schema.jsonl) | yes | 1109 | 494006 |
+| [effect/SchemaAST](effect-SchemaAST.jsonl) | yes | 315 | 127316 |
 | [effect/SchemaParser](effect-SchemaParser.jsonl) | yes | 37 | 20288 |
 | [effect/SchemaIssue](effect-SchemaIssue.jsonl) | yes | 65 | 28813 |
 | [effect/SchemaGetter](effect-SchemaGetter.jsonl) | yes | 72 | 34142 |
@@ -42,7 +42,7 @@ Importable `no` marks provenance-only modules whose path effect's exports map nu
 | [effect/internal/schema/codegen](effect-internal-schema-codegen.jsonl) | no | 11 | 4352 |
 | [effect/internal/schema/compilerRegistry](effect-internal-schema-compilerRegistry.jsonl) | no | 25 | 10464 |
 | [effect/internal/schema/interpreter](effect-internal-schema-interpreter.jsonl) | no | 3 | 1487 |
-| **Total** | | **2232** | **998102** |
+| **Total** | | **2232** | **997957** |
 
 ## Per-module kinds and categories
 
@@ -51,7 +51,7 @@ Every cell verified with `rg --no-ignore --no-heading -F -c '"kind":"<kind>"' <m
 | Module | Kinds | Categories |
 | --- | --- | --- |
 | effect/Schema | accessor: 1; call: 8; class: 1; const: 192; constructor: 5; function: 152; interface: 220; method: 17; namespace: 10; property: 479; type: 24 | (untagged): 525; annotations: 3; branding: 3; combinators: 9; constructors: 43; converting: 13; decoding: 24; encoding: 15; error handling: 4; errors: 1; filtering: 3; formatting: 2; getters: 2; guards: 4; instances: 2; models: 202; options: 4; schemas: 150; transforming: 20; utility types: 16; validation: 64 |
-| effect/SchemaAST | const: 86; function: 49; interface: 30; method: 74; property: 70; type: 6 | (untagged): 209; annotations: 5; constants: 2; constructors: 38; guards: 22; models: 32; options: 2; predicates: 1; transforming: 4 |
+| effect/SchemaAST | const: 86; function: 48; interface: 30; method: 74; property: 70; type: 7 | (untagged): 209; annotations: 5; constants: 2; constructors: 38; guards: 22; models: 32; options: 2; predicates: 1; transforming: 4 |
 | effect/SchemaParser | call: 2; const: 12; function: 21; interface: 2 | (untagged): 12; constructors: 3; decoding: 10; encoding: 10; guards: 2 |
 | effect/SchemaIssue | const: 14; function: 7; interface: 12; property: 28; type: 4 | (untagged): 32; constructors: 11; formatting: 7; guards: 2; models: 13 |
 | effect/SchemaGetter | call: 3; const: 4; function: 49; interface: 5; property: 9; type: 2 | (untagged): 12; combining: 2; constructors: 8; converting: 8; decoding: 10; encoding: 7; filtering: 1; mapping: 1; models: 6; splitting: 2; transforming: 12; utility types: 1; validation: 2 |

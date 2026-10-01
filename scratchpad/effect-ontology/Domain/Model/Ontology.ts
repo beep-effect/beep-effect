@@ -592,7 +592,7 @@ export type PropertyDefinition = typeof PropertyDefinition.Type;
  * @since 0.0.0
  */
 export const partitionPropertiesByRangeType = (properties: ReadonlyArray<PropertyDefinition>) => {
-  const [objectProperties, datatypeProperties] = A.partition(properties, (property) =>
+  const [datatypeProperties, objectProperties] = A.partition(properties, (property) =>
     Bool.match(property.isDatatypeProperty, {
       onFalse: () => Result.fail(property),
       onTrue: () => Result.succeed(property),
