@@ -18,8 +18,8 @@ where the route supports it:
 | Codex | `gpt-6.1-sol` medium through the Codex CLI, plugin, or `claudex` proxy | `cursor-agent --model claude-opus-5-5` | grok-build (`grok -m grok-4.7 --effort medium`) |
 | Claude Code | direct `claude-opus-5-5` medium (Agent tool, Workflow child, `claude -p`) | `cursor-agent --model claude-opus-5-5` | grok-build (`grok -m grok-4.7 --effort medium`) |
 
-Defaults: Codex `gpt-6.1-sol` medium (`~/.codex/config.toml`), Claude Code `claude-opus-5-5`
-medium (`~/.claude/settings.json`). Within these routes Codex uses only GPT-6.1-Sol and direct
+Defaults: Codex `gpt-6.1-sol` medium (`$HOME/.codex/config.toml`), Claude Code `claude-opus-5-5`
+medium (`$HOME/.claude/settings.json`). Within these routes Codex uses only GPT-6.1-Sol and direct
 Claude uses only Opus 5.5; same-provider substitution (`gpt-6-astra`, `claude-opus-5`, the
 `opus` alias) is a drift, not a fallback. Lightweight routes (`gpt-5.6-luna` default children)
 keep their lightweight tasks.
@@ -407,7 +407,7 @@ flags follow the operator's Codex rules; this runbook does not restate them.
 Pin model and reasoning effort per `AGENTS.md` "Volume pools". The Codex plugin/companion
 (`--model gpt-6.1-sol --effort medium`) and proxy Workflow children (`gpt-6.1-sol(medium)`) use
 the same pins. Verified 2026-10-01: the session rollout records `model=gpt-6.1-sol`,
-`reasoning_effort=medium`; `~/.codex/models_cache.json` had not yet listed the id, so the
+`reasoning_effort=medium`; `$HOME/.codex/models_cache.json` had not yet listed the id, so the
 interactive picker may lag while `-m gpt-6.1-sol` works.
 
 ## Failure signatures and remedies

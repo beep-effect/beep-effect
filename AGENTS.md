@@ -51,7 +51,7 @@ wherever the route supports it:
   acceptance gates across fallbacks.
 - Junie has no delegation chain. Include it in policy discovery and
   question-interface verification, inspect its existing configuration
-  (`~/.junie/settings.json`), and surface any unresolved routing decision
+  (`$HOME/.junie/settings.json`), and surface any unresolved routing decision
   rather than inventing one.
 
 **Pins per surface** (verified identifiers 2026-10-01; `beep models check`
