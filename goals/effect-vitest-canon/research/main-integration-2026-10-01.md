@@ -1,7 +1,9 @@
 # Main integration: 2026-10-01
 
 Base integrated: `4a97d3955f7fa0a5d554efb5869170a50dccacde`.
-Package and hosted gates remain outstanding.
+Full package verification passes for CLI (audit 811.2 seconds, docgen 21.5
+seconds) and schema (audit 7.8 seconds, docgen 6.4 seconds). Hosted gates remain
+outstanding. Main subsequently moved again with the LiteralKit retirement.
 
 Fifteen Git conflicts were resolved. The three test files for retired FileInfo,
 JSONSchema and StatusCauseError concepts follow the upstream removals. Removed
@@ -25,4 +27,5 @@ Both CLI and schema test-type artifacts report exit code zero and no diagnostics
 The three affected schema files pass all 71 tests on Node (3.16 seconds) and Bun
 (1.28 seconds). Ten affected CLI files pass 784 tests on Node (86.76 seconds).
 The same 784 CLI tests pass on Bun (62.88 seconds). These are focused integration
-results, not a full package or hosted readiness claim.
+results; the full package results above were collected afterward. No hosted
+readiness is claimed.
