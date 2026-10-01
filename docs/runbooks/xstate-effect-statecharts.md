@@ -140,6 +140,17 @@ Outside the browser, `StatelyInspector.layer` reads `STATELY_INSPECT`, `STATELY_
 (`none` or `browser`), `STATELY_INSPECT_URL`, and `STATELY_INSPECT_NAME`; `inspectActor(actor)`
 attaches an actor for the lifetime of the current scope.
 
+Two things to know before enabling it:
+
+- The desktop waits for `inspector.ready` before attaching. When the relay rejects this
+  producer's registration, the rejection is logged redacted and no URL is reported, so an
+  "attached" log line always means a working session.
+- The inspector forwards complete snapshots and events to the relay, which is the hosted Stately
+  relay unless `STATELY_INSPECT_URL` points elsewhere. For document intake that includes the
+  developer's own vault root path and manual path drafts; file bytes never enter events or context
+  because they travel as state input. Point `STATELY_INSPECT_URL` at a local relay when even your
+  own paths must stay on the machine.
+
 ## CLI
 
 ```bash

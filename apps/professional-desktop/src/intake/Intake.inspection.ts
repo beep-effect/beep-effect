@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
 import * as O from "@beep/utils/Option";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -47,21 +48,26 @@ export const statelyInspectEnabled = (): boolean => {
  *
  * The inspector driver is imported on demand, so a build that never inspects
  * does not load the Stately SDK. When inspection is disabled the Effect does
- * nothing and reports no URL.
+ * nothing and reports no URL. When the relay rejects this producer's
+ * registration, the rejection is logged redacted, the actor is not attached and
+ * no URL is reported, so a developer never sees a session that cannot work.
  *
  * **Example** (Inspect an actor in a scoped program)
  *
  * ```ts
  * import { inspectIntakeActor } from "@/intake/Intake.inspection"
- * import type { InspectableActor } from "@beep/xstate"
+ * import { createEffectActor } from "@xstate/effect"
+ * import * as Effect from "effect/Effect"
+ * import { createMachine } from "xstate"
  *
- * declare const actor: InspectableActor
- * console.log(inspectIntakeActor(actor))
+ * const toggle = createMachine({ initial: "off", states: { off: { on: { TOGGLE: { target: "on" } } }, on: {} } })
+ * const program = Effect.flatMap(createEffectActor(toggle), inspectIntakeActor)
+ * console.log(program)
  * ```
  *
  * @param actor - Actor handle exposing `inspect`.
  * @returns The inspector URL when inspection is enabled and a relay URL exists.
- * @category inspection
+ * @category observability
  * @since 0.0.0
  */
 export const inspectIntakeActor = Effect.fn("professional_desktop.intake.inspect_actor")(function* (
@@ -77,6 +83,22 @@ export const inspectIntakeActor = Effect.fn("professional_desktop.intake.inspect
     )
   );
   const inspector = Context.get(services, driver.StatelyInspector);
+  const accepted = yield* inspector.ready.pipe(
+    Effect.as(true),
+    Effect.catchCause((cause) =>
+      logRedactedCause(
+        cause,
+        LogRedactedCauseOptions.make({
+          message: "Stately inspector relay rejected document intake",
+          level: "Warn",
+          attributes: { "professional_desktop.subsystem": "document_intake" },
+        })
+      ).pipe(Effect.as(false))
+    )
+  );
+  if (!accepted) {
+    return O.none<string>();
+  }
   yield* inspector.attach(actor);
   yield* Effect.logInfo("Stately inspector attached to document intake").pipe(
     Effect.annotateLogs({ "professional_desktop.intake.inspector_url": O.getOrElse(inspector.inspectorUrl, () => "") })

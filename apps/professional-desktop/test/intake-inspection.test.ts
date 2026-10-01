@@ -11,18 +11,23 @@ import { createMachine } from "xstate";
 import { inspectIntakeActor, statelyInspectEnabled } from "@/intake/Intake.inspection";
 import type { Inspector } from "@statelyai/sdk";
 
-const { createInspector, calls } = vi.hoisted(() => {
+const { createInspector, calls, relay } = vi.hoisted(() => {
   const recorded: Array<{ readonly method: string; readonly id?: string }> = [];
+  const relay = { accept: true };
   return {
     calls: recorded,
+    relay,
     createInspector: vi.fn(
       (
         options: unknown
       ): Pick<Inspector, "actor" | "destroy" | "event" | "inspectorUrl" | "ready" | "snapshot" | "stop"> => {
         recorded.push({ method: `create:${JSON.stringify(options)}` });
+        const ready = relay.accept ? Promise.resolve() : Promise.reject(new Error("relay refused"));
+        // The rejection is observed by the code under test; mark it handled so the runtime does not report it.
+        ready.catch(() => undefined);
         return {
           inspectorUrl: "http://inspector.test/session",
-          ready: Promise.resolve(),
+          ready,
           actor: (id: string) => recorded.push({ method: "actor", id }),
           event: (id: string) => recorded.push({ method: "event", id }),
           snapshot: (id: string) => recorded.push({ method: "snapshot", id }),
@@ -44,6 +49,7 @@ const toggle = createMachine({
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  relay.accept = true;
   createInspector.mockClear();
   calls.length = 0;
 });
@@ -79,6 +85,18 @@ describe("intake actor inspection", { concurrent: false }, () => {
       expect(methods).not.toContain("destroy");
       yield* Scope.close(inspection, Exit.void);
       expect(A.map(calls, (call) => call.method)).toContain("destroy");
+    })
+  );
+
+  it.effect(
+    "reports no session when the relay rejects the registration",
+    Effect.fnUntraced(function* () {
+      vi.stubEnv("VITE_STATELY_INSPECT", "1");
+      relay.accept = false;
+      const actor = yield* createEffectActor(toggle);
+      assertNone(yield* inspectIntakeActor(actor));
+      expect(createInspector).toHaveBeenCalledTimes(1);
+      expect(A.map(calls, (call) => call.method)).not.toContain("actor");
     })
   );
 });
