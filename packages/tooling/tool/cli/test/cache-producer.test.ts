@@ -42,7 +42,7 @@ const setup = Effect.fn("ProducerTest.setup")(function* () {
   const encoded = yield* S.encodeEffect(CacheProducerEnvelope)(envelope);
   return { receipt, binding, issuer, envelope, encoded };
 });
-it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("closed producer issuer", (it) => {
+it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed producer issuer", (it) => {
   it.effect.prop(
     "authenticates every schema-generated policy digest against the issued envelope",
     { policyDigest: Sha256Hex },

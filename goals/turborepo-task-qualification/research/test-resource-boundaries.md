@@ -29,3 +29,35 @@ Exceptions must be re-reviewed when the anchored code changes. Retire each impor
 exception if the detector learns the provider's provenance, or if the test stops
 exercising the corresponding native behavior. Retire the inner-scope exception
 only when another test still proves release before the failed read.
+
+## Per-case and transaction lifetimes
+
+Two provider findings are resolved by inspecting the named helper: census uses
+`provideScopedLayer(NodeCrypto.layer)` per generated case; dispatch supplies its
+platform/console test layer inside each generated case. Both use native property
+registration. The dispatch fixture's request files and captured console belong
+to that case, rather than to the entire property run. Retain those boundaries;
+re-review when the helper or layer changes.
+
+The CLI and operational integration tests retain inner property loops. They
+mutate references or runtime identity against one provisioned transaction and
+assert that its marker or ledger remains unchanged. The surrounding transaction
+also tests revocation. Repeating a new transaction per generated value would
+change that invariant. Both loops retain `fcRuns`, seeds, shrinking and an explicit
+`Passed` assertion. The integration tests pass at the 400-run floor after moving
+the services into explicit test layers. Re-review if setup stops being shared or
+the properties cease checking the same stored bytes.
+
+## Serial expiry tests
+
+The acceptance and closed-producer suites now declare `concurrent: false` on
+their owning layers. Each test creates new issuer state and expiry times relative
+to its current clock. No test depends on an absolute zero timestamp or reuses a
+previous test's issuer. Advancing 25 hours is the behavior being tested; a reset
+would not prove concurrency isolation. All 36 tests across acceptance, producer,
+CLI and operational acceptance pass. Re-review these exceptions if concurrency,
+absolute-time assumptions, or shared issuer state changes.
+
+The reviewed inventory contains six additional anchored rows for these specific
+provider, property and clock observations. The explicit layers remove the live
+and outer-scope findings; those findings are not covered by exceptions.

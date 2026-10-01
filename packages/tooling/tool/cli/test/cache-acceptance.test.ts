@@ -348,7 +348,7 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("producer evidence project
   );
 });
 
-it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { concurrent: false, timeout: "30 seconds" })(
   "authenticated import preview",
   (it) => {
     it.effect("accepts only a fully covered approved policy and preserves envelope expiry", () =>

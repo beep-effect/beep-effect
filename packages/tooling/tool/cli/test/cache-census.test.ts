@@ -598,59 +598,99 @@ describe("signed root projection", () => {
   );
 });
 
-it.effect("binds signed activation to actual source bytes and real configuration fingerprints", () =>
-  Effect.gen(function* () {
-    const fixture = yield* activationFixture();
-    const rootBefore = '{"remoteCache":{"enabled":false},"tasks":{}}';
-    const rootSha256 = yield* hashBytes(new TextEncoder().encode(rootBefore));
-    const census = CacheCensusReport.make({
-      ...fixture.census,
-      globalConfiguration: { remoteCache: { enabled: false } },
-      sources: A.map(fixture.census.sources, (source) =>
-        source.path === "turbo.json" ? CacheCensusSource.make({ ...source, sha256: rootSha256 }) : source
-      ),
-    });
-    const source = yield* fingerprintCacheComputation(key, census, toolchain);
-    const activation = CacheActivationProjection.make({
-      ...fixture.activation,
-      sourceConfiguration: source.configurationDigest,
-    });
-    const activated = yield* projectCacheActivation(key, census, toolchain, activation, fixture.before, fixture.after);
-    const rootSigned = yield* projectCacheSignedRoot(rootBefore);
-    const signed = yield* projectCacheSignedActivation(
-      key,
-      census,
-      toolchain,
-      activation,
-      fixture.before,
-      fixture.after,
-      rootBefore,
-      rootSigned
-    );
-    expect(signed.key).toEqual(key);
-    expect(signed.configurationDigest).not.toBe(source.configurationDigest);
-    expect(signed.configurationDigest).not.toBe(activated.configurationDigest);
-    expect(signed.toolchainDigest).toBe(source.toolchainDigest);
-    expect(signed.configuration.globalConfiguration).toEqual({ remoteCache: { enabled: true, signature: true } });
-    expect(signed.configuration.nodes).toEqual(activated.configuration.nodes);
-    const projectedCensus = CacheCensusReport.make({
-      ...census,
-      globalConfiguration: signed.configuration.globalConfiguration,
-      sources: signed.configuration.sources,
-      nodes: A.map(census.nodes, (node) =>
-        node.id === key.computation
-          ? CacheCensusNode.make({
-              ...node,
-              configuration: CacheTaskConfiguration.make({ ...node.configuration, cache: true }),
-            })
-          : node
-      ),
-    });
-    expect(yield* fingerprintCacheComputation(key, projectedCensus, toolchain)).toEqual(signed);
-    for (const altered of [
-      `${rootSigned}\n`,
-      '{"remoteCache":{"enabled":true,"signature":true},"tasks":{"lint":{"outputs":["dist/**"]}}}',
-    ])
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
+  it.effect("binds signed activation to actual source bytes and real configuration fingerprints", () =>
+    Effect.gen(function* () {
+      const fixture = yield* activationFixture();
+      const rootBefore = '{"remoteCache":{"enabled":false},"tasks":{}}';
+      const rootSha256 = yield* hashBytes(new TextEncoder().encode(rootBefore));
+      const census = CacheCensusReport.make({
+        ...fixture.census,
+        globalConfiguration: { remoteCache: { enabled: false } },
+        sources: A.map(fixture.census.sources, (source) =>
+          source.path === "turbo.json" ? CacheCensusSource.make({ ...source, sha256: rootSha256 }) : source
+        ),
+      });
+      const source = yield* fingerprintCacheComputation(key, census, toolchain);
+      const activation = CacheActivationProjection.make({
+        ...fixture.activation,
+        sourceConfiguration: source.configurationDigest,
+      });
+      const activated = yield* projectCacheActivation(
+        key,
+        census,
+        toolchain,
+        activation,
+        fixture.before,
+        fixture.after
+      );
+      const rootSigned = yield* projectCacheSignedRoot(rootBefore);
+      const signed = yield* projectCacheSignedActivation(
+        key,
+        census,
+        toolchain,
+        activation,
+        fixture.before,
+        fixture.after,
+        rootBefore,
+        rootSigned
+      );
+      expect(signed.key).toEqual(key);
+      expect(signed.configurationDigest).not.toBe(source.configurationDigest);
+      expect(signed.configurationDigest).not.toBe(activated.configurationDigest);
+      expect(signed.toolchainDigest).toBe(source.toolchainDigest);
+      expect(signed.configuration.globalConfiguration).toEqual({ remoteCache: { enabled: true, signature: true } });
+      expect(signed.configuration.nodes).toEqual(activated.configuration.nodes);
+      const projectedCensus = CacheCensusReport.make({
+        ...census,
+        globalConfiguration: signed.configuration.globalConfiguration,
+        sources: signed.configuration.sources,
+        nodes: A.map(census.nodes, (node) =>
+          node.id === key.computation
+            ? CacheCensusNode.make({
+                ...node,
+                configuration: CacheTaskConfiguration.make({ ...node.configuration, cache: true }),
+              })
+            : node
+        ),
+      });
+      expect(yield* fingerprintCacheComputation(key, projectedCensus, toolchain)).toEqual(signed);
+      for (const altered of [
+        `${rootSigned}\n`,
+        '{"remoteCache":{"enabled":true,"signature":true},"tasks":{"lint":{"outputs":["dist/**"]}}}',
+      ])
+        expect(
+          yield* projectCacheSignedActivation(
+            key,
+            census,
+            toolchain,
+            activation,
+            fixture.before,
+            fixture.after,
+            rootBefore,
+            altered
+          ).pipe(Effect.isFailure)
+        ).toBe(true);
+      for (const altered of [
+        CacheCensusReport.make({ ...census, globalConfiguration: {} }),
+        CacheCensusReport.make({ ...census, sources: A.filter(census.sources, (row) => row.path !== "turbo.json") }),
+        CacheCensusReport.make({
+          ...census,
+          sources: A.append(census.sources, CacheCensusSource.make({ path: "turbo.json", sha256: rootSha256 })),
+        }),
+      ])
+        expect(
+          yield* projectCacheSignedActivation(
+            key,
+            altered,
+            toolchain,
+            activation,
+            fixture.before,
+            fixture.after,
+            rootBefore,
+            rootSigned
+          ).pipe(Effect.isFailure)
+        ).toBe(true);
       expect(
         yield* projectCacheSignedActivation(
           key,
@@ -659,41 +699,10 @@ it.effect("binds signed activation to actual source bytes and real configuration
           activation,
           fixture.before,
           fixture.after,
-          rootBefore,
-          altered
-        ).pipe(Effect.isFailure)
-      ).toBe(true);
-    for (const altered of [
-      CacheCensusReport.make({ ...census, globalConfiguration: {} }),
-      CacheCensusReport.make({ ...census, sources: A.filter(census.sources, (row) => row.path !== "turbo.json") }),
-      CacheCensusReport.make({
-        ...census,
-        sources: A.append(census.sources, CacheCensusSource.make({ path: "turbo.json", sha256: rootSha256 })),
-      }),
-    ])
-      expect(
-        yield* projectCacheSignedActivation(
-          key,
-          altered,
-          toolchain,
-          activation,
-          fixture.before,
-          fixture.after,
-          rootBefore,
+          `${rootBefore} `,
           rootSigned
         ).pipe(Effect.isFailure)
       ).toBe(true);
-    expect(
-      yield* projectCacheSignedActivation(
-        key,
-        census,
-        toolchain,
-        activation,
-        fixture.before,
-        fixture.after,
-        `${rootBefore} `,
-        rootSigned
-      ).pipe(Effect.isFailure)
-    ).toBe(true);
-  }).pipe(provideCrypto)
-);
+    })
+  );
+});

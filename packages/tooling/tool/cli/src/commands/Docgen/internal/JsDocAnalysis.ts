@@ -416,7 +416,7 @@ const analyzeSourceFile = (
     })
   );
 
-  if (directExports.length === 0) {
+  if (directExports.length === 0 && sourceFile.getExportDeclarations().length === 0) {
     return A.empty();
   }
 

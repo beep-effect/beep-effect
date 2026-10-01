@@ -2856,8 +2856,17 @@ export * from "./Value.ts";
       expect(findingCodes).not.toContain("missing-example");
       expect(findingCodes).not.toContain("missing-description");
       const metadata = yield* analyzePackageDocumentation(target!);
-      expect(metadata.summary.missingDocumentation).toBe(0);
+      expect(metadata.summary.missingDocumentation).toBe(1);
+      expect(A.map(metadata.exports, (entry) => entry.name)).toEqual(["<module fileoverview>", "parseValue"]);
+      expect(metadata.exports[0]?.missingTags).toEqual(["@since"]);
       expect(A.some(metadata.exports, (entry) => entry.kind === "re-export")).toBe(false);
+
+      yield* fs.writeFileString(
+        path.join(packageDir, "src", "index.ts"),
+        '/** @packageDocumentation @since 0.0.0 */\nexport * from "./Value.ts";\n'
+      );
+      const documentedBarrel = yield* analyzePackageDocumentation(target!);
+      expect(documentedBarrel.summary.missingDocumentation).toBe(0);
 
       yield* fs.writeFileString(
         path.join(packageDir, "src", "Value.ts"),

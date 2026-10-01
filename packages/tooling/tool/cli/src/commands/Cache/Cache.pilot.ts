@@ -4,6 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientPin, CacheQualificationKey, CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
@@ -395,6 +397,15 @@ const runPilot = Effect.fn("CachePilot.run")(
     const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(Effect.flatMap(decodeGitObjectId));
     const commonGit = yield* captureHost(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
     const sourceRoots = yield* Effect.forEach(request.worktrees, (source) => fs.realPath(source), { concurrency: 1 });
+    if (O.isSome(protectedIssuerMaterial)) {
+      const issuer = path.resolve(protectedIssuerMaterial.value);
+      if (
+        A.some([...sourceRoots, commonGit, dependencies.directory, "/usr"], (mount) =>
+          isResolvedPathWithinRoot(path, { root: mount, candidate: issuer })
+        )
+      )
+        return yield* CacheCommandError.new("Issuer material must remain outside every signed pilot input mount.");
+    }
     const sourceRootA = O.getOrThrow(A.get(sourceRoots, 0));
     const sourceRootB = O.getOrThrow(A.get(sourceRoots, 1));
     if (sourceRootA === sourceRootB)

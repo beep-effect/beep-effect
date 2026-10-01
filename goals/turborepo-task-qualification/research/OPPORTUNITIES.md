@@ -1,5 +1,20 @@
 # Friction and opportunities
 
+## 2026-10-01: resumed recovery and scheduler readiness
+
+The prior continuation lost the terminal output of the lifetime patch operation.
+Reverse-apply validation confirms the patch is already integrated; the retained
+ratchet log and a fresh scan both report zero introduced findings. A bounded
+operation receipt with exit status and changed-file hashes would have avoided
+reconstructing the outcome from patch state and logs.
+
+PR #1389's completed repo-cli unit job reported a failure in the inherited
+`hard-floors admission below 15 GiB and recovers when memory frees` test:
+`expected +0 to be 1`. The test slept for 100 ms before inspecting the real
+filesystem queue. It now waits for an actual queue entry with the neighboring
+test's bounded polling pattern. The focused regression passes. This is a test
+readiness repair; the hosted replacement and full proof remain required.
+
 ## 2026-09-09: draft PR readiness follow-up
 
 The operator authorized taking PR #1068 through mergeability while keeping it

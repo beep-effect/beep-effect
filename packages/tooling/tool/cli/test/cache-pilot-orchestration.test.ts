@@ -556,8 +556,8 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.provideService(CacheQualificationService, service)
     );
-  const runSigned = (changed = request, interfaces = "lo") =>
-    runCacheSignedPilotWorker(root, changed).pipe(
+  const runSigned = (changed = request, interfaces = "lo", issuer: O.Option<string> = O.none()) =>
+    runCacheSignedPilotWorker(root, changed, issuer).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.provideService(CacheQualificationService, service),
       Effect.provideService(FileSystem.FileSystem, {
@@ -574,6 +574,19 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
 afterEach(() => vi.restoreAllMocks());
 
 it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process boundary", (it) => {
+  it.effect("rejects issuer material under either mounted source before native execution", () =>
+    Effect.gen(function* () {
+      const { runSigned, sourceRoots, calls, path } = yield* fixture("none", linker, true);
+      for (const source of sourceRoots) {
+        const result = yield* runSigned(undefined, "lo", O.some(path.join(source, ".private", "issuer.key"))).pipe(
+          Effect.result
+        );
+        assertTrue(Result.isFailure(result));
+        expect(result.failure.message).toBe("Issuer material must remain outside every signed pilot input mount.");
+      }
+      expect(calls).toHaveLength(0);
+    })
+  );
   it.effect("rejects signed work outside the private network before any native process", () =>
     Effect.gen(function* () {
       const { runSigned, calls } = yield* fixture("none", linker, true);

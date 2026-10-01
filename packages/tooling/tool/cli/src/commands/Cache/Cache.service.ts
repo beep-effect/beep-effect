@@ -189,7 +189,6 @@ const audit = Effect.fn("CacheQualification.audit")(function* (root: string) {
       { discard: true }
     );
   }
-  yield* Effect.forEach(store.entries, (entry) => verifyQualifiedEvidence(root, entry), { discard: true });
   return auditCachePolicy(
     CachePolicyAuditRequest.make({
       baseline,

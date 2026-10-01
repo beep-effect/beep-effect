@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { Duration, Effect, FileSystem, Path } from "effect";
@@ -153,6 +154,13 @@ BunRuntime.runMain(Effect.gen(function* () {
           ],
           fs.realPath
         );
+        if (O.isSome(protectedIssuerMaterial)) {
+          const issuer = yield* fs.realPath(protectedIssuerMaterial.value);
+          if (
+            A.some([...mounts, "/usr"], (mount) => isResolvedPathWithinRoot(path, { root: mount, candidate: issuer }))
+          )
+            return yield* CacheCommandError.new("Issuer material must remain outside every signed pilot input mount.");
+        }
         const captured = yield* runCapturedStreams({
           command: "/usr/bin/bwrap",
           args: [

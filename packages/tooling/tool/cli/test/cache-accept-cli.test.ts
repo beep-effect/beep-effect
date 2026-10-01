@@ -20,9 +20,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { canaryInput, contractInput, input } from "./helpers/cache-producer-bundle-fixture.ts";
 
-it.live(
-  "accepts complete CLI bundles larger than 64 KiB and refuses revoked issuers",
-  () =>
+it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), {
+  timeout: "30 seconds",
+  excludeTestServices: true,
+})("native acceptance CLI", (it) => {
+  it.effect("accepts complete CLI bundles larger than 64 KiB and refuses revoked issuers", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -115,6 +117,6 @@ it.live(
       const revoked = Bun.spawnSync(args, { env, stdout: "pipe", stderr: "pipe" });
       expect(revoked.exitCode).not.toBe(0);
       expect(yield* fs.readFileString(referencePath)).toBe(marker);
-    }).pipe(Effect.scoped, Effect.provide(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))),
-  30000
-);
+    })
+  );
+});

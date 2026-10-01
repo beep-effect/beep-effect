@@ -174,22 +174,7 @@ const validateSignedMutationSeed = Effect.fn("CachePilot.validateSignedMutation"
     return yield* CacheCommandError.new("Signed mutation lacks its exact changed input and fresh seed verdict.");
 });
 
-const validateSignedComparison = Effect.fn("CachePilot.validateSignedComparison")(function* (
-  pair: CacheSignedPilotPair,
-  key: CacheQualificationKey,
-  client: CacheClientPin,
-  mutation: O.Option<CacheSignedPilotMutation>
-) {
-  if (
-    !S.toEquivalence(CacheClientPin)(
-      pair.client,
-      CacheClientPin.make({
-        ...client,
-        namespace: pair.client.namespace,
-      })
-    )
-  )
-    return yield* CacheCommandError.new("Signed pair client differs from its receipt pin.");
+const validateSignedRuntime = Effect.fn("CachePilot.validateSignedRuntime")(function* (pair: CacheSignedPilotPair) {
   const authority = pair.authoritative;
   const producer = pair.producer;
   const replay = pair.replay;
@@ -211,6 +196,15 @@ const validateSignedComparison = Effect.fn("CachePilot.validateSignedComparison"
     )
   )
     return yield* CacheCommandError.new("Signed pilot runtime, source, roots or fresh dependencies are invalid.");
+});
+
+const validateSignedOutcomes = Effect.fn("CachePilot.validateSignedOutcomes")(function* (
+  pair: CacheSignedPilotPair,
+  key: CacheQualificationKey
+) {
+  const { authoritative: authority, producer, replay } = pair;
+  if (!CachePilotOutcome.isAnyOf(["Executed"])(authority.outcome))
+    return yield* CacheCommandError.new("Signed pilot authority did not execute.");
   const authoritative = authority.outcome;
   const outcomes = [authoritative, producer.outcome, replay.outcome];
   if (
@@ -231,6 +225,13 @@ const validateSignedComparison = Effect.fn("CachePilot.validateSignedComparison"
     producer.outcome.selected.inputsDigest !== replay.outcome.selected.inputsDigest
   )
     return yield* CacheCommandError.new("Signed pilot lacks matching successful fresh authority and remote replay.");
+});
+
+const validateSignedWire = Effect.fn("CachePilot.validateSignedWire")(function* (
+  pair: CacheSignedPilotPair,
+  mutation: O.Option<CacheSignedPilotMutation>
+) {
+  const producer = pair.producer;
   const events = pair.events;
   if (
     !A.every(
@@ -298,6 +299,29 @@ const validateSignedComparison = Effect.fn("CachePilot.validateSignedComparison"
   )
     return yield* CacheCommandError.new("Signed pilot upload and download lack ordered matching signed bytes.");
 
+  return put;
+});
+
+const validateSignedComparison = Effect.fn("CachePilot.validateSignedComparison")(function* (
+  pair: CacheSignedPilotPair,
+  key: CacheQualificationKey,
+  client: CacheClientPin,
+  mutation: O.Option<CacheSignedPilotMutation>
+) {
+  if (
+    !S.toEquivalence(CacheClientPin)(
+      pair.client,
+      CacheClientPin.make({
+        ...client,
+        namespace: pair.client.namespace,
+      })
+    )
+  )
+    return yield* CacheCommandError.new("Signed pair client differs from its receipt pin.");
+  yield* validateSignedRuntime(pair);
+  yield* validateSignedOutcomes(pair, key);
+  const put = yield* validateSignedWire(pair, mutation);
+  const producer = pair.producer;
   if (
     !O.contains(pair.archive.archiveSha256)(put.digest) ||
     pair.archive.archiveBytes !== put.bytes ||

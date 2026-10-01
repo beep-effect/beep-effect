@@ -5,6 +5,32 @@
 Status: `active`
 Lifecycle: `active`
 
+### Resumed recovery and review repairs: 2026-10-01
+
+The lifetime patch is already integrated, confirmed by a successful reverse-apply
+check. Both its retained primary log and the resumed Effect/Vitest scan report
+zero introduced findings. The reviewed occurrence exceptions remain bounded;
+no detector baseline refresh is used.
+
+Current PR #1389 is open at `3a640c01ced4e73c6bf017392c808e2f984c5951`.
+Three newly observed review findings are repaired locally: the signed supervisor
+rejects issuer material inside any canonical input mount, the nested worker
+rejects mounted source locations, pure re-export barrels retain their module
+fileoverview checks, and qualified audit no longer repeats evidence verification.
+The issuer-location and pure-barrel regressions pass. All 129 tests across signed
+pilot, orchestration, operational acceptance and docgen pass; source and package
+test typechecking pass. The inherited hosted scheduler readiness failure has a
+focused passing repair using bounded queue observation instead of a fixed sleep.
+
+The signed comparison validator is decomposed into runtime, outcome and wire
+checks with diagnostics preserved. Fallow remains red: the resumed health scan
+reports 22 findings, including complexity in the extracted wire check. This is
+an intermediate structural repair, not a passing Fallow proof. Full CLI package
+verification passed against the captured, unchanged source snapshot: audit
+681.8 seconds and docgen 24.9 seconds. Native v9 execution,
+real qualification, semantic closure, adoption and final same-PR closeout remain
+incomplete. Frozen native bindings must be refreshed after source repairs land.
+
 Launched with `bun run beep goals set-status turborepo-task-qualification active`.
 P0 refresh is recorded in [census-refresh.json](./research/census-refresh.json).
 The user approved the program scope on 2026-09-08; no repeated shape approval
