@@ -59,8 +59,8 @@ const RUN_JQ =
 const JOBS_JQ =
   "{total_count,jobs:[.jobs[]|{completed_at,conclusion,created_at,id,labels,name,run_attempt,run_id,runner_name,started_at,status,steps}]}";
 const ANNOTATIONS_JQ = "[.[].message]";
-const PULL_REQUEST_JQ = "{number,state,head_sha:.head.sha}";
-const PULL_REQUESTS_JQ = "[.[]|{number,state,head_sha:.head.sha}]";
+const PULL_REQUEST_JQ = "{number,state,head_sha:.head.sha,head_ref:.head.ref,head_owner:.head.repo.owner.login}";
+const PULL_REQUESTS_JQ = "[.[]|{number,state,head_sha:.head.sha,head_ref:.head.ref,head_owner:.head.repo.owner.login}]";
 const BRANCH_REF_JQ = "{sha:.object.sha}";
 const JOBS_PER_PAGE = 100;
 const ANNOTATIONS_PER_PAGE = 100;
@@ -115,9 +115,9 @@ export class CiRerunRunnerLossInput extends S.Class<CiRerunRunnerLossInput>($I`C
 ) {}
 
 class RunnerLossPullRequest extends S.Class<RunnerLossPullRequest>($I`RunnerLossPullRequest`)(
-  { number: S.Finite, state: S.String, head_sha: S.String },
+  { number: S.Finite, state: S.String, head_sha: S.String, head_ref: S.String, head_owner: S.NullOr(S.String) },
   $I.annote("RunnerLossPullRequest", {
-    description: "The state and head SHA of one pull request read by the runner-loss head gate.",
+    description: "The state, head SHA, and head branch of one pull request read by the runner-loss head gate.",
   })
 ) {}
 
@@ -268,11 +268,17 @@ const readPullRequestHead = Effect.fn("Ci.rerunRunnerLoss.readPullRequestHead")(
       );
     })
   );
+  // Only the pull requests the run belongs to decide: the ones whose head is
+  // the run's own branch. Another pull request on the same commit has its own
+  // concurrency group, so its head says nothing about this run.
+  const ownsRun = (pullRequest: RunnerLossPullRequest) =>
+    pullRequest.head_ref === run.head_branch && pullRequest.head_owner === run.head_owner;
+  const owning = A.filter(listed, ownsRun);
   // A fork pull request is absent from the run's `pull_requests`; find it by
   // the head label instead.
   const found =
-    A.isReadonlyArrayNonEmpty(listed) || run.head_owner === null || run.head_branch === null
-      ? listed
+    A.isReadonlyArrayNonEmpty(owning) || run.head_owner === null || run.head_branch === null
+      ? owning
       : yield* ghApiJson(
           cwd,
           `repos/{owner}/{repo}/pulls?state=open&per_page=10&head=${encodeURIComponent(`${run.head_owner}:${run.head_branch}`)}`,
@@ -282,21 +288,20 @@ const readPullRequestHead = Effect.fn("Ci.rerunRunnerLoss.readPullRequestHead")(
             decodePullRequests(output).pipe(
               CiCommandError.mapError(`Failed to decode open pull requests for ${run.head_branch}.`)
             )
-          )
+          ),
+          Effect.map(A.filter(ownsRun))
         );
   const open = A.filter(found, (pullRequest) => Str.toLowerCase(pullRequest.state) === "open");
   if (A.isReadonlyArrayEmpty(open)) {
     return RunnerLossHead.make({ status: "no-open-pull-request" });
   }
-  // The run is current while any open pull request still has its SHA as head;
-  // another pull request on the same commit moving on does not supersede it.
-  if (A.some(open, (pullRequest) => pullRequest.head_sha === run.head_sha)) {
-    return RunnerLossHead.make({ status: "current" });
-  }
-  return RunnerLossHead.make({
-    status: "superseded",
-    currentSha: O.map(A.head(open), (pullRequest) => pullRequest.head_sha),
-  });
+  return pipe(
+    A.findFirst(open, (pullRequest) => pullRequest.head_sha !== run.head_sha),
+    O.match({
+      onNone: () => RunnerLossHead.make({ status: "current" }),
+      onSome: (pullRequest) => RunnerLossHead.make({ status: "superseded", currentSha: O.some(pullRequest.head_sha) }),
+    })
+  );
 });
 
 const readBranchHead = Effect.fn("Ci.rerunRunnerLoss.readBranchHead")(function* (

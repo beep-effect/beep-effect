@@ -354,7 +354,8 @@ const runJson = (values: Record<string, unknown> = {}) =>
   });
 const jobsJson = (totalCount: number, jobs: ReadonlyArray<CiWorkflowJob>) =>
   encodeJson({ total_count: totalCount, jobs });
-const pullJson = (state: string, headSha: string) => encodeJson({ number: 1338, state, head_sha: headSha });
+const pullJson = (state: string, headSha: string, number = 1338, headRef = "refactor/literal-kit-trim") =>
+  encodeJson({ number, state, head_sha: headSha, head_ref: headRef, head_owner: "beep-effect" });
 // Page 1 holds a lost job and a genuine red; page 2 a green job.
 const failedAttemptReplies: ReadonlyArray<GhReply> = [
   [jobsEndpoint(1), 0, jobsJson(3, [restJob(11, "failure", lostSteps), restJob(12, "failure", failedSteps)])],
@@ -443,23 +444,33 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
     })
   );
 
-  layerIt.effect("keeps a run current while any open pull request still has its head", () =>
+  layerIt.effect("judges a run only by the pull request whose branch it ran on", () =>
     Effect.gen(function* () {
       const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
-      const decision = yield* decideRun(
-        CiRerunRunnerLossInput.make({ runId: 36763005302, dryRun: true, cwd: "." })
-      ).pipe(
-        withGh(
-          [
-            [RUN_ENDPOINT, 0, runJson({ pull_requests: [1339, 1338] })],
-            ...failedAttemptReplies,
-            ["repos/{owner}/{repo}/pulls/1339", 0, encodeJson({ number: 1339, state: "open", head_sha: NEWER_SHA })],
-            ["repos/{owner}/{repo}/pulls/1338", 0, pullJson("open", SHA)],
-          ],
-          commands
-        )
-      );
-      expect(decision.reason).toBe("runner-loss");
+      // PR 1338 (branch refactor/literal-kit-trim) advanced; PR 1339 (branch
+      // other/branch) still points at the run's SHA.
+      const pulls: ReadonlyArray<GhReply> = [
+        ["repos/{owner}/{repo}/pulls/1338", 0, pullJson("open", NEWER_SHA)],
+        ["repos/{owner}/{repo}/pulls/1339", 0, pullJson("open", SHA, 1339, "other/branch")],
+      ];
+      const decide = (runValues: Record<string, unknown>) =>
+        decideRun(CiRerunRunnerLossInput.make({ runId: 36763005302, cwd: "." })).pipe(
+          withGh(
+            [
+              [RUN_ENDPOINT, 0, runJson({ pull_requests: [1339, 1338], ...runValues })],
+              ...failedAttemptReplies,
+              ...pulls,
+              ["run rerun --job 11", 0, "✓ Requested"],
+            ],
+            commands
+          )
+        );
+      const runOfA = yield* decide({});
+      expect(runOfA.reason).toBe("superseded-head");
+      expect(A.some(yield* Ref.get(commands), (args) => args[0] === "run")).toBe(false);
+      const runOfB = yield* decide({ head_branch: "other/branch" });
+      expect(runOfB.reason).toBe("runner-loss");
+      expect(A.contains(endpoints(yield* Ref.get(commands)), "run rerun --job 11")).toBe(true);
     })
   );
 
@@ -495,7 +506,20 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
           withGh([[RUN_ENDPOINT, 0, runJson(runValues)], ...failedAttemptReplies, ...replies], commands)
         );
       const fork = yield* decide({ pull_requests: [], head_owner: "contributor" }, [
-        [forkLookup, 0, encodeJson([{ number: 7, state: "open", head_sha: SHA }])],
+        [
+          forkLookup,
+          0,
+          encodeJson([
+            {
+              number: 7,
+              state: "open",
+              head_sha: SHA,
+              head_ref: "refactor/literal-kit-trim",
+              head_owner: "contributor",
+            },
+            { number: 8, state: "open", head_sha: NEWER_SHA, head_ref: "other/branch", head_owner: "contributor" },
+          ]),
+        ],
       ]);
       expect(fork.reason).toBe("runner-loss");
       expect(A.contains(endpoints(yield* Ref.get(commands)), forkLookup)).toBe(true);

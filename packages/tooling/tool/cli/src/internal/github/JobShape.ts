@@ -314,7 +314,7 @@ export const detectGithubJobShapeClass = (job: GithubJobRecord): O.Option<Github
  *
  * @param job - One job record from either GitHub job API.
  * @returns `true` when at least one step concluded `failure`.
- * @category detection
+ * @category predicates
  * @since 0.0.0
  */
 export const githubJobHasFailedStep = (job: GithubJobRecord): boolean =>
