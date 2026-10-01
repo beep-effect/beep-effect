@@ -58,7 +58,11 @@ import {
   CacheSignedPilotShadow,
   CacheSignedPilotTask,
 } from "./Cache.pilot.signed.schemas.ts";
-import { validateCacheSignedPilotFreshPair, validateCacheSignedPilotShadow } from "./Cache.pilot.signed.ts";
+import {
+  validateCacheSignedPilotConcurrency,
+  validateCacheSignedPilotFreshPair,
+  validateCacheSignedPilotShadow,
+} from "./Cache.pilot.signed.ts";
 import { renderCacheIdentityLintProfile, verifyCacheIdentityLintProfile } from "./Cache.profile.ts";
 import { CacheFixtureCredentials, CacheFixtureScenario } from "./Cache.protocol.fixture.schemas.ts";
 import { makeCacheProtocolFixture } from "./Cache.protocol.fixture.ts";
@@ -127,7 +131,13 @@ const NativeTask = S.Struct({
     configured: S.Array(S.String),
     passthrough: S.Array(S.String).pipe(S.OptionFromNullOr),
   }),
-  execution: S.OptionFromOptionalKey(S.Struct({ exitCode: S.OptionFromOptionalKey(S.Int) })),
+  execution: S.OptionFromOptionalKey(
+    S.Struct({
+      exitCode: S.OptionFromOptionalKey(S.Int),
+      startTime: S.OptionFromOptionalKey(S.Natural),
+      endTime: S.OptionFromOptionalKey(S.Natural),
+    })
+  ),
 });
 const NativeSummary = S.Struct({ tasks: S.Array(NativeTask) });
 class PilotFile extends S.Class<PilotFile>($I`PilotFile`)(
@@ -973,6 +983,12 @@ const runPilot = Effect.fn("CachePilot.run")(
         cacheEnabled: enabled,
         graphExitCode: captured.exitCode,
         outcome,
+        ...R.getSomes({
+          selectedTaskInterval: A.head(selected).pipe(
+            O.flatMap((task) => task.execution),
+            O.flatMap((execution) => O.all({ startTime: execution.startTime, endTime: execution.endTime }))
+          ),
+        }),
         dependencies,
         summarySha256: yield* hashBytes(bytes),
         sourceTreeUnchanged,
@@ -990,7 +1006,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       env: Readonly<Record<string, string>> = {}
     ) {
       return yield* executeNative(fixture, id, enabled, reuse, guest, env).pipe(
-        Effect.flatMap(S.decodeUnknownEffect(CachePilotRun))
+        Effect.flatMap(S.decodeUnknownEffect(S.toType(CachePilotRun)))
       );
     });
     const verifyFinalIntegrity = Effect.fn("CachePilot.verifyFinalIntegrity")(function* () {
@@ -1121,8 +1137,13 @@ const runPilot = Effect.fn("CachePilot.run")(
           for (const fixture of [leftRoot, rightRoot])
             if (yield* fs.exists(path.join(fixture.directory, "cache")))
               return yield* CacheCommandError.new("Signed fresh comparison requires a new isolated cache directory.");
-          const left = yield* execute(leftRoot, `signed-fresh-${pair}-left`, true, true);
-          const right = yield* execute(rightRoot, `signed-fresh-${pair}-right`, true, true);
+          const [left, right] = yield* Effect.all(
+            [
+              execute(leftRoot, `signed-fresh-${pair}-left`, true, true),
+              execute(rightRoot, `signed-fresh-${pair}-right`, true, true),
+            ],
+            { concurrency: 2 }
+          );
           const result = CacheSignedPilotFreshPair.make({
             id: pair,
             leftRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(leftRoot.directory)}`),
@@ -1135,6 +1156,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         }),
         { concurrency: 1 }
       );
+      yield* validateCacheSignedPilotConcurrency(freshPairs);
       const runSignedPair = Effect.fn("CachePilot.signedPair")(function* (pair: number, scenario: PilotShadowScenario) {
         const namespace = `team_${request.channel}_${yield* hashText(`${request.client.namespace}:${pair}`)}`;
         const client = CacheClientPin.make({ ...request.client, namespace });
@@ -1181,7 +1203,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           scenario.guest,
           scenario.env,
           O.some(transport)
-        ).pipe(Effect.flatMap(S.decodeUnknownEffect(CacheSignedPilotRun)));
+        ).pipe(Effect.flatMap(S.decodeUnknownEffect(S.toType(CacheSignedPilotRun))));
         const protectedKeyPath = path.join(experiment, `protected-${pair}.key`);
         const protectedRecordPath = path.join(experiment, `protected-${pair}.json`);
         const protectedRecord = yield* JsonStringCodec(CacheSignedPilotRun).encode(producer);
@@ -1198,7 +1220,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           "/fixture",
           scenario.env,
           O.some(PilotTransport.make({ ...transport, bearer: reader }))
-        ).pipe(Effect.flatMap(S.decodeUnknownEffect(CacheSignedPilotRun)));
+        ).pipe(Effect.flatMap(S.decodeUnknownEffect(S.toType(CacheSignedPilotRun))));
         const protectedPaths = yield* S.String.pipe(S.Array, JsonStringCodec).encode([
           protectedKeyPath,
           protectedRecordPath,

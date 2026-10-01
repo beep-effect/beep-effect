@@ -75,6 +75,45 @@ describe("signed real-pilot receipt relationships", () => {
       }
     })
   );
+  it.effect("requires native task overlap rather than parent lifetime or touching endpoints", () =>
+    Effect.gen(function* () {
+      for (const interval of [
+        undefined,
+        { startTime: 1000, endTime: 1000 },
+        { startTime: 1100, endTime: 1000 },
+        { startTime: -1, endTime: 1800 },
+        { startTime: 1.5, endTime: 1800 },
+      ]) {
+        const freshPairs = A.map(input.freshPairs, (pair) => ({
+          ...pair,
+          left: { ...pair.left, selectedTaskInterval: interval },
+        }));
+        expect(Result.isFailure(yield* validate({ ...input, freshPairs }))).toBe(true);
+      }
+      for (const offset of [0, 1]) {
+        const freshPairs = A.map(input.freshPairs, (pair) => ({
+          ...pair,
+          right: {
+            ...pair.right,
+            selectedTaskInterval: {
+              startTime: pair.left.selectedTaskInterval.endTime + offset,
+              endTime: pair.left.selectedTaskInterval.endTime + 1000,
+            },
+          },
+        }));
+        expect(Result.isFailure(yield* validate({ ...input, freshPairs }))).toBe(true);
+      }
+      const oneOverlap = A.map(input.freshPairs, (pair, index) =>
+        index === 0
+          ? pair
+          : {
+              ...pair,
+              right: { ...pair.right, selectedTaskInterval: { startTime: 9000, endTime: 10000 } },
+            }
+      );
+      expect(Result.isSuccess(yield* validate({ ...input, freshPairs: oneOverlap }))).toBe(true);
+    })
+  );
   it.effect("requires all ten distinct remote shadow scenarios and isolation roots", () =>
     Effect.gen(function* () {
       for (const shadows of [

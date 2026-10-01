@@ -2607,3 +2607,16 @@ execution, and exact task output plus persisted replay-log comparisons remain
 mandatory. Testing configured cache state separately from cache I/O mode would
 have prevented the failed run. Final qualification still requires current pins
 and the remaining signed matrix.
+
+### Native interval evidence exposed a decoded-versus-wire boundary mismatch
+
+The first concurrency development run and bounded diagnostic failed after the
+installed-runtime preflight. A small schema-boundary probe reproduced both
+errors: the runner put a decoded `Option` into the encoded native-observation
+shape, and its local/signed narrowing wrappers decoded already constructed
+observations again. The runner now supplies optional raw interval fields only
+at the native decode boundary; subsequent checks use the schema's decoded
+type. Source typechecking and 52 focused tests pass after that correction.
+The native rerun is still pending, so no task-overlap evidence is claimed.
+A boundary test covering nontrivial transformed fields would have exposed
+this before the native attempt; passing plain-field observations did not.

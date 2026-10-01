@@ -205,7 +205,7 @@ export class CacheSignedPilotShadow extends S.Class<CacheSignedPilotShadow>($I`C
  */
 export class CacheSignedPilotReceipt extends S.Class<CacheSignedPilotReceipt>($I`CacheSignedPilotReceipt`)(
   {
-    schemaVersion: S.tag("cache-pilot-signed/v3"),
+    schemaVersion: S.tag("cache-pilot-signed/v4"),
     authority: S.tag("signed-pilot-observation-only"),
     network: S.tag("private-loopback-nested-readers/v1"),
     key: CachePilotReceipt.fields.key,
@@ -242,6 +242,7 @@ export class CacheSignedPilotReceipt extends S.Class<CacheSignedPilotReceipt>($I
    * console.assert(typeof comparisons === "function")
    * ```
    *
+   * @returns Every baseline and shadow comparison with a protected reader boundary.
    * @category getters
    * @since 0.0.0
    */

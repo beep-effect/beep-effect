@@ -2920,3 +2920,18 @@ Full package verification passed: audit 619.7 seconds and docgen 20.2 seconds. T
 the final profile, accept producer authority or qualify a tuple. Signed mutation,
 non-execution, capture and actual task-overlap controls, accepted policy import
 and final-source reconciliation remain required.
+
+## Signed native concurrency: 2026-10-01
+
+Signed v4 observations retain selected-task native start/end timestamps and run
+the three independent fresh pairs concurrently within each pair. Missing or
+nonpositive intervals fail; at least one pair must have a strictly positive
+intersection. Parent-process overlap and touching endpoints cannot count.
+
+The stable development run passed all existing remote/shadow comparisons and
+measured 498 ms, 539 ms and 378 ms of selected-task overlap. Typechecking and
+52 focused tests pass; full CLI audit passed in 660.6 seconds and docgen in
+19.2 seconds. The [checkpoint](./research/signed-concurrency-development-stable.json)
+retains receipt identity and scope. The native run remains on the older frozen
+profile and does not qualify a tuple. Seeded invalidation, refusal/capture
+controls, accepted import and current-profile reconciliation remain open.

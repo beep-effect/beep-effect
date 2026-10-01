@@ -68,6 +68,39 @@ export const validateCacheSignedPilotFreshPair = Effect.fn("CachePilot.validateS
   return pair;
 });
 
+/**
+ * Require direct selected-task overlap among the isolated fresh comparisons.
+ *
+ * **Details**
+ * All three pairs need positive native intervals. At least one must have a
+ * strictly positive intersection; touching endpoints and parent-process overlap
+ * do not count. Fresh execution and output equality are validated separately.
+ *
+ * **Example** (Reference the native overlap gate)
+ * ```ts
+ * import { validateCacheSignedPilotConcurrency } from "@beep/repo-cli/commands/Cache"
+ * console.assert(typeof validateCacheSignedPilotConcurrency === "function")
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const validateCacheSignedPilotConcurrency = Effect.fn("CachePilot.validateSignedConcurrency")(function* (
+  pairs: ReadonlyArray<CacheSignedPilotFreshPair>
+) {
+  const intervals = A.map(pairs, (pair) => O.all([pair.left.selectedTaskInterval, pair.right.selectedTaskInterval]));
+  if (
+    pairs.length !== 3 ||
+    !A.every(intervals, O.isSome) ||
+    !A.every(
+      A.getSomes(intervals),
+      ([left, right]) => left.endTime > left.startTime && right.endTime > right.startTime
+    ) ||
+    !A.some(A.getSomes(intervals), ([left, right]) => left.startTime < right.endTime && right.startTime < left.endTime)
+  )
+    return yield* CacheCommandError.new("Signed fresh comparisons lack positive native selected-task overlap.");
+});
+
 const changesShadowHash = S.is(
   CacheSignedPilotShadow.fields.case.pick([
     "source-comment",
@@ -154,6 +187,7 @@ export const validateCacheSignedPilotReceipt = Effect.fn("CachePilot.validateSig
   if (A.dedupe(isolationRoots).length !== 45)
     return yield* CacheCommandError.new("Signed comparisons reuse an isolation root.");
   yield* Effect.forEach(freshPairs, (pair) => validateCacheSignedPilotFreshPair(pair, receipt.key), { discard: true });
+  yield* validateCacheSignedPilotConcurrency(freshPairs);
   const baseline = yield* A.head(receipt.pairs).pipe(
     Effect.fromOption(() => CacheCommandError.new("Signed baseline comparison is missing."))
   );

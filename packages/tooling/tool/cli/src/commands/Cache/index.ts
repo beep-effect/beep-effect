@@ -113,6 +113,7 @@ export { runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
  * @since 0.0.0
  */
 export {
+  CachePilotExecutionInterval,
   CachePilotLogInput,
   CachePilotMutation,
   CachePilotNonExecution,
@@ -141,6 +142,7 @@ export {
  * @since 0.0.0
  */
 export {
+  validateCacheSignedPilotConcurrency,
   validateCacheSignedPilotFreshPair,
   validateCacheSignedPilotReceipt,
   validateCacheSignedPilotShadow,

@@ -65,7 +65,7 @@ const comparison = (pair: number) => ({
   events: A.map(A.range(0, 2), (role) => event(pair, role)),
 });
 export const signedPilotInput = {
-  schemaVersion: "cache-pilot-signed/v3",
+  schemaVersion: "cache-pilot-signed/v4",
   authority: "signed-pilot-observation-only",
   network: "private-loopback-nested-readers/v1",
   baseKey,
@@ -109,6 +109,7 @@ export const signedPilotInput = {
     left: {
       ...run(pair, 0),
       id: `fresh-${pair}-left`,
+      selectedTaskInterval: { startTime: 1000 + pair * 1000, endTime: 1800 + pair * 1000 },
       cacheEnabled: true,
       summarySha256: digest(["a", "c", "e"][pair]),
       outcome: { ...run(pair, 0).outcome, replayLogMatches: true },
@@ -116,6 +117,7 @@ export const signedPilotInput = {
     right: {
       ...run(pair, 0),
       id: `fresh-${pair}-right`,
+      selectedTaskInterval: { startTime: 1400 + pair * 1000, endTime: 2200 + pair * 1000 },
       root: "root-b",
       cacheEnabled: true,
       summarySha256: digest(["b", "d", "f"][pair]),
