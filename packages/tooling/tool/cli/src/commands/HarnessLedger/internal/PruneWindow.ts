@@ -11,6 +11,7 @@ import { contextSurfaceId, HookPulseV1 } from "@beep/repo-ai-metrics";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str } from "@beep/utils";
 import { DateTime, Effect, FileSystem, Order, Path, Result } from "effect";
+import * as F from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as R from "effect/Record";
@@ -133,7 +134,7 @@ const regimeOf = (tally: SessionTally, harnessHash: HarnessHash): SessionRegime 
   pipe(
     O.liftPredicate(tally.stamps, (stamps) => !HashSet.isEmpty(stamps)),
     O.match({
-      onNone: SessionRegime.thunk.unstamped,
+      onNone: F.constant(SessionRegime.Enum.unstamped),
       onSome: (stamps) =>
         HashSet.every(stamps, (stamp) => stamp === harnessHash)
           ? SessionRegime.Enum["in-regime"]
