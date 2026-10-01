@@ -6084,3 +6084,14 @@ The same merge initially exposed stale generated ai-metrics declarations during
 the CLI quick check (`HarnessHash` missing). Rebuilding the changed dependency
 cleared the errors. Package verification could detect and refresh stale
 referenced declarations before presenting dependent-source diagnostics.
+
+### Package quick proof and root test diagnostics disagree
+
+PR #1365's package quick check passed before root `quality test-tsgo` reported
+`TS377050 missedPipeableOpportunity` for the scanner persistence regression's
+nested Option assertion. The repair maps the optional inventory through
+`O.getOrThrow` before checking its contents; absence still fails the test. Compare
+these proof paths' diagnostic configuration and cache inputs so a quick pass
+does not conceal an error the authoritative gate will later report. The cause
+of the discrepancy is not yet established; the full test-type gate remains
+required evidence.

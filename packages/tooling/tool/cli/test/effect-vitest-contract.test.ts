@@ -151,12 +151,11 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
               : path.resolve(...segments),
         })
       );
-      const inventory = yield* readEffectVitestInventory(output);
-      assertTrue(O.isSome(inventory));
-      assertTrue(inventory.value.effectVitestVersion === "4.0.0-rc.118");
-      assertTrue(inventory.value.findings.length === timing.findingCount);
-      assertTrue(A.some(inventory.value.findings, (row) => row.ruleId === "EV001"));
-      const findingIds = A.map(inventory.value.findings, (row) => row.id);
+      const inventory = yield* readEffectVitestInventory(output).pipe(Effect.map(O.getOrThrow));
+      assertTrue(inventory.effectVitestVersion === "4.0.0-rc.118");
+      assertTrue(inventory.findings.length === timing.findingCount);
+      assertTrue(A.some(inventory.findings, (row) => row.ruleId === "EV001"));
+      const findingIds = A.map(inventory.findings, (row) => row.id);
       deepStrictEqual(findingIds, A.sort(findingIds, Str.Order));
       const census = yield* fs
         .readFileString(path.join(output, EffectVitestCensusPath))

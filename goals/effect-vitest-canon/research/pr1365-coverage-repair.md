@@ -63,3 +63,9 @@ fields and ordering through the persisted JSON codec, with stable re-encoding.
 The focused persistence regression remains in place. Concurrent full-package
 verification also exposed a transient lint-worker source fixture to Knip; the
 quality rerun must occur after that fixture's scoped cleanup.
+
+The subsequent full policy run reported `TS377050` on the nested Some assertion.
+The scanner fixture now maps the read result through `O.getOrThrow`, preserving
+failure on a missing inventory and all persisted-content assertions without the
+flagged nested call. This follow-up is checked with root `quality test-tsgo`,
+not inferred solely from the earlier package quick proof.
