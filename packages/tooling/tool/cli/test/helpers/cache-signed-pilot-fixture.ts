@@ -65,7 +65,7 @@ const comparison = (pair: number) => ({
   events: A.map(A.range(0, 2), (role) => event(pair, role)),
 });
 export const signedPilotInput = {
-  schemaVersion: "cache-pilot-signed/v4",
+  schemaVersion: "cache-pilot-signed/v5",
   authority: "signed-pilot-observation-only",
   network: "private-loopback-nested-readers/v1",
   baseKey,
@@ -124,6 +124,52 @@ export const signedPilotInput = {
       outcome: { ...run(pair, 0).outcome, replayLogMatches: true },
     },
   })),
+  mutations: A.map(
+    [
+      { case: "root-task-config", changedPath: "turbo.json", seedExit: 0 },
+      { case: "child-task-config", changedPath: "packages/foundation/modeling/identity/turbo.json", seedExit: 0 },
+      { case: "root-lint-config", changedPath: "biome.jsonc", seedExit: 1 },
+      { case: "lockfile", changedPath: "bun.lock", seedExit: 0 },
+      { case: "package-manager", changedPath: "package.json", seedExit: 0 },
+      { case: "generated-alias", changedPath: "tsconfig.json", seedExit: 0 },
+      { case: "dependency-source", changedPath: "packages/foundation/primitive/types/src/index.ts", seedExit: 1 },
+    ],
+    (variant, index) => {
+      const pair = index + 13;
+      const seedHash = `00000000000000${index}1`;
+      const seed = {
+        ...run(pair, 1),
+        id: `mutation-${index}-seed`,
+        graphExitCode: variant.seedExit,
+        summarySha256: Str.padStart(64, "0")(`${100 + index}`),
+        outcome: {
+          ...run(pair, 1).outcome,
+          selected: { ...task, origin: "fresh", taskHash: seedHash, exitCode: variant.seedExit },
+        },
+      };
+      const seedEvents = A.map(A.range(0, variant.seedExit === 0 ? 1 : 0), (role) => ({
+        ...event(pair, role),
+        artifact: seedHash,
+      }));
+      return {
+        case: variant.case,
+        changedPath: variant.changedPath,
+        beforeSha256: digest("a"),
+        afterSha256: digest("b"),
+        seed,
+        comparison: {
+          ...comparison(pair),
+          events: A.appendAll(
+            seedEvents,
+            A.map(comparison(pair).events, (event) => ({
+              ...event,
+              sequence: event.sequence + seedEvents.length,
+            }))
+          ),
+        },
+      };
+    }
+  ),
   pairs: A.map(A.range(0, 2), comparison),
   shadows: A.map(
     [

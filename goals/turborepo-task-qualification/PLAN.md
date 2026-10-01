@@ -2935,3 +2935,16 @@ measured 498 ms, 539 ms and 378 ms of selected-task overlap. Typechecking and
 retains receipt identity and scope. The native run remains on the older frozen
 profile and does not qualify a tuple. Seeded invalidation, refusal/capture
 controls, accepted import and current-profile reconciliation remain open.
+
+## Signed seeded-mutation checkpoint: 2026-10-01
+
+Signed v5 completes all seven seeded invalidation controls at frozen b410da2b6d
+with stable Turbo 2.11.4, while preserving three fresh pairs, three baseline
+remote pairs and ten shadow decisions. Failed seeds are not uploaded; each
+changed producer differs from its seed before signed replay. Exact workflow
+source and native receipt are retained privately. Typechecking, 78 focused
+tests and full CLI verification pass (audit 719.3s, docgen 34.6s).
+See [the development receipt](./research/signed-mutations-development-stable.json).
+Missing-child refusal and four non-execution controls are being validated in
+a separate snapshot. Capture controls, current-profile reconciliation, semantic
+closure and accepted operational import remain open; no tuple is qualified.

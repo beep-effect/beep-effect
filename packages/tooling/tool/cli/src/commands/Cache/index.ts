@@ -127,6 +127,7 @@ export {
 } from "./Cache.pilot.schemas.ts";
 export {
   CacheSignedPilotFreshPair,
+  CacheSignedPilotMutation,
   CacheSignedPilotPair,
   CacheSignedPilotProtection,
   CacheSignedPilotReceipt,
@@ -144,6 +145,8 @@ export {
 export {
   validateCacheSignedPilotConcurrency,
   validateCacheSignedPilotFreshPair,
+  validateCacheSignedPilotMutation,
+  validateCacheSignedPilotPair,
   validateCacheSignedPilotReceipt,
   validateCacheSignedPilotShadow,
 } from "./Cache.pilot.signed.ts";

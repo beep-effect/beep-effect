@@ -10,7 +10,13 @@ import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { CachePilotReceipt, CachePilotRequest, CachePilotRun, CachePilotTask } from "./Cache.pilot.schemas.ts";
+import {
+  CachePilotMutation,
+  CachePilotReceipt,
+  CachePilotRequest,
+  CachePilotRun,
+  CachePilotTask,
+} from "./Cache.pilot.schemas.ts";
 import { CacheFixtureEvent } from "./Cache.protocol.fixture.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot.signed.schemas");
@@ -192,6 +198,46 @@ export class CacheSignedPilotShadow extends S.Class<CacheSignedPilotShadow>($I`C
 ) {}
 
 /**
+ * A seeded backend whose changed inputs must invalidate before signed replay.
+ *
+ * **Details**
+ * The seed and changed producer share one isolated writer root and backend.
+ * Fresh authority and replay use independent roots carrying the same mutation.
+ * Missing child configuration is a separate mandatory policy-refusal control,
+ * because it removes the governed runtime key and cannot be a valid replay.
+ *
+ * **Example** (Inspect seeded invalidation evidence)
+ * ```ts
+ * import { CacheSignedPilotMutation } from "@beep/repo-cli/commands/Cache"
+ * console.assert("seed" in CacheSignedPilotMutation.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheSignedPilotMutation extends S.Class<CacheSignedPilotMutation>($I`CacheSignedPilotMutation`)(
+  {
+    case: LiteralKit([
+      "root-task-config",
+      "child-task-config",
+      "root-lint-config",
+      "lockfile",
+      "package-manager",
+      "generated-alias",
+      "dependency-source",
+    ]),
+    changedPath: CachePilotMutation.fields.changedPath,
+    beforeSha256: Sha256Hex,
+    afterSha256: Sha256Hex,
+    seed: CacheSignedPilotRun,
+    comparison: CacheSignedPilotPair,
+  },
+  $I.annote("CacheSignedPilotMutation", {
+    description: "Same-backend seed, changed fresh execution and signed replay with independently changed authority.",
+  })
+) {}
+
+/**
  * Real signed comparisons without protected-producer or promotion authority.
  *
  * **Example** (Inspect the explicit profile)
@@ -205,7 +251,7 @@ export class CacheSignedPilotShadow extends S.Class<CacheSignedPilotShadow>($I`C
  */
 export class CacheSignedPilotReceipt extends S.Class<CacheSignedPilotReceipt>($I`CacheSignedPilotReceipt`)(
   {
-    schemaVersion: S.tag("cache-pilot-signed/v4"),
+    schemaVersion: S.tag("cache-pilot-signed/v5"),
     authority: S.tag("signed-pilot-observation-only"),
     network: S.tag("private-loopback-nested-readers/v1"),
     key: CachePilotReceipt.fields.key,
@@ -223,17 +269,18 @@ export class CacheSignedPilotReceipt extends S.Class<CacheSignedPilotReceipt>($I
     configurationDigest: Sha256Hex,
     toolchainDigest: Sha256Hex,
     signedRootConfiguration: Sha256Hex,
+    mutations: S.Array(CacheSignedPilotMutation).check(S.isMinLength(7), S.isMaxLength(7)),
     shadows: S.Array(CacheSignedPilotShadow).check(S.isMinLength(10), S.isMaxLength(10)),
     freshPairs: S.Array(CacheSignedPilotFreshPair).check(S.isMinLength(3), S.isMaxLength(3)),
     pairs: S.Array(CacheSignedPilotPair).check(S.isMinLength(3), S.isMaxLength(3)),
   },
   $I.annote("CacheSignedPilotReceipt", {
     description:
-      "Three fresh pairs, three signed remote pairs and ten remote shadows bound to an explicit network profile; operational protected-receipt validation remains required.",
+      "Three fresh pairs, three remote pairs, ten shadows and seven seeded mutations bound to an explicit network profile; operational protected-receipt validation remains required.",
   })
 ) {
   /**
-   * Every baseline and shadow remote comparison requiring receipt validation.
+   * Every baseline, shadow and mutation comparison requiring receipt validation.
    *
    * **Example** (Select all protected comparisons)
    * ```ts
@@ -242,14 +289,17 @@ export class CacheSignedPilotReceipt extends S.Class<CacheSignedPilotReceipt>($I
    * console.assert(typeof comparisons === "function")
    * ```
    *
-   * @returns Every baseline and shadow comparison with a protected reader boundary.
+   * @returns Every baseline, shadow and mutation comparison with a protected reader boundary.
    * @category getters
    * @since 0.0.0
    */
   get comparisons(): ReadonlyArray<CacheSignedPilotPair> {
     return A.appendAll(
-      this.pairs,
-      A.map(this.shadows, (shadow) => shadow.comparison)
+      A.appendAll(
+        this.pairs,
+        A.map(this.shadows, (shadow) => shadow.comparison)
+      ),
+      A.map(this.mutations, (mutation) => mutation.comparison)
     );
   }
 }

@@ -51,6 +51,7 @@ import {
 } from "./Cache.pilot.schemas.ts";
 import {
   CacheSignedPilotFreshPair,
+  CacheSignedPilotMutation,
   CacheSignedPilotPair,
   CacheSignedPilotProtection,
   CacheSignedPilotReceipt,
@@ -61,6 +62,8 @@ import {
 import {
   validateCacheSignedPilotConcurrency,
   validateCacheSignedPilotFreshPair,
+  validateCacheSignedPilotMutation,
+  validateCacheSignedPilotPair,
   validateCacheSignedPilotShadow,
 } from "./Cache.pilot.signed.ts";
 import { renderCacheIdentityLintProfile, verifyCacheIdentityLintProfile } from "./Cache.profile.ts";
@@ -1099,6 +1102,173 @@ const runPilot = Effect.fn("CachePilot.run")(
       PilotShadowScenario.make({ ...unchanged, id: "timezone", env: { TZ: "Pacific/Honolulu" } }),
       PilotShadowScenario.make({ ...unchanged, id: "absolute-root", guest: "/fixture-other" }),
     ];
+    const mutationIds = LiteralKit([
+      "root-task-config",
+      "child-task-config",
+      "missing-child-config",
+      "root-lint-config",
+      "lockfile",
+      "package-manager",
+      "generated-alias",
+      "dependency-source",
+    ]);
+    class PilotMutationChange extends S.Class<PilotMutationChange>($I`PilotMutationChange`)(
+      {
+        fixture: PilotRoot,
+        changedPath: CachePilotMutation.fields.changedPath,
+        beforeSha256: Sha256Hex,
+        afterSha256: CachePilotMutation.fields.afterSha256,
+      },
+      $I.annote("PilotMutationChange", {
+        description: "Owned fixture mutation and exact changed configuration evidence.",
+      })
+    ) {}
+    const sameMutationDigest = S.toEquivalence(CachePilotMutation.fields.afterSha256);
+    const prepareMutationBaseline = Effect.fn("CachePilot.prepareMutationBaseline")(function* (
+      fixture: PilotRoot,
+      id: typeof mutationIds.Type
+    ) {
+      if (id === "root-lint-config")
+        yield* writeContainedFileString(fixture.identity, "src/index.ts", "export const = ;\n");
+      if (id === "dependency-source") {
+        yield* writeContainedFileString(
+          fixture.identity,
+          "src/qualification-dependency.ts",
+          'import { qualificationDependency } from "../../../primitive/types/src/index.ts";\n\nexport const qualificationValue = qualificationDependency;\n'
+        );
+        const dependencySource = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
+        yield* writeContainedFileString(
+          fixture.types,
+          "src/index.ts",
+          `${dependencySource}\n/** @deprecated qualification dependency control */\nexport const qualificationDependency = 1;\n`
+        );
+      }
+    });
+    const applyMutationControl = Effect.fn("CachePilot.applyMutationControl")(function* (
+      fixture: PilotRoot,
+      id: typeof mutationIds.Type,
+      rootConfiguration: string
+    ) {
+      let changedFixture = fixture;
+      let changedPath = "turbo.json";
+      let original = rootConfiguration;
+      let changedText = original;
+      const changeChildConfiguration = Effect.fn("CachePilot.changeChildConfiguration")(function* () {
+        changedPath = `${identityDirectory}/turbo.json`;
+        original = fixture.after;
+        if (id === "missing-child-config") changedFixture = PilotRoot.make({ ...fixture, omitChild: true });
+        else {
+          const change = Effect.fn("CachePilot.changeChild")(function* (text: string) {
+            const config = yield* decodeJsoncTextAs(S.JsonObject)(text);
+            const tasks = yield* decodeJsonObject(config.tasks);
+            const lint = yield* decodeJsonObject(tasks.lint);
+            const declared = yield* decodeArrayString(lint.env);
+            const encoded = yield* JsonStringCodec(S.JsonObject).encode(
+              R.set(
+                config,
+                "tasks",
+                R.set(tasks, "lint", R.set(lint, "env", A.append(declared, "QUALIFICATION_CHILD_INPUT")))
+              )
+            );
+            yield* writeContainedFileString(fixture.identity, "turbo.json", encoded);
+            const formatted = yield* invoke(fixture, "/fixture", [
+              "/bin/sh",
+              "-c",
+              `exec /tools/biome format --stdin-file-path=/fixture/${identityDirectory}/turbo.json < /fixture/${identityDirectory}/turbo.json`,
+            ]);
+            if (formatted.exitCode !== 0 || formatted.truncated)
+              return yield* CacheCommandError.new("Cannot format the child-config control with pinned Biome.");
+            return formatted.stdout;
+          });
+          changedText = yield* change(fixture.after);
+          changedFixture = PilotRoot.make({ ...fixture, before: yield* change(fixture.before), after: changedText });
+        }
+      });
+      const changeRootMetadata = Effect.fn("CachePilot.changeRootMetadata")(function* () {
+        changedPath = mutationIds.$match({
+          "root-lint-config": () => "biome.jsonc",
+          lockfile: () => "bun.lock",
+          "package-manager": () => "package.json",
+          "generated-alias": () => "tsconfig.json",
+          "root-task-config": () => "tsconfig.json",
+          "child-task-config": () => "tsconfig.json",
+          "missing-child-config": () => "tsconfig.json",
+          "dependency-source": () => "tsconfig.json",
+        })(id);
+        original = yield* readBytes(fixture.source, changedPath).pipe(Effect.flatMap(decodeText));
+        const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
+        if (id === "root-lint-config") {
+          const files = yield* decodeJsonObject(config.files);
+          const includes = yield* decodeArrayString(files.includes);
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(
+            R.set(config, "files", R.set(files, "includes", A.append(includes, "!**/src/index.ts")))
+          );
+        } else if (id === "lockfile") {
+          const packages = yield* decodeJsonObject(config.packages);
+          const dependency = yield* decodeNonEmptyArrayJson(packages.effect);
+          const descriptor = yield* decodeNonEmptyString(dependency[0]);
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(
+            R.set(
+              config,
+              "packages",
+              R.set(packages, "effect", [`${descriptor}-qualification`, ...A.drop(dependency, 1)])
+            )
+          );
+        } else if (id === "package-manager") {
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(R.set(config, "packageManager", "bun@1.4.1"));
+        } else {
+          const options = yield* decodeJsonObject(config.compilerOptions);
+          const aliases = yield* decodeJsonObject(options.paths);
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(
+            R.set(
+              config,
+              "compilerOptions",
+              R.set(
+                options,
+                "paths",
+                R.set(aliases, "@beep/qualification-alias", [`./${identityDirectory}/src/index.ts`])
+              )
+            )
+          );
+        }
+      });
+      const applyMutation = Effect.fn("CachePilot.applyMutation")(function* () {
+        if (id === "root-task-config") {
+          const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
+          const global = yield* decodeJsonObject(config.global);
+          const declared = yield* decodeArrayString(global.env);
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(
+            R.set(config, "global", R.set(global, "env", A.append(declared, "QUALIFICATION_CONFIG_INPUT")))
+          );
+        } else if (id === "child-task-config" || id === "missing-child-config") {
+          yield* changeChildConfiguration();
+        } else if (id === "dependency-source") {
+          changedPath = `${typesDirectory}/src/index.ts`;
+          original = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
+          changedText = Str.replace("/** @deprecated qualification dependency control */\n", "")(original);
+          yield* writeContainedFileString(fixture.types, "src/index.ts", changedText);
+        } else {
+          yield* changeRootMetadata();
+        }
+      });
+      yield* applyMutation();
+      if (
+        !A.contains(mutationIds.pick(["child-task-config", "missing-child-config", "dependency-source"]).literals, id)
+      )
+        changedFixture = yield* overlayRootFile(fixture, changedPath, changedText);
+      if (needsProfile && id === "root-lint-config")
+        changedFixture = yield* overlayRootFile(
+          changedFixture,
+          "biome.identity.jsonc",
+          yield* renderCacheIdentityLintProfile(changedText)
+        );
+      return PilotMutationChange.make({
+        fixture: changedFixture,
+        changedPath,
+        beforeSha256: yield* hashText(original),
+        afterSha256: id === "missing-child-config" ? O.none() : O.some(yield* hashText(changedText)),
+      });
+    });
     if (mode === "signed") {
       const crypto = yield* Crypto.Crypto;
       const rootConfig = yield* readBytes(root, "turbo.json").pipe(
@@ -1157,7 +1327,19 @@ const runPilot = Effect.fn("CachePilot.run")(
         { concurrency: 1 }
       );
       yield* validateCacheSignedPilotConcurrency(freshPairs);
-      const runSignedPair = Effect.fn("CachePilot.signedPair")(function* (pair: number, scenario: PilotShadowScenario) {
+      const mutations = A.empty<CacheSignedPilotMutation>();
+      class SignedMutationSeed extends S.Class<SignedMutationSeed>($I`SignedMutationSeed`)(
+        { seed: CacheSignedPilotRun, change: PilotMutationChange },
+        $I.annote("SignedMutationSeed", { description: "Owned seed execution and matching changed fixture inputs." })
+      ) {}
+      const runSignedPair = Effect.fn("CachePilot.signedPair")(function* (
+        pair: number,
+        scenario: PilotShadowScenario,
+        mutationCase: O.Option<CacheSignedPilotMutation["case"]> = O.none()
+      ) {
+        const env = O.isSome(mutationCase)
+          ? { ...scenario.env, QUALIFICATION_CONFIG_INPUT: "changed", QUALIFICATION_CHILD_INPUT: "changed" }
+          : scenario.env;
         const namespace = `team_${request.channel}_${yield* hashText(`${request.client.namespace}:${pair}`)}`;
         const client = CacheClientPin.make({ ...request.client, namespace });
         const writer = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
@@ -1165,27 +1347,19 @@ const runPilot = Effect.fn("CachePilot.run")(
         const signing = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
         const issuerCanary = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
         const secrets = [writer, reader, signing, issuerCanary];
-        const fresh = yield* prepare(sourceRootA, "root-a", `signed-${pair}-authority`).pipe(
+        let fresh = yield* prepare(sourceRootA, "root-a", `signed-${pair}-authority`).pipe(
           Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
         );
-        const producerRoot = yield* prepare(sourceRootA, "root-a", `signed-${pair}-producer`).pipe(
+        let producerRoot = yield* prepare(sourceRootA, "root-a", `signed-${pair}-producer`).pipe(
           Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
         );
-        const readerRoot = yield* prepare(sourceRootB, "root-b", `signed-${pair}-reader`).pipe(
+        let readerRoot = yield* prepare(sourceRootB, "root-b", `signed-${pair}-reader`).pipe(
           Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
         );
         yield* Effect.forEach([fresh, producerRoot, readerRoot], (fixture) => applyShadowSource(fixture, scenario), {
           concurrency: 1,
           discard: true,
         });
-        const authoritative = yield* execute(
-          fresh,
-          `signed-${pair}-authority`,
-          false,
-          false,
-          scenario.guest,
-          scenario.env
-        );
         const fixture = yield* makeCacheProtocolFixture(CacheFixtureCredentials.make({ namespace, writer, reader }));
         const transport = PilotTransport.make({
           endpoint: fixture.url,
@@ -1194,6 +1368,59 @@ const runPilot = Effect.fn("CachePilot.run")(
           signing,
           secrets,
         });
+        const mutationEvidence = yield* O.match(mutationCase, {
+          onNone: () => Effect.succeedNone,
+          onSome: Effect.fn("CachePilot.seedSignedMutation")(function* (id) {
+            yield* Effect.forEach([fresh, producerRoot, readerRoot], (root) => prepareMutationBaseline(root, id), {
+              concurrency: 1,
+              discard: true,
+            });
+            yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-seed`, fault: "none" }));
+            const seed = yield* executeNative(
+              producerRoot,
+              `signed-${pair}-seed`,
+              true,
+              true,
+              scenario.guest,
+              env,
+              O.some(transport)
+            ).pipe(Effect.flatMap(S.decodeUnknownEffect(S.toType(CacheSignedPilotRun))));
+            const expectedExit = A.contains(mutationIds.pick(["root-lint-config", "dependency-source"]).literals, id)
+              ? 1
+              : 0;
+            if (
+              seed.graphExitCode !== expectedExit ||
+              seed.outcome.selected.exitCode !== expectedExit ||
+              seed.outcome.selected.origin !== "fresh"
+            )
+              return yield* CacheCommandError.new(
+                "Signed mutation seed disagrees with its case-derived fresh verdict."
+              );
+            const [freshChange, producerChange, readerChange] = yield* Effect.all(
+              [
+                applyMutationControl(fresh, id, signedConfig),
+                applyMutationControl(producerRoot, id, signedConfig),
+                applyMutationControl(readerRoot, id, signedConfig),
+              ],
+              { concurrency: 1 }
+            );
+            if (
+              !A.every(
+                [freshChange, readerChange],
+                (change) =>
+                  change.changedPath === producerChange.changedPath &&
+                  change.beforeSha256 === producerChange.beforeSha256 &&
+                  sameMutationDigest(change.afterSha256, producerChange.afterSha256)
+              )
+            )
+              return yield* CacheCommandError.new("Signed mutation roots received different configuration changes.");
+            fresh = freshChange.fixture;
+            producerRoot = producerChange.fixture;
+            readerRoot = readerChange.fixture;
+            return O.some(SignedMutationSeed.make({ seed, change: producerChange }));
+          }),
+        });
+        const authoritative = yield* execute(fresh, `signed-${pair}-authority`, false, false, scenario.guest, env);
         yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-producer`, fault: "none" }));
         const producer = yield* executeNative(
           producerRoot,
@@ -1201,9 +1428,25 @@ const runPilot = Effect.fn("CachePilot.run")(
           true,
           true,
           scenario.guest,
-          scenario.env,
+          env,
           O.some(transport)
         ).pipe(Effect.flatMap(S.decodeUnknownEffect(S.toType(CacheSignedPilotRun))));
+        if (
+          !CachePilotOutcome.isAnyOf(["Executed"])(authoritative.outcome) ||
+          authoritative.graphExitCode !== 0 ||
+          producer.graphExitCode !== 0 ||
+          authoritative.outcome.selected.origin !== "fresh" ||
+          producer.outcome.selected.origin !== "fresh" ||
+          authoritative.outcome.logSha256 !== producer.outcome.logSha256 ||
+          authoritative.outcome.logBytes !== producer.outcome.logBytes ||
+          O.exists(
+            mutationEvidence,
+            (evidence) => evidence.seed.outcome.selected.taskHash === producer.outcome.selected.taskHash
+          )
+        )
+          return yield* CacheCommandError.new(
+            "Signed producer diverged from fresh authority or failed seeded invalidation."
+          );
         const protectedKeyPath = path.join(experiment, `protected-${pair}.key`);
         const protectedRecordPath = path.join(experiment, `protected-${pair}.json`);
         const protectedRecord = yield* JsonStringCodec(CacheSignedPilotRun).encode(producer);
@@ -1218,7 +1461,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           true,
           true,
           "/fixture",
-          scenario.env,
+          env,
           O.some(PilotTransport.make({ ...transport, bearer: reader }))
         ).pipe(Effect.flatMap(S.decodeUnknownEffect(S.toType(CacheSignedPilotRun))));
         const protectedPaths = yield* S.String.pipe(S.Array, JsonStringCodec).encode([
@@ -1240,7 +1483,7 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
           readerRoot,
           "/fixture",
           ["/tools/bun", "-e", probeScript],
-          scenario.env,
+          env,
           O.some(PilotTransport.make({ ...transport, bearer: reader }))
         );
         if (protectionProbe.exitCode !== 0 || protectionProbe.truncated || Str.trim(protectionProbe.stderr) !== "")
@@ -1256,60 +1499,8 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
           mechanism: "nested-reader-denial/v1",
           protectedBytesUnchanged,
         });
-        if (
-          !CachePilotOutcome.isAnyOf(["Executed"])(authoritative.outcome) ||
-          authoritative.graphExitCode !== 0 ||
-          producer.graphExitCode !== 0 ||
-          replay.graphExitCode !== 0 ||
-          authoritative.outcome.selected.origin !== "fresh" ||
-          producer.outcome.selected.origin !== "fresh" ||
-          replay.outcome.selected.origin !== "remote-hit" ||
-          authoritative.outcome.logSha256 !== producer.outcome.logSha256 ||
-          producer.outcome.logSha256 !== replay.outcome.logSha256 ||
-          producer.outcome.selected.taskHash !== replay.outcome.selected.taskHash ||
-          producer.outcome.selected.inputsDigest !== replay.outcome.selected.inputsDigest ||
-          !producer.outcome.replayLogMatches ||
-          !replay.outcome.replayLogMatches ||
-          producer.summarySha256 === replay.summarySha256
-        )
-          return yield* CacheCommandError.new(
-            "Signed pilot diverged from fresh authority or lacked independent remote replay."
-          );
         const events = yield* fixture.events;
-        const taskHash = producer.outcome.selected.taskHash;
-        const puts = A.filter(events, (event) => event.operation === "put");
-        const reads = A.filter(events, (event) => event.operation === "get" && event.role === "reader");
-        const put = yield* A.head(puts).pipe(
-          Effect.fromOption(() => CacheCommandError.new("Signed producer upload missing."))
-        );
-        const read = yield* A.head(reads).pipe(
-          Effect.fromOption(() => CacheCommandError.new("Signed reader download missing."))
-        );
-        if (
-          puts.length !== 1 ||
-          reads.length !== 1 ||
-          put.status !== 200 ||
-          put.role !== "writer" ||
-          read.status !== 200 ||
-          !O.contains(taskHash)(put.artifact) ||
-          !O.contains(taskHash)(read.artifact) ||
-          !put.tagPresent ||
-          !read.tagPresent ||
-          put.bytes === 0 ||
-          put.bytes !== read.bytes ||
-          O.isNone(put.digest) ||
-          !O.contains(put.digest.value)(read.digest) ||
-          !A.some(
-            events,
-            (event) =>
-              event.operation === "get" &&
-              event.role === "writer" &&
-              event.status === 404 &&
-              O.contains(taskHash)(event.artifact)
-          )
-        )
-          return yield* CacheCommandError.new("Signed pilot lacks matching direct miss/upload/download evidence.");
-        return CacheSignedPilotPair.make({
+        const comparison = CacheSignedPilotPair.make({
           id: S.Natural.make(pair),
           client,
           authorityRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(fresh.directory)}`),
@@ -1321,6 +1512,24 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
           events,
           protection,
         });
+        if (O.isSome(mutationCase) && O.isSome(mutationEvidence)) {
+          const evidence = mutationEvidence.value;
+          const afterSha256 = yield* evidence.change.afterSha256.pipe(
+            Effect.fromOption(() =>
+              CacheCommandError.new("Signed replay mutation unexpectedly removed its configuration.")
+            )
+          );
+          const mutation = CacheSignedPilotMutation.make({
+            case: mutationCase.value,
+            changedPath: evidence.change.changedPath,
+            beforeSha256: evidence.change.beforeSha256,
+            afterSha256,
+            seed: evidence.seed,
+            comparison,
+          });
+          mutations.push(yield* validateCacheSignedPilotMutation(mutation, current.source.key, request.client));
+        } else yield* validateCacheSignedPilotPair(comparison, current.source.key, request.client);
+        return comparison;
       }, Effect.scoped);
       const pairs = yield* Effect.forEach(A.range(0, 2), (pair) => runSignedPair(pair, unchanged), { concurrency: 1 });
       const baselinePair = O.getOrThrow(A.head(pairs));
@@ -1332,6 +1541,11 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
           return yield* validateCacheSignedPilotShadow(shadow, baselinePair);
         }),
         { concurrency: 1 }
+      );
+      yield* Effect.forEach(
+        CacheSignedPilotMutation.fields.case.literals,
+        (id, index) => runSignedPair(index + 13, unchanged, O.some(id)),
+        { concurrency: 1, discard: true }
       );
       yield* verifyFinalIntegrity();
       return CacheSignedPilotReceipt.make({
@@ -1353,6 +1567,7 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
         configurationDigest: current.source.configurationDigest,
         toolchainDigest: current.source.toolchainDigest,
         signedRootConfiguration,
+        mutations,
         shadows,
         freshPairs,
         pairs,
@@ -1514,16 +1729,6 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
       });
       yield* runFailedSourceControl();
     }
-    const mutationIds = LiteralKit([
-      "root-task-config",
-      "child-task-config",
-      "missing-child-config",
-      "root-lint-config",
-      "lockfile",
-      "package-manager",
-      "generated-alias",
-      "dependency-source",
-    ]);
     const validMutationReplay = (
       seeded: CachePilotRun,
       changed: CachePilotRun,
@@ -1548,136 +1753,15 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
         )
           ? 1
           : 0;
-        if (id === "root-lint-config")
-          yield* writeContainedFileString(fixture.identity, "src/index.ts", "export const = ;\n");
-        if (id === "dependency-source") {
-          yield* writeContainedFileString(
-            fixture.identity,
-            "src/qualification-dependency.ts",
-            'import { qualificationDependency } from "../../../primitive/types/src/index.ts";\n\nexport const qualificationValue = qualificationDependency;\n'
-          );
-          const dependencySource = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
-          yield* writeContainedFileString(
-            fixture.types,
-            "src/index.ts",
-            `${dependencySource}\n/** @deprecated qualification dependency control */\nexport const qualificationDependency = 1;\n`
-          );
-        }
+        yield* prepareMutationBaseline(fixture, id);
         const env = { QUALIFICATION_CONFIG_INPUT: "changed", QUALIFICATION_CHILD_INPUT: "changed" };
         const seeded = yield* execute(fixture, `${id}-baseline`, true, true, "/fixture", env);
-        let changedFixture = fixture;
-        let changedPath = "turbo.json";
-        let original = yield* readBytes(fixture.source, changedPath).pipe(Effect.flatMap(decodeText));
-        let changedText = original;
-        const changeChildConfiguration = Effect.fn("CachePilot.changeChildConfiguration")(function* () {
-          changedPath = `${identityDirectory}/turbo.json`;
-          original = fixture.after;
-          if (id === "missing-child-config") changedFixture = PilotRoot.make({ ...fixture, omitChild: true });
-          else {
-            const change = Effect.fn("CachePilot.changeChild")(function* (text: string) {
-              const config = yield* decodeJsoncTextAs(S.JsonObject)(text);
-              const tasks = yield* decodeJsonObject(config.tasks);
-              const lint = yield* decodeJsonObject(tasks.lint);
-              const declared = yield* decodeArrayString(lint.env);
-              const encoded = yield* JsonStringCodec(S.JsonObject).encode(
-                R.set(
-                  config,
-                  "tasks",
-                  R.set(tasks, "lint", R.set(lint, "env", A.append(declared, "QUALIFICATION_CHILD_INPUT")))
-                )
-              );
-              yield* writeContainedFileString(fixture.identity, "turbo.json", encoded);
-              const formatted = yield* invoke(fixture, "/fixture", [
-                "/bin/sh",
-                "-c",
-                `exec /tools/biome format --stdin-file-path=/fixture/${identityDirectory}/turbo.json < /fixture/${identityDirectory}/turbo.json`,
-              ]);
-              if (formatted.exitCode !== 0 || formatted.truncated)
-                return yield* CacheCommandError.new("Cannot format the child-config control with pinned Biome.");
-              return formatted.stdout;
-            });
-            changedText = yield* change(fixture.after);
-            changedFixture = PilotRoot.make({ ...fixture, before: yield* change(fixture.before), after: changedText });
-          }
-        });
-        const changeRootMetadata = Effect.fn("CachePilot.changeRootMetadata")(function* () {
-          changedPath = mutationIds.$match({
-            "root-lint-config": () => "biome.jsonc",
-            lockfile: () => "bun.lock",
-            "package-manager": () => "package.json",
-            "generated-alias": () => "tsconfig.json",
-            "root-task-config": () => "tsconfig.json",
-            "child-task-config": () => "tsconfig.json",
-            "missing-child-config": () => "tsconfig.json",
-            "dependency-source": () => "tsconfig.json",
-          })(id);
-          original = yield* readBytes(fixture.source, changedPath).pipe(Effect.flatMap(decodeText));
-          const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
-          if (id === "root-lint-config") {
-            const files = yield* decodeJsonObject(config.files);
-            const includes = yield* decodeArrayString(files.includes);
-            changedText = yield* JsonStringCodec(S.JsonObject).encode(
-              R.set(config, "files", R.set(files, "includes", A.append(includes, "!**/src/index.ts")))
-            );
-          } else if (id === "lockfile") {
-            const packages = yield* decodeJsonObject(config.packages);
-            const dependency = yield* decodeNonEmptyArrayJson(packages.effect);
-            const descriptor = yield* decodeNonEmptyString(dependency[0]);
-            changedText = yield* JsonStringCodec(S.JsonObject).encode(
-              R.set(
-                config,
-                "packages",
-                R.set(packages, "effect", [`${descriptor}-qualification`, ...A.drop(dependency, 1)])
-              )
-            );
-          } else if (id === "package-manager") {
-            changedText = yield* JsonStringCodec(S.JsonObject).encode(R.set(config, "packageManager", "bun@1.4.1"));
-          } else {
-            const options = yield* decodeJsonObject(config.compilerOptions);
-            const aliases = yield* decodeJsonObject(options.paths);
-            changedText = yield* JsonStringCodec(S.JsonObject).encode(
-              R.set(
-                config,
-                "compilerOptions",
-                R.set(
-                  options,
-                  "paths",
-                  R.set(aliases, "@beep/qualification-alias", [`./${identityDirectory}/src/index.ts`])
-                )
-              )
-            );
-          }
-        });
-        const applyMutation = Effect.fn("CachePilot.applyMutation")(function* () {
-          if (id === "root-task-config") {
-            const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
-            const global = yield* decodeJsonObject(config.global);
-            const declared = yield* decodeArrayString(global.env);
-            changedText = yield* JsonStringCodec(S.JsonObject).encode(
-              R.set(config, "global", R.set(global, "env", A.append(declared, "QUALIFICATION_CONFIG_INPUT")))
-            );
-          } else if (id === "child-task-config" || id === "missing-child-config") {
-            yield* changeChildConfiguration();
-          } else if (id === "dependency-source") {
-            changedPath = `${typesDirectory}/src/index.ts`;
-            original = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
-            changedText = Str.replace("/** @deprecated qualification dependency control */\n", "")(original);
-            yield* writeContainedFileString(fixture.types, "src/index.ts", changedText);
-          } else {
-            yield* changeRootMetadata();
-          }
-        });
-        yield* applyMutation();
-        if (
-          !A.contains(mutationIds.pick(["child-task-config", "missing-child-config", "dependency-source"]).literals, id)
-        )
-          changedFixture = yield* overlayRootFile(fixture, changedPath, changedText);
-        if (needsProfile && id === "root-lint-config")
-          changedFixture = yield* overlayRootFile(
-            changedFixture,
-            "biome.identity.jsonc",
-            yield* renderCacheIdentityLintProfile(changedText)
-          );
+        const mutation = yield* applyMutationControl(
+          fixture,
+          id,
+          yield* readBytes(fixture.source, "turbo.json").pipe(Effect.flatMap(decodeText))
+        );
+        const changedFixture = mutation.fixture;
         const changed = yield* execute(changedFixture, `${id}-changed`, true, true, "/fixture", env);
         const replayed = yield* execute(changedFixture, `${id}-replay`, true, true, "/fixture", env);
         runs.push(seeded, changed, replayed);
@@ -1685,9 +1769,9 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
         mutations.push(
           CachePilotMutation.make({
             id,
-            changedPath,
-            beforeSha256: yield* hashText(original),
-            afterSha256: id === "missing-child-config" ? O.none() : O.some(yield* hashText(changedText)),
+            changedPath: mutation.changedPath,
+            beforeSha256: mutation.beforeSha256,
+            afterSha256: mutation.afterSha256,
             baseline: seeded.id,
             changed: changed.id,
             replay: replayed.id,

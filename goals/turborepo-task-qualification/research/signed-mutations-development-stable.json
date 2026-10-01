@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "qualification-signed-mutations-development/v1",
+  "authority": "development-observation-only",
+  "workflowBaseRevision": "21347d0b9f",
+  "workflowSource": "working tree; exact changed-source snapshot retained privately",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "client": {
+    "version": "2.11.4",
+    "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+    "namespace": "team_qualification_seeded_mutations_stable_v5"
+  },
+  "channel": "stable",
+  "receiptSha256": "c946a154e316992bee4a2599a1e31faf96d3250da4db76d7011136d6202a0812",
+  "receiptBytes": 180477,
+  "receiptRetention": "~/.cache/beep/turbo-qualification/evidence/signed-mutations-v5/stable.json",
+  "freshPairs": 3,
+  "baselineRemotePairs": 3,
+  "shadowDecisions": 10,
+  "seededMutations": [
+    "root-task-config",
+    "child-task-config",
+    "root-lint-config",
+    "lockfile",
+    "package-manager",
+    "generated-alias",
+    "dependency-source"
+  ],
+  "nativeSelectedTaskOverlapMs": [
+    175,
+    0,
+    548
+  ],
+  "sourceTypecheck": "passed",
+  "focusedTests": {
+    "files": 6,
+    "tests": 78,
+    "result": "passed"
+  },
+  "packageVerification": {
+    "result": "passed",
+    "package": "@beep/repo-cli",
+    "auditSeconds": 719.3,
+    "docgenSeconds": 34.6
+  },
+  "limitations": [
+    "Older frozen profile; not final current-profile qualification.",
+    "Actual persistent issuer file was not supplied to this development control.",
+    "Missing-child refusal, non-execution and capture controls are not included in this receipt.",
+    "Accepted policy import and qualified transitions remain closed."
+  ]
+}

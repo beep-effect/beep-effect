@@ -114,6 +114,100 @@ describe("signed real-pilot receipt relationships", () => {
       expect(Result.isSuccess(yield* validate({ ...input, freshPairs: oneOverlap }))).toBe(true);
     })
   );
+  it.effect("requires all seven seeded cases with distinct changed files and fresh case-derived verdicts", () =>
+    Effect.gen(function* () {
+      for (const mutations of [
+        [],
+        A.map(input.mutations, () => input.mutations[0]),
+        A.map(input.mutations, (mutation) => ({ ...mutation, case: "missing-child-config" })),
+        A.map(input.mutations, (mutation) => ({ ...mutation, changedPath: "unrelated.json" })),
+        A.map(input.mutations, (mutation) => ({ ...mutation, afterSha256: mutation.beforeSha256 })),
+        A.map(input.mutations, (mutation) => ({
+          ...mutation,
+          seed: { ...mutation.seed, nativeRuntimeKeyObserved: false },
+        })),
+        A.map(input.mutations, (mutation) => ({ ...mutation, seed: { ...mutation.seed, graphExitCode: 7 } })),
+        A.map(input.mutations, (mutation) => ({
+          ...mutation,
+          seed: {
+            ...mutation.seed,
+            outcome: {
+              ...mutation.seed.outcome,
+              selected: {
+                ...mutation.seed.outcome.selected,
+                taskHash: mutation.comparison.producer.outcome.selected.taskHash,
+              },
+            },
+          },
+        })),
+        A.map(input.mutations, (mutation) => ({
+          ...mutation,
+          seed: {
+            ...mutation.seed,
+            outcome: {
+              ...mutation.seed.outcome,
+              selected: { ...mutation.seed.outcome.selected, origin: "remote-hit" },
+            },
+          },
+        })),
+      ])
+        expect(Result.isFailure(yield* validate({ ...input, mutations }))).toBe(true);
+    })
+  );
+  it.effect("requires ordered seed and changed wire evidence without uploading failed seeds", () =>
+    Effect.gen(function* () {
+      for (const mutations of [
+        A.map(input.mutations, (mutation) => ({
+          ...mutation,
+          comparison: {
+            ...mutation.comparison,
+            events: A.filter(
+              mutation.comparison.events,
+              (event) => event.artifact !== mutation.seed.outcome.selected.taskHash
+            ),
+          },
+        })),
+        A.map(input.mutations, (mutation) => ({
+          ...mutation,
+          comparison: {
+            ...mutation.comparison,
+            events: A.map(mutation.comparison.events, (event) =>
+              event.artifact === mutation.seed.outcome.selected.taskHash ? { ...event, status: 403 } : event
+            ),
+          },
+        })),
+        A.map(input.mutations, (mutation) => ({
+          ...mutation,
+          comparison: {
+            ...mutation.comparison,
+            events: A.map(mutation.comparison.events, (event) =>
+              event.role === "reader" ? { ...event, artifact: mutation.seed.outcome.selected.taskHash } : event
+            ),
+          },
+        })),
+        A.map(input.mutations, (mutation) => ({
+          ...mutation,
+          comparison: {
+            ...mutation.comparison,
+            events: A.map(A.reverse(mutation.comparison.events), (event, index) => ({ ...event, sequence: index + 1 })),
+          },
+        })),
+        A.map(input.mutations, (mutation) => ({
+          ...mutation,
+          comparison: {
+            ...mutation.comparison,
+            events: A.append(mutation.comparison.events, {
+              ...mutation.comparison.events[0],
+              sequence: mutation.comparison.events.length + 1,
+              operation: "put",
+              status: 200,
+            }),
+          },
+        })),
+      ])
+        expect(Result.isFailure(yield* validate({ ...input, mutations }))).toBe(true);
+    })
+  );
   it.effect("requires all ten distinct remote shadow scenarios and isolation roots", () =>
     Effect.gen(function* () {
       for (const shadows of [
@@ -183,7 +277,7 @@ describe("signed real-pilot receipt relationships", () => {
   it.effect("includes every shadow in the protected comparison inventory", () =>
     Effect.gen(function* () {
       const receipt = yield* S.decodeUnknownEffect(CacheSignedPilotReceipt)(input);
-      expect(receipt.comparisons).toHaveLength(13);
+      expect(receipt.comparisons).toHaveLength(20);
       expect(receipt.comparisons[12]).toEqual(receipt.shadows[9].comparison);
     })
   );
