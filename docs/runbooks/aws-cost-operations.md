@@ -17,6 +17,11 @@ Spot and On-Demand; changing purchase model alone does not resolve total usage.
 - Set `RUNNERS_MAXIMUM_COUNT` to 2 and retain the deployed Spot instance
   choices with `price-capacity-optimized` allocation and no automatic
   On-Demand fallback. Retain ephemeral workers and cleanup.
+- October 1, 2026 amendment (operator-approved): the Spot pool moves to
+  `capacity-optimized` allocation across eight 64 GiB instance types and five
+  availability zones to reduce Spot reclaims. It stays all-Spot with cap 2 and
+  no On-Demand fallback. See the pending deployment evidence in
+  [Heavy CI runner reliability](./ci-runner-reliability.md).
 - Keep `beep-ci-scale-up` reserved concurrency at 1. A value of 0 prevents PR
   verification jobs from acquiring runners and must not be used as the normal
   budget policy.

@@ -1,0 +1,32 @@
+{
+  "1": {
+    "digest": "e9525165d950ab8f3d4ac57973c924afe73080dc61ef93468d456126cea9d622",
+    "disposition": "hl-20260929-58b6caf6",
+    "propose": "hl-20260929-5efc96ff"
+  },
+  "2": {
+    "digest": "a4f56f2691708cb2753a5025bb76e40dec64283098b2fa05bbcb3e7a95f06302",
+    "disposition": null,
+    "propose": "hl-20260929-df3f0899"
+  },
+  "3": {
+    "digest": "9ea3b7bc9bb07c9d0ce117e893db7c38e60b5cbc422de835029b2ef5be364994",
+    "disposition": "hl-20260929-5ccfb1f4",
+    "propose": "hl-20260929-3d7c119f"
+  },
+  "4": {
+    "digest": "50835504da87eb878685c7d6a11cc328e1c50b14458042c6d59aae353247479d",
+    "disposition": "hl-20260929-5ddf9e10",
+    "propose": "hl-20260929-81ff6e06"
+  },
+  "5": {
+    "digest": "bcd05a9becbdc605280f2b6f09036a4a9a47af53dc9b7e75acb1213bfb0b496b",
+    "disposition": "hl-20260929-672c2818",
+    "propose": "hl-20260929-7abfe91a"
+  },
+  "6": {
+    "digest": "fdb507fbe58085ac66f1992b2a74a3463480dec11a5961bdc883ac9f8b3eaa14",
+    "disposition": null,
+    "propose": "hl-20260929-f88812b2"
+  }
+}

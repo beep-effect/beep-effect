@@ -14,22 +14,22 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2873 |
-| publicExports | 20309 |
-| openModules | 372 |
-| openExports | 3072 |
+| publicModules | 2808 |
+| publicExports | 19855 |
+| openModules | 366 |
+| openExports | 3017 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3309 |
+| exampleImportFindings | 3245 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
-| undescribed-see | 12 |
-| multiple-description-paragraphs | 429 |
+| undescribed-see | 11 |
+| multiple-description-paragraphs | 426 |
 | leading-blank | 0 |
-| trailing-blank | 1 |
+| trailing-blank | 0 |
 | invalid-heading | 1 |
 | section-out-of-order | 0 |
 | duplicate-section | 0 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3308 |
+| no-root-package-import | 3244 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 230 | 2 | 204 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 216 | 6 | 118 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 231 | 1389 | 20 | 143 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 166 | 935 | 14 | 88 |
 | 8 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 9 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 3 |
 | 10 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
@@ -609,7 +609,6 @@ Export findings:
 Path: `packages/foundation/modeling/schema`
 
 Module findings:
-- `src/BigDecimal.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Color/Color.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/CryptoTxnHash/CryptoTxnHash.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/CryptoWalletAddress/CryptoWalletAddress.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -620,13 +619,8 @@ Module findings:
 - `src/Float32Array.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Float64Array.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Fn/Fn.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/LiteralKit/LiteralKit.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/LocalDate/LocalDate.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Options.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Percentage.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/SafeObject/index.ts:1` (packageDocumentation) - 1 example import violation(s)
-- `src/SchemaUtils/pluck.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/SchemaUtils/split.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Semver.ts:1` (packageDocumentation) - 1 example import violation(s)
 - `src/UnitInterval.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
@@ -662,8 +656,8 @@ Export findings:
 - `src/CsvFormatter/CsvFormatter.formatter.ts:148` `formatCsvDataRow` (const) - 1 example import violation(s)
 - `src/CsvFormatter/CsvFormatter.formatter.ts:186` `formatCsvDocument` (const) - 1 example import violation(s)
 - `src/CsvFormatter/CsvFormatter.formatter.ts:186` `format` (const) - 1 example import violation(s)
-- `src/CsvParser/CsvParser.parser.ts:415` `parseCsvRows` (const) - 1 example import violation(s)
-- `src/CsvParser/CsvParser.parser.ts:415` `parse` (const) - 1 example import violation(s)
+- `src/CsvParser/CsvParser.parser.ts:414` `parseCsvRows` (const) - 1 example import violation(s)
+- `src/CsvParser/CsvParser.parser.ts:414` `parse` (const) - 1 example import violation(s)
 - `src/Cuid.ts:41` `sha512` (const) - 1 example import violation(s)
 - `src/Cuid.ts:157` `CuidState` (class) - 1 example import violation(s)
 - `src/Cuid.ts:214` `cuid` (const) - 1 example import violation(s)
@@ -671,41 +665,25 @@ Export findings:
 - `src/Did.ts:108` `Did` (type) - 1 example import violation(s)
 - `src/Did.ts:131` `Did` (namespace) - 1 example import violation(s)
 - `src/Double.ts:52` `Double` (const) - 1 example import violation(s)
-- `src/Duration/Duration.input.ts:289` `DurationFromInput` (const) - 1 example import violation(s)
-- `src/Duration/Duration.input.ts:320` `DurationFromInput` (type) - 1 example import violation(s)
-- `src/Duration/Duration.schema.ts:31` `Schema` (const) - 1 example import violation(s)
-- `src/Duration/Duration.schema.ts:50` `Schema` (type) - 1 example import violation(s)
-- `src/Duration/Duration.schema.ts:69` `Duration` (const) - 1 example import violation(s)
-- `src/Duration/Duration.schema.ts:88` `Duration` (type) - 1 example import violation(s)
 - `src/Email.ts:33` `EmailString` (const) - 1 example import violation(s)
 - `src/Email.ts:52` `EmailString` (type) - 2 example import violation(s)
 - `src/Email.ts:76` `Email` (const) - 1 example import violation(s)
 - `src/Email.ts:96` `Email` (type) - 1 example import violation(s)
-- `src/FileDiff.schema.ts:52` `Added` (class) - 2 example import violation(s)
-- `src/FileDiff.schema.ts:86` `Deleted` (class) - 2 example import violation(s)
-- `src/FileDiff.schema.ts:121` `Modified` (class) - 2 example import violation(s)
-- `src/FileDiff.schema.ts:155` `Info` (const) - 2 example import violation(s)
-- `src/FileDiff.schema.ts:177` `Info` (type) - 1 example import violation(s)
-- `src/FileDiff.schema.ts:195` `Info` (namespace) - 1 example import violation(s)
-- `src/Fixed32.ts:68` `Fixed32` (const) - 1 example import violation(s)
+- `src/FileDiff.schema.ts:67` `Added` (class) - 2 example import violation(s)
+- `src/FileDiff.schema.ts:101` `Deleted` (class) - 2 example import violation(s)
+- `src/FileDiff.schema.ts:136` `Modified` (class) - 2 example import violation(s)
+- `src/FileDiff.schema.ts:170` `Info` (const) - 2 example import violation(s)
+- `src/FileDiff.schema.ts:192` `Info` (type) - 1 example import violation(s)
+- `src/FileDiff.schema.ts:210` `Info` (namespace) - 1 example import violation(s)
 - `src/Fixed64.ts:58` `Fixed64` (const) - 1 example import violation(s)
 - `src/Float.ts:57` `Float` (const) - 1 example import violation(s)
-- `src/Fn/Fn.schema.ts:523` `ThunkOf` (function) - 3 example import violation(s)
-- `src/Fn/Fn.schema.ts:593` `Fn` (function) - 5 example import violation(s)
-- `src/Fn/Fn.schema.ts:476` `AnyFn` (const) - 1 example import violation(s)
-- `src/Fn/Fn.schema.ts:498` `AnyFn` (type) - 1 example import violation(s)
+- `src/Fn/Fn.schema.ts:524` `ThunkOf` (function) - 3 example import violation(s)
+- `src/Fn/Fn.schema.ts:594` `Fn` (function) - 5 example import violation(s)
+- `src/Fn/Fn.schema.ts:477` `AnyFn` (const) - 1 example import violation(s)
+- `src/Fn/Fn.schema.ts:499` `AnyFn` (type) - 1 example import violation(s)
 - `src/Http/Http.headers.shared.ts:275` `makeHeaderEncodeForbidden` (const) - 1 example import violation(s)
-- `src/HttpStatus/HttpStatus.shared.ts:26` `$I` (const) - 1 example import violation(s)
-- `src/Int64.ts:124` `Int64FromString` (const) - 1 example import violation(s)
-- `src/Json.ts:117` `decodeJsonString` (const) - 1 example import violation(s)
-- `src/Json.ts:139` `encodeJsonString` (const) - 1 example import violation(s)
-- `src/Jsonc.ts:94` `JsoncTextToUnknown` (const) - 1 example import violation(s)
-- `src/Jsonc.ts:140` `decodeJsoncTextAs` (const) - 1 example import violation(s)
-- `src/Jsonl.ts:107` `JsonlTextToUnknown` (const) - 1 example import violation(s)
-- `src/Jsonl.ts:151` `decodeJsonlTextAs` (const) - 1 example import violation(s)
-- `src/KebabStr.ts:29` `KebabCaseStr` (const) - 1 example import violation(s)
-- `src/KebabStr.ts:58` `KebabCaseStr` (type) - 2 example import violation(s)
-- `src/LiteralKit/LiteralKit.schema.ts:732` `LiteralKit` (function) - 1 example import violation(s)
+- `src/Jsonc.ts:93` `JsoncTextToUnknown` (const) - 1 example import violation(s)
+- `src/Jsonc.ts:139` `decodeJsoncTextAs` (const) - 1 example import violation(s)
 - `src/LocalDate/LocalDate.schema.ts:249` `fromString` (const) - 1 example import violation(s)
 - `src/LocalDate/LocalDate.schema.ts:322` `todayEffect` (const) - 1 example import violation(s)
 - `src/LocalDate/LocalDate.schema.ts:343` `fromDateTime` (const) - 1 example import violation(s)
@@ -713,67 +691,28 @@ Export findings:
 - `src/Markdown.ts:222` `decodeMarkdownTextAs` (const) - 1 example import violation(s)
 - `src/NoSniff/NoSniff.schema.ts:153` `NoSniffHeader` (const) - 1 example import violation(s)
 - `src/NoSniff/NoSniff.schema.ts:255` `Header` (const) - 1 example import violation(s)
-- `src/Opaque.ts:52` `Defect` (const) - 2 example import violation(s)
-- `src/Opaque.ts:92` `OpaqueUnknown` (const) - 2 example import violation(s)
-- `src/Opaque.ts:114` `OpaqueUnknown` (type) - 1 example import violation(s)
-- `src/Options.ts:89` `OptionFromOptionalNullishKey` (function) - 2 example import violation(s)
-- `src/PascalStr.ts:29` `PascalCaseStr` (const) - 1 example import violation(s)
-- `src/PascalStr.ts:58` `PascalCaseStr` (type) - 2 example import violation(s)
 - `src/Port.ts:71` `Port` (const) - 1 example import violation(s)
 - `src/Port.ts:125` `PortFromString` (const) - 1 example import violation(s)
 - `src/Port.ts:152` `PortFromString` (type) - 1 example import violation(s)
-- `src/Record/Record.schema.ts:31` `UnknownRecord` (const) - 1 example import violation(s)
-- `src/Record/Record.schema.ts:53` `UnknownRecord` (type) - 1 example import violation(s)
-- `src/SafeObject/SafeObject.schema.ts:40` `SafeObject` (const) - 1 example import violation(s)
-- `src/SafeObject/SafeObject.schema.ts:93` `SafeObjectFromObjectKeyword` (const) - 1 example import violation(s)
-- `src/SafeObject/SafeObject.schema.ts:40` `Schema` (const) - 1 example import violation(s)
 - `src/SafeRemoteHost.ts:91` `BlockedHostError` (class) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:277` `isBlockedRemoteHost` (const) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:322` `assertAllowedRemoteHost` (const) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:387` `assertAllowedRemoteUrl` (const) - 1 example import violation(s)
-- `src/SchemaUtils/encoders.ts:59` `encodeEffect` (const) - 1 example import violation(s)
-- `src/SchemaUtils/encoders.ts:116` `encodeUnknownEffect` (const) - 1 example import violation(s)
-- `src/SchemaUtils/optional.ts:47` `optional` (const) - 1 example import violation(s)
-- `src/SchemaUtils/toEquivalence.ts:70` `toEquivalence` (const) - 1 example import violation(s)
-- `src/SchemaUtils/withCodecStatics.ts:420` `withCodecStatics` (const) - 1 example import violation(s)
-- `src/SecureHeaderError/SecureHeaderError.errors.ts:402` `SecureHeaderError` (type) - 1 example import violation(s)
-- `src/SecureHeaderError/SecureHeaderError.errors.ts:402` `Error` (type) - 1 example import violation(s)
+- `src/SafeRemoteHost.ts:279` `isBlockedRemoteHost` (const) - 1 example import violation(s)
+- `src/SafeRemoteHost.ts:324` `assertAllowedRemoteHost` (const) - 1 example import violation(s)
+- `src/SafeRemoteHost.ts:389` `assertAllowedRemoteUrl` (const) - 1 example import violation(s)
+- `src/SchemaUtils/toEquivalence.ts:71` `toEquivalence` (const) - 1 example import violation(s)
+- `src/SchemaUtils/withCodecStatics.ts:419` `withCodecStatics` (const) - 1 example import violation(s)
+- `src/SecureHeaderError/SecureHeaderError.errors.ts:404` `SecureHeaderError` (type) - 1 example import violation(s)
+- `src/SecureHeaderError/SecureHeaderError.errors.ts:404` `Error` (type) - 1 example import violation(s)
 - `src/SecureHeaderOptions/SecureHeaderOptions.schema.ts:168` `createHeadersObject` (const) - 1 example import violation(s)
 - `src/SecureHeaderOptions/SecureHeaderOptions.schema.ts:200` `createSecureHeaders` (const) - 1 example import violation(s)
 - `src/SemanticVersion.ts:57` `SemanticVersionSchema` (interface) - 1 documentation section/link violation(s)
 - `src/Semver.ts:648` `SemverFromString` (const) - 1 example import violation(s)
-- `src/Sfixed32.ts:68` `Sfixed32` (const) - 1 example import violation(s)
-- `src/Sfixed64.ts:58` `Sfixed64` (const) - 1 example import violation(s)
 - `src/Sha256.ts:114` `Sha256HexFromBytes` (const) - 1 example import violation(s)
 - `src/Sha256.ts:147` `Sha256HexFromBytes` (type) - 1 example import violation(s)
 - `src/Sha256.ts:170` `Sha256HexFromHexBytes` (const) - 1 example import violation(s)
 - `src/Sha256.ts:197` `Sha256HexFromHexBytes` (type) - 1 example import violation(s)
-- `src/Sint32.ts:68` `Sint32` (const) - 1 example import violation(s)
-- `src/Sint64.ts:58` `Sint64` (const) - 1 example import violation(s)
-- `src/SnakeStr.ts:29` `SnakeCaseStr` (const) - 1 example import violation(s)
-- `src/SnakeStr.ts:58` `SnakeCaseStr` (type) - 2 example import violation(s)
-- `src/StatusCauseError.ts:48` `StatusCauseFields` (const) - 1 example import violation(s)
-- `src/StatusCauseError.ts:228` `makeStatusCauseError` (const) - 1 example import violation(s)
-- `src/String.ts:241` `StrFromUnknown` (const) - 1 example import violation(s)
-- `src/String.ts:271` `StrFromUnknown` (type) - 1 example import violation(s)
-- `src/String.ts:290` `OptionFromOptionalStrWithNoneDefault` (const) - 1 example import violation(s)
-- `src/Timestamp/Timestamp.schema.ts:352` `fromDateTime` (const) - 1 example import violation(s)
-- `src/Timestamp/Timestamp.schema.ts:390` `fromString` (const) - 1 example import violation(s)
-- `src/Timestamp/Timestamp.schema.ts:435` `nowEffect` (const) - 1 example import violation(s)
-- `src/Toml.ts:84` `TomlTextToUnknown` (const) - 1 example import violation(s)
-- `src/Toml.ts:126` `decodeTomlTextAs` (const) - 1 example import violation(s)
-- `src/Transformations.ts:49` `destructiveTransform` (const) - 1 example import violation(s)
-- `src/Uint32.ts:68` `Uint32` (const) - 1 example import violation(s)
-- `src/Uint64.ts:58` `Uint64` (const) - 1 example import violation(s)
-- `src/Unknown.ts:43` `Unknown` (const) - 1 example import violation(s)
-- `src/Unknown.ts:75` `UnknownFromJsonString` (const) - 2 example import violation(s)
 - `src/Xml.ts:86` `XmlTextToUnknown` (const) - 1 example import violation(s)
 - `src/Xml.ts:131` `decodeXmlTextAs` (const) - 1 example import violation(s)
-- `src/Yaml.ts:86` `YamlTextToUnknown` (const) - 1 example import violation(s)
-- `src/Yaml.ts:128` `decodeYamlTextAs` (const) - 1 example import violation(s)
-- `src/index.ts:196` `export * as HttpMethod from "./HttpMethod/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:303` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
-- `src/index.ts:338` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:187` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
 
 ### @beep/pglite
 
