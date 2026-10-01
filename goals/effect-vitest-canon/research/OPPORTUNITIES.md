@@ -6143,3 +6143,25 @@ polling had already been repaired in #1323; it uses a finite retry schedule and
 although the invocation supplies no run identifier and the command has no such
 flag. Renamed the case to its actual protobuf/span export assertion rather than
 claiming unsupported selection behavior.
+
+## 2026-10-01: Heavy verification lost runner communication
+
+PR #1365 head `1710f6d3cf` lost three distinct self-hosted runners during
+coverage, docgen, and type verification. Their job annotations report
+"The self-hosted runner lost communication with the server"; each verification
+step remained in progress, and job-log downloads returned 404. These are
+interrupted proofs, not passing checks or demonstrated source failures. GitHub
+refused a same-head job retry with "The workflow run containing this job is
+already running" while another lane remained active. Persisting runner-side
+logs independently and recording host termination reasons would distinguish
+capacity interruptions, network loss, and process failure without guessing.
+
+### Private qualification dependency isolation
+
+While qualifying the step-capture migration, a scratch directory linked to a
+sibling worktree's dependencies loaded a different Vitest instance than the
+launcher. The suite failed before registration with `Cannot read properties of
+undefined (reading 'config')`; this is not a failing test assertion. Qualification
+fixtures should resolve their runner, shared config, and dependency link from one
+checkout. A dedicated directory with the active checkout's dependency link is
+being used for the retry.

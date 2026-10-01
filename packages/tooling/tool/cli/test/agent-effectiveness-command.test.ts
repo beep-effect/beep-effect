@@ -9,14 +9,18 @@ import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiv
 import { AgentConventionComparison } from "@beep/repo-cli/test/AgentEffectiveness";
 import { it } from "@beep/test-runner";
 import { fcRuns, privacySafeSystemTempRoot } from "@beep/test-utils";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { Cause, ConfigProvider, Console, Effect, Exit, FileSystem, Path, pipe, Result, Runtime } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
+import baselineReceipt from "./fixtures/agent-effectiveness/comparison/baseline.json" with { type: "json" };
+import candidateReceipt from "./fixtures/agent-effectiveness/comparison/candidate.json" with { type: "json" };
 
 const temporaryDirectory = FileSystem.FileSystem.use((fs) =>
   Effect.acquireRelease(
@@ -26,7 +30,23 @@ const temporaryDirectory = FileSystem.FileSystem.use((fs) =>
 );
 
 const runAgentEffectivenessCommand = Command.runWith(agentEffectivenessCommand, { version: "0.0.0" });
-const CommandTestLayer = NodeServices.layer;
+const encodeFixture = S.encodeEffect(S.fromJsonString(S.Unknown));
+const CommandTestLayer = Layer.effectDiscard(
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    for (const [name, receipt] of [
+      ["baseline.json", baselineReceipt],
+      ["candidate.json", candidateReceipt],
+    ] as const) {
+      const target = yield* path.fromFileUrl(
+        new URL("./fixtures/agent-effectiveness/comparison/" + name, import.meta.url)
+      );
+      yield* fs.makeDirectory(path.dirname(target), { recursive: true });
+      yield* fs.writeFileString(target, yield* encodeFixture(receipt));
+    }
+  })
+).pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, MemoryFileSystem.layer)));
 const decodeDoctorReport = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessDoctorReport));
 const decodeAnnotationCheckReport = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationCheckReport));
 const decodeDatasetBundle = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessDatasetBundle));
