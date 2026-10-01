@@ -116,6 +116,10 @@ const readable = (entries: ReadonlyArray<SchemaFirstInventoryEntry>): ReadonlyAr
     (entry) => `${entry.ruleId ?? ""} ${Str.replace(/@[0-9a-f]{12}/u, "@<hash>")(entry.occurrence ?? "")}`
   );
 
+// The reason a codec facade finding carries for the attached key.
+const facadeReason = (key: string): string =>
+  `SchemaUtils.withStatics attaches "${key}" as a codec facade over an effect/Schema codec function; call that S.* function over the schema at the use site (Effect caches parsers per AST) and keep withStatics for non-codec helpers.`;
+
 const anchors = (entries: ReadonlyArray<SchemaFirstInventoryEntry>): ReadonlyArray<string> =>
   A.map(entries, (entry) => entry.occurrence ?? "");
 
@@ -561,6 +565,136 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
     })
   );
 
+  it.effect("sees through type-only wrappers on callbacks, bindings and schema operands", () =>
+    Effect.gen(function* () {
+      const entries = yield* parityEntries([
+        'import * as S from "effect/Schema";',
+        'import { SchemaUtils } from "@beep/schema";',
+        "export const Asserted = S.String.pipe(",
+        "  SchemaUtils.withStatics((schema) => ({",
+        "    cast: S.is(schema as S.Top),",
+        "    nonNull: S.is(schema!),",
+        "    satisfied: S.decodeUnknownResult(schema satisfies S.Top),",
+        "    asserted: S.is(<S.Top>schema),",
+        "    outer: S.is(schema)!,",
+        "  }) as const)",
+        ");",
+        "export const Bound = S.String.pipe(",
+        "  SchemaUtils.withStatics((schema) => {",
+        "    const statics = { is: S.is(schema) } satisfies object;",
+        "    return statics;",
+        "  })",
+        ");",
+        "const Other = S.Number;",
+        "export const Foreign = S.String.pipe(SchemaUtils.withStatics(() => ({ is: S.is(Other as S.Top) })));",
+      ]);
+      expect(readable(entries)).toEqual([
+        "SFV4-codec-static Asserted::cast@<hash>",
+        "SFV4-codec-static Asserted::nonNull@<hash>",
+        "SFV4-codec-static Asserted::satisfied@<hash>",
+        "SFV4-codec-static Asserted::asserted@<hash>",
+        "SFV4-codec-static Asserted::outer@<hash>",
+        "SFV4-codec-static Bound.statics::is@<hash>",
+      ]);
+      expect(A.map(entries, (entry) => entry.reason)).toEqual(
+        A.map(["cast", "nonNull", "satisfied", "asserted", "outer", "is"], facadeReason)
+      );
+    })
+  );
+
+  it.effect("treats F.pipe and Effect.pipe as forwarding pipes, but not a pipe declared in the file", () =>
+    Effect.gen(function* () {
+      const entries = yield* parityEntries([
+        'import * as S from "effect/Schema";',
+        'import { Effect, Result } from "effect";',
+        'import * as F from "effect/Function";',
+        'import { SchemaUtils } from "@beep/schema";',
+        "export const Piped = S.String.pipe(",
+        "  SchemaUtils.withStatics((schema) => ({",
+        "    viaFunction: (u: unknown) => F.pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow),",
+        "    viaEffect: (u: unknown) => Effect.pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow),",
+        "  }))",
+        ");",
+      ]);
+      expect(readable(entries)).toEqual([
+        "SFV4-codec-static Piped::viaFunction@<hash>",
+        "SFV4-codec-static Piped::viaEffect@<hash>",
+      ]);
+      expect(A.map(entries, (entry) => entry.reason)).toEqual(A.map(["viaFunction", "viaEffect"], facadeReason));
+      expect(
+        yield* parityEntries([
+          'import * as S from "effect/Schema";',
+          'import { Result } from "effect";',
+          'import { SchemaUtils } from "@beep/schema";',
+          "const pipe = (value: unknown, ..._steps: ReadonlyArray<unknown>) => value;",
+          "const local = { pipe };",
+          "export const Shadowed = S.String.pipe(",
+          "  SchemaUtils.withStatics((schema) => ({",
+          "    bare: (u: unknown) => pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow),",
+          "    member: (u: unknown) => local.pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow),",
+          "  }))",
+          ");",
+        ])
+      ).toEqual([]);
+    })
+  );
+
+  it.effect("compares member keys by their runtime value, quoted or computed", () =>
+    Effect.gen(function* () {
+      const entries = yield* parityEntries([
+        'import * as S from "effect/Schema";',
+        'import { SchemaUtils } from "@beep/schema";',
+        'const guardKey = "guard";',
+        "declare const dynamic: string;",
+        "export const Keys = S.String.pipe(",
+        "  SchemaUtils.withStatics((schema) => ({",
+        '    "quoted": S.is(schema),',
+        "    [guardKey]: S.is(schema),",
+        "    [dynamic]: S.is(schema),",
+        "    kept: S.is(schema),",
+        "    [`${dynamic}x`]: () => true,",
+        "    replaced: S.is(schema),",
+        '    "replaced"() {',
+        "      return true;",
+        "    },",
+        "  }))",
+        ");",
+      ]);
+      expect(readable(entries)).toEqual([
+        "SFV4-codec-static Keys::quoted@<hash>",
+        "SFV4-codec-static Keys::guard@<hash>",
+        "SFV4-codec-static Keys::kept@<hash>",
+      ]);
+      expect(A.map(entries, (entry) => entry.reason)).toEqual(A.map(["quoted", "guard", "kept"], facadeReason));
+    })
+  );
+
+  it.effect("keeps a codec member past a spread whose type does not name its key", () =>
+    Effect.gen(function* () {
+      const entries = yield* parityEntries([
+        'import * as S from "effect/Schema";',
+        'import { SchemaUtils } from "@beep/schema";',
+        'import { importedStatics } from "./elsewhere";',
+        "declare const metadata: { readonly label: string };",
+        "declare const replacing: { readonly is: (u: unknown) => boolean };",
+        "declare const record: Readonly<Record<string, unknown>>;",
+        "declare const opaque: unknown;",
+        "export const Survives = S.String.pipe(SchemaUtils.withStatics((schema) => ({ is: S.is(schema), ...metadata })));",
+        "export const Replaced = S.String.pipe(SchemaUtils.withStatics((schema) => ({ is: S.is(schema), ...replacing })));",
+        "export const Indexed = S.String.pipe(SchemaUtils.withStatics((schema) => ({ is: S.is(schema), ...record })));",
+        "export const Opaque = S.String.pipe(SchemaUtils.withStatics((schema) => ({ is: S.is(schema), ...(opaque as object) })));",
+        "export const Unknown = S.String.pipe(SchemaUtils.withStatics((schema) => ({ is: S.is(schema), ...opaque })));",
+        "export const Imported = S.String.pipe(SchemaUtils.withStatics((schema) => ({ is: S.is(schema), ...importedStatics })));",
+      ]);
+      // An `object`-typed spread names no keys, so by its type it replaces nothing.
+      expect(readable(entries)).toEqual([
+        "SFV4-codec-static Survives::is@<hash>",
+        "SFV4-codec-static Opaque::is@<hash>",
+      ]);
+      expect(A.map(entries, (entry) => entry.reason)).toEqual([facadeReason("is"), facadeReason("is")]);
+    })
+  );
+
   it.effect("leaves domain statics that use a codec internally unflagged", () =>
     Effect.gen(function* () {
       expect(
@@ -639,6 +773,35 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
       expect(declarationPathsOf(project.getSourceFileOrThrow(fixtureFile))("withCodecStatics")).toEqual([
         "src/SchemaUtils/withCodecStatics.ts",
       ]);
+    })
+  );
+
+  it.effect("follows a re-keyed withStatics member to its declaration through the member's type", () =>
+    Effect.gen(function* () {
+      const project = schemaUtilsProject();
+      project.createSourceFile(
+        "packages/foundation/modeling/schema/src/SchemaUtils/withStatics.ts",
+        "export const withStatics = <S, M>(methods: (schema: S) => M) => (schema: S): S & M => Object.assign(schema as object, methods(schema)) as S & M;"
+      );
+      project
+        .getSourceFileOrThrow("packages/foundation/modeling/schema/src/SchemaUtils/index.ts")
+        .addExportDeclaration({ moduleSpecifier: "./withStatics.ts" });
+      const entries = yield* parityEntriesIn(project, [
+        'import * as S from "effect/Schema";',
+        'import { SchemaUtils } from "@beep/schema";',
+        'declare const Kit: { readonly [K in "withStatics"]: typeof SchemaUtils.withStatics };',
+        "const helper = <S, M>(methods: (schema: S) => M) => (schema: S): S & M => Object.assign(schema as object, methods(schema)) as S & M;",
+        'declare const Helper: { readonly [K in "withStatics"]: typeof helper };',
+        "const withStatics = helper;",
+        'declare const Local: { readonly [K in "withStatics"]: typeof withStatics };',
+        'declare const Typed: { readonly [K in "withStatics"]: <S>(methods: (schema: S) => object) => (schema: S) => S };',
+        'export const Mapped = S.String.pipe(Kit["withStatics"]((schema) => ({ is: S.is(schema) })));',
+        "export const ViaHelper = S.String.pipe(Helper.withStatics((schema) => ({ is: S.is(schema) })));",
+        "export const ViaLocal = S.String.pipe(Local.withStatics((schema) => ({ is: S.is(schema) })));",
+        "export const ViaType = S.String.pipe(Typed.withStatics((schema) => ({ is: S.is(schema) })));",
+      ]);
+      expect(readable(entries)).toEqual(["SFV4-codec-static Mapped::is@<hash>"]);
+      expect(A.map(entries, (entry) => entry.reason)).toEqual([facadeReason("is")]);
     })
   );
 });

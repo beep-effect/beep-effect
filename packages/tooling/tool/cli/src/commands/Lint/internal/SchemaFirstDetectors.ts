@@ -1457,6 +1457,22 @@ const unresolvedWithStatics = (expression: Node, name: string): boolean =>
       Str.Equivalence(name, "withStatics") &&
       O.exists(unresolvedReceiverModule(expression.getExpression()), (module) => module === "schema-utils");
 
+// A member whose symbol carries no declaration (a mapped type re-keys it, `{ [K in "withStatics"]: ... }`)
+// still has the declared function type of `withStatics`; the receiver's property is that same
+// transient symbol, so the value type is the only trace left to the SchemaUtils declaration.
+const isWithStaticsValueType = (expression: Node): boolean =>
+  pipe(
+    O.fromUndefinedOr(expression.getType().getSymbol()),
+    O.flatMap((symbol) => A.head(symbol.getDeclarations())),
+    O.flatMap((declaration) => O.fromUndefinedOr(declaration.getParent())),
+    O.exists(
+      (owner) =>
+        Node.isVariableDeclaration(owner) &&
+        Str.Equivalence(owner.getName(), "withStatics") &&
+        SCHEMA_UTILS_SOURCE_PATTERN.test(owner.getSourceFile().getFilePath())
+    )
+  );
+
 // A `withStatics` callee resolved through the checker to the SchemaUtils declaration, whatever local
 // name or access form reaches it; when the module does not resolve, the import declaration decides.
 const isWithStaticsCallee = (callee: Node): boolean => {
@@ -1474,13 +1490,24 @@ const isWithStaticsCallee = (callee: Node): boolean => {
         A.some(target.declarations, (declaration) =>
           SCHEMA_UTILS_SOURCE_PATTERN.test(declaration.getSourceFile().getFilePath())
         ),
-      onNone: () => unresolvedWithStatics(expression, name),
+      onNone: () => isWithStaticsValueType(expression) || unresolvedWithStatics(expression, name),
     });
   });
 };
 
 // How far local bindings, callback references and spreads are followed inside one file.
 const FACADE_RESOLUTION_DEPTH = 3;
+
+// An expression without its parentheses and type-only wrappers (`as`, `satisfies`, `!`, `<T>x`): they
+// change what the checker believes, not the value that is attached or called.
+const unwrapTypeWrappers = (node: Node): Node =>
+  Node.isParenthesizedExpression(node) ||
+  Node.isAsExpression(node) ||
+  Node.isSatisfiesExpression(node) ||
+  Node.isNonNullExpression(node) ||
+  Node.isTypeAssertion(node)
+    ? unwrapTypeWrappers(node.getExpression())
+    : node;
 
 type StaticsCallback = ArrowFunction | FunctionExpression | FunctionDeclaration;
 type StaticsFunction = StaticsCallback | MethodDeclaration | GetAccessorDeclaration;
@@ -1508,7 +1535,7 @@ const constInitializer = (declaration: Node): O.Option<Node> =>
 
 // What an expression denotes after following `const` bindings in the same file.
 const followBinding = (node: Node, depth = 0): Node => {
-  const value = unwrapParentheses(node);
+  const value = unwrapTypeWrappers(node);
   if (!Node.isIdentifier(value) || depth >= FACADE_RESOLUTION_DEPTH) {
     return value;
   }
@@ -1521,7 +1548,7 @@ const followBinding = (node: Node, depth = 0): Node => {
 
 // The function a `withStatics` callback argument is: inline, or a same-file function reference.
 const resolveStaticsCallback = (node: Node, depth = 0): O.Option<StaticsCallback> => {
-  const value = unwrapParentheses(node);
+  const value = unwrapTypeWrappers(node);
   if (isStaticsCallback(value)) {
     return O.some(value);
   }
@@ -1548,20 +1575,20 @@ const lastReturned = (fn: StaticsFunction): O.Option<Node> =>
       ? pipe(
           A.last(A.filter(body.getStatements(), Node.isReturnStatement)),
           O.flatMap((statement) => O.fromUndefinedOr(statement.getExpression())),
-          O.map(unwrapParentheses)
+          O.map(unwrapTypeWrappers)
         )
-      : O.some(unwrapParentheses(body))
+      : O.some(unwrapTypeWrappers(body))
   );
 
 // The expression a function returns when it does nothing else: an expression body or a single `return`.
 const onlyReturned = (fn: StaticsFunction): O.Option<Node> =>
   O.flatMap(functionBody(fn), (body) => {
     if (!Node.isBlock(body)) {
-      return O.some(unwrapParentheses(body));
+      return O.some(unwrapTypeWrappers(body));
     }
     const statements = body.getStatements();
     return statements.length === 1 && Node.isReturnStatement(statements[0])
-      ? pipe(O.fromUndefinedOr(statements[0].getExpression()), O.map(unwrapParentheses))
+      ? pipe(O.fromUndefinedOr(statements[0].getExpression()), O.map(unwrapTypeWrappers))
       : O.none();
   });
 
@@ -1577,17 +1604,48 @@ type StaticsMember = Exclude<ObjectLiteralElementLike, SpreadAssignment>;
 
 const NO_STATICS_MEMBERS: ReadonlyArray<StaticsMember> = A.empty();
 
-// Later members replace earlier members of the same name, as they do on the attached object.
+// The runtime key a member attaches: `is`, `"is"` and `["is"]` (or a `const` bound to "is") are the
+// same key. A computed key that does not resolve to a string literal is unknown: it neither replaces
+// nor is replaced by another member.
+const memberKey = (member: StaticsMember): O.Option<string> => {
+  const nameNode = member.getNameNode();
+  if (Node.isComputedPropertyName(nameNode)) {
+    const value = followBinding(nameNode.getExpression());
+    return Node.isStringLiteral(value) ? O.some(value.getLiteralValue()) : O.none();
+  }
+  return O.some(Node.isStringLiteral(nameNode) ? nameNode.getLiteralValue() : nameNode.getText());
+};
+
+const sameKey = (left: StaticsMember, right: StaticsMember): boolean =>
+  O.exists(memberKey(left), (key) => O.exists(memberKey(right), (other) => Str.Equivalence(key, other)));
+
+// Later members replace earlier members of the same key, as they do on the attached object.
 const overrideMembers = (
   members: ReadonlyArray<StaticsMember>,
   later: ReadonlyArray<StaticsMember>
 ): ReadonlyArray<StaticsMember> => [
-  ...A.filter(members, (member) => !A.some(later, (next) => Str.Equivalence(next.getName(), member.getName()))),
+  ...A.filter(members, (member) => !A.some(later, (next) => sameKey(next, member))),
   ...later,
 ];
 
+// Whether a spread that is not a local object literal may replace a member, judged by its type: an
+// `any`, `unknown` or index-signature type may replace every key, an object type only its own keys.
+const spreadMayReplace =
+  (spread: Node) =>
+  (member: StaticsMember): boolean => {
+    const type = spread.getType();
+    return (
+      type.isAny() ||
+      type.isUnknown() ||
+      type.getStringIndexType() !== undefined ||
+      O.exists(memberKey(member), (key) =>
+        A.some(type.getProperties(), (property) => Str.Equivalence(property.getName(), key))
+      )
+    );
+  };
+
 // The members a statics object attaches, with spreads of locally bound objects flattened in. A spread
-// that cannot be resolved may replace any earlier member, so none of those is known to survive it.
+// that cannot be resolved removes only the earlier members its type may replace.
 const staticsMembers = (object: ObjectLiteralExpression, depth = 0): ReadonlyArray<StaticsMember> =>
   A.reduce(object.getProperties(), NO_STATICS_MEMBERS, (members, property) => {
     if (!Node.isSpreadAssignment(property)) {
@@ -1596,14 +1654,14 @@ const staticsMembers = (object: ObjectLiteralExpression, depth = 0): ReadonlyArr
     const spread = followBinding(property.getExpression());
     return Node.isObjectLiteralExpression(spread) && depth < FACADE_RESOLUTION_DEPTH
       ? overrideMembers(members, staticsMembers(spread, depth + 1))
-      : NO_STATICS_MEMBERS;
+      : A.filter(members, (member) => !spreadMayReplace(property.getExpression())(member));
   });
 
 // The effect/Schema codec function a call invokes (`S.is(...)` is `is`); none for any other call.
 const codecCallName =
   (schemaNames: HashSet.HashSet<string>) =>
   (node: CallExpression): O.Option<string> => {
-    const callee = unwrapParentheses(node.getExpression());
+    const callee = unwrapTypeWrappers(node.getExpression());
     if (!Node.isPropertyAccessExpression(callee) || !isSchemaCodecFunction(callee.getName())) {
       return O.none();
     }
@@ -1642,14 +1700,14 @@ const schemaBindings = (callback: StaticsCallback, call: Node): SchemaBindings =
 const isSchemaOperand =
   (bindings: SchemaBindings) =>
   (node: Node): boolean => {
-    const value = unwrapParentheses(node);
+    const value = unwrapTypeWrappers(node);
     if (Node.isIdentifier(value)) {
       return O.exists(localDeclaration(value), (declaration) => A.some(bindings, (binding) => binding === declaration));
     }
     if (!Node.isCallExpression(value)) {
       return false;
     }
-    const callee = unwrapParentheses(value.getExpression());
+    const callee = unwrapTypeWrappers(value.getExpression());
     return (
       (Node.isPropertyAccessExpression(callee) && isSchemaOperand(bindings)(callee.getExpression())) ||
       A.some(value.getArguments(), isSchemaOperand(bindings))
@@ -1667,7 +1725,7 @@ const isSchemaCodec =
 // Calls that only unwrap a codec result: `Result.getOrThrow(...)`, `O.getOrThrowWith(...)`.
 const UNWRAPPER_NAMES = HashSet.fromIterable(["getOrThrow", "getOrThrowWith"]);
 const isUnwrapperReference = (node: Node): boolean => {
-  const value = unwrapParentheses(node);
+  const value = unwrapTypeWrappers(node);
   return Node.isPropertyAccessExpression(value) && HashSet.has(UNWRAPPER_NAMES, value.getName());
 };
 
@@ -1684,7 +1742,7 @@ const isCodecReference =
 const isParameterOperand =
   (parameters: HashSet.HashSet<string>) =>
   (node: Node): boolean => {
-    const value = unwrapParentheses(node);
+    const value = unwrapTypeWrappers(node);
     return Node.isIdentifier(value) && HashSet.has(parameters, value.getText());
   };
 
@@ -1717,12 +1775,21 @@ const forwardsAssertion: ForwardingForm = (context, parameters, call) => {
 const forwardsUnwrapped: ForwardingForm = (context, parameters, call, callee) =>
   isUnwrapperReference(callee) && O.exists(A.head(call.getArguments()), isForwardingExpression(context, parameters));
 
-// `pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow)`.
+// A `pipe` callee: `pipe`, `F.pipe`, `Effect.pipe`; a `pipe` declared in this file (a shadowing local
+// or an object's own member) is not effect's.
+const isPipeCallee = (callee: Node): boolean =>
+  O.exists(
+    calleeMember(callee),
+    ({ nameNode, name }) =>
+      Str.Equivalence(name, "pipe") &&
+      !O.exists(localDeclaration(nameNode), (declaration) => !Node.isImportSpecifier(declaration))
+  );
+
+// `pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow)`, also through `F.pipe` or `Effect.pipe`.
 const forwardsPipe: ForwardingForm = (context, parameters, call, callee) => {
   const args = call.getArguments();
   return (
-    Node.isIdentifier(callee) &&
-    Str.Equivalence(callee.getText(), "pipe") &&
+    isPipeCallee(callee) &&
     O.exists(A.get(args, 0), isParameterOperand(parameters)) &&
     O.exists(A.get(args, 1), isCodecReference(context)) &&
     A.every(A.drop(args, 2), isUnwrapperReference)
@@ -1741,11 +1808,11 @@ const FORWARDING_FORMS: ReadonlyArray<ForwardingForm> = [
 const isForwardingExpression =
   (context: FacadeContext, parameters: HashSet.HashSet<string>) =>
   (node: Node): boolean => {
-    const value = unwrapParentheses(node);
+    const value = unwrapTypeWrappers(node);
     if (!Node.isCallExpression(value)) {
       return false;
     }
-    const callee = unwrapParentheses(value.getExpression());
+    const callee = unwrapTypeWrappers(value.getExpression());
     return A.some(FORWARDING_FORMS, (form) => form(context, parameters, value, callee));
   };
 
@@ -1772,7 +1839,7 @@ const isCodecFacadeValue =
     if (!Node.isCallExpression(value)) {
       return false;
     }
-    const callee = unwrapParentheses(value.getExpression());
+    const callee = unwrapTypeWrappers(value.getExpression());
     if (Node.isPropertyAccessExpression(callee) && Str.Equivalence(callee.getName(), "bind")) {
       return isCodecReference(context)(callee.getExpression());
     }
@@ -1786,36 +1853,33 @@ const isCodecFacadeValue =
 
 // The value a statics member exposes: an initializer, the shorthand's local binding, or a getter's
 // returned expression. Methods are judged as functions instead.
-const staticsMemberValue = (member: Node): O.Option<readonly [name: string, value: Node]> => {
+const staticsMemberValue = (member: StaticsMember): O.Option<Node> => {
   if (Node.isPropertyAssignment(member)) {
-    return O.map(O.fromUndefinedOr(member.getInitializer()), (value) => [member.getName(), value] as const);
+    return O.fromUndefinedOr(member.getInitializer());
   }
   if (Node.isShorthandPropertyAssignment(member)) {
     return pipe(
       O.fromUndefinedOr(member.getProject().getTypeChecker().getShorthandAssignmentValueSymbol(member)),
       O.flatMap((symbol) => A.head(symbol.getDeclarations())),
-      O.flatMap(constInitializer),
-      O.map((value) => [member.getName(), value] as const)
+      O.flatMap(constInitializer)
     );
   }
-  return Node.isGetAccessorDeclaration(member)
-    ? O.map(onlyReturned(member), (value) => [member.getName(), value] as const)
-    : O.none();
+  return Node.isGetAccessorDeclaration(member) ? onlyReturned(member) : O.none();
 };
 
-// The name of a statics member that is a codec facade; none for a domain helper.
+// Whether a statics member is a codec facade; a domain helper is not.
+const isCodecFacadeMember =
+  (context: FacadeContext) =>
+  (member: StaticsMember): boolean =>
+    Node.isMethodDeclaration(member)
+      ? isForwardingFunction(context)(member)
+      : O.exists(staticsMemberValue(member), isCodecFacadeValue(context));
+
+// The key of a statics member that is a codec facade; none for a domain helper or an unknown key.
 const codecFacadeName =
   (context: FacadeContext) =>
-  (member: Node): O.Option<string> => {
-    if (Node.isMethodDeclaration(member)) {
-      return isForwardingFunction(context)(member) ? O.some(member.getName()) : O.none();
-    }
-    return pipe(
-      staticsMemberValue(member),
-      O.filter(([, value]) => isCodecFacadeValue(context)(value)),
-      O.map(([name]) => name)
-    );
-  };
+  (member: StaticsMember): O.Option<string> =>
+    isCodecFacadeMember(context)(member) ? memberKey(member) : O.none();
 
 const codecFacadeCandidates = (sourceFile: SourceFile): ReadonlyArray<ParityCandidate> => {
   if (!WITH_STATICS_SIGNAL_PATTERN.test(sourceFile.getFullText())) {
