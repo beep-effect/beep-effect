@@ -42,7 +42,7 @@ Match the disposition to the same issues: `absent-missing` retains `attributes.i
 
 # Migration inventory
 
-- `Html.conformance.ts:12-24,979-1071` — add `LiteralKit` to imports and introduce the one shared private literal domain with the img migration.
+- `Html.conformance.ts:12-25,979-1071` — add a dedicated `LiteralKit` import from `@beep/schema` and introduce the one shared private literal domain with the img migration.
 - `Html.conformance.ts:334-350` — reuse existing adapters; add no helper.
 - `Html.conformance.ts:1025-1070` — replace all three correlated booleans, the inline missing guard, and two responsive conditional spreads with local disposition/match. Leave `iconSizesMisplaced` independent and third.
 - `Html.conformance.ts:1187-1197,2149-2165` — preserve dispatch and global issue order.
