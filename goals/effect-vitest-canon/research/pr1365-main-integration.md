@@ -24,3 +24,12 @@ assertion-helper imports in Yeet tests: the merged imports retain both branches'
 required helpers. The previous local proof was still queued when this new base
 conflict arrived and was explicitly interrupted before changing its inputs.
 Its queue wait is not a completed proof of either head.
+
+
+## CI lane economics ruleset integration
+
+Integrated main `f04c75c7a6` (#1366). The single conflict in
+`ci-lane-timings.test.ts` combines the canonical Exit assertion with the upstream
+ratified required-context counts (16, 17 or 18). The obsolete local proof was
+still queued and was cancelled before merging; a fresh proof will follow the
+early push. This receipt does not claim the new merged head is verified.

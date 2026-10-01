@@ -1153,7 +1153,7 @@ describe("ci lane timing admission window", () => {
         const exitFailed = Exit.isFailure(exit);
         assertTrue(exitFailed);
         expect(exit.cause.toString()).toContain(
-          "must expose a ratified required-context count (17 or 18); observed 19"
+          "must expose a ratified required-context count (16 or 17 or 18); observed 19"
         );
       }
     })
@@ -1222,6 +1222,39 @@ describe("ci lane timing admission window", () => {
         "- required contexts: 17 (expected 17; ruleset 10240248 version 49479116 effective 2026-09-12T01:46:53.354Z)"
       );
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("admits the ratified 16-context version after the Lint Policy removal", () => {
+    const commands = A.empty<string>();
+    const historyJson =
+      '[{"version_id":50918272,"updated_at":"2026-09-25T09:46:59.802-05:00"},{"version_id":49479116,"updated_at":"2026-09-11T20:46:53.354-05:00"}]';
+    const snapshot16Json = Str.replace('{"context":"Heavy / Lint Policy"},', "")(RULESET_SNAPSHOT_17_JSON);
+    const response = (endpoint: string) =>
+      Str.includes("/history?")(endpoint)
+        ? Effect.succeed(historyJson)
+        : Str.endsWith("/history/50918272")(endpoint)
+          ? Effect.succeed(snapshot16Json)
+          : windowGithubResponse(endpoint);
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(
+        ".",
+        windowOptions({
+          since: DateTime.makeUnsafe("2026-09-26T00:00:00Z"),
+          until: DateTime.makeUnsafe("2026-10-03T00:00:00Z"),
+        })
+      );
+      strictEqual(report.contextCount, 16);
+      deepStrictEqual(
+        O.map(report.rulesetVersion, (version) => version.version_id),
+        O.some(50918272)
+      );
+      assertTrue(A.some(commands, Str.endsWith("/history/50918272")));
+      assertTrue(
+        Str.includes(
+          "- required contexts: 16 (expected 16; ruleset 10240248 version 50918272 effective 2026-09-25T14:46:59.802Z)"
+        )(renderCiLaneTimingWindowMarkdown(report))
+      );
+    }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
   });
 
   it.effect("fails closed when a ratified version exposes a different context count", () => {
