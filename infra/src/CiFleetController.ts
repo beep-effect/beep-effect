@@ -30,8 +30,24 @@ const githubAppWebhookSecretSsmParameterName = "/github-action-runners/app/githu
  * Keeps every runner at 64 GB so the build-mode census peaks of 47.59 GiB for
  * professional-desktop and 24.77 GiB for epistemic-server fit with headroom.
  * See `goals/ci-fleet-endgame/research/build-mode-typecheck-census.md`.
+ *
+ * Eight interchangeable shapes (all x86_64, ENA and NVMe, 64 GiB, 8 or 16
+ * vCPU) across five subnets give the Spot fleet 40 capacity pools. On
+ * 2026-09-30 every lost heavy job was a Spot reclaim, concentrated in the
+ * one cheap r7i.2xlarge pool in us-east-1a, so breadth here is the
+ * reliability lever. Order carries no priority: `capacity-optimized` ignores
+ * it, and only the `-prioritized` strategies read override priorities.
  */
-const runnerInstanceTypes = ["r7a.2xlarge", "r7i.2xlarge", "r6i.2xlarge", "m7a.4xlarge"];
+const runnerInstanceTypes = [
+  "r7a.2xlarge",
+  "r7i.2xlarge",
+  "r6i.2xlarge",
+  "r6a.2xlarge",
+  "m7a.4xlarge",
+  "m7i.4xlarge",
+  "m6a.4xlarge",
+  "m6i.4xlarge",
+];
 
 // The runner agent and every job step both run as this user, so the two cannot
 // be told apart by uid at agent-start time — the reason the post-install IMDS
@@ -922,7 +938,12 @@ export class CiFleetController extends pulumi.ComponentResource {
             name: githubAppWebhookSecretSsmParameterName,
           },
         },
-        instance_allocation_strategy: "price-capacity-optimized",
+        // Pick Spot pools by spare capacity alone. `price-capacity-optimized`
+        // kept choosing the cheapest pool (r7i.2xlarge in us-east-1a took 35%
+        // of launches and 46% of reclaims on 2026-09-30). The scale-up Lambda
+        // silently falls back to `lowest-price` for any value outside its
+        // CreateFleet Spot list, so the test pins this exact string.
+        instance_allocation_strategy: "capacity-optimized",
         // Preserve the September 15 containment policy. A larger budget alert
         // does not authorize automatic fallback to higher-priced capacity.
         instance_target_capacity_type: "spot",

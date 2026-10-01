@@ -66,8 +66,16 @@ const defaultAwsRegion = "us-east-1";
 const defaultVpcCidr = "10.88.0.0/16";
 const defaultPublicSubnetACidr = "10.88.0.0/20";
 const defaultPublicSubnetBCidr = "10.88.16.0/20";
+const defaultPublicSubnetCCidr = "10.88.32.0/20";
+const defaultPublicSubnetDCidr = "10.88.48.0/20";
+const defaultPublicSubnetECidr = "10.88.64.0/20";
+// Subnet slots are positions, not zone suffixes: slot E lands in us-east-1f
+// because us-east-1e offers none of the fleet's instance types.
 const defaultAvailabilityZoneA = "us-east-1a";
 const defaultAvailabilityZoneB = "us-east-1b";
+const defaultAvailabilityZoneC = "us-east-1c";
+const defaultAvailabilityZoneD = "us-east-1d";
+const defaultAvailabilityZoneE = "us-east-1f";
 const defaultInstanceType = "m7i.2xlarge";
 const defaultRootVolumeSizeGb = 100;
 const defaultMaxRunMinutes = 60;
@@ -331,11 +339,17 @@ type CiRunnersPulumiConfigValuesFields = {
   readonly amiSsmParameterName?: string | undefined;
   readonly availabilityZoneA?: string | undefined;
   readonly availabilityZoneB?: string | undefined;
+  readonly availabilityZoneC?: string | undefined;
+  readonly availabilityZoneD?: string | undefined;
+  readonly availabilityZoneE?: string | undefined;
   readonly awsRegion?: string | undefined;
   readonly instanceType?: string | undefined;
   readonly maxRunMinutes?: number | undefined;
   readonly publicSubnetACidr?: string | undefined;
   readonly publicSubnetBCidr?: string | undefined;
+  readonly publicSubnetCCidr?: string | undefined;
+  readonly publicSubnetDCidr?: string | undefined;
+  readonly publicSubnetECidr?: string | undefined;
   readonly reaperTtlMinutes?: number | undefined;
   readonly rootVolumeSizeGb?: number | undefined;
   readonly vpcCidr?: string | undefined;
@@ -364,11 +378,17 @@ export const CiRunnersPulumiConfigValues = S.Class<CiRunnersPulumiConfigValuesFi
     amiSsmParameterName: SsmParameterName,
     availabilityZoneA: AwsAvailabilityZone,
     availabilityZoneB: AwsAvailabilityZone,
+    availabilityZoneC: AwsAvailabilityZone,
+    availabilityZoneD: AwsAvailabilityZone,
+    availabilityZoneE: AwsAvailabilityZone,
     awsRegion: AwsRegion,
     instanceType: Ec2InstanceType,
     maxRunMinutes: MaxRunMinutes,
     publicSubnetACidr: Ipv4Cidr,
     publicSubnetBCidr: Ipv4Cidr,
+    publicSubnetCCidr: Ipv4Cidr,
+    publicSubnetDCidr: Ipv4Cidr,
+    publicSubnetECidr: Ipv4Cidr,
     reaperTtlMinutes: ReaperTtlMinutes,
     rootVolumeSizeGb: RootVolumeSizeGb,
     vpcCidr: Ipv4Cidr,
@@ -404,6 +424,18 @@ const ciRunnersNetworkConfigStruct = S.Struct({
     S.withConstructorDefault(Effect.succeed(defaultAvailabilityZoneB)),
     S.withDecodingDefaultTypeKey(Effect.succeed(defaultAvailabilityZoneB))
   ),
+  availabilityZoneC: AwsAvailabilityZone.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultAvailabilityZoneC)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultAvailabilityZoneC))
+  ),
+  availabilityZoneD: AwsAvailabilityZone.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultAvailabilityZoneD)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultAvailabilityZoneD))
+  ),
+  availabilityZoneE: AwsAvailabilityZone.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultAvailabilityZoneE)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultAvailabilityZoneE))
+  ),
   publicSubnetACidr: Ipv4Cidr.pipe(
     S.withConstructorDefault(Effect.succeed(defaultPublicSubnetACidr)),
     S.withDecodingDefaultTypeKey(Effect.succeed(defaultPublicSubnetACidr))
@@ -411,6 +443,18 @@ const ciRunnersNetworkConfigStruct = S.Struct({
   publicSubnetBCidr: Ipv4Cidr.pipe(
     S.withConstructorDefault(Effect.succeed(defaultPublicSubnetBCidr)),
     S.withDecodingDefaultTypeKey(Effect.succeed(defaultPublicSubnetBCidr))
+  ),
+  publicSubnetCCidr: Ipv4Cidr.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultPublicSubnetCCidr)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultPublicSubnetCCidr))
+  ),
+  publicSubnetDCidr: Ipv4Cidr.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultPublicSubnetDCidr)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultPublicSubnetDCidr))
+  ),
+  publicSubnetECidr: Ipv4Cidr.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultPublicSubnetECidr)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultPublicSubnetECidr))
   ),
   region: AwsRegion.pipe(
     S.withConstructorDefault(Effect.succeed(defaultAwsRegion)),
@@ -422,17 +466,44 @@ const ciRunnersNetworkConfigStruct = S.Struct({
   ),
 });
 
-const CiRunnersNetworkZonesWithinRegionCheck = S.makeFilter<typeof ciRunnersNetworkConfigStruct.Type>(
-  (network) =>
-    Bool.and(
-      Str.startsWith(network.availabilityZoneA, network.region),
-      Str.startsWith(network.availabilityZoneB, network.region)
-    ),
+type CiRunnersNetworkGeometry = typeof ciRunnersNetworkConfigStruct.Type;
+
+const networkAvailabilityZones = (network: CiRunnersNetworkGeometry): ReadonlyArray<string> => [
+  network.availabilityZoneA,
+  network.availabilityZoneB,
+  network.availabilityZoneC,
+  network.availabilityZoneD,
+  network.availabilityZoneE,
+];
+
+const networkPublicSubnetCidrs = (network: CiRunnersNetworkGeometry): ReadonlyArray<string> => [
+  network.publicSubnetACidr,
+  network.publicSubnetBCidr,
+  network.publicSubnetCCidr,
+  network.publicSubnetDCidr,
+  network.publicSubnetECidr,
+];
+
+const CiRunnersNetworkZonesWithinRegionCheck = S.makeFilter<CiRunnersNetworkGeometry>(
+  (network) => A.every(networkAvailabilityZones(network), Str.startsWith(network.region)),
   {
     identifier: $I`CiRunnersNetworkZonesWithinRegionCheck`,
     title: "Availability Zones Within Region",
-    description: "Both availability zones must belong to the configured AWS region.",
-    message: "Expected both availability zones to start with the configured AWS region",
+    description: "Every availability zone must belong to the configured AWS region.",
+    message: "Expected every availability zone to start with the configured AWS region",
+  }
+);
+
+const CiRunnersNetworkZonesDistinctCheck = S.makeFilter<CiRunnersNetworkGeometry>(
+  (network) => {
+    const zones = networkAvailabilityZones(network);
+    return A.length(A.dedupe(zones)) === A.length(zones);
+  },
+  {
+    identifier: $I`CiRunnersNetworkZonesDistinctCheck`,
+    title: "Availability Zones Distinct",
+    description: "Every public subnet must sit in a different availability zone.",
+    message: "Expected every public subnet availability zone to be distinct",
   }
 );
 
@@ -454,33 +525,34 @@ const cidrRange = (cidr: string): CidrRange => {
 const cidrRangeContains = (outer: CidrRange, inner: CidrRange): boolean =>
   Bool.and(outer.start <= inner.start, inner.end <= outer.end);
 
-const CiRunnersSubnetsWithinVpcCheck = S.makeFilter<typeof ciRunnersNetworkConfigStruct.Type>(
+const cidrRangesDisjoint = (left: CidrRange, right: CidrRange): boolean =>
+  Bool.or(left.end < right.start, right.end < left.start);
+
+const CiRunnersSubnetsWithinVpcCheck = S.makeFilter<CiRunnersNetworkGeometry>(
   (network) => {
     const vpc = cidrRange(network.vpcCidr);
-    return Bool.and(
-      cidrRangeContains(vpc, cidrRange(network.publicSubnetACidr)),
-      cidrRangeContains(vpc, cidrRange(network.publicSubnetBCidr))
-    );
+    return A.every(networkPublicSubnetCidrs(network), (cidr) => cidrRangeContains(vpc, cidrRange(cidr)));
   },
   {
     identifier: $I`CiRunnersSubnetsWithinVpcCheck`,
     title: "Subnets Within VPC",
-    description: "Both public subnet CIDR blocks must be contained within the VPC CIDR block.",
-    message: "Expected both public subnet CIDR blocks to be contained within the VPC CIDR block",
+    description: "Every public subnet CIDR block must be contained within the VPC CIDR block.",
+    message: "Expected every public subnet CIDR block to be contained within the VPC CIDR block",
   }
 );
 
-const CiRunnersSubnetsDisjointCheck = S.makeFilter<typeof ciRunnersNetworkConfigStruct.Type>(
+const CiRunnersSubnetsDisjointCheck = S.makeFilter<CiRunnersNetworkGeometry>(
   (network) => {
-    const subnetA = cidrRange(network.publicSubnetACidr);
-    const subnetB = cidrRange(network.publicSubnetBCidr);
-    return Bool.or(subnetA.end < subnetB.start, subnetB.end < subnetA.start);
+    const subnets = A.map(networkPublicSubnetCidrs(network), cidrRange);
+    return A.every(subnets, (subnet, index) =>
+      A.every(A.drop(subnets, index + 1), (other) => cidrRangesDisjoint(subnet, other))
+    );
   },
   {
     identifier: $I`CiRunnersSubnetsDisjointCheck`,
     title: "Subnets Disjoint",
-    description: "The two public subnet CIDR blocks must not overlap each other.",
-    message: "Expected the two public subnet CIDR blocks not to overlap",
+    description: "The public subnet CIDR blocks must not overlap each other.",
+    message: "Expected the public subnet CIDR blocks not to overlap",
   }
 );
 
@@ -489,9 +561,14 @@ const CiRunnersSubnetsDisjointCheck = S.makeFilter<typeof ciRunnersNetworkConfig
  *
  * **Details**
  *
+ * Five public subnets (slots A-E) spread the Spot fleet across five
+ * availability zones so one reclaimed capacity pool cannot starve it. Slots
+ * are positions, not zone suffixes: the default slot E is `us-east-1f`
+ * because `us-east-1e` offers none of the fleet's instance types.
+ *
  * Class-level checks reject availability zones outside the configured
- * region, subnet CIDR blocks that fall outside the VPC CIDR block, and
- * subnet CIDR blocks that overlap each other — so a partial override such
+ * region, two slots sharing one zone, subnet CIDR blocks that fall outside
+ * the VPC CIDR block, and subnet CIDR blocks that overlap each other — so a partial override such
  * as `awsRegion` or `vpcCidr` alone fails fast at config-load time instead
  * of deep inside `pulumi up` after earlier resources have provisioned.
  *
@@ -508,7 +585,12 @@ const CiRunnersSubnetsDisjointCheck = S.makeFilter<typeof ciRunnersNetworkConfig
  */
 export class CiRunnersNetworkConfig extends S.Class<CiRunnersNetworkConfig>($I`CiRunnersNetworkConfig`)(
   ciRunnersNetworkConfigStruct.pipe(
-    S.check(CiRunnersNetworkZonesWithinRegionCheck, CiRunnersSubnetsWithinVpcCheck, CiRunnersSubnetsDisjointCheck)
+    S.check(
+      CiRunnersNetworkZonesWithinRegionCheck,
+      CiRunnersNetworkZonesDistinctCheck,
+      CiRunnersSubnetsWithinVpcCheck,
+      CiRunnersSubnetsDisjointCheck
+    )
   ),
   $I.annote("CiRunnersNetworkConfig", {
     description: "Dedicated egress-only VPC geometry for the CI runner fleet.",
@@ -672,11 +754,17 @@ export const makeCiRunnersStackArgsFromConfigValues = ({
   amiSsmParameterName,
   availabilityZoneA,
   availabilityZoneB,
+  availabilityZoneC,
+  availabilityZoneD,
+  availabilityZoneE,
   awsRegion,
   instanceType,
   maxRunMinutes,
   publicSubnetACidr,
   publicSubnetBCidr,
+  publicSubnetCCidr,
+  publicSubnetDCidr,
+  publicSubnetECidr,
   reaperTtlMinutes,
   rootVolumeSizeGb,
   vpcCidr,
@@ -690,8 +778,14 @@ export const makeCiRunnersStackArgsFromConfigValues = ({
       O.getSomesStruct({
         availabilityZoneA: O.fromUndefinedOr(availabilityZoneA),
         availabilityZoneB: O.fromUndefinedOr(availabilityZoneB),
+        availabilityZoneC: O.fromUndefinedOr(availabilityZoneC),
+        availabilityZoneD: O.fromUndefinedOr(availabilityZoneD),
+        availabilityZoneE: O.fromUndefinedOr(availabilityZoneE),
         publicSubnetACidr: O.fromUndefinedOr(publicSubnetACidr),
         publicSubnetBCidr: O.fromUndefinedOr(publicSubnetBCidr),
+        publicSubnetCCidr: O.fromUndefinedOr(publicSubnetCCidr),
+        publicSubnetDCidr: O.fromUndefinedOr(publicSubnetDCidr),
+        publicSubnetECidr: O.fromUndefinedOr(publicSubnetECidr),
         region: O.fromUndefinedOr(awsRegion),
         vpcCidr: O.fromUndefinedOr(vpcCidr),
       })
@@ -732,11 +826,17 @@ export const loadCiRunnersStackArgs = (): CiRunnersStackArgs => {
     amiSsmParameterName: config.get("amiSsmParameterName"),
     availabilityZoneA: config.get("availabilityZoneA"),
     availabilityZoneB: config.get("availabilityZoneB"),
+    availabilityZoneC: config.get("availabilityZoneC"),
+    availabilityZoneD: config.get("availabilityZoneD"),
+    availabilityZoneE: config.get("availabilityZoneE"),
     awsRegion: config.get("awsRegion"),
     instanceType: config.get("instanceType"),
     maxRunMinutes: config.getNumber("maxRunMinutes"),
     publicSubnetACidr: config.get("publicSubnetACidr"),
     publicSubnetBCidr: config.get("publicSubnetBCidr"),
+    publicSubnetCCidr: config.get("publicSubnetCCidr"),
+    publicSubnetDCidr: config.get("publicSubnetDCidr"),
+    publicSubnetECidr: config.get("publicSubnetECidr"),
     reaperTtlMinutes: config.getNumber("reaperTtlMinutes"),
     rootVolumeSizeGb: config.getNumber("rootVolumeSizeGb"),
     vpcCidr: config.get("vpcCidr"),
@@ -949,7 +1049,23 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   public readonly region: pulumi.Output<string>;
 
   /**
-   * Public subnet id in the first availability zone.
+   * Public subnet id in the first availability zone, resolved only once the
+   * subnet is routed to the internet gateway.
+   *
+   * **Example** (Read the routed subnet A id under Pulumi mocks)
+   *
+   * ```ts
+   * import { CiRunnersStack } from "@beep/infra"
+   * import * as pulumi from "@pulumi/pulumi"
+   *
+   * await pulumi.runtime.setMocks({
+   *   call: () => ({}),
+   *   newResource: ({ name, inputs }) => ({ id: `${name}-id`, state: inputs }),
+   * })
+   *
+   * const stack = new CiRunnersStack("ci-runners")
+   * stack.publicSubnetAId.apply((subnetId) => console.log(subnetId)) // "ci-runners-public-a-id"
+   * ```
    *
    * @category resources
    * @since 0.0.0
@@ -957,12 +1073,100 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   public readonly publicSubnetAId: pulumi.Output<string>;
 
   /**
-   * Public subnet id in the second availability zone.
+   * Public subnet id in the second availability zone, resolved only once the
+   * subnet is routed to the internet gateway.
+   *
+   * **Example** (Read the routed subnet B id under Pulumi mocks)
+   *
+   * ```ts
+   * import { CiRunnersStack } from "@beep/infra"
+   * import * as pulumi from "@pulumi/pulumi"
+   *
+   * await pulumi.runtime.setMocks({
+   *   call: () => ({}),
+   *   newResource: ({ name, inputs }) => ({ id: `${name}-id`, state: inputs }),
+   * })
+   *
+   * const stack = new CiRunnersStack("ci-runners")
+   * stack.publicSubnetBId.apply((subnetId) => console.log(subnetId)) // "ci-runners-public-b-id"
+   * ```
    *
    * @category resources
    * @since 0.0.0
    */
   public readonly publicSubnetBId: pulumi.Output<string>;
+
+  /**
+   * Public subnet id in the third availability zone, resolved only once the
+   * subnet is routed to the internet gateway.
+   *
+   * **Example** (Read the routed subnet C id under Pulumi mocks)
+   *
+   * ```ts
+   * import { CiRunnersStack } from "@beep/infra"
+   * import * as pulumi from "@pulumi/pulumi"
+   *
+   * await pulumi.runtime.setMocks({
+   *   call: () => ({}),
+   *   newResource: ({ name, inputs }) => ({ id: `${name}-id`, state: inputs }),
+   * })
+   *
+   * const stack = new CiRunnersStack("ci-runners")
+   * stack.publicSubnetCId.apply((subnetId) => console.log(subnetId)) // "ci-runners-public-c-id"
+   * ```
+   *
+   * @category resources
+   * @since 0.0.0
+   */
+  public readonly publicSubnetCId: pulumi.Output<string>;
+
+  /**
+   * Public subnet id in the fourth availability zone, resolved only once the
+   * subnet is routed to the internet gateway.
+   *
+   * **Example** (Read the routed subnet D id under Pulumi mocks)
+   *
+   * ```ts
+   * import { CiRunnersStack } from "@beep/infra"
+   * import * as pulumi from "@pulumi/pulumi"
+   *
+   * await pulumi.runtime.setMocks({
+   *   call: () => ({}),
+   *   newResource: ({ name, inputs }) => ({ id: `${name}-id`, state: inputs }),
+   * })
+   *
+   * const stack = new CiRunnersStack("ci-runners")
+   * stack.publicSubnetDId.apply((subnetId) => console.log(subnetId)) // "ci-runners-public-d-id"
+   * ```
+   *
+   * @category resources
+   * @since 0.0.0
+   */
+  public readonly publicSubnetDId: pulumi.Output<string>;
+
+  /**
+   * Public subnet id in the fifth availability zone, resolved only once the
+   * subnet is routed to the internet gateway.
+   *
+   * **Example** (Read the routed subnet E id under Pulumi mocks)
+   *
+   * ```ts
+   * import { CiRunnersStack } from "@beep/infra"
+   * import * as pulumi from "@pulumi/pulumi"
+   *
+   * await pulumi.runtime.setMocks({
+   *   call: () => ({}),
+   *   newResource: ({ name, inputs }) => ({ id: `${name}-id`, state: inputs }),
+   * })
+   *
+   * const stack = new CiRunnersStack("ci-runners")
+   * stack.publicSubnetEId.apply((subnetId) => console.log(subnetId)) // "ci-runners-public-e-id"
+   * ```
+   *
+   * @category resources
+   * @since 0.0.0
+   */
+  public readonly publicSubnetEId: pulumi.Output<string>;
 
   /**
    * Zero-ingress worker security group id.
@@ -1082,7 +1286,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
       { parent: this }
     );
 
-    new aws.ec2.Route(
+    const publicDefaultRoute = new aws.ec2.Route(
       `${name}-public-default-route`,
       {
         destinationCidrBlock: "0.0.0.0/0",
@@ -1093,51 +1297,44 @@ export class CiRunnersStack extends pulumi.ComponentResource {
       { parent: this }
     );
 
-    const publicSubnetA = new aws.ec2.Subnet(
-      `${name}-public-a`,
-      {
-        availabilityZone: args.network.availabilityZoneA,
-        cidrBlock: args.network.publicSubnetACidr,
-        mapPublicIpOnLaunch: false,
-        region: args.network.region,
-        tags: { ...defaultTags, Name: "beep-ci-runners-public-a" },
-        vpcId: vpc.id,
-      },
-      { parent: this }
-    );
+    // Resource names keep the per-slot `public-<slot>` spelling, so slots A and
+    // B stay the same Pulumi resources while the fleet widens to five zones.
+    // The returned id resolves only after the subnet's route-table association
+    // and the default route exist: the controller receives it as a launch
+    // target, and a worker started in a subnet without that route has no
+    // egress and never registers.
+    const makePublicSubnet = (slot: string, availabilityZone: string, cidrBlock: string): pulumi.Output<string> => {
+      const subnet = new aws.ec2.Subnet(
+        `${name}-public-${slot}`,
+        {
+          availabilityZone,
+          cidrBlock,
+          mapPublicIpOnLaunch: false,
+          region: args.network.region,
+          tags: { ...defaultTags, Name: `beep-ci-runners-public-${slot}` },
+          vpcId: vpc.id,
+        },
+        { parent: this }
+      );
 
-    const publicSubnetB = new aws.ec2.Subnet(
-      `${name}-public-b`,
-      {
-        availabilityZone: args.network.availabilityZoneB,
-        cidrBlock: args.network.publicSubnetBCidr,
-        mapPublicIpOnLaunch: false,
-        region: args.network.region,
-        tags: { ...defaultTags, Name: "beep-ci-runners-public-b" },
-        vpcId: vpc.id,
-      },
-      { parent: this }
-    );
+      const association = new aws.ec2.RouteTableAssociation(
+        `${name}-public-${slot}-rta`,
+        {
+          region: args.network.region,
+          routeTableId: publicRouteTable.id,
+          subnetId: subnet.id,
+        },
+        { parent: this }
+      );
 
-    new aws.ec2.RouteTableAssociation(
-      `${name}-public-a-rta`,
-      {
-        region: args.network.region,
-        routeTableId: publicRouteTable.id,
-        subnetId: publicSubnetA.id,
-      },
-      { parent: this }
-    );
+      return pulumi.all([subnet.id, association.id, publicDefaultRoute.id]).apply(([subnetId]) => subnetId);
+    };
 
-    new aws.ec2.RouteTableAssociation(
-      `${name}-public-b-rta`,
-      {
-        region: args.network.region,
-        routeTableId: publicRouteTable.id,
-        subnetId: publicSubnetB.id,
-      },
-      { parent: this }
-    );
+    const publicSubnetAId = makePublicSubnet("a", args.network.availabilityZoneA, args.network.publicSubnetACidr);
+    const publicSubnetBId = makePublicSubnet("b", args.network.availabilityZoneB, args.network.publicSubnetBCidr);
+    const publicSubnetCId = makePublicSubnet("c", args.network.availabilityZoneC, args.network.publicSubnetCCidr);
+    const publicSubnetDId = makePublicSubnet("d", args.network.availabilityZoneD, args.network.publicSubnetDCidr);
+    const publicSubnetEId = makePublicSubnet("e", args.network.availabilityZoneE, args.network.publicSubnetECidr);
 
     // Worker SG: ZERO ingress rules — that single fact enforces both no-inbound
     // and no-east-west (SG-member traffic requires a receiver-side ingress
@@ -1401,8 +1598,11 @@ export class CiRunnersStack extends pulumi.ComponentResource {
     this.vpcId = vpc.id;
     this.vpcCidr = pulumi.output(args.network.vpcCidr);
     this.region = pulumi.output(args.network.region);
-    this.publicSubnetAId = publicSubnetA.id;
-    this.publicSubnetBId = publicSubnetB.id;
+    this.publicSubnetAId = publicSubnetAId;
+    this.publicSubnetBId = publicSubnetBId;
+    this.publicSubnetCId = publicSubnetCId;
+    this.publicSubnetDId = publicSubnetDId;
+    this.publicSubnetEId = publicSubnetEId;
     this.workerSecurityGroupId = workerSecurityGroup.id;
     this.launchTemplateId = launchTemplate.id;
     this.launchTemplateName = pulumi.output(ciRunnersLaunchTemplateName);
@@ -1420,6 +1620,9 @@ export class CiRunnersStack extends pulumi.ComponentResource {
       launchTemplateName: this.launchTemplateName,
       publicSubnetAId: this.publicSubnetAId,
       publicSubnetBId: this.publicSubnetBId,
+      publicSubnetCId: this.publicSubnetCId,
+      publicSubnetDId: this.publicSubnetDId,
+      publicSubnetEId: this.publicSubnetEId,
       reaperFunctionName: this.reaperFunctionName,
       region: this.region,
       resolvedAmiId: this.resolvedAmiId,

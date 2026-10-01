@@ -17,8 +17,15 @@ config:
   ciRunners:vpcCidr: 10.88.0.0/16
   ciRunners:publicSubnetACidr: 10.88.0.0/20
   ciRunners:publicSubnetBCidr: 10.88.16.0/20
+  ciRunners:publicSubnetCCidr: 10.88.32.0/20
+  ciRunners:publicSubnetDCidr: 10.88.48.0/20
+  ciRunners:publicSubnetECidr: 10.88.64.0/20
   ciRunners:availabilityZoneA: us-east-1a
   ciRunners:availabilityZoneB: us-east-1b
+  ciRunners:availabilityZoneC: us-east-1c
+  ciRunners:availabilityZoneD: us-east-1d
+  # Slot E is us-east-1f: us-east-1e offers none of the fleet's instance types.
+  ciRunners:availabilityZoneE: us-east-1f
   ciRunners:instanceType: m7i.2xlarge
   ciRunners:rootVolumeSizeGb: "100"
   ciRunners:maxRunMinutes: "60"
