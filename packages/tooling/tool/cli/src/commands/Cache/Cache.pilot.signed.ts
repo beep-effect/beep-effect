@@ -4,11 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { CacheClientPin, CacheQualificationKey } from "@beep/repo-configs/cache";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { cacheSignedCaptureDiagnostic } from "./Cache.pilot.capture.ts";
 import { CachePilotOutcome } from "./Cache.pilot.schemas.ts";
 import { CacheSignedPilotMutation, CacheSignedPilotShadow } from "./Cache.pilot.signed.schemas.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
@@ -296,6 +298,20 @@ const validateSignedComparison = Effect.fn("CachePilot.validateSignedComparison"
   )
     return yield* CacheCommandError.new("Signed pilot upload and download lack ordered matching signed bytes.");
 
+  if (
+    !O.contains(pair.archive.archiveSha256)(put.digest) ||
+    pair.archive.archiveBytes !== put.bytes ||
+    pair.archive.logSha256 !== producer.outcome.logSha256 ||
+    pair.archive.logBytes !== producer.outcome.logBytes ||
+    pair.archive.archiveBytes === 0 ||
+    pair.archive.archiveBytes > 1024 * 1024 ||
+    pair.archive.logBytes > 64 * 1024 ||
+    pair.archive.decodedBytes !== 512 + Math.ceil(pair.archive.logBytes / 512) * 512 + 1024
+  )
+    return yield* CacheCommandError.new(
+      "Signed archive inspection is not bound to its transferred artifact and task log."
+    );
+
   return pair;
 });
 
@@ -368,6 +384,11 @@ export const validateCacheSignedPilotReceipt = Effect.fn("CachePilot.validateSig
     return yield* CacheCommandError.new("Signed pilot profile differs from its base tuple.");
   if (O.isNone(receipt.runtimeLinker))
     return yield* CacheCommandError.new("Signed pilot runtime linkage evidence is missing.");
+  if (
+    A.dedupe(A.map(receipt.nonExecutions, (observation) => observation.reason)).length !== 4 ||
+    !A.every(receipt.nonExecutions, (observation) => observation.id === observation.reason && observation.passed)
+  )
+    return yield* CacheCommandError.new("Signed pilot omits distinct, case-derived native non-execution controls.");
   const pairs = receipt.comparisons;
   const freshPairs = receipt.freshPairs;
   const freshRuns = A.flatMap(freshPairs, (pair) => [pair.left, pair.right]);
@@ -388,18 +409,62 @@ export const validateCacheSignedPilotReceipt = Effect.fn("CachePilot.validateSig
     A.dedupe(A.map(runs, (run) => run.summarySha256)).length !== 73
   )
     return yield* CacheCommandError.new("Signed pilot pairs, namespaces, runs and summaries must be independent.");
+  if (
+    A.dedupe(A.map(receipt.captureControls, (control) => control.case)).length !== 4 ||
+    A.dedupe(A.map(receipt.captureControls, (control) => control.summarySha256)).length !== 4 ||
+    A.some(
+      receipt.captureControls,
+      (control) =>
+        control.diagnostic !== cacheSignedCaptureDiagnostic(control.case) ||
+        A.some(runs, (run) => run.summarySha256 === control.summarySha256)
+    )
+  )
+    return yield* CacheCommandError.new(
+      "Native capture controls require distinct cases, summaries and exact rejection diagnostics."
+    );
   const isolationRoots = A.appendAll(
     A.flatMap(freshPairs, (pair) => [pair.leftRoot, pair.rightRoot]),
-    A.flatMap(pairs, (pair) => [pair.authorityRoot, pair.producerRoot, pair.replayRoot])
+    A.appendAll(
+      A.flatMap(pairs, (pair) => [pair.authorityRoot, pair.producerRoot, pair.replayRoot]),
+      A.append(
+        A.map(receipt.nonExecutions, (observation) => observation.isolationRoot),
+        receipt.policyRefusal.isolationRoot
+      )
+    )
   );
-  if (A.dedupe(isolationRoots).length !== 66)
+  const allRoots = A.appendAll(
+    isolationRoots,
+    A.map(receipt.captureControls, (control) => control.isolationRoot)
+  );
+  if (A.dedupe(allRoots).length !== 75)
     return yield* CacheCommandError.new("Signed comparisons reuse an isolation root.");
+  if (
+    A.some(receipt.nonExecutions, (observation) =>
+      O.exists(observation.summarySha256, (digest) => A.some(runs, (run) => run.summarySha256 === digest))
+    )
+  )
+    return yield* CacheCommandError.new("Non-execution evidence reused an executed task summary.");
   yield* Effect.forEach(freshPairs, (pair) => validateCacheSignedPilotFreshPair(pair, receipt.key), { discard: true });
   yield* validateCacheSignedPilotConcurrency(freshPairs);
   const baseline = yield* A.head(receipt.pairs).pipe(
     Effect.fromOption(() => CacheCommandError.new("Signed baseline comparison is missing."))
   );
   const baselineTask = baseline.producer.outcome.selected;
+  if (
+    receipt.policyRefusal.computation !== receipt.key.computation ||
+    receipt.policyRefusal.taskHash === baselineTask.taskHash ||
+    A.contains(receipt.policyRefusal.configuration.env, "BEEP_CACHE_TOOLCHAIN_DIGEST") ||
+    receipt.policyRefusal.configuration.persistent ||
+    receipt.policyRefusal.configuration.interactive ||
+    A.some(runs, (run) => run.summarySha256 === receipt.policyRefusal.dryPlanSha256) ||
+    A.some(receipt.nonExecutions, (observation) =>
+      O.contains(receipt.policyRefusal.dryPlanSha256)(observation.summarySha256)
+    )
+  )
+    return yield* CacheCommandError.new(
+      "Missing-child policy refusal does not establish an independent ungoverned dry plan."
+    );
+
   if (
     !A.every(
       receipt.pairs,

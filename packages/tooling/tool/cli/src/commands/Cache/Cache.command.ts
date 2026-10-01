@@ -19,6 +19,8 @@ import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { nearestRank } from "../../internal/stats/NearestRank.ts";
+import { CacheProducerAcceptanceReference, CacheProducerImportRequest } from "./Cache.acceptance.schemas.ts";
+import { loadCacheProducerStoreConfiguration, persistCacheProducerAcceptance } from "./Cache.acceptance.store.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
 import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
 import { materializeCacheDependencies } from "./Cache.dependencies.ts";
@@ -825,6 +827,20 @@ const cacheSignedPilotCommand = Command.make(
   Command.provide(MemoryStatsLive)
 );
 
+const cacheAcceptCommand = Command.make(
+  "accept",
+  { request: Flag.File("request"), output: outputFlag },
+  ({ request, output }) =>
+    Effect.gen(function* () {
+      const input = yield* readCacheRequest(request, CacheProducerImportRequest, S.Natural.make(8 * 1024 * 1024));
+      const configuration = yield* loadCacheProducerStoreConfiguration();
+      const reference = yield* persistCacheProducerAcceptance(configuration.directory, input, configuration.trust);
+      yield* writeEncoded(reference, JsonStringCodec(CacheProducerAcceptanceReference), output);
+    }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription("Retain authenticated policy-complete reports and emit a reference without promoting a tuple")
+);
+
 const cacheProtocolRunCommand = Command.make(
   "protocol-run",
   { request: Flag.File("request"), output: outputFlag },
@@ -866,7 +882,7 @@ const cacheExecuteCommand = Command.make(
 
 const cacheCommandDefinition = Command.make("cache", {}, () =>
   Console.log(
-    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, pilot-signed, protocol-run, protocol-review, warm, probe, dashboard, execute"
+    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, pilot-signed, accept, protocol-run, protocol-review, warm, probe, dashboard, execute"
   )
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
@@ -884,6 +900,7 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
     cacheDependenciesCommand,
     cachePilotCommand,
     cacheSignedPilotCommand,
+    cacheAcceptCommand,
     cacheProtocolRunCommand,
     cacheProtocolReviewCommand,
     cacheWarmCommand,

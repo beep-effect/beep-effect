@@ -58,6 +58,39 @@ export class CacheProtocolReadFailure extends S.Class<CacheProtocolReadFailure>(
 ) {}
 
 /**
+ * Measured private filesystem root for one complete protocol scenario.
+ *
+ * **Example** (Inspect the bound scenario identity)
+ * ```ts
+ * import { CacheProtocolIsolationRoot } from "@beep/repo-cli/commands/Cache"
+ * console.assert("sha256" in CacheProtocolIsolationRoot.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheProtocolIsolationRoot extends S.Class<CacheProtocolIsolationRoot>($I`CacheProtocolIsolationRoot`)(
+  {
+    case: LiteralKit([
+      "producer",
+      "replay",
+      "missing-tag",
+      "invalid-tag",
+      "corrupt-body",
+      "wrong-key",
+      "truncated-body",
+      "unavailable",
+      "throttled",
+    ]),
+    sha256: Sha256Hex,
+  },
+  $I.annote("CacheProtocolIsolationRoot", {
+    description:
+      "Domain-separated digest of the scenario directory's resolved absolute path, measured by its owned worker.",
+  })
+) {}
+
+/**
  * Bounded synthetic execution results, never a qualification authorization.
  *
  * **Example** (Keep authority explicit)
@@ -71,10 +104,11 @@ export class CacheProtocolReadFailure extends S.Class<CacheProtocolReadFailure>(
  */
 export class CacheProtocolExecution extends S.Class<CacheProtocolExecution>($I`CacheProtocolExecution`)(
   {
-    schemaVersion: S.tag("cache-protocol-execution/v1"),
+    schemaVersion: S.tag("cache-protocol-execution/v2"),
     authority: S.tag("synthetic-native-observation-only"),
     network: S.tag("private-loopback-nested-readers/v1"),
     observation: CacheProtocolObservation,
+    roots: S.NonEmptyArray(CacheProtocolIsolationRoot).check(S.isMinLength(9), S.isMaxLength(9)),
     failures: S.Array(CacheProtocolReadFailure).check(S.isMinLength(3), S.isMaxLength(3)),
     events: S.Array(CacheFixtureEvent).check(S.isMaxLength(101)),
     bunSha256: Sha256Hex,

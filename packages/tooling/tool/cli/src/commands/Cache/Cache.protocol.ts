@@ -123,7 +123,7 @@ const isTransportCase = S.is(CacheProtocolReadFailure.fields.case);
 export const validateCacheProtocolExecution = Effect.fn("Cache.validateProtocolExecution")(function* (
   report: CacheProtocolExecution
 ) {
-  const { observation, failures, events } = report;
+  const { observation, roots, failures, events } = report;
   yield* validateCacheProtocolObservation(observation);
   const cases = A.map(observation.runs, (run) => run.case);
   const allCases = A.appendAll(
@@ -135,6 +135,10 @@ export const validateCacheProtocolExecution = Effect.fn("Cache.validateProtocolE
     A.map(failures, (failure) => failure.summary)
   );
   if (
+    roots.length !== 9 ||
+    A.dedupe(A.map(roots, (root) => root.case)).length !== 9 ||
+    A.dedupe(A.map(roots, (root) => root.sha256)).length !== 9 ||
+    !A.every(roots, (root) => A.contains(allCases, root.case)) ||
     failures.length !== 3 ||
     A.dedupe(allCases).length !== 9 ||
     A.dedupe(summaries).length !== 9 ||
@@ -150,7 +154,7 @@ export const validateCacheProtocolExecution = Effect.fn("Cache.validateProtocolE
     A.filter(events, (event) => event.operation === "put").length !== 1
   )
     return yield* CacheCommandError.new(
-      "Protocol execution requires nine distinct cases and ordered, attributed wire evidence."
+      "Protocol execution requires nine distinct cases, isolated roots and ordered, attributed wire evidence."
     );
   const upload = yield* A.findFirst(observation.exchanges, (event) => event.case === "producer").pipe(
     Effect.fromOption(() => CacheCommandError.new("Protocol upload is missing."))

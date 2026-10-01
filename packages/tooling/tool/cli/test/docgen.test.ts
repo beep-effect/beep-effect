@@ -2833,11 +2833,9 @@ export const parseValue = (value: string): string => value.trim();
       );
       yield* fs.writeFileString(
         path.join(packageDir, "src", "index.ts"),
-        `/**
- * @since 0.0.0
- * @category parsing
- */
-export * as Value from "./Value.ts";
+        `export * as Value from "./Value.ts";
+export { parseValue as parseAlias } from "./Value.ts";
+export * from "./Value.ts";
 `
       );
 
@@ -2857,6 +2855,17 @@ export * as Value from "./Value.ts";
       expect(exportNames).not.toContain("export * as Value");
       expect(findingCodes).not.toContain("missing-example");
       expect(findingCodes).not.toContain("missing-description");
+      const metadata = yield* analyzePackageDocumentation(target!);
+      expect(metadata.summary.missingDocumentation).toBe(0);
+      expect(A.some(metadata.exports, (entry) => entry.kind === "re-export")).toBe(false);
+
+      yield* fs.writeFileString(
+        path.join(packageDir, "src", "Value.ts"),
+        "/**\n * @packageDocumentation\n * @since 0.0.0\n */\n\nexport const parseValue = 1;\n"
+      );
+      const undocumented = yield* analyzePackageDocumentation(target!);
+      expect(undocumented.summary.missingDocumentation).toBe(1);
+      expect(A.map(undocumented.exports, (entry) => entry.name)).toEqual(["parseValue"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 

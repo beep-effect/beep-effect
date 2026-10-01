@@ -7,8 +7,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as S from "effect/Schema";
-import { CacheSignedPilotReceipt } from "./Cache.pilot.signed.schemas.ts";
-import { CacheProducerEnvelope } from "./Cache.producer.schemas.ts";
+import { CacheProducerBundle, CacheProducerEnvelope } from "./Cache.producer.schemas.ts";
 import { CacheCensusSource, CacheLinkedFile, CacheToolchainSnapshot } from "./Cache.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow.schemas");
@@ -76,13 +75,13 @@ export class CacheProducerWorkflow extends S.Class<CacheProducerWorkflow>($I`Cac
  */
 export class CacheProducerObservation extends S.Class<CacheProducerObservation>($I`CacheProducerObservation`)(
   {
-    schemaVersion: S.tag("cache-producer-observation/v1"),
+    schemaVersion: S.tag("cache-producer-observation/v2"),
     authority: S.tag("authenticated-observation-only"),
-    observation: CacheSignedPilotReceipt,
+    observation: CacheProducerBundle,
     envelope: CacheProducerEnvelope,
   },
   $I.annote("CacheProducerObservation", {
     description:
-      "Owned signed-pilot execution authenticated by a pre-provisioned issuer; qualification evidence and profile closure remain separate gates.",
+      "Owned complete pilot and conformance execution authenticated by a pre-provisioned issuer; qualification evidence and profile closure remain separate gates.",
   })
 ) {}

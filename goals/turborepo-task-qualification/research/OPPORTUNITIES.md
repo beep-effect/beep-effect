@@ -2620,3 +2620,139 @@ type. Source typechecking and 52 focused tests pass after that correction.
 The native rerun is still pending, so no task-overlap evidence is claimed.
 A boundary test covering nontrivial transformed fields would have exposed
 this before the native attempt; passing plain-field observations did not.
+
+## 2026-10-01: Node fixture shim omitted the server address
+
+While verifying signed archive inspection, all 13 protocol fixture tests failed
+under Node before exercising fixture behavior: `BunHttpServer` read an absent
+`server.hostname`. The same suite passed under real Bun. The repository's
+`vitest.setup.ts` serve adapter returned only port/stop; this Effect version
+requires hostname as well. Returning the already-bound hostname repairs the
+missing adapter property. A Node/Bun fixture parity check during Effect bumps
+would have caught this before the qualification work. Logs remain private in
+`.beep/qualification-signed-capture/`; no runtime failure is waived.
+
+The parity rerun also exposed missing `server.reload` and a shutdown-before-listen
+race. The adapter now retains the active fetch handler, supplies the server
+handle, and memoizes shutdown after listening. All 13 fixture tests pass under
+Node and Bun; root configuration typechecking passes.
+
+
+### Full package proof: unrelated worktree timeout (2026-10-01)
+
+- Work: verify the protocol-root and acceptance implementation snapshot.
+- Evidence: `bun run beep quality package-verify @beep/repo-cli` failed its
+  audit on `test/worktree-fleet.test.ts`, “worktree new calls reference linking
+  after copying files and prints its links”: `Test timed out in 30000ms.`
+  The file was unchanged; 260 test files and 5,086 tests passed.
+- Attribution: suspected environmental timing; an isolated file rerun is in
+  progress. This is not a waived package gate or proof of a source defect.
+- Prevention: retain test-level runtime and scheduling attribution in the
+  package proof summary so unrelated timing failures can be isolated without
+  rerunning every passing test during diagnosis.
+
+Attribution follow-up: the entire unchanged `worktree-fleet.test.ts` file
+passed 36/36 tests in isolation in 9.10 seconds. The timeout did not reproduce;
+no unrelated test/source changes or timeout increase were made. Full final
+package proof remains required.
+
+### Acceptance integration verification friction
+
+- During capture package verification, Biome reported import ordering in
+  `Cache/index.ts` and `src/test/Cache.test-kit.ts`. These introduced issues were
+  fixed in the editable integration worktree while the native proof source
+  stayed frozen. Full integrated package verification is still required.
+- The configuration loader used `decodeUnknownEffect` on typed configuration
+  fields; source checking reported `preferTypedSchemaDecoder`. Switching to
+  `decodeEffect` preserves compile-time validation and passes source checking.
+- Verification launch mistakes named a nonexistent `tsconfig.src.json` and
+  started package Vitest from the root, where its relative test glob matched
+  nothing. Both failures were launch errors, not test passes. Use the actual
+  package `tsconfig.json` and run package Vitest from its workspace directory.
+
+### Complete bundle blocked by generic request bound
+
+The actual `cache accept` CLI smoke failed with “Cannot read the bounded local
+experiment request.” The request initially lay outside the contained checkout;
+relocating it exposed a second cause: the command reused the 64 KiB generic
+request bound, while complete signed bundles require the private store's 8 MiB
+bound. The idle capture worktree carries the scoped command fix. Positive CLI
+proof, negative revocation and package verification must pass before integration.
+A realistic complete-bundle command fixture would have found this earlier than
+helper tests and malformed-request dispatch alone. No bound is removed.
+
+### Signed-profile operational mismatch
+
+A new authenticated-ledger regression exposed that the signed receipt key uses
+`<base-profile>-private-loopback-signed-v1`, while
+`fingerprintCacheComputation` requires equality with the observed base toolchain
+profile. Its rejection is “Computation and observed toolchain use different
+profiles.” Authentication helper success therefore cannot establish real
+operational qualification. Keep this guard; accepting a suffix alone would
+relabel protected lab evidence as ordinary checkout authority. The next design
+step must explicitly model and prove the supported execution environment before
+allowing an operational promotion. The new controlled-identity regression
+separately exercises ledger acceptance, runtime drift and revocation, and also
+asserts the real profile refusal. No live qualified row was written.
+
+### Copied policy source with stale declaration output
+
+After copying the verified policy source into the idle acceptance worktree,
+CLI typechecking reported that `CacheTaskContract.signedExecution` did not
+exist. Runtime tests imported the new source, while TypeScript references read
+old dependency declarations. Rebuilding `@beep/repo-configs` refreshed those
+declarations; codegen reported unchanged output. A source-snapshot transfer
+should explicitly rebuild changed workspace dependencies before consumer
+typechecking, instead of treating copied dependency outputs as current proof.
+
+### Activation evidence missing from protected receipt
+
+While preparing live service wiring, tracing `subjectFailures` to
+`deriveCacheProducerEvidence` showed that activation-bearing contracts require
+per-channel `activation-projection` evidence. The signed v8 report has a source
+fingerprint and request reference, without separate activated/signed
+fingerprints. Approval alone cannot supply runtime evidence for that row.
+The receipt/runner must retain those prepared identities before the verifier
+can consume them. End-to-end fixtures should exercise all mandatory subjects
+of the intended real contract, including activation, earlier in development.
+
+### Qualification receipt test loop: workspace and Option boundaries
+
+While adding measured projection evidence, a combined edit/test shell invocation
+used a repo-relative edit path from the package directory. The edit failed with
+`FileNotFoundError`, but the shell proceeded to run unchanged tests. Separate
+mutations from validation commands and use explicit absolute edit paths.
+
+The new regression also exposed two test-only API mistakes: yielding an Option
+as an Effect and calling `assertSome` without its expected payload. Both fail
+at runtime despite the package test-tsgo command reporting success. Use an
+explicit `Effect.fromOption` boundary when extracting a fixture value, and keep
+runtime focused tests as independent proof. These failures did not produce or
+accept native qualification evidence.
+
+### Direct test-tsconfig probe differs from package gate
+
+A direct `tsgo --noEmit -p test/tsconfig.json` probe from the CLI workspace
+failed with TS6059 across the test tree because the inherited rootDir remains
+`src`. This is an invocation/configuration boundary, not evidence of a new
+service regression. Use the canonical `quality test-tsgo-package` gate and
+retain focused runtime proof; do not repair unrelated test configurations.
+
+### Durable repair admission unavailable in the current session
+
+`beep yeet repair --detach --job-max-runtime "2 hours"` refused because an
+active systemd user manager was unavailable. No fallback started. Continued
+through an explicit attached repair with a retained handle and local log.
+Session startup should verify durable-job availability before scheduling long
+quality work; unavailable detachment is not a source failure or permission
+to restart an already live proof.
+
+### Scoped documentation gate and re-export ownership
+
+After merging main and repairing invalid categories, `bun run docgen:local -- --package @beep/repo-cli` rejected seven re-export declarations in `Cache/index.ts` for missing metadata. The current documentation law says re-export declarations are graph edges rather than separate documentation subjects. Package lint/type checks and the separate package docgen proof pass, so the scoped metadata gate needs attribution before changing documentation. A regression test aligning scoped export inventory with declaration ownership would prevent this contradictory repair guidance. This is a gate discrepancy, not a waiver or qualification receipt.
+
+The discrepancy was traced to `Docgen/internal/JsDocAnalysis.ts`: its dedicated re-export analyzer still required edge metadata. Removed that obsolete subject path and extended the existing graph-edge regression to cover namespace, named and star re-exports plus an undocumented owning declaration. All 83 documentation tests and the scoped CLI docgen check pass. No required owning-declaration gate was waived.
+
+### Public runtime fingerprint mistaken for a credential
+
+Early Yeet publication was rejected by the staged secret scan on `signed-profile-binding-review.json` under `generic-api-key`. The flagged value was the same public SHA-256 toolchain fingerprint already recorded beside it; the review field name included `Key`. Renamed only the authored summary field to `runtimeFingerprintSha256` and retained its original receipt-field mapping. Runtime schemas and source receipts are unchanged. An explicit fingerprint label in authored summaries prevents this ambiguity without disabling or broadening secret-scan exceptions.

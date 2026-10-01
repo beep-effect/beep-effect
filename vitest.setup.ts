@@ -96,7 +96,7 @@ type BunFileShim = {
 };
 
 type BunServeOptions = {
-  readonly fetch: (request: Request) => Promise<Response> | Response;
+  readonly fetch: (request: Request, server: ReturnType<BunTestShim["serve"]>) => Promise<Response> | Response;
   readonly hostname?: string;
   readonly port?: number;
 };
@@ -145,7 +145,9 @@ type BunTestShim = {
     readonly html: (content: string, options?: BunMarkdownOptions) => string;
   };
   readonly serve: (options: BunServeOptions) => {
+    readonly hostname: string;
     readonly port: number;
+    readonly reload: (options: Pick<BunServeOptions, "fetch">) => void;
     readonly stop: (force?: boolean) => Promise<void>;
   };
   readonly sleep: (milliseconds: number) => Promise<void>;
@@ -325,6 +327,8 @@ const listenPort = (requestedPort: number | undefined): number =>
   requestedPort === undefined || requestedPort === 0 ? 30_000 + Math.floor(Math.random() * 20_000) : requestedPort;
 
 const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
+  let handler = options.fetch;
+  let stopped: Promise<void> | undefined;
   const hostname = options.hostname ?? "0.0.0.0";
   const port = listenPort(options.port);
   const server = createServer((request, response) => {
@@ -342,7 +346,7 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
             headers: requestHeaders(request.headers),
             method,
           });
-          await writeResponse(response, await options.fetch(fetchRequest));
+          await writeResponse(response, await handler(fetchRequest, handle));
         } catch (error) {
           response.statusCode = 500;
           response.end(error instanceof Error ? error.message : String(error));
@@ -353,19 +357,27 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
 
   server.listen(port, hostname);
 
-  return {
+  const handle: ReturnType<BunTestShim["serve"]> = {
+    hostname,
     port,
+    reload: (options) => {
+      handler = options.fetch;
+    },
     stop: () =>
-      new Promise((resolve, reject) => {
-        server.close((error) => {
-          if (P.isUndefined(error)) {
-            resolve();
-          } else {
-            reject(error);
-          }
-        });
-      }),
+      (stopped ??= new Promise<void>((resolve, reject) => {
+        const close = () =>
+          server.close((error) => {
+            if (P.isUndefined(error)) resolve();
+            else reject(error);
+          });
+        if (server.listening) close();
+        else {
+          server.once("listening", close);
+          server.once("error", reject);
+        }
+      })),
   };
+  return handle;
 };
 
 const normalizeTomlValue = (value: unknown): unknown => {

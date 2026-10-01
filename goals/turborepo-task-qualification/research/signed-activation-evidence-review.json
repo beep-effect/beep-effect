@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "cache-activation-evidence-review/v1",
+  "authority": "source-review-only",
+  "sourceBindings": {
+    "packages/tooling/policy-pack/repo-configs/src/cache/Cache.policy.ts": "609d62b733fa5308b5dc1d337d15cac7cebe2659ba965e328db2f2d17c8d2fdf",
+    "packages/tooling/policy-pack/repo-configs/src/cache/Cache.governance.policy.ts": "645e23450f494f3d69fb2341a8cfc7354dc729d396846117f3fcc4378da9393a",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.ts": "dc8230568ad68cf7caeb031b9c7461354c071ea46be280d88767627c1405e248",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts": "1c51d04b1a60321f071d09877a0c9397257d24da11234026187e988e36294eda",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "8afb277c2c7af8ce518a016ba9cf13f6fa97968a3ae99bedc4c6b0fa91bcfd05"
+  },
+  "findings": [
+    {
+      "requirement": "Activation-bearing contracts require activation-projection orchestration evidence for each channel.",
+      "producerGap": "The signed v8 receipt retains the source configuration and activation request reference, but no separate activated and signed configuration fingerprints. Existing derivation emits case-based orchestration rows without activation-projection.",
+      "requiredChange": "Extend the protected receipt and independently approved binding to include the actual prepared activation and signed configuration identities. Produce the observation from validated receipt facts; do not synthesize it from approval intent alone."
+    },
+    {
+      "requirement": "Ordinary source cache stays disabled while scoped lab qualification is audited.",
+      "currentBehavior": "auditPopulation skips cache-disabled nodes, while operational audit separately validates active contracts. A projected signed configuration can therefore be checked without enabling ordinary reuse.",
+      "requiredChange": "Preserve this separation and test it through actual fingerprint/projection functions plus authenticated acceptance."
+    }
+  ],
+  "nextImplementation": [
+    "Version the signed receipt when adding the prepared activation/signed fingerprints.",
+    "Measure both through the shared projection on the source/fixtures actually used by the protected pilot.",
+    "Bind and verify those identities against the full signed execution profile.",
+    "Derive activation-projection evidence only after complete native pair and identity validation.",
+    "Connect service source checks and projections, preserving disabled source and ordinary profile guards.",
+    "Run negative substitution tests and refresh native evidence before real qualification."
+  ],
+  "qualificationState": "unchanged; no tuple qualified"
+}

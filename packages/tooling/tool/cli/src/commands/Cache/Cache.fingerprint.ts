@@ -17,6 +17,7 @@ import * as Str from "effect/String";
 import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { hashFileSha256, readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
+import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { collectCacheCensus, resolveCacheTurboBinary } from "./Cache.census.ts";
 import { inspectCacheDependencyTree } from "./Cache.dependencies.ts";
 import { collectCacheRuntimeLinker } from "./Cache.linker.ts";
@@ -315,6 +316,47 @@ const decodeRootInheritance = S.decodeUnknownEffect(S.Tuple([S.Literal("//")]));
 const decodeJsonObject = S.decodeUnknownEffect(S.JsonObject);
 
 /**
+ * Project the exact signed-root overlay shared by the pilot and its verifier.
+ *
+ * **Details**
+ * Preserves every setting except remote-cache enablement and signature
+ * verification. Supports legacy root settings and the global-configuration
+ * layout, rejecting malformed containers instead of guessing their shape.
+ *
+ * **Example** (Prepare a signed root)
+ * ```ts
+ * import { projectCacheSignedRoot } from "@beep/repo-cli/test/Cache"
+ * import { Effect } from "effect"
+ * const projected = projectCacheSignedRoot('{"tasks":{}}')
+ * console.assert(Effect.isEffect(projected))
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export const projectCacheSignedRoot = Effect.fn("CacheFingerprint.projectSignedRoot")(function* (source: string) {
+  const rootConfig = yield* decodeJsoncTextAs(S.JsonObject)(source);
+  const flags = yield* O.match(R.get(rootConfig, "futureFlags"), {
+    onNone: () => Effect.succeed({}),
+    onSome: decodeJsonObject,
+  });
+  const usesGlobal = S.is(S.Literal(true))(R.get(flags, "globalConfiguration").pipe(O.getOrUndefined));
+  const configuration = usesGlobal ? yield* decodeJsonObject(rootConfig.global) : rootConfig;
+  const remoteConfig = yield* O.match(R.get(configuration, "remoteCache"), {
+    onNone: () => Effect.succeed({}),
+    onSome: decodeJsonObject,
+  });
+  const signedConfiguration = R.set(configuration, "remoteCache", {
+    ...remoteConfig,
+    enabled: true,
+    signature: true,
+  });
+  return yield* JsonStringCodec(S.JsonObject).encode(
+    usesGlobal ? R.set(rootConfig, "global", signedConfiguration) : signedConfiguration
+  );
+}, CacheCommandError.mapError("Cannot project the reviewed signed root configuration."));
+
+/**
  * Validate and fingerprint an exact single-task cache activation projection.
  *
  * **Details**
@@ -385,3 +427,61 @@ export const projectCacheActivation = Effect.fn("CacheFingerprint.projectActivat
     toolchain
   );
 }, CacheCommandError.mapError("Cannot validate the reviewed cache activation projection."));
+
+/**
+ * Fingerprint a reviewed task activation together with its exact signed-root overlay.
+ *
+ * **Details**
+ * Uses the base profile for ordinary source fingerprint checks. Both root byte
+ * identity and census settings must agree, and the signed bytes must equal the
+ * pilot's projection. The result describes projected configuration only; it
+ * grants neither execution evidence nor a different runtime profile.
+ *
+ * **Example** (Reference signed activation verification)
+ * ```ts
+ * import { projectCacheSignedActivation } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof projectCacheSignedActivation === "function")
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export const projectCacheSignedActivation = Effect.fn("CacheFingerprint.projectSignedActivation")(function* (
+  key: CacheQualificationKey,
+  census: CacheCensusReport,
+  toolchain: CacheToolchainSnapshot,
+  activation: CacheActivationProjection,
+  before: string,
+  after: string,
+  rootBefore: string,
+  rootSigned: string
+) {
+  const rootDigest = yield* hashBytes(new TextEncoder().encode(rootBefore));
+  const roots = A.filter(census.sources, (source) => source.path === "turbo.json");
+  const root = yield* decodeJsoncTextAs(S.JsonObject)(rootBefore);
+  const globalConfiguration = R.filter(root, (_, name) => name !== "tasks" && name !== "$schema");
+  if (
+    roots.length !== 1 ||
+    !A.every(roots, (source) => source.sha256 === rootDigest) ||
+    !S.toEquivalence(S.Json)(globalConfiguration, census.globalConfiguration)
+  )
+    return yield* CacheCommandError.new("Signed projection source root differs from the observed census.");
+  if ((yield* projectCacheSignedRoot(rootBefore)) !== rootSigned)
+    return yield* CacheCommandError.new("Signed root bytes differ from the exact reviewed projection.");
+  const activated = yield* projectCacheActivation(key, census, toolchain, activation, before, after);
+  const signed = yield* decodeJsoncTextAs(S.JsonObject)(rootSigned);
+  const signedDigest = yield* hashBytes(new TextEncoder().encode(rootSigned));
+  const configuration = CacheComputationConfiguration.make({
+    ...activated.configuration,
+    globalConfiguration: R.filter(signed, (_, name) => name !== "tasks" && name !== "$schema"),
+    sources: A.map(activated.configuration.sources, (source) =>
+      source.path === "turbo.json" ? CacheCensusSource.make({ ...source, sha256: signedDigest }) : source
+    ),
+  });
+  const text = yield* encodeCacheComputationConfigurationJson(configuration);
+  return CacheLiveIdentity.make({
+    ...activated,
+    configuration,
+    configurationDigest: yield* hashBytes(new TextEncoder().encode(text)),
+  });
+}, CacheCommandError.mapError("Cannot validate the reviewed signed activation projection."));

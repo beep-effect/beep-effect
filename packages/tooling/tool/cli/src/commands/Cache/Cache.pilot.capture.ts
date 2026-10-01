@@ -4,16 +4,91 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Buffer } from "node:buffer";
+import { zstdDecompressSync } from "node:zlib";
 import { $RepoCliId } from "@beep/identity/packages";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { Header } from "tar";
+import { CacheSignedPilotArchive, CacheSignedPilotCaptureControl } from "./Cache.pilot.signed.schemas.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CachePilotLogInput, CacheSignedPilotLogInput } from "./Cache.pilot.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot.capture");
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
+const archiveLogPath = "packages/foundation/modeling/identity/.turbo/turbo-lint.log";
+const ArchiveLogSize = S.Natural.check(S.isLessThanOrEqualTo(64 * 1024)).annotate(
+  $I.annote("ArchiveLogSize", { description: "The native pilot log's maximum uncompressed byte count." })
+);
+const isArchiveLogSize = S.is(ArchiveLogSize);
+
+/**
+ * Inspect a native zstd archive without extracting any file.
+ *
+ * **Details**
+ * Accepts the pilot's exact single-file tar layout, including zero padding and
+ * two terminating blocks. Metadata, links, additional entries and trailing
+ * bytes fail. Decompression is bounded before header inspection. Synthetic
+ * credentials are checked over all decoded bytes, including header fields.
+ * The caller must join the resulting archive identity to native wire evidence.
+ *
+ * **Example** (Reference the bounded archive inspector)
+ * ```ts
+ * import { inspectCacheSignedPilotArchive } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof inspectCacheSignedPilotArchive === "function")
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const inspectCacheSignedPilotArchive = Effect.fn("CachePilot.inspectSignedArchive")(function* (
+  archive: Uint8Array,
+  secrets: ReadonlyArray<Redacted.Redacted<string>>
+) {
+  if (archive.byteLength === 0 || archive.byteLength > 1024 * 1024)
+    return yield* CacheCommandError.new("Signed pilot archive exceeds its compressed bound.");
+  const bytes = yield* Effect.try({
+    try: () => zstdDecompressSync(archive, { maxOutputLength: 128 * 1024 }),
+    catch: () => CacheCommandError.new("Signed pilot archive decompression failed or exceeded its bound."),
+  });
+  if (bytes.byteLength < 1536)
+    return yield* CacheCommandError.new("Signed pilot archive lacks its complete tar framing.");
+  const header = yield* Effect.try({
+    try: () => new Header(Buffer.from(bytes.subarray(0, 512))),
+    catch: () => CacheCommandError.new("Signed pilot archive header is invalid."),
+  });
+  const size = header.size;
+  if (
+    !header.cksumValid ||
+    header.nullBlock ||
+    header.needPax ||
+    header.type !== "File" ||
+    header.path !== archiveLogPath ||
+    (header.linkpath !== undefined && header.linkpath !== "") ||
+    !isArchiveLogSize(size)
+  )
+    return yield* CacheCommandError.new("Signed pilot archive is not its expected bounded regular task log.");
+  const framedBytes = 512 + Math.ceil(size / 512) * 512 + 1024;
+  if (bytes.byteLength !== framedBytes || bytes.subarray(512 + size).some((byte) => byte !== 0))
+    return yield* CacheCommandError.new("Signed pilot archive has extra entries, metadata or nonzero padding.");
+  const decoded = new TextDecoder().decode(bytes);
+  if (A.some(secrets, (secret) => Str.includes(Redacted.value(secret))(decoded)))
+    return yield* CacheCommandError.new("Signed pilot archive contains synthetic credential material.");
+  return CacheSignedPilotArchive.make({
+    archiveSha256: yield* hashBytes(archive),
+    archiveBytes: archive.byteLength,
+    decodedBytes: bytes.byteLength,
+    path: archiveLogPath,
+    logSha256: yield* hashBytes(bytes.subarray(512, 512 + size)),
+    logBytes: size,
+  });
+});
 const UnambiguousTerminalText = S.String.check(S.isPattern(/^[^\x00-\x08\x0b-\x1f\x7f\ufffd]*$/u)).pipe(
   $I.annoteSchema("UnambiguousTerminalText", {
     description: "Terminal text without carriage returns, escape/control bytes or replacement characters.",
@@ -122,4 +197,23 @@ export const extractCacheSignedPilotLog = Effect.fn("CachePilot.extractSignedLog
   input: CacheSignedPilotLogInput
 ) {
   return yield* extractPilotLog(input);
+});
+
+/**
+ * Fixed rejection required from each native capture adversary.
+ *
+ * **Example** (Inspect an oversized-log rejection)
+ * ```ts
+ * import { cacheSignedCaptureDiagnostic } from "@beep/repo-cli/test/Cache"
+ * console.assert(cacheSignedCaptureDiagnostic("oversized-log").includes("64 KiB"))
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const cacheSignedCaptureDiagnostic = CacheSignedPilotCaptureControl.fields.case.$match({
+  "credential-output": () => "Signed pilot capture contains synthetic credential material.",
+  "terminal-control": () => "Pilot process streams are truncated, oversized or contain ambiguous terminal text.",
+  "oversized-log": () => "Selected pilot task log exceeded its 64 KiB bound.",
+  "undeclared-output": () => "Pilot produced an undeclared persistent output beside its replay log.",
 });

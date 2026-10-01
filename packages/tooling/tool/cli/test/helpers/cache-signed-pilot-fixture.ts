@@ -1,3 +1,4 @@
+import { cacheSignedCaptureDiagnostic } from "@beep/repo-cli/test/Cache";
 import * as A from "effect/Array";
 import * as Str from "effect/String";
 
@@ -46,6 +47,14 @@ const baseKey = {
 const linked = { path: "/fixture/loader", target: "/fixture/loader", sha256: digest("a") };
 const staticLink = { _tag: "Static" };
 const comparison = (pair: number) => ({
+  archive: {
+    archiveSha256: digest("d"),
+    archiveBytes: 159,
+    decodedBytes: 2048,
+    path: "packages/foundation/modeling/identity/.turbo/turbo-lint.log",
+    logSha256: digest("c"),
+    logBytes: 23,
+  },
   protection: {
     mechanism: "nested-reader-denial/v1",
     protectedFiles: 2,
@@ -65,7 +74,20 @@ const comparison = (pair: number) => ({
   events: A.map(A.range(0, 2), (role) => event(pair, role)),
 });
 export const signedPilotInput = {
-  schemaVersion: "cache-pilot-signed/v5",
+  schemaVersion: "cache-pilot-signed/v9",
+  captureControls: A.map(
+    ["credential-output", "terminal-control", "oversized-log", "undeclared-output"] as const,
+    (name, index) => ({
+      case: name,
+      isolationRoot: Str.padStart(64, "0")(`${9100 + index}`),
+      summarySha256: Str.padStart(64, "0")(`${9200 + index}`),
+      probeSha256: Str.padStart(64, "0")(`${9300 + index}`),
+      taskHash: `capture-${index}`,
+      selectedExitCode: 0,
+      origin: "fresh",
+      diagnostic: cacheSignedCaptureDiagnostic(name),
+    })
+  ),
   authority: "signed-pilot-observation-only",
   network: "private-loopback-nested-readers/v1",
   baseKey,
@@ -100,6 +122,8 @@ export const signedPilotInput = {
   },
   activation: { path: "fixture/activation.json", sha256: digest("a") },
   configurationDigest: digest("a"),
+  activatedConfigurationDigest: digest("b"),
+  signedConfigurationDigest: digest("c"),
   toolchainDigest: digest("a"),
   signedRootConfiguration: digest("a"),
   freshPairs: A.map(A.range(0, 2), (pair) => ({
@@ -124,6 +148,46 @@ export const signedPilotInput = {
       outcome: { ...run(pair, 0).outcome, replayLogMatches: true },
     },
   })),
+  policyRefusal: {
+    reason: "missing-child-config",
+    removedPath: "packages/foundation/modeling/identity/turbo.json",
+    isolationRoot: digest("8"),
+    computation: task.computation,
+    taskHash: "fedcba9876543210",
+    inputsDigest: digest("b"),
+    configuration: {
+      cache: true,
+      inputs: ["$TURBO_DEFAULT$"],
+      env: [],
+      passThroughEnv: [],
+      outputs: [],
+      dependsOn: [],
+      persistent: false,
+      interactive: false,
+      interruptible: false,
+      outputLogs: "full",
+    },
+    dryPlanSha256: digest("9"),
+    planExitCode: 0,
+    nativeRuntimeKeyObserved: false,
+    nativeExecutionObserved: false,
+    executionSummaries: 0,
+    selectedLogFiles: 0,
+    guardRejected: true,
+  },
+  nonExecutions: A.map(
+    ["missing-root-config", "malformed-root-config", "malformed-child-config", "absent-script"],
+    (reason, index) => ({
+      id: reason,
+      reason,
+      isolationRoot: Str.padStart(64, "0")(`${900 + index}`),
+      exitCode: reason === "absent-script" ? 0 : 1,
+      stdoutSha256: digest("a"),
+      stderrSha256: digest("b"),
+      selectedExecutionObserved: false,
+      ...(reason === "absent-script" ? { summarySha256: digest("7") } : { diagnostic: reason }),
+    })
+  ),
   mutations: A.map(
     [
       { case: "root-task-config", changedPath: "turbo.json", seedExit: 0 },

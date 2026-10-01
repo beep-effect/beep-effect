@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { CacheClientPin, CacheQualificationKey } from "@beep/repo-configs/cache";
+import { CacheClientPin, CacheQualificationKey, CacheTaskContract } from "@beep/repo-configs/cache";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { Clock, Crypto, Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
@@ -17,27 +17,157 @@ import {
   currentEffectiveUserIdOption,
   validatePrivateCoordinationDirectory,
 } from "../../internal/repo-run/QualityScheduler.ts";
-import { CacheSignedPilotReceipt } from "./Cache.pilot.signed.schemas.ts";
 import { validateCacheSignedPilotReceipt } from "./Cache.pilot.signed.ts";
-import { CacheProducerBinding, CacheProducerBody, CacheProducerEnvelope } from "./Cache.producer.schemas.ts";
+import {
+  CacheProducerApproval,
+  CacheProducerBinding,
+  CacheProducerBody,
+  CacheProducerBundle,
+  CacheProducerEnvelope,
+} from "./Cache.producer.schemas.ts";
+import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 
+const encodeApproval = S.encodeEffect(S.fromJsonString(CacheProducerApproval));
+const decodeApproval = S.decodeUnknownEffect(S.fromJsonString(CacheProducerApproval));
+const encodeContract = S.encodeEffect(S.fromJsonString(CacheTaskContract));
 const encodeBinding = S.encodeEffect(S.fromJsonString(CacheProducerBinding));
 const decodeBinding = S.decodeUnknownEffect(S.fromJsonString(CacheProducerBinding));
 const encodeBody = S.encodeEffect(S.fromJsonString(CacheProducerBody));
-const encodeReceipt = S.encodeEffect(S.fromJsonString(CacheSignedPilotReceipt));
+const encodeReceipt = S.encodeEffect(S.fromJsonString(CacheProducerBundle));
 const digest = S.decodeEffect(Sha256HexFromBytes);
 const maxLifetimeMs = Duration.toMillis(Duration.hours(24));
 const persistedMaterialBytes = 96;
+
+/**
+ * Bind every reviewed task obligation to the producer's policy identity.
+ *
+ * **Example** (Reference canonical policy hashing)
+ * ```ts
+ * import { hashCacheProducerContract } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof hashCacheProducerContract === "function")
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const hashCacheProducerContract = Effect.fn("Producer.hashContract")(function* (contract: CacheTaskContract) {
+  const text = yield* encodeContract(contract);
+  return yield* digest(new TextEncoder().encode(`beep/cache-producer-contract/v1\0${text}`));
+});
+/**
+ * Check the complete reviewed contract against its fixed producer binding.
+ *
+ * **Example** (Reference the validation boundary)
+ * ```ts
+ * import { validateCacheProducerApproval } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof validateCacheProducerApproval === "function")
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const validateCacheProducerApproval = Effect.fn("Producer.validateApproval")(function* (
+  approval: CacheProducerApproval
+) {
+  const { binding, contract } = approval;
+  const sourceConfiguration = O.match(contract.signedExecution, {
+    onNone: () => contract.pins.configuration,
+    onSome: (execution) => execution.sourceConfiguration,
+  });
+  const sourceToolchain = O.match(contract.signedExecution, {
+    onNone: () => contract.pins.toolchain,
+    onSome: (execution) => execution.sourceToolchain,
+  });
+  if (
+    binding.policyDigest !== (yield* hashCacheProducerContract(contract)) ||
+    !S.toEquivalence(CacheQualificationKey)(binding.key, contract.key) ||
+    !S.toEquivalence(CacheClientPin)(binding.client, contract.clients[binding.channel]) ||
+    binding.configurationDigest !== sourceConfiguration ||
+    binding.toolchainDigest !== sourceToolchain
+  )
+    return yield* CacheCommandError.new("Producer approval's full policy differs from its fixed binding.");
+  if (O.isSome(contract.signedExecution)) {
+    const execution = contract.signedExecution.value;
+    const expectedKey = CacheQualificationKey.make({
+      ...execution.sourceKey,
+      profile: `${execution.sourceKey.profile}-private-loopback-signed-v1`,
+    });
+    if (
+      !S.toEquivalence(CacheQualificationKey)(contract.key, expectedKey) ||
+      O.isNone(contract.activation) ||
+      contract.activation.value.sourceConfiguration !== execution.sourceConfiguration ||
+      binding.activatedConfigurationDigest !== execution.activatedConfiguration ||
+      binding.signedConfigurationDigest !== contract.pins.configuration ||
+      binding.signedRootConfiguration !== execution.signedRootConfiguration.sha256 ||
+      binding.runtimeKeyDigest !== execution.runtimeKeys[binding.channel] ||
+      contract.pins.toolchain !== execution.runtimeKeys.stable
+    )
+      return yield* CacheCommandError.new("Producer approval differs from its reviewed signed execution profile.");
+  }
+});
+
+/**
+ * Validate complete native matrices before authenticating their shared payload.
+ *
+ * **Details**
+ * The protocol client is supplied from independent workflow approval. Every
+ * signed reader must have demonstrated denial of the actual persistent issuer
+ * material. This check grants no qualification or issuer authority itself.
+ *
+ * **Example** (Reference the complete payload gate)
+ * ```ts
+ * import { validateCacheProducerBundle } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof validateCacheProducerBundle === "function")
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const validateCacheProducerBundle = Effect.fn("Producer.validateBundle")(function* (
+  bundle: CacheProducerBundle,
+  protocolClient: CacheClientPin
+) {
+  const { pilot, protocol } = bundle;
+  yield* validateCacheSignedPilotReceipt(pilot);
+  yield* validateCacheProtocolExecution(protocol);
+  if (
+    protocol.observation.channel !== pilot.channel ||
+    protocol.bunSha256 !== pilot.bun.sha256 ||
+    !S.toEquivalence(CacheClientPin)(protocol.observation.client, protocolClient) ||
+    protocolClient.version !== pilot.client.version ||
+    protocolClient.sha256 !== pilot.client.sha256 ||
+    protocolClient.namespace === pilot.client.namespace ||
+    A.some(pilot.comparisons, (pair) => pair.client.namespace === protocolClient.namespace) ||
+    A.some(pilot.comparisons, (pair) => O.isNone(pair.protection.issuerMaterialDenied))
+  )
+    return yield* CacheCommandError.new(
+      "Producer bundle lacks independently pinned conformance or persistent issuer protection."
+    );
+  return bundle;
+});
 const bindingDigest = Effect.fn("Producer.bindingDigest")(function* (expected: CacheProducerBinding) {
   const text = yield* encodeBinding(expected);
-  return yield* digest(new TextEncoder().encode(`beep/cache-producer-approval/v1\0${text}`));
+  return yield* digest(new TextEncoder().encode(`beep/cache-producer-approval/v3\0${text}`));
 });
-const verifyBinding = Effect.fn("Producer.verifyBinding")(function* (
-  receipt: CacheSignedPilotReceipt,
+/**
+ * Check both native matrices against the independently supplied producer identity.
+ *
+ * **Example** (Reference the validation boundary)
+ * ```ts
+ * import { validateCacheProducerBinding } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof validateCacheProducerBinding === "function")
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const validateCacheProducerBinding = Effect.fn("Producer.validateCacheProducerBinding")(function* (
+  bundle: CacheProducerBundle,
   expected: CacheProducerBinding
 ) {
-  yield* validateCacheSignedPilotReceipt(receipt);
+  yield* validateCacheProducerBundle(bundle, expected.protocolClient);
+  const receipt = bundle.pilot;
   if (
     receipt.sourceRevision !== expected.sourceRevision ||
     receipt.channel !== expected.channel ||
@@ -45,6 +175,8 @@ const verifyBinding = Effect.fn("Producer.verifyBinding")(function* (
     !S.toEquivalence(CacheQualificationKey)(receipt.key, expected.key) ||
     !S.toEquivalence(CacheClientPin)(receipt.client, expected.client) ||
     receipt.configurationDigest !== expected.configurationDigest ||
+    receipt.activatedConfigurationDigest !== expected.activatedConfigurationDigest ||
+    receipt.signedConfigurationDigest !== expected.signedConfigurationDigest ||
     receipt.toolchainDigest !== expected.toolchainDigest ||
     receipt.signedRootConfiguration !== expected.signedRootConfiguration
   )
@@ -79,19 +211,19 @@ const makeIssuer = Effect.fn("Producer.makeIssuer")(function* (
         globalThis.crypto.subtle.sign(
           "HMAC",
           secretKey,
-          new TextEncoder().encode(`beep/cache-producer-envelope/v1\0${text}`)
+          new TextEncoder().encode(`beep/cache-producer-envelope/v2\0${text}`)
         ),
       catch: () => CacheCommandError.new("Producer authentication failed."),
     });
     return Sha256Hex.make(Hex.encode(new Uint8Array(signature)));
   });
-  const payloadDigest = Effect.fn("Producer.payloadDigest")(function* (receipt: CacheSignedPilotReceipt) {
+  const payloadDigest = Effect.fn("Producer.payloadDigest")(function* (receipt: CacheProducerBundle) {
     const text = yield* encodeReceipt(receipt);
     return yield* digest(new TextEncoder().encode(text));
   });
-  const issue = Effect.fn("Producer.issue")(function* (receipt: CacheSignedPilotReceipt) {
+  const issue = Effect.fn("Producer.issue")(function* (receipt: CacheProducerBundle) {
     const trusted = yield* decodeBinding(trustedBindingBytes);
-    yield* verifyBinding(receipt, trusted);
+    yield* validateCacheProducerBinding(receipt, trusted);
     const now = yield* Clock.currentTimeMillis;
     const body = CacheProducerBody.make({
       issuer,
@@ -104,7 +236,7 @@ const makeIssuer = Effect.fn("Producer.makeIssuer")(function* (
   });
   const verify = Effect.fn("Producer.verify")(function* (
     envelope: CacheProducerEnvelope,
-    receipt: CacheSignedPilotReceipt
+    receipt: CacheProducerBundle
   ) {
     const trusted = yield* decodeBinding(trustedBindingBytes);
     const now = yield* Clock.currentTimeMillis;
@@ -125,14 +257,14 @@ const makeIssuer = Effect.fn("Producer.makeIssuer")(function* (
           "HMAC",
           secretKey,
           new Uint8Array(signature),
-          new TextEncoder().encode(`beep/cache-producer-envelope/v1\0${body}`)
+          new TextEncoder().encode(`beep/cache-producer-envelope/v2\0${body}`)
         ),
       catch: () => CacheCommandError.new("Cannot verify producer authentication."),
     });
     if (!validMac) return yield* CacheCommandError.new("Producer envelope authentication is invalid.");
     if (envelope.body.payloadSha256 !== (yield* payloadDigest(receipt)))
       return yield* CacheCommandError.new("Producer payload differs from its authenticated observation.");
-    yield* verifyBinding(receipt, trusted);
+    yield* validateCacheProducerBinding(receipt, trusted);
     return receipt;
   });
   return { issue, verify };
@@ -165,7 +297,22 @@ export const makeCacheProducerIssuer = Effect.fn("Producer.makeCacheProducerIssu
   return yield* makeIssuer(expected, Redacted.make(yield* crypto.randomBytes(64)));
 });
 
-const inspectIssuerDirectory = Effect.fn("Producer.inspectIssuerDirectory")(function* (directory: string) {
+/**
+ * Require a canonical supervisor-owned private directory for protected records.
+ *
+ * **Example** (Reference the protected directory boundary)
+ * ```ts
+ * import { inspectCacheProducerDirectory } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof inspectCacheProducerDirectory === "function")
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const inspectCacheProducerDirectory = Effect.fn("Producer.inspectIssuerDirectory")(function* (
+  directory: string
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const uid = currentEffectiveUserIdOption();
@@ -184,7 +331,7 @@ const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(
   function* (directory: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const uid = yield* inspectIssuerDirectory(directory);
+    const uid = yield* inspectCacheProducerDirectory(directory);
     // readDirectory detects even a dangling revocation marker; errors fail closed.
     const entries = yield* fs.readDirectory(directory);
     if (A.contains(entries, "revoked")) return yield* CacheCommandError.new("Producer issuer is revoked.");
@@ -246,13 +393,13 @@ export const openCacheProducerIssuer = Effect.fn("Producer.openCacheProducerIssu
       );
   });
   return {
-    issue: Effect.fn("Producer.persistentIssue")(function* (receipt: CacheSignedPilotReceipt) {
+    issue: Effect.fn("Producer.persistentIssue")(function* (receipt: CacheProducerBundle) {
       yield* active;
       return yield* issuer.issue(receipt);
     }),
     verify: Effect.fn("Producer.persistentVerify")(function* (
       envelope: CacheProducerEnvelope,
-      receipt: CacheSignedPilotReceipt
+      receipt: CacheProducerBundle
     ) {
       yield* active;
       return yield* issuer.verify(envelope, receipt);
@@ -264,7 +411,7 @@ const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(
   function* (directory: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const uid = yield* inspectIssuerDirectory(directory);
+    const uid = yield* inspectCacheProducerDirectory(directory);
     const file = path.join(directory, "approval.json");
     const info = yield* fs.stat(file);
     const limit = 16384;
@@ -284,7 +431,9 @@ const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(
       try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
       catch: () => CacheCommandError.new("Producer approval must be valid UTF-8."),
     });
-    return yield* decodeBinding(text);
+    const approval = yield* decodeApproval(text);
+    yield* validateCacheProducerApproval(approval);
+    return approval;
   },
   Effect.mapError(() => CacheCommandError.new("Producer approval is unavailable or unsafe."))
 );
@@ -297,8 +446,10 @@ const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(
  * never selects an issuer or supplies its expected binding. The approval record
  * must match the digest fixed in issuer material; every verification rechecks
  * both records and revocation. No signing method or mutable expected binding is
- * returned. This authenticates pilot observations only, not qualification policy
- * satisfaction. Legacy stores without an approval record fail closed.
+ * returned. Verification returns a freshly read full approval, not signing
+ * authority or mutable verifier state. This authenticates complete observations against a fixed reviewed contract;
+ * qualification satisfaction remains a separate gate. Legacy stores without
+ * the full approval record fail closed.
  *
  * **Example** (Reference the private approval verifier)
  * ```ts
@@ -312,16 +463,17 @@ const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(
  */
 export const openCacheProducerVerifier = Effect.fn("Producer.openCacheProducerVerifier")(function* (directory: string) {
   const trusted = yield* readIssuerApproval(directory);
-  const issuer = yield* openCacheProducerIssuer(directory, trusted);
+  const issuer = yield* openCacheProducerIssuer(directory, trusted.binding);
   return {
     verify: Effect.fn("Producer.approvedVerify")(function* (
       envelope: CacheProducerEnvelope,
-      receipt: CacheSignedPilotReceipt
+      receipt: CacheProducerBundle
     ) {
       const current = yield* readIssuerApproval(directory);
-      if (!S.toEquivalence(CacheProducerBinding)(current, trusted))
+      if (!S.toEquivalence(CacheProducerApproval)(current, trusted))
         return yield* CacheCommandError.new("Producer approval changed after verification opened.");
-      return yield* issuer.verify(envelope, receipt);
+      yield* issuer.verify(envelope, receipt);
+      return current;
     }),
   };
 });
@@ -333,7 +485,8 @@ export const openCacheProducerVerifier = Effect.fn("Producer.openCacheProducerVe
  * The parent must already exist. Failed initialization leaves the reserved
  * directory for operator inspection and never silently recreates a lost key.
  * Provisioning fixes the approved workflow/computation binding in the private
- * material and writes its private approval record. It is an explicit trusted-supervisor action, never an observation
+ * material and writes the complete reviewed contract to its private approval
+ * record. It is an explicit trusted-supervisor action, never an observation
  * import or a receipt-selected key lookup. A new binding requires a new issuer.
  * Callers must keep this location outside every reader mount.
  *
@@ -348,15 +501,19 @@ export const openCacheProducerVerifier = Effect.fn("Producer.openCacheProducerVe
  * @since 0.0.0
  */
 export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCacheProducerIssuer")(
-  function* (directory: string, expected: CacheProducerBinding) {
+  function* (directory: string, expected: CacheProducerBinding, contract: CacheTaskContract) {
+    const approval = yield* encodeApproval(CacheProducerApproval.make({ binding: expected, contract })).pipe(
+      Effect.flatMap(decodeApproval)
+    );
+    yield* validateCacheProducerApproval(approval);
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const crypto = yield* Crypto.Crypto;
     if (!path.isAbsolute(directory)) return yield* CacheCommandError.new("Producer store path must be absolute.");
     yield* fs.makeDirectory(directory, { mode: 0o700 });
-    yield* inspectIssuerDirectory(directory);
-    const trusted = yield* encodeBinding(expected).pipe(Effect.flatMap(decodeBinding));
-    yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeBinding(trusted), {
+    yield* inspectCacheProducerDirectory(directory);
+    const trusted = approval.binding;
+    yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeApproval(approval), {
       flag: "wx",
       mode: 0o600,
     });
@@ -388,7 +545,7 @@ export const revokeCacheProducerIssuer = Effect.fn("Producer.revokeCacheProducer
   function* (directory: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    yield* inspectIssuerDirectory(directory);
+    yield* inspectCacheProducerDirectory(directory);
     yield* fs.writeFileString(path.join(directory, "revoked"), "revoked\n", { flag: "wx", mode: 0o600 });
   },
   Effect.mapError(() => CacheCommandError.new("Cannot revoke producer store."))

@@ -1,8 +1,12 @@
 import { CacheSignedPilotReceipt, validateCacheSignedPilotReceipt } from "@beep/repo-cli/commands/Cache";
+import { Sha256Hex } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -18,6 +22,81 @@ const validate = (value: unknown) =>
   );
 
 describe("signed real-pilot receipt relationships", () => {
+  it.effect("requires four independent native capture refusals with exact case diagnostics", () =>
+    Effect.gen(function* () {
+      for (const captureControls of [
+        [],
+        A.map(input.captureControls, (control) => ({ ...control, case: "credential-output" })),
+        A.map(input.captureControls, (control) => ({ ...control, diagnostic: "unrelated failure" })),
+        A.map(input.captureControls, (control) => ({
+          ...control,
+          summarySha256: input.pairs[0].producer.summarySha256,
+        })),
+        A.map(input.captureControls, (control) => ({ ...control, isolationRoot: input.freshPairs[0].leftRoot })),
+        A.map(input.captureControls, (control) => ({ ...control, selectedExitCode: 1 })),
+        A.map(input.captureControls, (control) => ({ ...control, origin: "remote-hit" })),
+      ])
+        expect(Result.isFailure(yield* validate({ ...input, captureControls }))).toBe(true);
+    })
+  );
+  it.effect("binds every inspected archive to transferred bytes and the verified producer log", () =>
+    Effect.gen(function* () {
+      for (const archive of [
+        { ...input.pairs[0].archive, archiveSha256: digest("e") },
+        { ...input.pairs[0].archive, archiveBytes: 160 },
+        { ...input.pairs[0].archive, logSha256: digest("e") },
+        { ...input.pairs[0].archive, logBytes: 24 },
+        { ...input.pairs[0].archive, decodedBytes: 2049 },
+        { ...input.pairs[0].archive, path: "another.log" },
+      ]) {
+        expect(
+          Result.isFailure(yield* validate({ ...input, pairs: A.map(input.pairs, (pair) => ({ ...pair, archive })) }))
+        ).toBe(true);
+        expect(
+          Result.isFailure(
+            yield* validate({
+              ...input,
+              shadows: A.map(input.shadows, (shadow) => ({ ...shadow, comparison: { ...shadow.comparison, archive } })),
+            })
+          )
+        ).toBe(true);
+        expect(
+          Result.isFailure(
+            yield* validate({
+              ...input,
+              mutations: A.map(input.mutations, (mutation) => ({
+                ...mutation,
+                comparison: { ...mutation.comparison, archive },
+              })),
+            })
+          )
+        ).toBe(true);
+      }
+    })
+  );
+  it.effect("requires independent missing-child refusal with no native execution", () =>
+    Effect.gen(function* () {
+      expect(Result.isFailure(yield* validate(R.remove(input, "policyRefusal")))).toBe(true);
+      const refusal = input.policyRefusal;
+      for (const policyRefusal of [
+        { ...refusal, removedPath: "turbo.json" },
+        { ...refusal, nativeRuntimeKeyObserved: true },
+        { ...refusal, nativeExecutionObserved: true },
+        { ...refusal, guardRejected: false },
+        { ...refusal, planExitCode: 1 },
+        { ...refusal, executionSummaries: 1 },
+        { ...refusal, selectedLogFiles: 1 },
+        { ...refusal, isolationRoot: input.freshPairs[0].leftRoot },
+        { ...refusal, dryPlanSha256: input.pairs[0].producer.summarySha256 },
+        { ...refusal, taskHash: task.taskHash },
+        { ...refusal, computation: "@beep/types#lint" },
+        { ...refusal, configuration: { ...refusal.configuration, env: ["BEEP_CACHE_TOOLCHAIN_DIGEST"] } },
+        { ...refusal, configuration: { ...refusal.configuration, persistent: true } },
+        { ...refusal, configuration: { ...refusal.configuration, interactive: true } },
+      ])
+        expect(Result.isFailure(yield* validate({ ...input, policyRefusal }))).toBe(true);
+    })
+  );
   it.effect("accepts coherent comparisons without promotion authority", () =>
     Effect.gen(function* () {
       const receipt = yield* S.decodeUnknownEffect(CacheSignedPilotReceipt)(input);
@@ -112,6 +191,39 @@ describe("signed real-pilot receipt relationships", () => {
             }
       );
       expect(Result.isSuccess(yield* validate({ ...input, freshPairs: oneOverlap }))).toBe(true);
+    })
+  );
+  it.effect("derives native non-execution from exit, summary and diagnostic facts", () =>
+    Effect.gen(function* () {
+      for (const nonExecutions of [
+        [],
+        A.map(input.nonExecutions, () => input.nonExecutions[0]),
+        A.map(input.nonExecutions, (observation) => ({ ...observation, id: "same" })),
+        A.map(input.nonExecutions, (observation) => ({ ...observation, isolationRoot: input.freshPairs[0].leftRoot })),
+        A.map(input.nonExecutions, (observation) => ({
+          ...observation,
+          selectedExecutionObserved: true,
+          passed: true,
+        })),
+        A.map(input.nonExecutions, (observation) => ({
+          ...observation,
+          exitCode: observation.exitCode === 0 ? 1 : 0,
+          passed: true,
+        })),
+        A.map(input.nonExecutions, (observation) => ({ ...R.remove(observation, "diagnostic"), passed: true })),
+        A.map(input.nonExecutions, (observation) => ({ ...observation, diagnostic: "malformed-child-config" })),
+        A.map(input.nonExecutions, (observation) => ({ ...R.remove(observation, "summarySha256"), passed: true })),
+        A.map(input.nonExecutions, (observation) => ({ ...observation, summarySha256: digest("7"), passed: true })),
+        A.map(input.nonExecutions, (observation) =>
+          observation.reason === "absent-script"
+            ? {
+                ...observation,
+                summarySha256: input.freshPairs[0].left.summarySha256,
+              }
+            : observation
+        ),
+      ])
+        expect(Result.isFailure(yield* validate({ ...input, nonExecutions }))).toBe(true);
     })
   );
   it.effect("requires all seven seeded cases with distinct changed files and fresh case-derived verdicts", () =>
@@ -372,5 +484,24 @@ it.effect("distinguishes a canary-only observation from an actual issuer denial"
     });
     expect(A.every(actual.pairs, (pair) => O.contains(pair.protection.issuerMaterialDenied, true))).toBe(true);
     expect(actual.authority).toBe("signed-pilot-observation-only");
+  })
+);
+
+it.effect("rejects schema-generated archive identities detached from transferred bytes", () =>
+  Effect.gen(function* () {
+    const checked = yield* Arbitrary.checkEffect(
+      Arbitrary.schema(Sha256Hex),
+      (archiveSha256) =>
+        Effect.gen(function* () {
+          const result = yield* validate({
+            ...input,
+            pairs: A.map(input.pairs, (pair) => ({ ...pair, archive: { ...pair.archive, archiveSha256 } })),
+          });
+          expect(Result.isSuccess(result)).toBe(archiveSha256 === input.pairs[0].archive.archiveSha256);
+          return true;
+        }),
+      fcRuns(100)
+    );
+    expect(checked._tag).toBe("Passed");
   })
 );

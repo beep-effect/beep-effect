@@ -2948,3 +2948,155 @@ See [the development receipt](./research/signed-mutations-development-stable.jso
 Missing-child refusal and four non-execution controls are being validated in
 a separate snapshot. Capture controls, current-profile reconciliation, semantic
 closure and accepted operational import remain open; no tuple is qualified.
+
+## Authenticated import preparation: 2026-10-01
+
+The acceptance worktree now authenticates complete stable and canary bundles
+against separately loaded private approvals containing the same reviewed full
+task contract. Derived comparison evidence retains missing policy obligations;
+the preview writes no ledger entry. Source typechecking and 32 focused tests
+pass, including rejection of stable evidence reused in the canary slot. Full
+CLI package verification is running; this is not an accepted qualification.
+
+The [development census checkpoint](./research/acceptance-development-census.json)
+records the current dirty acceptance worktree's dry-plan population and exact
+report digest. Command-bearing nodes are not observed executions. Semantic
+review, final main/profile reconciliation, capture adversaries and durable
+operational acceptance remain required. No tuple is qualified.
+
+## Native refusal and archive results: 2026-10-01
+
+Stable v6 and v7 runs terminated successfully, with retained source bindings
+matching all seven and twelve source files respectively. v7 contains three
+fresh pairs, three baseline remote pairs, ten shadows, seven seeded mutations,
+four non-execution controls and the missing-child policy refusal. All twenty
+signed comparisons include bounded archive inspection. The
+[archive checkpoint](./research/signed-archive-development-stable.json)
+retains the report identity. These are older frozen Turbo 2.11.4 development
+observations; complete capture adversaries and current-profile proof remain
+required. Protocol v2 now records nine native scenario roots; its pinned
+stable and canary runs are in progress. No tuple is qualified.
+
+## Protocol root binding: native results
+
+Protocol execution v2 passed on pinned stable and exact-canary clients. Each
+receipt contains all nine cases, nine distinct measured roots and 23 wire
+events; retained source bindings match. See
+[the protocol checkpoint](./research/protocol-roots-development.json).
+The primary package audit had one unchanged worktree-test timeout among
+5,087 tests; all 36 tests in that file passed in isolation. This attribution
+does not waive the final full package gate. No tuple is qualified.
+
+### Signed capture and operational acceptance development
+
+The stable v8 development matrix passed all four native unsafe-capture controls,
+three fresh pairs, three signed pairs, ten shadows and seven mutations. All 27
+source bindings matched before retention. See
+[the bounded receipt](./research/signed-capture-development-stable.json).
+This uses the older frozen source/profile and does not qualify a current tuple.
+
+The integrated operational acceptance path authenticates both channel reports
+against independent private approvals, retains immutable private evidence and
+revalidates it during audit and promotion. The new `cache accept` command emits
+a reference without promoting a tuple. Command tests and final package proof
+remain required; actual protected workflow issuance, semantic closure and
+current-profile qualification are still open.
+
+Actual CLI acceptance development proof now passes with disposable independent
+stable/canary issuers: a complete request larger than 64 KiB is accepted, the
+private record reauthenticates, revocation prevents a later acceptance, and the
+prior reference stays unchanged. The proof found and repairs the generic
+64 KiB request limit by aligning `accept` with the private store's 8 MiB bound.
+The fix and regression test are isolated in the capture worktree while the
+primary package proof runs. Source checking and the new regression pass; full
+package proof and baseline-checked integration remain pending. This synthetic
+command test supplies no real-task qualification authority.
+
+### Operational profile binding repair
+
+[The source-bound profile review](./research/signed-profile-binding-review.json)
+identifies the next implementation seam: the authenticated signed tuple, base
+source fingerprint, activation projection and channel runtime key have distinct
+identities. The real fingerprint rejects the signed profile, and the current
+source digest cannot stand for the activated/signed configuration. Introduce
+an explicit reviewed execution-profile contract covering both source and
+execution bindings; preserve ordinary profile equality and verify the real
+fingerprint/projection path before native operational qualification. The
+controlled-identity ledger regression remains bounded test evidence only.
+
+The policy model now includes optional `CacheSignedExecutionProfile` with
+explicit source key/configuration/toolchain, activated configuration, activation
+request, signed root reference and both channel runtime keys. Ordinary contracts
+default to no signed binding. Pure policy rejects inconsistent tuple/activation
+relationships; 29 policy tests and source typechecking pass. Full policy-package
+verification passed (audit 11.0s, docgen 4.9s), and all 34 focused CLI consumer
+tests pass. The separate CLI request-bound snapshot also passed full package
+verification (audit 1043.5s, docgen 30.4s). Operational interpretation
+remains pending, and the existing profile-equality gate remains intact.
+
+Producer approval and evidence derivation now consume the explicit signed
+execution binding: source pins remain separate from execution pins; the signed
+root, per-channel runtime key, base tuple and activation request are checked
+against independent approval. Rehashed mismatch cases are rejected, including
+canary-only runtime drift. Source and package-test typechecks pass; 34 focused
+tests pass, followed by seven acceptance tests with expanded channel coverage.
+Full CLI verification is starting. The live profile/projection bridge and
+real current-profile qualification remain unfinished.
+
+The next verifier prerequisite is implemented in the isolated acceptance
+worktree: `projectCacheSignedRoot` is shared with the pilot and preserves
+legacy/global layout behavior. All 39 focused census/orchestration tests pass,
+and the helper reproduces the exact signed-root hash from the retained native
+v8 observation at its frozen source revision. Source typechecking passes
+after rebuilding the changed policy dependency. Full CLI verification is
+running; baseline-checked integration and live profile verification remain.
+
+The signed activation projection now verifies source-root bytes and census
+settings, the exact signed overlay, and the real base-profile activation before
+deriving the signed configuration identity. Seventeen tests pass with no
+fingerprint mocks, including equality with an independently projected census
+and refusal of altered roots or ambiguous source inventory. Source typechecking
+passes. The change is isolated in the capture worktree; full package proof and
+service integration remain pending.
+
+### Projection integration verification
+
+The primary signed-profile approval snapshot passed full CLI package verification
+(audit 1056.8s, docgen 32.4s), with all 37 recorded source hashes unchanged.
+The shared signed-root and activation projections are now integrated into the
+primary worktree after checking the sibling baselines. The combined source
+passes typechecking and all 37 focused census/signed-pilot tests. Full CLI
+package verification is running for the integrated 39-file snapshot. The two
+sibling proof runs remain live and their source snapshots remain unchanged.
+
+Next, bind runner-measured activated and signed configuration digests into the
+versioned authenticated receipt and derive activation-projection evidence from
+validated execution facts. Then wire the live profile verifier and rerun the
+protected stable/canary workflow before real qualification. No tuple qualifies
+from these helper tests or package checks alone.
+
+### Measured activation evidence
+
+The acceptance worktree now requires activated and signed configuration digests
+in receipt v9 and producer bindings. Independent approval v3 checks both against
+the reviewed execution profile. The runner computes the signed identity through
+the shared projection from actual source bytes. Evidence derivation retains the
+complete validated pilot and native baseline roots for activation-projection;
+contracts without a signed profile receive no such observation. All 55 focused
+tests pass, including old receipt, missing-field and substitution refusals.
+Source typechecking passes; full CLI package verification is running. These
+changes remain isolated pending baseline-checked integration. No native v9
+workflow has run, and service integration and real qualification remain pending.
+
+### Live signed-profile verifier
+
+The capture worktree now verifies the explicit source tuple, real source and
+activation fingerprints, complete reviewed activation preview, and exact signed
+root overlay before checking the live contract. Ordinary profile equality is
+preserved and ordinary source caching stays disabled. The operational regression
+uses actual fingerprint/projection functions, private authenticated acceptance
+and ledger transitions; only census/toolchain observations are controlled.
+It rejects changed artifacts, runtime drift and revocation without changing the
+ledger. All 27 focused tests and source typechecking pass; full CLI package
+verification is running. This is synthetic operational proof, not native v9
+qualification. Integration and protected stable/canary evidence remain pending.

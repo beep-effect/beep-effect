@@ -6,13 +6,12 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { O } from "@beep/utils";
 import { BunHttpServer } from "@effect/platform-bun";
 import { Effect, Ref } from "effect";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import { Headers, HttpServer, HttpServerRequest, HttpServerResponse } from "effect/http";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -101,7 +100,7 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
         headers: {
           "x-fixture-event": `${id}`,
           "x-artifact-duration": "0",
-          ...R.getSomes({ "x-artifact-tag": tag }),
+          ...O.getSomesStruct({ "x-artifact-tag": tag }),
         },
       });
     });
@@ -176,6 +175,16 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
   return {
     url: HttpServer.formatAddress(server.address),
     events: Ref.get(events),
+    // Supervisor-only observation; HTTP readers cannot access this capability.
+    artifactBytes: (key: CacheFixtureArtifactKey) =>
+      Ref.get(artifacts).pipe(
+        Effect.flatMap((all) =>
+          HashMap.get(all, key).pipe(
+            Effect.fromOption(() => CacheCommandError.new("Requested fixture artifact has not been uploaded."))
+          )
+        ),
+        Effect.map((artifact) => new Uint8Array(artifact.body))
+      ),
     setScenario: (value: CacheFixtureScenario) => Ref.set(scenario, value),
   };
 }, CacheCommandError.mapError("Cannot run isolated cache protocol fixture."));

@@ -126,9 +126,13 @@ export {
   CacheSignedPilotLogInput,
 } from "./Cache.pilot.schemas.ts";
 export {
+  CacheSignedPilotArchive,
+  CacheSignedPilotCaptureControl,
   CacheSignedPilotFreshPair,
   CacheSignedPilotMutation,
+  CacheSignedPilotNonExecution,
   CacheSignedPilotPair,
+  CacheSignedPilotPolicyRefusal,
   CacheSignedPilotProtection,
   CacheSignedPilotReceipt,
   CacheSignedPilotRequest,
@@ -163,7 +167,14 @@ export { runCachePilotExperiment, runCacheSignedPilotWorker } from "./Cache.pilo
  * @category schemas
  * @since 0.0.0
  */
-export { CacheProducerBinding, CacheProducerBody, CacheProducerEnvelope } from "./Cache.producer.schemas.ts";
+export {
+  CacheProducerApproval,
+  CacheProducerBinding,
+  CacheProducerBody,
+  CacheProducerBundle,
+  CacheProducerEnvelope,
+  CacheProducerEvidenceFragment,
+} from "./Cache.producer.schemas.ts";
 export {
   CacheFixtureArtifactKey,
   CacheFixtureCredentials,
@@ -174,6 +185,7 @@ export {
 export { makeCacheProtocolFixture } from "./Cache.protocol.fixture.ts";
 export {
   CacheProtocolExecution,
+  CacheProtocolIsolationRoot,
   CacheProtocolReadFailure,
   CacheProtocolRequest,
 } from "./Cache.protocol.runner.schemas.ts";

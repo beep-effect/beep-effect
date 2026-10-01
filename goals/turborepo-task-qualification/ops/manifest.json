@@ -464,7 +464,14 @@
     "research/current-host-runtime-drift.json",
     "research/signed-matrix-development-stable.json",
     "research/signed-concurrency-development-stable.json",
-    "research/signed-mutations-development-stable.json"
+    "research/signed-mutations-development-stable.json",
+    "research/acceptance-development-census.json",
+    "research/signed-archive-development-stable.json",
+    "research/protocol-roots-development.json",
+    "research/signed-capture-development-stable.json",
+    "research/acceptance-command-review.json",
+    "research/signed-profile-binding-review.json",
+    "research/signed-activation-evidence-review.json"
   ],
   "agentLaunchers": [
     {

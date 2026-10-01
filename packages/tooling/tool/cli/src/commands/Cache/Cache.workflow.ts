@@ -20,8 +20,10 @@ import { readCacheExperimentBytes } from "./Cache.evidence.ts";
 import { collectCacheToolchain } from "./Cache.fingerprint.ts";
 import { inspectCacheLinkedFile } from "./Cache.linker.ts";
 import { runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
-import { CacheProducerBinding } from "./Cache.producer.schemas.ts";
+import { CacheProducerBinding, CacheProducerBundle } from "./Cache.producer.schemas.ts";
 import { openCacheProducerIssuer } from "./Cache.producer.ts";
+import { CacheProtocolRequest } from "./Cache.protocol.runner.schemas.ts";
+import { runCacheProtocolExperiment } from "./Cache.protocol.runner.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import {
   CacheProducerObservation,
@@ -298,7 +300,17 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
     })
   );
   yield* verifyWorkflow;
-  const observation = yield* runCacheSignedPilotExperiment(root, request, O.some(path.join(directory, "issuer.key")));
+  const pilot = yield* runCacheSignedPilotExperiment(root, request, O.some(path.join(directory, "issuer.key")));
+  yield* verifyWorkflow;
+  const protocol = yield* runCacheProtocolExperiment(
+    root,
+    CacheProtocolRequest.make({
+      channel: trusted.channel,
+      client: trusted.protocolClient,
+      executable: request.pilot.executable,
+    })
+  );
+  const observation = CacheProducerBundle.make({ pilot, protocol });
   yield* verifyWorkflow;
   return CacheProducerObservation.make({ observation, envelope: yield* issuer.issue(observation) });
 }, CacheCommandError.mapError("Cannot issue an observation from the approved producer workflow."));

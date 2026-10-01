@@ -5,13 +5,15 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { CacheClientPin } from "@beep/repo-configs/cache";
+import { CacheClientPin, CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
   CachePilotMutation,
+  CachePilotNonExecution,
   CachePilotReceipt,
   CachePilotRequest,
   CachePilotRun,
@@ -107,6 +109,32 @@ export class CacheSignedPilotProtection extends S.Class<CacheSignedPilotProtecti
 ) {}
 
 /**
+ * Bounded inventory of the actual transferred single-log pilot archive.
+ *
+ * **Example** (Inspect the content identity)
+ * ```ts
+ * import { CacheSignedPilotArchive } from "@beep/repo-cli/commands/Cache"
+ * console.assert("archiveSha256" in CacheSignedPilotArchive.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheSignedPilotArchive extends S.Class<CacheSignedPilotArchive>($I`CacheSignedPilotArchive`)(
+  {
+    archiveSha256: Sha256Hex,
+    archiveBytes: S.Natural,
+    decodedBytes: S.Natural,
+    path: S.Literal("packages/foundation/modeling/identity/.turbo/turbo-lint.log"),
+    logSha256: Sha256Hex,
+    logBytes: S.Natural,
+  },
+  $I.annote("CacheSignedPilotArchive", {
+    description: "Measured archive and sole regular-log identities; no raw archive or task text is retained.",
+  })
+) {}
+
+/**
  * Independently isolated fresh authority, signed producer and remote reader.
  *
  * **Example** (Inspect independent authority)
@@ -129,6 +157,7 @@ export class CacheSignedPilotPair extends S.Class<CacheSignedPilotPair>($I`Cache
     producer: CacheSignedPilotRun,
     replay: CacheSignedPilotRun,
     protection: CacheSignedPilotProtection,
+    archive: CacheSignedPilotArchive,
     events: S.Array(CacheFixtureEvent).check(S.isMaxLength(101)),
   },
   $I.annote("CacheSignedPilotPair", {
@@ -238,6 +267,143 @@ export class CacheSignedPilotMutation extends S.Class<CacheSignedPilotMutation>(
 ) {}
 
 /**
+ * Native refusal or script absence, with no claimed selected-task execution.
+ *
+ * **Details**
+ * The verdict is derived from the exit code, decoded summary presence and
+ * recognized diagnostic class. No caller-provided success flag is accepted.
+ *
+ * **Example** (Inspect native absence evidence)
+ * ```ts
+ * import { CacheSignedPilotNonExecution } from "@beep/repo-cli/commands/Cache"
+ * console.assert("summarySha256" in CacheSignedPilotNonExecution.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheSignedPilotNonExecution extends S.Class<CacheSignedPilotNonExecution>(
+  $I`CacheSignedPilotNonExecution`
+)(
+  {
+    id: S.NonEmptyString,
+    reason: CachePilotNonExecution.fields.reason,
+    isolationRoot: Sha256Hex,
+    exitCode: S.Int,
+    stdoutSha256: Sha256Hex,
+    stderrSha256: Sha256Hex,
+    summarySha256: S.OptionFromOptionalKey(Sha256Hex).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    selectedExecutionObserved: S.Boolean,
+    diagnostic: S.OptionFromOptionalKey(
+      CachePilotNonExecution.fields.reason.pick([
+        "missing-root-config",
+        "malformed-root-config",
+        "malformed-child-config",
+      ])
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  },
+  $I.annote("CacheSignedPilotNonExecution", {
+    description: "Owned native refusal or absence with bounded stream identities and optional native summary evidence.",
+  })
+) {
+  /**
+   * Derive the expected absence or refusal from measured native facts.
+   *
+   * **Example** (Inspect the derived verdict)
+   * ```ts
+   * import { CacheSignedPilotNonExecution } from "@beep/repo-cli/commands/Cache"
+   * const passed = (observation: CacheSignedPilotNonExecution) => observation.passed
+   * console.assert(typeof passed === "function")
+   * ```
+   *
+   * @returns Whether the native facts establish the case-specific non-execution outcome.
+   * @category getters
+   * @since 0.0.0
+   */
+  get passed(): boolean {
+    return (
+      !this.selectedExecutionObserved &&
+      (this.reason === "absent-script"
+        ? this.exitCode === 0 && O.isSome(this.summarySha256) && O.isNone(this.diagnostic)
+        : this.exitCode !== 0 && O.isNone(this.summarySha256) && O.contains(this.reason)(this.diagnostic))
+    );
+  }
+}
+
+/**
+ * A missing child configuration rejected by the shared native-plan guard.
+ *
+ * **Details**
+ * This is a dry-plan refusal, not a task execution or cache hit. The owned
+ * runner observes the resolved configuration and requires zero task logs
+ * and execution summaries after invoking the same guard used by preflight.
+ *
+ * **Example** (Inspect governed refusal evidence)
+ * ```ts
+ * import { CacheSignedPilotPolicyRefusal } from "@beep/repo-cli/commands/Cache"
+ * console.assert("configuration" in CacheSignedPilotPolicyRefusal.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheSignedPilotPolicyRefusal extends S.Class<CacheSignedPilotPolicyRefusal>(
+  $I`CacheSignedPilotPolicyRefusal`
+)(
+  {
+    reason: S.tag("missing-child-config"),
+    removedPath: S.Literal("packages/foundation/modeling/identity/turbo.json"),
+    isolationRoot: Sha256Hex,
+    computation: CachePilotTask.fields.computation,
+    taskHash: CachePilotTask.fields.taskHash,
+    inputsDigest: Sha256Hex,
+    configuration: CacheTaskConfiguration,
+    dryPlanSha256: Sha256Hex,
+    planExitCode: S.Literal(0),
+    nativeRuntimeKeyObserved: S.Literal(false),
+    nativeExecutionObserved: S.Literal(false),
+    executionSummaries: S.Literal(0),
+    selectedLogFiles: S.Literal(0),
+    guardRejected: S.Literal(true),
+  },
+  $I.annote("CacheSignedPilotPolicyRefusal", {
+    description:
+      "Direct native dry-plan evidence that the governed runtime guard refused a missing child configuration.",
+  })
+) {}
+
+/**
+ * Native execution rejected by the shared output-capture boundary.
+ *
+ * **Example** (Inspect native capture-control evidence)
+ * ```ts
+ * import { CacheSignedPilotCaptureControl } from "@beep/repo-cli/commands/Cache"
+ * console.assert("summarySha256" in CacheSignedPilotCaptureControl.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheSignedPilotCaptureControl extends S.Class<CacheSignedPilotCaptureControl>(
+  $I`CacheSignedPilotCaptureControl`
+)(
+  {
+    case: LiteralKit(["credential-output", "terminal-control", "oversized-log", "undeclared-output"]),
+    isolationRoot: Sha256Hex,
+    summarySha256: Sha256Hex,
+    probeSha256: Sha256Hex,
+    taskHash: S.NonEmptyString,
+    selectedExitCode: S.Literal(0),
+    origin: S.Literal("fresh"),
+    diagnostic: S.NonEmptyString,
+  },
+  $I.annote("CacheSignedPilotCaptureControl", {
+    description:
+      "Native summary and isolated probe identity with a case-derived capture rejection; contains no raw task output.",
+  })
+) {}
+
+/**
  * Real signed comparisons without protected-producer or promotion authority.
  *
  * **Example** (Inspect the explicit profile)
@@ -251,7 +417,7 @@ export class CacheSignedPilotMutation extends S.Class<CacheSignedPilotMutation>(
  */
 export class CacheSignedPilotReceipt extends S.Class<CacheSignedPilotReceipt>($I`CacheSignedPilotReceipt`)(
   {
-    schemaVersion: S.tag("cache-pilot-signed/v5"),
+    schemaVersion: S.tag("cache-pilot-signed/v9"),
     authority: S.tag("signed-pilot-observation-only"),
     network: S.tag("private-loopback-nested-readers/v1"),
     key: CachePilotReceipt.fields.key,
@@ -267,8 +433,13 @@ export class CacheSignedPilotReceipt extends S.Class<CacheSignedPilotReceipt>($I
     installedDependencies: CachePilotReceipt.fields.installedDependencies,
     activation: CachePilotReceipt.fields.activation,
     configurationDigest: Sha256Hex,
+    activatedConfigurationDigest: Sha256Hex,
+    signedConfigurationDigest: Sha256Hex,
     toolchainDigest: Sha256Hex,
     signedRootConfiguration: Sha256Hex,
+    policyRefusal: CacheSignedPilotPolicyRefusal,
+    captureControls: S.Array(CacheSignedPilotCaptureControl).check(S.isMinLength(4), S.isMaxLength(4)),
+    nonExecutions: S.Array(CacheSignedPilotNonExecution).check(S.isMinLength(4), S.isMaxLength(4)),
     mutations: S.Array(CacheSignedPilotMutation).check(S.isMinLength(7), S.isMaxLength(7)),
     shadows: S.Array(CacheSignedPilotShadow).check(S.isMinLength(10), S.isMaxLength(10)),
     freshPairs: S.Array(CacheSignedPilotFreshPair).check(S.isMinLength(3), S.isMaxLength(3)),

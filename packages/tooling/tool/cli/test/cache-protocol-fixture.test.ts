@@ -38,6 +38,21 @@ const put = (url: string, body = bytes, capability = writer, signature = tag) =>
 it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20 seconds" })(
   "native protocol fixture server",
   (it) => {
+    it.effect("returns supervisor copies without mutating stored bytes or adding wire events", () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeCacheProtocolFixture(credentials);
+        expect(Result.isFailure(yield* fixture.artifactBytes(artifactHash).pipe(Effect.result))).toBe(true);
+        const uploaded = yield* put(endpoint(fixture.url));
+        yield* uploaded.text;
+        const before = yield* fixture.events;
+        const copy = yield* fixture.artifactBytes(artifactHash);
+        copy[0] = 0;
+        expect(yield* fixture.artifactBytes(artifactHash)).toEqual(bytes);
+        expect(yield* fixture.events).toEqual(before);
+        const downloaded = yield* get(endpoint(fixture.url));
+        expect(new Uint8Array(yield* downloaded.arrayBuffer)).toEqual(bytes);
+      })
+    );
     it.effect("round trips opaque bytes and tags, including zero-byte objects", () =>
       Effect.gen(function* () {
         const fixture = yield* makeCacheProtocolFixture(credentials);

@@ -5,12 +5,49 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { CacheClientChannel, CacheClientPin, CacheQualificationKey } from "@beep/repo-configs/cache";
+import {
+  CacheClientChannel,
+  CacheClientPin,
+  CacheEvidenceReference,
+  CacheQualificationKey,
+  CacheQualificationObservation,
+  CacheTaskContract,
+} from "@beep/repo-configs/cache";
 import { Sha256Hex } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as S from "effect/Schema";
+import { CacheSignedPilotReceipt } from "./Cache.pilot.signed.schemas.ts";
+import { CacheProtocolExecution } from "./Cache.protocol.runner.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.producer.schemas");
+
+/**
+ * Complete pilot and conformance payload for one protected producer run.
+ *
+ * **Details**
+ * Shape validation alone grants no trust. Both native matrices must be
+ * validated and authenticated together before an acceptance importer can use
+ * them with an independently approved task contract.
+ *
+ * **Example** (Require complete conformance)
+ * ```ts
+ * import { CacheProducerBundle } from "@beep/repo-cli/commands/Cache"
+ * console.assert("protocol" in CacheProducerBundle.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheProducerBundle extends S.Class<CacheProducerBundle>($I`CacheProducerBundle`)(
+  {
+    schemaVersion: S.tag("cache-producer-bundle/v1"),
+    pilot: CacheSignedPilotReceipt,
+    protocol: CacheProtocolExecution,
+  },
+  $I.annote("CacheProducerBundle", {
+    description: "One channel's complete native pilot and conformance observations; authentication remains separate.",
+  })
+) {}
 
 /**
  * Trusted workflow and live computation identities expected by a receipt verifier.
@@ -32,14 +69,62 @@ export class CacheProducerBinding extends S.Class<CacheProducerBinding>($I`Cache
     policyDigest: Sha256Hex,
     key: CacheQualificationKey,
     client: CacheClientPin,
+    protocolClient: CacheClientPin,
     channel: CacheClientChannel,
     runtimeKeyDigest: Sha256Hex,
     configurationDigest: Sha256Hex,
+    activatedConfigurationDigest: Sha256Hex,
+    signedConfigurationDigest: Sha256Hex,
     toolchainDigest: Sha256Hex,
     signedRootConfiguration: Sha256Hex,
   },
   $I.annote("CacheProducerBinding", {
     description: "Trusted workflow and live computation identities expected by a receipt verifier.",
+  })
+) {}
+
+/**
+ * Independently provisioned full policy and exact producer identity.
+ *
+ * **Example** (Keep reviewed obligations outside receipt authority)
+ * ```ts
+ * import { CacheProducerApproval } from "@beep/repo-cli/commands/Cache"
+ * console.assert("contract" in CacheProducerApproval.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheProducerApproval extends S.Class<CacheProducerApproval>($I`CacheProducerApproval`)(
+  { schemaVersion: S.tag("cache-producer-approval/v3"), binding: CacheProducerBinding, contract: CacheTaskContract },
+  $I.annote("CacheProducerApproval", {
+    description: "Private complete task contract and its independently approved workflow binding.",
+  })
+) {}
+
+/**
+ * Canonical child evidence and its derived policy observation.
+ *
+ * **Details**
+ * The importer must persist and verify these exact bytes. Child identities
+ * preserve independent comparisons; the enclosing bundle hash cannot stand
+ * in for every counted receipt. This projection grants no qualification.
+ *
+ * **Example** (Inspect the retained evidence bytes)
+ * ```ts
+ * import { CacheProducerEvidenceFragment } from "@beep/repo-cli/commands/Cache"
+ * console.assert("contents" in CacheProducerEvidenceFragment.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheProducerEvidenceFragment extends S.Class<CacheProducerEvidenceFragment>(
+  $I`CacheProducerEvidenceFragment`
+)(
+  { reference: CacheEvidenceReference, contents: S.NonEmptyString, observation: CacheQualificationObservation },
+  $I.annote("CacheProducerEvidenceFragment", {
+    description: "Exact projected native evidence bytes and their bound policy row.",
   })
 ) {}
 
@@ -57,7 +142,7 @@ export class CacheProducerBinding extends S.Class<CacheProducerBinding>($I`Cache
  */
 export class CacheProducerBody extends S.Class<CacheProducerBody>($I`CacheProducerBody`)(
   {
-    schemaVersion: S.tag("cache-producer-envelope-body/v1"),
+    schemaVersion: S.tag("cache-producer-envelope-body/v2"),
     issuer: Sha256Hex,
     binding: CacheProducerBinding,
     payloadSha256: Sha256Hex,

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { CacheClientPin } from "@beep/repo-configs/cache";
-import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { Crypto, Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
@@ -27,6 +27,7 @@ import { CacheFixtureCredentials, CacheFixtureScenario } from "./Cache.protocol.
 import { makeCacheProtocolFixture } from "./Cache.protocol.fixture.ts";
 import {
   CacheProtocolExecution,
+  CacheProtocolIsolationRoot,
   CacheProtocolReadFailure,
   CacheProtocolRequest,
 } from "./Cache.protocol.runner.schemas.ts";
@@ -34,17 +35,7 @@ import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
 import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 
-const cases = LiteralKit([
-  "producer",
-  "replay",
-  "missing-tag",
-  "invalid-tag",
-  "corrupt-body",
-  "wrong-key",
-  "truncated-body",
-  "unavailable",
-  "throttled",
-]);
+const cases = CacheProtocolIsolationRoot.fields.case;
 const extraCase = S.is(CacheProtocolReadFailure.fields.case);
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const bound = OutputBound.make({ maxChars: 64 * 1024, truncatedNotice: "capture exceeded bound" });
@@ -173,6 +164,7 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
         reader: Redacted.make(reader),
       })
     );
+    const roots = A.empty<CacheProtocolIsolationRoot>();
     const runs: Array<CacheProtocolObservation["runs"][number]> = [];
     const failures: Array<CacheProtocolReadFailure> = [];
     for (const name of cases.literals) {
@@ -180,6 +172,14 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
       yield* fixture.setScenario(CacheFixtureScenario.make({ id: name, fault }));
       const work = path.join(directory, name);
       yield* fs.makeDirectory(path.join(work, ".turbo"), { recursive: true });
+      roots.push(
+        CacheProtocolIsolationRoot.make({
+          case: name,
+          sha256: yield* hashBytes(
+            new TextEncoder().encode(`beep/cache-protocol-isolation/v1\0${yield* fs.realPath(work)}`)
+          ),
+        })
+      );
       yield* writeContainedFileString(
         work,
         ".turbo/config.json",
@@ -340,7 +340,13 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
     )
       return yield* CacheCommandError.new("Protocol producer or executable identity changed during the run.");
     return yield* validateCacheProtocolExecution(
-      CacheProtocolExecution.make({ observation, failures, events, bunSha256 })
+      CacheProtocolExecution.make({
+        observation,
+        roots: yield* S.decodeUnknownEffect(CacheProtocolExecution.fields.roots)(roots),
+        failures,
+        events,
+        bunSha256,
+      })
     );
   },
   Effect.scoped,

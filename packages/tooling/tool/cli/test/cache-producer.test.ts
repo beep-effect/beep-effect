@@ -1,29 +1,41 @@
-import { CacheProducerBinding, CacheProducerEnvelope, CacheSignedPilotReceipt } from "@beep/repo-cli/commands/Cache";
 import {
+  CacheProducerApproval,
+  CacheProducerBinding,
+  CacheProducerBundle,
+  CacheProducerEnvelope,
+} from "@beep/repo-cli/commands/Cache";
+import {
+  hashCacheProducerContract,
   initializeCacheProducerIssuer,
   makeCacheProducerIssuer,
   openCacheProducerIssuer,
   openCacheProducerVerifier,
   revokeCacheProducerIssuer,
 } from "@beep/repo-cli/test/Cache";
+import { CacheTaskContract } from "@beep/repo-configs/cache";
+import { Sha256Hex } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import { signedPilotInput as input } from "./helpers/cache-signed-pilot-fixture.ts";
+import { input as bundleInput, contractInput, pilot as input } from "./helpers/cache-producer-bundle-fixture.ts";
 
+const contract = S.decodeUnknownSync(CacheTaskContract)(contractInput);
 const setup = Effect.fn("ProducerTest.setup")(function* () {
-  const receipt = yield* S.decodeUnknownEffect(CacheSignedPilotReceipt)(input);
+  const receipt = yield* S.decodeUnknownEffect(CacheProducerBundle)(bundleInput);
   const binding = yield* S.decodeUnknownEffect(CacheProducerBinding)({
     ...input,
+    protocolClient: bundleInput.protocol.observation.client,
     workflowRevision: Str.repeat(40)("a"),
     workflowImplementation: Str.repeat(64)("b"),
-    policyDigest: Str.repeat(64)("c"),
+    policyDigest: yield* hashCacheProducerContract(contract),
   });
   const issuer = yield* makeCacheProducerIssuer(binding);
   const envelope = yield* issuer.issue(receipt);
@@ -31,6 +43,68 @@ const setup = Effect.fn("ProducerTest.setup")(function* () {
   return { receipt, binding, issuer, envelope, encoded };
 });
 it.layer(NodeCrypto.layer)("closed producer issuer", (it) => {
+  it.effect("authenticates every schema-generated policy digest against the issued envelope", () =>
+    Effect.gen(function* () {
+      const { issuer, receipt, envelope } = yield* setup();
+      const checked = yield* Arbitrary.checkEffect(
+        Arbitrary.schema(Sha256Hex),
+        (policyDigest) =>
+          Effect.gen(function* () {
+            const altered = CacheProducerEnvelope.make({
+              ...envelope,
+              body: { ...envelope.body, binding: { ...envelope.body.binding, policyDigest } },
+            });
+            expect(yield* issuer.verify(altered, receipt).pipe(Effect.isSuccess)).toBe(
+              policyDigest === envelope.body.binding.policyDigest
+            );
+            return true;
+          }),
+        fcRuns(20)
+      );
+      expect(checked._tag).toBe("Passed");
+    })
+  );
+
+  it.effect("rejects legacy receipts and missing measured projection identities", () =>
+    Effect.gen(function* () {
+      for (const patch of [
+        { schemaVersion: "cache-pilot-signed/v8" },
+        { activatedConfigurationDigest: undefined },
+        { signedConfigurationDigest: undefined },
+      ])
+        expect(
+          yield* S.decodeUnknownEffect(CacheProducerBundle)({
+            ...bundleInput,
+            pilot: { ...input, ...patch },
+          }).pipe(Effect.isFailure)
+        ).toBe(true);
+    })
+  );
+  it.effect("authenticates conformance bytes together with the pilot and refuses incomplete bundles", () =>
+    Effect.gen(function* () {
+      const { issuer, envelope } = yield* setup();
+      const changed = yield* S.decodeUnknownEffect(CacheProducerBundle)({
+        ...bundleInput,
+        protocol: {
+          ...bundleInput.protocol,
+          observation: {
+            ...bundleInput.protocol.observation,
+            runs: A.map(bundleInput.protocol.observation.runs, (run, index) =>
+              index === 0 ? { ...run, summary: Str.repeat(64)("f") } : run
+            ),
+          },
+        },
+      });
+      // This remains valid conformance; its bytes are not the authenticated payload.
+      yield* issuer.issue(changed);
+      expect(Result.isFailure(yield* issuer.verify(envelope, changed).pipe(Effect.result))).toBe(true);
+      const incomplete = yield* S.decodeUnknownEffect(CacheProducerBundle)({
+        ...bundleInput,
+        protocol: { ...bundleInput.protocol, events: [] },
+      });
+      expect(Result.isFailure(yield* issuer.issue(incomplete).pipe(Effect.result))).toBe(true);
+    })
+  );
   it.effect("authenticates a bound observation without exporting keys", () =>
     Effect.gen(function* () {
       const { issuer, receipt, envelope } = yield* setup();
@@ -67,9 +141,9 @@ it.layer(NodeCrypto.layer)("closed producer issuer", (it) => {
       const { issuer, receipt, binding, envelope } = yield* setup();
       const other = yield* makeCacheProducerIssuer(binding);
       expect(Result.isFailure(yield* other.verify(envelope, receipt).pipe(Effect.result))).toBe(true);
-      const changed = yield* S.decodeUnknownEffect(CacheSignedPilotReceipt)({
-        ...input,
-        sourceRevision: Str.repeat(40)("0"),
+      const changed = yield* S.decodeUnknownEffect(CacheProducerBundle)({
+        ...bundleInput,
+        pilot: { ...input, sourceRevision: Str.repeat(40)("0") },
       });
       expect(Result.isFailure(yield* issuer.verify(envelope, changed).pipe(Effect.result))).toBe(true);
     })
@@ -83,11 +157,16 @@ it.layer(NodeCrypto.layer)("closed producer issuer", (it) => {
         { runtimeKeyDigest: Str.repeat(64)("0") },
         { client: { ...input.client, sha256: Str.repeat(64)("0") } },
         { configurationDigest: Str.repeat(64)("0") },
+        { activatedConfigurationDigest: Str.repeat(64)("0") },
+        { signedConfigurationDigest: Str.repeat(64)("0") },
         { toolchainDigest: Str.repeat(64)("0") },
         { signedRootConfiguration: Str.repeat(64)("0") },
         { key: { ...input.key, epoch: "other" }, baseKey: { ...input.baseKey, epoch: "other" } },
       ]) {
-        const receipt = yield* S.decodeUnknownEffect(CacheSignedPilotReceipt)({ ...input, ...patch });
+        const receipt = yield* S.decodeUnknownEffect(CacheProducerBundle)({
+          ...bundleInput,
+          pilot: { ...input, ...patch },
+        });
         expect(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result))).toBe(true);
       }
     })
@@ -103,7 +182,10 @@ it.layer(NodeCrypto.layer)("closed producer issuer", (it) => {
         })),
         A.map(input.pairs, (pair) => ({ ...pair, events: [] })),
       ]) {
-        const receipt = yield* S.decodeUnknownEffect(CacheSignedPilotReceipt)({ ...input, pairs });
+        const receipt = yield* S.decodeUnknownEffect(CacheProducerBundle)({
+          ...bundleInput,
+          pilot: { ...input, pairs },
+        });
         expect(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result))).toBe(true);
       }
     })
@@ -116,7 +198,7 @@ it.layer(NodeCrypto.layer)("closed producer issuer", (it) => {
         Reflect.set(envelope.body.binding, "sourceRevision", Str.repeat(40)("0"));
       });
       const fresh = yield* issuer.issue(receipt);
-      expect(fresh.body.binding.sourceRevision).toBe(receipt.sourceRevision);
+      expect(fresh.body.binding.sourceRevision).toBe(receipt.pilot.sourceRevision);
       expect(yield* issuer.verify(fresh, receipt)).toEqual(receipt);
     })
   );
@@ -135,7 +217,7 @@ const persistentSetup = Effect.fn("ProducerTest.persistentSetup")(function* () {
   const parent = yield* fs.makeTempDirectoryScoped();
   const directory = path.join(parent, "issuer");
   const { receipt, binding } = yield* setup();
-  const issuer = yield* initializeCacheProducerIssuer(directory, binding);
+  const issuer = yield* initializeCacheProducerIssuer(directory, binding, contract);
   const envelope = yield* issuer.issue(receipt);
   return { fs, path, directory, receipt, binding, issuer, envelope };
 });
@@ -145,7 +227,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("persistent produ
       const { directory, binding, receipt, envelope } = yield* persistentSetup();
       const reopened = yield* openCacheProducerIssuer(directory, binding);
       expect(yield* reopened.verify(envelope, receipt)).toEqual(receipt);
-      expect(Result.isFailure(yield* initializeCacheProducerIssuer(directory, binding).pipe(Effect.result))).toBe(true);
+      expect(
+        Result.isFailure(yield* initializeCacheProducerIssuer(directory, binding, contract).pipe(Effect.result))
+      ).toBe(true);
       expect(yield* reopened.verify(envelope, receipt)).toEqual(receipt);
     }).pipe(Effect.scoped)
   );
@@ -161,6 +245,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("persistent produ
         { runtimeKeyDigest: Str.repeat(64)("0") },
         { client: { ...input.client, sha256: Str.repeat(64)("0") } },
         { configurationDigest: Str.repeat(64)("0") },
+        { activatedConfigurationDigest: Str.repeat(64)("0") },
+        { signedConfigurationDigest: Str.repeat(64)("0") },
         { toolchainDigest: Str.repeat(64)("0") },
         { signedRootConfiguration: Str.repeat(64)("0") },
         { key: { ...input.key, epoch: "other" } },
@@ -192,7 +278,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("persistent produ
       expect(Result.isFailure(yield* openCacheProducerIssuer(directory, binding).pipe(Effect.result))).toBe(true);
       expect(yield* fs.exists(file)).toBe(false);
       yield* fs.remove(directory, { recursive: true });
-      const replacement = yield* initializeCacheProducerIssuer(directory, binding);
+      const replacement = yield* initializeCacheProducerIssuer(directory, binding, contract);
       expect(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result))).toBe(true);
       expect(Result.isFailure(yield* issuer.verify(envelope, receipt).pipe(Effect.result))).toBe(true);
       expect(Result.isFailure(yield* replacement.verify(envelope, receipt).pipe(Effect.result))).toBe(true);
@@ -245,12 +331,35 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("persistent produ
 });
 
 it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("private approval verifier", (it) => {
+  it.effect("rejects edited full obligations even when the submitted bundle is unchanged", () =>
+    Effect.gen(function* () {
+      const { fs, path, directory, receipt, envelope } = yield* persistentSetup();
+      const verifier = yield* openCacheProducerVerifier(directory);
+      const file = path.join(directory, "approval.json");
+      const approval = yield* S.decodeUnknownEffect(S.fromJsonString(CacheProducerApproval))(
+        yield* fs.readFileString(file)
+      );
+      const changedContract = CacheTaskContract.make({ ...approval.contract, negativeCases: ["weaker-policy"] });
+      for (const binding of [
+        approval.binding,
+        CacheProducerBinding.make({
+          ...approval.binding,
+          policyDigest: yield* hashCacheProducerContract(changedContract),
+        }),
+      ]) {
+        const changed = CacheProducerApproval.make({ binding, contract: changedContract });
+        yield* fs.writeFileString(file, yield* S.encodeEffect(S.fromJsonString(CacheProducerApproval))(changed));
+        expect(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result))).toBe(true);
+        expect(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result))).toBe(true);
+      }
+    }).pipe(Effect.scoped)
+  );
   it.effect("loads independent approval and exposes verification only", () =>
     Effect.gen(function* () {
       const { directory, receipt, envelope } = yield* persistentSetup();
       const verifier = yield* openCacheProducerVerifier(directory);
       expect(R.keys(verifier)).toEqual(["verify"]);
-      expect(yield* verifier.verify(envelope, receipt)).toEqual(receipt);
+      expect((yield* verifier.verify(envelope, receipt)).contract).toEqual(contract);
     }).pipe(Effect.scoped)
   );
   it.effect("rejects an edited approval at open and through an existing verifier", () =>
