@@ -4,7 +4,7 @@ import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { YouTubeWatchOpenFailed } from "@/chat/ui/YouTubeWatchOpener";
 import { ContradictionQaSeedError } from "@/contradiction/ContradictionQaSeed";
-import { BrowserFileReadError, VaultDirectoryPickerInvocationError } from "@/intake/Intake.atoms";
+import { BrowserFileReadError, VaultDirectoryPickerInvocationError } from "@/intake/DocumentIntake.models";
 import { VaultDirectoryPickError } from "@/intake/VaultDirectoryPicker.rpc";
 import { CosmosWorkerInitializationError } from "@/spikes/CosmosSpike";
 import { SidecarClosedError, SidecarClosedPayload, SidecarSendError } from "@/transport/TauriIpcSocket";
