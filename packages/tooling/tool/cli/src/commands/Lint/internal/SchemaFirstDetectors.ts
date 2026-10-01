@@ -1611,7 +1611,9 @@ const memberKey = (member: StaticsMember): O.Option<string> => {
   const nameNode = member.getNameNode();
   if (Node.isComputedPropertyName(nameNode)) {
     const value = followBinding(nameNode.getExpression());
-    return Node.isStringLiteral(value) ? O.some(value.getLiteralValue()) : O.none();
+    return Node.isStringLiteral(value) || Node.isNoSubstitutionTemplateLiteral(value)
+      ? O.some(value.getLiteralValue())
+      : O.none();
   }
   return O.some(Node.isStringLiteral(nameNode) ? nameNode.getLiteralValue() : nameNode.getText());
 };
@@ -1775,15 +1777,32 @@ const forwardsAssertion: ForwardingForm = (context, parameters, call) => {
 const forwardsUnwrapped: ForwardingForm = (context, parameters, call, callee) =>
   isUnwrapperReference(callee) && O.exists(A.head(call.getArguments()), isForwardingExpression(context, parameters));
 
-// A `pipe` callee: `pipe`, `F.pipe`, `Effect.pipe`; a `pipe` declared in this file (a shadowing local
-// or an object's own member) is not effect's.
-const isPipeCallee = (callee: Node): boolean =>
+const EFFECT_MODULE_PATTERN = /^effect(?:\/|$)/u;
+
+// Whether an identifier is a named or namespace import from `effect` or an `effect/*` module.
+const isEffectImport = (identifier: Node): boolean =>
   O.exists(
-    calleeMember(callee),
-    ({ nameNode, name }) =>
-      Str.Equivalence(name, "pipe") &&
-      !O.exists(localDeclaration(nameNode), (declaration) => !Node.isImportSpecifier(declaration))
+    localDeclaration(identifier),
+    (declaration) =>
+      (Node.isImportSpecifier(declaration) || Node.isNamespaceImport(declaration)) &&
+      EFFECT_MODULE_PATTERN.test(
+        declaration.getFirstAncestorByKindOrThrow(SyntaxKind.ImportDeclaration).getModuleSpecifierValue()
+      )
   );
+
+// Effect's own `name` function as a callee: the imported `pipe`, or `F.pipe`, `Effect.pipe`,
+// `F["pipe"]` on an effect import. A local or an unrelated module's function of that name is not.
+const isEffectFunctionCallee =
+  (name: string) =>
+  (callee: Node): boolean =>
+    O.exists(calleeMember(callee), (member) => Str.Equivalence(member.name, name)) &&
+    isEffectImport(
+      Node.isPropertyAccessExpression(callee) || Node.isElementAccessExpression(callee)
+        ? callee.getExpression()
+        : callee
+    );
+
+const isPipeCallee = isEffectFunctionCallee("pipe");
 
 // `pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow)`, also through `F.pipe` or `Effect.pipe`.
 const forwardsPipe: ForwardingForm = (context, parameters, call, callee) => {
@@ -1845,7 +1864,7 @@ const isCodecFacadeValue =
     }
     const args = value.getArguments();
     return (
-      O.exists(calleeMember(callee), ({ name }) => Str.Equivalence(name, "flow")) &&
+      isEffectFunctionCallee("flow")(callee) &&
       O.exists(A.head(args), isCodecReference(context)) &&
       A.every(A.drop(args, 1), isUnwrapperReference)
     );

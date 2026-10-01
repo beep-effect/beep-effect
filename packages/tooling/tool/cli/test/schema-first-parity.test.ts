@@ -609,7 +609,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
     })
   );
 
-  it.effect("treats F.pipe and Effect.pipe as forwarding pipes, but not a pipe declared in the file", () =>
+  it.effect("treats effect's pipe and flow as forwarding, but not a local or unrelated module's", () =>
     Effect.gen(function* () {
       const entries = yield* parityEntries([
         'import * as S from "effect/Schema";',
@@ -620,14 +620,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
         "  SchemaUtils.withStatics((schema) => ({",
         "    viaFunction: (u: unknown) => F.pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow),",
         "    viaEffect: (u: unknown) => Effect.pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow),",
+        '    viaElement: (u: unknown) => F["pipe"](u, S.decodeUnknownResult(schema), Result.getOrThrow),',
+        "    viaFlow: F.flow(S.decodeUnknownResult(schema), Result.getOrThrow),",
         "  }))",
         ");",
       ]);
       expect(readable(entries)).toEqual([
         "SFV4-codec-static Piped::viaFunction@<hash>",
         "SFV4-codec-static Piped::viaEffect@<hash>",
+        "SFV4-codec-static Piped::viaElement@<hash>",
+        "SFV4-codec-static Piped::viaFlow@<hash>",
       ]);
-      expect(A.map(entries, (entry) => entry.reason)).toEqual(A.map(["viaFunction", "viaEffect"], facadeReason));
+      expect(A.map(entries, (entry) => entry.reason)).toEqual(
+        A.map(["viaFunction", "viaEffect", "viaElement", "viaFlow"], facadeReason)
+      );
       expect(
         yield* parityEntries([
           'import * as S from "effect/Schema";',
@@ -639,6 +645,22 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
           "  SchemaUtils.withStatics((schema) => ({",
           "    bare: (u: unknown) => pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow),",
           "    member: (u: unknown) => local.pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow),",
+          "  }))",
+          ");",
+        ])
+      ).toEqual([]);
+      expect(
+        yield* parityEntries([
+          'import * as S from "effect/Schema";',
+          'import { Result } from "effect";',
+          'import { flow, pipe } from "./pipeline";',
+          'import * as U from "./pipeline";',
+          'import { SchemaUtils } from "@beep/schema";',
+          "export const Unrelated = S.String.pipe(",
+          "  SchemaUtils.withStatics((schema) => ({",
+          "    named: (u: unknown) => pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow),",
+          "    namespaced: (u: unknown) => U.pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow),",
+          "    flowed: flow(S.decodeUnknownResult(schema), Result.getOrThrow),",
           "  }))",
           ");",
         ])
@@ -658,6 +680,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
         '    "quoted": S.is(schema),',
         "    [guardKey]: S.is(schema),",
         "    [dynamic]: S.is(schema),",
+        "    templated: S.is(schema),",
+        "    [`templated`]: () => true,",
         "    kept: S.is(schema),",
         "    [`${dynamic}x`]: () => true,",
         "    replaced: S.is(schema),",
