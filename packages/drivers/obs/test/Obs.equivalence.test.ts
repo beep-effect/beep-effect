@@ -43,7 +43,7 @@ describe("ObsError.fromUnknown", () => {
 
     expect(error.operation).toBe("connect");
     expect(error.message).toBe("Failed to reach obs-websocket");
-    assertTrue(O.isSome(error.cause));
+    error.cause.pipe(O.isSome, assertTrue);
     assertSome(error.closeCode, 4009);
     assertSome(error.requestType, "GetVersion");
     assertNone(error.requestStatusCode);
