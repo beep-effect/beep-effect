@@ -123,7 +123,8 @@ const DisconnectedNote = ({
   // Dark mode needs the brighter warning text tier: amber-600 on the tinted
   // alert surface fell below readable contrast on the near-black theme (QA
   // round 104, R104-02). `warning-text` carries that high-contrast tier in its
-  // dark value, and the outline retry button inherits it as its label color.
+  // dark value; the retry button uses the design system's `warning` variant,
+  // which paints the same tier on its own border, label and hover wash.
   const probeNote = (message: string) => (
     <div
       className="mt-2 rounded-sm border border-warning/40 bg-warning/10 p-2 text-xs text-warning-text dark:border-warning/50"
@@ -144,7 +145,7 @@ const DisconnectedNote = ({
       <Button
         type="button"
         size="sm"
-        variant="outline"
+        variant="warning"
         className="mt-2"
         onClick={onRetry}
         disabled={waiting}

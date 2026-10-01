@@ -43,6 +43,8 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/20 text-destructive focus-visible:border-destructive/40 dark:hover:bg-destructive/30",
         link: "text-primary underline-offset-4 hover:underline",
+        warning:
+          "border-warning/40 bg-background text-warning-text hover:bg-warning/10 focus-visible:border-warning/60 focus-visible:ring-warning/30 aria-expanded:bg-warning/10 dark:border-warning/60 dark:bg-input/30 dark:hover:bg-warning/20",
       },
       size: {
         default: "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
