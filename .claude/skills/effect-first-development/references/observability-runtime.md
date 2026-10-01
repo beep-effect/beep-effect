@@ -160,8 +160,8 @@ const UserJson = S.fromJsonString(User)
 const decodeUserJson = S.decodeUnknownEffect(UserJson)
 const encodeUserJson = S.encodeUnknownEffect(UserJson)
 
-const decodeUnknownJson = S.decodeUnknownEffect(S.UnknownFromJsonString)
-const encodeUnknownJson = S.encodeUnknownEffect(S.UnknownFromJsonString)
+const decodeUnknownJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown))
+const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown))
 
 const decodeUserJsonAtBoundary = (input: unknown) =>
   decodeUserJson(input).pipe(

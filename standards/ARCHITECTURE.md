@@ -757,7 +757,7 @@ formatter, option, or error modules. Retired acronym casing aliases such as
 `@beep/schema/ExpectCT` and `@beep/schema/XSSProtection` are not public exports;
 use the canonical concept casing (`ExpectCt`, `XssProtection`). `SchemaUtils`
 and similar utility namespaces may expose helper leaves when the helper itself
-is the public concept, for example `@beep/schema/SchemaUtils/pluck`.
+is the public concept, for example `@beep/schema/SchemaUtils/collectAnnotationsAt`.
 
 Core schema role suffixes are `.schema.ts`, `.input.ts`, `.transforms.ts`,
 `.constructors.ts`, `.guards.ts`, `.errors.ts`, and `.types.ts`. Earned

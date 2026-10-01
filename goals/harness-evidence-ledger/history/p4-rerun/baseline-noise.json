@@ -1,0 +1,168 @@
+{
+  "schema": "beep-skillopt-baseline-noise/v1",
+  "ts": "2026-09-29T10:57:03Z",
+  "repeats": 3,
+  "note": "rerun analysis only; the loop gate uses its own baseline, not this band",
+  "runs": [
+    {
+      "n_items": 4,
+      "soft": 0.958333,
+      "hard": 0.75,
+      "per_task": [
+        {
+          "task_id": "sfv4-fn-schema-003",
+          "soft": 1.0,
+          "hard": 1.0,
+          "exec_seconds": 39.083,
+          "score_seconds": 7.722
+        },
+        {
+          "task_id": "sfv4-getsomes-struct-003",
+          "soft": 0.833333,
+          "hard": 0.0,
+          "exec_seconds": 58.507,
+          "score_seconds": 5.879
+        },
+        {
+          "task_id": "sfv4-normalization-003",
+          "soft": 1.0,
+          "hard": 1.0,
+          "exec_seconds": 36.226,
+          "score_seconds": 5.497
+        },
+        {
+          "task_id": "sfv4-null-return-003",
+          "soft": 1.0,
+          "hard": 1.0,
+          "exec_seconds": 28.893,
+          "score_seconds": 5.2
+        }
+      ],
+      "run": 1,
+      "wall_seconds": 64.4
+    },
+    {
+      "n_items": 4,
+      "soft": 0.958333,
+      "hard": 0.75,
+      "per_task": [
+        {
+          "task_id": "sfv4-fn-schema-003",
+          "soft": 1.0,
+          "hard": 1.0,
+          "exec_seconds": 58.926,
+          "score_seconds": 6.346
+        },
+        {
+          "task_id": "sfv4-getsomes-struct-003",
+          "soft": 1.0,
+          "hard": 1.0,
+          "exec_seconds": 70.891,
+          "score_seconds": 5.3
+        },
+        {
+          "task_id": "sfv4-normalization-003",
+          "soft": 0.833333,
+          "hard": 0.0,
+          "exec_seconds": 61.324,
+          "score_seconds": 5.102
+        },
+        {
+          "task_id": "sfv4-null-return-003",
+          "soft": 1.0,
+          "hard": 1.0,
+          "exec_seconds": 27.401,
+          "score_seconds": 5.795
+        }
+      ],
+      "run": 2,
+      "wall_seconds": 76.2
+    },
+    {
+      "n_items": 4,
+      "soft": 0.875,
+      "hard": 0.5,
+      "per_task": [
+        {
+          "task_id": "sfv4-fn-schema-003",
+          "soft": 1.0,
+          "hard": 1.0,
+          "exec_seconds": 58.841,
+          "score_seconds": 6.138
+        },
+        {
+          "task_id": "sfv4-getsomes-struct-003",
+          "soft": 0.833333,
+          "hard": 0.0,
+          "exec_seconds": 52.242,
+          "score_seconds": 4.945
+        },
+        {
+          "task_id": "sfv4-normalization-003",
+          "soft": 0.666667,
+          "hard": 0.0,
+          "exec_seconds": 42.881,
+          "score_seconds": 4.771
+        },
+        {
+          "task_id": "sfv4-null-return-003",
+          "soft": 1.0,
+          "hard": 1.0,
+          "exec_seconds": 25.799,
+          "score_seconds": 5.914
+        }
+      ],
+      "run": 3,
+      "wall_seconds": 65.0
+    }
+  ],
+  "soft": {
+    "min": 0.875,
+    "max": 0.958333,
+    "spread": 0.083333,
+    "mean": 0.930555
+  },
+  "hard": {
+    "min": 0.5,
+    "max": 0.75,
+    "spread": 0.25,
+    "mean": 0.666667
+  },
+  "loop_baseline": {
+    "n_items": 4,
+    "soft": 0.916667,
+    "hard": 0.5,
+    "per_task": [
+      {
+        "task_id": "sfv4-fn-schema-003",
+        "soft": 1.0,
+        "hard": 1.0,
+        "exec_seconds": 53.797,
+        "score_seconds": 5.518
+      },
+      {
+        "task_id": "sfv4-getsomes-struct-003",
+        "soft": 0.833333,
+        "hard": 0.0,
+        "exec_seconds": 44.126,
+        "score_seconds": 5.096
+      },
+      {
+        "task_id": "sfv4-normalization-003",
+        "soft": 0.833333,
+        "hard": 0.0,
+        "exec_seconds": 61.987,
+        "score_seconds": 5.056
+      },
+      {
+        "task_id": "sfv4-null-return-003",
+        "soft": 1.0,
+        "hard": 1.0,
+        "exec_seconds": 26.224,
+        "score_seconds": 4.353
+      }
+    ],
+    "wall_seconds": 67.0,
+    "reused_cached_results": false
+  }
+}

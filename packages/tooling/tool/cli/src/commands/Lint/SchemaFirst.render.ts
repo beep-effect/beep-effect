@@ -13,6 +13,7 @@ import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
   renderSchemaFirstPolicyFindingLine,
+  renderSchemaFirstScannedFilesLine,
   SchemaFirstPolicyFinding,
 } from "../../internal/quality/SchemaFirstPolicyFinding.ts";
 import { missingEntryRemediation } from "./internal/SchemaFirstPolicy.ts";
@@ -225,6 +226,10 @@ const logActiveAdvisories = Effect.fn("logActiveAdvisories")(function* (
   }
 });
 
+const logScannedFiles = Effect.fn("logScannedFiles")(function* (files: ReadonlyArray<string>) {
+  yield* Console.log(yield* renderSchemaFirstScannedFilesLine(files));
+});
+
 const parityRuleSummaryKey: (ruleId: string) => string = flow(Str.replaceAll("-", "_"), Str.toLowerCase);
 
 const renderParityRuleSummaryLine = (rule: SchemaFirstParityRuleSummary): string =>
@@ -325,6 +330,7 @@ export const SchemaFirstRender = {
   logEnforcedCandidates,
   logLiteralKitConstAssertionViolations,
   logMissingEntries,
+  logScannedFiles,
   logSchemaFirstSummary,
   logStaleEntries,
   makeSchemaFirstLintSummary,

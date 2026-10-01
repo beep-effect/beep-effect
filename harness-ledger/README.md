@@ -46,7 +46,7 @@ Row schema: `HarnessLedgerRow` in `@beep/repo-ai-metrics`.
 | `bun run beep harness-ledger propose --mechanism <class> --edit <commit:<sha>\|diff:<sha256>\|pending> [--hypothesis "<claim>" --expected-surface <kind> --expected-metric "<name>"] [--model <id>] [--reasoning-effort <level>] [--repo-revision <sha>] [--json]` | Captures the harness fingerprint now and appends one `proposed` row. Prints the row id and its trailer. |
 | `bun run beep harness-ledger disposition --row <rowId> --to <accepted\|rejected\|deferred\|waived\|tombstoned> --evidence "<text>" [--score <n> --cost <n>] [--resurrect-when "<text>"] [--touched <kind>:<name> ...]` | Appends a row that supersedes the latest row of a chain. Refuses a row that is already superseded. |
 | `bun run beep harness-ledger list [--stale] [--disposition <d>] [--month YYYY-MM] [--json]` | Folds each chain to its latest row and flags rows whose fingerprint differs from the current one. |
-| `bun run beep harness-ledger prune-proposals [--window <sessions>] [--state-dir <dir>] [--write] [--json]` | Proposes retiring skills and MCP servers with zero hook-pulse touches in the last N sessions. Read-only diagnostic across mixed harness regimes; `--write` is blocked until current-harness session filtering exists. |
+| `bun run beep harness-ledger prune-proposals [--window <sessions>] [--state-dir <dir>] [--write] [--json]` | Proposes retiring skills and MCP servers with zero hook-pulse touches in the last N sessions under the current harness hash. Dry run by default; `--write` appends the fresh `proposed` rows. |
 
 ## Trailer
 
@@ -64,12 +64,47 @@ against a different regime explicitly. Hooks are excluded from zero-touch
 pruning until hook execution telemetry exists; file-tool touches alone cannot
 show whether an always-on hook is unused.
 
-Pruning output is not current-harness evidence until SessionStart records a
-harness hash and the scan filters on that hash. `prune-proposals --write`
-fails before reading sessions or acquiring the ledger lock.
+## Pruning window
 
-Every supported write (`propose` and `disposition`) acquires
-an exclusive `harness-ledger/.write.lock` before reading the chain and releases
-it after append or failure. A concurrent writer fails closed with
+Hook-pulse stamps a `harnessHash` on each `SessionStart` row: a digest of the
+config-snapshot session and baseline hashes, the same two hashes the
+fingerprint carries (`deriveHarnessHash` in `@beep/repo-ai-metrics`).
+`prune-proposals` computes the current harness hash and counts a session only
+when it carries at least one stamp and every stamp equals the current hash. A
+session restarted across a harness edit, and a session with no stamp, is
+skipped; the output reports both skip counts. Zero in-regime sessions is no
+evidence, so nothing is proposed. Proposal evidence names the regime by the
+first 12 hex characters of the hash, never by a path.
+
+`--write` needs a full window: it appends only when N in-regime sessions were
+observed for `--window N`, so every written row's `windowSessions` equals N. A
+partial window writes nothing and says so (`nothing written: window not full
+(<n> of <N> sessions under the current harness hash)`). A dry run still lists
+what the partial window would propose and marks it as partial.
+
+A chain that targets a surface can stop that surface from being proposed
+again:
+
+- a chain whose latest row is `proposed` blocks under any harness hash;
+- a chain whose latest row is a human decision (`accepted`, `rejected`,
+  `deferred`, `waived`) blocks only while that row's fingerprint derives the
+  current harness hash. After a harness edit the decision's evidence has
+  expired, and a full window under the new hash may propose the surface again;
+- a `tombstoned` chain never blocks.
+
+The output counts both kinds of block, as `already proposed` and `decided
+under this harness`.
+
+The writer drops the stamp, never the row, whenever it cannot prove its shell
+walk matches the TypeScript snapshot (for example a non-ASCII path, 1000 or
+more config files, or a missing tool). Such sessions count as unstamped, as
+do sessions from writers that do not stamp yet (the Codex copy of the writer
+and the Cursor adapter).
+
+## Write fence
+
+Every supported write (`propose`, `disposition`, and `prune-proposals
+--write`) acquires an exclusive `harness-ledger/.write.lock` before reading the
+chain and releases it after append or failure. A concurrent writer fails closed with
 `HarnessLedgerBusyError`. If a process is killed before cleanup, verify no
 writer is active before manually removing the leftover lock and retrying.

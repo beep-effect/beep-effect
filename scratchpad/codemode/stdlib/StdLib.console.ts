@@ -5,9 +5,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, R } from "@beep/utils";
-import { MutableHashSet, pipe } from "effect";
+import { MutableHashSet, pipe, flow, Result } from "effect";
 import { dual } from "effect/Function";
 import { ConsoleMethod } from "../Codemode.method-names.ts";
 import { copyIn, copyOut } from "../Codemode.tool-runtime.ts";
@@ -27,11 +26,12 @@ import {
   isRuntimeReference,
 } from "../interpreter/Interpreter.references.ts";
 import { boundedData, coerceToString } from "./StdLib.value.ts";
+import * as S from "effect/Schema";
 
 export { ConsoleMethod } from "../Codemode.method-names.ts";
 
 const MAX_CONSOLE_DEPTH = 32;
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 /**
  * Renders one guest `console` call as a single host-visible log line.

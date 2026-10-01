@@ -1,11 +1,13 @@
 import {
   assessCiLaneTimingWindowBounds,
+  assessCiLaneTimingWindowPopulation,
   attemptOnePickupSeconds,
   buildCiLaneTimingWindowReport,
   CiLaneTimingGithubClient,
   CiLaneTimingWindowOptions,
   CiLaneTimingWindowReport,
   CiRulesetHistoryVersion,
+  CiRulesetPopulationChange,
   CiWorkflowJob,
   CiWorkflowJobsPage,
   CiWorkflowWindowRun,
@@ -32,7 +34,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import { assertFalse, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { DateTime, Effect, Exit, Fiber, Layer, pipe, Sink, Stream } from "effect";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
@@ -1153,19 +1155,25 @@ describe("ci lane timing admission window", () => {
   it.effect("admits the ratified 17-context version after the removal", () => {
     const commands = A.empty<string>();
     return Effect.gen(function* () {
+      // The removal lands inside this window, so only a preview may read it.
       const report = yield* collectCiLaneTimingWindow(
         ".",
         windowOptions({
           until: DateTime.makeUnsafe("2026-09-12T01:46:53.355Z"),
-        })
+        }),
+        true
       );
-      expect(report.contextCount).toBe(17);
-      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(49479116));
-      expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(true);
-      expect(A.some(commands, Str.includes("/actions/"))).toBe(true);
-      const markdown = renderCiLaneTimingWindowMarkdown(report);
-      expect(markdown).toContain(
-        "- required contexts: 17 (expected 17; ruleset 10240248 version 49479116 effective 2026-09-12T01:46:53.354Z)"
+      strictEqual(report.contextCount, 17);
+      deepStrictEqual(
+        O.map(report.rulesetVersion, (version) => version.version_id),
+        O.some(49479116)
+      );
+      assertTrue(A.some(commands, Str.endsWith("/history/49479116")));
+      assertTrue(A.some(commands, Str.includes("/actions/")));
+      assertTrue(
+        Str.includes(
+          "- required contexts: 17 (expected 17; ruleset 10240248 version 49479116 effective 2026-09-12T01:46:53.354Z)"
+        )(renderCiLaneTimingWindowMarkdown(report))
       );
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
   });
@@ -1611,5 +1619,177 @@ describe("ci lane timing admission window", () => {
     expect(assessCiLaneTimingWindowBounds(openWeek, now)).toStrictEqual(["future-cutoff"]);
     expect(assessCiLaneTimingWindowBounds(closedShortWeek, now)).toStrictEqual(["short-span"]);
     expect(assessCiLaneTimingWindowBounds(openShortWeek, now)).toStrictEqual(["future-cutoff", "short-span"]);
+  });
+});
+
+// Ruleset version 49479116 removed `Heavy / Coverage Regression` at
+// 2026-09-12T01:46:53.354Z, so a window over that instant straddles a
+// required-context change the same way admission window 3 straddled 50918272.
+const STRADDLING_SINCE = "2026-09-08T00:00:00Z";
+const STRADDLING_UNTIL = "2026-09-15T00:00:00Z";
+const COVERAGE_REMOVAL_STAMP =
+  "Ruleset 10240248 version 49479116 effective 2026-09-12T01:46:53.354Z (after version 48600030) removed Coverage Regression; this census measures the window-end population for the whole window.";
+
+const straddlingWindowOptions = () =>
+  windowOptions({ since: DateTime.makeUnsafe(STRADDLING_SINCE), until: DateTime.makeUnsafe(STRADDLING_UNTIL) });
+
+const populationChangeSummary = (change: CiRulesetPopulationChange) => ({
+  added: change.addedContexts,
+  previous: O.map(change.previousVersion, (version) => version.version_id),
+  removed: change.removedContexts,
+  version: change.version.version_id,
+});
+
+const historyVersion = (version_id: number, iso: string) =>
+  CiRulesetHistoryVersion.make({ version_id, updated_at: DateTime.makeUnsafe(iso) });
+
+describe("ci lane timing ruleset changes inside the window", () => {
+  it.effect("refuses a window a required-context change lands inside before reading any workflow run", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      const exit = yield* Effect.exit(collectCiLaneTimingWindow(".", straddlingWindowOptions()));
+
+      assertTrue(Exit.isFailure(exit));
+      assertTrue(
+        Str.includes(
+          "required contexts changed inside the window: ruleset 10240248 version 49479116 effective 2026-09-12T01:46:53.354Z (after version 48600030) removed Coverage Regression. Pass --preview to run a preview that is never an admission census."
+        )(Exit.isFailure(exit) ? exit.cause.toString() : "")
+      );
+      assertTrue(A.some(commands, Str.endsWith("/history/48600030")));
+      assertTrue(A.some(commands, Str.endsWith("/history/49479116")));
+      assertFalse(A.some(commands, Str.includes("/actions/")));
+    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("stamps the change above every rendering of a straddled preview", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(".", straddlingWindowOptions(), true);
+      const blockquote = `> **Required contexts changed inside the window.** ${COVERAGE_REMOVAL_STAMP}`;
+
+      strictEqual(report.contextCount, 17);
+      deepStrictEqual(A.map(report.populationChanges, populationChangeSummary), [
+        { added: [], previous: O.some(48600030), removed: ["Coverage Regression"], version: 49479116 },
+      ]);
+      assertTrue(Str.startsWith(`${blockquote}\n\n- required contexts: 17`)(renderCiLaneTimingWindowMarkdown(report)));
+      assertTrue(Str.includes(blockquote)(renderCiLaneTimingWindowSummary(report)));
+      assertTrue(
+        Str.startsWith(`# Required contexts changed inside the window. ${COVERAGE_REMOVAL_STAMP}\npopulation\tlane`)(
+          renderCiLaneTimingWindowTsv(report)
+        )
+      );
+    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("lists a ruleset edit that kept the required checks without refusing the census", () => {
+    const commands = A.empty<string>();
+    const historyJson =
+      '[{"version_id":48600030,"updated_at":"2026-09-03T12:12:53.589-05:00"},{"version_id":47676581,"updated_at":"2026-08-25T23:16:24.765-05:00"}]';
+    const response = (endpoint: string) =>
+      Str.includes("/history?")(endpoint)
+        ? Effect.succeed(historyJson)
+        : Str.endsWith("/history/47676581")(endpoint)
+          ? Effect.succeed(RULESET_SNAPSHOT_18_JSON)
+          : windowGithubResponse(endpoint);
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(
+        ".",
+        windowOptions({ since: DateTime.makeUnsafe("2026-09-01T00:00:00Z") })
+      );
+
+      strictEqual(report.contextCount, 18);
+      deepStrictEqual(A.map(report.populationChanges, populationChangeSummary), [
+        { added: [], previous: O.some(47676581), removed: [], version: 48600030 },
+      ]);
+      deepStrictEqual(assessCiLaneTimingWindowPopulation(report.populationChanges), []);
+      assertTrue(A.some(commands, Str.includes("/actions/")));
+      const sentence =
+        "Ruleset 10240248 version 48600030 effective 2026-09-03T17:12:53.589Z (after version 47676581) left the required contexts unchanged.";
+      assertTrue(
+        Str.startsWith(`> **Ruleset edit inside the window.** ${sentence}`)(renderCiLaneTimingWindowMarkdown(report))
+      );
+      assertTrue(
+        Str.startsWith(`# Ruleset edit inside the window. ${sentence}\npopulation\tlane`)(
+          renderCiLaneTimingWindowTsv(report)
+        )
+      );
+    }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
+  });
+
+  it.effect("treats a version effective exactly at the window start as the starting population", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(
+        ".",
+        windowOptions({
+          since: DateTime.makeUnsafe("2026-09-12T01:46:53.354Z"),
+          until: DateTime.makeUnsafe("2026-09-19T01:46:53.354Z"),
+        })
+      );
+
+      strictEqual(report.contextCount, 17);
+      deepStrictEqual(report.populationChanges, []);
+      assertFalse(A.some(commands, Str.endsWith("/history/48600030")));
+    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it("judges only a version that added or removed a required context as a population change", () => {
+    const edit = CiRulesetPopulationChange.make({
+      addedContexts: [],
+      previousVersion: O.some(historyVersion(48600030, "2026-09-03T17:12:53.589Z")),
+      removedContexts: [],
+      version: historyVersion(49000000, "2026-09-08T00:00:00Z"),
+    });
+    const addition = CiRulesetPopulationChange.make({
+      addedContexts: ["Lint Policy"],
+      previousVersion: O.none(),
+      removedContexts: [],
+      version: historyVersion(49000001, "2026-09-09T00:00:00Z"),
+    });
+
+    deepStrictEqual(assessCiLaneTimingWindowPopulation([]), []);
+    deepStrictEqual(assessCiLaneTimingWindowPopulation([edit]), []);
+    deepStrictEqual(assessCiLaneTimingWindowPopulation([edit, addition]), ["population-change"]);
+  });
+
+  it.effect("refuses a straddled CLI census and banners its preview with the population change", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      yield* pinLaneTimingsClock(AFTER_CENSUS_WINDOW);
+      const exit = yield* Effect.exit(
+        runLaneTimingsCommand(["--window", "--since", STRADDLING_SINCE, "--until", STRADDLING_UNTIL])
+      );
+
+      assertTrue(Exit.isFailure(exit));
+      assertTrue(
+        Str.includes("required contexts changed inside the window: ruleset 10240248 version 49479116")(
+          Exit.isFailure(exit) ? exit.cause.toString() : ""
+        )
+      );
+      assertFalse(A.some(commands, Str.includes("/actions/")));
+
+      yield* runLaneTimingsCommand([
+        "--window",
+        "--since",
+        STRADDLING_SINCE,
+        "--until",
+        STRADDLING_UNTIL,
+        "--markdown",
+        "--preview",
+      ]);
+      const markdown = yield* lastLaneTimingsLog();
+
+      assertTrue(
+        Str.startsWith(
+          "> **Preview, not an admission census.** Window 2026-09-08T00:00:00.000Z → 2026-09-15T00:00:00.000Z: required contexts changed inside the window."
+        )(markdown)
+      );
+      assertTrue(
+        Str.includes(`> **Required contexts changed inside the window.** ${COVERAGE_REMOVAL_STAMP}`)(markdown)
+      );
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)),
+      provideScopedLayer(laneTimingsCommandLayer)
+    );
   });
 });

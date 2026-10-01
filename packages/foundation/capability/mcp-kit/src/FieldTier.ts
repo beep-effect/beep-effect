@@ -19,14 +19,15 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { LiteralKit, UnknownRecord } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { LiteralKit } from "@beep/schema";
 import { HashSet } from "effect";
 import * as A from "effect/Array";
 import { dual, identity } from "effect/Function";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $McpKitId.create("FieldTier");
 
@@ -204,7 +205,7 @@ export const projectFieldTier: {
   ): Record<string, unknown> => stripNulls(pickFields(value, fieldNamesOf(tiers[tier])))
 );
 
-const encodeJsonSizeInput = S.encodeResult(UnknownFromJsonString);
+const encodeJsonSizeInput = S.encodeResult(S.fromJsonString(S.Unknown));
 const jsonSizeEncoder = new TextEncoder();
 
 /**

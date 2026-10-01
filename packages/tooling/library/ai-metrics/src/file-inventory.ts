@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -42,7 +42,7 @@ export class AiMetricsFileInventoryError extends S.TaggedError<AiMetricsFileInve
 )(
   "AiMetricsFileInventoryError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     operation: AiMetricsFileInventoryOperation,
   },
   $I.annoteError<AiMetricsFileInventoryError>("AiMetricsFileInventoryError", {

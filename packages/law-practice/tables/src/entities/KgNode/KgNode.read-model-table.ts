@@ -7,7 +7,6 @@
 
 import { jsonb, pgTable, text } from "drizzle-orm/pg-core";
 import type { KgNodeKind } from "@beep/law-practice-domain/values";
-import type { UnknownRecord } from "@beep/schema";
 
 /**
  * Physical table name for practice knowledge-graph nodes.
@@ -77,5 +76,5 @@ export const kgNodeTable = pgTable(KG_NODE_TABLE_NAME, {
   epistemicStatus: text("epistemic_status").notNull(),
   provenanceKind: text("provenance_kind").notNull(),
   provenanceRef: text("provenance_ref").notNull(),
-  payload: jsonb("payload").notNull().$type<UnknownRecord>(),
+  payload: jsonb("payload").notNull().$type<Readonly<Record<string, unknown>>>(),
 });

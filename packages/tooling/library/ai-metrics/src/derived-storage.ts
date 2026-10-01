@@ -8,8 +8,7 @@
 import { DuckDb, DuckDbParquetExport } from "@beep/duckdb";
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Path, pipe } from "effect";
@@ -716,7 +715,7 @@ export class AiMetricsDerivedStorageError extends S.TaggedError<AiMetricsDerived
 )(
   "AiMetricsDerivedStorageError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsDerivedStorageError>("AiMetricsDerivedStorageError", {
@@ -890,7 +889,7 @@ export class AiMetricsDerivedStorageWriteResult extends S.Class<AiMetricsDerived
   })
 ) {}
 
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const derivedFailure = (message: string, cause: unknown): AiMetricsDerivedStorageError =>
   AiMetricsDerivedStorageError.make({ cause, message });

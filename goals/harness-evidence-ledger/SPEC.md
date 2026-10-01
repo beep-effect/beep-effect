@@ -286,6 +286,41 @@ and the Claude tool allowlist includes Edit/Write (the harness default is Read,B
 - Two PRs. PR1 = packet + schemas + CLI + hook-pulse + scorer fix + rerun
   config. PR2 = rerun results + first rows + pruning proposal output.
 
+### Routine calls (2026-09-29, closing PR, made without asking)
+
+- One closing PR instead of two. The operator asked on 2026-09-29 for the
+  remainder of the goal in a single PR to save runner cost and CI queue time.
+  PR1 (#1253) shipped P1 and the stopped P2 run; this PR carries the rerun
+  controls, the regime gate, the rerun results, the first recorded rows, the
+  pruning output, the reflection, and the close.
+- Harness hash. The regime identity for sessions is one digest,
+  `sha256("harness-hash-v1\n" + harnessSessionHash + "\n" + harnessBaselineHash)`,
+  derived from the two config-snapshot hashes the fingerprint already carries.
+  hook-pulse stamps it on `SessionStart` rows from a shell mirror of the
+  snapshot walk; the conformance test is the oracle, and the mirror drops the
+  stamp whenever it cannot guarantee parity (a missing stamp excludes a session,
+  a wrong stamp would corrupt evidence).
+- In-regime session. A session counts toward a pruning window only when it
+  carries at least one `SessionStart` stamp and every stamp equals the current
+  harness hash. Unstamped and mixed-regime sessions are excluded and counted in
+  the report. Sessions recorded before this change are all unstamped, so
+  pruning evidence starts accruing at merge.
+- Pre-evaluation diff screen. The rerun tool screens a candidate skill before
+  any evaluation spend: added text that names the scorer, its lanes, or the
+  fixture layout (evaluation-environment fitting), or that shares a long word
+  shingle with a corpus task (task leakage), is rejected without scoring. It is
+  deterministic, lives in `tools/skillopt`, and is experiment control for the
+  rerun, not a repo quality gate; the Non-Goals entry on leakage critics as
+  shipped code stands.
+- Rerun rows. Every evaluated or screened candidate is proposed through the
+  CLI. A candidate the loop gate or the screen rejected receives a machine
+  `rejected` disposition with the gate or screen reason as evidence (negative
+  evidence, not admission). A candidate the gate accepted stays `proposed`;
+  only a human admits (D2).
+- Rollout target and optimizer pinned to the explicit id `claude-opus-5-5`
+  where the backend accepts a full model id; the `opus` alias is not a stable
+  pin (AGENTS.md Volume pools).
+
 ## Derived Predicates
 
 | Question | Predicate |
@@ -298,21 +333,21 @@ and the Claude tool allowlist includes Edit/Write (the harness default is Read,B
 
 ## Acceptance Criteria
 
-- [ ] Schemas decode and round-trip; predicates have unit tests, including
+- [x] Schemas decode and round-trip; predicates have unit tests, including
       `isWarmRestart` false on effort-only and harness-only changes.
-- [ ] `harness-ledger propose` writes one immutable row; `disposition`
+- [x] `harness-ledger propose` writes one immutable row; `disposition`
       appends a new row referencing the prior `rowId`; `list` shows both.
-- [ ] Editing a skill file flips `isStale`; changing only the model id flips
+- [x] Editing a skill file flips `isStale`; changing only the model id flips
       `isWarmRestart`.
-- [ ] A session that invokes a Skill emits a hook-pulse row with `surface`
+- [x] A session that invokes a Skill emits a hook-pulse row with `surface`
       set; a product-only session does not. No path appears in any row.
-- [ ] `evals score` records a `configSnapshotId` that changes with AGENTS.md
+- [x] `evals score` records a `configSnapshotId` that changes with AGENTS.md
       or an injected candidate skill outside the repo, and not with the score.
-- [ ] Scorer wall time per task drops against P5's roughly 2 minutes.
-- [ ] The rerun completes; results, first ledger rows, and
-      `prune-proposals --window 30` output land in PR2.
-- [ ] Both PRs reach mergeable through Yeet. A reflection exists.
-- [ ] No unrelated refactors or formatting churn.
+- [x] Scorer wall time per task drops against P5's roughly 2 minutes.
+- [x] The rerun completes; results, first ledger rows, and
+      `prune-proposals --window 30` output land in the closing PR.
+- [x] Both PRs reach mergeable through Yeet. A reflection exists.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

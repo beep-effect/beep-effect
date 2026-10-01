@@ -11,7 +11,6 @@
 
 import { composeGatedLayers, FetchableHandle, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
 import { conformance2026, connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Uspto, UsptoApplicationMetadata, UsptoConfigInput, UsptoDocumentReference } from "@beep/uspto";
@@ -46,7 +45,7 @@ import * as Str from "effect/String";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-const encodeUnknownJson = S.encodeEffect(UnknownFromJsonString);
+const encodeUnknownJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeDocumentsProjectionOutput = S.decodeEffect(DocumentsProjectionOutput);
 const decodeDocumentsProjectionOutputJson = S.decodeEffect(S.fromJsonString(DocumentsProjectionOutput));
 const decodeStructInlineSchemaJson = S.decodeEffect(S.fromJsonString(S.Struct({ error: S.String, envVar: S.String })));

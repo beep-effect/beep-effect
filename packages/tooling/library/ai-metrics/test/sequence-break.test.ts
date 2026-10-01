@@ -15,7 +15,6 @@ import {
   sequenceBreakNotificationLedgerDir,
   sequenceBreakRoot,
 } from "@beep/repo-ai-metrics";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -50,7 +49,7 @@ const REQUEST_TS = "2026-09-03T12:00:00.001Z";
 const POST_TS = "2026-09-03T12:00:00.002Z";
 const CANARY = "SEQUENCE-BREAK-CONTENT-CANARY";
 const NTFY_BASE_URL = "https://private.example";
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const canonicalNotificationKeys = [
   "schemaVersion",

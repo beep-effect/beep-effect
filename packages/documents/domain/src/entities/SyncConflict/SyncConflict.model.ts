@@ -6,7 +6,6 @@
  */
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
 import { SyncItemId } from "@beep/shared-domain/identity/Documents/SyncItemId";
@@ -87,9 +86,11 @@ export class SyncConflict extends ProductEntity.Entity<SyncConflict>()(SyncConfl
         description: "Provider identifier of the drifted remote item; none when the event omits it.",
       })
       .pipe(pg.text(), pg.columnName("remote_id")),
-    remotePayload: UnknownRecord.annotateKey({
-      description: "Remote event snapshot preserved verbatim for review.",
-    }).pipe(pg.jsonb(), pg.columnName("remote_payload")),
+    remotePayload: S.Record(S.String, S.Unknown)
+      .annotateKey({
+        description: "Remote event snapshot preserved verbatim for review.",
+      })
+      .pipe(pg.jsonb(), pg.columnName("remote_payload")),
     resolutionStatus: SyncConflictResolution.annotateKey({
       description: "Review status of the drift record.",
     }).pipe(

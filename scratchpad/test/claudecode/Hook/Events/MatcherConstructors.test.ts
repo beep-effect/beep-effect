@@ -3,7 +3,6 @@
  *
  * @since 0.1.0
  */
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -13,8 +12,10 @@ import * as Notification from "../../../../claudecode/Hook/Events/Notification.t
 import * as PermissionRequest from "../../../../claudecode/Hook/Events/PermissionRequest.ts";
 import * as PreToolUse from "../../../../claudecode/Hook/Events/PreToolUse.ts";
 import * as Testing from "../../../../claudecode/Testing.ts";
+import * as S from "effect/Schema";
+import { flow, Result } from "effect";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const notificationJson = (notificationType: string) =>
   encodeJson({

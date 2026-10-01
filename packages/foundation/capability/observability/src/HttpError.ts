@@ -26,8 +26,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $ObservabilityId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { ErrorReporter } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -134,7 +135,9 @@ const statusFields = <Status extends S.Top>(status: Status) =>
   ({
     message: S.String,
     status,
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ),
   }) as const;
 
 /**
@@ -163,7 +166,9 @@ export class ClientHttpError extends S.TaggedError<ClientHttpError>($I`ClientHtt
   {
     message: S.String,
     status: ClientErrorStatus,
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ),
   },
   $I.annoteError<ClientHttpError>("ClientHttpError", {
     description: "Shared tagged error for 4xx HTTP responses.",
@@ -199,7 +204,9 @@ export class ServerHttpError extends S.TaggedError<ServerHttpError>($I`ServerHtt
   {
     message: S.String,
     status: ServerErrorStatus,
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ),
   },
   $I.annoteError<ServerHttpError>("ServerHttpError", {
     description: "Shared tagged error for 5xx HTTP responses.",
