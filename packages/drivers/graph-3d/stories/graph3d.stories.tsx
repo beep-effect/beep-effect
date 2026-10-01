@@ -82,7 +82,7 @@ const Graph3DDemo = ({ nodeCount, edgeCount, communityCount, seed, selectHub, fl
     <div className="dark relative h-story-canvas min-h-120 w-full">
       <div ref={containerRef} data-testid="graph3d-container" className="absolute inset-0" />
       <div
-        className="pointer-events-none absolute top-2 left-2 rounded-md bg-black/55 px-2.5 py-1.5 font-mono text-xs leading-normal whitespace-pre text-foreground"
+        className="pointer-events-none absolute top-2 left-2 rounded-sm bg-black/55 px-2.5 py-1.5 font-mono text-xs leading-normal whitespace-pre text-foreground"
         data-testid="graph3d-overlay"
       >
         {error === undefined

@@ -29,8 +29,22 @@ import type { DockAtomGraph } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
 import type { DropPreview, PointerPosition, TabDrag, TabRect } from "./Gesture.models.ts";
 
-// Geometry reaches the DOM as `--dock-*` custom properties that the package
-// stylesheet (src/dock.css) reads; this formats one length for them.
+/**
+ * Formats a kernel length as the CSS pixel string the dock stylesheet reads back
+ * from a `--dock-*` custom property.
+ *
+ * **Example** (Writing a group box as custom properties)
+ *
+ * ```ts
+ * import { px } from "@beep/dock-react/internal/DropCompiler"
+ *
+ * const style = { "--dock-left": px(404), "--dock-width": px(320) }
+ * // style["--dock-left"] === "404px"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const px = (value: number): string => `${value}px`;
 
 export const positionOf = (event: PointerEvent): PointerPosition => ({

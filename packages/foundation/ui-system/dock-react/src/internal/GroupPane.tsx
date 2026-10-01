@@ -39,6 +39,9 @@ import type React from "react";
 import type { DockAtomGraph, DockTabRenderer, DockviewReactProps } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
 
+// The overflow trigger's width, also read back through --dock-overflow-width in src/dock.css.
+const OVERFLOW_TRIGGER_WIDTH = 32;
+
 const panelIdsEqual = A.makeEquivalence(S.toEquivalence(PanelId));
 
 const tabWidthsFor = (state: AdapterState, groupId: GroupId): MutableHashMap.MutableHashMap<PanelId, number> =>
@@ -369,7 +372,7 @@ const TabStrip = (
           MutableHashMap.get(tabWidths, tabs.active.id),
           O.getOrElse(() => 0)
         );
-        const capacity = N.max(0, N.subtract(N.subtract(width, actionsWidth), 32));
+        const capacity = N.max(0, N.subtract(N.subtract(width, actionsWidth), OVERFLOW_TRIGGER_WIDTH));
         const availableForInactive = N.max(0, N.subtract(capacity, activeWidth));
         const visibleInactive = A.reduce(panels, { ids: A.empty<PanelId>(), width: 0 }, (visible, panel) => {
           if (S.toEquivalence(PanelId)(panel.id, tabs.active.id)) return visible;
@@ -479,6 +482,7 @@ const TabStrip = (
               aria-label={`Show ${A.length(hiddenPanels)} overflowed tabs`}
               aria-expanded={overflowOpen}
               data-dock-overflow=""
+              style={{ "--dock-overflow-width": px(OVERFLOW_TRIGGER_WIDTH) } as React.CSSProperties}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={() => setOverflowOpen(Bool.not(overflowOpen))}
             >

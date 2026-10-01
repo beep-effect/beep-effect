@@ -142,7 +142,13 @@ function ChartContainer({
 // Config keys become custom property names, so anything else is skipped.
 const CSS_IDENTIFIER_PATTERN = /^[A-Za-z0-9_-]+$/;
 
+const CSS_VALUE_BREAKOUT_PATTERN = /[;{}<>\\]|\/\*|\*\//;
+
 const isSafeCssIdentifier = (value: string): boolean => O.isSome(Str.match(CSS_IDENTIFIER_PATTERN)(value));
+
+// A config color is attacker-influenced input: reject anything that could close the
+// declaration or the style attribute it is rendered into.
+const isSafeCssColorValue = (value: string): boolean => O.isNone(Str.match(CSS_VALUE_BREAKOUT_PATTERN)(value));
 
 /**
  * The `--color-<series>` custom properties a chart container sets for its config.
@@ -175,9 +181,13 @@ const chartColorProperties = (config: ChartConfig): ReadonlyArray<readonly [stri
   A.flatMap(Struct.entries(config), ([key, itemConfig]): ReadonlyArray<readonly [string, string]> => {
     if (!isSafeCssIdentifier(key)) return [];
     if (itemConfig.theme !== undefined) {
-      return [[`--color-${key}`, `light-dark(${itemConfig.theme.light}, ${itemConfig.theme.dark})`]];
+      return isSafeCssColorValue(itemConfig.theme.light) && isSafeCssColorValue(itemConfig.theme.dark)
+        ? [[`--color-${key}`, `light-dark(${itemConfig.theme.light}, ${itemConfig.theme.dark})`]]
+        : [];
     }
-    return itemConfig.color === undefined ? [] : [[`--color-${key}`, itemConfig.color]];
+    return itemConfig.color === undefined || !isSafeCssColorValue(itemConfig.color)
+      ? []
+      : [[`--color-${key}`, itemConfig.color]];
   });
 
 // The container's `style` prop: the series color properties first, then the caller's own style.

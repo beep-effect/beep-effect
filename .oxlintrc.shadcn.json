@@ -64,7 +64,12 @@
     },
     {
       // MUI theme overrides: CSS property names in `transitions.create([...])` are not classes.
-      "files": ["packages/foundation/ui-system/ui/src/themes/**/*.ts"],
+      // `lib/utils.ts` holds the tailwind-merge registration, whose class-group ids (`bg-image`)
+      // and scale names are configuration keys, not classes.
+      "files": [
+        "packages/foundation/ui-system/ui/src/themes/**/*.ts",
+        "packages/foundation/ui-system/ui/src/lib/utils.ts"
+      ],
       "rules": {
         "shadcn/no-raw-colors": "error",
         "shadcn/no-arbitrary-values": "error"

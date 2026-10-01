@@ -163,7 +163,7 @@ export const WithIcon: Story = {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink href="#home">
-            <span className="inline-flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5">
               <HouseIcon className="size-4" />
               Home
             </span>

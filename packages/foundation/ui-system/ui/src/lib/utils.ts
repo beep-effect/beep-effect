@@ -23,13 +23,17 @@ import type { ClassValue } from "clsx";
 // it). tailwind-merge only knows the stock scale names: an unknown `text-<name>` reads as a
 // text color, so `cn("text-xs-plus", "text-muted-foreground")` would drop the font size, and
 // unknown radius, shadow and leading names never conflict with their stock siblings. Every
-// `--text-*`, `--radius-*`, `--shadow-*`, `--leading-*`, `--tracking-*`, `--font-*`, `--ease-*`
-// and `--animate-*` token declared in a theme stylesheet must be listed here.
+// `--text-*`, `--radius-*`, `--shadow-*`, `--leading-*`, `--tracking-*`, `--font-*`, `--ease-*`,
+// `--animate-*`, `--spacing-*`, `--gap-*` and `--background-image-*` token declared in a theme
+// stylesheet, and every `@utility` whose name collides with a stock group (`border-indicator`
+// reads as a border color) must be listed here. `text-anchor-middle` is applied only through
+// d3 attributes, never through `cn`, so it stays unregistered.
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
       text: ["3xs", "2xs", "xs-plus", "sm-plus", "oip-hero"],
-      radius: ["checkbox", "control", "control-sm", "ellipse", "nested", "nested-sm"],
+      radius: ["checkbox", "control", "control-sm", "ellipse", "inherit", "nested", "nested-sm"],
+      spacing: ["addon-button", "addon-kbd", "oip-hero-inset"],
       shadow: ["sidebar-outline", "sidebar-outline-hover"],
       leading: ["code", "oip-hero"],
       tracking: ["oip-wide", "oip-wider", "oip-widest"],
@@ -38,6 +42,9 @@ const twMerge = extendTailwindMerge({
       animate: ["progress-indeterminate"],
     },
     classGroups: {
+      "border-w": [{ border: ["indicator"] }],
+      "bg-image": [{ bg: ["oip-hero-scrim"] }],
+      gap: [{ gap: ["toggle-group"] }],
       w: [{ w: ["full-minus-2px", "sidebar-icon-floating", "sync-panel"] }],
       h: [{ h: ["full-minus-2px", "full-minus-px", "story-canvas", "switch"] }],
       "max-w": [{ "max-w": ["full-gutter", "measure"] }],

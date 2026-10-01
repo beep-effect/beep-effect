@@ -10,11 +10,14 @@
      --dock-z          floating stack order
      --dock-transform  drag-ghost follow-cursor transform
      --dock-max-width  drag-ghost ellipsis cap
+     --dock-header-height   floating-pane drag-header height
+     --dock-overflow-width  tab-strip overflow trigger width
 
    Hosts import this file once (`@import "@beep/dock-react/dock.css";`) and
    hang every visual (colors, borders, radii, type) off the same hooks in their
-   own stylesheet. Selectors use child combinators from [data-dock-root] so a
-   panel's own content never inherits dock mechanics. */
+   own stylesheet. Selectors key on the dock-specific data attributes and
+   roles (with child combinators wherever the DOM shape is fixed) so a panel's
+   own content never matches dock mechanics. */
 
 [data-dock-root] {
   position: relative;
@@ -71,7 +74,7 @@ section[data-group-id] > [data-dock-tab-strip] {
 }
 
 [data-dock-overflow-root] > [data-dock-overflow] {
-  width: 32px;
+  width: var(--dock-overflow-width);
 }
 
 [data-dock-overflow-root] > [role="menu"] {
@@ -112,7 +115,7 @@ section[data-group-id] > [data-dock-tab-strip] {
 }
 
 [data-floating-pane] > [data-floating-header] {
-  height: 32px;
+  height: var(--dock-header-height);
   cursor: move;
   touch-action: none;
   user-select: none;

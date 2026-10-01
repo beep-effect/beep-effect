@@ -27,3 +27,13 @@ describe("BeepWordmark", () => {
     expect(container.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
   });
 });
+
+describe("brand styling hooks", () => {
+  it("keys the wordmark layout and the glasses fill off attributes, not inline styles", () => {
+    const wordmark = render(<BeepWordmark />).container;
+    expect(wordmark.querySelector("[data-beep-wordmark]")).not.toBeNull();
+    expect(wordmark.querySelector("[style]")).toBeNull();
+    const mark = render(<BeepMark />).container;
+    expect(mark.querySelector('path[fill^="var(--color-fg,"]')).not.toBeNull();
+  });
+});

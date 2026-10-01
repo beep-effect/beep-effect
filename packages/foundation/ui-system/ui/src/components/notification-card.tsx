@@ -295,7 +295,7 @@ export function NotificationCard({
               onClick={() => onMarkAsRead(id)}
               className={cn(
                 "rounded-lg p-1.5 transition-colors",
-                "text-muted-foreground hover:bg-muted hover:text-foreground"
+                "text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
               )}
               aria-label="Mark as read"
             >

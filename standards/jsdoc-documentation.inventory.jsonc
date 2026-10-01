@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-01T10:13:02.194Z",
+  "generatedAt": "2026-10-01T18:54:37.425Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 117,
     "publicModules": 2822,
-    "publicExports": 20062,
+    "publicExports": 20068,
     "openModules": 366,
     "openExports": 2860,
     "missingExportExamples": 5,
@@ -40433,8 +40433,8 @@
           "exportKind": "interface",
           "filePath": "src/SemanticVersion.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SemanticVersion.ts",
-          "line": 57,
-          "anchor": "packages-foundation-modeling-schema-src-semanticversion-ts-57-semanticversionschema",
+          "line": 53,
+          "anchor": "packages-foundation-modeling-schema-src-semanticversion-ts-53-semanticversionschema",
           "currentTags": [
             "@category",
             "@since"
@@ -40459,8 +40459,8 @@
           "exportKind": "const",
           "filePath": "src/SemanticVersion.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SemanticVersion.ts",
-          "line": 91,
-          "anchor": "packages-foundation-modeling-schema-src-semanticversion-ts-91-semanticversion",
+          "line": 87,
+          "anchor": "packages-foundation-modeling-schema-src-semanticversion-ts-87-semanticversion",
           "currentTags": [
             "@category",
             "@since"
@@ -40481,8 +40481,8 @@
           "exportKind": "type",
           "filePath": "src/SemanticVersion.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SemanticVersion.ts",
-          "line": 109,
-          "anchor": "packages-foundation-modeling-schema-src-semanticversion-ts-109-semanticversion",
+          "line": 105,
+          "anchor": "packages-foundation-modeling-schema-src-semanticversion-ts-105-semanticversion",
           "currentTags": [
             "@see",
             "@category",
@@ -87971,8 +87971,8 @@
           "exportKind": "const",
           "filePath": "src/values/AssistantContent/AssistantContent.behavior.ts",
           "repoPath": "packages/agents/domain/src/values/AssistantContent/AssistantContent.behavior.ts",
-          "line": 38,
-          "anchor": "packages-agents-domain-src-values-assistantcontent-assistantcontent-behavior-ts-38-inlinetomd",
+          "line": 40,
+          "anchor": "packages-agents-domain-src-values-assistantcontent-assistantcontent-behavior-ts-40-inlinetomd",
           "currentTags": [
             "@category",
             "@since"
@@ -87993,8 +87993,8 @@
           "exportKind": "const",
           "filePath": "src/values/AssistantContent/AssistantContent.behavior.ts",
           "repoPath": "packages/agents/domain/src/values/AssistantContent/AssistantContent.behavior.ts",
-          "line": 84,
-          "anchor": "packages-agents-domain-src-values-assistantcontent-assistantcontent-behavior-ts-84-blocktomd",
+          "line": 86,
+          "anchor": "packages-agents-domain-src-values-assistantcontent-assistantcontent-behavior-ts-86-blocktomd",
           "currentTags": [
             "@category",
             "@since"
@@ -88015,8 +88015,8 @@
           "exportKind": "const",
           "filePath": "src/values/AssistantContent/AssistantContent.behavior.ts",
           "repoPath": "packages/agents/domain/src/values/AssistantContent/AssistantContent.behavior.ts",
-          "line": 145,
-          "anchor": "packages-agents-domain-src-values-assistantcontent-assistantcontent-behavior-ts-145-assistantcontenttodocument",
+          "line": 147,
+          "anchor": "packages-agents-domain-src-values-assistantcontent-assistantcontent-behavior-ts-147-assistantcontenttodocument",
           "currentTags": [
             "@category",
             "@since"
@@ -166766,8 +166766,8 @@
           "exportKind": "const",
           "filePath": "src/entities/Worker/Worker.behavior.ts",
           "repoPath": "packages/architecture-lab/domain/src/entities/Worker/Worker.behavior.ts",
-          "line": 54,
-          "anchor": "packages-architecture-lab-domain-src-entities-worker-worker-behavior-ts-54-create",
+          "line": 56,
+          "anchor": "packages-architecture-lab-domain-src-entities-worker-worker-behavior-ts-56-create",
           "currentTags": [
             "@category",
             "@since"
@@ -180399,8 +180399,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 917,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-917-projectscopeid",
+          "line": 916,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-916-projectscopeid",
           "currentTags": [
             "@category",
             "@since"
@@ -180421,8 +180421,8 @@
           "exportKind": "type",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 938,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-938-projectscopeid",
+          "line": 937,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-937-projectscopeid",
           "currentTags": [
             "@category",
             "@since"
@@ -180443,8 +180443,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 954,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-954-projectscopeidparts",
+          "line": 953,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-953-projectscopeidparts",
           "currentTags": [
             "@category",
             "@since"
@@ -180465,8 +180465,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 980,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-980-projectcachekey",
+          "line": 979,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-979-projectcachekey",
           "currentTags": [
             "@category",
             "@since"
@@ -180487,8 +180487,8 @@
           "exportKind": "type",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1001,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1001-projectcachekey",
+          "line": 1000,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1000-projectcachekey",
           "currentTags": [
             "@category",
             "@since"
@@ -180509,8 +180509,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1020,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1020-symbolid",
+          "line": 1019,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1019-symbolid",
           "currentTags": [
             "@category",
             "@since"
@@ -180531,8 +180531,8 @@
           "exportKind": "type",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1052,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1052-symbolid",
+          "line": 1050,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1050-symbolid",
           "currentTags": [
             "@category",
             "@since"
@@ -180553,8 +180553,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1068,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1068-symbolidparts",
+          "line": 1066,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1066-symbolidparts",
           "currentTags": [
             "@category",
             "@since"
@@ -180575,8 +180575,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1089,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1089-symbolidentityparts",
+          "line": 1087,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1087-symbolidentityparts",
           "currentTags": [
             "@category",
             "@since"
@@ -180597,8 +180597,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1114,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1114-filepathtotsconfigfilepath",
+          "line": 1112,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1112-filepathtotsconfigfilepath",
           "currentTags": [
             "@category",
             "@since"
@@ -180619,8 +180619,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1138,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1138-filepathtotypescriptimplementationfilepath",
+          "line": 1136,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1136-filepathtotypescriptimplementationfilepath",
           "currentTags": [
             "@category",
             "@since"
@@ -180641,8 +180641,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1162,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1162-filepathtotypescriptdeclarationfilepath",
+          "line": 1160,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1160-filepathtotypescriptdeclarationfilepath",
           "currentTags": [
             "@category",
             "@since"
@@ -180663,8 +180663,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1186,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1186-filepathtotypescriptfilepath",
+          "line": 1184,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1184-filepathtotypescriptfilepath",
           "currentTags": [
             "@category",
             "@since"
@@ -180685,8 +180685,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1210,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1210-typescriptimplementationfilepathtosymbolfilepath",
+          "line": 1208,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1208-typescriptimplementationfilepathtosymbolfilepath",
           "currentTags": [
             "@category",
             "@since"
@@ -180707,8 +180707,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1236,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1236-contenthashfrombytes",
+          "line": 1234,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1234-contenthashfrombytes",
           "currentTags": [
             "@category",
             "@since"
@@ -180729,8 +180729,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1269,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1269-contenthashfromsourcetext",
+          "line": 1267,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1267-contenthashfromsourcetext",
           "currentTags": [
             "@category",
             "@since"
@@ -180751,8 +180751,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1298,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1298-internaltsmorphproject",
+          "line": 1296,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1296-internaltsmorphproject",
           "currentTags": [
             "@category",
             "@since"
@@ -180773,8 +180773,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1318,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1318-internaltsmorphsourcefile",
+          "line": 1316,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1316-internaltsmorphsourcefile",
           "currentTags": [
             "@category",
             "@since"
@@ -180795,8 +180795,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1340,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1340-internaltsmorphnode",
+          "line": 1338,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1338-internaltsmorphnode",
           "currentTags": [
             "@category",
             "@since"
@@ -180817,8 +180817,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1362,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1362-symbol",
+          "line": 1360,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1360-symbol",
           "currentTags": [
             "@category",
             "@since"
@@ -180839,8 +180839,8 @@
           "exportKind": "namespace",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1435,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1435-symbol",
+          "line": 1433,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1433-symbol",
           "currentTags": [
             "@category",
             "@since"
@@ -180861,8 +180861,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1480,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1480-symbolinit",
+          "line": 1478,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1478-symbolinit",
           "currentTags": [
             "@category",
             "@since"
@@ -180883,8 +180883,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1529,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1529-makesymbolid",
+          "line": 1527,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1527-makesymbolid",
           "currentTags": [
             "@param",
             "@returns",
@@ -180907,8 +180907,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1554,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1554-makeprojectscopeid",
+          "line": 1552,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1552-makeprojectscopeid",
           "currentTags": [
             "@param",
             "@returns",
@@ -180931,8 +180931,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1579,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1579-makeprojectcachekey",
+          "line": 1577,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1577-makeprojectcachekey",
           "currentTags": [
             "@param",
             "@returns",
@@ -180955,8 +180955,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1634,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1634-makesymbol",
+          "line": 1632,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1632-makesymbol",
           "currentTags": [
             "@param",
             "@returns",
@@ -180979,8 +180979,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1688,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1688-tsmorphscopeentrypoint",
+          "line": 1686,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1686-tsmorphscopeentrypoint",
           "currentTags": [
             "@category",
             "@since"
@@ -181001,8 +181001,8 @@
           "exportKind": "type",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1719,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1719-tsmorphscopeentrypoint",
+          "line": 1717,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1717-tsmorphscopeentrypoint",
           "currentTags": [
             "@category",
             "@since"
@@ -181023,8 +181023,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1735,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1735-tsmorphprojectscoperequest",
+          "line": 1733,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1733-tsmorphprojectscoperequest",
           "currentTags": [
             "@category",
             "@since"
@@ -181045,8 +181045,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1761,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1761-tsmorphprojectinspectionrequest",
+          "line": 1759,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1759-tsmorphprojectinspectionrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -181067,8 +181067,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1825,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1825-tsmorphprojectscope",
+          "line": 1823,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1823-tsmorphprojectscope",
           "currentTags": [
             "@category",
             "@since"
@@ -181089,8 +181089,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1854,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1854-tsmorphfileoutlinerequest",
+          "line": 1852,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1852-tsmorphfileoutlinerequest",
           "currentTags": [
             "@category",
             "@since"
@@ -181111,8 +181111,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1878,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1878-tsmorphfileoutline",
+          "line": 1876,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1876-tsmorphfileoutline",
           "currentTags": [
             "@category",
             "@since"
@@ -181133,8 +181133,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1903,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1903-tsmorphsourcetextrequest",
+          "line": 1901,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1901-tsmorphsourcetextrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -181155,8 +181155,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1926,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1926-tsmorphsourcetextresult",
+          "line": 1924,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1924-tsmorphsourcetextresult",
           "currentTags": [
             "@category",
             "@since"
@@ -181177,8 +181177,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1951,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1951-tsmorphsymbollookuprequest",
+          "line": 1949,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1949-tsmorphsymbollookuprequest",
           "currentTags": [
             "@category",
             "@since"
@@ -181199,8 +181199,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1975,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1975-tsmorphsymbollookupresult",
+          "line": 1973,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1973-tsmorphsymbollookupresult",
           "currentTags": [
             "@category",
             "@since"
@@ -181221,8 +181221,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 1999,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1999-tsmorphsearchlimit",
+          "line": 1997,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-1997-tsmorphsearchlimit",
           "currentTags": [
             "@category",
             "@since"
@@ -181243,8 +181243,8 @@
           "exportKind": "type",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 2019,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2019-tsmorphsearchlimit",
+          "line": 2017,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2017-tsmorphsearchlimit",
           "currentTags": [
             "@category",
             "@since"
@@ -181265,8 +181265,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 2035,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2035-tsmorphsymbolsearchrequest",
+          "line": 2033,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2033-tsmorphsymbolsearchrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -181287,8 +181287,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 2072,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2072-tsmorphsymbolsearchresult",
+          "line": 2070,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2070-tsmorphsymbolsearchresult",
           "currentTags": [
             "@category",
             "@since"
@@ -181309,8 +181309,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 2109,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2109-tsmorphsymbolsourcerequest",
+          "line": 2107,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2107-tsmorphsymbolsourcerequest",
           "currentTags": [
             "@category",
             "@since"
@@ -181331,8 +181331,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 2133,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2133-tsmorphsymbolsourceresult",
+          "line": 2131,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2131-tsmorphsymbolsourceresult",
           "currentTags": [
             "@category",
             "@since"
@@ -181353,8 +181353,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 2159,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2159-tsmorphdiagnosticcategory",
+          "line": 2157,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2157-tsmorphdiagnosticcategory",
           "currentTags": [
             "@category",
             "@since"
@@ -181375,8 +181375,8 @@
           "exportKind": "type",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 2178,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2178-tsmorphdiagnosticcategory",
+          "line": 2176,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2176-tsmorphdiagnosticcategory",
           "currentTags": [
             "@category",
             "@since"
@@ -181397,8 +181397,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 2252,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2252-tsmorphdiagnostic",
+          "line": 2250,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2250-tsmorphdiagnostic",
           "currentTags": [
             "@returns",
             "@category",
@@ -181420,8 +181420,8 @@
           "exportKind": "type",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 2279,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2279-tsmorphdiagnostic",
+          "line": 2277,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2277-tsmorphdiagnostic",
           "currentTags": [
             "@category",
             "@since"
@@ -181442,8 +181442,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 2295,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2295-tsmorphdiagnosticsrequest",
+          "line": 2293,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2293-tsmorphdiagnosticsrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -181464,8 +181464,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-          "line": 2319,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2319-tsmorphdiagnosticsresult",
+          "line": 2317,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-model-ts-2317-tsmorphdiagnosticsresult",
           "currentTags": [
             "@category",
             "@since"
@@ -181662,8 +181662,8 @@
           "exportKind": "type",
           "filePath": "src/TSMorph/TSMorph.service.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
-          "line": 335,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-service-ts-335-tsmorphserviceshape",
+          "line": 342,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-service-ts-342-tsmorphserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -181684,8 +181684,8 @@
           "exportKind": "class",
           "filePath": "src/TSMorph/TSMorph.service.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
-          "line": 390,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-service-ts-390-tsmorphservice",
+          "line": 397,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-service-ts-397-tsmorphservice",
           "currentTags": [
             "@category",
             "@since"
@@ -181712,8 +181712,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.service.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
-          "line": 713,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-service-ts-713-createtsmorphservice",
+          "line": 728,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-service-ts-728-createtsmorphservice",
           "currentTags": [
             "@returns",
             "@effects",
@@ -181742,8 +181742,8 @@
           "exportKind": "const",
           "filePath": "src/TSMorph/TSMorph.service.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
-          "line": 1392,
-          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-service-ts-1392-tsmorphservicelive",
+          "line": 1439,
+          "anchor": "packages-tooling-library-repo-utils-src-tsmorph-tsmorph-service-ts-1439-tsmorphservicelive",
           "currentTags": [
             "@category",
             "@since"
@@ -187910,8 +187910,8 @@
           "exportKind": "type",
           "filePath": "src/DuckDb.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDb.service.ts",
-          "line": 46,
-          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-46-duckdbqueryparameters",
+          "line": 48,
+          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-48-duckdbqueryparameters",
           "currentTags": [
             "@category",
             "@since"
@@ -187932,8 +187932,8 @@
           "exportKind": "interface",
           "filePath": "src/DuckDb.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDb.service.ts",
-          "line": 83,
-          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-83-duckdbclient",
+          "line": 85,
+          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-85-duckdbclient",
           "currentTags": [
             "@category",
             "@since"
@@ -187960,8 +187960,8 @@
           "exportKind": "interface",
           "filePath": "src/DuckDb.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDb.service.ts",
-          "line": 177,
-          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-177-duckdbshape",
+          "line": 179,
+          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-179-duckdbshape",
           "currentTags": [
             "@category",
             "@since"
@@ -187988,8 +187988,8 @@
           "exportKind": "class",
           "filePath": "src/DuckDb.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDb.service.ts",
-          "line": 492,
-          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-492-duckdb",
+          "line": 494,
+          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-494-duckdb",
           "currentTags": [
             "@category",
             "@since"
@@ -190360,8 +190360,8 @@
           "exportKind": "type",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 141,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-141-ffmpegeventsink",
+          "line": 153,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-153-ffmpegeventsink",
           "currentTags": [
             "@category",
             "@since"
@@ -190388,8 +190388,8 @@
           "exportKind": "interface",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 169,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-169-ffmpegshape",
+          "line": 181,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-181-ffmpegshape",
           "currentTags": [
             "@category",
             "@since"
@@ -190416,8 +190416,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 249,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-249-plannedframecommit",
+          "line": 261,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-261-plannedframecommit",
           "currentTags": [
             "@category",
             "@since"
@@ -190438,8 +190438,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 281,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-281-progressstate",
+          "line": 293,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-293-progressstate",
           "currentTags": [
             "@category",
             "@since"
@@ -190460,8 +190460,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 432,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-432-formatframefilenameoptions",
+          "line": 444,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-444-formatframefilenameoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -190482,8 +190482,8 @@
           "exportKind": "const",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 479,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-479-formatframefilename",
+          "line": 491,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-491-formatframefilename",
           "currentTags": [
             "@category",
             "@since"
@@ -190504,8 +190504,8 @@
           "exportKind": "const",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 498,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-498-buildffprobeargs",
+          "line": 510,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-510-buildffprobeargs",
           "currentTags": [
             "@category",
             "@since"
@@ -190526,8 +190526,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 531,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-531-buildextractframesargsoptions",
+          "line": 543,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-543-buildextractframesargsoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -190548,8 +190548,8 @@
           "exportKind": "const",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 584,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-584-buildextractframesargs",
+          "line": 596,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-596-buildextractframesargs",
           "currentTags": [
             "@category",
             "@since"
@@ -190570,8 +190570,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 622,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-622-buildextractframeatargsoptions",
+          "line": 634,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-634-buildextractframeatargsoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -190592,8 +190592,8 @@
           "exportKind": "const",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 689,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-689-buildextractframeatargs",
+          "line": 701,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-701-buildextractframeatargs",
           "currentTags": [
             "@category",
             "@since"
@@ -190614,8 +190614,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 737,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-737-buildextractclipargsoptions",
+          "line": 749,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-749-buildextractclipargsoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -190636,8 +190636,8 @@
           "exportKind": "const",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 807,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-807-buildextractclipargs",
+          "line": 819,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-819-buildextractclipargs",
           "currentTags": [
             "@category",
             "@since"
@@ -190658,8 +190658,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 850,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-850-buildrendergifargsoptions",
+          "line": 862,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-862-buildrendergifargsoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -190680,8 +190680,8 @@
           "exportKind": "const",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 930,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-930-buildrendergifargs",
+          "line": 942,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-942-buildrendergifargs",
           "currentTags": [
             "@category",
             "@since"
@@ -190702,8 +190702,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 971,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-971-buildrendercontactsheetargsoptions",
+          "line": 983,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-983-buildrendercontactsheetargsoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -190724,8 +190724,8 @@
           "exportKind": "const",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 1048,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1048-buildrendercontactsheetargs",
+          "line": 1060,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1060-buildrendercontactsheetargs",
           "currentTags": [
             "@category",
             "@since"
@@ -190746,8 +190746,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 1084,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1084-buildwritecontainermetadataargsoptions",
+          "line": 1096,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1096-buildwritecontainermetadataargsoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -190768,8 +190768,8 @@
           "exportKind": "const",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 1148,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1148-buildwritecontainermetadataargs",
+          "line": 1160,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1160-buildwritecontainermetadataargs",
           "currentTags": [
             "@category",
             "@since"
@@ -190790,8 +190790,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 1186,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1186-buildproberegionluminanceargsoptions",
+          "line": 1198,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1198-buildproberegionluminanceargsoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -190812,8 +190812,8 @@
           "exportKind": "const",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 1257,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1257-buildproberegionluminanceargs",
+          "line": 1269,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1269-buildproberegionluminanceargs",
           "currentTags": [
             "@category",
             "@since"
@@ -190834,8 +190834,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 2555,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-2555-ffmpeg",
+          "line": 2567,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-2567-ffmpeg",
           "currentTags": [
             "@category",
             "@since"
@@ -201538,7 +201538,7 @@
         "srcDir": "src",
         "sourceFileCount": 134,
         "publicModuleCount": 134,
-        "publicExportCount": 555
+        "publicExportCount": 557
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -202542,7 +202542,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 1,
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -203356,7 +203356,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 1,
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -205229,8 +205229,8 @@
           "exportKind": "function",
           "filePath": "src/components/avatar.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/avatar.tsx",
-          "line": 40,
-          "anchor": "packages-foundation-ui-system-ui-src-components-avatar-tsx-40-avatar",
+          "line": 80,
+          "anchor": "packages-foundation-ui-system-ui-src-components-avatar-tsx-80-avatar",
           "currentTags": [
             "@category",
             "@since"
@@ -205251,8 +205251,8 @@
           "exportKind": "function",
           "filePath": "src/components/avatar.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/avatar.tsx",
-          "line": 162,
-          "anchor": "packages-foundation-ui-system-ui-src-components-avatar-tsx-162-avatarfallback",
+          "line": 204,
+          "anchor": "packages-foundation-ui-system-ui-src-components-avatar-tsx-204-avatarfallback",
           "currentTags": [
             "@category",
             "@since"
@@ -205273,8 +205273,8 @@
           "exportKind": "function",
           "filePath": "src/components/avatar.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/avatar.tsx",
-          "line": 117,
-          "anchor": "packages-foundation-ui-system-ui-src-components-avatar-tsx-117-avatarimage",
+          "line": 159,
+          "anchor": "packages-foundation-ui-system-ui-src-components-avatar-tsx-159-avatarimage",
           "currentTags": [
             "@category",
             "@since"
@@ -205867,8 +205867,8 @@
           "exportKind": "function",
           "filePath": "src/components/button.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/button.tsx",
-          "line": 87,
-          "anchor": "packages-foundation-ui-system-ui-src-components-button-tsx-87-button",
+          "line": 104,
+          "anchor": "packages-foundation-ui-system-ui-src-components-button-tsx-104-button",
           "currentTags": [
             "@category",
             "@since"
@@ -205933,8 +205933,8 @@
           "exportKind": "function",
           "filePath": "src/components/calendar-event-card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/calendar-event-card.tsx",
-          "line": 205,
-          "anchor": "packages-foundation-ui-system-ui-src-components-calendar-event-card-tsx-205-eventtitle",
+          "line": 192,
+          "anchor": "packages-foundation-ui-system-ui-src-components-calendar-event-card-tsx-192-eventtitle",
           "currentTags": [
             "@category",
             "@since"
@@ -205955,8 +205955,8 @@
           "exportKind": "function",
           "filePath": "src/components/calendar-event-card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/calendar-event-card.tsx",
-          "line": 231,
-          "anchor": "packages-foundation-ui-system-ui-src-components-calendar-event-card-tsx-231-eventtime",
+          "line": 218,
+          "anchor": "packages-foundation-ui-system-ui-src-components-calendar-event-card-tsx-218-eventtime",
           "currentTags": [
             "@category",
             "@since"
@@ -205977,8 +205977,8 @@
           "exportKind": "function",
           "filePath": "src/components/calendar-event-card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/calendar-event-card.tsx",
-          "line": 263,
-          "anchor": "packages-foundation-ui-system-ui-src-components-calendar-event-card-tsx-263-eventlocation",
+          "line": 250,
+          "anchor": "packages-foundation-ui-system-ui-src-components-calendar-event-card-tsx-250-eventlocation",
           "currentTags": [
             "@category",
             "@since"
@@ -206065,8 +206065,8 @@
           "exportKind": "function",
           "filePath": "src/components/calendar.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/calendar.tsx",
-          "line": 180,
-          "anchor": "packages-foundation-ui-system-ui-src-components-calendar-tsx-180-calendardaybutton",
+          "line": 177,
+          "anchor": "packages-foundation-ui-system-ui-src-components-calendar-tsx-177-calendardaybutton",
           "currentTags": [
             "@category",
             "@since"
@@ -206109,8 +206109,8 @@
           "exportKind": "function",
           "filePath": "src/components/card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/card.tsx",
-          "line": 153,
-          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-153-cardaction",
+          "line": 178,
+          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-178-cardaction",
           "currentTags": [
             "@category",
             "@since"
@@ -206131,8 +206131,8 @@
           "exportKind": "function",
           "filePath": "src/components/card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/card.tsx",
-          "line": 179,
-          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-179-cardcontent",
+          "line": 204,
+          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-204-cardcontent",
           "currentTags": [
             "@category",
             "@since"
@@ -206153,8 +206153,8 @@
           "exportKind": "function",
           "filePath": "src/components/card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/card.tsx",
-          "line": 128,
-          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-128-carddescription",
+          "line": 153,
+          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-153-carddescription",
           "currentTags": [
             "@category",
             "@since"
@@ -206175,8 +206175,8 @@
           "exportKind": "function",
           "filePath": "src/components/card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/card.tsx",
-          "line": 205,
-          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-205-cardfooter",
+          "line": 230,
+          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-230-cardfooter",
           "currentTags": [
             "@category",
             "@since"
@@ -206197,8 +206197,8 @@
           "exportKind": "function",
           "filePath": "src/components/card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/card.tsx",
-          "line": 73,
-          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-73-cardheader",
+          "line": 93,
+          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-93-cardheader",
           "currentTags": [
             "@category",
             "@since"
@@ -206219,8 +206219,8 @@
           "exportKind": "function",
           "filePath": "src/components/card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/card.tsx",
-          "line": 102,
-          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-102-cardtitle",
+          "line": 127,
+          "anchor": "packages-foundation-ui-system-ui-src-components-card-tsx-127-cardtitle",
           "currentTags": [
             "@category",
             "@since"
@@ -206395,8 +206395,8 @@
           "exportKind": "type",
           "filePath": "src/components/chart.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/chart.tsx",
-          "line": 51,
-          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-51-chartconfig",
+          "line": 52,
+          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-52-chartconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -206417,8 +206417,8 @@
           "exportKind": "function",
           "filePath": "src/components/chart.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/chart.tsx",
-          "line": 97,
-          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-97-chartcontainer",
+          "line": 98,
+          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-98-chartcontainer",
           "currentTags": [
             "@category",
             "@since"
@@ -206439,8 +206439,8 @@
           "exportKind": "const",
           "filePath": "src/components/chart.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/chart.tsx",
-          "line": 568,
-          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-568-chartlegend",
+          "line": 550,
+          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-550-chartlegend",
           "currentTags": [
             "@category",
             "@since"
@@ -206461,30 +206461,8 @@
           "exportKind": "function",
           "filePath": "src/components/chart.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/chart.tsx",
-          "line": 600,
-          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-600-chartlegendcontent",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ChartStyle",
-          "exportKind": "const",
-          "filePath": "src/components/chart.tsx",
-          "repoPath": "packages/foundation/ui-system/ui/src/components/chart.tsx",
-          "line": 179,
-          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-179-chartstyle",
+          "line": 582,
+          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-582-chartlegendcontent",
           "currentTags": [
             "@category",
             "@since"
@@ -206505,8 +206483,8 @@
           "exportKind": "const",
           "filePath": "src/components/chart.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/chart.tsx",
-          "line": 247,
-          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-247-charttooltip",
+          "line": 229,
+          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-229-charttooltip",
           "currentTags": [
             "@category",
             "@since"
@@ -206527,8 +206505,30 @@
           "exportKind": "function",
           "filePath": "src/components/chart.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/chart.tsx",
-          "line": 463,
-          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-463-charttooltipcontent",
+          "line": 445,
+          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-445-charttooltipcontent",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "chartColorProperties",
+          "exportKind": "const",
+          "filePath": "src/components/chart.tsx",
+          "repoPath": "packages/foundation/ui-system/ui/src/components/chart.tsx",
+          "line": 180,
+          "anchor": "packages-foundation-ui-system-ui-src-components-chart-tsx-180-chartcolorproperties",
           "currentTags": [
             "@category",
             "@since"
@@ -208837,8 +208837,8 @@
           "exportKind": "function",
           "filePath": "src/components/editor/editor-ui/content-editable.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/editor/editor-ui/content-editable.tsx",
-          "line": 76,
-          "anchor": "packages-foundation-ui-system-ui-src-components-editor-editor-ui-content-editable-tsx-76-contenteditable",
+          "line": 114,
+          "anchor": "packages-foundation-ui-system-ui-src-components-editor-editor-ui-content-editable-tsx-114-contenteditable",
           "currentTags": [
             "@category",
             "@since"
@@ -209703,8 +209703,30 @@
           "exportKind": "function",
           "filePath": "src/components/input.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/input.tsx",
-          "line": 25,
-          "anchor": "packages-foundation-ui-system-ui-src-components-input-tsx-25-input",
+          "line": 64,
+          "anchor": "packages-foundation-ui-system-ui-src-components-input-tsx-64-input",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "inputVariants",
+          "exportKind": "const",
+          "filePath": "src/components/input.tsx",
+          "repoPath": "packages/foundation/ui-system/ui/src/components/input.tsx",
+          "line": 33,
+          "anchor": "packages-foundation-ui-system-ui-src-components-input-tsx-33-inputvariants",
           "currentTags": [
             "@category",
             "@since"
@@ -209989,8 +210011,8 @@
           "exportKind": "interface",
           "filePath": "src/components/knowledge-graph.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
-          "line": 38,
-          "anchor": "packages-foundation-ui-system-ui-src-components-knowledge-graph-tsx-38-graphnode",
+          "line": 39,
+          "anchor": "packages-foundation-ui-system-ui-src-components-knowledge-graph-tsx-39-graphnode",
           "currentTags": [
             "@category",
             "@since"
@@ -210011,8 +210033,8 @@
           "exportKind": "interface",
           "filePath": "src/components/knowledge-graph.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
-          "line": 69,
-          "anchor": "packages-foundation-ui-system-ui-src-components-knowledge-graph-tsx-69-graphlink",
+          "line": 70,
+          "anchor": "packages-foundation-ui-system-ui-src-components-knowledge-graph-tsx-70-graphlink",
           "currentTags": [
             "@category",
             "@since"
@@ -210033,8 +210055,8 @@
           "exportKind": "interface",
           "filePath": "src/components/knowledge-graph.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
-          "line": 119,
-          "anchor": "packages-foundation-ui-system-ui-src-components-knowledge-graph-tsx-119-knowledgegraphhandle",
+          "line": 120,
+          "anchor": "packages-foundation-ui-system-ui-src-components-knowledge-graph-tsx-120-knowledgegraphhandle",
           "currentTags": [
             "@category",
             "@since"
@@ -210055,8 +210077,8 @@
           "exportKind": "const",
           "filePath": "src/components/knowledge-graph.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
-          "line": 194,
-          "anchor": "packages-foundation-ui-system-ui-src-components-knowledge-graph-tsx-194-knowledgegraph",
+          "line": 195,
+          "anchor": "packages-foundation-ui-system-ui-src-components-knowledge-graph-tsx-195-knowledgegraph",
           "currentTags": [
             "@category",
             "@since"
@@ -210077,8 +210099,8 @@
           "exportKind": "const",
           "filePath": "src/components/knowledge-graph.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
-          "line": 194,
-          "anchor": "packages-foundation-ui-system-ui-src-components-knowledge-graph-tsx-194-default",
+          "line": 195,
+          "anchor": "packages-foundation-ui-system-ui-src-components-knowledge-graph-tsx-195-default",
           "currentTags": [
             "@category",
             "@since"
@@ -210165,8 +210187,8 @@
           "exportKind": "const",
           "filePath": "src/components/live-waveform.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/live-waveform.tsx",
-          "line": 218,
-          "anchor": "packages-foundation-ui-system-ui-src-components-live-waveform-tsx-218-livewaveform",
+          "line": 223,
+          "anchor": "packages-foundation-ui-system-ui-src-components-live-waveform-tsx-223-livewaveform",
           "currentTags": [
             "@category",
             "@since"
@@ -210913,8 +210935,8 @@
           "exportKind": "function",
           "filePath": "src/components/native-select.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/native-select.tsx",
-          "line": 85,
-          "anchor": "packages-foundation-ui-system-ui-src-components-native-select-tsx-85-nativeselectoptgroup",
+          "line": 83,
+          "anchor": "packages-foundation-ui-system-ui-src-components-native-select-tsx-83-nativeselectoptgroup",
           "currentTags": [
             "@category",
             "@since"
@@ -211155,8 +211177,8 @@
           "exportKind": "function",
           "filePath": "src/components/notification-card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/notification-card.tsx",
-          "line": 248,
-          "anchor": "packages-foundation-ui-system-ui-src-components-notification-card-tsx-248-notificationcard",
+          "line": 250,
+          "anchor": "packages-foundation-ui-system-ui-src-components-notification-card-tsx-250-notificationcard",
           "currentTags": [
             "@category",
             "@since"
@@ -211287,8 +211309,8 @@
           "exportKind": "const",
           "filePath": "src/components/notification-card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/notification-card.tsx",
-          "line": 168,
-          "anchor": "packages-foundation-ui-system-ui-src-components-notification-card-tsx-168-notificationaction",
+          "line": 170,
+          "anchor": "packages-foundation-ui-system-ui-src-components-notification-card-tsx-170-notificationaction",
           "currentTags": [
             "@category",
             "@since"
@@ -211309,8 +211331,8 @@
           "exportKind": "type",
           "filePath": "src/components/notification-card.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/notification-card.tsx",
-          "line": 195,
-          "anchor": "packages-foundation-ui-system-ui-src-components-notification-card-tsx-195-notificationaction",
+          "line": 197,
+          "anchor": "packages-foundation-ui-system-ui-src-components-notification-card-tsx-197-notificationaction",
           "currentTags": [
             "@category",
             "@since"
@@ -211331,8 +211353,8 @@
           "exportKind": "function",
           "filePath": "src/components/orb-background.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/orb-background.tsx",
-          "line": 226,
-          "anchor": "packages-foundation-ui-system-ui-src-components-orb-background-tsx-226-orbbackground",
+          "line": 220,
+          "anchor": "packages-foundation-ui-system-ui-src-components-orb-background-tsx-220-orbbackground",
           "currentTags": [
             "@category",
             "@since"
@@ -213201,8 +213223,8 @@
           "exportKind": "function",
           "filePath": "src/components/skeleton.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/skeleton.tsx",
-          "line": 24,
-          "anchor": "packages-foundation-ui-system-ui-src-components-skeleton-tsx-24-skeleton",
+          "line": 50,
+          "anchor": "packages-foundation-ui-system-ui-src-components-skeleton-tsx-50-skeleton",
           "currentTags": [
             "@category",
             "@since"
@@ -213289,8 +213311,8 @@
           "exportKind": "const",
           "filePath": "src/components/speech-input.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/speech-input.tsx",
-          "line": 464,
-          "anchor": "packages-foundation-ui-system-ui-src-components-speech-input-tsx-464-speechinputcancelbutton",
+          "line": 462,
+          "anchor": "packages-foundation-ui-system-ui-src-components-speech-input-tsx-462-speechinputcancelbutton",
           "currentTags": [
             "@category",
             "@since"
@@ -213839,8 +213861,30 @@
           "exportKind": "function",
           "filePath": "src/components/textarea.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/textarea.tsx",
-          "line": 24,
-          "anchor": "packages-foundation-ui-system-ui-src-components-textarea-tsx-24-textarea",
+          "line": 71,
+          "anchor": "packages-foundation-ui-system-ui-src-components-textarea-tsx-71-textarea",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "textareaVariants",
+          "exportKind": "const",
+          "filePath": "src/components/textarea.tsx",
+          "repoPath": "packages/foundation/ui-system/ui/src/components/textarea.tsx",
+          "line": 35,
+          "anchor": "packages-foundation-ui-system-ui-src-components-textarea-tsx-35-textareavariants",
           "currentTags": [
             "@category",
             "@since"
@@ -213949,8 +213993,8 @@
           "exportKind": "const",
           "filePath": "src/components/toast.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/toast.tsx",
-          "line": 208,
-          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-208-toastaction",
+          "line": 209,
+          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-209-toastaction",
           "currentTags": [
             "@category",
             "@since"
@@ -213971,8 +214015,8 @@
           "exportKind": "type",
           "filePath": "src/components/toast.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/toast.tsx",
-          "line": 330,
-          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-330-toastactionelement",
+          "line": 331,
+          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-331-toastactionelement",
           "currentTags": [
             "@category",
             "@since"
@@ -213993,8 +214037,8 @@
           "exportKind": "const",
           "filePath": "src/components/toast.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/toast.tsx",
-          "line": 236,
-          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-236-toastclose",
+          "line": 237,
+          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-237-toastclose",
           "currentTags": [
             "@category",
             "@since"
@@ -214015,8 +214059,8 @@
           "exportKind": "const",
           "filePath": "src/components/toast.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/toast.tsx",
-          "line": 287,
-          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-287-toastdescription",
+          "line": 288,
+          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-288-toastdescription",
           "currentTags": [
             "@category",
             "@since"
@@ -214037,8 +214081,8 @@
           "exportKind": "type",
           "filePath": "src/components/toast.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/toast.tsx",
-          "line": 312,
-          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-312-toastprops",
+          "line": 313,
+          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-313-toastprops",
           "currentTags": [
             "@category",
             "@since"
@@ -214081,8 +214125,8 @@
           "exportKind": "const",
           "filePath": "src/components/toast.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/toast.tsx",
-          "line": 266,
-          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-266-toasttitle",
+          "line": 267,
+          "anchor": "packages-foundation-ui-system-ui-src-components-toast-tsx-267-toasttitle",
           "currentTags": [
             "@category",
             "@since"
@@ -214125,8 +214169,8 @@
           "exportKind": "function",
           "filePath": "src/components/toaster.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/toaster.tsx",
-          "line": 84,
-          "anchor": "packages-foundation-ui-system-ui-src-components-toaster-tsx-84-toaster",
+          "line": 78,
+          "anchor": "packages-foundation-ui-system-ui-src-components-toaster-tsx-78-toaster",
           "currentTags": [
             "@category",
             "@since"
@@ -214147,8 +214191,8 @@
           "exportKind": "function",
           "filePath": "src/components/todo-item.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/todo-item.tsx",
-          "line": 115,
-          "anchor": "packages-foundation-ui-system-ui-src-components-todo-item-tsx-115-todoitem",
+          "line": 116,
+          "anchor": "packages-foundation-ui-system-ui-src-components-todo-item-tsx-116-todoitem",
           "currentTags": [
             "@category",
             "@since"
@@ -214675,8 +214719,8 @@
           "exportKind": "function",
           "filePath": "src/components/ui/button.tsx",
           "repoPath": "packages/foundation/ui-system/ui/src/components/ui/button.tsx",
-          "line": 82,
-          "anchor": "packages-foundation-ui-system-ui-src-components-ui-button-tsx-82-button",
+          "line": 95,
+          "anchor": "packages-foundation-ui-system-ui-src-components-ui-button-tsx-95-button",
           "currentTags": [
             "@category",
             "@since"
@@ -215779,8 +215823,8 @@
           "exportKind": "function",
           "filePath": "src/lib/utils.ts",
           "repoPath": "packages/foundation/ui-system/ui/src/lib/utils.ts",
-          "line": 35,
-          "anchor": "packages-foundation-ui-system-ui-src-lib-utils-ts-35-cn",
+          "line": 112,
+          "anchor": "packages-foundation-ui-system-ui-src-lib-utils-ts-112-cn",
           "currentTags": [
             "@category",
             "@since"
@@ -245835,8 +245879,8 @@
           "exportKind": "const",
           "filePath": "src/Box.errors.ts",
           "repoPath": "packages/drivers/box/src/Box.errors.ts",
-          "line": 47,
-          "anchor": "packages-drivers-box-src-box-errors-ts-47-boxerrorreason",
+          "line": 46,
+          "anchor": "packages-drivers-box-src-box-errors-ts-46-boxerrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -245857,8 +245901,8 @@
           "exportKind": "type",
           "filePath": "src/Box.errors.ts",
           "repoPath": "packages/drivers/box/src/Box.errors.ts",
-          "line": 69,
-          "anchor": "packages-drivers-box-src-box-errors-ts-69-boxerrorreason",
+          "line": 68,
+          "anchor": "packages-drivers-box-src-box-errors-ts-68-boxerrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -245879,8 +245923,8 @@
           "exportKind": "class",
           "filePath": "src/Box.errors.ts",
           "repoPath": "packages/drivers/box/src/Box.errors.ts",
-          "line": 126,
-          "anchor": "packages-drivers-box-src-box-errors-ts-126-boxapifailurecontext",
+          "line": 125,
+          "anchor": "packages-drivers-box-src-box-errors-ts-125-boxapifailurecontext",
           "currentTags": [
             "@category",
             "@since"
@@ -245901,8 +245945,8 @@
           "exportKind": "class",
           "filePath": "src/Box.errors.ts",
           "repoPath": "packages/drivers/box/src/Box.errors.ts",
-          "line": 251,
-          "anchor": "packages-drivers-box-src-box-errors-ts-251-boxerroroptions",
+          "line": 252,
+          "anchor": "packages-drivers-box-src-box-errors-ts-252-boxerroroptions",
           "currentTags": [
             "@category",
             "@since"
@@ -245923,8 +245967,8 @@
           "exportKind": "class",
           "filePath": "src/Box.errors.ts",
           "repoPath": "packages/drivers/box/src/Box.errors.ts",
-          "line": 304,
-          "anchor": "packages-drivers-box-src-box-errors-ts-304-boxerrordiagnostic",
+          "line": 305,
+          "anchor": "packages-drivers-box-src-box-errors-ts-305-boxerrordiagnostic",
           "currentTags": [
             "@category",
             "@since"
@@ -245945,8 +245989,8 @@
           "exportKind": "class",
           "filePath": "src/Box.errors.ts",
           "repoPath": "packages/drivers/box/src/Box.errors.ts",
-          "line": 326,
-          "anchor": "packages-drivers-box-src-box-errors-ts-326-boxerror",
+          "line": 327,
+          "anchor": "packages-drivers-box-src-box-errors-ts-327-boxerror",
           "currentTags": [
             "@category",
             "@since"
@@ -246039,8 +246083,8 @@
           "exportKind": "type",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 83,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-83-boxbyteinput",
+          "line": 85,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-85-boxbyteinput",
           "currentTags": [
             "@category",
             "@since"
@@ -246067,8 +246111,8 @@
           "exportKind": "type",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 101,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-101-boxbytestream",
+          "line": 103,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-103-boxbytestream",
           "currentTags": [
             "@category",
             "@since"
@@ -246095,8 +246139,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 125,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-125-boxpartaccumulator",
+          "line": 127,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-127-boxpartaccumulator",
           "currentTags": [
             "@category",
             "@since"
@@ -246117,8 +246161,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 213,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-213-boxcreateuseravatarpayload",
+          "line": 215,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-215-boxcreateuseravatarpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246139,8 +246183,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 239,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-239-boxgetuseravatarpayload",
+          "line": 241,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-241-boxgetuseravatarpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246161,8 +246205,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 264,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-264-boxdownloadfilepayload",
+          "line": 266,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-266-boxdownloadfilepayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246183,8 +246227,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 289,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-289-boxgetfilethumbnailbyidpayload",
+          "line": 291,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-291-boxgetfilethumbnailbyidpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246205,8 +246249,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 325,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-325-boxuploadfileversionpayload",
+          "line": 327,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-327-boxuploadfileversionpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246227,8 +246271,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 361,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-361-boxuploadfilepayload",
+          "line": 363,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-363-boxuploadfilepayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246249,8 +246293,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 397,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-397-boxuploadwithpreflightcheckpayload",
+          "line": 399,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-399-boxuploadwithpreflightcheckpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246271,8 +246315,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 432,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-432-boxuploadfilepartbyurlpayload",
+          "line": 434,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-434-boxuploadfilepartbyurlpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246299,8 +246343,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 468,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-468-boxuploadfilepartpayload",
+          "line": 470,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-470-boxuploadfilepartpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246321,8 +246365,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 506,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-506-boxchunkeduploadreducerpayload",
+          "line": 508,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-508-boxchunkeduploadreducerpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246343,8 +246387,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 539,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-539-boxuploadbigfilepayload",
+          "line": 541,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-541-boxuploadbigfilepayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246365,8 +246409,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 566,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-566-boxgeteventstreampayload",
+          "line": 568,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-568-boxgeteventstreampayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246387,8 +246431,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 592,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-592-boxgetzipdownloadcontentpayload",
+          "line": 594,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-594-boxgetzipdownloadcontentpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246415,8 +246459,8 @@
           "exportKind": "class",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 624,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-624-boxdownloadzippayload",
+          "line": 626,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-626-boxdownloadzippayload",
           "currentTags": [
             "@category",
             "@since"
@@ -246437,8 +246481,8 @@
           "exportKind": "type",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 648,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-648-boxstreamingoperations",
+          "line": 650,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-650-boxstreamingoperations",
           "currentTags": [
             "@category",
             "@since"
@@ -246459,8 +246503,8 @@
           "exportKind": "const",
           "filePath": "src/Box.streaming.ts",
           "repoPath": "packages/drivers/box/src/Box.streaming.ts",
-          "line": 1007,
-          "anchor": "packages-drivers-box-src-box-streaming-ts-1007-makestreamingoperations",
+          "line": 1009,
+          "anchor": "packages-drivers-box-src-box-streaming-ts-1009-makestreamingoperations",
           "currentTags": [
             "@category",
             "@since"
@@ -279850,8 +279894,8 @@
           "exportKind": "interface",
           "filePath": "src/FaceDetection.service.ts",
           "repoPath": "packages/drivers/face-detection/src/FaceDetection.service.ts",
-          "line": 207,
-          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-207-loadedfacedetector",
+          "line": 209,
+          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-209-loadedfacedetector",
           "currentTags": [
             "@category",
             "@since"
@@ -279878,8 +279922,8 @@
           "exportKind": "interface",
           "filePath": "src/FaceDetection.service.ts",
           "repoPath": "packages/drivers/face-detection/src/FaceDetection.service.ts",
-          "line": 255,
-          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-255-facedetectionserviceshape",
+          "line": 257,
+          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-257-facedetectionserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -279906,8 +279950,8 @@
           "exportKind": "class",
           "filePath": "src/FaceDetection.service.ts",
           "repoPath": "packages/drivers/face-detection/src/FaceDetection.service.ts",
-          "line": 314,
-          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-314-facedetectionservice",
+          "line": 316,
+          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-316-facedetectionservice",
           "currentTags": [
             "@category",
             "@since"
@@ -279934,8 +279978,8 @@
           "exportKind": "const",
           "filePath": "src/FaceDetection.service.ts",
           "repoPath": "packages/drivers/face-detection/src/FaceDetection.service.ts",
-          "line": 429,
-          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-429-facedetectionservicetestkit",
+          "line": 431,
+          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-431-facedetectionservicetestkit",
           "currentTags": [
             "@internal",
             "@category",
@@ -279957,8 +280001,8 @@
           "exportKind": "const",
           "filePath": "src/FaceDetection.service.ts",
           "repoPath": "packages/drivers/face-detection/src/FaceDetection.service.ts",
-          "line": 885,
-          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-885-makefacedetectionservice",
+          "line": 887,
+          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-887-makefacedetectionservice",
           "currentTags": [
             "@category",
             "@since"
@@ -279979,8 +280023,8 @@
           "exportKind": "const",
           "filePath": "src/FaceDetection.service.ts",
           "repoPath": "packages/drivers/face-detection/src/FaceDetection.service.ts",
-          "line": 958,
-          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-958-withdetector",
+          "line": 960,
+          "anchor": "packages-drivers-face-detection-src-facedetection-service-ts-960-withdetector",
           "currentTags": [
             "@effects",
             "@category",
@@ -287398,8 +287442,8 @@
           "exportKind": "const",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 40,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-40-beep-qa-xmp-namespace-uri",
+          "line": 42,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-42-beep-qa-xmp-namespace-uri",
           "currentTags": [
             "@category",
             "@since"
@@ -287420,8 +287464,8 @@
           "exportKind": "const",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 56,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-56-beep-qa-xmp-namespace-prefix",
+          "line": 58,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-58-beep-qa-xmp-namespace-prefix",
           "currentTags": [
             "@category",
             "@since"
@@ -287442,8 +287486,8 @@
           "exportKind": "const",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 73,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-73-beep-qa-xmp-group",
+          "line": 75,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-75-beep-qa-xmp-group",
           "currentTags": [
             "@category",
             "@since"
@@ -287464,8 +287508,8 @@
           "exportKind": "const",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 89,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-89-beepqatagname",
+          "line": 91,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-91-beepqatagname",
           "currentTags": [
             "@category",
             "@since"
@@ -287486,8 +287530,8 @@
           "exportKind": "type",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 119,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-119-beepqatagname",
+          "line": 121,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-121-beepqatagname",
           "currentTags": [
             "@category",
             "@since"
@@ -287508,8 +287552,8 @@
           "exportKind": "const",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 137,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-137-xmpnamespaceprefix",
+          "line": 139,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-139-xmpnamespaceprefix",
           "currentTags": [
             "@category",
             "@since"
@@ -287530,8 +287574,8 @@
           "exportKind": "type",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 166,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-166-xmpnamespaceprefix",
+          "line": 168,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-168-xmpnamespaceprefix",
           "currentTags": [
             "@category",
             "@since"
@@ -287552,8 +287596,8 @@
           "exportKind": "const",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 184,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-184-xmppropertyname",
+          "line": 186,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-186-xmppropertyname",
           "currentTags": [
             "@category",
             "@since"
@@ -287574,8 +287618,8 @@
           "exportKind": "type",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 213,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-213-xmppropertyname",
+          "line": 215,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-215-xmppropertyname",
           "currentTags": [
             "@category",
             "@since"
@@ -287596,8 +287640,8 @@
           "exportKind": "const",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 231,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-231-xmpnamespaceuri",
+          "line": 233,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-233-xmpnamespaceuri",
           "currentTags": [
             "@category",
             "@since"
@@ -287618,8 +287662,8 @@
           "exportKind": "type",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 260,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-260-xmpnamespaceuri",
+          "line": 262,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-262-xmpnamespaceuri",
           "currentTags": [
             "@category",
             "@since"
@@ -287640,8 +287684,8 @@
           "exportKind": "class",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 277,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-277-renderbeepqaconfigoptions",
+          "line": 279,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-279-renderbeepqaconfigoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -287662,8 +287706,8 @@
           "exportKind": "const",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 330,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-330-renderbeepqaexiftoolconfig",
+          "line": 332,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-332-renderbeepqaexiftoolconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -287684,8 +287728,8 @@
           "exportKind": "const",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 384,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-384-beepqarawtagkey",
+          "line": 386,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-386-beepqarawtagkey",
           "currentTags": [
             "@category",
             "@since"
@@ -287706,8 +287750,8 @@
           "exportKind": "const",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 411,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-411-provenancetagassignments",
+          "line": 413,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-413-provenancetagassignments",
           "currentTags": [
             "@category",
             "@since"
@@ -287728,8 +287772,8 @@
           "exportKind": "const",
           "filePath": "src/ExiftoolConfig.ts",
           "repoPath": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
-          "line": 484,
-          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-484-provenancefromrawtags",
+          "line": 486,
+          "anchor": "packages-drivers-exiftool-src-exiftoolconfig-ts-486-provenancefromrawtags",
           "currentTags": [
             "@category",
             "@since"
@@ -332791,8 +332835,8 @@
           "exportKind": "function",
           "filePath": "src/ContradictionTriage/ContradictionTriageView.tsx",
           "repoPath": "packages/epistemic/ui/src/ContradictionTriage/ContradictionTriageView.tsx",
-          "line": 1393,
-          "anchor": "packages-epistemic-ui-src-contradictiontriage-contradictiontriageview-tsx-1393-contradictiontriageview",
+          "line": 1388,
+          "anchor": "packages-epistemic-ui-src-contradictiontriage-contradictiontriageview-tsx-1388-contradictiontriageview",
           "currentTags": [
             "@category",
             "@since"
@@ -332813,8 +332857,8 @@
           "exportKind": "const",
           "filePath": "src/ContradictionTriage/ContradictionTriageView.tsx",
           "repoPath": "packages/epistemic/ui/src/ContradictionTriage/ContradictionTriageView.tsx",
-          "line": 73,
-          "anchor": "packages-epistemic-ui-src-contradictiontriage-contradictiontriageview-tsx-73-contradictiontriagetab",
+          "line": 74,
+          "anchor": "packages-epistemic-ui-src-contradictiontriage-contradictiontriageview-tsx-74-contradictiontriagetab",
           "currentTags": [
             "@category",
             "@since"
@@ -332835,8 +332879,8 @@
           "exportKind": "type",
           "filePath": "src/ContradictionTriage/ContradictionTriageView.tsx",
           "repoPath": "packages/epistemic/ui/src/ContradictionTriage/ContradictionTriageView.tsx",
-          "line": 95,
-          "anchor": "packages-epistemic-ui-src-contradictiontriage-contradictiontriageview-tsx-95-contradictiontriagetab",
+          "line": 97,
+          "anchor": "packages-epistemic-ui-src-contradictiontriage-contradictiontriageview-tsx-97-contradictiontriagetab",
           "currentTags": [
             "@category",
             "@since"
@@ -332857,8 +332901,8 @@
           "exportKind": "interface",
           "filePath": "src/ContradictionTriage/ContradictionTriageView.tsx",
           "repoPath": "packages/epistemic/ui/src/ContradictionTriage/ContradictionTriageView.tsx",
-          "line": 126,
-          "anchor": "packages-epistemic-ui-src-contradictiontriage-contradictiontriageview-tsx-126-contradictiontriageviewprops",
+          "line": 128,
+          "anchor": "packages-epistemic-ui-src-contradictiontriage-contradictiontriageview-tsx-128-contradictiontriageviewprops",
           "currentTags": [
             "@category",
             "@since"
@@ -337163,8 +337207,8 @@
           "exportKind": "const",
           "filePath": "src/DockviewReact.tsx",
           "repoPath": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
-          "line": 236,
-          "anchor": "packages-foundation-ui-system-dock-react-src-dockviewreact-tsx-236-dockviewreact",
+          "line": 244,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockviewreact-tsx-244-dockviewreact",
           "currentTags": [
             "@category",
             "@since"
@@ -341730,8 +341774,8 @@
           "exportKind": "const",
           "filePath": "src/react.tsx",
           "repoPath": "packages/foundation/ui-system/brand/src/react.tsx",
-          "line": 80,
-          "anchor": "packages-foundation-ui-system-brand-src-react-tsx-80-beepwordmark",
+          "line": 92,
+          "anchor": "packages-foundation-ui-system-brand-src-react-tsx-92-beepwordmark",
           "currentTags": [
             "@param",
             "@returns",
@@ -342965,7 +343009,7 @@
         "srcDir": "src",
         "sourceFileCount": 36,
         "publicModuleCount": 36,
-        "publicExportCount": 211
+        "publicExportCount": 212
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -343569,7 +343613,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 7,
+          "exportCount": 8,
           "remediationStatus": "open"
         },
         {
@@ -346864,8 +346908,8 @@
           "exportKind": "function",
           "filePath": "src/chat/chat-composer.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
-          "line": 567,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-chat-composer-tsx-567-chatcomposer",
+          "line": 560,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-chat-composer-tsx-560-chatcomposer",
           "currentTags": [
             "@category",
             "@since"
@@ -346886,8 +346930,8 @@
           "exportKind": "interface",
           "filePath": "src/chat/chat-composer.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
-          "line": 109,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-chat-composer-tsx-109-chatcomposermountconfig",
+          "line": 103,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-chat-composer-tsx-103-chatcomposermountconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -346908,8 +346952,8 @@
           "exportKind": "interface",
           "filePath": "src/chat/chat-composer.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
-          "line": 151,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-chat-composer-tsx-151-chatcomposerprops",
+          "line": 145,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-chat-composer-tsx-145-chatcomposerprops",
           "currentTags": [
             "@category",
             "@since"
@@ -347404,8 +347448,8 @@
           "exportKind": "function",
           "filePath": "src/chat/toolbar.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/toolbar.tsx",
-          "line": 316,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-toolbar-tsx-316-fixedtoolbarplugin",
+          "line": 306,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-toolbar-tsx-306-fixedtoolbarplugin",
           "currentTags": [
             "@category",
             "@since"
@@ -347426,8 +347470,8 @@
           "exportKind": "const",
           "filePath": "src/chat/toolbar.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/toolbar.tsx",
-          "line": 76,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-toolbar-tsx-76-blocktype",
+          "line": 74,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-toolbar-tsx-74-blocktype",
           "currentTags": [
             "@category",
             "@since"
@@ -347448,8 +347492,8 @@
           "exportKind": "type",
           "filePath": "src/chat/toolbar.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/toolbar.tsx",
-          "line": 110,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-toolbar-tsx-110-blocktype",
+          "line": 108,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-toolbar-tsx-108-blocktype",
           "currentTags": [
             "@category",
             "@since"
@@ -347470,8 +347514,8 @@
           "exportKind": "const",
           "filePath": "src/chat/toolbar.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/toolbar.tsx",
-          "line": 177,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-toolbar-tsx-177-selectionblocktype",
+          "line": 175,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-toolbar-tsx-175-selectionblocktype",
           "currentTags": [
             "@category",
             "@since"
@@ -347492,8 +347536,8 @@
           "exportKind": "const",
           "filePath": "src/chat/toolbar.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/toolbar.tsx",
-          "line": 226,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-toolbar-tsx-226-toolbarselectionatom",
+          "line": 224,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-toolbar-tsx-224-toolbarselectionatom",
           "currentTags": [
             "@category",
             "@since"
@@ -347514,8 +347558,8 @@
           "exportKind": "function",
           "filePath": "src/chat/typeahead.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
-          "line": 451,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-typeahead-tsx-451-slashplugin",
+          "line": 488,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-typeahead-tsx-488-slashplugin",
           "currentTags": [
             "@category",
             "@since"
@@ -347536,8 +347580,8 @@
           "exportKind": "function",
           "filePath": "src/chat/typeahead.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
-          "line": 535,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-typeahead-tsx-535-mentionplugin",
+          "line": 572,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-typeahead-tsx-572-mentionplugin",
           "currentTags": [
             "@category",
             "@since"
@@ -347558,8 +347602,8 @@
           "exportKind": "function",
           "filePath": "src/chat/typeahead.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
-          "line": 763,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-typeahead-tsx-763-comboboxariaplugin",
+          "line": 800,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-typeahead-tsx-800-comboboxariaplugin",
           "currentTags": [
             "@category",
             "@since"
@@ -347642,12 +347686,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "typeaheadInsetPx",
+          "exportKind": "const",
+          "filePath": "src/chat/typeahead.tsx",
+          "repoPath": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
+          "line": 328,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-typeahead-tsx-328-typeaheadinsetpx",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "typeaheadMenuId",
           "exportKind": "const",
           "filePath": "src/chat/typeahead.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
-          "line": 636,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-typeahead-tsx-636-typeaheadmenuid",
+          "line": 673,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-typeahead-tsx-673-typeaheadmenuid",
           "currentTags": [
             "@category",
             "@since"
@@ -347998,8 +348064,8 @@
           "exportKind": "function",
           "filePath": "src/mermaid-view.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
-          "line": 794,
-          "anchor": "packages-foundation-ui-system-editor-src-mermaid-view-tsx-794-mermaidview",
+          "line": 793,
+          "anchor": "packages-foundation-ui-system-editor-src-mermaid-view-tsx-793-mermaidview",
           "currentTags": [
             "@category",
             "@since"
@@ -350915,8 +350981,8 @@
           "exportKind": "function",
           "filePath": "src/aggregates/Session/Session.inspector.tsx",
           "repoPath": "packages/ontology/ui/src/aggregates/Session/Session.inspector.tsx",
-          "line": 197,
-          "anchor": "packages-ontology-ui-src-aggregates-session-session-inspector-tsx-197-ontologyinspectorregion",
+          "line": 198,
+          "anchor": "packages-ontology-ui-src-aggregates-session-session-inspector-tsx-198-ontologyinspectorregion",
           "currentTags": [
             "@category",
             "@since"
@@ -360670,8 +360736,8 @@
           "exportKind": "const",
           "filePath": "src/Discord.errors.ts",
           "repoPath": "packages/drivers/discord/src/Discord.errors.ts",
-          "line": 34,
-          "anchor": "packages-drivers-discord-src-discord-errors-ts-34-discorderrorreason",
+          "line": 32,
+          "anchor": "packages-drivers-discord-src-discord-errors-ts-32-discorderrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -360692,8 +360758,8 @@
           "exportKind": "type",
           "filePath": "src/Discord.errors.ts",
           "repoPath": "packages/drivers/discord/src/Discord.errors.ts",
-          "line": 46,
-          "anchor": "packages-drivers-discord-src-discord-errors-ts-46-discorderrorreason",
+          "line": 44,
+          "anchor": "packages-drivers-discord-src-discord-errors-ts-44-discorderrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -360714,8 +360780,8 @@
           "exportKind": "class",
           "filePath": "src/Discord.errors.ts",
           "repoPath": "packages/drivers/discord/src/Discord.errors.ts",
-          "line": 77,
-          "anchor": "packages-drivers-discord-src-discord-errors-ts-77-discorderror",
+          "line": 75,
+          "anchor": "packages-drivers-discord-src-discord-errors-ts-75-discorderror",
           "currentTags": [
             "@see",
             "@category",
@@ -362467,7 +362533,7 @@
         "srcDir": "src",
         "sourceFileCount": 292,
         "publicModuleCount": 290,
-        "publicExportCount": 2556
+        "publicExportCount": 2559
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -367646,7 +367712,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 40,
+          "exportCount": 43,
           "remediationStatus": "resolved"
         },
         {
@@ -374201,8 +374267,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 233,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-233-cilaneid",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-234-cilaneid",
           "currentTags": [
             "@category",
             "@since"
@@ -374223,8 +374289,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 254,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-254-cilaneid",
+          "line": 255,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-255-cilaneid",
           "currentTags": [
             "@category",
             "@since"
@@ -374245,8 +374311,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 272,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-272-docgen-lane-mode-values",
+          "line": 273,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-273-docgen-lane-mode-values",
           "currentTags": [
             "@category",
             "@since"
@@ -374267,8 +374333,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 288,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-288-docgenlanemode",
+          "line": 289,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-289-docgenlanemode",
           "currentTags": [
             "@category",
             "@since"
@@ -374289,8 +374355,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 309,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-309-docgenlanemode",
+          "line": 310,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-310-docgenlanemode",
           "currentTags": [
             "@category",
             "@since"
@@ -374311,8 +374377,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 333,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-333-cilanedescriptor",
+          "line": 334,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-334-cilanedescriptor",
           "currentTags": [
             "@category",
             "@since"
@@ -374333,8 +374399,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 368,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-368-ci-lane-descriptors",
+          "line": 369,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-369-ci-lane-descriptors",
           "currentTags": [
             "@category",
             "@since"
@@ -374359,8 +374425,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 658,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-658-cilanerunoptions",
+          "line": 671,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-671-cilanerunoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -374381,8 +374447,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 842,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-842-cilanepartitionproof",
+          "line": 855,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-855-cilanepartitionproof",
           "currentTags": [
             "@category",
             "@since"
@@ -374403,8 +374469,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1089,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1089-provecilanepartition",
+          "line": 1102,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1102-provecilanepartition",
           "currentTags": [
             "@param",
             "@returns",
@@ -374427,8 +374493,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1194,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1194-cilanepartitionargs",
+          "line": 1207,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1207-cilanepartitionargs",
           "currentTags": [
             "@category",
             "@since"
@@ -374449,8 +374515,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1224,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1224-cilanepartitionargsfortesting",
+          "line": 1237,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1237-cilanepartitionargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -374473,8 +374539,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1429,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1429-cilanestepsfortesting",
+          "line": 1442,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1442-cilanestepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -374501,8 +374567,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1756,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1756-docgenlanemodeforchangedpaths",
+          "line": 1772,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1772-docgenlanemodeforchangedpaths",
           "currentTags": [
             "@param",
             "@returns",
@@ -374525,8 +374591,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2114,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2114-runcilane",
+          "line": 2130,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2130-runcilane",
           "currentTags": [
             "@param",
             "@returns",
@@ -374549,8 +374615,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2182,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2182-cilanecommand",
+          "line": 2198,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2198-cilanecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -374571,8 +374637,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2405,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2405-cilocalstepplan",
+          "line": 2422,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2422-cilocalstepplan",
           "currentTags": [
             "@category",
             "@since"
@@ -374593,8 +374659,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2486,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2486-cilanedispatchstep",
+          "line": 2504,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2504-cilanedispatchstep",
           "currentTags": [
             "@param",
             "@returns",
@@ -374617,8 +374683,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2524,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2524-cilocalstepsfortesting",
+          "line": 2542,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2542-cilocalstepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -374641,8 +374707,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2560,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2560-cilocallaneinputsfortesting",
+          "line": 2578,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2578-cilocallaneinputsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -374665,8 +374731,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2591,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2591-runcilocal",
+          "line": 2609,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2609-runcilocal",
           "currentTags": [
             "@param",
             "@returns",
@@ -374689,8 +374755,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2627,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2627-cilocalcommand",
+          "line": 2645,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2645-cilocalcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -376051,8 +376117,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1750,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1750-cilanetiminggithubclientshape",
+          "line": 1752,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1752-cilanetiminggithubclientshape",
           "currentTags": [
             "@category",
             "@since"
@@ -376073,8 +376139,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1773,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1773-cilanetiminggithubclient",
+          "line": 1775,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1775-cilanetiminggithubclient",
           "currentTags": [
             "@category",
             "@since"
@@ -376095,8 +376161,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1933,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1933-collectrequiredcontexts",
+          "line": 1935,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1935-collectrequiredcontexts",
           "currentTags": [
             "@param",
             "@returns",
@@ -376119,8 +376185,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2508,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2508-buildcilanetimingwindowreport",
+          "line": 2510,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2510-buildcilanetimingwindowreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -376143,8 +376209,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2586,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2586-collectcilanetimingwindow",
+          "line": 2588,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2588-collectcilanetimingwindow",
           "currentTags": [
             "@param",
             "@returns",
@@ -376167,8 +376233,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2752,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2752-rendercilanetimingwindowmarkdown",
+          "line": 2754,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2754-rendercilanetimingwindowmarkdown",
           "currentTags": [
             "@param",
             "@returns",
@@ -376191,8 +376257,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2787,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2787-rendercilanetimingwindowsummary",
+          "line": 2789,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2789-rendercilanetimingwindowsummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -376215,8 +376281,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2899,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2899-rendercilanetimingwindowtsv",
+          "line": 2901,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2901-rendercilanetimingwindowtsv",
           "currentTags": [
             "@param",
             "@returns",
@@ -376239,8 +376305,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3001,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3001-assesscilanetimingwindowbounds",
+          "line": 3003,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3003-assesscilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -376263,8 +376329,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3049,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3049-assesscilanetimingwindowpopulation",
+          "line": 3051,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3051-assesscilanetimingwindowpopulation",
           "currentTags": [
             "@param",
             "@returns",
@@ -376287,8 +376353,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3087,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3087-rendercilanetimingwindowpreviewbanner",
+          "line": 3089,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3089-rendercilanetimingwindowpreviewbanner",
           "currentTags": [
             "@param",
             "@returns",
@@ -376311,8 +376377,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3122,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3122-guardcilanetimingwindowbounds",
+          "line": 3124,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3124-guardcilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -376335,8 +376401,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3272,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3272-cilanetimingscommand",
+          "line": 3274,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3274-cilanetimingscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -413579,12 +413645,56 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "TsgoDisabledRule",
+          "exportKind": "class",
+          "filePath": "src/commands/Quality/Quality.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "line": 519,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-519-tsgodisabledrule",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "tsgoDisabledRules",
+          "exportKind": "const",
+          "filePath": "src/commands/Quality/Quality.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "line": 551,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-551-tsgodisabledrules",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "isRejectedEffectDiagnosticsDirectiveForTesting",
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 533,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-533-isrejectedeffectdiagnosticsdirectivefortesting",
+          "line": 605,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-605-isrejectedeffectdiagnosticsdirectivefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -413607,8 +413717,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 774,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-774-qualitycommandprimitivehelpersfortesting",
+          "line": 846,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-846-qualitycommandprimitivehelpersfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -413629,8 +413739,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 948,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-948-runbunaudit",
+          "line": 1020,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1020-runbunaudit",
           "currentTags": [
             "@param",
             "@returns",
@@ -413657,8 +413767,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1078,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1078-devqualitystepsfortesting",
+          "line": 1150,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1150-devqualitystepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -413687,8 +413797,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1146,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1146-reviewfixdocgenlocalargsfortesting",
+          "line": 1218,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1218-reviewfixdocgenlocalargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -413711,8 +413821,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1376,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1376-rungithubchecks",
+          "line": 1448,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1448-rungithubchecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -413735,8 +413845,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1821,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1821-testtsgoplanningfortesting",
+          "line": 1893,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1893-testtsgoplanningfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -413757,8 +413867,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1966,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1966-collecteffecttsgodiagnosticlines",
+          "line": 2038,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2038-collecteffecttsgodiagnosticlines",
           "currentTags": [
             "@param",
             "@returns",
@@ -413781,8 +413891,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1999,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1999-missingtesttsgotaskmessagefortesting",
+          "line": 2071,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2071-missingtesttsgotaskmessagefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -413805,8 +413915,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2115,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2115-extracteffecttsgoreadmepluginoptionnamesfortesting",
+          "line": 2187,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2187-extracteffecttsgoreadmepluginoptionnamesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -413829,8 +413939,32 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2185,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2185-collecttsgopluginoptionparitydiagnosticsfortesting",
+          "line": 2257,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2257-collecttsgopluginoptionparitydiagnosticsfortesting",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "collectTsgoSeverityDiagnosticsForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Quality/Quality.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "line": 2385,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2385-collecttsgoseveritydiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -413853,8 +413987,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2555,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2555-collecttsgopluginprofilediagnosticsfortesting",
+          "line": 2686,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2686-collecttsgopluginprofilediagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -413877,8 +414011,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2577,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2577-collecttsconfiginheritancediagnosticsfortesting",
+          "line": 2708,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2708-collecttsconfiginheritancediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -413899,8 +414033,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2754,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2754-runtsgorulescheck",
+          "line": 2885,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2885-runtsgorulescheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -413922,8 +414056,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2901,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2901-runtesttsgochecks",
+          "line": 3023,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3023-runtesttsgochecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -413946,8 +414080,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3010,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3010-runtesttsgochecksat",
+          "line": 3132,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3132-runtesttsgochecksat",
           "currentTags": [
             "@param",
             "@returns",
@@ -413970,8 +414104,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3056,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3056-runtsgosmokecheck",
+          "line": 3178,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3178-runtsgosmokecheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -413993,8 +414127,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3166,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3166-ismoduletagscannedpathfortesting",
+          "line": 3288,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3288-ismoduletagscannedpathfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -414017,8 +414151,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3187,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3187-runjsdocmoduletagscheck",
+          "line": 3309,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3309-runjsdocmoduletagscheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -414040,8 +414174,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3260,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3260-runjsdocinventory",
+          "line": 3382,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3382-runjsdocinventory",
           "currentTags": [
             "@returns",
             "@category",
@@ -414063,8 +414197,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3326,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3326-runjsdocquality",
+          "line": 3448,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3448-runjsdocquality",
           "currentTags": [
             "@category",
             "@since"
@@ -414085,8 +414219,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3865,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3865-renderadmissionsnapshotlinesfortesting",
+          "line": 3987,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3987-renderadmissionsnapshotlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -414109,8 +414243,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4029,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4029-rendertmpfsreportlinesfortesting",
+          "line": 4154,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4154-rendertmpfsreportlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -414133,8 +414267,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4178,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4178-renderresiduereportlinesfortesting",
+          "line": 4303,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4303-renderresiduereportlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -414157,8 +414291,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4298,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4298-qualitycommand",
+          "line": 4423,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4423-qualitycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -435850,8 +435984,8 @@
           "exportKind": "function",
           "filePath": "src/app/page.tsx",
           "repoPath": "apps/oip-web/src/app/page.tsx",
-          "line": 65,
-          "anchor": "apps-oip-web-src-app-page-tsx-65-generatemetadata",
+          "line": 67,
+          "anchor": "apps-oip-web-src-app-page-tsx-67-generatemetadata",
           "currentTags": [
             "@category",
             "@since"
@@ -435872,8 +436006,8 @@
           "exportKind": "function",
           "filePath": "src/app/page.tsx",
           "repoPath": "apps/oip-web/src/app/page.tsx",
-          "line": 116,
-          "anchor": "apps-oip-web-src-app-page-tsx-116-default",
+          "line": 118,
+          "anchor": "apps-oip-web-src-app-page-tsx-118-default",
           "currentTags": [
             "@category",
             "@since"
@@ -435894,8 +436028,8 @@
           "exportKind": "const",
           "filePath": "src/app/page.tsx",
           "repoPath": "apps/oip-web/src/app/page.tsx",
-          "line": 48,
-          "anchor": "apps-oip-web-src-app-page-tsx-48-instant",
+          "line": 50,
+          "anchor": "apps-oip-web-src-app-page-tsx-50-instant",
           "currentTags": [
             "@category",
             "@since"
@@ -436048,8 +436182,8 @@
           "exportKind": "function",
           "filePath": "src/components/MattersCarousel.tsx",
           "repoPath": "apps/oip-web/src/components/MattersCarousel.tsx",
-          "line": 52,
-          "anchor": "apps-oip-web-src-components-matterscarousel-tsx-52-matterscarousel",
+          "line": 89,
+          "anchor": "apps-oip-web-src-components-matterscarousel-tsx-89-matterscarousel",
           "currentTags": [
             "@category",
             "@since"
@@ -436070,8 +436204,8 @@
           "exportKind": "function",
           "filePath": "src/components/OipHomePage.tsx",
           "repoPath": "apps/oip-web/src/components/OipHomePage.tsx",
-          "line": 537,
-          "anchor": "apps-oip-web-src-components-oiphomepage-tsx-537-oiphomepage",
+          "line": 523,
+          "anchor": "apps-oip-web-src-components-oiphomepage-tsx-523-oiphomepage",
           "currentTags": [
             "@category",
             "@since"
@@ -508867,8 +509001,8 @@
           "exportKind": "function",
           "filePath": "src/chat/ui/Thread.tsx",
           "repoPath": "apps/professional-desktop/src/chat/ui/Thread.tsx",
-          "line": 236,
-          "anchor": "apps-professional-desktop-src-chat-ui-thread-tsx-236-thread",
+          "line": 234,
+          "anchor": "apps-professional-desktop-src-chat-ui-thread-tsx-234-thread",
           "currentTags": [
             "@category",
             "@since"
@@ -511470,8 +511604,8 @@
           "exportKind": "function",
           "filePath": "src/sync/VaultSyncPanel.tsx",
           "repoPath": "apps/professional-desktop/src/sync/VaultSyncPanel.tsx",
-          "line": 298,
-          "anchor": "apps-professional-desktop-src-sync-vaultsyncpanel-tsx-298-vaultsyncpanel",
+          "line": 296,
+          "anchor": "apps-professional-desktop-src-sync-vaultsyncpanel-tsx-296-vaultsyncpanel",
           "currentTags": [
             "@category",
             "@since"
@@ -511713,8 +511847,8 @@
           "exportKind": "class",
           "filePath": "src/transport/TauriIpcSocket.ts",
           "repoPath": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-          "line": 123,
-          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-123-sidecarclosedpayload",
+          "line": 125,
+          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-125-sidecarclosedpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -511735,8 +511869,8 @@
           "exportKind": "class",
           "filePath": "src/transport/TauriIpcSocket.ts",
           "repoPath": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-          "line": 170,
-          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-170-sidecarclosederror",
+          "line": 172,
+          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-172-sidecarclosederror",
           "currentTags": [
             "@category",
             "@since"
@@ -511757,8 +511891,8 @@
           "exportKind": "class",
           "filePath": "src/transport/TauriIpcSocket.ts",
           "repoPath": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-          "line": 200,
-          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-200-sidecarsenderror",
+          "line": 202,
+          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-202-sidecarsenderror",
           "currentTags": [
             "@category",
             "@since"
@@ -511779,8 +511913,8 @@
           "exportKind": "const",
           "filePath": "src/transport/TauriIpcSocket.ts",
           "repoPath": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-          "line": 238,
-          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-238-inboundevent",
+          "line": 240,
+          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-240-inboundevent",
           "currentTags": [
             "@category",
             "@since"
@@ -511801,8 +511935,8 @@
           "exportKind": "const",
           "filePath": "src/transport/TauriIpcSocket.ts",
           "repoPath": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-          "line": 476,
-          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-476-tauriipcsocketlive",
+          "line": 478,
+          "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-478-tauriipcsocketlive",
           "currentTags": [
             "@category",
             "@since"
@@ -522288,8 +522422,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 579,
-          "anchor": "infra-src-cifleetcontroller-ts-579-cifleetcontrollerpulumiconfigvalues",
+          "line": 595,
+          "anchor": "infra-src-cifleetcontroller-ts-595-cifleetcontrollerpulumiconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -522312,8 +522446,8 @@
           "exportKind": "type",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 607,
-          "anchor": "infra-src-cifleetcontroller-ts-607-cifleetcontrollerpulumiconfigvalues",
+          "line": 623,
+          "anchor": "infra-src-cifleetcontroller-ts-623-cifleetcontrollerpulumiconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -522334,8 +522468,8 @@
           "exportKind": "class",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 615,
-          "anchor": "infra-src-cifleetcontroller-ts-615-cifleetcontrollerconfig",
+          "line": 631,
+          "anchor": "infra-src-cifleetcontroller-ts-631-cifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -522358,8 +522492,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 647,
-          "anchor": "infra-src-cifleetcontroller-ts-647-makecifleetcontrollerconfig",
+          "line": 663,
+          "anchor": "infra-src-cifleetcontroller-ts-663-makecifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -522382,8 +522516,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 671,
-          "anchor": "infra-src-cifleetcontroller-ts-671-loadcifleetcontrollerconfig",
+          "line": 687,
+          "anchor": "infra-src-cifleetcontroller-ts-687-loadcifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -522406,8 +522540,8 @@
           "exportKind": "class",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 778,
-          "anchor": "infra-src-cifleetcontroller-ts-778-cifleetcontroller",
+          "line": 794,
+          "anchor": "infra-src-cifleetcontroller-ts-794-cifleetcontroller",
           "currentTags": [
             "@category",
             "@since"
@@ -522428,8 +522562,8 @@
           "exportKind": "const",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 92,
-          "anchor": "infra-src-cirunners-ts-92-cirunnersrunnertagkey",
+          "line": 100,
+          "anchor": "infra-src-cirunners-ts-100-cirunnersrunnertagkey",
           "currentTags": [
             "@category",
             "@since"
@@ -522450,8 +522584,8 @@
           "exportKind": "const",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 108,
-          "anchor": "infra-src-cirunners-ts-108-cirunnersrunnertagvalue",
+          "line": 116,
+          "anchor": "infra-src-cirunners-ts-116-cirunnersrunnertagvalue",
           "currentTags": [
             "@category",
             "@since"
@@ -522472,8 +522606,8 @@
           "exportKind": "const",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 126,
-          "anchor": "infra-src-cirunners-ts-126-cirunnersinfratagvalue",
+          "line": 134,
+          "anchor": "infra-src-cirunners-ts-134-cirunnersinfratagvalue",
           "currentTags": [
             "@category",
             "@since"
@@ -522494,8 +522628,8 @@
           "exportKind": "const",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 143,
-          "anchor": "infra-src-cirunners-ts-143-cirunnerslaunchtemplatename",
+          "line": 151,
+          "anchor": "infra-src-cirunners-ts-151-cirunnerslaunchtemplatename",
           "currentTags": [
             "@category",
             "@since"
@@ -522516,8 +522650,8 @@
           "exportKind": "const",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 159,
-          "anchor": "infra-src-cirunners-ts-159-cirunnersworkersecuritygroupname",
+          "line": 167,
+          "anchor": "infra-src-cirunners-ts-167-cirunnersworkersecuritygroupname",
           "currentTags": [
             "@category",
             "@since"
@@ -522538,8 +522672,8 @@
           "exportKind": "const",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 175,
-          "anchor": "infra-src-cirunners-ts-175-cirunnersreaperfunctionname",
+          "line": 183,
+          "anchor": "infra-src-cirunners-ts-183-cirunnersreaperfunctionname",
           "currentTags": [
             "@category",
             "@since"
@@ -522560,8 +522694,8 @@
           "exportKind": "const",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 361,
-          "anchor": "infra-src-cirunners-ts-361-cirunnerspulumiconfigvalues",
+          "line": 375,
+          "anchor": "infra-src-cirunners-ts-375-cirunnerspulumiconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -522582,8 +522716,8 @@
           "exportKind": "type",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 396,
-          "anchor": "infra-src-cirunners-ts-396-cirunnerspulumiconfigvalues",
+          "line": 416,
+          "anchor": "infra-src-cirunners-ts-416-cirunnerspulumiconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -522604,8 +522738,8 @@
           "exportKind": "class",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 509,
-          "anchor": "infra-src-cirunners-ts-509-cirunnersnetworkconfig",
+          "line": 586,
+          "anchor": "infra-src-cirunners-ts-586-cirunnersnetworkconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -522626,8 +522760,8 @@
           "exportKind": "class",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 539,
-          "anchor": "infra-src-cirunners-ts-539-cirunnersimageconfig",
+          "line": 621,
+          "anchor": "infra-src-cirunners-ts-621-cirunnersimageconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -522648,8 +522782,8 @@
           "exportKind": "class",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 567,
-          "anchor": "infra-src-cirunners-ts-567-cirunnersworkerconfig",
+          "line": 649,
+          "anchor": "infra-src-cirunners-ts-649-cirunnersworkerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -522670,8 +522804,8 @@
           "exportKind": "class",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 602,
-          "anchor": "infra-src-cirunners-ts-602-cirunnersreaperconfig",
+          "line": 684,
+          "anchor": "infra-src-cirunners-ts-684-cirunnersreaperconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -522692,8 +522826,8 @@
           "exportKind": "class",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 628,
-          "anchor": "infra-src-cirunners-ts-628-cirunnersstackargs",
+          "line": 710,
+          "anchor": "infra-src-cirunners-ts-710-cirunnersstackargs",
           "currentTags": [
             "@category",
             "@since"
@@ -522714,8 +522848,8 @@
           "exportKind": "const",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 670,
-          "anchor": "infra-src-cirunners-ts-670-makecirunnersstackargsfromconfigvalues",
+          "line": 752,
+          "anchor": "infra-src-cirunners-ts-752-makecirunnersstackargsfromconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -522736,8 +522870,8 @@
           "exportKind": "const",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 727,
-          "anchor": "infra-src-cirunners-ts-727-loadcirunnersstackargs",
+          "line": 821,
+          "anchor": "infra-src-cirunners-ts-821-loadcirunnersstackargs",
           "currentTags": [
             "@category",
             "@since"
@@ -522758,8 +522892,8 @@
           "exportKind": "class",
           "filePath": "src/CiRunners.ts",
           "repoPath": "infra/src/CiRunners.ts",
-          "line": 926,
-          "anchor": "infra-src-cirunners-ts-926-cirunnersstack",
+          "line": 1026,
+          "anchor": "infra-src-cirunners-ts-1026-cirunnersstack",
           "currentTags": [
             "@category",
             "@since"

@@ -73,8 +73,10 @@ function ToastTrigger() {
 
 /**
  * A trigger button, hosted inside a `ToastPrimitive.Provider`, adds a toast through
- * `useToastManager`, and the styled `Toast` parts from `@beep/ui/components/toast` render it. The play test clicks the trigger and asserts the new toast's title
- * and description render in the viewport, demonstrating the imperative add-and-render flow.
+ * `useToastManager`, and the styled `Toast` parts from `@beep/ui/components/toast` render it. The
+ * play test clicks the trigger and asserts the new toast's title and description render in the
+ * viewport, demonstrating the imperative add-and-render flow. The close button appears on hover or
+ * focus, as `ToastClose` specifies.
  */
 export const WithTrigger: Story = {
   render: () => (

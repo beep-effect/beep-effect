@@ -46,6 +46,7 @@ describe("@beep/ui", () => {
         revenue: { label: "Revenue", color: "var(--chart-1)" },
         expenses: { label: "Expenses", theme: { light: "var(--chart-2)", dark: "var(--chart-3)" } },
         "bad key;": { label: "Skipped", color: "var(--chart-4)" },
+        breakout: { label: "Skipped", color: "red;background:url(x)" },
         unlabeled: { label: "No color" },
       })
     ).toEqual([
@@ -84,6 +85,13 @@ describe("@beep/ui", () => {
     const optionalHiddenClass: false | string = false;
 
     expect(cn("px-2 py-1", "px-4", optionalHiddenClass, ["text-sm"])).toBe("py-1 px-4 text-sm");
+  });
+
+  it("keeps the design system's custom scales apart from the stock groups they resemble", () => {
+    expect(cn("text-xs-plus", "text-muted-foreground")).toBe("text-xs-plus text-muted-foreground");
+    expect(cn("border-(--color-border)", "border-indicator")).toBe("border-(--color-border) border-indicator");
+    expect(cn("gap-toggle-group", "gap-2")).toBe("gap-2");
+    expect(cn("rounded-md", "rounded-inherit")).toBe("rounded-inherit");
   });
 
   it("renders input validation, form attributes, and caller styling", () => {

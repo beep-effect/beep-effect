@@ -335,16 +335,6 @@
   }
 }
 
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  overscroll-behavior: contain;
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
 /*
  * Custom utilities the design-system components use. The no-scrollbar, scroll-fade and
  * shimmer utilities are the shadcn base-nova set (shadcn/dist/tailwind.css), copied here
@@ -574,7 +564,9 @@
 }
 
 /* Day-cell geometry the calendar's own classes read through `size-(--cell-size)` and
-   `rounded-(--cell-radius)`; callers can still override either variable. */
+   `rounded-(--cell-radius)`. A consumer that needs other geometry declares its own
+   `@utility` setting them: arbitrary properties are off-policy, and `cn` cannot dedupe
+   variable-setting utilities. */
 @utility calendar-cell-vars {
   --cell-size: calc(var(--spacing) * 7);
   --cell-radius: var(--radius-md);

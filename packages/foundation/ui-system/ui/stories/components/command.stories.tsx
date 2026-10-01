@@ -1,4 +1,4 @@
-// fallow-ignore-file code-duplication -- story variants repeat the canonical markup on purpose: each story is a standalone usage example whose source the Storybook docs panel shows, and shared render helpers would hide that usage; the shadcn-lint adoption only rewrote class names inside these pre-existing blocks.
+// fallow-ignore-file code-duplication -- pre-existing story clones on main: the diff-attributed audit charges them to this change because its edited lines fall inside the clone ranges. Story variants repeat the canonical markup on purpose (the Storybook docs panel shows each story's source; shared render helpers would hide that usage). Review by 2026-12-31.
 import {
   Command,
   CommandDialog,
@@ -67,7 +67,7 @@ const onSelectSpy = fn();
  */
 export const Default: Story = {
   render: (args) => (
-    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+    <div className="overflow-hidden rounded-xl border bg-popover shadow-md md:min-w-112.5">
       <Command {...args}>
         <CommandInput placeholder="Type a command or search..." aria-label="Command" />
         <CommandList>
@@ -124,7 +124,7 @@ export const Default: Story = {
  */
 export const Filtering: Story = {
   render: (args) => (
-    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+    <div className="overflow-hidden rounded-xl border bg-popover shadow-md md:min-w-112.5">
       <Command {...args}>
         <CommandInput placeholder="Type a command or search..." aria-label="Command" />
         <CommandList>
@@ -164,7 +164,7 @@ export const Filtering: Story = {
  */
 export const EmptyState: Story = {
   render: (args) => (
-    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+    <div className="overflow-hidden rounded-xl border bg-popover shadow-md md:min-w-112.5">
       <Command {...args}>
         <CommandInput placeholder="Type a command or search..." aria-label="Command" />
         <CommandList>
@@ -199,7 +199,7 @@ export const EmptyState: Story = {
  */
 export const Selecting: Story = {
   render: () => (
-    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+    <div className="overflow-hidden rounded-xl border bg-popover shadow-md md:min-w-112.5">
       <Command>
         <CommandInput placeholder="Type a command or search..." aria-label="Command" />
         <CommandList>
@@ -234,7 +234,7 @@ export const Selecting: Story = {
  */
 export const DisabledItem: Story = {
   render: () => (
-    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+    <div className="overflow-hidden rounded-xl border bg-popover shadow-md md:min-w-112.5">
       <Command>
         <CommandInput placeholder="Type a command or search..." aria-label="Command" />
         <CommandList>
@@ -268,7 +268,7 @@ export const DisabledItem: Story = {
 export const WithLoop: Story = {
   args: { loop: true },
   render: (args) => (
-    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+    <div className="overflow-hidden rounded-xl border bg-popover shadow-md md:min-w-112.5">
       <Command {...args}>
         <CommandInput placeholder="Search actions..." aria-label="Command" />
         <CommandList>
