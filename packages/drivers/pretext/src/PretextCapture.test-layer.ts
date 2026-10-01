@@ -102,7 +102,7 @@ const fixtureCaptureFontMetrics = (snapshot: FontMetricsSnapshotV1) =>
         message: `Fixture carries "${snapshot.metrics.font}"; requested "${request.font}".`,
       });
     }
-    const [missing, entries] = A.partition(request.words, (word) =>
+    const [entries, missing] = A.partition(request.words, (word) =>
       O.match(R.get(snapshot.metrics.words, word), {
         onNone: () => Result.fail(word),
         onSome: (width) => Result.succeed([word, width] as const),

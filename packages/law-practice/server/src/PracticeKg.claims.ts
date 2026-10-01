@@ -305,7 +305,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     yield* Effect.forEach(createClaimsTables, (statement) => sql.unsafe(statement), { discard: true });
     const canonicalInputs = yield* fs.realPath(options.inputs);
     const entries = A.sort(yield* fs.readDirectory(canonicalInputs), Order.String);
-    const [skippedFiles, docketedFiles] = A.partition(entries, (filename) =>
+    const [docketedFiles, skippedFiles] = A.partition(entries, (filename) =>
       O.match(docketFromFilename(filename), {
         onNone: () => Result.fail(filename),
         onSome: (docket) => Result.succeed({ docket, filename }),
@@ -464,7 +464,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     const persistedPatentDocuments = yield* Effect.forEach(options.patentDocuments, persistPatentDocument, {
       concurrency: 1,
     });
-    const [failedExtractions, extractedFiles] = A.partition(outcomes, (outcome) =>
+    const [extractedFiles, failedExtractions] = A.partition(outcomes, (outcome) =>
       outcome.extracted ? Result.succeed(outcome) : Result.fail(outcome)
     );
     if (A.isReadonlyArrayNonEmpty(failedExtractions)) {
