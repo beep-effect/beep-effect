@@ -194,7 +194,7 @@ const selectJobs = Effect.fn("Gold.selectJobs")(function* (subsets: GoldSubset, 
     return jobsForSubset(subsets, options.subset.value);
   }
   if (O.isSome(options.paper)) {
-    const paperId = yield* CorpusPaperId.decodeEffect(options.paper.value).pipe(
+    const paperId = yield* S.decodeEffect(CorpusPaperId)(options.paper.value).pipe(
       Effect.mapError(() => unavailable("invalid-selection", "The requested paper id is not a valid W1 corpus id."))
     );
     const selected = A.getSomes(
@@ -320,7 +320,7 @@ const entityLabelsFor = Effect.fn("Gold.entityLabelsFor")(function* (
 ) {
   const inventory = yield* readWrittenGold(directory, [GoldJob.make({ paperId, subset: "entity" })]);
   const files = yield* Effect.forEach(inventory.files, (file) =>
-    GoldFile.decodeEffect(file).pipe(
+    S.decodeEffect(GoldFile)(file).pipe(
       Effect.provideService(CurrentGoldDocumentText, text),
       Effect.mapError(() =>
         unavailable("digest-failed", "An entity gold label digest does not match its canonical document slice.")

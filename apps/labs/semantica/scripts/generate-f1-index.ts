@@ -118,7 +118,7 @@ const generateF1Index = Effect.gen(function* () {
     fixtureSpecs,
     Effect.fnUntraced(function* (spec) {
       const bytes = yield* fs.readFile(path.join(F1_ROOT, spec.relativePath));
-      const sha256 = yield* Sha256HexFromBytes.decodeEffect(bytes).pipe(
+      const sha256 = yield* S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(
         Effect.provideService(Crypto.Crypto, crypto),
         Effect.orDie
       );

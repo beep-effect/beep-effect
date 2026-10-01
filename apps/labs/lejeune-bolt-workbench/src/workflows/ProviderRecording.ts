@@ -112,7 +112,7 @@ export const verifyProviderRecording = Effect.fn("lejeune.provider.verify_record
   recording: ProviderRecording,
   sourceText: string
 ) {
-  const candidateJson = yield* ProviderCandidateListFromJsonString.encodeEffect(recording.candidates).pipe(
+  const candidateJson = yield* S.encodeEffect(ProviderCandidateListFromJsonString)(recording.candidates).pipe(
     Effect.mapError((cause) =>
       providerIntegrityError(
         "candidate-encoding",

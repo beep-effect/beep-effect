@@ -119,7 +119,7 @@ export default function Home({ searchParams }: HomeProps) {
     .then(([params, requestHeaders, content]) => {
       const nonce = requestHeaders.get("x-nonce") ?? undefined;
       const contactStatusValue = A.isArray(params?.contact) ? params.contact[0] : params?.contact;
-      const contactStatus = O.getOrUndefined(ContactSubmissionStatus.decodeOption(contactStatusValue));
+      const contactStatus = O.getOrUndefined(S.decodeUnknownOption(ContactSubmissionStatus)(contactStatusValue));
       const initialContactSubmittedAt = Effect.runSync(Clock.currentTimeMillis);
 
       return (

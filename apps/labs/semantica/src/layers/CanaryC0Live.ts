@@ -119,7 +119,7 @@ const selectedPaper = (paper: O.Option<string>) =>
   O.match(paper, {
     onNone: () => Effect.succeed(O.none<CorpusPaperId>()),
     onSome: (value) =>
-      CorpusPaperId.decodeEffect(value).pipe(
+      S.decodeEffect(CorpusPaperId)(value).pipe(
         Effect.asSome,
         Effect.mapError(() => executionFailed("The requested --paper value is not a valid W1 corpus id."))
       ),
