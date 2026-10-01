@@ -127,7 +127,7 @@ call is not permission to redesign unrelated detector APIs.
 - `SchemaFirstDetectors.ts:27–28,39,627–644,657–662,690–720,750–783`:
   preserve patterns, exported-candidate logic, generic skips, explicit-return
   checks and safe wrappers. No field/cardinality change inside finding schemas.
-- `SchemaFirstScan.ts:312–325`: sole direct appendFunctionEntries call319
+- `SchemaFirstScan.ts:312–325`: sole direct appendFunctionEntries call325
   remains between call and property scanners. Excluded files and other TSX
   detector families retain their current scheduling and findings.
 - `SchemaFirstScan.ts:481–511`: exported runSchemaFirstLint calls the scan482,
@@ -192,7 +192,7 @@ refresh, generated file rewrite or codec migration is part of this change.
 ## Test impact
 
 Use the existing public command fixture at
-`packages/tooling/tool/cli/test/lint-command.test.ts:72–97` rather than exporting
+`packages/tooling/tool/cli/test/lint-command.test.ts:73–97` rather than exporting
 appendFunctionEntries or changing blocked internal package subpaths.
 
 - Preserve existing TS/TSX gating fixtures503–559 and TSX data scanning1411–1446.
@@ -286,20 +286,6 @@ Only earlier const-assertion iteration changed; appendFunctionEntries body is un
 - `packages/tooling/tool/cli/test/lint-command.test.ts:751` — accepts schema-derived static match usage without static-api advisories
 - `packages/tooling/tool/cli/test/lint-command.test.ts:771` — reports untracked SFV4 equivalence manual equals advisories
 - `packages/tooling/tool/cli/test/lint-command.test.ts:804` — accepts schema-derived equivalence helpers without equivalence advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:798` — accepts S.TaggedError declarations that rely on the derived field equivalence
-- `packages/tooling/tool/cli/test/lint-command.test.ts:817` — reports S.TaggedError declarations that install a redundant toEquivalence hook
-- `packages/tooling/tool/cli/test/lint-command.test.ts:853` — reports named effect/Schema TaggedError imports that install a redundant toEquivalence hook
-- `packages/tooling/tool/cli/test/lint-command.test.ts:881` — reports named effect/Schema Class imports that install a redundant toEquivalence hook
-- `packages/tooling/tool/cli/test/lint-command.test.ts:904` — reports S.Class declarations that install a redundant toEquivalence hook
-- `packages/tooling/tool/cli/test/lint-command.test.ts:931` — reports S.Error declarations that install a redundant toEquivalence hook
-- `packages/tooling/tool/cli/test/lint-command.test.ts:958` — reports S.TaggedClass declarations that install a redundant toEquivalence hook
-- `packages/tooling/tool/cli/test/lint-command.test.ts:986` — ignores class declarations whose heritage is not a Schema class factory call
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1008` — follows annotation aliases up to three hops before giving up on the reference chain
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1046` — accepts field-level toEquivalence annotations inside the declared fields
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1065` — ignores unrelated local TaggedError factories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1081` — reports a toEquivalence hook reached through a referenced annoteClass annotation record
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1107` — accepts annoteError tagged-error annotations
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1126` — preserves existing tagged-error exceptions without excepting new write findings
 - `packages/tooling/tool/cli/test/lint-command.test.ts:823` — reports untracked SFV4 boundary-codec JSON.parse advisories
 - `packages/tooling/tool/cli/test/lint-command.test.ts:853` — accepts schema JSON codecs without boundary-codec advisories
 - `packages/tooling/tool/cli/test/lint-command.test.ts:869` — reports untracked SFV4 defaults parameter object advisories
