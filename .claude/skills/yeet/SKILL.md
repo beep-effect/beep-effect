@@ -342,7 +342,7 @@ bun run beep yeet monitor --summary
 bun run beep yeet closeout --summary --require-review-comments 0
 ```
 
-- Inspect hosted review/bot closeout gates for the current branch PR:
+- Inspect review threads and review-bot findings for the current branch PR:
 
 ```bash
 bun run beep yeet closeout --require-review-comments 0
