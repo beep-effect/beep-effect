@@ -45,18 +45,22 @@
     ".": "./src/index.ts",
     "./DockReact.types": "./src/DockReact.types.ts",
     "./DockviewReact": "./src/DockviewReact.tsx",
+    "./dock.css": "./src/dock.css",
     "./internal/*": "./src/internal/*.ts",
     "./package.json": "./package.json"
   },
   "files": [
     "src/**/*.ts",
     "src/**/*.tsx",
+    "src/**/*.css",
     "dist/**/*.js",
     "dist/**/*.js.map",
     "dist/**/*.d.ts",
     "dist/**/*.d.ts.map"
   ],
-  "sideEffects": [],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "publishConfig": {
     "access": "public",
     "provenance": true,
@@ -64,6 +68,7 @@
       ".": "./dist/index.js",
       "./DockReact.types": "./dist/DockReact.types.js",
       "./DockviewReact": "./dist/DockviewReact.js",
+      "./dock.css": "./src/dock.css",
       "./internal/*": null,
       "./package.json": "./package.json"
     }

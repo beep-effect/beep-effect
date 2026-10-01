@@ -52,6 +52,26 @@ function Card({
 /**
  * Header grid for card title, description, and optional action.
  *
+ * **Details**
+ *
+ * `bordered` draws a bottom rule under the header and adds the matching bottom padding,
+ * for cards whose body is a scroll region or list that should read as separate from the
+ * header.
+ *
+ * **Example** (Bordered header above a list)
+ *
+ * ```tsx
+ * import { CardHeader, CardTitle } from "@beep/ui/components/card"
+ *
+ * export function QueueHeader() {
+ *   return (
+ *     <CardHeader bordered>
+ *       <CardTitle>Candidate queue</CardTitle>
+ *     </CardHeader>
+ *   )
+ * }
+ * ```
+ *
  * **Example** (Header with action)
  *
  * ```tsx
@@ -70,12 +90,17 @@ function Card({
  * @category components
  * @since 0.0.0
  */
-function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+function CardHeader({
+  className,
+  bordered = false,
+  ...props
+}: React.ComponentProps<"div"> & { readonly bordered?: undefined | boolean }) {
   return (
     <div
       data-slot="card-header"
       className={cn(
-        "gap-1 rounded-t-xl px-4 group-data-[size=sm]/card:px-3 [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3 group/card-header @container/card-header grid auto-rows-min items-start has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto]",
+        "gap-1 rounded-t-xl px-4 group-data-[size=sm]/card:px-3 [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3 group/card-header @container/card-header grid auto-rows-min items-start has-data-[slot=card-action]:grid-cols-fr-auto has-data-[slot=card-description]:grid-rows-auto-auto",
+        bordered && "border-b",
         className
       )}
       {...props}

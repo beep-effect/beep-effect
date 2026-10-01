@@ -19,8 +19,8 @@ import { ContactSubmissionStatus, contactSubmissionPayloadFromFormData } from ".
 
 const $I = $OipWebId.create("components/ContactForm");
 const inputClass =
-  "min-h-11 rounded-md border border-[color-mix(in_oklab,var(--oip-on-soil)_22%,transparent)] bg-[color-mix(in_oklab,var(--oip-soil)_18%,transparent)] px-3 py-2 text-sm text-[var(--oip-on-soil)] outline-none transition-colors placeholder:text-[color-mix(in_oklab,var(--oip-on-soil)_52%,transparent)] focus:border-[var(--oip-gold)] focus:ring-3 focus:ring-[color-mix(in_oklab,var(--oip-gold)_35%,transparent)]";
-const labelClass = "grid gap-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--oip-on-burgundy-accent)]";
+  "min-h-11 rounded-md border border-oip-on-soil/22 bg-oip-soil/18 px-3 py-2 text-sm text-oip-on-soil outline-none transition-colors placeholder:text-oip-on-soil/52 focus:border-oip-gold focus:ring-3 focus:ring-oip-gold/35";
+const labelClass = "grid gap-2 text-xs font-medium uppercase tracking-oip-wide text-oip-on-burgundy-accent";
 const submitButtonClass =
   "inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-transparent bg-primary bg-clip-padding px-2.5 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/80 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50";
 const submittedAtAtom = Atom.make(0);
@@ -137,7 +137,7 @@ export function ContactForm({ email, initialSubmittedAt, status }: ContactFormPr
   return (
     <form
       action="/api/contact"
-      className="grid gap-4 rounded-lg border border-[color-mix(in_oklab,var(--oip-on-soil)_22%,transparent)] bg-[color-mix(in_oklab,var(--oip-soil)_30%,transparent)] p-6"
+      className="grid gap-4 rounded-lg border border-oip-on-soil/22 bg-oip-soil/30 p-6"
       method="post"
       onFocus={() => markStarted(initialSubmittedAt)}
       onSubmit={(event) => {
@@ -180,21 +180,21 @@ export function ContactForm({ email, initialSubmittedAt, status }: ContactFormPr
           {isSubmitting ? "Sending..." : "Send note"}
         </button>
         <a
-          className="font-[family-name:var(--font-oip-mono)] text-xs uppercase tracking-[0.12em] text-[var(--oip-on-burgundy-accent)]"
+          className="font-oip-mono text-xs uppercase tracking-oip-wide text-oip-on-burgundy-accent"
           href={`mailto:${email}`}
         >
           Email directly
         </a>
       </div>
       <p
-        className="text-sm text-[var(--oip-gold-bright)] empty:hidden"
+        className="text-sm text-oip-gold-bright empty:hidden"
         id="contact-form-status"
         role={statusMessage === null ? undefined : "status"}
       >
         {statusMessage}
       </p>
       {isRejected && (
-        <p className="text-sm text-[color-mix(in_oklab,var(--oip-on-soil)_88%,transparent)]" role="status">
+        <p className="text-sm text-oip-on-soil/88" role="status">
           Your note could not be sent here. Email directly instead.
         </p>
       )}

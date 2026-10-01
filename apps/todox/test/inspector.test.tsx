@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { cleanup, fireEvent, render, within } from "@testing-library/react";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
+import { InspectableRow, InspectorList, RowGroup } from "@/components/InspectorList";
 import { SessionDemo } from "@/components/SessionDemo";
 import { TodoxAtomProvider } from "@/runtime/TodoxAtomProvider";
 
@@ -46,5 +48,46 @@ describe("record inspector", () => {
     fireEvent.keyDown(first, { key: "Escape" });
     expect(within(container).queryByRole("region", { name: /Record inspector/ })).toBeNull();
     expect(within(container).getByText(/INSPECTOR CLOSED/)).toBeDefined();
+  });
+});
+
+describe("record inspector post delay", () => {
+  const makeRow = (id: string, postDelayMs: O.Option<number>) =>
+    InspectableRow.make({
+      id,
+      no: id,
+      text: "Client cash need",
+      state: O.some("CANDIDATE"),
+      actor: "FIXTURE RUNTIME",
+      time: "09:41",
+      evidence: [],
+      receipt: O.none(),
+      detail: [],
+      postDelayMs,
+    });
+
+  it("rides a row's post delay in the --post-delay custom property and marks it data-post", () => {
+    const { container } = render(
+      <TodoxAtomProvider>
+        <InspectorList
+          passageId="post-delay"
+          defaultOpen={O.none()}
+          cursor="CLM 0201"
+          groups={[
+            RowGroup.make({
+              heading: O.none(),
+              rows: [makeRow("CLM 0201", O.some(250)), makeRow("CLM 0202", O.none())],
+            }),
+          ]}
+          sources={[]}
+        />
+      </TodoxAtomProvider>
+    );
+
+    const [delayed, resting] = rowButtons(container);
+    expect(delayed?.dataset.post).toBe("");
+    expect(delayed?.style.getPropertyValue("--post-delay")).toBe("250ms");
+    expect(resting?.dataset.post).toBeUndefined();
+    expect(resting?.style.getPropertyValue("--post-delay")).toBe("");
   });
 });

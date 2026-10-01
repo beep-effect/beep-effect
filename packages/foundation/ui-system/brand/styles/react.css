@@ -1,0 +1,15 @@
+/*
+ * Layout for the @beep/brand/react components, keyed by data attributes so the components carry
+ * no inline styles and the package needs no Tailwind content scan. Plain CSS: it works with or
+ * without Tailwind and needs no other brand stylesheet.
+ *
+ * Import once in an application stylesheet that renders BeepWordmark:
+ *   @import "@beep/brand/styles/react.css";
+ */
+[data-beep-wordmark] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}

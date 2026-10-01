@@ -2021,7 +2021,10 @@
         "./packages/tooling/tool/cli/src/commands/Refs/index.ts"
       ],
       "@beep/xstate": ["./packages/drivers/xstate/src/index.ts"],
-      "@beep/xstate/*": ["./packages/drivers/xstate/src/*"]
+      "@beep/xstate/*": ["./packages/drivers/xstate/src/*"],
+      "@beep/dock-react/dock.css": [
+        "./packages/foundation/ui-system/dock-react/src/dock.css"
+      ]
     }
   }
 }

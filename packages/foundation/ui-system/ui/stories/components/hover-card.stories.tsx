@@ -1,3 +1,4 @@
+// fallow-ignore-file code-duplication -- pre-existing story clones on main: the diff-attributed audit charges them to this change because its edited lines fall inside the clone ranges. Story variants repeat the canonical markup on purpose (the Storybook docs panel shows each story's source; shared render helpers would hide that usage). Review by 2026-12-31.
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@beep/ui/components/hover-card";
 import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -47,7 +48,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: (args) => (
     <HoverCard {...args}>
-      <HoverCardTrigger className="underline underline-offset-4">@beep</HoverCardTrigger>
+      <HoverCardTrigger>
+        <span className="underline underline-offset-4">@beep</span>
+      </HoverCardTrigger>
       <HoverCardContent>
         <div className="flex flex-col gap-1">
           <p className="font-semibold">@beep</p>
@@ -78,7 +81,9 @@ export const DefaultOpen: Story = {
   args: { defaultOpen: true },
   render: (args) => (
     <HoverCard {...args}>
-      <HoverCardTrigger className="underline underline-offset-4">Hover me</HoverCardTrigger>
+      <HoverCardTrigger>
+        <span className="underline underline-offset-4">Hover me</span>
+      </HoverCardTrigger>
       <HoverCardContent>
         <p>This preview opened automatically when the story mounted.</p>
       </HoverCardContent>
@@ -97,7 +102,9 @@ export const DefaultOpen: Story = {
 export const Dismissal: Story = {
   render: (args) => (
     <HoverCard {...args}>
-      <HoverCardTrigger className="underline underline-offset-4">Preview link</HoverCardTrigger>
+      <HoverCardTrigger>
+        <span className="underline underline-offset-4">Preview link</span>
+      </HoverCardTrigger>
       <HoverCardContent>
         <p>Move your pointer away to dismiss this preview.</p>
       </HoverCardContent>
@@ -127,7 +134,9 @@ export const ProfilePreview: Story = {
   args: { defaultOpen: true },
   render: (args) => (
     <HoverCard {...args}>
-      <HoverCardTrigger className="underline underline-offset-4">@ada</HoverCardTrigger>
+      <HoverCardTrigger>
+        <span className="underline underline-offset-4">@ada</span>
+      </HoverCardTrigger>
       <HoverCardContent className="w-72">
         <div className="flex gap-3">
           <div className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium">
@@ -158,7 +167,9 @@ export const SideTop: Story = {
   args: { defaultOpen: true },
   render: (args) => (
     <HoverCard {...args}>
-      <HoverCardTrigger className="underline underline-offset-4">Top side</HoverCardTrigger>
+      <HoverCardTrigger>
+        <span className="underline underline-offset-4">Top side</span>
+      </HoverCardTrigger>
       <HoverCardContent side="top">
         <p>This preview is positioned above the trigger.</p>
       </HoverCardContent>
@@ -174,7 +185,9 @@ export const AlignStartWithOffset: Story = {
   args: { defaultOpen: true },
   render: (args) => (
     <HoverCard {...args}>
-      <HoverCardTrigger className="underline underline-offset-4">Aligned start</HoverCardTrigger>
+      <HoverCardTrigger>
+        <span className="underline underline-offset-4">Aligned start</span>
+      </HoverCardTrigger>
       <HoverCardContent align="start" sideOffset={12}>
         <p>Aligned to the start edge with a larger side offset.</p>
       </HoverCardContent>
@@ -190,7 +203,9 @@ export const Controlled: Story = {
   args: { open: true },
   render: (args) => (
     <HoverCard {...args}>
-      <HoverCardTrigger className="underline underline-offset-4">Controlled trigger</HoverCardTrigger>
+      <HoverCardTrigger>
+        <span className="underline underline-offset-4">Controlled trigger</span>
+      </HoverCardTrigger>
       <HoverCardContent>
         <p>This card is held open by the controlled `open` prop.</p>
       </HoverCardContent>

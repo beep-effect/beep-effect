@@ -73,7 +73,7 @@ export function OntologyGraphRegion(): JSX.Element {
     ),
   });
   const graphProjectionOverlay: JSX.Element = O.isSome(graphError) ? (
-    <span className="block max-w-[44ch] text-destructive">Graph unavailable: {graphError.value}</span>
+    <span className="block max-w-measure text-destructive">Graph unavailable: {graphError.value}</span>
   ) : (
     graphProjectionSummary
   );
@@ -90,7 +90,7 @@ export function OntologyGraphRegion(): JSX.Element {
         </div>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
           <span
-            className="min-w-0 max-w-[45ch] truncate font-mono text-xs text-muted-foreground"
+            className="min-w-0 max-w-measure truncate font-mono text-xs text-muted-foreground"
             title={graphPathLabel}
           >
             {graphPathLabel}
@@ -106,7 +106,7 @@ export function OntologyGraphRegion(): JSX.Element {
           </div>
         </div>
       </div>
-      <div className="relative min-h-0 flex-[3] bg-background">
+      <div className="relative min-h-0 flex-3 bg-background">
         <div ref={setGraphContainer} className="h-full w-full" />
         <div className="pointer-events-none absolute left-3 top-3 rounded-md border bg-background/95 px-3 py-2 text-xs shadow-sm">
           {graphProjectionOverlay}

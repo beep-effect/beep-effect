@@ -77,7 +77,7 @@ export function EvidenceSourcePanel({
 
   return (
     <Card className="h-full min-h-0" data-testid="contradiction-source-panel">
-      <CardHeader className="border-b">
+      <CardHeader bordered>
         <div className="flex min-w-0 items-start justify-between gap-3">
           <CardTitle className="wrap-anywhere min-w-0">{source.sourceRef}</CardTitle>
           <Badge variant="secondary">Verified source</Badge>
@@ -107,38 +107,40 @@ export function EvidenceSourcePanel({
           </div>
         </dl>
       </CardHeader>
-      <CardContent className="flex min-h-0 flex-1 flex-col gap-3 py-3">
-        <div className="flex items-center justify-between gap-3">
-          <Button
-            disabled={loading || !page.hasPreviousPage}
-            onClick={() => onPageChange(page.pageIndex - 1)}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            Previous
-          </Button>
-          <span className="text-xs text-muted-foreground" aria-live="polite">
-            Page {page.pageIndex + 1} of {page.pageCount} · {page.totalCodeUnits.toLocaleString()} UTF-16 units
-          </span>
-          <Button
-            disabled={loading || !page.hasNextPage}
-            onClick={() => onPageChange(page.pageIndex + 1)}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            Next
-          </Button>
+      <CardContent className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <Button
+              disabled={loading || !page.hasPreviousPage}
+              onClick={() => onPageChange(page.pageIndex - 1)}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              Previous
+            </Button>
+            <span className="text-xs text-muted-foreground" aria-live="polite">
+              Page {page.pageIndex + 1} of {page.pageCount} · {page.totalCodeUnits.toLocaleString()} UTF-16 units
+            </span>
+            <Button
+              disabled={loading || !page.hasNextPage}
+              onClick={() => onPageChange(page.pageIndex + 1)}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              Next
+            </Button>
+          </div>
+          <VerifiedSourceTextViewer
+            anchorEndOffset={highlight.endChar}
+            anchorStartOffset={highlight.startChar}
+            aria-busy={loading}
+            className="min-h-64 flex-1"
+            pageStartOffset={page.startOffset}
+            pageText={page.text}
+          />
         </div>
-        <VerifiedSourceTextViewer
-          anchorEndOffset={highlight.endChar}
-          anchorStartOffset={highlight.startChar}
-          aria-busy={loading}
-          className="min-h-64 flex-1"
-          pageStartOffset={page.startOffset}
-          pageText={page.text}
-        />
       </CardContent>
     </Card>
   );

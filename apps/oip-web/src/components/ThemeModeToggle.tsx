@@ -34,13 +34,13 @@ export function ThemeModeToggle() {
     <button
       aria-label="Switch to dark mode"
       aria-pressed="false"
-      className="group/theme inline-flex size-9 items-center justify-center rounded-md border border-[color-mix(in_oklab,var(--oip-on-soil)_22%,transparent)] bg-transparent text-[var(--oip-gold)] transition-colors hover:border-[color-mix(in_oklab,var(--oip-on-soil)_42%,transparent)] hover:bg-[color-mix(in_oklab,var(--oip-on-soil)_10%,transparent)] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--oip-gold)]"
+      className="group/theme inline-flex size-9 items-center justify-center rounded-md border border-oip-on-soil/22 bg-transparent text-oip-gold transition-colors hover:border-oip-on-soil/42 hover:bg-oip-on-soil/10 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-oip-gold"
       data-oip-theme-toggle=""
       data-theme-mode="light"
       suppressHydrationWarning
       type="button"
     >
-      <span aria-hidden className="relative block size-[1.05rem]" suppressHydrationWarning>
+      <span aria-hidden className="relative block size-4.25" suppressHydrationWarning>
         <svg
           aria-hidden="true"
           className="absolute inset-0 size-full rotate-0 scale-100 opacity-100 transition-all duration-300 ease-out group-data-[theme-mode=dark]/theme:-rotate-90 group-data-[theme-mode=dark]/theme:scale-0 group-data-[theme-mode=dark]/theme:opacity-0"
