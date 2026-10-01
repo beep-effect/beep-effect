@@ -70,12 +70,12 @@ export function CodeBlockView({ code, language }: { readonly code: string; reado
     // can collapse under.
     <div className="my-3 overflow-hidden rounded-md border bg-muted" data-testid="code-block">
       <div className="flex items-center justify-between gap-4 border-b bg-background/40 px-3 py-1">
-        <span className="font-mono text-[11px] text-muted-foreground">{language === "" ? "code" : language}</span>
+        <span className="font-mono text-2xs text-muted-foreground">{language === "" ? "code" : language}</span>
         <button
           type="button"
           aria-label={copied ? "Code copied" : "Copy code"}
           data-testid="code-block-copy"
-          className="rounded px-1.5 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="rounded px-1.5 py-0.5 text-2xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={() => copy()}
         >
           {copied ? "Copied" : "Copy"}
@@ -86,7 +86,7 @@ export function CodeBlockView({ code, language }: { readonly code: string; reado
           on itself instead of scrolling — and code that wraps at an arbitrary column
           has to be reassembled in the reader's head before it can be read. */}
       <pre className="overflow-x-auto p-3 text-sm">
-        <code className="whitespace-pre font-mono text-[13px] leading-[1.53]">{code}</code>
+        <code className="whitespace-pre font-mono text-xs-plus leading-code">{code}</code>
       </pre>
     </div>
   );

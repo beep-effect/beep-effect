@@ -129,7 +129,8 @@ const OntologyAddTripleForm = (): JSX.Element => {
         </div>
         <TripleValidationMessages state={form} />
         <Button
-          className="w-full disabled:bg-muted disabled:text-muted-foreground"
+          disabledTone="muted"
+          className="w-full"
           size="sm"
           type="button"
           disabled={!form.canApplyTriple}

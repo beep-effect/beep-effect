@@ -1,5 +1,5 @@
 {
-  "$schema": "https://v2-11-5.turborepo.dev/schema.json",
+  "$schema": "https://v2-11-6.turborepo.dev/schema.json",
   "agentGuidance": false,
   "futureFlags": {
     "affectedUsingTaskInputs": true,
@@ -768,6 +768,23 @@
         "packages/**/*.{ts,tsx,js,jsx,mjs,cjs}",
         "infra/**/*.{ts,js,mjs}",
         "packages/tooling/policy-pack/lint-rules/src/**",
+        "!**/node_modules/**"
+      ]
+    },
+    "//#lint:shadcn": {
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        ".oxlintrc.shadcn.json",
+        "**/components.json",
+        "package.json",
+        "bun.lock",
+        "tsconfig.json",
+        "tsconfig.base.json",
+        "{apps,packages}/**/package.json",
+        "{apps,packages}/**/tsconfig.json",
+        "apps/**/*.{ts,tsx,jsx,js,css}",
+        "packages/**/*.{ts,tsx,jsx,js,css}",
         "!**/node_modules/**"
       ]
     },

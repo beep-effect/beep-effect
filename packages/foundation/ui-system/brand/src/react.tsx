@@ -51,9 +51,9 @@ export const BeepMark = (props: SVGProps<SVGSVGElement>) => (
       />
     ))}
     <g transform={glassesTransform(glasses)}>
-      <path style={{ fill: `var(--color-fg, ${beep.dark.foreground.base})` }} d={glasses.frame} />
+      <path fill={`var(--color-fg, ${beep.dark.foreground.base})`} d={glasses.frame} />
       {A.map(glasses.lenses, (d) => (
-        <path key={d} style={{ fill: `var(--color-surface-0, ${beep.dark.surface["0"]})` }} d={d} />
+        <path key={d} fill={`var(--color-surface-0, ${beep.dark.surface["0"]})`} d={d} />
       ))}
     </g>
   </svg>
@@ -61,6 +61,18 @@ export const BeepMark = (props: SVGProps<SVGSVGElement>) => (
 
 /**
  * The beep mark beside the brand name in the sans stack. The wrapper is an inline flex `<span>`; size it with a font size and the mark follows at `1.25em`.
+ *
+ * **Details**
+ *
+ * The wrapper layout (inline flex, `0.4em` gap, bold, `-0.02em` tracking) lives in `@beep/brand/styles/react.css`,
+ * keyed by the `data-beep-wordmark` attribute, so the component carries no inline styles and needs no Tailwind
+ * content scan of this package. The mark is sized by its own `width`/`height` attributes and colored from the
+ * theme's `--color-brand-400` token (brand.css), falling back to the dark-scheme value where the token is absent.
+ *
+ * **Gotchas**
+ *
+ * Import `@beep/brand/styles/react.css` once in the application stylesheet; without it the name and mark still
+ * render, but sit on the text baseline with no gap.
  *
  * **Example** (Render the wordmark)
  *
@@ -78,18 +90,13 @@ export const BeepMark = (props: SVGProps<SVGSVGElement>) => (
  * @since 0.0.0
  */
 export const BeepWordmark = (props: HTMLAttributes<HTMLSpanElement>) => (
-  <span
-    {...props}
-    style={{
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "0.4em",
-      fontWeight: 700,
-      letterSpacing: "-0.02em",
-      ...props.style,
-    }}
-  >
-    <BeepMark aria-hidden="true" style={{ width: "1.25em", height: "1.25em" }} className="text-brand-400" />
+  <span data-beep-wordmark="" {...props}>
+    <BeepMark
+      aria-hidden="true"
+      width="1.25em"
+      height="1.25em"
+      color={`var(--color-brand-400, ${beep.dark.brand["400"]})`}
+    />
     <span>{beep.name}</span>
   </span>
 );

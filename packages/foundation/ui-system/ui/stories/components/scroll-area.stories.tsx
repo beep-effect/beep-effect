@@ -110,7 +110,7 @@ export const BothAxes: Story = {
   args: { className: "h-72 w-96 rounded-md border" },
   render: (args) => (
     <ScrollArea {...args}>
-      <div className="w-[640px] p-4">
+      <div className="w-160 p-4">
         <h4 className="mb-4 font-medium text-sm leading-none">Wide table</h4>
         {A.map(artworks, (artwork) => (
           <div key={artwork.id} className="border-border flex gap-6 border-b py-2 text-sm last:border-b-0">

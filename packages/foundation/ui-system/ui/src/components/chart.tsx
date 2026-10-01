@@ -7,14 +7,15 @@
 "use client";
 
 import { cn } from "@beep/ui/lib/utils";
-import { A, O, P, Str, Struct } from "@beep/utils";
+import { A, O, P, R, Str, Struct } from "@beep/utils";
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 import { requireReactContext } from "../lib/react-invariant.ts";
 import type { TooltipValueType } from "recharts";
 
-// Format: { THEME_NAME: CSS_SELECTOR }
-const THEMES = { light: "", dark: ".dark" } as const;
+// The two color schemes a series may set a color for. The theme stylesheet sets
+// `color-scheme` on `:root` and `.dark`, so `light-dark()` picks the matching one.
+type ChartTheme = "light" | "dark";
 
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const;
 type TooltipNameType = number | string;
@@ -53,7 +54,7 @@ export type ChartConfig = Record<
   {
     label?: React.ReactNode;
     icon?: React.ComponentType;
-  } & ({ color?: string; theme?: never } | { color?: never; theme: Record<keyof typeof THEMES, string> })
+  } & ({ color?: string; theme?: never } | { color?: never; theme: Record<ChartTheme, string> })
 >;
 
 type ChartContextProps = {
@@ -99,6 +100,7 @@ function ChartContainer({
   className,
   children,
   config,
+  style,
   initialDimension = INITIAL_DIMENSION,
   ...props
 }: React.ComponentProps<"div"> & {
@@ -111,6 +113,10 @@ function ChartContainer({
 }) {
   const uniqueId = React.useId();
   const chartId = `chart-${id ?? Str.replace(/:/g, "")(uniqueId)}`;
+  // The series colors are custom properties named after the config keys, so they cannot be a
+  // literal style object. They ride on the container's props instead: present in the server
+  // markup, and diffed by React when the config changes. No stylesheet is generated at runtime.
+  const surfaceProps = chartSurfaceProps(config, style);
 
   return (
     <ChartContext.Provider value={{ config }}>
@@ -122,8 +128,8 @@ function ChartContainer({
           className
         )}
         {...props}
+        {...surfaceProps}
       >
-        <ChartStyle id={chartId} config={config} />
         <RechartsPrimitive.ResponsiveContainer initialDimension={initialDimension}>
           {children}
         </RechartsPrimitive.ResponsiveContainer>
@@ -133,88 +139,64 @@ function ChartContainer({
 }
 
 // Conservative CSS identifier: only ASCII letters, digits, hyphen, underscore.
-// Used to validate chart ids and config keys so they cannot break out of the
-// surrounding selector/declaration when serialized into a raw <style> tag.
+// Config keys become custom property names, so anything else is skipped.
 const CSS_IDENTIFIER_PATTERN = /^[A-Za-z0-9_-]+$/;
 
-// Characters that can terminate a CSS declaration, close a rule, open a comment,
-// or break out of the <style> element. Any color/theme value containing one of
-// these is rejected rather than serialized, preventing CSS rule breakout.
 const CSS_VALUE_BREAKOUT_PATTERN = /[;{}<>\\]|\/\*|\*\//;
 
 const isSafeCssIdentifier = (value: string): boolean => O.isSome(Str.match(CSS_IDENTIFIER_PATTERN)(value));
 
+// A config color is attacker-influenced input: reject anything that could close the
+// declaration or the style attribute it is rendered into.
 const isSafeCssColorValue = (value: string): boolean => O.isNone(Str.match(CSS_VALUE_BREAKOUT_PATTERN)(value));
 
-// Strip everything that is not a safe CSS identifier character so the value can
-// be embedded inside the quoted `[data-chart="..."]` attribute selector without
-// allowing selector/rule breakout.
-const sanitizeChartSelectorId = (id: string): string => Str.replace(/[^A-Za-z0-9_-]/g, "")(id);
-
 /**
- * Injects per-theme CSS custom properties for a chart's configured series colors.
+ * The `--color-<series>` custom properties a chart container sets for its config.
  *
  * **Details**
  *
- * Chart ids, series keys, and color values are sanitized before they are
- * serialized into the generated style tag.
+ * A series with a single `color` maps to that color. A series with a per-theme
+ * `theme` pair maps to `light-dark(light, dark)`, which resolves against the
+ * `color-scheme` the theme stylesheet sets on `:root` and `.dark`. Series keys
+ * that are not plain CSS identifiers are skipped.
  *
- * **Example** (Static chart CSS variables)
+ * **Example** (Series color properties)
  *
  * ```tsx
- * import { ChartStyle, type ChartConfig } from "@beep/ui/components/chart"
+ * import { chartColorProperties, type ChartConfig } from "@beep/ui/components/chart"
  *
  * const config = {
- *   revenue: { label: "Revenue", color: "hsl(210 90% 48%)" }
+ *   revenue: { label: "Revenue", color: "var(--chart-1)" },
+ *   expenses: { label: "Expenses", theme: { light: "var(--chart-2)", dark: "var(--chart-3)" } }
  * } satisfies ChartConfig
  *
- * export function StaticChartVariables() {
- *   return <ChartStyle id="revenue-chart" config={config} />
- * }
+ * console.log(chartColorProperties(config))
+ * // [["--color-revenue", "var(--chart-1)"], ["--color-expenses", "light-dark(var(--chart-2), var(--chart-3))"]]
  * ```
  *
- * @category components
+ * @category utilities
  * @since 0.0.0
  */
-const ChartStyle = ({ id, config }: { readonly id: string; readonly config: ChartConfig }) => {
-  // Only keep entries whose key is a safe CSS identifier and that declare a
-  // color/theme, so attacker-influenced config keys cannot break the rule body.
-  const colorConfig = A.filter(
-    Struct.entries(config),
-    ([key, itemConfig]) => isSafeCssIdentifier(key) && (itemConfig.theme ?? itemConfig.color) !== undefined
-  );
+const chartColorProperties = (config: ChartConfig): ReadonlyArray<readonly [string, string]> =>
+  A.flatMap(Struct.entries(config), ([key, itemConfig]): ReadonlyArray<readonly [string, string]> => {
+    if (!isSafeCssIdentifier(key)) return [];
+    if (itemConfig.theme !== undefined) {
+      return isSafeCssColorValue(itemConfig.theme.light) && isSafeCssColorValue(itemConfig.theme.dark)
+        ? [[`--color-${key}`, `light-dark(${itemConfig.theme.light}, ${itemConfig.theme.dark})`]]
+        : [];
+    }
+    return itemConfig.color === undefined || !isSafeCssColorValue(itemConfig.color)
+      ? []
+      : [[`--color-${key}`, itemConfig.color]];
+  });
 
-  if (colorConfig.length === 0) {
-    return null;
-  }
-
-  const safeSelectorId = sanitizeChartSelectorId(id);
-
-  return (
-    <style
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: canonical shadcn ChartStyle pattern; id/keys/colors are sanitized (quoted+escaped selector, identifier-validated keys, breakout-rejected color values) before serialization
-      dangerouslySetInnerHTML={{
-        __html: A.join(
-          A.map(
-            Struct.entries(THEMES),
-            ([theme, prefix]) => `
-${prefix} [data-chart="${safeSelectorId}"] {
-${A.join(
-  A.map(colorConfig, ([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ?? itemConfig.color;
-    return color !== undefined && isSafeCssColorValue(color) ? `  --color-${key}: ${color};` : "";
-  }),
-  "\n"
-)}
-}
-`
-          ),
-          "\n"
-        ),
-      }}
-    />
-  );
-};
+// The container's `style` prop: the series color properties first, then the caller's own style.
+const chartSurfaceProps = (
+  config: ChartConfig,
+  style: React.CSSProperties | undefined
+): { readonly style: React.CSSProperties } => ({
+  style: { ...R.fromEntries(chartColorProperties(config)), ...style },
+});
 
 /**
  * Recharts tooltip primitive paired with {@link ChartTooltipContent}.
@@ -258,7 +240,7 @@ function formatTooltipValue(value: TooltipValueType): React.ReactNode {
 const tooltipIndicatorClasses = {
   dot: "h-2.5 w-2.5",
   line: "w-1",
-  dashed: "w-0 border-[1.5px] border-dashed bg-transparent",
+  dashed: "w-0 border-indicator border-dashed bg-transparent",
 } as const;
 
 const tooltipIndicatorNestClass = (nestLabel: boolean, indicator: "line" | "dot" | "dashed") =>
@@ -276,7 +258,7 @@ function ChartTooltipIndicatorMark({
   return (
     <div
       className={cn(
-        "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
+        "shrink-0 rounded-xs border-(--color-border) bg-(--color-bg)",
         tooltipIndicatorClasses[indicator],
         tooltipIndicatorNestClass(nestLabel, indicator)
       )}
@@ -632,10 +614,8 @@ function ChartLegendContent({
                 <LegendIcon />
               ) : (
                 <div
-                  className="h-2 w-2 shrink-0 rounded-[2px]"
-                  style={{
-                    backgroundColor: item.color,
-                  }}
+                  className="h-2 w-2 shrink-0 rounded-xs bg-(--color-bg)"
+                  style={{ "--color-bg": item.color } as React.CSSProperties}
                 />
               )}
               {itemConfig?.label}
@@ -673,4 +653,4 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
  * @category components
  * @since 0.0.0
  */
-export { ChartContainer, ChartLegend, ChartLegendContent, ChartStyle, ChartTooltip, ChartTooltipContent };
+export { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, chartColorProperties };

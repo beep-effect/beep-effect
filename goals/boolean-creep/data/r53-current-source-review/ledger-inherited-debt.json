@@ -1,0 +1,107 @@
+{
+  "kind": "r53-inherited-debt/v1",
+  "note": "Pre-R53 drift (stale at cf97) or claim invalidation not fixable by digit reconciliation. Not applied; not blocking R53 citation reconciliation, but blocking any P3/implementation that relies on these locators/claims.",
+  "items": [
+    {
+      "row": "yeet-merge-ready-verdict",
+      "ref": "record",
+      "r53Move": "475->488",
+      "finding": "anchor sits in the YeetMergeReady doc example, not the class",
+      "evidence": "design pinned 0be1f13 where 475 is the class; 0be1f13->cf97 ('moved', 495), cf97->HEAD ('moved', 507); class YeetMergeReady at HEAD:507"
+    },
+    {
+      "row": "yeet-merge-ready-encoded",
+      "ref": "record",
+      "r53Move": "367->363",
+      "finding": "anchor is inside YeetMergeReadyCoherenceCheck; criteria S.Struct is at cf97:384 / HEAD:389"
+    },
+    {
+      "row": "yeet-verdict-commit-push",
+      "ref": "record",
+      "r53Move": "568->581",
+      "finding": "anchor in YeetVerdict doc example; class at cf97:591 / HEAD:604; note 'committed at 567 (class starts 562)' already stale at cf97"
+    },
+    {
+      "row": "yeet-status-github-thread-mirror",
+      "ref": "record",
+      "r53Move": "404->405",
+      "finding": "blank line before GhStatusLabel; owner GhStatusReviewThread at cf97:452 / HEAD:453"
+    },
+    {
+      "row": "yeet-merge-ready-criterion-changed",
+      "ref": "record",
+      "r53Move": "433->432",
+      "finding": "inside YeetWatchStarted; owner YeetMergeReadyCriterionChanged at cf97:605 / HEAD:604"
+    },
+    {
+      "row": "yeet-merge-ready-criterion-changed",
+      "ref": "evidence[0]",
+      "r53Move": "950->949",
+      "finding": "doc comment of the encoder, not diffYeetWatchSnapshots"
+    },
+    {
+      "row": "yeet-merge-ready-criterion-changed",
+      "ref": "evidence[1]",
+      "r53Move": "447->446",
+      "finding": "doc of a different event class ('One check moved between outcomes')"
+    },
+    {
+      "row": "practice-kg-closed-world-four-hints",
+      "ref": "record",
+      "r53Move": "630->629",
+      "finding": "practiceKgCandidateClaimFieldTiers; owner closedWorldReadOnlyHints at cf97:641 / HEAD:640"
+    },
+    {
+      "row": "yeet-status-remote-check-phase",
+      "ref": "evidence[0]",
+      "r53Move": "1310->1311",
+      "finding": "doc comment of the failed-job helper, not the checked-present producer"
+    },
+    {
+      "row": "tsconfig-compiler-options",
+      "ref": "disqualifier.note",
+      "finding": "':1306' and ':1286' were off by 3 at cf97 (sibling rows cite :1303/:1283); moved relation-preservingly to :1307/:1287"
+    },
+    {
+      "row": "yeet-merge-ready-encoded",
+      "ref": "disqualifier.note",
+      "finding": "Verdict.ts:364-374 is not the criteria struct at cf97; normalizeLegacyYeetMergeReady:405-427 range span changes cf97->HEAD (405->411, 427->429) and was left unchanged (rule R3)"
+    },
+    {
+      "row": "jsonc-parser-sdk-flags",
+      "ref": "notes",
+      "finding": "'object opens at :54' was off by one at cf97 (opens at 53, members 54-55); moved relation-preservingly"
+    },
+    {
+      "row": "r27-cli-commands-a-c-ecosystem-package-json-flags",
+      "ref": "disqualifier.note",
+      "finding": "1706 ('pkg spreads baseManifestFor') and 1708 ('sideEffects false') do not carry those facts at cf97 (spread at 1703, sideEffects at 1705); moved relation-preservingly"
+    },
+    {
+      "row": "r3-tooling-schema-first-fn-eligibility",
+      "ref": "evidence[0].note",
+      "finding": "SchemaFirstDetectors.ts:662/:783 are not the eligibility helpers at cf97 (isFnSchemaEligibleFilePath at 676); moved relation-preservingly"
+    },
+    {
+      "row": "r32-cli-yeet-settle-budget-phase",
+      "ref": "disqualifier.note",
+      "finding": "WatchMode.ts1112-1116 out of range at cf97 (1098 lines); deferred/archived"
+    },
+    {
+      "design": "html-img-sizes-disposition.md:64",
+      "finding": "claim 'add LiteralKit to the existing @beep/schema import; reuse SchemaUtils' invalidated: root @beep/schema/SchemaUtils import deleted cf97->HEAD (codec-statics retirement). Mechanical range move kept; authored update required"
+    },
+    {
+      "design": "html-datalist-child-grammar.md:115 / html-dl-child-grammar.md:66",
+      "finding": "Html.conformance.ts:13 import deleted; no successor; authored update required"
+    },
+    {
+      "design": "r3-foundation-invariant-enforcement-channels.md:125",
+      "finding": "ConformanceLedger.schema.ts:162-218 -> 149-193: withStatics JSON-decode facades (decodeUnknownEffectFromJsonString) removed inside the range; 'preserve JSON decoding' needs re-review"
+    },
+    {
+      "design": "(advisory)",
+      "finding": "the codec-statics retirement changeset removed APIs (X.decodeUnknownSync, X.is, withCodecStatics, toEquivalence) that design prose may prescribe reusing; digit reconciliation cannot detect such claim invalidation"
+    }
+  ]
+}

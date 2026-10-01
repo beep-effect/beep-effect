@@ -89,10 +89,12 @@ export const Default: Story = {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex-col gap-2">
-        <button type="button" className="bg-primary text-primary-foreground w-full rounded-md py-2 text-sm">
-          Login
-        </button>
+      <CardFooter className="flex-col">
+        <div className="flex w-full flex-col gap-2">
+          <button type="button" className="bg-primary text-primary-foreground w-full rounded-md py-2 text-sm">
+            Login
+          </button>
+        </div>
       </CardFooter>
     </Card>
   ),

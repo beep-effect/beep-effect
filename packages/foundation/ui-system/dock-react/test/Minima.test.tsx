@@ -63,7 +63,8 @@ const longGroup = (): HTMLElement => {
   return node;
 };
 
-const width = (): number => pipe(longGroup().style.width, Str.slice(0, -2), N.parse, O.getOrThrow);
+const width = (): number =>
+  pipe(longGroup().style.getPropertyValue("--dock-width"), Str.slice(0, -2), N.parse, O.getOrThrow);
 
 const titleMinima = {
   font: "16px Arial",

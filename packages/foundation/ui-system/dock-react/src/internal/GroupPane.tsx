@@ -23,11 +23,11 @@ import * as S from "effect/Schema";
 import { useCallback, useEffect, useRef } from "react";
 import { makeOperation } from "./AdapterState.ts";
 import {
-  boxStyle,
   compileDrop,
   exceedsDragThreshold,
   preFloatContextFor,
   pressStartsOnButton,
+  px,
   relativePositionOf,
   releaseCapture,
 } from "./DropCompiler.ts";
@@ -38,6 +38,9 @@ import type { DockBox, Panel } from "@beep/dock";
 import type React from "react";
 import type { DockAtomGraph, DockTabRenderer, DockviewReactProps } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
+
+// The overflow trigger's width, also read back through --dock-overflow-width in src/dock.css.
+const OVERFLOW_TRIGGER_WIDTH = 32;
 
 const panelIdsEqual = A.makeEquivalence(S.toEquivalence(PanelId));
 
@@ -253,7 +256,6 @@ const Tab = (props: {
       ref={pointerRef}
       onClick={activate}
       onKeyDown={activateFromKeyboard}
-      style={{ flex: "0 0 auto", touchAction: "none" }}
     >
       {O.match(O.fromUndefinedOr(Renderer), {
         onNone: () => props.panel.title,
@@ -370,7 +372,7 @@ const TabStrip = (
           MutableHashMap.get(tabWidths, tabs.active.id),
           O.getOrElse(() => 0)
         );
-        const capacity = N.max(0, N.subtract(N.subtract(width, actionsWidth), 32));
+        const capacity = N.max(0, N.subtract(N.subtract(width, actionsWidth), OVERFLOW_TRIGGER_WIDTH));
         const availableForInactive = N.max(0, N.subtract(capacity, activeWidth));
         const visibleInactive = A.reduce(panels, { ids: A.empty<PanelId>(), width: 0 }, (visible, panel) => {
           if (S.toEquivalence(PanelId)(panel.id, tabs.active.id)) return visible;
@@ -449,7 +451,6 @@ const TabStrip = (
       ref={stripRef}
       role="tablist"
       data-dock-tab-strip=""
-      style={{ display: "flex", minWidth: 0 }}
       onDoubleClick={(event) => {
         if (P.not(Eq.equals(true))(props.floating) && Eq.equals(event.currentTarget, event.target))
           props.toggleMaximized();
@@ -475,20 +476,20 @@ const TabStrip = (
       {A.match(hiddenPanels, {
         onEmpty: () => null,
         onNonEmpty: () => (
-          <div ref={overflowRootRef} style={{ position: "relative", flex: "0 0 auto" }}>
+          <div ref={overflowRootRef} data-dock-overflow-root="">
             <button
               type="button"
               aria-label={`Show ${A.length(hiddenPanels)} overflowed tabs`}
               aria-expanded={overflowOpen}
               data-dock-overflow=""
-              style={{ width: 32 }}
+              style={{ "--dock-overflow-width": px(OVERFLOW_TRIGGER_WIDTH) } as React.CSSProperties}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={() => setOverflowOpen(Bool.not(overflowOpen))}
             >
               ⋯
             </button>
             {overflowOpen && (
-              <div role="menu" style={{ position: "absolute", insetInlineEnd: 0, zIndex: 2 }}>
+              <div role="menu">
                 {A.map(hiddenPanels, (panel) => (
                   <button
                     key={panel.id}
@@ -537,7 +538,7 @@ export const GroupPane = (
       )
     );
   const actions = P.not(Eq.equals(true))(props.floating) && (
-    <div data-dock-actions="" style={{ marginInlineStart: "auto", display: "inline-flex", gap: 2 }}>
+    <div data-dock-actions="">
       <button
         type="button"
         aria-label={`Float group ${props.groupId}`}
@@ -588,11 +589,14 @@ export const GroupPane = (
       data-header-position={tabs.metadata.headerPosition}
       data-locked={tabs.metadata.locked}
       onPointerDown={() => props.graph.registry.set(props.state.focusedGroupAtom, O.some(props.groupId))}
-      style={{
-        ...boxStyle(box),
-        display: "flex",
-        flexDirection: Eq.equals(tabs.metadata.headerPosition, "bottom") ? "column-reverse" : "column",
-      }}
+      style={
+        {
+          "--dock-left": px(box.left),
+          "--dock-top": px(box.top),
+          "--dock-width": px(box.width),
+          "--dock-height": px(box.height),
+        } as React.CSSProperties
+      }
     >
       {tabs.metadata.hideHeader ? null : (
         <TabStrip

@@ -51,19 +51,6 @@ const hubIndex = (projection: Graph3DProjection): number => {
   return best;
 };
 
-const overlayStyle: React.CSSProperties = {
-  position: "absolute",
-  top: 8,
-  left: 8,
-  color: "#9ee2e2",
-  background: "rgba(0,0,0,0.55)",
-  font: "12px/1.5 monospace",
-  padding: "6px 10px",
-  borderRadius: 6,
-  pointerEvents: "none",
-  whiteSpace: "pre",
-};
-
 // fallow-ignore-next-line complexity -- cognitive 12 = pre-existing hook/JSX tax (six hook bindings across state/memo/effect); this branch's changes in this file were story args and story renames only and added no branching here
 const Graph3DDemo = ({ nodeCount, edgeCount, communityCount, seed, selectHub, flatten }: Graph3DDemoProps) => {
   const [picked, setPicked] = useState<number | undefined>(undefined);
@@ -89,9 +76,15 @@ const Graph3DDemo = ({ nodeCount, edgeCount, communityCount, seed, selectHub, fl
   }, [handle, flatten, flattened, projection, selectHub]);
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "80vh", minHeight: 480 }}>
-      <div ref={containerRef} data-testid="graph3d-container" style={{ position: "absolute", inset: 0 }} />
-      <div style={overlayStyle} data-testid="graph3d-overlay">
+    // `dark` scopes the theme's dark tokens over the always-dark canvas, so the HUD reads
+    // `text-foreground` on a translucent black plate in both Storybook themes. Height is
+    // the theme's 80vh `h-story-canvas` step with a 480px floor.
+    <div className="dark relative h-story-canvas min-h-120 w-full">
+      <div ref={containerRef} data-testid="graph3d-container" className="absolute inset-0" />
+      <div
+        className="pointer-events-none absolute top-2 left-2 rounded-sm bg-black/55 px-2.5 py-1.5 font-mono text-xs leading-normal whitespace-pre text-foreground"
+        data-testid="graph3d-overlay"
+      >
         {error === undefined
           ? `nodes ${projection.nodeCount}  edges ${projection.edgeCount}\n` +
             `fps ${fps.toFixed(1)}\n` +

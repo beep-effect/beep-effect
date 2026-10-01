@@ -183,12 +183,6 @@ interface OrbBackgroundProps extends React.ComponentProps<"div"> {
   readonly tone?: OrbTone;
 }
 
-function buildGradient(hue: number, lightness: number, alpha: number): string {
-  const core = `hsl(${hue} 82% ${lightness}% / ${alpha})`;
-  const mid = `hsl(${hue + 14} 76% ${lightness + 4}% / ${alpha * 0.55})`;
-  return `radial-gradient(circle at 50% 38%, ${core}, ${mid} 46%, transparent 72%)`;
-}
-
 /**
  * `OrbBackground` is a purely decorative, theme-aware backdrop of soft, blurred, glowing orbs.
  *
@@ -250,18 +244,23 @@ function OrbBackground({
           data-orb={layer.key}
           data-animated={animated ? "true" : "false"}
           className={cn(
-            "absolute rounded-[50%] opacity-0 will-change-[opacity,transform]",
+            "absolute top-(--orb-top) left-(--orb-left) h-(--orb-height) w-(--orb-width) rotate-(--orb-rotate) blur-(--orb-blur)",
+            "rounded-ellipse opacity-0 will-change-opacity-transform orb-gradient",
             "mix-blend-normal dark:mix-blend-screen"
           )}
           style={
             {
-              width: layer.width,
-              height: layer.height,
-              left: layer.left,
-              top: layer.top,
-              rotate: layer.rotate,
-              filter: `blur(${layer.blur}px)`,
-              background: buildGradient(baseHue + layer.hueShift, lightness, baseAlpha * layer.alphaScale),
+              // Per-orb geometry, read by the classes above.
+              "--orb-width": layer.width,
+              "--orb-height": layer.height,
+              "--orb-left": layer.left,
+              "--orb-top": layer.top,
+              "--orb-rotate": layer.rotate,
+              "--orb-blur": `${layer.blur}px`,
+              // Gradient inputs (numbers), turned into the radial glow by `orb-gradient` in globals.css.
+              "--orb-hue": baseHue + layer.hueShift,
+              "--orb-lightness": lightness,
+              "--orb-alpha": baseAlpha * layer.alphaScale,
               // Per-orb timing consumed by the `[data-slot]` animation rules in globals.css.
               "--orb-intro": layer.introDuration,
               "--orb-drift-duration": layer.driftDuration,

@@ -40,6 +40,13 @@ export * from "./CiLane.ts";
  */
 export * from "./CiLanePartitions.ts";
 /**
+ * Public runner-loss rerun subcommand export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiRerunRunnerLoss.ts";
+/**
  * Public heavy-admission decision export.
  *
  * @category cli-commands
@@ -53,3 +60,10 @@ export * from "./HeavyAdmission.ts";
  * @since 0.0.0
  */
 export * from "./LaneTimings.ts";
+/**
+ * Public runner-loss rerun decision export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./RunnerLossRerun.ts";
