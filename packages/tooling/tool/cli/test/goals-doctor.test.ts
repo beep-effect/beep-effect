@@ -7,14 +7,13 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, flow, Layer, Result, Runtime } from "effect";
 import { Command } from "effect/cli";
 import * as S from "effect/Schema";
-import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
@@ -64,68 +63,56 @@ const writeBaseline = (keys: ReadonlyArray<string>) =>
     `${encodeJson({ schemaVersion: "goals-doctor-baseline/v1", findings: keys })}\n`
   );
 
-describe("goals doctor baseline ratchet", () => {
-  it(
+it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", (it) => {
+  it.effect(
     "ignores hidden editor directories under goals",
     () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
-          Effect.gen(function* () {
-            yield* writeProjectFile("goals/.idea/workspace.xml", "<project />\n");
-            yield* writeBaseline([]);
-            const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
-            assertTrue(Exit.isSuccess(exit));
-          })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* writeProjectFile("goals/.idea/workspace.xml", "<project />\n");
+        yield* writeBaseline([]);
+        const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
+        assertTrue(Exit.isSuccess(exit));
+      }),
     20_000
   );
 
-  it(
+  it.effect(
     "fails with exit 1 on a synthetic new blocking finding absent from the baseline",
     () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
-          Effect.gen(function* () {
-            yield* writeDriftedPacket("demo");
-            yield* writeBaseline([]);
-            const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
-            expectReportedFailure(exit);
-          })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* writeDriftedPacket("demo");
+        yield* writeBaseline([]);
+        const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
+        expectReportedFailure(exit);
+      }),
     20_000
   );
 
-  it(
+  it.effect(
     "exits 0 when the same finding is inherited from the committed baseline",
     () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
-          Effect.gen(function* () {
-            yield* writeDriftedPacket("demo");
-            yield* writeBaseline(["demo lifecycle-mismatch"]);
-            const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
-            assertTrue(Exit.isSuccess(exit));
-          })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* writeDriftedPacket("demo");
+        yield* writeBaseline(["demo lifecycle-mismatch"]);
+        const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
+        assertTrue(Exit.isSuccess(exit));
+      }),
     20_000
   );
 
-  it(
+  it.effect(
     "exposes the same ratchet through the beep lint goal-packets alias",
     () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
-          Effect.gen(function* () {
-            yield* writeDriftedPacket("demo");
-            yield* writeBaseline([]);
-            const exit = yield* Effect.exit(runLintCommand(["goal-packets"]));
-            expectReportedFailure(exit);
-          })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* writeDriftedPacket("demo");
+        yield* writeBaseline([]);
+        const exit = yield* Effect.exit(runLintCommand(["goal-packets"]));
+        expectReportedFailure(exit);
+      }),
     20_000
   );
 });

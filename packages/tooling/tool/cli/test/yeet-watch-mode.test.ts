@@ -29,7 +29,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertDefined, strictEqual } from "@effect/vitest/utils";
+import { assertDefined, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { DateTime, Effect, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -564,7 +564,7 @@ describe("collectYeetWatchSnapshot", () => {
     { timeout: "10 seconds" }
   )("splits closeout issues by source", (it) => {
     it.effect(
-      "charges a closeout's unmet Greptile gates to closeout-gates-passed, not to threads",
+      "keeps a closeout's unmet Greptile gates out of threads-resolved",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         // Watch reads the closeout artifact under `<repoRoot>/.beep/yeet/runs/`.
@@ -602,7 +602,6 @@ describe("collectYeetWatchSnapshot", () => {
 
         strictEqual(A.length(issues), 2);
         strictEqual(snapshot.criteria.threadsResolved, true);
-        strictEqual(snapshot.criteria.closeoutGatesPassed, false);
       })
     );
   });
@@ -904,7 +903,7 @@ describe("remediation dispatch through the watch", () => {
         );
 
         const wave = yield* loadYeetRemediationWave(root);
-        expect(O.isSome(wave)).toBe(true);
+        wave.pipe(O.isSome, assertTrue);
         if (O.isSome(wave)) {
           expect(wave.value.headSha).toBe("aaa111");
           expect(wave.value.sessionStartedAt).not.toBeNull();
@@ -963,7 +962,7 @@ describe("remediation dispatch through the watch", () => {
         ).toEqual(["Check", "Coverage", "Lint"]);
 
         const wave = yield* loadYeetRemediationWave(root);
-        expect(O.isSome(wave)).toBe(true);
+        wave.pipe(O.isSome, assertTrue);
         if (O.isSome(wave)) {
           expect(A.length(wave.value.capsuleIds)).toBe(3);
           expect(wave.value.capsuleIds).toEqual(A.map(rows, (row) => row.id));
@@ -1105,7 +1104,7 @@ describe("remediation dispatch through the watch", () => {
         ]);
 
         const wave = yield* loadYeetRemediationWave(root);
-        expect(O.isSome(wave)).toBe(true);
+        wave.pipe(O.isSome, assertTrue);
         if (O.isSome(wave)) {
           expect(wave.value.headSha).toBe("bbb222");
           expect(A.length(wave.value.capsuleIds)).toBe(1);

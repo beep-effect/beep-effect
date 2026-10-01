@@ -5062,6 +5062,759 @@ original whole-cohort timeout or final package acceptance.
   affected Fallow gates before publishing this production repair would have
   shortened the feedback loop. Receipts: `pr1323-fallow-fix-*`.
 
+- PR #1323 hosted CLI shard 2 exposed CI-only console pollution: runner
+  lifecycle logs entered three exact application-output assertions in
+  `cli-json-printer.test.ts` and `person-match-portability.test.ts`. Running
+  both files with `CI=1` reproduced the same three failures locally; ordinary
+  local proofs had not exercised that trace mode. A fresh TestConsole around
+  the application effect preserves CI lifecycle diagnostics and exact output
+  assertions. Keep explicit CI/trace-mode coverage for console-sensitive tests.
+  Receipt: `pr1323-ci-console-control`; follow-up proof: `console-followup-ci-*`.
+
+- The generated PR #1323 title used the latest documentation commit, and its
+  initial body included already-squashed #1312 checkpoint history. The body
+  required a manual rewrite around the current diff while retaining review
+  and provenance blocks. PR generation should summarize the effective diff
+  against the base instead of treating all reachable feature commits as new
+  work after a squash merge. Receipt: PR #1323 body rewrite.
+
+- PR #1323's full local publisher reached lint policy after the ordinary
+  package proof, then found Effect test-only diagnostics: nested predicate
+  assertions need the pipeable form, two existing test helpers need Effect.fn,
+  and a new backward-compatibility decoder must be hoisted and typed. Package
+  source checking alone does not cover this test diagnostic lane; run the
+  generated `package-test-typecheck` task during assertion migrations. The
+  same policy pass rejects literal synthetic home paths in captured inventory
+  evidence, even though they are test fixtures rather than real private paths.
+  Preserve the test case while using portable, unambiguous fixture paths or
+  sanitized inventory evidence. Receipt: `pr1323-local-policy-failures.json`.
+
+- Converting nested boolean assertions to their required pipeable form exposed
+  an EV005 detector blind spot: six existing outcome findings disappeared
+  without changing their test behavior. A red regression now covers method
+  pipes, functional pipes, inline results, lexical shadows, unrelated bindings,
+  and non-assertion consumers. The detector follows proven public assertion
+  references and includes method receivers in local-binding checks. All six
+  findings remain visible. The repair also exposes nine existing outcome
+  assertions in PathSafety and DocumentIntake, which require explicit review
+  and remediation rather than silent baseline expansion. Receipt:
+  `console-followup-detector-before` and `console-followup-policy-captures`.
+- `package-test-typecheck` is a Turbo artifact producer: its wrapper may exit
+  zero while `.turbo/package-test-typecheck-result.json` records failure.
+  Operators must inspect the artifact or use the aggregating quality command;
+  a clearer command completion summary would prevent false green reports.
+
+- The unchanged detector scan took 17.2 seconds over 4,176 findings during
+  concurrent proofs, following a 10.0-second scan over 4,391 findings. Compare
+  phase timings with recorded load/pressure before attributing scan latency
+  to a code change; the final cheap-gate target needs a controlled measurement.
+- Scheduler status JSON includes its full historical quarantine inventory.
+  A status read encountered 2,068 quarantined entries, obscuring the live
+  capacity/lease summary. Prefer counts in the default summary and an explicit
+  verbose inventory for historical paths; consumers should allowlist fields
+  rather than exclude only known bulky fields. No leases were reaped or changed.
+
+### Option assertion drafts need optional-subject and pipe diagnostics
+
+While migrating 97 CLI comparisons with `Option.none()` to public `assertNone`,
+`package-test-typecheck` reported nine TS2345 errors for optional indexed
+subjects and two missed-pipeable diagnostics. The original comparisons also
+failed on `undefined`; a migration must preserve that failure without a cast
+or evaluating the subject twice. Bind the subject once, use public
+`assertDefined`, then `assertNone`; use pipe syntax for the two nested calls.
+The initial draft's parse/import/subject checks were insufficient to prove
+TypeScript compatibility. Future assertion preparation should classify optional
+subjects and account for Effect diagnostics before starting the timed after-run.
+Private receipt: `cli-option-none-equality-typecheck.json`. The generated task
+wrapper exited zero while its result artifact correctly reported exit one.
+
+### Option comparison migration must preserve asymmetric matchers
+
+Preparing the CLI `Option.some` batch exposed one `quality-tasks.test.ts`
+comparison whose payload is `expect.objectContaining`. The public `assertSome`
+helper delegates to Node's deep strict comparison, which does not implement
+Vitest asymmetric matching. A direct mechanical replacement would change the
+assertion. The draft instead binds the subject and matcher once, asserts the
+Some predicate, and retains the original matcher against the unwrapped value.
+Future migration preparation should classify asymmetric matchers before
+emitting helper calls; parse validity and argument-text equality are not enough.
+Evidence: installed `@effect/vitest/src/utils.ts`, the existing root lint policy
+step test, and private `cli-option-some-equality-proposal.json`. This was caught
+in draft review before application; it is not a production defect.
+
+The same Some batch's typed helper check also exposed three expected numeric
+literals whose subjects carry `NonNegativeInt` brands. Reusing the existing
+schema constructor preserves the numbers without casts. The final generated
+Effect diagnostic artifact is clean. Include expected-value brand compatibility
+in migration preparation, alongside optional subjects and asymmetric matchers.
+Private before/final receipts: `cli-option-some-equality-typecheck.json` and
+`cli-option-some-equality-final-typecheck.json`.
+
+### Inventory evidence selectors must accept multiline formatting
+
+The Option comparison preparation selected files from existing ledger evidence
+with a literal matcher opening followed immediately by `O.some`. Three files
+used a newline there and were missed, even though the AST rewrite itself
+handled multiline calls. A whitespace-tolerant selection found three existing
+rows, now included in the inline Exit-tag follow-up batch. Future preparation
+should select candidates by the inventory class and inspect their AST, or test
+its evidence selector against multiline formatting. Receipt:
+`cli-option-some-residual-proposal.json`; no new repository inventory was needed.
+
+### Amortize full CLI proof across larger assertion batches
+
+The assertion work repeatedly ran `bun run beep quality package-verify
+@beep/repo-cli` after small batches. Recent audit phases took 680.6, 669.0 and
+672.8 seconds, plus roughly twenty seconds of docgen, while the five-file
+before/after cohorts took about 31 seconds on Node and 21 seconds on Bun.
+Holding source immutable during each full proof was necessary, but launching
+that proof after every small transformation unnecessarily serialized progress.
+Group subsequent assertion transformations into larger reviewable batches;
+retain source-preservation checks, actual Effect diagnostics, focused Node/Bun
+parity and the ratchet during editing, then run the full owning-package proof
+before publication. This changes batching, not acceptance requirements or the
+full Yeet/hosted gates. Receipts: the Option comparison and inline Exit assertion
+proof documents and their private package-verify logs. Do not interrupt or edit
+under a full proof that is already running.
+
+### EV006 must inspect canonical absence through pipe syntax
+
+The remaining-assertion audit found that `assertTrue(O.isNone(value))` routes
+to `assertNone`, while `value.pipe(O.isNone, assertTrue)` escapes EV006. The
+earlier 215-assertion absence migration used that pipe form, so its reported
+ratchet reduction did not establish canonical absence assertions. Add paired
+direct/method/functional pipe regression cases, preserving import provenance
+and predicate polarity, then correct the affected assertions and their proof
+records. Keep already canonical presence and Result/Exit branch predicates
+valid; do not invent expected payloads. Receipt: `detectBooleanDataShape` in
+`EffectVitestDetectors.ts` and `cli-option-absence-proof.md`.
+
+The corrected root scan also exposes 50 functional-pipe absence assertions
+in eight `@beep/schema` test files. They require the same canonical repair;
+the baseline must not grow to absorb them. The first corrected scan reports
+3,816 findings with 50 introduced. CLI's 216 repaired pipe assertions restore
+previously claimed migration credit rather than add a fresh reduction.
+
+### Compound Boolean predicates need a canonical public route
+
+The remaining CLI EV006 audit includes public `assertTrue` calls around
+`Option.contains` and Array `every`/`some`. Their return values are Boolean,
+but the detector falls back to structural equality guidance and flags the
+canonical helper again. The Effect reference declares both direct/curried
+contains overloads as Boolean and uses `Equal.asEquivalence`; changing these
+to payload deep equality could alter semantics. Add narrow provenance/arity
+regressions and route proven aggregate/member predicates to public Boolean
+helpers while preserving compound operands and truth polarity. Keep
+Option-valued transformations and genuine absence checks distinct.
+
+### Assertion preparation must distinguish arrays and event-version unions
+
+The compound assertion draft initially emitted method `.pipe` on arrays and
+projected version-specific journal fields before narrowing the event union.
+The generated test diagnostics rejected both (`Property 'pipe' does not
+exist` and keys outside the common union fields). The repair uses functional
+`pipe` and existing schema/variant guards before `Struct.pick`, without
+casts. Future preparation should classify receivers and preserve the
+version/tag facts already asserted by surrounding tests. Receipt:
+`cli-assertion-closeout-typecheck.log` and its generated diagnostic artifact;
+the final artifact has exit zero and empty diagnostics.
+
+### Typed-failure batch proof command and receipt ergonomics
+
+During CLI assertion verification, invoking `bun run package-test-typecheck`
+from the repository root failed because that generated task belongs to the
+CLI workspace. The corrected workspace invocation produced an empty diagnostic
+artifact with exit code zero. A package-aware wrapper or examples carrying
+an explicit workspace directory would prevent this routing mistake. Receipt:
+`cli-typed-failure-typecheck.log`.
+
+Timing context receipts include hashes for every tracked CLI source file.
+Printing the complete context while recovering a finished proof produced a
+large, truncated tool result. Recovery should allowlist terminal fields
+(exit, timeout, duration, source stability) and test totals, leaving the full
+hash map on disk. This is reporting friction; the four timing runs retained
+stable source and identical registrations.
+
+### Runtime migration exposes nested resource ownership candidates
+
+Converting 95 files-command runtime wrappers to instrumented Effect tests
+preserved all 105 Node/Bun cases and clean TypeScript diagnostics, but the
+before/after syntax detector revealed 93 additional whole-body resource-wrapper
+calls and seven layer-provision candidates. Their bodies were previously below
+plain test callbacks, outside those detector contexts. The migration needs
+canonical fixture ownership as well as runtime removal; expanding the baseline
+would conceal that work. Preview detector output on prepared drafts before
+applying large harness migrations, and reconcile newly visible candidates with
+the owning resource definitions. Receipt: cli-files-runtime-raw-findings.json.
+
+### Hoisting a layer can bypass filesystem fault injection
+
+FilesCommandService captures its construction context and supplies that context
+to each operation. Five files-command fault tests override FileSystem before
+constructing the service. Hoisting one native instance to a shared suite fixture
+would therefore bypass the overrides, even though the tests still appeared to
+provide them. The migration uses harness-owned scenario layers built with the
+same filesystem objects, retains all rollback counters and preservation checks,
+and leaves assertions in the test body. Resource migration review should inspect
+constructor context capture before hoisting providers. Receipts:
+cli-files-scenario-fixtures.json and cli-files-assertion-preservation.json.
+
+The new verification fixture initially used an unknown error channel and a
+handwritten service key. Generated Effect diagnostics rejected both. Its final
+channel names PlatformError and FlattenMediaSummary (the latter is the existing
+Effect.flip unexpected-success failure), and the key follows the deterministic
+package/test/declaration path. Run generated test diagnostics before recording
+final timing evidence for new fixture declarations.
+
+### Shared TSMorphService aliases independent repository roots
+
+While preparing the docgen harness migration, a single TSMorphService instance
+was used to inspect two scoped temporary repositories. Both had tsconfig.json
+and src/index.ts, with different exported marker values. The first inspection
+returned its source; the second returned an empty source list. Both scopes used
+the identical key `tsconfig.json::syntax#workspaceOnly`. The probe exits one and
+cleans both temporary roots. Receipt: tsmorph-cross-root-probe-before.log.
+
+The project pools and symbol-index pool use relative ProjectCacheKey values;
+resolvedScopes also overwrites entries keyed only by relative scopeId. Hoisting
+this stateful service without repair would introduce cross-test contamination.
+Repair must partition internal caches by repository root and address ambiguous
+scope-id lookup, not merely make the new test pass. Preserve the existing public
+scope-id contract unless the model is deliberately migrated, and add a regression
+covering two roots with the same relative config/file paths. Production repair
+is authorized by the operator's standing instruction. It is repaired in
+`f26bf72626`; see tsmorph-repository-isolation-proof.md for the three red/green
+regressions and full package proof.
+
+### Docgen temporary-repository setup could leak on acquisition failure
+
+While migrating docgen tests, the local withTempRepo and withTempRepoCommand
+helpers allocated a directory and changed cwd before creating .git, all inside
+acquireUseRelease acquisition. A failed directory creation never reached the
+registered release. Commit f309935ade replaces them with makeTempDirectoryScoped
+and a separately registered cwd release. Extracted fixture controls under Node
+and Bun prove cleanup on success, failure, interruption, chdir failure and mkdir
+failure. See cli-docgen-runtime-resource-proof.md. Review remaining temporary
+repository helpers for the same acquisition ordering when their inventory rows
+are reached; resource acquisition should register cleanup before later fallible
+setup, and controls should exercise setup defects as well as test-body failures.
+
+### Native import consolidation does not settle filesystem judgment
+
+The docgen migration reduced two native-platform detector rows to one because
+NodeServices replaces separate platform imports. The underlying suite still
+uses a real filesystem, cwd changes and git processes. Both historical native
+judgments remain open; detector disappearance is not sufficient evidence to
+close a backend decision. A future inventory aid should track service provenance
+through platform aggregate layers and retain the Resource lens decision when
+import spelling changes. The existing native-platform anchor was updated without
+adding baseline members or claiming a Memory migration.
+
+### Scheduler status recipe requires an undocumented flag
+
+While checking the live docgen package proof, the Yeet skill's documented
+`bun run beep quality scheduler status` exited with `Missing required flag:
+--json`. The same read-only command with `--json` succeeded. Update the operator
+recipe or the command's optional-output flag behavior so the published status
+check works as written. No scheduler leases or sibling proofs were changed.
+
+Repaired in f6b1dcaa28 by defaulting the Boolean output flag to false. A
+regression failed before the repair and passes on Node and Bun afterward;
+omitting the flag produces exactly the explicit --no-json output. The real
+unflagged command now succeeds. Quick package proof passed lint/check, and the
+133-case scheduler cohort passes on both runtimes. The later full package proof at a1de26d035 passes audit (704.4 seconds) and
+docgen (19.2 seconds), covering this repair; the earlier Yeet proof predates it.
+
+### Native journal lock retries need an explicit live clock during migration
+
+The first Yeet harness draft passed 168 cases but timed out the two native
+journal contention cases at their existing 30-second limits. Their internal
+retry sleeps inherited TestClock, so the lock-refusal and concurrent-appender
+operations could not advance. The migration scopes TestClock.withLive to those
+two existing cases; assertions, concurrency and timeout values are unchanged.
+The failed cohort is retained separately from the final comparison. Future
+resource migrations should inspect transitive retry clocks, not only direct
+sleep calls in the test file. Final validation belongs in the Yeet batch proof.
+
+### Match detector evidence with its canonical truncation and trimming order
+
+A private lineage audit initially could not resolve five Yeet runtime rows
+because it compared a 200-character prefix that retained a trailing space.
+The detector's compactEvidence trims after truncation. Applying the same rule
+produces exact historical line/evidence matches for all 74 runtime rows. Future
+lineage tooling should reuse compactEvidence rather than recreating its text
+normalization; otherwise shared evidence prefixes create false ambiguity and
+unnecessary history scans. No detector or baseline behavior was changed.
+
+
+### Assertion conservation audits must include utility and pipeline forms
+
+The initial private AST audit recognized common expect/assert calls but omitted
+some imported helpers and direct assertion stages in pipe expressions. The
+expanded audit recognizes imported assertion utilities, local assert-prefixed
+helpers and assertion pipelines. Rechecking the original committed sources
+against the current migrations preserves 604 Yeet, 342 docgen and 472 files
+assertion trees. This strengthens migration evidence; it does not add behavioral
+coverage. Future audit tooling should report its recognized forms explicitly
+and include fixtures for aliased imports and piped assertions.
+
+### Layer fixtures share their parent clock unless explicitly isolated
+
+The scheduler migration draft exposes five TestClock.adjust findings across
+four cases. The installed harness caches the parent TestEnv and nested layers
+inherit it. The draft gives each adjusting case its own TestClock.layer(). A
+six-case public-API control passes on Node and Bun, while removing those nested
+layers fails all four identity checks on both runtimes. This is evidence for
+the fixture design, not yet proof of the actual scheduler suite. Keep the
+judgment rows pending until the migrated suite and its clock witnesses pass.
+
+
+### Clock audits must follow journal helpers and include setTime
+
+The first applied scheduler draft collected no tests because layer-bound test
+methods do not expose it.live. The corrected public it.effect registrations
+retain native time with TestClock.withLive. A subsequent diagnostic run was
+stopped after identifying unadvanced retry sleeps in appendAdmissionJournalEvent
+through withJournalFileLock/pauseBeforeLockRetry. The initial clock audit had
+missed transitive journal, recovery and CLI callers; those previously live
+operations now explicitly retain live time. Neither diagnostic run is timing
+or success evidence.
+
+The actual-suite parent-clock witness then failed at 1000 ms despite all 133
+original tests passing. A fifth case used TestClock.setTime without adjust and
+was omitted from the first isolation audit. It now owns a separate clock;
+135/135 cases including the two witnesses pass on both Node and Bun. EV015
+currently detects adjust only. Review extending the judgment detector to
+setTime and other clock mutations, with corresponding syntax tests and an
+explicit inventory update. Do not infer clock isolation from passing business
+assertions or from the absence of adjust findings.
+
+
+### Historical inventory can retain fixes already merged by other work
+
+The scheduler reconciliation matched six open historical rows to already merged
+changes in PRs #1143, #1146, #1200 and #1268. One registration was renamed when
+its single scope-unit case became a scope/service table. Comparing only current
+runtime calls misses these closures; retaining historical line/evidence and
+checking the landed registration establishes provenance. The complete pre-batch
+registrations match those commits after whitespace normalization. Record the
+upstream fix SHA rather than attributing these removals to the current batch.
+
+The lint-command assertion audit also exposed a coverage omission in the private
+conservation script: custom expectReportedExit calls were not counted. Including
+expect-prefixed assertion helpers raises the preserved-tree count from 159 to
+198. Future reusable audits should inventory custom assertion entrypoints as
+well as imported Vitest utilities; naming heuristics alone are incomplete.
+
+
+### Location-based detector IDs can collide across source snapshots
+
+While recording the lint-command migration, the ledger guard rejected a new
+finding at lint-command.test.ts:1010 because its raw detector ID already belonged
+to a different historical finding. Their evidence and occurrence fingerprints
+differ. The guard prevented an overwrite. Both rows are preserved, with an
+explicit #2 ledger suffix for the new row and a public collision receipt.
+Future cumulative inventory tooling should distinguish snapshot identity from
+finding lineage and check occurrence/evidence before treating matching location
+IDs as the same row. This does not require changing the current baseline IDs.
+
+
+### Quality-task temporary-repository setup registers cleanup too late
+
+Preparing quality-tasks.test.ts exposed a setup defect in withTempRepo: it
+allocates a directory and overrides process.cwd, then creates .git before
+registering either cleanup action. An extracted-body control with native
+NodeServices and an injected mkdir failure reproduces both the directory leak
+and the retained cwd override on Node and Bun. The control restores its own cwd
+function and removes its directory afterward; no repository source is changed
+while the lint-command package proof runs.
+
+Repair this helper in the next cohort by registering directory cleanup and cwd
+restoration before fallible setup. Preserve its process.cwd function override;
+replacing that behavior with process.chdir would change how subprocesses see
+cwd. Prove success, failure, interruption and setup-defect cleanup, and audit
+call-site scope boundaries before flattening the wrapper. Private receipts:
+cli-quality-tasks-setup-leak-{node,bun}.log.
+
+
+### Quality-task scope review exposed a second setup-cleanup gap
+
+While validating the quality-task migration, `bun run beep lint effect-vitest`
+reported one introduced scope judgment despite a net decrease of 78 findings.
+The whole-body scope around the diff-audit integration case became visible
+after its runtime boundary migrated. The nested acquisition allocated a
+temporary directory and ran Git setup before registering cleanup, leaving
+the directory unreleased if setup failed. The follow-up moves acquisition
+and its existing ignore-on-remove cleanup into `Effect.acquireRelease` before
+setup and lets the public test scope own it. Focused failure-path evidence
+and refreshed suite proof are required before recording the repair as verified.
+
+The same review found that the detector no longer sees an unchanged shorter
+scope behind a `flow(Effect.fnUntraced(...), ...)` test callback. Its historical
+judgment remains open; detector silence is not evidence of resolution. Extend
+callback recognition with explicit regression coverage in a tooling batch.
+
+The diff-audit repair now has passing Node/Bun controls for the reproduced
+setup leak, success, setup failure, body failure, interruption and retained
+ignore-on-remove behavior. All 254 actual suite cases pass on each runtime,
+894 assertion trees are preserved, and the root ratchet introduces no findings.
+Full package verification remains the next gate.
+
+
+### Packet-core test temporary directories need scope ownership
+
+Preparing the next existing inventory cohort found six `makeTempDirectory`
+allocations in `test/goals-packet-core.test.ts`. The file-name-mismatch and
+deep-unknown-input cases never remove their directories; the robustness and
+append-refusal cases remove four directories only at the successful end of
+the test. A failed assertion or interrupted native operation can skip cleanup.
+Use the public Effect test scope and scoped filesystem acquisition in the next
+batch, retaining assertions, native fixture reads and setup semantics. This is
+source-review evidence; runtime cleanup controls are still pending.
+
+The unchanged packet-core baseline now reproduces two leaked directories on
+both Node and Bun despite all 28 tests passing. Each run used a dedicated
+`TMPDIR` under the private task cache; the harness counted the residue and
+removed its own temporary root afterward. Source hashes stayed stable. The
+four success-only cleanup sites still need failure/interruption controls.
+
+The packet-core repair now passes all 28 actual tests without temporary residue
+on either runtime. Actual-suite failure and self-interruption probes verify
+cleanup in all four resource-owning cases on both runtimes; all six allocation
+sites are covered by the success runs. Probe changes are removed. The root
+ratchet passes without baseline changes; full package proof remains pending.
+
+
+### Effect-import tests duplicated an unsafe cwd acquisition wrapper
+
+The effect-import test suite kept a private Layer.build wrapper and an
+acquireUseRelease cwd wrapper that allocated a directory before process.chdir
+without registering release until the whole acquisition returned. The suite
+now reuses support/CommandTest's scope-owned temporaryWorkingDirectory under
+public it.effect and it.layer. Actual-constructor Node/Bun controls verify
+cleanup and cwd restoration even when chdir defects; success, body failure
+and interruption also pass. Reusing the existing constructor avoids maintaining
+a second cleanup implementation. All 23 actual tests and console isolation
+controls pass; grouped full package proof remains pending.
+
+
+### Package creation test fixtures delay cleanup until after setup
+
+The next existing-inventory batch contains matching withTempRepoCommand
+helpers in create-package.test.ts and create-package-lab.test.ts. Both allocate
+a temporary directory, change cwd and create `.git` inside acquireUseRelease's
+acquisition; release is registered only after all three operations succeed.
+A chdir or mkdir defect can therefore strand a directory, and a mkdir defect
+can leave cwd changed. Reuse the existing scope-owned cwd constructor and
+register cleanup before fallible setup. Source review identified the gap;
+injected setup-failure controls and the grouped package proof remain pending.
+
+Injected chdir and `.git` mkdir failures now reproduce the gap in both original
+create fixtures on Node and Bun. Every failure leaks its allocated directory;
+the mkdir failures also leave cwd changed. Each private control restores cwd
+and removes its own directory afterward. The migration draft has not yet
+been applied while the previous grouped package proof is active.
+
+The lifecycle draft preview also exposes a detector blind spot: the unchanged
+withBunShim resource wrapper disappears from EV003 after it moves inside the
+public fixture callback. Its narrow environment-restoration lifetime remains
+in the source and its judgment must remain open. The preview's finding-count
+drop therefore exceeds the actual resolved scope by one. Extend nested helper
+discovery in the tooling follow-up; do not close the row based on silence.
+
+The applied lifecycle constructors pass the same five Node/Bun cleanup
+controls as the private drafts, including the reproduced chdir/mkdir defects.
+All 62 uninstrumented cases pass with zero temporary residue, all 321 assertion
+trees are retained, and type diagnostics are empty. The root ratchet introduces
+no findings; withBunShim's unchanged judgment stays open.
+
+### Measure lifecycle fixture performance under matched load
+
+The first lifecycle samples are slower after migration: Node 12.084 -> 16.849
+seconds and Bun 6.224 -> 8.583 seconds for the same 62 registrations. Baseline
+and after runs had different concurrent proof/typecheck/ratchet activity;
+load and pressure receipts are retained, so these are observations rather
+than evidence of a causal regression. A controlled repeated comparison could
+separate service-fixture retention, per-test console cost and workstation
+contention before any performance change is justified. Do not claim a speedup
+from this batch or weaken resource isolation to improve one timing sample.
+
+
+### Preserve reviewed shorter scopes during wrapper migration
+
+The qa-round-pipeline private draft removes its callback resource wrapper,
+but six existing Effect.exit calls observe the wrapper's completed cleanup
+before asserting the Exit. Explicitly retaining those boundaries produces
+six EV004 shorter-scope judgment findings. Draft controls on Node and Bun
+prove cleanup-before-continuation and visible cleanup defects. Hoisting all
+six releases to test end would change that contract.
+
+The syntax ratchet compares membership regardless of exception status:
+adding a reason alone does not admit these new instances. Document an exact
+lineage-aware judgment transition for necessary scopes, including how it
+satisfies the packet's zero-new-findings and final-empty-baseline gates.
+Do not suppress recognition or remove meaningful lifetimes to pass the gate.
+This is recorded before application; source and baseline remain unchanged.
+
+
+### Use parsed syntax for assertion-preservation audits
+
+A private QA helper assertion audit initially compared scanner tokens without
+parser-driven template rescanning. It therefore included indentation after a
+template expression in a false difference, despite unchanged assertions.
+Replacing that comparison with parsed syntax-tree leaves verifies all 106
+assertion trees unchanged, with zero exclusions. Reuse parser-derived trees
+for future audits; a raw scanner needs template-context rescanning to be sound.
+
+The QA helper timing samples are also slightly slower after migration (Node
+3.520 -> 3.770 seconds; Bun 1.667 -> 1.967 seconds). Retain the load/pressure
+receipts and include this file in a matched-load comparison before attributing
+a performance change to fixture structure or console construction.
+
+
+### Audit native capture deadlines when choosing test-clock ownership
+
+The grouped package-verification draft audit followed runCaptured into
+StepExec.capturePipeDeadline. Even without an explicit command timeout, the
+capture races pipe EOF against post-exit drain and reap sleeps. A subprocess
+can exit while an inherited writer remains open; a frozen test clock would
+prevent that cleanup deadline from advancing. Passing ordinary subprocess
+cases alone does not prove the deadline stays live.
+
+The draft retains TestClock.withLive for the nine cases that reach captured
+subprocesses, including Git discovery and elapsed-duration reports. Pure
+selection and filesystem-only cases keep the test clock. Check earlier native
+migration cohorts for the same transitive boundary before final closure; do
+not infer clock safety merely from the absence of direct sleep calls in tests.
+
+
+The QA helper audit confirms one immediate follow-up: readCommitProvenance
+calls capturedText, which delegates to runCaptured. Its migrated native Git
+case therefore needs the same live-clock protection. A one-case draft is
+prepared without altering the running proof's source. Include that correction
+with the next grouped package proof and retain the earlier proof as evidence
+of its actual source revision, not proof of this newly identified timer path.
+
+
+The applied package-verification draft exposed a finalizer-type distinction:
+acquireUseRelease accepts a typed release failure, while acquireRelease
+requires an infallible finalizer. The actual type-result artifact rejected the
+migration even though the typecheck wrapper exited zero. The release effect
+now uses orDie so cleanup failure remains a visible test failure at the public
+scope boundary. Record this explicit typed-failure-to-defect transition and
+verify both ordinary cleanup and injected cleanup failure; do not ignore it.
+
+
+### Register tsconfig fixture cleanup before fallible setup
+
+The tsconfig-sync withTempRepo acquisition allocates a directory, creates its
+.git directory and changes cwd before acquireUseRelease installs cleanup.
+Either setup failure can therefore leave the allocated directory behind.
+Replace that acquisition with the existing cleanup-safe cwd constructor and
+create .git only after cleanup is registered. Verify mkdir/chdir failures as
+well as normal success, failure and interruption. This receipt records the
+source finding before a draft is applied; no reproduction is claimed yet.
+
+
+The original tsconfig helper leak is reproduced on Node and Bun: both injected
+mkdir and chdir failures leave the allocated directory present; cwd remains
+unchanged in these two original failure paths. Each control cleans up its own
+resource afterward. The extracted private replacement passes success, body
+failure, interruption, mkdir failure and chdir failure on both runtimes, with
+cwd restored and no directory left behind. Application and actual-suite
+controls remain pending while the preceding package proof runs.
+
+### Transitive timing audit needs subprocess-specific evidence
+
+While migrating identity and tsconfig callbacks, direct command-module searches
+missed the Biome child process reached through TsconfigSync.plan's
+renderBiomeJson call. Unlike StepExec capture, that path uses the shared Node
+spawner's native Date.now/setTimeout cleanup bound and needs no TestClock
+override. Record timer ownership at each subprocess adapter in the test
+primitive graph so future migrations can distinguish native cleanup bounds
+from Effect-clock deadlines without repeating manual transitive inspection.
+Evidence: cli-identity-tsconfig-runtime-resource-proof.md and
+repo-utils/src/schemas/BiomeJson.ts.
+
+### Fixture construction can leak before release registration
+
+Preparing jsdoc-inventory-detector-fixes.test.ts exposed fallible fixture writes
+inside acquireFixtureRepo before withFixtureRepo registers its release. An
+extracted original helper with an injected first-write failure leaves its
+allocated directory behind on Node and Bun. The draft registers removal at
+allocation, before writes; matching controls then remove the directory on
+setup failure. Audit other resource-wrapper acquisitions for this shape,
+not only successful-body cleanup. Evidence: jsdoc/model-store preparation
+receipt and private original/draft resource controls.
+
+### Model-store fixture cleanup errors were invisible
+
+person-match-model-store.test.ts used Effect.ignore on its directory removal.
+An extracted original-helper control with an injected removal failure returns
+a successful Exit and leaves residue on both runtimes. The scoped draft uses
+a visible finalizer defect, returning a failed Exit for that same control;
+the harness removes intentional residue afterward. Consider a targeted
+fixture-cleanup-error check in future resource reviews. This is a test-helper
+repair, not a change to model-store production behavior.
+
+### Scheduler status output is dominated by historical quarantine entries
+
+While checking whether an active package proof was waiting for admission,
+`bun run beep quality scheduler status` emitted 2,071 lines, mostly historical
+quarantine paths. Its live capacity and queue summary were only a few lines.
+Default to a quarantine count and bounded recent examples, with an explicit
+verbose listing for diagnosis. This would keep routine proof-state inspection
+readable without discarding the quarantine evidence. No scheduler state was
+changed during this observation.
+
+### Native packet locks are a transitive test-clock boundary
+
+Preparing goals-set-status-stream.test.ts found no direct timer in the test,
+but PacketEventStore.withLock reaches AdmissionJournal's acquisition and
+ownership-loss retries, both implemented with Effect.sleep. A frozen test
+clock can prevent a native lock retry from advancing. The draft preserves
+live clocks for the 11 native stream callbacks, leaving pure decode on the
+test clock. Include this adapter in the ongoing transitive clock audit of
+previously migrated packet tests; passing uncontended-lock cases alone is
+insufficient evidence. See cli-stream-normalize-preparation.md.
+
+### Package proof does not cover root inline-schema policy
+
+The JSDoc/model-store CLI package audit and docgen passed, while root
+`bun run lint:oxlint` still rejected 12 scheduler codec declarations nested
+inside the suite callback and three synthetic-scenario guards compiled inside
+assertions. The follow-up hoists the same compilers and guards to module scope;
+root Oxlint now passes. Run this root policy gate alongside migration checks
+before interpreting package proof as publication readiness. No assertions or
+schema contracts were weakened.
+
+### Schema guard hoisting changes a remaining runtime finding fingerprint
+
+After hoisting three synthetic-scenario schema guards to satisfy root Oxlint,
+`beep lint effect-vitest` reports one new finding in that same file. A focused
+before/after detector comparison confirms identical EV001/EV003/EV010 counts;
+the remaining runPromise body's occurrence fingerprint changed when its guard
+calls changed. The outstanding runtime boundary still requires migration.
+Preserve that obligation and its historical lineage when resolving the ratchet;
+a broad baseline refresh would obscure the distinction between an identity
+change and newly introduced debt. Receipt: cli-scheduler-schema-hoist-proof.md.
+
+### Package type wrapper success is not a clean diagnostic artifact
+
+During stream/normalization verification, `bun run package-test-typecheck`
+exited zero while `.turbo/package-test-typecheck-result.json` recorded exitCode
+1 and five TS377015 chained-pipe diagnostics. Reading the artifact exposed the
+failures; flattening the pipes produced a new empty artifact with exitCode 0.
+Consumers should clearly distinguish diagnostic collection success from a
+clean type result. A visible summary or separate strict mode would prevent
+an operator from treating the wrapper's zero status as type proof.
+
+### Partially migrating a nested fixture changes the retained wrapper identity
+
+The Yeet review-fixes migration removed its inner directory wrapper but kept
+its coordinator wrapper. Root `beep lint effect-vitest` then rejected one new
+fingerprint despite unchanged remaining rule counts. Completing the coordinator
+migration exposed three previously hidden dynamic layer provisions. Scoped
+acquisition plus direct provision of the stateless memory service removed both
+issues without refreshing the baseline. Migration previews should compare
+fingerprints as well as counts and inspect nested providers before application.
+Lock-release probes now verify removal while the temporary root still exists,
+so directory cleanup cannot hide a broken lock finalizer. Receipt:
+`cli-yeet-review-runtime-proof.md`.
+
+### Reflection lint success case does not exercise the default it names
+
+While preparing reflection-lint.test.ts, the case named "passes when a completed
+goal without reflectionRequired has a valid reflection" explicitly supplies
+reflectionRequired: false. It duplicates opt-out behavior instead of proving
+successful validation when the field is absent. Add a distinct omitted-field
+success case or correct this fixture in a behavior-focused follow-up, preserving
+the explicit opt-out test. The migration draft retains the current fixture and
+assertions and does not claim this missing coverage. Receipt:
+`cli-reflection-lint-preparation.md`.
+
+### Anonymous layer concurrency options do not serialize nested suites
+
+The Effect reference's makeLayer implementation applies options.concurrent to
+named layers, while anonymous layers register tests in the existing suite.
+During bootstrap-plan migration, the fixture's concurrent:false option alone
+therefore did not prove serialization of cwd-changing tests. The applied suite
+sets concurrent:false on all thirteen existing describes, preserving test names
+and per-test timeouts. Audit earlier anonymous fixtures that mutate process-wide
+state for an explicit serial parent; default serial Vitest execution can hide
+this gap. The same reference confirms layer timeout governs fixture hooks, not
+individual test deadlines. Receipt: cli-reflection-bootstrap-runtime-proof.md.
+
+### Temporary repository acquisition can fail after changing cwd
+
+Source inspection of sync-data-to-ts.test.ts shows withTempRepoCommand creating
+a directory and changing process cwd before creating .git within a single
+acquireUseRelease acquisition. If that last step fails, the release has not yet
+been registered. The migration should register directory and cwd finalizers
+incrementally and inject a .git creation failure to verify restoration. A source-extracted
+Node/Bun probe with simulated cwd/filesystem now reproduces the missing release:
+the old helper leaves cwd changed with zero removals, while incremental scoped
+acquisition restores both. After application, native-file .git setup-failure probes pass on Node and Bun
+for all eight repository cases, with cwd restored and no temporary residue.
+Receipt: cli-sync-data-runtime-proof.md.
+
+### Assertion parity must distinguish formatting from semantic changes
+
+The portfolio guard migration preserved 32 assertion trees before formatting,
+but its token-inclusive parity script rejected a formatter-added trailing comma
+after wrapping the suite in it.layer. The applied check now normalizes only a
+trailing CommaToken within a SyntaxList; all assertions remain compared. A shared
+parity checker should encode this normalization, retain negative controls for
+changed arguments/operators, and avoid hand-copying check scripts between waves.
+Receipt: cli-portfolio-guard-runtime-proof.md.
+
+## PR closeout suggests unavailable reviewer score requirements
+
+While repairing PR 1323, Yeet suggested closeout with a required Greptile 5/5
+score and zero issues. The PR has no Greptile review, so that command generated
+two blocking unknown-value reports despite zero actionable review threads.
+Closeout with the actual review-comment requirement succeeds while CI remains
+pending. Derive score-specific suggestions from the configured reviewer or
+observed review evidence, rather than suggesting an unavailable integration.
+No CI or unresolved-thread gate was relaxed.
+
+## Browser setup import failure obscures an otherwise passing proof
+
+PR 1323 full verification at `1d01a323d6` passed lint policy, type checks,
+and unit tests, then failed the fourth Storybook chunk before collecting the
+`todo-item.stories.tsx` tests. The minimal error was `Failed to fetch dynamically
+imported module` for Storybook's `setup-file-with-project-annotations.js`.
+Three chunks passed; the final chunk had 16 passing files and one failed suite.
+Neither Storybook nor the UI package differs from main in this PR, and the
+hosted Storybook check passed. These facts suggest a local loading issue but
+do not establish its cause. The isolated same-head lane recheck passed all four chunks and 489 tests
+without source or configuration changes. This supports transient attribution,
+although the underlying fetch failure remains unexplained. No retry policy,
+gate, or test has been weakened.
+
+Improve browser-runner failure artifacts with setup-module HTTP status and
+server-side transform errors, so fetch failures can be attributed without a
+whole-suite rerun. Preserve the failed chunk identity and distinguish setup
+collection failures from failed story assertions.
+
+## Inventory merge keys can collapse existing rows
+
+Preparing the PR 1323 checkpoint integration exposed duplicate identity
+groups in the existing inventories. Grouping by file, rule ID, and occurrence
+hash yields 28 groups with multiple rows in the baseline and 15 in the CLI
+ledger. The counts are identical in the merge base and both branch inputs;
+this preparation did not introduce them. For example, the baseline contains
+two EV002 rows for one occurrence in `contradiction-qa-seed.pglite.test.ts`,
+with row IDs that differ by line number.
+
+A reconciliation map that stores only one row for that tuple would silently
+discard history. Preserve each group as a multiset and match individual
+lineages before changing statuses or removing rows. Distinguish moved
+identities from deleted findings, and reject ambiguous matches. Add a focused
+regression for colliding identities when improving the reconciliation tooling.
+The analysis keeps multi-row groups intact; no baseline or ledger was
+rewritten and no finding was closed by this analysis.
+
 ## PR 1323: keep CI-only console repairs available at the checkpoint
 
 The frozen PR retained three CI console failures and 35 Effect diagnostic
@@ -5099,6 +5852,104 @@ instant case. Added behavioral regressions restore full focused coverage
 without lowering either baseline. Include skipped required checks and malformed
 timestamps in watch conformance tests when changing readiness or ordering.
 
+## Squash ancestry changes checkpoint integration conflicts
+
+The branch-to-branch preview for PR 1323 had seven conflicts. After its squash
+merge, integrating main into the saved follow-up branch produced 51 because
+the merge base no longer included the checkpoint branch history. The exact
+checkpoint head and merged main differed only in 106 documentation paths in
+other goal packets. A fresh semantic merge preview against the checkpoint
+head therefore resolved 44 ancestry-only conflicts without dropping upstream
+changes; the four previously reviewed source resolutions still matched after
+normalizing conflict-marker branch labels.
+
+Preserve the exact checkpoint head and preview tree before retiring its lane.
+When integrating a squash merge into a continuation branch, compare main with
+that exact head before trusting a branch-to-branch conflict count. Verify the
+content delta and preserve unrelated main changes; do not resolve these cases
+with a blanket choice of either branch.
+
+## Assertion parity does not prove an Effect callback contract
+
+The labs-scoping migration draft preserved all six registrations and twelve
+assertions but supplied a bare generator to `it.effect`. Its first Node run
+failed one test with `Not a valid effect`. The reference harness uses
+Effect-returning callbacks, so the repair wraps the generator in `Effect.gen`.
+The assertion tree was unchanged by that repair.
+
+Draft validation should include callback type checking before treating
+structural parity as ready for runtime proof. Preserve a failing execution
+receipt and rerun the actual Node/Bun cohort; assertion-count equality alone
+cannot establish the runner contract. No test or gate was weakened.
+
+
+### Test-type wrapper status still requires the result artifact
+
+During the shared-internals Effect callback migration, `bun run
+package-test-typecheck` returned exit zero while its package result artifact
+contained exitCode 1 and two preferSchemaOverJson diagnostics. The fixtures
+were repaired and the subsequent artifact reports exitCode 0 with empty output.
+Source inspection confirms this is an aggregate-task contract: the package
+command writes the artifact, and reportTestTsgoResults makes the aggregate lane
+fail for nonzero results or Effect diagnostics. Changing the child exit alone
+would bypass that diagnostic collection path. A clearer standalone command or
+completion message would prevent misuse. This migration checked both artifact
+fields before declaring a pass; no aggregate failure gate was weakened.
+
+
+### Git signing availability is separate from agent secret health
+
+Committing the verified CI fixture hook budgets failed twice after all commit
+hooks passed: `1Password: Could not connect to socket`, followed by `failed to
+write commit object`. The configured SSH signer was unavailable while the
+required op-doctor service-account checks passed. A metadata-only signing
+preflight would distinguish these paths before an expensive publish cycle.
+The staged work and proof were preserved; no signing or authentication setting
+was changed, and no raw secrets were read for this diagnosis.
+
+Later, a metadata-only check confirmed a listening SSH-agent socket. A signed
+commit then succeeded without configuration changes. This distinguishes the
+initial unavailable signer from the recovered path rather than treating a
+service-account health check as signing proof.
+
+
+### Effect callback migration exposes previously hidden error-channel diagnostics
+
+Migrating cli-kits.test.ts from direct runSync calls to it.effect preserved
+runtime behavior but exposed three globalErrorInEffectFailure diagnostics in
+its generic Error fixture. Both runtimes passed before the type artifact caught
+this. A local tagged error preserves the message and supports stronger exact
+failure assertions; final diagnostics are empty. Migration checks should inspect
+the actual test-type artifact even when ordinary package check and runtimes pass.
+See cli-kits-runtime-proof.md for the preserved API cases and final evidence.
+
+## Main integration exposed unreviewed platform provenance and detector complexity
+
+After main integration, `yeet verify --tier cheap-gates` found a new EV010 in
+`schema-parity-codemod.test.ts`, plus Fallow complexity findings in
+`dataAssertionRoute` and `detectBooleanDataShape`. The native compiler fixture
+needs a documented exception; Effect filesystem substitution alone cannot feed
+ts-morph. Reviewing platform provenance before merge would avoid rediscovery.
+Keep detector branch coverage and complexity checks together as assertion
+recognition grows. The same run also reported changeset and health gate failures;
+these remain under investigation, not waived.
+
+The detector complexity repair separates membership provenance and piped
+absence recognition, and flattens the membership guard. Node/Bun each pass
+260 tests; all 2,861 detection rows are preserved. Fallow audit and health now
+pass without suppressions or threshold changes. Full package audit (770.6 seconds)
+and docgen (24.8 seconds) subsequently passed, as did all fifteen cheap gates.
+
+## Runtime and fixture ownership must migrate together
+
+Runtime-only conversions of goals-doctor and quality-command-dispatch passed
+Node/Bun tests but exposed thirteen layer/wrapper/scope findings once their
+callbacks became instrumented. Migrate runtime and fixture ownership together;
+preserve fresh consoles and test-local process mock arrays. The baseline was
+not refreshed. The dispatch source was restored before completing the doctor
+fixture repair. A migration preflight that detects newly visible wrapper
+findings would have prevented this incomplete first pass.
+
 ## 2026-09-29: The TestClock timeout recipe proved nothing for waits that must not return
 
 Property Laws job 109018379124 on PR #1322 (head c0f76d8ab2) failed
@@ -5122,3 +5973,143 @@ whole poll found no wave, and adjusts past the timeout only then; the same
 probe fails it 5 of 5. Running every must-time-out oracle once against a
 state that must wake it, before recording the flake as fixed, would have
 caught the empty assertion when #1278 landed.
+
+
+## Merge assertion-import diagnostics need a type-check backstop
+
+During the October 1 main integration, an unused-import diagnostic on the
+SchemaUtils assertion import was interpreted too broadly. Removing the complete
+helper subset left surviving codec tests without assertSome/assertNone. Focused
+Node tests reported ReferenceError; restoring those two imports produced 71
+passing Node/Bun tests and a clean schema test-type artifact. Merge review should
+check surviving symbol uses and run the actual package test-type task after
+import edits; a formatter pass alone did not catch the missing names.
+
+
+## Publish admission should precede long sequential proof cycles
+
+The consolidated follow-up merged main and passed focused checks, but a new
+LiteralKit migration landed before early publication admission. Yeet correctly
+refused the stale base because thirteen paths overlapped. Full package proof
+then held the source stable while the next merge was prepared privately.
+Start the early-publication path immediately after the focused merge proof,
+then run the longer required package checks so hosted review can overlap them.
+Detached publication also reported an unavailable systemd user manager; the
+attached path worked far enough to evaluate base freshness. Keep that fallback
+explicit and preserve its live process handle.
+
+## Scoped fixture migrations must preserve removal options
+
+PR #1365 Property Laws failed in `yeet.test.ts` after the no-stash publish
+assertion, with `NotFound: FileSystem.makeTempDirectoryScoped` during cleanup.
+The migrated helper had replaced explicit recursive removal with `force: true`
+by the platform scoped helper, whose finalizer omits `force`. This introduced
+a teardown behavior difference despite passing the full local package audit.
+The hosted log does not identify what removed the directory first.
+
+Keep the acquisition registered with the test scope, but retain the original
+removal options through `Effect.acquireRelease`. A regression that removes the
+directory before scope closure reproduced the same failure before the repair.
+Future fixture migrations should compare cleanup options and error behavior,
+not only test names, assertions, and successful execution. The initial
+regression also exposed a missing assertion import on its green-path run;
+include actual test-type diagnostics before recording final proof.
+
+## Review status can conceal a provider quota refusal
+
+On PR #1365 the CodeRabbit status check reported success while its comment
+reported a spending-cap refusal. Treat the provider message as evidence that
+the review did not run; a successful status alone is insufficient proof of
+review coverage. Preserve that distinction when reporting independent review.
+
+## Inline command spans must remain valid after wrapping
+
+The PR #1365 full local lint-policy proof found two inherited
+`tsdoc-code-span-missing-delimiter` warnings in the `CheckCensusSampler`
+documentation in `CheckCensusGate.ts`. The inline compiler command crossed a
+comment-line boundary. The source matched main, and the passing JSDoc Ratchet
+did not establish that the separate ESLint syntax gate passed. Split the
+command into closed inline spans, preserving every flag. Validate comment
+formatting with the syntax gate as well as inventory and docgen checks.
+
+
+### Fixture migrations must preserve loop continuation
+
+The PR #1365 full proof failed coverage in `AdmissionJournal.ts`. In
+`quality-scheduler.test.ts`, migration of a fixture callback left a
+`return yield*` inside a three-case loop. The test still passed, but exercised
+only the first claim-ownership-loss case. Removing the early return restores
+all three cases. An AST audit of changed test files found no other successful
+early return inside a loop; the two remaining returns explicitly die on invalid
+fixture evidence. Test-name and assertion parity alone would not catch this.
+Future migration checks should also compare loop exits and callback return
+boundaries. Coverage floors were retained.
+
+### Node Bun.serve port-zero compatibility can collide
+
+Private qualification of the next AI-metrics test migration failed with
+`EADDRINUSE`, followed by `ERR_SERVER_NOT_RUNNING` during cleanup. The unchanged
+`vitest.setup.ts` shim chooses a random port for `port: 0`, instead of obtaining
+an OS-assigned port, and does not handle the listen error before returning.
+The candidate fixture now uses the installed scoped `NodeHttpServer.make`
+constructor with loopback binding and port zero; private Node/Bun runs pass all
+45 tests and cleanup probes confirm five closed listeners. That draft is not
+part of this PR. The shared shim still needs a separate compatibility repair
+that preserves synchronous callers, hostname binding and failed-start cleanup;
+blanket retries or swallowed close errors would conceal the issue.
+
+### Heavy admission needs visible runner-capacity evidence
+
+PR #1365 passed heavy admission while all seven heavy jobs remained queued.
+The Check job had no assigned runner, and the repository runner endpoint
+returned zero runners. A read-only AWS controller query could not proceed
+because the CLI session had expired. Runner assignment later resumed without
+pool changes; these observations do not prove a controller fault. A sanitized
+status surface for queue age, available capacity and controller health would
+help distinguish ordinary Spot/capacity delay from a provisioning failure.
+The documented pool limits and queued jobs were left intact.
+
+### Concurrent package proof exposes transient source fixtures to Knip
+
+While verifying PR #1365 after main integration, `yeet publish --start-pr-early`
+ran Knip beside full CLI package verification. Knip reported an untracked
+`packages/tooling/tool/cli/src/lint-worker-fixture-*/index.ts`. The fixture belongs
+to `lint-workers.test.ts`, which deliberately creates a scoped directory beneath
+CLI source so the worker sees it as a project source file. The fixture is valid
+within that test but visible to concurrent repository-wide scans. Prevent this
+by isolating the worker fixture's project, or declaring scan-versus-source-write
+exclusion in scheduling. Do not add the random path to the Knip baseline.
+
+The same merge initially exposed stale generated ai-metrics declarations during
+the CLI quick check (`HarnessHash` missing). Rebuilding the changed dependency
+cleared the errors. Package verification could detect and refresh stale
+referenced declarations before presenting dependent-source diagnostics.
+
+### Package quick proof and root test diagnostics disagree
+
+PR #1365's package quick check passed before root `quality test-tsgo` reported
+`TS377050 missedPipeableOpportunity` for the scanner persistence regression's
+nested Option assertion. The repair maps the optional inventory through
+`O.getOrThrow` before checking its contents; absence still fails the test. Compare
+these proof paths' diagnostic configuration and cache inputs so a quick pass
+does not conceal an error the authoritative gate will later report. The cause
+of the discrepancy is not yet established; the full test-type gate remains
+required evidence.
+
+## 2026-10-01: Historical proof receipts drifted from their reports
+
+PR #1365 review found two lineage JSON receipts still marking full package
+verification pending, while their companion proof reports recorded successful
+audit and docgen runs. Updated the receipts with the original source commits
+and timings. A receipt/report consistency check would prevent this stale state;
+historical package proof must remain distinct from current-head acceptance.
+
+## 2026-10-01: Unexpected branch detachment interrupted closeout
+
+During PR #1365 closeout, Git reported detached HEAD at the identical published
+commit, with a clean index and worktree and the feature branch still pointing to
+that commit. The reflog confirmed a checkout; its initiating process remains
+unknown. Reattaching the existing branch restored closeout without changing
+content. Better checkout-operation attribution and a pre-closeout branch check
+would shorten diagnosis. This is not attributed to another task or reported as
+a reproduced product defect.

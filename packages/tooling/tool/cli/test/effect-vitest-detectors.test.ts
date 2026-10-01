@@ -1390,7 +1390,7 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         ["expect(value).toEqual(X.fail(error))", "utils.deepStrictEqual", "judgment"],
         ["expect(value).not.toEqual(O.none())", "utils.deepStrictEqual", "judgment"],
         ["expect(O.isNone(a) && R.isFailure(b)).toBe(true)", "utils.deepStrictEqual", "judgment"],
-        ["expect(A.every(values, O.isNone)).toBe(true)", "utils.deepStrictEqual", "judgment"],
+        ["expect(A.every(values, O.isNone)).toBe(true)", "utils.assertTrue", "judgment"],
       ];
       for (const [assertion, primitive, mode] of examples) {
         const rows = A.filter(
@@ -1575,6 +1575,102 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
           assertTrue(A.every(rows, (row) => row.replacement.sketch.includes(requirement)));
         }
       })
+  );
+
+  it.effect("accepts public Boolean assertions over proven membership and aggregate predicates", () =>
+    Effect.gen(function* () {
+      for (const expression of [
+        "O.contains(value, expected)",
+        "O.contains(expected)(value)",
+        "A.every(values, O.isNone)",
+        "A.some(values, (value) => O.isSome(value.field))",
+        "A.every(O.isNone)(values)",
+      ]) {
+        for (const truth of [true, false]) {
+          const prelude =
+            'import * as A from "effect/Array"; import { assertTrue, assertFalse } from "@effect/vitest/utils";';
+          const helper = truth ? "assertTrue" : "assertFalse";
+          assertFalse(
+            yield* hasRule(`${prelude} it("canonical", () => ${helper}(${expression}, "preserved message"));`, "EV006")
+          );
+          const rows = A.filter(
+            yield* findings(`${prelude} it("legacy", () => expect(${expression}).toBe(${truth}));`),
+            (row) => row.ruleId === "EV006"
+          );
+          deepStrictEqual(
+            A.map(rows, (row) => [row.mechanization, row.replacement.primitive]),
+            [["judgment", `utils.${helper}`]]
+          );
+        }
+      }
+      for (const expression of ["O.map(value, transform)", "O.filter(value, predicate)", "O.some(value)"]) {
+        assertTrue(
+          yield* hasRule(
+            `import { assertTrue } from "@effect/vitest/utils"; it("notBoolean", () => assertTrue(${expression}));`,
+            "EV006"
+          )
+        );
+      }
+      assertFalse(
+        yield* hasRule(
+          'import { assertTrue } from "@effect/vitest/utils"; it("shadow", (assertTrue) => assertTrue(O.contains(value, expected)));',
+          "EV006"
+        )
+      );
+    })
+  );
+
+  it.effect("requires canonical absence assertions through proven pipe stages", () =>
+    Effect.gen(function* () {
+      for (const assertion of [
+        "value.pipe(O.isNone, assertTrue)",
+        "value.pipe(O.isSome, assertFalse)",
+        "pipe(value, O.isNone, assertTrue)",
+        "pipe(value, O.isSome, assertFalse)",
+      ]) {
+        const rows = A.filter(
+          yield* findings(
+            `import { pipe } from "effect/Function"; import { assertTrue, assertFalse } from "@effect/vitest/utils"; it("absence", () => ${assertion});`
+          ),
+          (row) => row.ruleId === "EV006"
+        );
+        deepStrictEqual(
+          A.map(rows, (row) => row.replacement.primitive),
+          ["utils.assertNone"]
+        );
+      }
+      for (const assertion of [
+        "value.pipe(O.isSome, assertTrue)",
+        "value.pipe(O.isNone, assertFalse)",
+        "value.pipe(X.isFailure, assertTrue)",
+        "value.pipe(O.isNone, consume)",
+      ]) {
+        assertFalse(
+          yield* hasRule(
+            `import { assertTrue, assertFalse } from "@effect/vitest/utils"; it("valid", () => ${assertion});`,
+            "EV006"
+          )
+        );
+      }
+      assertFalse(
+        yield* hasRule(
+          'import { assertTrue } from "@effect/vitest/utils"; it("shadow", (assertTrue) => value.pipe(O.isNone, assertTrue));',
+          "EV006"
+        )
+      );
+      for (const body of [
+        'import { assertTrue } from "@effect/vitest/utils"; it("shadow", (O) => value.pipe(O.isNone, assertTrue));',
+        'import { pipe } from "effect/Function"; import { assertTrue } from "@effect/vitest/utils"; it("shadow", (pipe) => pipe(value, O.isNone, assertTrue));',
+      ]) {
+        assertFalse(yield* hasRule(body, "EV006"));
+      }
+      assertTrue(
+        yield* hasRule(
+          'import { pipe as flowValue } from "effect/Function"; import { assertFalse as checkFalse } from "@effect/vitest/utils"; it("alias", () => flowValue(value, O.isSome, checkFalse));',
+          "EV006"
+        )
+      );
+    })
   );
 
   it.effect.each([

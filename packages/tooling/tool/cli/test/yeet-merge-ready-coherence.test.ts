@@ -5,7 +5,7 @@ import {
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -14,7 +14,6 @@ const decodeMergeReady = S.decodeUnknownEffect(YeetMergeReadyFromEncoded);
 
 const currentCriteria = (
   overrides: Partial<{
-    readonly closeoutGatesPassed: boolean;
     readonly closeoutRun: boolean;
     readonly mergeStateAcceptable: boolean;
     readonly mergeable: boolean;
@@ -33,7 +32,6 @@ const currentCriteria = (
   mergeable: true,
   mergeStateAcceptable: true,
   reviewDecisionAcceptable: true,
-  closeoutGatesPassed: true,
   ...overrides,
 });
 
@@ -57,7 +55,7 @@ describe("YeetMergeReady coherence", () => {
       });
 
       expect(decoded.ready).toBe(false);
-      expect(decoded.failing).toStrictEqual(O.some("required-checks-green"));
+      assertSome(decoded.failing, "required-checks-green");
     })
   );
 
@@ -69,8 +67,8 @@ describe("YeetMergeReady coherence", () => {
       });
 
       expect(decoded.ready).toBe(true);
-      expect(decoded.failing).toStrictEqual(O.none());
-      expect(decoded.criteria.greptileScore).toStrictEqual(O.some("5/5"));
+      assertNone(decoded.failing);
+      assertSome(decoded.criteria.greptileScore, "5/5");
     })
   );
 
@@ -140,7 +138,7 @@ describe("YeetMergeReady coherence", () => {
       }),
     });
 
-    expect(mergeReady.failing).toStrictEqual(O.some("threads-resolved"));
+    assertSome(mergeReady.failing, "threads-resolved");
   });
 });
 
@@ -153,7 +151,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       const mergeReady = O.getOrThrow(decoded.mergeReady);
 
       expect(mergeReady.ready).toBe(false);
-      expect(mergeReady.failing).toStrictEqual(O.some("pr-open"));
+      assertSome(mergeReady.failing, "pr-open");
       expect(mergeReady.criteria.prOpen).toBe(false);
     })
   );
@@ -168,7 +166,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       const mergeReady = O.getOrThrow(decoded.mergeReady);
 
       expect(mergeReady.ready).toBe(false);
-      expect(mergeReady.failing).toStrictEqual(O.some("pr-open"));
+      assertSome(mergeReady.failing, "pr-open");
       expect(mergeReady.criteria.closeoutRun).toBe(false);
     })
   );
@@ -181,42 +179,45 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
         )
       );
 
-      expect(O.flatMap(decoded.mergeReady, (value) => value.failing)).toStrictEqual(O.some("required-checks-green"));
+      assertSome(
+        O.flatMap(decoded.mergeReady, (value) => value.failing),
+        "required-checks-green"
+      );
     })
   );
 
-  it.effect("keeps a pre-split ready verdict ready, its closeout gates passing with its threads", () =>
+  it.effect("reads a verdict blocked only by the retired closeout-gates-passed criterion as ready", () =>
     Effect.gen(function* () {
       const decoded = yield* YeetVerdictJson.decode(
         verdictJsonWithMergeReady(
-          '{"ready":true,"criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":true,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
+          '{"ready":false,"failing":"closeout-gates-passed","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":true,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true,"closeoutGatesPassed":false}}'
         )
       );
       const mergeReady = O.getOrThrow(decoded.mergeReady);
 
-      expect(mergeReady.ready).toBe(true);
-      expect(mergeReady.criteria.closeoutGatesPassed).toBe(true);
+      assertTrue(mergeReady.ready);
+      assertNone(mergeReady.failing);
     })
   );
 
-  it.effect("keeps a pre-split verdict blocked on threads-resolved, closeout gates unproven with it", () =>
+  it.effect("keeps a real blocker on a verdict that also recorded a failed closeout gate", () =>
     Effect.gen(function* () {
       const decoded = yield* YeetVerdictJson.decode(
         verdictJsonWithMergeReady(
-          '{"ready":false,"failing":"threads-resolved","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":true,"threadsResolved":false,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
+          '{"ready":false,"failing":"threads-resolved","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":true,"threadsResolved":false,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true,"closeoutGatesPassed":false}}'
         )
       );
       const mergeReady = O.getOrThrow(decoded.mergeReady);
 
+      assertFalse(mergeReady.ready);
       assertSome(mergeReady.failing, "threads-resolved");
-      expect(mergeReady.criteria.closeoutGatesPassed).toBe(false);
     })
   );
 
   it.effect("round-trips a current verdict byte-identically", () =>
     Effect.gen(function* () {
       const json = verdictJsonWithMergeReady(
-        '{"ready":false,"failing":"required-checks-green","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":false,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true,"closeoutGatesPassed":true}}'
+        '{"ready":false,"failing":"required-checks-green","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":false,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
       );
       const decoded = yield* YeetVerdictJson.decode(json);
 

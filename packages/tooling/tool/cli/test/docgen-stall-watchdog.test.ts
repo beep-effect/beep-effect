@@ -5,11 +5,9 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
 import { Duration, Effect, Layer } from "effect";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
-import * as Result from "effect/Result";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const ProcessDiagnosticTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
@@ -40,14 +38,10 @@ describe("commands/Docgen docgen step stall watchdog", () => {
     Effect.fnUntraced(function* () {
       const repoRoot = yield* findRepoRoot();
 
-      const outcome = yield* Effect.result(
-        runDocgenStepWithStallWatchdogForTesting("watchdog probe", "false", [], repoRoot, {
-          first: Duration.seconds(30),
-          retry: Duration.seconds(30),
-        })
-      );
-
-      outcome.pipe(Result.isFailure, assertTrue);
+      yield* runDocgenStepWithStallWatchdogForTesting("watchdog probe", "false", [], repoRoot, {
+        first: Duration.seconds(30),
+        retry: Duration.seconds(30),
+      }).pipe(Effect.flip);
     }, provideScopedLayer(NodeServices.layer))
   );
 
@@ -58,14 +52,10 @@ describe("commands/Docgen docgen step stall watchdog", () => {
 
       // Both attempts stall, which is the unrecoverable case: it has to fail
       // loudly rather than hang, since hanging is the whole defect.
-      const outcome = yield* Effect.result(
-        runDocgenStepWithStallWatchdogForTesting("watchdog probe", "sleep", ["30"], repoRoot, {
-          first: Duration.millis(250),
-          retry: Duration.millis(250),
-        })
-      );
-
-      outcome.pipe(Result.isFailure, assertTrue);
+      yield* runDocgenStepWithStallWatchdogForTesting("watchdog probe", "sleep", ["30"], repoRoot, {
+        first: Duration.millis(250),
+        retry: Duration.millis(250),
+      }).pipe(Effect.flip);
     }, provideScopedLayer(NodeServices.layer))
   );
 
@@ -82,20 +72,17 @@ describe("commands/Docgen docgen step stall watchdog", () => {
       });
       const rawArgumentCanary = "docgen-raw-argv-canary";
 
-      const outcome = yield* Effect.result(
-        runDocgenStepWithStallWatchdogForTesting(
-          "watchdog process fixture",
-          "sh",
-          ["-c", "sleep 30 & wait", rawArgumentCanary],
-          repoRoot,
-          {
-            first: Duration.millis(250),
-            retry: Duration.millis(250),
-          }
-        )
-      );
+      yield* runDocgenStepWithStallWatchdogForTesting(
+        "watchdog process fixture",
+        "sh",
+        ["-c", "sleep 30 & wait", rawArgumentCanary],
+        repoRoot,
+        {
+          first: Duration.millis(250),
+          retry: Duration.millis(250),
+        }
+      ).pipe(Effect.flip);
 
-      outcome.pipe(Result.isFailure, assertTrue);
       const diagnostics = A.join(
         A.filter(
           A.filter(yield* TestConsole.logLines, P.isString),

@@ -56,7 +56,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Equal, Exit, FileSystem, HashSet, Layer, Path, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -439,8 +439,14 @@ describe("commands/Qa complete judge contract parity", () => {
           allowed: () => O.none(),
           denied: ({ audit }) => O.some(audit.detail),
         });
-      expect(O.map(deniedDetail(malformed), (detail) => detail.failure)).toEqual(O.some("malformed-json"));
-      expect(O.map(deniedDetail(wrongCount), (detail) => detail.failure)).toEqual(O.some("inventory-schema-rejected"));
+      assertSome(
+        O.map(deniedDetail(malformed), (detail) => detail.failure),
+        "malformed-json"
+      );
+      assertSome(
+        O.map(deniedDetail(wrongCount), (detail) => detail.failure),
+        "inventory-schema-rejected"
+      );
       expect(O.exists(deniedDetail(malformed), (detail) => isNonEmptyString(detail.issue))).toBe(true);
       expect(O.exists(deniedDetail(wrongCount), (detail) => isNonEmptyString(detail.issue))).toBe(true);
     })

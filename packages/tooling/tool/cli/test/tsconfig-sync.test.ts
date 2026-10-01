@@ -1,18 +1,20 @@
 import { syncTsconfigAtRoot, tsconfigSyncCommand } from "@beep/repo-cli/commands/TsconfigSync";
 import { FsUtilsLive } from "@beep/repo-utils";
-import { it as effectIt, it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Order, Path } from "effect";
+import { assertSome } from "@effect/vitest/utils";
+import { Console, Effect, FileSystem, flow, Layer, Order, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
 import * as S from "effect/Schema";
+import * as TestConsole from "effect/testing/TestConsole";
 import * as jsonc from "jsonc-parser";
+import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
@@ -43,25 +45,13 @@ const expectTsconfigReferencesRoundTrip = Effect.fnUntraced(function* (value: ty
   expect(yield* decodeTsconfigReferences(encoded)).toEqual(value);
 });
 
-const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const tmpDir = yield* fs.makeTempDirectory();
-      const previousCwd = process.cwd();
-
-      yield* fs.makeDirectory(path.join(tmpDir, ".git"), { recursive: true });
-      process.chdir(tmpDir);
-      return { fs, previousCwd, tmpDir } as const;
-    }),
-    () => use,
-    ({ fs, previousCwd, tmpDir }) =>
-      Effect.gen(function* () {
-        process.chdir(previousCwd);
-        yield* fs.remove(tmpDir, { recursive: true, force: true });
-      })
-  ).pipe(provideScopedLayer(TestLayer));
+const temporaryRepository = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = yield* temporaryWorkingDirectory;
+  yield* fs.makeDirectory(path.join(directory, ".git"), { recursive: true });
+  return directory;
+});
 
 const writeTextFile = Effect.fn(function* (filePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -201,21 +191,25 @@ const bootstrapWorkspace = Effect.fn(function* (
   }
 });
 
-describe("tsconfig-sync", () => {
-  it.effect.prop(
-    "round-trips arbitrary tsconfig reference documents",
-    [Arbitrary.schema(TsconfigReferences)],
-    Effect.fnUntraced(function* ([value]) {
-      yield* expectTsconfigReferencesRoundTrip(value);
-    }),
-    { arbitrary: { runs: 25 } }
-  );
+it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
+  describe("tsconfig-sync", () => {
+    it.effect.prop(
+      "round-trips arbitrary tsconfig reference documents",
+      [Arbitrary.schema(TsconfigReferences)],
+      flow(
+        Effect.fnUntraced(function* ([value]) {
+          yield* expectTsconfigReferencesRoundTrip(value);
+        }),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      ),
+      { arbitrary: { runs: 25 } }
+    );
 
-  it(
-    "accepts --write as explicit sync mode",
-    () =>
-      Effect.runPromise(
-        withTempRepo(
+    it.effect(
+      "accepts --write as explicit sync mode",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const path = yield* Path.Path;
             const rootDir = process.cwd();
@@ -238,14 +232,13 @@ describe("tsconfig-sync", () => {
             );
             expect(A.map(refs.references, (entry) => entry.path)).toEqual(["packages/example-domain"]);
           })
-        )
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it("synchronizes root references, aliases, and syncpack from workspace discovery", () =>
-    Effect.runPromise(
-      withTempRepo(
+    it.effect("synchronizes root references, aliases, and syncpack from workspace discovery", () =>
+      Effect.andThen(
+        temporaryRepository,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -300,88 +293,96 @@ describe("tsconfig-sync", () => {
           const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
           expect(syncpackConfig).toContain(`"packages/example-domain/package.json"`);
         })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect(
+      "generates the source-only Knowledge test seam from the repo-cli registry",
+      flow(
+        Effect.fnUntraced(function* () {
+          yield* Effect.andThen(
+            temporaryRepository,
+            Effect.gen(function* () {
+              const path = yield* Path.Path;
+              const rootDir = process.cwd();
+
+              yield* bootstrapRootConfig(rootDir, {
+                workspaces: ["packages/tooling/tool/cli"],
+                references: [],
+                paths: {},
+                syncpackSources: ["package.json"],
+              });
+              yield* bootstrapWorkspace(rootDir, {
+                relativeDir: "packages/tooling/tool/cli",
+                packageName: "@beep/repo-cli",
+                exports: {
+                  ".": "./src/index.ts",
+                  "./commands/Knowledge": "./src/commands/Knowledge/index.ts",
+                  "./test/*": "./src/test/*.test-kit.ts",
+                  "./package.json": "./package.json",
+                },
+              });
+
+              yield* syncTsconfigAtRoot(rootDir, {
+                mode: "sync",
+                filter: "@beep/repo-cli",
+                verbose: false,
+              });
+
+              const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+              assert.deepStrictEqual(paths.compilerOptions.paths["@beep/repo-cli/test/Knowledge"], [
+                "./packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts",
+              ]);
+            })
+          );
+        }),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )
-    ));
+    );
+    it.effect(
+      "generates the source-only Conformance test seam from the mcp-kit registry",
+      flow(
+        Effect.fnUntraced(function* () {
+          yield* Effect.andThen(
+            temporaryRepository,
+            Effect.gen(function* () {
+              const path = yield* Path.Path;
+              const rootDir = process.cwd();
+              yield* bootstrapRootConfig(rootDir, {
+                workspaces: ["packages/foundation/capability/mcp-kit"],
+                references: [],
+                paths: {},
+                syncpackSources: ["package.json"],
+              });
+              yield* bootstrapWorkspace(rootDir, {
+                relativeDir: "packages/foundation/capability/mcp-kit",
+                packageName: "@beep/mcp-kit",
+                exports: {
+                  ".": "./src/index.ts",
+                  "./client": "./src/client.ts",
+                  "./test/*": "./src/test/*.test-kit.ts",
+                  "./package.json": "./package.json",
+                },
+              });
+              yield* syncTsconfigAtRoot(rootDir, {
+                mode: "sync",
+                filter: "@beep/mcp-kit",
+                verbose: false,
+              });
+              const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+              assert.deepStrictEqual(paths.compilerOptions.paths["@beep/mcp-kit/test/Conformance"], [
+                "./packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts",
+              ]);
+            })
+          );
+        }),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
 
-  effectIt.effect(
-    "generates the source-only Knowledge test seam from the repo-cli registry",
-    Effect.fnUntraced(function* () {
-      yield* withTempRepo(
-        Effect.gen(function* () {
-          const path = yield* Path.Path;
-          const rootDir = process.cwd();
-
-          yield* bootstrapRootConfig(rootDir, {
-            workspaces: ["packages/tooling/tool/cli"],
-            references: [],
-            paths: {},
-            syncpackSources: ["package.json"],
-          });
-          yield* bootstrapWorkspace(rootDir, {
-            relativeDir: "packages/tooling/tool/cli",
-            packageName: "@beep/repo-cli",
-            exports: {
-              ".": "./src/index.ts",
-              "./commands/Knowledge": "./src/commands/Knowledge/index.ts",
-              "./test/*": "./src/test/*.test-kit.ts",
-              "./package.json": "./package.json",
-            },
-          });
-
-          yield* syncTsconfigAtRoot(rootDir, {
-            mode: "sync",
-            filter: "@beep/repo-cli",
-            verbose: false,
-          });
-
-          const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
-          assert.deepStrictEqual(paths.compilerOptions.paths["@beep/repo-cli/test/Knowledge"], [
-            "./packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts",
-          ]);
-        })
-      );
-    })
-  );
-  effectIt.effect(
-    "generates the source-only Conformance test seam from the mcp-kit registry",
-    Effect.fnUntraced(function* () {
-      yield* withTempRepo(
-        Effect.gen(function* () {
-          const path = yield* Path.Path;
-          const rootDir = process.cwd();
-          yield* bootstrapRootConfig(rootDir, {
-            workspaces: ["packages/foundation/capability/mcp-kit"],
-            references: [],
-            paths: {},
-            syncpackSources: ["package.json"],
-          });
-          yield* bootstrapWorkspace(rootDir, {
-            relativeDir: "packages/foundation/capability/mcp-kit",
-            packageName: "@beep/mcp-kit",
-            exports: {
-              ".": "./src/index.ts",
-              "./client": "./src/client.ts",
-              "./test/*": "./src/test/*.test-kit.ts",
-              "./package.json": "./package.json",
-            },
-          });
-          yield* syncTsconfigAtRoot(rootDir, {
-            mode: "sync",
-            filter: "@beep/mcp-kit",
-            verbose: false,
-          });
-          const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
-          assert.deepStrictEqual(paths.compilerOptions.paths["@beep/mcp-kit/test/Conformance"], [
-            "./packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts",
-          ]);
-        })
-      );
-    })
-  );
-
-  it("does not synthesize wildcard aliases for packages without wildcard exports", () =>
-    Effect.runPromise(
-      withTempRepo(
+    it.effect("does not synthesize wildcard aliases for packages without wildcard exports", () =>
+      Effect.andThen(
+        temporaryRepository,
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const rootDir = process.cwd();
@@ -444,12 +445,12 @@ describe("tsconfig-sync", () => {
             (syncedDocgen as { readonly examplesCompilerOptions?: Record<string, unknown> }).examplesCompilerOptions
           ).not.toHaveProperty("paths");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("emits scoped aliases only for file-stem scoped wildcard exports", () =>
-    Effect.runPromise(
-      withTempRepo(
+    it.effect("emits scoped aliases only for file-stem scoped wildcard exports", () =>
+      Effect.andThen(
+        temporaryRepository,
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const rootDir = process.cwd();
@@ -493,12 +494,12 @@ describe("tsconfig-sync", () => {
           expect(paths.compilerOptions.paths).not.toHaveProperty("@beep/example-slices/aggregates/*/server");
           expect(paths.compilerOptions.paths).not.toHaveProperty("@beep/example-slices/internal/*");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("syncs managed docgen fields, preserves extras, and respects filter", () =>
-    Effect.runPromise(
-      withTempRepo(
+    it.effect("syncs managed docgen fields, preserves extras, and respects filter", () =>
+      Effect.andThen(
+        temporaryRepository,
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const rootDir = process.cwd();
@@ -607,14 +608,14 @@ describe("tsconfig-sync", () => {
             ).examplesCompilerOptions?.paths
           ).not.toHaveProperty("@beep/identity");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it(
-    "reports docgen drift in check mode and backfills missing managed fields in sync mode",
-    () =>
-      Effect.runPromise(
-        withTempRepo(
+    it.effect(
+      "reports docgen drift in check mode and backfills missing managed fields in sync mode",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const path = yield* Path.Path;
             const rootDir = process.cwd();
@@ -747,16 +748,15 @@ describe("tsconfig-sync", () => {
                 .examplesCompilerOptions
             ).not.toHaveProperty("paths");
           })
-        )
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "prunes package references with no declared dependency and reports them as drift",
-    () =>
-      Effect.runPromise(
-        withTempRepo(
+    it.effect(
+      "prunes package references with no declared dependency and reports them as drift",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const path = yield* Path.Path;
             const rootDir = process.cwd();
@@ -817,16 +817,15 @@ describe("tsconfig-sync", () => {
               "../foundation/modeling/identity/tsconfig.json",
             ]);
           })
-        )
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "mirrors package tsconfig references into tsconfig.check.json overlays in the same run",
-    () =>
-      Effect.runPromise(
-        withTempRepo(
+    it.effect(
+      "mirrors package tsconfig references into tsconfig.check.json overlays in the same run",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
@@ -895,8 +894,9 @@ describe("tsconfig-sync", () => {
               syncResult.changes,
               (change) => change.section === "package-check-references"
             );
-            expect(O.map(overlayChange, (change) => change.summary)).toEqual(
-              O.some("references: 0 -> 1 (add 1, remove 0)")
+            assertSome(
+              O.map(overlayChange, (change) => change.summary),
+              "references: 0 -> 1 (add 1, remove 0)"
             );
 
             const expectedReferences = ["../foundation/modeling/identity/tsconfig.json"];
@@ -920,16 +920,15 @@ describe("tsconfig-sync", () => {
             });
             expect(steadyState.changes).toHaveLength(0);
           })
-        )
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "reports an overlay whose references drift from its canonical tsconfig.json",
-    () =>
-      Effect.runPromise(
-        withTempRepo(
+    it.effect(
+      "reports an overlay whose references drift from its canonical tsconfig.json",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const path = yield* Path.Path;
             const rootDir = process.cwd();
@@ -1000,16 +999,15 @@ describe("tsconfig-sync", () => {
               "../foundation/modeling/identity/tsconfig.json",
             ]);
           })
-        )
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "treats lint-only docgen formatting drift as sync drift",
-    () =>
-      Effect.runPromise(
-        withTempRepo(
+    it.effect(
+      "treats lint-only docgen formatting drift as sync drift",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
@@ -1120,16 +1118,15 @@ describe("tsconfig-sync", () => {
             expect(syncedText).toContain('"lib": ["ESNext", "DOM", "DOM.Iterable"],');
             expect(syncedDocgen.examplesCompilerOptions).not.toHaveProperty("paths");
           })
-        )
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "excludes lab workspaces from root references while keeping package-local refs and syncpack visibility",
-    () =>
-      Effect.runPromise(
-        withTempRepo(
+    it.effect(
+      "excludes lab workspaces from root references while keeping package-local refs and syncpack visibility",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
@@ -1208,16 +1205,15 @@ describe("tsconfig-sync", () => {
             });
             expect(steadyState.changes).toHaveLength(0);
           })
-        )
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
 
-  it(
-    "reports a hand-added lab root reference as drift in check mode",
-    () =>
-      Effect.runPromise(
-        withTempRepo(
+    it.effect(
+      "reports a hand-added lab root reference as drift in check mode",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
           Effect.gen(function* () {
             const path = yield* Path.Path;
             const rootDir = process.cwd();
@@ -1273,8 +1269,8 @@ describe("tsconfig-sync", () => {
             }
             expect(drift.fileCount).toBe(1);
           })
-        )
-      ),
-    20_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
+  });
 });

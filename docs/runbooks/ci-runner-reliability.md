@@ -9,15 +9,14 @@ is 1, and the launch/retry queue mappings remain enabled. The earlier emergency
 pause blocked PR job pickup and has been superseded. Follow the current policy
 in AWS cost operations; the 14-worker deployment evidence below is historical.
 
-The current `beep-ec2-heavy` pool uses Spot capacity with
-`price-capacity-optimized` allocation and automatic On-Demand fallback disabled.
-This September 15 containment supersedes the September 9 On-Demand posture.
-Keep the two-instance cap, 64 GiB instance choices and ephemeral one-job-per-VM
-teardown. The October 1 source change below moves the pool to
-`capacity-optimized` across eight 64 GiB types and five availability zones,
-still all-Spot with the same cap; until it is deployed, the live pool keeps
-the September 15 settings. A budget alert does not enforce a monthly worker-hour limit. Diagnose
-interrupted jobs before retrying; changing the alert does not change running workers.
+The current `beep-ec2-heavy` pool uses Spot capacity with `capacity-optimized`
+allocation across eight 64 GiB instance types and five availability zones, and
+automatic On-Demand fallback disabled. This is the October 1, 2026 pool spread
+(deployment evidence below), on top of the September 15 containment that
+superseded the September 9 On-Demand posture. Keep the two-instance cap, 64 GiB
+instance choices and ephemeral one-job-per-VM teardown. A budget alert does not
+enforce a monthly worker-hour limit. Diagnose interrupted jobs before retrying;
+changing the alert does not change running workers.
 
 ## Admission and capacity
 
@@ -141,7 +140,9 @@ runner workload identity.
 
 This fixes Spot-specific interruption and the known cleanup permission defect.
 Normal host, network, application, or timeout failures still require diagnosis.
-The 14-instance cap limits concurrency, not a monthly budget: billing continues
+The instance cap (14 in this September 9 procedure; two in source since
+September 15, raised only by a time-boxed burst) limits concurrency, not a
+monthly budget: billing continues
 for each running VM until its ephemeral teardown completes.
 
 ## Deployment evidence — 2026-10-01 (Spot pool spread)
@@ -175,9 +176,30 @@ failover list are unchanged.
   left in place.
 - Live check after the apply: the scale-up Lambda environment carries
   `capacity-optimized`, `spot`, all eight types and five subnet ids; all five
-  subnets are `available` and route `0.0.0.0/0` to the internet gateway. The
-  first three workers launched after the apply were two `m6a.4xlarge` in
-  `us-east-1a` and one `m7i.4xlarge` in `us-east-1d`, all Spot.
+  subnets are `available` and route `0.0.0.0/0` to the internet gateway.
+- Job execution on the new pools, 12:05–12:45 UTC (the 40 minutes after the
+  apply): 40 workers launched, all Spot, in all five zones — `r6a.2xlarge` 19
+  (`us-east-1b` 13, `us-east-1a` 6), `m7i.4xlarge` 15 (`us-east-1c` 8,
+  `us-east-1d` 6, `us-east-1f` 1), `m6a.4xlarge` 5 (`us-east-1a`),
+  `r7a.2xlarge` 1 (`us-east-1b`). Each worker ran exactly one heavy job, in
+  workflow runs 36853948319, 36856561977, 36856678457, 36856816907,
+  36858959880, 36860910363, 36861577932 and 36862034113. At 12:50 UTC: 29
+  succeeded, 3 were cancelled by a newer push, 6 were still running, 1 failed
+  on its own output (`Heavy / Coverage Regression`, exit 1), and 1 was lost to
+  a Spot eviction (`r6a.2xlarge` in `us-east-1a`, launched 12:17:57, evicted
+  12:23:02, `Heavy / Coverage Regression` in run 36856561977).
+- CloudTrail `BidEvictedEvent` count for the same window: 3. Two reclaimed
+  workers launched before the apply; one reclaimed a worker launched after it.
+  That is 1 eviction in 40 post-apply launches, against the baseline of 41 in
+  564. The sample is 40 minutes and too small to call the rate; the two
+  preceding hours had 22 evictions and 20 launches. Reproduce with
+  `aws cloudtrail lookup-events --lookup-attributes
+  AttributeKey=EventName,AttributeValue=BidEvictedEvent --start-time <t0>
+  --end-time <t1>` and the launch list from `aws ec2 describe-instances`
+  filtered on the `ghr:Application` tag and `LaunchTime`, joined to the
+  Actions jobs API on `runner_name`. The dated launch-to-job record for this window is
+  kept in [evidence/2026-10-01-spot-pool-spread-launches.md](./evidence/2026-10-01-spot-pool-spread-launches.md),
+  because terminated-instance records expire.
 - Open: repeat the reclaim count from "Attribute a runner loss" over the
   following days and compare with the baseline of 41 evictions per 564
   launches before deciding whether to shard the Coverage Regression and Lint

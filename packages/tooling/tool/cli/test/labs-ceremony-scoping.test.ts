@@ -4,7 +4,6 @@ import {
   planCoverageAffectedScope,
 } from "@beep/repo-cli/test/Quality";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { Effect, Path } from "effect";
@@ -56,8 +55,8 @@ describe("labs ceremony scoping", () => {
   });
 
   describe("isModuleTagScannedPathForTesting", () => {
-    it("excludes labs paths from the module-tags scan while keeping every other root", () =>
-      Effect.runPromise(
+    it.layer(NodePath.layer, { timeout: "10 seconds" })((it) => {
+      it.effect("excludes labs paths from the module-tags scan while keeping every other root", () =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const isScannedPath = isModuleTagScannedPathForTesting(path);
@@ -71,7 +70,8 @@ describe("labs ceremony scoping", () => {
           expect(isScannedPath("apps/labsx/src/File.ts")).toBe(true);
           // Extension guard still applies outside labs.
           expect(isScannedPath("packages/demo/src/data.json")).toBe(false);
-        }).pipe(provideScopedLayer(NodePath.layer))
-      ));
+        })
+      );
+    });
   });
 });

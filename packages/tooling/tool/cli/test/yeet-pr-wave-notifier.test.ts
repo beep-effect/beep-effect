@@ -38,8 +38,8 @@ import {
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
-import { DateTime, Duration, Effect, FileSystem, HashSet, Layer, Path, Ref, Sink, Stream } from "effect";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { DateTime, Duration, Effect, FileSystem, HashSet, Layer, Path, pipe, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -48,7 +48,6 @@ import * as Str from "effect/String";
 
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const workerPath = `${repoRoot}.claude/hooks/yeet-pr-wave-notifier.sh`;
-const sequenceBreakPath = `${repoRoot}.claude/hooks/sequence-break-notifier.sh`;
 const at = "2026-09-28T00:00:00.000Z";
 const head = "abc1234def5678";
 const prUrl = "https://github.com/beep/repo/pull/7";
@@ -555,21 +554,21 @@ it.layer(platform, { timeout: "30 seconds" })("W9 notifier worker", (it) => {
   );
 
   it.effect(
-    "parses, and leaves the sequence-break notifier byte-identical to origin/main",
+    "parses, and never invokes or writes through the sequence-break worker",
     () =>
       Effect.gen(function* () {
         const syntax = yield* ChildProcess.make("bash", ["-n", workerPath], { stdout: "pipe", stderr: "pipe" });
         expect(yield* syntax.exitCode).toBe(0);
-        const show = yield* ChildProcess.make("git", ["show", "origin/main:.claude/hooks/sequence-break-notifier.sh"], {
-          cwd: repoRoot,
-          stdout: "pipe",
-          stderr: "pipe",
-        });
-        const [upstream, code] = yield* Effect.all([Stream.mkString(Stream.decodeText(show.stdout)), show.exitCode], {
-          concurrency: "unbounded",
-        });
-        expect(code).toBe(0);
-        expect(yield* readText(sequenceBreakPath)).toBe(upstream);
+        // Comments may cite the sibling worker's conventions; executable lines
+        // must not source it, call it, or touch its evidence ledger.
+        const executable = A.filter(
+          Str.split(yield* readText(workerPath), "\n"),
+          (line) => !Str.startsWith("#")(Str.trimStart(line))
+        );
+        pipe(
+          A.every(executable, (line) => !Str.includes("sequence-break")(line)),
+          assertTrue
+        );
       }),
     20_000
   );
@@ -599,7 +598,6 @@ const snapshot = (root: string, checks: ReadonlyArray<YeetWatchCheck>, state = "
     mergeable: true,
     mergeStateAcceptable: true,
     reviewDecisionAcceptable: true,
-    closeoutGatesPassed: true,
     greptileScore: O.none(),
   });
   return YeetStatusSnapshot.make({

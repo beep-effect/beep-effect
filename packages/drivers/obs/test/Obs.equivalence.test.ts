@@ -1,6 +1,7 @@
 import { ObsError } from "@beep/obs";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -29,5 +30,29 @@ describe("OBS declared-field equivalence", () => {
     });
 
     expect(sameObsError(a, b)).toBe(true);
+  });
+});
+
+describe("ObsError.fromUnknown", () => {
+  it("wraps an unknown cause with the declared context", () => {
+    const error = ObsError.fromUnknown("connect", "Failed to reach obs-websocket", {
+      cause: new Error("boom"),
+      closeCode: 4009,
+      requestType: "GetVersion",
+    });
+
+    expect(error.operation).toBe("connect");
+    expect(error.message).toBe("Failed to reach obs-websocket");
+    error.cause.pipe(O.isSome, assertTrue);
+    assertSome(error.closeCode, 4009);
+    assertSome(error.requestType, "GetVersion");
+    assertNone(error.requestStatusCode);
+  });
+
+  it("passes an existing ObsError cause through unchanged, data-last too", () => {
+    const existing = ObsError.make({ message: "request failed", operation: "startRecording" });
+    const wrap = ObsError.fromUnknown("Outer failure", { cause: existing });
+
+    expect(wrap("connect")).toBe(existing);
   });
 });

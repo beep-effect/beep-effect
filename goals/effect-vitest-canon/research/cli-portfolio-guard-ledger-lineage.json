@@ -1,0 +1,176 @@
+{
+  "sourceFixSha": "9d96c2670eb4fa55f58513279e9a7451ce1d4c54",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:206:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:235:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:253:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:272:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:294:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:317:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:343:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:362:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:387:runPromise@4#1",
+    "EV003:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:55:withTempDirectory@26#1"
+  ],
+  "lineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:206:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "leaves a repo without goals/ untouched",
+      "currentTitle": "leaves a repo without goals/ untouched",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 208,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* runGit(tmpDir, [\"init\"]); const tempContext ="
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:235:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "regenerates a missing index without staging it",
+      "currentTitle": "regenerates a missing index without staging it",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 237,
+          "evidence": "Effect.runPromise( withPortfolioRepo(({ indexPath, tempContext, tmpDir }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const disposition = yield* enforcePortfolioIndexPublishI"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:253:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "leaves a current unstaged local projection untouched",
+      "currentTitle": "leaves a current unstaged local projection untouched",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 255,
+          "evidence": "Effect.runPromise( withPortfolioRepo(({ indexPath, tempContext, tmpDir }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const current = yield* buildPortfolioIndexContent(tmpDir"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:272:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "overwrites a stale unstaged index without staging the refresh",
+      "currentTitle": "overwrites a stale unstaged index without staging the refresh",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 274,
+          "evidence": "Effect.runPromise( withPortfolioRepo(({ indexPath, tempContext, tmpDir }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.writeFileString(indexPath, \"# Goals Index\\n\\ns"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:294:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects a symlinked index file without writing or staging its destination",
+      "currentTitle": "rejects a symlinked index file without writing or staging its destination",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 296,
+          "evidence": "Effect.runPromise( withPortfolioRepoAndOutside(({ indexPath, tempContext, tmpDir }, outsideRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; co"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:317:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects a symlinked index parent without writing or staging through it",
+      "currentTitle": "rejects a symlinked index parent without writing or staging through it",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 319,
+          "evidence": "Effect.runPromise( withPortfolioRepoAndOutside(({ tempContext, tmpDir }, outsideRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const goalsPa"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:343:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses a staged index even when it equals the regenerated projection",
+      "currentTitle": "refuses a staged index even when it equals the regenerated projection",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 345,
+          "evidence": "Effect.runPromise( withPortfolioRepo(({ indexPath, tempContext, tmpDir }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.writeFileString(indexPath, yield* buildPortfol"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:362:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "preserves a staged deletion while regenerating the ignored local projection",
+      "currentTitle": "preserves a staged deletion while regenerating the ignored local projection",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 364,
+          "evidence": "Effect.runPromise( withPortfolioRepo(({ indexPath, tempContext, tmpDir }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.writeFileString(indexPath, yield* buildPortfol"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:387:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses a hand-staged index that disagrees with the manifests",
+      "currentTitle": "refuses a hand-staged index that disagrees with the manifests",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 389,
+          "evidence": "Effect.runPromise( withPortfolioRepo(({ indexPath, tempContext, tmpDir }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const handEdited = \"# Goals Index\\n\\nhand-merged by an a"
+        }
+      ],
+      "afterMatches": []
+    }
+  ],
+  "wrapperMatches": [
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:55:withTempDirectory@26#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:56:withTempDirectory@26#1",
+      "occurrence": "v2:2f49f5b9325f758761c5ffa159b94c4cd59bd63ad69d0fef2a9e3209f0cfdc6f",
+      "evidence": "<Result, Error, Requirements>( use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements> ) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; ret"
+    }
+  ],
+  "addedCurrentRows": 0,
+  "counts": {
+    "open": 1537,
+    "fixed": 1946,
+    "exception": 12
+  },
+  "fullPackageProof": "passed grouped CLI package verification against source 9d96c2670e: audit 666.8 seconds; docgen 20.5 seconds"
+}
