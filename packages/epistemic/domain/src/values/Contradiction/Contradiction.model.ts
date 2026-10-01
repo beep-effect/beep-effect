@@ -7,7 +7,6 @@
 
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { JsonObject } from "@beep/schema/Json";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import { P, R } from "@beep/utils";
@@ -26,7 +25,6 @@ import { PosInt } from "../../internal/PosInt.ts";
 import { Confidence } from "../EvidenceSpan/index.ts";
 import { canonicalJson } from "../internal/CanonicalJson.ts";
 import { LogicalEdgeKey } from "../LogicalEdgeIdentity/index.ts";
-import type { JsonObject as JsonObjectValue } from "@beep/schema/Json";
 
 const $I = $EpistemicDomainId.create("values/Contradiction/Contradiction.model");
 const TrimmedText = S.String.pipe(S.decodeTo(S.NonEmptyString, SchemaTransformation.trim()));
@@ -667,7 +665,7 @@ const proposalFactChildren = (
 ): ReadonlyArray<S.Json> =>
   A.isArray(value) ? (value as ReadonlyArray<S.Json>) : A.map(objectEntries, ([, child]) => child);
 
-const isBoundedProposalFact = (fact: JsonObjectValue): boolean => {
+const isBoundedProposalFact = (fact: S.JsonObject): boolean => {
   const pending: Array<ProposalFactNode> = [{ depth: 0, value: fact }];
   let cursor = 0;
   let minimumTextCodeUnits = 0;
@@ -695,7 +693,7 @@ const isBoundedProposalFact = (fact: JsonObjectValue): boolean => {
   return utf8ToBytes(canonicalJson(fact)).byteLength <= CONTRADICTION_PROPOSAL_FACT_MAX_BYTES;
 };
 
-const ContradictionProposalFact = JsonObject.check(
+const ContradictionProposalFact = S.JsonObject.check(
   S.makeFilter(isBoundedProposalFact, {
     identifier: $I`ContradictionProposalFactBoundsCheck`,
     title: "Bounded Contradiction Proposal Fact",

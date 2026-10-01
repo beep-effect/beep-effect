@@ -24,7 +24,6 @@ import {
   StopPodRequest,
 } from "@beep/runpod";
 import { LiteralKit } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import * as O from "@beep/utils/Option";
 import { Console, Duration, Effect, flow, Layer, Order, pipe, Ref, Result, Schedule } from "effect";
 import * as A from "effect/Array";
@@ -46,6 +45,8 @@ import {
   DocgenQualityWorkerEvalScope,
 } from "./QualityWorkerEval.ts";
 import type { Pod, Template } from "@beep/runpod";
+
+const encodeUnknownJsonSync = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const $I = $RepoCliId.create("commands/Docgen/internal/QualityWorkerRunpodEval");
 
@@ -320,7 +321,7 @@ const hashPublicIdentifier = (value: string): Effect.Effect<string, DomainError>
 
 const ollamaBootstrapCommand = (model: string): ReadonlyArray<string> => {
   // TODO(effect-native-migration): model schema
-  const pullPayload = shellQuote(UnknownFromJsonString.encodeUnknownSync({ name: model }));
+  const pullPayload = shellQuote(encodeUnknownJsonSync({ name: model }));
 
   // cspell:ignore resolv
   return [

@@ -4,7 +4,6 @@
  *
  * @since 0.1.0
  */
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -14,6 +13,8 @@ import * as PostToolBatch from "../../../../claudecode/Hook/Events/PostToolBatch
 import * as Setup from "../../../../claudecode/Hook/Events/Setup.ts";
 import * as UserPromptExpansion from "../../../../claudecode/Hook/Events/UserPromptExpansion.ts";
 import * as Testing from "../../../../claudecode/Testing.ts";
+import * as S from "effect/Schema";
+import { flow, Result } from "effect";
 
 const envelope = {
   session_id: "test-session",
@@ -22,7 +23,7 @@ const envelope = {
   permission_mode: "default",
 } as const;
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 // ---------------------------------------------------------------------------
 // Setup

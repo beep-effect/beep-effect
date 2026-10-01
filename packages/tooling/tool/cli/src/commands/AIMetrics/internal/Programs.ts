@@ -96,7 +96,6 @@ import {
   upsertAiMetricsBenchmarkCase,
   withAiMetricsDuckDb,
 } from "@beep/repo-ai-metrics";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import {
@@ -139,7 +138,7 @@ const $I = $RepoCliId.create("commands/AIMetrics/internal/Programs");
 const decodeNonNegativeInteger = S.decodeUnknownEffect(AiMetricsNonNegativeInteger);
 const decodeRating = S.decodeUnknownEffect(AiMetricsRating);
 
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const encodeInstallSpecJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsInstallSpec));
 const defaultP7MirrorRemoteRoot = "/srv/data/ai-metrics/p7-derived-mirror";
 // cspell:words yubi

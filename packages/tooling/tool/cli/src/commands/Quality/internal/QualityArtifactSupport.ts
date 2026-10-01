@@ -1,7 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -12,6 +11,7 @@ import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import { fencedLineState } from "../../../internal/jsdoc/JSDocSections.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
+import { OpaqueDefect } from "../../../internal/schema/OpaqueDefect.ts";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 
@@ -40,7 +40,7 @@ export class QualityArtifactGeneratorError extends S.TaggedError<QualityArtifact
     command: S.optionalKey(S.String),
     exitCode: S.optionalKey(S.Finite),
     filePath: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<QualityArtifactGeneratorError>("QualityArtifactGeneratorError", {
     description: "Typed failure raised by repo quality artifact generators.",

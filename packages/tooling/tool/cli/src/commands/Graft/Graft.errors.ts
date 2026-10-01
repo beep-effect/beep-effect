@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 import { GraftDeepRefreshPhase } from "./Graft.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Graft/Graft.errors");
@@ -31,7 +31,11 @@ const $I = $RepoCliId.create("commands/Graft/Graft.errors");
  */
 export class GraftCacheSourceError extends S.TaggedError<GraftCacheSourceError>($I`GraftCacheSourceError`)(
   "GraftCacheSourceError",
-  { path: S.String, message: S.String, cause: S.optionalKey(Defect({ includeStack: true })) },
+  {
+    path: S.String,
+    message: S.String,
+    cause: S.optionalKey(OpaqueDefect),
+  },
   $I.annoteError<GraftCacheSourceError>("GraftCacheSourceError", {
     description: "Invalid or unreadable source meaning tier.",
   })
@@ -57,7 +61,11 @@ export class GraftCacheSourceError extends S.TaggedError<GraftCacheSourceError>(
  */
 export class GraftCacheTargetError extends S.TaggedError<GraftCacheTargetError>($I`GraftCacheTargetError`)(
   "GraftCacheTargetError",
-  { path: S.String, message: S.String, cause: S.optionalKey(Defect({ includeStack: true })) },
+  {
+    path: S.String,
+    message: S.String,
+    cause: S.optionalKey(OpaqueDefect),
+  },
   $I.annoteError<GraftCacheTargetError>("GraftCacheTargetError", {
     description: "Unsafe target selection or stale sync plan.",
   })
@@ -83,7 +91,11 @@ export class GraftCacheTargetError extends S.TaggedError<GraftCacheTargetError>(
  */
 export class GraftCacheIoError extends S.TaggedError<GraftCacheIoError>($I`GraftCacheIoError`)(
   "GraftCacheIoError",
-  { path: S.String, message: S.String, cause: Defect({ includeStack: true }) },
+  {
+    path: S.String,
+    message: S.String,
+    cause: OpaqueDefect,
+  },
   $I.annoteError<GraftCacheIoError>("GraftCacheIoError", {
     description: "Filesystem or schema encoding failure during cache sync.",
   })
@@ -110,7 +122,11 @@ export class GraftCacheIoError extends S.TaggedError<GraftCacheIoError>($I`Graft
  */
 export class GraftDeepLockError extends S.TaggedError<GraftDeepLockError>($I`GraftDeepLockError`)(
   "GraftDeepLockError",
-  { path: S.String, holderPid: S.Int, cause: S.optionalKey(Defect({ includeStack: true })) },
+  {
+    path: S.String,
+    holderPid: S.Int,
+    cause: S.optionalKey(OpaqueDefect),
+  },
   $I.annoteError<GraftDeepLockError>("GraftDeepLockError", {
     description: "Refresh lock is held by a live process.",
   })
@@ -137,7 +153,11 @@ export class GraftDeepLockError extends S.TaggedError<GraftDeepLockError>($I`Gra
  */
 export class GraftDeepPreflightError extends S.TaggedError<GraftDeepPreflightError>($I`GraftDeepPreflightError`)(
   "GraftDeepPreflightError",
-  { path: S.String, message: S.String, cause: S.optionalKey(Defect({ includeStack: true })) },
+  {
+    path: S.String,
+    message: S.String,
+    cause: S.optionalKey(OpaqueDefect),
+  },
   $I.annoteError<GraftDeepPreflightError>("GraftDeepPreflightError", {
     description: "Owner clone or operator environment is unfit for a refresh.",
   })
@@ -174,7 +194,7 @@ export class GraftDeepStepError extends S.TaggedError<GraftDeepStepError>($I`Gra
     exitCode: S.Int,
     log: S.String,
     message: S.String,
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<GraftDeepStepError>("GraftDeepStepError", {
     description: "A refresh step refused to spawn, timed out, or exited non-zero.",

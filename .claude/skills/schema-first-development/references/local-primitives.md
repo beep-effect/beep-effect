@@ -114,7 +114,8 @@ Look for transformation helpers before writing custom decode glue.
 
 Example:
 
-- `destructiveTransform` in `@beep/schema/Transformations`
+- `S.decodeTo(Output, { decode: SchemaGetter.transform(f), encode: ... })` from
+  `effect/Schema`, with an honest `Output` schema for one-way transforms
 
 Use local transform helpers when they already encode the repo's expected
 behavior or failure handling.

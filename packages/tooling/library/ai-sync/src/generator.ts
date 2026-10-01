@@ -144,7 +144,7 @@ const renderSchemasFile = (): string =>
     [
       ...generatedPrelude,
       'import { $AiSyncId } from "@beep/identity/packages";',
-      'import { LiteralKit, UnknownRecord } from "@beep/schema";',
+      'import { LiteralKit } from "@beep/schema";',
       'import * as S from "effect/Schema";',
       "",
       'const $I = $AiSyncId.create("_generated/schemas.gen");',
@@ -339,7 +339,7 @@ const renderSchemasFile = (): string =>
       "  {",
       "    enabledMcpjsonServers: S.Array(S.String).pipe(S.optionalKey),",
       "    enabledPlugins: S.Record(S.String, S.Boolean).pipe(S.optionalKey),",
-      "    hooks: UnknownRecord.pipe(S.optionalKey),",
+      "    hooks: S.Record(S.String, S.Unknown).pipe(S.optionalKey),",
       "  },",
       '  $I.annote("ClaudeSettings", {',
       '    description: "Generated subset of the Claude Code settings schema used for V1 validation.",',

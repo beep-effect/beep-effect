@@ -6,7 +6,6 @@
  *
  * @since 0.1.0
  */
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -17,6 +16,8 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 
 import * as ClaudeProject from "../../claudecode/ClaudeProject.ts";
+import * as S from "effect/Schema";
+import { flow, Result } from "effect";
 
 const provideBuiltLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -34,7 +35,7 @@ const CWD = "/repo";
 const PROJECT_SETTINGS = `${CWD}/.claude/settings.json`;
 const MCP_PATH = `${CWD}/.mcp.json`;
 const SKILL_PATH = `${CWD}/skills/greet/SKILL.md`;
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const notFoundError = (path: string, method: string) =>
   PlatformError.systemError({

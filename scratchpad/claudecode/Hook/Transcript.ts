@@ -15,7 +15,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import { Unknown } from "@beep/schema/Unknown";
 import { Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
@@ -25,7 +24,7 @@ import { TranscriptReadError } from "../Errors.ts";
 
 const $I = $ScratchpadId.create("claudecode/Hook/Transcript");
 
-const JsonValue = S.fromJsonString(Unknown).pipe(
+const JsonValue = S.fromJsonString(S.Unknown).pipe(
   $I.annoteSchema("JsonValue", {
     description: "One JSON value encoded as a transcript JSONL line.",
   })

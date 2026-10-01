@@ -1,8 +1,7 @@
 import { fileURLToPath } from "node:url";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Path, Stream } from "effect";
+import { Effect, FileSystem, flow, Path, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
@@ -16,7 +15,7 @@ const WiringStamp = S.Struct({
   at: S.String,
 });
 const decodeWiringStamp = S.decodeUnknownEffect(S.fromJsonString(WiringStamp));
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const makeFixture = Effect.fn("GraftHooksTest.makeFixture")(function* () {
   const fs = yield* FileSystem.FileSystem;

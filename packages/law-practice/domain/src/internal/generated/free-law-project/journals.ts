@@ -8,9 +8,9 @@
  */
 
 import { Result } from "effect";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import * as S from "effect/Schema";
 
-const decodeJson = UnknownFromJsonString.decodeUnknownResult;
+const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
 
 /**
  * Schema-decoded generated data.

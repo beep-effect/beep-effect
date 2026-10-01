@@ -9,7 +9,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
@@ -25,6 +24,8 @@ import * as ClaudeRuntime from "../../claudecode/ClaudeRuntime.ts";
 import * as Plugin from "../../claudecode/Plugin.ts";
 import * as Settings from "../../claudecode/Settings.ts";
 import * as Testing from "../../claudecode/Testing.ts";
+import * as S from "effect/Schema";
+import { flow, Result } from "effect";
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -42,7 +43,7 @@ const PROJECT_SETTINGS = `${CWD}/.claude/settings.json`;
 const PLUGIN_ROOT = "/plugin";
 const SKILL_PATH = `${PLUGIN_ROOT}/skills/review/SKILL.md`;
 const $I = $ScratchpadId.create("test/claudecode/ClaudeRuntime.test");
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const provideLayer = <A, E, R, ROut, E2, RIn>(
   self: Effect.Effect<A, E, R>,

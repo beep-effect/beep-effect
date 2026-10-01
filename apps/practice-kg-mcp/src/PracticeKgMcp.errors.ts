@@ -6,7 +6,7 @@
  */
 
 import { $PracticeKgMcpId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $PracticeKgMcpId.create("PracticeKgMcp.errors");
@@ -29,7 +29,7 @@ const $I = $PracticeKgMcpId.create("PracticeKgMcp.errors");
 export class PackageFailure extends S.TaggedError<PackageFailure>($I`PackageFailure`)(
   "PackageFailure",
   {
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
     message: S.NonEmptyString,
   },
   $I.annoteError<PackageFailure>("PackageFailure", {
@@ -55,7 +55,7 @@ export class PackageFailure extends S.TaggedError<PackageFailure>($I`PackageFail
 export class PracticeKgHostError extends S.TaggedError<PracticeKgHostError>($I`PracticeKgHostError`)(
   "PracticeKgHostError",
   {
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
     message: S.NonEmptyString,
   },
   $I.annoteError<PracticeKgHostError>("PracticeKgHostError", {
@@ -81,7 +81,7 @@ export class PracticeKgHostError extends S.TaggedError<PracticeKgHostError>($I`P
 export class SmokeFailure extends S.TaggedError<SmokeFailure>($I`SmokeFailure`)(
   "SmokeFailure",
   {
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
     message: S.NonEmptyString,
   },
   $I.annoteError<SmokeFailure>("SmokeFailure", { description: "Sanitized compiled-host smoke failure." })

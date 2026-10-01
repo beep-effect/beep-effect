@@ -6,7 +6,7 @@
  */
 
 import { $WinkId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Inspectable } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -39,7 +39,7 @@ const getEntityNameOption = (options: { readonly entityName?: string | undefined
 export class WinkEngineError extends S.TaggedError<WinkEngineError>($I`WinkEngineError`)(
   "WinkEngineError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
     operation: S.String,
   },
@@ -89,7 +89,7 @@ export class WinkEngineError extends S.TaggedError<WinkEngineError>($I`WinkEngin
 export class WinkTokenizationError extends S.TaggedError<WinkTokenizationError>($I`WinkTokenizationError`)(
   "WinkTokenizationError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
     operation: S.String,
     text: S.OptionFromOptionalKey(S.String),
@@ -143,7 +143,7 @@ export class WinkTokenizationError extends S.TaggedError<WinkTokenizationError>(
 export class WinkEntityError extends S.TaggedError<WinkEntityError>($I`WinkEntityError`)(
   "WinkEntityError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     entityName: S.OptionFromOptionalKey(S.String),
     message: S.String,
     operation: S.String,

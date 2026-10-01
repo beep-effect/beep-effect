@@ -5,10 +5,11 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Ci.errors");
 
@@ -31,7 +32,7 @@ export class CiCommandError extends S.TaggedError<CiCommandError>($I`CiCommandEr
   "CiCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<CiCommandError>("CiCommandError", {
     description: "Failure raised by CI helper commands.",
@@ -140,7 +141,7 @@ export class CiLanePartitionError extends S.TaggedError<CiLanePartitionError>($I
     tablePath: S.String,
     repair: S.String,
     message: S.String,
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<CiLanePartitionError>("CiLanePartitionError", {
     description: "Fail-closed CI lane partition validation or discovery failure.",

@@ -13,27 +13,26 @@ import { A, O, P, pipe } from "@beep/utils";
 import { assert, describe, expect } from "@effect/vitest";
 import { Context, Effect, flow, Layer, PubSub, Ref, Stream } from "effect";
 import type { ObsEvent, ObsProtocolShape, ObsRequestType } from "@beep/obs";
-import type { UnknownRecord } from "@beep/schema";
 
 type PublishEvent = (event: ObsEvent) => Effect.Effect<void>;
 
 type StubHandler = (
-  requestData: O.Option<UnknownRecord>,
+  requestData: O.Option<Readonly<Record<string, unknown>>>,
   publish: PublishEvent
-) => Effect.Effect<O.Option<UnknownRecord>, ObsError>;
+) => Effect.Effect<O.Option<Readonly<Record<string, unknown>>>, ObsError>;
 
 type RecordedRequest = {
-  readonly requestData: O.Option<UnknownRecord>;
+  readonly requestData: O.Option<Readonly<Record<string, unknown>>>;
   readonly requestType: ObsRequestType;
 };
 
 const respondWith =
   (handlers: Partial<Record<ObsRequestType, StubHandler>>) =>
-  (requestType: ObsRequestType, requestData: O.Option<UnknownRecord>, publish: PublishEvent) =>
+  (requestType: ObsRequestType, requestData: O.Option<Readonly<Record<string, unknown>>>, publish: PublishEvent) =>
     pipe(
       O.fromUndefinedOr(handlers[requestType]),
       O.match({
-        onNone: () => Effect.succeed(O.none<UnknownRecord>()),
+        onNone: () => Effect.succeed(O.none<Readonly<Record<string, unknown>>>()),
         onSome: (handler) => handler(requestData, publish),
       })
     );
@@ -247,7 +246,7 @@ describe("Obs", () => {
               outputPath: O.none(),
               outputState: "OBS_WEBSOCKET_OUTPUT_STARTED",
             })
-          ).pipe(Effect.as(O.none<UnknownRecord>())),
+          ).pipe(Effect.as(O.none<Readonly<Record<string, unknown>>>())),
       })
     ),
     { timeout: "5 seconds" }
@@ -328,7 +327,7 @@ describe("Obs", () => {
   it.layer(
     makeObsLayer(
       Effect.succeed({
-        GetRecordStatus: () => Effect.succeed(O.none<UnknownRecord>()),
+        GetRecordStatus: () => Effect.succeed(O.none<Readonly<Record<string, unknown>>>()),
       })
     ),
     { timeout: "5 seconds" }
