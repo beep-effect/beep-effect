@@ -1,5 +1,7 @@
 # Worktree command fixture and layer proof
 
+The full migration proof below is pinned to source commit `43c98e278b`.
+
 The applied migration retains all 48 registration expressions (49 expanded
 cases) and all 243 assertion ASTs. The structural comparison ignores formatter
 whitespace and trailing separators while retaining expression kinds, operands,
@@ -27,3 +29,23 @@ retains historical identities and adds 28 scope/layer judgments: 26 fixed-servic
 layer registrations and two intentional short scopes. The reviewed ratchet passes with zero introduced findings. Full package
 verification passes: audit 1,001.1 seconds and docgen 25.8 seconds. Campaign
 dispositions remain separate from this source proof.
+
+## Campaign dispositions
+
+Ten fixed findings and 23 reviewed exceptions retain all historical IDs and
+evidence. Two property-wrapper findings are attributed to upstream
+`b1aa7e320c`; six provider findings, the local helper finding and the native
+cleanup finding are bound to `43c98e278b`. The native Git domain fixture and
+shorter descriptor/root scopes remain intentional exceptions. The diagnostic
+observability finding remains open until the next source proof.
+
+## Subsequent diagnostic hardening
+
+The runGit setup helper now concurrently drains stdout, stderr and exit code.
+Its existing zero-exit assertion includes the command and both streams as an
+assertion message. Private deliberate-failure probes verify the exact multiline
+stdout/stderr text, not merely words present in the command arguments. Both
+Node and Bun pass those controls. The 49 original tests pass on each runtime.
+The combined applied worktree/CI-lane run passes 123 tests on Node in 30.87
+seconds and Bun in 16.08 seconds; root test types pass. Full package proof for
+these subsequent changes passes: audit 940.0 seconds and docgen 56.1 seconds.

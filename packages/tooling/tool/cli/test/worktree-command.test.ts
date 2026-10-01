@@ -104,11 +104,18 @@ const runGit = Effect.fn("WorktreeCommandTest.runGit")(function* (repoRoot: stri
   const handle = yield* ChildProcess.make("git", [...args], {
     cwd: repoRoot,
     stdin: "ignore",
-    stdout: "ignore",
-    stderr: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
   });
-  const exitCode = yield* handle.exitCode;
-  expect(exitCode).toBe(0);
+  const [stdout, stderr, exitCode] = yield* Effect.all(
+    [
+      handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
+      handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
+      handle.exitCode,
+    ],
+    { concurrency: "unbounded" }
+  );
+  expect(exitCode, `git ${A.join(args, " ")}\n${stdout}\n${stderr}`).toBe(0);
 });
 
 const runGitText = Effect.fn("WorktreeCommandTest.runGitText")(function* (
