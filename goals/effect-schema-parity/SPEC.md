@@ -272,50 +272,52 @@ Goal-time additions (append dated rows):
 | 2026-09-29 | The instantiation gate compares a PR to its base. An increase is admitted only when it is the first-use cost of an upstream combinator the retirement requires (`S.overrideToEquivalence` in `@beep/repo-cli`, +139 single-checker in P3 PR 3-ii: 4,152,422 → 4,152,561 against the 3-i head `579c05d32d`), the sole alternative changes runtime behaviour, the count against the train's origin `7cc0aa9b33` still decreases (4,152,690 → 4,152,561), and the changeset states the number and the reason. | The retired `Defect()` hid the override behind a declared `S.Defect` return type, so the repo-cli program never instantiated it; its first use costs about 150 instantiations (one shared `S.Defect({ includeStack: true })` measures 4,152,409 without the override and 4,152,561 with it; the override inline at all 44 cause fields measures 4,152,904). repo-cli therefore shares one consumer-local `OpaqueDefect` const, annotated with plain `.annotate({ identifier, description })`: `$I.annoteSchema` on the same const costs +323 instantiations, evidence for the P5 per-combinator cost table. Rejected: dropping the equivalence override (it changes `S.toEquivalence` on 44 error fields; a behaviour change is never the remedy for a type-cost number); the override inline at every field (+482). |
 | 2026-09-30 | The always-true equivalence that replaces the retired `Defect` / `OpaqueUnknown` wrappers is one named value, `SchemaUtils.alwaysEquivalent` (`@beep/schema/SchemaUtils/toEquivalence`), passed as `S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)`. It is covered once in `@beep/schema`'s tests. It is an equivalence thunk, not a schema constructor, so no wrapper family returns. There are no exceptions: `@beep/pglite` depends on `@beep/schema` again so that its `cause` field can use the shared value. A decode-only or `S.is` use of `S.Defect` takes no override. | Inlining `S.overrideToEquivalence(() => () => true)` at 109 sites in 82 files added two uncovered functions per site. Hosted `Heavy / Coverage Regression` on 6ee4066b6a failed on `@beep/acp`, `@beep/drizzle`, `@beep/duckdb`, `@beep/ecfr` and `@beep/govinfo`, for example `DuckDb.errors.ts` functions 83.33 < 100. One shared value moves both arrows into a single covered definition, with no copy-pasted tests per consumer. Rejected: a named `S.Defect`-with-override schema, which cannot cover the `S.Defect()`, `S.Defect({ includeStack: true })` and `S.Unknown` variants with one value. |
 | 2026-10-01 | Facet census: `withCodecStatics` RETIRE holds. Doctrine sums: uncovered 0 against covered 1,248 lines: 390 `withCodecStatics` steps in 170 files, 833 reads the compiler located and the codemod rewrote, 25 reads rewritten by hand. Every selectable key is a public `effect/Schema` function at `df77fff939` (`is` `Schema.ts:1401`, `asserts` `:1450`, the `decode*` / `encode*` family, `toEquivalence` `:15252`). The read census is compiler-backed: removing the attaching steps turns every orphaned read into a `TS2339`, and the rewrite is driven from those positions (whole-repo tsgo program, 72 s). `withStatics` stays ADAPT: of 404 attached properties at `e324f01e1e`, 204 were codec facades (retired here) and 200 are domain helpers (`create`, `fromParts`, `toHtml`, ...) in 65 files. `withLiteralKitStatics` attaches only LiteralKit keyed helpers and stays ADAPT. | The SPEC gate for a RETIRE over 100 consumers. A text census cannot count reads (`.is`, `.decodeUnknownEffect` collide with every schema and kit member), and the type-directed ts-morph engine ran 14 minutes on one package without finishing (friction ledger, 2026-10-01). Rejected: keeping `withCodecStatics` for declaration-time compilation (D10: the per-AST cache already holds it); a codec-free `withStatics` replacement (the 200 domain helpers are the uncovered facet the ADAPT keeps). |
-| 2026-10-01 | Sync codec statics retire onto `Result.getOrThrow(S.<x>Result(X)(u))` (references: `flow(S.<x>Result(X), Result.getOrThrow)`), and a read whose input already has the schema's Encoded type takes the typed decoder (`S.decodeEffect`, not `S.decodeUnknownEffect`). | The repo's Effect language-service laws reject `S.*Sync` everywhere (`schemaSync`, `schemaSyncInEffect`) and an Unknown decoder over a typed input (`preferTypedSchemaDecoder`); the statics hid both from the checker. The Result form throws the same `SchemaError` and is the form #1347 used for the same reason. Rejected: `@effect-diagnostics` directives (banned outside three exemptions); converting sync call sites to Effect (changes control flow at about 270 sites, outside this goal). |
+| 2026-10-01 | Sync codec statics retire onto `Result.getOrThrow(S.<x>Result(X)(u))` (references: `flow(S.<x>Result(X), Result.getOrThrow)`), and a read whose input already has the schema's Encoded type takes the typed decoder (`S.decodeEffect`, not `S.decodeUnknownEffect`). | The repo's Effect language-service laws reject `S.*Sync` everywhere (`schemaSync`, `schemaSyncInEffect`) and an Unknown decoder over a typed input (`preferTypedSchemaDecoder`); the statics hid both from the checker. The Result form throws the same `SchemaError` for every schema failure and is the form #1347 used for the same reason; only the defect path differs (a non-schema failure inside the parser surfaces as "Result adapter can only return schema issues" instead of the sync adapter's message), a recorded difference, not an accident. Rejected: `@effect-diagnostics` directives (banned outside three exemptions); converting sync call sites to Effect (changes control flow at about 270 sites, outside this goal). |
 | 2026-10-01 | The F15 detector is `SFV4-codec-static`: a reference that resolves to `SchemaUtils.withCodecStatics`, or a `withStatics` property whose initializer is an `effect/Schema` codec function over the schema. Class-body statics (`static readonly is = S.is(Self)`) are not flagged. Baseline: zero occurrences. | The SPEC names the two combinators; class statics are a different idiom with its own tradeoffs (identity on `S.Class`) and no census behind them. Measured on the P5 base: 364 occurrences in 176 files (229 `withCodecStatics`, 135 facades), all removed in the same PR. |
 | 2026-10-01 | F13 hand-fixes: nine of the ten sites now derive from their schemas (`S.is(BoxActionApplied)`, `S.is(BoxBlockedAction)`, `S.is(S.Finite)`, `Md.Inline.guards.a`, `S.is(BinaryFileExtension)`, `S.is(CurrencyCode)`, `S.is(FileExtension)`, `S.is(YeetReviewThreadRow)`); the VeniceAI `HttpStatus` guard left with group G; the `Rdf.ts` `MakeQuadOptions` discriminant stays, as the P4 note allowed (a cheap check over an already validated union). | Closes the P4 carry-over without a detector. |
-| 2026-10-01 | P5 performance: single-checker instantiations (`--singleThreaded`, compiler `7.0.2+effect-tsgo.0.45.0`) fall on all three baseline packages against base `90517df719`: `@beep/schema` 460,260 → 446,597 (−13,663), `@beep/repo-cli` 4,186,320 → 4,181,648 (−4,672), `@beep/law-practice-domain` 830,007 → 799,578 (−30,429). Advisory default (four-checker) runs: 860,752 → 833,368, 8,555,584 → 8,542,137, 1,198,648 → 1,162,833. Check time on the re-measure: 719 → 669 ms, 11,486 → 10,093 ms, 1,237 → 1,053 ms, inside the band. `standards/check-census.regression-baseline.jsonc` is re-measured on the final tree. | The P5 done-signal ("no instantiation increase on the three baseline packages and the check-time band reported"). The committed baseline had been stale since P5a (friction ledger 2026-10-01), so the gate is judged against a fresh base measurement, not the old row. |
+| 2026-10-01 | P5 performance: single-checker instantiations (`--singleThreaded`, compiler `7.0.2+effect-tsgo.0.45.0`) fall on all three baseline packages against base `90517df719`: `@beep/schema` 460,260 → 446,597 (−13,663), `@beep/repo-cli` 4,186,320 → 4,181,648 (−4,672), `@beep/law-practice-domain` 830,007 → 799,578 (−30,429). Advisory default (four-checker) runs: 860,752 → 833,368, 8,555,584 → 8,542,137, 1,198,648 → 1,162,833. Check time on the re-measure: 719 → 669 ms, 11,486 → 10,093 ms, 1,237 → 1,053 ms, inside the band. `standards/check-census.regression-baseline.jsonc` is re-measured on the final tree. | The P5 done-signal ("no instantiation increase on the three baseline packages and the check-time band reported"). The committed baseline had been stale since P5a (friction ledger 2026-10-01): `@beep/repo-cli` measured +13,516 over its row at `e324f01e1e` and +13,387 at the P5 base `90517df719`. The gate is therefore judged against a fresh base measurement, not the old row; transcripts are in `research/2026-10-01-p5-check-census.md`. |
 | 2026-10-01 | The packet closes `completed-retained` with two operator rulings open: URL (row 2026-09-29, ADAPT or RETIRE) and MimeType (row 2026-09-29, KEEP or a migration goal). Both stay in the exception ledger below until ruled. | Every other RETIRE, Role B and ADAPT row is done or ruled; the two deferrals are boundary questions the Wire shape ruling sends to the operator, not work this packet can finish. Rejected: holding the packet `active` for rulings with no lane work behind them. |
 
 ## Acceptance Criteria
 
-- [ ] P0 merged: dated entry in `standards/architecture/DECISIONS.md`, rule
+- [x] P0 merged: dated entry in `standards/architecture/DECISIONS.md`, rule
       text in `standards/architecture/11-evolution-and-deprecation.md`,
       AGENTS.md line narrowed, `@beep/schema` README carries the rule.
-- [ ] Every retirement PR (P2, each P3 PR, P5) carries before/after
+- [x] Every retirement PR (P2, each P3 PR, P5) carries before/after
       single-checker `--extendedDiagnostics` (`--singleThreaded`) on the
       three baseline packages with no instantiation increase; the default
       run and check time reported beside it against the 5% band.
-- [ ] `test/fixtures/effect-schema-rc118/inventory/` committed with the full
+- [x] `test/fixtures/effect-schema-rc118/inventory/` committed with the full
       `inventoryPin` sha in its pin line and rows; `--check` byte-identical locally; hosted verification green.
-- [ ] LiteralKit and MappedLiteralKit trimmed per the P2 row; no retired facet
+- [x] LiteralKit and MappedLiteralKit trimmed per the P2 row; no retired facet
       name remains; statics survive every derivation; a before/after number
       is attached.
 - [ ] The 50 RETIRE concepts and 6 Role B concepts are deleted with consumers
       migrated, or flipped to ADAPT through the facet census with a logged
       ruling; the 77 KEEP concepts are untouched.
-- [ ] SchemaUtils (ADAPT concept, 39 exports per
+      Unmet at close: URL and MimeType wait on operator rulings (exception
+      ledger; goal-time rows 2026-09-29); every other row is done or ruled.
+- [x] SchemaUtils (ADAPT concept, 39 exports per
       `explorations/effect-schema-parity/research/2026-09-28-schemautils-census.md`):
       32 DELETE (20 zero-consumer in P3 C/F; 4 defaults via PR 3b; 8 with the
       P5 statics retirement), 4 ADAPT (`BoolKeyDefaultFalse`/`True` in P3 C,
       `withLiteralKitStatics` in P2, `withStatics` in P5), 3 KEEP
       (`collectAnnotationsAt`, `isCodecDataFirst`, internal
       `staticDescriptorInstaller` until its last user goes).
-- [ ] Boundary table rows for every group D and E concept are filled with
+- [x] Boundary table rows for every group D and E concept are filled with
       evidence; no persisted or served encoding changed.
-- [ ] `SFV4-*` rules for F03 and F24 exist with committed baselines (F13
+- [x] `SFV4-*` rules for F03 and F24 exist with committed baselines (F13
       dropped below the reach floor, goal-time row 2026-09-29; its ten sites
       are hand-fixed in P5); `SFV4-tagged-error-equivalence` is gone; `bun run
       beep lint schema-first` reports zero actionable parity findings.
-- [ ] `withCodecStatics` retired after the selective-statics merge (#927);
+- [x] `withCodecStatics` retired after the selective-statics merge (#927);
       `collectAnnotationsAt` kept; F15 rule exists.
-- [ ] `quality check-census` records single-checker instantiations and check
+- [x] `quality check-census` records single-checker instantiations and check
       time against a committed baseline measured `--singleThreaded`; no
       instantiation increase on the three packages and check time reported
       against the 5% band.
-- [ ] Closeout reflection written; lifecycle flipped in the same PR.
-- [ ] No unrelated refactors or formatting churn.
+- [x] Closeout reflection written; lifecycle flipped in the same PR.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

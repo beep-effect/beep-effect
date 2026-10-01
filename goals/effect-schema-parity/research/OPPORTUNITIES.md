@@ -384,7 +384,7 @@ machine ids, quote only the minimal identifying error text.
   progress; `gh api repos/<owner>/<repo>/actions/jobs/<id>/logs` printed
   nothing because the log is ANSI-coloured and `gh` drops escape sequences by
   default. Only `gh api --allow-escape-sequences .../jobs/<id>/logs` works.
-  PR #1363 teaches the Yeet monitor that per-job endpoint.
+  PR #1363 (merged 2026-10-01) teaches the Yeet monitor that per-job endpoint.
 - **What would have prevented it:** The monitor reading the per-job endpoint
   from the start, and the yeet skill naming the flag.
 
@@ -425,7 +425,7 @@ machine ids, quote only the minimal identifying error text.
 - **What I was doing:** Driving the last train PRs to merge-ready between
   2026-09-29 and 2026-10-01.
 - **Evidence:** 28 `Heavy / *` jobs ended with the runner lost to Spot
-  reclamation rather than a test failure, and each had to be re-run. PR #1364 spreads the heavy fleet across
+  reclamation rather than a test failure, and each had to be re-run. PR #1364 (merged 2026-10-01, deploy by the operator) spreads the heavy fleet across
   capacity-optimized Spot pools; a companion PR re-runs runner-loss failures
   automatically. Both await operator deploy.
 - **What would have prevented it:** Diversified Spot pools and an automatic
@@ -440,8 +440,8 @@ machine ids, quote only the minimal identifying error text.
   the coverage baseline, the schema barrel and this packet's ledgers, so with
   N open PRs every merge forced N-1 re-merges (O(N²) over the train). Lanes
   that took main's copy of the JSDoc inventory verbatim left it drifted on
-  main. The 2026-09-30 ruling (regenerate the JSDoc inventory once, in P5)
-  removed one class.
+  main. The 2026-09-30 ruling (regenerate the JSDoc inventory once, in P5,
+  after #1370 merged on 2026-10-01) removed one class.
 - **What would have prevented it:** Generated inventories regenerated on main
   after merge (or merge-driver regenerated), not carried in feature PRs; one
   ledger file per PR instead of appending to shared tables.
@@ -465,7 +465,8 @@ machine ids, quote only the minimal identifying error text.
 - **What I was doing:** Taking the P5 "before" numbers with
   `bun run beep quality check-census --gate-only` at `e324f01e1e`.
 - **Evidence:** the gate failed on an unchanged main: `@beep/repo-cli`
-  4,186,449 against the committed 4,172,933 (+13,516), while `@beep/schema`
+  4,186,449 against the committed 4,172,933 (+13,516), and +13,387 again at
+  the P5 base 90517df719 (4,186,320), while `@beep/schema`
   sat 236,325 below its row. No PR after P5a (#1354) re-measured the
   baseline, and the gate does not run in hosted CI.
 - **What would have prevented it:** Run `check-census --gate-only` in a hosted

@@ -97,7 +97,10 @@ left behind.
   facades map through their initializer (`fromUnknown`, `decodeOption`, ...).
   Sync statics become `Result.getOrThrow(S.<codec>Result(X)(u))` (or
   `flow(S.<codec>Result(X), Result.getOrThrow)` as a value), because
-  `effect(schemaSync)` rejects `S.*Sync`; the thrown `SchemaError` is unchanged.
+  `effect(schemaSync)` rejects `S.*Sync`; the thrown `SchemaError` is unchanged for
+  schema failures. Only the defect path differs: a non-schema failure inside the
+  parser reads "Result adapter can only return schema issues" instead of the sync
+  adapter's message.
 - `@beep/codegen-kit` drops `GenerateConfig.schemaCodecStatics` and its emitter;
   no generated file used it (runpod `generate --check` passes, box regenerates
   byte-identical).
