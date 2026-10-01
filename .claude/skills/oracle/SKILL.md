@@ -46,9 +46,19 @@ Two resolutions:
    that reads the bundle file, follows the instructions inside it, and writes
    the review to one deliverable file. Fully automated; loses the
    second-model-family opinion and the ChatGPT-UI Pro extended-thinking mode.
-   The `codex:codex-rescue` route (`--model gpt-6-astra --effort medium`)
-   keeps the ChatGPT-Pro-backed pool but is Codex opt-in only under the
-   `AGENTS.md` Volume pools order — use it when the operator asks for it.
+   The `codex:codex-rescue` route (`--model gpt-6.1-sol --effort medium`)
+   keeps the ChatGPT-Pro-backed pool; under the `AGENTS.md` Volume pools
+   policy (2026-10-01) it is the Codex chain's own first route, never a
+   fallback for a Claude orchestrator. Manifest projection:
+
+<!-- beep-models:begin codex-heavy -->
+| Role | Surface | Model | Effort |
+| --- | --- | --- | --- |
+| codex.heavy | codex-cli | `gpt-6.1-sol` | `medium` |
+| codex.heavy | codex-plugin | `gpt-6.1-sol` | `medium` |
+| codex.heavy | proxy-workflow | `gpt-6.1-sol` | `medium` |
+| codex.heavy | jetbrains-codex | `gpt-6.1-sol` | `medium` |
+<!-- beep-models:end codex-heavy -->
 
 Also verified: if the ChatGPT composer shows an attached "Deep research"
 chip, remove it before pasting (click into the composer, Backspace) — the

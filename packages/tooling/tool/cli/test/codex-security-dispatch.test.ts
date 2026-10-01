@@ -168,7 +168,7 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
             "--mode",
             "standard",
             "--model",
-            "gpt-6-astra",
+            "gpt-6.1-sol",
             "--effort",
             "medium",
             "--output-dir",
