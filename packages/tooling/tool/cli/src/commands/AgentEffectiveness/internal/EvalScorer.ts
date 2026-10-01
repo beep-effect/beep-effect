@@ -13,7 +13,12 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
-import { decodeTaskManifestJson, encodeAgentEffectivenessEvalScoreReportJson } from "../AgentEffectiveness.schemas.ts";
+import {
+  AgentEffectivenessEvalLaneStatus,
+  AgentEffectivenessEvalReportStatus,
+  decodeTaskManifestJson,
+  encodeAgentEffectivenessEvalScoreReportJson,
+} from "../AgentEffectiveness.schemas.ts";
 import { evaluateSkillOptCompletion, readSourceSnapshots } from "./EvalFixture.ts";
 import { evaluateLaw } from "./EvalLawLanes.ts";
 import { recordAgentEffectivenessEvalScore } from "./EvalRecord.ts";
@@ -171,6 +176,14 @@ export const scoreAgentEffectivenessEval = Effect.fn("AgentEffectivenessEvalScor
   return buildAgentEffectivenessEvalScoreReport(task, completion, law);
 });
 
+const environmentFailureSummary = (report: AgentEffectivenessEvalScoreReport): string =>
+  pipe(
+    report.lanes,
+    A.filter((lane) => AgentEffectivenessEvalLaneStatus.is["environment-failure"](lane.status)),
+    A.map((lane) => `${lane.lane} (${pipe(lane.environmentDiagnostics, A.join("; "))})`),
+    A.join(", ")
+  );
+
 class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffectivenessEvalScoreCommandOptions>(
   $I`RunAgentEffectivenessEvalScoreCommandOptions`
 )(
@@ -197,6 +210,10 @@ class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffec
  * pure fixture scoring never touches writable-store configuration — a
  * `HOME`-less hermetic container can score with `dataRoot: O.none()` as long as
  * it does not ask to record.
+ *
+ * A report whose status is `environment-failure` is still printed, then the
+ * command fails with a scorer error and records nothing: a lane that could not
+ * measure the fixture must not reach a consumer as a law score.
  *
  * **Example** (Score a fixture without recording)
  *
@@ -253,7 +270,14 @@ export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivene
     yield* Console.log(yield* encodeAgentEffectivenessEvalScoreReportJson(report));
   } else {
     yield* Console.log(
-      `agent-effectiveness eval score: task=${report.taskId} score=${report.score} completion=${report.breakdown.completion} schema-first=${report.breakdown.schemaFirst} tsgo=${report.breakdown.tsgo} biome=${report.breakdown.biome}`
+      `agent-effectiveness eval score: task=${report.taskId} status=${report.status} score=${report.score} completion=${report.breakdown.completion} schema-first=${report.breakdown.schemaFirst} tsgo=${report.breakdown.tsgo} biome=${report.breakdown.biome}`
+    );
+  }
+
+  if (AgentEffectivenessEvalReportStatus.is["environment-failure"](report.status)) {
+    return yield* AgentEffectivenessEvalScorerError.new(
+      `Scorer law lanes could not measure the fixture: ${environmentFailureSummary(report)}`,
+      { file: dir }
     );
   }
 

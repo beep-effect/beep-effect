@@ -3,13 +3,13 @@
   "initiative": {
     "id": "harness-evidence-ledger",
     "title": "Harness Evidence Ledger",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-25",
-    "updated": "2026-09-25",
+    "updated": "2026-09-29",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/harness-evidence-ledger",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Typed per-edit harness evidence ledger with config-fingerprint expiry, retention-side pruning proposals, and an annealed-budget rerun of the SkillOpt pilot",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -22,7 +22,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "statement": "Shipped as PR #1253 (merged 2026-09-26) and one closing PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -35,7 +35,11 @@
     "goals/harness-evidence-ledger/research/SOURCES.md",
     "harness-ledger/README.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "history/p2-rerun/FINDINGS.md",
+    "history/p4-rerun/FINDINGS.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -56,27 +60,27 @@
     {
       "id": "P1",
       "name": "Schemas + ledger CLI + hook-pulse surface + scorer fixes",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Rerun",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR1 to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
-      "name": "PR2 results + reflection",
-      "status": "pending"
+      "name": "Closing PR: results + reflection",
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
