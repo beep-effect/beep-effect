@@ -127,7 +127,7 @@ call is not permission to redesign unrelated detector APIs.
 - `SchemaFirstDetectors.ts:27–28,39,627–644,657–662,690–720,750–783`:
   preserve patterns, exported-candidate logic, generic skips, explicit-return
   checks and safe wrappers. No field/cardinality change inside finding schemas.
-- `SchemaFirstScan.ts:311–323`: sole direct appendFunctionEntries call319
+- `SchemaFirstScan.ts:312–325`: sole direct appendFunctionEntries call319
   remains between call and property scanners. Excluded files and other TSX
   detector families retain their current scheduling and findings.
 - `SchemaFirstScan.ts:481–511`: exported runSchemaFirstLint calls the scan482,
@@ -263,29 +263,29 @@ Only earlier const-assertion iteration changed; appendFunctionEntries body is un
 - `packages/tooling/tool/cli/test/schema-first.test.ts:458` — resolves the fixture paths to the flipped and still-exempt families
 - `packages/tooling/tool/cli/test/schema-first.test.ts:465` — counts the foundation violation and exempts the drivers violation (flipped policy)
 - `packages/tooling/tool/cli/test/schema-first.test.ts:491` — keeps the same ratchet result against the real committed policy document
-- `packages/tooling/tool/cli/test/lint-command.test.ts:145` — reports runtime and schema metadata violations through the pure test seam
-- `packages/tooling/tool/cli/test/lint-command.test.ts:240` — constructs unique content-cache shard commands at concurrency four
-- `packages/tooling/tool/cli/test/lint-command.test.ts:246` — fails the aggregate when any shard exits nonzero
-- `packages/tooling/tool/cli/test/lint-command.test.ts:252` — skips the labs shard when the labs root is absent
-- `packages/tooling/tool/cli/test/lint-command.test.ts:258` — passes --no-error-on-unmatched-pattern to the labs shard only
-- `packages/tooling/tool/cli/test/lint-command.test.ts:302` — reports redundant LiteralKit const assertions
-- `packages/tooling/tool/cli/test/lint-command.test.ts:331` — accepts direct LiteralKit inline arrays without const assertions
-- `packages/tooling/tool/cli/test/lint-command.test.ts:347` — reports untracked SFV4 numeric-domain advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:380` — reports untracked SFV4 static-api discriminator switch advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:418` — reports untracked SFV4 precision-audit broad email advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:449` — accepts precise email schemas without precision-audit advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:467` — reports untracked SFV4 fn-schema advisories for a .ts function (R17-2 still-fires case)
-- `packages/tooling/tool/cli/test/lint-command.test.ts:499` — does not report SFV4 fn-schema advisories for a .tsx component (R17-2 newly-excluded case)
-- `packages/tooling/tool/cli/test/lint-command.test.ts:517` — excludes inventoried precision-audit exceptions from active advisory counts
-- `packages/tooling/tool/cli/test/lint-command.test.ts:543` — blocks tracked active schema-first advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:580` — reports untracked SFV4 arbitrary-tests static-only schema test advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:614` — accepts schema-derived property tests without arbitrary-tests advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:637` — does not treat a non-schema-derived fast-check property as arbitrary-tests coverage
-- `packages/tooling/tool/cli/test/lint-command.test.ts:665` — counts class-local static codec calls toward the arbitrary-tests threshold
-- `packages/tooling/tool/cli/test/lint-command.test.ts:693` — reports SFV4 arbitrary-tests advisories for synchronous schema codec helpers
-- `packages/tooling/tool/cli/test/lint-command.test.ts:726` — accepts schema-derived static match usage without static-api advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:746` — reports untracked SFV4 equivalence manual equals advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:779` — accepts schema-derived equivalence helpers without equivalence advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:146` — reports runtime and schema metadata violations through the pure test seam
+- `packages/tooling/tool/cli/test/lint-command.test.ts:242` — constructs unique content-cache shard commands at concurrency four
+- `packages/tooling/tool/cli/test/lint-command.test.ts:248` — fails the aggregate when any shard exits nonzero
+- `packages/tooling/tool/cli/test/lint-command.test.ts:254` — skips the labs shard when the labs root is absent
+- `packages/tooling/tool/cli/test/lint-command.test.ts:260` — passes --no-error-on-unmatched-pattern to the labs shard only
+- `packages/tooling/tool/cli/test/lint-command.test.ts:303` — reports redundant LiteralKit const assertions
+- `packages/tooling/tool/cli/test/lint-command.test.ts:332` — accepts direct LiteralKit inline arrays without const assertions
+- `packages/tooling/tool/cli/test/lint-command.test.ts:372` — reports untracked SFV4 numeric-domain advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:405` — reports untracked SFV4 static-api discriminator switch advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:443` — reports untracked SFV4 precision-audit broad email advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:474` — accepts precise email schemas without precision-audit advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:492` — reports untracked SFV4 fn-schema advisories for a .ts function (R17-2 still-fires case)
+- `packages/tooling/tool/cli/test/lint-command.test.ts:524` — does not report SFV4 fn-schema advisories for a .tsx component (R17-2 newly-excluded case)
+- `packages/tooling/tool/cli/test/lint-command.test.ts:542` — excludes inventoried precision-audit exceptions from active advisory counts
+- `packages/tooling/tool/cli/test/lint-command.test.ts:568` — blocks tracked active schema-first advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:605` — reports untracked SFV4 arbitrary-tests static-only schema test advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:639` — accepts schema-derived property tests without arbitrary-tests advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:662` — does not treat a non-schema-derived fast-check property as arbitrary-tests coverage
+- `packages/tooling/tool/cli/test/lint-command.test.ts:690` — counts class-local static codec calls toward the arbitrary-tests threshold
+- `packages/tooling/tool/cli/test/lint-command.test.ts:718` — reports SFV4 arbitrary-tests advisories for synchronous schema codec helpers
+- `packages/tooling/tool/cli/test/lint-command.test.ts:751` — accepts schema-derived static match usage without static-api advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:771` — reports untracked SFV4 equivalence manual equals advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:804` — accepts schema-derived equivalence helpers without equivalence advisories
 - `packages/tooling/tool/cli/test/lint-command.test.ts:798` — accepts S.TaggedError declarations that rely on the derived field equivalence
 - `packages/tooling/tool/cli/test/lint-command.test.ts:817` — reports S.TaggedError declarations that install a redundant toEquivalence hook
 - `packages/tooling/tool/cli/test/lint-command.test.ts:853` — reports named effect/Schema TaggedError imports that install a redundant toEquivalence hook
@@ -300,35 +300,35 @@ Only earlier const-assertion iteration changed; appendFunctionEntries body is un
 - `packages/tooling/tool/cli/test/lint-command.test.ts:1081` — reports a toEquivalence hook reached through a referenced annoteClass annotation record
 - `packages/tooling/tool/cli/test/lint-command.test.ts:1107` — accepts annoteError tagged-error annotations
 - `packages/tooling/tool/cli/test/lint-command.test.ts:1126` — preserves existing tagged-error exceptions without excepting new write findings
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1183` — reports untracked SFV4 boundary-codec JSON.parse advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1213` — accepts schema JSON codecs without boundary-codec advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1229` — reports untracked SFV4 defaults parameter object advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1261` — accepts schema-owned constructor defaults without defaults advisories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1280` — writes SFV4 numeric-domain advisories to the schema-first inventory
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1311` — filters generic and wholly runtime declarations before inventory comparison
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1434` — limits normalization advisories to exported schema-boundary helpers
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1479` — omits render contracts without hiding pure data declared in TSX
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1518` — recognizes local export lists for declarations, schema companions, structs, and functions
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1571` — recognizes anonymous direct default exports with stable fallback symbols
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1616` — inventories only exported top-level plain S.Struct object models
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1657` — rejects conflicting and out-of-package scan scopes
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1678` — scopes the scan to one package root
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1705` — reports same-package relative imports into src
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1734` — allows relative imports to local test fixtures
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1763` — allows source test-kit files under src internal test directories
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1792` — allows internal package alias imports
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1876` — reports a package whose check script never typechecks its test sources
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1903` — accepts a package whose check script transitively runs a test-covering project
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1936` — reports a test-covering project the check script never runs
-- `packages/tooling/tool/cli/test/lint-command.test.ts:1970` — does not treat compiler names echoed as script text as test typechecking
-- `packages/tooling/tool/cli/test/lint-command.test.ts:2003` — treats a baselined blind spot as green
-- `packages/tooling/tool/cli/test/lint-command.test.ts:2034` — reports a tail-filtered include that leaves a sibling helper unselected
-- `packages/tooling/tool/cli/test/lint-command.test.ts:2076` — accepts a tail-filtered include when it selects every test source
-- `packages/tooling/tool/cli/test/lint-command.test.ts:2111` — reports a one-level include because nested sources stay unselected
-- `packages/tooling/tool/cli/test/lint-command.test.ts:2151` — accepts a bare test directory include as a recursive subtree
-- `packages/tooling/tool/cli/test/lint-command.test.ts:2194` — honors exclude when deciding which test sources a project selects
-- `packages/tooling/tool/cli/test/lint-command.test.ts:2236` — follows check-script delegation through bun run flags
-- `packages/tooling/tool/cli/test/lint-command.test.ts:2271` — preserves hand-authored notes when rewriting the baseline
+- `packages/tooling/tool/cli/test/lint-command.test.ts:823` — reports untracked SFV4 boundary-codec JSON.parse advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:853` — accepts schema JSON codecs without boundary-codec advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:869` — reports untracked SFV4 defaults parameter object advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:901` — accepts schema-owned constructor defaults without defaults advisories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:920` — writes SFV4 numeric-domain advisories to the schema-first inventory
+- `packages/tooling/tool/cli/test/lint-command.test.ts:951` — filters generic and wholly runtime declarations before inventory comparison
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1074` — limits normalization advisories to exported schema-boundary helpers
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1119` — omits render contracts without hiding pure data declared in TSX
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1158` — recognizes local export lists for declarations, schema companions, structs, and functions
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1211` — recognizes anonymous direct default exports with stable fallback symbols
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1256` — inventories only exported top-level plain S.Struct object models
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1297` — rejects conflicting and out-of-package scan scopes
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1318` — scopes the scan to one package root
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1345` — reports same-package relative imports into src
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1374` — allows relative imports to local test fixtures
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1403` — allows source test-kit files under src internal test directories
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1432` — allows internal package alias imports
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1517` — reports a package whose check script never typechecks its test sources
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1544` — accepts a package whose check script transitively runs a test-covering project
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1577` — reports a test-covering project the check script never runs
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1611` — does not treat compiler names echoed as script text as test typechecking
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1644` — treats a baselined blind spot as green
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1675` — reports a tail-filtered include that leaves a sibling helper unselected
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1717` — accepts a tail-filtered include when it selects every test source
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1752` — reports a one-level include because nested sources stay unselected
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1792` — accepts a bare test directory include as a recursive subtree
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1835` — honors exclude when deciding which test sources a project selects
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1877` — follows check-script delegation through bun run flags
+- `packages/tooling/tool/cli/test/lint-command.test.ts:1912` — preserves hand-authored notes when rewriting the baseline
 
 The private review also supplies source-location-maps.json with exact unchanged
 line blocks and explicit changed blocks, plus symbol-locations.json/test-locations.json.
