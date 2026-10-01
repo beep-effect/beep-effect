@@ -419,10 +419,10 @@ def _scorer_environment_failure(stdout: str) -> dict | None:
     """Return the scorer report when it says its own lanes could not measure the fixture.
 
     The scorer prints the report and then exits non-zero when a law lane could not
-    run (tool missing, configuration unusable, zero files processed). That is a
-    fault of the scoring environment, not evidence about the candidate, so the
-    caller keeps the report, scores the item 0, and tags it; a batch where every
-    item carries the tag stops the run in `_raise_on_systemic_failure`.
+    run (a broken tool). That is a fault of the scoring environment, not evidence
+    about the candidate, so the caller keeps the report and tags the item; any
+    tagged item stops the batch in `_raise_on_systemic_failure`, because a 0 for
+    an unmeasured item would let the gate decide on a partial measurement.
     """
     try:
         payload = json.loads((stdout or "").strip())
@@ -692,11 +692,13 @@ def _process_one(
 
 
 def _raise_on_systemic_failure(results: list[dict]) -> None:
-    if results and all(_is_scorer_environment_failure(row) for row in results):
+    unmeasured = [str(row.get("id", "")) for row in results if _is_scorer_environment_failure(row)]
+    if unmeasured:
         raise RuntimeError(
-            f"Beeplaw scorer could not measure any of {len(results)} items: every law-lane "
-            "report is an environment failure. Fix the scoring environment before training; "
-            "these scores say nothing about the candidate."
+            f"Beeplaw scorer could not measure {len(unmeasured)} of {len(results)} items "
+            f"({', '.join(sorted(unmeasured))}): the law-lane report is an environment failure. "
+            "Fix the scoring environment and resume; a partial batch says nothing about the "
+            "candidate, so it never reaches the gate."
         )
     if not results or not all(row.get("agent_ok") is False for row in results):
         return
@@ -745,10 +747,13 @@ def _run_batch(
             for line in f:
                 try:
                     row = json.loads(line)
-                    done_ids.add(str(row["id"]))
-                    existing.append(row)
                 except Exception:
-                    pass
+                    continue
+                # An environment failure is not a measurement: re-measure it on resume.
+                if not isinstance(row, dict) or "id" not in row or _is_scorer_environment_failure(row):
+                    continue
+                done_ids.add(str(row["id"]))
+                existing.append(row)
 
     pending = [item for item in items if str(item["id"]) not in done_ids]
     if not pending:

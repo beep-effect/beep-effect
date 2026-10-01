@@ -11,18 +11,58 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from beep_skillopt import ledger
 
 DIGEST = {n: f"{n:064x}" for n in range(1, 5)}
+SKILL = "schema-first-development"
+# A stand-in for the ledger CLI that keeps its own rows in a JSON store: propose
+# and disposition append (disposition refuses a superseded row, as the real CLI
+# does), and `list --json` folds every chain to its latest row.
 FAKE_CLI = """#!{python}
 import json, sys, pathlib
 log = pathlib.Path({log!r})
+store = pathlib.Path({store!r})
+argv = sys.argv[1:]
 calls = log.read_text().splitlines() if log.exists() else []
-calls.append(json.dumps(sys.argv[1:]))
+calls.append(json.dumps(argv))
 log.write_text("\\n".join(calls) + "\\n")
+rows = json.loads(store.read_text()) if store.exists() else []
 print("$ bun run fake harness-ledger", file=sys.stderr)
-print(json.dumps({{"rowId": "hl-20260929-%08x" % len(calls), "disposition": "proposed"}}, indent=2))
+
+def flag(name):
+    return argv[argv.index(name) + 1]
+
+if argv[0] == "list":
+    previous = {{row.get("previousRowId") for row in rows}}
+    by_id = {{row["rowId"]: row for row in rows}}
+    entries = []
+    for row in rows:
+        if row["rowId"] in previous:
+            continue
+        length, cursor = 1, row
+        while cursor.get("previousRowId") in by_id:
+            length, cursor = length + 1, by_id[cursor["previousRowId"]]
+        entries.append({{"row": row, "stale": False, "chainLength": length}})
+    print("[INFO] not json")
+    print(json.dumps(entries))
+    sys.exit(0)
+row_id = "hl-20260929-%08x" % (len(rows) + 1)
+if argv[0] == "propose":
+    row = {{"rowId": row_id, "edit": {{"kind": "diff-digest", "ref": flag("--edit").split(":", 1)[1]}},
+           "hypothesis": {{"claim": flag("--hypothesis")}}, "mechanismClass": flag("--mechanism"),
+           "disposition": "proposed"}}
+else:
+    target = flag("--row")
+    previous = [row for row in rows if row["rowId"] == target]
+    if not previous or any(row.get("previousRowId") == target for row in rows):
+        print("HarnessLedgerChainError: " + target + " is not the latest row of its chain", file=sys.stderr)
+        sys.exit(1)
+    row = {{**previous[0], "rowId": row_id, "disposition": flag("--to"), "previousRowId": target}}
+rows.append(row)
+store.write_text(json.dumps(rows))
+print(json.dumps({{"rowId": row_id, "disposition": row["disposition"]}}, indent=2))
 """
 
 
@@ -43,6 +83,14 @@ def _steps() -> list[dict]:
     ]
 
 
+def _claim(step: int) -> str:
+    return ledger.hypothesis_for(_steps()[step - 1], SKILL)
+
+
+class Interrupted(Exception):
+    """Stands in for a crash between a successful CLI call and the marker save."""
+
+
 class RecorderTest(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -56,11 +104,12 @@ class RecorderTest(unittest.TestCase):
             "target_model": "claude-opus-5-5",
             "target_backend": "claude_code_exec",
             "claude_code_exec_effort": "medium",
-            "skill_init": ".claude/skills/schema-first-development/SKILL.md",
+            "skill_init": f".claude/skills/{SKILL}/SKILL.md",
         }))
         self.log = self.root / "calls.log"
+        self.store = self.root / "ledger-rows.json"
         self.cli = self.root / "fake-ledger"
-        self.cli.write_text(FAKE_CLI.format(python=sys.executable, log=str(self.log)))
+        self.cli.write_text(FAKE_CLI.format(python=sys.executable, log=str(self.log), store=str(self.store)))
         self.cli.chmod(self.cli.stat().st_mode | stat.S_IXUSR)
 
     def tearDown(self) -> None:
@@ -72,15 +121,38 @@ class RecorderTest(unittest.TestCase):
             code = ledger.main(["--out-root", str(self.out_root), "--cli", str(self.cli), *args])
         return code, buf.getvalue()
 
-    def _calls(self) -> list[list[str]]:
+    def _calls(self, *, reads: bool = False) -> list[list[str]]:
         if not self.log.exists():
             return []
-        return [json.loads(line) for line in self.log.read_text().splitlines() if line]
+        calls = [json.loads(line) for line in self.log.read_text().splitlines() if line]
+        return calls if reads else [call for call in calls if call[0] != "list"]
+
+    def _rows(self) -> list[dict]:
+        return json.loads(self.store.read_text()) if self.store.exists() else []
+
+    def _seed(self, rows: list[dict]) -> None:
+        self.store.write_text(json.dumps(rows))
+
+    def _marker(self) -> dict:
+        return json.loads((self.out_root / ledger.MARKER_FILE).read_text())
+
+    def _interrupt_on_save(self, nth: int):
+        """Patch the marker save so the ``nth`` save dies after its CLI call succeeded."""
+        real = ledger.save_marker
+        seen = {"n": 0}
+
+        def save(out_root, marker):
+            seen["n"] += 1
+            if seen["n"] == nth:
+                raise Interrupted
+            real(out_root, marker)
+
+        return mock.patch.object(ledger, "save_marker", save)
 
     def test_dry_run_is_default_and_runs_nothing(self) -> None:
         code, out = self._run()
         self.assertEqual(code, 0)
-        self.assertEqual(self._calls(), [])
+        self.assertEqual(self._calls(reads=True), [])
         self.assertFalse((self.out_root / ledger.MARKER_FILE).exists())
         commands = [shlex.split(line) for line in out.splitlines() if not line.startswith("#")]
         self.assertEqual([c[1] for c in commands], ["propose", "disposition", "propose", "disposition", "propose"])
@@ -89,6 +161,7 @@ class RecorderTest(unittest.TestCase):
     def test_write_records_proposals_and_rejections_only(self) -> None:
         code, _out = self._run("--write")
         self.assertEqual(code, 0)
+        self.assertEqual(self._calls(reads=True)[0], ["list", "--json"])
         calls = self._calls()
         self.assertEqual([c[0] for c in calls], ["propose", "disposition", "propose", "disposition", "propose"])
 
@@ -119,7 +192,7 @@ class RecorderTest(unittest.TestCase):
             self.assertNotIn(str(self.root), joined)
             self.assertNotIn(".claude/skills", joined)
 
-        marker = json.loads((self.out_root / ledger.MARKER_FILE).read_text())
+        marker = self._marker()
         self.assertEqual(sorted(marker), ["1", "2", "3"])
         self.assertIsNone(marker["3"]["disposition"])  # gate-accepted stays proposed
 
@@ -132,6 +205,8 @@ class RecorderTest(unittest.TestCase):
         self.assertEqual(out.count("already recorded"), 3)
 
     def test_resumes_a_half_recorded_step(self) -> None:
+        self._seed([{"rowId": "hl-20260929-aaaaaaaa", "edit": {"kind": "diff-digest", "ref": DIGEST[1]},
+                     "hypothesis": {"claim": _claim(1)}, "mechanismClass": "skill", "disposition": "proposed"}])
         marker = {"1": {"digest": DIGEST[1], "propose": "hl-20260929-aaaaaaaa", "disposition": None}}
         (self.out_root / ledger.MARKER_FILE).write_text(json.dumps(marker))
         self.assertEqual(self._run("--write")[0], 0)
@@ -139,20 +214,135 @@ class RecorderTest(unittest.TestCase):
         self.assertEqual(calls[0][0], "disposition")
         self.assertEqual(calls[0][calls[0].index("--row") + 1], "hl-20260929-aaaaaaaa")
 
+    def test_marker_alone_still_resumes_when_the_ledger_has_no_matching_chain(self) -> None:
+        # A row written by an older recorder whose hypothesis text differs: the marker decides.
+        self._seed([{"rowId": "hl-20260929-aaaaaaaa", "edit": {"kind": "diff-digest", "ref": DIGEST[1]},
+                     "hypothesis": {"claim": "older wording"}, "mechanismClass": "skill", "disposition": "proposed"}])
+        marker = {"1": {"digest": DIGEST[1], "propose": "hl-20260929-aaaaaaaa", "disposition": None}}
+        (self.out_root / ledger.MARKER_FILE).write_text(json.dumps(marker))
+        self.assertEqual(self._run("--write")[0], 0)
+        first = self._calls()[0]
+        self.assertEqual(first[first.index("--row") + 1], "hl-20260929-aaaaaaaa")
+
+    def test_retry_after_an_unsaved_proposal_does_not_propose_again(self) -> None:
+        # Greptile P1: the CLI appended step 1's proposal, then the marker save died.
+        with self._interrupt_on_save(1), self.assertRaises(Interrupted):
+            self._run("--write")
+        self.assertFalse((self.out_root / ledger.MARKER_FILE).exists())
+        self.assertEqual(self._run("--write")[0], 0)
+        proposals = [row for row in self._rows() if row["disposition"] == "proposed"]
+        self.assertEqual(sorted(row["edit"]["ref"] for row in proposals), [DIGEST[1], DIGEST[2], DIGEST[3]])
+        first_disposition = self._calls()[1]
+        self.assertEqual(first_disposition[0], "disposition")
+        self.assertEqual(first_disposition[first_disposition.index("--row") + 1], "hl-20260929-00000001")
+        self.assertEqual(self._marker()["1"]["propose"], "hl-20260929-00000001")
+
+    def test_retry_after_an_unsaved_disposition_does_not_disposition_again(self) -> None:
+        # Same gap for the disposition: appended, then the marker save died.
+        with self._interrupt_on_save(2), self.assertRaises(Interrupted):
+            self._run("--write")
+        self.assertIsNone(self._marker()["1"]["disposition"])
+        code, out = self._run("--write")
+        self.assertEqual(code, 0)
+        step1 = [row for row in self._rows() if row["edit"]["ref"] == DIGEST[1]]
+        self.assertEqual([row["disposition"] for row in step1], ["proposed", "rejected"])
+        self.assertEqual(self._marker()["1"]["disposition"], "hl-20260929-00000002")
+        self.assertIn("step 1: the ledger already records rejected", out)
+
+    def test_lost_marker_is_rebuilt_from_the_ledger_without_writing(self) -> None:
+        self.assertEqual(self._run("--write")[0], 0)
+        before = self._marker()
+        writes = len(self._calls())
+        (self.out_root / ledger.MARKER_FILE).unlink()
+        self.assertEqual(self._run("--write")[0], 0)
+        self.assertEqual(len(self._calls()), writes)
+        self.assertEqual(self._marker(), before)
+
+    def test_a_human_disposition_on_the_chain_is_left_in_place(self) -> None:
+        self._seed([
+            {"rowId": "hl-20260929-aaaaaaaa", "edit": {"kind": "diff-digest", "ref": DIGEST[2]},
+             "hypothesis": {"claim": _claim(2)}, "mechanismClass": "skill", "disposition": "proposed"},
+            {"rowId": "hl-20260929-bbbbbbbb", "edit": {"kind": "diff-digest", "ref": DIGEST[2]},
+             "hypothesis": {"claim": _claim(2)}, "mechanismClass": "skill", "disposition": "deferred",
+             "previousRowId": "hl-20260929-aaaaaaaa"},
+        ])
+        code, out = self._run("--write")
+        self.assertEqual(code, 0)
+        self.assertIn("step 2: the chain's latest row hl-20260929-bbbbbbbb is deferred", out)
+        step2 = [row for row in self._rows() if row["edit"]["ref"] == DIGEST[2]]
+        self.assertEqual([row["disposition"] for row in step2], ["proposed", "deferred"])
+
+    def test_duplicate_chains_are_resolved_by_the_marker_or_refused(self) -> None:
+        duplicate = [
+            {"rowId": f"hl-20260929-{suffix}", "edit": {"kind": "diff-digest", "ref": DIGEST[2]},
+             "hypothesis": {"claim": _claim(2)}, "mechanismClass": "skill", "disposition": "proposed"}
+            for suffix in ("aaaaaaaa", "bbbbbbbb")
+        ]
+        self._seed(duplicate)
+        code, out = self._run("--write")
+        self.assertEqual(code, 1)
+        self.assertIn("step 2: 2 ledger chains already carry this proposal", out)
+
+        marker = self._marker()
+        marker["2"] = {"digest": DIGEST[2], "propose": "hl-20260929-cccccccc", "disposition": None}
+        (self.out_root / ledger.MARKER_FILE).write_text(json.dumps(marker))
+        self.assertEqual(self._run("--write")[0], 1)  # the marker links to neither chain
+
+        marker["2"] = {"digest": DIGEST[2], "propose": "hl-20260929-bbbbbbbb", "disposition": None}
+        (self.out_root / ledger.MARKER_FILE).write_text(json.dumps(marker))
+        self.assertEqual(self._run("--write")[0], 0)
+        dispositions = [call for call in self._calls() if call[0] == "disposition"]
+        rows = [call[call.index("--row") + 1] for call in dispositions]
+        self.assertIn("hl-20260929-bbbbbbbb", rows)
+        self.assertNotIn("hl-20260929-aaaaaaaa", rows)
+
+    def test_unreadable_ledger_stops_before_any_write(self) -> None:
+        outputs = [ledger.RunResult(1, "", "HarnessLedgerIoError"), ledger.RunResult(0, "no json here", "")]
+        for listing in outputs:
+            seen: list[list[str]] = []
+
+            def runner(argv, _cwd, listing=listing):
+                seen.append(list(argv))
+                return listing
+
+            lines: list[str] = []
+            code = ledger.record(self.out_root, write=True, cli=["fake"], runner=runner, echo=lines.append)
+            self.assertEqual(code, 1)
+            self.assertEqual(seen, [["fake", "list", "--json"]])
+            self.assertTrue(any("ledger list" in line for line in lines), lines)
+
     def test_injectable_runner_and_failure_stops(self) -> None:
         seen: list[list[str]] = []
 
         def runner(argv, _cwd):
             seen.append(list(argv))
+            if argv[1] == "list":
+                return ledger.RunResult(0, "[]", "")
             return ledger.RunResult(1, "", "HarnessLedgerBusyError")
 
         code = ledger.record(self.out_root, write=True, cli=["fake"], runner=runner, echo=lambda _line: None)
         self.assertEqual(code, 1)
-        self.assertEqual(len(seen), 1)
+        self.assertEqual([argv[1] for argv in seen], ["list", "propose"])
         self.assertFalse((self.out_root / ledger.MARKER_FILE).exists())
 
     def test_parse_row_id_tolerates_noise(self) -> None:
         self.assertEqual(ledger.parse_row_id('$ bun run x\n{\n  "rowId": "hl-20260929-0000beef"\n}\n'), "hl-20260929-0000beef")
+
+    def test_parse_ledger_list_tolerates_noise_and_skips_other_rows(self) -> None:
+        stdout = '$ bun run x\n[INFO] start\n[1, 2]\n' + json.dumps([
+            "not an entry",
+            {"row": "not a row"},
+            {"row": {"rowId": "a", "edit": {"kind": "pending"}, "mechanismClass": "skill"}},
+            {"row": {"rowId": "b", "edit": {"kind": "diff-digest", "ref": "x"}, "mechanismClass": "config",
+                     "hypothesis": {"claim": "c"}}},
+            {"row": {"rowId": "c", "edit": {"kind": "diff-digest", "ref": "x"}, "mechanismClass": "skill",
+                     "hypothesis": {"claim": "c"}, "disposition": "proposed"}, "chainLength": 1},
+        ])
+        chains = ledger.index_chains(ledger.parse_ledger_list(stdout))
+        self.assertEqual(list(chains), [("x", "c")])
+        self.assertEqual([row["rowId"] for row in chains[("x", "c")]], ["c"])
+        with self.assertRaises(ValueError):
+            ledger.parse_ledger_list("[INFO] nothing")
 
 
 def _write_run(out_root: Path, history: list[dict], screens: list[dict], noise_items: list[list[float]]) -> None:

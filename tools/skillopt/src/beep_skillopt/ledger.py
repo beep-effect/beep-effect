@@ -19,8 +19,13 @@ reads ``<out_root>/steps.jsonl`` (see :mod:`beep_skillopt.export`) and plans:
   because only a human admits (D2). This module never writes ``accepted``.
 
 ``--dry-run`` (the default) prints the exact invocations. ``--write`` runs
-them. A marker file ``<out_root>/ledger-rows.json`` maps step -> row ids so a
-rerun never records a step twice.
+them. A marker file ``<out_root>/ledger-rows.json`` maps step -> row ids and is
+saved after each successful CLI call. The marker can lag the ledger (a crash
+between the CLI append and the save), so ``--write`` first reads the ledger
+through ``list --json`` and reconciles: a step whose proposal (same ``diff:``
+edit and hypothesis) is already a chain is not proposed again, and a
+disposition goes to that chain's latest row only while it is still
+``proposed``.
 """
 
 from __future__ import annotations
@@ -60,6 +65,7 @@ class PlannedStep:
     propose: list[str]
     disposition: list[str] | None = None
     kind: str = ""
+    claim: str = ""
     notes: list[str] = field(default_factory=list)
 
 
@@ -196,6 +202,7 @@ def plan(
         )
         if not digest or not decided:
             continue
+        claim = hypothesis_for(row, skill)
         propose = [
             *cli,
             "propose",
@@ -204,7 +211,7 @@ def plan(
             "--edit",
             f"diff:{digest}",
             "--hypothesis",
-            hypothesis_for(row, skill),
+            claim,
             "--expected-surface",
             "skill",
             "--expected-metric",
@@ -215,7 +222,7 @@ def plan(
         if effort:
             propose += ["--reasoning-effort", effort]
         propose.append("--json")
-        item = PlannedStep(step=int(row["step"]), digest=str(digest), propose=propose)
+        item = PlannedStep(step=int(row["step"]), digest=str(digest), propose=propose, claim=claim)
         rejection = rejection_for(row)
         if rejection is not None:
             evidence, flags = rejection
@@ -244,6 +251,58 @@ def parse_row_id(stdout: str) -> str:
         if isinstance(value, dict) and isinstance(value.get("rowId"), str):
             return value["rowId"]
     raise ValueError("ledger CLI output carried no rowId")
+
+
+def parse_ledger_list(stdout: str) -> list[Any]:
+    """The JSON array ``harness-ledger list --json`` printed, skipping any log noise."""
+    decoder = json.JSONDecoder()
+    for index, char in enumerate(stdout):
+        if char != "[":
+            continue
+        try:
+            value, _ = decoder.raw_decode(stdout[index:])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, list) and (not value or any(isinstance(entry, dict) for entry in value)):
+            return value
+    raise ValueError("ledger CLI list output carried no JSON array of entries")
+
+
+ChainKey = tuple[str, str]
+
+
+def index_chains(entries: list[Any]) -> dict[ChainKey, list[dict[str, Any]]]:
+    """Latest row of every skill chain, keyed by ``(diff digest, hypothesis claim)``.
+
+    A disposition row copies its predecessor's edit and hypothesis, so the
+    latest row still names the proposal. The claim names the step, which keeps
+    two steps apart when they share a digest (a cache-hit repeat).
+    """
+    chains: dict[ChainKey, list[dict[str, Any]]] = {}
+    for entry in entries:
+        row = entry.get("row") if isinstance(entry, dict) else None
+        if not isinstance(row, dict) or row.get("mechanismClass") != "skill":
+            continue
+        edit = row.get("edit") or {}
+        if edit.get("kind") != "diff-digest":
+            continue
+        claim = (row.get("hypothesis") or {}).get("claim")
+        chains.setdefault((str(edit.get("ref")), str(claim)), []).append(
+            {**row, "chainLength": entry.get("chainLength")}
+        )
+    return chains
+
+
+def ledger_head(chains: list[dict[str, Any]], propose_id: str | None) -> tuple[dict[str, Any] | None, str | None]:
+    """The one chain carrying a step's proposal, or a refusal when several do."""
+    if len(chains) > 1 and propose_id:
+        linked = [row for row in chains if propose_id in (row.get("rowId"), row.get("previousRowId"))]
+        if len(linked) == 1:
+            return linked[0], None
+    if len(chains) > 1:
+        ids = ", ".join(sorted(str(row.get("rowId")) for row in chains))
+        return None, f"{len(chains)} ledger chains already carry this proposal ({ids}); resolve the duplicate first"
+    return (chains[0] if chains else None), None
 
 
 def load_marker(out_root: Path) -> dict[str, dict[str, Any]]:
@@ -284,6 +343,17 @@ def record(
     marker = load_marker(root)
     planned = plan(_read_jsonl(steps_path), config, cli_argv, model=model, effort=effort)
     echo(f"# {len(planned)} candidate(s); mode={'write' if write else 'dry-run'}")
+    chains: dict[ChainKey, list[dict[str, Any]]] = {}
+    if write:
+        listing = runner([*cli_argv, "list", "--json"], cwd)
+        if listing.returncode != 0:
+            echo(f"# ledger list failed (exit {listing.returncode}): {listing.stderr.strip()[:500]}")
+            return 1
+        try:
+            chains = index_chains(parse_ledger_list(listing.stdout))
+        except ValueError as exc:
+            echo(f"# ledger list output unreadable: {exc}")
+            return 1
 
     for item in planned:
         key = str(item.step)
@@ -296,7 +366,18 @@ def record(
             continue
 
         row_id = done.get("propose")
-        if not row_id:
+        head, problem = ledger_head(chains.get((item.digest, item.claim), []), row_id)
+        if problem:
+            echo(f"# step {item.step}: {problem}")
+            return 1
+        if head is not None and not row_id:
+            # The CLI appended this proposal but the marker save never happened.
+            proposal = head["rowId"] if head.get("disposition") == "proposed" else head.get("previousRowId")
+            row_id = str(proposal or head["rowId"])
+            echo(f"# step {item.step}: proposal already in the ledger ({row_id}); not proposing again")
+            marker[key] = {"digest": item.digest, "propose": row_id, "disposition": None}
+            save_marker(root, marker)
+        elif not row_id:
             echo(shlex.join(item.propose))
             if write:
                 result = runner(item.propose, cwd)
@@ -309,7 +390,19 @@ def record(
         if item.disposition is None:
             echo(f"# step {item.step}: {item.kind}")
             continue
-        argv = [tok.replace("{row}", row_id or f"<rowId of step {item.step} propose>") for tok in item.disposition]
+        target = row_id
+        if head is not None:
+            latest = head.get("disposition")
+            if latest == "rejected":
+                marker[key]["disposition"] = head["rowId"]
+                save_marker(root, marker)
+                echo(f"# step {item.step}: the ledger already records rejected ({head['rowId']}); skipping")
+                continue
+            if latest != "proposed":
+                echo(f"# step {item.step}: the chain's latest row {head['rowId']} is {latest}; leaving it in place")
+                continue
+            target = str(head["rowId"])
+        argv = [tok.replace("{row}", target or f"<rowId of step {item.step} propose>") for tok in item.disposition]
         echo(shlex.join(argv))
         if write:
             result = runner(argv, cwd)

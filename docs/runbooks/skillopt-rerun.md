@@ -217,7 +217,10 @@ the recorder rejects it with evidence naming the earlier step and no score or
 cost. A
 gate-accepted candidate stays `proposed`: only a human admits (D2), and the
 recorder never writes `accepted`. `out/ledger-rows.json` maps each step to its
-row ids, so rerunning `--write` never records a step twice.
+row ids. Before writing, `--write` also reads the ledger through
+`harness-ledger list --json`, adopts a proposal or rejection already recorded
+for a step, and dispositions only a chain whose latest row is still
+`proposed`, so a retry after an interruption never records a step twice.
 
 Reading `steps.jsonl` scores:
 
