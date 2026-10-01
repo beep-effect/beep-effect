@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit } from "@beep/schema";
 import { O, P, pipe, R } from "@beep/utils";
 import { Effect, flow, HashMap, Layer, Redacted, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
@@ -110,8 +110,7 @@ export const OperationId = TrimmedNonEmptyString.pipe(
   S.brand("OpenApiOperationId"),
   $I.annoteSchema("OperationId", {
     description: "A non-empty OpenAPI operationId.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**
@@ -157,9 +156,6 @@ export const HttpMethod = MappedLiteralKit([
   ["patch", "PATCH"],
   ["trace", "TRACE"],
 ]).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-  })),
   $I.annoteSchema("HttpMethod", {
     description: "A supported OpenAPI operation method decoded to uppercase HTTP form.",
   })
@@ -194,8 +190,7 @@ export type HttpMethod = typeof HttpMethod.Type;
 export const ApiPath = S.String.check(S.isPattern(/^\/.*$/u)).pipe(
   $I.annoteSchema("ApiPath", {
     description: "An absolute OpenAPI path template.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**

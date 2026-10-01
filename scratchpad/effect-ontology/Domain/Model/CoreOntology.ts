@@ -10,7 +10,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { IRI } from "@beep/rdf";
 import { LiteralKit, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
-import { DateTime, Effect, Order, SchemaGetter } from "effect";
+import { DateTime, Effect, Order, SchemaGetter, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -34,7 +34,7 @@ const utf8Encoder = new TextEncoder();
  * @category constants
  * @since 0.0.0
  */
-export const CORE_NAMESPACE: IRI = IRI.decodeUnknownSync("https://effect-ontology.dev/core#");
+export const CORE_NAMESPACE: IRI = Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/core#"));
 
 /**
  * Core ontology class IRIs used by tracked objects.
@@ -150,7 +150,7 @@ const canonicalEntityIdPattern = /^(?:entity-[a-f0-9]{12}|[a-z][a-z0-9_]*)$/;
 const eventIdPattern = /^event-[a-f0-9]{12}$/;
 
 const digestText = Effect.fn("CoreOntology.digestText")(function* (text: string) {
-  return yield* Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(text));
+  return yield* S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(text));
 });
 
 const withSeedDerivedIdStatics =
@@ -192,7 +192,6 @@ export const MentionId = S.String.check(
     $I.annoteSchema("MentionId", {
       description: "Deterministic short identifier for one document character span.",
     }),
-    SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics((schema) => ({
       fromCoordinates: Effect.fn("MentionId.fromCoordinates")(function* (
         documentId: string,
@@ -342,7 +341,6 @@ export const CanonicalEntityId = S.String.check(
     $I.annoteSchema("CanonicalEntityId", {
       description: "Stable canonical identifier for a persistent resolved entity.",
     }),
-    SchemaUtils.withCodecStatics(["is"]),
     withSeedDerivedIdStatics("CanonicalEntityId.fromSeed", "entity")
   );
 
@@ -458,7 +456,6 @@ export const EventId = S.String.check(
     $I.annoteSchema("EventId", {
       description: "Stable deterministic short identifier for a tracked event.",
     }),
-    SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics((schema) => ({
       fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`event-${ContentHash.idFragment(hash)}`),
     })),

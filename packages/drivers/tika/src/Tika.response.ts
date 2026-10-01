@@ -11,7 +11,6 @@
  */
 
 import { $TikaId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect } from "effect";
 import * as P from "effect/Predicate";
@@ -42,8 +41,7 @@ const tikaContentKey = "X-TIKA:content";
 export const TikaContentText = S.Trim.pipe(
   $I.annoteSchema("TikaContentText", {
     description: "Trim-normalized text emitted from the Apache Tika JSON content field.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
+  })
 );
 
 /**
@@ -151,7 +149,7 @@ export const stringifyTikaMetadata = (record: Readonly<Record<string, unknown>>)
  * @since 0.0.0
  */
 export const readTikaContentText = (record: Readonly<Record<string, unknown>>): O.Option<TikaContentText> =>
-  O.fromUndefinedOr(record[tikaContentKey]).pipe(O.flatMap(TikaContentText.decodeUnknownOption));
+  O.fromUndefinedOr(record[tikaContentKey]).pipe(O.flatMap(S.decodeUnknownOption(TikaContentText)));
 
 // Output-budget arithmetic lives with its only consumer in `Tika.server.ts`;
 // the tika-app engine declares no budget, so it is not a shared response concern.

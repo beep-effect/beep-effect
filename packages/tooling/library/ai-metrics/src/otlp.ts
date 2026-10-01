@@ -129,8 +129,7 @@ const OtlpSpanId = S.String.check(S.isPattern(/^[0-9a-f]{16}$/u)).pipe(
 export const AiMetricsOtlpAttributeValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
   $I.annoteSchema("AiMetricsOtlpAttributeValue", {
     description: "Low-cardinality or hashed attribute value emitted on AI metrics OTLP spans.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

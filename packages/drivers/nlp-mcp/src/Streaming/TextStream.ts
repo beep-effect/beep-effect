@@ -177,11 +177,7 @@ const TextEncodingBase = LiteralKit(["ascii", "latin1", "utf-8"]);
 export const TextEncoding = TextEncodingBase.pipe(
   $I.annoteSchema("TextEncoding", {
     description: "Text decoding labels accepted by the streaming text helpers.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  })
 );
 
 /**

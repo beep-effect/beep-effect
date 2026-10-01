@@ -4,6 +4,7 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { makeOperation } from "./AdapterState.ts";
 import { boxStyle, clampRatio, positionOf, releaseCapture, splitExtent } from "./DropCompiler.ts";
 import { SashDrag } from "./Gesture.models.ts";
@@ -16,7 +17,7 @@ export const Sash = (props: {
   readonly splitId: SplitId;
 }) => {
   const geometry = useAtomValue(props.state.geometry.geometryAtom);
-  const sash = A.findFirst(geometry.sashes, (candidate) => SplitId.equals(candidate.splitId, props.splitId));
+  const sash = A.findFirst(geometry.sashes, (candidate) => S.toEquivalence(SplitId)(candidate.splitId, props.splitId));
   if (O.isNone(sash)) return null;
   const attach = (node: HTMLDivElement | null): (() => void) | undefined => {
     if (P.isNull(node)) return undefined;
@@ -39,7 +40,11 @@ export const Sash = (props: {
     };
     const move = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.resizeAtom);
-      if (O.isNone(current) || !SplitId.equals(current.value.splitId, props.splitId) || current.value.extent <= 0)
+      if (
+        O.isNone(current) ||
+        !S.toEquivalence(SplitId)(current.value.splitId, props.splitId) ||
+        current.value.extent <= 0
+      )
         return;
       const delta = SashDrag.match(current.value, {
         horizontal: () => event.clientX - current.value.start.left,
@@ -60,7 +65,7 @@ export const Sash = (props: {
     };
     const up = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.resizeAtom);
-      if (O.isNone(current) || !SplitId.equals(current.value.splitId, props.splitId)) return;
+      if (O.isNone(current) || !S.toEquivalence(SplitId)(current.value.splitId, props.splitId)) return;
       const override = props.graph.registry.get(props.state.ratioOverrideAtom);
       props.graph.registry.set(props.state.resizeAtom, O.none());
       props.graph.registry.set(props.state.ratioOverrideAtom, O.none());

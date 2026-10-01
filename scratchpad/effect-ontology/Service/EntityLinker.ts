@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 
-import { Graph } from "effect";
+import { Graph, Result } from "effect";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -22,6 +22,7 @@ import { EREdge, ERNode } from "../Domain/Model/EntityResolution.ts";
 import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { dual2 } from "../Utils/Dual.ts";
+import * as S from "effect/Schema";
 
 /**
  * Get canonical ID for an entity
@@ -105,7 +106,7 @@ export const getMentionsForEntity = dual2(
     // Find all entity IDs that map to this canonical ID
     const matchingIds = R.toEntries(erg.canonicalMap)
       .filter(([_, canonical]) => canonical === canonicalId)
-      .map(([entityId]) => EntityId.decodeUnknownSync(entityId));
+      .map(([entityId]) => Result.getOrThrow(S.decodeResult(EntityId)(entityId)));
 
     // Look up MentionRecord nodes in the graph
     const mentions: Array<MentionRecord> = [];

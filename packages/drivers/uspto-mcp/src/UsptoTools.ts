@@ -52,11 +52,7 @@ export const UsptoToolErrorReason = UsptoToolErrorReasonBase.pipe(
   $I.annoteSchema("UsptoToolErrorReason", {
     description: "Redacted technical failure reasons surfaced by a USPTO MCP tool after the credential gate passes.",
   }),
-  SchemaUtils.withLiteralKitStatics(UsptoToolErrorReasonBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(UsptoToolErrorReasonBase)
 );
 
 /**
@@ -140,8 +136,7 @@ export class UsptoToolError extends S.Class<UsptoToolError>($I`UsptoToolError`)(
 export const UsptoMcpFailure = S.Union([ApiKeyRequiredFailure, UsptoToolError]).pipe(
   $I.annoteSchema("UsptoMcpFailure", {
     description: "Union of the api_key_required envelope and post-gate USPTO driver failures.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

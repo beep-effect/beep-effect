@@ -90,7 +90,7 @@ describe("ThreadStore in-memory", () => {
       "creates a thread, appends ordered turns, and projects a timeline",
       Effect.fnUntraced(function* () {
         const store = yield* makeTestThreadStore;
-        const workspaceId = yield* WorkspaceIdentity.WorkspaceId.decodeUnknownEffect(2);
+        const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(2);
 
         const thread = yield* store.createThread({ title: "Matter intake", workspaceId });
         expect(thread.title).toBe("Matter intake");
@@ -140,8 +140,8 @@ describe("ThreadStore in-memory", () => {
       "isolates threads and turns by workspace and thread id",
       Effect.fnUntraced(function* () {
         const store = yield* makeTestThreadStore;
-        const workspaceA = yield* WorkspaceIdentity.WorkspaceId.decodeUnknownEffect(2);
-        const workspaceB = yield* WorkspaceIdentity.WorkspaceId.decodeUnknownEffect(3);
+        const workspaceA = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(2);
+        const workspaceB = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(3);
 
         const threadA = yield* store.createThread({ title: "Thread A", workspaceId: workspaceA });
         const threadB = yield* store.createThread({ title: "Thread B", workspaceId: workspaceB });
@@ -180,7 +180,7 @@ describe("ThreadStore in-memory", () => {
       Effect.fnUntraced(function* () {
         const concurrency = 8;
         const store = yield* makeInMemoryThreadStore();
-        const workspaceId = yield* WorkspaceIdentity.WorkspaceId.decodeUnknownEffect(2);
+        const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(2);
 
         const created = yield* Effect.all(
           A.makeBy(concurrency, (index) => store.createThread({ title: `Concurrent ${index}`, workspaceId })),
@@ -237,7 +237,7 @@ describe("ThreadStore in-memory", () => {
       "maps public-id generation failures to ThreadStoreUnavailable",
       Effect.fnUntraced(function* () {
         const store = yield* makeInMemoryThreadStore();
-        const workspaceId = yield* WorkspaceIdentity.WorkspaceId.decodeUnknownEffect(2);
+        const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(2);
         const error = yield* store.createThread({ title: "Unavailable", workspaceId }).pipe(Effect.flip);
 
         expect(error._tag).toBe("ThreadStoreUnavailable");
@@ -282,7 +282,7 @@ describe("ThreadStore in-memory", () => {
       "sets an empty thread title once",
       Effect.fnUntraced(function* () {
         const store = yield* makeTestThreadStore;
-        const workspaceId = yield* WorkspaceIdentity.WorkspaceId.decodeUnknownEffect(2);
+        const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(2);
 
         const thread = yield* store.createThread({ title: "New thread", workspaceId });
 
@@ -404,7 +404,7 @@ describe("ThreadStore in-memory", () => {
       "stamps rows from the clock, and a rename advances updatedAt without restamping createdAt",
       Effect.fnUntraced(function* () {
         const store = yield* makeTestThreadStore;
-        const workspaceId = yield* WorkspaceIdentity.WorkspaceId.decodeUnknownEffect(2);
+        const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(2);
         const createdTime = yield* Clock.currentTimeMillis;
 
         const thread = yield* store.createThread({ title: "New thread", workspaceId });

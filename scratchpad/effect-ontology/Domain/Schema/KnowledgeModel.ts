@@ -59,7 +59,6 @@ export const ClaimId = S.String.check(
     $I.annoteSchema("ClaimId", {
       description: "Deterministic compact identifier for one extracted claim.",
     }),
-    SchemaUtils.withCodecStatics(["is"]),
     withContentHashIdStatics("claim")
   );
 
@@ -106,7 +105,6 @@ export const AssertionId = S.String.check(
     $I.annoteSchema("AssertionId", {
       description: "Deterministic compact identifier for one curated assertion.",
     }),
-    SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
     withContentHashIdStatics("assertion")
   );
 
@@ -153,7 +151,6 @@ export const DerivedAssertionId = S.String.check(
     $I.annoteSchema("DerivedAssertionId", {
       description: "Deterministic compact identifier for one rule-derived assertion.",
     }),
-    SchemaUtils.withCodecStatics(["is"]),
     withContentHashIdStatics("derived")
   );
 
@@ -202,8 +199,7 @@ export const RuleId = S.String.check(
     S.brand("RuleId"),
     $I.annoteSchema("RuleId", {
       description: "Canonical lowercase identifier for a reasoning rule.",
-    }),
-    SchemaUtils.withCodecStatics(["is"])
+    })
   );
 
 /**
@@ -269,8 +265,7 @@ export const TextSpan = LegacyTextSpan.pipe(
   }),
   $I.annoteSchema("TextSpan", {
     description: "Legacy text-span ingress decoding to the canonical provenance TextAnchor.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeEffect"])
+  })
 );
 
 /**

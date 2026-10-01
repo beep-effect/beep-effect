@@ -14,7 +14,7 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  */
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils, Sha256Hex } from "@beep/schema";
-import { Match } from "effect";
+import { Match, Result } from "effect";
 import type * as Brand from "effect/Brand";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -138,8 +138,7 @@ export const LegacyContentHashPrefix = S.String.check(
       description:
         "Ingress-only legacy fingerprint containing the first 16 lowercase hexadecimal characters of a SHA-256 digest.",
       documentation: "This value is collision-sensitive and is not canonical content identity.",
-    }),
-    SchemaUtils.withCodecStatics(["is"])
+    })
   );
 
 /**
@@ -191,7 +190,6 @@ export const ContentHash = Sha256Hex.pipe(
   $I.annoteSchema("ContentHash", {
     description: "Canonical content identity represented by a complete lowercase SHA-256 digest.",
   }),
-  SchemaUtils.withCodecStatics(["decodeEffect", "decodeUnknownSync", "is"]),
   SchemaUtils.withStatics((schema) => ({
     prefix: (hash: typeof schema.Type): LegacyContentHashPrefix => LegacyContentHashPrefix.make(Str.takeLeft(16)(hash)),
     idFragment: (hash: typeof schema.Type): string => Str.takeLeft(12)(hash),
@@ -276,8 +274,7 @@ export const IdempotencyKey = Sha256Hex.pipe(
       "Canonical full-length SHA-256 digest used as an idempotency key after hashing a stable operation description.",
     documentation:
       "The schema validates digest shape only; uniqueness depends on the canonical operation data supplied to the hash.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -328,11 +325,10 @@ export type IdempotencyKey = typeof IdempotencyKey.Type;
  * @since 0.0.0
  */
 const GcsBucketEncoded = S.String.check(GcsBucketChecks).pipe(
-  S.brand("GcsBucket"),
-  SchemaUtils.withCodecStatics(["is"])
+  S.brand("GcsBucket")
 );
 
-const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => GcsBucketEncoded.is(input)).annotate({
+const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => S.is(GcsBucketEncoded)(input)).annotate({
   toCodecArbitrary: () => new SchemaAST.Link(S.toType(GcsBucketEncoded).ast, SchemaTransformation.passthrough()),
 });
 
@@ -366,8 +362,7 @@ export const GcsBucket = GcsBucketEncoded.pipe(
       "Portable 3-63 character Google Cloud Storage bucket name excluding IPv4 addresses and explicitly documented Google-reserved forms.",
     documentation:
       "Provider-side availability and Google's broader close-misspelling policy must still be checked when creating the bucket.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "decodeUnknownSync", "is"])
+  })
 );
 
 /**
@@ -416,11 +411,10 @@ export type GcsBucket = typeof GcsBucket.Type;
  * @since 0.0.0
  */
 const GcsUriEncoded = S.TemplateLiteral(["gs://", GcsBucketEncoded, "/", GcsObjectName]).pipe(
-  S.brand("GcsUri"),
-  SchemaUtils.withCodecStatics(["is"])
+  S.brand("GcsUri")
 );
 
-const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => GcsUriEncoded.is(input)).annotate({
+const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => S.is(GcsUriEncoded)(input)).annotate({
   toCodecArbitrary: () => new SchemaAST.Link(S.toType(GcsUriEncoded).ast, SchemaTransformation.passthrough()),
 });
 
@@ -457,13 +451,12 @@ export const GcsUri = GcsUriEncoded.pipe(
     documentation:
       "The schema validates URI components locally; bucket existence, permissions, and hierarchical-namespace configuration require GCS.",
   }),
-  SchemaUtils.withCodecStatics(["decodeEffect", "decodeUnknownEffect", "decodeUnknownSync", "is"]),
   SchemaUtils.withStatics((schema) => {
     const fromParts = dual(2, (bucket: GcsBucket, objectPath: GcsObject) =>
-      schema.decodeUnknownSync(`gs://${bucket}/${objectPath}`)
+      Result.getOrThrow(S.decodeUnknownResult(schema)(`gs://${bucket}/${objectPath}`))
     );
     const resolveStoragePath = Match.type<typeof schema.Type | GcsObject>().pipe(
-      Match.when(schema.is, (value) => (_bucket: GcsBucket) => value),
+      Match.when(S.is(schema), (value) => (_bucket: GcsBucket) => value),
       Match.orElse((objectPath) => (bucket: GcsBucket) => fromParts(bucket, objectPath))
     );
     const resolve = dual(2, (storagePath: typeof schema.Type | GcsObject, bucket: GcsBucket) =>
@@ -548,11 +541,10 @@ const GcsObjectChecks = S.makeFilterGroup(
  * @since 0.0.0
  */
 const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(
-  S.brand("GcsObject"),
-  SchemaUtils.withCodecStatics(["is"])
+  S.brand("GcsObject")
 );
 
-const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => GcsObjectEncoded.is(input)).annotate({
+const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => S.is(GcsObjectEncoded)(input)).annotate({
   toCodecArbitrary: () => new SchemaAST.Link(S.toType(GcsObjectEncoded).ast, SchemaTransformation.passthrough()),
 });
 
@@ -584,8 +576,7 @@ export const GcsObject = GcsObjectEncoded.pipe(
     description: "Canonical slash-separated GCS object path derived from the provider-valid object-name schema.",
     documentation:
       "Leading, trailing, and consecutive slashes are rejected to prevent multiple textual forms of one application path.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -638,8 +629,7 @@ export const Namespace = S.String.check(
     $I.annoteSchema("Namespace", {
       description:
         "Lowercase ontology namespace identifier beginning with a letter and containing letters, digits, or hyphens.",
-    }),
-    SchemaUtils.withCodecStatics(["decodeEffect", "decodeUnknownSync", "is"])
+    })
   );
 
 /**
@@ -688,8 +678,7 @@ export const OntologyName = S.String.check(
     $I.annoteSchema("OntologyName", {
       description:
         "Lowercase ontology name beginning with a letter and containing letters, digits, hyphens, or underscores.",
-    }),
-    SchemaUtils.withCodecStatics(["decodeEffect", "is"])
+    })
   );
 
 /**
@@ -739,7 +728,6 @@ export const OntologyVersion = S.TemplateLiteral([Namespace, "/", OntologyName, 
     description:
       "Ontology version identifier composed from a namespace, ontology name, and complete SHA-256 content identity.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
   SchemaUtils.withStatics((schema) => ({
     fromParts: (namespace: Namespace, name: OntologyName, hash: ContentHash): typeof schema.Type =>
       schema.make(`${namespace}/${name}@${hash}`),
@@ -803,7 +791,6 @@ const DocumentIdSchema = S.String.check(
  * @since 0.0.0
  */
 export const DocumentId = DocumentIdSchema.pipe(
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
   withContentHashIdStatics("doc")
 );
 
@@ -852,7 +839,6 @@ export const ChunkId = S.String.check(
       description:
         "Deterministic chunk identifier combining a 12-character document fingerprint and canonical chunk index.",
     }),
-    SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics((schema) => ({
       fromDocument: dual(2, (documentId: DocumentId, index: number): typeof schema.Type =>
         schema.make(`${documentId}-chunk-${index}`)
@@ -898,8 +884,7 @@ export type ChunkId = typeof ChunkId.Type;
 export const ExtractionRunId = DocumentIdSchema.pipe(
   $I.annoteSchema("ExtractionRunId", {
     description: "Document identifier reused as the correlation identifier for its extraction run.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -948,7 +933,6 @@ export const BatchId = S.String.check(
       documentation:
         "The 48-bit truncated suffix is compact but collision-sensitive; consumers must define collision handling.",
     }),
-    SchemaUtils.withCodecStatics(["decodeEffect", "decodeOption", "decodeUnknownEffect", "decodeUnknownSync", "is"]),
     withContentHashIdStatics("batch")
   );
 

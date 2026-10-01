@@ -7,7 +7,6 @@
 "use client";
 
 import { $UiId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import {
   Combobox,
   ComboboxContent,
@@ -119,8 +118,7 @@ export const PhoneNumberE164 = S.String.check(
 ).pipe(
   $I.annoteSchema("PhoneNumberE164", {
     description: "Valid E.164 phone number accepted by PhoneInput.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
+  })
 );
 
 /**
@@ -188,7 +186,7 @@ export const parsePhoneDraft: {
   return pipe(
     formatter.getNumberValue() ?? parsePhoneNumberFromString(value, country)?.number,
     O.fromNullishOr,
-    O.filter(PhoneNumberE164.is)
+    O.filter(S.is(PhoneNumberE164))
   );
 });
 
@@ -207,7 +205,7 @@ export const parsePhoneDraft: {
  * @category utilities
  * @since 0.0.0
  */
-export const isValidPhoneNumberE164 = (value: string): boolean => PhoneNumberE164.is(value);
+export const isValidPhoneNumberE164 = (value: string): boolean => S.is(PhoneNumberE164)(value);
 
 /**
  * Props for a country-aware phone input that emits E.164 values.

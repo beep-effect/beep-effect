@@ -20,6 +20,7 @@ import {
   UriFunctionName,
 } from "../interpreter/Interpreter.model.ts";
 import { boundedData, coerceToString } from "./StdLib.value.ts";
+import * as S from "effect/Schema";
 
 export {
   UrlMethod,
@@ -159,7 +160,7 @@ export const invokeUriFunction: {
   const value = Result.try({
     try: () => uriArgument(args[0], `${ref.name} input`),
     catch: (error) =>
-      InterpreterFailure.is(error)
+      S.is(InterpreterFailure)(error)
         ? error
         : InterpreterRuntimeError.new(`${ref.name} input could not be converted to data.`, node),
   });

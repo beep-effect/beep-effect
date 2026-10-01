@@ -31,9 +31,9 @@ describe("effect-ontology shared model schemas", () => {
 
   it("keeps attribute records JSON-safe and provides a schema-owned empty value", () => {
     expect(Attributes.empty()).toEqual({});
-    expect(Attributes.is({ active: true, confidence: 0.95, source: "article" })).toBe(true);
-    expect(AttributeValue.is(Number.NaN)).toBe(false);
-    expect(AttributeValue.is(Number.POSITIVE_INFINITY)).toBe(false);
+    expect(S.is(Attributes)({ active: true, confidence: 0.95, source: "article" })).toBe(true);
+    expect(S.is(AttributeValue)(Number.NaN)).toBe(false);
+    expect(S.is(AttributeValue)(Number.POSITIVE_INFINITY)).toBe(false);
   });
 
   it("normalizes nullish confidence at the schema boundary", () => {
@@ -51,9 +51,9 @@ describe("effect-ontology shared model schemas", () => {
     const same = EntityId.make("cristiano_ronaldo");
     const other = EntityId.make("lionel_messi");
 
-    expect(EntityId.equivalence(first, same)).toBe(true);
-    expect(EntityId.equivalence(first, other)).toBe(false);
-    expect(EntityId.is("_private")).toBe(false);
-    expect(EntityId.is("Upper_Case")).toBe(false);
+    expect(S.toEquivalence(EntityId)(first, same)).toBe(true);
+    expect(S.toEquivalence(EntityId)(first, other)).toBe(false);
+    expect(S.is(EntityId)("_private")).toBe(false);
+    expect(S.is(EntityId)("Upper_Case")).toBe(false);
   });
 });

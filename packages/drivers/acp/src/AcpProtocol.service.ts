@@ -235,12 +235,7 @@ export const AcpProtocolLogEvent = pipe(
   $I.annoteSchema("AcpProtocolLogEvent", {
     description: "Structured log event emitted by the ACP protocol adapter.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("direction"),
-      SchemaUtils.withStatics(() => ({ decodeUnknownSync: schema.decodeUnknownSync }))
-    )
+  S.toTaggedUnion("direction")
 );
 
 /**
@@ -344,12 +339,7 @@ export const AcpIncomingNotification = pipe(
   $I.annoteSchema("AcpIncomingNotification", {
     description: "Schema for notifications decoded from the ACP peer stream.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ decodeUnknownSync: schema.decodeUnknownSync }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**
@@ -814,7 +804,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     ),
     Effect.matchEffect({
       onFailure: (error) => {
-        const normalized: AcpError.AcpError = AcpError.AcpError.is(error)
+        const normalized: AcpError.AcpError = S.is(AcpError.AcpError)(error)
           ? error
           : AcpError.AcpTransportError.make({
               cause: O.some(error),

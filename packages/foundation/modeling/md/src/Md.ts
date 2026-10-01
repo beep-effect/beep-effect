@@ -6,7 +6,7 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Effect, Match } from "effect";
+import { Effect, Match, Result } from "effect";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -73,7 +73,6 @@ import {
   documentSafetyIssues,
   refineSafeDocument,
 } from "./Md.safe.ts";
-import type { Result } from "effect";
 import type {
   AdmonitionKind,
   Block,
@@ -358,7 +357,7 @@ const isListItemChildInputArray = (input: ListItemContent): input is ReadonlyArr
   A.isArray(input);
 
 const isListItemContentBlockValue = (input: ListItemContent): boolean =>
-  BlockSchema.is(input) || (A.isArray(input) && A.some(input, BlockSchema.is));
+  S.is(BlockSchema)(input) || (A.isArray(input) && A.some(input, S.is(BlockSchema)));
 
 const isBlockTemplateFormattingChunk = (chunk: string): boolean =>
   Str.isEmpty(Str.trim(chunk)) && blockTemplateFormattingLinePattern.test(chunk);
@@ -414,7 +413,7 @@ const asBlockArray = (input: BlockContent): ReadonlyArray<Block> =>
 const hasBlockTemplateNeighbor = (
   value: O.Option<BlockTemplateValue>,
   previousValue: O.Option<BlockTemplateValue>
-): boolean => O.exists(value, BlockSchema.is) || O.exists(previousValue, BlockSchema.is);
+): boolean => O.exists(value, S.is(BlockSchema)) || O.exists(previousValue, S.is(BlockSchema));
 
 interface BlockTemplateState {
   readonly out: ReadonlyArray<Block>;
@@ -443,7 +442,7 @@ const templateToBlockArray = (
       return O.match(value, {
         onNone: () => withChunk,
         onSome: (templateValue) =>
-          BlockSchema.is(templateValue)
+          S.is(BlockSchema)(templateValue)
             ? {
                 out: A.appendAll(flushBlockTemplateInline(withChunk).out, asBlockArray(templateValue)),
                 pending: A.empty<Inline>(),
@@ -928,7 +927,9 @@ export const ol: {
   (children: ReadonlyArray<ListItemInput>, options: { readonly start?: number } = {}): Ol =>
     Ol.make({
       children: A.map(children, asListItem),
-      ...(P.isNumber(options.start) ? { start: OrderedListStart.decodeUnknownSync(options.start) } : {}),
+      ...(P.isNumber(options.start)
+        ? { start: Result.getOrThrow(S.decodeResult(OrderedListStart)(options.start)) }
+        : {}),
     })
 );
 
@@ -1017,7 +1018,7 @@ export const pre: {
 } = dual(
   isLeadingContentCall,
   (value: string, options: { readonly language?: string } = {}): Pre =>
-    Pre.make({ value, language: O.flatMap(O.fromUndefinedOr(options.language), CodeFenceLanguage.decodeOption) })
+    Pre.make({ value, language: O.flatMap(O.fromUndefinedOr(options.language), S.decodeOption(CodeFenceLanguage)) })
 );
 
 /**

@@ -83,7 +83,7 @@ const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
       })
     )
   );
-  return yield* Sha256HexFromBytes.decodeEffect(strToU8(encoded)).pipe(
+  return yield* S.decodeEffect(Sha256HexFromBytes)(strToU8(encoded)).pipe(
     Effect.mapError((cause) =>
       ReplayError.make({
         cause,

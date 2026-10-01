@@ -49,7 +49,7 @@ const decodePositiveInteger = Effect.fnUntraced(function* (
 const decodePriority = Effect.fnUntraced(function* (
   raw: string
 ): Effect.fn.Return<AdmissionPriority, PolicyDecodeError> {
-  return yield* AdmissionPriority.decodeUnknownEffect(raw).pipe(
+  return yield* S.decodeUnknownEffect(AdmissionPriority)(raw).pipe(
     Effect.mapError(() => schemaFailure("A-Box declared an unknown admission priority."))
   );
 });

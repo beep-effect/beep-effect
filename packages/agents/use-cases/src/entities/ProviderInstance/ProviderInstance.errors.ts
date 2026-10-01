@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import * as S from "effect/Schema";
 
@@ -101,12 +100,7 @@ export const ProviderActionError = S.Union([
 ]).pipe(
   // fallow-ignore-next-line code-duplication -- preserve the selected guard through Effect's tagged-union rebuild
   $I.annoteSchema("ProviderActionError", { description: "Client-safe provider-instance action failures." }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**

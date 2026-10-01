@@ -15,7 +15,6 @@ import { OperationId, SourceArtifact } from "@beep/file-processing/Artifact";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
-import { SchemaUtils } from "@beep/schema";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import { IrToLawExtractionError } from "../IrToLaw/index.ts";
@@ -151,8 +150,7 @@ export const OfficeActionReviewError = S.Union([
 ]).pipe(
   $I.annoteSchema("OfficeActionReviewError", {
     description: "Failure union for the law-practice office-action review loop.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption", "is"])
+  })
 );
 
 /**

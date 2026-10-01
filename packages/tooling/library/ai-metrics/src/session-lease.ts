@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import { constant, dual } from "effect/Function";
@@ -29,12 +29,6 @@ const $I = $RepoAiMetricsId.create("session-lease");
 const sessionLeaseSchemaVersion = "telemetry-v2/session-lease/v1";
 const sessionLeaseExpiryCandidateSchemaVersion = "telemetry-v2/session-lease-expiry-candidate/v1";
 const sessionLeaseTombstoneSchemaVersion = "telemetry-v2/session-lease-tombstone/v1";
-
-const withJsonEffectStatics = <Schema extends S.Top>(schema: Schema) =>
-  SchemaUtils.withStatics(schema, (self) => ({
-    decodeJsonEffect: S.decodeUnknownEffect(S.fromJsonString(self)),
-    encodeJsonEffect: S.encodeUnknownEffect(S.fromJsonString(self)),
-  }));
 
 /**
  * Strictly attributed wait that keeps a live session from being tombstoned.
@@ -273,8 +267,7 @@ export const SessionLeaseEvent = S.Union([
   S.toTaggedUnion("event"),
   $I.annoteSchema("SessionLeaseEvent", {
     description: "Start, renewal, exact wait transition, or terminal event for one active-session lease.",
-  }),
-  withJsonEffectStatics
+  })
 );
 
 /**
@@ -285,6 +278,25 @@ export const SessionLeaseEvent = S.Union([
  * @since 0.0.0
  */
 export type SessionLeaseEvent = typeof SessionLeaseEvent.Type;
+
+/**
+ * SessionLeaseEvent encoded as one JSON string, the line format the telemetry-v2 store
+ * appends and reads back.
+ *
+ * **Example** (Round-trip a session-lease event line)
+ *
+ * ```ts
+ * import { SessionLeaseEventJson } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * const decode = S.decodeUnknownEffect(SessionLeaseEventJson)
+ * console.log(typeof decode) // "function"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionLeaseEventJson = S.fromJsonString(SessionLeaseEvent);
 
 const SessionLeaseActiveOutcome = LiteralKit([
   "started",
@@ -363,8 +375,7 @@ export const SessionLeaseTransition = S.Union([
   S.toTaggedUnion("status"),
   $I.annoteSchema("SessionLeaseTransition", {
     description: "Active, ended, or content-free quarantined session-lease transition.",
-  }),
-  withJsonEffectStatics
+  })
 );
 
 /**
@@ -375,6 +386,25 @@ export const SessionLeaseTransition = S.Union([
  * @since 0.0.0
  */
 export type SessionLeaseTransition = typeof SessionLeaseTransition.Type;
+
+/**
+ * SessionLeaseTransition encoded as one JSON string, the line format the telemetry-v2 store
+ * appends and reads back.
+ *
+ * **Example** (Round-trip a session-lease transition line)
+ *
+ * ```ts
+ * import { SessionLeaseTransitionJson } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * const decode = S.decodeUnknownEffect(SessionLeaseTransitionJson)
+ * console.log(typeof decode) // "function"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionLeaseTransitionJson = S.fromJsonString(SessionLeaseTransition);
 
 const quarantineTransition = (
   event: SessionLeaseEvent,
@@ -723,8 +753,7 @@ export const SessionLeaseReconciliation = S.Union([
   S.toTaggedUnion("status"),
   $I.annoteSchema("SessionLeaseReconciliation", {
     description: "Explicit tombstone decision retaining every veto as a bounded deferral reason.",
-  }),
-  withJsonEffectStatics
+  })
 );
 
 /**
@@ -735,6 +764,25 @@ export const SessionLeaseReconciliation = S.Union([
  * @since 0.0.0
  */
 export type SessionLeaseReconciliation = typeof SessionLeaseReconciliation.Type;
+
+/**
+ * SessionLeaseReconciliation encoded as one JSON string, the line format the telemetry-v2 store
+ * appends and reads back.
+ *
+ * **Example** (Round-trip a session-lease reconciliation line)
+ *
+ * ```ts
+ * import { SessionLeaseReconciliationJson } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * const decode = S.decodeUnknownEffect(SessionLeaseReconciliationJson)
+ * console.log(typeof decode) // "function"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SessionLeaseReconciliationJson = S.fromJsonString(SessionLeaseReconciliation);
 
 const deferReconciliation = (
   candidate: SessionLeaseExpiryCandidate,

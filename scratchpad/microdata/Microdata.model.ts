@@ -329,8 +329,7 @@ export const HtmlYearString = S.String.check(
   S.brand("HtmlYearString"),
   $I.annoteSchema("HtmlYearString", {
     description: "Positive proleptic-Gregorian year in the WHATWG HTML lexical form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -366,8 +365,7 @@ export const HtmlMonthString = S.String.check(
   S.brand("HtmlMonthString"),
   $I.annoteSchema("HtmlMonthString", {
     description: "Proleptic-Gregorian year and month in the WHATWG HTML lexical form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -403,8 +401,7 @@ export const HtmlDateString = S.String.check(
   S.brand("HtmlDateString"),
   $I.annoteSchema("HtmlDateString", {
     description: "Calendar-valid proleptic-Gregorian date in the WHATWG HTML lexical form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -439,8 +436,7 @@ export const HtmlYearlessDateString = S.String.check(
   S.brand("HtmlYearlessDateString"),
   $I.annoteSchema("HtmlYearlessDateString", {
     description: "Month and day in the WHATWG HTML yearless-date lexical form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -476,8 +472,7 @@ export const HtmlTimeString = S.String.check(
   S.brand("HtmlTimeString"),
   $I.annoteSchema("HtmlTimeString", {
     description: "Time of day in the WHATWG HTML lexical form at millisecond precision.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -511,8 +506,7 @@ export const HtmlLocalDateTimeString = S.String.check(
   makeStringCheck($I`HtmlLocalDateTimeStringCheck`, "a valid HTML local date and time string", isHtmlLocalDateTime)
 ).pipe(
   S.brand("HtmlLocalDateTimeString"),
-  $I.annoteSchema("HtmlLocalDateTimeString", { description: "Local date and time in the WHATWG HTML lexical form." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  $I.annoteSchema("HtmlLocalDateTimeString", { description: "Local date and time in the WHATWG HTML lexical form." })
 );
 
 /**
@@ -550,8 +544,7 @@ export const HtmlTimeZoneOffsetString = S.String.check(
   makePatternCheck($I`HtmlTimeZoneOffsetStringCheck`, "a valid HTML time-zone offset string", htmlTimeZoneOffsetPattern)
 ).pipe(
   S.brand("HtmlTimeZoneOffsetString"),
-  $I.annoteSchema("HtmlTimeZoneOffsetString", { description: "Time-zone offset in the WHATWG HTML lexical form." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("HtmlTimeZoneOffsetString", { description: "Time-zone offset in the WHATWG HTML lexical form." })
 );
 
 /**
@@ -587,8 +580,7 @@ export const HtmlGlobalDateTimeString = S.String.check(
   S.brand("HtmlGlobalDateTimeString"),
   $I.annoteSchema("HtmlGlobalDateTimeString", {
     description: "Globally qualified date and time in the WHATWG HTML lexical form.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -621,8 +613,7 @@ export const HtmlWeekString = S.String.check(
   makeStringCheck($I`HtmlWeekStringCheck`, "a valid HTML week string", isHtmlWeek)
 ).pipe(
   S.brand("HtmlWeekString"),
-  $I.annoteSchema("HtmlWeekString", { description: "Calendar-valid ISO week in the WHATWG HTML lexical form." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("HtmlWeekString", { description: "Calendar-valid ISO week in the WHATWG HTML lexical form." })
 );
 
 /**
@@ -696,8 +687,7 @@ export const HtmlIsoDurationString = S.String.check(
   S.brand("HtmlIsoDurationString"),
   $I.annoteSchema("HtmlIsoDurationString", {
     description: "Restricted ISO 8601 duration lexical form admitted by HTML.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -736,8 +726,7 @@ export const HtmlHumanDurationString = S.String.check(
   makeStringCheck($I`HtmlHumanDurationStringCheck`, "a valid HTML human-readable duration string", isHtmlHumanDuration)
 ).pipe(
   S.brand("HtmlHumanDurationString"),
-  $I.annoteSchema("HtmlHumanDurationString", { description: "Human-readable duration lexical form admitted by HTML." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("HtmlHumanDurationString", { description: "Human-readable duration lexical form admitted by HTML." })
 );
 
 /**
@@ -768,8 +757,7 @@ export type HtmlHumanDurationString = typeof HtmlHumanDurationString.Type;
  * @since 0.0.0
  */
 export const HtmlDurationString = S.Union([HtmlIsoDurationString, HtmlHumanDurationString]).pipe(
-  $I.annoteSchema("HtmlDurationString", { description: "Either duration lexical form admitted by the HTML Standard." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("HtmlDurationString", { description: "Either duration lexical form admitted by the HTML Standard." })
 );
 
 /**
@@ -810,8 +798,7 @@ export const HtmlUrlTokenString = S.String.pipe(
   S.brand("HtmlUrlTokenString"),
   $I.annoteSchema("HtmlUrlTokenString", {
     description: "URL parser input after HTML ASCII-whitespace preprocessing, including an empty relative URL.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -848,8 +835,7 @@ export const HtmlUrlPotentiallySurroundedBySpaces = S.String.pipe(
   }),
   $I.annoteSchema("HtmlUrlPotentiallySurroundedBySpaces", {
     description: "HTML URL text decoded after stripping surrounding ASCII whitespace.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -897,8 +883,7 @@ export const makeHtmlUrlFromString = (base: URL) =>
       ),
       encode: SchemaGetter.transformEffect(SchemaParser.decodeEffect(HtmlUrlTokenString)),
     }),
-    $I.annoteSchema("HtmlUrlFromString", { description: "WHATWG URL resolved against an explicit document base." }),
-    SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+    $I.annoteSchema("HtmlUrlFromString", { description: "WHATWG URL resolved against an explicit document base." })
   );
 
 /**
@@ -924,14 +909,13 @@ export const MicrodataSerializedUrlString = S.String.pipe(
     makeStringCheck(
       $I`MicrodataSerializedUrlStringCheck`,
       "an absolute serialized URL without surrounding ASCII whitespace",
-      (value) => HtmlUrlTokenString.is(value) && isAbsoluteUrlString(value)
+      (value) => S.is(HtmlUrlTokenString)(value) && isAbsoluteUrlString(value)
     )
   ),
   S.brand("MicrodataSerializedUrlString"),
   $I.annoteSchema("MicrodataSerializedUrlString", {
     description: "Absolute serialized URL emitted by the HTML microdata value algorithm.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -968,8 +952,7 @@ export const MicrodataUrlFromString = MicrodataSerializedUrlString.pipe(
   }),
   $I.annoteSchema("MicrodataUrlFromString", {
     description: "Microdata URL-property string decoded to a platform URL.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1060,7 +1043,7 @@ const parseHtmlIsoDuration = (value: string): O.Option<Duration.Duration> => {
 };
 
 const parseHtmlDuration = (value: HtmlDurationString): O.Option<Duration.Duration> =>
-  HtmlIsoDurationString.is(value) ? parseHtmlIsoDuration(value) : parseHtmlHumanDuration(value);
+  S.is(HtmlIsoDurationString)(value) ? parseHtmlIsoDuration(value) : parseHtmlHumanDuration(value);
 
 const isHtmlDurationValue = (value: Duration.Duration): boolean =>
   pipe(
@@ -1124,7 +1107,6 @@ export const HtmlDurationValue = S.Duration.check(
   $I.annoteSchema("HtmlDurationValue", {
     description: "Finite non-negative Effect duration representable at HTML millisecond precision.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
   SchemaUtils.withStatics(() => ({
     parse: parseHtmlDuration,
     format: formatHtmlDuration,
@@ -1182,8 +1164,7 @@ export const MicrodataDurationFromString = HtmlDurationString.pipe(
   }),
   $I.annoteSchema("MicrodataDurationFromString", {
     description: "HTML duration lexical value decoded to an Effect duration.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "encodeEffect"])
+  })
 );
 
 /**
@@ -1230,8 +1211,7 @@ export const MicrodataDateTimeFromString = HtmlGlobalDateTimeString.pipe(
   }),
   $I.annoteSchema("MicrodataDateTimeFromString", {
     description: "HTML global date-time lexical value decoded to DateTime.Utc.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1267,8 +1247,7 @@ export const XsdIntegerString = S.String.check(
   S.brand("XsdIntegerString"),
   $I.annoteSchema("XsdIntegerString", {
     description: "XML Schema integer lexical value recognized by the Microdata-to-RDF algorithm.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -1299,8 +1278,7 @@ export const XsdIntegerValue = S.BigInt.pipe(
   S.brand("XsdIntegerValue"),
   $I.annoteSchema("XsdIntegerValue", {
     description: "Arbitrary-precision integer decoded from XML Schema integer lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -1342,8 +1320,7 @@ export const XsdIntegerFromString = XsdIntegerString.pipe(
   }),
   $I.annoteSchema("XsdIntegerFromString", {
     description: "XML Schema integer string decoded to a branded arbitrary-precision integer.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1401,7 +1378,6 @@ export const XsdDoubleString = S.String.check(
   $I.annoteSchema("XsdDoubleString", {
     description: "XML Schema double lexical value recognized by the Microdata-to-RDF algorithm.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"]),
   SchemaUtils.withStatics(() => ({
     parse: parseXsdDouble,
     format: formatXsdDouble,
@@ -1449,8 +1425,7 @@ export const XsdDoubleFromString = XsdDoubleString.pipe(
   }),
   $I.annoteSchema("XsdDoubleFromString", {
     description: "XML Schema double string decoded to a branded IEEE-754 binary64 value.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "encodeEffect"])
+  })
 );
 
 /**
@@ -1483,8 +1458,7 @@ export type XsdDoubleFromString = typeof XsdDoubleFromString.Type;
 export const MicrodataNumericValueFromString = S.Union([XsdIntegerFromString, XsdDoubleFromString]).pipe(
   $I.annoteSchema("MicrodataNumericValueFromString", {
     description: "Integer-first numeric codec used for microdata data and meter values.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1500,7 +1474,7 @@ const MicrodataNonNumericString = S.String.check(
   makeStringCheck(
     $I`MicrodataNonNumericStringCheck`,
     "a non-numeric microdata string",
-    (value) => !XsdIntegerString.is(value) && !XsdDoubleString.is(value)
+    (value) => !S.is(XsdIntegerString)(value) && !S.is(XsdDoubleString)(value)
   )
 ).pipe(
   $I.annoteSchema("MicrodataNonNumericString", {
@@ -1533,8 +1507,7 @@ export const MicrodataDataValueFromString = S.Union([
 ]).pipe(
   $I.annoteSchema("MicrodataDataValueFromString", {
     description: "Microdata data or meter value with numeric typing and a string fallback.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1577,8 +1550,7 @@ export const MicrodataXsdDateString = HtmlDateString.check(
   S.brand("MicrodataXsdDateString"),
   $I.annoteSchema("MicrodataXsdDateString", {
     description: "HTML date value that also inhabits XML Schema date lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1618,8 +1590,7 @@ export const MicrodataXsdYearMonthString = HtmlMonthString.check(
   S.brand("MicrodataXsdYearMonthString"),
   $I.annoteSchema("MicrodataXsdYearMonthString", {
     description: "HTML month value that also inhabits XML Schema gYearMonth lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1655,8 +1626,7 @@ export const MicrodataXsdYearString = HtmlYearString.check(
   S.brand("MicrodataXsdYearString"),
   $I.annoteSchema("MicrodataXsdYearString", {
     description: "HTML year value that also inhabits XML Schema gYear lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1692,8 +1662,7 @@ export const MicrodataXsdTimeString = HtmlTimeString.check(
   S.brand("MicrodataXsdTimeString"),
   $I.annoteSchema("MicrodataXsdTimeString", {
     description: "HTML time value that also inhabits XML Schema time lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1706,7 +1675,7 @@ export const MicrodataXsdTimeString = HtmlTimeString.check(
 export type MicrodataXsdTimeString = typeof MicrodataXsdTimeString.Type;
 
 const isMicrodataXsdDateTime = (value: string): boolean =>
-  xsdDateTimeFromHtmlPattern.test(value) && (HtmlLocalDateTimeString.is(value) || HtmlGlobalDateTimeString.is(value));
+  xsdDateTimeFromHtmlPattern.test(value) && (S.is(HtmlLocalDateTimeString)(value) || S.is(HtmlGlobalDateTimeString)(value));
 
 /**
  * HTML date-time values that also inhabit xsd:dateTime lexical space.
@@ -1736,8 +1705,7 @@ export const MicrodataXsdDateTimeString = S.String.check(
   S.brand("MicrodataXsdDateTimeString"),
   $I.annoteSchema("MicrodataXsdDateTimeString", {
     description: "HTML date-time value that also inhabits XML Schema dateTime lexical space.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1783,8 +1751,7 @@ export const MicrodataRdfTimeValueFromString = S.Union([
 ]).pipe(
   $I.annoteSchema("MicrodataRdfTimeValueFromString", {
     description: "W3C Microdata-to-RDF value-typing order for HTML time elements.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1827,8 +1794,7 @@ export const MicrodataRuntimeValueFromString = S.Union([
 ]).pipe(
   $I.annoteSchema("MicrodataRuntimeValueFromString", {
     description: "Non-URL microdata string decoded to supported Effect-first runtime values.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1997,8 +1963,7 @@ export const VCardValueTypeString = S.String.pipe(
   S.brand("VCardValueTypeString"),
   $I.annoteSchema("VCardValueTypeString", {
     description: "Case-insensitive lexical spelling of a predefined RFC 6350 VALUE type.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2035,8 +2000,7 @@ export const VCardValueTypeFromString = VCardValueTypeString.pipe(
   }),
   $I.annoteSchema("VCardValueTypeFromString", {
     description: "Predefined RFC 6350 VALUE type normalized to its lowercase literal.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2078,8 +2042,7 @@ export const VCardIanaValueTypeString = S.String.check(
   S.brand("VCardIanaValueTypeString"),
   $I.annoteSchema("VCardIanaValueTypeString", {
     description: "Syntactically valid registered RFC 6350 VALUE extension token.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2118,8 +2081,7 @@ export const VCardExperimentalValueTypeString = S.String.check(
   S.brand("VCardExperimentalValueTypeString"),
   $I.annoteSchema("VCardExperimentalValueTypeString", {
     description: "Experimental RFC 6350 VALUE extension token beginning with x-.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2156,8 +2118,7 @@ export const VCardDeclaredValueTypeString = S.Union([
 ]).pipe(
   $I.annoteSchema("VCardDeclaredValueTypeString", {
     description: "Any predefined, registered, or experimental RFC 6350 VALUE type token.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2190,8 +2151,7 @@ export const VCardTextString = S.String.check(
   makePatternCheck($I`VCardTextStringCheck`, "an RFC 6350 text value", vCardTextPattern)
 ).pipe(
   S.brand("VCardTextString"),
-  $I.annoteSchema("VCardTextString", { description: "RFC 6350 TEXT-CHAR lexical value after content-line unfolding." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardTextString", { description: "RFC 6350 TEXT-CHAR lexical value after content-line unfolding." })
 );
 
 /**
@@ -2234,8 +2194,7 @@ export const VCardUriString = S.String.pipe(
     makePatternCheck($I`VCardUriStringCheck`, "an absolute RFC 3986 URI", vCardUriSchemePattern)
   ),
   S.brand("VCardUriString"),
-  $I.annoteSchema("VCardUriString", { description: "Absolute RFC 3986 URI lexical value admitted by RFC 6350." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardUriString", { description: "Absolute RFC 3986 URI lexical value admitted by RFC 6350." })
 );
 
 /**
@@ -2270,8 +2229,7 @@ export const VCardDateString = S.String.check(
   S.brand("VCardDateString"),
   $I.annoteSchema("VCardDateString", {
     description: "RFC 6350 DATE lexical value, including reduced and truncated forms.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -2308,8 +2266,7 @@ export const VCardTimeString = S.String.check(
   S.brand("VCardTimeString"),
   $I.annoteSchema("VCardTimeString", {
     description: "RFC 6350 TIME lexical value, including reduced, truncated, and zoned forms.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -2342,8 +2299,7 @@ export const VCardDateTimeString = S.String.check(
   makeStringCheck($I`VCardDateTimeStringCheck`, "an RFC 6350 date-time value", isVCardDateTime)
 ).pipe(
   S.brand("VCardDateTimeString"),
-  $I.annoteSchema("VCardDateTimeString", { description: "RFC 6350 DATE-TIME lexical value." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  $I.annoteSchema("VCardDateTimeString", { description: "RFC 6350 DATE-TIME lexical value." })
 );
 
 /**
@@ -2356,9 +2312,9 @@ export const VCardDateTimeString = S.String.check(
 export type VCardDateTimeString = typeof VCardDateTimeString.Type;
 
 const isVCardDateAndOrTime = (value: string): boolean =>
-  VCardDateTimeString.is(value) ||
-  VCardDateString.is(value) ||
-  (Str.startsWith("T")(value) && VCardTimeString.is(Str.slice(1)(value)));
+  S.is(VCardDateTimeString)(value) ||
+  S.is(VCardDateString)(value) ||
+  (Str.startsWith("T")(value) && S.is(VCardTimeString)(Str.slice(1)(value)));
 
 /**
  * RFC 6350 DATE-AND-OR-TIME lexical space.
@@ -2381,8 +2337,7 @@ export const VCardDateAndOrTimeString = S.String.check(
   makeStringCheck($I`VCardDateAndOrTimeStringCheck`, "an RFC 6350 date-and-or-time value", isVCardDateAndOrTime)
 ).pipe(
   S.brand("VCardDateAndOrTimeString"),
-  $I.annoteSchema("VCardDateAndOrTimeString", { description: "RFC 6350 DATE-AND-OR-TIME lexical value." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardDateAndOrTimeString", { description: "RFC 6350 DATE-AND-OR-TIME lexical value." })
 );
 
 /**
@@ -2415,8 +2370,7 @@ export type VCardDateAndOrTimeString = typeof VCardDateAndOrTimeString.Type;
 export const VCardTimestampString = S.String.pipe(
   S.check(makeStringCheck($I`VCardTimestampStringCheck`, "an RFC 6350 timestamp value", isVCardTimestamp)),
   S.brand("VCardTimestampString"),
-  $I.annoteSchema("VCardTimestampString", { description: "Complete basic-format RFC 6350 TIMESTAMP lexical value." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardTimestampString", { description: "Complete basic-format RFC 6350 TIMESTAMP lexical value." })
 );
 
 /**
@@ -2456,8 +2410,7 @@ export const VCardZonedTimestampString = VCardTimestampString.check(
   S.brand("VCardZonedTimestampString"),
   $I.annoteSchema("VCardZonedTimestampString", {
     description: "Zoned RFC 6350 TIMESTAMP lexical value convertible to an absolute instant.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2489,8 +2442,7 @@ export type VCardZonedTimestampString = typeof VCardZonedTimestampString.Type;
 export const VCardBooleanString = S.String.pipe(
   S.check(makePatternCheck($I`VCardBooleanStringCheck`, "an RFC 6350 boolean value", /^(?:TRUE|FALSE)$/i)),
   S.brand("VCardBooleanString"),
-  $I.annoteSchema("VCardBooleanString", { description: "Case-insensitive RFC 6350 BOOLEAN lexical value." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardBooleanString", { description: "Case-insensitive RFC 6350 BOOLEAN lexical value." })
 );
 
 /**
@@ -2527,8 +2479,7 @@ export type VCardBooleanString = typeof VCardBooleanString.Type;
 export const VCardIntegerString = S.String.pipe(
   S.check(makePatternCheck($I`VCardIntegerStringCheck`, "an RFC 6350 integer lexical value", vCardIntegerPattern)),
   S.brand("VCardIntegerString"),
-  $I.annoteSchema("VCardIntegerString", { description: "Signed decimal RFC 6350 INTEGER lexical value." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardIntegerString", { description: "Signed decimal RFC 6350 INTEGER lexical value." })
 );
 
 /**
@@ -2562,8 +2513,7 @@ export const VCardFloatString = S.String.pipe(
   S.brand("VCardFloatString"),
   $I.annoteSchema("VCardFloatString", {
     description: "Plain-decimal RFC 6350 FLOAT lexical value without exponent notation.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2597,8 +2547,7 @@ export const VCardUtcOffsetString = S.String.pipe(
   S.brand("VCardUtcOffsetString"),
   $I.annoteSchema("VCardUtcOffsetString", {
     description: "RFC 6350 UTC-OFFSET lexical value from negative 23:59 through positive 23:59.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2631,8 +2580,7 @@ export const VCardLanguageTagString = S.String.check(
   makeStringCheck($I`VCardLanguageTagStringCheck`, "an RFC 5646 language tag", isValidBcp47LanguageTag)
 ).pipe(
   S.brand("VCardLanguageTagString"),
-  $I.annoteSchema("VCardLanguageTagString", { description: "RFC 5646 language tag admitted by RFC 6350." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardLanguageTagString", { description: "RFC 5646 language tag admitted by RFC 6350." })
 );
 
 /**
@@ -2676,8 +2624,7 @@ export const VCardBooleanFromString = VCardBooleanString.pipe(
   }),
   $I.annoteSchema("VCardBooleanFromString", {
     description: "RFC 6350 BOOLEAN string decoded to boolean with canonical uppercase encoding.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "encodeEffect"])
+  })
 );
 
 /**
@@ -2717,8 +2664,7 @@ export const VCardIntegerValue = S.BigInt.check(
   S.brand("VCardIntegerValue"),
   $I.annoteSchema("VCardIntegerValue", {
     description: "Signed 64-bit integer decoded from an RFC 6350 INTEGER value.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -2766,8 +2712,7 @@ export const VCardIntegerFromString = VCardIntegerString.pipe(
   }),
   $I.annoteSchema("VCardIntegerFromString", {
     description: "RFC 6350 INTEGER string decoded to a signed 64-bit branded bigint.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2799,7 +2744,6 @@ export const VCardFloatValue = S.BigDecimal.pipe(
   $I.annoteSchema("VCardFloatValue", {
     description: "Arbitrary-precision decimal decoded from an RFC 6350 FLOAT value.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
   SchemaUtils.withStatics(() => ({
     format: (value: BigDecimal.BigDecimal): string => {
       const normalized = BigDecimal.normalize(value);
@@ -2862,8 +2806,7 @@ export const VCardFloatFromString = VCardFloatString.pipe(
   }),
   $I.annoteSchema("VCardFloatFromString", {
     description: "RFC 6350 FLOAT string decoded to an arbitrary-precision branded decimal.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -2949,7 +2892,6 @@ export const VCardUtcOffsetValue = S.Duration.check(
   $I.annoteSchema("VCardUtcOffsetValue", {
     description: "Effect duration constrained to the RFC 6350 UTC-OFFSET range and minute precision.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
   SchemaUtils.withStatics(() => ({
     parse: parseVCardUtcOffset,
     format: formatVCardUtcOffset,
@@ -3005,8 +2947,7 @@ export const VCardUtcOffsetFromString = VCardUtcOffsetString.pipe(
   }),
   $I.annoteSchema("VCardUtcOffsetFromString", {
     description: "RFC 6350 UTC-OFFSET string decoded to an Effect duration.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "encodeEffect"])
+  })
 );
 
 /**
@@ -3070,8 +3011,7 @@ export const VCardTimestampValue = S.DateTimeUtc.check(
   S.brand("VCardTimestampValue"),
   $I.annoteSchema("VCardTimestampValue", {
     description: "UTC instant constrained to the whole-second precision representable by RFC 6350 TIMESTAMP.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -3117,8 +3057,7 @@ export const VCardTimestampFromString = VCardZonedTimestampString.pipe(
       flow(DateTime.formatIso, isoUtcToVCardTimestamp, SchemaParser.decodeEffect(VCardZonedTimestampString))
     ),
   }),
-  $I.annoteSchema("VCardTimestampFromString", { description: "RFC 6350 TIMESTAMP string decoded to DateTime.Utc." }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  $I.annoteSchema("VCardTimestampFromString", { description: "RFC 6350 TIMESTAMP string decoded to DateTime.Utc." })
 );
 
 /**
@@ -3160,8 +3099,7 @@ export const VCardUrlFromString = VCardUriString.pipe(
   }),
   $I.annoteSchema("VCardUrlFromString", {
     description: "RFC 6350 URI value in the URL-compatible subset decoded to a platform URL.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -3205,8 +3143,7 @@ export const MicrodataContextualValueFromString = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("MicrodataContextualValueFromString", {
     description: "Microdata property value discriminated by the DOM or vocabulary context that determines typing.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -3265,8 +3202,7 @@ export const VCardTypedScalarFromString = VCardValueType.toTaggedUnion("_tag")({
 }).pipe(
   $I.annoteSchema("VCardTypedScalarFromString", {
     description: "RFC 6350 scalar value discriminated by its declared VALUE type.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**

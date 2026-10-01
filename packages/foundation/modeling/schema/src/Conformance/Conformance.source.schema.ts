@@ -9,7 +9,6 @@ import { Effect, Result, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { LocalDateFromString } from "../LocalDate/index.ts";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { Sha256Hex } from "../Sha256.ts";
 import { URLStr } from "../URL.ts";
 
@@ -295,7 +294,7 @@ export class SpecificationSource extends S.Class<SpecificationSource>($I`Specifi
     description: "Immutable authority record used to ground conformance claims.",
   })
 ) {
-  static readonly toEquivalenceArray = SpecificationSource.pipe(S.Array, SchemaUtils.toEquivalence);
+  static readonly toEquivalenceArray = SpecificationSource.pipe(S.Array, S.toEquivalence);
 }
 
 /**

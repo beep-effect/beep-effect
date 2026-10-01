@@ -35,11 +35,11 @@ import { HasNullByte, UsesPosixSeparator, UsesWindowsSeparator } from "./FilePat
 
 const $I = $SchemaId.create("FileName");
 
-const isHasNullByte = HasNullByte.is;
+const isHasNullByte = S.is(HasNullByte);
 const isFileExtension = S.is(FileExtension);
 const isNonEmptyString = S.is(S.NonEmptyString);
-const isUsesPosixSeparator = UsesPosixSeparator.is;
-const isUsesWindowsSeparator = UsesWindowsSeparator.is;
+const isUsesPosixSeparator = S.is(UsesPosixSeparator);
+const isUsesWindowsSeparator = S.is(UsesWindowsSeparator);
 
 const fileNameLastDotIndex = (value: string): number =>
   pipe(

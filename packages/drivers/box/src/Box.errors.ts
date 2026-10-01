@@ -19,18 +19,6 @@ import type { BoxMethodName as BoxMethodNameType } from "./_generated/Box.models
 const $I = $BoxId.create("Box.errors");
 
 // Shared driver codec-statics idiom; drivers are independent and have no in-family home — future foundation capability candidate.
-const withLiteralKitCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(
-  schema: Sch
-): Sch & {
-  // fallow-ignore-next-line code-duplication -- driver-local codec statics avoid cross-driver coupling
-  readonly decodeOption: (input: unknown) => O.Option<Sch["Type"]>;
-  readonly fromUnknown: (input: unknown) => Effect.Effect<Sch["Type"], S.SchemaError, Sch["DecodingServices"]>;
-} =>
-  SchemaUtils.withStatics((self: Sch) => ({
-    decodeOption: S.decodeUnknownOption(self),
-    fromUnknown: S.decodeUnknownEffect(self),
-  }))(schema);
-
 const BoxErrorReasonBase = LiteralKit([
   "config",
   "request encoding",
@@ -60,7 +48,6 @@ export const BoxErrorReason = BoxErrorReasonBase.pipe(
   $I.annoteSchema("BoxErrorReason", {
     description: "Redacted technical error reasons emitted by the Box driver.",
   }),
-  withLiteralKitCodecStatics,
   SchemaUtils.withLiteralKitStatics(BoxErrorReasonBase)
 );
 
@@ -155,8 +142,7 @@ const BoxErrorCode = S.String.check(
 ).pipe(
   $I.annoteSchema("BoxErrorCode", {
     description: "Bounded Box API error classification safe to retain in diagnostics.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const BoxRequestId = S.String.check(
@@ -169,15 +155,13 @@ const BoxRequestId = S.String.check(
 ).pipe(
   $I.annoteSchema("BoxRequestId", {
     description: "Technical Box request identifier safe to retain in diagnostics.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const BoxSdkVersion = S.Literal(BOX_SDK_VERSION).pipe(
   $I.annoteSchema("BoxSdkVersion", {
     description: "Exact Box SDK version used by this driver build.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const BoxRedactedHelpUrl = S.Literal("redacted").pipe(
@@ -205,7 +189,6 @@ const BoxErrorCause = BoxErrorCauseBase.pipe(
   $I.annoteSchema("BoxErrorCause", {
     description: "Closed error-class classification retained without provider or schema issue text.",
   }),
-  withLiteralKitCodecStatics,
   SchemaUtils.withLiteralKitStatics(BoxErrorCauseBase)
 );
 
@@ -236,8 +219,7 @@ const BoxHttpStatusCode = S.Int.check(
 ).pipe(
   $I.annoteSchema("BoxHttpStatusCode", {
     description: "Numeric HTTP status code accepted by the Box driver.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const BoxErrorContextFields = {
@@ -376,14 +358,14 @@ export class BoxError extends S.TaggedError<BoxError>($I`BoxError`)(
     return BoxError.make({
       reason,
       cause: pipe(O.fromUndefinedOr(input.cause), O.map(causeLabel)),
-      code: pipe(O.fromUndefinedOr(input.code), O.filter(BoxErrorCode.is)),
+      code: pipe(O.fromUndefinedOr(input.code), O.filter(S.is(BoxErrorCode))),
       context: O.fromUndefinedOr(input.context),
       helpUrl: O.none(),
       method: O.fromUndefinedOr(input.method),
-      requestId: pipe(O.fromUndefinedOr(input.requestId), O.filter(BoxRequestId.is)),
-      status: pipe(O.fromUndefinedOr(input.status), O.filter(BoxHttpStatusCode.is)),
+      requestId: pipe(O.fromUndefinedOr(input.requestId), O.filter(S.is(BoxRequestId))),
+      status: pipe(O.fromUndefinedOr(input.status), O.filter(S.is(BoxHttpStatusCode))),
       ...O.getSomesStruct({
-        sdkVersion: pipe(O.fromUndefinedOr(input.sdkVersion), O.filter(BoxSdkVersion.is)),
+        sdkVersion: pipe(O.fromUndefinedOr(input.sdkVersion), O.filter(S.is(BoxSdkVersion))),
       }),
     });
   };
@@ -495,7 +477,7 @@ const readNumber =
 const readHttpStatusCode =
   (key: PropertyKey) =>
   (value: unknown): O.Option<number> =>
-    pipe(readNumber(key)(value), O.filter(BoxHttpStatusCode.is));
+    pipe(readNumber(key)(value), O.filter(S.is(BoxHttpStatusCode)));
 
 const responseInfoFromUnknown = (cause: unknown): O.Option<unknown> => readProperty("responseInfo")(cause);
 
@@ -521,9 +503,9 @@ const readContextInfo = (value: unknown): O.Option<BoxApiFailureContext> =>
 const causeLabel = (cause: unknown): BoxErrorCause =>
   pipe(
     O.firstSomeOf([
-      P.isString(cause) ? BoxErrorCause.decodeOption(cause) : O.none(),
-      pipe(readString("_tag")(cause), O.flatMap(BoxErrorCause.decodeOption)),
-      pipe(readString("name")(cause), O.flatMap(BoxErrorCause.decodeOption)),
+      P.isString(cause) ? S.decodeUnknownOption(BoxErrorCause)(cause) : O.none(),
+      pipe(readString("_tag")(cause), O.flatMap(S.decodeUnknownOption(BoxErrorCause))),
+      pipe(readString("name")(cause), O.flatMap(S.decodeUnknownOption(BoxErrorCause))),
     ]),
     O.getOrElse(() => (P.isString(cause) ? "String" : "Unknown"))
   );

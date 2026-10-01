@@ -214,12 +214,7 @@ export const Failure = S.Union([
   $I.annoteSchema("Failure", {
     description: "Tagged union of typed GovInfo search endpoint failures.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**

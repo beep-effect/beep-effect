@@ -410,8 +410,7 @@ export type AgentEffectivenessArtifactSchemaVersion = typeof AgentEffectivenessA
 export const AgentEffectivenessAnnotationValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
   $I.annoteSchema("AgentEffectivenessAnnotationValue", {
     description: "Sanitized primitive value allowed in an agent-effectiveness annotation plan.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

@@ -6,9 +6,8 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, flow, pipe, SchemaGetter, SchemaIssue } from "effect";
+import { Effect, flow, pipe, Result, SchemaGetter, SchemaIssue } from "effect";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -282,8 +281,7 @@ export type BracketStringToPatternElement = typeof BracketStringToPatternElement
 export const PatternElementsFromString = S.NonEmptyArray(BracketStringToPatternElement).pipe(
   $I.annoteSchema("PatternElementsFromString", {
     description: "Decoder for non-empty arrays of supported bracket-string pattern elements.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -317,4 +315,5 @@ export type PatternElementsFromString = typeof PatternElementsFromString.Type;
  * @category validation
  * @since 0.0.0
  */
-export const PatternFromString = (input: unknown) => PatternElementsFromString.decodeUnknownSync(input);
+export const PatternFromString = (input: unknown) =>
+  Result.getOrThrow(S.decodeUnknownResult(PatternElementsFromString)(input));

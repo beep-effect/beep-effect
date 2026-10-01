@@ -6,7 +6,7 @@
  */
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
 import { type Duration, Effect } from "effect";
 import { DateTime } from "effect";
@@ -47,8 +47,7 @@ export const AgentId = S.String.check(
     S.brand("AgentId"),
     $I.annoteSchema("AgentId", {
       description: "Stable lowercase identifier assigned to an agent implementation.",
-    }),
-    SchemaUtils.withCodecStatics(["is"])
+    })
   );
 
 /**
@@ -544,7 +543,7 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
    * @returns The retained intermediate result, or `Option.none()` when absent.
    */
   getResult(agentId: AgentId): O.Option<IntermediateResult> {
-    return A.findFirst(this.intermediateResults, (result) => AgentId.is(agentId) && result.agentId === agentId);
+    return A.findFirst(this.intermediateResults, (result) => S.is(AgentId)(agentId) && result.agentId === agentId);
   }
 
   /**

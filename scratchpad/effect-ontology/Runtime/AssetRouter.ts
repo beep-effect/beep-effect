@@ -65,7 +65,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      if (!DocumentId.is(docId)) {
+      if (!S.is(DocumentId)(docId)) {
         return yield* HttpServerResponse.json(
           { error: "VALIDATION_ERROR", message: "docId must be a canonical document identifier" },
           { status: 400 }
@@ -120,7 +120,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      if (!DocumentId.is(docId)) {
+      if (!S.is(DocumentId)(docId)) {
         return yield* HttpServerResponse.json(
           { error: "VALIDATION_ERROR", message: "docId must be a canonical document identifier" },
           { status: 400 }
@@ -249,7 +249,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = BatchId.decodeOption(rawBatchId);
+      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
       if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {
@@ -321,7 +321,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = BatchId.decodeOption(rawBatchId);
+      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
       if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {

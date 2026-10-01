@@ -103,11 +103,11 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   const randomB = (yield* Random.nextIntBetween(0, 16_777_216)).toString(16).padStart(6, "0");
   const effectiveBatchId = yield* O.match(batchId, {
     onNone: () => Effect.succeed(BatchId.make(`batch-${randomA}${randomB}`)),
-    onSome: BatchId.decodeUnknownEffect,
+    onSome: S.decodeUnknownEffect(BatchId),
   });
   const bucket = yield* O.match(config.storage.bucket, {
-    onNone: () => GcsBucket.decodeUnknownEffect(undefined),
-    onSome: GcsBucket.decodeUnknownEffect,
+    onNone: () => S.decodeUnknownEffect(GcsBucket)(undefined),
+    onSome: S.decodeUnknownEffect(GcsBucket),
   });
   const storagePrefix = O.getOrElse(prefix, () => `batches/${effectiveBatchId}`);
   yield* Console.log(`Ingesting files from: ${dir}`);
@@ -138,7 +138,7 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
         : Str.endsWith(".md")(file)
           ? "text/markdown"
           : "text/plain";
-    const sourceUri = yield* GcsUri.decodeUnknownEffect(`gs://${bucket}/${storageKey}`);
+    const sourceUri = yield* S.decodeUnknownEffect(GcsUri)(`gs://${bucket}/${storageKey}`);
     documents.push({
       documentId: docId,
       sourceUri,
@@ -148,8 +148,8 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
     yield* Console.log(`  Uploaded: ${file} -> ${storageKey}`);
   }
   const ontologyContent = yield* fs.readFileString(ontology);
-  const ontologyName = yield* OntologyName.decodeEffect(ontologyId);
-  const targetNamespace = yield* Namespace.decodeEffect(namespace);
+  const ontologyName = yield* S.decodeEffect(OntologyName)(ontologyId);
+  const targetNamespace = yield* S.decodeEffect(Namespace)(namespace);
   const ontologyHash = ContentHash.make(yield* sha256SyncFull(ontologyContent));
   const ontologyFilename = path.basename(ontology);
   const ontologyKey = `${storagePrefix}/ontology/${ontologyFilename}`;
@@ -159,7 +159,7 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   if (P.isUndefined(firstDocument)) {
     return;
   }
-  const ontologyUri = yield* GcsUri.decodeUnknownEffect(`gs://${bucket}/${ontologyKey}`);
+  const ontologyUri = yield* S.decodeUnknownEffect(GcsUri)(`gs://${bucket}/${ontologyKey}`);
   const createdAt = yield* DateTime.now;
   const manifest = BatchManifest.make({
     batchId: effectiveBatchId,

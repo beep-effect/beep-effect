@@ -15,10 +15,11 @@ import * as Str from "effect/String";
 const $I = $WorkspaceDomainId.create("entities/Workspace/Workspace.values");
 
 const isAbsoluteWindowsDrivePath = (value: string): boolean =>
-  WindowsDrivePath.is(value) && /^[A-Za-z]:[\\/]/u.test(value);
+  S.is(WindowsDrivePath)(value) && /^[A-Za-z]:[\\/]/u.test(value);
 
 const isAbsoluteVaultRootPath = (value: string): boolean =>
-  FilePath.is(value) && (Str.startsWith("/")(value) || isAbsoluteWindowsDrivePath(value) || WindowsUncPath.is(value));
+  S.is(FilePath)(value) &&
+  (Str.startsWith("/")(value) || isAbsoluteWindowsDrivePath(value) || S.is(WindowsUncPath)(value));
 
 const WorkspaceVaultRootPathChecks = S.makeFilter(isAbsoluteVaultRootPath, {
   identifier: $I`WorkspaceVaultRootPathAbsoluteCheck`,

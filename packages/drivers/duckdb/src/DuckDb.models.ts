@@ -12,7 +12,6 @@
  */
 
 import { $DuckdbId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $DuckdbId.create("DuckDb.models");
@@ -119,8 +118,7 @@ export class DuckDbParquetExport extends S.Class<DuckDbParquetExport>($I`DuckDbP
 export const DuckDbRow = S.JsonObject.pipe(
   $I.annoteSchema("DuckDbRow", {
     description: "JSON-compatible row returned from DuckDB queries.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -165,11 +163,7 @@ export type DuckDbRow = typeof DuckDbRow.Type;
 export const DuckDbRows = S.Array(DuckDbRow).pipe(
   $I.annoteSchema("DuckDbRows", {
     description: "JSON-compatible rows returned from DuckDB queries.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
-  SchemaUtils.withStatics((schema) => ({
-    decodeEffect: S.decodeUnknownEffect(schema),
-  }))
+  })
 );
 
 /**

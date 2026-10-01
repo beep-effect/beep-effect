@@ -14,7 +14,6 @@
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, flow, Layer } from "effect";
 import * as A from "effect/Array";
@@ -64,7 +63,6 @@ import { PosInt } from "../Schema/PosInt.ts";
  */
 export const CanonicalEntityId = UUID.pipe(
   S.brand("EntityRegistryCanonicalEntityId"),
-  SchemaUtils.withCodecStatics(["decodeEffect"]),
   $I.annoteSchema("CanonicalEntityId", {
     description: "Database identity of a canonical entity in the persistent registry.",
   })
@@ -275,16 +273,16 @@ const RegistryStatsSqlRow = S.Struct({
   })
 );
 
-const OneCanonicalEntitySqlRow = S.Tuple([CanonicalEntitySqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
-const OneEntityAliasSqlRow = S.Tuple([EntityAliasSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
-const OneCountSqlRow = S.Tuple([CountSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
-const OneRegistryStatsSqlRow = S.Tuple([RegistryStatsSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const OneCanonicalEntitySqlRow = S.Tuple([CanonicalEntitySqlRow]);
+const OneEntityAliasSqlRow = S.Tuple([EntityAliasSqlRow]);
+const OneCountSqlRow = S.Tuple([CountSqlRow]);
+const OneRegistryStatsSqlRow = S.Tuple([RegistryStatsSqlRow]);
 
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const decodeOneCanonicalEntitySqlRow = (rows: unknown) =>
-  normalizeDecodedRows(OneCanonicalEntitySqlRow.decodeUnknownEffect(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(OneCanonicalEntitySqlRow)(rows));
 const decodeOneEntityAliasSqlRow = (rows: unknown) =>
-  normalizeDecodedRows(OneEntityAliasSqlRow.decodeUnknownEffect(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(OneEntityAliasSqlRow)(rows));
 const CanonicalEntitySelectRows = CanonicalEntities.select.pipe(S.Array, S.mutable);
 const decodeCanonicalEntityDrizzleRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(CanonicalEntitySelectRows)(rows));
@@ -294,9 +292,9 @@ const decodeEntityAliasDrizzleRows = (rows: unknown) =>
 const BlockingCandidateSqlRows = BlockingCandidateSqlRow.pipe(S.Array, S.mutable);
 const decodeBlockingCandidateSqlRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(BlockingCandidateSqlRows)(rows));
-const decodeOneCountSqlRow = (rows: unknown) => normalizeDecodedRows(OneCountSqlRow.decodeUnknownEffect(rows));
+const decodeOneCountSqlRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(OneCountSqlRow)(rows));
 const decodeOneRegistryStatsSqlRow = (rows: unknown) =>
-  normalizeDecodedRows(OneRegistryStatsSqlRow.decodeUnknownEffect(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(OneRegistryStatsSqlRow)(rows));
 
 // =============================================================================
 // Service

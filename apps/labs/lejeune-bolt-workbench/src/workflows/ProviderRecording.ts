@@ -121,7 +121,7 @@ export const verifyProviderRecording = Effect.fn("lejeune.provider.verify_record
       )
     )
   );
-  const digest = yield* Sha256HexFromBytes.decodeEffect(strToU8(candidateJson)).pipe(
+  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(strToU8(candidateJson)).pipe(
     Effect.mapError((cause) =>
       providerIntegrityError("candidate-digest", "The provider candidate digest could not be computed.", cause)
     )

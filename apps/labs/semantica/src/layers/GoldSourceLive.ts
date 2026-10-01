@@ -1,4 +1,4 @@
-import { SchemaUtils, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { Crypto, Effect, FileSystem, Layer, Path, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -17,8 +17,8 @@ import type { LedgerDocumentSnapshot } from "@/schema/Ledger";
 const decodeGoldFile = S.decodeEffect(GoldFile);
 const encodeModelIdentity = S.encodeEffect(ModelIdentity);
 
-const GoldFileJson = S.fromJsonString(GoldFileEncoded).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
-const GoldRefJson = S.fromJsonString(GoldRef).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
+const GoldFileJson = S.fromJsonString(GoldFileEncoded);
+const GoldRefJson = S.fromJsonString(GoldRef);
 const sha256Equivalence = S.toEquivalence(Sha256Hex);
 
 const unavailable = (reason: GoldUnavailable["reason"], message: string): GoldUnavailable =>
@@ -38,7 +38,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       return yield* unavailable("read-failed", "The gold-v1 reference is unavailable.");
     }
     return yield* fs.readFileString(referencePath).pipe(
-      Effect.flatMap(GoldRefJson.decodeEffect),
+      Effect.flatMap(S.decodeEffect(GoldRefJson)),
       Effect.mapError(() => unavailable("read-failed", "The gold-v1 reference could not be read or decoded."))
     );
   });
@@ -55,7 +55,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       return yield* unavailable("stale-reference", "The gold-v1 reference covers a missing label file.");
     }
     const file = yield* fs.readFileString(filePath).pipe(
-      Effect.flatMap(GoldFileJson.decodeEffect),
+      Effect.flatMap(S.decodeEffect(GoldFileJson)),
       Effect.mapError(() => unavailable("read-failed", "A covered gold-v1 file could not be read or decoded."))
     );
     if (!Str.Equivalence(file.paperId, paperId) || !Str.Equivalence(file.subset, subset)) {

@@ -40,8 +40,7 @@ const urlSchemePattern = /^[a-z][a-z0-9+.-]*:$/u;
 const StringArray = S.Array(S.String).pipe(
   $I.annoteSchema("StringArray", {
     description: "Rendered string array accepted by Markdown utility helpers.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 const UnsafeUrlProtocolDestination = S.String.check(
   S.isPattern(unsafeUrlProtocolPattern, {
@@ -53,8 +52,7 @@ const UnsafeUrlProtocolDestination = S.String.check(
 ).pipe(
   $I.annoteSchema("UnsafeUrlProtocolDestination", {
     description: "Normalized URL destination that starts with an active unsafe protocol.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const NormalizedUrlScheme = S.Trim.pipe(
@@ -480,7 +478,7 @@ export const isUrlDestinationAllowedWithPolicy: {
   const hasUnsafeProtocol = pipe(
     candidates,
     A.map(normalizeUrlProtocolCandidate),
-    A.some(UnsafeUrlProtocolDestination.is)
+    A.some(S.is(UnsafeUrlProtocolDestination))
   );
 
   return !hasUnsafeProtocol && A.every(candidates, (candidate) => isAllowedByPolicy(policy, candidate));
@@ -779,7 +777,7 @@ export const renderFencedCode: {
   (language: string): (text: string) => string;
 } = dual(2, (text: string, language: string): string => {
   const fence = pipe("`", Str.repeat(N.max(maxBackticks(text), 2) + 1));
-  const info = O.getOrElse(CodeFenceLanguage.decodeOption(Str.trim(language)), thunkEmptyStr);
+  const info = O.getOrElse(S.decodeOption(CodeFenceLanguage)(Str.trim(language)), thunkEmptyStr);
 
   return `${fence}${info}\n${text}\n${fence}`;
 });
@@ -798,4 +796,4 @@ export const renderFencedCode: {
  * @category guards
  * @since 0.0.0
  */
-export const isStringArray = StringArray.is;
+export const isStringArray = S.is(StringArray);

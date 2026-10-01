@@ -41,7 +41,7 @@ describe("Cuid", () => {
       "derives valid CUIDs from the schema arbitrary",
       [arbitrary],
       Effect.fnUntraced(function* ([id]) {
-        expect(Cuid.is(id)).toBe(true);
+        expect(S.is(Cuid)(id)).toBe(true);
         expect(yield* encodeCuidEffect(id)).toBe(id);
 
         return true;

@@ -42,8 +42,7 @@ const RunpodDocsErrorReasonBase = LiteralKit(["config", "parse", "response decod
 export const RunpodHttpStatusCode = S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
   $I.annoteSchema("RunpodHttpStatusCode", {
     description: "Numeric HTTP status code emitted by Runpod driver boundaries.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -81,11 +80,7 @@ export const RunpodErrorReason = RunpodErrorReasonBase.pipe(
   $I.annoteSchema("RunpodErrorReason", {
     description: "Redacted technical error reasons emitted by the Runpod REST API driver.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodErrorReasonBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodErrorReasonBase)
 );
 
 /**
@@ -123,11 +118,7 @@ export const RunpodDocsErrorReason = RunpodDocsErrorReasonBase.pipe(
   $I.annoteSchema("RunpodDocsErrorReason", {
     description: "Redacted technical error reasons emitted by the Runpod documentation driver.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodDocsErrorReasonBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodDocsErrorReasonBase)
 );
 
 /**

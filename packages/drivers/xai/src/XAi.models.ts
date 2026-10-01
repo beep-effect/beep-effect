@@ -79,8 +79,7 @@ export type XAiHttpStatusCode = typeof XAiHttpStatusCode.Type;
 export const XAiQueryScalar = S.Union([S.Boolean, S.Null, S.Finite, S.String]).pipe(
   $I.annoteSchema("XAiQueryScalar", {
     description: "URL query scalar accepted by the xAI driver.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**
@@ -424,10 +423,6 @@ export const XAiWebSocketEventKind = XAiWebSocketEventKindBase.pipe(
   $I.annoteSchema("XAiWebSocketEventKind", {
     description: "WebSocket event kinds emitted by xAI realtime and streaming audio sessions.",
   }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  })),
   SchemaUtils.withLiteralKitStatics(XAiWebSocketEventKindBase)
 );
 

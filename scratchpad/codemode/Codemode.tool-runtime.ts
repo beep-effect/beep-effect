@@ -6,7 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, O, P, pipe, R, Str, Struct, thunkNull } from "@beep/utils";
 import { Cause, Clock, DateTime, Effect, Exit, flow, HashMap, HashSet, Order, Ref, Result, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -297,8 +297,7 @@ export const ToolCallEnded = S.Union([ToolCallSucceeded, ToolCallInterrupted, To
   $I.annoteSchema("ToolCallEnded", {
     description: "All terminal observations for an admitted tool call.",
   }),
-  S.toTaggedUnion("_tag"),
-  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
+  S.toTaggedUnion("_tag")
 );
 
 /**

@@ -485,7 +485,10 @@ export const provenanceFromRawTags = (raw: Readonly<Record<string, unknown>>): O
   pipe(
     O.all({
       actionId: rawTextAt(raw, "actionId"),
-      capturedAtEpochMs: pipe(rawNumberAt(raw, "capturedAtEpochMs"), O.flatMap(EpochMilliseconds.decodeUnknownOption)),
+      capturedAtEpochMs: pipe(
+        rawNumberAt(raw, "capturedAtEpochMs"),
+        O.flatMap(S.decodeUnknownOption(EpochMilliseconds))
+      ),
       scenarioName: rawTextAt(raw, "scenarioName"),
       sessionId: rawTextAt(raw, "sessionId"),
     }),

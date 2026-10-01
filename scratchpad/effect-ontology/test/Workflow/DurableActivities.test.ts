@@ -2,7 +2,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { ObjectRef } from "@beep/rdf/Prov";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Context, Duration, Effect, Equal, HashMap, Layer, Ref } from "effect";
+import { Context, Duration, Effect, Equal, HashMap, Layer, Ref, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
@@ -98,12 +98,12 @@ describe("durable activity boundaries", () => {
           [
             makeIngestionActivity({
               batchId: BatchA,
-              validatedGraphUri: GcsUri.decodeUnknownSync(`gs://test-bucket/${firstPath}`),
+              validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${firstPath}`)),
               targetNamespace: namespace,
             }).execute,
             makeIngestionActivity({
               batchId: BatchB,
-              validatedGraphUri: GcsUri.decodeUnknownSync(`gs://test-bucket/${secondPath}`),
+              validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${secondPath}`)),
               targetNamespace: namespace,
             }).execute,
           ],
@@ -125,7 +125,7 @@ describe("durable activity boundaries", () => {
         const output = yield* makeCrossBatchResolutionActivity(
           CrossBatchResolutionInput.make({
             batchId: BatchA,
-            resolvedGraphUri: GcsUri.decodeUnknownSync("gs://test-bucket/resolved.ttl"),
+            resolvedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/resolved.ttl")),
             enabled: false,
             ontologyId: Ontology,
           })
@@ -143,7 +143,7 @@ describe("durable activity boundaries", () => {
         const error = yield* makeCrossBatchResolutionActivity(
           CrossBatchResolutionInput.make({
             batchId: BatchA,
-            resolvedGraphUri: GcsUri.decodeUnknownSync("gs://test-bucket/resolved.ttl"),
+            resolvedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/resolved.ttl")),
             enabled: true,
             ontologyId: Ontology,
           })
@@ -263,7 +263,7 @@ describe("durable activity boundaries", () => {
         const output = yield* makeCrossBatchResolutionActivity(
           CrossBatchResolutionInput.make({
             batchId: BatchA,
-            resolvedGraphUri: GcsUri.decodeUnknownSync(`gs://test-bucket/${graphPath}`),
+            resolvedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${graphPath}`)),
             enabled: true,
             ontologyId: Ontology,
           })
@@ -282,7 +282,7 @@ describe("durable activity boundaries", () => {
         const attempts = yield* InterruptAttempts;
         const fiber = yield* makeIngestionActivity({
           batchId: BatchA,
-          validatedGraphUri: GcsUri.decodeUnknownSync("gs://test-bucket/interrupted.ttl"),
+          validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/interrupted.ttl")),
           targetNamespace: Namespace.make("interrupt-retry"),
         }).execute.pipe(Effect.forkChild);
 

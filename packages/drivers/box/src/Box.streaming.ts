@@ -8,7 +8,7 @@
 import { Buffer } from "node:buffer";
 import * as dns from "node:dns";
 import { $BoxId } from "@beep/identity";
-import { assertAllowedRemoteUrl, BlockedHostError, HttpsUrl, SchemaUtils } from "@beep/schema";
+import { assertAllowedRemoteUrl, BlockedHostError, HttpsUrl } from "@beep/schema";
 import * as NodeStream from "@effect/platform-node-shared/NodeStream";
 import { Effect, Exit, Result, Stream } from "effect";
 import * as A from "effect/Array";
@@ -48,8 +48,7 @@ const BoxNodeReadableInput = S.declare(
 const BoxByteInputValue = S.Union([S.Uint8Array, BoxNodeReadableInput, BoxByteEffectStream]).pipe(
   $I.annoteSchema("BoxByteInput", {
     description: "Byte input accepted by Box upload adapters.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const LastPartIndex = S.Int.check(
@@ -806,7 +805,7 @@ const assertBoxUrlAllowed = (method: BoxMethodName, url: string): Effect.Effect<
   );
 
 const byteInputToReadable = (method: BoxMethodName, value: unknown): Effect.Effect<NodeJS.ReadableStream, BoxError> => {
-  if (!BoxByteInputValue.is(value)) {
+  if (!S.is(BoxByteInputValue)(value)) {
     return Effect.fail(
       BoxError.fromReason("stream", {
         cause: "Expected Uint8Array, Node Readable, or Effect Stream byte input",

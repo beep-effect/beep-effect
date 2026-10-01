@@ -317,7 +317,7 @@ export type ActivityGenericError = typeof ActivityGenericError.Type;
 
 const messageFromError = Match.type<Error>().pipe(
   Match.when(
-    (error) => ErrorMessage.is(error.message),
+    (error) => S.is(ErrorMessage)(error.message),
     (error) => ErrorMessage.make(error.message)
   ),
   Match.orElse((error) => ErrorMessage.make(Inspectable.toStringUnknown(error, 0)))

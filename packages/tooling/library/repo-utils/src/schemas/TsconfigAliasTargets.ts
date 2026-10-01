@@ -6,7 +6,6 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
@@ -38,8 +37,7 @@ const wildcardFileStemPattern = /(?:^|\/)\*\.tsx?$/u;
 export const RootAliasTarget = S.String.check(S.isPattern(rootAliasTargetPattern)).pipe(
   $I.annoteSchema("RootAliasTarget", {
     description: "A repo-relative alias target beginning with ./ and containing no wildcard segment.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -75,8 +73,7 @@ export type RootAliasTarget = typeof RootAliasTarget.Type;
 export const WildcardAliasTarget = S.String.check(S.isPattern(wildcardAliasTargetPattern)).pipe(
   $I.annoteSchema("WildcardAliasTarget", {
     description: "A repo-relative alias target beginning with ./ and containing a wildcard segment.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

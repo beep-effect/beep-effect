@@ -6,7 +6,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
@@ -31,8 +31,7 @@ const DistinctionDetailWithCodecStatics = S.make<(typeof DistinctionDetailDefini
 ).pipe(
   $I.annoteSchema("DistinctionDetail", {
     description: "Substantive detail of a distinction, discriminated on its kind.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -57,10 +56,7 @@ const DistinctionDetailWithCodecStatics = S.make<(typeof DistinctionDetailDefini
  * @category value-objects
  * @since 0.0.0
  */
-export const DistinctionDetail = DistinctionDetailWithCodecStatics.pipe(
-  S.toTaggedUnion("kind"),
-  SchemaUtils.withStatics(() => ({ is: DistinctionDetailWithCodecStatics.is }))
-);
+export const DistinctionDetail = DistinctionDetailWithCodecStatics.pipe(S.toTaggedUnion("kind"));
 
 /**
  * Type-level tagged union produced by {@link DistinctionDetail}.

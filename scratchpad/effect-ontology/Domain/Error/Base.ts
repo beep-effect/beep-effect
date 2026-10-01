@@ -12,7 +12,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { SchemaUtils, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Effect } from "effect";
 
@@ -36,8 +36,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Base");
 export const ErrorMessage = S.NonEmptyString.pipe(
   $I.annoteSchema("ErrorMessage", {
     description: "Non-empty human-readable diagnostic carried by an ontology domain error.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

@@ -80,10 +80,10 @@ describe("@beep/agents-domain ProviderInstance", () => {
     expect(rejectsEnvVarName("9BAD_NAME")).toBe(true);
     expect(rejectsEnvVarName("")).toBe(true);
 
-    expect(EnvVarName.is("EDITOR")).toBe(true);
-    expect(EnvVarName.is("NO_PROXY")).toBe(true);
-    expect(EnvVarName.is("ANTHROPIC_BASE_URL")).toBe(true);
-    expect(EnvVarName.is("MY_TOKEN")).toBe(false);
+    expect(S.is(EnvVarName)("EDITOR")).toBe(true);
+    expect(S.is(EnvVarName)("NO_PROXY")).toBe(true);
+    expect(S.is(EnvVarName)("ANTHROPIC_BASE_URL")).toBe(true);
+    expect(S.is(EnvVarName)("MY_TOKEN")).toBe(false);
   });
 
   it.effect("round-trips every AuthSnapshot variant through the tagged union", () =>
@@ -107,7 +107,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
       expect(authenticated).toBeInstanceOf(AuthenticatedSnapshot);
       expect(unauthenticated).toBeInstanceOf(UnauthenticatedSnapshot);
       expect(probeFailed).toBeInstanceOf(ProbeFailedSnapshot);
-      expect(AuthSnapshot.is(authenticated)).toBe(true);
+      expect(S.is(AuthSnapshot)(authenticated)).toBe(true);
       expect(AuthSnapshot.guards.authenticated(authenticated)).toBe(true);
       expect(AuthSnapshot.guards.unauthenticated(authenticated)).toBe(false);
 

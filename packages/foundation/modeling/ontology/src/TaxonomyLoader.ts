@@ -25,6 +25,8 @@ import {
 } from "./SemanticFoundation.models.ts";
 import { SemanticFoundationSeed } from "./SemanticFoundation.seed.ts";
 
+const iriReferenceEquivalence = S.toEquivalence(IRIReference);
+
 const $I = $OntologyId.create("TaxonomyLoader");
 
 /**
@@ -622,7 +624,7 @@ const readAlignmentSlice = Effect.fn("TaxonomyLoader.readAlignmentSlice")(functi
   );
   yield* Effect.filterOrFail(
     Effect.succeed(slice),
-    P.Struct({ "@id": IRIReference.equivalence(entry.conceptIri) }),
+    P.Struct({ "@id": (iri: IRIReference) => iriReferenceEquivalence(iri, entry.conceptIri) }),
     () =>
       VendorSliceConceptMismatch.make({
         actualConceptIri: slice["@id"],
@@ -703,7 +705,7 @@ const toAlignment = Match.typeTags<LoadedVendorSlice>()({
 const appendAlignment = (concept: TaxonomyConcept, loaded: LoadedAlignmentSlice): TaxonomyConcept =>
   Bool.match(
     Bool.and(
-      IRIReference.equivalence(loaded.localConceptIri)(concept.iri),
+      iriReferenceEquivalence(concept.iri, loaded.localConceptIri),
       Bool.not(A.containsWith(alignmentEquivalence)(concept.alignments, loaded.alignment))
     ),
     {
@@ -727,7 +729,11 @@ const mergeAlignment = Effect.fn("TaxonomyLoader.mergeAlignment")(function* (
 ) {
   yield* Effect.filterOrFail(
     Effect.succeed(seed),
-    (seed) => A.some(seed.concepts, P.Struct({ iri: IRIReference.equivalence(loaded.localConceptIri) })),
+    (seed) =>
+      A.some(
+        seed.concepts,
+        P.Struct({ iri: (iri: IRIReference) => iriReferenceEquivalence(iri, loaded.localConceptIri) })
+      ),
     () => VendorAlignmentTargetNotFound.make({ id: loaded.id, localConceptIri: loaded.localConceptIri })
   );
   return TaxonomySeed.make({

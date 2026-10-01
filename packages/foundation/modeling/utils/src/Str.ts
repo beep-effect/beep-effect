@@ -19,7 +19,7 @@ import type * as TF from "type-fest";
  * **Details**
  *
  * This is the canonical string-specific equivalence helper for reusable code.
- * Use `SchemaUtils.toEquivalence(schema)` when comparing values whose equality
+ * Use `S.toEquivalence(schema)` when comparing values whose equality
  * should be derived from a named schema.
  *
  * **Example** (Call `equivalence`)

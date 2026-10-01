@@ -17,6 +17,7 @@ import * as Md from "@beep/md/Md.model";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
 import { flow, Match } from "effect";
 import { pipe } from "effect/Function";
+import * as S from "effect/Schema";
 
 const wwwPrefix = /^www\./u;
 const embedOrShortsPrefix = /^\/(?:embed|shorts)\//u;
@@ -71,7 +72,7 @@ const youtubeVideoIdFromUrl = (url: URL): O.Option<string> =>
  */
 export const legacyYouTubeVideoId = (value: string): string => {
   const trimmed = Str.trim(value);
-  return Md.YouTubeVideoId.is(trimmed)
+  return S.is(Md.YouTubeVideoId)(trimmed)
     ? trimmed
     : pipe(
         safeUrl(trimmed),

@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { HttpsUrl, LiteralKit, SchemaUtils } from "@beep/schema";
+import { HttpsUrl, LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName, UUID, withContentHashIdStatics } from "../Identity.ts";
 import { EntityId } from "../Model/shared.ts";
@@ -48,7 +48,6 @@ export const BackgroundJobId = S.String.check(
     $I.annoteSchema("BackgroundJobId", {
       description: "Compact content-derived identifier for a persisted background job.",
     }),
-    SchemaUtils.withCodecStatics(["is"]),
     withContentHashIdStatics("job")
   );
 

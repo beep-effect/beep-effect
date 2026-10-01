@@ -1,16 +1,11 @@
-import { fcRuns } from "@beep/fc-runs";
 import { $SchemaId } from "@beep/identity/packages";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
-import { alwaysEquivalent, toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
+import { alwaysEquivalent } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, pipe } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
-import * as O from "effect/Option";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
-const isNonEmptyString = S.is(S.NonEmptyString);
 const BoolKeySettings = S.Struct({
   visible: SchemaUtils.BoolKeyDefaultFalse,
   enabled: SchemaUtils.BoolKeyDefaultTrue,
@@ -35,38 +30,6 @@ describe("BoolKeyDefaultFalse and BoolKeyDefaultTrue", () => {
       });
     })
   );
-});
-
-describe("toEquivalence", () => {
-  const Tags = S.Array(S.String);
-
-  it("is exported from the SchemaUtils barrel", () => {
-    expect(SchemaUtils.toEquivalence).toBe(toEquivalence);
-  });
-
-  it("compares decoded schema values with the data-first signature", () => {
-    const sameTags = toEquivalence(Tags);
-
-    expect(sameTags(["docs", "tests"], ["docs", "tests"])).toBe(true);
-    expect(sameTags(["docs", "tests"], ["tests", "docs"])).toBe(false);
-  });
-
-  it("compares decoded schema values with the data-last signature", () => {
-    const sameTask = SchemaUtils.toEquivalence(
-      S.Struct({
-        name: S.String,
-        tags: Tags,
-      })
-    );
-    const expected = {
-      name: "document toEquivalence",
-      tags: ["docs", "tests"],
-    };
-    const sameAsExpected = sameTask(expected);
-
-    expect(pipe({ name: "document toEquivalence", tags: ["docs", "tests"] }, sameAsExpected)).toBe(true);
-    expect(pipe({ name: "document toEquivalence", tags: ["tests", "docs"] }, sameAsExpected)).toBe(false);
-  });
 });
 
 describe("alwaysEquivalent", () => {
@@ -103,9 +66,8 @@ describe("alwaysEquivalent", () => {
 describe("withStatics", () => {
   it("preserves statics when identity annotations run later in the pipeline", () => {
     const TenantName = S.String.pipe(
-      SchemaUtils.withStatics((schema) => ({
+      SchemaUtils.withStatics(() => ({
         empty: "" as const,
-        isTenantName: S.is(schema),
       })),
       $SchemaId.annoteSchema("TenantName", {
         description: "Tenant name with helper statics.",
@@ -113,46 +75,6 @@ describe("withStatics", () => {
     );
 
     expect(TenantName.empty).toBe("");
-    expect(TenantName.isTenantName("tenant")).toBe(true);
-  });
-});
-
-describe("withCodecStatics", () => {
-  const Slug = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync", "is"]));
-
-  it.effect.prop(
-    "attached statics agree with the raw schema codecs over schema-derived samples",
-    [Arbitrary.schema(S.NonEmptyString)],
-    Effect.fnUntraced(function* ([sampled]) {
-      expect(Slug.is(sampled)).toBe(isNonEmptyString(sampled));
-      expect(Slug.decodeUnknownSync(sampled)).toBe(sampled);
-      pipe(Slug.decodeUnknownOption(sampled), O.isSome, assertTrue);
-
-      return true;
-    }),
-    { arbitrary: fcRuns(50) }
-  );
-
-  it("attaches a working `is` guard", () => {
-    expect(Slug.is("post")).toBe(true);
-    expect(Slug.is("")).toBe(false);
-    expect(Slug.is(42)).toBe(false);
-  });
-
-  it("attaches `fromUnknown` (throws on invalid) and `decodeOption` (None on invalid)", () => {
-    expect(Slug.decodeUnknownSync("post")).toBe("post");
-    expect(() => Slug.decodeUnknownSync("")).toThrow();
-    assertSome(Slug.decodeUnknownOption("post"), "post");
-    pipe(Slug.decodeUnknownOption(""), O.isNone, assertTrue);
-  });
-
-  it("preserves statics when identity annotations run later in the pipeline", () => {
-    const Tagged = S.NonEmptyString.pipe(
-      SchemaUtils.withCodecStatics(["decodeUnknownOption", "is"]),
-      $SchemaId.annoteSchema("TaggedSlug", { description: "Slug with codec statics." })
-    );
-
-    expect(Tagged.is("post")).toBe(true);
-    pipe(Tagged.decodeUnknownOption(""), O.isNone, assertTrue);
+    expect(S.is(TenantName)("tenant")).toBe(true);
   });
 });

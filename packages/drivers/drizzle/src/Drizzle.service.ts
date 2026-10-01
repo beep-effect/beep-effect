@@ -6,7 +6,6 @@
  */
 
 import { $DrizzleId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Context, Layer } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
@@ -38,8 +37,7 @@ const $I = $DrizzleId.create("Drizzle.service");
 export const DrizzleRows = S.Array(S.Unknown).pipe(
   $I.annoteSchema("DrizzleRows", {
     description: "Rows returned by a product-neutral Drizzle adapter.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**

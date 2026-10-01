@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
 import { Effect, flow, Match, Order, pipe, Result } from "effect";
 import { identity } from "effect/Function";
@@ -40,7 +40,7 @@ const $I = $HtmlId.create("Html.serialize");
 const isHtmlTag = S.is(HtmlTag);
 const isBooleanAttributeName = S.is(HtmlBooleanAttributeName);
 const isForeignAttributeName = S.is(ForeignAttributeName);
-const isSafeHtmlAst = SafeHtmlAst.is;
+const isSafeHtmlAst = S.is(SafeHtmlAst);
 const invalidScalarPattern = /\u0000|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u;
 const byEntryName = Order.mapInput(Str.Order, ([name]: readonly [string, unknown]) => name);
 
@@ -141,7 +141,6 @@ const issueSafeHtml = (html: string): SafeHtmlValue => {
  * @since 0.0.0
  */
 export const SafeHtml = S.declare(SafeHtmlValue.is).pipe(
-  SchemaUtils.withStatics(() => ({ is: SafeHtmlValue.is })),
   $I.annoteSchema("SafeHtml", {
     description: "Opaque HTML string issued only after conformance and safe-policy validation.",
   })

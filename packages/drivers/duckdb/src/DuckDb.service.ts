@@ -16,6 +16,7 @@ import { $DuckdbId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
 import { DuckDBInstance, quotedIdentifier, quotedString } from "@duckdb/node-api";
 import { Context, Effect, Exit, Layer, Scope, Semaphore } from "effect";
+import * as S from "effect/Schema";
 import { DuckDbError } from "./DuckDb.errors.ts";
 import { DuckDbRows } from "./DuckDb.models.ts";
 import { ignoreNativeClose, releaseNativeConnection } from "./DuckDbNative.ts";
@@ -226,7 +227,7 @@ const queryOnConnection = Effect.fn("DuckDb.queryOnConnection")(function* (
       catch: connectionFailure("query", options, statement),
     })
   );
-  return yield* DuckDbRows.decodeEffect(rows).pipe(
+  return yield* S.decodeEffect(DuckDbRows)(rows).pipe(
     Effect.mapError((cause) =>
       DuckDbError.fromUnknown("query", cause, {
         databasePath: options.databasePath,

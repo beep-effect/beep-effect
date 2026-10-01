@@ -42,8 +42,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
 export const AttributeValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
     $I.annoteSchema("AttributeValue", {
       description: "JSON-safe scalar attribute value consisting of a string, boolean, or finite number.",
-    }),
-    SchemaUtils.withCodecStatics(["is"])
+    })
   );
 
 /**
@@ -90,7 +89,6 @@ export const Attributes = S.Record(S.String, AttributeValue).pipe(
     $I.annoteSchema("Attributes", {
       description: "Open string-keyed attribute record whose values are JSON-safe scalars.",
     }),
-    SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics(() => ({
       empty: (): Attributes => ({}),
     }))
@@ -212,11 +210,7 @@ export const EntityId = S.String.check(
     S.brand("EntityId"),
     $I.annoteSchema("EntityId", {
       description: "Validated snake-case local identifier for an extracted or resolved entity.",
-    }),
-    SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
-    SchemaUtils.withStatics((schema) => ({
-      equivalence: SchemaUtils.toEquivalence(schema),
-    }))
+    })
   );
 
 /**

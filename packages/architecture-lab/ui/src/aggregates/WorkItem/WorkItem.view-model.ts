@@ -55,10 +55,6 @@ export const WorkItemVisibleAction = WorkItemVisibleActionBase.pipe(
     title: "WorkItem visible action",
     description: "Action key exposed by the architecture lab WorkItem UI view model.",
   }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownResult(schema),
-  })),
   SchemaUtils.withLiteralKitStatics(WorkItemVisibleActionBase)
 );
 

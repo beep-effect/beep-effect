@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, flow, Match, SchemaIssue, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -1335,8 +1335,7 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
   ),
   $I.annoteSchema("HookPulseV1FromLegacyRecord", {
     description: "Migration codec that pseudonymizes private identifiers in legacy hook-pulse/v1 ledger rows.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1551,8 +1550,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
   ),
   $I.annoteSchema("HookPulseV1FromRawEvent", {
     description: "Canonical hook-pulse codec that derives wait attribution from whitelisted raw event fields.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "decodeUnknownResult", "encodeResult", "encodeUnknownEffect"])
+  })
 );
 
 /**

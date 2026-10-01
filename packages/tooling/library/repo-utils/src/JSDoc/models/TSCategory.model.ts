@@ -6,7 +6,7 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import { flow, Order, pipe, Result, SchemaAST } from "effect";
 import { dual } from "effect/Function";
@@ -1667,9 +1667,6 @@ export const resolveContextFallback: {
  * @since 0.0.0
  */
 export const Category = S.Union(CATEGORY_TAG_SCHEMAS).pipe(
-  SchemaUtils.withStatics((self) => ({
-    decodeUnknown: S.decodeUnknownEffect(self),
-  })),
   $I.annoteSchema("Category", {
     description: "A TypeScript category tag, representing a categorization of TypeScript constructs.",
   })

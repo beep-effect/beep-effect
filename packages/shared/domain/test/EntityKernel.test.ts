@@ -104,14 +104,14 @@ describe("EntityId", () => {
       assertFalse(DocumentId.equivalence(cast(1), cast(2)));
       expect(yield* decodeEffect(DocumentId)(1)).toBe(1);
 
-      assertTrue(DocumentId.is(1));
-      assertFalse(DocumentId.is(0));
-      expect(DocumentId.decodeUnknownSync(1)).toBe(1);
-      DocumentId.decodeUnknownOption(1).pipe(O.isSome, assertTrue);
-      assertNone(DocumentId.decodeUnknownOption(0));
-      const decoded = yield* DocumentId.decodeUnknownEffect(1);
+      assertTrue(S.is(DocumentId)(1));
+      assertFalse(S.is(DocumentId)(0));
+      expect(Result.getOrThrow(S.decodeResult(DocumentId)(1))).toBe(1);
+      S.decodeOption(DocumentId)(1).pipe(O.isSome, assertTrue);
+      assertNone(S.decodeOption(DocumentId)(0));
+      const decoded = yield* S.decodeEffect(DocumentId)(1);
       expect(decoded).toBe(1);
-      expect(yield* DocumentId.encodeEffect(decoded)).toBe(1);
+      expect(yield* S.encodeEffect(DocumentId)(decoded)).toBe(1);
       assertTrue(DocumentId.equivalence(decoded, decoded));
       assertFalse(DocumentId.equivalence(decoded, cast(2)));
       // The canonical static is the schema's own (per-AST memoized) equivalence, not the
@@ -174,7 +174,7 @@ describe("PublicEntityId", () => {
       Effect.fnUntraced(function* () {
         const publicId = yield* PublicEntityId.generate(DocumentId);
 
-        assertTrue(DocumentPublicId.is(publicId));
+        assertTrue(S.is(DocumentPublicId)(publicId));
         assertTrue(publicId.startsWith(`${DocumentId.tableName}_`));
       })
     );

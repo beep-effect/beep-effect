@@ -15,12 +15,6 @@ import { TSSyntaxKind } from "../TypeScript/index.ts";
 import type * as Crypto from "effect/Crypto";
 
 const $I = $RepoUtilsId.create("TSMorph/TSMorph.model");
-
-const withDecodeEffectStatic = <const Schema extends S.Top & S.Constraint>(schema: Schema) =>
-  SchemaUtils.withStatics(schema, (self) => ({
-    decodeEffect: S.decodeUnknownEffect(self),
-  }));
-
 const TS_CONFIG_FILE_PATTERN = /(?:^|[\\/])tsconfig(?:\.[^\\/]+)?\.json$/;
 const TYPE_SCRIPT_IMPLEMENTATION_FILE_PATTERN = /\.(?:ts|tsx|mts|cts)$/;
 const TYPE_SCRIPT_DECLARATION_FILE_PATTERN = /\.d\.(?:ts|mts|cts)$/;
@@ -124,8 +118,7 @@ export const RepoRootPath = FilePath.pipe(
   S.brand("RepoRootPath"),
   $I.annoteSchema("RepoRootPath", {
     description: "Absolute or repo-anchored path representing the repository root directory.",
-  }),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -161,8 +154,7 @@ export const WorkspaceDirectoryPath = FilePath.pipe(
   S.brand("WorkspaceDirectoryPath"),
   $I.annoteSchema("WorkspaceDirectoryPath", {
     description: "Directory path representing a workspace root inside the repository.",
-  }),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -200,9 +192,7 @@ export const TsConfigFilePath = S.make<(typeof FilePath)["Rebuild"]>(FilePath.as
     S.brand("TsConfigFilePath"),
     $I.annoteSchema("TsConfigFilePath", {
       description: "A tsconfig*.json file path that is safe to embed in TSMorph scope identities.",
-    }),
-    SchemaUtils.withCodecStatics(["is"]),
-    withDecodeEffectStatic
+    })
   );
 
 /**
@@ -240,9 +230,7 @@ export const TypeScriptImplementationFilePath = S.make<(typeof FilePath)["Rebuil
     S.brand("TypeScriptImplementationFilePath"),
     $I.annoteSchema("TypeScriptImplementationFilePath", {
       description: "A TypeScript implementation file path for .ts, .tsx, .mts, or .cts files.",
-    }),
-    SchemaUtils.withCodecStatics(["decodeUnknownOption"]),
-    withDecodeEffectStatic
+    })
   );
 
 /**
@@ -313,9 +301,7 @@ export type TypeScriptDeclarationFilePath = typeof TypeScriptDeclarationFilePath
 export const TypeScriptFilePath = S.Union([TypeScriptImplementationFilePath, TypeScriptDeclarationFilePath]).pipe(
   $I.annoteSchema("TypeScriptFilePath", {
     description: "A TypeScript source file path covering implementation and declaration files.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption", "is"]),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -332,6 +318,9 @@ export const TypeScriptFilePath = S.Union([TypeScriptImplementationFilePath, Typ
  * @since 0.0.0
  */
 export type TypeScriptFilePath = typeof TypeScriptFilePath.Type;
+
+const isTsConfigFilePath: (input: string) => input is TsConfigFilePath = S.is(TsConfigFilePath);
+const isTypeScriptFilePath: (input: string) => input is TypeScriptFilePath = S.is(TypeScriptFilePath);
 
 /**
  * Symbol-safe implementation file path schema.
@@ -351,8 +340,7 @@ export const SymbolFilePath = TypeScriptImplementationFilePath.check(symbolIdSaf
   S.brand("SymbolFilePath"),
   $I.annoteSchema("SymbolFilePath", {
     description: "A TypeScript implementation file path that is safe to embed in symbol identities.",
-  }),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -388,9 +376,7 @@ export const SymbolNameSegment = S.String.check(S.isPattern(SYMBOL_NAME_SEGMENT_
   S.brand("SymbolNameSegment"),
   $I.annoteSchema("SymbolNameSegment", {
     description: "A single identifier-like segment in a TypeScript symbol path.",
-  }),
-  SchemaUtils.withCodecStatics(["is"]),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -426,9 +412,7 @@ export const SymbolQualifiedName = S.String.check(S.isPattern(SYMBOL_QUALIFIED_N
   S.brand("SymbolQualifiedName"),
   $I.annoteSchema("SymbolQualifiedName", {
     description: "Dot-delimited symbol path such as UserService.login.",
-  }),
-  SchemaUtils.withCodecStatics(["is"]),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -602,8 +586,7 @@ export const SourceText = S.NonEmptyString.pipe(
   S.brand("SourceText"),
   $I.annoteSchema("SourceText", {
     description: "Non-empty source text extracted from a TypeScript file or declaration.",
-  }),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -639,8 +622,7 @@ export const LineNumber = S.Int.check(S.isGreaterThan(0)).pipe(
   S.brand("LineNumber"),
   $I.annoteSchema("LineNumber", {
     description: "A positive 1-based line number.",
-  }),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -676,8 +658,7 @@ export const ColumnNumber = S.Int.check(S.isGreaterThan(0)).pipe(
   S.brand("ColumnNumber"),
   $I.annoteSchema("ColumnNumber", {
     description: "A positive 1-based column number.",
-  }),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -713,8 +694,7 @@ export const ByteOffset = S.Natural.pipe(
   S.brand("ByteOffset"),
   $I.annoteSchema("ByteOffset", {
     description: "A non-negative byte offset within a source file.",
-  }),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -750,8 +730,7 @@ export const ByteLength = S.Natural.pipe(
   S.brand("ByteLength"),
   $I.annoteSchema("ByteLength", {
     description: "A non-negative byte length for a source span.",
-  }),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -787,10 +766,7 @@ export const ContentHash = Sha256Hex.pipe(
   S.brand("ContentHash"),
   $I.annoteSchema("ContentHash", {
     description: "Canonical SHA-256 digest for source text or symbol content.",
-  }),
-  SchemaUtils.withStatics((self) => ({
-    decodeEffect: S.decodeUnknownEffect(self),
-  }))
+  })
 );
 
 /**
@@ -984,8 +960,7 @@ export const ProjectScopeIdParts = S.TemplateLiteralParser([
 ]).pipe(
   $I.annoteSchema("ProjectScopeIdParts", {
     description: "Parsed project scope identity tuple for tsconfig path, scope mode, and reference policy.",
-  }),
-  withDecodeEffectStatic
+  })
 );
 
 /**
@@ -1239,8 +1214,7 @@ export const TypeScriptImplementationFilePathToSymbolFilePath = TypeScriptImplem
   }),
   $I.annoteSchema("TypeScriptImplementationFilePathToSymbolFilePath", {
     description: "Schema transformation from a TypeScript implementation file path to a symbol-id-safe file path.",
-  }),
-  withDecodeEffectStatic
+  })
 );
 
 const decodeSha256HexFromBytesEffect = S.decodeUnknownEffect(Sha256HexFromBytes);
@@ -1263,7 +1237,7 @@ export const ContentHashFromBytes = S.Uint8Array.pipe(
   S.decodeTo(ContentHash, {
     decode: SchemaGetter.transformEffect<ContentHash, Uint8Array, Crypto.Crypto>((value) =>
       decodeSha256HexFromBytesEffect(value).pipe(
-        Effect.flatMap(ContentHash.decodeEffect),
+        Effect.flatMap(S.decodeEffect(ContentHash)),
         Effect.mapError((error) => error.issue)
       )
     ),
@@ -1273,10 +1247,7 @@ export const ContentHashFromBytes = S.Uint8Array.pipe(
   }),
   $I.annoteSchema("ContentHashFromBytes", {
     description: "Effectful one-way schema transformation from source bytes to a canonical content hash.",
-  }),
-  SchemaUtils.withStatics((self) => ({
-    decodeEffect: S.decodeUnknownEffect(self),
-  }))
+  })
 );
 
 const textEncoder = new TextEncoder();
@@ -1298,7 +1269,7 @@ const textEncoder = new TextEncoder();
 export const ContentHashFromSourceText = SourceText.pipe(
   S.decodeTo(ContentHash, {
     decode: SchemaGetter.transformEffect<ContentHash, SourceText, Crypto.Crypto>((value) =>
-      ContentHashFromBytes.decodeEffect(textEncoder.encode(value)).pipe(Effect.mapError((error) => error.issue))
+      S.decodeEffect(ContentHashFromBytes)(textEncoder.encode(value)).pipe(Effect.mapError((error) => error.issue))
     ),
     encode: SchemaGetter.forbidden(
       () => "Encoding ContentHash back to original source text is not supported by ContentHashFromSourceText."
@@ -1306,10 +1277,7 @@ export const ContentHashFromSourceText = SourceText.pipe(
   }),
   $I.annoteSchema("ContentHashFromSourceText", {
     description: "Effectful one-way schema transformation from source text to a canonical content hash.",
-  }),
-  SchemaUtils.withStatics((self) => ({
-    decodeEffect: S.decodeUnknownEffect(self),
-  }))
+  })
 );
 
 /**
@@ -1724,8 +1692,8 @@ export const TsMorphScopeEntrypoint = S.Union([TsMorphScopeEntrypointTsConfig, T
   S.toTaggedUnion("_tag"),
   SchemaUtils.withStatics(() => {
     const make = Match.type<string>().pipe(
-      Match.when(TsConfigFilePath.is, TsMorphScopeEntrypointTsConfig.new),
-      Match.when(TypeScriptFilePath.is, TsMorphScopeEntrypointFile.new),
+      Match.when(isTsConfigFilePath, TsMorphScopeEntrypointTsConfig.new),
+      Match.when(isTypeScriptFilePath, TsMorphScopeEntrypointFile.new),
       Match.orElseAbsurd
     );
 
@@ -2292,8 +2260,7 @@ export const TsMorphDiagnostic = TsMorphDiagnosticCategory.mapMembers(
   $I.annoteSchema("TsMorphDiagnostic", {
     description: "Tagged union of normalized TypeScript diagnostics keyed by category.",
   }),
-  S.toTaggedUnion("category"),
-  withDecodeEffectStatic
+  S.toTaggedUnion("category")
 );
 
 /**

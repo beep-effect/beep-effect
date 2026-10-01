@@ -47,9 +47,7 @@ export const AgentInstructionDocument = S.NonEmptyString.pipe(
   $I.annoteSchema("AgentInstructionDocument", {
     description: "Non-empty markdown instructions read by agents such as Codex, Claude Code, Grok Build, and Junie.",
   }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeEffect: S.decodeUnknownEffect(schema),
-    is: S.is(schema),
+  SchemaUtils.withStatics(() => ({
     normalize: normalizeInstructionText,
   }))
 );
@@ -96,11 +94,7 @@ export const NormalizedAgentInstructionDocument = S.String.pipe(
   ),
   $I.annoteSchema("NormalizedAgentInstructionDocument", {
     description: "Markdown instruction document normalized by trimming trailing line whitespace and outer whitespace.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeEffect: S.decodeUnknownEffect(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 
 /**

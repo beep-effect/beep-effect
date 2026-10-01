@@ -7,7 +7,7 @@
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { LiteralKit, PosixPath, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, PosixPath, Sha256Hex } from "@beep/schema";
 import { HttpsUrl } from "@beep/schema/URL";
 import { Effect, identity, Number as N, Order } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -697,7 +697,7 @@ export const PROVIDER_RECORDING_DOCUMENT_ID = EntityId.make("lejeune-provider-sm
 /** Canonical compact codec used when hashing a sanitized candidate list. @category codecs @since 0.0.0 */
 export const ProviderCandidateListFromJsonString = S.fromJsonString(
   S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate])
-).pipe(SchemaUtils.withCodecStatics(["encodeEffect"]));
+);
 
 const ProviderRecordingFields = S.Struct({
   candidates: S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate]),
@@ -1473,9 +1473,7 @@ export const makePublishedReplayAggregate = (input: unknown) =>
  * @category codecs
  * @since 0.0.0
  */
-export const ImmutableDemoBundleFromJsonString = S.fromJsonString(ImmutableDemoBundle, { space: 2 }).pipe(
-  SchemaUtils.withCodecStatics(["encodeEffect"])
-);
+export const ImmutableDemoBundleFromJsonString = S.fromJsonString(ImmutableDemoBundle, { space: 2 });
 
 /**
  * JSON codec used to persist the mutable ledger without native JSON helpers.

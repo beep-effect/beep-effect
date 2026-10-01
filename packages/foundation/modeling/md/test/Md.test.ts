@@ -758,7 +758,7 @@ ${Md.h3("Inside")}
 
     expect(
       segmentInlineRuns([Md.text("a"), Md.code("b"), Md.p("block"), Md.em("c")], {
-        isInline: Inline.is,
+        isInline: S.is(Inline),
         renderInlineRun: (run) => `inline:${run.length}`,
         renderBlock: (block) => `block:${block._tag}`,
       })
@@ -1379,10 +1379,9 @@ Demo video`);
     expect(isStringArray(["a", 1])).toBe(false);
   });
 
-  // §5.3 crispen parity: the escape schemas now carry their guards via
-  // SchemaUtils.withCodecStatics instead of free-floating `S.is(...)` walls.
-  // These Arbitrary.schema laws pin that the colocated `.is` static agrees with
-  // the schema it derives from, so the absorption cannot silently drift.
+  // §5.3 crispen parity: the escape guards derive from their schemas with
+  // `S.is(...)`. These Arbitrary.schema laws pin that each guard agrees with
+  // the schema it derives from, so the derivation cannot silently drift.
   describe("colocated escape-schema guards agree with their schemas", () => {
     // Mirrors the module-private StringArray schema in Md.escape.ts.
     const StringArraySchema = S.Array(S.String);

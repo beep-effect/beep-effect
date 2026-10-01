@@ -198,8 +198,7 @@ export class BackendOperationError extends S.TaggedError<BackendOperationError>(
 export const NLPBackendError = S.Union([BackendNotSupported, BackendInitError, BackendOperationError]).pipe(
   $I.annoteSchema("NLPBackendError", {
     description: "A backend failure.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

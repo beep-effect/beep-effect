@@ -8,7 +8,6 @@
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { aliasedTable, and, count, desc, eq, or } from "drizzle-orm";
 import { Context, DateTime, Effect, Equal, Layer, Match, Order } from "effect";
@@ -174,9 +173,9 @@ const ConflictSelectRows = Conflicts.select.pipe(S.Array, S.mutable);
 const decodeConflictRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(ConflictSelectRows)(rows));
 
-const CountRows = S.Tuple([CountRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const CountRows = S.Tuple([CountRow]);
 
-const decodeCountRow = (rows: unknown) => normalizeDecodedRows(CountRows.decodeUnknownEffect(rows));
+const decodeCountRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(CountRows)(rows));
 
 /**
  * Canonicalize a pair of claim UUIDs so the smaller id is always stored first.

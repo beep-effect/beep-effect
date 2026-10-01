@@ -7,7 +7,7 @@
  */
 
 import { $AgentsDomainId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, pipe, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
@@ -231,8 +231,7 @@ export const EnvVarName = S.NonEmptyString.check(
   S.brand("EnvVarName"),
   $I.annoteSchema("EnvVarName", {
     description: "Environment-variable name safe to persist on a provider instance; token-bearing names rejected.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -290,8 +289,7 @@ export const EnvVars = TokenSafeEnvVarRecord.pipe(
   S.decodeTo(S.Record(EnvVarName, S.NonEmptyString), SchemaTransformation.passthrough()),
   $I.annoteSchema("EnvVars", {
     description: "Extra child-process environment injected when spawning the provider CLI, token-safe names only.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeEffect"])
+  })
 );
 
 /**
@@ -484,15 +482,7 @@ export const AuthSnapshot = pipe(
   $I.annoteSchema("AuthSnapshot", {
     description: "Tagged union of provider auth-probe outcomes, discriminated by status.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("status"),
-      SchemaUtils.withStatics(() => ({
-        decodeUnknownSync: schema.decodeUnknownSync,
-        is: schema.is,
-      }))
-    )
+  S.toTaggedUnion("status")
 );
 
 /**

@@ -14,7 +14,7 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { Effect } from "effect";
@@ -132,8 +132,7 @@ export const SinkDestination = S.NonEmptyString.pipe(
   S.brand("SinkDestination"),
   $I.annoteSchema("SinkDestination", {
     description: "Raw granted sink destination; grant-side only, never persisted in execution records.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -332,8 +331,7 @@ export const PolicyRevision = S.make<(typeof SemanticVersion)["Rebuild"]>(Semant
   S.brand("PolicyRevision"),
   $I.annoteSchema("PolicyRevision", {
     description: "Pinned policy revision a grant and its records were evaluated under.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**

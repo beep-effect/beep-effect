@@ -7,7 +7,6 @@
  */
 
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -151,12 +150,7 @@ export const WorkerRepositoryError = S.Union([
     title: "Worker repository error",
     description: "Tagged union of Worker repository port failures.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**

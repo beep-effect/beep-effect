@@ -229,8 +229,8 @@ export const ansiStyles = {
  */
 export const getStyleEntry = Match.type<StyleName>().pipe(
   Match.withReturnType<StylerEntry>(),
-  Match.when(ModifierName.is, (value) => modifierStyles[value]),
-  Match.when(ForegroundColorName.is, (value) => foregroundStyles[value]),
+  Match.when(S.is(ModifierName), (value) => modifierStyles[value]),
+  Match.when(S.is(ForegroundColorName), (value) => foregroundStyles[value]),
   Match.orElse((value) => backgroundStyles[value])
 );
 

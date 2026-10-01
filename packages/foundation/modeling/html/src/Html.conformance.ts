@@ -10,7 +10,6 @@
 /// <reference path="./whatwg-url.d.ts" />
 
 import { $HtmlId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import * as Conformance from "@beep/schema/Conformance";
 import { A, Eq, Struct } from "@beep/utils";
 import { color as parseCssColor } from "@csstools/css-color-parser";
@@ -174,7 +173,6 @@ const issueConformantHtml = (root: HtmlRoot.Type): ConformantHtmlValue => {
  */
 export const ConformantHtml = S.declare(ConformantHtmlValue.is).pipe(
   Conformance.annotateConformance(HtmlWhatwgConformanceAnnotation),
-  SchemaUtils.withStatics(() => ({ is: ConformantHtmlValue.is })),
   $I.annoteSchema("ConformantHtml", {
     description: "Runtime-issued proof of HTML AST conformance.",
   })

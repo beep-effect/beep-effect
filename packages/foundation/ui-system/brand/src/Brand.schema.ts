@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $BrandId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { HexColor } from "@beep/schema/Color";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -650,8 +650,7 @@ export class BrandIdentity extends S.Class<BrandIdentity>($I`BrandIdentity`)(
  * @since 0.0.0
  */
 export const SvgPaint = S.Union([HexColor, S.Literal("currentColor")]).pipe(
-  $I.annoteSchema("SvgPaint", { description: "A hex color or the inherited currentColor keyword." }),
-  SchemaUtils.withStatics((self) => ({ is: S.is(self) }))
+  $I.annoteSchema("SvgPaint", { description: "A hex color or the inherited currentColor keyword." })
 );
 
 /**

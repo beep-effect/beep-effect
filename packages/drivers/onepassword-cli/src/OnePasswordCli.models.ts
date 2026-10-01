@@ -13,9 +13,6 @@ import * as S from "effect/Schema";
 
 const $I = $OnepasswordCliId.create("OnePasswordCli.models");
 const OnePasswordReferenceProbeStatusBase = LiteralKit(["resolved", "missing"]);
-const withProbeStatusDecodeOption = SchemaUtils.withStatics((schema: typeof OnePasswordReferenceProbeStatusBase) => ({
-  decodeOption: S.decodeUnknownOption(schema),
-}));
 
 const OnePasswordCliAccountName = S.Trim.pipe(
   $I.annoteSchema("OnePasswordCliAccountName", {
@@ -41,8 +38,7 @@ export const OnePasswordReferenceProbeStatus = OnePasswordReferenceProbeStatusBa
   $I.annoteSchema("OnePasswordReferenceProbeStatus", {
     description: "Product-neutral 1Password secret-reference probe status.",
   }),
-  SchemaUtils.withLiteralKitStatics(OnePasswordReferenceProbeStatusBase),
-  withProbeStatusDecodeOption
+  SchemaUtils.withLiteralKitStatics(OnePasswordReferenceProbeStatusBase)
 );
 
 /**
@@ -125,8 +121,7 @@ export type OnePasswordCliExitCode = typeof OnePasswordCliExitCode.Type;
 export const OnePasswordCliDiagnosticText = S.Trim.pipe(
   $I.annoteSchema("OnePasswordCliDiagnosticText", {
     description: "Trim-normalized redacted stdout or stderr text used for diagnostics.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
+  })
 );
 
 /**

@@ -1,6 +1,6 @@
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Duration, Effect, Fiber, Layer } from "effect";
+import { Duration, Effect, Fiber, Layer, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
@@ -49,8 +49,8 @@ describe("streaming extraction activity boundaries", () => {
         const fiber = yield* makeStreamingExtractionActivity({
           batchId: BatchId.make("batch-00000000000a"),
           documentId: DocumentId.make("doc-00000000000a"),
-          sourceUri: GcsUri.decodeUnknownSync("gs://test-bucket/missing.txt"),
-          ontologyUri: GcsUri.decodeUnknownSync("gs://test-bucket/ontology.ttl"),
+          sourceUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/missing.txt")),
+          ontologyUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/ontology.ttl")),
           ontologyId: OntologyName.make("test_ontology"),
           targetNamespace: Namespace.make("test-ontology"),
           ontologyEmbeddingsUri: O.none(),

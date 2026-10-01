@@ -7,7 +7,6 @@
  */
 
 import { $WorkspaceUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 
@@ -140,8 +139,7 @@ export class ThreadStoreUnavailable extends S.TaggedError<ThreadStoreUnavailable
 export const ThreadStoreError = S.Union([ThreadStoreNotFound, ThreadStoreConflict, ThreadStoreUnavailable]).pipe(
   $I.annoteSchema("ThreadStoreError", {
     description: "ThreadStore port failure.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

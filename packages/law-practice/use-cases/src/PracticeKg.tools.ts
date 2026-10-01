@@ -17,7 +17,6 @@ import {
   FieldTierName,
   FourHintAnnotations,
 } from "@beep/mcp-kit";
-import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
@@ -272,8 +271,7 @@ export const PracticeKgCandidateClaimsResult = S.Union([
 ]).pipe(
   $I.annoteSchema("PracticeKgCandidateClaimsResult", {
     description: "Loaded candidate-claim rows or a typed not-loaded bundle state.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

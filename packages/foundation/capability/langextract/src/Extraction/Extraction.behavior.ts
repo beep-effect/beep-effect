@@ -38,10 +38,7 @@ const isModelOutputCandidates = S.is(ModelOutputCandidates);
 const ModelOutputJson = S.fromJsonString(S.Unknown).pipe(
   $I.annoteSchema("ModelOutputJson", {
     description: "JSON text emitted by a language model before response-shape validation.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeUnknownEffect: S.decodeUnknownEffect(schema),
-  }))
+  })
 );
 
 class ModelOutputObject extends S.Class<ModelOutputObject>($I`ModelOutputObject`)(
@@ -58,7 +55,6 @@ const ModelOutput = S.Union([ModelOutputObject, ModelOutputCandidates]).pipe(
     description: "Accepted array or object-envelope shape for one language-model extraction response.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    decodeUnknownEffect: S.decodeUnknownEffect(schema),
     toCandidates: (output: typeof schema.Type): ReadonlyArray<ExtractionCandidate> =>
       Match.value(output).pipe(
         Match.when(isModelOutputCandidates, (candidates) => candidates),
@@ -96,14 +92,14 @@ const stripJsonFence = (text: string): string => {
 export const parseModelOutput: (text: string) => Effect.Effect<ReadonlyArray<ExtractionCandidate>, LangExtractError> =
   flow(
     stripJsonFence,
-    ModelOutputJson.decodeUnknownEffect,
+    S.decodeUnknownEffect(ModelOutputJson),
     Effect.mapError(() =>
       LangExtractError.fromReason("model-output-parse-failed", {
         details: { cause: "json-parse-failed" },
         message: "Language model output was not valid JSON.",
       })
     ),
-    Effect.flatMap(ModelOutput.decodeUnknownEffect),
+    Effect.flatMap(S.decodeUnknownEffect(ModelOutput)),
     Effect.catchTag("SchemaError", () =>
       Effect.fail(
         LangExtractError.fromReason("model-output-schema-invalid", {

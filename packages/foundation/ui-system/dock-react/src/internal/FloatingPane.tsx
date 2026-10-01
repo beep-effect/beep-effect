@@ -15,6 +15,7 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { makeOperation } from "./AdapterState.ts";
 import { boxStyle, freshFloatingSplitId, positionOf, pressStartsOnButton, topLeftBox } from "./DropCompiler.ts";
 import { GroupPane } from "./GroupPane.tsx";
@@ -49,7 +50,7 @@ export const FloatingPane = (
   const container = props.graph.registry.get(props.state.containerAtom);
   const finish = (node: HTMLElement, event: PointerEvent): void => {
     const gesture = props.graph.registry.get(props.state.floatingGestureAtom);
-    if (O.isNone(gesture) || !GroupId.equals(gesture.value.groupId, groupId)) return;
+    if (O.isNone(gesture) || !S.toEquivalence(GroupId)(gesture.value.groupId, groupId)) return;
     const override = props.graph.registry.get(props.state.floatingOverrideAtom);
     props.graph.registry.set(props.state.floatingGestureAtom, O.none());
     props.graph.registry.set(props.state.floatingOverrideAtom, O.none());
@@ -81,7 +82,7 @@ export const FloatingPane = (
         const gesture = props.graph.registry.get(props.state.floatingGestureAtom);
         if (
           O.isNone(gesture) ||
-          !GroupId.equals(gesture.value.groupId, groupId) ||
+          !S.toEquivalence(GroupId)(gesture.value.groupId, groupId) ||
           P.not(Eq.equals(mode))(gesture.value.mode)
         )
           return;

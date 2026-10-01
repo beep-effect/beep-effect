@@ -41,6 +41,11 @@ import * as SchemaAST from "effect/SchemaAST";
 import { createEditor } from "lexical";
 import type { SerializedTableCellNode } from "@lexical/table";
 
+// LexicalNode's strict decoders reject excess properties, as the retired statics did.
+const strictSemanticParseOptions = { onExcessProperty: "error" } satisfies SchemaAST.ParseOptions;
+const decodeStrictLexicalNodeResult = S.decodeUnknownResult(LexicalNode, strictSemanticParseOptions);
+const decodeStrictLexicalNodeOption = S.decodeUnknownOption(LexicalNode, strictSemanticParseOptions);
+
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 const encodeJsonEffect = S.encodeEffect(S.fromJsonString(S.Unknown));
 
@@ -347,7 +352,7 @@ describe("Lexical.model", { concurrent: false }, () => {
     { node: NodeArbitrary },
     ({ node }) => {
       expect(matchedNodeType(node)).toBe(node.type);
-      expect(decoded(LexicalNode.decodeUnknownResult(decoded(encodeLexicalNodeResult(node))))).toEqual(node);
+      expect(decoded(decodeStrictLexicalNodeResult(decoded(encodeLexicalNodeResult(node))))).toEqual(node);
     },
     { arbitrary: fcRuns(50) }
   );
@@ -524,9 +529,9 @@ describe("Lexical.model", { concurrent: false }, () => {
       ] as const;
 
       expect(decodeLexicalNodeResult(nodeWithExtension)._tag).toBe("Failure");
-      assertNone(LexicalNode.decodeUnknownOption(nodeWithExtension));
+      assertNone(decodeStrictLexicalNodeOption(nodeWithExtension));
       expect(decodeLexicalNodeResult(rootWithNestedExtension)._tag).toBe("Failure");
-      assertNone(LexicalNode.decodeUnknownOption(rootWithNestedExtension));
+      assertNone(decodeStrictLexicalNodeOption(rootWithNestedExtension));
       yield* Effect.forEach(
         cases,
         Effect.fnUntraced(function* ([stateWithExtension, jsonWithExtension]) {

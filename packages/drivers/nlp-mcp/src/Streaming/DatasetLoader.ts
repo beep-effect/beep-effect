@@ -53,11 +53,7 @@ const DatasetFormatBase = LiteralKit(["json", "jsonl", "lines", "text"]);
 export const DatasetFormat = DatasetFormatBase.pipe(
   $I.annoteSchema("DatasetFormat", {
     description: "Dataset formats supported by the file and URL loaders.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  })
 );
 
 /**
@@ -101,11 +97,7 @@ const DatasetSourceTypeBase = LiteralKit(["file", "url"]);
 export const DatasetSourceType = DatasetSourceTypeBase.pipe(
   $I.annoteSchema("DatasetSourceType", {
     description: "Provenance source channels supported by dataset loaders.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  })
 );
 
 /**

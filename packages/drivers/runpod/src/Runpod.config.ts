@@ -6,7 +6,7 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { SchemaUtils, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { Effect, SchemaGetter } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -37,8 +37,7 @@ export const RunpodConfigUrl = S.String.pipe(
   }),
   $I.annoteSchema("RunpodConfigUrl", {
     description: "Validated Runpod configuration URL with trailing slash separators removed.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**

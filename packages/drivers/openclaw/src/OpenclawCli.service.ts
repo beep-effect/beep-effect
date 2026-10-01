@@ -13,7 +13,7 @@
  */
 
 import { $OpenclawId } from "@beep/identity";
-import { Context, Duration, Effect, flow, Layer, pipe } from "effect";
+import { Context, Duration, Effect, flow, Layer, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -327,9 +327,9 @@ const firstNonBlank = (primary: string, fallback: string): string =>
     O.getOrElse(() => fallback)
   );
 const stderrDiagnostics = (result: OpenclawProcessResult): OpenclawDiagnosticText =>
-  OpenclawDiagnosticText.decodeUnknownSync(firstNonBlank(result.stderr, result.stdout));
+  Result.getOrThrow(S.decodeResult(OpenclawDiagnosticText)(firstNonBlank(result.stderr, result.stdout)));
 const stdoutDiagnostics = (result: OpenclawProcessResult): OpenclawDiagnosticText =>
-  OpenclawDiagnosticText.decodeUnknownSync(firstNonBlank(result.stdout, result.stderr));
+  Result.getOrThrow(S.decodeResult(OpenclawDiagnosticText)(firstNonBlank(result.stdout, result.stderr)));
 
 const cliTimeoutArguments = (timeoutMs: number | undefined): ReadonlyArray<string> =>
   O.match(O.fromUndefinedOr(timeoutMs), {

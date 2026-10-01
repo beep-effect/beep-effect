@@ -6,7 +6,7 @@
  */
 
 import { $SanityId } from "@beep/identity";
-import { SchemaUtils, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Config, Context, Effect, Layer, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -41,8 +41,7 @@ const $I = $SanityId.create("Sanity.service");
 export const SanityQueryParamValue = S.Union([S.Boolean, S.Finite, S.String]).pipe(
   $I.annoteSchema("SanityQueryParamValue", {
     description: "Scalar JSON value accepted in Sanity query params.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

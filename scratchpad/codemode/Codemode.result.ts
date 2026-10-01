@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { Effect, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
@@ -220,8 +219,7 @@ export const ResultModel = S.Union([SuccessModel, FailureModel]).pipe(
   $I.annoteSchema("ResultModel", {
     description: "Schema-owned success or failure model.",
   }),
-  S.toTaggedUnion("_tag"),
-  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
+  S.toTaggedUnion("_tag")
 );
 
 /**

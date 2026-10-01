@@ -30,11 +30,7 @@ export const PanelId = S.NonEmptyString.pipe(
   S.brand("DockPanelId"),
   $I.annoteSchema("PanelId", {
     description: "Stable identity for one panel instance in a dock workspace.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 /**
  * Decoded panel identifier.
@@ -72,11 +68,7 @@ export const GroupId = S.NonEmptyString.pipe(
   S.brand("DockGroupId"),
   $I.annoteSchema("GroupId", {
     description: "Stable identity for one non-empty tab group.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 /**
  * Decoded tab-group identifier.
@@ -114,11 +106,7 @@ export const SplitId = S.NonEmptyString.pipe(
   S.brand("DockSplitId"),
   $I.annoteSchema("SplitId", {
     description: "Stable identity for one binary layout split.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 /**
  * Decoded binary-split identifier.
@@ -156,11 +144,7 @@ export const CommandId = S.NonEmptyString.pipe(
   S.brand("DockCommandId"),
   $I.annoteSchema("CommandId", {
     description: "Causal identity shared by a command and its emitted events.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 /**
  * Decoded command identifier.
@@ -198,11 +182,7 @@ export const RendererKey = S.NonEmptyString.pipe(
   S.brand("DockRendererKey"),
   $I.annoteSchema("RendererKey", {
     description: "Renderer-neutral key resolved by a host adapter outside dockview-core.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
-  }))
+  })
 );
 /**
  * Decoded renderer registry key.
@@ -249,8 +229,6 @@ export const SplitRatio = S.Int.check(
   }),
   SchemaUtils.withStatics((schema) => ({
     complement: (ratio: typeof schema.Type) => schema.make(N.subtract(10_000, ratio)),
-    equals: SchemaUtils.toEquivalence(schema),
-    is: S.is(schema),
   }))
 );
 /**

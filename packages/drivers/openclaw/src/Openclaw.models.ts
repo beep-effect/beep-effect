@@ -30,9 +30,6 @@ const OpenclawSystemdActiveStateBase = LiteralKit(["active", "inactive", "failed
 const OpenclawHttpProbeStatusBase = LiteralKit(["healthy", "unreachable"]);
 const OpenclawSchemaPlaceholderReasonBase = LiteralKit(["missing", "placeholder"]);
 const OpenclawLiveAcceptanceStepBase = LiteralKit(["hosted-model", "local-model", "skill", "reload", "telegram"]);
-const withActiveStateDecodeOption = SchemaUtils.withStatics((schema: typeof OpenclawSystemdActiveStateBase) => ({
-  decodeOption: S.decodeUnknownOption(schema),
-}));
 const OpenclawNpmShasum = S.String.check(
   S.isPattern(npmShasumPattern, {
     identifier: "OpenclawNpmShasum",
@@ -130,8 +127,7 @@ export const OpenclawDiagnosticText = S.String.pipe(
   ),
   $I.annoteSchema("OpenclawDiagnosticText", {
     description: "Trim-normalized redacted diagnostic text capped at 2000 characters.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -1263,8 +1259,7 @@ export const OpenclawSystemdActiveState = OpenclawSystemdActiveStateBase.pipe(
   $I.annoteSchema("OpenclawSystemdActiveState", {
     description: "Recognized systemd unit active states.",
   }),
-  SchemaUtils.withLiteralKitStatics(OpenclawSystemdActiveStateBase),
-  withActiveStateDecodeOption
+  SchemaUtils.withLiteralKitStatics(OpenclawSystemdActiveStateBase)
 );
 
 /**
@@ -1326,7 +1321,7 @@ export class OpenclawSystemdUnitState extends S.Class<OpenclawSystemdUnitState>(
    * @since 0.0.0
    */
   get knownActiveState(): O.Option<OpenclawSystemdActiveState> {
-    return OpenclawSystemdActiveState.decodeOption(this.activeState);
+    return S.decodeUnknownOption(OpenclawSystemdActiveState)(this.activeState);
   }
 }
 

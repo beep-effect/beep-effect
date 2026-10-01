@@ -132,8 +132,7 @@ export const PgExternalConnectionUri = S.NonEmptyString.check(
 ).pipe(
   $I.annoteSchema("PgExternalConnectionUri", {
     description: "PostgreSQL-compatible connection URI accepted by the external SQL test driver.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

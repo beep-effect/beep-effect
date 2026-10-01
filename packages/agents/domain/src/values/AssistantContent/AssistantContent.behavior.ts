@@ -11,6 +11,7 @@
 import * as Md from "@beep/md/Md.model";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { AssistantBlock, AssistantHeadingTag, AssistantListType, InlineNode } from "./AssistantContent.model.ts";
 
 /**
@@ -108,7 +109,7 @@ export const blockToMd = (block: AssistantBlock): Md.Block.Type =>
         // Assistant-supplied language hints are untrusted free-form info strings;
         // fold them through CodeFenceLanguage so non-conforming tokens drop to
         // None (matching the Pre codec) instead of throwing on construction.
-        language: O.flatMap(O.fromNullishOr(b.language), Md.CodeFenceLanguage.decodeOption),
+        language: O.flatMap(O.fromNullishOr(b.language), S.decodeOption(Md.CodeFenceLanguage)),
         value: b.code,
       }),
     table: (b): Md.Block.Type =>

@@ -47,11 +47,7 @@ const PipelineStageBase = LiteralKit(["lowercase", "normalizeWhitespace", "remov
 export const PipelineStage = PipelineStageBase.pipe(
   $I.annoteSchema("PipelineStage", {
     description: "Identifier of a supported, pure line transform stage.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  })
 );
 
 /**

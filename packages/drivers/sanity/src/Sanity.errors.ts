@@ -73,11 +73,7 @@ export const SanityErrorReason = SanityErrorReasonBase.pipe(
   $I.annoteSchema("SanityErrorReason", {
     description: "Redacted technical error reasons emitted by the Sanity API driver.",
   }),
-  SchemaUtils.withLiteralKitStatics(SanityErrorReasonBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownEffect(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(SanityErrorReasonBase)
 );
 
 /**

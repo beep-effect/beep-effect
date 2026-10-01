@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as Conformance from "@beep/schema/Conformance";
 import { A, Struct } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
@@ -269,9 +269,6 @@ export const SafeUrlAttribute = S.String.check(
     message: "Expected a relative, https, mailto, or tel URL without control characters",
   })
 ).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    is: S.is(schema),
-  })),
   $I.annoteSchema("SafeUrlAttribute", {
     description: "URL permitted in a safe HTML href or src attribute.",
   })
@@ -319,9 +316,6 @@ export const SafeImageUrlAttribute = S.String.check(
     message: "Expected a relative or https image URL without control characters",
   })
 ).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    is: S.is(schema),
-  })),
   $I.annoteSchema("SafeImageUrlAttribute", {
     description: "URL permitted in a safe HTML img src attribute.",
   })
@@ -504,7 +498,6 @@ const issueSafeHtmlAst = (conformant: ConformantHtml): SafeHtmlAstValue => {
  */
 export const SafeHtmlAst = S.declare(SafeHtmlAstValue.is).pipe(
   Conformance.annotateConformance(HtmlSafePolicyConformanceAnnotation),
-  SchemaUtils.withStatics(() => ({ is: SafeHtmlAstValue.is })),
   $I.annoteSchema("SafeHtmlAst", {
     description: "Runtime-issued proof of conservative HTML output safety.",
   })

@@ -41,7 +41,7 @@ import * as S from "effect/Schema";
 import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { JSX } from "react";
 
-const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePath.decodeUnknownOption(Str.trim(value));
+const decodePath = (value: string): O.Option<OntologyFilePath> => S.decodeOption(OntologyFilePath)(Str.trim(value));
 
 const documentBadge = (sessionOpen: boolean, dirty: boolean) => {
   if (!sessionOpen) {

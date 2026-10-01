@@ -3,6 +3,7 @@ import { IRI } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer } from "effect";
 import { isRdfStore, RdfBuilder, rdfStoreApplyRules, rdfStoreSize, rdfStoreToDataset } from "../../Service/Rdf.ts";
+import * as S from "effect/Schema";
 
 const RdfBuilderTest = RdfBuilder.Default.pipe(
   Layer.provide(
@@ -24,7 +25,7 @@ describe("RdfBuilder", () => {
         const valid = yield* rdf.createIri("https://example.org/resource");
         const invalid = yield* Effect.flip(rdf.createIri("not an iri"));
 
-        assert.isTrue(IRI.is(valid));
+        assert.isTrue(S.is(IRI)(valid));
         assert.strictEqual(invalid._tag, "RdfError");
       })
     );

@@ -394,8 +394,7 @@ export const EdgeAuthorityError = S.Union([
   $I.annoteSchema("EdgeAuthorityError", {
     title: "Edge authority error",
     description: "Union of every edge authority repository failure.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

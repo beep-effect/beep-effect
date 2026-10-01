@@ -18,10 +18,6 @@ const serviceUnavailableBody = WorkItemUseCases.WorkItemActionFailed.make({
   reason: WorkItemUseCases.WORK_ITEM_ACTION_UNAVAILABLE_REASON,
 });
 const WorkItemHttpStatusBase = LiteralKit([200, 201, 404, 409, 422, 503]);
-const withWorkItemHttpStatusCodecStatics = SchemaUtils.withStatics((schema: typeof WorkItemHttpStatusBase) => ({
-  decodeOption: S.decodeUnknownOption(schema),
-  fromUnknown: S.decodeUnknownResult(schema),
-}));
 
 /**
  * HTTP status values emitted by the WorkItem proof protocol adapter.
@@ -54,8 +50,7 @@ export const WorkItemHttpStatus = WorkItemHttpStatusBase.pipe(
     title: "WorkItem HTTP status",
     description: "HTTP status vocabulary emitted by the WorkItem proof protocol adapter.",
   }),
-  SchemaUtils.withLiteralKitStatics(WorkItemHttpStatusBase),
-  withWorkItemHttpStatusCodecStatics
+  SchemaUtils.withLiteralKitStatics(WorkItemHttpStatusBase)
 );
 
 /**

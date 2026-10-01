@@ -1,6 +1,5 @@
 import * as NLPService from "@beep/nlp-processing/NLPService";
 import { SourceTextExtractor } from "@beep/provenance";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { WinkBackendLive, WinkEngineLive } from "@beep/wink";
 import { Clock, Console, Crypto, DateTime, Effect, FileSystem, Layer, Number as N, Order, Path } from "effect";
 import * as A from "effect/Array";
@@ -53,7 +52,7 @@ import type { EventBody as EventBodyValue, ProvenanceEvent as ProvenanceEventVal
 import type { ParseOutcome } from "@/schema/Text";
 import type { GoldSource } from "@/services/GoldSource";
 
-const GoldRefJson = S.fromJsonString(GoldRef).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
+const GoldRefJson = S.fromJsonString(GoldRef);
 const EvalReportJson = S.fromJsonString(EvalReport, { space: 2 });
 const EvalTelemetryJson = S.fromJsonString(EvalRunTelemetry, { space: 2 });
 const fallbackExtractor = SourceTextExtractor.make({
@@ -209,7 +208,7 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
     );
     const goldPath = path.join(config.goldDirectory, "gold.json");
     const gold = yield* fs.readFileString(goldPath).pipe(
-      Effect.flatMap(GoldRefJson.decodeEffect),
+      Effect.flatMap(S.decodeEffect(GoldRefJson)),
       Effect.mapError(() =>
         GoldUnavailable.make({
           message: `Required gold reference is unavailable: ${goldPath}`,

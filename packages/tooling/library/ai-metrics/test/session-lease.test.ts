@@ -3,8 +3,8 @@ import {
   SessionLease,
   SessionLeaseEvent,
   SessionLeaseExpiryCandidate,
-  SessionLeaseReconciliation,
   SessionLeaseReconciliationEvidence,
+  SessionLeaseReconciliationJson,
   transitionSessionLease,
 } from "@beep/repo-ai-metrics";
 import { it } from "@beep/test-runner";
@@ -16,7 +16,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type { SessionLeaseTransition } from "@beep/repo-ai-metrics";
+import type { SessionLeaseReconciliation, SessionLeaseTransition } from "@beep/repo-ai-metrics";
 
 const decodeSessionLeaseExpiryCandidateResult = S.decodeResult(SessionLeaseExpiryCandidate);
 const decodeEvent = S.decodeUnknownEffect(SessionLeaseEvent);
@@ -344,7 +344,7 @@ describe("telemetry-v2 session leases", () => {
       const encoded = [
         yield* encodeCandidateJson(candidate),
         yield* encodeEvidenceJson(evidence),
-        yield* SessionLeaseReconciliation.encodeJsonEffect(result),
+        yield* S.encodeUnknownEffect(SessionLeaseReconciliationJson)(result),
       ].join("\n");
 
       for (const forbidden of [

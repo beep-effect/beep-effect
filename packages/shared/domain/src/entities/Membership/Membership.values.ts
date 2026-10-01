@@ -7,7 +7,6 @@
 
 import { $SharedDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as S from "effect/Schema";
 
 const $I = $SharedDomainId.create("entities/Membership/Membership.values");
 const RoleBase = LiteralKit(["owner", "member"]);
@@ -31,11 +30,7 @@ export const Role = RoleBase.pipe(
   $I.annoteSchema("Role", {
     description: "Shared organization membership role.",
   }),
-  SchemaUtils.withLiteralKitStatics(RoleBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownResult(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RoleBase)
 );
 
 /**
@@ -73,11 +68,7 @@ export const Status = StatusBase.pipe(
   $I.annoteSchema("Status", {
     description: "Shared organization membership lifecycle status.",
   }),
-  SchemaUtils.withLiteralKitStatics(StatusBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownResult(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(StatusBase)
 );
 
 /**

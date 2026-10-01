@@ -240,7 +240,7 @@ export const InvariantEnforcement = InvariantEnforcementKind.mapMembers(
 ).pipe(
   S.toTaggedUnion("kind"),
   SchemaUtils.withStatics((schema) => ({
-    toEquivalenceArray: schema.pipe(S.Array, SchemaUtils.toEquivalence),
+    toEquivalenceArray: schema.pipe(S.Array, S.toEquivalence),
   })),
   $I.annoteSchema("InvariantEnforcement", {
     description: "Discriminated evidence describing how an invariant is enforced or why it is not.",
@@ -357,5 +357,5 @@ export class InvariantDescriptor extends S.Class<InvariantDescriptor>($I`Invaria
     description: "Specification-backed statement of one semantic or structural invariant.",
   })
 ) {
-  static readonly toEquivalenceArray = InvariantDescriptor.pipe(S.Array, SchemaUtils.toEquivalence);
+  static readonly toEquivalenceArray = InvariantDescriptor.pipe(S.Array, S.toEquivalence);
 }

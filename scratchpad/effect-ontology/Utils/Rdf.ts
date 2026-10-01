@@ -11,6 +11,8 @@ import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { dual2 } from "./Dual.ts";
+import * as S from "effect/Schema";
+import { Result } from "effect";
 
 /**
  * Concatenates a namespace and local identifier, then validates the result as
@@ -32,7 +34,7 @@ import { dual2 } from "./Dual.ts";
  * @since 0.0.0
  */
 export const buildIri = dual2(
-  (baseNamespace: string, localName: string): IriValue => IRI.decodeUnknownSync(`${baseNamespace}${localName}`)
+  (baseNamespace: string, localName: string): IriValue => Result.getOrThrow(S.decodeResult(IRI)(`${baseNamespace}${localName}`))
 );
 
 /**

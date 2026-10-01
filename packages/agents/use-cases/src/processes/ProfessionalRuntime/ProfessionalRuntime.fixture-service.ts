@@ -1,11 +1,3 @@
-/**
- * Deterministic fixture SDK facade for the Agentic Professional Runtime proof.
- *
- * @packageDocumentation
- * @since 0.0.0
- */
-
-import { SchemaUtils } from "@beep/schema";
 import { PromotionGateRequest, PromotionGateVerdict, PromotionTenantRef } from "@beep/shared-use-cases/PromotionGate";
 import { A } from "@beep/utils";
 import { Effect, flow, HashMap, HashSet, Result } from "effect";
@@ -44,7 +36,7 @@ const fixtureForScenario = (
 
 const outputForScenario = flow(fixtureForScenario, Effect.flatMap(runRuntimeFixture));
 
-const sameScope = SchemaUtils.toEquivalence(RuntimeScope);
+const sameScope = S.toEquivalence(RuntimeScope);
 
 const sameOrderedStrings = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
   left.length === right.length && A.every(left, (value, index) => value === right[index]);
