@@ -1996,3 +1996,14 @@ that the repaired matcher still accepted `it.layer`, `test.describe` and
 prefix-only title matches, although no frozen input depended on those gaps.
 A syntax-aware title owner check, with negative cases for suite/layer openers
 and closing-quote equality, would have prevented both review cycles.
+
+## 2026-10-01: resumed model check could not decode the workstation manifest
+
+During R54 recovery, `bun run beep models check` failed before checking routes:
+`Expected RoutingRole at ["bindings"][7]["role"]`. The campaign checkout's
+manifest decoder cannot read the current workstation model policy projection.
+The workstation policy implementation belongs to a separate task; this receipt
+records the failure without changing that policy or the campaign's evidence gates.
+Direct route evidence and explicit model/effort pins are needed until a compatible
+checker can inspect the manifest. A versioned compatibility check between the
+workstation manifest and older campaign checkouts would prevent this interruption.

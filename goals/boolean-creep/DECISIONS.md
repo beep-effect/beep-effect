@@ -395,3 +395,14 @@ before the next rebuild. Because this decision entry changes the exact tree,
 perform a final input rebind and independent review before runtime or provider
 execution. No R51/R52 preparation grants probe, census, dry-round, P3,
 ratification or implementation credit.
+
+## 2026-10-01: continuation after PR #1388 merged
+
+PR #1388 merged externally at `ed09a085f35c617c352de43152330d52b908f5b5`
+while R54 independent review was pending. Benjamin explicitly approved one
+successor PR for all remaining work. Preserve the same full campaign gates;
+this approval changes the publication destination only. The squash-merge tree
+matches `e1191a49b7b3c89c147b3d8f3176e75260950cdb` exactly, allowing the
+pending review to carry forward with verified identity rebinding. Use the
+isolated successor branch `codex/boolean-creep-r54-remainder-2026-10-01`;
+preserve the owning clone's inherited local main and all historical evidence.

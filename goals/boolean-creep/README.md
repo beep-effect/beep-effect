@@ -1,27 +1,25 @@
-## Current source refresh, 2026-10-01
+## Current continuation: R54, 2026-10-01
 
-PR #1339 merged at `04993ae26acd6f93f308a1ae949e4f2a5a4e864c`
-before the campaign completed. The remaining work continues in the single
-successor PR #1372. Main's Effect 4.0.0 snapshot
-`cf97523f40d690a0da02233b2e4a734d4e6fae9e` is merged into that branch at
-`b4f3af4be11580c1b708b60b24670ff311e4b682`.
+PR #1388 merged externally at `ed09a085f35c617c352de43152330d52b908f5b5`
+before the campaign gates passed. Benjamin approved continuing all remaining work
+in one successor PR on `codex/boolean-creep-r54-remainder-2026-10-01`.
+The merge tree is byte-identical to published head `e1191a49`; product source
+is unchanged from R54 main binding `ec71f01a`. Continue the existing review and
+rebind its receipt to the successor; this is not a new campaign.
 
-R51 refreshed four changed source citations and retained the prior projection
-in `history/inventory/2026-10-01-pre-r51-source-refresh.jsonl`. Hosted review
-then corrected the remaining StepExec locator and the current design map. R52
-independently reviewed and installed 13 design-map refreshes at
-`f61291298581fdf28ea3e12f26acd8df1d792a3f`. Its fresh independent input
-review approves all 40 deterministic inputs: 3,152 corpus files, 27 lanes,
-82 exclusions, 53 retired areas, 725 inventory rows and 4,114 frozen inputs.
-The inventory remains 108 qualified, 617 disqualified and zero applied.
+R54 v6 passed its 66-file seal check but has no zero-finding receipt. Independent
+review is correcting stale source claims and adjudicating all 365 held items.
+Its test-map count is 346 unique test reanchors plus 12 map rebindings; the older
+358-test description combined those categories. Preserve the original proposals
+and synthetic audit commits; they remain unpublished and grant no campaign credit.
 
-This packet update changes the exact tree identity, so perform one final R52
-input rebind with the stricter private title matcher before runtime admission.
-Continue with bounded runtime review and the provider probe only after that
-gate passes. R50/R51 preparations and the pre-rebind R52 approval grant no
-census, dry-round, P3, ratification or implementation credit. Publish each
-coherent remediation immediately and allow hosted checks to run while the
-private campaign gates continue.
+Inventory remains 723 records: 108 qualified, 615 disqualified and zero applied.
+R54 citation review grants no census, dry-round, campaign-wide P3, ratification
+or implementation credit. After reviewed corrections install and publish,
+independently approve fresh complete census inputs and the rebound runtime,
+then run the bounded probe and current-source census. Keep both dry rounds,
+replacement independent zero-finding P3, delegated ratification, implementation,
+final candidate rounds and exact-main post-merge evidence.
 
 ## Historical R49 source refresh, 2026-10-01
 

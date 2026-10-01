@@ -1,0 +1,30 @@
+{
+  "kind": "boolean-creep-r54-continuation/v1",
+  "previousPr": 1388,
+  "previousPublishedHead": "e1191a49b7b3c89c147b3d8f3176e75260950cdb",
+  "mergeCommit": "ed09a085f35c617c352de43152330d52b908f5b5",
+  "mergedAt": "2026-10-01T18:45:25Z",
+  "publishedTree": "5509f037aa2bdf8fe03cb0930a7f7a79dd1823ac",
+  "mergeTree": "5509f037aa2bdf8fe03cb0930a7f7a79dd1823ac",
+  "treeIdentical": true,
+  "productSourceChanged": false,
+  "successorApproved": true,
+  "successorBranch": "codex/boolean-creep-r54-remainder-2026-10-01",
+  "reviewStatus": "pending; all365 semantic holds require exact adjudication",
+  "proposalV6SealSha256": "76a4097214e5c2f643c6202160863f4e53c9fb5f439e79ba21f0555b3804251c",
+  "namedTestReanchors": 346,
+  "currentMapRebindings": 12,
+  "inventoryCounts": {
+    "total": 723,
+    "qualified": 108,
+    "disqualified": 615,
+    "applied": 0
+  },
+  "syntheticAuditPublished": false,
+  "censusCredit": false,
+  "dryRoundCredit": false,
+  "campaignWideP3Approved": false,
+  "gate2Passed": false,
+  "implementationCredit": false,
+  "completed": false
+}
