@@ -153,7 +153,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { assertDefined, assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import { ConfigProvider, DateTime, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -271,7 +271,11 @@ const runGitStatus = (cwd: string) => runGitCapture(cwd, ["status", "--porcelain
 const runGitOutputLines = (cwd: string, args: ReadonlyArray<string>) =>
   runGitCapture(cwd, args).pipe(Effect.map((output) => Str.split(/\r?\n/u)(Str.trim(output))));
 
-const temporaryDirectory = FileSystem.FileSystem.use((fs) => fs.makeTempDirectoryScoped());
+const temporaryDirectory = FileSystem.FileSystem.use((fs) =>
+  Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>
+    fs.remove(directory, { force: true, recursive: true }).pipe(Effect.orDie)
+  )
+);
 
 const withEnvVar = <Out>(name: string, value: string | undefined, use: () => Out): Out => {
   const previous = Bun.env[name];
@@ -533,6 +537,16 @@ const findStep = (steps: ReadonlyArray<RepoPlanStep>, label: string): RepoPlanSt
   );
 
 it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
+  it.effect("closes a temporary fixture scope after its directory was already removed", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* temporaryDirectory;
+      assertTrue(yield* fs.exists(directory));
+      yield* fs.remove(directory, { recursive: true });
+      assertFalse(yield* fs.exists(directory));
+    })
+  );
+
   describe("yeet pull request lifecycle", () => {
     it.effect("reads, finds, and validates the current branch pull request", () =>
       Effect.gen(function* () {

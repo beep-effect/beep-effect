@@ -5997,3 +5997,27 @@ then run the longer required package checks so hosted review can overlap them.
 Detached publication also reported an unavailable systemd user manager; the
 attached path worked far enough to evaluate base freshness. Keep that fallback
 explicit and preserve its live process handle.
+
+## Scoped fixture migrations must preserve removal options
+
+PR #1365 Property Laws failed in `yeet.test.ts` after the no-stash publish
+assertion, with `NotFound: FileSystem.makeTempDirectoryScoped` during cleanup.
+The migrated helper had replaced explicit recursive removal with `force: true`
+by the platform scoped helper, whose finalizer omits `force`. This introduced
+a teardown behavior difference despite passing the full local package audit.
+The hosted log does not identify what removed the directory first.
+
+Keep the acquisition registered with the test scope, but retain the original
+removal options through `Effect.acquireRelease`. A regression that removes the
+directory before scope closure reproduced the same failure before the repair.
+Future fixture migrations should compare cleanup options and error behavior,
+not only test names, assertions, and successful execution. The initial
+regression also exposed a missing assertion import on its green-path run;
+include actual test-type diagnostics before recording final proof.
+
+## Review status can conceal a provider quota refusal
+
+On PR #1365 the CodeRabbit status check reported success while its comment
+reported a spending-cap refusal. Treat the provider message as evidence that
+the review did not run; a successful status alone is insufficient proof of
+review coverage. Preserve that distinction when reporting independent review.
