@@ -375,7 +375,29 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
             ");",
           ])
         )
-      ).toEqual(["SFV4-codec-static Flag::guard@<hash>"]);
+      ).toEqual(["SFV4-codec-static Flag::same@<hash>", "SFV4-codec-static Flag::guard@<hash>"]);
+    })
+  );
+
+  it.effect("flags arrow-wrapped, curried and method codec facades", () =>
+    Effect.gen(function* () {
+      expect(
+        readable(
+          yield* parityEntries([
+            'import * as S from "effect/Schema";',
+            'import { SchemaUtils } from "@beep/schema";',
+            "export const Version = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => ({",
+            "    decodeOption: (input: unknown) => S.decodeUnknownOption(schema)(input),",
+            "    parse(input: unknown) {",
+            "      return S.decodeUnknownSync(schema)(input);",
+            "    },",
+            "    describe: (input: string) => `v${input}`,",
+            "  }))",
+            ");",
+          ])
+        )
+      ).toEqual(["SFV4-codec-static Version::decodeOption@<hash>", "SFV4-codec-static Version::parse@<hash>"]);
     })
   );
 

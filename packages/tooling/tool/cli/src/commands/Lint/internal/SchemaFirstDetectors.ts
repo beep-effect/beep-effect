@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, flow, HashSet, MutableHashMap, Order, pipe } from "effect";
+import { Effect, flow, HashSet, MutableHashMap, Order, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind, ts } from "ts-morph";
@@ -1463,22 +1463,73 @@ const returnedStaticsObject = (callback: Node): O.Option<Node> => {
   return pipe(returned, O.map(unwrapParentheses), O.filter(Node.isObjectLiteralExpression));
 };
 
-const isCodecFacade =
+// A call to an effect/Schema codec function, applied or not: `S.is(schema)`, `S.decodeUnknownSync(schema)(u)`.
+const isCodecCall =
   (schemaNames: HashSet.HashSet<string>) =>
+  (node: Node): boolean => {
+    if (!Node.isCallExpression(node)) {
+      return false;
+    }
+    const callee = unwrapParentheses(node.getExpression());
+    return Node.isPropertyAccessExpression(callee)
+      ? isSchemaCodecFunction(callee.getName()) &&
+          Node.isIdentifier(callee.getExpression()) &&
+          HashSet.has(schemaNames, callee.getExpression().getText())
+      : isCodecCall(schemaNames)(callee);
+  };
+
+// The expression a function-like returns: its expression body or its only `return`.
+const returnedExpression = (fn: Node): O.Option<Node> => {
+  if (!(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isMethodDeclaration(fn))) {
+    return O.none();
+  }
+  const body = fn.getBody();
+  if (body === undefined) {
+    return O.none();
+  }
+  if (!Node.isBlock(body)) {
+    return O.some(unwrapParentheses(body));
+  }
+  const statements = body.getStatements();
+  return statements.length === 1 && Node.isReturnStatement(statements[0])
+    ? pipe(O.fromUndefinedOr(statements[0].getExpression()), O.map(unwrapParentheses))
+    : O.none();
+};
+
+// A codec facade value: a codec call, a function that only returns one, or a name the statics
+// callback binds to either.
+const isCodecFacadeValue = (schemaNames: HashSet.HashSet<string>, callback: Node, depth: number) => {
+  const recur = (node: Node): boolean => {
+    const value = unwrapParentheses(node);
+    if (isCodecCall(schemaNames)(value)) {
+      return true;
+    }
+    if (Node.isArrowFunction(value) || Node.isFunctionExpression(value)) {
+      return O.exists(returnedExpression(value), isCodecCall(schemaNames));
+    }
+    if (Node.isIdentifier(value) && depth < 3) {
+      return pipe(
+        A.findFirst(
+          callback.getDescendantsOfKind(SyntaxKind.VariableDeclaration),
+          (declaration) => declaration.getName() === value.getText()
+        ),
+        O.flatMap((declaration) => O.fromUndefinedOr(declaration.getInitializer())),
+        O.exists(isCodecFacadeValue(schemaNames, callback, depth + 1))
+      );
+    }
+    return false;
+  };
+  return recur;
+};
+
+const isCodecFacade =
+  (schemaNames: HashSet.HashSet<string>, callback: Node) =>
   (property: Node): boolean =>
-    Node.isPropertyAssignment(property) &&
-    pipe(
-      O.fromUndefinedOr(property.getInitializer()),
-      O.filter(Node.isCallExpression),
-      O.map((call) => call.getExpression()),
-      O.filter(Node.isPropertyAccessExpression),
-      O.exists(
-        (access) =>
-          isSchemaCodecFunction(access.getName()) &&
-          Node.isIdentifier(access.getExpression()) &&
-          HashSet.has(schemaNames, access.getExpression().getText())
-      )
-    );
+    Node.isPropertyAssignment(property)
+      ? O.exists(O.fromUndefinedOr(property.getInitializer()), isCodecFacadeValue(schemaNames, callback, 0))
+      : Node.isShorthandPropertyAssignment(property)
+        ? isCodecFacadeValue(schemaNames, callback, 0)(property.getNameNode())
+        : Node.isMethodDeclaration(property) && O.exists(returnedExpression(property), isCodecCall(schemaNames));
 
 const codecFacadeCandidates = (sourceFile: SourceFile): ReadonlyArray<ParityCandidate> => {
   if (!WITH_STATICS_SIGNAL_PATTERN.test(sourceFile.getFullText())) {
@@ -1491,14 +1542,23 @@ const codecFacadeCandidates = (sourceFile: SourceFile): ReadonlyArray<ParityCand
     A.flatMap((call) =>
       pipe(
         A.last(call.getArguments()),
-        O.flatMap(returnedStaticsObject),
-        O.filter(Node.isObjectLiteralExpression),
-        O.map((object) => A.filter(object.getProperties(), isCodecFacade(schemaNames))),
+        O.flatMap((callback) =>
+          pipe(
+            returnedStaticsObject(callback),
+            O.filter(Node.isObjectLiteralExpression),
+            O.map((object) => A.filter(object.getProperties(), isCodecFacade(schemaNames, callback)))
+          )
+        ),
         O.getOrElse(A.empty<Node>)
       )
     ),
-    A.filter(Node.isPropertyAssignment),
-    A.map((property) => ({ wrapper: codecFacadeWrapper(property.getName()), node: property }))
+    A.filterMap((property) =>
+      Node.isPropertyAssignment(property) ||
+      Node.isShorthandPropertyAssignment(property) ||
+      Node.isMethodDeclaration(property)
+        ? Result.succeed({ wrapper: codecFacadeWrapper(property.getName()), node: property })
+        : Result.failVoid
+    )
   );
 };
 
