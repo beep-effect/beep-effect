@@ -487,7 +487,7 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
           requestType,
         }),
       })
-    ).pipe(Effect.catch((error) => removePending(requestId).pipe(Effect.andThen(Effect.fail(error)))));
+    ).pipe(Effect.tapError(() => removePending(requestId)));
     return yield* Deferred.await(deferred).pipe(Effect.onInterrupt(() => removePending(requestId)));
   });
 

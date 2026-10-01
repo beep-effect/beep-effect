@@ -1,6 +1,17 @@
 import { BunRuntime } from "@effect/platform-bun";
 import { layer as bunServicesLayer } from "@effect/platform-bun/BunServices";
-import { fail, flatMap, fnUntraced, gen, provide, scoped, succeed, sync, tryPromise } from "effect/Effect";
+import {
+  fail,
+  flatMap,
+  fnUntraced,
+  gen,
+  provide,
+  scoped,
+  succeed,
+  sync,
+  tryPromise,
+  void as voidEffect,
+} from "effect/Effect";
 import { FileSystem } from "effect/FileSystem";
 import { build as buildLayer } from "effect/Layer";
 import { String as StringSchema, TaggedError, Unknown } from "effect/Schema";
@@ -22,12 +33,10 @@ const measureBundleConsumer = fnUntraced(function* () {
     catch: (cause) => BundleProbeError.make({ message: "Bundle build rejected", cause }),
   });
   if (!artifact.text.includes("integer")) {
-    return yield* fail(
-      BundleProbeError.make({
-        message: "Bundle artifact lost the consumer surface (no integer symbol) — over-shaken stub",
-        cause: { rawBytes: artifact.rawBytes },
-      })
-    );
+    return yield* BundleProbeError.make({
+      message: "Bundle artifact lost the consumer surface (no integer symbol) — over-shaken stub",
+      cause: { rawBytes: artifact.rawBytes },
+    });
   }
   return artifact;
 });
@@ -44,7 +53,7 @@ const validateBaselineIdentity = () => {
     mismatches.push(`esbuildVersion ${committedBaseline.esbuildVersion} (installed ${esbuildVersion})`);
   }
   return mismatches.length === 0
-    ? succeed(undefined)
+    ? voidEffect
     : fail(
         BundleProbeError.make({
           message: `Committed baseline identity does not match this probe; re-baseline deliberately: ${mismatches.join("; ")}`,
@@ -97,20 +106,16 @@ const reportComparison = fnUntraced(function* (currentRawBytes: number, baseline
     yield* fs.writeFileString(summaryPath, `- ${line}\n`, { flag: "a" });
   }
   if (comparison.isCollapse) {
-    return yield* fail(
-      BundleProbeError.make({
-        message: "Bundle raw byte size fell below the stub-collapse floor",
-        cause: comparison,
-      })
-    );
+    return yield* BundleProbeError.make({
+      message: "Bundle raw byte size fell below the stub-collapse floor",
+      cause: comparison,
+    });
   }
   if (comparison.isRegression) {
-    return yield* fail(
-      BundleProbeError.make({
-        message: "Bundle raw byte size exceeds the committed baseline",
-        cause: comparison,
-      })
-    );
+    return yield* BundleProbeError.make({
+      message: "Bundle raw byte size exceeds the committed baseline",
+      cause: comparison,
+    });
   }
 });
 

@@ -2,7 +2,7 @@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import { fnUntraced, forEach, gen, map, tryPromise, withSpan } from "effect/Effect";
+import { fn, fnUntraced, forEach, map, tryPromise, withSpan } from "effect/Effect";
 import { decodeUnknownEffect, Record as RecordSchema, String, Unknown } from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -75,39 +75,37 @@ const moduleSpecifiers = (file: string, source: string): ReadonlyArray<ModuleEdg
   return edges;
 };
 
-const sourceEdges = (directoryUrl: URL, requiredFile: string) =>
-  gen(function* () {
-    const files = [...new Bun.Glob("**/*.ts").scanSync({ cwd: directoryUrl.pathname })];
-    expect(files).toContain(requiredFile);
-    return yield* forEach(
-      files,
-      (file) =>
-        tryPromise(() => Bun.file(new URL(file, directoryUrl)).text()).pipe(
-          withSpan("EffectDrizzle.boundary.read", { attributes: { file } }),
-          map((source) => moduleSpecifiers(file, source))
-        ),
-      { concurrency: "unbounded" }
-    ).pipe(map((edges) => edges.flat()));
-  });
+const sourceEdges = fn("sourceEdges")(function* (directoryUrl: URL, requiredFile: string) {
+  const files = [...new Bun.Glob("**/*.ts").scanSync({ cwd: directoryUrl.pathname })];
+  expect(files).toContain(requiredFile);
+  return yield* forEach(
+    files,
+    (file) =>
+      tryPromise(() => Bun.file(new URL(file, directoryUrl)).text()).pipe(
+        withSpan("EffectDrizzle.boundary.read", { attributes: { file } }),
+        map((source) => moduleSpecifiers(file, source))
+      ),
+    { concurrency: "unbounded" }
+  ).pipe(map((edges) => edges.flat()));
+});
 
 const localModuleUrls = (current: URL, source: string): ReadonlyArray<URL> =>
   moduleSpecifiers(current.pathname, source)
     .filter(({ specifier }) => specifier.startsWith("."))
     .map(({ specifier }) => new URL(specifier, current));
 
-const localImportClosure = (entrypoint: URL) =>
-  gen(function* () {
-    const pending = [entrypoint];
-    const visited = new Set<string>();
-    while (pending.length > 0) {
-      const current = pending.pop();
-      if (current === undefined || visited.has(current.pathname)) continue;
-      visited.add(current.pathname);
-      const source = yield* tryPromise(() => Bun.file(current).text());
-      pending.push(...localModuleUrls(current, source));
-    }
-    return [...visited];
-  });
+const localImportClosure = fn("localImportClosure")(function* (entrypoint: URL) {
+  const pending = [entrypoint];
+  const visited = new Set<string>();
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (current === undefined || visited.has(current.pathname)) continue;
+    visited.add(current.pathname);
+    const source = yield* tryPromise(() => Bun.file(current).text());
+    pending.push(...localModuleUrls(current, source));
+  }
+  return [...visited];
+});
 
 const workspaceEdges = (edges: ReadonlyArray<ModuleEdge>) =>
   A.filter(edges, ({ specifier }) => Str.startsWith("@beep/")(specifier));
@@ -117,14 +115,16 @@ const dialectEdges = (edges: ReadonlyArray<ModuleEdge>, forbiddenFragments: Read
 
 const dialectEntrypoints = { core: "model.ts", pg: "index.ts", sqlite: "index.ts" };
 
-const forbiddenDialectEdges = (directory: "core" | "pg" | "sqlite", forbiddenFragments: ReadonlyArray<string>) =>
-  gen(function* () {
-    const edges = yield* sourceEdges(
-      new URL(`../src/${directory}/`, import.meta.url),
-      dialectEntrypoints[directory]
-    ).pipe(withSpan("EffectDrizzle.boundary.scan", { attributes: { tree: directory } }));
-    return dialectEdges(edges, forbiddenFragments);
-  });
+const forbiddenDialectEdges = fn("forbiddenDialectEdges")(function* (
+  directory: "core" | "pg" | "sqlite",
+  forbiddenFragments: ReadonlyArray<string>
+) {
+  const edges = yield* sourceEdges(
+    new URL(`../src/${directory}/`, import.meta.url),
+    dialectEntrypoints[directory]
+  ).pipe(withSpan("EffectDrizzle.boundary.scan", { attributes: { tree: directory } }));
+  return dialectEdges(edges, forbiddenFragments);
+});
 
 describe("boundary scanner controls", () => {
   it("detects forbidden edges in each supported module syntax", () => {
