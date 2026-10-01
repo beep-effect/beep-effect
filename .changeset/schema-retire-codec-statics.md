@@ -120,10 +120,11 @@ tsconfig), and 25 reads were rewritten by hand; a third pass adjusted 453 reads
 the Effect language service then flagged (`schemaSync`, `preferTypedSchemaDecoder`).
 
 Type-check cost, tsgo 7.0.2, fresh build-info, before (`origin/main` at
-90517df719) → after. The gate is the `--singleThreaded` instantiation count:
+a69b1956ee) → after (67ba9397d3). The gate is the `--singleThreaded`
+instantiation count:
 
 | Package (`--singleThreaded`, gate) | Instantiations | Check time |
 | --- | --- | --- |
-| `@beep/schema` | 460,260 → 446,597 | 719 → 669 ms |
-| `@beep/repo-cli` | 4,186,320 → 4,181,648 | 11,486 → 10,093 ms |
-| `@beep/law-practice-domain` | 830,007 → 799,578 | 1,237 → 1,053 ms |
+| `@beep/schema` | 460,260 → 446,382 | 628 → 594 ms |
+| `@beep/repo-cli` | 4,206,806 → 4,202,582 | 11,545 → 10,390 ms |
+| `@beep/law-practice-domain` | 830,007 → 799,552 | 1,149 → 1,121 ms |
