@@ -3,6 +3,7 @@ import { zstdCompressSync } from "node:zlib";
 import { inspectCacheSignedPilotArchive } from "@beep/repo-cli/test/Cache";
 import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
@@ -43,7 +44,7 @@ it.layer(NodeCrypto.layer)("bounded signed pilot archive", (it) => {
         invalidChecksum,
         Buffer.alloc(2048),
       ])
-        expect(Result.isFailure(yield* inspect(bytes).pipe(Effect.result))).toBe(true);
+        assertTrue(Result.isFailure(yield* inspect(bytes).pipe(Effect.result)));
     })
   );
   it.effect("rejects hidden padding, trailing entries and incomplete framing", () =>
@@ -57,19 +58,19 @@ it.layer(NodeCrypto.layer)("bounded signed pilot archive", (it) => {
         makeTar().subarray(0, 1024),
         Buffer.alloc(256 * 1024),
       ])
-        expect(Result.isFailure(yield* inspect(bytes).pipe(Effect.result))).toBe(true);
-      expect(
+        assertTrue(Result.isFailure(yield* inspect(bytes).pipe(Effect.result)));
+      assertTrue(
         Result.isFailure(yield* inspectCacheSignedPilotArchive(Buffer.from("invalid"), []).pipe(Effect.result))
-      ).toBe(true);
+      );
     })
   );
   it.effect("rejects credentials in both task text and header metadata", () =>
     Effect.gen(function* () {
       const secret = Redacted.make("synthetic-archive-credential");
       for (const bytes of [makeTar(Redacted.value(secret)), makeTar("safe", { uname: Redacted.value(secret) })])
-        expect(
+        assertTrue(
           Result.isFailure(yield* inspectCacheSignedPilotArchive(zstdCompressSync(bytes), [secret]).pipe(Effect.result))
-        ).toBe(true);
+        );
     })
   );
 });

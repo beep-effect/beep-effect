@@ -6,6 +6,7 @@ import {
 } from "@beep/repo-cli/commands/Cache";
 import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import { FetchHttpClient, Headers, HttpClient, HttpClientRequest } from "effect/http";
@@ -41,7 +42,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
     it.effect("returns supervisor copies without mutating stored bytes or adding wire events", () =>
       Effect.gen(function* () {
         const fixture = yield* makeCacheProtocolFixture(credentials);
-        expect(Result.isFailure(yield* fixture.artifactBytes(artifactHash).pipe(Effect.result))).toBe(true);
+        assertTrue(Result.isFailure(yield* fixture.artifactBytes(artifactHash).pipe(Effect.result)));
         const uploaded = yield* put(endpoint(fixture.url));
         yield* uploaded.text;
         const before = yield* fixture.events;
@@ -193,9 +194,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         expect((yield* get(endpoint(fixture.url, otherArtifactHash))).status).toBe(404);
         const failures = A.filter(yield* fixture.events, (event) => event.status === 429 || event.status === 503);
         expect(failures).toHaveLength(8);
-        expect(A.every(failures, (event) => O.isNone(event.digest) && event.bytes === 0 && !event.tagPresent)).toBe(
-          true
-        );
+        assertTrue(A.every(failures, (event) => O.isNone(event.digest) && event.bytes === 0 && !event.tagPresent));
       })
     );
 
@@ -263,12 +262,12 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
     it.effect("refuses overlapping capabilities and releases the listening socket with its scope", () =>
       Effect.gen(function* () {
         const duplicate = CacheFixtureCredentials.make({ ...credentials, writer: credentials.reader });
-        expect(Result.isFailure(yield* makeCacheProtocolFixture(duplicate).pipe(Effect.result))).toBe(true);
+        assertTrue(Result.isFailure(yield* makeCacheProtocolFixture(duplicate).pipe(Effect.result)));
         const url = yield* makeCacheProtocolFixture(credentials).pipe(
           Effect.map((fixture) => fixture.url),
           Effect.scoped
         );
-        expect(Result.isFailure(yield* get(endpoint(url)).pipe(Effect.result))).toBe(true);
+        assertTrue(Result.isFailure(yield* get(endpoint(url)).pipe(Effect.result)));
       })
     );
   }

@@ -1,6 +1,7 @@
 import { CacheProducerBundle } from "@beep/repo-cli/commands/Cache";
 import { validateCacheProducerBundle } from "@beep/repo-cli/test/Cache";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -18,7 +19,7 @@ const validate = (value: unknown) =>
 describe("complete producer bundle", () => {
   it.effect("accepts both complete matrices with persistent issuer denial", () =>
     Effect.gen(function* () {
-      expect(Result.isSuccess(yield* validate(input))).toBe(true);
+      assertTrue(Result.isSuccess(yield* validate(input)));
     })
   );
   it.effect("rejects incomplete conformance and inconsistent native identities", () =>
@@ -29,31 +30,31 @@ describe("complete producer bundle", () => {
         { ...protocol, bunSha256: executionInput.bunSha256 },
         { ...protocol, observation: { ...protocol.observation, channel: "canary" } },
       ])
-        expect(Result.isFailure(yield* validate({ ...input, protocol: changed }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, protocol: changed })));
     })
   );
   it.effect("requires persistent issuer protection for every remote reader", () =>
     Effect.gen(function* () {
-      expect(Result.isFailure(yield* validate({ ...input, pilot: signedPilotInput }))).toBe(true);
-      expect(
+      assertTrue(Result.isFailure(yield* validate({ ...input, pilot: signedPilotInput })));
+      assertTrue(
         Result.isFailure(yield* validate({ ...input, pilot: { ...pilot, mutations: signedPilotInput.mutations } }))
-      ).toBe(true);
-      expect(
+      );
+      assertTrue(
         Result.isFailure(yield* validate({ ...input, pilot: { ...pilot, shadows: signedPilotInput.shadows } }))
-      ).toBe(true);
+      );
     })
   );
   it.effect("rejects an independently approved protocol client mismatch", () =>
     Effect.gen(function* () {
       const bundle = yield* decode(input);
-      expect(
+      assertTrue(
         Result.isFailure(
           yield* validateCacheProducerBundle(bundle, {
             ...bundle.protocol.observation.client,
             namespace: "another-approval",
           }).pipe(Effect.result)
         )
-      ).toBe(true);
+      );
     })
   );
 });

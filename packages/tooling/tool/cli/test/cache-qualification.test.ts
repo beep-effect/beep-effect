@@ -20,6 +20,7 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -115,7 +116,7 @@ describe("Cache qualification writer", () => {
       const promoted = yield* cache
         .transition(root, CacheTransitionRequest.make({ expectedRevision: 2, entry: qualified }))
         .pipe(Effect.result);
-      expect(R.isFailure(promoted)).toBe(true);
+      assertTrue(R.isFailure(promoted));
       expect(yield* fs.readFileString(target)).toBe(prior);
       yield* fs.writeFileString(
         target,
@@ -128,7 +129,7 @@ describe("Cache qualification writer", () => {
         )
       );
       const audited = yield* cache.audit(root).pipe(Effect.result);
-      expect(R.isFailure(audited)).toBe(true);
+      assertTrue(R.isFailure(audited));
       if (R.isFailure(audited)) expect(audited.failure.message).toContain("independently configured trust");
     }, provideScopedLayer(testLayer))
   );

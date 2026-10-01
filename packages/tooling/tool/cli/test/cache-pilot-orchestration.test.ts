@@ -577,18 +577,18 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
   it.effect("rejects signed work outside the private network before any native process", () =>
     Effect.gen(function* () {
       const { runSigned, calls } = yield* fixture("none", linker, true);
-      expect(Result.isFailure(yield* runSigned(undefined, "eth0").pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* runSigned(undefined, "eth0").pipe(Effect.result)));
       expect(calls).toHaveLength(0);
     })
   );
   it.effect("rejects partial signed selection before any native process", () =>
     Effect.gen(function* () {
       const { runSigned, request, calls } = yield* fixture("none", linker, true);
-      expect(
+      assertTrue(
         Result.isFailure(
           yield* runSigned(CachePilotRequest.make({ ...request, selection: "controls" })).pipe(Effect.result)
         )
-      ).toBe(true);
+      );
       expect(calls).toHaveLength(0);
     })
   );

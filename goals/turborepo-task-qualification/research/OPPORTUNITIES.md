@@ -2760,3 +2760,14 @@ Early Yeet publication was rejected by the staged secret scan on `signed-profile
 ### Security gate refresh before native qualification
 
 PR #1389 Security job 110438422401 rejected inherited `basic-ftp@5.3.1` under GHSA-c475-qrg2-pj4r; current main retained that version. The advisory specifies patched 6.2.1. A narrow root override and regenerated lock entry were prepared in an idle sibling, verified by frozen install, consumer resolution/API/listing smoke checks, and the OSV version query (zero known advisories). `@beep/box` quick verification passed. Queued proofs of the old head were cancelled before integrating the update; the completed CLI package audit/docgen remains evidence for its exact earlier snapshot. Native workflow identities must be refreshed after this dependency change.
+
+### 2026-10-01 — New test-policy and complexity gates during signed qualification
+
+The early publish proof for PR #1389 failed `lint:effect-vitest` with 192
+new findings and Fallow audit with 20 introduced complexity findings and three
+introduced clone groups. Reviewing the detector rows and preserving predicate
+expressions while adopting assertion helpers reduced the new test-policy
+findings to 70; all 139 tests across the eleven edited files passed. No inventory
+baseline was expanded. Running these gates before the long proof would have
+exposed the required migrations sooner. Remaining findings require semantic
+review and repair before qualification closeout.

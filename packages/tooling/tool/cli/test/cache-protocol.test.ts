@@ -7,6 +7,7 @@ import {
 import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -39,7 +40,7 @@ describe("native protocol observation boundary", () => {
         { ...input, exchanges: A.map(input.exchanges, (event) => ({ ...event, requestId: "same-request" })) },
         { ...input, runs: A.map(input.runs, (run) => ({ ...run, summary: digest("a") })) },
       ])
-        expect(Result.isFailure(yield* validate(value))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate(value)));
     })
   );
 
@@ -49,7 +50,7 @@ describe("native protocol observation boundary", () => {
         const exchanges = A.map(input.exchanges, (event) =>
           event.case === "producer" ? { ...event, ...patch } : event
         );
-        expect(Result.isFailure(yield* validate({ ...input, exchanges }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, exchanges })));
       }
     })
   );
@@ -66,7 +67,7 @@ describe("native protocol observation boundary", () => {
         ),
         A.map(input.runs, (run) => (run.case === "replay" ? { ...run, taskHash: "different-task" } : run)),
       ])
-        expect(Result.isFailure(yield* validate({ ...input, runs }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, runs })));
     })
   );
 
@@ -76,7 +77,7 @@ describe("native protocol observation boundary", () => {
         const exchanges = A.map(input.exchanges, (event) =>
           event.case === name ? { ...event, artifact, tag: "present" } : event
         );
-        expect(Result.isFailure(yield* validate({ ...input, exchanges }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, exchanges })));
       }
     })
   );
@@ -88,7 +89,7 @@ describe("native protocol observation boundary", () => {
         { ...input, runs: [] },
         { ...input, runs: [...input.runs, ...input.runs] },
       ])
-        expect(Result.isFailure(yield* validate(value))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate(value)));
     })
   );
 });
@@ -101,22 +102,22 @@ const validateExecution = (value: unknown) =>
 describe("complete protocol execution boundary", () => {
   it.effect("rejects legacy receipts and missing, duplicated or misattributed roots", () =>
     Effect.gen(function* () {
-      expect(
+      assertTrue(
         Result.isFailure(yield* validateExecution({ ...executionInput, schemaVersion: "cache-protocol-execution/v1" }))
-      ).toBe(true);
+      );
       for (const roots of [
         [],
         A.map(executionInput.roots, (root) => ({ ...root, case: "producer" })),
         A.map(executionInput.roots, (root) => ({ ...root, sha256: digest("1") })),
         A.map(executionInput.roots, (root) => ({ ...root, case: "unknown" })),
       ])
-        expect(Result.isFailure(yield* validateExecution({ ...executionInput, roots }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, roots })));
     })
   );
   it.effect("joins every integrity and transport case without accepting promotion authority", () =>
     Effect.gen(function* () {
       const result = yield* validateExecution(executionInput);
-      expect(Result.isSuccess(result)).toBe(true);
+      assertTrue(Result.isSuccess(result));
       if (Result.isSuccess(result)) expect(result.success.authority).toBe("synthetic-native-observation-only");
     })
   );
@@ -127,7 +128,7 @@ describe("complete protocol execution boundary", () => {
         A.map(executionInput.failures, (failure) => ({ ...failure, summary: digest("1") })),
         A.map(executionInput.failures, (failure) => ({ ...failure, taskHash: "other-task" })),
       ])
-        expect(Result.isFailure(yield* validateExecution({ ...executionInput, failures }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, failures })));
     })
   );
   it.effect("rejects missing, duplicated, misattributed and edited wire evidence", () =>
@@ -143,7 +144,7 @@ describe("complete protocol execution boundary", () => {
           event.operation === "put" ? { ...event, digest: digest("0") } : event
         ),
       ])
-        expect(Result.isFailure(yield* validateExecution({ ...executionInput, events }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, events })));
     })
   );
   it.effect("rejects missing fault reads, wrong transport status and wrong truncation evidence", () =>
@@ -165,7 +166,7 @@ describe("complete protocol execution boundary", () => {
           event.scenario.id === "throttled" ? { ...event, tagPresent: true } : event
         ),
       ])
-        expect(Result.isFailure(yield* validateExecution({ ...executionInput, events }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, events })));
     })
   );
   it.effect("preserves a genuine producer miss and rejects extra denied integrity reads", () =>
@@ -181,9 +182,9 @@ describe("complete protocol execution boundary", () => {
         bytes: 0,
         tagPresent: false,
       };
-      expect(
+      assertTrue(
         Result.isSuccess(yield* validateExecution({ ...executionInput, events: [...executionInput.events, miss] }))
-      ).toBe(true);
+      );
       for (const patch of [
         { status: 401 },
         { bytes: 1 },
@@ -191,11 +192,11 @@ describe("complete protocol execution boundary", () => {
         { artifact: "0123456789abcdef" },
         { scenario: { id: "wrong-key", fault: "none" }, role: "reader", status: 403 },
       ])
-        expect(
+        assertTrue(
           Result.isFailure(
             yield* validateExecution({ ...executionInput, events: [...executionInput.events, { ...miss, ...patch }] })
           )
-        ).toBe(true);
+        );
     })
   );
   it.effect("rejects a detached exchange reference or an extra upload", () =>
@@ -206,11 +207,11 @@ describe("complete protocol execution boundary", () => {
           exchange.case === "replay" ? { ...exchange, requestId: "wire-100" } : exchange
         ),
       };
-      expect(Result.isFailure(yield* validateExecution({ ...executionInput, observation }))).toBe(true);
+      assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, observation })));
       const events = A.map(executionInput.events, (event) =>
         event.scenario.id === "replay" ? { ...event, operation: "put" } : event
       );
-      expect(Result.isFailure(yield* validateExecution({ ...executionInput, events }))).toBe(true);
+      assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, events })));
     })
   );
 });

@@ -6,6 +6,7 @@ import {
 } from "@beep/repo-cli/test/Cache";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -76,7 +77,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("producer workflo
       const alias = path.join(root, "packages/fixture/src/alias.ts");
       yield* fs.symlink("main.ts", alias);
       const original = yield* collectCacheProducerWorkflowFiles(root);
-      expect(A.some(original, (file) => O.contains(file.linkTarget, "main.ts"))).toBe(true);
+      assertTrue(A.some(original, (file) => O.contains(file.linkTarget, "main.ts")));
       yield* fs.chmod(source, 0o700);
       expect(yield* collectCacheProducerWorkflowFiles(root)).not.toEqual(original);
     }).pipe(Effect.scoped)
@@ -86,14 +87,14 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("producer workflo
       const { root, fs, path } = yield* fixture();
       yield* fs.writeFileString(path.join(path.dirname(root), "outside.ts"), "outside fixture bytes");
       yield* fs.symlink("../../../../outside.ts", path.join(root, "packages/fixture/src/alias.ts"));
-      expect(Result.isFailure(yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result)));
     }).pipe(Effect.scoped)
   );
   it.effect("rejects missing tracked sources instead of silently dropping their binding", () =>
     Effect.gen(function* () {
       const { root, fs, source } = yield* fixture();
       yield* fs.remove(source);
-      expect(Result.isFailure(yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result)));
     }).pipe(Effect.scoped)
   );
 
@@ -107,9 +108,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("producer workflo
     Effect.gen(function* () {
       const { root, fs, source, git } = yield* fixture();
       yield* fs.writeFileString(source, "export const value = 2;\n");
-      expect(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
       yield* git(["add", "packages"]);
-      expect(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
     }).pipe(Effect.scoped)
   );
   it.effect("rejects untracked and ignored executable additions", () =>
@@ -118,7 +119,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("producer workflo
       for (const name of ["unreviewed.ts", "ignored.ts"]) {
         const file = path.join(root, "packages/fixture/src", name);
         yield* fs.writeFileString(file, "export {};\n");
-        expect(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result))).toBe(true);
+        assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
         yield* fs.remove(file);
       }
       yield* assertCacheProducerWorkflowProfile(root);
@@ -130,7 +131,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("producer workflo
       const directory = path.join(root, "packages/fixture/node_modules/effect");
       yield* fs.makeDirectory(directory, { recursive: true });
       yield* fs.writeFileString(path.join(directory, "index.js"), "export {};\n");
-      expect(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
     }).pipe(Effect.scoped)
   );
   it.effect("rejects ambient dotenv files without reading their contents", () =>
@@ -139,11 +140,11 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("producer workflo
       for (const name of [".env", ".env.production.local", ".env.test.local"]) {
         const file = path.join(root, name);
         yield* fs.writeFileString(file, "FIXTURE_ONLY=true\n");
-        expect(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result))).toBe(true);
+        assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
         yield* fs.remove(file);
       }
       yield* fs.symlink("missing-env-target", path.join(root, ".env.local"));
-      expect(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
     }).pipe(Effect.scoped)
   );
   it.effect("binds the loaded supervisor to its own checkout", () =>
@@ -152,7 +153,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("producer workflo
       const testFile = yield* path.fromFileUrl(new URL(import.meta.url));
       const owner = path.resolve(path.dirname(testFile), "../../../../..");
       yield* assertCacheProducerWorkflowLocation(owner);
-      expect(Result.isFailure(yield* assertCacheProducerWorkflowLocation(root).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowLocation(root).pipe(Effect.result)));
     }).pipe(Effect.scoped)
   );
 });

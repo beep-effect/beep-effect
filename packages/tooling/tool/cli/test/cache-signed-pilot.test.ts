@@ -2,6 +2,7 @@ import { CacheSignedPilotReceipt, validateCacheSignedPilotReceipt } from "@beep/
 import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -36,7 +37,7 @@ describe("signed real-pilot receipt relationships", () => {
         A.map(input.captureControls, (control) => ({ ...control, selectedExitCode: 1 })),
         A.map(input.captureControls, (control) => ({ ...control, origin: "remote-hit" })),
       ])
-        expect(Result.isFailure(yield* validate({ ...input, captureControls }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, captureControls })));
     })
   );
   it.effect("binds every inspected archive to transferred bytes and the verified producer log", () =>
@@ -49,18 +50,18 @@ describe("signed real-pilot receipt relationships", () => {
         { ...input.pairs[0].archive, decodedBytes: 2049 },
         { ...input.pairs[0].archive, path: "another.log" },
       ]) {
-        expect(
+        assertTrue(
           Result.isFailure(yield* validate({ ...input, pairs: A.map(input.pairs, (pair) => ({ ...pair, archive })) }))
-        ).toBe(true);
-        expect(
+        );
+        assertTrue(
           Result.isFailure(
             yield* validate({
               ...input,
               shadows: A.map(input.shadows, (shadow) => ({ ...shadow, comparison: { ...shadow.comparison, archive } })),
             })
           )
-        ).toBe(true);
-        expect(
+        );
+        assertTrue(
           Result.isFailure(
             yield* validate({
               ...input,
@@ -70,13 +71,13 @@ describe("signed real-pilot receipt relationships", () => {
               })),
             })
           )
-        ).toBe(true);
+        );
       }
     })
   );
   it.effect("requires independent missing-child refusal with no native execution", () =>
     Effect.gen(function* () {
-      expect(Result.isFailure(yield* validate(R.remove(input, "policyRefusal")))).toBe(true);
+      assertTrue(Result.isFailure(yield* validate(R.remove(input, "policyRefusal"))));
       const refusal = input.policyRefusal;
       for (const policyRefusal of [
         { ...refusal, removedPath: "turbo.json" },
@@ -94,7 +95,7 @@ describe("signed real-pilot receipt relationships", () => {
         { ...refusal, configuration: { ...refusal.configuration, persistent: true } },
         { ...refusal, configuration: { ...refusal.configuration, interactive: true } },
       ])
-        expect(Result.isFailure(yield* validate({ ...input, policyRefusal }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, policyRefusal })));
     })
   );
   it.effect("accepts coherent comparisons without promotion authority", () =>
@@ -131,7 +132,7 @@ describe("signed real-pilot receipt relationships", () => {
           },
         })),
       ])
-        expect(Result.isFailure(yield* validate({ ...input, freshPairs }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, freshPairs })));
     })
   );
   it.effect("rejects fresh-pair verdict, log, task and runtime divergence", () =>
@@ -150,7 +151,7 @@ describe("signed real-pilot receipt relationships", () => {
         { outcome: { ...run.outcome, selected: { ...run.outcome.selected, computation: "@beep/types#lint" } } },
       ]) {
         const freshPairs = A.map(input.freshPairs, (pair) => ({ ...pair, left: { ...pair.left, ...patch } }));
-        expect(Result.isFailure(yield* validate({ ...input, freshPairs }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, freshPairs })));
       }
     })
   );
@@ -167,7 +168,7 @@ describe("signed real-pilot receipt relationships", () => {
           ...pair,
           left: { ...pair.left, selectedTaskInterval: interval },
         }));
-        expect(Result.isFailure(yield* validate({ ...input, freshPairs }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, freshPairs })));
       }
       for (const offset of [0, 1]) {
         const freshPairs = A.map(input.freshPairs, (pair) => ({
@@ -180,7 +181,7 @@ describe("signed real-pilot receipt relationships", () => {
             },
           },
         }));
-        expect(Result.isFailure(yield* validate({ ...input, freshPairs }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, freshPairs })));
       }
       const oneOverlap = A.map(input.freshPairs, (pair, index) =>
         index === 0
@@ -190,7 +191,7 @@ describe("signed real-pilot receipt relationships", () => {
               right: { ...pair.right, selectedTaskInterval: { startTime: 9000, endTime: 10000 } },
             }
       );
-      expect(Result.isSuccess(yield* validate({ ...input, freshPairs: oneOverlap }))).toBe(true);
+      assertTrue(Result.isSuccess(yield* validate({ ...input, freshPairs: oneOverlap })));
     })
   );
   it.effect("derives native non-execution from exit, summary and diagnostic facts", () =>
@@ -223,7 +224,7 @@ describe("signed real-pilot receipt relationships", () => {
             : observation
         ),
       ])
-        expect(Result.isFailure(yield* validate({ ...input, nonExecutions }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, nonExecutions })));
     })
   );
   it.effect("requires all seven seeded cases with distinct changed files and fresh case-derived verdicts", () =>
@@ -263,7 +264,7 @@ describe("signed real-pilot receipt relationships", () => {
           },
         })),
       ])
-        expect(Result.isFailure(yield* validate({ ...input, mutations }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, mutations })));
     })
   );
   it.effect("requires ordered seed and changed wire evidence without uploading failed seeds", () =>
@@ -317,7 +318,7 @@ describe("signed real-pilot receipt relationships", () => {
           },
         })),
       ])
-        expect(Result.isFailure(yield* validate({ ...input, mutations }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, mutations })));
     })
   );
   it.effect("requires all ten distinct remote shadow scenarios and isolation roots", () =>
@@ -331,7 +332,7 @@ describe("signed real-pilot receipt relationships", () => {
           comparison: { ...shadow.comparison, producerRoot: input.pairs[0].producerRoot },
         })),
       ])
-        expect(Result.isFailure(yield* validate({ ...input, shadows }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, shadows })));
     })
   );
   it.effect("derives shadow invalidation and invariance from the scenario", () =>
@@ -359,7 +360,7 @@ describe("signed real-pilot receipt relationships", () => {
                 },
               }
         );
-        expect(Result.isFailure(yield* validate({ ...input, shadows }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, shadows })));
       }
     })
   );
@@ -382,7 +383,7 @@ describe("signed real-pilot receipt relationships", () => {
         const shadows = A.map(input.shadows, (shadow, index) =>
           index === 0 ? { ...shadow, comparison: { ...shadow.comparison, ...patch } } : shadow
         );
-        expect(Result.isFailure(yield* validate({ ...input, shadows }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, shadows })));
       }
     })
   );
@@ -403,7 +404,7 @@ describe("signed real-pilot receipt relationships", () => {
           replay: { ...pair.replay, summarySha256: pair.producer.summarySha256 },
         })),
       ])
-        expect(Result.isFailure(yield* validate({ ...input, pairs }))).toBe(true);
+        assertTrue(Result.isFailure(yield* validate({ ...input, pairs })));
     })
   );
   it.effect("rejects false hits, divergent logs and changed inputs", () =>
@@ -413,7 +414,7 @@ describe("signed real-pilot receipt relationships", () => {
         { ...run(0, 2).outcome, logSha256: digest("0") },
         { ...run(0, 2).outcome, selected: { ...task, origin: "remote-hit", inputsDigest: digest("0") } },
       ])
-        expect(
+        assertTrue(
           Result.isFailure(
             yield* validate({
               ...input,
@@ -423,7 +424,7 @@ describe("signed real-pilot receipt relationships", () => {
               })),
             })
           )
-        ).toBe(true);
+        );
     })
   );
   it.effect("rejects absent uploads, denied writes and unsigned downloads", () =>
@@ -433,15 +434,15 @@ describe("signed real-pilot receipt relationships", () => {
         A.map(input.pairs[0].events, (value) => (value.operation === "put" ? { ...value, status: 403 } : value)),
         A.map(input.pairs[0].events, (value) => (value.role === "reader" ? { ...value, tagPresent: false } : value)),
       ])
-        expect(
+        assertTrue(
           Result.isFailure(yield* validate({ ...input, pairs: A.map(input.pairs, (pair) => ({ ...pair, events })) }))
-        ).toBe(true);
+        );
     })
   );
   it.effect("rejects profile changes and lost source integrity", () =>
     Effect.gen(function* () {
-      expect(Result.isFailure(yield* validate({ ...input, key: { ...input.key, profile: "other" } }))).toBe(true);
-      expect(
+      assertTrue(Result.isFailure(yield* validate({ ...input, key: { ...input.key, profile: "other" } })));
+      assertTrue(
         Result.isFailure(
           yield* validate({
             ...input,
@@ -451,7 +452,7 @@ describe("signed real-pilot receipt relationships", () => {
             })),
           })
         )
-      ).toBe(true);
+      );
     })
   );
 });
@@ -464,9 +465,9 @@ it.effect("rejects missing or failed reader-protection evidence", () =>
       { ...input.pairs[0].protection, protectedBytesUnchanged: false },
       { ...input.pairs[0].protection, issuerMaterialDenied: false },
     ]) {
-      expect(
+      assertTrue(
         Result.isFailure(yield* validate({ ...input, pairs: A.map(input.pairs, (pair) => ({ ...pair, protection })) }))
-      ).toBe(true);
+      );
     }
   })
 );
@@ -474,7 +475,7 @@ it.effect("rejects missing or failed reader-protection evidence", () =>
 it.effect("distinguishes a canary-only observation from an actual issuer denial", () =>
   Effect.gen(function* () {
     const canary = yield* S.decodeUnknownEffect(CacheSignedPilotReceipt)(input);
-    expect(A.every(canary.pairs, (pair) => O.isNone(pair.protection.issuerMaterialDenied))).toBe(true);
+    assertTrue(A.every(canary.pairs, (pair) => O.isNone(pair.protection.issuerMaterialDenied)));
     const actual = yield* S.decodeUnknownEffect(CacheSignedPilotReceipt)({
       ...input,
       pairs: A.map(input.pairs, (pair) => ({
@@ -482,7 +483,7 @@ it.effect("distinguishes a canary-only observation from an actual issuer denial"
         protection: { ...pair.protection, issuerMaterialDenied: true },
       })),
     });
-    expect(A.every(actual.pairs, (pair) => O.contains(pair.protection.issuerMaterialDenied, true))).toBe(true);
+    assertTrue(A.every(actual.pairs, (pair) => O.contains(pair.protection.issuerMaterialDenied, true)));
     expect(actual.authority).toBe("signed-pilot-observation-only");
   })
 );

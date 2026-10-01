@@ -25,6 +25,7 @@ import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -342,12 +343,12 @@ it.layer(NodeCrypto.layer)("producer evidence projections", (it) => {
         ...approval,
         binding: CacheProducerBinding.make({ ...approval.binding, sourceRevision: Str.repeat(40)("0") }),
       });
-      expect(Result.isFailure(yield* deriveCacheProducerEvidence(bundle, changed).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* deriveCacheProducerEvidence(bundle, changed).pipe(Effect.result)));
       const policy = CacheProducerApproval.make({
         ...approval,
         contract: CacheTaskContract.make({ ...approval.contract, negativeCases: ["weaker"] }),
       });
-      expect(Result.isFailure(yield* deriveCacheProducerEvidence(bundle, policy).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* deriveCacheProducerEvidence(bundle, policy).pipe(Effect.result)));
     })
   );
 });
@@ -396,37 +397,27 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("authenticated im
       const original = yield* fs.readFileString(file);
       expect(yield* fs.readDirectory(directory)).toEqual([`${reference.sha256}.json`]);
       yield* fs.chmod(file, 0o644);
-      expect(
-        Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result))
-      ).toBe(true);
+      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)));
       yield* fs.chmod(file, 0o600);
       yield* fs.writeFileString(file, "{}");
-      expect(
-        Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result))
-      ).toBe(true);
-      expect(
+      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)));
+      assertTrue(
         Result.isFailure(yield* persistCacheProducerAcceptance(directory, request, trust).pipe(Effect.result))
-      ).toBe(true);
+      );
       expect(yield* fs.readFileString(file)).toBe("{}");
       yield* fs.writeFileString(file, original);
       const moved = path.join(root, "moved-record.json");
       yield* fs.rename(file, moved);
       yield* fs.symlink(moved, file);
-      expect(
-        Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result))
-      ).toBe(true);
+      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)));
       yield* fs.remove(file);
       yield* fs.rename(moved, file);
       const alias = path.join(root, "alias");
       yield* fs.symlink(directory, alias);
-      expect(Result.isFailure(yield* readCacheProducerAcceptance(alias, reference, trust).pipe(Effect.result))).toBe(
-        true
-      );
+      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(alias, reference, trust).pipe(Effect.result)));
       const hardlink = path.join(root, "hardlink.json");
       yield* fs.link(file, hardlink);
-      expect(
-        Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result))
-      ).toBe(true);
+      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)));
       yield* fs.remove(hardlink);
       const forged = CacheProducerImportRequest.make({
         observations: {
@@ -442,15 +433,13 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("authenticated im
         mode: 0o600,
         flag: "wx",
       });
-      expect(
+      assertTrue(
         Result.isFailure(yield* readCacheProducerAcceptance(directory, forgedReference, trust).pipe(Effect.result))
-      ).toBe(true);
+      );
       yield* TestClock.adjust("25 hours");
-      expect(
-        Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result))
-      ).toBe(true);
+      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)));
       expect(yield* fs.exists(file)).toBe(true);
-      expect(Result.isFailure(yield* validateCacheProducerImport(request, trust).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* validateCacheProducerImport(request, trust).pipe(Effect.result)));
     }).pipe(Effect.scoped)
   );
 
@@ -482,11 +471,11 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("authenticated im
       const preview = yield* previewCacheProducerImport(request, trust);
       expect(preview.authority).toBe("authenticated-import-preview-only");
       expect(preview.contract).toEqual(approval.contract);
-      expect(Result.isFailure(yield* validateCacheProducerImport(request, trust).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* validateCacheProducerImport(request, trust).pipe(Effect.result)));
       const deniedDirectory = path.join(root, "denied-import");
-      expect(
+      assertTrue(
         Result.isFailure(yield* persistCacheProducerAcceptance(deniedDirectory, request, trust).pipe(Effect.result))
-      ).toBe(true);
+      );
       expect(yield* fs.exists(deniedDirectory)).toBe(false);
       for (const channel of ["stable", "canary"]) {
         expect(preview.failures).not.toContain(`${channel}:missing-capture-safety`);
@@ -499,7 +488,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("authenticated im
         request,
         CacheProducerTrustLocations.make({ stable: trust.canary, canary: trust.stable })
       ).pipe(Effect.result);
-      expect(Result.isFailure(swapped)).toBe(true);
+      assertTrue(Result.isFailure(swapped));
       const changedContract = CacheTaskContract.make({ ...approval.contract, negativeCases: ["other-policy"] });
       const changedBinding = CacheProducerBinding.make({
         ...canaryBinding,
@@ -515,10 +504,10 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("authenticated im
         CacheProducerImportRequest.make({ observations: { ...request.observations, canary: changedReport } }),
         CacheProducerTrustLocations.make({ stable: trust.stable, canary: changedDirectory })
       ).pipe(Effect.result);
-      expect(Result.isFailure(mismatched)).toBe(true);
+      assertTrue(Result.isFailure(mismatched));
       if (Result.isFailure(mismatched)) expect(mismatched.failure.message).toContain("same reviewed task contract");
       yield* revokeCacheProducerIssuer(trust.canary);
-      expect(Result.isFailure(yield* previewCacheProducerImport(request, trust).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* previewCacheProducerImport(request, trust).pipe(Effect.result)));
     }).pipe(Effect.scoped)
   );
 
@@ -536,7 +525,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("authenticated im
         request,
         CacheProducerTrustLocations.make({ stable: directory, canary: directory })
       ).pipe(Effect.result);
-      expect(Result.isFailure(result)).toBe(true);
+      assertTrue(Result.isFailure(result));
       if (Result.isFailure(result)) expect(result.failure.message).toContain("Import channel does not match");
       expect(yield* fs.readDirectory(root)).toEqual(["issuer"]);
     }).pipe(Effect.scoped)
