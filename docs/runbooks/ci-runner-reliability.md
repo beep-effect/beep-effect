@@ -177,11 +177,27 @@ failover list are unchanged.
 - Live check after the apply: the scale-up Lambda environment carries
   `capacity-optimized`, `spot`, all eight types and five subnet ids; all five
   subnets are `available` and route `0.0.0.0/0` to the internet gateway.
-- Job execution on the new pools: in the first 25 minutes after the apply, 25
-  workers launched in `us-east-1a`, `us-east-1c` and `us-east-1d` as
-  `m7i.4xlarge` (14), `r6a.2xlarge` (6) and `m6a.4xlarge` (5), all Spot. Of the
-  17 heavy jobs that finished on them, 16 succeeded and one was cancelled by a
-  newer push; none was lost to an eviction.
+- Job execution on the new pools, 12:05–12:45 UTC (the 40 minutes after the
+  apply): 40 workers launched, all Spot, in all five zones — `r6a.2xlarge` 19
+  (`us-east-1b` 13, `us-east-1a` 6), `m7i.4xlarge` 15 (`us-east-1c` 8,
+  `us-east-1d` 6, `us-east-1f` 1), `m6a.4xlarge` 5 (`us-east-1a`),
+  `r7a.2xlarge` 1 (`us-east-1b`). Each worker ran exactly one heavy job, in
+  workflow runs 36853948319, 36856561977, 36856678457, 36856816907,
+  36858959880, 36860910363, 36861577932 and 36862034113. At 12:50 UTC: 29
+  succeeded, 3 were cancelled by a newer push, 6 were still running, 1 failed
+  on its own output (`Heavy / Coverage Regression`, exit 1), and 1 was lost to
+  a Spot eviction (`r6a.2xlarge` in `us-east-1a`, launched 12:17:57, evicted
+  12:23:02, `Heavy / Coverage Regression` in run 36856561977).
+- CloudTrail `BidEvictedEvent` count for the same window: 3. Two reclaimed
+  workers launched before the apply; one reclaimed a worker launched after it.
+  That is 1 eviction in 40 post-apply launches, against the baseline of 41 in
+  564. The sample is 40 minutes and too small to call the rate; the two
+  preceding hours had 22 evictions and 20 launches. Reproduce with
+  `aws cloudtrail lookup-events --lookup-attributes
+  AttributeKey=EventName,AttributeValue=BidEvictedEvent --start-time <t0>
+  --end-time <t1>` and the launch list from `aws ec2 describe-instances`
+  filtered on the `ghr:Application` tag and `LaunchTime`, joined to the
+  Actions jobs API on `runner_name`.
 - Open: repeat the reclaim count from "Attribute a runner loss" over the
   following days and compare with the baseline of 41 evictions per 564
   launches before deciding whether to shard the Coverage Regression and Lint
