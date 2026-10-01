@@ -1118,7 +1118,8 @@ export class CiRulesetHistoryVersion extends S.Class<CiRulesetHistoryVersion>($I
  * **Details**
  *
  * The census measures the whole window against the population effective at
- * its exclusive end, so a version that lands inside `[since, until)` means
+ * its exclusive end, so a version that lands strictly after `since` and
+ * before `until` means
  * part of the window ran under a different required-context set. Context
  * names are normalized the way the report's `requiredContexts` are, so a
  * `Heavy / ` rename is not a population change. `previousVersion` is absent
@@ -1149,7 +1150,7 @@ export class CiRulesetHistoryVersion extends S.Class<CiRulesetHistoryVersion>($I
  * ```
  *
  * @category models
- * @since 0.1.0
+ * @since 0.0.0
  */
 export class CiRulesetPopulationChange extends S.Class<CiRulesetPopulationChange>($I`CiRulesetPopulationChange`)(
   {
@@ -2024,6 +2025,11 @@ const isEffectiveBefore =
   (entry: CiRulesetHistoryVersion): boolean =>
     DateTime.isLessThan(entry.updated_at, instant);
 
+const isEffectiveAtOrBefore =
+  (instant: DateTime.Utc) =>
+  (entry: CiRulesetHistoryVersion): boolean =>
+    DateTime.isLessThanOrEqualTo(entry.updated_at, instant);
+
 const sortedContexts = (contexts: HashSet.HashSet<string>): ReadonlyArray<string> =>
   A.sort(A.fromIterable(contexts), Order.String);
 
@@ -2055,7 +2061,8 @@ const rulesetPopulationChange = (
 };
 
 // Snapshot the version in force at the window start plus every version that
-// took effect inside `[since, until)`. The last snapshot is the window-end
+// took effect inside `(since, until)`; a version effective exactly at `since`
+// governs the whole window, so it is the starting population, not a change. The last snapshot is the window-end
 // population the census measures; each in-window snapshot is diffed against
 // the one before it so a mid-window change can be named, not just detected.
 const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function* (
@@ -2063,10 +2070,10 @@ const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function
   options: CiLaneTimingWindowOptions
 ) {
   const history = A.sort(yield* collectCiRulesetHistory(repoRoot), rulesetHistoryOrder);
-  const baseline = A.last(A.filter(history, isEffectiveBefore(options.since)));
+  const baseline = A.last(A.filter(history, isEffectiveAtOrBefore(options.since)));
   const inWindow = A.filter(
     history,
-    (entry) => !isEffectiveBefore(options.since)(entry) && isEffectiveBefore(options.until)(entry)
+    (entry) => !isEffectiveAtOrBefore(options.since)(entry) && isEffectiveBefore(options.until)(entry)
   );
   const populations = yield* Effect.forEach(A.appendAll(O.toArray(baseline), inWindow), (version) =>
     rulesetVersionPopulation(repoRoot, version)
@@ -2542,7 +2549,7 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
  * **Details**
  *
  * The latest ruleset version strictly before the window end is checked before workflow runs are fetched, and so is
- * every version that took effect inside `[since, until)`: one that added or removed a required context refuses the
+ * every version that took effect after `since` and before `until`: one that added or removed a required context refuses the
  * window unless `preview` is set, because the census would measure part of the window against a population that was
  * not in force. Run pages are
  * de-duplicated and ordered, then each run's paginated jobs are fetched with
@@ -3037,7 +3044,7 @@ export const assessCiLaneTimingWindowBounds: {
  * @param changes - Every ruleset version effective inside the window, diffed against its predecessor.
  * @returns `["population-change"]` when any version added or removed a required context, else empty.
  * @category mapping
- * @since 0.1.0
+ * @since 0.0.0
  */
 export const assessCiLaneTimingWindowPopulation = (
   changes: ReadonlyArray<CiRulesetPopulationChange>

@@ -1684,6 +1684,23 @@ describe("ci lane timing ruleset changes inside the window", () => {
     }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
   });
 
+  it.effect("treats a version effective exactly at the window start as the starting population", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(
+        ".",
+        windowOptions({
+          since: DateTime.makeUnsafe("2026-09-12T01:46:53.354Z"),
+          until: DateTime.makeUnsafe("2026-09-19T01:46:53.354Z"),
+        })
+      );
+
+      strictEqual(report.contextCount, 17);
+      deepStrictEqual(report.populationChanges, []);
+      assertFalse(A.some(commands, Str.endsWith("/history/48600030")));
+    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
   it("judges only a version that added or removed a required context as a population change", () => {
     const edit = CiRulesetPopulationChange.make({
       addedContexts: [],
