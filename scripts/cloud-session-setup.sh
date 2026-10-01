@@ -73,6 +73,7 @@ probe() {
 reachable() { case "$1" in 2*|3*) return 0 ;; *) return 1 ;; esac; }
 
 cd "$REPO_ROOT"
+ORIG_PATH="$PATH"
 case "$(uname -s)-$(uname -m)" in
   Linux-x86_64) ;;
   *) printf 'cloud-session-setup: only Linux x86_64 containers are supported (this is %s-%s); use the workstation toolchain (mise) instead\n' "$(uname -s)" "$(uname -m)" >&2; exit 2 ;;
@@ -197,4 +198,12 @@ bun run beep --help >/dev/null 2>&1 || { log "bun run beep --help failed"; exit 
   [ "$HOST" = "cloud" ] && printf 'export BEEP_AGENT_HOST=cloud\n'
 } > "$ENV_FILE"
 log "ready: bun $(bun --version), effect $(bun -e 'console.log(require("effect/package.json").version)')"
-log "env file: ${ENV_FILE} (source it when ${BIN_DIR} is not already on PATH or --host cloud was passed)"
+case ":${ORIG_PATH}:" in
+  *":${BIN_DIR}:"*)
+    if [ "$HOST" = "cloud" ]; then
+      log "ACTION: source ${ENV_FILE} to export BEEP_AGENT_HOST=cloud in your shell"
+    else
+      log "env file: ${ENV_FILE} (nothing to source; ${BIN_DIR} is already on your PATH)"
+    fi ;;
+  *) log "ACTION: source ${ENV_FILE} before running bun or committing — ${BIN_DIR} is not on your PATH, so lefthook cannot find gitleaks and typos until you do" ;;
+esac

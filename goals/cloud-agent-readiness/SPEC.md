@@ -94,10 +94,12 @@ Higher sources outrank lower sources when they conflict.
       with `pkg.pr.new` allowed by the environment, `bash scripts/cloud-session-setup.sh`
       exits `0`, after which `bun --version` equals `.bun-version`,
       `node_modules/effect/package.json` exists, and `bun run beep --help`
-      exits `0`. Binaries land beside the caller's existing `bun`, so no PATH
-      change is needed; only when no `bun` existed, or `--host cloud` was
-      passed, does the caller first `source ~/.cache/beep/cloud-env.sh`
-      (never the setup script itself).
+      exits `0`. When the caller's `bun` is `~/.bun/bin/bun` (the cloud
+      container's case) binaries land there and no PATH change is needed. In
+      every other case (no `bun`, a mise-managed or otherwise relocated `bun`,
+      or `--host cloud` passed) the caller first
+      `source ~/.cache/beep/cloud-env.sh` (never the setup script itself),
+      and the script's final line says so.
 - [ ] `bash scripts/cloud-session-setup.sh --check` on a container that denies
       `pkg.pr.new` exits `78` and prints the denied host and the remedy
       ("add pkg.pr.new to the environment's allowed domains") without changing
