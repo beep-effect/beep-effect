@@ -31,3 +31,23 @@ existing packet's `CAPTURE.md`, or is struck through with a word of why.
   (a Claude-format `.mcp.json` compatibility loader in the ChatGPT-embedded
   app-server, Grok's Cursor-config import, Codex prompt-hooks) — and the 47
   tracked `.mcp.json` copies across clones had drifted into 3 content hashes.
+- **CI and local-gate determinism** — six gates that disagree between the
+  workstation and hosted CI, or between lanes, captured during the
+  effect-schema-parity close (operator decision 2026-10-01: record now, fix
+  later). Friction receipts in
+  `goals/effect-schema-parity/research/OPPORTUNITIES.md`. (1) The
+  `@beep/repo-cli` `test/root-tasks-turbo-inputs.test.ts` Git-fixture
+  `--affected` case fails on the workstation in every lane (it returns four
+  root tasks) and passes hosted. (2) The `@beep/agents-client`
+  `test/run-turn-reconciliation.test.ts` idle-sweep case is a real-clock timing
+  flake (1 ms idle timeout against a 20 ms sleep). (3) Local `turbo check` hits
+  a location-less TS2589 on `@beep/box`, `@beep/ui` or `@beep/xai` `#build` at
+  random. (4) `apps/storybook` fails package-test-typecheck on main ("no
+  package-owned test files"). (5) The generated schema catalog and other
+  tracked inventories drift between lane merges: the catalog was about 1,087
+  entries stale before P5 regenerated it, and six more entries (repo-cli
+  AgentEffectiveness, LaneTimings and Quality schemas from later merges) were
+  stale again by the follow-up PR, which regenerated them; nothing gates the
+  drift on main. (6) `detectGithubJobShapeClass` classifies runner loss only
+  when every step is null, so `yeet monitor` misses mid-job Spot evictions
+  (evidence: run 36763005302).
