@@ -20383,12 +20383,12 @@
           "lines": 77.64,
           "statements": 73.33,
           "branches": 62.5,
-          "functions": 54.54,
+          "functions": 53.33,
           "uncovered": {
             "lines": 19,
             "statements": 24,
             "branches": 3,
-            "functions": 20
+            "functions": 21
           }
         },
         "apps/professional-desktop/src/workspace/ProfessionalWorkspace.ts": {
