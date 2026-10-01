@@ -9,15 +9,14 @@ is 1, and the launch/retry queue mappings remain enabled. The earlier emergency
 pause blocked PR job pickup and has been superseded. Follow the current policy
 in AWS cost operations; the 14-worker deployment evidence below is historical.
 
-The current `beep-ec2-heavy` pool uses Spot capacity with
-`price-capacity-optimized` allocation and automatic On-Demand fallback disabled.
-This September 15 containment supersedes the September 9 On-Demand posture.
-Keep the two-instance cap, 64 GiB instance choices and ephemeral one-job-per-VM
-teardown. The October 1 source change below moves the pool to
-`capacity-optimized` across eight 64 GiB types and five availability zones,
-still all-Spot with the same cap; until it is deployed, the live pool keeps
-the September 15 settings. A budget alert does not enforce a monthly worker-hour limit. Diagnose
-interrupted jobs before retrying; changing the alert does not change running workers.
+The current `beep-ec2-heavy` pool uses Spot capacity with `capacity-optimized`
+allocation across eight 64 GiB instance types and five availability zones, and
+automatic On-Demand fallback disabled. This is the October 1, 2026 pool spread
+(deployment evidence below), on top of the September 15 containment that
+superseded the September 9 On-Demand posture. Keep the two-instance cap, 64 GiB
+instance choices and ephemeral one-job-per-VM teardown. A budget alert does not
+enforce a monthly worker-hour limit. Diagnose interrupted jobs before retrying;
+changing the alert does not change running workers.
 
 ## Admission and capacity
 
@@ -141,7 +140,9 @@ runner workload identity.
 
 This fixes Spot-specific interruption and the known cleanup permission defect.
 Normal host, network, application, or timeout failures still require diagnosis.
-The 14-instance cap limits concurrency, not a monthly budget: billing continues
+The instance cap (14 in this September 9 procedure; two in source since
+September 15, raised only by a time-boxed burst) limits concurrency, not a
+monthly budget: billing continues
 for each running VM until its ephemeral teardown completes.
 
 ## Deployment evidence — 2026-10-01 (Spot pool spread)
@@ -175,9 +176,12 @@ failover list are unchanged.
   left in place.
 - Live check after the apply: the scale-up Lambda environment carries
   `capacity-optimized`, `spot`, all eight types and five subnet ids; all five
-  subnets are `available` and route `0.0.0.0/0` to the internet gateway. The
-  first three workers launched after the apply were two `m6a.4xlarge` in
-  `us-east-1a` and one `m7i.4xlarge` in `us-east-1d`, all Spot.
+  subnets are `available` and route `0.0.0.0/0` to the internet gateway.
+- Job execution on the new pools: in the first 25 minutes after the apply, 25
+  workers launched in `us-east-1a`, `us-east-1c` and `us-east-1d` as
+  `m7i.4xlarge` (14), `r6a.2xlarge` (6) and `m6a.4xlarge` (5), all Spot. Of the
+  17 heavy jobs that finished on them, 16 succeeded and one was cancelled by a
+  newer push; none was lost to an eviction.
 - Open: repeat the reclaim count from "Attribute a runner loss" over the
   following days and compare with the baseline of 41 evictions per 564
   launches before deciding whether to shard the Coverage Regression and Lint
