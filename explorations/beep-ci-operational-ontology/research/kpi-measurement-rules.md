@@ -97,3 +97,52 @@ exists must name which rules its probe version skips.
 
 Reproduction: `uv run python scripts/kpi_baseline_probe.py --help` (v3.1 flags:
 `--modes`, `--exclude-bounces`, `--max-episode-hours`, multi-root).
+
+## 6. 2026-10-01 amendment (v1.1)
+
+Authority: DECISIONS.md, Ruling 10 (2026-10-01 graduation sitting). §1–§5 stay the
+v1 text; where this section disagrees, it governs readings over journals written at
+or after the changes it names.
+
+- **Probe conformance.** `scripts/kpi_baseline_probe.py` v3.2 (flags `--modes`,
+  `--exclude-bounces`, `--max-episode-hours`, multi-root) is the 2026-08-27 S0
+  baseline instrument and reproduces that baseline. It reads only
+  `attempt-started`/`attempt-finished`, so over post-#964 journals it miscounts
+  `attempt-terminated` attempts as abandoned and cannot report left-censoring. A
+  reading over current journals uses a reader that consumes `attempt-terminated` and
+  `journal-compacted`: the durable ETL, or `bun run beep yeet economics --fleet`
+  (#1239) as a named proxy.
+- **§3 attempt retention (supersedes the ring sentence).** `RETAINED_ATTEMPTS = 50`
+  counts TERMINAL attempts per run-id file (#978,
+  `internal/repo-run/AttemptTerminationJournal.ts`). Eviction drops whole oldest
+  terminal attempts and keeps unterminated ones. Every eviction writes
+  `journal-compacted` (`evictedCount`, `evictedAttemptIds`,
+  `terminalEvictionCutoffRecordedAt`; #964), so left-censoring is positively recorded.
+  A terminated attempt counts as red.
+- **§5 admission veins (supersedes the self-erasing bullet).** Handoffs no longer
+  self-erase. The lease carries the ticket `nonce` and `enqueuedAtMillis` (#878). The
+  admission transition journal (`internal/repo-run/AdmissionJournal.ts`, newest 200
+  admissions retained) records `admission-admitted` with
+  `enqueuedAtMillis`/`admittedAtMillis` (since #878), `admission-lease-evicted` (v2,
+  #964), and `admission-enqueued` / `admission-withdrawn` / `admission-ticket-evicted`
+  (v3, #1025, 2026-09-09). The seat-request clock is computable from v3
+  `admission-enqueued` from #1025 onward, and for granted work from
+  `admission-admitted.enqueuedAtMillis` from #878 onward. Earlier windows fall back to
+  attempt start, labeled per episode. The owning-clone proof ledger
+  (`.beep/yeet/proof-ledger.ndjson`, time-to-certainty ruling 71) is an issuance vein,
+  never a KPI vein.
+- **Mapping to time-to-certainty M1** (its rulings 73–75). M1 is red-to-green per
+  branch from the first red's `startedAt`, over comparable modes
+  (verify/repair/publish) with bounces excluded, cut at 24 h and uncut with
+  right-censored streaks. It is left-censored by the compaction cutoff, treats
+  terminated as red, keeps wrapper and inner lanes as separate populations, and
+  reports no starvation. M1 is a PROXY: it opens at the first red attempt, not at seat
+  request; it keys per branch, not per (checkout, branch); and it has no tier
+  partitions. A reading here may cite M1 beside it, labeled, and never as this KPI.
+- **Tier partitioning (graduation Ruling 10).** Merged preview reports as a
+  sub-partition of TierLocalFullProof; §2's three-tier list stands until an auditor
+  run ratifies a fourth AssuranceTier, which is proposed to run 4 (ratifying
+  vocabulary outside an auditor run is a BRIEF no-go). The deployed `ProofStage`
+  (`internal/repo-run/QualityScheduler.schemas.ts`, re-exported by `ProofFact.ts`) is
+  `repair-loop | pre-push | merged-preview | hosted`, and `AdmissionWorkKind` includes
+  `merged-preview`.
