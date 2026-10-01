@@ -755,12 +755,11 @@ const renderFailure = (source: string, message: string): JSX.Element => (
 // cspell:ignore nosemgrep
 const renderSuccess = (svg: string): JSX.Element => (
   <div
-    className="my-3 overflow-x-auto rounded border bg-background p-3"
     data-testid="mermaid-diagram"
     // Paint containment makes this trusted wrapper the fixed-position containing
     // block and clipping boundary even if a future renderer emits a class-based
     // layout rule that the SVG policy does not recognize.
-    style={{ contain: "paint" }}
+    className="my-3 overflow-x-auto rounded border bg-background p-3 contain-paint"
     // biome-ignore lint/security/noDangerouslySetInnerHtml: DOMPurify sanitizes at the browser parser boundary and the inert SVG policy revalidates the exact bytes injected here.
     dangerouslySetInnerHTML={{ __html: svg }} // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml -- DOMPurify and the inert SVG policy validate the exact bytes before this sink.
   />

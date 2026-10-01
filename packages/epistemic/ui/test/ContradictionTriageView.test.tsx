@@ -749,6 +749,22 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
       const tabs = requireElement(container, '[data-testid="contradiction-narrow-layout"]', HTMLElement);
       expect(tabs.className).toContain("@6xl/triage:hidden");
 
+      // The narrow layout is a tablist: the active trigger is selected and each trigger names its pane.
+      const comparisonTab = requireElement(
+        container,
+        '[data-testid="contradiction-tab-comparison"]',
+        HTMLButtonElement
+      );
+      expect(comparisonTab.getAttribute("role")).toBe("tab");
+      expect(comparisonTab.getAttribute("aria-selected")).toBe("true");
+      const queueTab = requireElement(container, '[data-testid="contradiction-tab-queue"]', HTMLButtonElement);
+      expect(queueTab.getAttribute("aria-selected")).toBe("false");
+      for (const tab of ["queue", "comparison", "source"]) {
+        const trigger = requireElement(container, `[data-testid="contradiction-tab-${tab}"]`, HTMLButtonElement);
+        expect(trigger.getAttribute("aria-controls")).toBe(`contradiction-pane-${tab}`);
+        expect(container.querySelectorAll(`#contradiction-pane-${tab}`)).toHaveLength(1);
+      }
+
       const wide = requireElement(container, '[data-testid="contradiction-wide-layout"]', HTMLElement);
       expect(wide.className).toContain("@6xl/triage:grid");
       expect(container.querySelectorAll('[data-testid="contradiction-queue-pane"]')).toHaveLength(1);

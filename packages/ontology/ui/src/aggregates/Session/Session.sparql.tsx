@@ -40,9 +40,9 @@ const sparqlResultPreview = (result: RunOntologySparqlResult): JSX.Element => {
           <p className="text-sm text-muted-foreground">No rows.</p>
         ) : (
           A.map(A.take(result.result.rows, 8), (row, index) => (
-            <div key={index} className="rounded-md border p-2 font-mono text-[11px]">
+            <div key={index} className="rounded-md border p-2 font-mono text-2xs">
               {A.map(R.toEntries(row), ([name, term]) => (
-                <div key={name} className="grid grid-cols-[70px_minmax(0,1fr)] gap-2">
+                <div key={name} className="grid grid-cols-key-value gap-2">
                   <span className="text-muted-foreground">?{name}</span>
                   <span className="break-all">{serializeTerm(term)}</span>
                 </div>
@@ -61,7 +61,7 @@ const sparqlResultPreview = (result: RunOntologySparqlResult): JSX.Element => {
           <p className="text-sm text-muted-foreground">No quads.</p>
         ) : (
           A.map(A.take(result.result.dataset.quads, 8), (quad, index) => (
-            <div key={`${index}-${serializeQuad(quad)}`} className="rounded-md border p-2 font-mono text-[11px]">
+            <div key={`${index}-${serializeQuad(quad)}`} className="rounded-md border p-2 font-mono text-2xs">
               {serializeQuad(quad)}
             </div>
           ))
@@ -177,7 +177,8 @@ export function OntologySparqlRegion(): JSX.Element {
         </div>
         <Textarea
           aria-label="SPARQL query"
-          className="h-40 resize-none font-mono text-xs leading-5"
+          font="mono"
+          className="h-40 resize-none"
           value={sparqlQuery}
           onChange={(event) => setSparqlQuery(valueFromEvent(event))}
           onKeyDown={runSparqlFromKeyboard}
@@ -186,7 +187,8 @@ export function OntologySparqlRegion(): JSX.Element {
           // Disabled must read as inactive, not as broken primary chrome: a
           // muted chip at full opacity instead of a washed-out green
           // (QA finding R1-07 — the low-contrast state was the disabled one).
-          className="w-full dark:text-foreground disabled:bg-muted disabled:text-muted-foreground dark:disabled:text-muted-foreground disabled:opacity-100"
+          disabledTone="muted"
+          className="w-full"
           size="sm"
           type="button"
           disabled={!canRunSparql}

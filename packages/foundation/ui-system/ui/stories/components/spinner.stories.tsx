@@ -82,10 +82,10 @@ export const Colored: Story = {
 export const Sizes: Story = {
   render: () => (
     <div className="flex items-center gap-4">
-      <Spinner className="size-3 animate-spin" />
-      <Spinner className="size-4 animate-spin" />
-      <Spinner className="size-6 animate-spin" />
-      <Spinner className="size-8 animate-spin" />
+      <Spinner className="size-3" />
+      <Spinner className="size-4" />
+      <Spinner className="size-6" />
+      <Spinner className="size-8" />
     </div>
   ),
 };

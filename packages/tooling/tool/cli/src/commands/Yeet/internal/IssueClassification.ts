@@ -269,6 +269,17 @@ const knownSubLaneHints: ReadonlyArray<KnownSubLaneHint> = [
     category: "lint-tool",
     remediation: "Run `bun run beep quality knip`, fix every finding, then rerun the cheap-gates tier.",
   },
+  // The pre-push lane id, then the root task the lint-policy battery runs.
+  ...A.map(
+    ["quality:shadcn-lint", "lint:shadcn"],
+    (needle): KnownSubLaneHint => ({
+      needle,
+      subCategory: "shadcn-lint",
+      category: "lint-tool",
+      remediation:
+        "Run `bun run lint:shadcn`, fix every finding with the recipes in docs/runbooks/design-system-lint.md (no allow-lists or disable comments), then rerun the failing tier.",
+    })
+  ),
   {
     needle: "fallow:audit",
     subCategory: "fallow-audit",

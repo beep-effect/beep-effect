@@ -85,5 +85,5 @@ export const ContentHost = (props: {
       for (const child of A.fromIterable(host.children)) child.remove();
     };
   };
-  return <div data-content-host={props.groupId} ref={attach} style={{ flex: 1, minHeight: 0 }} />;
+  return <div data-content-host={props.groupId} ref={attach} />;
 };

@@ -503,7 +503,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
       const decided = A.getSomes(A.map(handoff.lanes, (lane) => lane.decidedBy));
 
       expect(countBy(decided, (key) => key)).toEqual({
-        "cost-p50": 19,
+        "cost-p50": 20,
         "first-red-share": 6,
         "declaration-index": 5,
         "lane-class": 1,
@@ -517,7 +517,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
           Order.String
         )
       ).toEqual(["quality:coverage", "quality:nix", "quality:sast", "quality:security"]);
-      expect(A.filter(handoff.lanes, (lane) => lane.redScheduling === "stop-after-red").length).toBe(28);
+      expect(A.filter(handoff.lanes, (lane) => lane.redScheduling === "stop-after-red").length).toBe(29);
       expect(
         A.every(handoff.lanes, (lane) =>
           O.exists(
@@ -526,9 +526,9 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
           )
         )
       ).toBe(true);
-      // One cost source per seed row: 32 unique lane ids, exactly the seed's.
+      // One cost source per seed row: 33 unique lane ids, exactly the seed's.
       const costIds = A.map(DEFAULT_GATE_ORDER_COST_SOURCES, (entry) => entry.laneId);
-      expect(HashSet.size(HashSet.fromIterable(costIds))).toBe(32);
+      expect(HashSet.size(HashSet.fromIterable(costIds))).toBe(33);
       expect(A.sort(costIds, Order.String)).toEqual(
         A.sort(
           A.map(DEFAULT_GATE_ORDER_SEED.lanes, (row) => row.laneId),
@@ -538,7 +538,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
       expect(countBy(handoff.lanes, (lane) => lane.costBasis)).toEqual({
         "a1-lane-row": 16,
         "a1-proxy-row": 15,
-        "external-run": 1,
+        "external-run": 2,
       });
       expect(
         A.sort(
@@ -552,6 +552,7 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
         "fallow:health",
         "quality:cache-policy",
         "quality:doctest",
+        "quality:shadcn-lint",
         "quality:storybook",
         "repo-sanity:config-typecheck",
       ]);

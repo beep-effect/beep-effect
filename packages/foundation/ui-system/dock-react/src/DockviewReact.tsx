@@ -11,23 +11,22 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { adapterState } from "./internal/AdapterState.ts";
-import { boxStyle, dropPreview } from "./internal/DropCompiler.ts";
+import { dropPreview, px } from "./internal/DropCompiler.ts";
 import { FloatingPane } from "./internal/FloatingPane.tsx";
 import { DropPreview } from "./internal/Gesture.models.ts";
 import { GroupPane } from "./internal/GroupPane.tsx";
 import { PanelPortal } from "./internal/PanelHost.tsx";
 import { Sash } from "./internal/Sash.tsx";
 import type { DockBox, TabsNode } from "@beep/dock";
+import type React from "react";
 import type { DockviewReactProps } from "./DockReact.types.ts";
 import type { AdapterState } from "./internal/AdapterState.ts";
 import type { PointerPosition } from "./internal/Gesture.models.ts";
 
 // FlexLayout's drag-rect pattern: the preview element persists while its
-// kind stays active, and CSS transitions tween its bounds — the section
-// overlay flies between groups/quadrants and the caret slides along the
-// strip instead of teleporting.
-const SECTION_TRANSITION = "left 0.15s ease-out, top 0.15s ease-out, width 0.15s ease-out, height 0.15s ease-out";
-const CARET_TRANSITION = "left 0.12s ease-out, top 0.12s ease-out, height 0.12s ease-out";
+// kind stays active, and the package stylesheet's transitions tween its
+// bounds — the section overlay flies between groups/quadrants and the caret
+// slides along the strip instead of teleporting.
 
 const DropOverlay = (props: { readonly graph: DockviewReactProps["graph"]; readonly state: AdapterState }) => {
   const drag = useAtomValue(props.state.dragAtom);
@@ -41,13 +40,27 @@ const DropOverlay = (props: { readonly graph: DockviewReactProps["graph"]; reado
       "tab-insertion": (preview) => (
         <div
           data-drop-caret=""
-          style={{ ...boxStyle(preview.caretBox), transition: CARET_TRANSITION, pointerEvents: "none" }}
+          style={
+            {
+              "--dock-left": px(preview.caretBox.left),
+              "--dock-top": px(preview.caretBox.top),
+              "--dock-width": px(preview.caretBox.width),
+              "--dock-height": px(preview.caretBox.height),
+            } as React.CSSProperties
+          }
         />
       ),
       section: (preview) => (
         <div
           data-drop-indicator="true"
-          style={{ ...boxStyle(preview.box), transition: SECTION_TRANSITION, pointerEvents: "none" }}
+          style={
+            {
+              "--dock-left": px(preview.box.left),
+              "--dock-top": px(preview.box.top),
+              "--dock-width": px(preview.box.width),
+              "--dock-height": px(preview.box.height),
+            } as React.CSSProperties
+          }
         />
       ),
     }),
@@ -104,8 +117,8 @@ const ghostPlacement = (pointer: PointerPosition, container: DockBox): GhostPlac
 
 // Follow-cursor after-image for a promoted tab drag (dockview's PointerGhost
 // pattern): without it, mid-drag there is nothing under the pointer telling
-// the user what they are carrying. Functional styles only — the shell themes
-// it via [data-drag-ghost]. translate3d keeps per-move updates off layout.
+// the user what they are carrying. Placement only — the package stylesheet
+// owns the mechanics and the shell themes it via [data-drag-ghost].
 const DragGhost = (props: { readonly graph: DockviewReactProps["graph"]; readonly state: AdapterState }) => {
   const drag = useAtomValue(props.state.dragAtom);
   const panels = useAtomValue(props.graph.panelsAtom);
@@ -119,20 +132,12 @@ const DragGhost = (props: { readonly graph: DockviewReactProps["graph"]; readonl
       onSome: (panel) => (
         <div
           data-drag-ghost=""
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            transform: `translate3d(${placement.x}px, ${placement.y}px, 0)${placement.anchor}`,
-            maxWidth: Math.min(GHOST_MAX_WIDTH_PX, container.width),
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            pointerEvents: "none",
-            willChange: "transform",
-            opacity: 0.85,
-            zIndex: 1000,
-          }}
+          style={
+            {
+              "--dock-transform": `translate3d(${placement.x}px, ${placement.y}px, 0)${placement.anchor}`,
+              "--dock-max-width": px(Math.min(GHOST_MAX_WIDTH_PX, container.width)),
+            } as React.CSSProperties
+          }
         >
           {panel.title}
         </div>
@@ -156,11 +161,7 @@ const DockviewRoot = (
   const Watermark = props.watermarkComponent;
   props.state.onReadySlot.current = props.onReady;
   return (
-    <div
-      ref={props.state.rootRef}
-      data-testid="dockview-react"
-      style={{ position: "relative", width: "100%", height: "100%" }}
-    >
+    <div ref={props.state.rootRef} data-testid="dockview-react" data-dock-root="">
       {A.match(groups, {
         onEmpty: () =>
           O.match(O.fromUndefinedOr(Watermark), {
@@ -207,6 +208,13 @@ const DockviewRoot = (
  *
  * Adapter state is cached by graph identity and geometry inputs so portal
  * hosts remain stable across React remounts and dock topology changes.
+ *
+ * **Gotchas**
+ *
+ * The adapter writes geometry as `--dock-*` custom properties and leaves every
+ * rule to its stylesheet, so hosts must import it once
+ * (`@import "@beep/dock-react/dock.css";`); without it groups, sashes, and
+ * floating panes render unpositioned.
  *
  * **Example** (Create DockviewReact from workspace)
  *

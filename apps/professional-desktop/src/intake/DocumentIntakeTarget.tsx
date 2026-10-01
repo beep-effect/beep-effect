@@ -48,10 +48,10 @@ const intakeResultRow = (entry: IntakeResultEntry): JSX.Element =>
           </li>
         ),
         inboxed: (inboxed) => (
-          <li className="rounded-sm border border-amber-500/40 p-2" data-testid="intake-result-inboxed">
+          <li className="rounded-sm border border-warning/40 p-2" data-testid="intake-result-inboxed">
             <div className="flex items-center justify-between gap-2">
               <span className="truncate font-medium">{document.originalFileName}</span>
-              <span className="rounded-sm bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-600">inbox</span>
+              <span className="rounded-sm bg-warning/10 px-1.5 py-0.5 text-xs text-warning-text">inbox</span>
             </div>
             <p className="mt-1 break-all text-xs text-muted-foreground">{document.vaultPath.relativePath}</p>
             <p className="mt-1 text-xs text-muted-foreground">{inboxed.rationale}</p>

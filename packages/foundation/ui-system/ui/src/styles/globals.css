@@ -62,7 +62,104 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* Design-system vocabulary for the strict @shadcn/lint lane (docs/runbooks/design-system-lint.md).
+   Every value a component or page used to hardcode as an arbitrary class lives here as a named
+   token, so the class that consumes it reads `text-2xs` or `rounded-control`, never `text-[11px]`. */
+@theme inline {
+  /* Semantic colors that had no token: info (sky/blue), highlight (amber marks), rating (stars),
+     destructive-foreground (text on a solid destructive surface), and the CSS system colors the
+     native select popup must keep. */
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-info: var(--info);
+  --color-info-text: var(--info-text);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-rating: var(--rating);
+  /* Rich-text keyword emphasis (Lexical KeywordNode): purple-900 light / purple-300 dark. */
+  --color-keyword: var(--keyword);
+  --color-canvas: Canvas;
+  --color-canvas-text: CanvasText;
+  /* Bubble surfaces derived from the active theme's primary/secondary/muted, resolved per element. */
+  --color-bubble-tinted: oklch(from var(--primary) var(--bubble-tinted-l) calc(c * 0.4) h);
+  --color-bubble-tinted-hover: oklch(from var(--primary) var(--bubble-tinted-hover-l) calc(c * 0.5) h);
+  --color-bubble-secondary-hover: color-mix(in oklch, var(--secondary), var(--foreground) 5%);
+  --color-bubble-muted-hover: color-mix(in oklch, var(--muted), var(--foreground) 5%);
+
+  /* Type scale steps between Tailwind's defaults. */
+  --text-3xs: 0.625rem;
+  --text-2xs: 0.6875rem;
+  --text-xs-plus: 0.8rem;
+  --text-sm-plus: 0.9375rem;
+  --leading-code: 1.53;
+
+  /* Radius steps the controls use. */
+  --radius-checkbox: 0.25rem;
+  --radius-control-sm: min(var(--radius-md), 10px);
+  --radius-control: min(var(--radius-md), 12px);
+  --radius-nested: calc(var(--radius) - 3px);
+  --radius-nested-sm: calc(var(--radius) - 5px);
+  --radius-ellipse: 50%;
+
+  /* Structural sizes with no spacing-scale step. */
+  --height-switch: 1.15rem;
+  --height-full-minus-px: calc(100% - 1px);
+  --height-full-minus-2px: calc(100% - 2px);
+  --width-full-minus-2px: calc(100% - 2px);
+  --width-sidebar-icon-floating: calc(var(--sidebar-width-icon) + var(--spacing) * 4 + 2px);
+  --min-height-sidebar-inset: calc(100svh - var(--spacing) * 4);
+  --min-width-combobox-popup: calc(var(--anchor-width) + var(--spacing) * 7);
+  --max-height-combobox-list: min(calc(var(--spacing) * 63), calc(var(--available-height) - var(--spacing) * 9));
+  --max-height-drawer: 80vh;
+  /* Full-bleed story canvases (graph-3d stories): 80vh, named apart from the drawer cap. */
+  --height-story-canvas: 80vh;
+  --max-width-full-gutter: calc(100% - 2rem);
+  --max-width-measure: 45ch;
+  --spacing-addon-button: 0.3rem;
+  --spacing-addon-kbd: 0.15rem;
+  --gap-toggle-group: calc(var(--spacing) * var(--gap));
+  --translate-switch-thumb: calc(100% - 2px);
+  --translate-tooltip-arrow: calc(-50% - 2px);
+
+  /* Grid templates. */
+  --grid-template-columns-auto-fr: auto 1fr;
+  --grid-template-columns-fr-auto: 1fr auto;
+  --grid-template-rows-auto-fr: auto 1fr;
+  --grid-template-rows-auto-auto: auto auto;
+  --grid-template-rows-auto-auto-fr: auto auto 1fr;
+  --grid-template-columns-emoji: repeat(var(--frimousse-list-columns), 2rem);
+  --grid-template-columns-key-value: 70px minmax(0, 1fr);
+  --grid-template-columns-triage: minmax(15rem, 0.8fr) minmax(34rem, 2fr) minmax(19rem, 1fr);
+  --grid-template-columns-workbench-lg: 260px minmax(320px, 1fr);
+  --grid-template-columns-workbench-xl: 300px minmax(360px, 1fr) 340px;
+
+  /* Motion. */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-expo: cubic-bezier(0.7, 0, 0.84, 0);
+  --animate-progress-indeterminate: progress-indeterminate 1.5s ease-in-out infinite;
+  --transition-property-color-shadow: color, box-shadow;
+  --transition-property-width: width;
+  --transition-property-inset-x-width: left, right, width;
+  --transition-property-margin-opacity: margin, opacity;
+  --transition-property-opacity-transform-width: opacity, transform, width;
+  --transition-property-inset: top, left, right, bottom;
+  --transition-property-translate-scale-opacity: translate, scale, opacity;
+  --transition-property-size-padding: width, height, padding;
+
+  /* Effects. */
+  --shadow-sidebar-outline: 0 0 0 1px var(--sidebar-border);
+  --shadow-sidebar-outline-hover: 0 0 0 1px var(--sidebar-accent);
+
+  /* Nested ordered-list markers for the rich-text editor. */
+  --list-style-type-upper-roman: upper-roman;
+  --list-style-type-lower-roman: lower-roman;
+  --list-style-type-upper-alpha: upper-alpha;
+  --list-style-type-lower-alpha: lower-alpha;
+}
+
 :root {
+  /* Native controls, scrollbars and `light-dark()` (chart series colors) follow the theme. */
+  color-scheme: light;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -100,9 +197,19 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --destructive-foreground: oklch(0.985 0 0);
+  --info: oklch(0.685 0.169 237.323);
+  --info-text: oklch(0.546 0.245 262.881);
+  --highlight: oklch(0.879 0.169 91.605);
+  --highlight-foreground: oklch(0.279 0.077 45.635);
+  --rating: oklch(0.828 0.189 84.429);
+  --keyword: oklch(0.381 0.176 304.987);
+  --bubble-tinted-l: 0.93;
+  --bubble-tinted-hover-l: 0.88;
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -139,6 +246,15 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --destructive-foreground: oklch(0.985 0 0);
+  --info: oklch(0.746 0.16 232.661);
+  --info-text: oklch(0.707 0.165 254.624);
+  --highlight: oklch(0.828 0.189 84.429);
+  --highlight-foreground: oklch(0.279 0.077 45.635);
+  --rating: oklch(0.828 0.189 84.429);
+  --keyword: oklch(0.827 0.119 306.383);
+  --bubble-tinted-l: 0.3;
+  --bubble-tinted-hover-l: 0.35;
 }
 
 @layer base {
@@ -219,12 +335,261 @@
   }
 }
 
-.hide-scrollbar {
+/*
+ * Custom utilities the design-system components use. The no-scrollbar, scroll-fade and
+ * shimmer utilities are the shadcn base-nova set (shadcn/dist/tailwind.css), copied here
+ * rather than imported so @beep/ui does not take the shadcn CLI as a runtime dependency and
+ * does not inherit that file's custom variants. The rest replace arbitrary properties
+ * (`[content-visibility:auto]`, `[mask-image:...]`) the strict lint lane rejects.
+ */
+@utility no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-  overscroll-behavior: contain;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
+@property --scroll-fade-b {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-s {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-e {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-mask {
+  syntax: "*";
+  inherits: false;
+}
+
+@theme inline {
+  @keyframes scroll-fade-reveal-b {
+    from {
+      --scroll-fade-b: var(--_scroll-fade-size-b, var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10))));
+    }
+    to {
+      --scroll-fade-b: 0px;
+    }
+  }
+  @keyframes scroll-fade-reveal-s {
+    from {
+      --scroll-fade-s: 0px;
+    }
+    to {
+      --scroll-fade-s: var(--_scroll-fade-size-s, var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10))));
+    }
+  }
+  @keyframes scroll-fade-reveal-e {
+    from {
+      --scroll-fade-e: var(--_scroll-fade-size-e, var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10))));
+    }
+    to {
+      --scroll-fade-e: 0px;
+    }
+  }
+}
+
+@utility scroll-fade-x {
+  --_scroll-fade-size-s: var(--scroll-fade-s-size, var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10))));
+  --_scroll-fade-size-e: var(--scroll-fade-e-size, var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10))));
+  --scroll-fade-inline: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--scroll-fade-s, 0px),
+    #000 calc(100% - var(--scroll-fade-e, 0px)),
+    transparent 100%
+  );
+  &:where([dir="rtl"], [dir="rtl"] *) {
+    --scroll-fade-inline: linear-gradient(
+      to left,
+      transparent 0,
+      #000 var(--scroll-fade-s, 0px),
+      #000 calc(100% - var(--scroll-fade-e, 0px)),
+      transparent 100%
+    );
+  }
+  -webkit-mask-image: var(--scroll-fade-mask, var(--scroll-fade-inline));
+  mask-image: var(--scroll-fade-mask, var(--scroll-fade-inline));
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+
+  @supports (animation-timeline: scroll()) {
+    animation:
+      scroll-fade-reveal-s 1ms ease-in-out,
+      scroll-fade-reveal-e 1ms ease-in-out;
+    animation-timeline: scroll(self inline), scroll(self inline);
+    animation-range:
+      0 var(--scroll-fade-reveal, calc(var(--spacing) * 24)),
+      calc(100% - var(--scroll-fade-reveal, calc(var(--spacing) * 24))) 100%;
+    animation-fill-mode: both;
+  }
+
+  @supports not (animation-timeline: scroll()) {
+    --scroll-fade-s: var(--_scroll-fade-size-s);
+    --scroll-fade-e: var(--_scroll-fade-size-e);
+  }
+}
+
+@utility scroll-fade-b {
+  --_scroll-fade-size-b: var(--scroll-fade-b-size, var(--scroll-fade-size, min(12%, calc(var(--spacing) * 10))));
+  --scroll-fade-mask: linear-gradient(to bottom, #000 0, #000 calc(100% - var(--scroll-fade-b, 0px)), transparent 100%);
+  -webkit-mask-image: var(--scroll-fade-mask);
+  mask-image: var(--scroll-fade-mask);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+
+  @supports (animation-timeline: scroll()) {
+    animation: scroll-fade-reveal-b 1ms ease-in-out;
+    animation-timeline: scroll(self y);
+    animation-range: calc(100% - var(--scroll-fade-reveal, calc(var(--spacing) * 24))) 100%;
+    animation-fill-mode: both;
+  }
+
+  @supports not (animation-timeline: scroll()) {
+    --scroll-fade-b: var(--_scroll-fade-size-b);
+  }
+}
+
+@property --shimmer-angle {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 20deg;
+}
+@property --shimmer-image {
+  syntax: "*";
+  inherits: false;
+}
+@property --shimmer-text-fill {
+  syntax: "*";
+  inherits: false;
+}
+
+@theme inline {
+  @keyframes tw-shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: 0 0;
+    }
+  }
+}
+
+@utility shimmer {
+  --_spread: var(--shimmer-spread, calc(3ch + 40px));
+  --_base: currentColor;
+  --_highlight: var(--shimmer-color, oklch(from currentColor l c h / calc(alpha * 0.2)));
+
+  background-image: var(
+    --shimmer-image,
+    linear-gradient(
+      calc(90deg + var(--shimmer-angle)),
+      var(--_base) calc(50% - var(--_spread)),
+      color-mix(in oklch, var(--_highlight), var(--_base) 50%) calc(50% - var(--_spread) * 0.5),
+      var(--_highlight) 50%,
+      color-mix(in oklch, var(--_highlight), var(--_base) 50%) calc(50% + var(--_spread) * 0.5),
+      var(--_base) calc(50% + var(--_spread))
+    )
+  );
+  background-repeat: no-repeat;
+  background-size: calc(200% + var(--_spread) * 2) 100%;
+  background-position: 0 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: var(--shimmer-text-fill, transparent);
+  animation: tw-shimmer var(--shimmer-duration, 2s) linear infinite;
+
+  @variant dark {
+    --_highlight: var(--shimmer-color, oklch(from currentColor max(0.8, calc(l + 0.4)) c h / calc(alpha + 0.4)));
+  }
+
+  &:where([dir="rtl"], [dir="rtl"] *) {
+    animation-direction: reverse;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
+/* Horizontal edge fade for clipped single-line text (speech-input transcript). */
+@utility mask-fade-x {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+}
+
+/* `border-radius: inherit` cannot be a theme token: a custom property set to `inherit`
+   inherits the property, not the keyword. */
+@utility rounded-inherit {
+  border-radius: inherit;
+}
+
+@utility will-change-opacity-transform {
+  will-change: opacity, transform;
+}
+
+/* Off-screen message rows skip layout and paint; 10rem is the placeholder row height. */
+@utility content-visibility-auto {
+  content-visibility: auto;
+}
+
+@utility intrinsic-size-auto-40 {
+  contain-intrinsic-size: auto calc(var(--spacing) * 40);
+}
+
+@utility underline-line-through {
+  text-decoration-line: underline line-through;
+}
+
+/* Lexical reads the indent step from this variable on the editor root. */
+@utility editor-indent-base {
+  --lexical-indent-base-value: calc(var(--spacing) * 10);
+}
+
+/* Day-cell geometry the calendar's own classes read through `size-(--cell-size)` and
+   `rounded-(--cell-radius)`. A consumer that needs other geometry declares its own
+   `@utility` setting them: arbitrary properties are off-policy, and `cn` cannot dedupe
+   variable-setting utilities. */
+@utility calendar-cell-vars {
+  --cell-size: calc(var(--spacing) * 7);
+  --cell-radius: var(--radius-md);
+}
+
+/* OrbBackground glow: a radial gradient built from the per-orb hue, lightness (0-100) and
+   alpha numbers the component sets as custom properties. */
+@utility orb-gradient {
+  background: radial-gradient(
+    circle at 50% 38%,
+    hsl(var(--orb-hue) 82% calc(var(--orb-lightness) * 1%) / var(--orb-alpha)),
+    hsl(calc(var(--orb-hue) + 14) 76% calc((var(--orb-lightness) + 4) * 1%) / calc(var(--orb-alpha) * 0.55)) 46%,
+    transparent 72%
+  );
+}
+
+/* SVG text alignment for d3-rendered labels (knowledge-graph). */
+@utility text-anchor-middle {
+  text-anchor: middle;
+}
+
+/* The chart tooltip's dashed legend indicator: a 1.5px stroke, between border and border-2. */
+@utility border-indicator {
+  border-style: var(--tw-border-style);
+  border-width: 1.5px;
 }

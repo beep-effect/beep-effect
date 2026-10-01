@@ -287,7 +287,7 @@ export function EvidenceGraph() {
             </feMerge>
           </filter>
         </defs>
-        <g className="graph__edges">
+        <g>
           {graphEdges.map((edge) => (
             <path
               key={`${edge.from}-${edge.to}`}
@@ -297,7 +297,7 @@ export function EvidenceGraph() {
             />
           ))}
         </g>
-        <g className="graph__nodes">
+        <g>
           {graphNodes.map((node) => {
             const isSelected = O.exists(selected, (id) => id === node.id);
             return (

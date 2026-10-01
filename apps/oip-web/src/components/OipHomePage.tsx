@@ -31,10 +31,10 @@ import type { ContactSubmissionStatus } from "../contact";
 import type { OipSiteContent, SocialPlatform } from "../content";
 
 const sectionShell = "mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12";
-const monoLabel = "font-[family-name:var(--font-oip-mono)] text-xs font-medium uppercase tracking-[0.16em]";
-const displayClass = "font-[family-name:var(--font-oip-display)]";
+const monoLabel = "font-oip-mono text-xs font-medium uppercase tracking-oip-widest";
+const displayClass = "font-oip-display";
 const ctaClass =
-  "inline-flex h-12 items-center justify-center rounded-md px-6 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--oip-gold)]";
+  "inline-flex h-12 items-center justify-center rounded-md px-6 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-oip-gold";
 
 function Lockup({ className = "", width = 176 }: { readonly className?: string; readonly width?: number }) {
   return (
@@ -69,12 +69,12 @@ function Nav({ content }: { readonly content: OipSiteContent }) {
   return (
     <>
       <a
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-[var(--oip-paper)] focus:px-4 focus:py-2 focus:text-[var(--oip-heading)]"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-oip-paper focus:px-4 focus:py-2 focus:text-oip-heading"
         href="#main-content"
       >
         Skip to main content
       </a>
-      <nav className="fixed inset-x-0 top-0 z-40 border-b border-[color-mix(in_oklab,var(--oip-on-soil)_20%,transparent)] bg-[color-mix(in_oklab,var(--oip-soil)_82%,transparent)] backdrop-blur-md">
+      <nav className="fixed inset-x-0 top-0 z-40 border-b border-oip-on-soil/20 bg-oip-soil/82 backdrop-blur-md">
         <div className={`${sectionShell} flex h-14 items-center gap-2`}>
           <div className="flex flex-1 justify-start">
             <a href="/" aria-label="Oppold IP Law — home" className="flex shrink-0 items-center">
@@ -100,7 +100,7 @@ function Nav({ content }: { readonly content: OipSiteContent }) {
             {A.map(content.nav, (item) => (
               <li key={item.href}>
                 <a
-                  className="block px-2 py-2 font-[family-name:var(--font-oip-mono)] text-[0.68rem] font-medium uppercase tracking-[0.14em] text-[var(--oip-on-soil)] opacity-80 transition-opacity hover:opacity-100 sm:px-3"
+                  className="block px-2 py-2 font-oip-mono text-2xs font-medium uppercase tracking-oip-wider text-oip-on-soil opacity-80 transition-opacity hover:opacity-100 sm:px-3"
                   href={item.href}
                 >
                   {item.label}
@@ -122,29 +122,27 @@ function Hero({ content }: { readonly content: OipSiteContent }) {
 
   return (
     <section
-      className="relative isolate grid min-h-[720px] overflow-hidden bg-[var(--oip-soil)] pt-14 text-[var(--oip-on-soil)] lg:grid-cols-[1.08fr_0.92fr]"
+      className="relative isolate grid min-h-180 overflow-hidden bg-oip-soil pt-14 text-oip-on-soil lg:grid-cols-oip-hero"
       aria-labelledby="hero-title"
     >
-      <div className="relative z-10 flex min-h-[650px] flex-col justify-center px-5 py-10 sm:px-8 sm:py-14 lg:pl-[max(3rem,calc((100vw-80rem)/2+3rem))] lg:pr-14">
-        <div className="max-w-[41rem] 2xl:max-w-[32rem]">
+      <div className="relative z-10 flex min-h-162.5 flex-col justify-center px-5 py-10 sm:px-8 sm:py-14 lg:pl-oip-hero-inset lg:pr-14">
+        <div className="max-w-164 2xl:max-w-lg">
           <h1
             id="hero-title"
-            className={`${displayClass} max-w-3xl text-5xl leading-[1.05] sm:text-6xl lg:text-7xl 2xl:text-[4.75rem]`}
+            className={`${displayClass} max-w-3xl text-5xl leading-oip-hero sm:text-6xl lg:text-7xl 2xl:text-oip-hero`}
           >
             {hero.headline}
           </h1>
-          <p className={`${displayClass} mt-6 max-w-xl text-2xl italic leading-9 text-[var(--oip-cream-muted)]`}>
-            {hero.lede}
-          </p>
+          <p className={`${displayClass} mt-6 max-w-xl text-2xl italic leading-9 text-oip-cream-muted`}>{hero.lede}</p>
           <div className="mt-9 flex flex-wrap items-center gap-4">
             <a
-              className={`${ctaClass} border-[var(--oip-gold)] bg-[var(--oip-gold)] text-[var(--oip-soil)] hover:border-[var(--oip-gold-bright)] hover:bg-[var(--oip-gold-bright)]`}
+              className={`${ctaClass} border-oip-gold bg-oip-gold text-oip-soil hover:border-oip-gold-bright hover:bg-oip-gold-bright`}
               href={hero.primaryCta.href}
             >
               {hero.primaryCta.label}
             </a>
             <a
-              className="font-[family-name:var(--font-oip-mono)] text-sm font-medium uppercase tracking-[0.12em] text-[var(--oip-gold)]"
+              className="font-oip-mono text-sm font-medium uppercase tracking-oip-wide text-oip-gold"
               href={hero.secondaryCta.href}
             >
               {hero.secondaryCta.label}
@@ -153,7 +151,7 @@ function Hero({ content }: { readonly content: OipSiteContent }) {
         </div>
       </div>
 
-      <div className="relative min-h-[420px] overflow-hidden bg-[var(--oip-soil)] lg:min-h-full lg:[clip-path:polygon(18%_0,100%_0,100%_100%,0_100%)]">
+      <div className="relative min-h-105 overflow-hidden bg-oip-soil lg:min-h-full lg:clip-oip-hero-wedge">
         <HeroVideo
           clips={A.map(hero.clips, (clip) => ({
             poster: clip.poster.src,
@@ -161,11 +159,11 @@ function Hero({ content }: { readonly content: OipSiteContent }) {
             webm: clip.video.src.replace(/\.mp4$/, ".webm"),
           }))}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(31,29,26,0.58),rgba(91,26,26,0.12),rgba(31,29,26,0.38))]" />
+        <div className="absolute inset-0 bg-oip-hero-scrim" />
       </div>
 
       <Image
-        className="pointer-events-none absolute bottom-0 left-1/2 z-20 hidden h-[78%] w-auto max-w-[42%] object-contain opacity-95 2xl:block"
+        className="pointer-events-none absolute bottom-0 left-1/2 z-20 hidden h-39/50 w-auto max-w-21/50 object-contain opacity-95 2xl:block"
         src={hero.portrait.src}
         alt={hero.portrait.alt}
         width={hero.portrait.width ?? 700}
@@ -178,7 +176,7 @@ function Hero({ content }: { readonly content: OipSiteContent }) {
 
 function About({ content }: { readonly content: OipSiteContent }) {
   return (
-    <section className="bg-[var(--oip-paper)] py-20 text-[var(--oip-body)]" id="about" aria-labelledby="about-title">
+    <section className="bg-oip-paper py-20 text-oip-body" id="about" aria-labelledby="about-title">
       <div className={sectionShell}>
         <h2 id="about-title" className="sr-only">
           About Thomas J. Oppold's practice
@@ -191,11 +189,11 @@ function About({ content }: { readonly content: OipSiteContent }) {
               <article key={panel.id} className="flex flex-col gap-5">
                 <figure
                   className={cn(
-                    "overflow-hidden rounded-lg border border-[var(--oip-rule)]",
-                    isPortraitPanel ? "bg-[var(--oip-portrait-ground)]" : "bg-[var(--oip-figure-ground)]"
+                    "overflow-hidden rounded-lg border border-oip-rule",
+                    isPortraitPanel ? "bg-oip-portrait-ground" : "bg-oip-figure-ground"
                   )}
                 >
-                  <div className="relative aspect-[4/3] w-full">
+                  <div className="relative aspect-4/3 w-full">
                     <Image
                       className={cn(isPortraitPanel ? "object-contain object-bottom px-7 pt-7" : "object-cover")}
                       src={panel.image.src}
@@ -207,8 +205,8 @@ function About({ content }: { readonly content: OipSiteContent }) {
                   </div>
                 </figure>
                 <div>
-                  <h3 className={`${displayClass} text-4xl leading-tight text-[var(--oip-heading)]`}>{panel.title}</h3>
-                  <p className="mt-4 text-base leading-7 text-[var(--oip-body)]">{panel.body}</p>
+                  <h3 className={`${displayClass} text-4xl leading-tight text-oip-heading`}>{panel.title}</h3>
+                  <p className="mt-4 text-base leading-7 text-oip-body">{panel.body}</p>
                 </div>
               </article>
             );
@@ -221,24 +219,18 @@ function About({ content }: { readonly content: OipSiteContent }) {
 
 function Practice({ content }: { readonly content: OipSiteContent }) {
   return (
-    <section
-      className="bg-[var(--oip-paper)] py-20 text-[var(--oip-body)]"
-      id="practice"
-      aria-labelledby="practice-title"
-    >
+    <section className="bg-oip-paper py-20 text-oip-body" id="practice" aria-labelledby="practice-title">
       <div className={sectionShell}>
         <header className="max-w-3xl">
-          <h2 id="practice-title" className={`${displayClass} text-5xl leading-tight text-[var(--oip-heading)]`}>
+          <h2 id="practice-title" className={`${displayClass} text-5xl leading-tight text-oip-heading`}>
             Practice Areas
           </h2>
         </header>
         <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {A.map(content.practices, (practice) => (
-            <article key={practice.id} className="rounded-lg border border-[var(--oip-rule)] bg-[var(--oip-card)] p-5">
-              <h3 className={`${displayClass} min-h-[3.5rem] text-2xl leading-8 text-[var(--oip-heading)]`}>
-                {practice.title}
-              </h3>
-              <p className="mt-4 text-sm leading-7 text-[var(--oip-body)]">{practice.body}</p>
+            <article key={practice.id} className="rounded-lg border border-oip-rule bg-oip-card p-5">
+              <h3 className={`${displayClass} min-h-14 text-2xl leading-8 text-oip-heading`}>{practice.title}</h3>
+              <p className="mt-4 text-sm leading-7 text-oip-body">{practice.body}</p>
             </article>
           ))}
         </div>
@@ -250,13 +242,13 @@ function Practice({ content }: { readonly content: OipSiteContent }) {
 // function Matters({ content }: { readonly content: OipSiteContent }) {
 //   return (
 //     <section
-//       className="bg-[var(--oip-soil)] py-20 text-[var(--oip-on-soil)]"
+//       className="bg-oip-soil py-20 text-oip-on-soil"
 //       id="matters"
 //       aria-labelledby="matters-title"
 //     >
 //       <div className={sectionShell}>
 //         <header className="max-w-3xl">
-//           <p className={`${monoLabel} text-[var(--oip-gold)]`}>Selected matters</p>
+//           <p className={`${monoLabel} text-oip-gold`}>Selected matters</p>
 //           <h2 id="matters-title" className={`${displayClass} mt-4 text-5xl leading-tight`}>
 //             Public records, practical machinery.
 //           </h2>
@@ -268,11 +260,11 @@ function Practice({ content }: { readonly content: OipSiteContent }) {
 //               href={matter.source.href}
 //               target="_blank"
 //               rel="noopener noreferrer"
-//               className="group flex h-full min-h-[34rem] flex-col overflow-hidden rounded-lg border border-[color-mix(in_oklab,var(--oip-on-soil)_18%,transparent)] bg-[color-mix(in_oklab,var(--oip-soil)_80%,black)] text-[var(--oip-on-soil)] transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--oip-gold)]"
+//               className="group flex h-full min-h-[34rem] flex-col overflow-hidden rounded-lg border border-oip-on-soil/18 bg-[color-mix(in_oklab,var(--oip-soil)_80%,black)] text-oip-on-soil transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-oip-gold"
 //             >
-//               <figure className="min-w-0 border-b border-[color-mix(in_oklab,var(--oip-on-soil)_18%,transparent)] bg-[var(--oip-figure-ground)]">
+//               <figure className="min-w-0 border-b border-oip-on-soil/18 bg-oip-figure-ground">
 //                 <Image
-//                   className="aspect-[4/3] w-full object-contain p-5"
+//                   className="aspect-4/3 w-full object-contain p-5"
 //                   src={matter.figure.src}
 //                   alt={matter.figure.alt}
 //                   width={matter.figure.width ?? 900}
@@ -280,22 +272,22 @@ function Practice({ content }: { readonly content: OipSiteContent }) {
 //                   sizes="(min-width: 1024px) 31vw, 84vw"
 //                 />
 //                 {P.isString(matter.figure.credit) ? (
-//                   <figcaption className="overflow-wrap-anywhere border-t border-[var(--oip-rule)] px-5 py-3 font-[family-name:var(--font-oip-mono)] text-sm font-semibold leading-6 tracking-[0.04em] text-[var(--oip-figure-caption)]">
+//                   <figcaption className="overflow-wrap-anywhere border-t border-oip-rule px-5 py-3 font-oip-mono text-sm font-semibold leading-6 tracking-[0.04em] text-oip-figure-caption">
 //                     {matter.figure.credit}
 //                   </figcaption>
 //                 ) : null}
 //               </figure>
 //               <div className="grid min-w-0 gap-3 p-5">
-//                 <p className={`${monoLabel} min-h-8 text-[var(--oip-gold)]`}>{matter.eyebrow}</p>
-//                 <p className={`${monoLabel} text-[var(--oip-cream-muted)]`}>{matter.caption}</p>
+//                 <p className={`${monoLabel} min-h-8 text-oip-gold`}>{matter.eyebrow}</p>
+//                 <p className={`${monoLabel} text-oip-cream-muted`}>{matter.caption}</p>
 //                 <h3 className={`${displayClass} text-3xl leading-tight`}>{matter.title}</h3>
-//                 <p className="text-sm leading-7 text-[var(--oip-cream-muted)]">{matter.body}</p>
+//                 <p className="text-sm leading-7 text-oip-cream-muted">{matter.body}</p>
 //                 {P.isString(matter.citation) ? (
-//                   <p className="font-[family-name:var(--font-oip-mono)] text-xs leading-6 text-[var(--oip-gold)]">
+//                   <p className="font-oip-mono text-xs leading-6 text-oip-gold">
 //                     {matter.citation}
 //                   </p>
 //                 ) : null}
-//                 <span className="mt-2 font-[family-name:var(--font-oip-mono)] text-xs uppercase tracking-[0.12em] text-[var(--oip-gold)]">
+//                 <span className="mt-2 font-oip-mono text-xs uppercase tracking-oip-wide text-oip-gold">
 //                   {matter.source.label}
 //                 </span>
 //               </div>
@@ -309,9 +301,9 @@ function Practice({ content }: { readonly content: OipSiteContent }) {
 
 // function Clients({ content }: { readonly content: OipSiteContent }) {
 //   return (
-//     <section className="bg-[var(--oip-paper)] py-14 text-[var(--oip-body)]" id="clients" aria-label="Selected clients">
+//     <section className="bg-oip-paper py-14 text-oip-body" id="clients" aria-label="Selected clients">
 //       <div className={sectionShell}>
-//         <p className={`${monoLabel} text-center text-[var(--oip-burgundy)]`}>Counsel of record for selected matters</p>
+//         <p className={`${monoLabel} text-center text-oip-burgundy`}>Counsel of record for selected matters</p>
 //         <ul className="mt-8 grid grid-cols-2 items-center gap-x-8 gap-y-7 sm:grid-cols-3 lg:grid-cols-5">
 //           {A.map(content.clients, (client) => {
 //             const logo = (
@@ -337,7 +329,7 @@ function Practice({ content }: { readonly content: OipSiteContent }) {
 //                     target="_blank"
 //                     rel="noopener noreferrer"
 //                     aria-label={`${client.logo.alt} (opens in a new tab)`}
-//                     className="flex w-full items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--oip-gold)]"
+//                     className="flex w-full items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-oip-gold"
 //                   >
 //                     {logo}
 //                   </a>
@@ -355,33 +347,33 @@ function Practice({ content }: { readonly content: OipSiteContent }) {
 
 // function Press({ content }: { readonly content: OipSiteContent }) {
 //   return (
-//     <section className="bg-[var(--oip-paper)] py-20 text-[var(--oip-body)]" id="press" aria-labelledby="press-title">
+//     <section className="bg-oip-paper py-20 text-oip-body" id="press" aria-labelledby="press-title">
 //       <div className={sectionShell}>
 //         <header className="max-w-3xl">
-//           <p className={`${monoLabel} text-[var(--oip-burgundy)]`}>Selected press</p>
-//           <h2 id="press-title" className={`${displayClass} mt-4 text-5xl leading-tight text-[var(--oip-heading)]`}>
+//           <p className={`${monoLabel} text-oip-burgundy`}>Selected press</p>
+//           <h2 id="press-title" className={`${displayClass} mt-4 text-5xl leading-tight text-oip-heading`}>
 //             In the trade and legal press.
 //           </h2>
 //         </header>
 //         <ul className="mt-10 grid gap-5">
 //           {A.map(content.press, (item) => (
-//             <li key={item.source.href} className="border-t border-[var(--oip-rule)] pt-5">
+//             <li key={item.source.href} className="border-t border-oip-rule pt-5">
 //               <article className="grid gap-4 md:grid-cols-[14rem_1fr_auto] md:items-start">
-//                 <p className="font-[family-name:var(--font-oip-mono)] text-xs uppercase tracking-[0.12em] text-[var(--oip-muted)]">
+//                 <p className="font-oip-mono text-xs uppercase tracking-oip-wide text-oip-muted">
 //                   <time dateTime={item.date}>{item.dateLabel}</time>
 //                   <br />
 //                   {item.publication}
 //                 </p>
 //                 <div>
-//                   <h3 className={`${displayClass} text-3xl leading-tight text-[var(--oip-heading)]`}>
-//                     <ExternalAnchor className="hover:text-[var(--oip-burgundy)]" href={item.source.href}>
+//                   <h3 className={`${displayClass} text-3xl leading-tight text-oip-heading`}>
+//                     <ExternalAnchor className="hover:text-oip-burgundy" href={item.source.href}>
 //                       {item.headline}
 //                     </ExternalAnchor>
 //                   </h3>
-//                   <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--oip-body)]">{item.body}</p>
+//                   <p className="mt-3 max-w-3xl text-sm leading-7 text-oip-body">{item.body}</p>
 //                 </div>
 //                 <ExternalAnchor
-//                   className="font-[family-name:var(--font-oip-mono)] text-xs font-medium uppercase tracking-[0.12em] text-[var(--oip-burgundy)]"
+//                   className="font-oip-mono text-xs font-medium uppercase tracking-oip-wide text-oip-burgundy"
 //                   href={item.source.href}
 //                 >
 //                   {item.source.label}
@@ -409,41 +401,35 @@ function Contact({
   const officePhoneHref = `tel:${contact.officePhone}`;
 
   return (
-    <section
-      className="bg-[var(--oip-contact-ground)] py-20 text-[var(--oip-on-soil)]"
-      id="contact"
-      aria-labelledby="contact-title"
-    >
-      <div className={`${sectionShell} grid gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-start`}>
+    <section className="bg-oip-contact-ground py-20 text-oip-on-soil" id="contact" aria-labelledby="contact-title">
+      <div className={`${sectionShell} grid gap-10 lg:grid-cols-oip-contact lg:items-start`}>
         <div>
-          <p className={`${monoLabel} text-[var(--oip-on-burgundy-accent)]`}>Contact</p>
+          <p className={`${monoLabel} text-oip-on-burgundy-accent`}>Contact</p>
           <h2 id="contact-title" className={`${displayClass} mt-4 text-5xl leading-tight`}>
             {contact.title}
           </h2>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-[color-mix(in_oklab,var(--oip-on-soil)_88%,transparent)]">
-            {contact.lede}
-          </p>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-oip-on-soil/88">{contact.lede}</p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <a
-              className={`${ctaClass} border-[var(--oip-on-soil)] bg-[var(--oip-on-soil)] text-[var(--oip-contact-ground)] hover:border-white hover:bg-white`}
+              className={`${ctaClass} border-oip-on-soil bg-oip-on-soil text-oip-contact-ground hover:border-white hover:bg-white`}
               href={mailto}
             >
               {contact.email}
             </a>
             <a
-              className={`${ctaClass} border border-[color-mix(in_oklab,var(--oip-on-soil)_42%,transparent)] text-[var(--oip-on-soil)] hover:border-white hover:text-white`}
+              className={`${ctaClass} border border-oip-on-soil/42 text-oip-on-soil hover:border-white hover:text-white`}
               href={officePhoneHref}
             >
               {contact.officePhone}
             </a>
-            {/*<span className={`${monoLabel} text-[var(--oip-on-burgundy-accent)]`}>Iowa and Minnesota Bars</span>*/}
+            {/*<span className={`${monoLabel} text-oip-on-burgundy-accent`}>Iowa and Minnesota Bars</span>*/}
           </div>
         </div>
         <div className="grid gap-5">
           <ContactForm email={contact.email} initialSubmittedAt={initialSubmittedAt} status={status} />
-          <aside className="rounded-lg border border-[color-mix(in_oklab,var(--oip-on-soil)_22%,transparent)] bg-[color-mix(in_oklab,var(--oip-soil)_22%,transparent)] p-6">
-            <p className={`${monoLabel} text-[var(--oip-on-burgundy-accent)]`}>Notice</p>
-            <div className="mt-4 grid gap-4 text-sm leading-7 text-[color-mix(in_oklab,var(--oip-on-soil)_88%,transparent)]">
+          <aside className="rounded-lg border border-oip-on-soil/22 bg-oip-soil/22 p-6">
+            <p className={`${monoLabel} text-oip-on-burgundy-accent`}>Notice</p>
+            <div className="mt-4 grid gap-4 text-sm leading-7 text-oip-on-soil/88">
               {A.map(contact.notice, (line) => (
                 <p key={line}>{line}</p>
               ))}
@@ -482,7 +468,7 @@ function SocialLinks({ socials }: { readonly socials: OipSiteContent["socials"] 
           <li key={social.platform}>
             <a
               aria-label={social.label}
-              className="inline-flex size-11 items-center justify-center rounded-md text-[var(--oip-on-soil)] transition-colors hover:text-[var(--oip-gold)] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--oip-gold)]"
+              className="inline-flex size-11 items-center justify-center rounded-md text-oip-on-soil transition-colors hover:text-oip-gold focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-oip-gold"
               href={social.href}
               rel="me noopener noreferrer"
               target="_blank"
@@ -498,20 +484,20 @@ function SocialLinks({ socials }: { readonly socials: OipSiteContent["socials"] 
 
 function Footer({ content }: { readonly content: OipSiteContent }) {
   return (
-    <footer className="bg-[var(--oip-soil)] py-10 text-[var(--oip-on-soil)]">
-      <div className={`${sectionShell} grid gap-8 md:grid-cols-[1fr_auto] md:items-end`}>
+    <footer className="bg-oip-soil py-10 text-oip-on-soil">
+      <div className={`${sectionShell} grid gap-8 md:grid-cols-fr-auto md:items-end`}>
         <div>
           <h2 id="footer-title" className="sr-only">
             Site footer
           </h2>
-          <Lockup className="h-auto w-64 brightness-0 invert md:w-[18.75rem]" />
-          <p className={`${displayClass} mt-4 text-xl italic text-[var(--oip-cream-muted)]`}>
+          <Lockup className="h-auto w-64 brightness-0 invert md:w-75" />
+          <p className={`${displayClass} mt-4 text-xl italic text-oip-cream-muted`}>
             Patent counsel for the people who build the machines.
           </p>
         </div>
         <div className="grid gap-4 text-left md:justify-items-end md:text-right">
           <SocialLinks socials={content.socials} />
-          <p className="text-sm text-[var(--oip-cream-muted)]">Copyright 2026 Oppold IP Law</p>
+          <p className="text-sm text-oip-cream-muted">Copyright 2026 Oppold IP Law</p>
         </div>
       </div>
     </footer>
@@ -544,7 +530,7 @@ export function OipHomePage({
   readonly initialContactSubmittedAt: number;
 }) {
   return (
-    <div className="min-h-screen bg-[var(--oip-paper)] text-[var(--oip-body)]">
+    <div className="min-h-screen bg-oip-paper text-oip-body">
       <Nav content={content} />
       <main id="main-content">
         <Hero content={content} />

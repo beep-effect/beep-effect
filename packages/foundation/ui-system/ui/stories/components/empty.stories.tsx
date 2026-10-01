@@ -159,7 +159,7 @@ export const WithInlineLink: Story = {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="link" size="sm" className="text-muted-foreground">
+          <Button variant="link" size="sm">
             Learn More
             <ArrowUpRightIcon />
           </Button>

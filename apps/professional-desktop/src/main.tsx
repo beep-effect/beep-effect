@@ -1,5 +1,4 @@
 import "./styles/globals.css";
-import "./styles/dock.css";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
 import * as O from "@beep/utils/Option";
 import * as P from "@beep/utils/Predicate";

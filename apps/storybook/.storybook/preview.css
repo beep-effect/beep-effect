@@ -8,3 +8,11 @@
 @source "../";
 @source "../../../packages/foundation/ui-system";
 @source "../../../packages/epistemic/ui";
+@source "../../../packages/drivers/graph-3d";
+
+/* The shared theme maps `--font-mono` to `--font-geist-mono`, which the Next apps get from
+   next/font. Storybook loads no Geist face, so without a value here `font-mono` computes to
+   an invalid family and silently inherits the sans face (same fallback as professional-desktop). */
+:root {
+  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}

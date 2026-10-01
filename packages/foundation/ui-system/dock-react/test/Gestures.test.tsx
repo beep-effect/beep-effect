@@ -88,17 +88,17 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       };
       pointer(source, "pointerDown", 100, 16);
       pointer(source, "pointerMove", 410, 200);
-      expect(indicator().style.left).toBe("404px");
-      expect(indicator().style.width).toBe("198px");
+      expect(indicator().style.getPropertyValue("--dock-left")).toBe("404px");
+      expect(indicator().style.getPropertyValue("--dock-width")).toBe("198px");
       pointer(source, "pointerMove", 720, 200);
-      expect(indicator().style.left).toBe("602px");
-      expect(indicator().style.width).toBe("198px");
+      expect(indicator().style.getPropertyValue("--dock-left")).toBe("602px");
+      expect(indicator().style.getPropertyValue("--dock-width")).toBe("198px");
       pointer(source, "pointerMove", 600, 50);
-      expect(indicator().style.top).toBe("0px");
-      expect(indicator().style.height).toBe("200px");
+      expect(indicator().style.getPropertyValue("--dock-top")).toBe("0px");
+      expect(indicator().style.getPropertyValue("--dock-height")).toBe("200px");
       pointer(source, "pointerMove", 600, 350);
-      expect(indicator().style.top).toBe("200px");
-      expect(indicator().style.height).toBe("200px");
+      expect(indicator().style.getPropertyValue("--dock-top")).toBe("200px");
+      expect(indicator().style.getPropertyValue("--dock-height")).toBe("200px");
       // Center hover joins the tab list, so the preview moves INTO the
       // strip as an insertion caret (append position) instead of a
       // full-group overlay — adding a tab and creating a section read as
@@ -107,13 +107,13 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
       const caret = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-drop-caret]");
       expect(caret).not.toBeNull();
-      expect(caret?.style.left).toBe("797px");
-      expect(caret?.style.height).toBe("32px");
+      expect(caret?.style.getPropertyValue("--dock-left")).toBe("797px");
+      expect(caret?.style.getPropertyValue("--dock-height")).toBe("32px");
       // Strip hover positions the caret at the pointer's insertion index
       // (Chrome tab-strip semantics: the position is visible and draggable).
       pointer(source, "pointerMove", 500, 16);
       const stripCaret = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-drop-caret]");
-      expect(stripCaret?.style.left).toBe("404px");
+      expect(stripCaret?.style.getPropertyValue("--dock-left")).toBe("404px");
       fireEvent.keyDown(document, { key: "Escape" });
     })
   );
@@ -270,7 +270,7 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       const caretLeft = (): string => {
         const node = root.querySelector<HTMLElement>("[data-drop-caret]");
         if (node === null) throw new Error("Missing drop caret");
-        return node.style.left;
+        return node.style.getPropertyValue("--dock-left");
       };
       pointer(source, "pointerDown", 600, 16);
       // Before the first tab's midpoint (50px): index 0, caret at the strip start.
@@ -311,10 +311,10 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       // Before the rendered tab's midpoint (56 + 30 = 86): the caret sits on
       // that tab's real left edge, inside the padding — not at the box edge.
       pointer(source, "pointerMove", 70, 16);
-      expect(caret().style.left).toBe("56px");
+      expect(caret().style.getPropertyValue("--dock-left")).toBe("56px");
       // Past it: append trailing the rendered tab, never before a hidden one.
       pointer(source, "pointerMove", 100, 16);
-      expect(caret().style.left).toBe("116px");
+      expect(caret().style.getPropertyValue("--dock-left")).toBe("116px");
       fireEvent.keyDown(document, { key: "Escape" });
     })
   );
@@ -353,9 +353,9 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       const initialWidth = "396px";
       pointer(sash, "pointerDown", 400, 200);
       pointer(sash, "pointerMove", 500, 200);
-      expect(pane.style.width).not.toBe(initialWidth);
+      expect(pane.style.getPropertyValue("--dock-width")).not.toBe(initialWidth);
       fireEvent.pointerCancel(sash, { pointerId: 7 });
-      expect(pane.style.width).toBe(initialWidth);
+      expect(pane.style.getPropertyValue("--dock-width")).toBe(initialWidth);
       const source = tab(panel1.id);
       pointer(source, "pointerDown", 100, 16);
       pointer(source, "pointerMove", 410, 200);
@@ -380,10 +380,10 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       if (sash === null) throw new Error("Missing sash");
       const pane = screen.getByTestId("dockview-react").querySelector<HTMLElement>(`[data-group-id='${group1}']`);
       if (pane === null) throw new Error("Missing pane");
-      const initialWidth = pane.style.width;
+      const initialWidth = pane.style.getPropertyValue("--dock-width");
       pointer(sash, "pointerDown", 400, 200);
       pointer(sash, "pointerMove", 500, 200);
-      expect(pane.style.width).not.toBe(initialWidth);
+      expect(pane.style.getPropertyValue("--dock-width")).not.toBe(initialWidth);
       pointer(sash, "pointerUp", 500, 200);
       yield* mounted.graph.awaitIdle;
       const resized = mounted.graph.registry.get(mounted.graph.workspaceAtom);
