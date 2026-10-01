@@ -782,11 +782,7 @@ export const RunpodHttpMethod = RunpodHttpMethodBase.pipe(
   $I.annoteSchema("RunpodHttpMethod", {
     description: "Supported Runpod HTTP methods.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodHttpMethodBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodHttpMethodBase)
 );
 
 /**
@@ -824,11 +820,7 @@ export const RunpodOperationId = RunpodOperationIdBase.pipe(
   $I.annoteSchema("RunpodOperationId", {
     description: "Operation ids exposed by Runpod REST API v1.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodOperationIdBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodOperationIdBase)
 );
 
 /**
@@ -866,11 +858,7 @@ export const RunpodRequestBodyKind = RunpodRequestBodyKindBase.pipe(
   $I.annoteSchema("RunpodRequestBodyKind", {
     description: "Request body encoding used by a Runpod operation.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodRequestBodyKindBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodRequestBodyKindBase)
 );
 
 /**
@@ -908,11 +896,7 @@ export const RunpodResponseBodyKind = RunpodResponseBodyKindBase.pipe(
   $I.annoteSchema("RunpodResponseBodyKind", {
     description: "Response body decoding used by a Runpod operation.",
   }),
-  SchemaUtils.withLiteralKitStatics(RunpodResponseBodyKindBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(RunpodResponseBodyKindBase)
 );
 
 /**
