@@ -259,9 +259,9 @@ describe("uspto-mcp UTF-8 response budgets", () => {
   // fixture and its document metadata/download URLs.
   for (const { label, identifierPrefix, expected } of [
     { label: "multibyte identifiers", identifierPrefix: "文档-", expected: "Inline" },
-    { label: "oversized multibyte identifiers", identifierPrefix: Str.repeat(20)("界") + "-", expected: "Fetchable" },
+    { label: "oversized multibyte identifiers", identifierPrefix: `${Str.repeat(20)("界")}-`, expected: "Fetchable" },
   ]) {
-    const body = Str.replaceAll('"DOC-', '"' + identifierPrefix)(largeDocumentsEnvelope);
+    const body = Str.replaceAll('"DOC-', `"${identifierPrefix}`)(largeDocumentsEnvelope);
     it.layer(buildLayer({ USPTO_API_KEY: "fixture-secret" }, respondWith(body)), { timeout: "10 seconds" })(
       label,
       (it) =>
