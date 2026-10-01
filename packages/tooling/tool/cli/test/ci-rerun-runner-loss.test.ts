@@ -27,6 +27,7 @@ import { ConfigProvider, Effect, FileSystem, flow, Layer, Path, pipe, Ref, Resul
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -310,7 +311,8 @@ const handle = (exitCode: number, output: string) =>
   });
 
 // One scripted gh response: `gh api <endpoint>` matches by endpoint, any other
-// gh call by its whole argument list.
+// gh call by its whole argument list. A negative exit code scripts a gh that
+// could not be spawned at all.
 type GhReply = readonly [key: string, exitCode: number, output: string];
 const ghSpawner = (replies: ReadonlyArray<GhReply>, commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
   ChildProcessSpawner.make((command) => {
@@ -318,10 +320,20 @@ const ghSpawner = (replies: ReadonlyArray<GhReply>, commands: Ref.Ref<ReadonlyAr
     const key = command.args[0] === "api" ? (command.args[1] ?? "") : A.join(command.args, " ");
     const reply = A.findFirst(replies, ([candidate]) => candidate === key);
     return Ref.update(commands, A.append(command.args)).pipe(
-      Effect.as(
+      Effect.andThen(
         O.match(reply, {
-          onNone: () => handle(1, `gh: unscripted ${key} (HTTP 404)`),
-          onSome: ([, exitCode, output]) => handle(exitCode, output),
+          onNone: () => Effect.succeed(handle(1, `gh: unscripted ${key} (HTTP 404)`)),
+          onSome: ([, exitCode, output]) =>
+            exitCode < 0
+              ? Effect.fail(
+                  PlatformError.systemError({
+                    _tag: "NotFound",
+                    module: "CiRerunRunnerLossTest",
+                    method: "spawn",
+                    description: output,
+                  })
+                )
+              : Effect.succeed(handle(exitCode, output)),
         })
       )
     );
@@ -523,8 +535,55 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       ]);
       expect(fork.reason).toBe("runner-loss");
       expect(A.contains(endpoints(yield* Ref.get(commands)), forkLookup)).toBe(true);
+      const movedFork = yield* decide({ pull_requests: [], head_owner: "contributor" }, [
+        [
+          forkLookup,
+          0,
+          encodeJson([
+            {
+              number: 7,
+              state: "open",
+              head_sha: NEWER_SHA,
+              head_ref: "refactor/literal-kit-trim",
+              head_owner: "contributor",
+            },
+          ]),
+        ],
+      ]);
+      expect(movedFork.reason).toBe("superseded-head");
+      assertSome(
+        O.flatMap(movedFork.head, (head) => head.currentSha),
+        NEWER_SHA
+      );
       const ownerless = yield* decide({ pull_requests: [], head_owner: null }, []);
       expect(ownerless.reason).toBe("no-open-pull-request");
+    })
+  );
+
+  layerIt.effect("re-runs a fork pull request's lost job and fails visibly when gh cannot start", () =>
+    Effect.gen(function* () {
+      const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const forkLookup = `repos/{owner}/{repo}/pulls?state=open&per_page=10&head=${encodeURIComponent("contributor:refactor/literal-kit-trim")}`;
+      const forkPull = encodeJson([
+        { number: 7, state: "open", head_sha: SHA, head_ref: "refactor/literal-kit-trim", head_owner: "contributor" },
+      ]);
+      const rerun = (rerunReply: GhReply) =>
+        decideRun(CiRerunRunnerLossInput.make({ runId: 36763005302, cwd: "." })).pipe(
+          withGh(
+            [
+              [RUN_ENDPOINT, 0, runJson({ pull_requests: [], head_owner: "contributor" })],
+              ...failedAttemptReplies,
+              [forkLookup, 0, forkPull],
+              rerunReply,
+            ],
+            commands
+          )
+        );
+      const requested = yield* rerun(["run rerun --job 11", 0, "✓ Requested"]);
+      expect(requested.reason).toBe("runner-loss");
+      expect(A.contains(endpoints(yield* Ref.get(commands)), "run rerun --job 11")).toBe(true);
+      const unspawned = yield* rerun(["run rerun --job 11", -1, "gh: command not found"]).pipe(Effect.flip);
+      expect(unspawned.message).toBe("gh run rerun --job 11 failed (spawn).");
     })
   );
 
