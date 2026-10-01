@@ -55,6 +55,10 @@ class GhResult:
         self.stderr = stderr
 
 
+# CSI sequences (colours) and OSC sequences (hyperlinks such as `ESC]8;;url BEL`).
+ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;?]*[0-9A-Za-z]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)")
+
+
 def run_gh_command(args: Sequence[str], cwd: Path) -> GhResult:
     process = subprocess.run(
         ["gh", *args],
@@ -368,13 +372,17 @@ def fetch_job_log(job_id: str, repo_root: Path) -> tuple[str, str]:
     if not repo_slug:
         return "", "Error: unable to resolve repository name for job logs."
     endpoint = f"/repos/{repo_slug}/actions/jobs/{job_id}/logs"
-    returncode, stdout_bytes, stderr = run_gh_command_raw(["api", endpoint], cwd=repo_root)
+    # Job logs carry ANSI colour codes; without --allow-escape-sequences gh api
+    # refuses them and writes nothing to stdout.
+    returncode, stdout_bytes, stderr = run_gh_command_raw(
+        ["api", "--allow-escape-sequences", endpoint], cwd=repo_root
+    )
     if returncode != 0:
         message = (stderr or stdout_bytes.decode(errors="replace")).strip()
         return "", message or "gh api job logs failed"
     if is_zip_payload(stdout_bytes):
         return "", "Job logs returned a zip archive; unable to parse."
-    return stdout_bytes.decode(errors="replace"), ""
+    return ANSI_ESCAPE_PATTERN.sub("", stdout_bytes.decode(errors="replace")), ""
 
 
 def fetch_repo_slug(repo_root: Path) -> str | None:

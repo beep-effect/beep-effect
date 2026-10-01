@@ -999,3 +999,35 @@ turbo work, so they are cheap to run mid-loop.
   the user wants that GitHub write.
 - Do not weaken GitHub check names, hosted PR checks, or manual fallback lanes
   to make a branch appear green faster.
+
+### Read a failed job's log without waiting for the run
+
+Never wait for the whole workflow run to finish before reading a red job.
+`gh run view --job <id> --log` and `--log-failed` refuse while the run is in
+progress ("run … is still in progress; logs will be available when it is
+complete"); that is `gh` behaviour, not a GitHub Actions limit. The per-job
+endpoint serves a completed job's full log mid-run, and `yeet monitor` already
+falls back to it.
+
+```bash
+# Job ids for the PR head (`.id` is the job id; after a rerun take the latest by completed_at).
+gh api "repos/<owner>/<repo>/commits/<sha>/check-runs?per_page=100" \
+  --jq '.check_runs[] | [.id, .name, .status, .conclusion, .completed_at] | @tsv'
+
+# Full log of one completed job, ANSI colour and hyperlink escapes stripped.
+gh api --allow-escape-sequences "repos/<owner>/<repo>/actions/jobs/<job_id>/logs" \
+  | perl -pe 's/\e\[[0-9;?]*[0-9A-Za-z]|\e\][^\a\e]*(?:\a|\e\\)//g' > "<scratch>/job-<job_id>.log"
+
+# Annotations (error lines with file/line), also readable mid-run.
+gh api "repos/<owner>/<repo>/check-runs/<job_id>/annotations"
+```
+
+- `--allow-escape-sequences` is required. Without it `gh api` writes nothing
+  to stdout and prints only "the response contains terminal escape sequences;
+  pass --allow-escape-sequences to output it anyway" on stderr, so with stderr
+  discarded the log looks empty.
+- A job that is itself still running has no downloadable log through the API;
+  only the web UI streams it. Wait for that job, not for the run.
+- Rerun only jobs of the run for the PR's current head. `gh run rerun --job <id>`
+  on an older head's run re-queues that run, and the branch concurrency group
+  then cancels the current head's run.

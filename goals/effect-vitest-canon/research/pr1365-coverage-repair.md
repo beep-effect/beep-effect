@@ -37,3 +37,22 @@ the repository's committed inventory and census are not written.
 Full package verification, full coverage and hosted checks must still pass on
 the integrated commit before the PR is called mergeable. Private drafts for
 later inventory work are not included in this repair.
+
+## Main integration after the repair
+
+The next merge incorporates main through `1dd46faec6`. It preserves the new
+scanned-file reporting test, lane-timing ruleset tests and per-job failed-log
+monitor tests. The scanned-file case uses the branch's scoped fixture and fresh
+console. Existing canonical Option assertions remain intact.
+
+Inventory integration retains all 5,020 branch rows and their dispositions,
+applies 127 upstream metadata/rekey updates and adds 39 incoming occurrences.
+Twenty-four rows absent from the newer main snapshot remain as historical
+campaign work; this merge does not silently retire them. The resulting inventory
+has 5,059 rows. The existing ratified-context test's provider occurrence is
+reconciled to its merged assertion body after verifying the same test and layer.
+
+The first integrated CLI quick check used stale generated ai-metrics declarations
+and reported missing HarnessHash exports. Building the updated dependency
+restored the exports; the subsequent CLI lint and check passed. No source repair
+was needed for those diagnostics.

@@ -67,6 +67,7 @@ import {
   githubConclusion,
   githubJobShapeEvidence,
 } from "../../../internal/github/index.ts";
+import { OutputBound, repoRunOutputBound, runCaptured } from "../../../internal/process/StepExec.ts";
 import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "../../../internal/repo-run/index.ts";
 import { UUID } from "../../../internal/schema/Uuid.ts";
 import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
@@ -288,6 +289,15 @@ const stripGithubLogPrefix: (line: string) => string = flow(
 export const stripYeetMonitorLogDecoration = (log: string): string =>
   pipe(Str.split(/\r?\n/u)(log), A.map(stripGithubLogPrefix), A.join("\n"));
 
+const classifyNormalizedLog = (normalized: string): O.Option<YeetMonitorFlakeClass> => {
+  if (O.isSome(detectNoLocationTs2589Flake(normalized))) {
+    return O.some(YeetMonitorFlakeClass.Enum["ts2589-no-location"]);
+  }
+  return A.some(CI_TIMEOUT_PATTERNS, (pattern) => pattern.test(normalized))
+    ? O.some(YeetMonitorFlakeClass.Enum["ci-timeout"])
+    : O.none();
+};
+
 /**
  * Classify a failed job's log against the merge loop's flake fingerprints.
  *
@@ -318,14 +328,100 @@ export const stripYeetMonitorLogDecoration = (log: string): string =>
  * @category predicates
  * @since 0.0.0
  */
-export const detectYeetMonitorFlakeClass = (log: string): O.Option<YeetMonitorFlakeClass> => {
-  const normalized = stripYeetMonitorLogDecoration(log);
-  if (O.isSome(detectNoLocationTs2589Flake(normalized))) {
-    return O.some(YeetMonitorFlakeClass.Enum["ts2589-no-location"]);
-  }
-  return A.some(CI_TIMEOUT_PATTERNS, (pattern) => pattern.test(normalized))
-    ? O.some(YeetMonitorFlakeClass.Enum["ci-timeout"])
-    : O.none();
+export const detectYeetMonitorFlakeClass = (log: string): O.Option<YeetMonitorFlakeClass> =>
+  classifyNormalizedLog(stripYeetMonitorLogDecoration(log));
+
+// CSI colour sequences and OSC hyperlinks (`ESC]8;;<url> BEL`), both of which
+// hosted job logs carry.
+const GITHUB_LOG_ANSI_ESCAPE_PATTERN = /\u001B\[[0-9;?]*[0-9A-Za-z]|\u001B\][^\u0007\u001B]*(?:\u0007|\u001B\\)/gu;
+const GITHUB_LOG_BYTE_ORDER_MARK_PATTERN = /^\uFEFF/u;
+// Every step boundary the raw job log writes: `Run <script|owner/action@ref>`
+// headers for run and `uses:` steps alike, the `start-action` markers around
+// composite sub-steps, and the line that opens each post step.
+const GITHUB_JOB_LOG_STEP_START_MARKERS: ReadonlyArray<string> = [
+  "##[group]Run ",
+  "##[start-action ",
+  "Post job cleanup.",
+];
+const GITHUB_JOB_LOG_ERROR_MARKER = "##[error]";
+const GITHUB_JOB_LOG_STEP_FAILURE_MARKER = "##[error]Process completed with exit code";
+
+const normalizeJobEndpointLine: (line: string) => string = flow(
+  Str.replace(GITHUB_LOG_ANSI_ESCAPE_PATTERN, ""),
+  Str.replace(GITHUB_LOG_BYTE_ORDER_MARK_PATTERN, ""),
+  Str.replace(GITHUB_LOG_TIMESTAMP_PATTERN, "")
+);
+
+const isJobLogStepStart = (line: string): boolean =>
+  A.some(GITHUB_JOB_LOG_STEP_START_MARKERS, (marker) => Str.startsWith(marker)(line));
+
+/**
+ * Cut the failing step out of a whole-job log served by the per-job endpoint.
+ *
+ * **Details**
+ *
+ * `gh api repos/{owner}/{repo}/actions/jobs/<id>/logs` serves a completed
+ * job's log while its parent run is still in progress, which
+ * `gh run view --log-failed` refuses to do. That endpoint's format differs:
+ * no `<job>\t<step>\t` prefix, terminal colour escapes left in, and every step
+ * of the job rather than only the failing ones. A step starts at a
+ * `##[group]Run ` header (run and `uses:` steps alike), a `##[start-action `
+ * marker, or `Post job cleanup.`; the failing step is the one holding the last
+ * `##[error]Process completed with exit code` line, or the last `##[error]`
+ * when no step reported an exit code (an action step failing on its own
+ * message). Keying on the last marker matters: `::error::` annotations and
+ * `continue-on-error` steps emit earlier `##[error]` lines in steps that did
+ * not fail the job.
+ *
+ * **Gotchas**
+ *
+ * `None` means "cannot classify": no `##[error]` at all (the log has not
+ * materialized, or the body is not a job log) or no step boundary before the
+ * failure. The caller must treat it as an unreadable log, never as a verdict —
+ * an unbounded region could carry an earlier step's retry timeouts into the
+ * `ci-timeout` fingerprint.
+ *
+ * **Example** (Isolate the failing step)
+ *
+ * ```ts
+ * import { isolateYeetMonitorJobLogFailure } from "@beep/repo-cli/test/Yeet"
+ *
+ * const log = [
+ *   "2026-10-01T12:00:00.1Z ##[group]Run bun install",
+ *   "2026-10-01T12:00:01.1Z done",
+ *   "2026-10-01T12:00:02.1Z ##[group]Run bun run check",
+ *   "2026-10-01T12:00:03.1Z \u001B[31mboom\u001B[0m",
+ *   "2026-10-01T12:00:04.1Z ##[error]Process completed with exit code 1.",
+ * ].join("\n")
+ * console.log(isolateYeetMonitorJobLogFailure(log)) // Some("Run bun run check\nboom\nProcess completed with exit code 1.")
+ * ```
+ *
+ * @param log - Raw job log text as returned by the per-job logs endpoint.
+ * @returns The failing step's lines without timestamps, escapes, or command markers, or `None` when no failing step can be bounded.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const isolateYeetMonitorJobLogFailure = (log: string): O.Option<string> => {
+  const lines = A.map(Str.split(/\r?\n/u)(log), normalizeJobEndpointLine);
+  return pipe(
+    A.findLastIndex(lines, Str.startsWith(GITHUB_JOB_LOG_STEP_FAILURE_MARKER)),
+    O.orElse(() => A.findLastIndex(lines, Str.startsWith(GITHUB_JOB_LOG_ERROR_MARKER))),
+    O.flatMap((errorIndex) =>
+      O.map(A.findLastIndex(A.take(lines, errorIndex + 1), isJobLogStepStart), (start) => {
+        const end = O.match(A.findFirstIndex(A.drop(lines, errorIndex + 1), isJobLogStepStart), {
+          onNone: () => lines.length,
+          onSome: (offset) => errorIndex + 1 + offset,
+        });
+        return pipe(
+          lines,
+          A.take(end),
+          A.drop(start),
+          A.map(Str.replace(GITHUB_LOG_COMMAND_MARKER_PATTERN, "")),
+          A.join("\n")
+        );
+      })
+    )
+  );
 };
 
 /**
@@ -857,6 +953,69 @@ const runJobs = Effect.fn("YeetMonitorLoop.runJobs")(function* (
   );
 });
 
+// A whole-job log routinely runs to megabytes; the bound only guards memory.
+// The failing-step region is cut out of the complete text afterwards, so this
+// capture must not truncate where the repo-run bound would.
+const jobEndpointLogBound = OutputBound.make({
+  maxChars: 64 * 1024 * 1024,
+  truncatedNotice: `\n[yeet] job log truncated after ${64 * 1024 * 1024} characters`,
+});
+
+const unreadableJobLog = { exitCode: 1, output: Str.empty, truncated: false };
+
+/**
+ * Read a failed job's failing-step log, normalized for the flake classifier.
+ *
+ * `gh run view --job <id> --log-failed` is asked first and keeps its existing
+ * reading. It refuses (non-zero exit) while the parent run is still in
+ * progress ("run … is still in progress; logs will be available when it is
+ * complete") — a `gh` restriction, not a GitHub one — so any failure falls
+ * back to the per-job
+ * endpoint, which serves a completed job's log mid-run. `--allow-escape-sequences`
+ * is load-bearing: without it `gh api` refuses a log containing terminal escapes
+ * and prints nothing on stdout. A failed fallback, or a log whose failing step
+ * cannot be bounded, reads as an unreadable log,
+ * so a job whose log has not materialized yet still reads as pending mid-run
+ * and as "needs code fix" once the run has concluded.
+ */
+const readFailedJobLog = Effect.fn("YeetMonitorLoop.readFailedJobLog")(function* (
+  context: RepoRunContext,
+  jobDatabaseId: number
+): Effect.fn.Return<
+  { readonly exitCode: number; readonly output: string; readonly truncated: boolean },
+  never,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const primary = yield* runRepoCommandCapture(
+    "gh",
+    ["run", "view", "--job", `${jobDatabaseId}`, "--log-failed"],
+    context.repoRoot
+  ).pipe(Effect.orElseSucceed(() => unreadableJobLog));
+  // Only the exit code says `gh` refused: a successful body may itself contain
+  // "is still in progress" on some log line.
+  if (primary.exitCode === 0 || primary.truncated) {
+    return { ...primary, output: stripYeetMonitorLogDecoration(primary.output) };
+  }
+  const fallback = yield* runCaptured({
+    command: "gh",
+    args: ["api", "--allow-escape-sequences", `repos/{owner}/{repo}/actions/jobs/${jobDatabaseId}/logs`],
+    cwd: context.repoRoot,
+    source: "stdout",
+    bound: jobEndpointLogBound,
+    trim: false,
+  }).pipe(Effect.orElseSucceed(() => unreadableJobLog));
+  if (fallback.exitCode !== 0 || fallback.truncated) {
+    return unreadableJobLog;
+  }
+  // An unbounded failing step reads as unreadable, so it stays pending until
+  // `--log-failed` answers after the run. The bounded step is held to the
+  // primary read's bound, so a job reads the same mid-run as it will then.
+  return O.match(isolateYeetMonitorJobLogFailure(fallback.output), {
+    onNone: () => unreadableJobLog,
+    onSome: (region) => ({ exitCode: 0, output: region, truncated: region.length > repoRunOutputBound.maxChars }),
+  });
+});
+
 /**
  * Classify one failed job, reading its record before reaching for its log.
  *
@@ -864,7 +1023,8 @@ const runJobs = Effect.fn("YeetMonitorLoop.runJobs")(function* (
  * is already in hand — and because a job the control plane killed before any
  * step concluded often has no fetchable log to classify from at all.
  *
- * When the shape proves nothing, the failing-step log decides. `--log-failed`
+ * When the shape proves nothing, the failing-step log decides; mid-run it
+ * comes from the per-job endpoint (see `readFailedJobLog`). `--log-failed`
  * rather than `--log`: only the failing steps are relevant, and a whole-job log
  * routinely overruns the repo-run capture bound. A truncated or unavailable
  * capture yields `None`, which the planner reads as "needs code fix" — the
@@ -887,13 +1047,9 @@ const classifyJob = Effect.fn("YeetMonitorLoop.classifyJob")(function* (
       runCompleted,
     });
   }
-  const result = yield* runRepoCommandCapture(
-    "gh",
-    ["run", "view", "--job", `${job.databaseId}`, "--log-failed"],
-    context.repoRoot
-  ).pipe(Effect.orElseSucceed(() => ({ exitCode: 1, output: Str.empty, truncated: false })));
+  const result = yield* readFailedJobLog(context, job.databaseId);
   const logUnavailable = result.exitCode !== 0 || result.truncated;
-  const flakeClass = logUnavailable ? O.none<YeetMonitorFlakeClass>() : detectYeetMonitorFlakeClass(result.output);
+  const flakeClass = logUnavailable ? O.none<YeetMonitorFlakeClass>() : classifyNormalizedLog(result.output);
   return YeetMonitorFailedJob.make({
     databaseId: job.databaseId,
     flakeClass,

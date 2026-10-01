@@ -356,6 +356,30 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("reports the scanned files, leaving out excluded paths, only when asked", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeSchemaFirstSourceFixture(["export const example = 1;", ""]);
+          yield* writeSchemaFirstFileFixture("packages/example/src/generated/Hidden.ts", [
+            "export const hidden = 1;",
+            "",
+          ]);
+          yield* writeSchemaFirstFileFixture("packages/example/src/Types.d.ts", ["export type X = 1;", ""]);
+
+          yield* runLintCommand(["schema-first"]);
+          const scannedLine = (lines: ReadonlyArray<unknown>) =>
+            A.filter(lines, (line) => P.isString(line) && Str.startsWith("[schema-first:scanned] ")(line));
+          expect(scannedLine(yield* TestConsole.logLines)).toEqual([]);
+
+          yield* runLintCommand(["schema-first", "--report-scanned-files"]);
+          expect(scannedLine(yield* TestConsole.logLines)).toEqual([
+            '[schema-first:scanned] ["packages/example/src/Example.ts"]',
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("reports untracked SFV4 numeric-domain advisories", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
