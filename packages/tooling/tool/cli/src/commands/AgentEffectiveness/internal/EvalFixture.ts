@@ -24,9 +24,10 @@ const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalFixture")
 const normalizePathSeparators = Str.replaceAll("\\", "/");
 const normalizeRelativePath: (value: string) => string = flow(normalizePathSeparators, Str.replace(/^\.\//, ""));
 
-const SourceFileExtension = LiteralKit([".ts", ".tsx"]).pipe(
+const SourceFileExtension = LiteralKit([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]).pipe(
   $I.annoteSchema("AgentEffectivenessEvalSourceFileExtension", {
-    description: "TypeScript source file extensions included in SkillOpt fixture source text.",
+    description:
+      "Source file extensions a SkillOpt fixture's code can import or execute (declaration files end in .ts too); all of them reach completion checks and the law lanes.",
   })
 );
 
@@ -177,9 +178,9 @@ const parseExportedSymbols = Effect.fn("AgentEffectivenessEvalScorer.parseExport
  * Evaluate deterministic completion criteria from a SkillOpt task manifest.
  *
  * Export names are parsed from the manifest entrypoint with ts-morph. Pattern
- * checks use JavaScript regular expressions over fixture TypeScript source
- * files; this intentionally follows the contract's regex surface and does not
- * attempt semantic matching.
+ * checks use JavaScript regular expressions over every fixture source file,
+ * TypeScript or JavaScript; this intentionally follows the contract's regex
+ * surface and does not attempt semantic matching.
  *
  * @category services
  * @since 0.0.0

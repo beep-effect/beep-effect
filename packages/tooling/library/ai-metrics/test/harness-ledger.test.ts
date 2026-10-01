@@ -8,15 +8,18 @@ import {
   contextSurfaceId,
   contextSurfaceKey,
   deriveHarnessFingerprintId,
+  deriveHarnessHash,
   HarnessEditRef,
   HarnessFingerprint,
   HarnessFingerprintInput,
   HarnessFingerprintParts,
+  HarnessHash,
   HarnessLedgerDelta,
   HarnessLedgerRow,
   HarnessLedgerRowId,
   harnessFingerprintFromParts,
   harnessFingerprintUnknown,
+  hashPublicTextSha256,
   isHarnessEdit,
   isStale,
   isWarmRestart,
@@ -88,6 +91,7 @@ const decodeClaim = S.decodeEffect(BehavioralClaim);
 const encodeDelta = S.encodeEffect(HarnessLedgerDelta);
 const decodeDelta = S.decodeEffect(HarnessLedgerDelta);
 const isHarnessLedgerRowId = S.is(HarnessLedgerRowId);
+const isHarnessHash = S.is(HarnessHash);
 
 describe("harness-ledger", () => {
   describe("context surfaces", () => {
@@ -164,6 +168,38 @@ describe("harness-ledger", () => {
         expect(yield* decodeFingerprint(encodedFingerprint)).toStrictEqual(fingerprint);
         const { reasoningEffort: _dropped, ...withoutEffort } = encodedParts;
         expect((yield* decodeFingerprintParts(withoutEffort)).reasoningEffort).toBe(harnessFingerprintUnknown);
+      })
+    );
+  });
+
+  describe("harness hash", () => {
+    it.effect("hashes the versioned preimage the hook-pulse writer rebuilds in shell", () =>
+      Effect.gen(function* () {
+        const source = {
+          harnessSessionHash: Sha256Hex.make(hashA),
+          harnessBaselineHash: Sha256Hex.make(hashB),
+        };
+        const hash = yield* deriveHarnessHash(source);
+        // `printf 'harness-hash-v1\n%s\n%s' "$session" "$baseline" | sha256sum`
+        expect(hash).toBe("f770e97d322c8b3e4cd0aabdd5d768ddf44465b676ef12faa7fe081d73755f0c");
+        expect(hash).toBe(yield* hashPublicTextSha256(`harness-hash-v1\n${hashA}\n${hashB}`));
+        pipe(isHarnessHash(hash), assertTrue);
+      })
+    );
+
+    it.effect("ignores the model dimensions and orders the two scope hashes", () =>
+      Effect.gen(function* () {
+        const astra = yield* fingerprintFor("gpt-6-astra", hashA);
+        const sol = yield* fingerprintFor("gpt-5.6-sol", hashA, "xhigh");
+        const swapped = yield* deriveHarnessHash({
+          harnessSessionHash: Sha256Hex.make(hashB),
+          harnessBaselineHash: Sha256Hex.make(hashA),
+        });
+        const edited = yield* deriveHarnessHash(yield* fingerprintFor("gpt-6-astra", hashC));
+        expect(astra.fingerprintId).not.toBe(sol.fingerprintId);
+        expect(yield* deriveHarnessHash(astra)).toBe(yield* deriveHarnessHash(sol));
+        expect(swapped).not.toBe(yield* deriveHarnessHash(astra));
+        expect(edited).not.toBe(yield* deriveHarnessHash(astra));
       })
     );
   });
@@ -274,6 +310,7 @@ describe("harness-ledger", () => {
         pipe(HashSet.isEmpty(decoded.touched), assertTrue);
         assertNone(decoded.hypothesis);
         assertNone(decoded.repoRevision);
+        assertNone(decoded.decidedUnder);
       })
     );
 
@@ -319,6 +356,21 @@ describe("harness-ledger", () => {
         assertNone(defaulted.previousRowId);
         assertNone(defaulted.targetSurface);
         assertNone(defaulted.windowSessions);
+      })
+    );
+
+    it.effect("roundtrips the decision-time harness hash and rejects a malformed one", () =>
+      Effect.gen(function* () {
+        const decidedUnder = HarnessHash.make(hashC);
+        const row = yield* makeRow({ decidedUnder: O.some(decidedUnder) });
+        const json = yield* encodeRowJson(row);
+        assertSome((yield* decodeRowJson(json)).decidedUnder, decidedUnder);
+        const encoded = yield* asRecord(yield* parseJson(json));
+        expect(encoded.decidedUnder).toBe(hashC);
+        const bad = yield* Effect.flip(decodeRowJson(yield* stringifyJson({ ...encoded, decidedUnder: "harness-b" })));
+        expect(bad._tag).toBe("SchemaError");
+        const legacy = yield* encodeRowJson(yield* makeRow());
+        expect(legacy).not.toContain("decidedUnder");
       })
     );
 

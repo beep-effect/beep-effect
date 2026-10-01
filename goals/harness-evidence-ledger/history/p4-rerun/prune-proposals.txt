@@ -1,0 +1,6 @@
+window: last 30 sessions under harness hash bb86bd309008; observed 0 (partial window) ending -
+sessions skipped: 0 under another or mixed harness; 2182 without a SessionStart harness stamp
+shards read: 2603; undecodable lines skipped: 74
+candidates: 44; touched: 0; already proposed: 0; decided under this harness: 0
+No pruning proposals.
+nothing written: no fresh proposals.

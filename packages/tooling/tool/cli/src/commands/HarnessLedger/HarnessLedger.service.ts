@@ -9,6 +9,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   contextSurfaceId,
+  deriveHarnessHash,
   HarnessEditRefKind,
   HarnessFingerprintParts,
   HarnessLedgerRow,
@@ -17,8 +18,10 @@ import {
   LedgerDisposition,
   makeHarnessLedgerRowId,
 } from "@beep/repo-ai-metrics";
-import { A, O, pipe } from "@beep/utils";
-import { Context, DateTime, Effect, Layer } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { A, O, pipe, Str } from "@beep/utils";
+import { Context, DateTime, Effect, Layer, Result } from "effect";
+import * as Bool from "effect/Boolean";
 import * as HashSet from "effect/HashSet";
 import { HarnessLedgerChainError, HarnessLedgerInputError, HarnessLedgerIoError } from "./HarnessLedger.errors.ts";
 import {
@@ -37,6 +40,7 @@ import {
   withLedgerWriteFence,
 } from "./internal/LedgerFiles.ts";
 import { enumeratePruneCandidates, observeSessionWindow } from "./internal/PruneWindow.ts";
+import type { HarnessFingerprint, HarnessHash } from "@beep/repo-ai-metrics";
 import type { FileSystem, Path } from "effect";
 import type { HarnessLedgerCommandError } from "./HarnessLedger.errors.ts";
 import type {
@@ -59,6 +63,9 @@ const $I = $RepoCliId.create("commands/HarnessLedger/HarnessLedger.service");
 export interface HarnessLedgerServiceShape {
   /**
    * Append a row superseding the latest row of a chain with a human disposition.
+   *
+   * The row keeps the superseded row's fingerprint and records the harness
+   * hash captured now as `decidedUnder`.
    *
    * @since 0.0.0
    */
@@ -88,9 +95,12 @@ export interface HarnessLedgerServiceShape {
   ) => Effect.Effect<HarnessLedgerRow, HarnessLedgerCommandError>;
 
   /**
-   * Propose retiring every skill and MCP server with zero touches in
-   * the last N hook-pulse sessions for read-only inspection. Writes fail until
-   * sessions can be filtered by the current harness hash.
+   * Propose retiring every skill and MCP server with zero touches in the last
+   * N hook-pulse sessions under the current harness hash. With `write` and a
+   * full window (N sessions observed), the fresh proposals are appended under
+   * the ledger write fence; otherwise nothing is written. A surface is not
+   * proposed again while an open `proposed` chain targets it, or while a
+   * decision on it stands under the current harness hash.
    *
    * @since 0.0.0
    */
@@ -163,6 +173,12 @@ const appendDisposition = Effect.fn("HarnessLedger.appendDisposition")(function*
       Effect.mapError(HarnessLedgerIoError.wrap(`Failed to hash surface ${surface.kind}:${surface.name}.`))
     )
   );
+  // The row keeps the evidence's fingerprint; the decision belongs to the
+  // harness it is made under, which may have changed since the proposal.
+  const decidedUnder = yield* captureHarnessFingerprint(options.repoRoot, O.none(), O.none()).pipe(
+    Effect.flatMap(deriveHarnessHash),
+    Effect.mapError(HarnessLedgerIoError.wrap("Failed to derive the harness hash of this decision."))
+  );
   const createdAt = yield* DateTime.now;
   const rowId = yield* makeHarnessLedgerRowId(createdAt);
   const row = HarnessLedgerRow.make({
@@ -181,6 +197,7 @@ const appendDisposition = Effect.fn("HarnessLedger.appendDisposition")(function*
     previousRowId: O.some(previous.rowId),
     targetSurface: previous.targetSurface,
     windowSessions: previous.windowSessions,
+    decidedUnder: O.some(decidedUnder),
   });
   yield* appendLedgerRows(options.repoRoot, [row]);
   return row;
@@ -233,14 +250,17 @@ const listImpl = Effect.fn("HarnessLedger.list")(function* (options: HarnessLedg
 });
 
 const buildPruneProposals = Effect.fn("HarnessLedger.buildPruneProposals")(function* (
-  options: HarnessLedgerPruneOptions,
+  fingerprint: HarnessFingerprint,
   candidates: ReadonlyArray<PruneSurfaceCandidate>,
-  sessionsObserved: number,
+  observed: ObservedSessionWindow,
   windowEnd: DateTime.Utc
 ) {
-  const fingerprint = yield* captureHarnessFingerprint(options.repoRoot, options.modelId, options.reasoningEffort);
   const createdAt = yield* DateTime.now;
-  const evidence = `zero touches across ${sessionsObserved} sessions ending ${DateTime.formatIso(windowEnd)}`;
+  // Names the regime by a hash prefix, never by a path.
+  const evidence = `zero touches across ${observed.sessionsObserved} sessions under harness hash ${Str.slice(
+    0,
+    12
+  )(observed.harnessHash)} ending ${DateTime.formatIso(windowEnd)}`;
   return yield* Effect.forEach(candidates, (candidate) =>
     makeHarnessLedgerRowId(createdAt).pipe(
       Effect.map((rowId) =>
@@ -255,7 +275,7 @@ const buildPruneProposals = Effect.fn("HarnessLedger.buildPruneProposals")(funct
             disposition: LedgerDisposition.Enum.proposed,
             dispositionEvidence: O.some(evidence),
             targetSurface: O.some(candidate.surfaceId),
-            windowSessions: O.some(options.windowSessions),
+            windowSessions: O.some(observed.sessionsObserved),
           }),
         })
       )
@@ -263,52 +283,139 @@ const buildPruneProposals = Effect.fn("HarnessLedger.buildPruneProposals")(funct
   );
 });
 
-// Reads open proposals and plans fresh ones without writing. Appending waits
-// on hook-pulse sessions being scoped by the current harness hash; until then
-// `pruneProposalsImpl` refuses `write` before this runs.
+// Why a chain head keeps its target surface from a fresh proposal: an open
+// `proposed` head blocks under any regime; a human decision blocks only while
+// it was recorded under the current harness hash, because evidence gathered
+// under an older harness has expired. A tombstone never blocks. A decision is
+// dated by `decidedUnder`; a row written before that key existed falls back to
+// the harness hash of its fingerprint.
+const ProposalBlock = LiteralKit(["open-proposal", "standing-decision"]);
+type ProposalBlock = typeof ProposalBlock.Type;
+
+const blockOf = Effect.fn("HarnessLedger.blockOf")(function* (head: HarnessLedgerRow, harnessHash: HarnessHash) {
+  const recordedUnder: Effect.Effect<HarnessHash, HarnessLedgerIoError> = O.match(head.decidedUnder, {
+    onNone: () =>
+      deriveHarnessHash(head.fingerprint).pipe(
+        Effect.mapError(HarnessLedgerIoError.wrap(`Failed to derive the harness hash of ledger row ${head.rowId}.`))
+      ),
+    onSome: Effect.succeed,
+  });
+  const decided: Effect.Effect<O.Option<ProposalBlock>, HarnessLedgerIoError> = Effect.map(recordedUnder, (recorded) =>
+    O.liftPredicate(ProposalBlock.Enum["standing-decision"], () => recorded === harnessHash)
+  );
+  return yield* LedgerDisposition.$match(head.disposition, {
+    proposed: () => Effect.succeedSome<ProposalBlock>(ProposalBlock.Enum["open-proposal"]),
+    accepted: () => decided,
+    rejected: () => decided,
+    deferred: () => decided,
+    waived: () => decided,
+    tombstoned: () => Effect.succeedNone,
+  });
+});
+
+// Target surfaces of every chain head that blocks a fresh proposal, split by why.
+const blockedTargets = Effect.fn("HarnessLedger.blockedTargets")(function* (
+  rows: ReadonlyArray<HarnessLedgerRow>,
+  harnessHash: HarnessHash
+) {
+  const blocks = yield* Effect.forEach(
+    A.filterMap(chainHeads(rows), (head) =>
+      O.match(head.targetSurface, {
+        onNone: () => Result.failVoid,
+        onSome: (target) => Result.succeed([head, target] as const),
+      })
+    ),
+    ([head, target]) =>
+      Effect.map(
+        blockOf(head, harnessHash),
+        O.map((block) => [block, target] as const)
+      )
+  );
+  const targetsBlockedBy = (block: ProposalBlock): HashSet.HashSet<string> =>
+    pipe(
+      A.getSomes(blocks),
+      A.filterMap(([reason, target]) => (reason === block ? Result.succeed(target) : Result.failVoid)),
+      HashSet.fromIterable
+    );
+  return {
+    open: targetsBlockedBy(ProposalBlock.Enum["open-proposal"]),
+    decided: targetsBlockedBy(ProposalBlock.Enum["standing-decision"]),
+  };
+});
+
+// Reads blocking chain heads and plans fresh proposals without writing. With
+// `write` it runs under the ledger write fence, so the read and the append
+// cannot interleave with another writer and propose one surface twice.
 const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(function* (
   options: HarnessLedgerPruneOptions,
+  fingerprint: HarnessFingerprint,
   candidates: ReadonlyArray<PruneSurfaceCandidate>,
   observed: ObservedSessionWindow
 ) {
   const rows = yield* readLedgerRows(options.repoRoot);
-  const openTargets = pipe(
-    chainHeads(rows),
-    A.filter((head) => head.disposition === LedgerDisposition.Enum.proposed),
-    A.map((head) => head.targetSurface),
-    A.getSomes,
-    HashSet.fromIterable
-  );
+  const blocked = yield* blockedTargets(rows, observed.harnessHash);
   const untouched = A.filter(candidates, (candidate) => !HashSet.has(observed.touched, candidate.surfaceId));
   // No observed session is no evidence, not zero touches: propose nothing.
   const zeroTouch = observed.sessionsObserved === 0 ? A.empty<PruneSurfaceCandidate>() : untouched;
-  const fresh = A.filter(zeroTouch, (candidate) => !HashSet.has(openTargets, candidate.surfaceId));
+  const notOpen = A.filter(zeroTouch, (candidate) => !HashSet.has(blocked.open, candidate.surfaceId));
+  const fresh = A.filter(notOpen, (candidate) => !HashSet.has(blocked.decided, candidate.surfaceId));
   const proposals = yield* O.match(observed.windowEnd, {
     onNone: () => Effect.succeed(A.empty<PruneProposal>()),
-    onSome: (windowEnd) => buildPruneProposals(options, fresh, observed.sessionsObserved, windowEnd),
+    onSome: (windowEnd) => buildPruneProposals(fingerprint, fresh, observed, windowEnd),
   });
   return HarnessLedgerPruneReport.make({
     windowSessions: options.windowSessions,
+    harnessHash: observed.harnessHash,
     sessionsObserved: observed.sessionsObserved,
+    windowFull: observed.sessionsObserved >= options.windowSessions,
+    sessionsSkippedOutOfRegime: observed.sessionsSkippedOutOfRegime,
+    sessionsSkippedUnstamped: observed.sessionsSkippedUnstamped,
     windowEnd: observed.windowEnd,
     shardsRead: observed.shardsRead,
     undecodableLines: observed.undecodableLines,
     candidates: A.length(candidates),
     touchedCandidates: A.length(candidates) - A.length(untouched),
-    alreadyProposed: A.length(zeroTouch) - A.length(fresh),
+    alreadyProposed: A.length(zeroTouch) - A.length(notOpen),
+    decidedUnderHarness: A.length(notOpen) - A.length(fresh),
     proposals,
+    written: false,
+  });
+});
+
+// Plans and appends inside one fence; an empty plan appends nothing and
+// reports `written: false`.
+const appendPruneProposals = Effect.fn("HarnessLedger.appendPruneProposals")(function* (
+  options: HarnessLedgerPruneOptions,
+  fingerprint: HarnessFingerprint,
+  candidates: ReadonlyArray<PruneSurfaceCandidate>,
+  observed: ObservedSessionWindow
+) {
+  const report = yield* planPruneProposals(options, fingerprint, candidates, observed);
+  return yield* A.match(report.proposals, {
+    onEmpty: () => Effect.succeed(report),
+    onNonEmpty: (proposals) =>
+      appendLedgerRows(
+        options.repoRoot,
+        A.map(proposals, (proposal) => proposal.row)
+      ).pipe(Effect.as(HarnessLedgerPruneReport.make({ ...report, written: true }))),
   });
 });
 
 const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (options: HarnessLedgerPruneOptions) {
-  if (options.write) {
-    return yield* HarnessLedgerInputError.new(
-      "Cannot append pruning proposals until hook-pulse sessions are scoped by the current harness hash."
-    );
-  }
   const candidates = yield* enumeratePruneCandidates(options.repoRoot);
-  const observed = yield* observeSessionWindow(options.stateDir, options.windowSessions);
-  return yield* planPruneProposals(options, candidates, observed);
+  const fingerprint = yield* captureHarnessFingerprint(options.repoRoot, options.modelId, options.reasoningEffort);
+  const harnessHash = yield* deriveHarnessHash(fingerprint).pipe(
+    Effect.mapError(HarnessLedgerIoError.wrap("Failed to derive the current harness hash."))
+  );
+  const observed = yield* observeSessionWindow(options.stateDir, options.windowSessions, harnessHash);
+  // A partial window is shown but never written: a stored row must carry a
+  // full window of evidence, so a written row's `windowSessions` (the observed
+  // count) always equals the requested window.
+  return yield* Bool.match(options.write && observed.sessionsObserved >= options.windowSessions, {
+    onFalse: () => planPruneProposals(options, fingerprint, candidates, observed),
+    onTrue: () =>
+      withLedgerWriteFence(options.repoRoot, appendPruneProposals(options, fingerprint, candidates, observed)),
+  });
 });
 
 /**
