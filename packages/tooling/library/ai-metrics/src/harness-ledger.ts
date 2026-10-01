@@ -563,6 +563,94 @@ export const makeHarnessFingerprint = Effect.fn("AiMetrics.makeHarnessFingerprin
 });
 
 /**
+ * SHA-256 hex identity of the harness surfaces one session started under,
+ * without the model dimensions of a {@link HarnessFingerprint}.
+ *
+ * **Details**
+ *
+ * The hook-pulse writer stamps this digest on `SessionStart` rows, and
+ * `harness-ledger prune-proposals` counts only sessions whose stamps equal
+ * the current one. Model id and reasoning effort stay out: a hook cannot
+ * observe them, and they already expire evidence through the fingerprint.
+ *
+ * **Example** (Validating a harness hash)
+ *
+ * ```ts
+ * import { HarnessHash } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HarnessHash)("a".repeat(64))) // true
+ * console.log(S.is(HarnessHash)("harness-hash-v1")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HarnessHash = Sha256Hex.pipe(
+  $I.annoteSchema("HarnessHash", {
+    description: "SHA-256 hex of the config-snapshot session and baseline hashes of one harness regime.",
+  })
+);
+
+/**
+ * Decoded harness hash.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HarnessHash = typeof HarnessHash.Type;
+
+/**
+ * Derive the {@link HarnessHash} of a harness regime from its two
+ * config-snapshot scope hashes.
+ *
+ * **Details**
+ *
+ * The preimage is exactly the UTF-8 text
+ * `harness-hash-v1\n<harnessSessionHash>\n<harnessBaselineHash>`, hashed
+ * unsalted: both inputs are digests of public repo config, the same argument
+ * that keeps context surface ids unsalted. The input is structural, so a
+ * {@link HarnessFingerprint} or {@link HarnessFingerprintParts} is passed as-is.
+ *
+ * **Gotchas**
+ *
+ * `.claude/hooks/hook-pulse.sh` recomputes this digest in shell at
+ * `SessionStart`, including both scope hashes. The writer conformance test
+ * compares the two, so change the preimage in both places or not at all.
+ *
+ * **Example** (Deriving the harness hash of a fingerprint)
+ *
+ * ```ts
+ * import { deriveHarnessHash, HarnessFingerprintParts } from "@beep/repo-ai-metrics"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import * as Effect from "effect/Effect"
+ *
+ * const hash = Effect.runPromise(
+ *   deriveHarnessHash(
+ *     HarnessFingerprintParts.make({
+ *       modelId: "gpt-6-astra",
+ *       harnessSessionHash: Sha256Hex.make("a".repeat(64)),
+ *       harnessBaselineHash: Sha256Hex.make("b".repeat(64))
+ *     })
+ *   )
+ * )
+ * console.log(hash)
+ * ```
+ *
+ * @param source - Anything carrying `harnessSessionHash` and `harnessBaselineHash`.
+ * @returns SHA-256 hex of the versioned harness-hash preimage.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const deriveHarnessHash = Effect.fn("AiMetrics.deriveHarnessHash")(function* (
+  source: Pick<HarnessFingerprintParts, "harnessSessionHash" | "harnessBaselineHash">
+) {
+  return yield* hashPublicTextSha256(
+    `harness-hash-v1\n${source.harnessSessionHash}\n${source.harnessBaselineHash}`
+  ).pipe(Effect.mapError(harnessLedgerError("Failed to hash the harness hash preimage.")));
+});
+
+/**
  * Kind of reference a ledger row's edit points at.
  *
  * **Example** (Listing edit reference kinds)
@@ -793,6 +881,11 @@ const harnessLedgerRowTouchedDefault = HashSet.empty<ContextSurfaceId>();
  * surface it would retire in `targetSurface` (a hashed id, never a path) and
  * the session window it observed in `windowSessions`.
  *
+ * A disposition row keeps the `fingerprint` of the evidence it supersedes and
+ * records the {@link HarnessHash} the decision was made under in
+ * `decidedUnder`. The key is absent on `proposed` rows and on rows written
+ * before it existed; a reader then falls back to the hash of `fingerprint`.
+ *
  * **Gotchas**
  *
  * `touched` is an `effect/HashSet`, which plain `JSON.stringify` cannot
@@ -850,6 +943,7 @@ export class HarnessLedgerRow extends S.Class<HarnessLedgerRow>($I`HarnessLedger
     windowSessions: S.OptionFromOptionalKey(S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(1))).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
+    decidedUnder: S.OptionFromOptionalKey(HarnessHash).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).check(
     S.makeFilter(
       (row) =>

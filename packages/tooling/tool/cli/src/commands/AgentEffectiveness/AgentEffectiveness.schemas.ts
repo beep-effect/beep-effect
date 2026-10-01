@@ -179,6 +179,162 @@ export class AgentEffectivenessEvalViolation extends S.Class<AgentEffectivenessE
 ) {}
 
 /**
+ * Law lane the scorer runs over a staged fixture.
+ *
+ * **Example** (Check the tsgo lane literal)
+ *
+ * ```ts
+ * import { AgentEffectivenessEvalLawLane } from "@beep/repo-cli/commands/AgentEffectiveness"
+ *
+ * console.log(AgentEffectivenessEvalLawLane.is.tsgo("tsgo")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AgentEffectivenessEvalLawLane = LiteralKit(["schema-first", "tsgo", "biome"]).pipe(
+  $I.annoteSchema("AgentEffectivenessEvalLawLane", {
+    description: "Law lanes the SkillOpt eval scorer runs over a staged fixture.",
+  })
+);
+
+/**
+ * Law lane the scorer runs over a staged fixture.
+ *
+ * **Example** (Type a lane name)
+ *
+ * ```ts
+ * import type { AgentEffectivenessEvalLawLane } from "@beep/repo-cli/commands/AgentEffectiveness"
+ *
+ * const lane: AgentEffectivenessEvalLawLane = "biome"
+ * console.log(lane) // "biome"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AgentEffectivenessEvalLawLane = typeof AgentEffectivenessEvalLawLane.Type;
+
+/**
+ * Whether a law lane measured the agent's source or could not run.
+ *
+ * **Details**
+ *
+ * `measured` means the lane processed the staged source files and every
+ * finding it reported is attributable to those files. `environment-failure`
+ * means the lane could not measure the source: the tool did not start, its
+ * configuration did not load, it processed zero files, or it reported
+ * diagnostics outside the staged source files. An environment failure is a
+ * scorer-side defect, never a law violation by the agent.
+ *
+ * **Example** (Check an environment failure)
+ *
+ * ```ts
+ * import { AgentEffectivenessEvalLaneStatus } from "@beep/repo-cli/commands/AgentEffectiveness"
+ *
+ * console.log(AgentEffectivenessEvalLaneStatus.is["environment-failure"]("environment-failure")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AgentEffectivenessEvalLaneStatus = LiteralKit(["measured", "environment-failure"]).pipe(
+  $I.annoteSchema("AgentEffectivenessEvalLaneStatus", {
+    description: "Whether a law lane measured the staged source files or failed for environment reasons.",
+  })
+);
+
+/**
+ * Whether a law lane measured the agent's source or could not run.
+ *
+ * **Example** (Type a lane status)
+ *
+ * ```ts
+ * import type { AgentEffectivenessEvalLaneStatus } from "@beep/repo-cli/commands/AgentEffectiveness"
+ *
+ * const status: AgentEffectivenessEvalLaneStatus = "measured"
+ * console.log(status) // "measured"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AgentEffectivenessEvalLaneStatus = typeof AgentEffectivenessEvalLaneStatus.Type;
+
+/**
+ * Per-lane run evidence: how many staged files the lane processed and the
+ * environment diagnostics that kept it from measuring the source.
+ *
+ * **Example** (Make a measured lane report)
+ *
+ * ```ts
+ * import { AgentEffectivenessEvalLaneReport } from "@beep/repo-cli/commands/AgentEffectiveness"
+ * import * as S from "effect/Schema"
+ *
+ * const report = AgentEffectivenessEvalLaneReport.make({
+ *   lane: "biome",
+ *   status: "measured",
+ *   filesProcessed: S.Natural.make(1),
+ *   environmentDiagnostics: []
+ * })
+ * console.log(report.status) // "measured"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AgentEffectivenessEvalLaneReport extends S.Class<AgentEffectivenessEvalLaneReport>(
+  $I`AgentEffectivenessEvalLaneReport`
+)(
+  {
+    lane: AgentEffectivenessEvalLawLane,
+    status: AgentEffectivenessEvalLaneStatus,
+    filesProcessed: S.Natural,
+    environmentDiagnostics: S.Array(S.String),
+  },
+  $I.annote("AgentEffectivenessEvalLaneReport", {
+    description: "Run evidence for one law lane, separating environment failures from agent law violations.",
+  })
+) {}
+
+/**
+ * Whether every law lane measured the staged source.
+ *
+ * **Example** (Check a scored report status)
+ *
+ * ```ts
+ * import { AgentEffectivenessEvalReportStatus } from "@beep/repo-cli/commands/AgentEffectiveness"
+ *
+ * console.log(AgentEffectivenessEvalReportStatus.is.scored("scored")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AgentEffectivenessEvalReportStatus = LiteralKit(["scored", "environment-failure"]).pipe(
+  $I.annoteSchema("AgentEffectivenessEvalReportStatus", {
+    description: "Scored when every law lane measured the source; environment-failure when any lane could not.",
+  })
+);
+
+/**
+ * Whether every law lane measured the staged source.
+ *
+ * **Example** (Type a report status)
+ *
+ * ```ts
+ * import type { AgentEffectivenessEvalReportStatus } from "@beep/repo-cli/commands/AgentEffectiveness"
+ *
+ * const status: AgentEffectivenessEvalReportStatus = "scored"
+ * console.log(status) // "scored"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AgentEffectivenessEvalReportStatus = typeof AgentEffectivenessEvalReportStatus.Type;
+
+/**
  * Fixed scorer output breakdown.
  *
  * **Example** (Verify breakdown is defined)
@@ -234,6 +390,14 @@ export class AgentEffectivenessEvalScoreReport extends S.Class<AgentEffectivenes
     score: S.Finite,
     breakdown: AgentEffectivenessEvalScoreBreakdown,
     violations: S.Array(AgentEffectivenessEvalViolation),
+    status: AgentEffectivenessEvalReportStatus.pipe(
+      S.withConstructorDefault(Effect.succeed<"scored">("scored")),
+      S.withDecodingDefault(Effect.succeed<"scored">("scored"))
+    ),
+    lanes: S.Array(AgentEffectivenessEvalLaneReport).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<AgentEffectivenessEvalLaneReport>())),
+      S.withDecodingDefault(Effect.succeed(A.empty<AgentEffectivenessEvalLaneReport>()))
+    ),
   },
   $I.annote("AgentEffectivenessEvalScoreReport", {
     description: "Machine-readable SkillOpt eval score report emitted by agent-effectiveness evals score.",

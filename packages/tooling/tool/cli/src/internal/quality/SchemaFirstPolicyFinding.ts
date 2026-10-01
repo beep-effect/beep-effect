@@ -240,3 +240,74 @@ export const decodeSchemaFirstPolicyFindingLine = (line: string): O.Option<Schem
   Str.startsWith(SchemaFirstPolicyIssuePrefix)(line)
     ? codec.decodeOption(Str.slice(SchemaFirstPolicyIssuePrefix.length)(line))
     : O.none();
+
+/**
+ * Line prefix (including the trailing space) that marks the list of files a
+ * `beep lint schema-first --report-scanned-files` run actually scanned.
+ *
+ * **Example** (Prefix match on scanned-files line)
+ *
+ * ```ts
+ * import { SchemaFirstScannedFilesPrefix } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
+ *
+ * console.log('[schema-first:scanned] ["a.ts"]'.startsWith(SchemaFirstScannedFilesPrefix)) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const SchemaFirstScannedFilesPrefix = "[schema-first:scanned] " as const;
+
+const scannedFilesCodec = S.String.pipe(S.Array, JsonStringCodec);
+
+/**
+ * Render the repo-relative files a schema-first scan ran its detectors over as
+ * one prefixed stdout line.
+ *
+ * **Details**
+ *
+ * Files the scan skipped (path exclusions such as `/generated/`, `/test/`, or
+ * `.d.ts`, and anything outside the source globs) are absent, so a consumer
+ * that staged its own files can tell which of them the law never saw.
+ *
+ * **Example** (Render scanned-files line)
+ *
+ * ```ts
+ * import { renderSchemaFirstScannedFilesLine } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(renderSchemaFirstScannedFilesLine(["packages/a/src/a.ts"])))
+ * // [schema-first:scanned] ["packages/a/src/a.ts"]
+ * ```
+ *
+ * @param files - Repo-relative POSIX paths the scan ran its detectors over.
+ * @returns The prefixed line for stdout.
+ * @category codecs
+ * @since 0.0.0
+ */
+export const renderSchemaFirstScannedFilesLine = (files: ReadonlyArray<string>): Effect.Effect<string, S.SchemaError> =>
+  scannedFilesCodec.encode(files).pipe(Effect.map((json) => `${SchemaFirstScannedFilesPrefix}${json}`));
+
+/**
+ * Parse a stdout line into the list of files a schema-first scan covered,
+ * dropping non-matching or malformed lines.
+ *
+ * **Example** (Parse scanned-files line or noise)
+ *
+ * ```ts
+ * import { decodeSchemaFirstScannedFilesLine } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
+ * import * as O from "effect/Option"
+ *
+ * console.log(decodeSchemaFirstScannedFilesLine('[schema-first:scanned] ["a.ts"]')) // Option.some(["a.ts"])
+ * console.log(O.isNone(decodeSchemaFirstScannedFilesLine("noise"))) // true
+ * ```
+ *
+ * @param line - A single stdout line.
+ * @returns The scanned file list when the line is a well-formed scanned-files line.
+ * @category codecs
+ * @since 0.0.0
+ */
+export const decodeSchemaFirstScannedFilesLine = (line: string): O.Option<ReadonlyArray<string>> =>
+  Str.startsWith(SchemaFirstScannedFilesPrefix)(line)
+    ? scannedFilesCodec.decodeOption(Str.slice(SchemaFirstScannedFilesPrefix.length)(line))
+    : O.none();
