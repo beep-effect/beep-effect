@@ -33,9 +33,9 @@ Status: `complete`. All phases are complete as of 2026-09-29.
   saturation in step 7. Eight candidate rows and two rows for this PR's own
   harness edits recorded. Verdict: close the rerun, adopt no trained skill; the
   corpus has no headroom at this model strength.
-- Open for a human: add hook-pulse to the `SessionStart` hooks in
-  `.claude/settings.json` (row `hl-20260929-475be43a`, entry in `README.md`),
-  and disposition the four `proposed` candidate rows.
+- The operator admitted hook-pulse on `SessionStart` in `.claude/settings.json`
+  on 2026-10-01 (row `hl-20261001-5faf29a0` accepts `hl-20260929-475be43a`).
+- Open for a human: disposition the four `proposed` candidate rows.
 
 ## P0 Research (complete)
 

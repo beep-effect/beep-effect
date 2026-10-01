@@ -95,30 +95,17 @@ separate a better skill from noise at this model strength.
 - [`history/reflections/2026-09-29-claude.md`](history/reflections/2026-09-29-claude.md):
   the closeout reflection.
 
-## One Step Left For A Human
+## SessionStart Stamp, Admitted
 
-hook-pulse can stamp the harness hash on `SessionStart`, but
-`.claude/settings.json` does not run it on that event yet. An agent session is
-not allowed to edit its own hook wiring, and D2 reserves harness admission for
-a human, so the entry is filed as the `proposed` row `hl-20260929-475be43a`.
-To admit it, append this group to `hooks.SessionStart` in
-`.claude/settings.json`, using the same command string the `SessionEnd` group
-already uses for `hook-pulse.sh`:
+hook-pulse stamps the harness hash on `SessionStart`. An agent session was not
+allowed to edit its own hook wiring, and D2 reserves harness admission for a
+human, so the entry was filed as the `proposed` row `hl-20260929-475be43a`. The
+operator admitted it on 2026-10-01 (row `hl-20261001-5faf29a0`). The
+`SessionStart` group in `.claude/settings.json` runs `hook-pulse.sh` with the
+same command string as the `SessionEnd` group and a 5-second timeout.
 
-```json
-{
-  "hooks": [
-    {
-      "type": "command",
-      "command": "<the hook-pulse.sh command string from hooks.SessionEnd>",
-      "timeout": 5
-    }
-  ]
-}
-```
-
-Until then `prune-proposals` reports every session as unstamped and proposes
-nothing. After it, the 30-session window fills with real sessions and
+Sessions recorded before the stamp stay unstamped and never count. The
+30-session window fills from the admission on, and then
 `bun run beep harness-ledger prune-proposals --window 30 --write` records the
 first pruning proposals. The stamp costs about one second at session start.
 

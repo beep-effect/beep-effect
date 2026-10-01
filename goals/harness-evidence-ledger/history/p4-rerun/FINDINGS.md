@@ -93,7 +93,8 @@ harness-ledger CLI. Row ids per step are in `ledger-rows.json`.
 
 This PR's own harness edits are declared the same way (D6):
 `hl-20260929-2072a6f9` for the hook-pulse stamp, and `hl-20260929-475be43a`
-for the `SessionStart` settings entry, which is proposed and not applied.
+for the `SessionStart` settings entry. The operator admitted that entry on
+2026-10-01 (`hl-20261001-5faf29a0`).
 
 Dispositions of the two `proposed` candidates, and of the two P2 rows
 (`hl-20260925-873a855c`, `hl-20260925-4fc1962c`), are Benjamin's call (D2).
@@ -107,8 +108,8 @@ task leakage, two are inside the noise band.
 `bb86bd309008`: 44 candidate surfaces, 0 sessions in regime, 2,182 sessions
 skipped as unstamped, no proposals, nothing written. That is the correct
 answer today. Every recorded session predates the stamp, and no live session
-is stamped until hook-pulse runs on `SessionStart` (see the packet README for
-the one settings entry a human adds). The window fills from that point.
+was stamped until hook-pulse ran on `SessionStart`. The operator admitted that
+entry on 2026-10-01, and the window fills from that point.
 
 ## Verdict: CLOSE the rerun, do not adopt a trained skill
 
