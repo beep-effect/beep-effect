@@ -1,6 +1,5 @@
 import { syncTsconfigAtRoot, tsconfigSyncCommand } from "@beep/repo-cli/commands/TsconfigSync";
 import { FsUtilsLive } from "@beep/repo-utils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -17,11 +16,13 @@ import * as TestConsole from "effect/testing/TestConsole";
 import * as jsonc from "jsonc-parser";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const runTsconfigSyncCommand = Command.runWith(tsconfigSyncCommand, { version: "0.0.0" });
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeServices.layer);
 const TestLayer = Layer.mergeAll(PlatformLayer, FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer)));
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
-const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(UnknownJson);
+const decodeUnknownJson = S.decodeUnknownEffect(UnknownJson);
 
 const TsconfigReferences = S.Struct({
   references: S.Array(

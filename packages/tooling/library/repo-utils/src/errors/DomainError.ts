@@ -7,8 +7,9 @@
  * @category error-handling
  * @since 0.0.0
  */
+
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -35,7 +36,7 @@ export class DomainError extends S.TaggedError<DomainError>($I`DomainError`)(
   "DomainError",
   {
     message: S.String,
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
   },
   $I.annoteError<DomainError>("DomainError", {
     title: "Domain Error",

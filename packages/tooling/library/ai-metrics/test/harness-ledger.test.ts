@@ -25,7 +25,6 @@ import {
   requiresBudget,
 } from "@beep/repo-ai-metrics";
 import { Sha256Hex } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -39,6 +38,8 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Random from "effect/Random";
 import * as S from "effect/Schema";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const hashA = "a".repeat(64);
 const hashB = "b".repeat(64);
@@ -70,8 +71,8 @@ const fingerprintFor = (modelId: string, sessionHash: string, reasoningEffort = 
   );
 
 const encodeRowJson = HarnessLedgerRow.encodeJsonEffect;
-const parseJson = UnknownFromJsonString.decodeUnknownEffect;
-const stringifyJson = UnknownFromJsonString.encodeUnknownEffect;
+const parseJson = S.decodeUnknownEffect(UnknownJson);
+const stringifyJson = S.encodeUnknownEffect(UnknownJson);
 const asRecord = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
 const decodeRowJson = HarnessLedgerRow.decodeJsonEffect;
 const encodeFingerprintParts = S.encodeEffect(HarnessFingerprintParts);

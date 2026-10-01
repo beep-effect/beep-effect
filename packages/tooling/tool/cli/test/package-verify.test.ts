@@ -18,7 +18,6 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import { loadYeetInboxView } from "@beep/repo-cli/test/Yeet";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -29,6 +28,7 @@ import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Console, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 
@@ -39,7 +39,7 @@ const PlatformLayer = Layer.mergeAll(
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
   FsUtilsLive.pipe(Layer.provideMerge(FileSystemLayer))
 );
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const demoWorkspace = PackageVerifyWorkspace.make({
   name: "@beep/demo",

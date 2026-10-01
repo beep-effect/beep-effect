@@ -1,19 +1,21 @@
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { EffectImportRulesOptions, lawsCommand, runEffectImportRules } from "@beep/repo-cli/test/Laws";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Console, Effect, FileSystem, Layer, Path } from "effect";
+import { Console, Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import { Command } from "effect/cli";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const testLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
-const decodeJson = UnknownFromJsonString.decodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(UnknownJson), Result.getOrThrow);
+const decodeJson = flow(S.decodeUnknownResult(UnknownJson), Result.getOrThrow);
 const runLawsCommand = Command.runWith(lawsCommand, { version: "0.0.0" });
 const writeProjectFile = Effect.fn(function* (relativePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;

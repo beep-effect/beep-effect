@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Codex/Codex.errors");
 
@@ -38,7 +38,7 @@ export class CodexCommandError extends S.TaggedError<CodexCommandError>($I`Codex
   {
     message: S.String,
     exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<CodexCommandError>("CodexCommandError", {
     description: "Failure raised by Codex helper commands.",

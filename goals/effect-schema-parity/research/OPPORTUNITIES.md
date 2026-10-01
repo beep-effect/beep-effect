@@ -359,3 +359,19 @@ machine ids, quote only the minimal identifying error text.
   whole file, so no scoped update is possible.
 - **What would have prevented it:** Gate the catalog check (or regenerate on
   merge to main) so a feature PR does not carry a thousand unrelated entries.
+## 2026-09-29 — The first use of an upstream facet costs instantiations the retired wrapper hid
+
+- **What I was doing:** P3 PR 3-ii, retiring `Defect` onto
+  `S.Defect(o).pipe(S.overrideToEquivalence(() => () => true))` under the
+  single-checker instantiation gate.
+- **Evidence:** `@beep/repo-cli` rose +482 with the override inline at its 44
+  cause fields and +139 with one shared const; the same const without the
+  override measured −13, so the first use of `S.overrideToEquivalence` in the
+  program costs about 150 instantiations the retired `Defect()` hid behind its
+  declared return type. `$I.annoteSchema` on that const cost +323 more than
+  `.annotate({ identifier, description })`. Logs under
+  `~/.cache/beep/effect-schema-parity/p3c2/`.
+- **What would have prevented it:** A per-combinator cost table in the P5
+  census: the first-use cost of each upstream combinator a retirement recipe
+  introduces, and the per-const cost of `$I.annoteSchema`, so a recipe picks
+  the shared-const shape and the annotation form before the gate bounces.

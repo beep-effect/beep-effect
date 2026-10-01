@@ -78,7 +78,6 @@ import {
   writeArtifactBudget,
   writeRecordStartHint,
 } from "@beep/repo-cli/commands/Qa";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { thunk } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -88,6 +87,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Console, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { ActionEvent } from "@beep/qa-capture";
@@ -115,7 +115,7 @@ const layoutFor = (root: string): RoundLayout =>
     videoDir: `${root}/video`,
   });
 
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const clock = ClockSync.make({ confidence: "high", method: "beacon", offsetMs: 0, residualRmsMs: 4, slope: 1 });
 

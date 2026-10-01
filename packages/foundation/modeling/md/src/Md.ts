@@ -73,7 +73,6 @@ import {
   documentSafetyIssues,
   refineSafeDocument,
 } from "./Md.safe.ts";
-import type { JsonObject } from "@beep/schema";
 import type { Result } from "effect";
 import type {
   AdmonitionKind,
@@ -1297,11 +1296,11 @@ export const hr: Hr = Hr.make({});
  * @since 0.0.0
  */
 export const make: {
-  (options?: { readonly frontmatter?: JsonObject }): (children: ReadonlyArray<Block>) => Document;
-  (children: ReadonlyArray<Block>, options?: { readonly frontmatter?: JsonObject }): Document;
+  (options?: { readonly frontmatter?: S.JsonObject }): (children: ReadonlyArray<Block>) => Document;
+  (children: ReadonlyArray<Block>, options?: { readonly frontmatter?: S.JsonObject }): Document;
 } = dual(
   isLeadingContentCall,
-  (children: ReadonlyArray<Block>, options: { readonly frontmatter?: JsonObject } = {}): Document =>
+  (children: ReadonlyArray<Block>, options: { readonly frontmatter?: S.JsonObject } = {}): Document =>
     P.isUndefined(options.frontmatter)
       ? Document.make({ children })
       : Document.make({ children, frontmatter: O.some(options.frontmatter) })

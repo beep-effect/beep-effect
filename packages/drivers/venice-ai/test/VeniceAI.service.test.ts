@@ -1,7 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { decodeJsonString } from "@beep/schema/Json";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { URLStr } from "@beep/schema/URL";
 import { it } from "@beep/test-runner";
@@ -39,6 +38,8 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import swaggerFixture from "./fixtures/swagger.json" with { type: "json" };
+
+const decodeUnknownJsonEffect = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const descriptorAt = (index: number) => O.getOrThrow(A.get(VENICE_AI_OPERATION_DESCRIPTORS, index));
 
@@ -723,7 +724,7 @@ describe("@beep/venice-ai", () => {
         );
         const body = yield* pipe(
           bodyTextFromCapture(jsonCapture, "expected JSON body text"),
-          Effect.flatMap(decodeJsonString),
+          Effect.flatMap(decodeUnknownJsonEffect),
           Effect.flatMap(decodePromptBody)
         );
 

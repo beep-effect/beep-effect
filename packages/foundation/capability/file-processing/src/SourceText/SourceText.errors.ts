@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { Defect, LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -77,7 +77,9 @@ export type SourceTextResolverErrorReason = typeof SourceTextResolverErrorReason
 export class SourceTextResolverError extends S.TaggedError<SourceTextResolverError>($I`SourceTextResolverError`)(
   "SourceTextResolverError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ),
     message: S.NonEmptyString,
     reason: SourceTextResolverErrorReason,
   },

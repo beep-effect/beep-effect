@@ -6,11 +6,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 import { WorktreePreservationStep } from "./Worktree.schemas.ts";
 import type { WorktreePreservationStep as WorktreePreservationStepType } from "./Worktree.schemas.ts";
 
@@ -46,7 +46,7 @@ export class WorktreeCommandError extends S.TaggedError<WorktreeCommandError>($I
     command: S.optionalKey(S.String),
     exitCode: S.optionalKey(S.Finite),
     path: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<WorktreeCommandError>("WorktreeCommandError", {
     description: "Failure raised while planning or executing a git worktree operation.",
@@ -156,7 +156,7 @@ export class WorktreePreservationError extends S.TaggedError<WorktreePreservatio
     message: S.String,
     step: WorktreePreservationStep,
     path: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<WorktreePreservationError>("WorktreePreservationError", {
     description: "A named worktree-residue preservation step failed before removal began.",

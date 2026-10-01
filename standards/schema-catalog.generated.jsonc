@@ -18948,22 +18948,6 @@
       "owner": "@beep/schema"
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Json.ts",
-      "symbol": "JsonArray",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "JsonArray",
-      "description": "A Json Array"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Json.ts",
-      "symbol": "JsonObject",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "JsonObject",
-      "description": "A Json Object"
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Jsonc.ts",
       "symbol": "JsoncParseDiagnostic",
       "kind": "schema-class",
@@ -19092,14 +19076,6 @@
       "owner": "@beep/schema",
       "identity": "NoSniffValue",
       "description": "The supported `X-Content-Type-Options` header values."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Opaque.ts",
-      "symbol": "OpaqueUnknown",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "OpaqueUnknown",
-      "description": "Opaque payload; never part of declared identity."
     },
     {
       "file": "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts",
@@ -19286,22 +19262,6 @@
       "description": "Path string normalized to use '/' separators only."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Primitive.ts",
-      "symbol": "Primitive",
-      "kind": "union",
-      "owner": "@beep/schema",
-      "identity": "Primitive",
-      "description": "A primitive data type, (string | number | boolean | bigint | null | undefined )"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Record/Record.schema.ts",
-      "symbol": "UnknownRecord",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "UnknownRecord",
-      "description": "A record of unknown values"
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts",
       "symbol": "Header",
       "kind": "union",
@@ -19354,39 +19314,11 @@
       "description": "A fallback list of `Referrer-Policy` values for legacy browser support."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts",
-      "symbol": "SafeObject",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "SafeObject",
-      "description": "A nominally branded record with string keys and unknown values."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts",
-      "symbol": "SafeObjectFromObjectKeyword",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "SafeObjectFromObjectKeyword",
-      "description": "Normalizes any JavaScript object-keyword value into a nominally branded string-keyed record."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
       "symbol": "BlockedHostError",
       "kind": "tagged-error",
       "owner": "@beep/schema",
       "identity": "BlockedHostError"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/SchemaUtils/optionalKeyWithDefaults.ts",
-      "symbol": "optionalKeyWithDefault",
-      "kind": "codec",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/SchemaUtils/withEncodeDefault.ts",
-      "symbol": "withEncodeDefault",
-      "kind": "codec",
-      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/SecureHeader/SecureHeader.schema.ts",
@@ -19605,12 +19537,6 @@
       "description": "A reversible CLDR territory code to English display-name codec."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Transformations.ts",
-      "symbol": "destructiveTransform",
-      "kind": "codec",
-      "owner": "@beep/schema"
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/URL.ts",
       "symbol": "HttpsUrl",
       "kind": "brand",
@@ -19633,14 +19559,6 @@
       "owner": "@beep/schema",
       "identity": "UnitInterval",
       "description": "Schema for a real number in the closed unit interval [0, 1] (inclusive).\nThe canonical shape for probabilities, confidences, ratios, and normalized scores."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Unknown.ts",
-      "symbol": "Unknown",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "Unknown",
-      "description": "An unknown-value schema with Effect, Promise, Sync, Exit, Result, Option, and JSON-string codec statics."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Xml.ts",

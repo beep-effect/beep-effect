@@ -6,7 +6,7 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -51,7 +51,7 @@ export class PracticeKgProjectionError extends S.TaggedError<PracticeKgProjectio
   "PracticeKgProjectionError",
   {
     message: S.String,
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
   },
   $I.annoteError<PracticeKgProjectionError>("PracticeKgProjectionError", {
     description: "A failure raised while projecting a deterministic practice knowledge-graph bundle.",

@@ -7,7 +7,6 @@
 
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { decodeJsonString } from "@beep/schema/Json";
 import { URLStr } from "@beep/schema/URL";
 import { A, O, Str } from "@beep/utils";
 import { Config, Context, Effect, flow, Layer, pipe, Result, SchemaGetter, Stream } from "effect";
@@ -986,7 +985,7 @@ class ChatCompletionTextResponse extends S.Class<ChatCompletionTextResponse>($I`
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(ChatCompletionTextResponse);
 }
 
-const decodeSseJson = decodeJsonString;
+const decodeSseJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const createChatCompletionOperation = VeniceAIOperationDescriptor.make({
   method: "POST",

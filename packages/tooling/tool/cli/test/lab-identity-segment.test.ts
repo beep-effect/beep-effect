@@ -7,17 +7,17 @@ import {
   LabIdentitySegment,
 } from "@beep/repo-cli/commands/CreatePackage/internal/LabIdentitySegment";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { withTempWorkingDirectory } from "./support/CommandTest.ts";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const segmentLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
 

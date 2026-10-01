@@ -854,8 +854,8 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
         value: { value: "quoted" },
       });
 
-      expect(rendered).toContain('import { UnknownFromJsonString } from "@beep/schema/Unknown"');
-      expect(rendered).toContain("UnknownFromJsonString.decodeUnknownResult");
+      expect(rendered).toContain('import * as S from "effect/Schema"');
+      expect(rendered).toContain("S.decodeUnknownResult(S.fromJsonString(S.Unknown))");
       expect(rendered).toContain("Result.getOrThrow");
       expect(rendered).toContain("export const FixtureData: unknown");
       expect(rendered).not.toContain("JSON.parse");

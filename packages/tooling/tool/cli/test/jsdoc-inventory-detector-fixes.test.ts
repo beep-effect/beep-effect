@@ -3,14 +3,14 @@ import {
   tagsFromComment,
   writeJSDocDocumentationInventory,
 } from "@beep/repo-cli/test/Quality";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
-import { Console, Effect, FileSystem, Layer, Path } from "effect";
+import { Console, Effect, FileSystem, flow, Layer, Path, Result } from "effect";
+import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as jsonc from "jsonc-parser";
@@ -42,7 +42,7 @@ const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
 );
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const fixedGeneratedAt = "2026-01-01T00:00:00.000Z";
 
 const tsdocPolicy = {

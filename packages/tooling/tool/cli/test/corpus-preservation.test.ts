@@ -38,10 +38,9 @@ import {
 } from "@beep/repo-cli/commands/Corpus/internal/Preservation";
 import { decodeProvenanceLinesForTesting } from "@beep/repo-cli/commands/Corpus/internal/ServicePrograms";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { ByteSize, DateTime, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
+import { ByteSize, DateTime, Effect, FileSystem, flow, Layer, Path, pipe, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
@@ -54,7 +53,7 @@ const isArchiveWriterHookOutput = S.is(ArchiveWriterLiveOptions.fields.afterPayl
 
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeInheritedLossRow = S.decodeUnknownEffect(S.fromJsonString(InheritedLossRow));
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const isT7ArchiveProvenanceRecord = S.is(T7ArchiveProvenanceRecord);
 const runCorpusCommand = Command.runWith(corpusCommand, { version: "0.0.0" });
 const utf8Encoder = new TextEncoder();

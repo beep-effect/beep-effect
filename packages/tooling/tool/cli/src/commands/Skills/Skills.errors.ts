@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Skills/Skills.errors");
 
@@ -53,7 +53,7 @@ export class SkillsCommandError extends S.TaggedError<SkillsCommandError>($I`Ski
     message: S.String,
     file: S.optionalKey(S.String),
     skill: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<SkillsCommandError>("SkillsCommandError", {
     title: "Skills Command Error",

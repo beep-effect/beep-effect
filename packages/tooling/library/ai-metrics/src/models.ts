@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -1181,7 +1181,7 @@ export class OpenClawTranscriptLine extends S.Class<OpenClawTranscriptLine>($I`O
   {
     event: OptionalTranscriptString,
     message: OptionalTranscriptString,
-    payload: S.OptionFromOptionalKey(UnknownRecord).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    payload: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(S.withConstructorDefault(Effect.succeedNone)),
     timestamp: OptionalTranscriptString,
     type: OptionalTranscriptString,
   },

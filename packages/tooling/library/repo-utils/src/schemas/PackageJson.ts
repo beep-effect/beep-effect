@@ -11,7 +11,6 @@
 
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { EmailString, LiteralKit, SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Effect, FileSystem, pipe, Result, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -1879,7 +1878,7 @@ export const encodePackageJsonPrettyEffect: (input: unknown) => Effect.Effect<st
     return yield* jsonStringifyPretty(validated);
   });
 
-const decodeUnknownFromJsonString = UnknownFromJsonString.decodeUnknownEffect;
+const decodeUnknownFromJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 /**
  * Read a `package.json` file from disk and decode it into a strict `PackageJson`.

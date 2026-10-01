@@ -4,7 +4,6 @@ import {
   ResearchCommandServiceLive,
   ResearchNotionPullOptions,
 } from "@beep/repo-cli/commands/Research";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -32,7 +31,7 @@ const testLayer = Layer.mergeAll(
 );
 
 const provideTestLayer = provideScopedLayer(testLayer);
-const encodeLinksFile = S.encodeEffect(UnknownFromJsonString);
+const encodeLinksFile = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const LINKS = [
   { createdIso: "2026-07-08T12:00:00.000Z", tags: ["effect"], title: "Schema First", url: "https://example.com/a/" },
