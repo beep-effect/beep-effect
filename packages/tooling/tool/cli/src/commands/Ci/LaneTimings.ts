@@ -1553,6 +1553,8 @@ const CI_LANE_TIMING_RATIFIED_POPULATIONS: ReadonlyArray<CiLaneTimingRatifiedPop
   CiLaneTimingRatifiedPopulation.make({ contextCount: 18, ratifiedOn: "2026-09-03", versionId: 48_600_030 }),
   // Heavy / Coverage Regression removed at 2026-09-12T01:46:53.354Z; ratified for the next window.
   CiLaneTimingRatifiedPopulation.make({ contextCount: 17, ratifiedOn: "2026-09-22", versionId: 49_479_116 }),
+  // Heavy / Lint Policy removed at 2026-09-25T14:46:59.802Z; ratified for the window-3 census.
+  CiLaneTimingRatifiedPopulation.make({ contextCount: 16, ratifiedOn: "2026-10-01", versionId: 50_918_272 }),
 ];
 
 const CI_LANE_TIMING_RATIFIED_CONTEXT_COUNTS = HashSet.fromIterable(

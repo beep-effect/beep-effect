@@ -1108,7 +1108,7 @@ describe("ci lane timing admission window", () => {
 
       assertTrue(Exit.isFailure(exit));
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
-        "must expose a ratified required-context count (17 or 18); observed 19"
+        "must expose a ratified required-context count (16 or 17 or 18); observed 19"
       );
     })
   );
