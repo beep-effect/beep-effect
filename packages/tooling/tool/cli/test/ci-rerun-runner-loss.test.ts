@@ -336,7 +336,8 @@ const withEnv = Effect.provideService(
 const RUN_ENDPOINT = "repos/{owner}/{repo}/actions/runs/36763005302";
 const jobsEndpoint = (page: number) =>
   `repos/{owner}/{repo}/actions/runs/36763005302/attempts/1/jobs?per_page=100&page=${page}`;
-const annotationsEndpoint = (id: number) => `repos/{owner}/{repo}/check-runs/${id}/annotations`;
+const annotationsEndpoint = (id: number, page = 1) =>
+  `repos/{owner}/{repo}/check-runs/${id}/annotations?per_page=100&page=${page}`;
 const runJson = (values: Record<string, unknown> = {}) =>
   encodeJson({
     id: 36763005302,
@@ -439,6 +440,49 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       const closed = yield* decide([["repos/{owner}/{repo}/pulls/1338", 0, pullJson("closed", SHA)]]);
       expect(closed.reason).toBe("no-open-pull-request");
       expect(A.some(yield* Ref.get(commands), (args) => args[0] === "run")).toBe(false);
+    })
+  );
+
+  layerIt.effect("keeps a run current while any open pull request still has its head", () =>
+    Effect.gen(function* () {
+      const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const decision = yield* decideRun(
+        CiRerunRunnerLossInput.make({ runId: 36763005302, dryRun: true, cwd: "." })
+      ).pipe(
+        withGh(
+          [
+            [RUN_ENDPOINT, 0, runJson({ pull_requests: [1339, 1338] })],
+            ...failedAttemptReplies,
+            ["repos/{owner}/{repo}/pulls/1339", 0, encodeJson({ number: 1339, state: "open", head_sha: NEWER_SHA })],
+            ["repos/{owner}/{repo}/pulls/1338", 0, pullJson("open", SHA)],
+          ],
+          commands
+        )
+      );
+      expect(decision.reason).toBe("runner-loss");
+    })
+  );
+
+  layerIt.effect("reads every annotation page before judging a job", () =>
+    Effect.gen(function* () {
+      const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const noise = A.makeBy(100, (index) => `warning ${index}`);
+      const decision = yield* decideRun(
+        CiRerunRunnerLossInput.make({ runId: 36763005302, dryRun: true, cwd: "." })
+      ).pipe(
+        withGh(
+          [
+            [RUN_ENDPOINT, 0, runJson()],
+            [jobsEndpoint(1), 0, jobsJson(1, [restJob(11, "failure", lostSteps)])],
+            [annotationsEndpoint(11, 1), 0, encodeJson(noise)],
+            [annotationsEndpoint(11, 2), 0, encodeJson([LOST_MESSAGE])],
+            ["repos/{owner}/{repo}/pulls/1338", 0, pullJson("open", SHA)],
+          ],
+          commands
+        )
+      );
+      expect(decision.reason).toBe("runner-loss");
+      expect(A.contains(endpoints(yield* Ref.get(commands)), annotationsEndpoint(11, 2))).toBe(true);
     })
   );
 

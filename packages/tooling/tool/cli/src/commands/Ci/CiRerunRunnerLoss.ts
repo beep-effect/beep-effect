@@ -63,6 +63,9 @@ const PULL_REQUEST_JQ = "{number,state,head_sha:.head.sha}";
 const PULL_REQUESTS_JQ = "[.[]|{number,state,head_sha:.head.sha}]";
 const BRANCH_REF_JQ = "{sha:.object.sha}";
 const JOBS_PER_PAGE = 100;
+const ANNOTATIONS_PER_PAGE = 100;
+// Ten pages bound the loop; a failed heavy job carries one or two annotations.
+const ANNOTATIONS_MAX_PAGES = 10;
 // Ten pages is 1000 jobs; a Check run has about forty.
 const JOBS_MAX_PAGES = 10;
 
@@ -178,15 +181,41 @@ const readAttemptJobs = (
   return go(1, A.empty());
 };
 
-const readAnnotations = Effect.fn("Ci.rerunRunnerLoss.readAnnotations")(function* (
+const readAnnotationsPage = Effect.fn("Ci.rerunRunnerLoss.readAnnotationsPage")(function* (
   cwd: string,
-  jobId: number
+  jobId: number,
+  page: number
 ): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, GhRequirements> {
-  const output = yield* ghApiJson(cwd, `repos/{owner}/{repo}/check-runs/${jobId}/annotations`, O.some(ANNOTATIONS_JQ));
+  const output = yield* ghApiJson(
+    cwd,
+    `repos/{owner}/{repo}/check-runs/${jobId}/annotations?per_page=${ANNOTATIONS_PER_PAGE}&page=${page}`,
+    O.some(ANNOTATIONS_JQ)
+  );
   return yield* decodeAnnotations(output).pipe(
-    CiCommandError.mapError(`Failed to decode annotations of job ${jobId}.`)
+    CiCommandError.mapError(`Failed to decode annotations page ${page} of job ${jobId}.`)
   );
 });
+
+// The lost-communication annotation can sit behind other annotations, so every
+// page is read; a short page is the last one.
+const readAnnotations = (
+  cwd: string,
+  jobId: number
+): Effect.Effect<ReadonlyArray<string>, CiCommandError, GhRequirements> => {
+  const go = (
+    page: number,
+    collected: ReadonlyArray<string>
+  ): Effect.Effect<ReadonlyArray<string>, CiCommandError, GhRequirements> =>
+    readAnnotationsPage(cwd, jobId, page).pipe(
+      Effect.flatMap((messages) => {
+        const all = A.appendAll(collected, messages);
+        return A.length(messages) === ANNOTATIONS_PER_PAGE && page < ANNOTATIONS_MAX_PAGES
+          ? go(page + 1, all)
+          : Effect.succeed(all);
+      })
+    );
+  return go(1, A.empty());
+};
 
 const isFailedJob = (job: CiWorkflowJob): boolean =>
   O.exists(O.fromNullishOr(job.conclusion), (conclusion) => Str.toLowerCase(conclusion) === "failure");
@@ -259,13 +288,15 @@ const readPullRequestHead = Effect.fn("Ci.rerunRunnerLoss.readPullRequestHead")(
   if (A.isReadonlyArrayEmpty(open)) {
     return RunnerLossHead.make({ status: "no-open-pull-request" });
   }
-  return pipe(
-    A.findFirst(open, (pullRequest) => pullRequest.head_sha !== run.head_sha),
-    O.match({
-      onNone: () => RunnerLossHead.make({ status: "current" }),
-      onSome: (pullRequest) => RunnerLossHead.make({ status: "superseded", currentSha: O.some(pullRequest.head_sha) }),
-    })
-  );
+  // The run is current while any open pull request still has its SHA as head;
+  // another pull request on the same commit moving on does not supersede it.
+  if (A.some(open, (pullRequest) => pullRequest.head_sha === run.head_sha)) {
+    return RunnerLossHead.make({ status: "current" });
+  }
+  return RunnerLossHead.make({
+    status: "superseded",
+    currentSha: O.map(A.head(open), (pullRequest) => pullRequest.head_sha),
+  });
 });
 
 const readBranchHead = Effect.fn("Ci.rerunRunnerLoss.readBranchHead")(function* (
