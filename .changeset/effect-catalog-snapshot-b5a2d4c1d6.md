@@ -22,8 +22,8 @@
 "@beep/chalk": patch
 "@beep/ciops": patch
 "@beep/codegen-kit": patch
-"@beep/cosmos": patch
 "@beep/colors": patch
+"@beep/cosmos": patch
 "@beep/db-admin": patch
 "@beep/discord": patch
 "@beep/doc-text": patch
@@ -90,6 +90,7 @@
 "@beep/phoenix": patch
 "@beep/postgres": patch
 "@beep/practice-kg-mcp": patch
+"@beep/pretext": patch
 "@beep/professional-desktop": patch
 "@beep/provenance": patch
 "@beep/qa-capture": patch
