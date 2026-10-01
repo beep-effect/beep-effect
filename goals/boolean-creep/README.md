@@ -9,9 +9,12 @@ current coverage. Preserve them and the rejected R46 attempt. Refresh the
 complete source partition, frozen inputs and designs against the merged tree.
 
 The saved R47 runner correction addresses the lane-prefix and scope checks.
-Its independent delta review has resumed; no runtime, census, dry-round, P3
-or implementation acceptance is claimed. Inventory remains 726 rows,
-108 qualified, 618 disqualified and zero applied. Push ready fixes immediately
+Its independent delta review found two further deterministic corrections; no
+runtime, census, dry-round, P3 or implementation acceptance is claimed. The
+deleted JSONSchema owner is retained in
+`history/inventory/2026-10-01-pre-r48-source-refresh.jsonl` and removed from
+the live projection. Inventory is now 725 rows, 108 qualified,
+617 disqualified and zero applied. Push ready fixes immediately
 and use hosted checks for publication readiness under the existing ruling.
 
 ## Current execution after PR #1328 merged: 2026-09-29

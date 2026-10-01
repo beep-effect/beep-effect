@@ -285,3 +285,20 @@ independent review, implementation and exact-main completion requirement.
 The R46 runtime probe remains rejected after a scripted payload mismatch.
 Prepare a new independently reviewed fixture and source binding; do not retry
 the failed attempt in place or grant it retrospective acceptance.
+
+## 2026-10-01: R48 source-refresh dispositions
+
+Main deleted the JSONSchema source that owned the disqualified
+`json-schema-node-keywords` record. Apply the live-projection rule from the
+inventory contract: preserve the 726-row projection at
+`history/inventory/2026-10-01-pre-r48-source-refresh.jsonl` and remove that
+record from the live inventory. The current inventory is 725 rows: 108
+qualified, 617 disqualified and zero applied.
+
+Re-derive the R48 partition from existing source paths and retire the 40 lane
+areas removed by main. Do not spend provider calls proving paths already known
+to be absent. The R46 empty report root's filesystem device number may change
+across the documented workstation reboot; its unchanged inode, owner, mode and
+emptiness remain the relevant preservation facts. These dispositions authorize
+input preparation only. They grant no admission, census, dry-round, P3 or
+implementation credit.
