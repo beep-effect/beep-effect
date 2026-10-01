@@ -107354,6 +107354,138 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Stateless platform/TestClock adapters inherit root vitest.shared.ts hookTimeout:10 seconds normally,300 seconds for coverage/deep sweep. No external database is acquired in these hooks. A fixed10-second override would weaken the configured300-second mode; preserve the inherited budget."
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/cache-protocol-fixture.test.ts:268:scoped@10#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-protocol-fixture.test.ts",
+      "line": 268,
+      "endLine": 268,
+      "symbol": "scoped",
+      "occurrence": "v2:a1dec90d5aeb9ecf0e8027ef853aa1be3107d5b5a56d0dd939d8ee609ecfe17a",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. This inner scope releases the real listening socket before the next assertion verifies that reading the same URL fails. The outer test scope would close too late to test release. Keep the shorter scope."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-accept-cli.test.ts:15:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-accept-cli.test.ts",
+      "line": 15,
+      "endLine": 15,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. NodeServices and NodeCrypto provide real private issuer files and cryptographic authentication shared with a spawned CLI. Permissions, durable bytes and subprocess visibility are test subjects; an in-memory filesystem would remove those checks. This exception covers import provenance only, not the separate live-clock or provider-lifetime findings."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-acceptance.test.ts:26:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-acceptance.test.ts",
+      "line": 26,
+      "endLine": 26,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. NodeServices supplies real private acceptance and issuer files; NodeCrypto supplies actual hashing and authentication. The tests check mode, replacement, persistence and revocation with these native services in explicit it.layer registrations. This exception covers import provenance only; the shared-clock finding remains separate."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:44:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts",
+      "line": 44,
+      "endLine": 44,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. The operational test exercises real fingerprints, private issuer stores and the persisted qualification ledger. NodeServices and NodeCrypto are explicit native providers; census and toolchain observations alone are controlled. In-memory filesystem substitution would weaken the disk-bound trust and unchanged-ledger assertions. Separate lifetime and clock findings remain open."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-producer.test.ts:18:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-producer.test.ts",
+      "line": 18,
+      "endLine": 18,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. The producer tests deliberately exercise native permission bits, symlinks, hard links, revocation markers and reopen behavior through NodeServices, with real crypto through NodeCrypto. Providers are explicit it.layer registrations. This exception covers import provenance only, not the shared-clock finding."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-workflow.test.ts:7:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-workflow.test.ts",
+      "line": 7,
+      "endLine": 7,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. Workflow identity tests create real Git repositories and verify native executable permissions, symlinks, ignored files and source-root containment. NodeServices and NodeCrypto are explicit it.layer providers. A simulated filesystem would not establish these Git and native path properties."
     }
   ]
 }

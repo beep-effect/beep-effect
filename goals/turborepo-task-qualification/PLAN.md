@@ -3137,3 +3137,11 @@ and adopts eight Option assertion helpers. All 49 affected tests pass after
 integration; isolated test typechecking and package lint/check pass. The primary
 full scan now reports 21 new findings, with the intentional socket-release scope
 preserved and the inventory baseline unchanged.
+
+Six detector judgments are now recorded as occurrence-specific exceptions in
+`research/test-resource-boundaries.md`: five native service imports required by
+filesystem/crypto behavior and the deliberate socket-release scope. Their
+reasons and retirement conditions are explicit. This adds six reviewed exception
+rows to the inventory; it does not baseline the remaining open findings or waive
+qualification evidence. The isolated detector run reports 15 new findings after
+recognizing these exceptions.
