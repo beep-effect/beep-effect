@@ -6113,3 +6113,18 @@ unknown. Reattaching the existing branch restored closeout without changing
 content. Better checkout-operation attribution and a pre-closeout branch check
 would shorten diagnosis. This is not attributed to another task or reported as
 a reproduced product defect.
+
+## 2026-10-01: Apply private drafts through the authoritative test-type gate
+
+Five prepared migrations passed runtime checks and private virtual type checks,
+but applying them in the follow-up worktree exposed three root Effect diagnostics:
+`strictEffectProvide`, `effectFnOpportunity`, and `nodeBuiltinImport`. Replaced
+the concrete ConfigProvider layer with a direct service, used `Effect.fn` for the
+fake process spawner, and adopted `NodeHttpServer.layerTest` for the metrics sink.
+The authoritative `bun run beep quality test-tsgo` then passed. Private draft
+qualification should invoke that gate before being described as type-complete.
+
+A fresh-worktree package check also reported missing dependency declarations
+(`TS6305`). Building the CLI dependency graph cleared those errors; package
+quick verification then passed. A dependency-build preflight would avoid treating
+fresh-checkout setup failures as source regressions.

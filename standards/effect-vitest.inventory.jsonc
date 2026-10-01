@@ -54497,10 +54497,10 @@
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
-      "line": 386,
-      "endLine": 410,
+      "line": 384,
+      "endLine": 408,
       "symbol": "scoped",
-      "occurrence": "v2:263b706d7da047bec035726baccb60e764876b3caa639c011927606775777e47",
+      "occurrence": "v2:381a0735b1ed7710d9ec3d8d37f2505a7bc851b109ec690469f706f600c0261d",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpRoot = path.join(root, \"tmp\"); const cacheRoot = path.join(root, \"cache\"); con",
       "replacement": {
@@ -54510,7 +54510,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/cli-next-five-scope-proof.md. The inner scope releases child processes holding cwd, open-file, or flock references before the outer temporary-directory fixture removes its root; native lifetime assertions are preserved."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:416:scoped@6#1",
@@ -54518,10 +54519,10 @@
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
-      "line": 416,
-      "endLine": 526,
+      "line": 413,
+      "endLine": 523,
       "symbol": "scoped",
-      "occurrence": "v2:fd21b5ef31f718f6706f586020605892a4955cc45c10507e3151f30a63c3aaed",
+      "occurrence": "v2:9540c118efcb0d8b105c81d58741c534fc9f96fdc1e04192515224be1a7e9fbe",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const fixture = yield* makeNewClassFixtures(root); yield* ChildProcess.make(\"sh\", [\"-c\", \"while :; do sleep 1; done\"],",
       "replacement": {
@@ -54531,7 +54532,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/cli-next-five-scope-proof.md. The inner scope releases child processes holding cwd, open-file, or flock references before the outer temporary-directory fixture removes its root; native lifetime assertions are preserved."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:866:scoped@6#1",
@@ -54539,10 +54541,10 @@
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
-      "line": 866,
-      "endLine": 895,
+      "line": 853,
+      "endLine": 882,
       "symbol": "scoped",
-      "occurrence": "v2:9dd0246c35703a851ba1306d55916c2c197eda4d6487c8f72128274a863f8adb",
+      "occurrence": "v2:88aacbac307262b2e16f1fe05ad91684846837dc89fff5b1f6132f000b597387",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpRoot = path.join(root, \"tmp\"); const cacheRoot = path.join(root, \"cache\"); con",
       "replacement": {
@@ -54552,7 +54554,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/cli-next-five-scope-proof.md. The inner scope releases child processes holding cwd, open-file, or flock references before the outer temporary-directory fixture removes its root; native lifetime assertions are preserved."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:901:scoped@6#1",
@@ -54560,10 +54563,10 @@
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
-      "line": 901,
-      "endLine": 931,
+      "line": 887,
+      "endLine": 917,
       "symbol": "scoped",
-      "occurrence": "v2:9890cca29b21e3ee55eaf910e1ab0b7afcf76e2082da5cbca0a6cd179e55f3a3",
+      "occurrence": "v2:5d274315256c96b04beba2d39bad9a9626ea4f3b9c6e7d45cc73fce4e97a0450",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpRoot = path.join(root, \"tmp\"); const cacheRoot = path.join(root, \"cache\"); con",
       "replacement": {
@@ -54573,7 +54576,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/cli-next-five-scope-proof.md. The inner scope releases child processes holding cwd, open-file, or flock references before the outer temporary-directory fixture removes its root; native lifetime assertions are preserved."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/worktree-command.test.ts:148:scoped@2#1",
@@ -106520,10 +106524,10 @@
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts",
-      "line": 227,
-      "endLine": 239,
+      "line": 201,
+      "endLine": 213,
       "symbol": "scoped",
-      "occurrence": "v2:80da4007effbc598524d97393c5fe71530946c477a07ecc6a27a9fb894f8a253",
+      "occurrence": "v2:9155e38b0b29c2bad1b5db54bf8b2d75cdbd498219d03101feb2ab52841af2b8",
       "class": "inner-helper-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const fixtureDir = yield* fs.makeTempDirectoryScoped(); const repoRoot = yield* fs.make",
       "replacement": {
@@ -106533,7 +106537,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/cli-next-five-scope-proof.md. Per-invocation fixture and repository directories close before returning captured commands and configs; do not widen this lifetime to the shared platform layer."
     },
     {
       "id": "EV007:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:398:checkEffect@28#1",
@@ -107311,6 +107316,28 @@
       "confidence": 0.95,
       "mechanization": "detector",
       "status": "open"
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:233:scoped@2#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "line": 233,
+      "endLine": 254,
+      "symbol": "scoped",
+      "occurrence": "v2:1a7b7820cea012750089f6d3c31dcb2a66e2c0a7e41501a712e393d805dc14f3",
+      "class": "helper-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const requests: Array<CapturedOtlpRequest> = []; const serverContext = yield* Layer.build(NodeHttpServer.layerTest); const server = Context.get(serverContext,",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/cli-next-five-scope-proof.md. The per-sink NodeHttpServer.layerTest scope shuts down its ephemeral server before returning to the test. Node and Bun cleanup probes verify all five listeners are unreachable afterward."
     }
   ]
 }

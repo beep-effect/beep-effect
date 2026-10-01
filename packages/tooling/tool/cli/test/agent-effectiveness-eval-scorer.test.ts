@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { fcRuns } from "@beep/fc-runs";
 import {
   AgentEffectivenessEvalLaneReport,
   AgentEffectivenessEvalScoreBreakdown,
@@ -17,13 +18,12 @@ import {
   SkillOptTaskManifest,
 } from "@beep/repo-cli/test/AgentEffectiveness";
 import { findRepoRoot } from "@beep/repo-utils";
-import { fcRuns } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import {
   Cause,
   Effect,
@@ -46,9 +46,15 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const temporaryFixture = FileSystem.FileSystem.use((fs) =>
+  Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>
+    fs.remove(directory, { force: true, recursive: true }).pipe(Effect.orDie)
+  )
+);
+
 const decodeUnknownSkillOptTaskManifestJson = S.decodeUnknownEffect(S.fromJsonString(SkillOptTaskManifest));
 
-const TestLayer = NodeServices.layer;
+const TestLayer = Layer.mergeAll(NodeServices.layer, BunCrypto.layer);
 const UnknownJson = S.fromJsonString(S.Unknown);
 const encodeJson = flow(S.encodeUnknownResult(UnknownJson), Result.getOrThrow);
 const decodeUnknownJson = S.decodeUnknownEffect(UnknownJson);
@@ -57,14 +63,6 @@ const decodeTaskManifest = S.decodeUnknownEffect(SkillOptTaskManifest);
 const decodeScoreReportJson = S.decodeEffect(S.fromJsonString(AgentEffectivenessEvalScoreReport));
 const encodeLaneReportJson = S.encodeEffect(S.fromJsonString(AgentEffectivenessEvalLaneReport));
 const decodeLaneReportJson = S.decodeEffect(S.fromJsonString(AgentEffectivenessEvalLaneReport));
-
-const provideLayer =
-  <ROut, E2>(layer: Layer.Layer<ROut, E2, never>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const provideTestLayer = provideLayer(TestLayer);
-
 const fixtureRoot = fileURLToPath(new URL("./fixtures/agent-effectiveness/scorer-pass/fixture", import.meta.url));
 const taskPath = fileURLToPath(new URL("./fixtures/agent-effectiveness/scorer-pass/task.json", import.meta.url));
 
@@ -77,21 +75,6 @@ const writeText = Effect.fn("AgentEffectivenessEvalScorerTest.writeText")(functi
   yield* fs.makeDirectory(path.dirname(filePath), { recursive: true });
   yield* fs.writeFileString(filePath, content);
 });
-
-const withTempFixture = <A, E, R>(use: (fixtureDir: string) => Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      return yield* fs.makeTempDirectory();
-    }),
-    use,
-    (dir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(dir, { force: true, recursive: true });
-      })
-  ).pipe(provideTestLayer);
-
 const makeTask = (completion: unknown) =>
   decodeTaskManifest({
     id: "scorer-test",
@@ -161,59 +144,50 @@ const readConfigArgument = (args: ReadonlyArray<string>): O.Option<string> =>
  * name, snapshots the scorer-generated config a lane is pointed at, and answers
  * with a canned output or a spawn failure.
  */
-const fakeLawLayer = (
+const fakeLawSpawner = Effect.fn("AgentEffectivenessEvalScorerTest.fakeLawSpawner")(function* (
   spawned: Ref.Ref<ReadonlyArray<string>>,
   configs: Ref.Ref<ReadonlyArray<string>>,
   responses: LaneResponses
-) =>
-  Layer.mergeAll(
-    BunCrypto.layer,
-    NodeFileSystem.layer,
-    NodePath.layer,
-    Layer.effect(
-      ChildProcessSpawner.ChildProcessSpawner,
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        return ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) {
-            return Effect.die("unexpected piped law-lane command");
-          }
-          const name = commandName(command.command);
-          const response: LaneResponse = Match.value(name).pipe(
-            Match.when("biome", () => responses.biome ?? { stdout: biomeReportJson(0, 1) }),
-            Match.when("tsgo", () => responses.tsgo ?? {}),
-            Match.orElse(() => responses.bun ?? { stdout: scannedFilesLine(["src/Contact.ts"]) })
-          );
-          const snapshotConfig = pipe(
-            readConfigArgument(command.args),
-            O.match({
-              onNone: () => Effect.void,
-              onSome: (configPath) =>
-                fs.readFileString(configPath).pipe(
-                  Effect.flatMap((text) => Ref.update(configs, A.append(text))),
-                  Effect.orDie
-                ),
-            })
-          );
-          return Ref.update(spawned, A.append(name)).pipe(
-            Effect.andThen(snapshotConfig),
-            Effect.andThen(
-              response === "spawn-failure"
-                ? Effect.fail(
-                    PlatformError.systemError({
-                      _tag: "NotFound",
-                      module: "ChildProcess",
-                      method: "spawn",
-                      description: `${name} is not installed`,
-                    })
-                  )
-                : Effect.succeed(outputHandle(response))
-            )
-          );
-        });
+) {
+  const fs = yield* FileSystem.FileSystem;
+  return ChildProcessSpawner.make((command) => {
+    if (!ChildProcess.isStandardCommand(command)) {
+      return Effect.die("unexpected piped law-lane command");
+    }
+    const name = commandName(command.command);
+    const response: LaneResponse = Match.value(name).pipe(
+      Match.when("biome", () => responses.biome ?? { stdout: biomeReportJson(0, 1) }),
+      Match.when("tsgo", () => responses.tsgo ?? {}),
+      Match.orElse(() => responses.bun ?? { stdout: scannedFilesLine(["src/Contact.ts"]) })
+    );
+    const snapshotConfig = pipe(
+      readConfigArgument(command.args),
+      O.match({
+        onNone: () => Effect.void,
+        onSome: (configPath) =>
+          fs.readFileString(configPath).pipe(
+            Effect.flatMap((text) => Ref.update(configs, A.append(text))),
+            Effect.orDie
+          ),
       })
-    ).pipe(Layer.provide(NodeFileSystem.layer))
-  );
+    );
+    return Ref.update(spawned, A.append(name)).pipe(
+      Effect.andThen(snapshotConfig),
+      Effect.andThen(
+        response === "spawn-failure"
+          ? Effect.fail(
+              PlatformError.systemError({
+                _tag: "NotFound",
+                module: "ChildProcess",
+                method: "spawn",
+                description: `${name} is not installed`,
+              })
+            )
+          : Effect.succeed(outputHandle(response))
+      )
+    );
+  });
+});
 
 const runFakeLaw = Effect.fn("AgentEffectivenessEvalScorerTest.runFakeLaw")(function* (
   responses: LaneResponses,
@@ -236,7 +210,9 @@ const runFakeLaw = Effect.fn("AgentEffectivenessEvalScorerTest.runFakeLaw")(func
       );
       return { repoRoot, law: yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles) };
     })
-  ).pipe(provideLayer(fakeLawLayer(spawned, configs, responses)));
+  ).pipe(
+    Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, fakeLawSpawner(spawned, configs, responses))
+  );
   return { ...law, commands: yield* Ref.get(spawned), configs: yield* Ref.get(configs) };
 });
 
@@ -283,106 +259,100 @@ const emptyLaw = LawEvaluation.make({
   biome: [],
 });
 
-describe("agent-effectiveness eval scorer", () => {
+it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effectiveness eval scorer", (it) => {
   it.effect("fingerprints injected skills outside the repository independently of score", () =>
-    withTempFixture(
-      Effect.fnUntraced(function* (fixtureDir) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const repoRoot = yield* fs.makeTempDirectoryScoped();
-        yield* writeText(path.join(repoRoot, "AGENTS.md"), "# Shared guidance\n");
-        const candidate = path.join(fixtureDir, ".claude", "skills", "skillopt-target", "SKILL.md");
-        const identity = () => evalConfigurationId(repoRoot, fixtureDir, O.some("opus"), O.some("medium"));
-        const missing = yield* identity();
-        yield* writeText(candidate, "# Candidate A\n");
-        const first = yield* identity();
-        expect(first).not.toBe(missing);
-        expect(yield* identity()).toBe(first);
-        yield* writeText(candidate, "# Candidate B\n");
-        expect(yield* identity()).not.toBe(first);
-        yield* writeText(candidate, "# Candidate A\n");
-        expect(yield* identity()).toBe(first);
-        yield* writeText(path.join(fixtureDir, ".agents", "skills", "skillopt-target", "SKILL.md"), "# Candidate A\n");
-        const bothRoots = yield* identity();
-        expect(bothRoots).not.toBe(first);
-        yield* writeText(
-          path.join(fixtureDir, ".claude", "skills", "skillopt-target", "references", "notes.md"),
-          "n\n"
-        );
-        expect(yield* identity()).not.toBe(bothRoots);
+    Effect.gen(function* () {
+      const fixtureDir = yield* temporaryFixture;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.makeTempDirectoryScoped();
+      yield* writeText(path.join(repoRoot, "AGENTS.md"), "# Shared guidance\n");
+      const candidate = path.join(fixtureDir, ".claude", "skills", "skillopt-target", "SKILL.md");
+      const identity = () => evalConfigurationId(repoRoot, fixtureDir, O.some("opus"), O.some("medium"));
+      const missing = yield* identity();
+      yield* writeText(candidate, "# Candidate A\n");
+      const first = yield* identity();
+      expect(first).not.toBe(missing);
+      expect(yield* identity()).toBe(first);
+      yield* writeText(candidate, "# Candidate B\n");
+      expect(yield* identity()).not.toBe(first);
+      yield* writeText(candidate, "# Candidate A\n");
+      expect(yield* identity()).toBe(first);
+      yield* writeText(path.join(fixtureDir, ".agents", "skills", "skillopt-target", "SKILL.md"), "# Candidate A\n");
+      const bothRoots = yield* identity();
+      expect(bothRoots).not.toBe(first);
+      yield* writeText(path.join(fixtureDir, ".claude", "skills", "skillopt-target", "references", "notes.md"), "n\n");
+      expect(yield* identity()).not.toBe(bothRoots);
 
-        // Two rollout dirs with different candidate content get different ids;
-        // identical content in a different dir gets the same id.
-        const otherDir = yield* fs.makeTempDirectoryScoped();
-        const otherIdentity = () => evalConfigurationId(repoRoot, otherDir, O.some("opus"), O.some("medium"));
-        yield* writeText(path.join(otherDir, ".claude", "skills", "skillopt-target", "SKILL.md"), "# Candidate B\n");
-        const other = yield* otherIdentity();
-        expect(other).not.toBe(first);
-        expect(Str.startsWith("skillopt-scorer-")(other)).toBe(true);
-        yield* writeText(path.join(otherDir, ".claude", "skills", "skillopt-target", "SKILL.md"), "# Candidate A\n");
-        expect(yield* otherIdentity()).toBe(first);
-      })
-    )
+      // Two rollout dirs with different candidate content get different ids;
+      // identical content in a different dir gets the same id.
+      const otherDir = yield* fs.makeTempDirectoryScoped();
+      const otherIdentity = () => evalConfigurationId(repoRoot, otherDir, O.some("opus"), O.some("medium"));
+      yield* writeText(path.join(otherDir, ".claude", "skills", "skillopt-target", "SKILL.md"), "# Candidate B\n");
+      const other = yield* otherIdentity();
+      expect(other).not.toBe(first);
+      expect(Str.startsWith("skillopt-scorer-")(other)).toBe(true);
+      yield* writeText(path.join(otherDir, ".claude", "skills", "skillopt-target", "SKILL.md"), "# Candidate A\n");
+      expect(yield* otherIdentity()).toBe(first);
+    })
   );
 
   it.effect("scores completion checks from exports and manifest patterns", () =>
-    withTempFixture(
-      Effect.fnUntraced(function* (fixtureDir) {
-        const path = yield* Path.Path;
-        yield* writeText(
-          path.join(fixtureDir, "src", "Contact.ts"),
-          [
-            'import * as S from "effect/Schema";',
-            "",
-            'export class ContactPayload extends S.Class<ContactPayload>("ContactPayload")({',
-            "  email: S.String,",
-            "}) {}",
-            "",
-          ].join("\n")
-        );
-        const task = yield* makeTask({
-          requiredExports: ["ContactPayload"],
-          requiredPatterns: ["\\bS\\.Class\\b"],
-          forbiddenPatterns: ["\\binterface ContactPayload\\b"],
-        });
+    Effect.gen(function* () {
+      const fixtureDir = yield* temporaryFixture;
+      const path = yield* Path.Path;
+      yield* writeText(
+        path.join(fixtureDir, "src", "Contact.ts"),
+        [
+          'import * as S from "effect/Schema";',
+          "",
+          'export class ContactPayload extends S.Class<ContactPayload>("ContactPayload")({',
+          "  email: S.String,",
+          "}) {}",
+          "",
+        ].join("\n")
+      );
+      const task = yield* makeTask({
+        requiredExports: ["ContactPayload"],
+        requiredPatterns: ["\\bS\\.Class\\b"],
+        forbiddenPatterns: ["\\binterface ContactPayload\\b"],
+      });
 
-        const completion = yield* evaluateSkillOptCompletion(task, fixtureDir);
+      const completion = yield* evaluateSkillOptCompletion(task, fixtureDir);
 
-        expect(completion.fraction).toBe(1);
-        expect(completion.violations).toEqual([]);
-      })
-    )
+      expect(completion.fraction).toBe(1);
+      expect(completion.violations).toEqual([]);
+    })
   );
 
   it.effect("reports failed completion checks deterministically", () =>
-    withTempFixture(
-      Effect.fnUntraced(function* (fixtureDir) {
-        const path = yield* Path.Path;
-        yield* writeText(
-          path.join(fixtureDir, "src", "Contact.ts"),
-          ["export interface ContactPayload {", "  email: string;", "}", ""].join("\n")
-        );
-        const task = yield* makeTask({
-          requiredExports: ["ContactPayloadModel"],
-          requiredPatterns: ["\\bS\\.Class\\b"],
-          forbiddenPatterns: ["\\binterface ContactPayload\\b"],
-        });
+    Effect.gen(function* () {
+      const fixtureDir = yield* temporaryFixture;
+      const path = yield* Path.Path;
+      yield* writeText(
+        path.join(fixtureDir, "src", "Contact.ts"),
+        ["export interface ContactPayload {", "  email: string;", "}", ""].join("\n")
+      );
+      const task = yield* makeTask({
+        requiredExports: ["ContactPayloadModel"],
+        requiredPatterns: ["\\bS\\.Class\\b"],
+        forbiddenPatterns: ["\\binterface ContactPayload\\b"],
+      });
 
-        const completion = yield* evaluateSkillOptCompletion(task, fixtureDir);
+      const completion = yield* evaluateSkillOptCompletion(task, fixtureDir);
 
-        expect(completion.fraction).toBe(0);
-        expect(
-          pipe(
-            completion.violations,
-            A.map((violation) => violation.message)
-          )
-        ).toEqual([
-          "Forbidden pattern /\\binterface ContactPayload\\b/ matched.",
-          'Missing required export "ContactPayloadModel".',
-          "Missing required pattern /\\bS\\.Class\\b/.",
-        ]);
-      })
-    )
+      expect(completion.fraction).toBe(0);
+      expect(
+        pipe(
+          completion.violations,
+          A.map((violation) => violation.message)
+        )
+      ).toEqual([
+        "Forbidden pattern /\\binterface ContactPayload\\b/ matched.",
+        'Missing required export "ContactPayloadModel".',
+        "Missing required pattern /\\bS\\.Class\\b/.",
+      ]);
+    })
   );
 
   it("maps law violations with deterministic reciprocal decay", () => {
@@ -392,55 +362,44 @@ describe("agent-effectiveness eval scorer", () => {
     expect(aggregateLawFraction({ schemaFirst: 1, tsgo: 0.5, biome: 0.25 })).toBe(0.583333);
   });
 
-  it.effect(
+  it.effect.prop(
     "re-encodes schema-generated score and lane reports to the same JSON",
-    Effect.fnUntraced(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([
-          Arbitrary.schema(AgentEffectivenessEvalScoreReport),
-          Arbitrary.schema(AgentEffectivenessEvalLaneReport),
-        ]),
-        ([report, lane]) =>
-          Effect.gen(function* () {
-            // JSON cannot carry `-0`, so the stable property is the encoding:
-            // decoding then re-encoding reproduces the same bytes.
-            const reportJson = yield* encodeAgentEffectivenessEvalScoreReportJson(report);
-            const decodedReport = yield* decodeScoreReportJson(reportJson);
-            expect(yield* encodeAgentEffectivenessEvalScoreReportJson(decodedReport)).toBe(reportJson);
-            const laneJson = yield* encodeLaneReportJson(lane);
-            const decodedLane = yield* decodeLaneReportJson(laneJson);
-            expect(yield* encodeLaneReportJson(decodedLane)).toBe(laneJson);
-            return true;
-          }),
-        fcRuns(30)
-      );
-      expect(result._tag).toBe("Passed");
-    })
+    [Arbitrary.schema(AgentEffectivenessEvalScoreReport), Arbitrary.schema(AgentEffectivenessEvalLaneReport)],
+    ([report, lane]) =>
+      Effect.gen(function* () {
+        // JSON cannot carry `-0`, so the stable property is the encoding:
+        // decoding then re-encoding reproduces the same bytes.
+        const reportJson = yield* encodeAgentEffectivenessEvalScoreReportJson(report);
+        const decodedReport = yield* decodeScoreReportJson(reportJson);
+        expect(yield* encodeAgentEffectivenessEvalScoreReportJson(decodedReport)).toBe(reportJson);
+        const laneJson = yield* encodeLaneReportJson(lane);
+        const decodedLane = yield* decodeLaneReportJson(laneJson);
+        expect(yield* encodeLaneReportJson(decodedLane)).toBe(laneJson);
+      }),
+    { arbitrary: fcRuns(30) }
   );
 
   it.effect("renders byte-identical reports for the same fixed fixture", () =>
-    provideTestLayer(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const task = yield* fs.readFileString(taskPath).pipe(Effect.flatMap(decodeUnknownSkillOptTaskManifestJson));
-        const firstCompletion = yield* evaluateSkillOptCompletion(task, fixtureRoot);
-        const secondCompletion = yield* evaluateSkillOptCompletion(task, fixtureRoot);
-        const firstReport = buildAgentEffectivenessEvalScoreReport(task, firstCompletion, emptyLaw);
-        const secondReport = buildAgentEffectivenessEvalScoreReport(task, secondCompletion, emptyLaw);
-        const firstJson = yield* encodeAgentEffectivenessEvalScoreReportJson(firstReport);
-        const secondJson = yield* encodeAgentEffectivenessEvalScoreReportJson(secondReport);
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const task = yield* fs.readFileString(taskPath).pipe(Effect.flatMap(decodeUnknownSkillOptTaskManifestJson));
+      const firstCompletion = yield* evaluateSkillOptCompletion(task, fixtureRoot);
+      const secondCompletion = yield* evaluateSkillOptCompletion(task, fixtureRoot);
+      const firstReport = buildAgentEffectivenessEvalScoreReport(task, firstCompletion, emptyLaw);
+      const secondReport = buildAgentEffectivenessEvalScoreReport(task, secondCompletion, emptyLaw);
+      const firstJson = yield* encodeAgentEffectivenessEvalScoreReportJson(firstReport);
+      const secondJson = yield* encodeAgentEffectivenessEvalScoreReportJson(secondReport);
 
-        expect(firstJson).toBe(secondJson);
-        expect(firstReport.breakdown).toEqual(
-          AgentEffectivenessEvalScoreBreakdown.make({
-            completion: 1,
-            schemaFirst: 1,
-            tsgo: 1,
-            biome: 1,
-          })
-        );
-      })
-    )
+      expect(firstJson).toBe(secondJson);
+      expect(firstReport.breakdown).toEqual(
+        AgentEffectivenessEvalScoreBreakdown.make({
+          completion: 1,
+          schemaFirst: 1,
+          tsgo: 1,
+          biome: 1,
+        })
+      );
+    })
   );
 
   it.effect("returns all three law lane results and runs tsgo after the read-only lanes", () =>
@@ -450,7 +409,7 @@ describe("agent-effectiveness eval scorer", () => {
       expect(LawEvaluation.make({ schemaFirst: law.schemaFirst, tsgo: law.tsgo, biome: law.biome })).toEqual(emptyLaw);
       expectMeasured(law);
       expect(A.sort(commands, Str.Order)).toEqual(["biome", "bun", "tsgo"]);
-      expect(A.last(commands)).toEqual(O.some("tsgo"));
+      assertSome(A.last(commands), "tsgo");
 
       const [biomeConfig, tsgoConfig] = yield* Effect.all(A.map(configs, (text) => decodeUnknownJson(text)));
       expect(biomeConfig).toMatchObject({
@@ -469,7 +428,7 @@ describe("agent-effectiveness eval scorer", () => {
         compilerOptions: { lib: ["ESNext", "ESNext.Disposable"], types: ["node"], moduleResolution: "NodeNext" },
         files: ["packages/fixture/src/Contact.ts"],
       });
-    }).pipe(provideTestLayer)
+    })
   );
 
   it.effect("counts every staged file a lane did not measure as an unmeasured-file violation", () =>
@@ -507,7 +466,7 @@ describe("agent-effectiveness eval scorer", () => {
       expect(tsgoConfig).toMatchObject({
         files: ["packages/fixture/src/Contact.ts", "packages/fixture/src/generated/impl.ts"],
       });
-    }).pipe(provideTestLayer)
+    })
   );
 
   it.effect("scores staged files schema-first and tsgo cannot reach as unmeasured, not environment failure", () =>
@@ -538,7 +497,7 @@ describe("agent-effectiveness eval scorer", () => {
         ["unmeasured-file", "src/impl.js"],
       ]);
       expect(law.biome).toEqual([]);
-    }).pipe(provideTestLayer)
+    })
   );
 
   it.effect("reports a fixture with no staged source files as an environment failure in every lane", () =>
@@ -558,30 +517,29 @@ describe("agent-effectiveness eval scorer", () => {
         ["tsgo", "environment-failure", ["tsgo had no staged source files."]],
         ["biome", "environment-failure", ["biome processed no files."]],
       ]);
-    }).pipe(provideTestLayer)
+    })
   );
 
   it.effect("reports a schema-first run that did not list its scanned files as an environment failure", () =>
     Effect.gen(function* () {
       const { law } = yield* runFakeLaw({ bun: { stdout: "[schema-first] live_entries=0" } });
 
-      expect(
+      assertSome(
         pipe(
           laneReport(law, "schema-first"),
           O.map((report) => [report.status, report.filesProcessed, report.environmentDiagnostics])
-        )
-      ).toEqual(
-        O.some([
+        ),
+        [
           "environment-failure",
           0,
           [
             "schema-first lint exited 0 without reporting scanned files: [schema-first] live_entries=0",
             "schema-first processed no files.",
           ],
-        ])
+        ]
       );
       expect(law.schemaFirst).toEqual([]);
-    }).pipe(provideTestLayer)
+    })
   );
 
   it.effect("reports lanes that could not measure the fixture as environment failures", () =>
@@ -603,37 +561,32 @@ describe("agent-effectiveness eval scorer", () => {
         },
       });
 
-      expect(
+      assertSome(
         pipe(
           laneReport(law, "schema-first"),
           O.map((report) => report.status)
-        )
-      ).toEqual(O.some("environment-failure"));
-      expect(
+        ),
+        "environment-failure"
+      );
+      assertSome(
         pipe(
           laneReport(law, "biome"),
           O.map((report) => [report.status, report.filesProcessed, report.environmentDiagnostics])
-        )
-      ).toEqual(
-        O.some([
-          "environment-failure",
-          0,
-          ["No files were processed in the specified paths.", "biome processed no files."],
-        ])
+        ),
+        ["environment-failure", 0, ["No files were processed in the specified paths.", "biome processed no files."]]
       );
-      expect(
+      assertSome(
         pipe(
           laneReport(law, "tsgo"),
           O.map((report) => [report.status, report.environmentDiagnostics])
-        )
-      ).toEqual(
-        O.some([
+        ),
+        [
           "environment-failure",
           [
             "error TS5083: Cannot read file '/elsewhere/tsconfig.base.json'.",
             "../../node_modules/effect/dist/Effect.d.ts(12175,52): error TS2304: Cannot find name 'AsyncDisposable'.",
           ],
-        ])
+        ]
       );
       expect(A.map(law.tsgo, (violation) => [violation.file, violation.ruleId, violation.line])).toEqual([
         ["src/Contact.ts", "TS2322", 1],
@@ -650,7 +603,7 @@ describe("agent-effectiveness eval scorer", () => {
         AgentEffectivenessEvalScoreBreakdown.make({ completion: 1, schemaFirst: 0, tsgo: 0, biome: 0 })
       );
       expect(report.score).toBe(0);
-    }).pipe(provideTestLayer)
+    })
   );
 
   it.effect("reports unstartable tools, unusable Biome config, and silent failures as environment failures", () =>
@@ -676,18 +629,19 @@ describe("agent-effectiveness eval scorer", () => {
         expect.stringMatching(/^Biome configuration unusable: Failed to read .*biome\.jsonc\.$/u),
         "biome processed no files.",
       ]);
-    }).pipe(provideTestLayer)
+    })
   );
 
   it.effect("reports a Biome run without a JSON report and diagnostics outside the staged sources", () =>
     Effect.gen(function* () {
       const unparsable = yield* runFakeLaw({ biome: { stderr: "check ━━ Some errors", exitCode: 1 } });
-      expect(
+      assertSome(
         pipe(
           laneReport(unparsable.law, "biome"),
           O.map((report) => report.environmentDiagnostics)
-        )
-      ).toEqual(O.some(["Biome exited 1 without a JSON report: check ━━ Some errors", "biome processed no files."]));
+        ),
+        ["Biome exited 1 without a JSON report: check ━━ Some errors", "biome processed no files."]
+      );
 
       const located = yield* runFakeLaw({
         biome: {
@@ -706,13 +660,14 @@ describe("agent-effectiveness eval scorer", () => {
       expect(A.map(located.law.biome, (violation) => [violation.file, violation.ruleId, violation.message])).toEqual([
         ["src/Contact.ts", "lint/suspicious/noVar", "Use let or const instead of var."],
       ]);
-      expect(
+      assertSome(
         pipe(
           laneReport(located.law, "biome"),
           O.map((report) => report.environmentDiagnostics)
-        )
-      ).toEqual(O.some(["configuration: Unknown key.", "biome: No location."]));
-    }).pipe(provideTestLayer)
+        ),
+        ["configuration: Unknown key.", "biome: No location."]
+      );
+    })
   );
 
   it.effect("fails the score command without recording when a lane cannot measure the fixture", () =>
@@ -727,9 +682,15 @@ describe("agent-effectiveness eval scorer", () => {
         reasoningEffort: O.none(),
         record: true,
         taskPath,
-      }).pipe(provideLayer(fakeLawLayer(spawned, configs, { biome: {} })), Effect.exit);
+      }).pipe(
+        Effect.provideServiceEffect(
+          ChildProcessSpawner.ChildProcessSpawner,
+          fakeLawSpawner(spawned, configs, { biome: {} })
+        ),
+        Effect.exit
+      );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       const error = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined;
       expect(error).toBeInstanceOf(AgentEffectivenessEvalScorerError);
       expect(isScorerError(error) ? error.message : "").toContain(
@@ -741,76 +702,74 @@ describe("agent-effectiveness eval scorer", () => {
   it.effect(
     "scores a fixture copied outside the repository with a dangling tsconfig extends and ignores fixture-local tool config",
     () =>
-      withTempFixture(
-        Effect.fnUntraced(function* (fixtureDir) {
-          const path = yield* Path.Path;
-          const repoRoot = yield* findRepoRoot();
-          yield* writeText(
-            path.join(fixtureDir, "tsconfig.json"),
-            encodeJson({ extends: "../../../../../tsconfig.base.json", include: ["src/**/*.ts"] })
-          );
-          yield* writeText(
-            path.join(fixtureDir, "src", "Contact.ts"),
-            'export const contact: number = "x";\nexport var legacy = 1;\n'
-          );
-          const score = evaluateLaw(fixtureDir, repoRoot, ["src/Contact.ts"]);
+      Effect.gen(function* () {
+        const fixtureDir = yield* temporaryFixture;
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        yield* writeText(
+          path.join(fixtureDir, "tsconfig.json"),
+          encodeJson({ extends: "../../../../../tsconfig.base.json", include: ["src/**/*.ts"] })
+        );
+        yield* writeText(
+          path.join(fixtureDir, "src", "Contact.ts"),
+          'export const contact: number = "x";\nexport var legacy = 1;\n'
+        );
+        const score = evaluateLaw(fixtureDir, repoRoot, ["src/Contact.ts"]);
 
-          const baseline = yield* score;
-          expectMeasured(baseline);
-          expect(A.map(baseline.lanes, (report) => report.filesProcessed)).toEqual([1, 1, 1]);
-          expect(A.map(baseline.tsgo, (violation) => [violation.file, violation.ruleId])).toContainEqual([
-            "src/Contact.ts",
-            "TS2322",
-          ]);
-          expect(A.map(baseline.biome, (violation) => violation.ruleId)).toContain("lint/suspicious/noVar");
+        const baseline = yield* score;
+        expectMeasured(baseline);
+        expect(A.map(baseline.lanes, (report) => report.filesProcessed)).toEqual([1, 1, 1]);
+        expect(A.map(baseline.tsgo, (violation) => [violation.file, violation.ruleId])).toContainEqual([
+          "src/Contact.ts",
+          "TS2322",
+        ]);
+        expect(A.map(baseline.biome, (violation) => violation.ruleId)).toContain("lint/suspicious/noVar");
 
-          yield* writeText(
-            path.join(fixtureDir, "tsconfig.json"),
-            encodeJson({ compilerOptions: { noCheck: true, strict: false }, include: [] })
-          );
-          yield* writeText(
-            path.join(fixtureDir, "biome.json"),
-            encodeJson({ root: true, formatter: { enabled: false }, linter: { enabled: false } })
-          );
-          expect(yield* score).toEqual(baseline);
-        })
-      ),
+        yield* writeText(
+          path.join(fixtureDir, "tsconfig.json"),
+          encodeJson({ compilerOptions: { noCheck: true, strict: false }, include: [] })
+        );
+        yield* writeText(
+          path.join(fixtureDir, "biome.json"),
+          encodeJson({ root: true, formatter: { enabled: false }, linter: { enabled: false } })
+        );
+        expect(yield* score).toEqual(baseline);
+      }),
     { timeout: 120_000 }
   );
 
   it.effect(
     "measures code moved into JavaScript, declaration files, or excluded paths with the real lanes",
     () =>
-      withTempFixture(
-        Effect.fnUntraced(function* (fixtureDir) {
-          const path = yield* Path.Path;
-          const repoRoot = yield* findRepoRoot();
-          yield* writeText(
-            path.join(fixtureDir, "src", "Contact.ts"),
-            'export * from "./impl.js";\nexport * from "./generated/hidden.js";\n'
+      Effect.gen(function* () {
+        const fixtureDir = yield* temporaryFixture;
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        yield* writeText(
+          path.join(fixtureDir, "src", "Contact.ts"),
+          'export * from "./impl.js";\nexport * from "./generated/hidden.js";\n'
+        );
+        yield* writeText(path.join(fixtureDir, "src", "impl.js"), "export var contact = 1;\n");
+        yield* writeText(path.join(fixtureDir, "src", "impl.d.ts"), "export declare const contact: Missing;\n");
+        yield* writeText(path.join(fixtureDir, "src", "generated", "hidden.ts"), "export const hidden = 1;\n");
+        const sourceFiles = ["src/Contact.ts", "src/generated/hidden.ts", "src/impl.d.ts", "src/impl.js"];
+
+        const law = yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles);
+
+        expectMeasured(law);
+        expect(A.map(law.lanes, (report) => report.filesProcessed)).toEqual([1, 2, 4]);
+        const unmeasured = (violations: ReadonlyArray<{ readonly ruleId: string; readonly file: string }>) =>
+          A.map(
+            A.filter(violations, (violation) => violation.ruleId === "unmeasured-file"),
+            (violation) => violation.file
           );
-          yield* writeText(path.join(fixtureDir, "src", "impl.js"), "export var contact = 1;\n");
-          yield* writeText(path.join(fixtureDir, "src", "impl.d.ts"), "export declare const contact: Missing;\n");
-          yield* writeText(path.join(fixtureDir, "src", "generated", "hidden.ts"), "export const hidden = 1;\n");
-          const sourceFiles = ["src/Contact.ts", "src/generated/hidden.ts", "src/impl.d.ts", "src/impl.js"];
-
-          const law = yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles);
-
-          expectMeasured(law);
-          expect(A.map(law.lanes, (report) => report.filesProcessed)).toEqual([1, 2, 4]);
-          const unmeasured = (violations: ReadonlyArray<{ readonly ruleId: string; readonly file: string }>) =>
-            A.map(
-              A.filter(violations, (violation) => violation.ruleId === "unmeasured-file"),
-              (violation) => violation.file
-            );
-          expect(unmeasured(law.schemaFirst)).toEqual(["src/generated/hidden.ts", "src/impl.d.ts", "src/impl.js"]);
-          expect(unmeasured(law.tsgo)).toEqual(["src/impl.d.ts", "src/impl.js"]);
-          expect(A.map(law.biome, (violation) => [violation.file, violation.ruleId])).toContainEqual([
-            "src/impl.js",
-            "lint/suspicious/noVar",
-          ]);
-        })
-      ),
+        expect(unmeasured(law.schemaFirst)).toEqual(["src/generated/hidden.ts", "src/impl.d.ts", "src/impl.js"]);
+        expect(unmeasured(law.tsgo)).toEqual(["src/impl.d.ts", "src/impl.js"]);
+        expect(A.map(law.biome, (violation) => [violation.file, violation.ruleId])).toContainEqual([
+          "src/impl.js",
+          "lint/suspicious/noVar",
+        ]);
+      }),
     { timeout: 120_000 }
   );
 });
