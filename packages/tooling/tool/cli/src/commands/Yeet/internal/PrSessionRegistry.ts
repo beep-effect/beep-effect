@@ -30,7 +30,7 @@ const $I = $RepoCliId.create("commands/Yeet/internal/PrSessionRegistry");
  * ```ts
  * import { PrSessionRegistryErrorReason } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(PrSessionRegistryErrorReason.Options) // ["io", "decode", "denied"]
+ * console.log(PrSessionRegistryErrorReason.literals) // ["io", "decode", "denied"]
  * ```
  *
  * @category schemas

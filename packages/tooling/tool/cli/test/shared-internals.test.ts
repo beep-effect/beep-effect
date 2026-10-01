@@ -620,7 +620,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           TURBO_API: "https://cache.example.test",
           TURBO_TOKEN: "op://fixture-vault/turbo/token",
           TURBO_TEAM: "fixture-team",
-          TURBO_CACHE: TurboCacheMode.Enum.LocalWriteRemoteRead,
+          TURBO_CACHE: TurboCacheMode.Enum["local:rw,remote:r"],
           STALE_DATABASE_URL: staleReference,
         };
         const envFileFixture = A.join(
@@ -672,7 +672,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
         expect(result.plan).toEqual(
           RemoteReadTurboCache.make({
-            mode: TurboCacheMode.Enum.LocalWriteRemoteRead,
+            mode: TurboCacheMode.Enum["local:rw,remote:r"],
             requiresSecretSession: true,
           })
         );
@@ -757,7 +757,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           TURBO_API: "https://cache.example.test",
           TURBO_TOKEN: brokenReference,
           TURBO_TEAM: "fixture-team",
-          TURBO_CACHE: TurboCacheMode.Enum.LocalWriteRemoteRead,
+          TURBO_CACHE: TurboCacheMode.Enum["local:rw,remote:r"],
         };
         const spawner = ChildProcessSpawner.make((command) => {
           if (!ChildProcess.isStandardCommand(command)) {

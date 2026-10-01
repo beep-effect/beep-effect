@@ -69,8 +69,8 @@ describe("@beep/skill-contract Gate", () => {
     const conditional = ConditionalGateApplicability.make({
       condition: SchemaReference.make({ schemaId: SchemaReferenceId.make("qa.condition/v1") }),
     });
-    expect(GateSeverity.Options).toEqual(["blocking", "advisory"]);
-    expect(GateApplicabilityKind.Options).toEqual(["always", "conditional"]);
+    expect(GateSeverity.literals).toEqual(["blocking", "advisory"]);
+    expect(GateApplicabilityKind.literals).toEqual(["always", "conditional"]);
     expect(declaration.applicability.kind).toBe("always");
     expect(declaration.evidence.predicateType).toBe(predicateType);
     expect(

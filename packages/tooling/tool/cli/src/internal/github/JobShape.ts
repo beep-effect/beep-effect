@@ -67,7 +67,7 @@ const $I = $RepoCliId.create("internal/github/JobShape");
  * ```ts
  * import { GithubJobShapeClass } from "@beep/repo-cli/test/SharedInternals"
  *
- * console.log(GithubJobShapeClass.Options)
+ * console.log(GithubJobShapeClass.literals)
  * ```
  *
  * @category models

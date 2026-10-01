@@ -45,7 +45,7 @@ const ACT = "enter the land";
 const NORM = { designation: "cl. 4.1" };
 
 /** The eight positions, one per kind, all over the same act. */
-const everyPosition = A.map(HohfeldPositionKind.Options, (kind) =>
+const everyPosition = A.map(HohfeldPositionKind.literals, (kind) =>
   HohfeldPosition.make({
     content: LegalActContent.make({ description: ACT, polarity: "act" }),
     kind,
@@ -191,7 +191,7 @@ describe("LegalPositionRelatorPolicy — the derivations over the closed eight-m
       const reached = HashSet.fromIterable(
         A.flatMap(everyPosition, (position) => [correlativePosition(position).kind, oppositePosition(position).kind])
       );
-      pipe(Equal.equals(reached, HohfeldPositionKind.HashSet), assertTrue);
+      pipe(Equal.equals(reached, HashSet.fromIterable(HohfeldPositionKind.literals)), assertTrue);
     })
   );
 
@@ -223,8 +223,8 @@ describe("LegalPositionRelatorPolicy — the derivations over the closed eight-m
       for (const position of everyPosition) {
         const orbit = orbitKinds(position);
         const expected = isDeonticPositionKind(position.kind)
-          ? DeonticPositionKind.HashSet
-          : PotestativePositionKind.HashSet;
+          ? HashSet.fromIterable(DeonticPositionKind.literals)
+          : HashSet.fromIterable(PotestativePositionKind.literals);
         expect(HashSet.size(orbit)).toBe(4);
         pipe(Equal.equals(orbit, expected), assertTrue);
       }
@@ -233,10 +233,15 @@ describe("LegalPositionRelatorPolicy — the derivations over the closed eight-m
 
   it.effect("leave no advantage-side kind whose opposite is also advantage-side", () =>
     Effect.sync(() => {
-      const stored = A.filter(everyPosition, (position) => HashSet.has(AdvantagePositionKind.HashSet, position.kind));
+      const stored = A.filter(everyPosition, (position) =>
+        HashSet.has(HashSet.fromIterable(AdvantagePositionKind.literals), position.kind)
+      );
       expect(A.length(stored)).toBe(4);
       for (const position of stored) {
-        pipe(HashSet.has(AdvantagePositionKind.HashSet, oppositePosition(position).kind), assertFalse);
+        pipe(
+          HashSet.has(HashSet.fromIterable(AdvantagePositionKind.literals), oppositePosition(position).kind),
+          assertFalse
+        );
       }
     })
   );
@@ -370,8 +375,8 @@ describe("LegalPositionRelatorPolicy — one stored relation, every other readin
 
         // Both views are burden-side, so neither could ever have been stored,
         // and the one stored relation is exactly what it was.
-        pipe(HashSet.has(AdvantagePositionKind.HashSet, correlative.position.kind), assertFalse);
-        pipe(HashSet.has(AdvantagePositionKind.HashSet, opposite.position.kind), assertFalse);
+        pipe(HashSet.has(HashSet.fromIterable(AdvantagePositionKind.literals), correlative.position.kind), assertFalse);
+        pipe(HashSet.has(HashSet.fromIterable(AdvantagePositionKind.literals), opposite.position.kind), assertFalse);
         expect(stored.positionKind).toBe("privilege");
         expect(stored.content.polarity).toBe("act");
       })

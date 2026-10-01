@@ -5984,3 +5984,16 @@ Node tests reported ReferenceError; restoring those two imports produced 71
 passing Node/Bun tests and a clean schema test-type artifact. Merge review should
 check surviving symbol uses and run the actual package test-type task after
 import edits; a formatter pass alone did not catch the missing names.
+
+
+## Publish admission should precede long sequential proof cycles
+
+The consolidated follow-up merged main and passed focused checks, but a new
+LiteralKit migration landed before early publication admission. Yeet correctly
+refused the stale base because thirteen paths overlapped. Full package proof
+then held the source stable while the next merge was prepared privately.
+Start the early-publication path immediately after the focused merge proof,
+then run the longer required package checks so hosted review can overlap them.
+Detached publication also reported an unavailable systemd user manager; the
+attached path worked far enough to evaluate base freshness. Keep that fallback
+explicit and preserve its live process handle.

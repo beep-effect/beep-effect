@@ -65,7 +65,7 @@ describe("reference manifest schemas", () => {
   it("recognizes the cooldown and preflight outcomes", () => {
     expect(MemberRefreshOutcome.is["skipped-cooldown"]("skipped-cooldown")).toBe(true);
     expect(MemberRefreshOutcome.is["skipped-preflight"]("skipped-preflight")).toBe(true);
-    expect(PatchKitStatus.Options).toEqual(["ok", "missing", "unavailable"]);
+    expect(PatchKitStatus.literals).toEqual(["ok", "missing", "unavailable"]);
   });
 
   it.effect(

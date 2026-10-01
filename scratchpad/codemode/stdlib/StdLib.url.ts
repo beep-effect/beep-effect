@@ -90,7 +90,7 @@ export type urlProperties = typeof urlProperties.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const urlWritableProperties = LiteralKit(urlProperties.omitOptions(["origin"])).pipe(
+export const urlWritableProperties = LiteralKit(urlProperties.pick(["href", "protocol", "username", "password", "host", "hostname", "port", "pathname", "search", "hash"]).literals).pipe(
   $I.annoteSchema("urlWritableProperties", {
     description: "Writable URL instance property names; origin is computed.",
   })

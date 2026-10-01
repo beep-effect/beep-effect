@@ -554,7 +554,7 @@ export const getStepFactor: {
  * ```ts
  * import { NumberInputEventType } from "@beep/ui/hooks/useNumberInput"
  *
- * console.log(NumberInputEventType.Options)
+ * console.log(NumberInputEventType.literals)
  * ```
  *
  * @category models
@@ -592,7 +592,7 @@ export type NumberInputEventType = typeof NumberInputEventType.Type;
  * ```ts
  * import { NumberInputError } from "@beep/ui/hooks/useNumberInput"
  *
- * console.log(NumberInputError.Options)
+ * console.log(NumberInputError.literals)
  * ```
  *
  * @category models

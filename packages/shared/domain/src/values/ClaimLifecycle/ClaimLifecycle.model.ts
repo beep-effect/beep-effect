@@ -30,7 +30,7 @@ const ClaimLifecycleTransitionReason = S.NonEmptyString.pipe(
  * The four states form a linear admission pipeline: a claim starts as a
  * `candidate`, becomes `shape_valid` once it passes structural validation,
  * `consistency_checked` after cross-checking, and `admitted` once accepted into
- * the authoritative store. `ClaimLifecycle.Options` is the canonical forward order.
+ * the authoritative store. `ClaimLifecycle.literals` is the canonical forward order.
  *
  * **Example** (Check state and enum)
  *

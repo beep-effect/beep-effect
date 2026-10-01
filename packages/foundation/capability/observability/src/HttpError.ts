@@ -28,9 +28,10 @@
  */
 import { $ObservabilityId } from "@beep/identity/packages";
 import { Defect } from "@beep/schema";
-import * as HttpStatus from "@beep/schema/HttpStatus";
 import { ErrorReporter } from "effect";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as HttpStatus from "effect/http/HttpStatus";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -69,6 +70,66 @@ const makeStatusConstructor =
   (message: string, cause?: unknown): Error =>
     new ctor({ message, status, cause: O.isOption(cause) ? cause : O.fromUndefinedOr(cause) });
 
+// The retired `@beep/schema` `HttpStatus4XX` / `HttpStatus5XX` kits: the status name on the
+// encoded side and its code on the decoded side, over the same names. Each name maps to its
+// `effect/http/HttpStatus` code, so an unnamed code in the range still fails to decode, as before.
+const statusNameCodec = <const Name extends HttpStatus.Literal>(names: A.NonEmptyReadonlyArray<Name>) =>
+  S.Literals(names).transform(A.map(names, HttpStatus.fromLiteral));
+
+const ClientErrorStatus = statusNameCodec([
+  "BadRequest",
+  "Unauthorized",
+  "PaymentRequired",
+  "Forbidden",
+  "NotFound",
+  "MethodNotAllowed",
+  "NotAcceptable",
+  "ProxyAuthenticationRequired",
+  "RequestTimeout",
+  "Conflict",
+  "Gone",
+  "LengthRequired",
+  "PreconditionFailed",
+  "PayloadTooLarge",
+  "UriTooLong",
+  "UnsupportedMediaType",
+  "RangeNotSatisfiable",
+  "ExpectationFailed",
+  "ImATeapot",
+  "MisdirectedRequest",
+  "UnprocessableEntity",
+  "Locked",
+  "FailedDependency",
+  "TooEarly",
+  "UpgradeRequired",
+  "PreconditionRequired",
+  "TooManyRequests",
+  "RequestHeaderFieldsTooLarge",
+  "UnavailableForLegalReasons",
+]).pipe(
+  $I.annoteSchema("ClientErrorStatus", {
+    description: "HTTP client error status: the status name when encoded, its 4xx code when decoded.",
+  })
+);
+
+const ServerErrorStatus = statusNameCodec([
+  "InternalServerError",
+  "NotImplemented",
+  "BadGateway",
+  "ServiceUnavailable",
+  "GatewayTimeout",
+  "HttpVersionNotSupported",
+  "VariantAlsoNegotiates",
+  "InsufficientStorage",
+  "LoopDetected",
+  "NotExtended",
+  "NetworkAuthenticationRequired",
+]).pipe(
+  $I.annoteSchema("ServerErrorStatus", {
+    description: "HTTP server error status: the status name when encoded, its 5xx code when decoded.",
+  })
+);
+
 const statusFields = <Status extends S.Top>(status: Status) =>
   ({
     message: S.String,
@@ -101,7 +162,7 @@ export class ClientHttpError extends S.TaggedError<ClientHttpError>($I`ClientHtt
   "ClientHttpError",
   {
     message: S.String,
-    status: HttpStatus.HttpStatus4XX,
+    status: ClientErrorStatus,
     cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
   },
   $I.annoteError<ClientHttpError>("ClientHttpError", {
@@ -137,7 +198,7 @@ export class ServerHttpError extends S.TaggedError<ServerHttpError>($I`ServerHtt
   "ServerHttpError",
   {
     message: S.String,
-    status: HttpStatus.HttpStatus5XX,
+    status: ServerErrorStatus,
     cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
   },
   $I.annoteError<ServerHttpError>("ServerHttpError", {
@@ -166,7 +227,7 @@ export class ServerHttpError extends S.TaggedError<ServerHttpError>($I`ServerHtt
  */
 export class BadRequestError extends S.TaggedError<BadRequestError>($I`BadRequestError`)(
   "BadRequestError",
-  statusFields(HttpStatus.BadRequest),
+  statusFields(S.Literal(HttpStatus.fromLiteral("BadRequest"))),
   $I.annoteError<BadRequestError>("BadRequestError", {
     description: "400 tagged error.",
   })
@@ -193,7 +254,7 @@ export class BadRequestError extends S.TaggedError<BadRequestError>($I`BadReques
  */
 export class UnauthorizedError extends S.TaggedError<UnauthorizedError>($I`UnauthorizedError`)(
   "UnauthorizedError",
-  statusFields(HttpStatus.Unauthorized),
+  statusFields(S.Literal(HttpStatus.fromLiteral("Unauthorized"))),
   $I.annoteError<UnauthorizedError>("UnauthorizedError", {
     description: "401 tagged error.",
   })
@@ -220,7 +281,7 @@ export class UnauthorizedError extends S.TaggedError<UnauthorizedError>($I`Unaut
  */
 export class ForbiddenError extends S.TaggedError<ForbiddenError>($I`ForbiddenError`)(
   "ForbiddenError",
-  statusFields(HttpStatus.Forbidden),
+  statusFields(S.Literal(HttpStatus.fromLiteral("Forbidden"))),
   $I.annoteError<ForbiddenError>("ForbiddenError", {
     description: "403 tagged error.",
   })
@@ -247,7 +308,7 @@ export class ForbiddenError extends S.TaggedError<ForbiddenError>($I`ForbiddenEr
  */
 export class NotFoundError extends S.TaggedError<NotFoundError>($I`NotFoundError`)(
   "NotFoundError",
-  statusFields(HttpStatus.NotFound),
+  statusFields(S.Literal(HttpStatus.fromLiteral("NotFound"))),
   $I.annoteError<NotFoundError>("NotFoundError", {
     description: "404 tagged error.",
   })
@@ -274,7 +335,7 @@ export class NotFoundError extends S.TaggedError<NotFoundError>($I`NotFoundError
  */
 export class ConflictError extends S.TaggedError<ConflictError>($I`ConflictError`)(
   "ConflictError",
-  statusFields(HttpStatus.Conflict),
+  statusFields(S.Literal(HttpStatus.fromLiteral("Conflict"))),
   $I.annoteError<ConflictError>("ConflictError", {
     description: "409 tagged error.",
   })
@@ -301,7 +362,7 @@ export class ConflictError extends S.TaggedError<ConflictError>($I`ConflictError
  */
 export class UnprocessableEntityError extends S.TaggedError<UnprocessableEntityError>($I`UnprocessableEntityError`)(
   "UnprocessableEntityError",
-  statusFields(HttpStatus.UnprocessableEntity),
+  statusFields(S.Literal(HttpStatus.fromLiteral("UnprocessableEntity"))),
   $I.annoteError<UnprocessableEntityError>("UnprocessableEntityError", {
     description: "422 tagged error.",
   })
@@ -328,7 +389,7 @@ export class UnprocessableEntityError extends S.TaggedError<UnprocessableEntityE
  */
 export class TooManyRequestsError extends S.TaggedError<TooManyRequestsError>($I`TooManyRequestsError`)(
   "TooManyRequestsError",
-  statusFields(HttpStatus.TooManyRequests),
+  statusFields(S.Literal(HttpStatus.fromLiteral("TooManyRequests"))),
   $I.annoteError<TooManyRequestsError>("TooManyRequestsError", {
     description: "429 tagged error.",
   })
@@ -355,7 +416,7 @@ export class TooManyRequestsError extends S.TaggedError<TooManyRequestsError>($I
  */
 export class InternalServerErrorError extends S.TaggedError<InternalServerErrorError>($I`InternalServerErrorError`)(
   "InternalServerErrorError",
-  statusFields(HttpStatus.InternalServerError),
+  statusFields(S.Literal(HttpStatus.fromLiteral("InternalServerError"))),
   $I.annoteError<InternalServerErrorError>("InternalServerErrorError", {
     description: "500 tagged error.",
   })
@@ -382,7 +443,7 @@ export class InternalServerErrorError extends S.TaggedError<InternalServerErrorE
  */
 export class BadGatewayError extends S.TaggedError<BadGatewayError>($I`BadGatewayError`)(
   "BadGatewayError",
-  statusFields(HttpStatus.BadGateway),
+  statusFields(S.Literal(HttpStatus.fromLiteral("BadGateway"))),
   $I.annoteError<BadGatewayError>("BadGatewayError", {
     description: "502 tagged error.",
   })
@@ -409,7 +470,7 @@ export class BadGatewayError extends S.TaggedError<BadGatewayError>($I`BadGatewa
  */
 export class ServiceUnavailableError extends S.TaggedError<ServiceUnavailableError>($I`ServiceUnavailableError`)(
   "ServiceUnavailableError",
-  statusFields(HttpStatus.ServiceUnavailable),
+  statusFields(S.Literal(HttpStatus.fromLiteral("ServiceUnavailable"))),
   $I.annoteError<ServiceUnavailableError>("ServiceUnavailableError", {
     description: "503 tagged error.",
   })
@@ -436,7 +497,7 @@ export class ServiceUnavailableError extends S.TaggedError<ServiceUnavailableErr
  */
 export class GatewayTimeoutError extends S.TaggedError<GatewayTimeoutError>($I`GatewayTimeoutError`)(
   "GatewayTimeoutError",
-  statusFields(HttpStatus.GatewayTimeout),
+  statusFields(S.Literal(HttpStatus.fromLiteral("GatewayTimeout"))),
   $I.annoteError<GatewayTimeoutError>("GatewayTimeoutError", {
     description: "504 tagged error.",
   })
@@ -462,7 +523,7 @@ export class GatewayTimeoutError extends S.TaggedError<GatewayTimeoutError>($I`G
  */
 export const makeBadRequestError: StatusErrorConstructor<BadRequestError> = dual(
   isStatusErrorDataFirst,
-  makeStatusConstructor(BadRequestError, HttpStatus.BadRequest.literal)
+  makeStatusConstructor(BadRequestError, HttpStatus.fromLiteral("BadRequest"))
 );
 
 /**
@@ -482,7 +543,7 @@ export const makeBadRequestError: StatusErrorConstructor<BadRequestError> = dual
  */
 export const makeUnauthorizedError: StatusErrorConstructor<UnauthorizedError> = dual(
   isStatusErrorDataFirst,
-  makeStatusConstructor(UnauthorizedError, HttpStatus.Unauthorized.literal)
+  makeStatusConstructor(UnauthorizedError, HttpStatus.fromLiteral("Unauthorized"))
 );
 
 /**
@@ -502,7 +563,7 @@ export const makeUnauthorizedError: StatusErrorConstructor<UnauthorizedError> = 
  */
 export const makeForbiddenError: StatusErrorConstructor<ForbiddenError> = dual(
   isStatusErrorDataFirst,
-  makeStatusConstructor(ForbiddenError, HttpStatus.Forbidden.literal)
+  makeStatusConstructor(ForbiddenError, HttpStatus.fromLiteral("Forbidden"))
 );
 
 /**
@@ -522,7 +583,7 @@ export const makeForbiddenError: StatusErrorConstructor<ForbiddenError> = dual(
  */
 export const makeNotFoundError: StatusErrorConstructor<NotFoundError> = dual(
   isStatusErrorDataFirst,
-  makeStatusConstructor(NotFoundError, HttpStatus.NotFound.literal)
+  makeStatusConstructor(NotFoundError, HttpStatus.fromLiteral("NotFound"))
 );
 
 /**
@@ -542,7 +603,7 @@ export const makeNotFoundError: StatusErrorConstructor<NotFoundError> = dual(
  */
 export const makeConflictError: StatusErrorConstructor<ConflictError> = dual(
   isStatusErrorDataFirst,
-  makeStatusConstructor(ConflictError, HttpStatus.Conflict.literal)
+  makeStatusConstructor(ConflictError, HttpStatus.fromLiteral("Conflict"))
 );
 
 /**
@@ -562,7 +623,7 @@ export const makeConflictError: StatusErrorConstructor<ConflictError> = dual(
  */
 export const makeUnprocessableEntityError: StatusErrorConstructor<UnprocessableEntityError> = dual(
   isStatusErrorDataFirst,
-  makeStatusConstructor(UnprocessableEntityError, HttpStatus.UnprocessableEntity.literal)
+  makeStatusConstructor(UnprocessableEntityError, HttpStatus.fromLiteral("UnprocessableEntity"))
 );
 
 /**
@@ -582,7 +643,7 @@ export const makeUnprocessableEntityError: StatusErrorConstructor<UnprocessableE
  */
 export const makeTooManyRequestsError: StatusErrorConstructor<TooManyRequestsError> = dual(
   isStatusErrorDataFirst,
-  makeStatusConstructor(TooManyRequestsError, HttpStatus.TooManyRequests.literal)
+  makeStatusConstructor(TooManyRequestsError, HttpStatus.fromLiteral("TooManyRequests"))
 );
 
 /**
@@ -602,7 +663,7 @@ export const makeTooManyRequestsError: StatusErrorConstructor<TooManyRequestsErr
  */
 export const makeInternalServerError: StatusErrorConstructor<InternalServerErrorError> = dual(
   isStatusErrorDataFirst,
-  makeStatusConstructor(InternalServerErrorError, HttpStatus.InternalServerError.literal)
+  makeStatusConstructor(InternalServerErrorError, HttpStatus.fromLiteral("InternalServerError"))
 );
 
 /**
@@ -622,7 +683,7 @@ export const makeInternalServerError: StatusErrorConstructor<InternalServerError
  */
 export const makeBadGatewayError: StatusErrorConstructor<BadGatewayError> = dual(
   isStatusErrorDataFirst,
-  makeStatusConstructor(BadGatewayError, HttpStatus.BadGateway.literal)
+  makeStatusConstructor(BadGatewayError, HttpStatus.fromLiteral("BadGateway"))
 );
 
 /**
@@ -642,7 +703,7 @@ export const makeBadGatewayError: StatusErrorConstructor<BadGatewayError> = dual
  */
 export const makeServiceUnavailableError: StatusErrorConstructor<ServiceUnavailableError> = dual(
   isStatusErrorDataFirst,
-  makeStatusConstructor(ServiceUnavailableError, HttpStatus.ServiceUnavailable.literal)
+  makeStatusConstructor(ServiceUnavailableError, HttpStatus.fromLiteral("ServiceUnavailable"))
 );
 
 /**
@@ -662,5 +723,5 @@ export const makeServiceUnavailableError: StatusErrorConstructor<ServiceUnavaila
  */
 export const makeGatewayTimeoutError: StatusErrorConstructor<GatewayTimeoutError> = dual(
   isStatusErrorDataFirst,
-  makeStatusConstructor(GatewayTimeoutError, HttpStatus.GatewayTimeout.literal)
+  makeStatusConstructor(GatewayTimeoutError, HttpStatus.fromLiteral("GatewayTimeout"))
 );

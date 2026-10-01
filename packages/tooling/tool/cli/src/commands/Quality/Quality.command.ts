@@ -3790,7 +3790,7 @@ const qualityProfileConfigCommand = Command.make(
   "config",
   {
     json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the profile config as JSON")),
-    profile: Argument.Literals("profile", QualityHardwareProfile.Options).pipe(
+    profile: Argument.Literals("profile", QualityHardwareProfile.literals).pipe(
       Argument.withDescription("Quality hardware profile to inspect")
     ),
   },
@@ -4122,7 +4122,7 @@ const renderResidueClassBlock = (
 const renderResidueSection = ([label, candidates]: ResidueSection): ReadonlyArray<string> => [
   `== ${label} ==`,
   ...A.flatMap(
-    A.filter(ResidueReapClass.Options, (reapClass: ResidueReapClass) =>
+    A.filter(ResidueReapClass.literals, (reapClass: ResidueReapClass) =>
       A.some(candidates, (candidate) => candidate.reapClass === reapClass)
     ),
     (reapClass: ResidueReapClass) =>
@@ -4214,8 +4214,8 @@ const residueReapCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Emit the encoded residue-reap/v2 report as JSON")
     ),
-    classes: Flag.Literals("classes", ResidueReapClass.Options).pipe(
-      Flag.between(0, A.length(ResidueReapClass.Options)),
+    classes: Flag.Literals("classes", ResidueReapClass.literals).pipe(
+      Flag.between(0, A.length(ResidueReapClass.literals)),
       Flag.withDescription("Restrict cleanup to repeatable residue classes (default: all classes)")
     ),
     maxAgeDays: Flag.Finite("max-age-days").pipe(

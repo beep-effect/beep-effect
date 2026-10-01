@@ -223,9 +223,10 @@ complete. Report the exact commands and outcomes.
   with `S.toArbitrary`, and codecs with Schema APIs.
 - Prefer tagged-union `.cases`, `.guards`, `.isAnyOf`, and `.match` over
   handwritten constructors, guards, and branch chains.
-- Prefer `LiteralKit.Options`, `.Enum`, `.is`, `.pickOptions`,
-  `.omitOptions`, `.$match`, `.thunk`, and `.toTaggedUnion` over duplicate
-  literal arrays, enum-like objects, and literal predicates.
+- Prefer `LiteralKit` `.Enum`, `.is`, `.$match`, and `.toTaggedUnion`, plus
+  the inherited `S.Literals` members `.literals`, `.pick(...)`, and
+  `.mapMembers(...)`, over duplicate literal arrays, enum-like objects, and
+  literal predicates.
 - Attach frequently reused schema-specific helpers to a schema or class when
   doing so improves locality and does not create cycles.
 - Do not create a universal wall of `decodeX`, `encodeX`, and `isX` helpers.

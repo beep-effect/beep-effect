@@ -21,7 +21,7 @@ const $I = $LawPracticeDomainId.create("values/FullCitationType/FullCitationType
  *
  * Backed by a {@link LiteralKit} so callers get the schema plus derived
  * helpers: `FullCitationType.Enum` for typed literal access, `FullCitationType.is`
- * for per-literal guards, and `FullCitationType.Options` for the full literal
+ * for per-literal guards, and `FullCitationType.literals` for the full literal
  * list.
  *
  * **Example** (Decode and use helpers)

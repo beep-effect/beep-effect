@@ -7,17 +7,18 @@
 
 import * as Conformance from "@beep/schema/Conformance";
 import { A } from "@beep/utils";
+import * as F from "effect/Function";
 import * as O from "effect/Option";
 import { SemanticSchemaSpecification, SemanticSchemaSpecificationDisposition } from "./SemanticSchemaMetadata/index.ts";
 
 const specificationDisposition: (role: Conformance.SpecificationSourceRole) => SemanticSchemaSpecificationDisposition =
   Conformance.SpecificationSourceRole.$match({
-    primarySpecification: SemanticSchemaSpecificationDisposition.thunk.normative,
-    normativeDependency: SemanticSchemaSpecificationDisposition.thunk.normative,
-    conformanceCorpus: SemanticSchemaSpecificationDisposition.thunk.informative,
-    bestPractice: SemanticSchemaSpecificationDisposition.thunk.informative,
-    implementationReference: SemanticSchemaSpecificationDisposition.thunk.informative,
-    registry: SemanticSchemaSpecificationDisposition.thunk.informative,
+    primarySpecification: F.constant(SemanticSchemaSpecificationDisposition.Enum.normative),
+    normativeDependency: F.constant(SemanticSchemaSpecificationDisposition.Enum.normative),
+    conformanceCorpus: F.constant(SemanticSchemaSpecificationDisposition.Enum.informative),
+    bestPractice: F.constant(SemanticSchemaSpecificationDisposition.Enum.informative),
+    implementationReference: F.constant(SemanticSchemaSpecificationDisposition.Enum.informative),
+    registry: F.constant(SemanticSchemaSpecificationDisposition.Enum.informative),
   });
 
 /**

@@ -960,7 +960,7 @@ export class OpenclawLocalModels extends S.Class<OpenclawLocalModels>($I`Opencla
  * ```ts
  * import { OpenclawLiveAcceptanceStep } from "@beep/openclaw"
  *
- * console.log(OpenclawLiveAcceptanceStep.Options)
+ * console.log(OpenclawLiveAcceptanceStep.literals)
  * // ["hosted-model", "local-model", "skill", "reload", "telegram"]
  * ```
  *
@@ -1252,7 +1252,7 @@ export class OpenclawInvocationContext extends S.Class<OpenclawInvocationContext
  * ```ts
  * import { OpenclawSystemdActiveState } from "@beep/openclaw/Openclaw.models"
  *
- * console.log(OpenclawSystemdActiveState.Options)
+ * console.log(OpenclawSystemdActiveState.literals)
  * // ["active", "inactive", "failed", "activating", "deactivating"]
  * ```
  *
@@ -1337,7 +1337,7 @@ export class OpenclawSystemdUnitState extends S.Class<OpenclawSystemdUnitState>(
  * ```ts
  * import { OpenclawHttpProbeStatus } from "@beep/openclaw/Openclaw.models"
  *
- * console.log(OpenclawHttpProbeStatus.Options) // ["healthy", "unreachable"]
+ * console.log(OpenclawHttpProbeStatus.literals) // ["healthy", "unreachable"]
  * ```
  *
  * @category models
@@ -1412,7 +1412,7 @@ export class OpenclawHttpProbe extends S.Class<OpenclawHttpProbe>($I`OpenclawHtt
  * ```ts
  * import { OpenclawSchemaPlaceholderReason } from "@beep/openclaw/Openclaw.models"
  *
- * console.log(OpenclawSchemaPlaceholderReason.Options) // ["missing", "placeholder"]
+ * console.log(OpenclawSchemaPlaceholderReason.literals) // ["missing", "placeholder"]
  * ```
  *
  * @category models

@@ -32,7 +32,7 @@ const $I = $RepoCliId.create("internal/systemd/SystemdUnit.schemas");
  * ```ts
  * import { SystemdBunCandidate } from "@beep/repo-cli/test/Systemd"
  *
- * console.log(SystemdBunCandidate.Options) // [".local/share/mise/shims/bun", ".bun/bin/bun"]
+ * console.log(SystemdBunCandidate.literals) // [".local/share/mise/shims/bun", ".bun/bin/bun"]
  * ```
  *
  * @category schemas

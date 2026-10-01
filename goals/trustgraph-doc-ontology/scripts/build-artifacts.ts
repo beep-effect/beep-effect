@@ -70,7 +70,7 @@ const extractLiteralKitValues = (text: string, symbolName: string): Array<string
 
 const extractPickedOptions = (text: string, symbolName: string): Array<string> => {
   const match = text.match(
-    new RegExp(`const ${symbolName} = TSSyntaxKind\\.pickOptions\\(\\[(.*?)\\]\\s*as const\\)`, "s")
+    new RegExp(`const ${symbolName} = TSSyntaxKind\\.pick\\(\\[(.*?)\\]\\s*as const\\)\\.literals`, "s")
   );
 
   if (!match) {

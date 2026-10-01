@@ -254,8 +254,8 @@ const prepareRecordingTarget = Effect.fn("LeJeuneProviderSmoke.prepareRecordingT
   }
   return RecordingTarget.make({
     kind: RecordingMode.$match(mode, {
-      freeze: () => RecordingTargetKind.Options[0],
-      "reviewed-refresh": () => RecordingTargetKind.Options[1],
+      freeze: () => RecordingTargetKind.literals[0],
+      "reviewed-refresh": () => RecordingTargetKind.literals[1],
     }),
     mode,
     path: target,
@@ -286,7 +286,7 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
         providerSmokeErrorWithCause("provider-extraction", "The selected provider extraction failed.", cause)
       )
     );
-  const groundedExtractions = pipe(result.extractions, A.filter(GroundedExtraction.isAnyOf(AlignedStatus.Options)));
+  const groundedExtractions = pipe(result.extractions, A.filter(GroundedExtraction.isAnyOf(AlignedStatus.literals)));
   const candidates = yield* Effect.forEach(
     groundedExtractions,
     (extraction) =>

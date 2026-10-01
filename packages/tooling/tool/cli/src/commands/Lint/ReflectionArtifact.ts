@@ -15,7 +15,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { decodeYamlTextAs, LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, Path, pipe } from "effect";
 import { Command } from "effect/cli";
@@ -27,6 +27,7 @@ import { parse } from "jsonc-parser";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.ts";
+import { decodeYamlTextWith } from "../../internal/schema/TextCodec.ts";
 import { GoalStatus } from "../Goals/Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Lint/ReflectionArtifact");
@@ -155,7 +156,7 @@ const { log: logPolicyFinding } = makePolicyFindingLogger({
     `- ${finding.goal}${finding.file !== undefined ? ` :: ${finding.file}` : ""} [${finding.severity}] ${finding.message}`,
 });
 
-const decodeFrontmatter = decodeYamlTextAs(ReflectionFrontmatter);
+const decodeFrontmatter = decodeYamlTextWith(S.decodeUnknownEffect(ReflectionFrontmatter));
 
 const normalizeFrontmatterNewlines = Str.replace(/\r\n/g, "\n");
 

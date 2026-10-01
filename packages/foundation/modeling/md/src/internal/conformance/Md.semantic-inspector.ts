@@ -39,7 +39,7 @@ const gfmDisallowedRawHtmlPattern =
  * ```ts import.meta.vitest name="Select the GFM profile"
  * import { MarkdownConformanceProfile } from "@beep/md/Md.conformance"
  *
- * MarkdownConformanceProfile.Enum.Gfm // => "gfm-0.29.0.gfm.13"
+ * MarkdownConformanceProfile.Enum["gfm-0.29.0.gfm.13"] // => "gfm-0.29.0.gfm.13"
  * ```
  *
  * @see {@link https://spec.commonmark.org/0.31.2/ | CommonMark 0.31.2} for the base Markdown specification.
@@ -47,14 +47,11 @@ const gfmDisallowedRawHtmlPattern =
  * @category specifications
  * @since 0.0.0
  */
-export const MarkdownConformanceProfile = LiteralKit({
-  literals: [MarkdownProfileIds.CommonMark, MarkdownProfileIds.Gfm, MarkdownProfileIds.Beep],
-  enumMapping: [
-    [MarkdownProfileIds.CommonMark, "CommonMark"],
-    [MarkdownProfileIds.Gfm, "Gfm"],
-    [MarkdownProfileIds.Beep, "Beep"],
-  ],
-}).pipe(
+export const MarkdownConformanceProfile = LiteralKit([
+  MarkdownProfileIds.CommonMark,
+  MarkdownProfileIds.Gfm,
+  MarkdownProfileIds.Beep,
+]).pipe(
   $I.annoteSchema("MarkdownConformanceProfile", {
     description: "Specification profile selected for semantic Markdown AST validation.",
   })
@@ -304,7 +301,7 @@ export type MarkdownConformanceIssue = typeof MarkdownConformanceIssue.Type;
  * import { Md } from "@beep/md"
  *
  * const document = Md.make([Md.p(Md.footnoteRef("missing"))])
- * const report = inspectMarkdownDocumentLosslessly(document, MarkdownConformanceProfile.Enum.Beep)
+ * const report = inspectMarkdownDocumentLosslessly(document, MarkdownConformanceProfile.Enum["beep-md-extensions-v1"])
  * report.mode // => "lossless"
  * report.issues.length // => 1
  * ```
@@ -392,7 +389,8 @@ const issueUnsupportedNode = (
   path: MarkdownConformancePath,
   supportedByGfm: boolean
 ): ReadonlyArray<MarkdownConformanceIssue> =>
-  MarkdownConformanceProfile.is.Beep(profile) || (supportedByGfm && MarkdownConformanceProfile.is.Gfm(profile))
+  MarkdownConformanceProfile.is[MarkdownProfileIds.Beep](profile) ||
+  (supportedByGfm && MarkdownConformanceProfile.is[MarkdownProfileIds.Gfm](profile))
     ? A.empty()
     : A.of(MarkdownConformanceIssue.cases.UnsupportedNode.make({ path, nodeTag, profile }));
 
@@ -415,7 +413,7 @@ const scanInline = (
     rawMarkdown: () => scanFromIssues(issueUnsupportedNode(profile, "rawMarkdown", path, false)),
     rawHtml: ({ value }) =>
       scanFromIssues(
-        MarkdownConformanceProfile.is.Gfm(profile) && isGfmDisallowedRawHtml(value)
+        MarkdownConformanceProfile.is[MarkdownProfileIds.Gfm](profile) && isGfmDisallowedRawHtml(value)
           ? A.of(MarkdownConformanceIssue.cases.GfmDisallowedRawHtml.make({ path }))
           : A.empty()
       ),
@@ -566,7 +564,9 @@ const scanBlock = (block: Block, profile: MarkdownConformanceProfile, path: Mark
     table: (table) =>
       mergeAllScans([
         scanFromIssues(issueUnsupportedNode(profile, "table", path, true)),
-        scanFromIssues(MarkdownConformanceProfile.is.Gfm(profile) ? gfmTableIssues(table, path) : A.empty()),
+        scanFromIssues(
+          MarkdownConformanceProfile.is[MarkdownProfileIds.Gfm](profile) ? gfmTableIssues(table, path) : A.empty()
+        ),
         scanTableChildren(table, profile, path),
       ]),
     youtube: () => scanFromIssues(issueUnsupportedNode(profile, "youtube", path, false)),
@@ -623,7 +623,7 @@ const footnoteIssues = (
  * import { Md } from "@beep/md"
  *
  * const document = Md.make([Md.p(Md.a("/outer", Md.a("/inner", "nested")))])
- * const issues = markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.CommonMark)
+ * const issues = markdownConformanceIssues(document, MarkdownConformanceProfile.Enum["commonmark-0.31.2"])
  * issues[0]?._tag // => "NestedLink"
  * ```
  *
@@ -640,7 +640,9 @@ export const markdownConformanceIssues: {
   const scan = mergeAllScans(
     A.map(document.children, (block, index) => scanBlock(block, profile, ["children", index]))
   );
-  return MarkdownConformanceProfile.is.Beep(profile) ? A.appendAll(scan[0], footnoteIssues(scan[1], scan[2])) : scan[0];
+  return MarkdownConformanceProfile.is[MarkdownProfileIds.Beep](profile)
+    ? A.appendAll(scan[0], footnoteIssues(scan[1], scan[2]))
+    : scan[0];
 });
 
 /**
@@ -684,7 +686,7 @@ export const formatMarkdownConformanceIssue = MarkdownConformanceIssue.match({
  * import { Md } from "@beep/md"
  *
  * const document = Md.make([Md.mathBlock("x")])
- * const report = inspectMarkdownDocumentLosslessly(document, MarkdownConformanceProfile.Enum.CommonMark)
+ * const report = inspectMarkdownDocumentLosslessly(document, MarkdownConformanceProfile.Enum["commonmark-0.31.2"])
  * report.document.children[0]?._tag // => "mathBlock"
  * report.issues[0]?._tag // => "UnsupportedNode"
  * ```

@@ -409,7 +409,7 @@ describe("merge-ready row liveness", () => {
           ts: AT,
         });
         const failed = yield* row(capsule());
-        expect(YeetInboxObservedRowKind.Options).toStrictEqual(["proof-job-finished", "pr-merge-ready"]);
+        expect(YeetInboxObservedRowKind.literals).toStrictEqual(["proof-job-finished", "pr-merge-ready"]);
         expect(yeetInboxRowIsObserved(ready)).toBe(true);
         expect(yeetInboxRowIsObserved(failed)).toBe(false);
         // An observed row is live under a moved wave; a gate row on the same wave is superseded.

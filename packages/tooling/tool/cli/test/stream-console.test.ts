@@ -133,7 +133,7 @@ describe("stream console", () => {
     }
   });
 
-  for (const stream of ProcessStreamName.Options) {
+  for (const stream of ProcessStreamName.literals) {
     it(`records only the first external ${stream} failure and drains its sibling marker`, () => {
       const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
       const drained = MutableRef.make(false);

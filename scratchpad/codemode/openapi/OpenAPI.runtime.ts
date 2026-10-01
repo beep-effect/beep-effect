@@ -49,8 +49,8 @@ const EncodedPathPunctuation = MappedLiteralKit([
 ]);
 
 const encodePathPunctuation = (value: string): string =>
-  A.reduce(EncodedPathPunctuation.Options, value, (encoded, punctuation) =>
-    pipe(encoded, Str.replaceAll(punctuation, EncodedPathPunctuation.Enum[punctuation]))
+  A.reduce(EncodedPathPunctuation.Pairs, value, (encoded, [punctuation, escaped]) =>
+    pipe(encoded, Str.replaceAll(punctuation, escaped))
   );
 
 const mediaTypeBase: (mediaType: string) => string = flow(

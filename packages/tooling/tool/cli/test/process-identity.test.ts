@@ -39,8 +39,8 @@ const withProcStat = Effect.fnUntraced(function* <Value, Error, Requirements>(
 
 describe("ProcessIdentity", () => {
   it("models every supported source-prefixed identity", () => {
-    expect(ProcessIdentitySource.Options).toStrictEqual(["proc", "ps", "win"]);
-    expect(ProcessIdentityStatus.Options).toStrictEqual(["alive", "dead", "unknown"]);
+    expect(ProcessIdentitySource.literals).toStrictEqual(["proc", "ps", "win"]);
+    expect(ProcessIdentityStatus.literals).toStrictEqual(["alive", "dead", "unknown"]);
     expect(isProcessStartIdentity("proc:8241991")).toBe(true);
     expect(isProcessStartIdentity("ps:Thu Sep  3 12:00:00 2026")).toBe(true);
     expect(isProcessStartIdentity("win:638925552000000000")).toBe(true);

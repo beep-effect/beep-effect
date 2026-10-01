@@ -105,9 +105,9 @@ it.layer(platform, { timeout: "30 seconds" })("wave-exempt row kinds", (test) =>
   test.effect("name review threads and pull request comments, apart from the observed kinds", () =>
     Effect.gen(function* () {
       const { conflict, drift, failed, thread } = yield* oldHeadRows();
-      expect(YeetInboxWaveExemptRowKind.Options).toStrictEqual(["review-thread", "pr-comment"]);
+      expect(YeetInboxWaveExemptRowKind.literals).toStrictEqual(["review-thread", "pr-comment"]);
       expect(YeetInboxWaveExemptRowKind.is["pr-comment"]("pr-comment")).toBe(true);
-      expect(A.intersection(YeetInboxWaveExemptRowKind.Options, YeetInboxObservedRowKind.Options)).toStrictEqual([]);
+      expect(A.intersection(YeetInboxWaveExemptRowKind.literals, YeetInboxObservedRowKind.literals)).toStrictEqual([]);
       expect(A.map([thread, drift, conflict, failed], yeetInboxRowIsWaveExempt)).toStrictEqual([
         true,
         false,

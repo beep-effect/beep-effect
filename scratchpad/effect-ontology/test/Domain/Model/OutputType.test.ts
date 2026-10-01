@@ -26,7 +26,7 @@ describe("effect-ontology output artifact taxonomy", () => {
   });
 
   it("provides total metadata for every output type", () => {
-    for (const type of OutputType.Options) {
+    for (const type of OutputType.literals) {
       const metadata = OutputType.metadata(type);
 
       expect(metadata).toBe(OutputTypeRegistry[type]);
@@ -37,7 +37,7 @@ describe("effect-ontology output artifact taxonomy", () => {
 
   it("includes canonical JSON-LD output and rejects unregistered filenames", () => {
     expect(OutputType.filename("rdf-jsonld")).toBe("graph.jsonld");
-    expect(OutputFilename.is.graphJsonld("graph.jsonld")).toBe(true);
-    expect(OutputFilename.is.graphJsonld("custom-output.json")).toBe(false);
+    expect(OutputFilename.is["graph.jsonld"]("graph.jsonld")).toBe(true);
+    expect(OutputFilename.is["graph.jsonld"]("custom-output.json")).toBe(false);
   });
 });

@@ -265,7 +265,7 @@ describe("yeet monitor job-shape fingerprints", () => {
   });
 
   it("keeps every fingerprint the loop knows in one domain", () => {
-    expect(YeetMonitorFlakeClass.Options).toStrictEqual([
+    expect(YeetMonitorFlakeClass.literals).toStrictEqual([
       "ts2589-no-location",
       "ci-timeout",
       "setup-5xx",
@@ -274,7 +274,7 @@ describe("yeet monitor job-shape fingerprints", () => {
     ]);
     // Every shape class the shared detector can return must be a class the loop
     // can act on, or a match would decode into a domain that rejects it.
-    expect(A.every(GithubJobShapeClass.Options, (option) => A.contains(YeetMonitorFlakeClass.Options, option))).toBe(
+    expect(A.every(GithubJobShapeClass.literals, (option) => A.contains(YeetMonitorFlakeClass.literals, option))).toBe(
       true
     );
   });
