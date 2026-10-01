@@ -22,9 +22,11 @@ import {
   renderKnowledgeSemanticDeltaHumanReport,
 } from "@beep/repo-cli/test/Knowledge";
 import { findRepoRoot } from "@beep/repo-utils";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { assert, describe, expect, it } from "@effect/vitest";
+import * as NodePath from "@effect/platform-node/NodePath";
+import { assert, describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Crypto, Effect, Exit, FileSystem, HashSet, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
@@ -68,6 +70,8 @@ const COMMAND_TREE_WITHOUT_DOCTOR = JSON.stringify({
   children: [{ name: "goals", alias: null, children: [] }],
 });
 const NO_GIT_REFS = HashSet.empty<string>();
+const policyLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
+
 const testLayer = KnowledgeServiceLive.pipe(
   Layer.provideMerge(NodeServices.layer),
   Layer.provideMerge(NodeCrypto.layer)
@@ -147,11 +151,11 @@ const pipeOption = <A>(option: O.Option<A>, fallback: A): A => O.getOrElse(optio
 
 const scan = (
   input: KnowledgePairedOracleInput
-): Effect.Effect<KnowledgeSemanticDeltaReport, KnowledgeOperationalError> =>
+): Effect.Effect<KnowledgeSemanticDeltaReport, KnowledgeOperationalError, KnowledgeService> =>
   Effect.gen(function* () {
     const service = yield* KnowledgeService;
     return yield* service.scanPair(input);
-  }).pipe(provideScopedLayer(testLayer));
+  });
 
 const fixture = (
   baseFiles: Readonly<Record<string, string>>,
@@ -223,8 +227,8 @@ const independentDigestEffect = Effect.fn("KnowledgeTest.independentDigest")(fun
   return Hex.encode(digest);
 });
 
-const independentDigest = (text: string): Effect.Effect<string> =>
-  independentDigestEffect(text).pipe(provideScopedLayer(NodeCrypto.layer), Effect.orDie);
+const independentDigest = (text: string): Effect.Effect<string, never, Crypto.Crypto> =>
+  independentDigestEffect(text).pipe(Effect.orDie);
 
 const lp = (value: string): string => {
   const normalized = Str.normalize("NFC")(value);
@@ -263,543 +267,601 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
     expect(gitRefSpanNamesForTesting("refs/notes/goals/not-a-branch")).toEqual([]);
   });
 
-  it.effect("treats retired deterministic projections as virtual targets and skips index drift", () =>
-    Effect.gen(function* () {
-      const files = {
-        "docs/guide.md": "Use `goals/INDEX.md` and `explorations/ATLAS.md`.\n",
-      };
-      const head = makeOracle(files, {
-        indexExpected: "# Goals Index\nnew projection\n",
-        indexArchived: "# Goals Index\nold projection\n",
-      });
-      const report = yield* scan({
-        base: makeOracle(files),
-        gitRefNames: NO_GIT_REFS,
-        head: {
-          ...head,
-          trackedEntries: A.filter(head.trackedEntries, (entry) => entry.path !== "goals/INDEX.md"),
-          indexBytes: Effect.die("an untracked projection must not be probed for drift"),
-        },
-        probePolicy: "enabled",
-        renames: [],
-      });
-
-      expect(report.introduced).toEqual([]);
-      expect(report.resolved).toEqual([]);
-      expect(report.unchanged).toEqual([]);
-    })
-  );
-
-  it.effect("content edit introduces only the new broken tracked path", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "Use `docs/existing.md`.\n", "docs/existing.md": "ok\n" },
-          { "docs/guide.md": "Use `docs/missing.md`.\n", "docs/existing.md": "ok\n" }
-        )
-      );
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
-      ]);
-    })
-  );
-
-  it.effect("pure reflow preserves the inherited finding id", () =>
-    Effect.gen(function* () {
-      const input = fixture(
-        { "docs/guide.md": "First line.\nUse `docs/missing.md` here.\n" },
-        { "docs/guide.md": "\n\nRewrapped prose now uses `docs/missing.md` here.\n" }
-      );
-      const report = yield* scan(input);
-      const inherited = yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md");
-      expect(introducedIds(report)).toEqual([]);
-      expect(unchangedIds(report)).toEqual([inherited]);
-    })
-  );
-
-  it.effect("rename-only preserves the base document lineage", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/old.md": "Use `docs/missing.md`.\n" },
-          { "docs/new.md": "Use `docs/missing.md`.\n" },
-          {
-            renames: [
-              KnowledgeRename.make({
-                sourcePath: "docs/old.md",
-                targetPath: "docs/new.md",
-                score: S.Natural.make(100),
-              }),
-            ],
-          }
-        )
-      );
-      const inherited = yield* expectedId("broken-tracked-path", "base:docs/old.md", "repo-path:docs/missing.md");
-      expect(introducedIds(report)).toEqual([]);
-      expect(unchangedIds(report)).toEqual([inherited]);
-    })
-  );
-
-  it.effect("rename plus edit introduces only the added broken path", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/old.md": "Use `docs/missing.md`.\n" },
-          { "docs/new.md": "Use `docs/missing.md` and `packages/missing/src/index.ts`.\n" },
-          {
-            renames: [
-              KnowledgeRename.make({
-                sourcePath: "docs/old.md",
-                targetPath: "docs/new.md",
-                score: S.Natural.make(80),
-              }),
-            ],
-          }
-        )
-      );
-      const inherited = yield* expectedId("broken-tracked-path", "base:docs/old.md", "repo-path:docs/missing.md");
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("broken-tracked-path", "base:docs/old.md", "repo-path:packages/missing/src/index.ts"),
-      ]);
-      expect(unchangedIds(report)).toEqual([inherited]);
-    })
-  );
-
-  it.effect("command added with an option tail remains valid", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "No command.\n" },
-          { "docs/guide.md": "Run `bun run beep goals doctor --write-baseline`.\n" }
-        )
-      );
-      expect(introducedIds(report)).toEqual([]);
-    })
-  );
-
-  it.effect("command child typo introduces the canonical unknown command finding", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "Run `bun run beep goals doctor`.\n" },
-          { "docs/guide.md": "Run `bun run beep goals doctro --write`.\n" }
-        )
-      );
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctro"),
-      ]);
-    })
-  );
-
-  it.effect("an unchanged documented command removed from the current surface is introduced", () =>
-    Effect.gen(function* () {
-      const guide = { "docs/guide.md": "Run `bun run beep goals doctor`.\n" };
-      const report = yield* scan(
-        fixture(guide, guide, {
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("treats retired deterministic projections as virtual targets and skips index drift", () =>
+      Effect.gen(function* () {
+        const files = {
+          "docs/guide.md": "Use `goals/INDEX.md` and `explorations/ATLAS.md`.\n",
+        };
+        const head = makeOracle(files, {
+          indexExpected: "# Goals Index\nnew projection\n",
+          indexArchived: "# Goals Index\nold projection\n",
+        });
+        const report = yield* scan({
+          base: makeOracle(files),
+          gitRefNames: NO_GIT_REFS,
           head: {
-            commandTree: COMMAND_TREE_WITHOUT_DOCTOR,
-            currentCommandTree: COMMAND_TREE_WITHOUT_DOCTOR,
-            commandProbe: probeCommandWithoutDoctor,
+            ...head,
+            trackedEntries: A.filter(head.trackedEntries, (entry) => entry.path !== "goals/INDEX.md"),
+            indexBytes: Effect.die("an untracked projection must not be probed for drift"),
           },
-        })
-      );
+          probePolicy: "enabled",
+          renames: [],
+        });
 
-      assert.deepEqual(introducedIds(report), [
-        yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctor"),
-      ]);
-      assert.deepEqual(report.resolved, []);
-      assert.deepEqual(report.unchanged, []);
-    })
-  );
+        expect(report.introduced).toEqual([]);
+        expect(report.resolved).toEqual([]);
+        expect(report.unchanged).toEqual([]);
+      })
+    );
+  });
 
-  it.effect("a pre-existing documented typo remains unchanged when a real command is removed", () =>
-    Effect.gen(function* () {
-      const guide = { "docs/guide.md": "Run `bun run beep goals doctro`.\n" };
-      const report = yield* scan(
-        fixture(guide, guide, {
-          head: {
-            commandTree: COMMAND_TREE_WITHOUT_DOCTOR,
-            currentCommandTree: COMMAND_TREE_WITHOUT_DOCTOR,
-            commandProbe: probeCommandWithoutDoctor,
-          },
-        })
-      );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("content edit introduces only the new broken tracked path", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "Use `docs/existing.md`.\n", "docs/existing.md": "ok\n" },
+            { "docs/guide.md": "Use `docs/missing.md`.\n", "docs/existing.md": "ok\n" }
+          )
+        );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
+        ]);
+      })
+    );
+  });
 
-      assert.deepEqual(report.introduced, []);
-      assert.deepEqual(unchangedIds(report), [
-        yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctro"),
-      ]);
-    })
-  );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("pure reflow preserves the inherited finding id", () =>
+      Effect.gen(function* () {
+        const input = fixture(
+          { "docs/guide.md": "First line.\nUse `docs/missing.md` here.\n" },
+          { "docs/guide.md": "\n\nRewrapped prose now uses `docs/missing.md` here.\n" }
+        );
+        const report = yield* scan(input);
+        const inherited = yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md");
+        expect(introducedIds(report)).toEqual([]);
+        expect(unchangedIds(report)).toEqual([inherited]);
+      })
+    );
+  });
 
-  it.effect("coordinated command and documentation retirement does not invent a HEAD finding", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "Run `bun run beep goals doctor`.\n" },
-          { "docs/guide.md": "The retired command is no longer documented.\n" },
-          {
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("rename-only preserves the base document lineage", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/old.md": "Use `docs/missing.md`.\n" },
+            { "docs/new.md": "Use `docs/missing.md`.\n" },
+            {
+              renames: [
+                KnowledgeRename.make({
+                  sourcePath: "docs/old.md",
+                  targetPath: "docs/new.md",
+                  score: S.Natural.make(100),
+                }),
+              ],
+            }
+          )
+        );
+        const inherited = yield* expectedId("broken-tracked-path", "base:docs/old.md", "repo-path:docs/missing.md");
+        expect(introducedIds(report)).toEqual([]);
+        expect(unchangedIds(report)).toEqual([inherited]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("rename plus edit introduces only the added broken path", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/old.md": "Use `docs/missing.md`.\n" },
+            { "docs/new.md": "Use `docs/missing.md` and `packages/missing/src/index.ts`.\n" },
+            {
+              renames: [
+                KnowledgeRename.make({
+                  sourcePath: "docs/old.md",
+                  targetPath: "docs/new.md",
+                  score: S.Natural.make(80),
+                }),
+              ],
+            }
+          )
+        );
+        const inherited = yield* expectedId("broken-tracked-path", "base:docs/old.md", "repo-path:docs/missing.md");
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("broken-tracked-path", "base:docs/old.md", "repo-path:packages/missing/src/index.ts"),
+        ]);
+        expect(unchangedIds(report)).toEqual([inherited]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("command added with an option tail remains valid", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "No command.\n" },
+            { "docs/guide.md": "Run `bun run beep goals doctor --write-baseline`.\n" }
+          )
+        );
+        expect(introducedIds(report)).toEqual([]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("command child typo introduces the canonical unknown command finding", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "Run `bun run beep goals doctor`.\n" },
+            { "docs/guide.md": "Run `bun run beep goals doctro --write`.\n" }
+          )
+        );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctro"),
+        ]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("an unchanged documented command removed from the current surface is introduced", () =>
+      Effect.gen(function* () {
+        const guide = { "docs/guide.md": "Run `bun run beep goals doctor`.\n" };
+        const report = yield* scan(
+          fixture(guide, guide, {
             head: {
               commandTree: COMMAND_TREE_WITHOUT_DOCTOR,
               currentCommandTree: COMMAND_TREE_WITHOUT_DOCTOR,
               commandProbe: probeCommandWithoutDoctor,
             },
-          }
-        )
-      );
+          })
+        );
 
-      assert.deepEqual(report.introduced, []);
-      assert.deepEqual(report.resolved, []);
-      assert.deepEqual(report.unchanged, []);
-    })
-  );
+        assert.deepEqual(introducedIds(report), [
+          yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctor"),
+        ]);
+        assert.deepEqual(report.resolved, []);
+        assert.deepEqual(report.unchanged, []);
+      })
+    );
+  });
 
-  it.effect("fails operationally when the HEAD static tree diverges from the current live tree", () =>
-    Effect.gen(function* () {
-      const error = yield* Effect.flip(
-        scan(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a pre-existing documented typo remains unchanged when a real command is removed", () =>
+      Effect.gen(function* () {
+        const guide = { "docs/guide.md": "Run `bun run beep goals doctro`.\n" };
+        const report = yield* scan(
+          fixture(guide, guide, {
+            head: {
+              commandTree: COMMAND_TREE_WITHOUT_DOCTOR,
+              currentCommandTree: COMMAND_TREE_WITHOUT_DOCTOR,
+              commandProbe: probeCommandWithoutDoctor,
+            },
+          })
+        );
+
+        assert.deepEqual(report.introduced, []);
+        assert.deepEqual(unchangedIds(report), [
+          yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctro"),
+        ]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("coordinated command and documentation retirement does not invent a HEAD finding", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
           fixture(
-            { "docs/guide.md": "Nothing cited.\n" },
-            { "docs/guide.md": "Nothing cited.\n" },
-            { head: { commandTree: COMMAND_TREE_WITHOUT_DOCTOR } }
+            { "docs/guide.md": "Run `bun run beep goals doctor`.\n" },
+            { "docs/guide.md": "The retired command is no longer documented.\n" },
+            {
+              head: {
+                commandTree: COMMAND_TREE_WITHOUT_DOCTOR,
+                currentCommandTree: COMMAND_TREE_WITHOUT_DOCTOR,
+                commandProbe: probeCommandWithoutDoctor,
+              },
+            }
           )
-        )
-      );
+        );
 
-      assert.strictEqual(error._tag, "KnowledgeOperationalError");
-      assert.strictEqual(
-        error.message,
-        "Static command surface provenance does not match the current-checkout command tree."
-      );
-    })
-  );
+        assert.deepEqual(report.introduced, []);
+        assert.deepEqual(report.resolved, []);
+        assert.deepEqual(report.unchanged, []);
+      })
+    );
+  });
 
-  it.effect("failing path assertion emits failed-assertion only", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "No assertion.\n" },
-          { "docs/guide.md": "<!-- beep:assert path-exists docs/missing.md -->\n" }
-        )
-      );
-      expect(A.map(report.introduced, (finding) => finding.kind)).toEqual(["failed-assertion"]);
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("failed-assertion", "base:docs/guide.md", "path-exists:docs/missing.md"),
-      ]);
-    })
-  );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("fails operationally when the HEAD static tree diverges from the current live tree", () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(
+          scan(
+            fixture(
+              { "docs/guide.md": "Nothing cited.\n" },
+              { "docs/guide.md": "Nothing cited.\n" },
+              { head: { commandTree: COMMAND_TREE_WITHOUT_DOCTOR } }
+            )
+          )
+        );
 
-  it.effect("every fenced example is a Stage-1 decoy", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "No fence.\n" },
-          {
-            "docs/guide.md": [
-              "```bash beep:exec",
-              "`docs/missing.md`",
-              "`bun run beep goals doctro`",
-              "<!-- beep:assert path-exists docs/missing.md -->",
-              "```",
-              "",
-            ].join("\n"),
-          }
-        )
-      );
-      expect(introducedIds(report)).toEqual([]);
-    })
-  );
+        assert.strictEqual(error._tag, "KnowledgeOperationalError");
+        assert.strictEqual(
+          error.message,
+          "Static command surface provenance does not match the current-checkout command tree."
+        );
+      })
+    );
+  });
 
-  it.effect("fence inside a blockquote hides its decoys and still closes", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "No fence.\n" },
-          {
-            "docs/guide.md": [
-              "> Quoted note:",
-              "> ```bash beep:exec",
-              "> `docs/decoy.md`",
-              "> `bun run beep goals doctro`",
-              "> <!-- beep:assert path-exists docs/decoy.md -->",
-              "> ```",
-              "",
-              "Back in prose, `docs/missing.md` is real.",
-              "",
-            ].join("\n"),
-          }
-        )
-      );
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
-      ]);
-    })
-  );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("failing path assertion emits failed-assertion only", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "No assertion.\n" },
+            { "docs/guide.md": "<!-- beep:assert path-exists docs/missing.md -->\n" }
+          )
+        );
+        expect(A.map(report.introduced, (finding) => finding.kind)).toEqual(["failed-assertion"]);
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("failed-assertion", "base:docs/guide.md", "path-exists:docs/missing.md"),
+        ]);
+      })
+    );
+  });
 
-  it.effect("fence inside a nested list item hides its decoys and still closes", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "No fence.\n" },
-          {
-            "docs/guide.md": [
-              "- outer item",
-              "    - inner item",
-              "        ```bash",
-              "        `docs/decoy.md`",
-              "        `bun run beep goals doctro`",
-              "        ```",
-              "",
-              "Back in prose, `docs/missing.md` is real.",
-              "",
-            ].join("\n"),
-          }
-        )
-      );
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
-      ]);
-    })
-  );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("every fenced example is a Stage-1 decoy", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "No fence.\n" },
+            {
+              "docs/guide.md": [
+                "```bash beep:exec",
+                "`docs/missing.md`",
+                "`bun run beep goals doctro`",
+                "<!-- beep:assert path-exists docs/missing.md -->",
+                "```",
+                "",
+              ].join("\n"),
+            }
+          )
+        );
+        expect(introducedIds(report)).toEqual([]);
+      })
+    );
+  });
 
-  it.effect("double-backtick inline span yields the same broken tracked path", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "Use ``docs/existing.md``.\n", "docs/existing.md": "ok\n" },
-          { "docs/guide.md": "Use ``docs/missing.md``.\n", "docs/existing.md": "ok\n" }
-        )
-      );
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
-      ]);
-    })
-  );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("fence inside a blockquote hides its decoys and still closes", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "No fence.\n" },
+            {
+              "docs/guide.md": [
+                "> Quoted note:",
+                "> ```bash beep:exec",
+                "> `docs/decoy.md`",
+                "> `bun run beep goals doctro`",
+                "> <!-- beep:assert path-exists docs/decoy.md -->",
+                "> ```",
+                "",
+                "Back in prose, `docs/missing.md` is real.",
+                "",
+              ].join("\n"),
+            }
+          )
+        );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
+        ]);
+      })
+    );
+  });
 
-  it.effect("a real Git ref span is exempt while a genuinely missing path remains", () =>
-    Effect.gen(function* () {
-      const branchName = "goals/time-to-certainty-kickoff";
-      const missingPath = "goals/genuinely-missing.md";
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "No references.\n" },
-          {
-            "docs/guide.md": `Continue branch \`${branchName}\`; repair \`${missingPath}\`.\n`,
-          },
-          {
-            gitRefNames: A.appendAll(
-              gitRefSpanNamesForTesting(`refs/heads/${branchName}`),
-              gitRefSpanNamesForTesting(`refs/remotes/origin/${missingPath}`)
-            ),
-          }
-        )
-      );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("fence inside a nested list item hides its decoys and still closes", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "No fence.\n" },
+            {
+              "docs/guide.md": [
+                "- outer item",
+                "    - inner item",
+                "        ```bash",
+                "        `docs/decoy.md`",
+                "        `bun run beep goals doctro`",
+                "        ```",
+                "",
+                "Back in prose, `docs/missing.md` is real.",
+                "",
+              ].join("\n"),
+            }
+          )
+        );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
+        ]);
+      })
+    );
+  });
 
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:goals/genuinely-missing.md"),
-      ]);
-    })
-  );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("double-backtick inline span yields the same broken tracked path", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "Use ``docs/existing.md``.\n", "docs/existing.md": "ok\n" },
+            { "docs/guide.md": "Use ``docs/missing.md``.\n", "docs/existing.md": "ok\n" }
+          )
+        );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
+        ]);
+      })
+    );
+  });
 
-  it.effect("padded triple-backtick inline span still probes the beep command", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "Run ``` bun run beep goals doctor ``` today.\n" },
-          { "docs/guide.md": "Run ``` bun run beep goals doctro ``` today.\n" }
-        )
-      );
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctro"),
-      ]);
-    })
-  );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a real Git ref span is exempt while a genuinely missing path remains", () =>
+      Effect.gen(function* () {
+        const branchName = "goals/time-to-certainty-kickoff";
+        const missingPath = "goals/genuinely-missing.md";
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "No references.\n" },
+            {
+              "docs/guide.md": `Continue branch \`${branchName}\`; repair \`${missingPath}\`.\n`,
+            },
+            {
+              gitRefNames: A.appendAll(
+                gitRefSpanNamesForTesting(`refs/heads/${branchName}`),
+                gitRefSpanNamesForTesting(`refs/remotes/origin/${missingPath}`)
+              ),
+            }
+          )
+        );
 
-  it.effect("alternate path spelling preserves the normalized finding id", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture({ "docs/guide.md": "Use `./missing.md`.\n" }, { "docs/guide.md": "Use `docs/./missing.md`.\n" })
-      );
-      const inherited = yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md");
-      expect(introducedIds(report)).toEqual([]);
-      expect(unchangedIds(report)).toEqual([inherited]);
-    })
-  );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:goals/genuinely-missing.md"),
+        ]);
+      })
+    );
+  });
 
-  it.effect("whole-file index drift uses the expected and archived byte digests", () =>
-    Effect.gen(function* () {
-      const expected = "# Goals Index\nnew projection\n";
-      const archived = "# Goals Index\nold projection\n";
-      const report = yield* scan(fixture({}, {}, { head: { indexExpected: expected, indexArchived: archived } }));
-      const expectedHash = yield* independentDigest(expected);
-      const archivedHash = yield* independentDigest(archived);
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId(
-          "index-drift",
-          "base:goals/INDEX.md",
-          `producer://goals/index:${expectedHash}:${archivedHash}`
-        ),
-      ]);
-    })
-  );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("padded triple-backtick inline span still probes the beep command", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "Run ``` bun run beep goals doctor ``` today.\n" },
+            { "docs/guide.md": "Run ``` bun run beep goals doctro ``` today.\n" }
+          )
+        );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctro"),
+        ]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("alternate path spelling preserves the normalized finding id", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture({ "docs/guide.md": "Use `./missing.md`.\n" }, { "docs/guide.md": "Use `docs/./missing.md`.\n" })
+        );
+        const inherited = yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md");
+        expect(introducedIds(report)).toEqual([]);
+        expect(unchangedIds(report)).toEqual([inherited]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("whole-file index drift uses the expected and archived byte digests", () =>
+      Effect.gen(function* () {
+        const expected = "# Goals Index\nnew projection\n";
+        const archived = "# Goals Index\nold projection\n";
+        const report = yield* scan(fixture({}, {}, { head: { indexExpected: expected, indexArchived: archived } }));
+        const expectedHash = yield* independentDigest(expected);
+        const archivedHash = yield* independentDigest(archived);
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId(
+            "index-drift",
+            "base:goals/INDEX.md",
+            `producer://goals/index:${expectedHash}:${archivedHash}`
+          ),
+        ]);
+      })
+    );
+  });
 });
 
 describe("knowledge semantic-delta negative controls", () => {
-  it.effect("adding a duplicate occurrence introduces ordinal one only", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "Use `docs/missing.md`.\n" },
-          { "docs/guide.md": "Use `docs/missing.md`, then `docs/missing.md` again.\n" }
-        )
-      );
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md", 1),
-      ]);
-    })
-  );
-
-  it.effect("rename-away plus recreate gives the recreated document a blob-disambiguated lineage", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/old.md": "Use `docs/missing.md`.\n" },
-          {
-            "docs/new.md": "Use `docs/missing.md`.\n",
-            "docs/old.md": "Use `docs/missing.md`.\n",
-          },
-          {
-            head: { objectIds: { "docs/old.md": "recreated-blob-oid" } },
-            renames: [
-              KnowledgeRename.make({
-                sourcePath: "docs/old.md",
-                targetPath: "docs/new.md",
-                score: S.Natural.make(100),
-              }),
-            ],
-          }
-        )
-      );
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId(
-          "broken-tracked-path",
-          "head-new:docs/old.md:recreated-blob-oid",
-          "repo-path:docs/missing.md"
-        ),
-      ]);
-    })
-  );
-
-  it.effect("sub-50-percent rename is delete plus add with new lineage", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture({ "docs/old.md": "Use `docs/missing.md`.\n" }, { "docs/new.md": "Use `docs/missing.md`.\n" })
-      );
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("broken-tracked-path", "head-new:docs/new.md", "repo-path:docs/missing.md"),
-      ]);
-    })
-  );
-
-  it.effect("tracked symlink escape cannot manufacture descendants in the tracked-tree oracle", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "No path.\n", "docs/link": "../../outside" },
-          { "docs/guide.md": "Use `docs/link/secret.md`.\n", "docs/link": "../../outside" },
-          {
-            base: { modes: { "docs/link": "120000" } },
-            head: { modes: { "docs/link": "120000" } },
-          }
-        )
-      );
-      expect(introducedIds(report)).toEqual([
-        yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/link/secret.md"),
-      ]);
-    })
-  );
-
-  it.effect("malformed assertion is ignored instead of partially parsed", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture(
-          { "docs/guide.md": "No assertion.\n" },
-          { "docs/guide.md": "<!-- beep:assert path-exists docs/missing.md unexpected -->\n" }
-        )
-      );
-      expect(introducedIds(report)).toEqual([]);
-    })
-  );
-
-  it.effect("sanitizes archive-derived public fields without changing their raw identity preimage", () =>
-    Effect.gen(function* () {
-      const hostilePath = "docs/\u001B[31mguide.md";
-      const hostileCommand = "\u001B[31mevil\u202E";
-      const report = yield* scan(
-        fixture({ [hostilePath]: "No command.\n" }, { [hostilePath]: `Run \`bun run beep ${hostileCommand}\`.\n` })
-      );
-      const introduced = A.head(report.introduced);
-      introduced.pipe(O.isSome, assertTrue);
-      if (O.isSome(introduced)) {
-        const finding = introduced.value;
-        assert.strictEqual(
-          finding.findingId,
-          yield* expectedId("unknown-beep-command", `base:${hostilePath}`, `beep-command:${hostileCommand}`)
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("adding a duplicate occurrence introduces ordinal one only", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "Use `docs/missing.md`.\n" },
+            { "docs/guide.md": "Use `docs/missing.md`, then `docs/missing.md` again.\n" }
+          )
         );
-        assert.strictEqual(finding.documentId, "base:docs/guide.md");
-        assert.strictEqual(finding.subject, "beep-command:evil");
-        assert.strictEqual(finding.location.path, "docs/guide.md");
-        assert.strictEqual(finding.message, "Unknown beep command path: evil.");
-      }
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md", 1),
+        ]);
+      })
+    );
+  });
 
-      const json = yield* encodeKnowledgeSemanticDeltaReportJson(report);
-      const human = renderKnowledgeSemanticDeltaHumanReport(report);
-      assert.notInclude(json, "\\u001b");
-      assert.notInclude(json, "\\u202e");
-      assert.notInclude(json, "\u202E");
-      assert.notInclude(human, "\u001B");
-      assert.notInclude(human, "\u202E");
-    })
-  );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("rename-away plus recreate gives the recreated document a blob-disambiguated lineage", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/old.md": "Use `docs/missing.md`.\n" },
+            {
+              "docs/new.md": "Use `docs/missing.md`.\n",
+              "docs/old.md": "Use `docs/missing.md`.\n",
+            },
+            {
+              head: { objectIds: { "docs/old.md": "recreated-blob-oid" } },
+              renames: [
+                KnowledgeRename.make({
+                  sourcePath: "docs/old.md",
+                  targetPath: "docs/new.md",
+                  score: S.Natural.make(100),
+                }),
+              ],
+            }
+          )
+        );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId(
+            "broken-tracked-path",
+            "head-new:docs/old.md:recreated-blob-oid",
+            "repo-path:docs/missing.md"
+          ),
+        ]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("sub-50-percent rename is delete plus add with new lineage", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture({ "docs/old.md": "Use `docs/missing.md`.\n" }, { "docs/new.md": "Use `docs/missing.md`.\n" })
+        );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("broken-tracked-path", "head-new:docs/new.md", "repo-path:docs/missing.md"),
+        ]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("tracked symlink escape cannot manufacture descendants in the tracked-tree oracle", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "No path.\n", "docs/link": "../../outside" },
+            { "docs/guide.md": "Use `docs/link/secret.md`.\n", "docs/link": "../../outside" },
+            {
+              base: { modes: { "docs/link": "120000" } },
+              head: { modes: { "docs/link": "120000" } },
+            }
+          )
+        );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/link/secret.md"),
+        ]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("malformed assertion is ignored instead of partially parsed", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "No assertion.\n" },
+            { "docs/guide.md": "<!-- beep:assert path-exists docs/missing.md unexpected -->\n" }
+          )
+        );
+        expect(introducedIds(report)).toEqual([]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("sanitizes archive-derived public fields without changing their raw identity preimage", () =>
+      Effect.gen(function* () {
+        const hostilePath = "docs/\u001B[31mguide.md";
+        const hostileCommand = "\u001B[31mevil\u202E";
+        const report = yield* scan(
+          fixture({ [hostilePath]: "No command.\n" }, { [hostilePath]: `Run \`bun run beep ${hostileCommand}\`.\n` })
+        );
+        const introduced = A.head(report.introduced);
+        introduced.pipe(O.isSome, assertTrue);
+        if (O.isSome(introduced)) {
+          const finding = introduced.value;
+          assert.strictEqual(
+            finding.findingId,
+            yield* expectedId("unknown-beep-command", `base:${hostilePath}`, `beep-command:${hostileCommand}`)
+          );
+          assert.strictEqual(finding.documentId, "base:docs/guide.md");
+          assert.strictEqual(finding.subject, "beep-command:evil");
+          assert.strictEqual(finding.location.path, "docs/guide.md");
+          assert.strictEqual(finding.message, "Unknown beep command path: evil.");
+        }
+
+        const json = yield* encodeKnowledgeSemanticDeltaReportJson(report);
+        const human = renderKnowledgeSemanticDeltaHumanReport(report);
+        assert.notInclude(json, "\\u001b");
+        assert.notInclude(json, "\\u202e");
+        assert.notInclude(json, "\u202E");
+        assert.notInclude(human, "\u001B");
+        assert.notInclude(human, "\u202E");
+      })
+    );
+  });
 });
 
 describe("knowledge semantic-delta gate semantics", () => {
-  it.effect("a finding this branch introduced gates the lane", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture({ "docs/guide.md": "Nothing cited.\n" }, { "docs/guide.md": "Use `docs/missing.md`.\n" })
-      );
-      const failure = knowledgeSemanticDeltaFailure(report);
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a finding this branch introduced gates the lane", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture({ "docs/guide.md": "Nothing cited.\n" }, { "docs/guide.md": "Use `docs/missing.md`.\n" })
+        );
+        const failure = knowledgeSemanticDeltaFailure(report);
 
-      expect(A.length(report.introduced)).toBe(1);
-      assertSome(
-        O.map(failure, (error) => error.introducedCount),
-        S.Natural.make(1)
-      );
-    })
-  );
+        expect(A.length(report.introduced)).toBe(1);
+        assertSome(
+          O.map(failure, (error) => error.introducedCount),
+          S.Natural.make(1)
+        );
+      })
+    );
+  });
 
-  it.effect("a finding inherited from the merge-base never gates the lane", () =>
-    Effect.gen(function* () {
-      const document = "Use `docs/missing.md`.\n";
-      const report = yield* scan(fixture({ "docs/guide.md": document }, { "docs/guide.md": document }));
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a finding inherited from the merge-base never gates the lane", () =>
+      Effect.gen(function* () {
+        const document = "Use `docs/missing.md`.\n";
+        const report = yield* scan(fixture({ "docs/guide.md": document }, { "docs/guide.md": document }));
 
-      expect(A.length(report.unchanged)).toBe(1);
-      expect(report.introduced).toEqual([]);
-      knowledgeSemanticDeltaFailure(report).pipe(assertNone);
-    })
-  );
+        expect(A.length(report.unchanged)).toBe(1);
+        expect(report.introduced).toEqual([]);
+        knowledgeSemanticDeltaFailure(report).pipe(assertNone);
+      })
+    );
+  });
 
-  it.effect("a finding this branch resolved never gates the lane", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(
-        fixture({ "docs/guide.md": "Use `docs/missing.md`.\n" }, { "docs/guide.md": "Nothing cited.\n" })
-      );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a finding this branch resolved never gates the lane", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture({ "docs/guide.md": "Use `docs/missing.md`.\n" }, { "docs/guide.md": "Nothing cited.\n" })
+        );
 
-      expect(A.length(report.resolved)).toBe(1);
-      knowledgeSemanticDeltaFailure(report).pipe(assertNone);
-    })
-  );
+        expect(A.length(report.resolved)).toBe(1);
+        knowledgeSemanticDeltaFailure(report).pipe(assertNone);
+      })
+    );
+  });
 });
 
 describe("knowledge semantic-delta probe policy", () => {
@@ -823,7 +885,7 @@ describe("knowledge semantic-delta probe policy", () => {
   const policyFor = (
     env: Readonly<Record<string, string | undefined>>,
     payload?: string
-  ): Effect.Effect<KnowledgeProbePolicy> =>
+  ): Effect.Effect<KnowledgeProbePolicy, never, FileSystem.FileSystem | Path.Path> =>
     Effect.scoped(
       Effect.gen(function* () {
         if (payload === undefined) {
@@ -836,120 +898,140 @@ describe("knowledge semantic-delta probe policy", () => {
         yield* fs.writeFileString(eventPath, payload);
         return yield* resolveKnowledgeProbePolicy({ ...env, GITHUB_EVENT_PATH: eventPath });
       })
-    ).pipe(provideScopedLayer(testLayer), Effect.orDie);
+    ).pipe(Effect.orDie);
 
-  it.effect("a push build probes, because the revision is already ours", () =>
-    Effect.gen(function* () {
-      expect(yield* policyFor({ GITHUB_EVENT_NAME: "push", GITHUB_REPOSITORY: SAME_REPO })).toBe("enabled");
-    })
-  );
+  it.layer(policyLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a push build probes, because the revision is already ours", () =>
+      Effect.gen(function* () {
+        expect(yield* policyFor({ GITHUB_EVENT_NAME: "push", GITHUB_REPOSITORY: SAME_REPO })).toBe("enabled");
+      })
+    );
+  });
 
-  it.effect("a local run with no GitHub context probes", () =>
-    Effect.gen(function* () {
-      expect(yield* policyFor({})).toBe("enabled");
-    })
-  );
+  it.layer(policyLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a local run with no GitHub context probes", () =>
+      Effect.gen(function* () {
+        expect(yield* policyFor({})).toBe("enabled");
+      })
+    );
+  });
 
-  it.effect("a same-repository pull request probes", () =>
-    Effect.gen(function* () {
-      const policy = yield* policyFor(
-        { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: SAME_REPO },
-        forkPayload(SAME_REPO)
-      );
-
-      expect(policy).toBe("enabled");
-    })
-  );
-
-  it.effect("repository names compare case-insensitively", () =>
-    Effect.gen(function* () {
-      const policy = yield* policyFor(
-        { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: "YeeBois/Beep-Effect" },
-        forkPayload("yeebois/beep-effect")
-      );
-
-      expect(policy).toBe("enabled");
-    })
-  );
-
-  it.effect("a fork pull request skips probes", () =>
-    Effect.gen(function* () {
-      const policy = yield* policyFor(
-        { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: SAME_REPO },
-        forkPayload("contributor/beep-effect")
-      );
-
-      expect(policy).toBe("skipped-untrusted-context");
-    })
-  );
-
-  it.effect("a fork pull_request_target run skips probes", () =>
-    Effect.gen(function* () {
-      const policy = yield* policyFor(
-        { GITHUB_EVENT_NAME: "pull_request_target", GITHUB_REPOSITORY: SAME_REPO },
-        forkPayload("contributor/beep-effect")
-      );
-
-      expect(policy).toBe("skipped-untrusted-context");
-    })
-  );
-
-  it.effect("an undeterminable head repository skips probes rather than buying execution", () =>
-    Effect.gen(function* () {
-      const env = { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: SAME_REPO };
-
-      expect(yield* policyFor(env)).toBe("skipped-untrusted-context");
-      expect(yield* policyFor({ ...env, GITHUB_EVENT_PATH: "/nonexistent/event.json" })).toBe(
-        "skipped-untrusted-context"
-      );
-      expect(yield* policyFor(env, "{not json")).toBe("skipped-untrusted-context");
-      expect(yield* policyFor(env, NULL_HEAD_REPO_PAYLOAD)).toBe("skipped-untrusted-context");
-      expect(yield* policyFor({ GITHUB_EVENT_NAME: "pull_request" }, forkPayload(SAME_REPO))).toBe(
-        "skipped-untrusted-context"
-      );
-    })
-  );
-
-  it.effect("a skipped comparison declines to run current-checkout probes against archive data", () =>
-    Effect.gen(function* () {
-      const service = yield* KnowledgeService;
-      const input = (probePolicy: KnowledgeProbePolicy): KnowledgePairedOracleInput => ({
-        base: explodingProbeOracle({ "docs/guide.md": "Nothing cited.\n" }),
-        gitRefNames: NO_GIT_REFS,
-        head: explodingProbeOracle({ "docs/guide.md": "Run `bun run beep goals doctro`.\n" }),
-        probePolicy,
-        renames: [],
-      });
-      const skipped = yield* service.scanPair(input("skipped-untrusted-context"));
-      // Counterfactual: the same oracles under `enabled` do reach the probe, so the pass above is a
-      // guard doing its job and not a fixture that had nothing to execute.
-      const probed = yield* Effect.exit(service.scanPair(input("enabled")));
-
-      expect(skipped.probePolicy).toBe("skipped-untrusted-context");
-      expect(skipped.introduced).toEqual([]);
-      assertTrue(Exit.isFailure(probed));
-    }).pipe(provideScopedLayer(testLayer))
-  );
-
-  it.effect("a skipped comparison drops the probe-dependent classes and keeps the rest", () =>
-    Effect.gen(function* () {
-      const baseFiles = { "docs/guide.md": "Nothing cited.\n" };
-      const headFiles = { "docs/guide.md": "Run `bun run beep goals doctro`, see `docs/missing.md`.\n" };
-      const drift = { head: { indexExpected: "# Regenerated Goals Index\n" } };
-      const probed = yield* scan(fixture(baseFiles, headFiles, drift));
-      const skipped = yield* scan(
-        fixture(baseFiles, headFiles, { ...drift, probePolicy: "skipped-untrusted-context" })
-      );
-      const kinds = (report: KnowledgeSemanticDeltaReport): ReadonlyArray<KnowledgeFindingKind> =>
-        A.sort(
-          A.map(report.introduced, (finding) => finding.kind),
-          Order.String
+  it.layer(policyLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a same-repository pull request probes", () =>
+      Effect.gen(function* () {
+        const policy = yield* policyFor(
+          { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: SAME_REPO },
+          forkPayload(SAME_REPO)
         );
 
-      expect(kinds(probed)).toEqual(A.sort(["broken-tracked-path", ...KNOWLEDGE_PROBE_DEPENDENT_KINDS], Order.String));
-      expect(kinds(skipped)).toEqual(["broken-tracked-path"]);
-    })
-  );
+        expect(policy).toBe("enabled");
+      })
+    );
+  });
+
+  it.layer(policyLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("repository names compare case-insensitively", () =>
+      Effect.gen(function* () {
+        const policy = yield* policyFor(
+          { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: "YeeBois/Beep-Effect" },
+          forkPayload("yeebois/beep-effect")
+        );
+
+        expect(policy).toBe("enabled");
+      })
+    );
+  });
+
+  it.layer(policyLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a fork pull request skips probes", () =>
+      Effect.gen(function* () {
+        const policy = yield* policyFor(
+          { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: SAME_REPO },
+          forkPayload("contributor/beep-effect")
+        );
+
+        expect(policy).toBe("skipped-untrusted-context");
+      })
+    );
+  });
+
+  it.layer(policyLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a fork pull_request_target run skips probes", () =>
+      Effect.gen(function* () {
+        const policy = yield* policyFor(
+          { GITHUB_EVENT_NAME: "pull_request_target", GITHUB_REPOSITORY: SAME_REPO },
+          forkPayload("contributor/beep-effect")
+        );
+
+        expect(policy).toBe("skipped-untrusted-context");
+      })
+    );
+  });
+
+  it.layer(policyLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("an undeterminable head repository skips probes rather than buying execution", () =>
+      Effect.gen(function* () {
+        const env = { GITHUB_EVENT_NAME: "pull_request", GITHUB_REPOSITORY: SAME_REPO };
+
+        expect(yield* policyFor(env)).toBe("skipped-untrusted-context");
+        expect(yield* policyFor({ ...env, GITHUB_EVENT_PATH: "/nonexistent/event.json" })).toBe(
+          "skipped-untrusted-context"
+        );
+        expect(yield* policyFor(env, "{not json")).toBe("skipped-untrusted-context");
+        expect(yield* policyFor(env, NULL_HEAD_REPO_PAYLOAD)).toBe("skipped-untrusted-context");
+        expect(yield* policyFor({ GITHUB_EVENT_NAME: "pull_request" }, forkPayload(SAME_REPO))).toBe(
+          "skipped-untrusted-context"
+        );
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a skipped comparison declines to run current-checkout probes against archive data", () =>
+      Effect.gen(function* () {
+        const service = yield* KnowledgeService;
+        const input = (probePolicy: KnowledgeProbePolicy): KnowledgePairedOracleInput => ({
+          base: explodingProbeOracle({ "docs/guide.md": "Nothing cited.\n" }),
+          gitRefNames: NO_GIT_REFS,
+          head: explodingProbeOracle({ "docs/guide.md": "Run `bun run beep goals doctro`.\n" }),
+          probePolicy,
+          renames: [],
+        });
+        const skipped = yield* service.scanPair(input("skipped-untrusted-context"));
+        // Counterfactual: the same oracles under `enabled` do reach the probe, so the pass above is a
+        // guard doing its job and not a fixture that had nothing to execute.
+        const probed = yield* Effect.exit(service.scanPair(input("enabled")));
+
+        expect(skipped.probePolicy).toBe("skipped-untrusted-context");
+        expect(skipped.introduced).toEqual([]);
+        assertTrue(Exit.isFailure(probed));
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a skipped comparison drops the probe-dependent classes and keeps the rest", () =>
+      Effect.gen(function* () {
+        const baseFiles = { "docs/guide.md": "Nothing cited.\n" };
+        const headFiles = { "docs/guide.md": "Run `bun run beep goals doctro`, see `docs/missing.md`.\n" };
+        const drift = { head: { indexExpected: "# Regenerated Goals Index\n" } };
+        const probed = yield* scan(fixture(baseFiles, headFiles, drift));
+        const skipped = yield* scan(
+          fixture(baseFiles, headFiles, { ...drift, probePolicy: "skipped-untrusted-context" })
+        );
+        const kinds = (report: KnowledgeSemanticDeltaReport): ReadonlyArray<KnowledgeFindingKind> =>
+          A.sort(
+            A.map(report.introduced, (finding) => finding.kind),
+            Order.String
+          );
+
+        expect(kinds(probed)).toEqual(
+          A.sort(["broken-tracked-path", ...KNOWLEDGE_PROBE_DEPENDENT_KINDS], Order.String)
+        );
+        expect(kinds(skipped)).toEqual(["broken-tracked-path"]);
+      })
+    );
+  });
 });
 
 describe("knowledge semantic-delta current-checkout probes", () => {
@@ -1038,8 +1120,8 @@ describe("knowledge semantic-delta current-checkout probes", () => {
     return { archiveRoot, currentCheckoutRoot, oracle, scratchRoot } as const;
   });
 
-  it.effect("derives the current command surface statically with exact live structural parity", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("derives the current command surface statically with exact live structural parity", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -1061,11 +1143,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
 
         assert.isTrue(KnowledgeCommandSurface.staticCommandNodeEquivalent(staticTree, liveTree));
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("fails closed without leaking hostile archive source through parser diagnostics", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("fails closed without leaking hostile archive source through parser diagnostics", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -1094,11 +1176,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.notInclude(error.message, "\u202E");
         assert.isFalse(yield* fs.exists(markerPath));
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("preserves ordered list expansion and last-wins aliases across trusted import forms", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("preserves ordered list expansion and last-wins aliases across trusted import forms", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -1127,11 +1209,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.deepEqual(KnowledgeCommandSurface.resolveStaticCommand(tree, ["f"]), ["unknown", ["f"]]);
         assert.deepEqual(KnowledgeCommandSurface.resolveStaticCommand(tree, ["second"]), ["resolved", ["second"]]);
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("fails closed for hostile command-surface syntax and ambiguous sibling spellings", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("fails closed for hostile command-surface syntax and ambiguous sibling spellings", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -1213,11 +1295,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           assert.include(error.message, "Failed to statically derive command surface provenance", fixture.name);
         }
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("fails promptly on recursive command factories and recursive command lists", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("fails promptly on recursive command factories and recursive command lists", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -1255,11 +1337,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.strictEqual(listError._tag, "KnowledgeOperationalError");
         assert.include(listError.message, "list declarations contain a cycle");
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("uses a scratch-owned empty env file instead of an archive-local dotenv file", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("uses a scratch-owned empty env file instead of an archive-local dotenv file", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -1308,11 +1390,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.isFalse(yield* fs.exists(path.join(archiveRoot, "command-tree-probe.ts")));
         assert.isFalse(yield* fs.exists(path.join(archiveRoot, "empty.env")));
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("treats archived command modules and runtime configuration as data, never code", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("treats archived command modules and runtime configuration as data, never code", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -1382,11 +1464,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.isFalse(yield* fs.exists(path.join(archiveRoot, PORTFOLIO_MARKER)));
         assert.isFalse(yield* fs.exists(path.join(archiveRoot, "node_modules")));
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("reports malformed command output with labeled sanitized stderr and expected counts", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("reports malformed command output with labeled sanitized stderr and expected counts", () =>
       Effect.gen(function* () {
         const harness = yield* makeProbeHarness("resolved\tgoals\tdoctor\nextra", malformedProbeStderr);
         const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
@@ -1400,11 +1482,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.notInclude(error.message, "\u001B");
         assert.notInclude(error.message, "\u0001");
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("reports unknown command statuses with bounded labeled stderr", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("reports unknown command statuses with bounded labeled stderr", () =>
       Effect.gen(function* () {
         const harness = yield* makeProbeHarness("unsupported\tgoals\tdoctor", Str.repeat(3_000)("x"));
         const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
@@ -1415,11 +1497,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.include(error.message, "stderr:");
         assert.isAtMost(Str.length(error.message), 2_500);
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("rejects truncated command and index output even when the probe exits zero", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("rejects truncated command and index output even when the probe exits zero", () =>
       Effect.gen(function* () {
         const harness = yield* makeProbeHarness(Str.repeat(1_100_000)("x"), "");
         const commandError = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
@@ -1434,11 +1516,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.include(indexError.message, "refusing to parse truncated structured output");
         assert.include(indexError.message, "capture: truncated");
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("redacts checkout archive scratch and arbitrary absolute paths from boot failures", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("redacts checkout archive scratch and arbitrary absolute paths from boot failures", () =>
       Effect.gen(function* () {
         const harness = yield* makeProbeHarness(unsafeProbeStdout, unsafeProbeStderr, 1);
         const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
@@ -1471,11 +1553,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.notInclude(error.message, "\u001B");
         assert.notInclude(error.message, "\u0001");
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("redacts absolute POSIX paths after the punctuation delimiter table", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("redacts absolute POSIX paths after the punctuation delimiter table", () =>
       Effect.gen(function* () {
         const stderr = A.join(
           A.map(
@@ -1492,11 +1574,11 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           assert.notInclude(error.message, `/private/${label}`, label);
         }
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 
-  it.effect("preserves URLs and word-adjacent slash fragments", () =>
-    Effect.scoped(
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("preserves URLs and word-adjacent slash fragments", () =>
       Effect.gen(function* () {
         const preserved = [
           "https://example.com/private/source.ts",
@@ -1514,8 +1596,8 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           assert.include(error.message, value);
         }
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
 });
 
 describe("knowledge semantic-delta base probe boot failure", () => {
@@ -1535,222 +1617,242 @@ describe("knowledge semantic-delta base probe boot failure", () => {
     renames: [],
   });
 
-  it.effect("an unbootable base degrades probe coverage instead of failing the comparison", () =>
-    Effect.gen(function* () {
-      const report = yield* scan(withUnbootableBase(CLEAN_BASE, DIRTY_HEAD, HEAD_DRIFT));
-      const detail = O.getOrElse(report.probeSkipDetail, () => "");
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("an unbootable base degrades probe coverage instead of failing the comparison", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(withUnbootableBase(CLEAN_BASE, DIRTY_HEAD, HEAD_DRIFT));
+        const detail = O.getOrElse(report.probeSkipDetail, () => "");
 
-      assert.strictEqual(report.probePolicy, "skipped-base-boot-failure");
-      assert.include(detail, "failed with exit 1");
-      assert.include(detail, "DEFAULT_AI_METRICS_DATA_ROOT");
-      assert.include(detail, "<absolute-path>");
-      assert.notInclude(detail, "/tmp/beep-knowledge-semantic-delta");
-      assert.notInclude(detail, "/repo/packages");
-      assert.notInclude(detail, "\u001B");
-      assert.notInclude(detail, "\u0001");
-      // Blank output lines are dropped, so the excerpt is three lines of evidence rather than four.
-      assert.strictEqual(A.length(Str.split("\n")(detail)), 3);
-      // The tracked-tree classes still work; only the probe-dependent ones went missing.
-      assert.deepEqual(sortedKinds(report.introduced), ["broken-tracked-path"]);
-    })
-  );
+        assert.strictEqual(report.probePolicy, "skipped-base-boot-failure");
+        assert.include(detail, "failed with exit 1");
+        assert.include(detail, "DEFAULT_AI_METRICS_DATA_ROOT");
+        assert.include(detail, "<absolute-path>");
+        assert.notInclude(detail, "/tmp/beep-knowledge-semantic-delta");
+        assert.notInclude(detail, "/repo/packages");
+        assert.notInclude(detail, "\u001B");
+        assert.notInclude(detail, "\u0001");
+        // Blank output lines are dropped, so the excerpt is three lines of evidence rather than four.
+        assert.strictEqual(A.length(Str.split("\n")(detail)), 3);
+        // The tracked-tree classes still work; only the probe-dependent ones went missing.
+        assert.deepEqual(sortedKinds(report.introduced), ["broken-tracked-path"]);
+      })
+    );
+  });
 
-  it.effect("a degraded comparison with nothing else introduced does not gate the lane", () =>
-    Effect.gen(function* () {
-      const degraded = yield* scan(withUnbootableBase(CLEAN_BASE, CLEAN_BASE, HEAD_DRIFT));
-      // Counterfactual: the same HEAD drift under a bootable base does introduce a finding and does
-      // gate, so the pass above is degradation doing its job and not an empty fixture.
-      const probed = yield* scan(fixture(CLEAN_BASE, CLEAN_BASE, { head: HEAD_DRIFT }));
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a degraded comparison with nothing else introduced does not gate the lane", () =>
+      Effect.gen(function* () {
+        const degraded = yield* scan(withUnbootableBase(CLEAN_BASE, CLEAN_BASE, HEAD_DRIFT));
+        // Counterfactual: the same HEAD drift under a bootable base does introduce a finding and does
+        // gate, so the pass above is degradation doing its job and not an empty fixture.
+        const probed = yield* scan(fixture(CLEAN_BASE, CLEAN_BASE, { head: HEAD_DRIFT }));
 
-      assert.strictEqual(degraded.probePolicy, "skipped-base-boot-failure");
-      assert.deepEqual(degraded.introduced, []);
-      knowledgeSemanticDeltaFailure(degraded).pipe(assertNone);
-      assert.deepEqual(sortedKinds(probed.introduced), ["index-drift"]);
-      knowledgeSemanticDeltaFailure(probed).pipe(O.isSome, assertTrue);
-    })
-  );
+        assert.strictEqual(degraded.probePolicy, "skipped-base-boot-failure");
+        assert.deepEqual(degraded.introduced, []);
+        knowledgeSemanticDeltaFailure(degraded).pipe(assertNone);
+        assert.deepEqual(sortedKinds(probed.introduced), ["index-drift"]);
+        knowledgeSemanticDeltaFailure(probed).pipe(O.isSome, assertTrue);
+      })
+    );
+  });
 
-  it.effect("a base boot failure discards the probe results collected before it", () =>
-    Effect.gen(function* () {
-      const baseFiles = { "docs/guide.md": "Run `bun run beep goals doctro`.\n" };
-      // Only the index probe dies, after the command probe has already resolved an unknown command.
-      const degraded = yield* scan({
-        base: { ...makeOracle(baseFiles), indexBytes: Effect.fail(BOOT_FAILURE) },
-        gitRefNames: NO_GIT_REFS,
-        head: makeOracle(CLEAN_BASE),
-        probePolicy: "enabled",
-        renames: [],
-      });
-      // Counterfactual: a bootable base does report that command finding as resolved, so keeping the
-      // half-probed base would have compared it against an unprobed HEAD.
-      const probed = yield* scan(fixture(baseFiles, CLEAN_BASE));
-
-      assert.strictEqual(degraded.probePolicy, "skipped-base-boot-failure");
-      assert.deepEqual(degraded.introduced, []);
-      assert.deepEqual(degraded.resolved, []);
-      assert.deepEqual(degraded.unchanged, []);
-      assert.deepEqual(sortedKinds(probed.resolved), ["unknown-beep-command"]);
-    })
-  );
-
-  it.effect("an unbootable HEAD is still an operational failure, because HEAD is the branch's own tree", () =>
-    Effect.gen(function* () {
-      const service = yield* KnowledgeService;
-      const error = yield* Effect.flip(
-        service.scanPair({
-          base: makeOracle(CLEAN_BASE),
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a base boot failure discards the probe results collected before it", () =>
+      Effect.gen(function* () {
+        const baseFiles = { "docs/guide.md": "Run `bun run beep goals doctro`.\n" };
+        // Only the index probe dies, after the command probe has already resolved an unknown command.
+        const degraded = yield* scan({
+          base: { ...makeOracle(baseFiles), indexBytes: Effect.fail(BOOT_FAILURE) },
           gitRefNames: NO_GIT_REFS,
-          head: unbootableProbeOracle(DIRTY_HEAD),
+          head: makeOracle(CLEAN_BASE),
           probePolicy: "enabled",
           renames: [],
-        })
-      );
+        });
+        // Counterfactual: a bootable base does report that command finding as resolved, so keeping the
+        // half-probed base would have compared it against an unprobed HEAD.
+        const probed = yield* scan(fixture(baseFiles, CLEAN_BASE));
 
-      assert.strictEqual(error._tag, "KnowledgeOperationalError");
-      assert.include(error.message, "DEFAULT_AI_METRICS_DATA_ROOT");
-      assert.notInclude(error.message, "/tmp/beep-knowledge-semantic-delta");
-      assert.notInclude(error.message, "/repo/packages");
-    }).pipe(provideScopedLayer(testLayer))
-  );
+        assert.strictEqual(degraded.probePolicy, "skipped-base-boot-failure");
+        assert.deepEqual(degraded.introduced, []);
+        assert.deepEqual(degraded.resolved, []);
+        assert.deepEqual(degraded.unchanged, []);
+        assert.deepEqual(sortedKinds(probed.resolved), ["unknown-beep-command"]);
+      })
+    );
+  });
 
-  it.effect("a shared current-checkout boot failure fails operationally even when HEAD has no command spans", () =>
-    Effect.gen(function* () {
-      const service = yield* KnowledgeService;
-      const error = yield* Effect.flip(
-        service.scanPair({
-          base: unbootableProbeOracle(CLEAN_BASE),
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("an unbootable HEAD is still an operational failure, because HEAD is the branch's own tree", () =>
+      Effect.gen(function* () {
+        const service = yield* KnowledgeService;
+        const error = yield* Effect.flip(
+          service.scanPair({
+            base: makeOracle(CLEAN_BASE),
+            gitRefNames: NO_GIT_REFS,
+            head: unbootableProbeOracle(DIRTY_HEAD),
+            probePolicy: "enabled",
+            renames: [],
+          })
+        );
+
+        assert.strictEqual(error._tag, "KnowledgeOperationalError");
+        assert.include(error.message, "DEFAULT_AI_METRICS_DATA_ROOT");
+        assert.notInclude(error.message, "/tmp/beep-knowledge-semantic-delta");
+        assert.notInclude(error.message, "/repo/packages");
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a shared current-checkout boot failure fails operationally even when HEAD has no command spans", () =>
+      Effect.gen(function* () {
+        const service = yield* KnowledgeService;
+        const error = yield* Effect.flip(
+          service.scanPair({
+            base: unbootableProbeOracle(CLEAN_BASE),
+            gitRefNames: NO_GIT_REFS,
+            head: unbootableProbeOracle(CLEAN_BASE),
+            probePolicy: "enabled",
+            renames: [],
+          })
+        );
+
+        assert.strictEqual(error._tag, "KnowledgeOperationalError");
+        assert.include(error.message, "DEFAULT_AI_METRICS_DATA_ROOT");
+        assert.notInclude(error.message, "/tmp/beep-knowledge-semantic-delta");
+        assert.notInclude(error.message, "/repo/packages");
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a current-code failure for a base-only command fails during the HEAD preflight", () =>
+      Effect.gen(function* () {
+        const baseFiles = { "docs/guide.md": "Run `bun run beep legacy command`.\n" };
+        const preflightFailure = KnowledgeProbeBootError.make({
+          message: "Current-checkout command handler failed for the base-only legacy command.",
+        });
+        const head = {
+          ...makeOracle(CLEAN_BASE),
+          probeCommands: (commands: ReadonlyArray<ReadonlyArray<string>>) =>
+            A.some(commands, (words) => A.contains(words, "legacy"))
+              ? Effect.fail(preflightFailure)
+              : Effect.succeed(A.map(commands, probeCommand)),
+        };
+        const error = yield* Effect.flip(
+          scan({
+            base: makeOracle(baseFiles),
+            gitRefNames: NO_GIT_REFS,
+            head,
+            probePolicy: "enabled",
+            renames: [],
+          })
+        );
+
+        assert.strictEqual(error._tag, "KnowledgeOperationalError");
+        assert.include(error.message, "base-only legacy command");
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a failure proved specific to merge-base data still degrades after the HEAD union preflight", () =>
+      Effect.gen(function* () {
+        const baseFiles = { "docs/guide.md": "Run `bun run beep legacy command`.\n" };
+        const report = yield* scan({
+          base: unbootableProbeOracle(baseFiles),
           gitRefNames: NO_GIT_REFS,
-          head: unbootableProbeOracle(CLEAN_BASE),
+          head: makeOracle(CLEAN_BASE),
           probePolicy: "enabled",
           renames: [],
-        })
-      );
+        });
 
-      assert.strictEqual(error._tag, "KnowledgeOperationalError");
-      assert.include(error.message, "DEFAULT_AI_METRICS_DATA_ROOT");
-      assert.notInclude(error.message, "/tmp/beep-knowledge-semantic-delta");
-      assert.notInclude(error.message, "/repo/packages");
-    }).pipe(provideScopedLayer(testLayer))
-  );
+        assert.strictEqual(report.probePolicy, "skipped-base-boot-failure");
+        assert.deepEqual(report.introduced, []);
+      })
+    );
+  });
 
-  it.effect("a current-code failure for a base-only command fails during the HEAD preflight", () =>
-    Effect.gen(function* () {
-      const baseFiles = { "docs/guide.md": "Run `bun run beep legacy command`.\n" };
-      const preflightFailure = KnowledgeProbeBootError.make({
-        message: "Current-checkout command handler failed for the base-only legacy command.",
-      });
-      const head = {
-        ...makeOracle(CLEAN_BASE),
-        probeCommands: (commands: ReadonlyArray<ReadonlyArray<string>>) =>
-          A.some(commands, (words) => A.contains(words, "legacy"))
-            ? Effect.fail(preflightFailure)
-            : Effect.succeed(A.map(commands, probeCommand)),
-      };
-      const error = yield* Effect.flip(
-        scan({
-          base: makeOracle(baseFiles),
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("an unsupported base command surface fails closed before runtime boot degradation", () =>
+      Effect.gen(function* () {
+        const base = {
+          ...unbootableProbeOracle(CLEAN_BASE),
+          commandTree: KnowledgeCommandSurface.decodeCurrentCommandTree("not-json"),
+        };
+        const error = yield* Effect.flip(
+          scan({ base, gitRefNames: NO_GIT_REFS, head: makeOracle(CLEAN_BASE), probePolicy: "enabled", renames: [] })
+        );
+
+        assert.strictEqual(error._tag, "KnowledgeOperationalError");
+        assert.include(error.message, "malformed output");
+        assert.notInclude(error.message, "DEFAULT_AI_METRICS_DATA_ROOT");
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("the JSON report carries the degraded policy and its evidence, and omits both when clean", () =>
+      Effect.gen(function* () {
+        const degradedReport = yield* scan(withUnbootableBase(CLEAN_BASE, CLEAN_BASE));
+        const degraded = yield* encodeKnowledgeSemanticDeltaReportJson(degradedReport);
+        const human = renderKnowledgeSemanticDeltaHumanReport(degradedReport);
+        const clean = yield* encodeKnowledgeSemanticDeltaReportJson(yield* scan(fixture(CLEAN_BASE, CLEAN_BASE)));
+
+        assert.include(degraded, `"probePolicy":"skipped-base-boot-failure"`);
+        assert.include(degraded, "DEFAULT_AI_METRICS_DATA_ROOT");
+        assert.include(degraded, "<absolute-path>");
+        assert.notInclude(degraded, "/tmp/beep-knowledge-semantic-delta");
+        assert.notInclude(degraded, "/repo/packages");
+        assert.notInclude(degraded, "\\u001b");
+        assert.notInclude(degraded, "\\u0001");
+        assert.include(human, "DEFAULT_AI_METRICS_DATA_ROOT");
+        assert.include(human, "<absolute-path>");
+        assert.notInclude(human, "/tmp/beep-knowledge-semantic-delta");
+        assert.notInclude(human, "/repo/packages");
+        assert.notInclude(human, "\u001B");
+        assert.notInclude(human, "\u0001");
+        assert.include(clean, `"probePolicy":"enabled"`);
+        assert.notInclude(clean, "probeSkipDetail");
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("the degraded public detail removes bare CR and short absolute paths", () =>
+      Effect.gen(function* () {
+        const unsafeFailure = KnowledgeProbeBootError.make({
+          message: "failure at /secret\r\nthen C:\\secret\rOVERWRITE\u202Ehidden",
+        });
+        const base = {
+          ...makeOracle(CLEAN_BASE),
+          probeCommands: () => Effect.fail(unsafeFailure),
+          indexBytes: Effect.fail(unsafeFailure),
+        };
+        const report = yield* scan({
+          base,
           gitRefNames: NO_GIT_REFS,
-          head,
+          head: makeOracle(CLEAN_BASE),
           probePolicy: "enabled",
           renames: [],
-        })
-      );
+        });
+        const json = yield* encodeKnowledgeSemanticDeltaReportJson(report);
+        const human = renderKnowledgeSemanticDeltaHumanReport(report);
 
-      assert.strictEqual(error._tag, "KnowledgeOperationalError");
-      assert.include(error.message, "base-only legacy command");
-    })
-  );
-
-  it.effect("a failure proved specific to merge-base data still degrades after the HEAD union preflight", () =>
-    Effect.gen(function* () {
-      const baseFiles = { "docs/guide.md": "Run `bun run beep legacy command`.\n" };
-      const report = yield* scan({
-        base: unbootableProbeOracle(baseFiles),
-        gitRefNames: NO_GIT_REFS,
-        head: makeOracle(CLEAN_BASE),
-        probePolicy: "enabled",
-        renames: [],
-      });
-
-      assert.strictEqual(report.probePolicy, "skipped-base-boot-failure");
-      assert.deepEqual(report.introduced, []);
-    })
-  );
-
-  it.effect("an unsupported base command surface fails closed before runtime boot degradation", () =>
-    Effect.gen(function* () {
-      const base = {
-        ...unbootableProbeOracle(CLEAN_BASE),
-        commandTree: KnowledgeCommandSurface.decodeCurrentCommandTree("not-json"),
-      };
-      const error = yield* Effect.flip(
-        scan({ base, gitRefNames: NO_GIT_REFS, head: makeOracle(CLEAN_BASE), probePolicy: "enabled", renames: [] })
-      );
-
-      assert.strictEqual(error._tag, "KnowledgeOperationalError");
-      assert.include(error.message, "malformed output");
-      assert.notInclude(error.message, "DEFAULT_AI_METRICS_DATA_ROOT");
-    })
-  );
-
-  it.effect("the JSON report carries the degraded policy and its evidence, and omits both when clean", () =>
-    Effect.gen(function* () {
-      const degradedReport = yield* scan(withUnbootableBase(CLEAN_BASE, CLEAN_BASE));
-      const degraded = yield* encodeKnowledgeSemanticDeltaReportJson(degradedReport);
-      const human = renderKnowledgeSemanticDeltaHumanReport(degradedReport);
-      const clean = yield* encodeKnowledgeSemanticDeltaReportJson(yield* scan(fixture(CLEAN_BASE, CLEAN_BASE)));
-
-      assert.include(degraded, `"probePolicy":"skipped-base-boot-failure"`);
-      assert.include(degraded, "DEFAULT_AI_METRICS_DATA_ROOT");
-      assert.include(degraded, "<absolute-path>");
-      assert.notInclude(degraded, "/tmp/beep-knowledge-semantic-delta");
-      assert.notInclude(degraded, "/repo/packages");
-      assert.notInclude(degraded, "\\u001b");
-      assert.notInclude(degraded, "\\u0001");
-      assert.include(human, "DEFAULT_AI_METRICS_DATA_ROOT");
-      assert.include(human, "<absolute-path>");
-      assert.notInclude(human, "/tmp/beep-knowledge-semantic-delta");
-      assert.notInclude(human, "/repo/packages");
-      assert.notInclude(human, "\u001B");
-      assert.notInclude(human, "\u0001");
-      assert.include(clean, `"probePolicy":"enabled"`);
-      assert.notInclude(clean, "probeSkipDetail");
-    })
-  );
-
-  it.effect("the degraded public detail removes bare CR and short absolute paths", () =>
-    Effect.gen(function* () {
-      const unsafeFailure = KnowledgeProbeBootError.make({
-        message: "failure at /secret\r\nthen C:\\secret\rOVERWRITE\u202Ehidden",
-      });
-      const base = {
-        ...makeOracle(CLEAN_BASE),
-        probeCommands: () => Effect.fail(unsafeFailure),
-        indexBytes: Effect.fail(unsafeFailure),
-      };
-      const report = yield* scan({
-        base,
-        gitRefNames: NO_GIT_REFS,
-        head: makeOracle(CLEAN_BASE),
-        probePolicy: "enabled",
-        renames: [],
-      });
-      const json = yield* encodeKnowledgeSemanticDeltaReportJson(report);
-      const human = renderKnowledgeSemanticDeltaHumanReport(report);
-
-      assert.strictEqual(report.probePolicy, "skipped-base-boot-failure");
-      assert.notInclude(json, "/secret");
-      assert.notInclude(json, "C:\\\\secret");
-      assert.notInclude(json, "\\r");
-      assert.notInclude(json, "\u202E");
-      assert.include(json, "<absolute-path>");
-      assert.notInclude(human, "/secret");
-      assert.notInclude(human, "C:\\secret");
-      assert.notInclude(human, "\r");
-      assert.notInclude(human, "\u202E");
-      assert.include(human, "<absolute-path>");
-    })
-  );
+        assert.strictEqual(report.probePolicy, "skipped-base-boot-failure");
+        assert.notInclude(json, "/secret");
+        assert.notInclude(json, "C:\\\\secret");
+        assert.notInclude(json, "\\r");
+        assert.notInclude(json, "\u202E");
+        assert.include(json, "<absolute-path>");
+        assert.notInclude(human, "/secret");
+        assert.notInclude(human, "C:\\secret");
+        assert.notInclude(human, "\r");
+        assert.notInclude(human, "\u202E");
+        assert.include(human, "<absolute-path>");
+      })
+    );
+  });
 });
 
 // The clone-local info/attributes file is the one attribute layer no git invocation can disable
@@ -1765,44 +1867,48 @@ describe("knowledge clone-local attributes guard", () => {
     }
   };
 
-  it.effect("passes while the clone-local attributes file is absent or empty and fails closed once non-empty", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-clone-attributes-" });
-      const repoDir = path.join(tempRoot, "repo");
-      const home = path.join(tempRoot, "home");
-      yield* fs.makeDirectory(repoDir, { recursive: true });
-      yield* fs.makeDirectory(home, { recursive: true });
-      const env = {
-        PATH: Bun.env.PATH ?? "",
-        HOME: home,
-        GIT_CONFIG_GLOBAL: "/dev/null",
-        GIT_CONFIG_NOSYSTEM: "1",
-      };
-      yield* Effect.sync(() => runGit(repoDir, ["init", "-b", "main"], env));
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("passes while the clone-local attributes file is absent or empty and fails closed once non-empty", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-clone-attributes-" });
+        const repoDir = path.join(tempRoot, "repo");
+        const home = path.join(tempRoot, "home");
+        yield* fs.makeDirectory(repoDir, { recursive: true });
+        yield* fs.makeDirectory(home, { recursive: true });
+        const env = {
+          PATH: Bun.env.PATH ?? "",
+          HOME: home,
+          GIT_CONFIG_GLOBAL: "/dev/null",
+          GIT_CONFIG_NOSYSTEM: "1",
+        };
+        yield* Effect.sync(() => runGit(repoDir, ["init", "-b", "main"], env));
 
-      yield* guardKnowledgeCloneAttributes(repoDir);
-      const attributesPath = path.join(repoDir, ".git", "info", "attributes");
-      yield* fs.writeFileString(attributesPath, "");
-      yield* guardKnowledgeCloneAttributes(repoDir);
+        yield* guardKnowledgeCloneAttributes(repoDir);
+        const attributesPath = path.join(repoDir, ".git", "info", "attributes");
+        yield* fs.writeFileString(attributesPath, "");
+        yield* guardKnowledgeCloneAttributes(repoDir);
 
-      yield* fs.writeFileString(attributesPath, "*.md eol=crlf\n");
-      const failure = yield* Effect.flip(guardKnowledgeCloneAttributes(repoDir));
-      assert.strictEqual(failure._tag, "KnowledgeCloneAttributesError");
-      if (failure._tag === "KnowledgeCloneAttributesError") {
-        assert.strictEqual(failure.attributesPath, attributesPath);
-        assert.include(failure.message, attributesPath);
-      }
-    }).pipe(provideScopedLayer(testLayer))
-  );
+        yield* fs.writeFileString(attributesPath, "*.md eol=crlf\n");
+        const failure = yield* Effect.flip(guardKnowledgeCloneAttributes(repoDir));
+        assert.strictEqual(failure._tag, "KnowledgeCloneAttributesError");
+        if (failure._tag === "KnowledgeCloneAttributesError") {
+          assert.strictEqual(failure.attributesPath, attributesPath);
+          assert.include(failure.message, attributesPath);
+        }
+      })
+    );
+  });
 
-  it.effect("runs the guard on the live semantic-delta path before failing typed on an unresolvable base ref", () =>
-    Effect.gen(function* () {
-      const knowledge = yield* KnowledgeService;
-      const failure = yield* Effect.flip(knowledge.semanticDelta("refs/beep/definitely-missing-base"));
-      assert.strictEqual(failure._tag, "KnowledgeOperationalError");
-      assert.include(failure.message, "fetch-depth: 0");
-    }).pipe(provideScopedLayer(testLayer))
-  );
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("runs the guard on the live semantic-delta path before failing typed on an unresolvable base ref", () =>
+      Effect.gen(function* () {
+        const knowledge = yield* KnowledgeService;
+        const failure = yield* Effect.flip(knowledge.semanticDelta("refs/beep/definitely-missing-base"));
+        assert.strictEqual(failure._tag, "KnowledgeOperationalError");
+        assert.include(failure.message, "fetch-depth: 0");
+      })
+    );
+  });
 });

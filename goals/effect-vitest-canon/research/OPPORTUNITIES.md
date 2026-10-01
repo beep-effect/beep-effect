@@ -6195,3 +6195,15 @@ repo-configs narrowed them to HarnessLedger's stale ai-metrics declarations.
 The quick lane should identify stale referenced declaration outputs or explain
 its dependency-build prerequisite before presenting a cascade as source errors.
 Do not refresh lint baselines or alter production types to suppress this signal.
+
+### Scoped temporary directories with deliberate early removal
+
+Private qualification of `architecture-operation-plan.test.ts` exposed an
+important migration constraint: replacing its unscoped allocator directly with
+`makeTempDirectoryScoped` caused 11 failures on each runtime. Existing tests
+remove their roots early, and the platform finalizer then reported `NotFound`.
+Register cleanup at allocation with `acquireRelease`, use forceful removal to
+accept already-absent roots, and keep other release failures visible. Add an
+immediate setup-failure control rather than treating the successful test body
+as proof that the root lifetime is safe. This pattern should be checked when
+reviewing other temporary-directory migrations with explicit early removal.

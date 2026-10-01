@@ -34516,8 +34516,8 @@
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
-      "line": 31,
-      "endLine": 31,
+      "line": 27,
+      "endLine": 27,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -108834,6 +108834,28 @@
       "mechanization": "detector",
       "status": "exception",
       "reason": "withPartitionShim owns a native executable fixture and temporarily binds its PATH and command-log environment for one invocation. acquireUseRelease registers root cleanup before fallible setup and restores each prior environment value. This domain fixture remains per invocation; a shared layer would widen process-global state lifetime. See goals/effect-vitest-canon/research/ci-lane-scope-proof.md."
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:889:scoped@4#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+      "line": 889,
+      "endLine": 901,
+      "symbol": "scoped",
+      "occurrence": "v2:a11336cd16471f8e291fd6c25b63b9368eba6a54f378012abdd521931fefa881",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { if (payload === undefined) { return yield* resolveKnowledgeProbePolicy(env); } const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const di",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "policyFor owns one event payload directory per invocation and releases it immediately after policy resolution. Its shorter helper scope is intentional even within a layer test. Memory and native runtime qualification preserves policy assertions; see goals/effect-vitest-canon/research/knowledge-semantic-delta-scope-proof.md."
     }
   ]
 }
