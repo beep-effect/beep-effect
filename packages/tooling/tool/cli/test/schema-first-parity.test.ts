@@ -508,9 +508,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
             'import { SchemaUtils } from "@beep/schema";',
             "export const Named = S.String.pipe(SchemaUtils.withStatics((schema) => ({ encode: S.encodeUnknownSync(schema) })));",
             'export const Coded = S.String.pipe(SchemaUtils.withCodecStatics(["is"]));',
+            'export const Bracketed = S.String.pipe(SchemaUtils["withStatics"]((schema) => ({ guard: S.is(schema) })));',
           ])
         )
-      ).toEqual(["SFV4-codec-static Named::encode@<hash>", "SFV4-codec-static Coded::withCodecStatics@<hash>"]);
+      ).toEqual([
+        "SFV4-codec-static Named::encode@<hash>",
+        "SFV4-codec-static Coded::withCodecStatics@<hash>",
+        "SFV4-codec-static Bracketed::guard@<hash>",
+      ]);
       expect(declarationPathsOf(project.getSourceFileOrThrow(fixtureFile))("withCodecStatics")).toEqual([
         "src/SchemaUtils/withCodecStatics.ts",
       ]);

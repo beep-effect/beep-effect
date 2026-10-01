@@ -1445,6 +1445,20 @@ const unresolvedWithStatics = (expression: Node, name: string): boolean =>
       Str.Equivalence(name, "withStatics") &&
       O.exists(unresolvedReceiverModule(expression.getExpression()), (module) => module === "schema-utils");
 
+// For `receiver.name` / `receiver["name"]` whose member has no symbol of its own, the declarations of
+// that member on the receiver's type.
+const receiverMemberDeclarations = (
+  expression: Node,
+  name: string
+): O.Option<{ readonly name: string; readonly declarations: ReadonlyArray<Node> }> =>
+  Node.isPropertyAccessExpression(expression) || Node.isElementAccessExpression(expression)
+    ? pipe(
+        O.fromUndefinedOr(expression.getExpression().getType().getProperty(name)),
+        O.map((symbol) => ({ name: symbol.getName(), declarations: symbol.getDeclarations() })),
+        O.filter(({ declarations }) => A.isReadonlyArrayNonEmpty(declarations))
+      )
+    : O.none();
+
 // A `withStatics` callee resolved through the checker to the SchemaUtils declaration, whatever local
 // name or access form reaches it; when the module does not resolve, the import declaration decides.
 const isWithStaticsCallee = (callee: Node): boolean => {
@@ -1456,14 +1470,17 @@ const isWithStaticsCallee = (callee: Node): boolean => {
       O.map((target) => ({ name: target.getName(), declarations: target.getDeclarations() })),
       O.filter(({ declarations }) => A.isReadonlyArrayNonEmpty(declarations))
     );
-    return O.match(declarations, {
-      onSome: (target) =>
-        Str.Equivalence(target.name, "withStatics") &&
-        A.some(target.declarations, (declaration) =>
-          SCHEMA_UTILS_SOURCE_PATTERN.test(declaration.getSourceFile().getFilePath())
-        ),
-      onNone: () => unresolvedWithStatics(expression, name),
-    });
+    return O.match(
+      O.orElse(declarations, () => receiverMemberDeclarations(expression, name)),
+      {
+        onSome: (target) =>
+          Str.Equivalence(target.name, "withStatics") &&
+          A.some(target.declarations, (declaration) =>
+            SCHEMA_UTILS_SOURCE_PATTERN.test(declaration.getSourceFile().getFilePath())
+          ),
+        onNone: () => unresolvedWithStatics(expression, name),
+      }
+    );
   });
 };
 
