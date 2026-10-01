@@ -20,20 +20,20 @@ import {
 } from "@beep/repo-cli/commands/Ci";
 import { GithubJobRecord, GithubJobStepRecord, githubJobHasFailedStep } from "@beep/repo-cli/test/SharedInternals";
 import { findRepoRoot } from "@beep/repo-utils/Root";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
-import { ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Ref, Sink, Stream } from "effect";
+import { ConfigProvider, Effect, FileSystem, flow, Layer, Path, pipe, Ref, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { parseDocument } from "yaml";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const LOST_MESSAGE =
   "The self-hosted runner lost communication with the server. Verify the machine is running and has a healthy network connection.";
 const SHA = "c81bbe770a2898edc2f6c62921ee14bfa339315c";

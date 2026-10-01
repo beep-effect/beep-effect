@@ -531,7 +531,7 @@ const isCopyOf = (job: CiWorkflowJob) => (prior: CiWorkflowJob) =>
  * @param job - A job of some attempt.
  * @param runJobs - Jobs of the run's attempts; later attempts are ignored.
  * @returns The original job, or `None` when the job ran in its attempt.
- * @category detection
+ * @category utilities
  * @since 0.0.0
  */
 export const runnerLossCopiedFrom: {
@@ -583,7 +583,7 @@ export const runnerLossCopiedFrom: {
  * @param job - A job of the evaluated attempt.
  * @param runJobs - Every job of the run's attempts up to the evaluated one.
  * @returns The number of earlier reruns of the job, its own run included.
- * @category detection
+ * @category utilities
  * @since 0.0.0
  */
 export const runnerLossJobReruns: {
@@ -641,7 +641,7 @@ export const runnerLossJobReruns: {
  * @param job - One failed job row from the Actions jobs REST endpoint.
  * @param evidence - Its annotation messages and prior rerun count.
  * @returns The job with its runner-loss verdict.
- * @category detection
+ * @category utilities
  * @since 0.0.0
  */
 export const runnerLossFailedJob: {
