@@ -6165,3 +6165,22 @@ undefined (reading 'config')`; this is not a failing test assertion. Qualificati
 fixtures should resolve their runner, shared config, and dependency link from one
 checkout. A dedicated directory with the active checkout's dependency link is
 being used for the retry.
+
+### Nested-child readiness budget exceeds the test budget
+
+The nested admission test in `step-capture-lifecycle.test.ts` permits 2,000
+readiness polls at 10ms, followed by up to 300 death polls, while the enclosing
+test specifies 15 seconds. Under contention the outer timeout can interrupt the
+readiness loop before its own assertion explains the failure. The canonical
+runner migration preserves these existing bounds. A focused hardening change
+should use a readiness acknowledgement or allocate explicit readiness, cleanup
+and outer budgets, preserving the actual child-group cleanup assertions.
+
+### Worktree fixture ownership begins after setup
+
+`worktree-command.test.ts` creates its scratch directory and initializes two Git
+repositories inside the acquisition side of acquireUseRelease. A failure in
+initialization or the first push happens before its cleanup is registered. Its
+release also ignores removal failure. Use the existing scoped temporary-directory
+primitive at allocation time, retain independent nested fixture contexts, and
+verify cleanup both after success and after an injected initialization failure.
