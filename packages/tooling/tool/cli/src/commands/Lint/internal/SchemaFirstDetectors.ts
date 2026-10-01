@@ -24,8 +24,10 @@ import type {
   InterfaceDeclaration,
   MethodDeclaration,
   Symbol as MorphSymbol,
+  ObjectLiteralElementLike,
   ObjectLiteralExpression,
   SourceFile,
+  SpreadAssignment,
   Type,
   TypeAliasDeclaration,
   TypeElementTypes,
@@ -1495,6 +1497,15 @@ const localDeclaration = (identifier: Node): O.Option<Node> =>
     O.filter((declaration) => declaration.getSourceFile() === identifier.getSourceFile())
   );
 
+// The initializer of a `const` declaration; a `let` or `var` may be reassigned after it, so its
+// initializer says nothing about the value that is finally used.
+const constInitializer = (declaration: Node): O.Option<Node> =>
+  Node.isVariableDeclaration(declaration) &&
+  Node.isVariableDeclarationList(declaration.getParent()) &&
+  (declaration.getParent().getFlags() & ts.NodeFlags.Const) !== 0
+    ? O.fromUndefinedOr(declaration.getInitializer())
+    : O.none();
+
 // What an expression denotes after following `const` bindings in the same file.
 const followBinding = (node: Node, depth = 0): Node => {
   const value = unwrapParentheses(node);
@@ -1503,8 +1514,7 @@ const followBinding = (node: Node, depth = 0): Node => {
   }
   return pipe(
     localDeclaration(value),
-    O.filter(Node.isVariableDeclaration),
-    O.flatMap((declaration) => O.fromUndefinedOr(declaration.getInitializer())),
+    O.flatMap(constInitializer),
     O.match({ onNone: () => value, onSome: (initializer) => followBinding(initializer, depth + 1) })
   );
 };
@@ -1523,12 +1533,7 @@ const resolveStaticsCallback = (node: Node, depth = 0): O.Option<StaticsCallback
     O.flatMap((declaration) =>
       Node.isFunctionDeclaration(declaration)
         ? O.some<StaticsCallback>(declaration)
-        : Node.isVariableDeclaration(declaration)
-          ? pipe(
-              O.fromUndefinedOr(declaration.getInitializer()),
-              O.flatMap((initializer) => resolveStaticsCallback(initializer, depth + 1))
-            )
-          : O.none()
+        : O.flatMap(constInitializer(declaration), (initializer) => resolveStaticsCallback(initializer, depth + 1))
     )
   );
 };
@@ -1568,16 +1573,30 @@ const returnedStaticsObject = (callback: StaticsCallback): O.Option<ObjectLitera
     O.filter(Node.isObjectLiteralExpression)
   );
 
-// The members of a statics object, with spreads of locally bound objects flattened in.
-const staticsMembers = (object: ObjectLiteralExpression, depth = 0): ReadonlyArray<Node> =>
-  A.flatMap(object.getProperties(), (property) => {
+type StaticsMember = Exclude<ObjectLiteralElementLike, SpreadAssignment>;
+
+const NO_STATICS_MEMBERS: ReadonlyArray<StaticsMember> = A.empty();
+
+// Later members replace earlier members of the same name, as they do on the attached object.
+const overrideMembers = (
+  members: ReadonlyArray<StaticsMember>,
+  later: ReadonlyArray<StaticsMember>
+): ReadonlyArray<StaticsMember> => [
+  ...A.filter(members, (member) => !A.some(later, (next) => Str.Equivalence(next.getName(), member.getName()))),
+  ...later,
+];
+
+// The members a statics object attaches, with spreads of locally bound objects flattened in. A spread
+// that cannot be resolved may replace any earlier member, so none of those is known to survive it.
+const staticsMembers = (object: ObjectLiteralExpression, depth = 0): ReadonlyArray<StaticsMember> =>
+  A.reduce(object.getProperties(), NO_STATICS_MEMBERS, (members, property) => {
     if (!Node.isSpreadAssignment(property)) {
-      return [property];
+      return overrideMembers(members, [property]);
     }
     const spread = followBinding(property.getExpression());
     return Node.isObjectLiteralExpression(spread) && depth < FACADE_RESOLUTION_DEPTH
-      ? staticsMembers(spread, depth + 1)
-      : A.empty<Node>();
+      ? overrideMembers(members, staticsMembers(spread, depth + 1))
+      : NO_STATICS_MEMBERS;
   });
 
 // The effect/Schema codec function a call invokes (`S.is(...)` is `is`); none for any other call.
@@ -1608,26 +1627,24 @@ const isShadowed = (identifier: Node): boolean =>
       )
   );
 
-// The names that denote the schema: the callback's first parameter and the name of the declaration
-// the decorated schema is bound to (a parameterless callback closes over it).
-const schemaBindingNames = (callback: StaticsCallback, call: Node): HashSet.HashSet<string> => {
-  const parameters = O.toArray(O.map(A.head(callback.getParameters()), (declaration) => declaration.getName()));
-  const owner = O.toArray(
-    O.map(O.fromUndefinedOr(call.getFirstAncestorByKind(SyntaxKind.VariableDeclaration)), (declaration) =>
-      declaration.getName()
-    )
-  );
-  return HashSet.fromIterable([...parameters, ...owner]);
-};
+// The declarations that denote the schema: the callback's first parameter and the declaration the
+// decorated schema is bound to (a parameterless callback closes over it).
+type SchemaBindings = ReadonlyArray<Node>;
+
+const schemaBindings = (callback: StaticsCallback, call: Node): SchemaBindings => [
+  ...O.toArray(A.head(callback.getParameters())),
+  ...O.toArray(O.fromUndefinedOr(call.getFirstAncestorByKind(SyntaxKind.VariableDeclaration))),
+];
 
 // The schema itself, a member call on it (`schema.pipe(...)`), or a call that takes it
-// (`S.fromJsonString(schema)`). An identifier that merely appears inside (a property name) is not.
+// (`S.fromJsonString(schema)`). An identifier counts only when it resolves to the schema's own
+// declaration: a property name, or a parameter that shadows the schema, is not.
 const isSchemaOperand =
-  (bindings: HashSet.HashSet<string>) =>
+  (bindings: SchemaBindings) =>
   (node: Node): boolean => {
     const value = unwrapParentheses(node);
     if (Node.isIdentifier(value)) {
-      return HashSet.has(bindings, value.getText());
+      return O.exists(localDeclaration(value), (declaration) => A.some(bindings, (binding) => binding === declaration));
     }
     if (!Node.isCallExpression(value)) {
       return false;
@@ -1641,7 +1658,7 @@ const isSchemaOperand =
 
 // `S.<codec>(schema)` bound to the schema; `S.asserts` is binary and only forwards (below).
 const isSchemaCodec =
-  (schemaNames: HashSet.HashSet<string>, bindings: HashSet.HashSet<string>) =>
+  (schemaNames: HashSet.HashSet<string>, bindings: SchemaBindings) =>
   (node: Node): boolean =>
     Node.isCallExpression(node) &&
     O.exists(codecCallName(schemaNames)(node), (name) => !Str.Equivalence(name, "asserts")) &&
@@ -1656,7 +1673,7 @@ const isUnwrapperReference = (node: Node): boolean => {
 
 type FacadeContext = {
   readonly schemaNames: HashSet.HashSet<string>;
-  readonly bindings: HashSet.HashSet<string>;
+  readonly bindings: SchemaBindings;
 };
 
 const isCodecReference =
@@ -1777,8 +1794,7 @@ const staticsMemberValue = (member: Node): O.Option<readonly [name: string, valu
     return pipe(
       O.fromUndefinedOr(member.getProject().getTypeChecker().getShorthandAssignmentValueSymbol(member)),
       O.flatMap((symbol) => A.head(symbol.getDeclarations())),
-      O.filter(Node.isVariableDeclaration),
-      O.flatMap((declaration) => O.fromUndefinedOr(declaration.getInitializer())),
+      O.flatMap(constInitializer),
       O.map((value) => [member.getName(), value] as const)
     );
   }
@@ -1817,7 +1833,7 @@ const codecFacadeCandidates = (sourceFile: SourceFile): ReadonlyArray<ParityCand
           pipe(
             returnedStaticsObject(callback),
             O.map((object) => {
-              const facadeName = codecFacadeName({ schemaNames, bindings: schemaBindingNames(callback, call) });
+              const facadeName = codecFacadeName({ schemaNames, bindings: schemaBindings(callback, call) });
               return A.getSomes(
                 A.map(staticsMembers(object), (member) =>
                   O.map(facadeName(member), (name) => ({ wrapper: codecFacadeWrapper(name), node: member }))

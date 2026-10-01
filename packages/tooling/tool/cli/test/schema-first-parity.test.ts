@@ -522,6 +522,45 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
     })
   );
 
+  it.effect("judges the attached member: later overrides win, let bindings and shadowed schemas do not count", () =>
+    Effect.gen(function* () {
+      expect(
+        readable(
+          yield* parityEntries([
+            'import * as S from "effect/Schema";',
+            'import { SchemaUtils } from "@beep/schema";',
+            'import { importedStatics } from "./elsewhere";',
+            "const domainStatics = { is: (u: unknown) => typeof u === 'string' };",
+            "export const Overrides = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => ({ ...domainStatics, is: S.is(schema) }))",
+            ");",
+            "export const Overridden = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => ({ is: S.is(schema), ...domainStatics }))",
+            ");",
+            "export const Unknown = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => ({ is: S.is(schema), ...importedStatics }))",
+            ");",
+            "export const Reassigned = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => {",
+            "    let guard = S.is(schema);",
+            "    guard = (u: unknown): u is string => typeof u === 'string';",
+            "    return { guard };",
+            "  })",
+            ");",
+            "export const Shadowed = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => ({",
+            "    assert(schema: S.Top, value: unknown) {",
+            "      return S.asserts(schema, value);",
+            "    },",
+            "    check: (schema: S.Top, u: unknown) => S.asserts(schema, u),",
+            "  }))",
+            ");",
+          ])
+        )
+      ).toEqual(["SFV4-codec-static Overrides::is@<hash>"]);
+    })
+  );
+
   it.effect("leaves domain statics that use a codec internally unflagged", () =>
     Effect.gen(function* () {
       expect(
