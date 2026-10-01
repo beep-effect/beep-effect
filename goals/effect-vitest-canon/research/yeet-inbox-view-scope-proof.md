@@ -1,7 +1,8 @@
 # Yeet inbox-view fixture qualification
 
-Private candidate only. Applied root types, package proof and campaign closure
-remain pending. Memory promotion has not been evaluated for this candidate.
+The candidate is now applied with the restricted Memory promotion described
+below. Full package verification passes; campaign closure awaits the source
+commit.
 
 Thirteen live tests move to the public layer runner with excludeTestServices,
 retaining their original live clock semantics and native filesystem. Existing
@@ -23,4 +24,13 @@ missing inbox, unreadable directory and an unterminated-only file. Append
 operations and symlink rejection stay native. The broader trial failed eight
 Bun cases because native flock needs a physical cwd, despite passing Node.
 The restricted mixed suite passes 19 tests on Node (3.62 seconds) and Bun
-(2.39 seconds), and private types pass. This is still unapplied evidence.
+(2.39 seconds), and private types pass. The restricted candidate is now applied.
+
+Applied combined restoration/inbox tests pass 31 cases on Node (10.53 seconds)
+and Bun (6.00 seconds). All 19 test names and 40 assertion expressions remain
+unchanged. Both crypto-only registrations now have explicit 10-second setup
+hook budgets. The public runner retains live clock behavior for the migrated
+view cases. Full package verification passes.
+
+Final root test types and detector ratchet pass with zero introduced findings.
+Full package audit passes in 734.7 seconds and docgen in 28.4 seconds.
