@@ -3130,3 +3130,10 @@ preceding `426ccee8c7` revision and the signed root projection was prepared, but
 main changed Turbo inputs; refresh those bindings after the repair batch before
 issuing native evidence. Fallow, remaining resource-policy reviews, native v9
 qualification, semantic closure and adoption handoff remain outstanding.
+
+The next resource-policy batch removes 26 redundant producer/workflow test-body
+scopes, adds four layer hook budgets, migrates the producer property registration,
+and adopts eight Option assertion helpers. All 49 affected tests pass after
+integration; isolated test typechecking and package lint/check pass. The primary
+full scan now reports 21 new findings, with the intentional socket-release scope
+preserved and the inventory baseline unchanged.

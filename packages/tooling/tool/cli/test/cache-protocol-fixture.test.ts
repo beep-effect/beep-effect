@@ -6,7 +6,7 @@ import {
 } from "@beep/repo-cli/commands/Cache";
 import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue, notDeepStrictEqual } from "@effect/vitest/utils";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import { FetchHttpClient, Headers, HttpClient, HttpClientRequest } from "effect/http";
@@ -59,7 +59,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         const fixture = yield* makeCacheProtocolFixture(credentials);
         const status = yield* get(`${fixture.url}/v8/artifacts/status?teamId=${credentials.namespace}`);
         expect(status.status).toBe(200);
-        expect(Headers.get(status.headers, "content-type")).toEqual(O.some("application/json"));
+        assertSome(Headers.get(status.headers, "content-type"), "application/json");
         yield* status.text;
         for (const [hash, body] of [
           [artifactHash, bytes],
@@ -70,13 +70,13 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
           expect(yield* uploaded.text).toBe("");
           const downloaded = yield* get(endpoint(fixture.url, hash));
           expect(new Uint8Array(yield* downloaded.arrayBuffer)).toEqual(body);
-          expect(Headers.get(downloaded.headers, "x-artifact-tag")).toEqual(O.some(tag));
+          assertSome(Headers.get(downloaded.headers, "x-artifact-tag"), tag);
           const head = yield* HttpClient.head(endpoint(fixture.url, hash), {
             headers: { authorization: `Bearer ${reader}` },
           });
           expect(head.status).toBe(200);
           expect((yield* head.arrayBuffer).byteLength).toBe(0);
-          expect(Headers.get(head.headers, "content-length")).toEqual(O.some(`${body.byteLength}`));
+          assertSome(Headers.get(head.headers, "content-length"), `${body.byteLength}`);
         }
       })
     );
@@ -155,9 +155,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
           if (fault === "corrupt-body") expect(body).not.toEqual(bytes);
           else expect(body).toEqual(bytes);
           const responseTag = Headers.get(response.headers, "x-artifact-tag");
-          if (fault === "missing-tag") expect(responseTag).toEqual(O.none());
-          else if (fault === "invalid-tag") expect(responseTag).not.toEqual(O.some(tag));
-          else expect(responseTag).toEqual(O.some(tag));
+          if (fault === "missing-tag") assertNone(responseTag);
+          else if (fault === "invalid-tag") notDeepStrictEqual(responseTag, O.some(tag));
+          else assertSome(responseTag, tag);
         }
         const events = yield* fixture.events;
         const encoded = yield* S.encodeEffect(S.fromJsonString(S.Array(CacheFixtureEvent)))(events);
@@ -182,7 +182,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
             expect(read.status).toBe(fault === "unavailable" ? 503 : 429);
             expect(head.status).toBe(read.status);
             expect((yield* read.arrayBuffer).byteLength).toBe(0);
-            expect(Headers.get(read.headers, "x-artifact-tag")).toEqual(O.none());
+            assertNone(Headers.get(read.headers, "x-artifact-tag"));
           }
           // Failure injection cannot bypass authorization or namespace checks.
           expect((yield* HttpClient.get(endpoint(fixture.url))).status).toBe(401);
@@ -207,7 +207,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         const response = yield* get(endpoint(fixture.url));
         expect(response.status).toBe(200);
         expect(new Uint8Array(yield* response.arrayBuffer)).toEqual(bytes.subarray(0, bytes.byteLength - 1));
-        expect(Headers.get(response.headers, "x-artifact-tag")).toEqual(O.some(tag));
+        assertSome(Headers.get(response.headers, "x-artifact-tag"), tag);
         const empty = yield* get(endpoint(fixture.url, otherArtifactHash));
         expect((yield* empty.arrayBuffer).byteLength).toBe(0);
         yield* fixture.setScenario(CacheFixtureScenario.make({ id: "recovery", fault: "none" }));
