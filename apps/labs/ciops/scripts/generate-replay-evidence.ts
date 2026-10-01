@@ -43,7 +43,18 @@ const sha256 = Effect.fn("S7Evidence.sha256")(function* (content: string) {
   return Hex.encode(yield* crypto.digest("SHA-256", utf8.encode(content)));
 });
 
+const conflictingModes = PolicyDecodeError.make({
+  message:
+    "`--check` and `--write` are mutually exclusive; regenerate the frozen evidence with `bun run evidence:s7:write`.",
+});
+
 const generate = Effect.gen(function* () {
+  // The committed evidence is a frozen dated record, so writing is opt-in:
+  // only `--write` regenerates it, and never alongside `--check`.
+  const write = A.contains(process.argv, "--write");
+  if (write && A.contains(process.argv, "--check")) {
+    return yield* conflictingModes;
+  }
   const artifacts = yield* Effect.all(
     { abox: readArtifact(aboxPath), journal: readArtifact(journalPath) },
     { concurrency: 2 }
@@ -53,12 +64,12 @@ const generate = Effect.gen(function* () {
   const policyDigest = yield* sha256(artifacts.abox);
   const journalDigest = yield* sha256(artifacts.journal);
   const report = yield* replayAdmissionJournal(policy, events, policyDigest, journalDigest);
-  // Check mode recomputes and validates the frozen replay without regenerating
-  // the historical report (whose explanatory prose belongs to its packet).
-  if (A.contains(process.argv, "--check")) {
-    yield* Console.log(renderReplayEvidence(report, journalDigest));
-  } else {
+  // The default (check) mode recomputes and validates the frozen replay without
+  // regenerating the historical report (whose explanatory prose belongs to its packet).
+  if (write) {
     yield* writeEvidence(renderReplayEvidence(report, journalDigest));
+  } else {
+    yield* Console.log(renderReplayEvidence(report, journalDigest));
   }
   yield* requireReplayMatch(report);
 }).pipe(Effect.withSpan("S7Evidence.generate"));
