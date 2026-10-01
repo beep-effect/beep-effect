@@ -472,8 +472,12 @@ export const lintSchemaFirstCommand = Command.make(
         "With --write, also admit new upstream-parity occurrences into the backlog (initial capture only)"
       )
     ),
+    reportScannedFiles: Flag.Boolean("report-scanned-files").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print the files the scan ran its detectors over as one [schema-first:scanned] JSON line")
+    ),
   },
-  Effect.fn(function* ({ write, admitParityBacklog }) {
-    yield* runSchemaFirstLint(SchemaFirstLintOptions.make({ write, admitParityBacklog }));
+  Effect.fn(function* ({ write, admitParityBacklog, reportScannedFiles }) {
+    yield* runSchemaFirstLint(SchemaFirstLintOptions.make({ write, admitParityBacklog, reportScannedFiles }));
   })
 ).pipe(Command.withDescription("Verify the repo-wide schema-first inventory baseline"));

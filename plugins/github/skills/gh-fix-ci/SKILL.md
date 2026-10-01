@@ -47,7 +47,8 @@ Prereq: authenticate with GitHub CLI once, then confirm with `gh auth status`. R
        - `gh run view <run_id> --json name,workflowName,conclusion,status,url,event,headBranch,headSha`
        - `gh run view <run_id> --log`
      - If the run log says it is still in progress, fetch job logs directly:
-       - `gh api "/repos/<owner>/<repo>/actions/jobs/<job_id>/logs" > "<path>"`
+       - `gh api --allow-escape-sequences "/repos/<owner>/<repo>/actions/jobs/<job_id>/logs" > "<path>"`
+       - The flag is required: job logs contain ANSI colour codes, and without it `gh api` writes nothing to stdout and only warns on stderr, so the log looks empty.
 4. Scope non-GitHub Actions checks.
    - If `detailsUrl` is not a GitHub Actions run, label it as external and only report the URL.
    - Do not attempt Buildkite or other providers; keep the workflow lean.
