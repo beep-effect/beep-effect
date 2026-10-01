@@ -2,7 +2,9 @@
 
 **Scope:** this review reconciles citations only. It does not admit inputs, launch a census or provider, or grant P3, implementation or campaign credit.
 
-**Source binding** (re-checked when review.json was assembled): HEAD = origin/main = `50e9c4bc41bae20a916e75cdcaaa2c6df453bf6e`, branch `codex/boolean-creep-r53-remainder-2026-10-01`, clean tree, inventory sha256 `6e1026fd…df6f`.
+**R53 review binding:** the independent review ran at HEAD = origin/main = `50e9c4bc41bae20a916e75cdcaaa2c6df453bf6e` with input inventory SHA-256 `6e1026fd…df6f`. That binding is historical evidence for the R53 correction; it is not a claim about the current PR head.
+
+**Post-merge rebind:** the branch merged origin/main `5214ecbed958d30d8447487cf29677fcdc02de8e`. At parent `451e2d51df`, the non-packet source tree equals that main commit, the corrected inventory hashes to `a957b778…e207`, and `bun goals/boolean-creep/ops/validate-inventory.ts` reports `inventory OK: 723 records, 723 unique ids`. The merge changed cited CLI sources, so citation admission remains blocked on the R54 exact-source audit; this structural validator receipt does not replace that review.
 
 **Mapping base:** `cf97523f`. Prior reviewed source `7bd88007` is a packet commit whose non-packet tree equals `cf97523f`.
 
