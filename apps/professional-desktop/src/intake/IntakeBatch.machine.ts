@@ -93,12 +93,18 @@ const submitFile = fromEffect({
  * **Example** (Run a batch to completion)
  *
  * ```ts
+ * import { IntakeBatchInput, batchIdFor } from "@/intake/DocumentIntake.models"
  * import { intakeBatchMachine } from "@/intake/IntakeBatch.machine"
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
  * import { createEffectActor, join } from "@xstate/effect"
  * import * as Effect from "effect/Effect"
- * import type { IntakeBatchInput } from "@/intake/DocumentIntake.models"
  *
- * declare const input: IntakeBatchInput
+ * const files = [new File(["text"], "Brief.txt")]
+ * const input = IntakeBatchInput.make({
+ *   intakeBatchId: batchIdFor(files),
+ *   workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
+ *   files
+ * })
  * const program = Effect.gen(function* () {
  *   const actor = yield* createEffectActor(intakeBatchMachine, { input })
  *   return yield* join(actor)
@@ -106,7 +112,7 @@ const submitFile = fromEffect({
  * console.log(program)
  * ```
  *
- * @category machines
+ * @category workflows
  * @since 0.0.0
  */
 export const intakeBatchMachine = setupEffect({

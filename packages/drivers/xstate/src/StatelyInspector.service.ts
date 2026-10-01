@@ -167,12 +167,14 @@ const makeEnabledService = Effect.fn("StatelyInspector.makeEnabledService")(func
  *
  * ```ts
  * import { StatelyInspector } from "@beep/xstate"
- * import { Effect } from "effect"
- * import type { InspectableActor } from "@beep/xstate"
+ * import { createEffectActor } from "@xstate/effect"
+ * import * as Effect from "effect/Effect"
+ * import { createMachine } from "xstate"
  *
- * declare const actor: InspectableActor
+ * const toggle = createMachine({ initial: "off", states: { off: { on: { TOGGLE: { target: "on" } } }, on: {} } })
  * const program = Effect.gen(function* () {
  *   const inspector = yield* StatelyInspector
+ *   const actor = yield* createEffectActor(toggle)
  *   yield* inspector.attach(actor)
  * })
  * console.log(program)
@@ -255,10 +257,13 @@ export class StatelyInspector extends Context.Service<StatelyInspector, StatelyI
  *
  * ```ts
  * import { inspectActor } from "@beep/xstate"
- * import type { InspectableActor } from "@beep/xstate"
+ * import { createEffectActor } from "@xstate/effect"
+ * import * as Effect from "effect/Effect"
+ * import { createMachine } from "xstate"
  *
- * declare const actor: InspectableActor
- * console.log(inspectActor(actor))
+ * const toggle = createMachine({ initial: "off", states: { off: { on: { TOGGLE: { target: "on" } } }, on: {} } })
+ * const program = Effect.flatMap(createEffectActor(toggle), inspectActor)
+ * console.log(program)
  * ```
  *
  * @param actor - Actor handle exposing `inspect`.

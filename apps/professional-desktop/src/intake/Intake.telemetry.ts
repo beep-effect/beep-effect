@@ -24,19 +24,22 @@ const decodeIntakeLogRequest = S.decodeUnknownOption(IntakeLogRequest);
  * context and is interrupted if the actor stops first. Params that are not a
  * log request are ignored.
  *
- * **Example** (Run the action outside a machine)
+ * **Example** (Register the action on a machine)
  *
  * ```ts
  * import { logIntakeCause } from "@/intake/Intake.telemetry"
- * import type { EffectActionArgs } from "@xstate/effect"
+ * import { setupEffect } from "@xstate/effect"
  *
- * declare const args: EffectActionArgs
- * console.log(logIntakeCause(args))
+ * const machine = setupEffect({ actions: { logIntakeCause } }).createMachine({
+ *   initial: "idle",
+ *   states: { idle: {} }
+ * })
+ * console.log(machine.id)
  * ```
  *
  * @param args - Action arguments; `params` carries the log request.
  * @returns An Effect that writes one redacted warning.
- * @category actions
+ * @category observability
  * @since 0.0.0
  */
 export const logIntakeCause = ({ params }: EffectActionArgs): Effect.Effect<void> =>

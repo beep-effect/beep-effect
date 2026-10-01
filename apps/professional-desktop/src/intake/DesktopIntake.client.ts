@@ -54,7 +54,7 @@ export class DesktopIntakeClient extends AtomRpc.Service<DesktopIntakeClient>()(
  *
  * @param workspaceId - Workspace whose vault configuration is keyed.
  * @returns The reactivity key for that workspace's vault configuration.
- * @category reactivity
+ * @category identifiers
  * @since 0.0.0
  */
 export const workspaceVaultKey = (workspaceId: WorkspaceIdentity.WorkspaceId): string =>

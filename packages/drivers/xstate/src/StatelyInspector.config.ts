@@ -105,7 +105,7 @@ export class StatelyInspectorConfig extends S.Class<StatelyInspectorConfig>($I`S
  *
  * ```ts
  * import { StatelyInspectorConfigFromEnv } from "@beep/xstate"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.map(StatelyInspectorConfigFromEnv, (config) => config.enabled)
  * console.log(program)

@@ -43,7 +43,7 @@ const sampleOptions = (options?: Arbitrary.SampleOptions): Arbitrary.SampleOptio
  *
  * ```ts
  * import { arbitraryFromSchema } from "@beep/xstate/test"
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function"
  * import * as S from "effect/Schema"
  *
  * const Reviewer = S.Struct({ reviewer: S.NonEmptyString })
@@ -55,7 +55,7 @@ const sampleOptions = (options?: Arbitrary.SampleOptions): Arbitrary.SampleOptio
  * @param schema - Schema the payload must satisfy.
  * @param options - Sampling options.
  * @returns A fast-check arbitrary over sampled schema values.
- * @category generators
+ * @category testing
  * @since 0.0.0
  */
 export const arbitraryFromSchema: {
@@ -112,7 +112,7 @@ const isSchemaRecord = (input: unknown): input is Readonly<Record<string, S.Cons
  * @param schemas - Payload schemas keyed by event type.
  * @param options - Sampling options shared by every event.
  * @returns Generators keyed by event type.
- * @category generators
+ * @category testing
  * @since 0.0.0
  */
 export const eventsFromSchemas: {
@@ -262,7 +262,8 @@ const makeEffectActorSession = <TLogic extends AnyActorLogic>(
  *
  * ```ts
  * import { effectActorSut } from "@beep/xstate/test"
- * import { Layer, pipe } from "effect"
+ * import { pipe } from "effect/Function"
+ * import * as Layer from "effect/Layer"
  * import { createMachine } from "xstate"
  *
  * const toggle = createMachine({ initial: "off", states: { off: { on: { TOGGLE: { target: "on" } } }, on: {} } })
@@ -274,7 +275,7 @@ const makeEffectActorSession = <TLogic extends AnyActorLogic>(
  * @param logic - Machine or actor logic to host.
  * @param options - Runtime layer, projection and settle timeout.
  * @returns A `TestSut` for `@xstate/test`.
- * @category sut
+ * @category testing
  * @since 0.0.0
  */
 export const effectActorSut: {

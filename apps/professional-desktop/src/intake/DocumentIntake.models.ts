@@ -493,6 +493,21 @@ const IntakeBatchSequence = S.Int.check(S.isGreaterThan(0)).pipe(
 /**
  * Input of one intake batch actor: the files of one drop and where they go.
  *
+ * **Example** (Create batch input)
+ *
+ * ```ts
+ * import { IntakeBatchInput, batchIdFor } from "@/intake/DocumentIntake.models"
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ *
+ * const files = [new File(["text"], "Brief.txt")]
+ * const input = IntakeBatchInput.make({
+ *   intakeBatchId: batchIdFor(files),
+ *   workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
+ *   files
+ * })
+ * console.log(input.files.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -510,6 +525,23 @@ export class IntakeBatchInput extends S.Class<IntakeBatchInput>($I`IntakeBatchIn
 /**
  * Context of one intake batch actor: its input, a cursor over the files and
  * the outcomes recorded so far.
+ *
+ * **Example** (Create the initial batch context)
+ *
+ * ```ts
+ * import { IntakeBatchContext, batchIdFor } from "@/intake/DocumentIntake.models"
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ *
+ * const files = [new File(["text"], "Brief.txt")]
+ * const context = IntakeBatchContext.make({
+ *   intakeBatchId: batchIdFor(files),
+ *   workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
+ *   files,
+ *   cursor: 0,
+ *   entries: []
+ * })
+ * console.log(context.cursor) // 0
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -529,6 +561,19 @@ export class IntakeBatchContext extends S.Class<IntakeBatchContext>($I`IntakeBat
 /**
  * Final output of one intake batch actor.
  *
+ * **Example** (Create a settled batch output)
+ *
+ * ```ts
+ * import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch"
+ * import { IntakeBatchOutput, IntakeResultEntry } from "@/intake/DocumentIntake.models"
+ *
+ * const output = IntakeBatchOutput.make({
+ *   intakeBatchId: IntakeBatchId.make("batch-1"),
+ *   entries: [IntakeResultEntry.cases.failure.make({ fileName: "empty.txt", message: "This file is empty." })]
+ * })
+ * console.log(output.entries.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -545,6 +590,15 @@ export class IntakeBatchOutput extends S.Class<IntakeBatchOutput>($I`IntakeBatch
 /**
  * Per-state context of the batch states that work on one file: the file is present.
  *
+ * **Example** (Narrow the context to one file)
+ *
+ * ```ts
+ * import { IntakeCurrentFileContext } from "@/intake/DocumentIntake.models"
+ *
+ * const context = IntakeCurrentFileContext.make({ current: new File(["text"], "Brief.txt") })
+ * console.log(context.current.name) // "Brief.txt"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -558,6 +612,15 @@ export class IntakeCurrentFileContext extends S.Class<IntakeCurrentFileContext>(
 /**
  * Input of the file-read actor.
  *
+ * **Example** (Create file-read input)
+ *
+ * ```ts
+ * import { ReadFileInput } from "@/intake/DocumentIntake.models"
+ *
+ * const input = ReadFileInput.make({ file: new File(["text"], "Brief.txt") })
+ * console.log(input.file.name) // "Brief.txt"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -570,6 +633,15 @@ export class ReadFileInput extends S.Class<ReadFileInput>($I`ReadFileInput`)(
 
 /**
  * State input of the batch `refused` state: why the file was refused.
+ *
+ * **Example** (Create refused state input)
+ *
+ * ```ts
+ * import { IntakeRefusedStateInput } from "@/intake/DocumentIntake.models"
+ *
+ * const input = IntakeRefusedStateInput.make({ message: "This file is empty." })
+ * console.log(input.message)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -589,6 +661,15 @@ export class IntakeRefusedStateInput extends S.Class<IntakeRefusedStateInput>($I
  * Bytes travel as state input so they never enter the actor's context, which
  * snapshots, inspection and persistence all read.
  *
+ * **Example** (Create submitting state input)
+ *
+ * ```ts
+ * import { IntakeSubmittingStateInput } from "@/intake/DocumentIntake.models"
+ *
+ * const input = IntakeSubmittingStateInput.make({ content: new Uint8Array([1, 2, 3]) })
+ * console.log(input.content.byteLength) // 3
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -601,6 +682,16 @@ export class IntakeSubmittingStateInput extends S.Class<IntakeSubmittingStateInp
 
 /**
  * Notifications an intake batch actor emits while it works.
+ *
+ * **Example** (Check a file result notification)
+ *
+ * ```ts
+ * import { IntakeBatchEmitted, IntakeResultEntry } from "@/intake/DocumentIntake.models"
+ * import * as S from "effect/Schema"
+ *
+ * const entry = IntakeResultEntry.cases.failure.make({ fileName: "empty.txt", message: "This file is empty." })
+ * console.log(S.is(IntakeBatchEmitted["file.result"])({ entry })) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -645,6 +736,26 @@ export class DocumentIntakeInput extends S.Class<DocumentIntakeInput>($I`Documen
  * `vaultFailure` is an optional key that the `vault.unconfigured.failed` state
  * narrows to a required one through its per-state context schema.
  *
+ * **Example** (Create the initial intake context)
+ *
+ * ```ts
+ * import { DocumentIntakeContext } from "@/intake/DocumentIntake.models"
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ * import * as O from "effect/Option"
+ *
+ * const context = DocumentIntakeContext.make({
+ *   workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
+ *   configRetryBaseMillis: 2000,
+ *   configAttempt: 0,
+ *   batchSequence: 0,
+ *   liveBatches: [],
+ *   results: [],
+ *   manualDraftPath: O.none(),
+ *   manualMessage: O.none()
+ * })
+ * console.log(context.liveBatches.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -668,6 +779,15 @@ export class DocumentIntakeContext extends S.Class<DocumentIntakeContext>($I`Doc
 /**
  * Per-state context of `vault.unconfigured.failed`: the failure message is present.
  *
+ * **Example** (Narrow the context to a failure)
+ *
+ * ```ts
+ * import { VaultFailureContext } from "@/intake/DocumentIntake.models"
+ *
+ * const context = VaultFailureContext.make({ vaultFailure: "Vault store unavailable." })
+ * console.log(context.vaultFailure)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -681,6 +801,15 @@ export class VaultFailureContext extends S.Class<VaultFailureContext>($I`VaultFa
 /**
  * State input of the two `saving` states: the vault root being persisted.
  *
+ * **Example** (Create saving state input)
+ *
+ * ```ts
+ * import { VaultSavingStateInput } from "@/intake/DocumentIntake.models"
+ *
+ * const input = VaultSavingStateInput.make({ vaultRootPath: "/vault" })
+ * console.log(input.vaultRootPath) // "/vault"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -693,6 +822,15 @@ export class VaultSavingStateInput extends S.Class<VaultSavingStateInput>($I`Vau
 
 /**
  * State input of the picker `saveFailed` state: the operator-safe failure message.
+ *
+ * **Example** (Create save-failed state input)
+ *
+ * ```ts
+ * import { VaultFailureStateInput } from "@/intake/DocumentIntake.models"
+ *
+ * const input = VaultFailureStateInput.make({ message: "Vault store unavailable." })
+ * console.log(input.message)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -821,6 +959,16 @@ export const ManualOutcome = ManualOutcomeKind.mapMembers(
 /**
  * Input of the vault-root persistence actor.
  *
+ * **Example** (Create persistence input)
+ *
+ * ```ts
+ * import { PersistVaultRootInput } from "@/intake/DocumentIntake.models"
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ *
+ * const input = PersistVaultRootInput.make({ workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID, vaultRootPath: "/vault" })
+ * console.log(input.vaultRootPath) // "/vault"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -836,6 +984,16 @@ export class PersistVaultRootInput extends S.Class<PersistVaultRootInput>($I`Per
 
 /**
  * Input of the vault configuration feed actor.
+ *
+ * **Example** (Create feed input)
+ *
+ * ```ts
+ * import { VaultConfigFeedInput } from "@/intake/DocumentIntake.models"
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ *
+ * const input = VaultConfigFeedInput.make({ workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID })
+ * console.log(input.workspaceId)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -889,6 +1047,15 @@ const IntakeFilesPayload = S.Struct({ files: S.Array(IntakeFile) });
  * XState reads event schemas as a record keyed by type. The `satisfies` clause
  * keeps that record exhaustive over {@link IntakeEventType}.
  *
+ * **Example** (Check a public event payload)
+ *
+ * ```ts
+ * import { IntakeEventPayloads } from "@/intake/DocumentIntake.models"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(IntakeEventPayloads.DRAG_LEAVE)({ leftSurface: true })) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -913,6 +1080,16 @@ export const IntakeEventPayloads = {
  * snapshots and `BATCH_REQUESTED` from a drop or file selection. Both are
  * absent from the type of `actor.send`.
  *
+ * **Example** (Check an internal event payload)
+ *
+ * ```ts
+ * import { IntakeInternalEventPayloads } from "@/intake/DocumentIntake.models"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(IntakeInternalEventPayloads.VAULT_CONFIG_RESOLVED)({ vaultRootPath: O.some("/vault") })) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -930,6 +1107,16 @@ export const IntakeInternalEventPayloads = {
  * event mapped by `enq.listen` or `enq.subscribeTo` is delivered with the
  * child as its sender. These two therefore sit in the public protocol even
  * though the intake surface never sends them.
+ *
+ * **Example** (Check a relayed file result)
+ *
+ * ```ts
+ * import { IntakeBatchRelayPayloads, IntakeResultEntry } from "@/intake/DocumentIntake.models"
+ * import * as S from "effect/Schema"
+ *
+ * const entry = IntakeResultEntry.cases.failure.make({ fileName: "empty.txt", message: "This file is empty." })
+ * console.log(S.is(IntakeBatchRelayPayloads.FILE_RESULT)({ entry })) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -969,6 +1156,16 @@ export type VaultSelectionOutcome = typeof VaultSelectionOutcome.Type;
 
 /**
  * Notifications the document intake actor emits.
+ *
+ * **Example** (Check a settled-batch notification)
+ *
+ * ```ts
+ * import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch"
+ * import { DocumentIntakeEmitted } from "@/intake/DocumentIntake.models"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(DocumentIntakeEmitted["batch.settled"])({ intakeBatchId: IntakeBatchId.make("batch-1"), fileCount: 1 })) // true
+ * ```
  *
  * @category models
  * @since 0.0.0

@@ -145,7 +145,7 @@ const persistVaultRoot = fromEffect({
  * console.log(program)
  * ```
  *
- * @category machines
+ * @category workflows
  * @since 0.0.0
  */
 export const documentIntakeMachine = setupEffect({
@@ -571,11 +571,19 @@ export type DocumentIntakeSnapshot = SnapshotFrom<typeof documentIntakeMachine>;
  * **Example** (Read the status of a snapshot)
  *
  * ```ts
- * import { vaultStatusOf } from "@/intake/DocumentIntake.machine"
- * import type { DocumentIntakeSnapshot } from "@/intake/DocumentIntake.machine"
+ * import { documentIntakeMachine, vaultStatusOf } from "@/intake/DocumentIntake.machine"
+ * import { DocumentIntakeInput } from "@/intake/DocumentIntake.models"
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ * import { createEffectActor } from "@xstate/effect"
+ * import * as Effect from "effect/Effect"
  *
- * declare const snapshot: DocumentIntakeSnapshot
- * console.log(vaultStatusOf(snapshot))
+ * const program = Effect.gen(function* () {
+ *   const actor = yield* createEffectActor(documentIntakeMachine, {
+ *     input: DocumentIntakeInput.make({ workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID })
+ *   })
+ *   return vaultStatusOf(actor.getSnapshot())
+ * })
+ * console.log(program)
  * ```
  *
  * @param snapshot - Intake actor snapshot.
@@ -604,11 +612,19 @@ export const vaultStatusOf = (snapshot: DocumentIntakeSnapshot): DocumentIntakeV
  * **Example** (Read the selection view of a snapshot)
  *
  * ```ts
- * import { vaultSelectionOf } from "@/intake/DocumentIntake.machine"
- * import type { DocumentIntakeSnapshot } from "@/intake/DocumentIntake.machine"
+ * import { documentIntakeMachine, vaultSelectionOf } from "@/intake/DocumentIntake.machine"
+ * import { DocumentIntakeInput } from "@/intake/DocumentIntake.models"
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ * import { createEffectActor } from "@xstate/effect"
+ * import * as Effect from "effect/Effect"
  *
- * declare const snapshot: DocumentIntakeSnapshot
- * console.log(vaultSelectionOf(snapshot).kind)
+ * const program = Effect.gen(function* () {
+ *   const actor = yield* createEffectActor(documentIntakeMachine, {
+ *     input: DocumentIntakeInput.make({ workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID })
+ *   })
+ *   return vaultSelectionOf(actor.getSnapshot()).kind
+ * })
+ * console.log(program)
  * ```
  *
  * @param snapshot - Intake actor snapshot.
@@ -647,11 +663,19 @@ export const vaultSelectionOf = (snapshot: DocumentIntakeSnapshot): VaultSelecti
  * **Example** (Project a snapshot)
  *
  * ```ts
- * import { documentIntakeStateOf } from "@/intake/DocumentIntake.machine"
- * import type { DocumentIntakeSnapshot } from "@/intake/DocumentIntake.machine"
+ * import { documentIntakeMachine, documentIntakeStateOf } from "@/intake/DocumentIntake.machine"
+ * import { DocumentIntakeInput } from "@/intake/DocumentIntake.models"
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ * import { createEffectActor } from "@xstate/effect"
+ * import * as Effect from "effect/Effect"
  *
- * declare const snapshot: DocumentIntakeSnapshot
- * console.log(documentIntakeStateOf(snapshot).activeBatches)
+ * const program = Effect.gen(function* () {
+ *   const actor = yield* createEffectActor(documentIntakeMachine, {
+ *     input: DocumentIntakeInput.make({ workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID })
+ *   })
+ *   return documentIntakeStateOf(actor.getSnapshot()).activeBatches
+ * })
+ * console.log(program)
  * ```
  *
  * @param snapshot - Intake actor snapshot.
