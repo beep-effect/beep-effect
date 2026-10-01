@@ -55,7 +55,7 @@ One named full-report transformation checks the old decoded Options, payload equ
 
 Placement stays within `Runners.schemas.ts`; comparison of AWS observations stays in `Runners.service.ts`; rendering and effects stay in `Runners.command.ts`. Existing command-role standards at `standards/architecture/07-non-slice-families.md:337-357` support these locations. A shared utility package or a new helper role is not justified by this one command. No new public probe kind, variant, legacy struct, or helper carrier is added to the curated barrel. The existing two public report names retain responsibility for the model and wire codec.
 
-Dependency baseline is Effect `4.0.0-rc.117` (`package.json:161`).
+Dependency baseline is Effect `4.0.0` snapshot `b5a2d4c1d6` (`package.json:161`).
 Both installed and local-reference SchemaTransformation source now expose
 `transformEffect`, not the historical `transformOrFail`. Bind current API bytes
 and validate the actual class-backed constructor and codec composition during

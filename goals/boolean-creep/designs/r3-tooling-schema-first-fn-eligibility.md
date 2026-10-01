@@ -238,31 +238,31 @@ Only earlier const-assertion iteration changed; appendFunctionEntries body is un
 
 ### Current named test locations
 
-- `packages/tooling/tool/cli/test/schema-first.test.ts:43` — applies decoding defaults for FileGenerationPlanInput.symlinks
-- `packages/tooling/tool/cli/test/schema-first.test.ts:58` — uses tagged-union helpers for GenerationAction
-- `packages/tooling/tool/cli/test/schema-first.test.ts:74` — creates deterministic plans via schema-backed input
-- `packages/tooling/tool/cli/test/schema-first.test.ts:105` — exposes toTaggedUnion helpers for VersionSyncOptions
-- `packages/tooling/tool/cli/test/schema-first.test.ts:124` — excludes generated docs examples from source-law scans
-- `packages/tooling/tool/cli/test/schema-first.test.ts:132` — recognizes repo-owned schema arbitrary helpers as schema-derived property coverage
-- `packages/tooling/tool/cli/test/schema-first.test.ts:182` — resolves schema-crispening wave families by path prefix
-- `packages/tooling/tool/cli/test/schema-first.test.ts:210` — exempts nothing when the policy document is absent (fail-safe)
-- `packages/tooling/tool/cli/test/schema-first.test.ts:214` — does not exempt an entry whose ruleId is not a policy-tracked card
-- `packages/tooling/tool/cli/test/schema-first.test.ts:226` — exempts a tracked card whose resolved family is non-blocking
-- `packages/tooling/tool/cli/test/schema-first.test.ts:238` — does not exempt a tracked card whose resolved family is blocking
-- `packages/tooling/tool/cli/test/schema-first.test.ts:250` — lets a blocking owner override win over a non-blocking family
-- `packages/tooling/tool/cli/test/schema-first.test.ts:262` — treats an unassigned family (e.g. packages/shared) as non-blocking, hence exempt
-- `packages/tooling/tool/cli/test/schema-first.test.ts:281` — fires for an exported function with an inline object parameter contract
-- `packages/tooling/tool/cli/test/schema-first.test.ts:296` — does not fire for a generic exported function
-- `packages/tooling/tool/cli/test/schema-first.test.ts:310` — fires for a trim() call beside a schema decode in the same exported function
-- `packages/tooling/tool/cli/test/schema-first.test.ts:335` — does not fire for a module-top-level trim() call
-- `packages/tooling/tool/cli/test/schema-first.test.ts:346` — fires for an exported function with an explicit null return annotation
-- `packages/tooling/tool/cli/test/schema-first.test.ts:360` — does not fire for a function without an explicit return annotation
-- `packages/tooling/tool/cli/test/schema-first.test.ts:375` — does not fire when nullish values are carried inside an approved return wrapper
-- `packages/tooling/tool/cli/test/schema-first.test.ts:398` — fires for R.getSomes over an inline Option-struct literal
-- `packages/tooling/tool/cli/test/schema-first.test.ts:412` — does not fire for R.getSomes over an identifier dictionary argument
-- `packages/tooling/tool/cli/test/schema-first.test.ts:458` — resolves the fixture paths to the flipped and still-exempt families
-- `packages/tooling/tool/cli/test/schema-first.test.ts:465` — counts the foundation violation and exempts the drivers violation (flipped policy)
-- `packages/tooling/tool/cli/test/schema-first.test.ts:491` — keeps the same ratchet result against the real committed policy document
+- `packages/tooling/tool/cli/test/schema-first.test.ts:44` — applies decoding defaults for FileGenerationPlanInput.symlinks
+- `packages/tooling/tool/cli/test/schema-first.test.ts:59` — uses tagged-union helpers for GenerationAction
+- `packages/tooling/tool/cli/test/schema-first.test.ts:75` — creates deterministic plans via schema-backed input
+- `packages/tooling/tool/cli/test/schema-first.test.ts:106` — exposes toTaggedUnion helpers for VersionSyncOptions
+- `packages/tooling/tool/cli/test/schema-first.test.ts:125` — excludes generated docs examples from source-law scans
+- `packages/tooling/tool/cli/test/schema-first.test.ts:133` — recognizes repo-owned schema arbitrary helpers as schema-derived property coverage
+- `packages/tooling/tool/cli/test/schema-first.test.ts:183` — resolves schema-crispening wave families by path prefix
+- `packages/tooling/tool/cli/test/schema-first.test.ts:211` — exempts nothing when the policy document is absent (fail-safe)
+- `packages/tooling/tool/cli/test/schema-first.test.ts:215` — does not exempt an entry whose ruleId is not a policy-tracked card
+- `packages/tooling/tool/cli/test/schema-first.test.ts:227` — exempts a tracked card whose resolved family is non-blocking
+- `packages/tooling/tool/cli/test/schema-first.test.ts:239` — does not exempt a tracked card whose resolved family is blocking
+- `packages/tooling/tool/cli/test/schema-first.test.ts:251` — lets a blocking owner override win over a non-blocking family
+- `packages/tooling/tool/cli/test/schema-first.test.ts:263` — treats an unassigned family (e.g. packages/shared) as non-blocking, hence exempt
+- `packages/tooling/tool/cli/test/schema-first.test.ts:282` — fires for an exported function with an inline object parameter contract
+- `packages/tooling/tool/cli/test/schema-first.test.ts:297` — does not fire for a generic exported function
+- `packages/tooling/tool/cli/test/schema-first.test.ts:311` — fires for a trim() call beside a schema decode in the same exported function
+- `packages/tooling/tool/cli/test/schema-first.test.ts:336` — does not fire for a module-top-level trim() call
+- `packages/tooling/tool/cli/test/schema-first.test.ts:347` — fires for an exported function with an explicit null return annotation
+- `packages/tooling/tool/cli/test/schema-first.test.ts:361` — does not fire for a function without an explicit return annotation
+- `packages/tooling/tool/cli/test/schema-first.test.ts:376` — does not fire when nullish values are carried inside an approved return wrapper
+- `packages/tooling/tool/cli/test/schema-first.test.ts:399` — fires for R.getSomes over an inline Option-struct literal
+- `packages/tooling/tool/cli/test/schema-first.test.ts:413` — does not fire for R.getSomes over an identifier dictionary argument
+- `packages/tooling/tool/cli/test/schema-first.test.ts:459` — resolves the fixture paths to the flipped and still-exempt families
+- `packages/tooling/tool/cli/test/schema-first.test.ts:466` — counts the foundation violation and exempts the drivers violation (flipped policy)
+- `packages/tooling/tool/cli/test/schema-first.test.ts:492` — keeps the same ratchet result against the real committed policy document
 - `packages/tooling/tool/cli/test/lint-command.test.ts:146` — reports runtime and schema metadata violations through the pure test seam
 - `packages/tooling/tool/cli/test/lint-command.test.ts:242` — constructs unique content-cache shard commands at concurrency four
 - `packages/tooling/tool/cli/test/lint-command.test.ts:248` — fails the aggregate when any shard exits nonzero

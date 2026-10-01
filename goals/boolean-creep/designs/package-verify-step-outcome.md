@@ -156,25 +156,25 @@ Complete source byte-identical to its authoritative R37 locator receipt. Retain 
 
 ### Current named test locations
 
-- `packages/tooling/tool/cli/test/package-verify.test.ts:116` — builds quick and default step specs
-- `packages/tooling/tool/cli/test/package-verify.test.ts:121` — builds upstream audit dependencies through Turbo before the package script
-- `packages/tooling/tool/cli/test/package-verify.test.ts:144` — does not run the package audit when its closure build fails
-- `packages/tooling/tool/cli/test/package-verify.test.ts:174` — refreshes environment-only stale upstream output before running the audit
-- `packages/tooling/tool/cli/test/package-verify.test.ts:205` — runs the audit when Turbo skips fresh upstream builds from cache
-- `packages/tooling/tool/cli/test/package-verify.test.ts:234` — attributes an audit failure after a successful dependency build
-- `packages/tooling/tool/cli/test/package-verify.test.ts:261` — maps dependency-build spawn failures to the package-verify error surface
-- `packages/tooling/tool/cli/test/package-verify.test.ts:281` — runs quick verification and records the repository head
-- `packages/tooling/tool/cli/test/package-verify.test.ts:306` — skips the dependency build when the package has no audit script
-- `packages/tooling/tool/cli/test/package-verify.test.ts:329` — surfaces malformed workspace manifests
-- `packages/tooling/tool/cli/test/package-verify.test.ts:350` — surfaces a missing repository HEAD after verification
-- `packages/tooling/tool/cli/test/package-verify.test.ts:367` — rejects more than one package argument before discovery
-- `packages/tooling/tool/cli/test/package-verify.test.ts:378` — selects an explicit workspace package
-- `packages/tooling/tool/cli/test/package-verify.test.ts:392` — fails when changed files span multiple packages
-- `packages/tooling/tool/cli/test/package-verify.test.ts:414` — collects deleted package paths for workspace auto-detection
-- `packages/tooling/tool/cli/test/package-verify.test.ts:439` — renders compact summaries and failed step output
-- `packages/tooling/tool/cli/test/package-verify.test.ts:478` — writes package failures to the shared inbox and clears them on success
-- `packages/tooling/tool/cli/test/package-verify.test.ts:537` — clears quick lint and check poison after a successful full audit
-- `packages/tooling/tool/cli/test/package-verify.test.ts:571` — records the Turbo closure build in a genuine audit failure capsule
+- `packages/tooling/tool/cli/test/package-verify.test.ts:118` — builds quick and default step specs
+- `packages/tooling/tool/cli/test/package-verify.test.ts:123` — builds upstream audit dependencies through Turbo before the package script
+- `packages/tooling/tool/cli/test/package-verify.test.ts:146` — does not run the package audit when its closure build fails
+- `packages/tooling/tool/cli/test/package-verify.test.ts:176` — refreshes environment-only stale upstream output before running the audit
+- `packages/tooling/tool/cli/test/package-verify.test.ts:207` — runs the audit when Turbo skips fresh upstream builds from cache
+- `packages/tooling/tool/cli/test/package-verify.test.ts:236` — attributes an audit failure after a successful dependency build
+- `packages/tooling/tool/cli/test/package-verify.test.ts:263` — maps dependency-build spawn failures to the package-verify error surface
+- `packages/tooling/tool/cli/test/package-verify.test.ts:283` — runs quick verification and records the repository head
+- `packages/tooling/tool/cli/test/package-verify.test.ts:308` — skips the dependency build when the package has no audit script
+- `packages/tooling/tool/cli/test/package-verify.test.ts:331` — surfaces malformed workspace manifests
+- `packages/tooling/tool/cli/test/package-verify.test.ts:352` — surfaces a missing repository HEAD after verification
+- `packages/tooling/tool/cli/test/package-verify.test.ts:369` — rejects more than one package argument before discovery
+- `packages/tooling/tool/cli/test/package-verify.test.ts:380` — selects an explicit workspace package
+- `packages/tooling/tool/cli/test/package-verify.test.ts:394` — fails when changed files span multiple packages
+- `packages/tooling/tool/cli/test/package-verify.test.ts:416` — collects deleted package paths for workspace auto-detection
+- `packages/tooling/tool/cli/test/package-verify.test.ts:441` — renders compact summaries and failed step output
+- `packages/tooling/tool/cli/test/package-verify.test.ts:480` — writes package failures to the shared inbox and clears them on success
+- `packages/tooling/tool/cli/test/package-verify.test.ts:539` — clears quick lint and check poison after a successful full audit
+- `packages/tooling/tool/cli/test/package-verify.test.ts:573` — records the Turbo closure build in a genuine audit failure capsule
 
 The private review also supplies source-location-maps.json with exact unchanged
 line blocks and explicit changed blocks, plus symbol-locations.json/test-locations.json.

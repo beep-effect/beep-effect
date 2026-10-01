@@ -195,69 +195,69 @@ Tests retain their existing Effect-based harness and NodeCrypto layer. In qualit
 
 ### Current named test locations
 
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:838` — routes explicit and legacy github audit modes to script checks
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:952` — maps repo-quality github checks as independent collector lanes
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:999` — plans every deterministic cheap gate in one preflight wave
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1041` — names every registered lane after its command with the label as its log prefix
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1072` — dispatches every replayable required lane through the hosted beep ci lane argv
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1104` — carries a quarantine package filter into the nested check lane's Turbo invocation
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1137` — pins direct CI Turbo lanes to a requested local-only cache
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1160` — keeps the ts2589 flake quarantine on the dispatched check lane
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1171` — maps repo-sanity github checks as collector lanes
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1219` — decodes the failure policy and wave report schemas
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1241` — decodes legacy lane rows and encodes unknown input digests as null
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1275` — records timings, exits, and only executor-provided lane digests
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1299` — tolerates an outcome whose mutable lane source disappears while the step runs
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1316` — emits machine-readable lane reports from both wrapper writers
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1335` — hands a wrapper lane a ledger and records the digest its child declared
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1471` — appends schema-versioned lane rows and ignores malformed side-channel rows
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1510` — rebuilds an unscoped lane report from an unscoped artifact
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1558` — falls back when a lane artifact is missing or belongs to another parent
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1605` — retains each completed inner lane when its wrapper is interrupted
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1656` — retains completed streaming lanes before the group returns
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1706` — property: the wave report schema round-trips arbitrary reports
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1719` — must-fail fixture: changing the seed changes order and unknown lanes retain declaration order
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1868` — stops later quality-mode waves after an estimate-less red
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1894` — runs later waves under collect-all
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1917` — reuses only exact lane proofs and invalidates them when the virtual tree changes
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1950` — isolates lane-proof defaults and persistence guards from the parent process environment
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1986` — disables lane-proof reuse when the virtual tree cannot be created
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2014` — surfaces platform crypto failures while identifying and staging lane proofs
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2052` — invalidates a lane proof when the property-test run floor increases
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2081` — invalidates ordinary lane proofs when inherited execution settings change
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2129` — invalidates a lane proof when an inherited ambient input changes
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2159` — includes the complete ambient environment for local-env lanes with an isolated spawn
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2197` — omits ambient inputs from proof identity when the lane spawn is isolated
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2234` — runs the lane when the configured proof base cannot be resolved
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2266` — merges successful lane proofs across waves
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2294` — invalidates history-sensitive proofs after a same-tree history rewrite
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2338` — rechecks a later-wave proof after an earlier wave changes the tree
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2381` — never reuses volatile OSV security proofs
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2404` — refuses to persist a proof when the lane changes the virtual tree
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2433` — uses a temporary proof index from a linked worktree git path
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2460` — does not persist a proof for an injected lane failure
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2520` — keeps wave-order attribution and journaling when cheap gates run concurrently
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2576` — stops fail-fast scheduling at the next chunk boundary when lanes run abreast
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2613` — runs every cheap gate through the collected runner when all lanes pass
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2705` — collects multiple failures through the cheap-gates runner without stopping later lanes
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2761` — accepts the current packet state with audit, dead-code, and health as promoted pre-push lanes
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2854` — keeps wired pre-push Fallow lanes in parity with authoritative promoted matrix lanes
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2878` — does not wire removed Fallow dupes or reuse clone lanes
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2955` — rejects a wired Fallow lane whose matrix row is not promoted
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3049` — includes repo-level tsgo diagnostics for affected root check lanes
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4284` — rejects legacy schema versions after the per-file migration
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4974` — shards a wide selection like the full lane, prebuilding only the selected owners
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5308` — fails a raised file row the lane does not reach and names both numbers
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5331` — passes a raised row the lane reaches
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5374` — fails raised rows whose file the lane did not measure
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5414` — passes a raised package total the lane reaches
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5537` — adds a tighten advisory when the lane measures above the lowered floor
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5671` — fails when the pull request removes a row for a package the lane still measures
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7097` — builds the integration lane command with shared SQL environment
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7326` — quarantines distinct TS2589 tasks exposed by resumed lane runs
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7524` — delegates affected root lint only to the affected aggregate repo lint lane
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7846` — selects the flagged lanes and keeps the remaining arguments in order
-- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7855` — runs both lanes when no lane flag is present
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:839` — routes explicit and legacy github audit modes to script checks
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:953` — maps repo-quality github checks as independent collector lanes
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1000` — plans every deterministic cheap gate in one preflight wave
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1042` — names every registered lane after its command with the label as its log prefix
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1073` — dispatches every replayable required lane through the hosted beep ci lane argv
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1105` — carries a quarantine package filter into the nested check lane's Turbo invocation
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1138` — pins direct CI Turbo lanes to a requested local-only cache
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1161` — keeps the ts2589 flake quarantine on the dispatched check lane
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1172` — maps repo-sanity github checks as collector lanes
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1220` — decodes the failure policy and wave report schemas
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1242` — decodes legacy lane rows and encodes unknown input digests as null
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1276` — records timings, exits, and only executor-provided lane digests
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1300` — tolerates an outcome whose mutable lane source disappears while the step runs
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1317` — emits machine-readable lane reports from both wrapper writers
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1336` — hands a wrapper lane a ledger and records the digest its child declared
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1582` — appends schema-versioned lane rows and ignores malformed side-channel rows
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1621` — rebuilds an unscoped lane report from an unscoped artifact
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1669` — falls back when a lane artifact is missing or belongs to another parent
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1716` — retains each completed inner lane when its wrapper is interrupted
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1767` — retains completed streaming lanes before the group returns
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1818` — property: the wave report schema round-trips arbitrary reports
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1831` — must-fail fixture: changing the seed changes order and unknown lanes retain declaration order
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1979` — stops later quality-mode waves after an estimate-less red
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2005` — runs later waves under collect-all
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2029` — reuses only exact lane proofs and invalidates them when the virtual tree changes
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2062` — isolates lane-proof defaults and persistence guards from the parent process environment
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2098` — disables lane-proof reuse when the virtual tree cannot be created
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2126` — surfaces platform crypto failures while identifying and staging lane proofs
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2164` — invalidates a lane proof when the property-test run floor increases
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2193` — invalidates ordinary lane proofs when inherited execution settings change
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2241` — invalidates a lane proof when an inherited ambient input changes
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2271` — includes the complete ambient environment for local-env lanes with an isolated spawn
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2309` — omits ambient inputs from proof identity when the lane spawn is isolated
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2346` — runs the lane when the configured proof base cannot be resolved
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2378` — merges successful lane proofs across waves
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2406` — invalidates history-sensitive proofs after a same-tree history rewrite
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2450` — rechecks a later-wave proof after an earlier wave changes the tree
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2493` — never reuses volatile OSV security proofs
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2516` — refuses to persist a proof when the lane changes the virtual tree
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2545` — uses a temporary proof index from a linked worktree git path
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2572` — does not persist a proof for an injected lane failure
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2631` — keeps wave-order attribution and journaling when cheap gates run concurrently
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2687` — stops fail-fast scheduling at the next chunk boundary when lanes run abreast
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2725` — runs every cheap gate through the collected runner when all lanes pass
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2817` — collects multiple failures through the cheap-gates runner without stopping later lanes
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2872` — accepts the current packet state with audit, dead-code, and health as promoted pre-push lanes
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2965` — keeps wired pre-push Fallow lanes in parity with authoritative promoted matrix lanes
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2989` — does not wire removed Fallow dupes or reuse clone lanes
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3066` — rejects a wired Fallow lane whose matrix row is not promoted
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3160` — includes repo-level tsgo diagnostics for affected root check lanes
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4396` — rejects legacy schema versions after the per-file migration
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5085` — shards a wide selection like the full lane, prebuilding only the selected owners
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5419` — fails a raised file row the lane does not reach and names both numbers
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5442` — passes a raised row the lane reaches
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5485` — fails raised rows whose file the lane did not measure
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5525` — passes a raised package total the lane reaches
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5648` — adds a tighten advisory when the lane measures above the lowered floor
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5782` — fails when the pull request removes a row for a package the lane still measures
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7208` — builds the integration lane command with shared SQL environment
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7437` — quarantines distinct TS2589 tasks exposed by resumed lane runs
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7635` — delegates affected root lint only to the affected aggregate repo lint lane
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7957` — selects the flagged lanes and keeps the remaining arguments in order
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7966` — runs both lanes when no lane flag is present
 
 The private review also supplies source-location-maps.json with exact unchanged
 line blocks and explicit changed blocks, plus symbol-locations.json/test-locations.json.
