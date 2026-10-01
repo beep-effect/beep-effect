@@ -24,7 +24,8 @@ The repair path is signed in `research/repair-decision-2.md`. Moves: #1195
 an optional `shard {index,total}` partition field; free hosted runners stay
 the placement) merged 2026-09-22T12:49Z; #1194 (refs-check quiet listing)
 merged 2026-09-22T16:34Z. `Lint Policy` left the required set on
-2026-09-25, so it no longer gates admission and C4 is not pulled forward. Do not add a shard or a fleet
+2026-09-25 and window 3 did not measure it, so the C4 trigger is unresolved:
+the debt stays with `goals/time-to-certainty` C4 at its own pace. Do not add a shard or a fleet
 move without a new signed decision.
 
 Window 3 is the first complete half-open UTC week that starts after the last

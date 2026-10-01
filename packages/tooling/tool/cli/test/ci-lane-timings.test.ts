@@ -32,7 +32,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { DateTime, Effect, Exit, Fiber, Layer, pipe, Sink, Stream } from "effect";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
@@ -1168,6 +1168,38 @@ describe("ci lane timing admission window", () => {
         "- required contexts: 17 (expected 17; ruleset 10240248 version 49479116 effective 2026-09-12T01:46:53.354Z)"
       );
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("admits the ratified 16-context version after the Lint Policy removal", () => {
+    const commands = A.empty<string>();
+    const historyJson =
+      '[{"version_id":50918272,"updated_at":"2026-09-25T09:46:59.802-05:00"},{"version_id":49479116,"updated_at":"2026-09-11T20:46:53.354-05:00"}]';
+    const snapshot16Json = Str.replace('{"context":"Heavy / Lint Policy"},', "")(RULESET_SNAPSHOT_17_JSON);
+    const response = (endpoint: string) =>
+      Str.includes("/history?")(endpoint)
+        ? Effect.succeed(historyJson)
+        : Str.endsWith("/history/50918272")(endpoint)
+          ? Effect.succeed(snapshot16Json)
+          : windowGithubResponse(endpoint);
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(
+        ".",
+        windowOptions({
+          until: DateTime.makeUnsafe("2026-09-25T14:47:00.000Z"),
+        })
+      );
+      strictEqual(report.contextCount, 16);
+      deepStrictEqual(
+        O.map(report.rulesetVersion, (version) => version.version_id),
+        O.some(50918272)
+      );
+      assertTrue(A.some(commands, Str.endsWith("/history/50918272")));
+      assertTrue(
+        Str.includes(
+          "- required contexts: 16 (expected 16; ruleset 10240248 version 50918272 effective 2026-09-25T14:46:59.802Z)"
+        )(renderCiLaneTimingWindowMarkdown(report))
+      );
+    }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
   });
 
   it.effect("fails closed when a ratified version exposes a different context count", () => {

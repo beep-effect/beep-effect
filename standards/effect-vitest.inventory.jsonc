@@ -32003,6 +32003,27 @@
       "status": "open"
     },
     {
+      "id": "EV002:packages/tooling/tool/cli/test/ci-lane-timings.test.ts:1202:provideScopedLayer@12#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/ci-lane-timings.test.ts",
+      "line": 1202,
+      "endLine": 1202,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:9dff25ccb648464ce9869689c064589ac92ed990ca712c80841fa3e3762cd06e",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(windowGithubLayer(commands, response))",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV002:packages/tooling/tool/cli/test/ci-lane-timings.test.ts:1217:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",

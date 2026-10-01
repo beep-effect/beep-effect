@@ -72,11 +72,17 @@ of the admission table. The table in
 | Test Unit | 566 | 502 | 64 | 12m21s | **35m00s** | 55m45s | **Breach** |
 
 `Lint` and `Test Unit` are effective spans: they run from the earliest
-successful shard start through the literal aggregator's completion. A shard
-that waits for a runner therefore counts against the lane. `Lint Policy` is
-not a required context under `50918272` and is not measured here. The window
-2 handoff of its debt to `goals/time-to-certainty` C4 is not triggered by
-this census.
+successful shard start through the literal aggregator's completion. Queue
+time before the first shard starts is excluded and is reported separately as
+pickup. Queue time for any later shard is included, because the span stays
+open until that shard runs and the aggregator completes. Under saturation
+the shards of one run start minutes apart, which stretches the span. That
+effect, plus the separate pickup tripwire, is the queue signal below.
+
+`Lint Policy` is not a required context under `50918272` and is not measured
+here. Its window-2 handoff to `goals/time-to-certainty` C4 depended on a
+window-3 measurement that this census does not provide, so the C4 trigger is
+recorded as unresolved, not cleared.
 
 ## Test Unit shard halves
 
@@ -182,8 +188,14 @@ day come from the census TSV's unique run ids.
 - P3 stays `in progress`; `ops/manifest.json` stays `active`.
 - Population `50918272 → 16` is ratified (PLAN note, `LaneTimings.ts`), so
   the next window needs no population work unless the ruleset changes again.
-- `Lint Policy` left the required set, so its window-2 breach no longer gates
-  admission, and C4 is not pulled forward by this verdict.
+- `Lint Policy` left the required set, so it no longer gates admission. The
+  C4 pull-forward trigger is unresolved (unmeasured), not cleared.
+- Population caveat: the census applies the population in force at
+  `--until` to the whole week, so the 2.6 days when `Lint Policy` was still
+  required went unmeasured. The verdict does not depend on it, but a future
+  window that straddles a ruleset change could pass without measuring a
+  check that was required for part of it. A mid-window population warning in
+  `beep ci lane-timings` is owed (ledger 2026-10-01).
 - The remaining failure is hosted-runner concurrency under agent fan-out.
   Shard re-splits cannot fix it. The proposed (unsigned) next decision is
   `research/repair-decision-3-proposed.md`. No shard or fleet move is made
