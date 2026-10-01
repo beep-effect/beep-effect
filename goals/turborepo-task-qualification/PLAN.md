@@ -3100,3 +3100,9 @@ It rejects changed artifacts, runtime drift and revocation without changing the
 ledger. All 27 focused tests and source typechecking pass; full CLI package
 verification is running. This is synthetic operational proof, not native v9
 qualification. Integration and protected stable/canary evidence remain pending.
+
+### Published implementation and current proof
+
+Draft PR #1389 saves the integrated v9 receipt, approval v3, private acceptance store, and live profile verifier. All eight schema-policy findings are addressed with behavioral properties or typed Option helpers; the scoped documentation gate now follows owning-declaration rules. Schema policy, scoped docgen, test typechecking, 48 protocol/pilot tests, 35 acceptance/producer tests, and 83 docgen tests pass. Full CLI package verification passed (audit 656.0s, docgen 21.6s) at implementation commit `6d920f87a7`.
+
+The hosted Security finding requires a narrow basic-ftp 6.2.1 override before current native evidence. Current stable authority remains the repository exact Turbo 2.11.5 under the approved decision; published canary 2.11.5-canary.5 is selected separately. Turbo 2.11.6 was observed but is not silently adopted. The frozen workflow inspection and old-head Yeet preview were cancelled while queued so the dependency refresh can land first. Native v9 stable/canary evidence, semantic closure, real qualification, adoption handoff and final reflection/lifecycle closeout remain outstanding.

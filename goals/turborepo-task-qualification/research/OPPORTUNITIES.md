@@ -2756,3 +2756,7 @@ The discrepancy was traced to `Docgen/internal/JsDocAnalysis.ts`: its dedicated 
 ### Public runtime fingerprint mistaken for a credential
 
 Early Yeet publication was rejected by the staged secret scan on `signed-profile-binding-review.json` under `generic-api-key`. The flagged value was the same public SHA-256 toolchain fingerprint already recorded beside it; the review field name included `Key`. Renamed only the authored summary field to `runtimeFingerprintSha256` and retained its original receipt-field mapping. Runtime schemas and source receipts are unchanged. An explicit fingerprint label in authored summaries prevents this ambiguity without disabling or broadening secret-scan exceptions.
+
+### Security gate refresh before native qualification
+
+PR #1389 Security job 110438422401 rejected inherited `basic-ftp@5.3.1` under GHSA-c475-qrg2-pj4r; current main retained that version. The advisory specifies patched 6.2.1. A narrow root override and regenerated lock entry were prepared in an idle sibling, verified by frozen install, consumer resolution/API/listing smoke checks, and the OSV version query (zero known advisories). `@beep/box` quick verification passed. Queued proofs of the old head were cancelled before integrating the update; the completed CLI package audit/docgen remains evidence for its exact earlier snapshot. Native workflow identities must be refreshed after this dependency change.
