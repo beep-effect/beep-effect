@@ -951,6 +951,43 @@ done
     })
   );
 
+  it.effect("replaces the last clickable card after its listener has expired", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+      // Each listener reports its card and ends at once, as a timed-out one would.
+      yield* fs.writeFileString(
+        `${store.fakeBin}/notify-send`,
+        `#!/usr/bin/env bash
+case " $* " in *" --replace-id=42 "*) echo replace ;; *) echo new ;; esac >>"$HOME/listeners.txt"
+printf '42\\n'
+`
+      );
+      yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, "#!/usr/bin/env bash\nexit 0\n");
+      yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
+      expectSilentSuccess(
+        yield* runNotifier(
+          store,
+          "",
+          "",
+          "urgent",
+          "/workspace/clone",
+          "claude://code/continue?session=local_test",
+          "",
+          "",
+          {
+            BEEP_SEQUENCE_BREAK_POLL_SECONDS: "1",
+            BEEP_SEQUENCE_BREAK_REMINDER_SECONDS: "1",
+            BEEP_SEQUENCE_BREAK_URGENT_SECONDS: "2",
+          }
+        )
+      );
+      yield* waitForNotificationRows(store, 6);
+      expect(yield* fs.readFileString(`${store.stateHome}/listeners.txt`)).toBe("new\nreplace\nreplace\n");
+    })
+  );
+
   it.effect("closes a clickable card whose ID arrives after the wait resolves", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

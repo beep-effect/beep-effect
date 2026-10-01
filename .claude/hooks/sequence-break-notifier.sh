@@ -609,6 +609,8 @@ deliver_desktop() {
     # A later stage escalates the same card: stop the live listener, then
     # replace its card with a fresh listener, so each wait keeps exactly one
     # actionable card and one listener. Without pkill the card stays as is.
+    # The last card is replaced even after its listener expired (one hour), so
+    # a late stage never strands an older card that resolution cannot close.
     local replace_id=""
     if action_listener_alive; then
       if ! command -v pkill >/dev/null 2>&1; then
@@ -617,6 +619,8 @@ deliver_desktop() {
       fi
       replace_id="$(action_notification_id)"
       stop_action_listener
+    else
+      replace_id="$(action_notification_id)"
     fi
     if [ -z "${action_id_file}" ]; then
       action_id_file="$(mktemp "${damping_dir}/${damping_key}.notification.XXXXXX")" || action_id_file=""
