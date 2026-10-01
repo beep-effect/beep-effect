@@ -206,9 +206,9 @@ export const reviewFollowUpThreadIssue = (thread: GhReviewThread): QualityIssue 
  * review thread raised (an unresolved thread, an unanswered follow-up, or the
  * actionable-thread count gate), all categorised `pr-review`, and those a
  * non-thread gate raised, such as the Greptile score and issue-count gates.
- * Merge readiness charges the first kind to `threads-resolved` and the second
- * to `closeout-gates-passed`; reading the category here keeps every reader of
- * a closeout report on the same split.
+ * Merge readiness charges the first kind to `threads-resolved` and only
+ * displays the second, since review-bot gates are advisory; reading the
+ * category here keeps every reader of a closeout report on the same split.
  *
  * **Example** (Split closeout issues by source)
  *

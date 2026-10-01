@@ -339,14 +339,19 @@ bun run beep yeet monitor --summary
 ```
 
 ```bash
-bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0
+bun run beep yeet closeout --summary --require-review-comments 0
 ```
 
 - Inspect hosted review/bot closeout gates for the current branch PR:
 
 ```bash
-bun run beep yeet closeout --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0
+bun run beep yeet closeout --require-review-comments 0
 ```
+
+  Add `--require-greptile-score 5/5 --require-greptile-issues 0` only when the
+  operator asks to wait on Greptile for this PR. Those gates set the closeout
+  command's own exit code and print as review-bot advisories in `yeet status`;
+  they never hold `merge-ready`.
 
 - Inspect local hardware profile guidance before choosing heavy parallel work:
 
@@ -637,8 +642,8 @@ under the wave-exempt rule. Clear the answered ones once: list them with
    flow while the loop waits. The loop runs read-first closeout automatically
    after the required checks settle. `monitor --summary` remains a one-shot
    compact read.
-7. Run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`
-   to inspect unresolved actionable review threads and review-bot gates.
+7. Run `bun run beep yeet closeout --summary --require-review-comments 0`
+   to inspect unresolved actionable review threads and review-bot findings.
 8. Use `bun run beep yeet verify --tier review-fix` while fixing PR comments,
    then use normal Yeet publish or the exact-match amend retry when appropriate.
 9. Address failed checks or actionable review comments with follow-up commits
@@ -702,14 +707,20 @@ rows: `review-follow-ups` is blocked while the count is non-zero and emits one
 `threads-resolved` criterion is unresolved **plus** follow-ups, plus closeout
 issues a thread raised, and the `next command` it prints is
 `bun run beep yeet reply` only when live threads are the *only* thing holding
-the PR — every other merge-ready criterion holding, an unmet closeout gate
-aside. A red pipeline or a stale closeout keeps the command on that instead,
-because answering reviewers would not make the branch mergeable. Closeout's
-non-thread gates — the Greptile score and issue count its
-`--require-greptile-*` flags asked for — block the separate
-`closeout-gates-passed` criterion, last in protocol order; when it is the
-blocker, `next` names the unmet gate (`Expected Greptile score 5/5; found
-unknown`) instead of pointing at threads that do not exist.
+the PR — every other merge-ready criterion holding. A red pipeline or a stale
+closeout keeps the command on that instead, because answering reviewers would
+not make the branch mergeable.
+
+No review bot's verdict gates `merge-ready`. The bots reviewing a PR rotate
+with the operator's quota (CodeRabbit, Greptile, ChatGPT, the openclaw
+reviewer, the operator's own Grok reviewer), so a bot that never posts must
+not hold a merge. Every reviewer, human or bot, gates the same way: through
+its review threads, which `threads-resolved` covers. Closeout's Greptile score
+and issue-count gates (`--require-greptile-*`, off by default) are advisory:
+they set `yeet closeout`'s own exit code and print on the
+`review-bot advisories (never block merge-ready)` line of `yeet status`. The
+`closeout-gates-passed` criterion that briefly held merges on them is retired;
+verdicts written while it existed decode against their remaining criteria.
 
 ### Review bodies and advisories
 
@@ -994,8 +1005,9 @@ turbo work, so they are cheap to run mid-loop.
   still need direct edits.
 - If there is no open PR for `yeet monitor`, create the draft PR first or run
   `bun run audit:github pre-push` as the full local fallback.
-- If `yeet closeout` reports Greptile score/issues as unknown, inspect the PR
-  comments and rerun Greptile explicitly with `--retrigger-greptile` only when
-  the user wants that GitHub write.
+- If `yeet closeout` reports Greptile score/issues as unknown, Greptile has not
+  reviewed the head (often no quota). It is advisory and does not block
+  `merge-ready`; rerun Greptile with `--retrigger-greptile` only when the user
+  wants that GitHub write.
 - Do not weaken GitHub check names, hosted PR checks, or manual fallback lanes
   to make a branch appear green faster.

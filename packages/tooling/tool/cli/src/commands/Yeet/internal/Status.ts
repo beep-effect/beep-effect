@@ -153,11 +153,12 @@ export class YeetStatusLaneDigest extends S.Class<YeetStatusLaneDigest>($I`YeetS
  * report written for an older pull request head. Legacy summaries decode with
  * no recorded head and therefore remain stale.
  *
- * `issueCount` is every closeout issue; `gateIssues` names the ones a non-thread
- * closeout gate raised (the Greptile score and issue-count gates), so merge
- * readiness can charge those to `closeout-gates-passed` and the rest to
- * `threads-resolved`. A summary without `gateIssues` predates the split and
- * charges every issue to threads, as status always did before.
+ * `issueCount` is every closeout issue; `gateIssues` names the ones a
+ * review-bot gate raised (the Greptile score and issue-count gates). Merge
+ * readiness charges the rest to `threads-resolved` and only displays
+ * `gateIssues`, since review-bot gates are advisory. A summary without
+ * `gateIssues` predates the split and charges every issue to threads, as
+ * status always did before.
  *
  * **Example** (Construct a yeet status artifact)
  *
@@ -751,7 +752,7 @@ const artifactFromCloseout = (path: string, report: PrCloseoutReport): YeetStatu
     A.map((issue) => issue.message)
   );
   return YeetStatusArtifact.make({
-    detail: `PR #${report.prNumber}: ${report.issueCount} closeout issue(s), ${report.actionableReviewThreadCount} actionable thread(s), ${A.length(gateIssues)} unmet gate(s)`,
+    detail: `PR #${report.prNumber}: ${report.issueCount} closeout issue(s), ${report.actionableReviewThreadCount} actionable thread(s), ${A.length(gateIssues)} advisory bot gate(s)`,
     issueCount: report.issueCount,
     gateIssues,
     path,
@@ -1462,15 +1463,10 @@ const OPEN_PULL_REQUEST_COMMAND =
   'run `bun run beep yeet publish --pr --monitor --message "..."` when ready for PR review';
 const MERGE_READY_COMMAND = "confirm GitHub mergeability, then merge the PR";
 const REPLY_COMMAND = "run `bun run beep yeet reply` to answer the outstanding review threads";
-const CLOSEOUT_COMMAND =
-  "run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`";
+// No review-bot gate here: which bots review a pull request rotates with the
+// operator's quota, so the suggested closeout gates only on review threads.
+const CLOSEOUT_COMMAND = "run `bun run beep yeet closeout --summary --require-review-comments 0`";
 const VERIFY_OR_REMOTE_COMMAND = "run `bun run beep yeet verify` or pass `--remote` for PR status";
-
-// The unmet gates are the ones the last closeout run was asked to enforce, and
-// they usually wait on a review bot rather than on the operator: name them, then
-// the closeout that re-reads them once the bot has posted on this head.
-const closeoutGatesCommand = (gateIssues: ReadonlyArray<string>): string =>
-  `closeout gate(s) unmet (${A.join(gateIssues, " ")}); once the review bot has posted on the current head, ${CLOSEOUT_COMMAND}`;
 
 // Retain the serialized criterion name while enforcing the complete PR check
 // policy. Count-only failures cannot receive an evidence-based exemption.
@@ -1535,17 +1531,10 @@ const closeoutThreadIssueCount = (closeout: YeetStatusArtifact): number =>
 // reports issues a thread raised. Requiring its presence would conflate
 // "closeout has not run yet" with "threads are unresolved" — a missing
 // artifact is unknown, and unknown must not masquerade as a named blocker.
-// Issues from the closeout's other gates never count here: a Greptile score
-// is not a review thread, and naming it as one sends the operator hunting for
-// threads that do not exist.
+// Issues from the closeout's review-bot gates never count here: a Greptile
+// score is not a review thread, and those gates are advisory.
 const threadsAreResolved = (closeout: YeetStatusArtifact, remote: YeetStatusRemote): boolean =>
   outstandingThreadCount(remote) === 0 && closeoutThreadIssueCount(closeout) <= 0;
-
-// The closeout's non-thread gates (Greptile score and issue count today) hold
-// when the artifact records none unmet. A missing artifact is unknown here for
-// the same reason as above; `closeout-run` is the criterion that names it.
-const closeoutGatesPass = (closeout: YeetStatusArtifact): boolean =>
-  A.isReadonlyArrayEmpty(closeout.gateIssues ?? A.empty());
 
 // The closeout-run criterion binds to a specific revision: a closeout artifact
 // satisfies it only when the head it reviewed is the head the PR currently
@@ -1557,10 +1546,8 @@ const closeoutBindsCurrentHead = (closeout: YeetStatusArtifact, remote: YeetStat
   );
 
 // The first unsatisfied hard criterion in protocol order, or `None` when every
-// one holds. Order mirrors the escalation the merge protocol asks an operator
-// to walk: closeout -> checks -> threads -> GitHub's merge gates -> the
-// closeout's own non-thread gates. Those gates come last because they usually
-// wait on a review bot, so any blocker the operator can act on is named first.
+// one holds. Order mirrors the closeout -> checks -> threads escalation the
+// merge protocol asks an operator to walk.
 const firstFailingCriterion = (criteria: YeetMergeReadyCriteria): O.Option<YeetMergeReadyCriterion> =>
   pipe(
     YeetMergeReadyCriterion.Options,
@@ -1575,15 +1562,15 @@ const firstFailingCriterion = (criteria: YeetMergeReadyCriteria): O.Option<YeetM
  * Status already fetches everything the protocol asks a human to read, so the
  * only thing missing was a name for the answer. Pull request state, draft state,
  * current-head closeout, required checks, threads, mergeability, merge state,
- * review decision, and the closeout's non-thread gates are hard criteria. A
- * missing closeout artifact is its own blocker while the live thread criterion
- * continues to report only the state it knows. A present closeout satisfies
- * `closeout-run` only when its recorded reviewed head equals the current remote
- * head; legacy headless and stale reports remain blockers. Closeout issues are
- * split by source: those a review thread raised block `threads-resolved`, and
- * those a gate the closeout run was asked to enforce raised (its
- * `--require-greptile-*` flags) block `closeout-gates-passed`. The Greptile
- * score itself rides along as display-only.
+ * and review decision are hard criteria. A missing closeout artifact is its own
+ * blocker while the live thread criterion continues to report only the state it
+ * knows. A present closeout satisfies `closeout-run` only when its recorded
+ * reviewed head equals the current remote head; legacy headless and stale
+ * reports remain blockers. Closeout issues a review thread raised block
+ * `threads-resolved`; issues a review-bot gate raised (`--require-greptile-*`)
+ * are advisory, because the bots reviewing a pull request rotate with the
+ * operator's quota and one that never posts must not hold the merge. The
+ * Greptile score rides along as display-only.
  *
  * **Gotchas**
  *
@@ -1634,21 +1621,15 @@ export const deriveYeetMergeReady: {
     mergeable: remote.mergeable === "MERGEABLE",
     mergeStateAcceptable: mergeStateIsAcceptable(remote),
     reviewDecisionAcceptable: reviewDecisionIsAcceptable(remote),
-    closeoutGatesPassed: closeoutGatesPass(closeout),
     greptileScore: closeout.greptileScore,
   });
   const failing = firstFailingCriterion(criteria);
   return O.some(YeetMergeReady.make({ ready: O.isNone(failing), failing, criteria }));
 });
 
-// Criteria that may stay unmet while replies are still the next step: the
-// threads themselves, and closeout gates that wait on a review bot whatever
-// the replies say.
-const reviewCriteria: ReadonlyArray<YeetMergeReadyCriterion> = ["threads-resolved", "closeout-gates-passed"];
-
 // Threads are the one blocker with a command of its own, and it is suggested
 // only when posting those replies is what is left to do: live threads owe an
-// answer and every criterion outside `reviewCriteria` already holds. Read
+// answer and every other criterion already holds. Read
 // across every criterion rather than off `failing` alone: `failing` names only
 // the first blocker in protocol order, so threads leading it says nothing
 // about the checks, mergeability, or review decision behind it, and naming
@@ -1661,14 +1642,10 @@ const repliesAreTheNextStep = (mergeReady: O.Option<YeetMergeReady>, remote: Yee
   O.exists(mergeReady, (value) =>
     A.every(
       YeetMergeReadyCriterion.Options,
-      (criterion) => A.contains(reviewCriteria, criterion) || mergeReadyCriterionHolds(value.criteria, criterion)
+      (criterion) =>
+        YeetMergeReadyCriterion.is["threads-resolved"](criterion) || mergeReadyCriterionHolds(value.criteria, criterion)
     )
   );
-
-// The closeout's own gates lead the blockers only when every other criterion
-// holds, since they come last in protocol order.
-const closeoutGatesAreTheBlocker = (mergeReady: O.Option<YeetMergeReady>): boolean =>
-  O.exists(mergeReady, (value) => O.exists(value.failing, YeetMergeReadyCriterion.is["closeout-gates-passed"]));
 
 const nextCommandForRemote = (
   verdict: YeetStatusArtifact,
@@ -1684,9 +1661,6 @@ const nextCommandForRemote = (
   }
   if (repliesAreTheNextStep(mergeReady, remote)) {
     return REPLY_COMMAND;
-  }
-  if (closeoutGatesAreTheBlocker(mergeReady)) {
-    return closeoutGatesCommand(closeout.gateIssues ?? A.empty());
   }
   if (remote.rerunFailedCommand !== undefined && verdict.outcome === "success") {
     return `${remote.rerunFailedCommand} # ${remote.rerunFailedDecision ?? "same-SHA failed workflow"}`;
@@ -1897,6 +1871,16 @@ const renderMergeReadyLine = (snapshot: YeetStatusSnapshot): string =>
     })
   );
 
+// Unmet review-bot gates from the last closeout, shown for the operator to
+// judge and never folded into merge readiness.
+const renderReviewBotAdvisoryLines = (closeout: YeetStatusArtifact): ReadonlyArray<string> =>
+  pipe(
+    O.fromUndefinedOr(closeout.gateIssues),
+    O.filter(A.isReadonlyArrayNonEmpty),
+    O.map((issues) => `- review-bot advisories (never block merge-ready): ${A.join(issues, " ")}`),
+    O.toArray
+  );
+
 /**
  * Render a concise human-readable Yeet status block.
  *
@@ -1941,6 +1925,7 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
       `- ${renderCheckLine(snapshot.remote)}`,
       `- ${renderYeetReviewThreadBlock(snapshot.remote)}`,
       `- ${renderMergeReadyLine(snapshot)}`,
+      ...renderReviewBotAdvisoryLines(snapshot.closeout),
       `- ${renderYeetGateStalenessBlock(snapshot.staleGates, snapshot.unprovenGates)}`,
       `- rerun-failed: ${snapshot.remote.rerunFailedDecision ?? "not checked"}`,
       `- status artifact: ${snapshot.statusPath}`,
@@ -2034,8 +2019,8 @@ export const yeetStatusArtifactFromVerdictForTesting: {
  * **Details**
  *
  * The projection is where closeout issues split by source: `gateIssues`
- * carries the message of every issue a non-thread gate raised, and the rest of
- * `issueCount` stays charged to review threads.
+ * carries the message of every issue a review-bot gate raised, shown as an
+ * advisory, and the rest of `issueCount` stays charged to review threads.
  *
  * **Example** (Carry an unmet Greptile gate into the artifact)
  *
