@@ -1,3 +1,19 @@
+## Current source refresh, 2026-10-01
+
+Continue the remaining campaign in PR #1339. Main advanced to
+`4a97d3955f7fa0a5d554efb5869170a50dccacde` and was merged in `3075193cf5`.
+The merge changes 746 candidate source paths under packages/apps source
+(excluding apps/labs); this is a changed-path count, not a qualified census.
+R47's prepared inputs remain bound to the older source and cannot establish
+current coverage. Preserve them and the rejected R46 attempt. Refresh the
+complete source partition, frozen inputs and designs against the merged tree.
+
+The saved R47 runner correction addresses the lane-prefix and scope checks.
+Its independent delta review has resumed; no runtime, census, dry-round, P3
+or implementation acceptance is claimed. Inventory remains 726 rows,
+108 qualified, 618 disqualified and zero applied. Push ready fixes immediately
+and use hosted checks for publication readiness under the existing ruling.
+
 ## Current execution after PR #1328 merged: 2026-09-29
 
 PR #1328 merged at `3bfb7d0f33d300b30b99f80792c7e61c2ce6bbff` before the

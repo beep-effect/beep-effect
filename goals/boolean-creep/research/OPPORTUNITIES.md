@@ -1943,3 +1943,15 @@ fixture that tests the required byte boundary without asking a model to copy
 thousands of repeated characters exactly would have prevented this particular
 failure. Preserve exact tool ordering, payload and escaping coverage, confinement
 checks, and the failed attempt when reviewing a correction.
+
+## 2026-10-01: continuation drift after the workstation interruption
+
+The previous monitor terminated before closeout. Its proof-job inbox row was
+observed on continuation, and a new hosted monitor now follows PR #1339.
+Main changed 746 candidate source paths while the R47 correction awaited
+review, invalidating current-source admission from the saved preparation.
+Preserve the candidate for correction review and refresh the full input set.
+A continuation preflight that checks job termination, source identity and
+review threads together prevents stale runner evidence from becoming launch
+permission. PR #1339 also exposed a stale separate-closeout-PR instruction in
+SPEC P5; the corrected text follows the one-successor-PR decision.

@@ -105,8 +105,9 @@ new status in the live inventory.
   full current-corpus residue rounds on exact `main` until two consecutive
   rounds add no qualified record. A new case is designed, reviewed,
   implemented, verified, and merged under the same bounded mandate, then the
-  two-round count restarts. Land the reflection and `completed-retained`
-  lifecycle in a separate closeout PR.
+  two-round count restarts. Land final candidate rounds, reflection and the
+  `completed-retained` lifecycle in the same successor PR before merge. The
+  post-merge exact-main rounds verify that completion claim.
 
 ## Landing
 
