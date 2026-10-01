@@ -495,6 +495,57 @@ describe("agent-effectiveness eval scorer", () => {
     }).pipe(provideTestLayer)
   );
 
+  it.effect("scores staged files schema-first and tsgo cannot reach as unmeasured, not environment failure", () =>
+    Effect.gen(function* () {
+      const sourceFiles = ["src/generated/hidden.d.ts", "src/impl.js"];
+      const { commands, law } = yield* runFakeLaw(
+        {
+          bun: { stdout: scannedFilesLine([]) },
+          biome: { stdout: biomeReportJson(0, 2) },
+        },
+        writeRepoBiomeConfig,
+        sourceFiles
+      );
+
+      expectMeasured(law);
+      expect(A.sort(commands, Str.Order)).toEqual(["biome", "bun"]);
+      expect(A.map(law.lanes, (report) => [report.lane, report.filesProcessed])).toEqual([
+        ["schema-first", 0],
+        ["tsgo", 0],
+        ["biome", 2],
+      ]);
+      expect(A.map(law.schemaFirst, (violation) => [violation.ruleId, violation.file])).toEqual([
+        ["unmeasured-file", "src/generated/hidden.d.ts"],
+        ["unmeasured-file", "src/impl.js"],
+      ]);
+      expect(A.map(law.tsgo, (violation) => [violation.ruleId, violation.file])).toEqual([
+        ["unmeasured-file", "src/generated/hidden.d.ts"],
+        ["unmeasured-file", "src/impl.js"],
+      ]);
+      expect(law.biome).toEqual([]);
+    }).pipe(provideTestLayer)
+  );
+
+  it.effect("reports a fixture with no staged source files as an environment failure in every lane", () =>
+    Effect.gen(function* () {
+      const { commands, law } = yield* runFakeLaw(
+        {
+          bun: { stdout: scannedFilesLine([]) },
+          biome: { stdout: biomeReportJson(0, 0) },
+        },
+        writeRepoBiomeConfig,
+        []
+      );
+
+      expect(A.sort(commands, Str.Order)).toEqual(["biome", "bun"]);
+      expect(A.map(law.lanes, (report) => [report.lane, report.status, report.environmentDiagnostics])).toEqual([
+        ["schema-first", "environment-failure", ["schema-first had no staged source files."]],
+        ["tsgo", "environment-failure", ["tsgo had no staged source files."]],
+        ["biome", "environment-failure", ["biome processed no files."]],
+      ]);
+    }).pipe(provideTestLayer)
+  );
+
   it.effect("reports a schema-first run that did not list its scanned files as an environment failure", () =>
     Effect.gen(function* () {
       const { law } = yield* runFakeLaw({ bun: { stdout: "[schema-first] live_entries=0" } });

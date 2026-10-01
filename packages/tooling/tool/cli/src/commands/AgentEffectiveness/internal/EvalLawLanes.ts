@@ -116,22 +116,45 @@ const laneOutcome = (
   filesProcessed: number,
   violations: ReadonlyArray<AgentEffectivenessEvalViolation>,
   environmentDiagnostics: ReadonlyArray<string>
-): LawLaneOutcome => {
-  const diagnostics =
-    filesProcessed === 0 ? A.append(environmentDiagnostics, `${lane} processed no files.`) : environmentDiagnostics;
-  return LawLaneOutcome.make({
+): LawLaneOutcome =>
+  LawLaneOutcome.make({
     violations: sortViolations(violations),
     report: AgentEffectivenessEvalLaneReport.make({
       lane,
-      status: A.isReadonlyArrayNonEmpty(diagnostics) ? "environment-failure" : "measured",
+      status: A.isReadonlyArrayNonEmpty(environmentDiagnostics) ? "environment-failure" : "measured",
       filesProcessed: S.Natural.make(filesProcessed),
-      environmentDiagnostics: diagnostics,
+      environmentDiagnostics,
     }),
   });
-};
+
+/**
+ * Append the zero-files diagnostic for a lane expected to measure every staged
+ * file (Biome, or any lane whose tool did not run).
+ */
+const requireProcessedFiles = (
+  lane: AgentEffectivenessEvalLawLane,
+  filesProcessed: number,
+  environmentDiagnostics: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  filesProcessed === 0 ? A.append(environmentDiagnostics, `${lane} processed no files.`) : environmentDiagnostics;
+
+/**
+ * Append the zero-staged diagnostic for a lane that ran but legitimately scans
+ * only a subset of the staged files (schema-first, tsgo). Measuring none of a
+ * non-empty staged set is the agent's doing and scores as `unmeasured-file`
+ * violations; only an empty staged set is an environment failure.
+ */
+const requireStagedFiles = (
+  lane: AgentEffectivenessEvalLawLane,
+  sourceFiles: ReadonlyArray<string>,
+  environmentDiagnostics: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  A.isReadonlyArrayEmpty(sourceFiles)
+    ? A.append(environmentDiagnostics, `${lane} had no staged source files.`)
+    : environmentDiagnostics;
 
 const unrunnableLane = (lane: AgentEffectivenessEvalLawLane, reason: string): LawLaneOutcome =>
-  laneOutcome(lane, 0, A.empty(), [reason]);
+  laneOutcome(lane, 0, A.empty(), requireProcessedFiles(lane, 0, [reason]));
 
 const unmeasuredFileViolation = (
   lane: AgentEffectivenessEvalLawLane,
@@ -362,9 +385,14 @@ const measureSchemaFirst =
     const violations = parseSchemaFirstViolations(result.output);
     return O.match(parseSchemaFirstScannedFiles(result.output), {
       onNone: () =>
-        laneOutcome("schema-first", 0, violations, [
-          `schema-first lint exited ${result.exitCode} without reporting scanned files: ${excerpt(result.output)}`,
-        ]),
+        laneOutcome(
+          "schema-first",
+          0,
+          violations,
+          requireProcessedFiles("schema-first", 0, [
+            `schema-first lint exited ${result.exitCode} without reporting scanned files: ${excerpt(result.output)}`,
+          ])
+        ),
       onSome: (scannedFiles) => {
         const measuredFiles = A.intersection(sourceFiles, scannedFiles);
         const unstructuredFailure = result.exitCode !== 0 && A.isReadonlyArrayEmpty(violations);
@@ -380,9 +408,13 @@ const measureSchemaFirst =
               "schema-first scans only TypeScript sources outside excluded paths (generated, test, docs, build, .d.ts, ...)."
             )
           ),
-          unstructuredFailure
-            ? [`schema-first lint exited ${result.exitCode} without structured findings: ${excerpt(result.output)}`]
-            : A.empty()
+          requireStagedFiles(
+            "schema-first",
+            sourceFiles,
+            unstructuredFailure
+              ? [`schema-first lint exited ${result.exitCode} without structured findings: ${excerpt(result.output)}`]
+              : A.empty()
+          )
         );
       },
     });
@@ -444,6 +476,17 @@ const sanitizeDiagnosticLine = (line: string, sandbox: LawSandbox): string =>
 
 const isTsgoDiagnosticLine = (line: string): boolean => /\b(?:error|warning)\s+TS\d+\b/u.test(line);
 
+const tsgoUnmeasuredFileViolations = (
+  sourceFiles: ReadonlyArray<string>,
+  checkedFiles: ReadonlyArray<string>
+): ReadonlyArray<AgentEffectivenessEvalViolation> =>
+  unmeasuredFileViolations(
+    "tsgo",
+    sourceFiles,
+    checkedFiles,
+    "tsgo type-checks only TypeScript implementation files; JavaScript and declaration files are not checked."
+  );
+
 const measureTsgo =
   (sandbox: LawSandbox, sourceFiles: ReadonlyArray<string>) =>
   (result: SubprocessResult): LawLaneOutcome => {
@@ -472,15 +515,7 @@ const measureTsgo =
     return laneOutcome(
       "tsgo",
       A.length(checkedFiles),
-      A.appendAll(
-        violations,
-        unmeasuredFileViolations(
-          "tsgo",
-          sourceFiles,
-          checkedFiles,
-          "tsgo type-checks only TypeScript implementation files; JavaScript and declaration files are not checked."
-        )
-      ),
+      A.appendAll(violations, tsgoUnmeasuredFileViolations(sourceFiles, checkedFiles)),
       silentFailure
         ? A.append(
             environmentDiagnostics,
@@ -497,6 +532,16 @@ const evaluateTsgo = Effect.fn("AgentEffectivenessEvalScorer.evaluateTsgo")(func
 ): Effect.fn.Return<LawLaneOutcome, never, Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const path = yield* Path.Path;
   const tsgoPath = path.join(repoRoot, "node_modules", ".bin", "tsgo");
+  // tsgo rejects an empty `files` list (TS18002), so with nothing to type-check
+  // the lane is measured without spawning it: every staged file is unmeasured.
+  if (!A.some(sourceFiles, isTypeCheckedFile)) {
+    return laneOutcome(
+      "tsgo",
+      0,
+      tsgoUnmeasuredFileViolations(sourceFiles, A.empty()),
+      requireStagedFiles("tsgo", sourceFiles, A.empty())
+    );
+  }
   return yield* runLaneSubprocess(
     "tsgo",
     tsgoPath,
@@ -593,9 +638,13 @@ const measureBiome =
           "biome",
           filesProcessed,
           A.appendAll(violations, shortfall),
-          filesProcessed === 0 && Str.isNonEmpty(result.stderr)
-            ? A.append(environmentDiagnostics, excerpt(result.stderr))
-            : environmentDiagnostics
+          requireProcessedFiles(
+            "biome",
+            filesProcessed,
+            filesProcessed === 0 && Str.isNonEmpty(result.stderr)
+              ? A.append(environmentDiagnostics, excerpt(result.stderr))
+              : environmentDiagnostics
+          )
         );
       },
     });
@@ -721,15 +770,19 @@ const evaluateBiome = Effect.fn("AgentEffectivenessEvalScorer.evaluateBiome")(fu
  * the same.
  *
  * A diagnostic located in a staged source file is a law violation. Anything
- * else (a tool that did not start, a config that did not load, zero files
- * processed, a diagnostic outside the staged sources) is recorded as an
- * environment failure in that lane's report instead.
+ * else (a tool that did not start, a config that did not load, no staged
+ * source files, Biome processing zero files, a diagnostic outside the staged
+ * sources) is recorded as an environment failure in that lane's report
+ * instead.
  *
  * Every staged file a lane did not measure is one `unmeasured-file` violation
  * in that lane: JavaScript and declaration files for tsgo, files outside the
  * schema-first scan (excluded paths, `.d.ts`, JavaScript) for schema-first,
  * and any shortfall between Biome's processed count and the staged count.
- * `filesProcessed` counts only what the lane measured.
+ * `filesProcessed` counts only what the lane measured. A schema-first or tsgo
+ * lane that ran but could reach none of the staged files is still measured:
+ * the agent put the code out of reach, so it scores as violations rather than
+ * stopping the run. tsgo is not spawned when nothing is type-checkable.
  *
  * Schema-first and Biome run concurrently, followed by tsgo.
  *
