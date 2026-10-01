@@ -197,7 +197,9 @@ failover list are unchanged.
   AttributeKey=EventName,AttributeValue=BidEvictedEvent --start-time <t0>
   --end-time <t1>` and the launch list from `aws ec2 describe-instances`
   filtered on the `ghr:Application` tag and `LaunchTime`, joined to the
-  Actions jobs API on `runner_name`.
+  Actions jobs API on `runner_name`. The dated launch-to-job record for this window is
+  kept in [evidence/2026-10-01-spot-pool-spread-launches.md](./evidence/2026-10-01-spot-pool-spread-launches.md),
+  because terminated-instance records expire.
 - Open: repeat the reclaim count from "Attribute a runner loss" over the
   following days and compare with the baseline of 41 evictions per 564
   launches before deciding whether to shard the Coverage Regression and Lint
