@@ -1955,3 +1955,11 @@ A continuation preflight that checks job termination, source identity and
 review threads together prevents stale runner evidence from becoming launch
 permission. PR #1339 also exposed a stale separate-closeout-PR instruction in
 SPEC P5; the corrected text follows the one-successor-PR decision.
+
+## 2026-10-01: source anchors outlived a retained owner
+
+The LiteralKit keyed-API migration shortened its schema file while preserving
+two disqualified PropertyDescriptor owners. R49 preparation caught their old
+line numbers only after a full source refresh. A packet validator that compares
+stored symbol names with Graft spans after each main merge would distinguish a
+simple re-anchor from a removed owner before rebuilding every prompt.
