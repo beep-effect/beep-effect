@@ -2,7 +2,7 @@
 
 - id: `yeet-status-remote-check-phase`
 - source: `3ba9c6bc603e73732ba18e40a29781ac87156a41`
-- file:line: `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:244`
+- file:line: `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:245`
 - symbol: `YeetStatusRemote`; members: `available`, `checked`, `isDraft`
 - classification: E4; stored; persisted; literalkit; Tier 2 singleton
 - authority: `DECISIONS.md`, 2026-09-24 constitutional citation and remote status rulings
@@ -15,7 +15,7 @@ File references below are under `packages/tooling/tool/cli/` unless qualified.
 
 # Current shape
 
-`src/commands/Yeet/internal/Status.ts:244-281` exports an S.Class with **31 fields**.
+`src/commands/Yeet/internal/Status.ts:245-282` exports an S.Class with **31 fields**.
 Three are the selected axes: required `available` and `checked`, and exact
 optional `isDraft`. No selected field has a default. The encoded field order is:
 
@@ -168,10 +168,10 @@ require the repository's titled Example/Details JSDoc and identity annotations.
 | MonitorLoop.ts:1085-1109,1127,1170-1203,1293-1337,1373-1377,1403-1440 | Preserve checks/labels admission, registered census, head identity, lifecycle terminals, announcement and rerun policy. Do not gate independent sibling observations by phase. |
 | src/commands/Yeet/index.ts:33; src/test/Yeet.test-kit.ts | Preserve facade and codec type; expose phase and focused printer through lawful existing paths. |
 | test/yeet-status-triage.test.ts | Migrate openRemote :86-119 and make fixtures :160,:181,:201,:214,:283,:350,:474,:593,:615,:634,:692,:822,:835, including unknown-draft rendering and readiness. |
-| test/yeet-artifact-writers.test.ts:354 | Migrate whole-snapshot fixture and extend exact artifact coverage across all phases. |
+| test/yeet-artifact-writers.test.ts:353 | Migrate whole-snapshot fixture and extend exact artifact coverage across all phases. |
 | test/yeet.test.ts:168-171,2533-2604 | Keep decode/encode helpers; replace make fixtures; retain full codecs and rendering/command coverage. |
-| test/yeet-monitor-ready.test.ts:60-116 | Migrate remote fixture; preserve admission, check census and readiness behavior. |
-| test/yeet-settle.test.ts:71,186-214,903-920,959,1168 | Migrate decoding/fixtures and updates; preserve arbitrary independent sibling updates and settling. |
+| test/yeet-monitor-ready.test.ts:60-115 | Migrate remote fixture; preserve admission, check census and readiness behavior. |
+| test/yeet-settle.test.ts:71,186-214,901-918,957,1166 | Migrate decoding/fixtures and updates; preserve arbitrary independent sibling updates and settling. |
 
 Search combined exhaustive symbol and selected-field queries, caller closure,
 parent snapshot consumers, source-wide field confirmation and facade inspection.

@@ -5,7 +5,7 @@ Native P2 source/design refresh before R32, bound to merged source HEAD
 and cardinality 4/3. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
 Independent P3 review and implementation acceptance remain pending.
 
-Owner `createPackageCommand` at `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:1399`,
+Owner `createPackageCommand` at `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:1397`,
 with members `retiredNameReused`, `retiredNameCleared`.
 Storage/exposure: derived/internal; target: literalkit.
 
@@ -91,20 +91,20 @@ module-override absences and `syncTsconfigAtRoot`1597–1601 owner references.
 The source's upstream script-policy changes do not change the reconciliation
 owner's4/3 law and must not be reverted by shared command edits.
 
-- `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:992-1006`
+- `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:990-1004`
   — return the initial reconciliation case from `ensureRetiredNameAllowed` while
   preserving the registry read, typed error mapping, refusal condition, and
   exact refusal message.
-- `CreatePackage.command.ts:1398-1400` — replace `retiredNameReused` with the
+- `CreatePackage.command.ts:1396-1398` — replace `retiredNameReused` with the
   named reconciliation state at the same early gate.
-- `CreatePackage.command.ts:1432-1468` — render the exact sanctioned-reuse
+- `CreatePackage.command.ts:1430-1466` — render the exact sanctioned-reuse
   dry-run line only for `reuse-authorized`; retain all other plan lines and the
   no-mutation return.
-- `CreatePackage.command.ts:1589-1611` — after all existing scaffold,
+- `CreatePackage.command.ts:1587-1609` — after all existing scaffold,
   workspace, identity, and config-sync operations, refine the authorized case
   through `removeRetiredPackageName`; preserve registry removal before lockfile
   refresh and its typed failures.
-- `CreatePackage.command.ts:1613-1651` — render the exact retired-entry removal
+- `CreatePackage.command.ts:1611-1649` — render the exact retired-entry removal
   summary only for `reuse-cleared`; preserve ordering relative to workspace,
   identity, lockfile, and sync summaries.
 - `packages/tooling/tool/cli/src/commands/CreatePackage/internal/RetiredNameRegistry.ts:22-72`

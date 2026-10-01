@@ -19,7 +19,7 @@ and currentness closure.
 
 `DesktopShell.isPanelCurrent` at `779-786` chooses the active panel of the
 focused group, or falls back to `isPanelActive` when no group is focused.
-The actual source query helpers in `workspace/dock.atoms.ts:643-672` are
+The actual source query helpers in `workspace/dock.atoms.ts:644-673` are
 callables; their pair is not an eligible stored/derived Boolean carrier and
 its canonical design is proposed for archival withdrawal. That withdrawal
 does not remove or invalidate the actual menu props owner.
@@ -85,7 +85,7 @@ codec, a new service, a cross-package helper, or a new public export.
 | `App.tsx:672-677` | Preserve both exact dot class strings and the aria-hidden span; derive style from closed versus open/current. |
 | `App.tsx:702-708` | Replace the pair of writes with the ordered three-case projection. Preserve key, onNavigate callback and panel descriptor. |
 | `App.tsx:779-786` | Keep both existing focused/no-focus currentness branches exactly; the query APIs remain unchanged. |
-| `workspace/dock.atoms.ts:643-672` | No implementation change. Retain both dual callable APIs, their supported consumers and documentation examples. They are proof dependencies, not additional qualified owners. |
+| `workspace/dock.atoms.ts:644-673` | No implementation change. Retain both dual callable APIs, their supported consumers and documentation examples. They are proof dependencies, not additional qualified owners. |
 | `test/dock-shell.test.tsx` | Preserve validated workspace, query and snapshot tests; add focused menu-entry state/render assertions. |
 
 No other source or fixture directly constructs `OntologyMenuItem`; its sole
