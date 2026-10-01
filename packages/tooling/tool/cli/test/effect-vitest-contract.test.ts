@@ -152,7 +152,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
         })
       );
       const inventory = yield* readEffectVitestInventory(output).pipe(Effect.map(O.getOrThrow));
-      assertTrue(inventory.effectVitestVersion === "4.0.0-rc.118");
+      assertTrue(inventory.effectVitestVersion === "4.0.0");
       assertTrue(inventory.findings.length === timing.findingCount);
       assertTrue(A.some(inventory.findings, (row) => row.ruleId === "EV001"));
       const findingIds = A.map(inventory.findings, (row) => row.id);
