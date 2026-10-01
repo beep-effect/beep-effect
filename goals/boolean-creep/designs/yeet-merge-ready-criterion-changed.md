@@ -15,7 +15,7 @@ unchanged pairs from the legitimate event domain.
 
 The event pair represents four tuples but has two legitimate values: false→true and true→false. The writer's `before === after ? [] : [event]` at `:859–868` is E2 defensive suppression of no-op events; the event description at `:371–372` is E1. An event is emitted for either inequality with no directional restriction.
 
-`test/yeet-watch-stream.test.ts:114–117` verifies unchanged snapshots emit nothing, and `:189–209` exercises eight false→true criterion events. The same public differ accepts the reversed pair of these concrete snapshots and follows the symmetric inequality branch, producing true→false. The only direct class example at `WatchStream.ts:347–350` is false→true. Exhaustive source search found no supported equal-pair class fixture or consumer relying on no-op events. Generic acceptance by `S.Boolean` is not a supported no-op event contract.
+`test/yeet-watch-stream.test.ts:113–116` verifies unchanged snapshots emit nothing, and `:188–208` exercises eight false→true criterion events. The same public differ accepts the reversed pair of these concrete snapshots and follows the symmetric inequality branch, producing true→false. The only direct class example at `WatchStream.ts:347–350` is false→true. Exhaustive source search found no supported equal-pair class fixture or consumer relying on no-op events. Generic acceptance by `S.Boolean` is not a supported no-op event contract.
 
 # Target schema
 
@@ -38,10 +38,10 @@ For the producer, preserve the equality check that suppresses events. Once inequ
 | Location | Required migration or preserved behavior |
 | --- | --- |
 | `WatchStream.ts:340–374` | Update constructor example and decoded event class; colocate transition LiteralKit and legacy codec. |
-| `WatchStream.ts:663–677` | Assemble the event union with this member's compatibility codec so the union's decoded event is narrow while its encoded event remains the old pair. Keep all eight other event members exact. |
-| `WatchStream.ts:690,717–718` | Keep one schema JSON encoding route through `encodeWatchEvent` / `renderYeetWatchEventLine`; ensure the union uses the inverse above. |
-| `WatchStream.ts:794–873` | Preserve head-change suppression, check/thread/mergeability ordering and eight-criterion ordering. Change only the emitted criterion constructor at `:862`. |
-| `internal/WatchMode.ts:502–506` | Preserve schema-error mapping and NDJSON emission. The event enters this route from snapshot diffs; no raw JSON alternative is permitted. |
+| `WatchStream.ts:662–676` | Assemble the event union with this member's compatibility codec so the union's decoded event is narrow while its encoded event remains the old pair. Keep all eight other event members exact. |
+| `WatchStream.ts:689,716–717` | Keep one schema JSON encoding route through `encodeWatchEvent` / `renderYeetWatchEventLine`; ensure the union uses the inverse above. |
+| `WatchStream.ts:793–872` | Preserve head-change suppression, check/thread/mergeability ordering and eight-criterion ordering. Change only the emitted criterion constructor at `:861`. |
+| `internal/WatchMode.ts:497–501` | Preserve schema-error mapping and NDJSON emission. The event enters this route from snapshot diffs; no raw JSON alternative is permitted. |
 | `internal/WatchMode.ts`; `internal/Porcelain.ts`; `Yeet.command.ts` | Preserve watch polling, termination, until-event and command routing; no new control flow. |
 | `src/test/Yeet.test-kit.ts`; CLI `package.json` | Preserve public test facade and command-subpath access, including generic class and union codec consumers. Document the decoded constructor change. |
 | `test/yeet-watch-stream.test.ts`; `test/yeet-watch-mode.test.ts` | Migrate direct decoded inspections as needed while keeping emitted JSON event kinds/order and the old from/to values. |

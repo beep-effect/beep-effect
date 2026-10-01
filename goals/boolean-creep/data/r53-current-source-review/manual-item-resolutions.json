@@ -1,0 +1,71 @@
+{
+  "kind": "r53-manual-item-resolutions/v1",
+  "count": 13,
+  "items": [
+    {
+      "owner": "r25-tool-docgen-cli-config-toggles",
+      "ruling": "non-conflict",
+      "evidence": "'Command.make156' is docgen/src/CLI.ts:156 (Command.make) in a note bound to HEAD 93217d9; CLI.ts unchanged cf97->HEAD. Builder misresolved basename to apps/labs/semantica canary Command.ts. No edit."
+    },
+    {
+      "owner": "r26-foundation-ui-activate-panel-reasons",
+      "ruling": "retain-unchanged",
+      "evidence": "Reducer.ts:344 changed only PanelId.equals -> S.toEquivalence(PanelId). At cf97 PanelId.equals = SchemaUtils.toEquivalence(schema) = dual(2, S.toEquivalence(schema)); two-argument call is identical. Same line, owner, members panelChanged/reveal/restore and D1 contract (restore line changed identically for GroupId). Row retained byte-identical."
+    },
+    {
+      "owner": "r28-cli-quality-coverage-resolved-operation",
+      "ruling": "non-conflict",
+      "evidence": "'validation3556-3560' is prose 'validation' + Tasks.ts lines (the evidence cite file); Tasks.ts unchanged cf97->HEAD. Builder misresolved to ai-sync validation.ts. No edit."
+    },
+    {
+      "owner": "r32-cli-yeet-settle-budget-phase",
+      "ruling": "defer-archived",
+      "evidence": "'WatchMode.ts1112-1116' is out of range at cf97 (WatchMode.ts has 1098 lines) and no pin binds it; stale before R53. No current successor is derivable without inventing one. Leave text unchanged; carry as inherited debt (not R53-introduced)."
+    },
+    {
+      "owner": "create-package-scaffold-shape",
+      "ruling": "resolve-move",
+      "evidence": "'validation1190-1414' is prose + CreatePackage.command.ts (not ai-sync validation.ts). Design pinned 0be1f13; pin->cf97 maps 'same', so citation was exact at cf97. cf97->HEAD 1190->1188, 1414->1412 (span preserved). Applied in corrected design set (L117)."
+    },
+    {
+      "owner": "create-package-template-type-flags",
+      "ruling": "resolve-move",
+      "evidence": "Same referent; L89 completed in full: declaration734-767->732-765, validation1190-1414->1188-1412, writer1479-1504->1477-1502 (all pin-same, byte-identical moves)."
+    },
+    {
+      "owner": "html-datalist-child-grammar",
+      "ruling": "defer-authored",
+      "evidence": "Html.conformance.ts:13 root '@beep/schema' (SchemaUtils) import was deleted by the codec-statics retirement; no exact successor exists, and the claim 'reuse schema import' no longer holds. Needs an authored design update. ':81' on the same line moved to ':80' (applied)."
+    },
+    {
+      "owner": "html-dl-child-grammar",
+      "ruling": "defer-authored",
+      "evidence": "Same deleted import at :13; '1732-1733' unchanged. Needs an authored design update; no digit edit."
+    },
+    {
+      "owner": "html-img-sizes-disposition",
+      "ruling": "non-conflict",
+      "evidence": "'package.json:44-74' refers to the owner package packages/foundation/modeling/html/package.json (unchanged), not root package.json. No edit."
+    },
+    {
+      "owner": "html-link-imagesizes-disposition",
+      "ruling": "non-conflict",
+      "evidence": "Same as html-img: owner html/package.json unchanged. No edit."
+    },
+    {
+      "owner": "r27-cli-commands-d-k-normalize-manifest-dedupe-move",
+      "ruling": "non-conflict",
+      "evidence": "'package `package.json:39`, `:109`' is packages/tooling/tool/cli/package.json (unchanged). No edit."
+    },
+    {
+      "owner": "statutes-at-large-pincite-is-range",
+      "ruling": "non-conflict",
+      "evidence": "'package.json:37-67' is packages/law-practice/domain/package.json (unchanged); cited src paths unchanged. No edit."
+    },
+    {
+      "owner": "worktree-removal-mode",
+      "ruling": "non-conflict",
+      "evidence": "'Name491' is Worktree.schemas.ts:491 (the name field of WorktreeRemovalRequest, cf. 'Worktree.schemas.ts489-513' two lines up), not FileName.ts; Worktree.schemas.ts unchanged cf97->HEAD. No edit."
+    }
+  ]
+}

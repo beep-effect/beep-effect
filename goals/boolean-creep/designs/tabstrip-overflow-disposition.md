@@ -3,12 +3,12 @@
 - id: `tabstrip-overflow-disposition`
 - exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
 - corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
-- file:line: `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:358`
+- file:line: `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:363`
 - symbol: `TabStrip.measureStrip`
 - members: `unmeasured`, `allFit`
 - evidence classes:
-  - E4 at `GroupPane.tsx:358-360` — `allFit = unmeasured || widthFits`, so unmeasured implies all-fit.
-  - E2 at `GroupPane.tsx:361-386` — overflow allocation runs only when all-fit is false, which implies a measured strip.
+  - E4 at `GroupPane.tsx:363-365` — `allFit = unmeasured || widthFits`, so unmeasured implies all-fit.
+  - E2 at `GroupPane.tsx:366-391` — overflow allocation runs only when all-fit is false, which implies a measured strip.
 
 # Current shape
 
@@ -32,12 +32,12 @@ Match the disposition exhaustively. `unmeasured` and `fits` both produce an empt
 
 # Migration inventory
 
-- `GroupPane.tsx:1-39` — import `LiteralKit` from `@beep/schema`; add the private annotated kit near the existing local helpers. No dependency or barrel change.
-- `GroupPane.tsx:316-353` — preserve width cache, root-relative rectangles, removal of hidden-tab rectangles, action width, and total-width calculation.
-- `GroupPane.tsx:354-386` — replace both booleans and `Bool.match(allFit)` with one disposition derivation and exhaustive LiteralKit match. Preserve active width, `32` reservation, inactive capacity, greedy order, active inclusion, and hidden-id order exactly.
-- `GroupPane.tsx:387-412` — no behavior change: preserve first-measurement publication, stable ref/latest closure, synchronous positive initial measurement, ResizeObserver lifetime, and disconnect cleanup.
-- `GroupPane.tsx:432-501` — no behavior change: preserve freshness-gated hiding, active-tab visibility, overflow label/count, menu activation, outside press, Escape dismissal, and pointer propagation.
-- `internal/AdapterState.ts:50,192,306-308` — no edit: retain keep-alive overflow atoms and cross-render width cache.
+- `GroupPane.tsx:1-40` — import `LiteralKit` from `@beep/schema`; add the private annotated kit near the existing local helpers. No dependency or barrel change.
+- `GroupPane.tsx:321-358` — preserve width cache, root-relative rectangles, removal of hidden-tab rectangles, action width, and total-width calculation.
+- `GroupPane.tsx:359-391` — replace both booleans and `Bool.match(allFit)` with one disposition derivation and exhaustive LiteralKit match. Preserve active width, `32` reservation, inactive capacity, greedy order, active inclusion, and hidden-id order exactly.
+- `GroupPane.tsx:392-417` — no behavior change: preserve first-measurement publication, stable ref/latest closure, synchronous positive initial measurement, ResizeObserver lifetime, and disconnect cleanup.
+- `GroupPane.tsx:437-508` — no behavior change: preserve freshness-gated hiding, active-tab visibility, overflow label/count, menu activation, outside press, Escape dismissal, and pointer propagation.
+- `internal/AdapterState.ts:51,193,307-309` — no edit: retain keep-alive overflow atoms and cross-render width cache.
 - `test/DockviewReact.test.tsx:104-131` — retain measured overflow and activation coverage; add explicit unmeasured/fits transitions, exact 32px reservation boundary, active visibility, and remount freshness.
 - `test/DockviewReact.test.tsx:243-260` — retain StrictMode observer cleanup and assert no extra observer churn.
 - `test/Gestures.test.tsx:252-303` — retain cached width/rect and hidden-tab drop-target behavior.

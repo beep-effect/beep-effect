@@ -114,7 +114,7 @@ and optional stories checks. Current canonical audits invoke lint:laws rather
 than beep:policy. App/lab check remains tsgo -p tsconfig.check.json; stories
 adds its separate tsc check. No copied script table.
 
-Keep validation1190-1414 and raw defaults/error ordering unchanged. Mode
+Keep validation1188-1412 and raw defaults/error ordering unchanged. Mode
 allocation does not move earlier or defer a refusal. Dry-run and final summaries
 1455-1467/1613-1618 continue using ordered filesFor. TemplateContext allocation
 1479-1504 remains separately owned, with all unrelated paths/strings/profiles.

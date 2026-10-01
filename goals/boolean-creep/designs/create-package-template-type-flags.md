@@ -5,7 +5,7 @@ Native P2 source/design refresh before R32, bound to merged source HEAD
 and cardinality 1658880/31. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
 Independent P3 review and implementation acceptance remain pending.
 
-Owner `TemplateContext` at `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:734`,
+Owner `TemplateContext` at `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:732`,
 with members `type`, `family`, `kind`, `appKind`, `isTool`, `isApp`, `isLibrary`, `isNextjsApp`, `isTauriApp`, `isViteApp`, `isServiceApp`, `isRuntimeProofApp`, `isRealApp`, `isLab`, `isEcosystem`.
 Storage/exposure: derived/internal; target: tagged-union.
 
@@ -20,7 +20,7 @@ as specified below. Paths beginning `src/` or `test/` are relative to
 
 # Current shape
 
-CreatePackage.command.ts734–767 exports TemplateContext, a real S.Class that
+CreatePackage.command.ts732–765 exports TemplateContext, a real S.Class that
 receives the resolved scaffold selection and full template payload. It carries
 PackageType, optional PackageFamily/PackageKind/AppKind and eleven Booleans:
 isTool/isApp/isLibrary, isNextjsApp/isTauriApp/isViteApp/isServiceApp/
@@ -86,7 +86,7 @@ a TemplateContext codec and then change which diagnostic appears first.
 # Migration inventory
 
 The output baseline is source/main `0be1f13d62fa00cb65e34ff69ec99043380f8d81`.
-Current declaration734–767, validation1190–1414 and writer1479–1504 retain
+Current declaration732–765, validation1188–1412 and writer1477–1502 retain
 the complete classification grammar. The current templates remain under
 `src/commands/CreatePackage/templates/` (not a CLI-root templates directory).
 Preserve `tsconfig.check.json.hbs` compiler switches, `rootRelative`, and absence

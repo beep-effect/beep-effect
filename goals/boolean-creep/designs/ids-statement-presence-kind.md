@@ -53,7 +53,7 @@ than defining competing e1/e2 strings.
 - `tables/src/entities/IdsSubmissionFact/IdsSubmissionFact.converters.ts:47-109`
   — continue encoding the entity before insert and decoding every untrusted
   selected JSONB row through `IdsSubmissionFact`.
-- `server/src/CandorRecord/CandorRecord.repo.ts:264-303` — no repository-flow
+- `server/src/CandorRecord/CandorRecord.repo.ts:268-307` — no repository-flow
   change; list and append continue crossing those converters.
 - Update decoded readers in `tables/test/CandorConverters.test.ts:263-274` and
   any application code to match `statementKind` rather than inspecting an
