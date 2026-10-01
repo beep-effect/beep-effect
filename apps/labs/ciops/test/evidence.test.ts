@@ -4,7 +4,13 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer } from "effect";
 import * as Str from "effect/String";
-import { decodeEvidenceMode, EvidenceMode, EvidencePaths, generateReplayEvidence } from "@/projection/Evidence";
+import {
+  decodeEvidenceMode,
+  EvidenceMode,
+  EvidencePaths,
+  EvidenceRun,
+  generateReplayEvidence,
+} from "@/projection/Evidence";
 
 const aboxPath = "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
 const journalPath =
@@ -62,6 +68,7 @@ describe("@beep/ciops replay evidence", () => {
         const paths = yield* scratchPaths(journalPath);
         const run = yield* generateReplayEvidence(EvidenceMode.Enum.check, paths);
 
+        expect(run).toBeInstanceOf(EvidenceRun);
         expect(EvidenceMode.is.check(run.mode)).toBe(true);
         expect(Str.includes("PASS")(run.rendered)).toBe(true);
         expect(yield* readEvidence(paths)).toBe(frozenRecord);
