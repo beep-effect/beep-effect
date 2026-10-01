@@ -509,3 +509,12 @@ Six Node/Bun tests preserve twelve assertions; full CLI audit (781.7 seconds)
 and docgen (22.9 seconds) pass. The ledger contains 3,498 rows: 1,989 fixed,
 fourteen exceptions and 1,495 open. Native platform judgment remains open.
 See research/cli-doctor-runtime-resource-proof.md.
+
+
+## Quality dispatch fixture ownership
+
+Eight runtime findings close with `ccfa1913f2` after full CLI audit (674.8
+seconds) and docgen (22.4 seconds). Node/Bun tests and isolation probes pass;
+all 26 assertion trees and eight test names/options remain intact. The ledger
+contains 3,498 rows: 1,997 fixed, fourteen exceptions and 1,487 open.
+See research/cli-dispatch-resource-proof.md.

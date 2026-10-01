@@ -19,8 +19,9 @@ two distinct process-spawner services and recording arrays, and removal of the
 scheduler directory after scope closure. The instrumentation was removed and
 assertion parity was rechecked before the source commit.
 
-Full CLI package verification is running. Eight historical runtime rows remain
-open until that result is collected. Their identities are retained, including
+Full CLI package verification passes: audit took 674.8 seconds and docgen
+22.4 seconds. Eight historical runtime rows close against the source commit
+above. Their identities are retained, including
 the failure-before-OSV row whose assertion migration in `8140304195` explains
 its changed occurrence hash. Native platform provenance remains an independent
 open judgment. No hosted readiness or overall goal completion is claimed.
