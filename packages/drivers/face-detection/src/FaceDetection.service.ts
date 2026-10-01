@@ -27,6 +27,8 @@ import {
 } from "./FaceDetection.models.ts";
 import type { OutputInfo } from "sharp";
 
+const decodeRawFaceDetectionConfidenceOption = S.decodeUnknownOption(RawFaceDetectionConfidence);
+
 const $I = $FaceDetectionId.create("FaceDetection.service");
 const divisor = 32;
 const MAX_FACE_DETECTION_IMAGE_BYTES = 64 * 1024 * 1024;
@@ -651,7 +653,7 @@ const outputTensor = (
 const confidenceScore = (value: number | undefined): RawFaceDetectionConfidence =>
   pipe(
     O.fromUndefinedOr(value),
-    O.flatMap(S.decodeUnknownOption(RawFaceDetectionConfidence)),
+    O.flatMap(decodeRawFaceDetectionConfidenceOption),
     O.getOrElse(() => 0)
   );
 

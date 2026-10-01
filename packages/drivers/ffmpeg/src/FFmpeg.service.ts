@@ -80,6 +80,18 @@ import {
 import type * as PlatformError from "effect/PlatformError";
 import type { FFmpegEvent } from "./FFmpeg.models.ts";
 
+const decodeSafeFramePrefixResult = S.decodeResult(SafeFramePrefix);
+
+const decodeLumaValueOption = S.decodeUnknownOption(LumaValue);
+
+const decodeFrameIndexOption = S.decodeUnknownOption(FrameIndex);
+
+const decodeFrameCountOption = S.decodeUnknownOption(FrameCount);
+
+const decodePositiveFrameRateOption = S.decodeUnknownOption(PositiveFrameRate);
+
+const decodeNonNegativeSecondsOption = S.decodeUnknownOption(NonNegativeSeconds);
+
 const $I = $FfmpegId.create("FFmpeg.service");
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const NumberOrString = S.Union([S.Finite, S.String]);
@@ -328,13 +340,13 @@ const rationalToNumber = (value: unknown): O.Option<number> => {
 };
 
 const parseNonNegativeSeconds = (value: unknown): O.Option<NonNegativeSeconds> =>
-  pipe(parseNumber(value), O.flatMap(S.decodeUnknownOption(NonNegativeSeconds)));
+  pipe(parseNumber(value), O.flatMap(decodeNonNegativeSecondsOption));
 
 const parsePositiveFrameRate = (value: unknown): O.Option<PositiveFrameRate> =>
-  pipe(rationalToNumber(value), O.flatMap(S.decodeUnknownOption(PositiveFrameRate)));
+  pipe(rationalToNumber(value), O.flatMap(decodePositiveFrameRateOption));
 
 const parseFrameCount = (value: unknown): O.Option<FrameCount> =>
-  pipe(parseNumber(value), O.flatMap(S.decodeUnknownOption(FrameCount)));
+  pipe(parseNumber(value), O.flatMap(decodeFrameCountOption));
 
 const probeFromOutput = (videoPath: string, output: FfprobeOutput): VideoProbe => {
   const stream = A.get(output.streams, 0);
@@ -1299,7 +1311,7 @@ const parseProgressEvent = (
     O.fromUndefinedOr(block.out_time_ms ?? block.out_time_us),
     O.flatMap(parseNumber),
     O.map((value) => value / 1_000_000),
-    O.flatMap(S.decodeUnknownOption(NonNegativeSeconds))
+    O.flatMap(decodeNonNegativeSecondsOption)
   );
   const percent = FFmpegProgressPercent.make(
     expected <= 0 ? 0 : Math.min(100, Math.max(0, (frameCount.value / expected) * 100))
@@ -1507,7 +1519,7 @@ const makeExtractContext = Effect.fn("FFmpeg.makeExtractContext")(function* (
   const outDir = path.resolve(request.outDir);
   const sourceExtension = path.extname(videoPath);
   const sourceStem = path.basename(videoPath, sourceExtension) || "video";
-  const defaultPrefix = Result.getOrThrow(S.decodeResult(SafeFramePrefix)(`${sourceStem}_frame`));
+  const defaultPrefix = Result.getOrThrow(decodeSafeFramePrefixResult(`${sourceStem}_frame`));
   const prefix = pipe(
     request.prefix,
     O.getOrElse(() => defaultPrefix)
@@ -1558,7 +1570,7 @@ const readTempFrames = Effect.fn("FFmpeg.readTempFrames")(function* (
     }
 
     const digits = Str.slice(tempPrefix.length, -4)(name);
-    const index = pipe(N.parse(digits), O.flatMap(S.decodeUnknownOption(FrameIndex)));
+    const index = pipe(N.parse(digits), O.flatMap(decodeFrameIndexOption));
 
     if (O.isSome(index)) {
       frames = A.append(
@@ -1715,12 +1727,12 @@ type PendingLuminanceFrame = {
 
 const pendingFrameFromMatch = (match: RegExpMatchArray): O.Option<PendingLuminanceFrame> =>
   O.flatMap(
-    pipe(O.fromUndefinedOr(match[1]), O.flatMap(parseNumber), O.flatMap(S.decodeUnknownOption(FrameIndex))),
+    pipe(O.fromUndefinedOr(match[1]), O.flatMap(parseNumber), O.flatMap(decodeFrameIndexOption)),
     (frameIndex) =>
       pipe(
         O.fromUndefinedOr(match[2]),
         O.flatMap(parseNumber),
-        O.flatMap(S.decodeUnknownOption(NonNegativeSeconds)),
+        O.flatMap(decodeNonNegativeSecondsOption),
         O.map((ptsTimeSeconds) => ({ frameIndex, ptsTimeSeconds }))
       )
   );
@@ -1730,7 +1742,7 @@ const lumaSampleFromMatch = (match: RegExpMatchArray, pending: PendingLuminanceF
     O.fromUndefinedOr(match[1]),
     O.flatMap(parseNumber),
     O.map((value) => Math.min(255, Math.max(0, value))),
-    O.flatMap(S.decodeUnknownOption(LumaValue)),
+    O.flatMap(decodeLumaValueOption),
     O.map((meanLuma) =>
       LuminanceSample.make({
         frameIndex: pending.frameIndex,
@@ -2253,7 +2265,7 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
     const sourceStem = path.basename(videoPath, sourceExtension) || "video";
     const prefix = pipe(
       request.prefix,
-      O.getOrElse(() => Result.getOrThrow(S.decodeResult(SafeFramePrefix)(`${sourceStem}_at`)))
+      O.getOrElse(() => Result.getOrThrow(decodeSafeFramePrefixResult(`${sourceStem}_at`)))
     );
     const context = ExtractAtContext.make({
       manifestPath,

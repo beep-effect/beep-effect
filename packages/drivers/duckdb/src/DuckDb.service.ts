@@ -24,6 +24,8 @@ import type { DuckDBConnection, DuckDBValue } from "@duckdb/node-api";
 import type { DuckDbOperation } from "./DuckDb.errors.ts";
 import type { DuckDbConnectionOptions, DuckDbParquetExport } from "./DuckDb.models.ts";
 
+const decodeDuckDbRows = S.decodeEffect(DuckDbRows);
+
 const $I = $DuckdbId.create("DuckDb.service");
 
 /**
@@ -227,7 +229,7 @@ const queryOnConnection = Effect.fn("DuckDb.queryOnConnection")(function* (
       catch: connectionFailure("query", options, statement),
     })
   );
-  return yield* S.decodeEffect(DuckDbRows)(rows).pipe(
+  return yield* decodeDuckDbRows(rows).pipe(
     Effect.mapError((cause) =>
       DuckDbError.fromUnknown("query", cause, {
         databasePath: options.databasePath,

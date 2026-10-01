@@ -191,6 +191,8 @@ const BoxErrorCause = BoxErrorCauseBase.pipe(
   SchemaUtils.withLiteralKitStatics(BoxErrorCauseBase)
 );
 
+const decodeBoxErrorCauseOption = S.decodeUnknownOption(BoxErrorCause);
+
 type BoxErrorCause = typeof BoxErrorCause.Type;
 
 const BoxHttpStatusCode = S.Int.check(
@@ -502,9 +504,9 @@ const readContextInfo = (value: unknown): O.Option<BoxApiFailureContext> =>
 const causeLabel = (cause: unknown): BoxErrorCause =>
   pipe(
     O.firstSomeOf([
-      P.isString(cause) ? S.decodeUnknownOption(BoxErrorCause)(cause) : O.none(),
-      pipe(readString("_tag")(cause), O.flatMap(S.decodeUnknownOption(BoxErrorCause))),
-      pipe(readString("name")(cause), O.flatMap(S.decodeUnknownOption(BoxErrorCause))),
+      P.isString(cause) ? decodeBoxErrorCauseOption(cause) : O.none(),
+      pipe(readString("_tag")(cause), O.flatMap(decodeBoxErrorCauseOption)),
+      pipe(readString("name")(cause), O.flatMap(decodeBoxErrorCauseOption)),
     ]),
     O.getOrElse(() => (P.isString(cause) ? "String" : "Unknown"))
   );

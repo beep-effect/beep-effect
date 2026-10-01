@@ -94,6 +94,8 @@ export const InboundFrame = S.NonEmptyString.pipe(
   })
 );
 
+const decodeInboundFrame = S.decodeUnknownEffect(InboundFrame);
+
 type InboundFrame = typeof InboundFrame.Type;
 
 const SidecarClosedKind = LiteralKit(["error", "terminated", "event-stream-closed"]).pipe(
@@ -316,7 +318,7 @@ const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, So
         })
       ),
     Rx: ({ payload }) =>
-      S.decodeUnknownEffect(InboundFrame)(payload).pipe(
+      decodeInboundFrame(payload).pipe(
         Effect.tapError(() => Metric.update(Metric.withAttributes(ipcDecodeFailures, { event: "Rx" }), 1)),
         tapRedactedCause(
           LogRedactedCauseOptions.make({

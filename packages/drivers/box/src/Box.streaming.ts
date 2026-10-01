@@ -51,6 +51,8 @@ const BoxByteInputValue = S.Union([S.Uint8Array, BoxNodeReadableInput, BoxByteEf
   })
 );
 
+const isBoxByteInputValue = S.is(BoxByteInputValue);
+
 const LastPartIndex = S.Int.check(
   S.isGreaterThanOrEqualTo(-1, {
     identifier: $I`LastPartIndexMinimumCheck`,
@@ -805,7 +807,7 @@ const assertBoxUrlAllowed = (method: BoxMethodName, url: string): Effect.Effect<
   );
 
 const byteInputToReadable = (method: BoxMethodName, value: unknown): Effect.Effect<NodeJS.ReadableStream, BoxError> => {
-  if (!S.is(BoxByteInputValue)(value)) {
+  if (!isBoxByteInputValue(value)) {
     return Effect.fail(
       BoxError.fromReason("stream", {
         cause: "Expected Uint8Array, Node Readable, or Effect Stream byte input",
