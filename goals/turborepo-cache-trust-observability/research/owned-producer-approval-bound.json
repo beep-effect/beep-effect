@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "owned-producer-approval-bound-checkpoint/v1",
+  "authority": "component-verification-only",
+  "storageRevision": {
+    "materialBytes": 96,
+    "bindingDigest": "domain-separated SHA-256 over schema-encoded CacheProducerBinding",
+    "approvedAt": "explicit exclusive provisioning",
+    "reopenCannotRebind": true,
+    "old64ByteStore": "rejected; no automatic migration"
+  },
+  "negativeBindingCases": 12,
+  "issuerTestsPassed": 15,
+  "focusedTestsPassed": 51,
+  "focusedTestFiles": 4,
+  "sourceCheck": "passed",
+  "fullPackage": "passed",
+  "nativeActualIssuerProbe": {
+    "stable": "passed; actual-persistent-issuer-stable.json",
+    "canary": "passed; actual-persistent-issuer-canary.json"
+  },
+  "workflowApproval": "synthetic identities in component probes; trusted production provisioning and live workflow verification remain unimplemented",
+  "qualificationGranted": false,
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
+      "sha256": "e16f867ebfcd8a8d9bd7d2aa98b88fc84caaae39d4037d4f85d2f001bed93019"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sha256": "961d4b744a120d86d6b5be4eccc0c7da39f8bfec4eb805ecdf69811af1eff0fa"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
+      "sha256": "2c908b2fe30e4d80a755985c3dc91c542c31bb9150c0a128c0227362f26b4c25"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts",
+      "sha256": "578ca3bcb1613ddcd7156d2823f80e8bcd0d6e8a421d370a9fc0f4455bf8b638"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-producer.test.ts",
+      "sha256": "e9c71a9674e671406e8c25f6108edc1049ac742352045ef78d3debc0df0346ee"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-signed-pilot.test.ts",
+      "sha256": "500730c0cef27757d47c4b3744f25bebcf8f55bcea2da2320356711ac165bc0f"
+    }
+  ],
+  "limits": [
+    "Actual issuer denial is optional observation evidence; absence must not authorize promotion.",
+    "Observation-only commands and qualified-transition rejection remain in place.",
+    "No operational protected-supervisor issuance/importer route is enabled."
+  ],
+  "packageAuditSeconds": 791.2,
+  "packageDocgenSeconds": 41.0
+}

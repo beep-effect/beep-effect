@@ -89,6 +89,30 @@ export class CachePilotLogInput extends S.Class<CachePilotLogInput>($I`CachePilo
 ) {}
 
 /**
+ * Grouped native output from the explicitly signed pilot profile.
+ *
+ * **Details**
+ * This parsing input permits remote replay without widening the offline
+ * pilot's local receipt or asserting that a remote hit was authorized.
+ *
+ * **Example** (Describe signed replay text)
+ * ```ts
+ * import { CacheSignedPilotLogInput } from "@beep/repo-cli/commands/Cache"
+ * console.assert("origin" in CacheSignedPilotLogInput.fields)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CacheSignedPilotLogInput extends S.Class<CacheSignedPilotLogInput>($I`CacheSignedPilotLogInput`)(
+  { ...CachePilotLogInput.fields, origin: LiteralKit(["fresh", "remote-hit"]) },
+  $I.annote("CacheSignedPilotLogInput", {
+    description:
+      "Bounded grouped task streams for the separate signed profile; no local receipt or qualification authority.",
+  })
+) {}
+
+/**
  * A selected task's native cache and execution facts.
  *
  * **Example** (Inspect the execution verdict)

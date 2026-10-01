@@ -3,13 +3,13 @@
   "initiative": {
     "id": "turborepo-cache-trust-observability",
     "title": "Turborepo cache trust and observability",
-    "status": "paused",
+    "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-08",
+    "updated": "2026-09-29",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-cache-trust-observability",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Enforce signed artifact reuse, independent upload authorization, tenant isolation and attributable cache outcomes with bounded safe telemetry.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -36,7 +36,23 @@
     "explorations/turborepo-quality-cache/DECISIONS.md",
     "explorations/turborepo-quality-cache/MAP.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/OPPORTUNITIES.md",
+    "research/qualification-fixture-boundary.md",
+    "research/native-isolated-stable-probe.json",
+    "research/native-isolated-canary-probe.json",
+    "research/nested-fixture-network-probe.json",
+    "research/producer-receipt-issuer-design.md",
+    "research/producer-issuer-boundary-control.json",
+    "research/producer-envelope-prototype.json",
+    "research/owned-producer-core.json",
+    "research/owned-producer-store.json",
+    "research/owned-producer-approval-bound.json",
+    "research/actual-persistent-issuer-stable.json",
+    "research/actual-persistent-issuer-canary.json",
+    "research/owned-producer-workflow.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,7 +66,7 @@
     {
       "id": "P0",
       "name": "Threat and receipt contracts",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
@@ -97,5 +113,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Graduated 2026-09-08 after user approval; authored but not started. Launch GOAL.md to activate P0. SPEC/PLAN define milestone dependencies and measured deployment gates."
+  "statusNote": "Active early handoff for task qualification under delegated blocker-resolution authority. PR #1327 merged; remaining work is consolidated on the final implementation branch. Single writer for shared Cache contracts and local signed fixtures. Broader packet criteria remain incomplete; no cloud deployment or production readiness is claimed."
 }

@@ -5,14 +5,16 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
+import { CacheClientPin, CacheQualificationKey, CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { LiteralKit, NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
+import { Crypto, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
@@ -35,7 +37,7 @@ import { CacheSyntheticCheck, CacheSyntheticRun } from "./Cache.experiment.schem
 import { inspectCacheFixtureCapture } from "./Cache.experiment.ts";
 import { fingerprintCacheComputation } from "./Cache.fingerprint.ts";
 import { collectCacheRuntimeLinker, inspectCacheLinkedFile, parseCacheLinkerOutput } from "./Cache.linker.ts";
-import { extractCachePilotLog } from "./Cache.pilot.capture.ts";
+import { extractCachePilotLog, extractCacheSignedPilotLog } from "./Cache.pilot.capture.ts";
 import {
   CachePilotLogInput,
   CachePilotMutation,
@@ -45,8 +47,19 @@ import {
   CachePilotRun,
   CachePilotShadow,
   CachePilotTask,
+  CacheSignedPilotLogInput,
 } from "./Cache.pilot.schemas.ts";
+import {
+  CacheSignedPilotPair,
+  CacheSignedPilotProtection,
+  CacheSignedPilotReceipt,
+  CacheSignedPilotRun,
+  CacheSignedPilotTask,
+} from "./Cache.pilot.signed.schemas.ts";
 import { renderCacheIdentityLintProfile, verifyCacheIdentityLintProfile } from "./Cache.profile.ts";
+import { CacheFixtureCredentials, CacheFixtureScenario } from "./Cache.protocol.fixture.schemas.ts";
+import { makeCacheProtocolFixture } from "./Cache.protocol.fixture.ts";
+import { assertCachePrivateNetwork } from "./Cache.protocol.runner.ts";
 import {
   CacheActivationPreview,
   CacheActivationRequest,
@@ -60,12 +73,26 @@ import {
   CacheToolchainSnapshot,
 } from "./Cache.schemas.ts";
 import { CacheQualificationService } from "./Cache.service.ts";
-import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
 import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
 import type { CachePilotRequest } from "./Cache.pilot.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot");
+const PilotMode = LiteralKit(["local", "signed"]);
+const PilotCapability = S.Redacted(S.NonEmptyString);
+class PilotTransport extends S.Class<PilotTransport>($I`PilotTransport`)(
+  {
+    endpoint: S.NonEmptyString,
+    namespace: S.NonEmptyString,
+    bearer: PilotCapability,
+    signing: PilotCapability,
+    secrets: S.Array(PilotCapability),
+  },
+  $I.annote("PilotTransport", {
+    description: "Supervisor-owned ephemeral transport for one signed execution; never decoded from a public request.",
+  })
+) {}
+
 const identityDirectory = "packages/foundation/modeling/identity";
 const typesDirectory = "packages/foundation/primitive/types";
 const identityTask = "@beep/identity#lint";
@@ -284,9 +311,15 @@ const decodeNonEmptyArrayJson = S.decodeUnknownEffect(S.NonEmptyArray(S.Json));
 const decodeNonEmptyString = S.decodeUnknownEffect(S.NonEmptyString);
 
 const runPilot = Effect.fn("CachePilot.run")(
-  function* (root: string, request: CachePilotRequest) {
+  function* (
+    root: string,
+    request: CachePilotRequest,
+    mode: typeof PilotMode.Type = "local",
+    protectedIssuerMaterial: O.Option<string> = O.none()
+  ) {
     if (process.platform !== "linux" || process.arch !== "x64")
       return yield* CacheCommandError.new("The real pilot sandbox requires Linux x64.");
+    if (mode === "signed") yield* assertCachePrivateNetwork;
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const cache = yield* CacheQualificationService;
@@ -298,6 +331,8 @@ const runPilot = Effect.fn("CachePilot.run")(
     const current = yield* cache.activation(root, activationRequest);
     if (!S.toEquivalence(CacheActivationPreview)(current, preview))
       return yield* CacheCommandError.new("The pilot activation preview is stale.");
+    if (mode === "signed" && request.selection !== "full")
+      return yield* CacheCommandError.new("Signed comparisons require full selection.");
     const dependencies = yield* readCacheEvidenceBytes(root, request.dependencies).pipe(
       Effect.flatMap(decodeText),
       Effect.flatMap(JsonStringCodec(CacheDependencyMaterialization).decode)
@@ -518,7 +553,8 @@ const runPilot = Effect.fn("CachePilot.run")(
       fixture: PilotRoot,
       guest: string,
       args: ReadonlyArray<string>,
-      env: Readonly<Record<string, string>> = {}
+      env: Readonly<Record<string, string>> = {},
+      transport: O.Option<PilotTransport> = O.none()
     ) {
       if (needsProfile && env.BIOME_CONFIG_PATH !== undefined)
         return yield* CacheCommandError.new("Pilot scenario cannot override the governed lint profile.");
@@ -526,10 +562,19 @@ const runPilot = Effect.fn("CachePilot.run")(
         yield* fs.makeDirectory(path.join(fixture.directory, name), { recursive: true });
       for (const relative of R.keys(fixture.additionalPackages))
         yield* fs.makeDirectory(path.join(fixture.directory, "dependency-logs", relative), { recursive: true });
+      if (O.isSome(transport)) {
+        yield* writeContainedFileString(
+          fixture.directory,
+          "run/config.json",
+          yield* JsonStringCodec(S.Struct({ teamId: S.String })).encode({ teamId: transport.value.namespace })
+        );
+      }
       return yield* runCapturedStreams({
         command: "/usr/bin/bwrap",
         args: [
-          "--unshare-all",
+          ...(O.isSome(transport)
+            ? ["--unshare-user", "--unshare-pid", "--unshare-ipc", "--unshare-uts"]
+            : ["--unshare-all"]),
           "--die-with-parent",
           "--new-session",
           "--ro-bind",
@@ -593,6 +638,13 @@ const runPilot = Effect.fn("CachePilot.run")(
           GIT_CONFIG_NOSYSTEM: "1",
           GIT_OPTIONAL_LOCKS: "0",
           ...env,
+          ...(O.isSome(transport)
+            ? {
+                TURBO_API: transport.value.endpoint,
+                TURBO_TOKEN: Redacted.value(transport.value.bearer),
+                TURBO_REMOTE_CACHE_SIGNATURE_KEY: Redacted.value(transport.value.signing),
+              }
+            : {}),
           ...(needsProfile ? { BIOME_CONFIG_PATH: path.join(guest, "biome.identity.jsonc") } : {}),
           BEEP_CACHE_TOOLCHAIN_DIGEST: runtimeIdentity.toolchainDigest,
         },
@@ -784,13 +836,14 @@ const runPilot = Effect.fn("CachePilot.run")(
       )
         return yield* CacheCommandError.new(`Native pilot run ${id} omitted the verified lint profile.`);
     });
-    const execute = Effect.fn("CachePilot.execute")(function* (
+    const executeNative = Effect.fn("CachePilot.executeNative")(function* (
       fixture: PilotRoot,
       id: string,
       enabled: boolean,
       reuse: boolean,
       guest = "/fixture",
-      env: Readonly<Record<string, string>> = {}
+      env: Readonly<Record<string, string>> = {},
+      transport: O.Option<PilotTransport> = O.none()
     ) {
       const expectedProfile = yield* profileObservation(guest);
       yield* prepareExecution(fixture, enabled);
@@ -808,7 +861,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           "lint",
           "--filter=@beep/identity",
           "--no-daemon",
-          `--cache=${reuse ? "local:rw" : "local:"}`,
+          `--cache=${O.isSome(transport) ? "remote:rw" : reuse ? "local:rw" : "local:"}`,
           "--cache-dir=/cache",
           "--env-mode=strict",
           "--summarize",
@@ -818,13 +871,23 @@ const runPilot = Effect.fn("CachePilot.run")(
           "--ui=stream",
           "--concurrency=1",
         ],
-        env
+        env,
+        transport
       );
       if (captured.truncated) return yield* CacheCommandError.new("Pilot process capture exceeded its bound.");
       const names = yield* fs.readDirectory(path.join(fixture.directory, "run/runs"));
       if (names.length !== 1)
         return yield* CacheCommandError.new("Pilot did not produce exactly one native run summary.");
       const bytes = yield* readBytes(fixture.directory, `run/runs/${O.getOrThrow(A.head(names))}`);
+      if (O.isSome(transport)) {
+        const text = yield* decodeText(bytes);
+        if (
+          A.some(transport.value.secrets, (secret) =>
+            A.some([captured.stdout, captured.stderr, text], (value) => Str.includes(Redacted.value(secret))(value))
+          )
+        )
+          return yield* CacheCommandError.new("Signed pilot capture contains synthetic credential material.");
+      }
       const summary = yield* decodeText(bytes).pipe(Effect.flatMap(JsonStringCodec(NativeSummary).decode));
       const dependencies = yield* Effect.forEach(
         A.filter(summary.tasks, (task) => task.taskId !== identityTask),
@@ -851,35 +914,54 @@ const runPilot = Effect.fn("CachePilot.run")(
         }),
         onSome: Effect.fn("CachePilot.executed")(function* (task: typeof NativeTask.Type) {
           yield* verifyExecutionEnvironment(fixture, id, task, expectedProfile);
-          const observation = yield* taskObservation(task);
+          const observation = yield* O.match(transport, {
+            onNone: () => taskObservation(task),
+            onSome: Effect.fn("CachePilot.observeSignedTask")(function* () {
+              const exitCode = yield* task.execution.pipe(
+                O.flatMap((execution) => execution.exitCode),
+                Effect.fromOption(() => CacheCommandError.new("Signed selected task omitted its exit verdict."))
+              );
+              if (task.cache.local || (task.cache.status === "HIT") !== task.cache.remote)
+                return yield* CacheCommandError.new("Signed selected task lacks exclusive remote origin evidence.");
+              return CacheSignedPilotTask.make({
+                computation: task.taskId,
+                taskHash: task.hash,
+                origin: task.cache.status === "HIT" ? "remote-hit" : "fresh",
+                exitCode,
+                inputsDigest: yield* inputDigest(task.inputs),
+              });
+            }),
+          });
           if (task.command !== "bun run beep:lint" || (captured.exitCode === 0) !== (observation.exitCode === 0))
             return yield* CacheCommandError.new("Selected pilot command or verdict disagrees with its graph.");
-          const text = yield* extractCachePilotLog(
-            CachePilotLogInput.make({
-              computation: identityTask,
-              taskHash: task.hash,
-              origin: observation.origin,
-              cacheEnabled: enabled,
-              stdout: captured.stdout,
-              stderr: captured.stderr,
-              truncated: captured.truncated,
-            })
-          );
+          const capture = {
+            computation: identityTask,
+            taskHash: task.hash,
+            origin: observation.origin,
+            cacheEnabled: enabled,
+            stdout: captured.stdout,
+            stderr: captured.stderr,
+            truncated: captured.truncated,
+          };
+          const text = yield* O.isSome(transport)
+            ? S.decodeUnknownEffect(CacheSignedPilotLogInput)(capture).pipe(Effect.flatMap(extractCacheSignedPilotLog))
+            : S.decodeUnknownEffect(CachePilotLogInput)(capture).pipe(Effect.flatMap(extractCachePilotLog));
           if (
             A.isReadonlyArrayNonEmpty(inspectCacheFixtureCapture(text, false)) ||
             Str.includes("qualification-canary")(text)
           )
             return yield* CacheCommandError.new("Selected pilot capture exposed an unsafe canary or absolute path.");
           const replayLogMatches = yield* verifyReplayLog(fixture, text, enabled);
-          return CachePilotOutcome.cases.Executed.make({
+          return {
+            _tag: "Executed",
             selected: observation,
             logSha256: yield* hashText(text),
             logBytes: NonNegativeInt.make(new TextEncoder().encode(text).byteLength),
             replayLogMatches,
-          });
+          };
         }),
       });
-      return CachePilotRun.make({
+      const observed = {
         nativeRuntimeKeyObserved: A.some(selected, (task) =>
           A.contains(task.environmentVariables.configured, runtimeKeyObservation)
         ),
@@ -891,8 +973,261 @@ const runPilot = Effect.fn("CachePilot.run")(
         dependencies,
         summarySha256: yield* hashBytes(bytes),
         sourceTreeUnchanged,
-      });
+      };
+      return yield* O.isSome(transport)
+        ? S.decodeUnknownEffect(CacheSignedPilotRun)(observed)
+        : S.decodeUnknownEffect(CachePilotRun)(observed);
     });
+    const execute = Effect.fn("CachePilot.execute")(function* (
+      fixture: PilotRoot,
+      id: string,
+      enabled: boolean,
+      reuse: boolean,
+      guest = "/fixture",
+      env: Readonly<Record<string, string>> = {}
+    ) {
+      return yield* executeNative(fixture, id, enabled, reuse, guest, env).pipe(
+        Effect.flatMap(S.decodeUnknownEffect(CachePilotRun))
+      );
+    });
+    const verifyFinalIntegrity = Effect.fn("CachePilot.verifyFinalIntegrity")(function* () {
+      yield* verifyTools();
+      if (
+        !S.toEquivalence(CacheRuntimeLinkerSnapshot)(
+          runtimeLinker,
+          yield* collectCacheRuntimeLinker(root, runtimeExecutables)
+        )
+      )
+        return yield* CacheCommandError.new("Pilot startup libraries changed during execution.");
+      if (!S.toEquivalence(CacheActivationPreview)(yield* cache.activation(root, activationRequest), current))
+        return yield* CacheCommandError.new("Pilot source configuration drifted during execution.");
+      for (const source of sourceRoots)
+        if (
+          (yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "" ||
+          (yield* captureHost(source, ["rev-parse", "HEAD"])) !== revision
+        )
+          return yield* CacheCommandError.new("Read-only pilot worktree changed during execution.");
+      yield* verifyCacheDependencies(root, dependencies);
+    });
+
+    if (mode === "signed") {
+      const crypto = yield* Crypto.Crypto;
+      const rootConfig = yield* readBytes(root, "turbo.json").pipe(
+        Effect.flatMap(decodeText),
+        Effect.flatMap(decodeJsoncTextAs(S.JsonObject))
+      );
+      const flags = yield* O.match(R.get(rootConfig, "futureFlags"), {
+        onNone: () => Effect.succeed({}),
+        onSome: decodeJsonObject,
+      });
+      const usesGlobal = S.is(S.Literal(true))(R.get(flags, "globalConfiguration").pipe(O.getOrUndefined));
+      const configuration = usesGlobal ? yield* decodeJsonObject(rootConfig.global) : rootConfig;
+      const remoteConfig = yield* O.match(R.get(configuration, "remoteCache"), {
+        onNone: () => Effect.succeed({}),
+        onSome: decodeJsonObject,
+      });
+      const signedConfiguration = R.set(configuration, "remoteCache", {
+        ...remoteConfig,
+        enabled: true,
+        signature: true,
+      });
+      const signedConfig = yield* JsonStringCodec(S.JsonObject).encode(
+        usesGlobal ? R.set(rootConfig, "global", signedConfiguration) : signedConfiguration
+      );
+      const signedRootConfiguration = yield* hashText(signedConfig);
+      const pairs = yield* Effect.forEach(
+        A.range(0, 2),
+        (pair) =>
+          Effect.scoped(
+            Effect.gen(function* () {
+              const namespace = `team_${request.channel}_${yield* hashText(`${request.client.namespace}:${pair}`)}`;
+              const client = CacheClientPin.make({ ...request.client, namespace });
+              const writer = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
+              const reader = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
+              const signing = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
+              const issuerCanary = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
+              const secrets = [writer, reader, signing, issuerCanary];
+              const fresh = yield* prepare(sourceRootA, "root-a", `signed-${pair}-authority`).pipe(
+                Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+              );
+              const producerRoot = yield* prepare(sourceRootA, "root-a", `signed-${pair}-producer`).pipe(
+                Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+              );
+              const readerRoot = yield* prepare(sourceRootB, "root-b", `signed-${pair}-reader`).pipe(
+                Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+              );
+              const authoritative = yield* execute(fresh, `signed-${pair}-authority`, false, false);
+              const fixture = yield* makeCacheProtocolFixture(
+                CacheFixtureCredentials.make({ namespace, writer, reader })
+              );
+              const transport = PilotTransport.make({
+                endpoint: fixture.url,
+                namespace,
+                bearer: writer,
+                signing,
+                secrets,
+              });
+              yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-producer`, fault: "none" }));
+              const producer = yield* executeNative(
+                producerRoot,
+                `signed-${pair}-producer`,
+                true,
+                true,
+                "/fixture",
+                {},
+                O.some(transport)
+              ).pipe(Effect.flatMap(S.decodeUnknownEffect(CacheSignedPilotRun)));
+              const protectedKeyPath = path.join(experiment, `protected-${pair}.key`);
+              const protectedRecordPath = path.join(experiment, `protected-${pair}.json`);
+              const protectedRecord = yield* JsonStringCodec(CacheSignedPilotRun).encode(producer);
+              yield* writeContainedFileString(experiment, `protected-${pair}.key`, Redacted.value(issuerCanary));
+              yield* writeContainedFileString(experiment, `protected-${pair}.json`, protectedRecord);
+              yield* fs.chmod(protectedKeyPath, 0o600);
+              yield* fs.chmod(protectedRecordPath, 0o600);
+              yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-reader`, fault: "none" }));
+              const replay = yield* executeNative(
+                readerRoot,
+                `signed-${pair}-reader`,
+                true,
+                true,
+                "/fixture",
+                {},
+                O.some(PilotTransport.make({ ...transport, bearer: reader }))
+              ).pipe(Effect.flatMap(S.decodeUnknownEffect(CacheSignedPilotRun)));
+              const protectedPaths = yield* S.String.pipe(S.Array, JsonStringCodec).encode([
+                protectedKeyPath,
+                protectedRecordPath,
+              ]);
+              const forbiddenDigests = yield* S.String.pipe(S.Array, JsonStringCodec).encode([
+                yield* writer.pipe(Redacted.value, hashText),
+                yield* issuerCanary.pipe(Redacted.value, hashText),
+              ]);
+              const issuerProbe = yield* S.String.pipe(S.OptionFromNullOr, JsonStringCodec).encode(
+                protectedIssuerMaterial
+              );
+              const probeScript = `const fs=require("node:fs");const crypto=require("node:crypto");
+const paths=${protectedPaths};const forbidden=${forbiddenDigests};const issuer=${issuerProbe};
+const denied=(file,flags)=>{try{const fd=fs.openSync(file,flags);fs.closeSync(fd);return false;}catch(error){if(error.code==="ENOENT"||error.code==="EACCES"||error.code==="EPERM"||error.code==="EROFS")return true;throw error;}};
+const values=Object.values(process.env);try{for(const item of fs.readFileSync("/proc/1/environ","utf8").split("\\0")){const at=item.indexOf("=");if(at>=0)values.push(item.slice(at+1));}}catch(error){if(error.code!=="ENOENT"&&error.code!=="EACCES"&&error.code!=="EPERM")throw error;}
+const hidden=values.every(value=>!forbidden.includes(crypto.createHash("sha256").update(value).digest("hex")));
+console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(file=>denied(file,"r")),writesDenied:paths.every(file=>denied(file,"r+")),writerEnvironmentHidden:hidden,issuerMaterialDenied:issuer===null?undefined:denied(issuer,"r")&&denied(issuer,"r+")}));`;
+              const protectionProbe = yield* invoke(
+                readerRoot,
+                "/fixture",
+                ["/tools/bun", "-e", probeScript],
+                {},
+                O.some(PilotTransport.make({ ...transport, bearer: reader }))
+              );
+              if (
+                protectionProbe.exitCode !== 0 ||
+                protectionProbe.truncated ||
+                Str.trim(protectionProbe.stderr) !== ""
+              )
+                return yield* CacheCommandError.new("Signed pilot reader protection probe failed.");
+              const protectionResult = yield* JsonStringCodec(S.JsonObject).decode(protectionProbe.stdout);
+              const protectedBytesUnchanged =
+                (yield* readBytes(experiment, `protected-${pair}.key`, 1024).pipe(Effect.flatMap(decodeText))) ===
+                  Redacted.value(issuerCanary) &&
+                (yield* readBytes(experiment, `protected-${pair}.json`, 256 * 1024).pipe(
+                  Effect.flatMap(decodeText)
+                )) === protectedRecord;
+              const protection = yield* S.decodeUnknownEffect(CacheSignedPilotProtection)({
+                ...protectionResult,
+                mechanism: "nested-reader-denial/v1",
+                protectedBytesUnchanged,
+              });
+              if (
+                !CachePilotOutcome.isAnyOf(["Executed"])(authoritative.outcome) ||
+                authoritative.graphExitCode !== 0 ||
+                producer.graphExitCode !== 0 ||
+                replay.graphExitCode !== 0 ||
+                authoritative.outcome.selected.origin !== "fresh" ||
+                producer.outcome.selected.origin !== "fresh" ||
+                replay.outcome.selected.origin !== "remote-hit" ||
+                authoritative.outcome.logSha256 !== producer.outcome.logSha256 ||
+                producer.outcome.logSha256 !== replay.outcome.logSha256 ||
+                producer.outcome.selected.taskHash !== replay.outcome.selected.taskHash ||
+                producer.outcome.selected.inputsDigest !== replay.outcome.selected.inputsDigest ||
+                !producer.outcome.replayLogMatches ||
+                !replay.outcome.replayLogMatches ||
+                producer.summarySha256 === replay.summarySha256
+              )
+                return yield* CacheCommandError.new(
+                  "Signed pilot diverged from fresh authority or lacked independent remote replay."
+                );
+              const events = yield* fixture.events;
+              const taskHash = producer.outcome.selected.taskHash;
+              const puts = A.filter(events, (event) => event.operation === "put");
+              const reads = A.filter(events, (event) => event.operation === "get" && event.role === "reader");
+              const put = yield* A.head(puts).pipe(
+                Effect.fromOption(() => CacheCommandError.new("Signed producer upload missing."))
+              );
+              const read = yield* A.head(reads).pipe(
+                Effect.fromOption(() => CacheCommandError.new("Signed reader download missing."))
+              );
+              if (
+                puts.length !== 1 ||
+                reads.length !== 1 ||
+                put.status !== 200 ||
+                put.role !== "writer" ||
+                read.status !== 200 ||
+                !O.contains(taskHash)(put.artifact) ||
+                !O.contains(taskHash)(read.artifact) ||
+                !put.tagPresent ||
+                !read.tagPresent ||
+                put.bytes === 0 ||
+                put.bytes !== read.bytes ||
+                O.isNone(put.digest) ||
+                !O.contains(put.digest.value)(read.digest) ||
+                !A.some(
+                  events,
+                  (event) =>
+                    event.operation === "get" &&
+                    event.role === "writer" &&
+                    event.status === 404 &&
+                    O.contains(taskHash)(event.artifact)
+                )
+              )
+                return yield* CacheCommandError.new(
+                  "Signed pilot lacks matching direct miss/upload/download evidence."
+                );
+              return CacheSignedPilotPair.make({
+                id: NonNegativeInt.make(pair),
+                client,
+                authoritative,
+                producer,
+                replay,
+                events,
+                protection,
+              });
+            })
+          ),
+        { concurrency: 1 }
+      );
+      yield* verifyFinalIntegrity();
+      return CacheSignedPilotReceipt.make({
+        key: CacheQualificationKey.make({
+          ...current.source.key,
+          profile: `${current.source.key.profile}-private-loopback-signed-v1`,
+        }),
+        baseKey: current.source.key,
+        sourceRevision: revision,
+        channel: request.channel,
+        client: request.client,
+        runtimeKeyDigest: runtimeIdentity.toolchainDigest,
+        runtimeLinker: O.some(runtimeLinker),
+        bun: current.source.toolchain.bun,
+        biome: current.source.toolchain.biome,
+        node: current.source.toolchain.node,
+        installedDependencies: dependencies.tree,
+        activation: request.activation,
+        configurationDigest: current.source.configurationDigest,
+        toolchainDigest: current.source.toolchainDigest,
+        signedRootConfiguration,
+        pairs,
+      });
+    }
+
     const runs: Array<CachePilotRun> = [];
     const checks: Array<CacheSyntheticCheck> = [];
     const shadowDecisions: Array<CachePilotShadow> = [];
@@ -1405,25 +1740,6 @@ const runPilot = Effect.fn("CachePilot.run")(
       }
     });
     yield* runNonExecutionControls();
-    const verifyFinalIntegrity = Effect.fn("CachePilot.verifyFinalIntegrity")(function* () {
-      yield* verifyTools();
-      if (
-        !S.toEquivalence(CacheRuntimeLinkerSnapshot)(
-          runtimeLinker,
-          yield* collectCacheRuntimeLinker(root, runtimeExecutables)
-        )
-      )
-        return yield* CacheCommandError.new("Pilot startup libraries changed during execution.");
-      if (!S.toEquivalence(CacheActivationPreview)(yield* cache.activation(root, activationRequest), current))
-        return yield* CacheCommandError.new("Pilot source configuration drifted during execution.");
-      for (const source of sourceRoots)
-        if (
-          (yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "" ||
-          (yield* captureHost(source, ["rev-parse", "HEAD"])) !== revision
-        )
-          return yield* CacheCommandError.new("Read-only pilot worktree changed during execution.");
-      yield* verifyCacheDependencies(root, dependencies);
-    });
     yield* verifyFinalIntegrity();
     yield* Effect.logInfo(
       `Pilot ${request.channel}: completed ${runs.length} observations and ${checks.length} checks.`
@@ -1480,7 +1796,14 @@ const runPilot = Effect.fn("CachePilot.run")(
  * @category testing
  * @since 0.0.0
  */
-export const runCachePilotForTesting = runPilot;
+export const runCachePilotForTesting = Effect.fn("CachePilot.runLocalForTesting")(function* (
+  root: string,
+  request: CachePilotRequest
+) {
+  return yield* runPilot(root, request).pipe(
+    Effect.filterOrFail(S.is(CachePilotReceipt), () => CacheCommandError.new("Expected an offline pilot receipt."))
+  );
+});
 
 /**
  * Execute admitted real-pilot comparisons in disposable overlays of read-only worktrees.
@@ -1516,6 +1839,35 @@ export const runCachePilotExperiment = Effect.fn("Cache.runPilotExperiment")(fun
       command: "bun run beep cache pilot",
     }),
     noAdmissionOriginGate,
-    runPilot(root, request)
+    runCachePilotForTesting(root, request)
   );
 }, CacheCommandError.mapError("Real pilot admission or execution failed."));
+
+/**
+ * Execute signed real-pilot pairs inside a supervisor-owned private network.
+ *
+ * **Details**
+ * Derives a distinct private-loopback profile from the reviewed base activation
+ * and requires clean registered
+ * source roots. The caller owns admission and the outer namespace. Returned
+ * observations do not establish protected-producer or qualification authority.
+ *
+ * **Example** (Reference the signed worker)
+ * ```ts
+ * import { runCacheSignedPilotWorker } from "@beep/repo-cli/commands/Cache"
+ * console.assert(typeof runCacheSignedPilotWorker === "function")
+ * ```
+ *
+ * @internal
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const runCacheSignedPilotWorker = Effect.fn("CachePilot.runSignedWorker")(function* (
+  root: string,
+  request: CachePilotRequest,
+  protectedIssuerMaterial: O.Option<string> = O.none()
+) {
+  return yield* runPilot(root, request, "signed", protectedIssuerMaterial).pipe(
+    Effect.filterOrFail(S.is(CacheSignedPilotReceipt), () => CacheCommandError.new("Expected a signed pilot receipt."))
+  );
+});

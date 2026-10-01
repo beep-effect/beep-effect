@@ -35,13 +35,30 @@ export {
   inspectCacheLinkerResolution,
   parseCacheLinkerOutput,
 } from "../commands/Cache/Cache.linker.ts";
-export { extractCachePilotLog } from "../commands/Cache/Cache.pilot.capture.ts";
+export { extractCachePilotLog, extractCacheSignedPilotLog } from "../commands/Cache/Cache.pilot.capture.ts";
 export { runCachePilotForTesting } from "../commands/Cache/Cache.pilot.ts";
+export {
+  initializeCacheProducerIssuer,
+  makeCacheProducerIssuer,
+  openCacheProducerIssuer,
+  revokeCacheProducerIssuer,
+} from "../commands/Cache/Cache.producer.ts";
 export * as CacheRuntimeProfile from "../commands/Cache/Cache.profile.ts";
 export {
   renderCacheIdentityLintProfile,
   verifyCacheIdentityLintProfile,
   writeCacheIdentityLintProfile,
 } from "../commands/Cache/Cache.profile.ts";
+export {
+  CacheProducerObservation,
+  CacheProducerWorkflow,
+  CacheProducerWorkflowFile,
+} from "../commands/Cache/Cache.workflow.schemas.ts";
+export {
+  collectCacheProducerWorkflowFiles,
+  hashCacheProducerWorkflow,
+  inspectCacheProducerWorkflow,
+  runCacheProducerWorkflow,
+} from "../commands/Cache/Cache.workflow.ts";
 export * as CacheRuntimeFileGuards from "../internal/cli/FsGuards.ts";
 export * as CacheRuntimeProcess from "../internal/process/StepExec.ts";

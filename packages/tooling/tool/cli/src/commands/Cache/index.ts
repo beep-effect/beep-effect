@@ -100,6 +100,13 @@ export { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
  */
 export { hashCacheToolchain } from "./Cache.fingerprint.ts";
 /**
+ * Supervised signed real-pilot execution.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export { runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
+/**
  * Native pilot requests, observations and negative controls.
  *
  * @category schemas
@@ -115,14 +122,57 @@ export {
   CachePilotRun,
   CachePilotShadow,
   CachePilotTask,
+  CacheSignedPilotLogInput,
 } from "./Cache.pilot.schemas.ts";
+export {
+  CacheSignedPilotPair,
+  CacheSignedPilotProtection,
+  CacheSignedPilotReceipt,
+  CacheSignedPilotRequest,
+  CacheSignedPilotRun,
+  CacheSignedPilotTask,
+} from "./Cache.pilot.signed.schemas.ts";
+/**
+ * Signed real-pilot observation consistency.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export { validateCacheSignedPilotReceipt } from "./Cache.pilot.signed.ts";
 /**
  * Run native identity lint qualification controls.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export { runCachePilotExperiment } from "./Cache.pilot.ts";
+export { runCachePilotExperiment, runCacheSignedPilotWorker } from "./Cache.pilot.ts";
+/**
+ * Producer envelope identities and authentication contracts.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export { CacheProducerBinding, CacheProducerBody, CacheProducerEnvelope } from "./Cache.producer.schemas.ts";
+export {
+  CacheFixtureArtifactKey,
+  CacheFixtureCredentials,
+  CacheFixtureEvent,
+  CacheFixtureFault,
+  CacheFixtureScenario,
+} from "./Cache.protocol.fixture.schemas.ts";
+export { makeCacheProtocolFixture } from "./Cache.protocol.fixture.ts";
+export {
+  CacheProtocolExecution,
+  CacheProtocolReadFailure,
+  CacheProtocolRequest,
+} from "./Cache.protocol.runner.schemas.ts";
+export {
+  assertCachePrivateNetwork,
+  runCacheProtocolExperiment,
+  runCacheProtocolWorker,
+} from "./Cache.protocol.runner.ts";
+export { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
+export { validateCacheProtocolObservation } from "./Cache.protocol.ts";
 /**
  * Execute tasks with a runtime-owned identity.
  *

@@ -11,7 +11,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CacheCommandError } from "./Cache.schemas.ts";
-import type { CachePilotLogInput } from "./Cache.pilot.schemas.ts";
+import type { CachePilotLogInput, CacheSignedPilotLogInput } from "./Cache.pilot.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot.capture");
 const UnambiguousTerminalText = S.String.check(S.isPattern(/^[^\x00-\x08\x0b-\x1f\x7f\ufffd]*$/u)).pipe(
@@ -21,7 +21,9 @@ const UnambiguousTerminalText = S.String.check(S.isPattern(/^[^\x00-\x08\x0b-\x1
 );
 const isUnambiguous = S.is(UnambiguousTerminalText);
 
-const validatePilotStreams = Effect.fn("CachePilot.validateStreams")(function* (input: CachePilotLogInput) {
+const validatePilotStreams = Effect.fn("CachePilot.validateStreams")(function* (
+  input: CachePilotLogInput | CacheSignedPilotLogInput
+) {
   if (
     input.truncated ||
     new TextEncoder().encode(input.stdout).byteLength > 1024 * 1024 ||
@@ -32,8 +34,36 @@ const validatePilotStreams = Effect.fn("CachePilot.validateStreams")(function* (
     return yield* CacheCommandError.new(
       "Pilot process streams are truncated, oversized or contain ambiguous terminal text."
     );
-  if (!input.cacheEnabled && input.origin === "local-hit")
-    return yield* CacheCommandError.new("A disabled pilot task cannot be a local hit.");
+  if (!input.cacheEnabled && input.origin !== "fresh")
+    return yield* CacheCommandError.new("A disabled pilot task cannot be a cache hit.");
+});
+
+const extractPilotLog = Effect.fn("CachePilot.extractLog")(function* (
+  input: CachePilotLogInput | CacheSignedPilotLogInput
+) {
+  yield* validatePilotStreams(input);
+  const prefix = `${Str.replace("#", ":")(input.computation)}: `;
+  const selectedLines = pipe(
+    A.fromIterable(Str.linesWithSeparators(input.stdout)),
+    A.filter(Str.startsWith(prefix)),
+    A.map(Str.slice(prefix.length))
+  );
+  if (A.some(A.fromIterable(Str.linesWithSeparators(input.stderr)), Str.startsWith(prefix)))
+    return yield* CacheCommandError.new(
+      "Selected pilot output unexpectedly appeared on the orchestration error stream."
+    );
+  const progress =
+    input.origin !== "fresh"
+      ? `cache hit, replaying logs ${input.taskHash}\n`
+      : input.cacheEnabled
+        ? `cache miss, executing ${input.taskHash}\n`
+        : `cache bypass, force executing ${input.taskHash}\n`;
+  if (!O.contains(progress)(A.head(selectedLines)))
+    return yield* CacheCommandError.new("Selected pilot output is missing its exact native progress boundary.");
+  const text = A.join(A.drop(selectedLines, 1), "");
+  if (new TextEncoder().encode(text).byteLength > 64 * 1024)
+    return yield* CacheCommandError.new("Selected pilot task log exceeded its 64 KiB bound.");
+  return text;
 });
 
 /**
@@ -63,28 +93,28 @@ const validatePilotStreams = Effect.fn("CachePilot.validateStreams")(function* (
  * @category parsing
  * @since 0.0.0
  */
-export const extractCachePilotLog = Effect.fn("CachePilot.extractLog")(function* (input: CachePilotLogInput) {
-  yield* validatePilotStreams(input);
-  const prefix = `${Str.replace("#", ":")(input.computation)}: `;
-  const selectedLines = pipe(
-    A.fromIterable(Str.linesWithSeparators(input.stdout)),
-    A.filter(Str.startsWith(prefix)),
-    A.map(Str.slice(prefix.length))
-  );
-  if (A.some(A.fromIterable(Str.linesWithSeparators(input.stderr)), Str.startsWith(prefix)))
-    return yield* CacheCommandError.new(
-      "Selected pilot output unexpectedly appeared on the orchestration error stream."
-    );
-  const progress =
-    input.origin === "local-hit"
-      ? `cache hit, replaying logs ${input.taskHash}\n`
-      : input.cacheEnabled
-        ? `cache miss, executing ${input.taskHash}\n`
-        : `cache bypass, force executing ${input.taskHash}\n`;
-  if (!O.contains(progress)(A.head(selectedLines)))
-    return yield* CacheCommandError.new("Selected pilot output is missing its exact native progress boundary.");
-  const text = A.join(A.drop(selectedLines, 1), "");
-  if (new TextEncoder().encode(text).byteLength > 64 * 1024)
-    return yield* CacheCommandError.new("Selected pilot task log exceeded its 64 KiB bound.");
-  return text;
+export const extractCachePilotLog = Effect.fn("CachePilot.extractLocalLog")(function* (input: CachePilotLogInput) {
+  return yield* extractPilotLog(input);
+});
+
+/**
+ * Preserve signed pilot task text using the same bounded grouped-output parser.
+ *
+ * **Details**
+ * The caller must independently establish remote origin from native summaries
+ * and direct wire/storage evidence. Log text itself cannot prove a remote hit.
+ *
+ * **Example** (Reference the signed capture boundary)
+ * ```ts
+ * import { extractCacheSignedPilotLog } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof extractCacheSignedPilotLog === "function")
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const extractCacheSignedPilotLog = Effect.fn("CachePilot.extractSignedLog")(function* (
+  input: CacheSignedPilotLogInput
+) {
+  return yield* extractPilotLog(input);
 });

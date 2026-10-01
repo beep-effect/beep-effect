@@ -15,6 +15,7 @@ import {
   CacheQualificationService,
   CacheRuntimeLinkerSnapshot,
   CacheToolchainSnapshot,
+  runCacheSignedPilotWorker,
 } from "@beep/repo-cli/commands/Cache";
 import * as Census from "@beep/repo-cli/commands/Cache/Cache.census";
 import * as Dependencies from "@beep/repo-cli/commands/Cache/Cache.dependencies";
@@ -554,12 +555,42 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.provideService(CacheQualificationService, service)
     );
-  return { root, fs, path, run, request, calls, preview, sourceRoots, profileMutations };
+  const runSigned = (changed = request, interfaces = "lo") =>
+    runCacheSignedPilotWorker(root, changed).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      Effect.provideService(CacheQualificationService, service),
+      Effect.provideService(FileSystem.FileSystem, {
+        ...fs,
+        readFileString: (file, encoding) =>
+          file === "/proc/net/dev"
+            ? Effect.succeed(`header\nheader\n${interfaces}: 0\n`)
+            : fs.readFileString(file, encoding),
+      })
+    );
+  return { root, fs, path, run, runSigned, request, calls, preview, sourceRoots, profileMutations };
 });
 
 afterEach(() => vi.restoreAllMocks());
 
 it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process boundary", (it) => {
+  it.effect("rejects signed work outside the private network before any native process", () =>
+    Effect.gen(function* () {
+      const { runSigned, calls } = yield* fixture("none", linker, true);
+      expect(Result.isFailure(yield* runSigned(undefined, "eth0").pipe(Effect.result))).toBe(true);
+      expect(calls).toHaveLength(0);
+    })
+  );
+  it.effect("rejects partial signed selection before any native process", () =>
+    Effect.gen(function* () {
+      const { runSigned, request, calls } = yield* fixture("none", linker, true);
+      expect(
+        Result.isFailure(
+          yield* runSigned(CachePilotRequest.make({ ...request, selection: "controls" })).pipe(Effect.result)
+        )
+      ).toBe(true);
+      expect(calls).toHaveLength(0);
+    })
+  );
   it.effect("regenerates mounted profile bytes for root mutations and retains fixed selection", () =>
     Effect.gen(function* () {
       const { run, profileMutations } = yield* fixture("none", linker, true);

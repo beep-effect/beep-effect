@@ -17,7 +17,7 @@ is needed.
 | P0 Refresh and contract | in-progress | Refresh checkout, tools, scripts and source ownership. Specify the versioned qualification tuple and evidence requirements. | Reconstructable census and reviewed contract; no phantom executable nodes. |
 | P1 Policy and discovery | in-progress | Implement pure policy/projection in repo-configs and discovery, transition checks and drift reporting in Cache. | Fixtures prove lifecycle legality, deterministic projection and pilot-only enforcement. |
 | P2 Local pilot and shadow | in-progress | Exercise one synthetic fixture and @beep/identity#lint in one named profile; record reads, writes, logs and semantic perturbations. | Fresh comparisons and shadow evidence are attributable; legacy settings remain visibly unassessed. |
-| P3 Signed replay integration | pending | Consume conformance/trust receipts and run the full isolated signed-replay protocol for the real pilot. | A real pilot qualifies with the required comparisons and shadow sample; unsupported profiles remain excluded. |
+| P3 Signed replay integration | in-progress | Consume conformance/trust receipts and run the full isolated signed-replay protocol for the real pilot. | A real pilot qualifies with the required comparisons and shadow sample; unsupported profiles remain excluded. |
 | P4 Verify and hand off | pending | Run package gates, command/fixture tests and the qualification replay suite; hand the population and policy API to adoption. | Acceptance and negative cases pass with versioned receipts and no unexplained divergence. |
 | P5 Yeet: PR to mergeable | pending | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
 | P6 Close | pending | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
@@ -2777,3 +2777,129 @@ reports preserve exact bindings; disposable fixture roots were scoped and
 removed. This pinned-native local matrix does not prove signed transport or
 ordinary-entrypoint semantic closure. Exact canary remains a separate run; no
 tuple is promoted. The receipt postdates the 112-review census attachment.
+
+### Remaining-work integration boundary
+
+Continue the remainder of qualification in PR #1327 where feasible, batching
+publication to reduce hosted CI and AWS costs. The operator delegated remaining
+material choices and authorized merging this PR through the ChatGPT Chrome
+extension after full goal acceptance and merge-ready proof. This supersedes
+the earlier unresolved launch decision for necessary sibling prerequisites.
+Conformance retains ownership of protocol fixtures; trust retains ownership of
+receipt contracts. Implement their required early handoffs in this integration
+branch with a single writer, preserving separate packet attribution. Prefer
+zero-incremental-cloud-cost local signed fixtures for the qualification boundary.
+Production activation and whole-program backend comparison are not qualification
+completion requirements and remain under their owning packets. No missing
+runtime receipt may be replaced with a source-only claim.
+
+### Patched dependency profile: canary full local shadow matrix
+
+The [canary matrix review](research/current-patched-shadow-canary.json) records
+67 observations, 40 passing checks, ten shadow decisions, eight mutation
+controls and four non-execution cases at `b410da2b6d`. Exact client
+2.11.5-canary.2 uses its own namespace. Separate report relationship review
+passes, including fresh dependency execution and expected hash changes.
+Both patched local matrices are now renewed; signed replay, protected producer
+evidence and complete semantic closure remain open. No tuple is promoted.
+
+### Signed pilot capture boundary — 2026-09-29
+
+The grouped-output parser now shares its bounded implementation between distinct
+local and signed input models. Local inputs still reject remote origins; signed
+inputs reject local origins. Disabled hits, fallback progress, wrong hashes and
+unsafe captures reject. All 27 pilot/parser and existing orchestration tests pass;
+scoped package lint/check and 1,956 docgen examples pass. This is a prerequisite
+for signed execution, not remote-origin proof. The real-pilot signed runner,
+protected receipts and importer remain incomplete.
+
+## Signed real-pilot implementation checkpoint: 2026-09-29
+
+The shared real-pilot runner now has a distinct signed observation mode with
+three independent authority/producer/reader pairs. It requires a private
+network namespace, per-pair reader/writer capabilities, native remote hits,
+matching task/input/log identities and matching fixture upload/download bytes.
+Its receipt derives a distinct signed profile and preserves the reviewed base
+key; it grants no protected-producer or qualification authority.
+
+The implementation snapshot passed the CLI package audit (661.6 seconds) and
+docgen (20.4 seconds). Native startup then exposed an introduced configuration
+placement error under Turbo's globalConfiguration flag. The corrected overlay
+passes typechecking, 29 pilot/orchestration tests and package quick verification
+(lint 4.4 seconds; check 8.6 seconds). The full audit predates that narrow fix.
+The stable native comparison is running; no completed signed real-pilot receipt
+is claimed at this checkpoint. Public supervision, accepted trust/conformance
+contracts, protected-producer validation and the final qualification decision
+remain outstanding. This continues the single final-PR consolidation.
+
+Both native clients subsequently completed: stable and canary each passed three
+independent signed real-pilot pairs. Each pair has zero graph exits, fresh
+local authority and producer, native remote-hit replay, matching log identity
+and a matching signed fixture PUT/GET. Compact checkpoints:
+[signed stable](./research/signed-real-pilot-stable-checkpoint.json) and
+[signed canary](./research/signed-real-pilot-canary-checkpoint.json). Receipt
+relationships were also checked separately after worker completion. Four tiny
+startup controls passed across both Turbo configuration dialects, with and
+without a signing key. Goals doctor reported no new blocking findings.
+
+These are partial observation receipts from the private supervisor harness.
+They do not supply protected-producer authority or an accepted importer, and
+they do not qualify the pilot. Public supervision and the remaining acceptance
+gates are the next implementation work; no new PR was published here.
+
+## Public signed-pilot command checkpoint: 2026-09-29
+
+Added `cache pilot-signed --request <request.json> --output <receipt.json>`.
+The request separates the frozen `sourceRoot` from the running CLI checkout and
+contains the existing exact pilot request. The admitted supervisor supplies the
+private network, read-only source/tool/dependency/Git mounts, scoped writable
+supervisor storage and the source experiment directory. It delegates computation
+and evidence checks to the existing real-pilot worker. The source checkout's
+remaining `.beep` state is read-only in this command.
+
+Typechecking passed. The public stable-client command passed all three signed
+pairs with this smaller writable boundary. The canary command, wrong-client-pin
+rejection and full package verification are pending at this checkpoint. The
+command returns observation-only receipts; protected workflow receipt import
+and qualification remain incomplete.
+
+The public canary command also passed three signed pairs. Both command receipts
+are retained; the supervisor snapshot passed full CLI audit (704.5 seconds) and
+docgen (20.8 seconds). See
+[owned signed pilot runner](./research/owned-signed-pilot-runner.json).
+
+Added relational validation at the supervisor return boundary and a parent-side
+binary-pin check. The validator rejects duplicate pair/namespace/run/summary
+identities, invalid runtime/source/root/dependency evidence, false hits,
+divergent logs/inputs, missing upload/download/miss events, unsigned or mismatched
+bytes, and invalid event order. Both native receipts pass it. All 34 focused
+tests and typechecking pass. A wrong-pin public command now rejects with the
+specific binary-pin mismatch and no receipt. A fresh full package proof is
+running for this later snapshot. Protected-producer and trusted live-contract
+binding remain separate unmet requirements; no qualified transition is enabled.
+
+## Reader protection integration: 2026-09-29
+
+The relational-validator snapshot passed full CLI audit (666.4 seconds) and
+docgen (19.5 seconds). The next implementation adds protection checks through
+exactly the same sandbox invocation used by the signed reader. A protected
+producer record and synthetic issuer-key canary exist before replay; afterward
+the reader boundary must deny file reads/writes and hide writer/issuer values
+from its environment and visible init process. Bounded parent reads verify that
+both protected files stayed unchanged.
+
+This changes signed observations to `cache-pilot-signed/v2` with required
+per-pair protection evidence. Retained v1 reports remain historical; they do not
+implicitly acquire this new evidence. Typechecking and 35 focused tests pass.
+The new native stable run and full package verification are in progress. The
+issuer canary is not a durable approved receipt issuer, and qualification remains
+disabled pending protected issuance and trusted operational import.
+
+Both public native v2 runs subsequently passed: three stable and three canary
+pairs include same-boundary file denial, credential-visibility and protected-byte
+checks. Retained checkpoints:
+[stable protection](./research/reader-protection-stable.json) and
+[canary protection](./research/reader-protection-canary.json). Full package
+verification for this snapshot remains running. These results establish the
+reader boundary around the synthetic protected material; approved durable
+issuance and trusted import remain outstanding.

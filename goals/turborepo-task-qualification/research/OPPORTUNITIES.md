@@ -2466,3 +2466,121 @@ public field; the private full report retains it and the public report hash
 binds the evidence. No scanner rule or baseline was weakened. A minimal public
 receipt projection that omits redundant runtime-key fields would prevent this
 false-positive publication failure.
+
+## 2026-09-29 — merged PR left a redundant local publish proof
+
+A refreshed GitHub query showed PR #1327 merged at 02:03 UTC while a previously
+queued local publish retry was still proving the closed branch. Its owned
+processes were identified by working directory and log destination, interrupted,
+and observed to exit 130. The pending packet files were copied with digest
+verification to the isolated implementation branch before retirement. Checking
+PR lifecycle again when a queued publish receives admission would prevent this
+wasted proof work and stale publication attempt.
+
+The older local proof failed in the inherited agents-client reconciliation test
+with a 29,750 ms watchdog. Its source matches the current base; an isolated run
+of the complete file passed all 14 tests in 2.86 seconds. This establishes a
+non-reproduction, not a root cause or a waived final gate. No test behavior was
+changed. The merged PR's hosted unit checks passed.
+
+## 2026-09-29: signed pilot must honor the frozen Turbo configuration dialect
+
+The first real signed pilot stopped before its fresh-authority summary was
+written. A bounded child-stderr diagnostic identified Turbo's error:
+`When "futureFlags.globalConfiguration" is enabled, "remoteCache" should be placed inside the "global" key.`
+The introduced overlay put that setting at the top level. A separate isolated
+startup control passed with and without a signing key, ruling out that earlier
+hypothesis. Neither attempt supplies a passing real-pilot pair. Preserve the
+frozen source and select the overlay location from its actual configuration
+flag; validate both dialects before rerunning the real computation. Missing
+summary errors should retain bounded, credential-safe native diagnostics so
+configuration rejection is not obscured by the subsequent directory read.
+
+## 2026-09-29: supervised failures need bounded stage diagnostics
+
+The public signed supervisor successfully produced the stable receipt. A request
+with a deliberately wrong binary pin exited nonzero and emitted no receipt, but
+the public error was only `Signed pilot supervisor failed or exceeded its capture bound.`
+This proves fail-closed output behavior, not which inner rejection fired. Keep
+that limitation explicit. Add a bounded typed failure-stage channel, or verify
+the pin before launching the worker, rather than exposing raw child stderr that
+could contain ephemeral fixture credentials. Do not claim the generic failure
+as stage-specific adversarial acceptance evidence.
+
+## 2026-09-29: protection-probe integration typecheck
+
+The new reader protection probe initially triggered four Effect compiler
+`missedPipeableOpportunity` diagnostics in nested codec and secret-hash calls.
+Using the existing pipeable schema and Redacted forms resolved them. Typechecking
+and all 35 focused tests then passed. The native protection experiment and its
+full package proof remain separately tracked; compilation alone does not prove
+reader confinement.
+
+## 2026-09-29: producer core integration boundaries
+
+Extracting the shared signed-pilot fixture left one stale `pin` test reference;
+the focused suite caught it and it now uses the shared input's client. The first
+source check also rejected the direct Node crypto import. Installed Effect
+Crypto exposes random bytes and digests but not HMAC; the implementation now
+uses standard Web Crypto import/sign/verify behind typed Effect boundaries and
+keeps the imported key non-extractable. No compiler diagnostic was disabled.
+Corrected source checking and all 42 focused tests pass. Durable issuer trust
+and the full package proof remain separate requirements.
+
+## Persistent issuer verification routing
+
+The initial persistence test addition used deprecated `it.scoped`; installed
+Effect/Vitest did not register those six cases. Replacing it with `it.effect`
+and explicit `Effect.scoped` registered all 13 issuer tests, which passed.
+Two nested digest calls triggered the enforced pipeable-form diagnostic; the
+pipeable forms now pass source checking without suppressions.
+
+A later focused fixture command omitted the package's canonical `--bun` runtime
+flag. All 12 Bun HTTP fixture cases failed during server initialization under
+Node (`Cannot read properties of undefined` in address conversion), while the
+other 25 cases passed. This is an invocation error, not evidence of a fixture
+regression. Use `bunx --bun vitest run` for that suite; keep the Node issuer-only
+result and the corrected Bun run separate.
+
+## Actual issuer probe: runtime drift and bounded diagnostics
+
+The first actual-key pilot stopped with the supervisor's generic worker-failure
+message. A temporary diagnostic emitted only matches from an allowlist of known
+source error messages. The child logger used stdout, so inspecting stderr alone
+missed the cause; the corrected classifier identified `The pilot activation
+preview is stale.` The temporary instrumentation was removed.
+
+Comparing a freshly computed activation to the retained activation identified
+changed startup-library hashes and the resulting toolchain digest. Source
+configuration and tool executable pins were unchanged. The new preview is a
+separate artifact; historical receipts keep their old identities. See
+[current host drift](./current-host-runtime-drift.json). A structured, secret-safe
+worker failure code would have avoided repeated diagnostic runs; raw child
+output must not be surfaced to achieve that.
+
+
+The optional issuer-probe integration initially passed an Effect value where
+`Option.match` requires a thunk. Source checking caught that error and the
+related inference fallout; it also required the direct `Effect.asSome` and
+pipeable codec forms. The corrected source check and 51 focused tests pass.
+No diagnostics were suppressed.
+
+### Workflow approval needs an execution checkout without development output
+
+While binding the protected issuer workflow, `git ls-files --others --ignored
+--exclude-standard -- packages scripts` observed 2,086 package-local module
+files, 5,533 build-output files and 355 other ignored files in the development
+checkout. Git-listed source hashes alone cannot establish which ignored files
+module resolution could execute. The observation-only route remains ineligible
+for qualification. A dedicated frozen workflow checkout with explicit dependency
+bindings and rejection of executable overrides prevents development caches from
+silently becoming part of trusted producer execution.
+
+### Pre-commit scanner distinguished public identities from secrets
+
+The saving commit's Gitleaks gate flagged two public runtime SHA-256 fields and
+two synthetic artifact IDs under the generic API-key heuristic. The compact
+reports now call the field `runtimeIdentitySha256`; test constants now say
+`artifactHash`. Values and raw receipt bindings remain unchanged. No secret-scan
+exemption was added. Domain-specific identifier names would have prevented this
+false-positive repair loop.

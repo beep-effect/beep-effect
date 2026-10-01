@@ -3,13 +3,13 @@
   "initiative": {
     "id": "turborepo-cache-conformance",
     "title": "Turborepo cache conformance",
-    "status": "paused",
+    "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-08",
+    "updated": "2026-09-29",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-cache-conformance",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Deliver a reusable exact-version Remote Cache conformance corpus and a bounded, evidence-neutral comparison of the named backend topologies.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -36,7 +36,23 @@
     "explorations/turborepo-quality-cache/DECISIONS.md",
     "explorations/turborepo-quality-cache/MAP.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/OPPORTUNITIES.md",
+    "research/current-qualification-client-pins.json",
+    "research/native-signed-stable-probe.json",
+    "research/native-signed-expanded-stable-probe.json",
+    "research/native-signed-expanded-canary-probe.json",
+    "research/signed-runner-integration.md",
+    "research/signed-fixture-case-inventory.json",
+    "research/protocol-observation-implementation.json",
+    "research/owned-fixture-stable.json",
+    "research/owned-fixture-canary.json",
+    "research/owned-fixture-implementation.json",
+    "research/owned-fixture-expanded-stable.json",
+    "research/owned-fixture-expanded-canary.json",
+    "research/owned-protocol-runner.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +66,12 @@
     {
       "id": "P0",
       "name": "Pins, corpus and budget plan",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
       "name": "Local differential runner",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -97,5 +113,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Graduated 2026-09-08 after user approval; authored but not started. Launch GOAL.md to activate P0. SPEC/PLAN define milestone dependencies and measured deployment gates."
+  "statusNote": "Active early handoff for task qualification under delegated blocker-resolution authority. PR #1327 merged; remaining work is consolidated on the final implementation branch. Single writer for shared Cache contracts and local signed fixtures. Broader packet criteria remain incomplete; no cloud deployment or production readiness is claimed."
 }

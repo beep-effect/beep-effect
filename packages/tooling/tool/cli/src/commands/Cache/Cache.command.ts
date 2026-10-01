@@ -27,9 +27,15 @@ import { CacheEntrypointReviewRequest } from "./Cache.entrypoints.schemas.ts";
 import { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
 import { CacheSyntheticReceipt, CacheSyntheticRequest } from "./Cache.experiment.schemas.ts";
 import { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
+import { runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
 import { CachePilotReceipt, CachePilotRequest } from "./Cache.pilot.schemas.ts";
+import { CacheSignedPilotReceipt, CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
 import { runCachePilotExperiment } from "./Cache.pilot.ts";
 import { verifyCacheIdentityLintProfile, writeCacheIdentityLintProfile } from "./Cache.profile.ts";
+import { CacheProtocolExecution, CacheProtocolRequest } from "./Cache.protocol.runner.schemas.ts";
+import { runCacheProtocolExperiment } from "./Cache.protocol.runner.ts";
+import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
+import { validateCacheProtocolObservation } from "./Cache.protocol.ts";
 import { runCacheRuntimeTasks } from "./Cache.runtime.ts";
 import {
   CacheActivationPreview,
@@ -806,6 +812,45 @@ const cachePilotCommand = Command.make(
   Command.provide(MemoryStatsLive)
 );
 
+const cacheSignedPilotCommand = Command.make(
+  "pilot-signed",
+  { request: Flag.File("request"), output: outputFlag },
+  ({ request, output }) =>
+    Effect.gen(function* () {
+      const input = yield* readCacheRequest(request, CacheSignedPilotRequest);
+      const report = yield* runCacheSignedPilotExperiment(process.cwd(), input);
+      yield* writeEncoded(report, JsonStringCodec(CacheSignedPilotReceipt), output);
+    }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription("Compare signed real-pilot pairs in a supervised private network"),
+  Command.provide(MemoryStatsLive)
+);
+
+const cacheProtocolRunCommand = Command.make(
+  "protocol-run",
+  { request: Flag.File("request"), output: outputFlag },
+  ({ request, output }) =>
+    Effect.gen(function* () {
+      const input = yield* readCacheRequest(request, CacheProtocolRequest);
+      const report = yield* runCacheProtocolExperiment(process.cwd(), input);
+      yield* writeEncoded(report, JsonStringCodec(CacheProtocolExecution), output);
+    }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription("Execute pinned signed native fixtures in an isolated private network"),
+  Command.provide(MemoryStatsLive)
+);
+
+const cacheProtocolReviewCommand = Command.make(
+  "protocol-review",
+  { request: Flag.File("request"), output: outputFlag },
+  ({ request, output }) =>
+    Effect.gen(function* () {
+      const observation = yield* readCacheRequest(request, CacheProtocolObservation);
+      const reviewed = yield* validateCacheProtocolObservation(observation);
+      yield* writeEncoded(reviewed, JsonStringCodec(CacheProtocolObservation), output);
+    }).pipe(renderCacheFailure)
+).pipe(Command.withDescription("Validate bounded synthetic protocol observations without granting qualification"));
+
 const cacheExecuteCommand = Command.make(
   "execute",
   { args: Argument.String("args").pipe(Argument.variadic) },
@@ -822,7 +867,7 @@ const cacheExecuteCommand = Command.make(
 
 const cacheCommandDefinition = Command.make("cache", {}, () =>
   Console.log(
-    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, warm, probe, dashboard, execute"
+    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, pilot-signed, protocol-run, protocol-review, warm, probe, dashboard, execute"
   )
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
@@ -839,6 +884,9 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
     cacheSyntheticCommand,
     cacheDependenciesCommand,
     cachePilotCommand,
+    cacheSignedPilotCommand,
+    cacheProtocolRunCommand,
+    cacheProtocolReviewCommand,
     cacheWarmCommand,
     cacheProbeCommand,
     cacheDashboardCommand,

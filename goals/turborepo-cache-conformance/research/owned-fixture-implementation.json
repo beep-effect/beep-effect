@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "cache-owned-fixture-implementation/v1",
+  "date": "2026-09-29",
+  "baseRevision": "5cd64a97b78451f8b9e325a22f4a5ce5d4a52c69",
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.schemas.ts",
+      "sha256": "a71c6215160c94b440d2113778269405ba366d21c88b4311629e351ec33b88b0"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.ts",
+      "sha256": "0a2e07f407b4e92dc92755fc12d0e4e9f33ed66a65e3a74bbb6bdbc032401160"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.schemas.ts",
+      "sha256": "b05c9168ada896cdf5587b9403a83a796d74e40974f932018313fb7fb7135b22"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts",
+      "sha256": "4bca3e7a50ae17c1bfbecee3eb6e33442b8127cbaa15c1386c4d0becc15f188a"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "1c1e33076d11d7df549421646f7b681dfbdeb9d35bef1acf9920e110b9aad8f1"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "sha256": "657cc5efb6bdb8c388f4a330b074c36a00f7613430abe6089b6f9767408b7a23"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-protocol.test.ts",
+      "sha256": "c3c029098cc674808dc85b36c5533979614e39472e6a79f702800c506e83d4c4"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-protocol-fixture.test.ts",
+      "sha256": "f5ab1aea5dee55daf755af3950180fe0cb6b1265adb2588083f1a592599848bb"
+    },
+    {
+      "path": ".changeset/cache-protocol-observation-review.md",
+      "sha256": "70c0fc67de7a638b2d73e06de1f3586f4782e702409375355e0507bf1ed57b74"
+    }
+  ],
+  "lockfileSha256": "7c69a4c119d863794daa86db4e65a95078251e27a1be3c400a448645449ae150",
+  "verification": {
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "exitCode": 0,
+    "auditSeconds": 678.4,
+    "docgenSeconds": 21.1,
+    "logSha256": "983b1a5c9f143a127a6688f1c929f9dffec3438eb83bfcf9cc240a8bf72a5268",
+    "focusedTests": 16,
+    "focusedLogSha256": "2aa7062c6ba3d76ff50ad5f23c79ec8ca3c6a012d899921b08190c13b57989a5"
+  },
+  "retention": "qualification-signed-implementation/verified-owned-fixture",
+  "integration": "Isolated implementation worktree; not yet integrated or published to PR #1327.",
+  "limits": [
+    "Reusable scoped fixture component; native orchestration remains a private integration harness.",
+    "No real-pilot qualification or accepted promotion authority."
+  ]
+}

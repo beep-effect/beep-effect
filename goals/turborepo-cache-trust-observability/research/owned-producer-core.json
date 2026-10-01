@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "owned-producer-core-checkpoint/v1",
+  "authority": "component-verification-only",
+  "crypto": "Web Crypto HMAC-SHA256 with non-extractable per-instance key",
+  "focusedTests": 42,
+  "typecheck": "passed",
+  "nativeReceiptProbeExitCode": 0,
+  "probeChecks": [
+    {
+      "case": "valid",
+      "observed": "accepted"
+    },
+    {
+      "case": "edited-payload",
+      "observed": "rejected"
+    },
+    {
+      "case": "changed-source",
+      "observed": "rejected"
+    },
+    {
+      "case": "changed-workflow",
+      "observed": "rejected"
+    },
+    {
+      "case": "changed-client",
+      "observed": "rejected"
+    },
+    {
+      "case": "changed-profile",
+      "observed": "rejected"
+    },
+    {
+      "case": "changed-epoch",
+      "observed": "rejected"
+    },
+    {
+      "case": "expired",
+      "observed": "rejected"
+    },
+    {
+      "case": "future",
+      "observed": "rejected"
+    },
+    {
+      "case": "wrong-mac",
+      "observed": "rejected"
+    },
+    {
+      "case": "duplicate-pair",
+      "observed": "rejected"
+    },
+    {
+      "case": "missing-wire",
+      "observed": "rejected"
+    },
+    {
+      "case": "denied-upload",
+      "observed": "rejected"
+    },
+    {
+      "case": "missing-protection",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-source",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-channel",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-runtime-key",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-client",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-epoch",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-configuration",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-toolchain",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-signed-root",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-duplicate-pair",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-missing-wire",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-denied-upload",
+      "observed": "rejected"
+    },
+    {
+      "case": "returned-binding-alias",
+      "observed": "isolated"
+    },
+    {
+      "case": "alias-hostile-source",
+      "observed": "rejected"
+    },
+    {
+      "case": "unknown-issuer",
+      "observed": "rejected"
+    }
+  ],
+  "fullPackage": "passed",
+  "qualificationGranted": false,
+  "limits": [
+    "Caller still owns independent workflow approval.",
+    "Issuer keys are in memory; no persistent store, revocation or public issuance route is installed.",
+    "No operational qualification importer consumes these envelopes yet."
+  ],
+  "packageAuditSeconds": 665.5,
+  "packageDocgenSeconds": 20.2
+}
