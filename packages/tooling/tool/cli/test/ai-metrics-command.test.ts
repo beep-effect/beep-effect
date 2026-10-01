@@ -1494,7 +1494,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
-  it.effect.skipIf(isCoverageRatchetRun)("exports an explicit derived OTLP ingest run without resolving latest", () =>
+  it.effect.skipIf(isCoverageRatchetRun)("exports derived OTLP spans as protobuf to the configured local sink", () =>
     withOtlpSink((otlpBaseUrl, requests) =>
       Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {

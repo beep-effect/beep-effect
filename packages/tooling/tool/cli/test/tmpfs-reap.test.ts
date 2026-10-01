@@ -9,6 +9,7 @@ import { runTmpfsWorktreesStep } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { ConfigProvider, Duration, Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -16,7 +17,9 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 
 const temporaryDirectory = FileSystem.FileSystem.use((fs) =>
   Effect.acquireRelease(fs.makeTempDirectory({ prefix: "tmpfs-reap-test-" }), (root) =>
@@ -868,11 +871,19 @@ describe("tmpfs reap", () => {
             yield* fs.writeFileString(payloadPath, "held open\n");
             yield* runCommand("touch", ["-d", fixtureTimestamp(3), candidatePath], root);
 
-            yield* ChildProcess.make(
+            const child = yield* ChildProcess.make(
               "sh",
-              ["-c", 'exec 3< "$1"; while :; do sleep 1; done', "tmpfs-reap-fd", payloadPath],
+              ["-c", 'exec 3< "$1"; printf "ready\\n"; while :; do sleep 1; done', "tmpfs-reap-fd", payloadPath],
               { cwd: root, stdin: "ignore", stderr: "pipe", stdout: "pipe" }
             );
+            const ready = yield* child.stdout.pipe(
+              Stream.decodeText,
+              Stream.splitLines,
+              Stream.runHead,
+              Effect.timeout("5 seconds"),
+              TestClock.withLive
+            );
+            assertSome(ready, "ready");
 
             const report = yield* runTmpfsReap({ cacheRoot, nowMillis: FIXTURE_NOW_MILLIS, tmpRoot });
             const candidate = candidateByPath(report, candidatePath);
@@ -902,12 +913,24 @@ describe("tmpfs reap", () => {
             yield* fs.writeFileString(path.join(candidatePath, "payload.txt"), "cached\n");
             yield* runCommand("touch", ["-d", fixtureTimestamp(8), candidatePath], root);
 
-            yield* ChildProcess.make("flock", ["-x", lockPath, "sh", "-c", "while :; do sleep 1; done"], {
-              cwd: root,
-              stdin: "ignore",
-              stderr: "pipe",
-              stdout: "pipe",
-            });
+            const child = yield* ChildProcess.make(
+              "flock",
+              ["-x", lockPath, "sh", "-c", 'printf "ready\\n"; while :; do sleep 1; done'],
+              {
+                cwd: root,
+                stdin: "ignore",
+                stderr: "pipe",
+                stdout: "pipe",
+              }
+            );
+            const ready = yield* child.stdout.pipe(
+              Stream.decodeText,
+              Stream.splitLines,
+              Stream.runHead,
+              Effect.timeout("5 seconds"),
+              TestClock.withLive
+            );
+            assertSome(ready, "ready");
 
             const report = yield* runTmpfsReap({ cacheRoot, nowMillis: FIXTURE_NOW_MILLIS, tmpRoot });
             const candidate = candidateByPath(report, candidatePath);

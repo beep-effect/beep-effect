@@ -6128,3 +6128,18 @@ A fresh-worktree package check also reported missing dependency declarations
 (`TS6305`). Building the CLI dependency graph cleared those errors; package
 quick verification then passed. A dependency-build preflight would avoid treating
 fresh-checkout setup failures as source regressions.
+
+## 2026-10-01: Native child readiness and stale lens findings
+
+Reviewing the five-suite lens ledger exposed an open file-descriptor/flock
+readiness gap: spawn completion does not guarantee the child's shell has opened
+its descriptor or obtained its lock. The fixture now prints an acknowledgement
+after that operation, and the test awaits that marker with a bounded live-clock
+timeout before running the reaper. Deliberate child scopes remain unchanged.
+
+The same review found two stale or misleading metrics records. Live-clock
+polling had already been repaired in #1323; it uses a finite retry schedule and
+`TestClock.withLive`. Another test title promised explicit ingest-run selection
+although the invocation supplies no run identifier and the command has no such
+flag. Renamed the case to its actual protobuf/span export assertion rather than
+claiming unsupported selection behavior.

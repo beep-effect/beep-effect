@@ -7,7 +7,9 @@ The authoritative root test-type gate subsequently identified three diagnostics;
 those were repaired without weakening assertions. The affected 73 tests pass
 again on Node and Bun (25.25 and 20.79 seconds). The root test-type gate passes.
 Full CLI package verification passed: audit 674.4 seconds and docgen 25.5
-seconds. No campaign ledger closure is claimed yet.
+seconds. Historical detector reconciliation closes 215 rows as fixed and records seven
+intentional lifetime/live-clock exceptions. Five native provenance rows remain
+open; all human-lens records are still pending their individual closeout.
 
 ## Retained scope lifetimes
 

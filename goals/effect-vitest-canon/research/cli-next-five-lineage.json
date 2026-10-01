@@ -1,6 +1,6 @@
 {
   "base": "1710f6d3cfc3c4ec785f98213501bd0ab895a3d3",
-  "status": "prepared; full package proof passed; ledger reconciliation pending",
+  "status": "full package proof passed; 215 fixed and 7 exceptions reconciled; 5 native provenance rows remain open",
   "rows": [
     {
       "id": "EV001:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:120:runSync@6#1",
