@@ -9,7 +9,6 @@ import { IdentityEntry } from "@beep/identity";
 import { $SemanticWebId } from "@beep/identity/packages";
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad, NamedNode, ObjectTerm, Subject } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Effect, HashMap, pipe, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -24,8 +23,8 @@ const $I = $SemanticWebId.create("identity/IdentityRdfBinding");
 
 const identifierPathIri = $SemanticWebId.create("identity/identifier").iri;
 const curiePathIri = $SemanticWebId.create("identity/curie").iri;
-const sameNamedNode = SchemaUtils.toEquivalence(NamedNode);
-const sameSubject = SchemaUtils.toEquivalence(Subject);
+const sameNamedNode = S.toEquivalence(NamedNode);
+const sameSubject = S.toEquivalence(Subject);
 
 const IdentityRdfBindingFields = S.Struct({
   identifierPath: NamedNode,
@@ -275,7 +274,7 @@ const literalAt = Effect.fn("IdentityRdfBinding.literalAt")(function* (
     quads,
     A.filter(
       P.Struct({
-        predicate: sameNamedNode(path),
+        predicate: (predicate: NamedNode) => sameNamedNode(predicate, path),
       })
     )
   );
@@ -341,7 +340,7 @@ const decodeSubject = Effect.fn("IdentityRdfBinding.decodeSubject")(function* (
     dataset.quads,
     A.filter(
       P.Struct({
-        subject: sameSubject(subject),
+        subject: (candidate: Subject) => sameSubject(candidate, subject),
       })
     )
   );
@@ -389,7 +388,10 @@ const decodeSubject = Effect.fn("IdentityRdfBinding.decodeSubject")(function* (
     "Expected exactly one identity CURIE literal."
   );
   const decodedFibers = yield* Effect.forEach(R.toEntries(binding.fiberPaths), ([fiber, path]) => {
-    const matching = pipe(quads, A.filter(P.Struct({ predicate: sameNamedNode(path) })));
+    const matching = pipe(
+      quads,
+      A.filter(P.Struct({ predicate: (predicate: NamedNode) => sameNamedNode(predicate, path) }))
+    );
 
     return A.match(matching, {
       onEmpty: () => Effect.succeed(O.none<[string, string]>()),

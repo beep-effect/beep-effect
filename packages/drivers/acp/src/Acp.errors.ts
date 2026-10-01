@@ -442,8 +442,9 @@ export class AcpRequestError extends S.TaggedError<AcpRequestError>($I`AcpReques
  *
  * ```ts
  * import { AcpError, AcpRequestError } from "@beep/acp/errors"
+ * import * as S from "effect/Schema"
  *
- * console.log(AcpError.is(AcpRequestError.methodNotFound("x/test")))
+ * console.log(S.is(AcpError)(AcpRequestError.methodNotFound("x/test")))
  * ```
  *
  * @category errors
@@ -455,12 +456,7 @@ export const AcpError = pipe(
   $I.annoteSchema("AcpError", {
     description: "Union of typed technical failures emitted by the ACP driver.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("_tag"),
-      SchemaUtils.withStatics(() => ({ is: schema.is }))
-    )
+  S.toTaggedUnion("_tag")
 );
 
 /**

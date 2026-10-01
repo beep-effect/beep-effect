@@ -8,17 +8,21 @@
 
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId";
+import { Result } from "effect";
+import * as S from "effect/Schema";
 import { Worker } from "./Worker.model.ts";
 import type { Principal } from "@beep/shared-domain/entity/Principal";
 import type { CreateWorkerInput } from "./Worker.values.ts";
 
 const WorkerPublicId = PublicEntityId.factory(WorkerId);
+
+const decodeWorkerPublicIdResult = S.decodeResult(WorkerPublicId);
 const systemPrincipal: Principal = {
   component: "Runtime",
   kind: "System",
 };
 
-const publicIdFor = (id: WorkerId) => WorkerPublicId.decodeUnknownSync(`${WorkerId.tableName}_a${id}`);
+const publicIdFor = (id: WorkerId) => Result.getOrThrow(decodeWorkerPublicIdResult(`${WorkerId.tableName}_a${id}`));
 
 /**
  * Creates a new active Worker entity.

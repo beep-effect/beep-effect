@@ -6,7 +6,6 @@
  */
 
 import { $FaceDetectionId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { identity, SchemaTransformation } from "effect";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -151,8 +150,7 @@ export const RawFaceDetectionConfidence = S.Finite.pipe(
   ),
   $I.annoteSchema("RawFaceDetectionConfidence", {
     description: "Finite raw ONNX confidence score normalized into the zero-to-one confidence domain.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
+  })
 );
 
 /**

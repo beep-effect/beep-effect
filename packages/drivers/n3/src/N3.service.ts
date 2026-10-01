@@ -173,7 +173,7 @@ const unsupportedGraph = (graph: Rdf.GraphTerm): N3TurtleCodecError =>
     message: `Turtle serialization only supports default graph quads; found ${Rdf.serializeTerm(graph)}.`,
   });
 
-const isPrefixLabel = (prefix: string): boolean => prefix === "" || Rdf.PrefixLabel.is(prefix);
+const isPrefixLabel = (prefix: string): boolean => prefix === "" || S.is(Rdf.PrefixLabel)(prefix);
 
 const fromN3Subject = (subject: N3.Quad_Subject): Effect.Effect<Rdf.Subject, N3TurtleCodecError> =>
   Match.value(subject).pipe(

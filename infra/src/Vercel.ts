@@ -7,7 +7,6 @@
 
 import { $InfraId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as S from "effect/Schema";
 
 const $I = $InfraId.create("Vercel");
 
@@ -36,10 +35,7 @@ export const VercelAuthenticationDeploymentType = VercelAuthenticationDeployment
   $I.annoteSchema("VercelAuthenticationDeploymentType", {
     description: "Vercel deployment authentication modes accepted by infra-managed projects.",
   }),
-  SchemaUtils.withLiteralKitStatics(VercelAuthenticationDeploymentTypeBase),
-  SchemaUtils.withStatics((schema) => ({
-    decodeResult: S.decodeUnknownResult(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(VercelAuthenticationDeploymentTypeBase)
 );
 
 /**

@@ -11,7 +11,7 @@
  */
 
 import { $PacerId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, Layer, Number as N, pipe, Ref } from "effect";
 import * as A from "effect/Array";
@@ -40,10 +40,7 @@ const $I = $PacerId.create("pacer/transport/Mock");
 
 type MockRequest = Parameters<Parameters<typeof HttpClient.make>[0]>[0];
 
-const MockIntFromString = S.FiniteFromString.pipe(
-  S.check(S.isInt()),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
-);
+const MockIntFromString = S.FiniteFromString.pipe(S.check(S.isInt()));
 const encodeJsonString = S.encodeUnknownEffect(UnknownJson);
 const decodeJsonString = S.decodeUnknownEffect(UnknownJson);
 const decodeLogoutRequestJson = S.decodeUnknownEffect(S.fromJsonString(CsoLogoutRequest));
@@ -397,7 +394,7 @@ const lastPathSegment = (path: string): O.Option<string> =>
   pipe(Str.split("/")(path), A.filter(Str.isNonEmpty), A.last);
 
 const decodedLastPathInt = (path: string): O.Option<number> =>
-  pipe(lastPathSegment(path), O.flatMap(MockIntFromString.decodeUnknownOption));
+  pipe(lastPathSegment(path), O.flatMap(S.decodeUnknownOption(MockIntFromString)));
 
 const selectedReportId = (options: PacerMockOptionsInput): number | string =>
   pipe(
@@ -409,7 +406,7 @@ const selectedPage = (pageCount: number, rawPage: string | null): number =>
   pipe(
     O.fromNullishOr(rawPage),
     O.orElse(() => O.some("0")),
-    O.flatMap(MockIntFromString.decodeUnknownOption),
+    O.flatMap(S.decodeUnknownOption(MockIntFromString)),
     O.map(N.clamp({ minimum: 0, maximum: pageCount - 1 })),
     O.getOrElse(() => 0)
   );

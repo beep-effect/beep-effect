@@ -10,7 +10,7 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { EmailString, LiteralKit, SchemaUtils } from "@beep/schema";
+import { EmailString, LiteralKit } from "@beep/schema";
 import { Effect, FileSystem, pipe, Result, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -42,7 +42,8 @@ const exportConditionPattern = /^(?:[^.0-9]+|types@.+)$/;
  *
  * ```ts
  * import { NpmPackageName } from "@beep/repo-utils/schemas/PackageJson"
- * const isValid = NpmPackageName.is("@beep/example")
+ * import * as S from "effect/Schema"
+ * const isValid = S.is(NpmPackageName)("@beep/example")
  * console.log(isValid)
  * ```
  *
@@ -56,8 +57,7 @@ export const NpmPackageName = S.String.check(S.isMinLength(1))
     $I.annoteSchema("NpmPackageName", {
       title: "Npm Package Name",
       description: "An npm package name that satisfies the package.json SchemaStore constraints.",
-    }),
-    SchemaUtils.withCodecStatics(["is"])
+    })
   );
 
 /**
@@ -67,7 +67,8 @@ export const NpmPackageName = S.String.check(S.isMinLength(1))
  *
  * ```ts
  * import { RepoPackageName } from "@beep/repo-utils/schemas/PackageJson"
- * const isValid = RepoPackageName.is("@beep/repo-utils")
+ * import * as S from "effect/Schema"
+ * const isValid = S.is(RepoPackageName)("@beep/repo-utils")
  * console.log(isValid)
  * ```
  *
@@ -82,8 +83,7 @@ export const RepoPackageName = S.String.check(S.isMinLength(1))
       title: "Repo Package Name",
       description:
         "A repo-local package name, including the legacy mixed-case workspace names currently present in this monorepo.",
-    }),
-    SchemaUtils.withCodecStatics(["is"])
+    })
   );
 
 const PackageManager = S.String.check(S.isPattern(packageManagerPattern)).pipe(
@@ -100,7 +100,8 @@ const PackageManager = S.String.check(S.isPattern(packageManagerPattern)).pipe(
  *
  * ```ts
  * import { RelativeDotPath } from "@beep/repo-utils/schemas/PackageJson"
- * const isPath = RelativeDotPath.is("./src/index.ts")
+ * import * as S from "effect/Schema"
+ * const isPath = S.is(RelativeDotPath)("./src/index.ts")
  * console.log(isPath)
  * ```
  *
@@ -111,32 +112,28 @@ export const RelativeDotPath = S.String.check(S.isPattern(relativeDotPathPattern
   $I.annoteSchema("RelativeDotPath", {
     title: "Relative Dot Path",
     description: "A relative path that starts with ./, used by exports and publishConfig.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const ExportTopLevelKey = S.String.check(S.isPattern(exportTopLevelPattern)).pipe(
   $I.annoteSchema("ExportTopLevelKey", {
     title: "Export Top Level Key",
     description: "A top-level package exports key such as . or ./subpath.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const ImportSpecifierKey = S.String.check(S.isPattern(importSpecifierPattern)).pipe(
   $I.annoteSchema("ImportSpecifierKey", {
     title: "Import Specifier Key",
     description: "A package imports specifier key such as #internal or #config/*.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const ExportConditionKey = S.String.check(S.isPattern(exportConditionPattern)).pipe(
   $I.annoteSchema("ExportConditionKey", {
     title: "Export Condition Key",
     description: "A conditional exports/imports key such as import, require, default, node, or types@>=5.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const StringArray = S.Array(S.String).pipe(
@@ -153,7 +150,8 @@ const StringArray = S.Array(S.String).pipe(
  *
  * ```ts
  * import { NonEmptyStringValue } from "@beep/repo-utils/schemas/PackageJson"
- * const isNonEmpty = NonEmptyStringValue.is("catalog:")
+ * import * as S from "effect/Schema"
+ * const isNonEmpty = S.is(NonEmptyStringValue)("catalog:")
  * console.log(isNonEmpty)
  * ```
  *
@@ -164,8 +162,7 @@ export const NonEmptyStringValue = S.String.check(S.isMinLength(1)).pipe(
   $I.annoteSchema("NonEmptyStringValue", {
     title: "Non Empty String Value",
     description: "A non-empty string value used for package metadata fields that should not be blank.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 const makeStrictStringKeyRecord = <Value extends S.Top>(
@@ -198,7 +195,7 @@ const StringRecord = S.Record(S.String, S.String).pipe(
 );
 
 const NpmDependencyRecord = makeStrictStringKeyRecord(
-  NpmPackageName.is,
+  S.is(NpmPackageName),
   NonEmptyStringValue,
   "Dependency names must be valid npm package names"
 ).pipe(
@@ -209,7 +206,7 @@ const NpmDependencyRecord = makeStrictStringKeyRecord(
 );
 
 const RepoDependencyRecord = makeStrictStringKeyRecord(
-  RepoPackageName.is,
+  S.is(RepoPackageName),
   NonEmptyStringValue,
   "Dependency names must be valid repo package names"
 ).pipe(
@@ -221,7 +218,7 @@ const RepoDependencyRecord = makeStrictStringKeyRecord(
 );
 
 const NonEmptyStringRecord = makeStrictStringKeyRecord(
-  NonEmptyStringValue.is,
+  S.is(NonEmptyStringValue),
   NonEmptyStringValue,
   "Record keys must not be empty"
 ).pipe(
@@ -571,8 +568,7 @@ export const Browser = S.Union([S.String, S.Record(S.String, BrowserReplacement)
     title: "Browser",
     description:
       "Browser-specific entry points represented as a replacement path string or a record of module replacements.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -705,8 +701,7 @@ export const PeerDependenciesMeta = S.Record(
   $I.annoteSchema("PeerDependenciesMeta", {
     title: "Peer Dependencies Meta",
     description: "Metadata describing peer dependency usage, including whether a peer dependency is optional.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -727,8 +722,7 @@ export const TypesVersions = S.Record(S.String, S.Record(S.String, StringArray))
   $I.annoteSchema("TypesVersions", {
     title: "Types Versions",
     description: "TypeScript version-specific path mappings for declarations.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -828,7 +822,7 @@ const PackageExportsEntryObject: S.Codec<
   { readonly [key: string]: PackageExportsEntryOrFallback }
 > = S.suspend(() =>
   makeStrictStringKeyRecord(
-    ExportConditionKey.is,
+    S.is(ExportConditionKey),
     PackageExportsEntryOrFallback,
     "Package exports condition keys must be valid condition names"
   )
@@ -866,7 +860,7 @@ const PackageExportsEntryOrFallback: S.Codec<PackageExportsEntryOrFallback, Pack
 );
 
 const PackageExportsSubpathMap = makeStrictStringKeyRecord(
-  ExportTopLevelKey.is,
+  S.is(ExportTopLevelKey),
   PackageExportsEntryOrFallback,
   "Package exports subpath keys must be . or start with ./"
 ).pipe(
@@ -900,8 +894,7 @@ export const PackageExports = S.Union([
     title: "Package Exports",
     description:
       "The package exports field modeled as a path target, conditional exports object, subpath map, or fallback array.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 type PackageImportsEntry = string | null | { readonly [key: string]: PackageImportsEntryOrFallback };
@@ -920,7 +913,7 @@ const PackageImportsEntryObject: S.Codec<
   { readonly [key: string]: PackageImportsEntryOrFallback }
 > = S.suspend(() =>
   makeStrictStringKeyRecord(
-    ExportConditionKey.is,
+    S.is(ExportConditionKey),
     PackageImportsEntryOrFallback,
     "Package imports condition keys must be valid condition names"
   )
@@ -972,15 +965,14 @@ const PackageImportsEntryOrFallback: S.Codec<PackageImportsEntryOrFallback, Pack
  * @since 0.0.0
  */
 export const PackageImports = makeStrictStringKeyRecord(
-  ImportSpecifierKey.is,
+  S.is(ImportSpecifierKey),
   PackageImportsEntryOrFallback,
   "Package imports keys must start with #"
 ).pipe(
   $I.annoteSchema("PackageImports", {
     title: "Package Imports",
     description: "Private package import mappings keyed by # specifiers.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 type OverrideValue = string | { readonly [key: string]: OverrideValue };
@@ -1066,8 +1058,7 @@ export const PublishConfig = S.StructWithRest(PublishConfigBase, [S.Record(S.Str
     title: "Publish Config",
     description:
       "npm publish configuration with explicit support for access, tag, registry, provenance, bin, exports, and additional JSON-valued config keys.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 const npmPackageJsonFields = {

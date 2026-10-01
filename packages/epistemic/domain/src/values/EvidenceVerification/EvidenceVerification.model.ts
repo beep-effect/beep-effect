@@ -6,7 +6,7 @@
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import { SchemaUtils, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
@@ -31,8 +31,9 @@ const manifestationEncodingVersion = "evidence-verification-manifestation/v1";
  *
  * ```ts
  * import { EvidenceVerificationManifestationKey } from "@beep/epistemic-domain/values/EvidenceVerification"
+ * import * as S from "effect/Schema"
  *
- * console.log(EvidenceVerificationManifestationKey.is("a".repeat(64))) // true
+ * console.log(S.is(EvidenceVerificationManifestationKey)("a".repeat(64))) // true
  * ```
  *
  * @category identifiers
@@ -42,8 +43,7 @@ export const EvidenceVerificationManifestationKey = Sha256Hex.pipe(
   S.brand("EvidenceVerificationManifestationKey"),
   $I.annoteSchema("EvidenceVerificationManifestationKey", {
     description: "SHA-256 digest naming one exact evidence id and verified source-text anchor within an organization.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

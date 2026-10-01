@@ -13,6 +13,7 @@ import { flow } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { Atom } from "effect/reactivity";
+import * as S from "effect/Schema";
 import { GroupId } from "./Dock.ids.ts";
 import type { DockEvent } from "./Dock.events.ts";
 import type { DockAtomFeedEntry } from "./Dock.protocol.ts";
@@ -86,7 +87,7 @@ export const touchedGroups: (entries: ReadonlyArray<DockAtomFeedEntry>) => Reado
       : A.empty<GroupId>()
   ),
   A.reverse,
-  A.dedupeWith(GroupId.equals)
+  A.dedupeWith(S.toEquivalence(GroupId))
 );
 
 /**

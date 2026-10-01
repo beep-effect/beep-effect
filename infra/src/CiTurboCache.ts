@@ -19,7 +19,6 @@ import { $InfraId } from "@beep/identity/packages";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import * as S from "effect/Schema";
-import { withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
 
 const $I = $InfraId.create("CiTurboCache");
 
@@ -119,7 +118,7 @@ export const CiTurboCachePulumiConfigValues = S.Class<CiTurboCachePulumiConfigVa
   $I.annote("CiTurboCachePulumiConfigValues", {
     description: "Validated Pulumi configuration for the asymmetric Turbo cache component.",
   })
-).pipe(withPulumiConfigDecodeEffect);
+);
 
 /**
  * Runtime type produced by {@link CiTurboCachePulumiConfigValues}.

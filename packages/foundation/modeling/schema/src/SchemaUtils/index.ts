@@ -24,11 +24,6 @@ export * from "./toEquivalence.ts";
  * @since 0.0.0
  * @category utilities
  */
-export * from "./withCodecStatics.ts";
-/**
- * @since 0.0.0
- * @category utilities
- */
 export * from "./withKeyDefaults.ts";
 /**
  * @since 0.0.0

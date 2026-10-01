@@ -7,7 +7,7 @@
  */
 
 import { $OntologyId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -99,7 +99,6 @@ const HttpUrlDefinition = S.String.check(
  * @since 0.0.0
  */
 export const HttpUrl = HttpUrlDefinition.pipe(
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
   $I.annoteSchema("HttpUrl", {
     description: "HTTP URL of the ontology source when the source type is http.",
     format: "uri",

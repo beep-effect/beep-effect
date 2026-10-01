@@ -7,7 +7,6 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("entities/PatentAsset/PatentAsset.values");
 const PatentAssetStatusBase = LiteralKit(["pre_filing"]);
@@ -32,11 +31,7 @@ export const PatentAssetStatus = PatentAssetStatusBase.pipe(
   $I.annoteSchema("PatentAssetStatus", {
     description: "Patent asset lifecycle status accepted by law-practice proof fixtures.",
   }),
-  SchemaUtils.withLiteralKitStatics(PatentAssetStatusBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownResult(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(PatentAssetStatusBase)
 );
 
 /**

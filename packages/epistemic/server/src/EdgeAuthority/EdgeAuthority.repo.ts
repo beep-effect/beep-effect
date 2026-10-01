@@ -223,7 +223,7 @@ const normalizeWriteFailure =
   (operation: EdgeWriteOperation, logicalKey: LogicalEdgeKey, expectedVersion: PosInt) =>
   (cause: unknown): EdgeAuthorityError =>
     Match.value(cause).pipe(
-      Match.when(EdgeAuthorityError.is, (typed) => typed),
+      Match.when(S.is(EdgeAuthorityError), (typed) => typed),
       Match.orElse((driverCause) =>
         pipe(
           constraintNameOf(operation, driverCause),

@@ -6,7 +6,7 @@
  */
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
 import { LegalDocumentConceptId, ProjectedVaultPath } from "../../values/Taxonomy/index.ts";
@@ -73,8 +73,9 @@ const FilingOutcomeBase = FilingOutcomeKind.toTaggedUnion("kind")({
  *
  * ```ts
  * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
+ * import * as S from "effect/Schema"
  *
- * const outcome = FilingOutcome.decodeUnknownSync({
+ * const outcome = S.decodeUnknownSync(FilingOutcome)({
  *   kind: "filed",
  *   confidence: 1,
  *   rationale: "Matched deterministic taxonomy token for pleadings.",
@@ -90,12 +91,7 @@ export const FilingOutcome = FilingOutcomeBase.rebuild(FilingOutcomeBase.ast).pi
   $I.annoteSchema("FilingOutcome", {
     description: "Filing decision outcome: filed under a taxonomy concept, or routed to the intake inbox.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("kind"),
-      SchemaUtils.withStatics(() => ({ decodeUnknownSync: schema.decodeUnknownSync }))
-    )
+  S.toTaggedUnion("kind")
 );
 
 /**

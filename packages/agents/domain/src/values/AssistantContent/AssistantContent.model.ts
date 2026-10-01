@@ -9,7 +9,7 @@
  */
 
 import { $AgentsDomainId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -90,12 +90,11 @@ export class LinkInline extends S.Class<LinkInline>($I`LinkInline`)(
   })
 ) {}
 
-const InlineNodeWithCodecStatics = pipe(
+const InlineNodeUntagged = pipe(
   S.Union([TextInline, LinkInline]),
   $I.annoteSchema("InlineNode", {
     description: "Inline content held by an assistant block.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
+  })
 );
 
 /**
@@ -114,13 +113,7 @@ const InlineNodeWithCodecStatics = pipe(
  * @category value-objects
  * @since 0.0.0
  */
-export const InlineNode = InlineNodeWithCodecStatics.pipe(
-  S.toTaggedUnion("type"),
-  SchemaUtils.withStatics(() => ({
-    decodeUnknownSync: InlineNodeWithCodecStatics.decodeUnknownSync,
-    is: InlineNodeWithCodecStatics.is,
-  }))
-);
+export const InlineNode = InlineNodeUntagged.pipe(S.toTaggedUnion("type"));
 
 /**
  * Type accepted by the {@link InlineNode} schema.
@@ -584,12 +577,7 @@ export const AssistantBlock = pipe(
   $I.annoteSchema("AssistantBlock", {
     description: "A single block of an assistant turn.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("type"),
-      SchemaUtils.withStatics(() => ({ decodeUnknownSync: schema.decodeUnknownSync, is: schema.is }))
-    )
+  S.toTaggedUnion("type")
 );
 
 /**

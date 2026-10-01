@@ -13,7 +13,6 @@
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { getSomesStruct } from "@beep/utils/Option";
 import { Context, DateTime, Layer } from "effect";
 import * as A from "effect/Array";
@@ -44,10 +43,10 @@ const ArticleSelectRows = Articles.select.pipe(S.Array, S.mutable);
 const decodeArticleRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(ArticleSelectRows)(rows));
 
-const ArticleCountRows = S.Tuple([ArticleCountDatabaseRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const ArticleCountRows = S.Tuple([ArticleCountDatabaseRow]);
 
 const decodeArticleCountRows = (rows: unknown) =>
-  normalizeDecodedRows(ArticleCountRows.decodeUnknownEffect(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(ArticleCountRows)(rows));
 
 // =============================================================================
 // Types

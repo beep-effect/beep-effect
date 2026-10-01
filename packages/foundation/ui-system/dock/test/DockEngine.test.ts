@@ -65,7 +65,7 @@ const encodeDockWorkspaceJson = S.encodeEffect(S.fromJsonString(DockWorkspace));
 const encodePopulatedWorkspaceJson = S.encodeEffect(S.fromJsonString(PopulatedWorkspace));
 const encodeDockSnapshotJsonOption = S.encodeOption(S.fromJsonString(DockSnapshot));
 
-const workspaceEquals = DockWorkspace.equals;
+const workspaceEquals = S.toEquivalence(DockWorkspace);
 
 const requireChanged = (outcome: DockMutationOutcome): Effect.Effect<DockChanged> =>
   DockMutationResult.match(outcome.result, {
@@ -94,8 +94,8 @@ describe("DockEngine", () => {
     expect(layout.axis).toBe("horizontal");
     expect(layout.leftRatio).toBe(5_000);
     expect(split._tag).toBe("Split");
-    expect(PanelId.is(panelOne.id)).toBe(true);
-    expect(PanelId.equals(panelOne.id)(panelOne.id)).toBe(true);
+    expect(S.is(PanelId)(panelOne.id)).toBe(true);
+    expect(S.toEquivalence(PanelId)(panelOne.id, panelOne.id)).toBe(true);
     assertSome(Panel.findInTabs(left, panelOne.id), panelOne);
     assertSome(TabsNode.findForPanel(split, panelTwo.id), right);
   });

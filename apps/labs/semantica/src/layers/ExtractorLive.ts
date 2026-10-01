@@ -328,7 +328,7 @@ const hostedCacheKey = Effect.fn("Extractor.hostedCacheKey")(function* (
   model: ModelIdentity
 ) {
   const prompt = yield* buildPrompt(request);
-  const inputDigest = yield* Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(prompt));
+  const inputDigest = yield* S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(prompt));
   return yield* contentDigest(ProviderCacheKey)(
     ProviderCacheKey.make({ inputDigest, model, requestKind: "generate-text", schemaVersion: "provider-cache/v1" })
   );

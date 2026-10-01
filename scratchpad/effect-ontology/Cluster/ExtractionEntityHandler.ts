@@ -115,7 +115,7 @@ const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
 ) {
   const eventNumber = yield* Random.nextInt;
   const timestamp = DateTime.formatIso(yield* DateTime.now);
-  return yield* ProgressEvent.decodeUnknownEffect({
+  return yield* S.decodeUnknownEffect(ProgressEvent)({
     _tag,
     eventId: `evt-${eventNumber}`,
     runId,
@@ -251,12 +251,12 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         );
 
       const ontologyParts = Str.includes("/")(ontologyId) ? Str.split("/")(ontologyId) : ["default", ontologyId];
-      const namespace = yield* Namespace.decodeEffect(ontologyParts[0]);
-      const name = yield* OntologyName.decodeEffect(ontologyParts[1] ?? ontologyParts[0]);
+      const namespace = yield* S.decodeEffect(Namespace)(ontologyParts[0]);
+      const name = yield* S.decodeEffect(OntologyName)(ontologyParts[1] ?? ontologyParts[0]);
       const ontologyRef = OntologyRef.make({
         namespace,
         name,
-        contentHash: yield* ContentHash.decodeEffect(ontologyVersion),
+        contentHash: yield* S.decodeEffect(ContentHash)(ontologyVersion),
       });
 
       yield* runService.createRun(

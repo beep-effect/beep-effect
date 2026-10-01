@@ -324,11 +324,11 @@ const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect
 
 const decodeRawHookPulse = HookPulseRawEvent.decodeEffect;
 const encodeRawHookPulse = HookPulseRawEvent.encodeEffect;
-const decodeHookPulseFromRaw = HookPulseV1FromRawEvent.decodeUnknownEffect;
-const decodeHookPulseFromLegacy = HookPulseV1FromLegacyRecord.decodeUnknownEffect;
+const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
+const decodeHookPulseFromLegacy = S.decodeUnknownEffect(HookPulseV1FromLegacyRecord);
 const decodeHookPulse = HookPulseV1.decodeEffect;
 const encodeHookPulse = HookPulseV1.encodeEffect;
-const encodeHookPulseToRaw = HookPulseV1FromRawEvent.encodeUnknownEffect;
+const encodeHookPulseToRaw = S.encodeUnknownEffect(HookPulseV1FromRawEvent);
 const encodeHookPulseToLegacy = S.encodeUnknownEffect(HookPulseV1FromLegacyRecord);
 const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 const isHookPulseWaitReason = S.is(HookPulseWaitReason);
@@ -404,9 +404,9 @@ describe("HookPulseV1", () => {
       "round-trips arbitrary encodable canonical values through the raw-event codec",
       [arbitrary],
       ([value]) => {
-        const encoded = Result.getOrThrow(HookPulseV1FromRawEvent.encodeResult(value));
+        const encoded = Result.getOrThrow(S.encodeResult(HookPulseV1FromRawEvent)(value));
 
-        const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(encoded));
+        const decoded = Result.getOrThrow(S.decodeResult(HookPulseV1FromRawEvent)(encoded));
 
         pipe(hookPulseEquivalent(decoded, value), assertTrue);
       },
@@ -1123,7 +1123,7 @@ describe("HookPulseV1", () => {
 
   it("decodes an already-hashed raw event synchronously", () => {
     // The Result adapter proves the already-hashed fast path stays synchronous.
-    const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(alreadyHashedRawInput));
+    const decoded = Result.getOrThrow(S.decodeResult(HookPulseV1FromRawEvent)(alreadyHashedRawInput));
 
     expect(decoded).toBeInstanceOf(HookPulseV1);
     expect(decoded.sessionId).toBe(alreadyHashedRawEventFixture.session_id);

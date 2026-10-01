@@ -15,7 +15,6 @@ import { OperationId, SourceArtifact } from "@beep/file-processing/Artifact";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
-import { SchemaUtils } from "@beep/schema";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import { IrToLawExtractionError } from "../IrToLaw/index.ts";
@@ -131,6 +130,7 @@ export class OfficeActionCandidateExtraction extends S.Class<OfficeActionCandida
  * ```ts
  * import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw"
  * import { OfficeActionReviewError } from "@beep/law-practice-use-cases/OfficeActionReview"
+ * import * as S from "effect/Schema"
  *
  * const error = IrToLawExtractionError.fromReason("required-extraction-unaligned", {
  *   alignmentStatus: "unaligned",
@@ -138,7 +138,7 @@ export class OfficeActionCandidateExtraction extends S.Class<OfficeActionCandida
  *   message: "The distinction could not be grounded."
  * })
  *
- * console.log(OfficeActionReviewError.is(error)) // true
+ * console.log(S.is(OfficeActionReviewError)(error)) // true
  * ```
  *
  * @category errors
@@ -151,8 +151,7 @@ export const OfficeActionReviewError = S.Union([
 ]).pipe(
   $I.annoteSchema("OfficeActionReviewError", {
     description: "Failure union for the law-practice office-action review loop.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption", "is"])
+  })
 );
 
 /**

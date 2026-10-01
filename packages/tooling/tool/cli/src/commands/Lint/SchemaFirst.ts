@@ -413,7 +413,7 @@ export const getsomesStructEntryFromCallExpression: {
  * const project = new Project({ useInMemoryFileSystem: true })
  * const sourceFile = project.createSourceFile(
  *   "Widget.ts",
- *   'import { SchemaUtils } from "@beep/schema"\nexport const Widget = S.Struct({ title: S.String.pipe(SchemaUtils.withNoneDefault) })'
+ *   'import { SchemaUtils } from "@beep/schema"\nexport const Widget = S.Struct({ title: S.String.pipe(SchemaUtils.withEncodeDefault) })'
  * )
  * const program = schemaFirstParityEntriesFromSourceFile(sourceFile, { file: "Widget.ts", owner: "@beep/test" })
  * // Provide Crypto (for example NodeServices.layer) to run it; the entry's symbol is "Widget.title".

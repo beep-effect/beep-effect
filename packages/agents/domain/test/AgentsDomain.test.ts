@@ -262,8 +262,8 @@ describe("@beep/agents-domain", () => {
     expect(Result.getOrThrow(encodeAssistantContentResult(decoded))).toStrictEqual(encoded);
     const decodedBlock = decodeUnknownAssistantBlockResult(encoded.blocks[0]);
     const decodedInline = decodeInlineNodeResult({ type: "text", text: "Install" });
-    assertTrue(Result.isSuccess(decodedBlock) && AssistantBlock.is(decodedBlock.success));
-    assertTrue(Result.isSuccess(decodedInline) && InlineNode.is(decodedInline.success));
+    assertTrue(Result.isSuccess(decodedBlock) && S.is(AssistantBlock)(decodedBlock.success));
+    assertTrue(Result.isSuccess(decodedInline) && S.is(InlineNode)(decodedInline.success));
   });
 
   it.prop(

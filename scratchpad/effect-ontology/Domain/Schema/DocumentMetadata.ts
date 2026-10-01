@@ -403,8 +403,9 @@ const languageCodePattern = /^[a-z]{2}$/;
  * **Example** (Use LanguageCode)
  * ```ts
  * import { LanguageCode } from "@effect-ontology/Schema/DocumentMetadata"
+ * import * as S from "effect/Schema"
  *
- * console.log(LanguageCode.is("en")) // true
+ * console.log(S.is(LanguageCode)("en")) // true
  * ```
  *
  * @invariant Exactly two lowercase ASCII letters.
@@ -422,8 +423,7 @@ export const LanguageCode = S.String.check(
     S.brand("LanguageCode"),
     $I.annoteSchema("LanguageCode", {
       description: "Two-letter lowercase language-code representation.",
-    }),
-    SchemaUtils.withCodecStatics(["is"])
+    })
   );
 
 /**

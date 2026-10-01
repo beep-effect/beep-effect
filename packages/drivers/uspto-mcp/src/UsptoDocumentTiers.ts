@@ -27,7 +27,7 @@ import {
   projectFieldTier,
   toColumnarEnvelope,
 } from "@beep/mcp-kit";
-import { Fn, LiteralKit, SchemaUtils, URLStr } from "@beep/schema";
+import { Fn, LiteralKit, URLStr } from "@beep/schema";
 import { UsptoDocumentReference } from "@beep/uspto";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -135,8 +135,7 @@ export const DocumentsProjectionOutput = S.make<(typeof DocumentsProjectionOutpu
   $I.annoteSchema("DocumentsProjectionOutput", {
     description:
       "Outcome of projecting a documentBag-shaped document array within a size budget: inline tier-projected columnar envelope, or a fetchable handle when even the minimal tier is oversized.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

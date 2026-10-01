@@ -379,8 +379,9 @@ export class EdgeRepositoryUnavailable extends S.TaggedError<EdgeRepositoryUnava
  *
  * ```ts
  * import { EdgeAuthorityError, EdgeRepositoryUnavailable } from "@beep/epistemic-use-cases/EdgeAuthority"
+ * import * as S from "effect/Schema"
  *
- * console.log(EdgeAuthorityError.is(EdgeRepositoryUnavailable.during("readAsOf", "maintenance")))
+ * console.log(S.is(EdgeAuthorityError)(EdgeRepositoryUnavailable.during("readAsOf", "maintenance")))
  * ```
  *
  * @category errors
@@ -394,8 +395,7 @@ export const EdgeAuthorityError = S.Union([
   $I.annoteSchema("EdgeAuthorityError", {
     title: "Edge authority error",
     description: "Union of every edge authority repository failure.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

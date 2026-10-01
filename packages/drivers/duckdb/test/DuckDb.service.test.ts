@@ -15,7 +15,7 @@ import { DuckDBInstance } from "@duckdb/node-api";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Effect, Exit, Fiber, FileSystem, Layer, Path, pipe, Stream } from "effect";
+import { Context, Effect, Exit, Fiber, FileSystem, Layer, Path, pipe, Result, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -148,11 +148,16 @@ describe("@beep/duckdb", { concurrent: false }, () => {
       ).toBe(yield* encodeJson({ filePath: "exports/events.parquet", tableName: "events" }));
       expect(
         yield* encodeJson(
-          yield* encodeSchema(DuckDbRow, DuckDbRow.decodeUnknownSync({ empty: null, id: "run-1", ok: true, value: 42 }))
+          yield* encodeSchema(
+            DuckDbRow,
+            Result.getOrThrow(S.decodeResult(DuckDbRow)({ empty: null, id: "run-1", ok: true, value: 42 }))
+          )
         )
       ).toBe(yield* encodeJson({ empty: null, id: "run-1", ok: true, value: 42 }));
       expect(
-        yield* encodeJson(yield* encodeSchema(DuckDbRows, DuckDbRows.decodeUnknownSync([{ id: "run-1", value: 42 }])))
+        yield* encodeJson(
+          yield* encodeSchema(DuckDbRows, Result.getOrThrow(S.decodeResult(DuckDbRows)([{ id: "run-1", value: 42 }])))
+        )
       ).toBe(yield* encodeJson([{ id: "run-1", value: 42 }]));
       expect(
         yield* encodeJson(

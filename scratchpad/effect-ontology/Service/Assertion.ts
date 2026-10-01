@@ -20,7 +20,7 @@ import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Context, DateTime, Effect, HashMap, Layer, Order, Random, Ref } from "effect";
+import { Clock, Context, DateTime, Effect, HashMap, Layer, Order, Random, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -297,17 +297,17 @@ export class AssertionError extends S.TaggedError<AssertionError>($I`AssertionEr
  */
 const ASSERTIONS = {
   namespace: "https://effect-ontology.dev/assertions#",
-  Assertion: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#Assertion"),
-  assertedAt: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#assertedAt"),
-  curatedBy: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#curatedBy"),
-  derivedFromClaim: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#derivedFromClaim"),
-  decision: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#decision"),
-  Status: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#Status"),
-  Accepted: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#Accepted"),
-  Rejected: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#Rejected"),
-  Pending: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#Pending"),
-  rejectedAt: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#rejectedAt"),
-  rejectionReason: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#rejectionReason"),
+  Assertion: Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/assertions#Assertion")),
+  assertedAt: Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/assertions#assertedAt")),
+  curatedBy: Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/assertions#curatedBy")),
+  derivedFromClaim: Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/assertions#derivedFromClaim")),
+  decision: Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/assertions#decision")),
+  Status: Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/assertions#Status")),
+  Accepted: Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/assertions#Accepted")),
+  Rejected: Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/assertions#Rejected")),
+  Pending: Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/assertions#Pending")),
+  rejectedAt: Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/assertions#rejectedAt")),
+  rejectionReason: Result.getOrThrow(S.decodeResult(IRI)("https://effect-ontology.dev/assertions#rejectionReason")),
 };
 
 // =============================================================================
@@ -394,7 +394,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         sourceClaims.reduce((sum, c) => sum + parseFloat(c.confidenceScore ?? "0.5"), 0) / sourceClaims.length;
       const avgConfidence =
         input.confidence ??
-        (yield* Confidence.decodeEffect(meanConfidence).pipe(
+        (yield* S.decodeEffect(Confidence)(meanConfidence).pipe(
           Effect.mapError(() =>
             AssertionError.make({
               operation: "create",
@@ -441,7 +441,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
      */
     const getAssertion = Effect.fn("getAssertion")(function* (id: string) {
       const assertions = yield* Ref.get(assertionsRef);
-      const assertion = AssertionId.is(id) ? HashMap.get(assertions, id) : O.none();
+      const assertion = S.is(AssertionId)(id) ? HashMap.get(assertions, id) : O.none();
       if (O.isNone(assertion)) {
         return O.none<AssertionWithProvenance>();
       }
@@ -491,7 +491,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
      */
     const getSupportingClaims = Effect.fn("getSupportingClaims")(function* (assertionId: string) {
       const assertions = yield* Ref.get(assertionsRef);
-      const assertion = AssertionId.is(assertionId) ? HashMap.get(assertions, assertionId) : O.none();
+      const assertion = S.is(AssertionId)(assertionId) ? HashMap.get(assertions, assertionId) : O.none();
       if (O.isNone(assertion)) {
         return [];
       }
@@ -513,7 +513,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
     const reject = Effect.fn("reject")(function* (assertionId: string, reason: string) {
       const now = yield* DateTime.now;
       const assertions = yield* Ref.get(assertionsRef);
-      const assertion = AssertionId.is(assertionId) ? HashMap.get(assertions, assertionId) : O.none();
+      const assertion = S.is(AssertionId)(assertionId) ? HashMap.get(assertions, assertionId) : O.none();
       if (O.isNone(assertion)) {
         return yield* AssertionError.make({
           operation: "reject",
@@ -526,7 +526,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         rejectedAt: DateTime.toDate(now),
         rejectionReason: reason,
       });
-      yield* Ref.update(assertionsRef, HashMap.set(AssertionId.decodeUnknownSync(assertion.value.id), updated));
+      yield* Ref.update(assertionsRef, HashMap.set(Result.getOrThrow(S.decodeResult(AssertionId)(assertion.value.id)), updated));
     });
 
     // -------------------------------------------------------------------------
@@ -544,8 +544,8 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
     const toTriples = (assertion: AssertionRow, graphUri?: string) =>
       Effect.sync(() => {
         const quads: Array<Quad> = [];
-        const assertionIri = IRI.decodeUnknownSync(`${ASSERTIONS.namespace}${assertion.id}`);
-        const graph = P.isUndefined(graphUri) ? undefined : IRI.decodeUnknownSync(graphUri);
+        const assertionIri = Result.getOrThrow(S.decodeResult(IRI)(`${ASSERTIONS.namespace}${assertion.id}`));
+        const graph = P.isUndefined(graphUri) ? undefined : Result.getOrThrow(S.decodeResult(IRI)(graphUri));
 
         // Type assertion
         quads.push(
@@ -562,7 +562,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
           canonicalQuad({
             subject: assertionIri,
             predicate: RDF_SUBJECT,
-            object: IRI.decodeUnknownSync(assertion.subjectIri),
+            object: Result.getOrThrow(S.decodeResult(IRI)(assertion.subjectIri)),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -571,14 +571,14 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
           canonicalQuad({
             subject: assertionIri,
             predicate: RDF_PREDICATE,
-            object: IRI.decodeUnknownSync(assertion.predicateIri),
+            object: Result.getOrThrow(S.decodeResult(IRI)(assertion.predicateIri)),
             graph: O.fromNullishOr(graph),
           })
         );
 
         const objectTerm =
           assertion.objectType === "iri"
-            ? IRI.decodeUnknownSync(assertion.objectValue)
+            ? Result.getOrThrow(S.decodeResult(IRI)(assertion.objectValue))
             : canonicalLiteral({ value: assertion.objectValue });
 
         quads.push(
@@ -651,7 +651,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
             canonicalQuad({
               subject: assertionIri,
               predicate: ASSERTIONS.derivedFromClaim,
-              object: IRI.decodeUnknownSync(`${CLAIMS.namespace}${claimId}`),
+              object: Result.getOrThrow(S.decodeResult(IRI)(`${CLAIMS.namespace}${claimId}`)),
               graph: O.fromNullishOr(graph),
             })
           );

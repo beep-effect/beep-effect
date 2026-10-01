@@ -150,7 +150,7 @@ const candidate = ContradictionCandidate.make({
   entityType: Epistemic.ContradictionCandidateId.entityType,
   id: Epistemic.ContradictionCandidateId.make(1),
   orgId: Shared.OrganizationId.make(1),
-  publicId: candidatePublicId.decodeUnknownSync("epistemic_contradiction_candidate_apostgresrace"),
+  publicId: Result.getOrThrow(S.decodeResult(candidatePublicId)("epistemic_contradiction_candidate_apostgresrace")),
   recordedAt: instant,
   rowVersion: PosInt.make(1),
   schemaVersion: SemanticVersion.make("0.0.0"),
@@ -249,7 +249,9 @@ const makeSupersessionCandidate = (
     entityType: Epistemic.ContradictionCandidateId.entityType,
     id: Epistemic.ContradictionCandidateId.make(1),
     orgId: Shared.OrganizationId.make(1),
-    publicId: candidatePublicId.decodeUnknownSync(`${Epistemic.ContradictionCandidateId.tableName}_a${candidateKey}`),
+    publicId: Result.getOrThrow(
+      S.decodeResult(candidatePublicId)(`${Epistemic.ContradictionCandidateId.tableName}_a${candidateKey}`)
+    ),
     recordedAt: instant,
     rowVersion: PosInt.make(1),
     schemaVersion: SemanticVersion.make("0.0.0"),

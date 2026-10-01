@@ -206,7 +206,7 @@ const renderHtmlInlines: (children: ReadonlyArray<Inline>) => string = flow(A.ma
 const renderMarkdownListItemChildren: (children: ReadonlyArray<ListItemChild>) => string = flow(
   (items: ReadonlyArray<ListItemChild>) =>
     segmentInlineRuns(items, {
-      isInline: InlineSchema.is,
+      isInline: S.is(InlineSchema),
       renderInlineRun: renderMarkdownInlines,
       renderBlock: renderMarkdownBlock,
     }),
@@ -218,7 +218,7 @@ const renderMarkdownListItem = (item: Li): string => renderMarkdownListItemChild
 const renderHtmlListItemChildren: (children: ReadonlyArray<ListItemChild>) => string = flow(
   (items: ReadonlyArray<ListItemChild>) =>
     segmentInlineRuns(items, {
-      isInline: InlineSchema.is,
+      isInline: S.is(InlineSchema),
       renderInlineRun: renderHtmlInlines,
       renderBlock: renderHtmlBlock,
     }),
@@ -1101,7 +1101,7 @@ const renderMarkdownListItemChildrenWithPolicy = (
 ): string =>
   pipe(
     segmentInlineRuns<Inline, Block>(children, {
-      isInline: InlineSchema.is,
+      isInline: S.is(InlineSchema),
       renderInlineRun: (inlines) => renderMarkdownInlinesWithPolicy(policy, inlines),
       renderBlock: (block: Block) => renderMarkdownBlockWithPolicy(policy, block),
     }),
@@ -1111,7 +1111,7 @@ const renderMarkdownListItemChildrenWithPolicy = (
 const renderHtmlListItemChildrenWithPolicy = (policy: UrlPolicySpec, children: ReadonlyArray<ListItemChild>): string =>
   pipe(
     segmentInlineRuns<Inline, Block>(children, {
-      isInline: InlineSchema.is,
+      isInline: S.is(InlineSchema),
       renderInlineRun: (inlines) => renderHtmlInlinesWithPolicy(policy, inlines),
       renderBlock: (block: Block) => renderHtmlBlockWithPolicy(policy, block),
     }),

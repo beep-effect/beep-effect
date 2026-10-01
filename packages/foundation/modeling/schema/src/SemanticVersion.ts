@@ -17,7 +17,6 @@
  */
 import { $SchemaId } from "@beep/identity";
 import * as S from "effect/Schema";
-import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("SemanticVersion");
 const semanticVersionSegmentPattern = /^(?:0|[1-9]\d*)$/;
@@ -27,28 +26,25 @@ const SemanticVersionSegment = S.String.check(
   })
 );
 
-const SemanticVersionWithStatics = S.TemplateLiteral([
+const SemanticVersionTemplate = S.TemplateLiteral([
   SemanticVersionSegment,
   ".",
   SemanticVersionSegment,
   ".",
   SemanticVersionSegment,
 ]).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    decodeUnknownOption: (u: unknown) => S.decodeUnknownOption(schema)(u),
-  })),
   $I.annoteSchema("SemanticVersion", {
     description: "A semantic version string in the format x.y.z",
   })
 );
 
-type SemanticVersionSchemaBase = typeof SemanticVersionWithStatics;
+type SemanticVersionSchemaBase = typeof SemanticVersionTemplate;
 
 /**
  * Named schema surface for {@link SemanticVersion}.
  *
  * Declaration emit references this interface by name instead of serializing
- * the template-literal schema and its statics structurally at every consumer
+ * the template-literal schema structurally at every consumer
  * position.
  *
  * @category schemas
@@ -67,8 +63,8 @@ export interface SemanticVersionSchema extends SemanticVersionSchemaBase {}
  * **Details**
  *
  * Each segment is a non-negative integer, and multi-digit segments cannot
- * begin with `0`. The schema also exposes `decodeUnknownOption` for callers
- * that prefer absence over a thrown parse error.
+ * begin with `0`. Callers that prefer absence over a thrown parse error use
+ * `S.decodeUnknownOption(SemanticVersion)`.
  *
  * **Gotchas**
  *
@@ -88,7 +84,7 @@ export interface SemanticVersionSchema extends SemanticVersionSchemaBase {}
  * @category validation
  * @since 0.0.0
  */
-export const SemanticVersion: SemanticVersionSchema = SemanticVersionWithStatics;
+export const SemanticVersion: SemanticVersionSchema = SemanticVersionTemplate;
 
 /**
  * Decoded semantic-version string produced by {@link SemanticVersion}.

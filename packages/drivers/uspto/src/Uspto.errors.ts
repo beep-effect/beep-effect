@@ -41,11 +41,7 @@ export const UsptoErrorReason = UsptoErrorReasonKit.pipe(
   $I.annoteSchema("UsptoErrorReason", {
     description: "Redacted technical error reasons emitted by the USPTO driver.",
   }),
-  SchemaUtils.withLiteralKitStatics(UsptoErrorReasonKit),
-  SchemaUtils.withStatics((schema: typeof UsptoErrorReasonKit) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownEffect(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(UsptoErrorReasonKit)
 );
 
 /**

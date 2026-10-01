@@ -122,11 +122,11 @@ const anchors = (entries: ReadonlyArray<SchemaFirstInventoryEntry>): ReadonlyArr
 const defaultWrapperSource = [
   'import * as S from "effect/Schema";',
   'import { SchemaUtils } from "@beep/schema";',
-  'import { withEmptyArrayDefaults as emptyTags } from "@beep/schema/SchemaUtils/withKeyDefaults";',
+  'import { boolKeyWithDefault as emptyTags } from "@beep/schema/SchemaUtils/withKeyDefaults";',
   'export class Widget extends S.Class<Widget>("Widget")({',
-  "  title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),",
-  "  count: S.Finite.pipe(SchemaUtils.withKeyDefaults(0)),",
-  '  label: S.String.pipe(SchemaUtils.withKeyDefaults("none")),',
+  "  title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withEncodeDefault),",
+  "  count: S.Finite.pipe(SchemaUtils.optionalKeyWithDefault(0)),",
+  '  label: S.String.pipe(SchemaUtils.optionalKeyWithDefault("none")),',
   "  tags: S.Array(S.String).pipe(emptyTags()),",
   "}) {}",
 ];
@@ -137,16 +137,16 @@ const reformattedDefaultWrapperSource = [
   "",
   'import * as S from "effect/Schema";',
   "import { SchemaUtils } from '@beep/schema';",
-  'import { withEmptyArrayDefaults as emptyTags } from "@beep/schema/SchemaUtils/withKeyDefaults";',
+  'import { boolKeyWithDefault as emptyTags } from "@beep/schema/SchemaUtils/withKeyDefaults";',
   "export const unrelated = 1;",
   'export class Widget extends S.Class<Widget>("Widget")({',
   "  title: S.OptionFromOptionalKey(",
   "    S.String, // the displayed title",
   "  ).pipe(",
-  "    SchemaUtils.withNoneDefault,",
+  "    SchemaUtils.withEncodeDefault,",
   "  ),",
-  "  count: S.Finite.pipe( SchemaUtils.withKeyDefaults( 0 ) ),",
-  "  label: S.String.pipe(SchemaUtils.withKeyDefaults('none')),",
+  "  count: S.Finite.pipe( SchemaUtils.optionalKeyWithDefault( 0 ) ),",
+  "  label: S.String.pipe(SchemaUtils.optionalKeyWithDefault('none')),",
   "  tags: S.Array(S.String).pipe(",
   "    /* no tags by default */ emptyTags(),",
   "  ),",
@@ -158,7 +158,7 @@ const unionSource = (arms: ReadonlyArray<string>) => [
   'import { SchemaUtils } from "@beep/schema";',
   "export const Widget = S.Struct({",
   "  value: S.Union([",
-  ...A.map(arms, (arm) => `    S.OptionFromOptionalKey(${arm}).pipe(SchemaUtils.withNoneDefault),`),
+  ...A.map(arms, (arm) => `    S.OptionFromOptionalKey(${arm}).pipe(SchemaUtils.withEncodeDefault),`),
   "  ]),",
   "});",
 ];
@@ -167,10 +167,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
   it.effect("flags SchemaUtils default wrappers through namespace and named imports", () =>
     Effect.gen(function* () {
       expect(readable(yield* parityEntries(defaultWrapperSource))).toEqual([
-        "SFV4-default-wrapper Widget.title::withNoneDefault@<hash>",
-        "SFV4-default-wrapper Widget.count::withKeyDefaults@<hash>",
-        "SFV4-default-wrapper Widget.label::withKeyDefaults@<hash>",
-        "SFV4-default-wrapper Widget.tags::withEmptyArrayDefaults@<hash>",
+        "SFV4-default-wrapper Widget.title::withEncodeDefault@<hash>",
+        "SFV4-default-wrapper Widget.count::optionalKeyWithDefault@<hash>",
+        "SFV4-default-wrapper Widget.label::optionalKeyWithDefault@<hash>",
+        "SFV4-default-wrapper Widget.tags::boolKeyWithDefault@<hash>",
       ]);
     })
   );
@@ -183,12 +183,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
           'import { Effect } from "effect";',
           'import { SchemaUtils } from "@beep/schema";',
           'import * as Local from "./local-defaults";',
-          "const withNoneDefault = <A>(schema: A): A => schema;",
+          "const withEncodeDefault = <A>(schema: A): A => schema;",
           "export const Widget = S.Struct({",
           "  title: S.String.pipe(S.withConstructorDefault(Effect.succeed(''))),",
           "  enabled: SchemaUtils.BoolKeyDefaultFalse,",
-          "  local: withNoneDefault(S.String),",
-          "  other: Local.withNoneDefault(S.String),",
+          "  local: withEncodeDefault(S.String),",
+          "  other: Local.withEncodeDefault(S.String),",
           "});",
         ])
       ).toEqual([]);
@@ -202,8 +202,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
           yield* parityEntries([
             'import * as S from "effect/Schema";',
             'import { SchemaUtils } from "@beep/schema";',
-            'import { withEmptyArrayDefaults as emptyTags } from "@beep/schema/SchemaUtils/withKeyDefaults";',
-            "export const fromParameter = (SchemaUtils: Record<string, unknown>) => SchemaUtils.withNoneDefault;",
+            'import { boolKeyWithDefault as emptyTags } from "@beep/schema/SchemaUtils/withKeyDefaults";',
+            "export const fromParameter = (SchemaUtils: Record<string, unknown>) => SchemaUtils.withEncodeDefault;",
             "export const fromLocal = () => {",
             "  const emptyTags = () => S.String;",
             "  return emptyTags();",
@@ -211,7 +211,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
             "export const kept = S.Array(S.String).pipe(emptyTags());",
           ])
         )
-      ).toEqual(["SFV4-default-wrapper kept::withEmptyArrayDefaults@<hash>"]);
+      ).toEqual(["SFV4-default-wrapper kept::boolKeyWithDefault@<hash>"]);
     })
   );
 
@@ -223,14 +223,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
             'import * as S from "effect/Schema";',
             'import { SchemaUtils } from "@beep/schema";',
             "export const Widget = S.Struct({",
-            '  byElement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils["withNoneDefault"]),',
-            "  byParens: S.OptionFromOptionalKey(S.Finite).pipe((SchemaUtils).withNoneDefault),",
+            '  byElement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils["withEncodeDefault"]),',
+            "  byParens: S.OptionFromOptionalKey(S.Finite).pipe((SchemaUtils).withEncodeDefault),",
             "});",
           ])
         )
       ).toEqual([
-        "SFV4-default-wrapper Widget.byElement::withNoneDefault@<hash>",
-        "SFV4-default-wrapper Widget.byParens::withNoneDefault@<hash>",
+        "SFV4-default-wrapper Widget.byElement::withEncodeDefault@<hash>",
+        "SFV4-default-wrapper Widget.byParens::withEncodeDefault@<hash>",
       ]);
     })
   );
@@ -239,22 +239,22 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
     Effect.gen(function* () {
       const project = new Project({ useInMemoryFileSystem: true });
       project.createSourceFile(
-        "packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts",
-        "export const withNoneDefault = <A>(schema: A): A => schema;"
+        "packages/foundation/modeling/schema/src/SchemaUtils/withEncodeDefault.ts",
+        "export const withEncodeDefault = <A>(schema: A): A => schema;"
       );
       project.createSourceFile(
         "packages/example/src/schema.ts",
-        'export { withNoneDefault } from "../../foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults";'
+        'export { withEncodeDefault } from "../../foundation/modeling/schema/src/SchemaUtils/withEncodeDefault";'
       );
       expect(
         readable(
           yield* parityEntriesIn(project, [
             'import * as S from "effect/Schema";',
-            'import { withNoneDefault } from "./schema";',
-            "export const title = S.OptionFromOptionalKey(S.String).pipe(withNoneDefault);",
+            'import { withEncodeDefault } from "./schema";',
+            "export const title = S.OptionFromOptionalKey(S.String).pipe(withEncodeDefault);",
           ])
         )
-      ).toEqual(["SFV4-default-wrapper title::withNoneDefault@<hash>"]);
+      ).toEqual(["SFV4-default-wrapper title::withEncodeDefault@<hash>"]);
     })
   );
   it.effect("names the upstream form for every live SchemaUtils default wrapper, resolved to its declaration", () =>
@@ -330,10 +330,195 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
           yield* parityEntries([
             'import * as S from "effect/Schema";',
             'import { SchemaUtils } from "@beep/schema";',
-            "void S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);",
+            "void S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withEncodeDefault);",
           ])
         )
-      ).toEqual(["SFV4-default-wrapper <module>::withNoneDefault@<hash>"]);
+      ).toEqual(["SFV4-default-wrapper <module>::withEncodeDefault@<hash>"]);
+    })
+  );
+});
+
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it) => {
+  it.effect("flags withCodecStatics and codec facades attached through withStatics, not other statics", () =>
+    Effect.gen(function* () {
+      expect(
+        readable(
+          yield* parityEntries([
+            'import * as S from "effect/Schema";',
+            'import { SchemaUtils } from "@beep/schema";',
+            'export const Count = S.FiniteFromString.pipe(SchemaUtils.withCodecStatics(["is"]));',
+            "export const Label = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => ({",
+            "    decodeOption: S.decodeUnknownOption(schema),",
+            '    empty: "",',
+            "    shout: (value: string) => value.toUpperCase(),",
+            "  }))",
+            ");",
+          ])
+        )
+      ).toEqual(["SFV4-codec-static Count::withCodecStatics@<hash>", "SFV4-codec-static Label::decodeOption@<hash>"]);
+    })
+  );
+
+  it.effect("reads block-bodied callbacks, the effect Schema named import, and a named withStatics import", () =>
+    Effect.gen(function* () {
+      expect(
+        readable(
+          yield* parityEntries([
+            'import { Schema } from "effect";',
+            'import { withStatics } from "@beep/schema/SchemaUtils/withStatics";',
+            "export const Flag = Schema.Boolean.pipe(",
+            "  withStatics((schema) => {",
+            "    const same = Schema.toEquivalence(schema);",
+            "    return { same, guard: Schema.is(schema), keep: 1 };",
+            "  })",
+            ");",
+          ])
+        )
+      ).toEqual(["SFV4-codec-static Flag::same@<hash>", "SFV4-codec-static Flag::guard@<hash>"]);
+    })
+  );
+
+  it.effect("flags arrow-wrapped, curried and method codec facades", () =>
+    Effect.gen(function* () {
+      expect(
+        readable(
+          yield* parityEntries([
+            'import * as S from "effect/Schema";',
+            'import { SchemaUtils } from "@beep/schema";',
+            "export const Version = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => ({",
+            "    decodeOption: (input: unknown) => S.decodeUnknownOption(schema)(input),",
+            "    parse(input: unknown) {",
+            "      return S.decodeUnknownSync(schema)(input);",
+            "    },",
+            "    describe: (input: string) => `v${input}`,",
+            "  }))",
+            ");",
+          ])
+        )
+      ).toEqual(["SFV4-codec-static Version::decodeOption@<hash>", "SFV4-codec-static Version::parse@<hash>"]);
+    })
+  );
+
+  it.effect("flags the SemanticVersion arrow facade, aliased and bracket-access callees, and bound shorthands", () =>
+    Effect.gen(function* () {
+      expect(
+        readable(
+          yield* parityEntries([
+            'import * as S from "effect/Schema";',
+            'import { SchemaUtils } from "@beep/schema";',
+            'import { withStatics as attach } from "@beep/schema/SchemaUtils/withStatics";',
+            "export const SemanticVersion = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => ({",
+            "    decodeUnknownOption: (u: unknown) => S.decodeUnknownOption(schema)(u),",
+            "  }))",
+            ");",
+            "export const Aliased = S.String.pipe(attach((schema) => ({ is: S.is(schema) })));",
+            'export const Bracketed = S.String.pipe(SchemaUtils["withStatics"]((schema) => ({ is: S.is(schema) })));',
+            "export const Bound = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => {",
+            "    const decodeOption = S.decodeUnknownOption(schema);",
+            "    const alias = decodeOption;",
+            "    return { decodeOption, alias };",
+            "  })",
+            ");",
+            "export const Closed = S.String.pipe(SchemaUtils.withStatics(() => ({ is: S.is(Closed) })));",
+            "export const Composed = S.String.pipe(",
+            "  SchemaUtils.withStatics((self) => ({ decodeJson: S.decodeUnknownEffect(S.fromJsonString(self)) }))",
+            ");",
+          ])
+        )
+      ).toEqual([
+        "SFV4-codec-static SemanticVersion::decodeUnknownOption@<hash>",
+        "SFV4-codec-static Aliased::is@<hash>",
+        "SFV4-codec-static Bracketed::is@<hash>",
+        "SFV4-codec-static Bound::decodeOption@<hash>",
+        "SFV4-codec-static Bound::alias@<hash>",
+        "SFV4-codec-static Closed::is@<hash>",
+        "SFV4-codec-static Composed::decodeJson@<hash>",
+      ]);
+    })
+  );
+
+  it.effect("leaves domain statics that use a codec internally unflagged", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* parityEntries([
+          'import * as S from "effect/Schema";',
+          'import { Result } from "effect";',
+          'import { SchemaUtils } from "@beep/schema";',
+          "const Other = S.String;",
+          "export const Config = S.Struct({ path: S.String }).pipe(",
+          "  SchemaUtils.withStatics((schema) => ({",
+          '    default: Result.getOrThrow(S.decodeResult(schema)({ path: "/" })),',
+          '    describe: (u: unknown) => (S.is(Other)(u) ? `other ${u}` : "none"),',
+          "    widened: (u: unknown) => S.is(schema)(`${u}`),",
+          "    noReturn() {},",
+          "  }))",
+          ");",
+          "export const Shadowed = S.String.pipe(",
+          "  SchemaUtils.withStatics((schema) => {",
+          "    const S = { is: (value: unknown) => (candidate: unknown) => value === candidate };",
+          "    return { is: S.is(schema) };",
+          "  }))",
+          ");",
+        ])
+      ).toEqual([]);
+    })
+  );
+
+  it.effect("ignores withStatics that does not come from @beep/schema and codec calls off other namespaces", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* parityEntries([
+          'import * as S from "effect/Schema";',
+          'import * as Local from "./local-statics";',
+          'import { SchemaUtils } from "@beep/schema";',
+          "const withStatics = <A>(value: A) => value;",
+          "export const Local1 = S.String.pipe(Local.withStatics((schema) => ({ is: S.is(schema) })));",
+          "export const Local2 = withStatics({ is: S.is(S.String) });",
+          "export const Other = S.String.pipe(SchemaUtils.withStatics((schema) => ({ is: Local.is(schema) })));",
+        ])
+      ).toEqual([]);
+    })
+  );
+
+  it.effect("resolves withStatics through the checker to the SchemaUtils declaration", () =>
+    Effect.gen(function* () {
+      const project = schemaUtilsProject();
+      project.createSourceFile(
+        "packages/foundation/modeling/schema/src/SchemaUtils/withStatics.ts",
+        "export const withStatics = <S, M>(methods: (schema: S) => M) => (schema: S): S & M => Object.assign(schema as object, methods(schema)) as S & M;"
+      );
+      project
+        .getSourceFileOrThrow("packages/foundation/modeling/schema/src/SchemaUtils/index.ts")
+        .addExportDeclaration({ moduleSpecifier: "./withStatics.ts" });
+      project.createSourceFile(
+        "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts",
+        "export const withCodecStatics = (keys: ReadonlyArray<string>) => <S>(schema: S): S => schema;"
+      );
+      project
+        .getSourceFileOrThrow("packages/foundation/modeling/schema/src/SchemaUtils/index.ts")
+        .addExportDeclaration({ moduleSpecifier: "./withCodecStatics.ts" });
+      expect(
+        readable(
+          yield* parityEntriesIn(project, [
+            'import * as S from "effect/Schema";',
+            'import { SchemaUtils } from "@beep/schema";',
+            "export const Named = S.String.pipe(SchemaUtils.withStatics((schema) => ({ encode: S.encodeUnknownSync(schema) })));",
+            'export const Coded = S.String.pipe(SchemaUtils.withCodecStatics(["is"]));',
+            'export const Bracketed = S.String.pipe(SchemaUtils["withStatics"]((schema) => ({ guard: S.is(schema) })));',
+          ])
+        )
+      ).toEqual([
+        "SFV4-codec-static Named::encode@<hash>",
+        "SFV4-codec-static Coded::withCodecStatics@<hash>",
+        "SFV4-codec-static Bracketed::guard@<hash>",
+      ]);
+      expect(declarationPathsOf(project.getSourceFileOrThrow(fixtureFile))("withCodecStatics")).toEqual([
+        "src/SchemaUtils/withCodecStatics.ts",
+      ]);
     })
   );
 });
@@ -477,12 +662,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("parity occurrence ident
       const grown = yield* parityEntries([
         ...defaultWrapperSource,
         'export class Extra extends S.Class<Extra>("Extra")({',
-        "  note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),",
+        "  note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withEncodeDefault),",
         "}) {}",
       ]);
 
       const growth = diffSchemaFirstParity(grown, toSchemaFirstBacklog(base));
-      expect(readable(growth.introduced)).toEqual(["SFV4-default-wrapper Extra.note::withNoneDefault@<hash>"]);
+      expect(readable(growth.introduced)).toEqual(["SFV4-default-wrapper Extra.note::withEncodeDefault@<hash>"]);
       expect(growth.resolved).toEqual([]);
 
       const shrink = diffSchemaFirstParity(base, toSchemaFirstBacklog(grown));
@@ -490,6 +675,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("parity occurrence ident
       expect(A.map(shrink.rules, (rule) => [rule.ruleId, rule.live, rule.baseline, rule.resolved])).toEqual([
         ["SFV4-default-wrapper", 4, 5, 1],
         ["SFV4-opaque-wrapper", 0, 0, 0],
+        ["SFV4-codec-static", 0, 0, 0],
       ]);
     })
   );
@@ -547,7 +733,7 @@ const backlogAnchors = Effect.gen(function* () {
 const grownDefaultWrapperSource = [
   ...defaultWrapperSource,
   'export class Extra extends S.Class<Extra>("Extra")({',
-  "  note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),",
+  "  note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withEncodeDefault),",
   "}) {}",
 ];
 
@@ -572,7 +758,7 @@ it.layer(testLayer, { timeout: "60 seconds" })("schema-first parity ratchet comm
           (line) =>
             Str.startsWith(
               '[schema-first:issue] {"category":"schema-first-policy","ruleId":"SFV4-default-wrapper","severity":"error"'
-            )(line) && Str.includes('"symbol":"Widget.title","occurrence":"Widget.title::withNoneDefault@')(line)
+            )(line) && Str.includes('"symbol":"Widget.title","occurrence":"Widget.title::withEncodeDefault@')(line)
         )
       ).toBe(true);
     })
@@ -605,7 +791,7 @@ it.layer(testLayer, { timeout: "60 seconds" })("schema-first parity ratchet comm
       yield* writeFixture(grownDefaultWrapperSource);
       const grown = yield* runSchemaFirst(["--write"]);
       expectReportedExit(grown.exit);
-      expect(A.some(grown.errorLines, Str.includes(":: Extra.note::withNoneDefault@"))).toBe(true);
+      expect(A.some(grown.errorLines, Str.includes(":: Extra.note::withEncodeDefault@"))).toBe(true);
       expect(yield* backlogAnchors).toEqual(captured);
 
       yield* writeFixture(A.filter(defaultWrapperSource, (line) => !Str.startsWith("  count:")(line)));
@@ -639,9 +825,9 @@ it.layer(TestConsole.layer, { timeout: "30 seconds" })("schema-first parity rend
     Effect.sync(() => {
       expect(
         makeSchemaFirstEntryKey(
-          SchemaFirstInventoryEntry.make({ ...unanchoredEntry, occurrence: "Widget::withNoneDefault@0123456789ab" })
+          SchemaFirstInventoryEntry.make({ ...unanchoredEntry, occurrence: "Widget::withEncodeDefault@0123456789ab" })
         )
-      ).toBe(`${fixtureFile}::::Widget::withNoneDefault@0123456789ab`);
+      ).toBe(`${fixtureFile}::::Widget::withEncodeDefault@0123456789ab`);
     })
   );
 

@@ -221,7 +221,6 @@ export const ColorSupportLevel = S.Literals(colorSupportLevelValues).pipe(
     description:
       "Supported terminal color support levels: 0 disables colors, 1 enables ANSI colors, 2 enables ANSI256, and 3 enables truecolor.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
   withLiteralKitHelpers(ColorSupportLevelKit)
 );
 
@@ -354,7 +353,6 @@ export const ModifierName = S.Literals(modifierNameValues).pipe(
   $I.annoteSchema("ModifierName", {
     description: "Supported Chalk modifier names.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
   withLiteralKitHelpers(ModifierNameKit)
 );
 
@@ -397,7 +395,6 @@ export const ForegroundColorName = S.Literals(foregroundColorNameValues).pipe(
   $I.annoteSchema("ForegroundColorName", {
     description: "Supported Chalk foreground color names.",
   }),
-  SchemaUtils.withCodecStatics(["is"]),
   withLiteralKitHelpers(ForegroundColorNameKit)
 );
 

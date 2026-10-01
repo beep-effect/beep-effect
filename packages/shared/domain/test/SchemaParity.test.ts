@@ -15,7 +15,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertNone, assertSuccess, assertTrue } from "@effect/vitest/utils";
-import { Effect, Equal } from "effect";
+import { Effect, Equal, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -165,20 +165,20 @@ describe("shared-domain schema parity", () => {
 
   it("keeps literal-kit member guards while adding decode statics", () => {
     assertTrue(Organization.LicenseTier.is.enterprise("enterprise"));
-    assertSuccess(Organization.LicenseTier.fromUnknown("team"), "team");
-    Organization.LicenseTier.decodeOption("solo").pipe(O.isSome, assertTrue);
+    assertSuccess(S.decodeResult(Organization.LicenseTier)("team"), "team");
+    S.decodeOption(Organization.LicenseTier)("solo").pipe(O.isSome, assertTrue);
     assertTrue(Membership.Role.is.owner("owner"));
-    assertSuccess(Membership.Role.fromUnknown("member"), "member");
+    assertSuccess(S.decodeResult(Membership.Role)("member"), "member");
     assertTrue(Membership.Status.is.active("active"));
-    assertSuccess(Membership.Status.fromUnknown("active"), "active");
+    assertSuccess(S.decodeResult(Membership.Status)("active"), "active");
     assertTrue(SourceKind.SourceKind.is.Agent("Agent"));
-    assertSuccess(SourceKind.SourceKind.fromUnknown("System"), "System");
+    assertSuccess(S.decodeResult(SourceKind.SourceKind)("System"), "System");
     assertTrue(Principal.SystemComponent.is.Runtime("Runtime"));
-    assertSuccess(Principal.SystemComponent.fromUnknown("Policy"), "Policy");
+    assertSuccess(S.decodeResult(Principal.SystemComponent)("Policy"), "Policy");
     assertTrue(ClaimLifecycle.ClaimLifecycle.is.admitted("admitted"));
-    assertSuccess(ClaimLifecycle.ClaimLifecycle.fromUnknown("candidate"), "candidate");
+    assertSuccess(S.decodeResult(ClaimLifecycle.ClaimLifecycle)("candidate"), "candidate");
     assertTrue(Rule.Effect.is.allow("allow"));
-    assertSuccess(Rule.Effect.fromUnknown("deny"), "deny");
+    assertSuccess(S.decodeResult(Rule.Effect)("deny"), "deny");
   });
 
   describe("round-trips schema-derived values through absorbed invariants", () => {
@@ -212,9 +212,9 @@ describe("shared-domain schema parity", () => {
   });
 
   it("keeps entity-id value statics colocated on the schema", () => {
-    assertTrue(EntityId.EntityIdValue.is(EntityId.EntityIdValue.make(1)));
-    expect(EntityId.EntityIdValue.decodeUnknownSync(1)).toBe(EntityId.EntityIdValue.make(1));
-    EntityId.EntityIdValue.decodeUnknownOption(1).pipe(O.isSome, assertTrue);
+    assertTrue(S.is(EntityId.EntityIdValue)(EntityId.EntityIdValue.make(1)));
+    expect(Result.getOrThrow(S.decodeResult(EntityId.EntityIdValue)(1))).toBe(EntityId.EntityIdValue.make(1));
+    S.decodeOption(EntityId.EntityIdValue)(1).pipe(O.isSome, assertTrue);
     assertTrue(DocumentId.equivalence(DocumentId.make(1), DocumentId.make(1)));
   });
 });

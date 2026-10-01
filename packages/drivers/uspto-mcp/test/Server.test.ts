@@ -348,8 +348,8 @@ describe("uspto-mcp schema parity", () => {
       const failure = yield* decodeUsptoMcpFailure(failureWire);
       const projection = yield* decodeDocumentsProjectionOutput(projectionWire);
 
-      assert.isTrue(UsptoMcpFailure.is(failure));
-      assert.isTrue(DocumentsProjectionOutput.is(projection));
+      assert.isTrue(S.is(UsptoMcpFailure)(failure));
+      assert.isTrue(S.is(DocumentsProjectionOutput)(projection));
       assert.deepEqual(yield* encodeUsptoMcpFailure(failure), failureWire);
       assert.deepEqual(yield* encodeDocumentsProjectionOutput(projection), projectionWire);
     })

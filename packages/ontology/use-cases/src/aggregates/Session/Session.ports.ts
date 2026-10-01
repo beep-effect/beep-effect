@@ -8,7 +8,6 @@
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { Dataset, PrefixMap } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 
@@ -42,8 +41,7 @@ export const OntologyFilePath = S.NonEmptyString.pipe(
   S.brand("OntologyFilePath"),
   $I.annoteSchema("OntologyFilePath", {
     description: "Filesystem path for sidecar ontology documents.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
+  })
 );
 
 /**

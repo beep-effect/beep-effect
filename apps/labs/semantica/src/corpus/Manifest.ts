@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { Equal, HashSet, Number as N, Order, Tuple } from "effect";
 import * as A from "effect/Array";
@@ -44,7 +44,6 @@ export const CorpusPaperId = S.String.check(
   ])
 ).pipe(
   S.brand("CorpusPaperId"),
-  SchemaUtils.withCodecStatics(["decodeEffect"]),
   $I.annoteSchema("CorpusPaperId", {
     description: "Twelve-character lowercase hexadecimal academia corpus identifier.",
   })

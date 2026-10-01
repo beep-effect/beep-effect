@@ -6,7 +6,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import * as N from "effect/Number";
 import * as P from "effect/Predicate";
 import { Equal, Fiber } from "effect";
@@ -446,10 +445,11 @@ export class CodeModeURL extends S.TaggedClass<CodeModeURL>($I`CodeModeURL`)(
  *
  * ```ts
  * import { CodeModeDate, CodeModeValue } from "../../../codemode/Codemode.values.ts"
+ * import * as S from "effect/Schema"
  *
  * const date = CodeModeDate.new(0)
  *
- * console.log(CodeModeValue.is(date)) // true
+ * console.log(S.is(CodeModeValue)(date)) // true
  * console.log(date._tag) // "CodeModeDate"
  * ```
  *
@@ -469,8 +469,7 @@ export const CodeModeValue = S.Union([
   $I.annoteSchema("CodeModeValue", {
     description: "Mutable guest values backed by native JavaScript state.",
   }),
-  S.toTaggedUnion("_tag"),
-  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
+  S.toTaggedUnion("_tag")
 );
 
 /**
@@ -503,4 +502,4 @@ export type CodeModeValue = typeof CodeModeValue.Type;
  * @category predicates
  * @since 0.0.0
  */
-export const isCodeModeValue = CodeModeValue.is;
+export const isCodeModeValue = S.is(CodeModeValue);

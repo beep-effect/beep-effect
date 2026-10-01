@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { Context, Crypto, Effect, Equal, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -22,11 +22,7 @@ import type { CorpusPaperId } from "@/corpus/Manifest";
 
 const $I = $SemanticaId.create("corpus/ManifestBuilder");
 
-const ManifestFromJsonString = S.fromJsonString(CorpusManifest).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    decodeEffect: S.decodeEffect(schema),
-  }))
-);
+const ManifestFromJsonString = S.fromJsonString(CorpusManifest);
 
 /**
  * Operations that build W1 from the configured corpus root or check a committed manifest.
@@ -154,7 +150,7 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
   });
 
   const hashBytes = Effect.fn("CorpusManifestBuilder.hashBytes")((bytes: Uint8Array) =>
-    Sha256HexFromBytes.decodeEffect(bytes).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.orDie)
+    S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.orDie)
   );
 
   const readSelectedPaperIds = Effect.fn("CorpusManifestBuilder.readSelectedPaperIds")(function* (corpusRoot: string) {
@@ -249,7 +245,7 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
         })
       )
     );
-    return yield* ManifestFromJsonString.decodeEffect(source).pipe(
+    return yield* S.decodeEffect(ManifestFromJsonString)(source).pipe(
       Effect.mapError(() =>
         ManifestDecodeFailed.make({
           message: "The W1 manifest is not valid w1-manifest/v1 JSON.",

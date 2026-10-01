@@ -12,7 +12,7 @@
  */
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { optionalDefect } from "../internal/OptionalDefect.ts";
@@ -189,8 +189,9 @@ export class ExecutionLedgerUnavailable extends S.TaggedError<ExecutionLedgerUna
  *
  * ```ts
  * import { ExecutionLedgerError, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger"
+ * import * as S from "effect/Schema"
  *
- * console.log(ExecutionLedgerError.is(ExecutionLedgerUnavailable.during("appendDecision", "write failed")))
+ * console.log(S.is(ExecutionLedgerError)(ExecutionLedgerUnavailable.during("appendDecision", "write failed")))
  * ```
  *
  * @category errors
@@ -199,8 +200,7 @@ export class ExecutionLedgerUnavailable extends S.TaggedError<ExecutionLedgerUna
 export const ExecutionLedgerError = S.Union([ExecutionLedgerConstraintViolation, ExecutionLedgerUnavailable]).pipe(
   $I.annoteSchema("ExecutionLedgerError", {
     description: "Every failure an execution ledger write can produce.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
