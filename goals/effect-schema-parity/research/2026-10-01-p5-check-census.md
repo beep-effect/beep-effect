@@ -71,11 +71,11 @@ built, clean trees):
 | --- | ---: | ---: |
 | Committed row, measured at `9951f493a0` | 4,202,537 | 1,078,097 |
 | Live `origin/main` `50e9c4bc41` | 4,204,960 | 1,078,652 |
-| Follow-up head `cb4b0b0cdf` | 4,205,649 | 1,078,977 |
+| Follow-up head `b8a577a6d8` | 4,205,657 | 1,079,002 |
 
-The follow-up costs +689 instantiations and +325 types against live main;
+The follow-up costs +697 instantiations and +350 types against live main;
 that is the detector's extra resolution code. The baseline file moves
-+3,112 / +880 because the row it replaces was measured at `9951f493a0`,
++3,120 / +905 because the row it replaces was measured at `9951f493a0`,
 which is not an ancestor of `50e9c4bc41`. The remaining +2,423 / +555 is
 main's drift since that row, from #1367 (`Quality.command.ts` and the
 `@effect/tsgo` 0.47.2 rules) and #1373 (Yeet internals). `@beep/schema`
