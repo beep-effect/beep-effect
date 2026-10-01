@@ -2584,3 +2584,12 @@ reports now call the field `runtimeIdentitySha256`; test constants now say
 `artifactHash`. Values and raw receipt bindings remain unchanged. No secret-scan
 exemption was added. Domain-specific identifier names would have prevented this
 false-positive repair loop.
+
+### Standalone census inspection requires its filesystem service layer
+
+The private frozen-workflow inspection probe failed with `Service not found:
+@beep/repo-utils/FsUtils/FsUtils`. It supplied platform and crypto services but
+omitted the filesystem utility layer consumed by the census. The probe now
+uses the existing `FsUtilsLive` composition. Reusing the complete established
+runner layer setup would have prevented the failed observation; no production
+service or evidence gate was weakened.

@@ -34,9 +34,9 @@ export class CacheProducerWorkflowFile extends S.Class<CacheProducerWorkflowFile
  * Bounded declared supervisor source inventory and independently observed runtime.
  *
  * **Details**
- * This identity is a prerequisite for approval, not approval itself. Git-listed
- * sources do not establish the absence of ignored executable overrides; the
- * protected execution profile must exclude or separately bind those inputs.
+ * This identity is a prerequisite for approval, not approval itself. The execution
+ * profile requires clean declared sources without ignored executable overrides
+ * or workspace-local dependency directories, plus a separately bound root dependency tree.
  *
  * **Example** (Inspect workflow identity components)
  * ```ts
@@ -49,7 +49,8 @@ export class CacheProducerWorkflowFile extends S.Class<CacheProducerWorkflowFile
  */
 export class CacheProducerWorkflow extends S.Class<CacheProducerWorkflow>($I`CacheProducerWorkflow`)(
   {
-    schemaVersion: S.tag("cache-producer-workflow/v1"),
+    schemaVersion: S.tag("cache-producer-workflow/v2"),
+    executionProfile: S.tag("clean-declared-sources/root-dependencies/v1"),
     revision: GitObjectId,
     files: S.Array(CacheProducerWorkflowFile).check(S.isMinLength(1), S.isMaxLength(20000)),
     toolchain: CacheToolchainSnapshot,

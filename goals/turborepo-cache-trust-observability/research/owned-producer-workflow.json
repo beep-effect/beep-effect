@@ -65,7 +65,17 @@
       "exploreCheck": "passed; no stream-integrity or fleet-graph findings",
       "gitDiffCheck": "passed"
     },
-    "afterPackageProof": "Pre-commit formatting and JSDoc spacing cleanup followed the recorded package pass. Synthetic artifact ID variables and compact runtime SHA-256 field names were clarified after secret-scan false positives. Final integrated-source proof remains required."
+    "afterPackageProof": "Pre-commit formatting and JSDoc spacing cleanup followed the recorded package pass. Synthetic artifact ID variables and compact runtime SHA-256 field names were clarified after secret-scan false positives. Final integrated-source proof remains required.",
+    "mainIntegration": {
+      "revision": "3cc02d12bfe9ca5abd566f88d3b3597c067ba221",
+      "sourceCheck": "passed",
+      "focusedTests": 74,
+      "testFiles": 7,
+      "packageAuditSeconds": 709.0,
+      "packageDocgenSeconds": 24.0,
+      "exitCode": 0,
+      "scope": "Integrated implementation before the subsequent frozen-profile changes."
+    }
   },
   "currentSourceFiles": [
     {

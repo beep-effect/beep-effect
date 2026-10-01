@@ -55,6 +55,8 @@ export {
   CacheProducerWorkflowFile,
 } from "../commands/Cache/Cache.workflow.schemas.ts";
 export {
+  assertCacheProducerWorkflowLocation,
+  assertCacheProducerWorkflowProfile,
   collectCacheProducerWorkflowFiles,
   hashCacheProducerWorkflow,
   inspectCacheProducerWorkflow,

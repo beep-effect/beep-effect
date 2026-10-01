@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "owned-producer-frozen-profile-checkpoint/v1",
+  "authority": "component-verification-only",
+  "qualificationGranted": false,
+  "workflowFormat": "cache-producer-workflow/v2",
+  "executionProfile": "clean-declared-sources/root-dependencies/v1",
+  "controls": [
+    "Committed declared source paths; reject staged, unstaged, untracked and ignored entries.",
+    "Reject root dotenv filenames, including dangling aliases, without reading contents.",
+    "Match the requested workflow root to the loaded supervisor source module.",
+    "Bind the physical root dependency view through existing dependency inspection.",
+    "Disable dotenv loading and runtime automatic installs in the signed worker."
+  ],
+  "verification": {
+    "focusedTests": {
+      "status": "passed",
+      "tests": 33,
+      "files": 3,
+      "workflowTests": 11
+    },
+    "sourceCheck": "passed",
+    "fullPackage": "pending",
+    "nativeSupervisedIssuance": "pending",
+    "nativeDotenvControl": {
+      "schemaVersion": "workflow-dotenv-control/v1",
+      "authority": "component-verification-only",
+      "results": [
+        {
+          "automaticEnvLoading": true,
+          "fixtureVariable": "present",
+          "exitCode": 0
+        },
+        {
+          "automaticEnvLoading": false,
+          "fixtureVariable": "absent",
+          "exitCode": 0
+        }
+      ],
+      "temporaryFixtureRemovedOnExit": true
+    }
+  },
+  "preparation": {
+    "frozenCheckoutCreatedFrom": "3cc02d12bfe9ca5abd566f88d3b3597c067ba221",
+    "localOnlyFilesCopied": false,
+    "rootDependencies": "Independent reflink copy; physical directory. Full identity inspection remains required.",
+    "workspaceLocalDependencyDirectories": 0,
+    "ignoredPackageOrScriptFiles": 0,
+    "ambientDotenvFiles": 0,
+    "clearedEnvironmentImport": "passed with --no-env-file --no-install"
+  },
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+      "sha256": "65f7914026fa022e679ad12f6063d77e5121dd6c294f599ea59c12f980a4873b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+      "sha256": "715eda251c56b5813e071e87f993d35c8419e5dabf931317a8f05dd7c23bc6ab"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
+      "sha256": "38211b13115ade088e79b2dd0789835ef45945f03fd46361962fb9870479f860"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+      "sha256": "f6281741727fb8bde0bcaabe5550f0ea6f1e5cc8fe5144a22c6e557c9a95766e"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-workflow.test.ts",
+      "sha256": "6abfcc4b165ced0775830b837152eb2f35c1bf6486cbe2c16036eb0d932e9f5d"
+    }
+  ],
+  "references": ["https://bun.sh/docs/runtime/environment-variables"],
+  "remaining": [
+    "Approved operational policy and issuer provisioning/import.",
+    "Final frozen source/runtime/client reconciliation and complete signed pilot matrix.",
+    "Current census, adoption handoff and final same-PR closeout."
+  ]
+}

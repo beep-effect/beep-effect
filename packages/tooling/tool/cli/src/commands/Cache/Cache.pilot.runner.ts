@@ -187,6 +187,8 @@ BunRuntime.runMain(Effect.gen(function* () {
             "--chdir",
             sourceRoot,
             bun,
+            "--no-env-file",
+            "--no-install",
             path.join(directory, "worker.ts"),
           ],
           cwd: root,

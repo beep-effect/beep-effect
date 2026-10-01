@@ -200,3 +200,15 @@ declared source inventory does not yet close ignored executable inputs or
 workspace-local module resolution. Those profile gates and operational import
 remain required before qualification. Current-host stable and canary probes
 separately established denial of access to the actual persistent issuer material.
+
+## Frozen execution profile implementation
+
+The [frozen-profile checkpoint](./research/owned-producer-frozen-profile.json)
+records workflow format v2. Inspection now requires clean declared source paths
+and rejects ignored executable additions, workspace-local dependency overrides
+and root dotenv names. Issuance also checks that the named checkout supplies
+the loaded supervisor module. Signed workers disable Bun dotenv loading and
+runtime automatic installs. Eleven workflow tests and the broader 33-test
+focused set pass, as does the source check. Native dotenv suppression passed.
+Full package verification and supervised issuance under the new profile are
+pending. These checks do not grant policy approval or qualify a computation.

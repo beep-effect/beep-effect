@@ -4,9 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { Effect, FileSystem, Path } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -48,6 +49,18 @@ const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args:
     return yield* CacheCommandError.new("Cannot read a complete workflow Git inventory.");
   return captured.stdout;
 });
+const declaredSourcePaths = [
+  "packages",
+  "scripts",
+  "package.json",
+  "bun.lock",
+  "bunfig.toml",
+  "tsconfig.json",
+  "tsconfig.base.json",
+  "tsconfig.packages.json",
+  ".bun-version",
+  ".nvmrc",
+];
 const listSources = Effect.fn("CacheWorkflow.listSources")(function* (root: string) {
   const output = yield* captureGit(root, [
     "ls-files",
@@ -56,16 +69,7 @@ const listSources = Effect.fn("CacheWorkflow.listSources")(function* (root: stri
     "--exclude-standard",
     "-z",
     "--",
-    "packages",
-    "scripts",
-    "package.json",
-    "bun.lock",
-    "bunfig.toml",
-    "tsconfig.json",
-    "tsconfig.base.json",
-    "tsconfig.packages.json",
-    ".bun-version",
-    ".nvmrc",
+    ...declaredSourcePaths,
   ]);
   if (!Str.endsWith("\0")(output))
     return yield* CacheCommandError.new("Workflow source inventory is empty or incomplete.");
@@ -73,6 +77,79 @@ const listSources = Effect.fn("CacheWorkflow.listSources")(function* (root: stri
   if (paths.length > 20000) return yield* CacheCommandError.new("Workflow source inventory exceeded its entry bound.");
   return paths;
 });
+
+const AmbientEnvironmentFile = LiteralKit([
+  ".env",
+  ".env.local",
+  ".env.development",
+  ".env.development.local",
+  ".env.production",
+  ".env.production.local",
+  ".env.test",
+  ".env.test.local",
+]);
+const isAmbientEnvironmentFile = S.is(AmbientEnvironmentFile);
+
+/**
+ * Require committed declared sources without ignored source or local dependency overrides.
+ *
+ * **Details**
+ * Intended for a dedicated execution checkout. Rejects staged, unstaged,
+ * untracked and ignored entries under the declared source paths. Root dotenv
+ * names are rejected without reading their contents, including dangling aliases.
+ * The root dependency view is verified separately by workflow inspection.
+ *
+ * **Example** (Reference frozen source eligibility)
+ * ```ts
+ * import { assertCacheProducerWorkflowProfile } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof assertCacheProducerWorkflowProfile === "function")
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const assertCacheProducerWorkflowProfile = Effect.fn("CacheWorkflow.profile")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const status = yield* captureGit(root, [
+    "status",
+    "--porcelain=v1",
+    "--untracked-files=all",
+    "--ignored=matching",
+    "--ignore-submodules=none",
+    "--",
+    ...declaredSourcePaths,
+  ]);
+  if (status !== "")
+    return yield* CacheCommandError.new("Producer workflow requires clean declared sources without ignored overrides.");
+  if (A.some(yield* fs.readDirectory(root), isAmbientEnvironmentFile))
+    return yield* CacheCommandError.new("Producer workflow must not contain ambient dotenv files.");
+}, CacheCommandError.mapError("Cannot validate the frozen producer workflow profile."));
+
+/**
+ * Bind the supplied workflow root to this loaded source supervisor.
+ *
+ * **Example** (Reference loaded implementation binding)
+ * ```ts
+ * import { assertCacheProducerWorkflowLocation } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof assertCacheProducerWorkflowLocation === "function")
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const assertCacheProducerWorkflowLocation = Effect.fn("CacheWorkflow.location")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const loaded = yield* path.fromFileUrl(new URL(import.meta.url)).pipe(Effect.flatMap(fs.realPath));
+  const expected = path.join(
+    yield* fs.realPath(root),
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts"
+  );
+  if (loaded !== expected)
+    return yield* CacheCommandError.new("Loaded producer workflow does not belong to the requested checkout.");
+}, CacheCommandError.mapError("Cannot bind the loaded producer workflow."));
 
 /**
  * Inspect declared source bytes without following an alias outside the checkout.
@@ -120,8 +197,8 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
  *
  * **Details**
  * Call inside the caller's admission scope. This observation never provisions an
- * issuer or approves its own digest. The execution profile must separately close
- * ignored inputs and workspace-local dependency resolution before promotion.
+ * issuer or approves its own digest. Requires the frozen declared-source profile; the root dependency tree
+ * supplies the remaining installed module bindings. This is still not approval.
  *
  * **Example** (Reference workflow inspection)
  * ```ts
@@ -138,6 +215,7 @@ export const inspectCacheProducerWorkflow = Effect.fn("CacheWorkflow.inspect")(f
     Effect.map(Str.trim),
     Effect.flatMap(decodeRevision)
   );
+  yield* assertCacheProducerWorkflowProfile(root);
   const files = yield* collectCacheProducerWorkflowFiles(root);
   const toolchain = yield* collectCacheToolchain(root);
   const inspectionTools = yield* Effect.forEach(
@@ -147,6 +225,7 @@ export const inspectCacheProducerWorkflow = Effect.fn("CacheWorkflow.inspect")(f
   );
   if (Str.trim(yield* captureGit(root, ["rev-parse", "HEAD"])) !== before)
     return yield* CacheCommandError.new("Workflow revision changed during inspection.");
+  yield* assertCacheProducerWorkflowProfile(root);
   return CacheProducerWorkflow.make({ revision: before, files, toolchain, inspectionTools });
 }, CacheCommandError.mapError("Cannot inspect the producer workflow."));
 
@@ -165,7 +244,7 @@ export const inspectCacheProducerWorkflow = Effect.fn("CacheWorkflow.inspect")(f
  */
 export const hashCacheProducerWorkflow = Effect.fn("CacheWorkflow.hash")(function* (workflow: CacheProducerWorkflow) {
   const text = yield* encodeWorkflow(workflow);
-  return yield* digest(new TextEncoder().encode(`beep/cache-producer-workflow/v1\0${text}`));
+  return yield* digest(new TextEncoder().encode(`beep/cache-producer-workflow/v2\0${text}`));
 });
 
 /**
@@ -176,7 +255,7 @@ export const hashCacheProducerWorkflow = Effect.fn("CacheWorkflow.hash")(functio
  * declared workflow identity before and after execution, requires actual-key
  * reader denial, and exposes no arbitrary payload-signing argument. This route
  * neither provisions its own approval nor grants qualification. The approved
- * execution profile must also exclude or bind ignored executable overrides.
+ * execution profile rejects ignored source and local dependency overrides.
  *
  * **Example** (Reference closed supervised issuance)
  * ```ts
@@ -195,6 +274,7 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
   expected: CacheProducerBinding
 ) {
   const path = yield* Path.Path;
+  yield* assertCacheProducerWorkflowLocation(root);
   const trusted = yield* bindingCodec.encode(expected).pipe(Effect.flatMap(bindingCodec.decode));
   const issuer = yield* openCacheProducerIssuer(directory, trusted);
   const verifyWorkflow = withQualityAdmission(
