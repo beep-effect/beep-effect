@@ -335,15 +335,21 @@ zero applied.
 Preserve the exact pre-change projection at
 `history/inventory/2026-10-01-pre-r50-anchor-drift.jsonl`, whose SHA-256 is
 `0078790a38a060c7ac40c1e75f79974d012c6b9b0758e6d85f3ee379f9123a46`.
-The reviewed live projection has SHA-256
+The approved patch produced SHA-256
 `90709fd80b90660493849f106c6e417b37452c7dbf1469c92583e412c95dbfff`.
+A hosted follow-up review then found that the `practice-kg-options` owner
+citation selected the unrelated `bundleOut` field at line 80. Re-anchor that
+owner to its `PracticeKgOptions` declaration at line 78; the corrected live
+projection has SHA-256
+`4e64ea1832090715bca8d92a966b6f1290a5d4d882074ceb824d1fd66652d91f`.
 Retain the Practice knowledge-graph owner: its Schema defect and equivalence
 configuration still represents the same independent policy choices after the
 old `includeStack` constructor moved. The informational stale StepExec note on
 `r28-cli-commands-a-c-eval-law-lanes-spawn-options` is outside this anchor
 patch and grants no additional finding or disposition.
 
-These rulings install reviewed current-source citations only. Rebuild and
+These rulings install reviewed current-source citations plus that hosted
+follow-up correction only. Rebuild and
 independently review the complete R50 admission inputs after this packet edit
 and recheck exact source identity before any runtime or provider execution.
 They grant no current-source admission, probe, census, dry-round, P3,

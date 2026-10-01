@@ -1972,4 +1972,7 @@ The fresh source partition then exposed 76 inventory-anchor conflicts and
 required 72 reviewed row edits. A source-refresh step that binds owners to
 symbols or syntax nodes before preparing the runtime would have isolated this
 line drift earlier and avoided reviewing a launch package that could not be
-used. The R49 artifacts remain historical; no provider call was spent.
+used. The first R50 patch also selected `bundleOut` rather than the
+`PracticeKgOptions` declaration; hosted review caught that one-line owner
+citation before launch. The R49 artifacts remain historical; no provider call
+was spent.
