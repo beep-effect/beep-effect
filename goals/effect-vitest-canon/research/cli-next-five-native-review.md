@@ -17,8 +17,9 @@ on Node and Bun, authoritative root test types, and the canonical ratchet.
 
 These three EV010 rows are exceptions, not removed test coverage. Corpus
 provenance is resolved by the additional control below. Agent command filesystem
-promotion is being tested separately and is not included in this native exception
-decision.
+promotion is committed in `f969fc59ee`; its EV010 record is fixed. The current
+ledger therefore has four native exceptions and no open EV010 record among
+these five files.
 
 ## Resolved lens findings
 
@@ -32,9 +33,12 @@ decision.
   with a bounded live timeout; spawn completion alone is no longer treated as
   readiness.
 
-Together with the corpus exception below, eight reviewed rows change disposition.
-Other human-lens records remain open pending their individual closeout; this is
-not goal-wide acceptance.
+The four human-lens findings listed above are fixed. The other sixteen
+human-lens records remain open pending individual closeout. Across these five
+files, current detector counts are 222 fixed, eleven exceptions and zero open
+(233 total). The reconciliation receipt derives these counts from the ledger
+and retains the initial migration snapshot separately; this is not goal-wide
+acceptance.
 
 ## Corpus durability control
 
@@ -62,4 +66,4 @@ receipts seeded at their original resolved fixture paths. Node passed all eleven
 cases in 3.42 seconds; Bun passed them in 1.73 seconds. Root test types passed
 after replacing the synchronous fixture encoder with the Effect encoder. Full
 package verification passed: audit 869.5 seconds and docgen 45.5 seconds. The
-EV010 disposition will reference the source commit recording this promotion.
+EV010 disposition references source commit `f969fc59ee4ab57b5ef6c766902d74234e0fa98b`.

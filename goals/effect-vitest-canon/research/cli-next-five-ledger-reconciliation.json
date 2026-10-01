@@ -1,897 +1,1307 @@
 {
   "sourceFixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00",
-  "fixed": 215,
-  "exceptions": 7,
-  "nativeProvenanceOpen": 5,
+  "fixed": 222,
+  "exceptions": 11,
+  "nativeProvenanceOpen": 0,
   "fullPackageProof": "passed audit 674.4 seconds; docgen 25.5 seconds",
   "rows": [
     {
       "id": "EV001:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:120:runSync@6#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV001:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:290:runSync@6#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV001:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1575:runSync@6#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:140:provideTestLayer@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1005:provide@60#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1013:provide@15#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1023:provide@53#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1024:provide@43#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1029:provide@49#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1030:provide@60#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1036:provide@65#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1040:provide@55#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1049:provide@77#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1059:provide@79#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1070:provide@83#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1081:provide@79#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1094:provide@71#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1102:provide@61#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1109:provide@62#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1124:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1146:provide@60#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:175:provide@53#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:176:provide@43#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:187:provide@76#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:190:provide@70#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:196:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:199:provide@79#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:202:provide@79#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:203:provide@77#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:207:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:216:provide@28#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:220:provide@84#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:230:provide@53#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:231:provide@43#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:247:provide@12#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:260:provide@53#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:261:provide@43#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:299:provide@70#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:304:provide@15#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:305:provide@61#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:309:provide@62#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:313:provide@70#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:315:provide@90#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:348:provide@53#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:353:provide@93#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:361:provide@80#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:366:provide@92#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:378:provide@93#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:383:provide@86#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:388:provide@85#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:398:provide@53#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:399:provide@43#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:468:provide@72#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:473:provide@17#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:474:provide@78#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:488:provide@53#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:489:provide@43#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:509:provide@70#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:511:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:531:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:547:provide@53#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:548:provide@43#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:580:provide@12#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:603:provide@53#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:604:provide@43#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:636:provide@12#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:661:provide@53#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:662:provide@43#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:682:provide@70#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:687:provide@15#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:707:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:719:provide@53#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:720:provide@43#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:725:provide@63#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:728:provide@71#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:729:provide@49#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:730:provide@51#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:736:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:753:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:772:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:774:provide@64#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:793:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:810:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:812:provide@63#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:839:provide@12#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:841:provide@57#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:885:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:897:provide@57#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:902:provide@78#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:908:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:920:provide@56#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:932:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:945:provide@64#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:960:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:966:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:978:provide@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/corpus-preservation.test.ts:995:provide@64#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1003:provideScopedLayer@16#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1012:provideScopedLayer@16#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1021:provideScopedLayer@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1036:provideScopedLayer@16#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1045:provideScopedLayer@10#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1055:provideScopedLayer@16#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1064:provideScopedLayer@16#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1072:provideScopedLayer@16#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1080:provideScopedLayer@16#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1088:provideScopedLayer@16#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1095:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1136:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1184:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1212:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1260:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1308:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1350:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1404:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1446:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1478:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1512:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1543:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1569:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:305:provideScopedLayer@12#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:310:provideScopedLayer@12#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:315:provideScopedLayer@12#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:321:provideScopedLayer@45#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:332:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:370:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:400:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:516:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:551:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:583:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:619:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:661:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:693:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:730:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:769:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:816:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:850:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:885:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:921:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:963:provideScopedLayer@11#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:993:provideScopedLayer@16#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:161:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:188:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:218:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:246:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:281:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:310:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:324:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:53:provideScopedLayer@2#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:75:withTempDirectory@26#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:102:withTempFixture@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:23:provideTestLayer@25#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:39:withTempFixture@24#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:73:withTempFixture@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1006:withOtlpSink@6#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:102:withTempDirectory@26#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1079:withOtlpSink@6#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1158:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1202:withTempDirectory@6#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1343:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1371:withOtlpSink@6#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1443:withOtlpSink@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1474:withOtlpSink@6#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1510:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1543:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1573:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1603:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1650:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1689:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1720:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1779:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1818:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1854:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:206:withPrependedPath@26#1",
-      "status": "exception"
+      "status": "exception",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:236:withOtlpSink@21#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:330:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:369:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:393:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:403:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:40:provideScopedLayer@2#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:428:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:470:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:487:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:504:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:522:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:539:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:561:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:590:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:603:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:622:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:657:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:687:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:718:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:728:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:746:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:764:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:803:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:828:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:889:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:939:withTempDirectory@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:41:withTempDirectory@26#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:24:scoped@2#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1020:scoped@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1143:scoped@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/corpus-preservation.test.ts:172:scoped@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/corpus-preservation.test.ts:227:scoped@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/corpus-preservation.test.ts:256:scoped@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/corpus-preservation.test.ts:395:scoped@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/corpus-preservation.test.ts:482:scoped@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/corpus-preservation.test.ts:544:scoped@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/corpus-preservation.test.ts:600:scoped@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/corpus-preservation.test.ts:655:scoped@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/corpus-preservation.test.ts:715:scoped@4#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:375:scoped@6#1",
-      "status": "exception"
+      "status": "exception",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:405:scoped@6#1",
-      "status": "exception"
+      "status": "exception",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:855:scoped@6#1",
-      "status": "exception"
+      "status": "exception",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:890:scoped@6#1",
-      "status": "exception"
+      "status": "exception",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1054:expect@12#1",
+      "status": "fixed",
+      "fixSha": "a72a31ea9bc8546a58b017d6d4a0b1d9f92b01b0"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1130:expect@14#1",
+      "status": "fixed",
+      "fixSha": "a72a31ea9bc8546a58b017d6d4a0b1d9f92b01b0"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1256:expect@10#1",
+      "status": "fixed",
+      "fixSha": "a72a31ea9bc8546a58b017d6d4a0b1d9f92b01b0"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:679:expect@8#1",
+      "status": "fixed",
+      "fixSha": "8140304195f59af07c5ab19db3378ae7e21e3d71"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:873:expect@8#1",
+      "status": "fixed",
+      "fixSha": "484ab21b075e36bad965961ff196ffa74615ebfd"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:874:expect@8#1",
+      "status": "fixed",
+      "fixSha": "a72a31ea9bc8546a58b017d6d4a0b1d9f92b01b0"
     },
     {
       "id": "EV007:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:121:checkEffect@8#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV007:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:291:checkEffect@8#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV007:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1576:checkEffect@8#1",
-      "status": "fixed"
+      "status": "fixed",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV009:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1516:it.live@2#1",
-      "status": "exception"
+      "status": "exception",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
     },
     {
       "id": "EV009:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1546:it.live@2#1",
-      "status": "exception"
+      "status": "exception",
+      "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:11:@effect/platform-node@0#1",
+      "status": "fixed",
+      "fixSha": "f969fc59ee4ab57b5ef6c766902d74234e0fa98b"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:12:@effect/platform-node@0#1",
+      "status": "exception",
+      "fixSha": "65755fc9bdf140d2bcfe4dc170c5978e26444e5e"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:16:@effect/platform-node@0#1",
+      "status": "exception",
+      "fixSha": "65755fc9bdf140d2bcfe4dc170c5978e26444e5e"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/corpus-preservation.test.ts:42:@effect/platform-node@0#1",
+      "status": "exception",
+      "fixSha": "65755fc9bdf140d2bcfe4dc170c5978e26444e5e"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:9:@effect/platform-node@0#1",
+      "status": "exception",
+      "fixSha": "65755fc9bdf140d2bcfe4dc170c5978e26444e5e"
     }
-  ]
+  ],
+  "initialReconciliation": {
+    "sourceFixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00",
+    "fixed": 215,
+    "exceptions": 7,
+    "nativeProvenanceOpen": 5,
+    "fullPackageProof": "passed audit 674.4 seconds; docgen 25.5 seconds"
+  },
+  "sourceFixShaScope": "Initial five-suite migration; current dispositions below also include subsequent repairs and Memory promotion.",
+  "reconciledAgainst": "6edc3b8e2ce031c349416cd15583341300f61ce7",
+  "open": 0,
+  "total": 233,
+  "nativeProvenance": {
+    "fixed": 1,
+    "exception": 4,
+    "open": 0
+  },
+  "humanLenses": {
+    "resource": {
+      "counts": {
+        "open": 4,
+        "fixed": 1
+      },
+      "rows": [
+        {
+          "id": "L-RES-NONE:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-RES-NONE:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-RES-03:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:47",
+          "status": "fixed",
+          "fixSha": "f669aba9c77136ee8187286ad4c91a2fe00d4a00"
+        },
+        {
+          "id": "L-RES-NONE:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-RES-NONE:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1",
+          "status": "open"
+        }
+      ]
+    },
+    "property": {
+      "counts": {
+        "open": 4,
+        "fixed": 1
+      },
+      "rows": [
+        {
+          "id": "L-PROP-NONE:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-PROP-NONE:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-PROP-04:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1442",
+          "status": "fixed",
+          "fixSha": "65755fc9bdf140d2bcfe4dc170c5978e26444e5e"
+        },
+        {
+          "id": "L-PROP-NONE:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-PROP-NONE:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1",
+          "status": "open"
+        }
+      ]
+    },
+    "flake": {
+      "counts": {
+        "open": 3,
+        "fixed": 2
+      },
+      "rows": [
+        {
+          "id": "L-FLAKE-NONE:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-FLAKE-NONE:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-FLAKE-01:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:278",
+          "status": "fixed",
+          "fixSha": "4203a309f11930eb60e971931718b73b54efc653"
+        },
+        {
+          "id": "L-FLAKE-NONE:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-FLAKE-02:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:873",
+          "status": "fixed",
+          "fixSha": "65755fc9bdf140d2bcfe4dc170c5978e26444e5e"
+        }
+      ]
+    },
+    "observability": {
+      "counts": {
+        "open": 5
+      },
+      "rows": [
+        {
+          "id": "L-OBS-NONE:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-OBS-NONE:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-OBS-NONE:packages/tooling/tool/cli/test/ai-metrics-command.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-OBS-NONE:packages/tooling/tool/cli/test/corpus-preservation.test.ts:1",
+          "status": "open"
+        },
+        {
+          "id": "L-OBS-NONE:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1",
+          "status": "open"
+        }
+      ]
+    }
+  }
 }

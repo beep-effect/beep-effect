@@ -6227,3 +6227,20 @@ presence assertions make the same two cases fail. Consider a targeted review
 of assertions nested under `Option.isSome` without a preceding presence check;
 a syntax-only detector should report candidates rather than assume intent.
 The private control receipts are summarized in `yeet-remediation-scope-proof.md`.
+
+### PR 1390 closeout: stale summaries and GitHub error attribution
+
+Review comments identified a five-suite digest and reconciliation receipt that
+still described rows as open after the ledger closed them. Recompute aggregate
+receipts from ledger dispositions whenever a follow-up closes rows, retaining
+an explicitly named historical snapshot instead of treating old totals as live.
+
+Separately, `yeet monitor --until-ready` reported no open PR while direct
+GraphQL requests returned a quota error and REST confirmed PR 1390 open at the
+expected head. Preserve and classify the upstream lookup error rather than
+turning transport or quota failures into an absent-PR conclusion. Detached
+monitoring was unavailable because the systemd user manager was unreachable.
+
+The hosted Security job also found inherited `basic-ftp@5.3.1` advisory
+GHSA-c475-qrg2-pj4r, reporting 6.2.1 as fixed. This PR does not change bun.lock;
+track dependency remediation separately from test migration regressions.
