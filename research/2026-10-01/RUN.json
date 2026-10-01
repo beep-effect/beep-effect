@@ -1,0 +1,103 @@
+{
+  "schema": "beep.research.run/v0",
+  "date": "2026-10-01",
+  "status": "partial",
+  "window": {
+    "start": "2026-09-30T08:19:00-05:00",
+    "end": "2026-10-01T08:19:00-05:00",
+    "label": "America/Chicago",
+    "approx_hours": 24,
+    "sunday_weekly": false
+  },
+  "prior": {
+    "lastSuccessfulPacket": "research/2026-09-30",
+    "lastSuccessfulPr": 1358,
+    "lastSuccessfulRun": "2026-09-30T08:19:00-05:00"
+  },
+  "counts": {
+    "total": 25,
+    "window_new": 14,
+    "refute": 14,
+    "by_axis": {
+      "law": 8,
+      "effect": 8,
+      "agents": 9
+    }
+  },
+  "novelty": {
+    "window_new": 14,
+    "exclusion_url_collisions": 9,
+    "exclusion_collision_pct": 36.0,
+    "unique_claim_urls": 25,
+    "collision_urls": [
+      "https://www.harvey.ai/blog/harvey-everlaw-evidence-ediscovery",
+      "https://imanage.com/resources/resource-center/news/imanage-thomson-reuters-atrategic-partnership-governed-ai-legal-workflows/",
+      "https://github.com/Effect-TS/effect/pull/8577",
+      "https://www.npmjs.com/package/jazz-tools/v/2.0.0-alpha.58",
+      "https://github.com/drizzle-team/drizzle-orm/issues/6162",
+      "https://www.instantdb.com/essays/instant_team_joins_openai",
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3306",
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3004",
+      "https://github.com/modelcontextprotocol/go-sdk/pull/1238"
+    ],
+    "window_new_collision_pct": 7.1,
+    "note": "Hard collisions are intentional refute-quota re-cites + Effect #8577 settle re-cite + jazz alpha.58 HOLD. HOLD breaks use fresh version-specific npmjs URLs (effect@4.0.0, canary.21, evolu 8.14.0). USPTO FAQ uses data.uspto.gov (not patent.dev). Gate \u226440%."
+  },
+  "quotaPools": {
+    "search": "web+github-mcp+arxiv+npm",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot-blinded",
+    "publisher": "not-invoked (local packet only)"
+  },
+  "frictions": [
+    {
+      "source": "user-X",
+      "tools": ["search_posts_all"],
+      "error": "client-not-enrolled",
+      "detail": "X connector search_posts_all: client-not-enrolled (Appropriate Level of API Access) \u2014 skipped; continued without X."
+    },
+    {
+      "source": "local-gh",
+      "error": "bad-credentials-unused",
+      "detail": "local gh unused by design; preferred cursor-github MCP for PR/issue status."
+    },
+    {
+      "source": "npmjs-web",
+      "error": "cloudflare-avoided",
+      "detail": "npm tip probes via registry.npmjs.org JSON / WebFetch; HOLD-break claims cite fresh version-specific npmjs package URLs for novelty."
+    }
+  ],
+  "capabilities": {
+    "cursor-github": "ok",
+    "registry.npmjs.org": "ok",
+    "arxiv-export-api": "ok",
+    "WebFetch": "ok",
+    "WebSearch": "ok",
+    "user-X": "blocked-client-not-enrolled"
+  },
+  "resume_cursor": {
+    "x": null,
+    "arxiv": null,
+    "note": "Retry X when project enrollment fixed."
+  },
+  "headline_deltas": [
+    "Effect #8577 MERGED 2026-10-01 \u2192 effect@4.0.0 stable (no rc.119); LTS \u22653y.",
+    "Zero canary.20 \u2192 canary.21; head tip *-20261001.",
+    "Evolu @evolu/common 8.12.0 \u2192 8.14.0 (via 8.13.0).",
+    "jazz-tools still alpha.58 (HOLD).",
+    "Clio acquires Learned Hand (judiciary AI) \u2014 Sep 30 LawNext + PR Newswire.",
+    "California SB 574 signed Sep 30 \u2014 attorney genAI practice limits.",
+    "Harvey\u2013Everlaw MCP + iManage/TR MCP still not GA; Patlytics MCP foil reconfirmed.",
+    "arXiv Pretext 2609.39607 / ActionGuard 2609.39450 / TrustProbe 2609.39065 (+ skill-poison / SkillSeek).",
+    "SEP-2640 Tier-1 SDKs still OPEN; MCP #3306 blocked; SEP-3004 still closed-unmerged.",
+    "drizzle #6162 / Instant 2027-08-31 / USPTO four-field \u2014 HOLDs reconfirmed."
+  ],
+  "blinding": {
+    "cloned_beep_effect": false,
+    "opened_pr": false,
+    "called_cloud_agent": false,
+    "wrote_goals_or_inbox": false
+  },
+  "written_at": "2026-10-01T08:35:00-05:00"
+}

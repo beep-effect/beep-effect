@@ -1,7 +1,7 @@
 ---
 schema: beep.research.watchlist/v0
-updated: 2026-09-30
-note: Draft until human merge of research/2026-09-30. Do not claim merged. Prior #1308 merged 2026-09-27. Wednesday catch-up after Sep 28+29 failed automation; ~72h window; no weekly consolidation.
+updated: 2026-10-01
+note: Draft until human merge of research/2026-10-01. Prior #1358 merged 2026-10-01. Thursday ~24h window; no weekly consolidation. Never auto-merge. Partial: X client-not-enrolled.
 ---
 
 # WATCHLIST
@@ -10,23 +10,23 @@ Routine-proposed. Human admits. Add-with-evidence only.
 
 | id | term | why | evidence | action |
 | --- | --- | --- | --- | --- |
-| w-schema-binary | Effect SchemaBinary / cluster wire | SchemaBinary shipped in rc.113+; tip now rc.118 — watch cluster consumers | effect@4.0.0-rc.118 | keep |
-| w-drizzle-taggederror | drizzle Schema.TaggedErrorClass | #6162 still OPEN (reconfirmed Sep 30) | drizzle-orm#6162 | keep |
-| w-uspto-odp-auth | USPTO ODP profile + API key | four fields still mandatory (reconfirmed Sep 30 via patent.dev) | patent.dev; data.uspto.gov/support | keep |
+| w-schema-binary | Effect SchemaBinary / cluster wire | SchemaBinary shipped in rc.113+; tip now effect@4.0.0 stable — watch cluster consumers | effect@4.0.0 | keep |
+| w-drizzle-taggederror | drizzle Schema.TaggedErrorClass | #6162 still OPEN (reconfirmed Oct 1); now vs effect@4.0.0 stable | drizzle-orm#6162 | keep |
+| w-uspto-odp-auth | USPTO ODP profile + API key | four fields still mandatory (reconfirmed Oct 1 via FAQ) | data.uspto.gov/support/faq | keep |
 | w-skills-over-mcp | Agent Plugins vs SEP-2640 | **SEP-2640 MERGED Final on main** 2026-09-13; Tier-1 SDKs still OPEN | mcp#2640 merged; sdk PRs OPEN | keep |
 | w-trustshift | MCP TrustShift delayed defect | install-time scanners miss it; registry 48.8% initialize | arXiv 2609.10962 | keep |
-| w-instant-sunset | Instant Cloud sunset 2027-08-31 | 2027-08-31 unchanged (reconfirmed Sep 30) | instantdb essay | keep |
+| w-instant-sunset | Instant Cloud sunset 2027-08-31 | 2027-08-31 unchanged (reconfirmed Oct 1) | instantdb essay | keep |
 | w-legal-models-2026-08 | Thomson 1.0 / Harvey Tenet | competitor specialist models + MCP/verify | TR arXiv 2608.27147 | keep |
-| w-imanage-mcp-write | iManage MCP write-back | write tools live; platform GA October 2026; TR partnership MCP still coming soon; ChatGPT plugin foil noted (reconfirmed Sep 30) | iManage docs; partnership page | keep |
+| w-imanage-mcp-write | iManage MCP write-back | write tools live; platform GA October 2026; TR partnership MCP still coming soon; ChatGPT plugin foil noted (reconfirmed Oct 1) | iManage partnership page | keep |
 | w-daydreaming | Daydreaming skill steal | hosted skills leak via ordinary task results | arXiv 2608.26733 | keep |
 | w-blanc-whitespace | BLANC patent white space | multi-view delta-NPMI | arXiv 2608.26685 | keep |
-| w-legal-dms-mcp | DMS/research MCP fabric | Split clocks reconfirmed Sep 25: Harvey first-party docs + Everlaw first-party + Harvey↔Everlaw fall 2026 + iManage/TR coming soon + Everlaw↔TR/Copilot/Gemini fall 2026 | Harvey MCP docs; Everlaw; iManage | keep |
+| w-legal-dms-mcp | DMS/research MCP fabric | Split clocks unchanged (reconfirmed Oct 1): Harvey first-party docs + Everlaw first-party + Harvey↔Everlaw fall 2026 + iManage/TR coming soon + Everlaw↔TR/Copilot/Gemini fall 2026 | Harvey; Everlaw; iManage | keep |
 | w-deepjudge-ahp | DeepJudge AHP handoff | app to app on MCP; also Astra for Law plugin partner | LawNext 2026-08-13; Astra press | keep |
 | w-lawtoolbox-mcp | LawToolBox M365 MCP | 70+ tools over matter containers | lawtoolbox.com/mcp | keep |
 | w-harvey-pacerpro | Harvey-PacerPro docket | firm litigation record into Harvey | LawNext 2026-08-24 | keep |
-| w-harvey-everlaw-mcp | Harvey-Everlaw MCP evidence bridge | still expected fall 2026; not GA (reconfirmed Sep 30) | harvey.ai blog live Sep 27 | keep |
+| w-harvey-everlaw-mcp | Harvey-Everlaw MCP evidence bridge | still expected fall 2026; not GA (reconfirmed Oct 1) | harvey.ai blog | keep |
 | w-everlaw-first-party-mcp | Everlaw hosted MCP | api.everlaw.com/v1/mcp OAuth read-only | Everlaw MCP KB | keep |
-| w-mcp-enterprise-ig | MCP Enterprise IG | #3306 still OPEN/blocked (reconfirmed Sep 30) | mcp#3306 | keep |
+| w-mcp-enterprise-ig | MCP Enterprise IG | #3306 still OPEN/blocked (reconfirmed Oct 1) | mcp#3306 | keep |
 | w-jazz-wire-v1 | Jazz sync wire | **RETIRED 2026-09-23** superseded by alpha.56 / w-jazz-wire-v2 | jazz-tools@2.0.0-alpha.55 | retired |
 | w-uspto-oed-ai | USPTO OED AI discipline | first generative-AI-predicated order | IPWatchdog D2026-16 | keep |
 | w-rayrun-sep2640 | Rayrun SEP-2640 host | host implements draft skills/list+get | ray.run/docs/skills | keep |
@@ -50,15 +50,15 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-nobox-mcp | No-Box MCP prompt-injection scan | description-only IPI detection | arXiv 2609.10854 | keep |
 | w-schema-jit | SchemaJIT/AOT compilers | **RETIRED 2026-09-30** #7908 ships in effect@4.0.0-rc.118 (SchemaJITCompiler export) | effect@4.0.0-rc.118 dist/schema/index.d.ts | retired |
 | w-sep2640-final-unmerged | SEP-2640 Final≠merged | **RETIRED 2026-09-23** Final merged; replaced by w-sep2640-sdk-ship | mcp#2640 merged 2026-09-13 | retired |
-| w-zero-canary | Rocicorp Zero canary channel | canary.15 → **canary.20** (2026-09-30) | npm @rocicorp/zero 1.11.0-canary.20 | keep |
+| w-zero-canary | Rocicorp Zero canary channel | canary.20 → **canary.21** (2026-10-01) | npm @rocicorp/zero 1.11.0-canary.21 | keep |
 | w-patent-kb-connect | patent-kb-connect hosted MCP | 727k US patent MCP created Sep 12 | blazingbunny/patent-kb-connect | keep |
-| w-patlytics-mcp | Patlytics MCP Claude+ChatGPT | read-only prior-art/claims MCP foil for Tom | Patlytics blog | keep |
+| w-patlytics-mcp | Patlytics MCP Claude+ChatGPT | read-only prior-art/claims MCP foil for Tom; still Claude+ChatGPT (reconfirmed Oct 1) | Patlytics blog | keep |
 | w-scanners-as-skills | agent-security-auditor / agent-scan skills | CI scanner packaged as installable skills | awesome-llm-apps#1167; registry#23 | keep |
 | w-harvey-guardrails | Harvey Guardrails AI acquisition | agent reliability foil (Sep 9) | harvey.ai/blog/guardrails-ai-joins-harvey | keep |
 | w-harvey-first-party-mcp | Harvey first-party MCP Server | Vault + knowledge tools; Streamable HTTP + OAuth; Claude/Gemini/Copilot | developers.harvey.ai/guides/harvey_mcp | keep |
 | w-arcangel-mcp | Arcangel patents/TM hosted MCP | Cursor plugin + arcb_ bot token; read/draft; no USPTO file | Ga1axia/arcangel-cursor-plugin | keep |
-| w-jazz-wire-v2 | Jazz sync wire protocol v2 | still wire-v2 at alpha.58 (reconfirmed Sep 30) | jazz-tools@2.0.0-alpha.58 | keep |
-| w-sep2640-sdk-ship | SEP-2640 Tier-1 SDK ship gate | go#1238 / py#3485 / ts#2818 still OPEN (reconfirmed Sep 30) | SDK PRs 2026-09-30 | keep |
+| w-jazz-wire-v2 | Jazz sync wire protocol v2 | still wire-v2 at alpha.58 (reconfirmed Oct 1) | jazz-tools@2.0.0-alpha.58 | keep |
+| w-sep2640-sdk-ship | SEP-2640 Tier-1 SDK ship gate | go#1238 / py#3485 / ts#2818 still OPEN (reconfirmed Oct 1) | go#1238; py#3485; ts#2818 | keep |
 | w-stochastic-deputy | Stochastic Deputy tenant isolation | remove tenant id from MCP tool schema; bind credential below agent | arXiv 2609.14780 | keep |
 | w-intentcap | IntentCap task-scoped capability leases | compose user/workflow/tool/env; Skill/MCP text must not widen authority | arXiv 2609.14631 | keep |
 | w-acquirebound | AcquireBound post-fulfillment activation | provenance-bounded runtime auth for acquired resources | arXiv 2609.14744 | keep |
@@ -73,14 +73,14 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-effect-http-api-rename | HttpApi module path rename | #8365 MERGED Sep 22; effect/httpapi → effect/http-api | Effect#8365 | keep |
 | w-openai-astra-law | OpenAI Astra for Law | Trusted Access still limited; soft press continues | Legal IT Insider 2026-09-17; NeoTeo 2026-09-23 | keep |
 | w-jazz-alpha-56 | jazz-tools@2.0.0-alpha.56 tip | **RETIRED 2026-09-27** tip past to alpha.57; replaced by w-jazz-alpha-57 | jazz-tools@2.0.0-alpha.57 | retired |
-| w-sep3004-closed | SEP-3004 closed unmerged | remains closed unmerged (reconfirmed Sep 30; no reopen) | mcp#3004 closed | keep |
+| w-sep3004-closed | SEP-3004 closed unmerged | remains closed unmerged (reconfirmed Oct 1; no reopen) | mcp#3004 closed | keep |
 | w-rac-auth-drift | RAC authorization drift | arXiv 2609.23498 controller pre-commit guard for MCP workflows | arXiv 2609.23498 | keep |
 | w-everlaw-mcp-fabric | Everlaw multi-vendor MCP fall 2026 | Harvey + TR CoCounsel + Gemini + Copilot expected fall 2026 | Everlaw ILTACON press | keep |
 | w-a2m-mcp-hijack | A2M Attraction-to-Manipulation | MCP registry/tool hijack threat on LiveMCPBench | arXiv 2609.26761; github.com/Lilaizhen/A2M | add |
 | w-paypal-zt-mcp | PayPal zero-trust MCP extensions | dual-persona + permission-filtered discovery | arXiv 2609.22573 | add |
 | w-graphskillevo | GraphSkillEvo graph skills | structured skill IR beyond flat SKILL.md | arXiv 2609.21749 | add |
 | w-cimplifi-maestro | Cimplifi Maestro / CI Lake | Relativity aiR orchestration competitor | GlobeNewswire 2026-09-22 | add |
-| w-zero-head | Rocicorp Zero head dist-tag | head tip 1.11.0-head-cb19d9a9-20260930 | npm @rocicorp/zero head 20260930 | keep |
+| w-zero-head | Rocicorp Zero head dist-tag | head tip 1.11.0-head-422b0c68-20261001 | npm @rocicorp/zero head 20261001 | keep |
 | w-mcp-infra-wg | MCP Infrastructure WG | charter merged Sep 22 | mcp#3385 | add |
 | w-sep3371-sdk-ext | SEP-3371 SDK extension points | consistent extension hooks across SDKs | mcp#3371 OPEN | add |
 | w-legora-amlaw-cluster | Legora AmLaw / enterprise rollout cluster | Bradley firm-wide + Brodies Scotland HQ + Justice Connect + Veolia Group Legal in one ~47h window | Legora newsroom Sep 23–25 | add |
@@ -99,10 +99,10 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-instrumental-evasion | Instrumental Monitor Evasion / EvasionBench | ordinary task pressure → monitor bypass ≤98% attempt | arXiv 2609.30217; instrumental-evasion.com | add |
 | w-haqq-legal-ai-rubric | HAQQ 50-point Harvey/Legora/CoCounsel rubric | soft competitive scoring foil | haqq.ai | add |
 | w-jazz-alpha-57 | jazz-tools@2.0.0-alpha.57 tip | **RETIRED 2026-09-30** tip past to alpha.58; replaced by w-jazz-alpha-58 | npm jazz-tools@2.0.0-alpha.58 | retire-after-admit |
-| w-effect-rc118 | effect@4.0.0-rc.118 tip | tip effect@4.0.0-rc.118; watch #8577 for rc.119 | effect@4.0.0-rc.118; Effect#8577 | add |
-| w-effect-rc119 | effect@4.0.0-rc.119 staging | #8577 OPEN staging rc.119 (updated Sep 30) | Effect#8577 | add |
+| w-effect-rc118 | effect@4.0.0-rc.118 tip | **RETIRED 2026-10-01** tip past rc.118 → effect@4.0.0 stable (#8577 MERGED); replaced by w-effect-400 | npm effect@4.0.0; Effect#8577 | retire-after-admit |
+| w-effect-rc119 | effect@4.0.0-rc.119 staging | **RETIRED 2026-10-01** no rc.119 published; tip jumped to effect@4.0.0 | npm dist-tags | retire-after-admit |
 | w-jazz-alpha-58 | jazz-tools@2.0.0-alpha.58 tip | tip alpha.58; wire-v2 still applies | npm jazz-tools@2.0.0-alpha.58 | add |
-| w-evolu-8120 | @evolu/common@8.12.0 shipped | maxMutationSize + relay fixes | npm @evolu/common@8.12.0 | add |
+| w-evolu-8120 | @evolu/common@8.12.0 shipped | **RETIRED 2026-10-01** tip past 8.12.0 → 8.14.0; replaced by w-evolu-8140 | npm @evolu/common@8.14.0 | retire-after-admit |
 | w-legora-uk-scholars | Legora UK Legal AI Scholars | King's/City/BPP + clinic live cases; SRA AI warning framing | Legora newsroom Sep 29 | add |
 | w-legora-munich-dach | Legora Munich / DACH growth | Germany 3k→13k; in-house 8×; Munich office | Legora newsroom Sep 28 | add |
 | w-skilllite | SKILLLITE malicious skill audit | compact-LLM skill supply-chain auditing | arXiv 2609.36879 | add |
@@ -111,3 +111,10 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-sage-skill-gate | SAGE statistical skill-edit gate | self-evolving skill document acceptance | arXiv 2609.36043 | add |
 | w-agentbug-smith | AgentBug-Smith harness bugs | automated harness-bug reproduction | arXiv 2609.37864 | add |
 | w-workday-prog-skills | Workday progressive skill disclosure | production cost study of lazy skill loading | arXiv 2609.35692 | add |
+| w-effect-400 | effect@4.0.0 LTS tip | stable tip effect@4.0.0; LTS ≥3 years; watch consumers past rc.118 | npm effect@4.0.0 | add |
+| w-evolu-8140 | @evolu/common@8.14.0 tip | tip 8.14.0 (via 8.13.0 the same evening) | npm @evolu/common@8.14.0 | add |
+| w-clio-judiciary | Clio × Learned Hand judiciary AI | Clio acquired Learned Hand Sep 30; judiciary AI workspace already in LA Superior Court plus multi-state pilots | LawNext Sep 30; PR Newswire | add |
+| w-ca-sb574 | CA SB 574 attorney genAI duties | signed Sep 30: no delegating the practice of law to genAI; verify outputs; restrict confidential inputs | gov.ca.gov Sep 30; leginfo | add |
+| w-pretext-skills | Pretext skill-scanner evasion | white-box attacker evades SkillSpector-class static and LLM skill scanners | arXiv 2609.39607 | add |
+| w-actionguard | ActionGuard tool-call auth | execution-boundary authorization for tool calls under poisoned skills | arXiv 2609.39450 | add |
+| w-trustprobe | TrustProbe skill trust chains | taint-style trust-chain findings across skill agents; installed-skill delivery | arXiv 2609.39065 | add |
