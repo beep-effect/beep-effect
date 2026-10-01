@@ -434,6 +434,30 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("unsets unrelated unresolved references on a direct spawn and keeps literals", () =>
+      Effect.gen(function* () {
+        expect(
+          yield* overridesFor(
+            {
+              PATH: "/fixture/bin",
+              SAFE_LITERAL: "fixture-value",
+              TURBO_TOKEN: "resolved",
+              TURBO_TEAM: "beep",
+              TURBO_CACHE: REMOTE_READ,
+              UNRELATED_SECRET: "op://fixture-vault/unrelated/secret",
+              UNRELATED_DATABASE_URL: "postgres://user:op://fixture-vault/database/password@db.test/database",
+            },
+            "bunx",
+            ["turbo", "run", "build"]
+          )
+        ).toStrictEqual({
+          UNRELATED_SECRET: undefined,
+          UNRELATED_DATABASE_URL: undefined,
+          TURBO_UI: "false",
+        });
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("gives a wrapped spawn only Turbo secret references and a non-extending environment", () =>
       Effect.gen(function* () {
         const environment = {

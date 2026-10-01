@@ -895,7 +895,6 @@ const withProjectIdentityStatics = <Schema extends S.ConstraintDecoder<string, n
   const decode = S.decodeUnknownResult(self);
 
   return {
-    fromString: (value: string): Schema["Type"] => Result.getOrThrow(decode(value)),
     fromParts: (parts: ProjectIdentityParts): Schema["Type"] => Result.getOrThrow(decode(renderProjectIdentity(parts))),
   };
 };
@@ -1026,7 +1025,6 @@ export const SymbolId = symbolIdentity.pipe(
     const decode = S.decodeUnknownResult(self);
 
     return {
-      fromString: (value: string) => Result.getOrThrow(decode(value)),
       fromParts: (parts: {
         readonly filePath: SymbolFilePath;
         readonly qualifiedName: SymbolQualifiedName;
