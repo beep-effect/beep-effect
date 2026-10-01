@@ -1,8 +1,7 @@
 # Knowledge semantic-delta fixture qualification
 
 The source migration is applied after the preceding CI-lane/worktree package
-proof passed and its source was committed as `1d61d8fae2`. No campaign rows are
-closed by this receipt; full package proof passes: audit 981.4 seconds and docgen 33.6 seconds.
+proof passed and its source was committed as `1d61d8fae2`. Source proof is committed as `c1ef174970`; full package proof passes: audit 981.4 seconds and docgen 33.6 seconds.
 
 The canonical candidate replaces hidden service provisioning with 63 explicit
 instrumented runner layer registrations. It removes 13 whole-callback scopes;
@@ -31,3 +30,10 @@ historical rows, refreshes platform-import metadata, and reviews the newly
 fingerprinted shorter policy helper scope. Full package proof passes: audit 981.4 seconds and docgen 33.6 seconds.
 Private candidate hashes and logs are retained in the operator cache; they are
 not a substitute for committed source proof.
+
+Campaign reconciliation binds 31 fixed detector rows to `c1ef174970`. The
+shorter event-payload scope and native probe platform remain two reviewed
+exceptions. Historical identities and evidence are retained. The subsequent
+main merge passes 318 affected CLI tests on each runtime and root types; the
+refreshed ratchet introduces no findings. No-finding lens rows remain open
+until the separate file-level closeout review.
