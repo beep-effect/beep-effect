@@ -88,10 +88,14 @@ separate a better skill from noise at this model strength.
   task against roughly 2 minutes in P5.
 - [`history/p2-rerun/FINDINGS.md`](history/p2-rerun/FINDINGS.md): the stopped
   first run that exposed the scorer sandbox floor.
-- [`2026-09.jsonl`](../../harness-ledger/rows/2026-09.jsonl): fourteen rows.
-  Four candidate rows are `proposed` and wait for a human disposition
-  (`hl-20260925-873a855c`, `hl-20260925-4fc1962c`, `hl-20260929-df3f0899`,
-  `hl-20260929-f88812b2`); four are machine `rejected` as negative evidence.
+- [`2026-09.jsonl`](../../harness-ledger/rows/2026-09.jsonl): fourteen rows,
+  four of them machine `rejected` as negative evidence.
+- [`2026-10.jsonl`](../../harness-ledger/rows/2026-10.jsonl): the operator's
+  dispositions of 2026-10-01. The settings entry is `accepted`. The two P2
+  candidates (`hl-20260925-873a855c`, `hl-20260925-4fc1962c`) are `rejected`
+  as sandbox repair and task leakage. The two rerun accepts
+  (`hl-20260929-df3f0899`, `hl-20260929-f88812b2`) are `deferred` until a
+  corpus with headroom can separate them from noise.
 - [`history/reflections/2026-09-29-claude.md`](history/reflections/2026-09-29-claude.md):
   the closeout reflection.
 

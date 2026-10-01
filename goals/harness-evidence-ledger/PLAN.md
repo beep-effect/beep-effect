@@ -35,7 +35,9 @@ Status: `complete`. All phases are complete as of 2026-09-29.
   corpus has no headroom at this model strength.
 - The operator admitted hook-pulse on `SessionStart` in `.claude/settings.json`
   on 2026-10-01 (row `hl-20261001-5faf29a0` accepts `hl-20260929-475be43a`).
-- Open for a human: disposition the four `proposed` candidate rows.
+- The operator disposed the four candidate rows on 2026-10-01: the two P2
+  rows `rejected`, the two rerun accepts `deferred` until a corpus with
+  headroom.
 
 ## P0 Research (complete)
 

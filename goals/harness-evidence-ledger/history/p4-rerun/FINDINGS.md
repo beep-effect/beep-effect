@@ -96,10 +96,11 @@ This PR's own harness edits are declared the same way (D6):
 for the `SessionStart` settings entry. The operator admitted that entry on
 2026-10-01 (`hl-20261001-5faf29a0`).
 
-Dispositions of the two `proposed` candidates, and of the two P2 rows
-(`hl-20260925-873a855c`, `hl-20260925-4fc1962c`), are Benjamin's call (D2).
-The evidence recommends `rejected` for all four: two are sandbox repair and
-task leakage, two are inside the noise band.
+The operator disposed the two `proposed` candidates and the two P2 rows
+(`hl-20260925-873a855c`, `hl-20260925-4fc1962c`) on 2026-10-01 (D2). The P2
+rows are `rejected` as sandbox repair and task leakage. The two rerun accepts
+are `deferred`, not rejected: they lost to noise, not on merit, and get
+re-evaluated on a corpus with headroom.
 
 ## Pruning proposals
 
