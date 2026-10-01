@@ -116,8 +116,8 @@ adds its separate tsc check. No copied script table.
 
 Keep validation1188-1412 and raw defaults/error ordering unchanged. Mode
 allocation does not move earlier or defer a refusal. Dry-run and final summaries
-1455-1467/1613-1618 continue using ordered filesFor. TemplateContext allocation
-1479-1504 remains separately owned, with all unrelated paths/strings/profiles.
+1453-1465/1611-1616 continue using ordered filesFor. TemplateContext allocation
+1477-1502 remains separately owned, with all unrelated paths/strings/profiles.
 TemplateRenderRequest1508-1513 receives mode-selected templates and complete
 context. File plan1539-1586 preserves package.json then rendered files, gitkeep,
 lab manifest ordering, directories, assets and CLAUDE.md→AGENTS.md symlink.

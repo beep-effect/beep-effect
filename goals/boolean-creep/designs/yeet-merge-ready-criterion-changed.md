@@ -13,7 +13,7 @@ unchanged pairs from the legitimate event domain.
 
 # Cardinality gap
 
-The event pair represents four tuples but has two legitimate values: false→true and true→false. The writer's `before === after ? [] : [event]` at `:859–868` is E2 defensive suppression of no-op events; the event description at `:371–372` is E1. An event is emitted for either inequality with no directional restriction.
+The event pair represents four tuples but has two legitimate values: false→true and true→false. The writer's `before === after ? [] : [event]` at `:858–867` is E2 defensive suppression of no-op events; the event description at `:371–372` is E1. An event is emitted for either inequality with no directional restriction.
 
 `test/yeet-watch-stream.test.ts:113–116` verifies unchanged snapshots emit nothing, and `:188–208` exercises eight false→true criterion events. The same public differ accepts the reversed pair of these concrete snapshots and follows the symmetric inequality branch, producing true→false. The only direct class example at `WatchStream.ts:347–350` is false→true. Exhaustive source search found no supported equal-pair class fixture or consumer relying on no-op events. Generic acceptance by `S.Boolean` is not a supported no-op event contract.
 

@@ -85,9 +85,9 @@ Use `TabDragPhase.Enum.*` for writes and `TabDragPhase.is.*` for phase guards. N
 - `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:150` — promote `pressed` to `dragging` when the threshold is exceeded; keep `dragging` unchanged.
 - `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:158` — branch on `concluded` for the retained-record release path.
 - `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:170` — perform the release-time promotion check by producing a final `phase`, not by OR-ing `moved`.
-- `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:178` — retain a `concluded` record only when the final phase is `dragging`; clear `pressed`.
-- `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:181` — compile and submit a drop only for a final `dragging` phase.
-- `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:191` — clear a stale retained record by testing `concluded`.
+- `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:183` — retain a `concluded` record only when the final phase is `dragging`; clear `pressed`.
+- `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:186` — compile and submit a drop only for a final `dragging` phase.
+- `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:196` — clear a stale retained record by testing `concluded`.
 - `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:217-218` — initialize a new pointer record as `phase: TabDragPhase.Enum.pressed`.
 
 The `moved` fields in `SashDragBase` and `FloatingGestureBase`, and their readers in `Sash.tsx` and `FloatingPane.tsx`, are different symbols and remain unchanged.
@@ -99,7 +99,7 @@ The `moved` fields in `SashDragBase` and `FloatingGestureBase`, and their reader
 - `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:143` — delete the boolean `!concluded` half-state guard.
 - `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:155` and `:175` — delete the sticky `current.moved || threshold` boolean coherence updates.
 - `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:177-180` — rewrite the comment-only invariant from correlated booleans to the explicit `dragging -> concluded` / `pressed -> none` transition.
-- `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:178` — delete the final `moved` check used to decide whether `concluded` is legal.
+- `packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:183` — delete the final `moved` check used to decide whether `concluded` is legal.
 - `packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts:30` — delete the prose-only relationship between “traveled” and “concluded”; the phase domain carries it.
 
 # Encoded-side impact

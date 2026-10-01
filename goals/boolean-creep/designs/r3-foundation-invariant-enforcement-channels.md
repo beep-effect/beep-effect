@@ -122,9 +122,10 @@ combination names, or narrow the existing enforcement array.
 - HTML, Markdown, Lexical, and Pandoc conformance registries — retain every
   encoded enforcement array, its order, payloads, and `satisfies
   Conformance.Annotation.Encoded` boundary.
-- `ConformanceLedger.schema.ts:149-193` and
-  `ConformanceLedger.test-kit.ts:162-291` — preserve JSON decoding and exact
-  annotation/invariant/enforcement-array parity.
+- `ConformanceLedger.schema.ts:147-193` and
+  `ConformanceLedger.test-kit.ts:162-291` — preserve the current direct JSON
+  decoders and exact annotation/invariant/enforcement-array parity. The retired
+  codec-static facades are not part of this preservation boundary.
 - `ConformanceLedger.evidence.ts:17-145` — preserve direct runtime-enforcement
   filtering used to verify cited tests; downstream consumers continue reading
   the original tagged arrays.

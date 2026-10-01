@@ -36,7 +36,7 @@ Match the disposition exhaustively. `unmeasured` and `fits` both produce an empt
 - `GroupPane.tsx:321-358` — preserve width cache, root-relative rectangles, removal of hidden-tab rectangles, action width, and total-width calculation.
 - `GroupPane.tsx:359-391` — replace both booleans and `Bool.match(allFit)` with one disposition derivation and exhaustive LiteralKit match. Preserve active width, `32` reservation, inactive capacity, greedy order, active inclusion, and hidden-id order exactly.
 - `GroupPane.tsx:392-417` — no behavior change: preserve first-measurement publication, stable ref/latest closure, synchronous positive initial measurement, ResizeObserver lifetime, and disconnect cleanup.
-- `GroupPane.tsx:437-508` — no behavior change: preserve freshness-gated hiding, active-tab visibility, overflow label/count, menu activation, outside press, Escape dismissal, and pointer propagation.
+- `GroupPane.tsx:437-506` — no behavior change: preserve freshness-gated hiding, active-tab visibility, overflow label/count, menu activation, outside press, Escape dismissal, and pointer propagation.
 - `internal/AdapterState.ts:51,193,307-309` — no edit: retain keep-alive overflow atoms and cross-render width cache.
 - `test/DockviewReact.test.tsx:104-131` — retain measured overflow and activation coverage; add explicit unmeasured/fits transitions, exact 32px reservation boundary, active visibility, and remount freshness.
 - `test/DockviewReact.test.tsx:243-260` — retain StrictMode observer cleanup and assert no extra observer churn.
