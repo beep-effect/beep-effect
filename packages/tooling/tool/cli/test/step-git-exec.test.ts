@@ -27,6 +27,7 @@ import { Str } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -139,14 +140,14 @@ describe("GitExec origin-branch refname safety", () => {
   });
 
   it("extracts the branch from an origin base ref", () => {
-    expect(originBranchFromBase("origin/main")).toEqual(O.some("main"));
-    expect(originBranchFromBase("HEAD")).toEqual(O.none());
-    expect(originBranchFromBase("origin/")).toEqual(O.none());
+    assertSome(originBranchFromBase("origin/main"), "main");
+    assertNone(originBranchFromBase("HEAD"));
+    assertNone(originBranchFromBase("origin/"));
   });
 
   it("extracts only safe branches from an origin base ref", () => {
-    expect(safeOriginBranchFromBase("origin/main")).toEqual(O.some("main"));
-    expect(safeOriginBranchFromBase("origin/--upload-pack=x")).toEqual(O.none());
+    assertSome(safeOriginBranchFromBase("origin/main"), "main");
+    assertNone(safeOriginBranchFromBase("origin/--upload-pack=x"));
   });
 });
 

@@ -1,11 +1,11 @@
 import { PersonMatchModel, prepareAdaFaceArtifacts, verifyPersonMatchModelArtifacts } from "@beep/repo-cli/test/Files";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import { HttpClient } from "effect/http";
 import * as S from "effect/Schema";
+import * as TestConsole from "effect/testing/TestConsole";
 
 const insightFaceSource = "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip";
 const insightFaceLicense =
@@ -22,12 +22,12 @@ const noDownloadClient = HttpClient.make((request) =>
 
 const testLayer = Layer.mergeAll(NodeServices.layer, Layer.succeed(HttpClient.HttpClient, noDownloadClient));
 
-const withTempRoot = <A, E, R>(use: (root: string) => Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    FileSystem.FileSystem.use((fs) => fs.makeTempDirectory()),
-    use,
-    (root) => FileSystem.FileSystem.use((fs) => fs.remove(root, { force: true, recursive: true }).pipe(Effect.ignore))
-  ).pipe(provideScopedLayer(testLayer));
+const temporaryRoot = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>
+    fs.remove(directory, { force: true, recursive: true }).pipe(Effect.orDie)
+  );
+});
 
 const detectorArtifact = (path: string) => ({
   name: "det_10g.onnx",
@@ -110,10 +110,10 @@ const expectIntegrityFailure = Effect.fnUntraced(function* <A, R>(
   expect(error.message).toContain(message);
 });
 
-describe("person-match model store", { concurrent: false }, () => {
-  it("rejects an existing corrupt pin and releases its acquisition lock", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
+  describe("person-match model store", { concurrent: false }, () => {
+    it.effect("rejects an existing corrupt pin and releases its acquisition lock", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -127,12 +127,11 @@ describe("person-match model store", { concurrent: false }, () => {
           expect(yield* fs.exists(lockPath)).toBe(false);
           expect(yield* fs.readDirectory(path.join(root, "pinned"))).toEqual(["aligner"]);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rejects a dangling pin without attempting a download and releases its lock", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("rejects a dangling pin without attempting a download and releases its lock", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -147,12 +146,11 @@ describe("person-match model store", { concurrent: false }, () => {
           expect(yield* fs.exists(lockPath)).toBe(false);
           expect(yield* fs.readLink(artifactPath)).toBe(path.join(root, "missing-model.safetensors"));
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rejects an aliased existing pin and releases its lock", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("rejects an aliased existing pin and releases its lock", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -170,12 +168,11 @@ describe("person-match model store", { concurrent: false }, () => {
 
           expect(yield* fs.exists(path.join(root, ".adaface-model-store.lock"))).toBe(false);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("maps an occupied model-store lock to the typed acquisition channel and preserves its owner token", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("maps an occupied model-store lock to the typed acquisition channel and preserves its owner token", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -188,12 +185,11 @@ describe("person-match model store", { concurrent: false }, () => {
           expect(error.message).toContain("Could not acquire the AdaFace model-store lock");
           expect(yield* fs.readFileString(lockPath)).toBe("active-owner-token");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rejects a model root that is a regular file through the typed integrity channel", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("rejects a model root that is a regular file through the typed integrity channel", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -202,12 +198,11 @@ describe("person-match model store", { concurrent: false }, () => {
 
           yield* expectIntegrityFailure(prepareAdaFaceArtifacts(fileRoot), "Failed to create AdaFace model root");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rejects incomplete Buffalo and AdaFace component sets before reading artifacts", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("rejects incomplete Buffalo and AdaFace component sets before reading artifacts", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const buffalo = yield* buffaloModel(root, []);
           const adaFace = yield* adaFaceModel(root, []);
@@ -221,12 +216,11 @@ describe("person-match model store", { concurrent: false }, () => {
             "omitted or added a pinned model component"
           );
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rejects a same-size component set that omits the detector role", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("rejects a same-size component set that omits the detector role", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const runtimeRoot = path.join(root, "models", "beep_buffalo_l_v1");
@@ -235,12 +229,11 @@ describe("person-match model store", { concurrent: false }, () => {
 
           yield* expectIntegrityFailure(verifyPersonMatchModelArtifacts(model, root), "omitted the detector component");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rejects altered component provenance before reading its artifacts", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("rejects altered component provenance before reading its artifacts", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const runtimeRoot = path.join(root, "models", "beep_buffalo_l_v1");
@@ -258,12 +251,11 @@ describe("person-match model store", { concurrent: false }, () => {
             "detector component does not match its pinned name, revision, source, or license notice"
           );
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rejects missing and duplicate artifact provenance for a pinned component", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("rejects missing and duplicate artifact provenance for a pinned component", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const runtimeRoot = path.join(root, "models", "beep_buffalo_l_v1");
@@ -281,12 +273,11 @@ describe("person-match model store", { concurrent: false }, () => {
             "reported multiple detector artifacts"
           );
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rejects altered artifact metadata before trusting its installation path", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("rejects altered artifact metadata before trusting its installation path", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const runtimeRoot = path.join(root, "models", "beep_buffalo_l_v1");
@@ -305,12 +296,11 @@ describe("person-match model store", { concurrent: false }, () => {
             "detector artifact does not match its pinned path, size, or SHA-256"
           );
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("re-hashes exact reported metadata and rejects corrupt physical bytes", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("re-hashes exact reported metadata and rejects corrupt physical bytes", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -328,12 +318,11 @@ describe("person-match model store", { concurrent: false }, () => {
             "Model artifact integrity mismatch for detector"
           );
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rejects an exact reported artifact when its installation path is an alias", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("rejects an exact reported artifact when its installation path is an alias", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -353,12 +342,11 @@ describe("person-match model store", { concurrent: false }, () => {
             "Refusing a symlinked or aliased model artifact"
           );
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("builds the AdaFace allowlist and rejects its missing detector artifact", () =>
-    Effect.runPromise(
-      withTempRoot((root) =>
+    it.effect("builds the AdaFace allowlist and rejects its missing detector artifact", () =>
+      Effect.flatMap(temporaryRoot, (root) =>
         Effect.gen(function* () {
           const components = [
             detectorComponent([]),
@@ -385,6 +373,7 @@ describe("person-match model store", { concurrent: false }, () => {
 
           yield* expectIntegrityFailure(verifyPersonMatchModelArtifacts(model, root), "omitted the detector artifact");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 });

@@ -21,7 +21,7 @@ import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -261,7 +261,12 @@ describe("executable cache census", () => {
       const lint = { ...node("lint", "biome check ."), dependencies: [rootTask.taskId] };
       const rows = yield* joinCacheCensusPlan([rootWorkspace, workspace], { tasks: [rootTask, lint] });
       expect(rows[0]?.workspace).toBe("//");
-      expect(rows[0]?.command).toEqual(O.some(rootTask.command));
+      {
+        const optionUnderTest = rows[0]?.command;
+        const expectedOptionValue = rootTask.command;
+        assertDefined(optionUnderTest);
+        assertSome(optionUnderTest, expectedOptionValue);
+      }
       expect(rows[1]?.dependencies).toEqual([rootTask.taskId]);
       expect(yield* joinCacheCensusPlan([workspace], { tasks: [rootTask, lint] }).pipe(Effect.isFailure)).toBe(true);
       expect(
@@ -473,9 +478,9 @@ describe("computation configuration fingerprint", () => {
       const second = yield* fingerprintCacheComputation(key, reordered, toolchain);
       expect(second.configurationDigest).toBe(first.configurationDigest);
       expect(first.configuration.nodes).toHaveLength(2);
-      expect(
+      assertNone(
         O.getOrThrow(A.findFirst(first.configuration.nodes, (row) => row.id === "@beep/fixture#transit")).command
-      ).toEqual(O.none());
+      );
     }, provideCrypto)
   );
 

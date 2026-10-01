@@ -46,16 +46,18 @@ import { Sha256Hex } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { Context, Effect, FileSystem, Layer, Match, Path, Result, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
 import type { PlatformError } from "effect";
 
@@ -237,7 +239,7 @@ describe("corpus restoration evidence invariants", () => {
         expect(RA.sameSourceIdentity(identity, identity)).toBe(true);
         expect(RA.sameSourceIdentity(identity, noMtimeIdentity)).toBe(false);
         expect(RA.sameSourceIdentityExceptMtime(identity, noMtimeIdentity)).toBe(true);
-        expect(RA.sameDeviceAndInode(identity, identity)).toBe(O.isSome(identity.inode));
+        strictEqual(RA.sameDeviceAndInode(identity, identity), O.isSome(identity.inode));
         expect(RA.sameDeviceAndInode({ ...identity, inode: O.none() }, identity)).toBe(false);
         expect(RA.sourceIdentityToken(identity)).toContain("\u0000");
         expect(RA.objectIdFor("source", "relative/path")).toHaveLength(64);
@@ -248,15 +250,15 @@ describe("corpus restoration evidence invariants", () => {
         expect(RA.pathsOverlap(path, root, filePath)).toBe(true);
         expect(RA.pathsOverlap(path, filePath, path.join(path.dirname(root), "other"))).toBe(false);
         expect(RA.filesystemRootFor(path, filePath)).toBe(path.parse(filePath).root);
-        expect(O.isNone(RA.parseProcStatStartTime("malformed"))).toBe(true);
+        RA.parseProcStatStartTime("malformed").pipe(assertNone);
         expect(
           RA.parseProcStatStartTime(`1 (fixture) S ${A.join(A.map(A.range(0, 19), String), " ")}`).pipe(
             O.getOrElse(() => "")
           )
         ).toBe("18");
-        expect(RA.collectorRelativePath("C:\\root\\nested\\file.bin", 2)).toEqual(O.some("nested/file.bin"));
-        expect(RA.collectorRelativePath("C:\\root\\..\\file.bin", 2)).toEqual(O.none());
-        expect(RA.collectorRelativePath("C:\\root", 2)).toEqual(O.none());
+        assertSome(RA.collectorRelativePath("C:\\root\\nested\\file.bin", 2), "nested/file.bin");
+        assertNone(RA.collectorRelativePath("C:\\root\\..\\file.bin", 2));
+        assertNone(RA.collectorRelativePath("C:\\root", 2));
         expect(RA.partialArchiveOpenFlag({ expectedInfo: O.none(), resumeBytes: 0 })).toBe("wx+");
         expect(RA.partialArchiveOpenFlag({ expectedInfo: O.some(identity), resumeBytes: 0 })).toBe("r+");
         expect(RA.partialArchiveOpenFlag({ expectedInfo: O.some(identity), resumeBytes: 1 })).toBe("a");
@@ -408,15 +410,17 @@ describe("Corpus recycle-bin parsing", () => {
   );
 
   it("classifies $I and $R names and ignores everything else", () => {
-    expect(O.map(classifyRecycleBinName("$I0CB4M9.docx"), (entry) => `${entry.kind}:${entry.pairKey}`)).toStrictEqual(
-      O.some("metadata:0CB4M9.docx")
+    assertSome(
+      O.map(classifyRecycleBinName("$I0CB4M9.docx"), (entry) => `${entry.kind}:${entry.pairKey}`),
+      "metadata:0CB4M9.docx"
     );
-    expect(O.map(classifyRecycleBinName("$R0CB4M9.docx"), (entry) => `${entry.kind}:${entry.pairKey}`)).toStrictEqual(
-      O.some("content:0CB4M9.docx")
+    assertSome(
+      O.map(classifyRecycleBinName("$R0CB4M9.docx"), (entry) => `${entry.kind}:${entry.pairKey}`),
+      "content:0CB4M9.docx"
     );
-    expect(O.isNone(classifyRecycleBinName("README.md"))).toBe(true);
-    expect(O.isNone(classifyRecycleBinName("$Xnope.txt"))).toBe(true);
-    expect(O.isNone(classifyRecycleBinName("$Recycle.Bin"))).toBe(true);
+    classifyRecycleBinName("README.md").pipe(assertNone);
+    classifyRecycleBinName("$Xnope.txt").pipe(assertNone);
+    classifyRecycleBinName("$Recycle.Bin").pipe(assertNone);
   });
 
   it("pairs metadata with content and reports leftovers", () => {
@@ -869,7 +873,7 @@ describe("corpus salvage run labels and dedupe", () => {
         expect(copiedExists).toBe(true);
         expect(runManifestExists).toBe(true);
         expect(rootManifestExists).toBe(false);
-        expect(A.head(records).pipe(O.map((record) => record.copyMode))).toStrictEqual(O.some("copied"));
+        assertSome(A.head(records).pipe(O.map((record) => record.copyMode)), "copied");
       },
       Effect.scoped,
       provideTestLayer
@@ -1074,7 +1078,7 @@ describe("corpus salvage run labels and dedupe", () => {
         const deduped = A.findFirst(records, (record) => record.sourceLabel === "source-b");
         const duplicateCopyExists = yield* fs.exists(path.join(corpusRoot, "raw", "source-b", "duplicate.txt"));
 
-        expect(O.isSome(deduped)).toBe(true);
+        deduped.pipe(O.isSome, assertTrue);
         if (O.isSome(deduped)) {
           expect(deduped.value.copyMode).toBe("provenance-only");
           expect(deduped.value.destPath).toBe(existingRawPath);
@@ -1182,8 +1186,8 @@ describe("corpus salvage run labels and dedupe", () => {
       const record = yield* decodeCorpusProvenanceRecordJson(line);
 
       expect(record.sourceLabel).toBe("source-a");
-      expect(O.isNone(O.fromUndefinedOr(record.copyMode))).toBe(true);
-      expect(O.isNone(O.fromUndefinedOr(record.dedupeOfPath))).toBe(true);
+      O.fromUndefinedOr(record.copyMode).pipe(assertNone);
+      O.fromUndefinedOr(record.dedupeOfPath).pipe(assertNone);
     })
   );
 });
@@ -1531,8 +1535,8 @@ describe("corpus restoration preservation", () => {
         '{"destinationRelativePath":"../escape","objectId":"object-1","objectKind":"directory","recordedAt":"2026-08-27T00:00:00.000Z","recordType":"archive-directory-pass","runId":"preservation-1","schemaVersion":"oppold-corpus-restoration/v1","sourceLabel":"source-tree","sourceRelativePath":"safe"}'
       ).pipe(Effect.option);
 
-      expect(O.isNone(runLabelResult)).toBe(true);
-      expect(O.isNone(archivePathResult)).toBe(true);
+      runLabelResult.pipe(assertNone);
+      archivePathResult.pipe(assertNone);
     })
   );
 
@@ -1627,7 +1631,7 @@ describe("corpus restoration preservation", () => {
         expect(summary.unapprovedCount).toBe(0);
         expect(verified.unapprovedCount).toBe(0);
         expect(changedRows).toHaveLength(1);
-        expect(O.isSome(stablePass)).toBe(true);
+        stablePass.pipe(O.isSome, assertTrue);
         expect(Uint8Array.from(destination)).toStrictEqual(stableReplacement);
       },
       Effect.scoped,
@@ -1763,14 +1767,21 @@ describe("corpus restoration preservation", () => {
         });
         const claimedOutput = yield* child.stdout.pipe(Stream.decodeText(), Stream.runHead);
         yield* child.kill({ killSignal: "SIGKILL" });
-        const childExit = yield* Effect.result(child.exitCode);
+        yield* child.exitCode.pipe(Effect.flip);
         const staleClaimExists = yield* fs.exists(claimPath);
 
-        expect({ claimedOutput, staleClaimExists }).toMatchObject({
-          claimedOutput: O.some("CLAIMED\n"),
-          staleClaimExists: true,
-        });
-        assertTrue(Result.isFailure(childExit));
+        {
+          const actualProjection = { claimedOutput, staleClaimExists };
+          const expectedProjection = {
+            claimedOutput: O.some("CLAIMED\n"),
+            staleClaimExists: true,
+          };
+          assertDefined(actualProjection);
+          deepStrictEqual<typeof expectedProjection>(
+            Struct.pick(actualProjection, ["claimedOutput", "staleClaimExists"]),
+            expectedProjection
+          );
+        }
 
         yield* withRestorationWriterClaim(claimDirectory, claimName, Effect.void);
 
@@ -1883,9 +1894,10 @@ describe("corpus restoration preservation", () => {
         expect(summary.inputBytes).toBe(1024 * 1024 + 37 + "verbatim-root-archive".length);
         expect(verified.unapprovedCount).toBe(0);
         expect(verified.passCount).toBe(summary.passCount);
-        expect(
-          O.map(resumedPass, (record) => (record.recordType === "archive-file-pass" ? record.resumedBytes : 0))
-        ).toStrictEqual(O.some(2));
+        assertSome(
+          O.map(resumedPass, (record) => (record.recordType === "archive-file-pass" ? record.resumedBytes : 0)),
+          S.Natural.make(2)
+        );
         expect(provenance.trim().split("\n")).toHaveLength(2);
         expect(reports).toHaveLength(1);
         expect(rootArchiveExists).toBe(true);
@@ -2007,23 +2019,19 @@ describe("corpus restoration preservation", () => {
           failureTerminal,
           failureTerminal.recordedAt
         );
-        expect(
-          yield* RA.appendProvenance(
-            path.join(fixture.corpusRoot, "raw", "provenance.jsonl"),
-            archiveRoot,
-            { ...provenanceSource, sourcePath: `${provenanceSource.sourcePath}.contradictory` },
-            fileTerminal.value,
-            fileTerminal.value.recordedAt
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.appendProvenance(
+          path.join(fixture.corpusRoot, "raw", "provenance.jsonl"),
+          archiveRoot,
+          { ...provenanceSource, sourcePath: `${provenanceSource.sourcePath}.contradictory` },
+          fileTerminal.value,
+          fileTerminal.value.recordedAt
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
         expect(
           (yield* RA.verifyArchiveTerminal(archiveRoot, failureTerminal.objectId, failureTerminal)).record
         ).toMatchObject({ _tag: "Some", value: { failureKind: "unapproved-terminal" } });
-        expect(
-          yield* RA.requireArchivePayloadOwned(archiveRoot, RA.indexArchiveTerminals([failureTerminal]).terminals).pipe(
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.requireArchivePayloadOwned(archiveRoot, RA.indexArchiveTerminals([failureTerminal]).terminals).pipe(
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
         const withoutSeal = A.filter(records, (record) => record.recordType !== "archive-manifest-seal");
         const reseal = Effect.fn("CorpusTest.resealArchiveLedger")(function* (
           unsealed: ReadonlyArray<ArchiveLedgerRecord>
@@ -2626,15 +2634,16 @@ describe("corpus restoration mail", { concurrent: false }, () => {
 
         expect(summary.passCount).toBe(1);
         expect(summary.unapprovedCount).toBe(0);
-        expect(
+        assertSome(
           O.map(pass, (record) =>
             record.recordType === "mail-store-pass" ? record.accountedChildCount > record.childCount : false
-          )
-        ).toStrictEqual(O.some(true));
+          ),
+          true
+        );
         expect(A.some(children, (record) => record.recordType === "mail-child-pass" && !record.engineReported)).toBe(
           true
         );
-        expect(O.isSome(repair)).toBe(true);
+        repair.pipe(O.isSome, assertTrue);
       },
       Effect.scoped,
       provideTestLayer
@@ -2912,11 +2921,12 @@ describe("corpus restoration mail", { concurrent: false }, () => {
           const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
           const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
           const terminal = A.findFirst(records, (record) => record.recordType === "mail-store-exception");
-          expect(
+          assertSome(
             O.map(terminal, (record) =>
               record.recordType === "mail-store-exception" ? record.exceptionKind : "engine-failure"
-            )
-          ).toStrictEqual(O.some(expected));
+            ),
+            expected
+          );
         }
       },
       Effect.scoped,
@@ -3137,13 +3147,14 @@ describe("corpus restoration recycle", () => {
         expect(summary.passCount).toBe(5);
         expect(summary.exceptionCount).toBe(3);
         expect(summary.unapprovedCount).toBe(0);
-        expect(
+        assertSome(
           O.zipWith(start, familySummary, (left, right) =>
             left.recordType === "family-run-start" && right.recordType === "family-run-summary"
               ? left.expectedCount === right.sourceCount
               : false
-          )
-        ).toStrictEqual(O.some(true));
+          ),
+          true
+        );
         expect(joins).toHaveLength(12);
         expect(totals).toEqual(
           new Map([
@@ -3177,13 +3188,14 @@ describe("corpus restoration recycle", () => {
           mappings,
           (record) => record.recordType === "recycle-mapping" && record.originalPath === "E:\\Recovered\\Directory Copy"
         );
-        expect(
+        assertSome(
           O.zipWith(directoryMapping, directoryCopyMapping, (left, right) =>
             left.recordType === "recycle-mapping" && right.recordType === "recycle-mapping"
               ? left.digest !== right.digest
               : false
-          )
-        ).toStrictEqual(O.some(true));
+          ),
+          true
+        );
         const emptyDirectoryExists = yield* O.match(directoryMapping, {
           onNone: () => Effect.succeed(false),
           onSome: (record) =>
@@ -3465,14 +3477,15 @@ describe("corpus restoration legacy Word", () => {
         expect(summary.unapprovedCount).toBe(0);
         expect(passes).toHaveLength(1);
         expect(exceptions).toHaveLength(1);
-        expect(
+        assertSome(
           O.map(exceptions[0] === undefined ? O.none() : O.some(exceptions[0]), (record) =>
             record.recordType === "legacy-word-exception"
               ? record.approved && record.exceptionKind === "not-binary-word"
               : false
-          )
-        ).toStrictEqual(O.some(true));
-        expect(O.isSome(acceptance)).toBe(true);
+          ),
+          true
+        );
+        acceptance.pipe(O.isSome, assertTrue);
       },
       Effect.scoped,
       provideTestLayer

@@ -32,6 +32,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, pipe, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -158,12 +159,18 @@ const settledOutcomes = (actions: ReadonlyArray<ReplyAction>): ReadonlyArray<Rep
 describe("findReplyThread", () => {
   it("matches a draft that names the GraphQL thread id", () => {
     const draft = ReplyDraft.make({ threadId: O.some("PRRT_resolved"), body: "ack" });
-    expect(O.map(findReplyThread(liveThreads, draft), (thread) => thread.id)).toEqual(O.some("PRRT_resolved"));
+    assertSome(
+      O.map(findReplyThread(liveThreads, draft), (thread) => thread.id),
+      "PRRT_resolved"
+    );
   });
 
   it("maps a REST comment id onto its thread through the comment databaseId", () => {
     const draft = ReplyDraft.make({ commentId: O.some(OPEN_COMMENT_ID), body: "ack" });
-    expect(O.map(findReplyThread(liveThreads, draft), (thread) => thread.id)).toEqual(O.some("PRRT_open"));
+    assertSome(
+      O.map(findReplyThread(liveThreads, draft), (thread) => thread.id),
+      "PRRT_open"
+    );
   });
 
   it("prefers the thread id when a draft carries both handles", () => {
@@ -172,7 +179,10 @@ describe("findReplyThread", () => {
       commentId: O.some(OPEN_COMMENT_ID),
       body: "ack",
     });
-    expect(O.map(findReplyThread(liveThreads, draft), (thread) => thread.id)).toEqual(O.some("PRRT_resolved"));
+    assertSome(
+      O.map(findReplyThread(liveThreads, draft), (thread) => thread.id),
+      "PRRT_resolved"
+    );
   });
 
   it("falls back to the comment id when the named thread id is not live", () => {
@@ -181,17 +191,23 @@ describe("findReplyThread", () => {
       commentId: O.some(OPEN_COMMENT_ID),
       body: "ack",
     });
-    expect(O.map(findReplyThread(liveThreads, draft), (thread) => thread.id)).toEqual(O.some("PRRT_open"));
+    assertSome(
+      O.map(findReplyThread(liveThreads, draft), (thread) => thread.id),
+      "PRRT_open"
+    );
   });
 
   it("returns None for a comment id no live thread carries", () => {
     const draft = ReplyDraft.make({ commentId: O.some(UNKNOWN_COMMENT_ID), body: "ack" });
-    expect(findReplyThread(liveThreads, draft)).toEqual(O.none());
+    assertNone(findReplyThread(liveThreads, draft));
   });
 
   it("skips comments whose databaseId is absent instead of matching them", () => {
     const draft = ReplyDraft.make({ commentId: O.some(OUTDATED_COMMENT_ID), body: "ack" });
-    expect(O.map(findReplyThread(liveThreads, draft), (thread) => thread.id)).toEqual(O.some("PRRT_outdated"));
+    assertSome(
+      O.map(findReplyThread(liveThreads, draft), (thread) => thread.id),
+      "PRRT_outdated"
+    );
   });
 });
 
@@ -305,7 +321,12 @@ describe("planReplyActions", () => {
       planReplyActions(draftsOf([ReplyDraft.make({ threadId: O.some("PRRT_resolved"), body: "ack" })]), liveThreads)
     );
     expect(outcome?.status).toBe("stale");
-    expect(outcome?.threadId).toEqual(O.some("PRRT_resolved"));
+    {
+      const optionUnderTest = outcome?.threadId;
+      const expectedOptionValue = "PRRT_resolved";
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
     expect(outcome?.detail).toContain("already resolved upstream");
     expect(outcome?.detail).toContain("src/commands/Yeet/internal/Verdict.ts:7");
   });
@@ -315,7 +336,12 @@ describe("planReplyActions", () => {
       planReplyActions(draftsOf([ReplyDraft.make({ threadId: O.some("PRRT_gone"), body: "ack" })]), liveThreads)
     );
     expect(outcome?.status).toBe("failed");
-    expect(outcome?.threadId).toEqual(O.some("PRRT_gone"));
+    {
+      const optionUnderTest = outcome?.threadId;
+      const expectedOptionValue = "PRRT_gone";
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
     expect(outcome?.detail).toContain("thread id PRRT_gone");
     expect(outcome?.detail).toContain("pull request #558");
   });
@@ -325,8 +351,17 @@ describe("planReplyActions", () => {
       planReplyActions(draftsOf([ReplyDraft.make({ commentId: O.some(UNKNOWN_COMMENT_ID), body: "ack" })]), liveThreads)
     );
     expect(outcome?.status).toBe("failed");
-    expect(outcome?.threadId).toEqual(O.none());
-    expect(outcome?.commentId).toEqual(O.some(UNKNOWN_COMMENT_ID));
+    {
+      const optionUnderTest = outcome?.threadId;
+      assertDefined(optionUnderTest);
+      assertNone(optionUnderTest);
+    }
+    {
+      const optionUnderTest = outcome?.commentId;
+      const expectedOptionValue = UNKNOWN_COMMENT_ID;
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
     expect(outcome?.detail).toContain(`comment id ${UNKNOWN_COMMENT_ID}`);
   });
 
@@ -354,8 +389,18 @@ describe("planReplyActions", () => {
     const [outcome] = settledOutcomes(actions);
     expect(outcome?.status).toBe("failed");
     expect(outcome?.detail).toContain("already targeted by an earlier draft");
-    expect(outcome?.commentId).toEqual(O.some(OPEN_COMMENT_ID));
-    expect(outcome?.threadId).toEqual(O.some("PRRT_open"));
+    {
+      const optionUnderTest = outcome?.commentId;
+      const expectedOptionValue = OPEN_COMMENT_ID;
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
+    {
+      const optionUnderTest = outcome?.threadId;
+      const expectedOptionValue = "PRRT_open";
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
   });
 
   it("emits exactly one action per draft, in drafts-file order", () => {
@@ -526,7 +571,10 @@ describe("runYeetReply", () => {
         const written = yield* fs.readFileString(reportPath);
         const report = yield* ReplyReportJson.decode(written);
         expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["failed", "failed"]);
-        expect(A.map(report.outcomes, (outcome) => outcome.threadId)).toEqual([O.some("PRRT_open"), O.none()]);
+        deepStrictEqual(
+          A.map(report.outcomes, (outcome) => outcome.threadId),
+          [O.some("PRRT_open"), O.none()]
+        );
         for (const outcome of report.outcomes) {
           expect(outcome.detail).toContain("gh: authentication required");
           expect(outcome.detail).toContain(REPLY_RERUN_COMMAND);
@@ -645,7 +693,10 @@ describe("reply run verdict", () => {
       ReplyDraftOutcome.make({ threadId: O.some("PRRT_posted"), status: "posted", detail: "reply posted" }),
       ReplyDraftOutcome.make({ threadId: O.some("PRRT_open"), status: "failed", detail: "denied" }),
     ]);
-    expect(A.map(failedReplyOutcomes(report), (outcome) => outcome.threadId)).toEqual([O.some("PRRT_open")]);
+    deepStrictEqual(
+      A.map(failedReplyOutcomes(report), (outcome) => outcome.threadId),
+      [O.some("PRRT_open")]
+    );
   });
 
   it("names every failed handle, the report, and the still-open threads", () => {
@@ -656,7 +707,7 @@ describe("reply run verdict", () => {
       ]),
       "/repo/.beep/yeet/reply-report.json"
     );
-    expect(O.isSome(verdict)).toBe(true);
+    verdict.pipe(O.isSome, assertTrue);
     const text = O.getOrElse(verdict, () => "");
     expect(text).toContain("2 of 2 drafts");
     expect(text).toContain("PRRT_open");
@@ -669,7 +720,7 @@ describe("reply run verdict", () => {
   });
 
   it("has no verdict for a pass where nothing failed", () => {
-    expect(
+    assertNone(
       renderYeetReplyFailureVerdict(
         reportOf([
           ReplyDraftOutcome.make({ threadId: O.some("PRRT_a"), status: "resolved", detail: "reply posted" }),
@@ -677,7 +728,7 @@ describe("reply run verdict", () => {
         ]),
         "reply-report.json"
       )
-    ).toEqual(O.none());
+    );
   });
 
   it.effect("exits zero when every outcome is posted, resolved, or stale", () =>

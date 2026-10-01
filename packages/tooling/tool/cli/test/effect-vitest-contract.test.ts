@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { fcRuns } from "@beep/fc-runs";
 import {
   applyEffectVitestPrimitiveGraph,
   countEffectVitestSourceLines,
@@ -6,6 +7,8 @@ import {
   detectEffectVitestFindings,
   diffEffectVitestFindings,
   discoverEffectVitestSourcePaths,
+  EffectVitestCensusPath,
+  EffectVitestCensusRow,
   EffectVitestFinding,
   EffectVitestInventoryDocument,
   EffectVitestInventoryPath,
@@ -17,6 +20,7 @@ import {
   formatEffectVitestIntroducedReport,
   makeEffectVitestFindingKey,
   preserveEffectVitestExceptions,
+  readEffectVitestInventory,
   readEffectVitestPrimitiveGraph,
   runEffectVitestLint,
   verifyEffectVitestPin,
@@ -33,6 +37,8 @@ import * as S from "effect/Schema";
 import { Project } from "ts-morph";
 
 const encodeInventoryJson = S.encodeEffect(S.fromJsonString(EffectVitestInventoryDocument));
+const encodeCensusJson = S.encodeEffect(S.fromJsonString(S.Array(EffectVitestCensusRow)));
+const decodeCensusJson = S.decodeUnknownEffect(S.fromJsonString(S.Array(EffectVitestCensusRow)));
 const isEffectVitestFinding = S.is(EffectVitestFinding);
 const isEffectVitestPackageTiming = S.is(EffectVitestPackageTiming);
 
@@ -80,6 +86,19 @@ const finding = (line: number, evidence: string, ordinal = 1): EffectVitestFindi
     fixSha: O.none(),
   });
 
+it.effect.prop(
+  "preserves every census row through its persisted JSON codec",
+  { rows: S.Array(EffectVitestCensusRow) },
+  ({ rows }) =>
+    Effect.gen(function* () {
+      const encoded = yield* encodeCensusJson(rows);
+      const decoded = yield* decodeCensusJson(encoded);
+      deepStrictEqual(decoded, rows);
+      deepStrictEqual(yield* encodeCensusJson(decoded), encoded);
+    }),
+  { arbitrary: fcRuns(25) }
+);
+
 it("keeps symbol absence and literal ordinal suffixes distinct in canonical keys", () => {
   const base = finding(4, "Fx.runSync(program)");
   const absent = EffectVitestFinding.make({ ...base, symbol: O.none() });
@@ -107,6 +126,48 @@ it("uses the P0a physical-line convention", () => {
 });
 
 it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it) => {
+  it.effect(
+    "persists the scanned inventory and census to their configured artifact paths",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fsUtils = yield* FsUtils;
+      const output = yield* fs.makeTempDirectoryScoped({ prefix: "effect-vitest-write-contract-" });
+      const inputs = A.map(["z.test.ts", "a.test.ts"], (name) => path.join(output, name));
+      yield* Effect.forEach(inputs, (input) =>
+        fs.writeFileString(
+          input,
+          'import { it } from "@effect/vitest"; import { Effect } from "effect"; it("fixture", () => Effect.runSync(Effect.void));\n'
+        )
+      );
+      const timing = yield* runEffectVitestLint(EffectVitestLintOptions.make({ census: true, write: true })).pipe(
+        Effect.provideService(FsUtils, { ...fsUtils, globFiles: () => Effect.succeed(inputs) }),
+        Effect.provideService(Path.Path, {
+          ...path,
+          resolve: (...segments) =>
+            segments.length === 2 &&
+            (segments[1] === EffectVitestInventoryPath || segments[1] === EffectVitestCensusPath)
+              ? path.resolve(output, segments[1])
+              : path.resolve(...segments),
+        })
+      );
+      const inventory = yield* readEffectVitestInventory(output).pipe(Effect.map(O.getOrThrow));
+      assertTrue(inventory.effectVitestVersion === "4.0.0");
+      assertTrue(inventory.findings.length === timing.findingCount);
+      assertTrue(A.some(inventory.findings, (row) => row.ruleId === "EV001"));
+      const findingIds = A.map(inventory.findings, (row) => row.id);
+      deepStrictEqual(findingIds, A.sort(findingIds, Str.Order));
+      const census = yield* fs
+        .readFileString(path.join(output, EffectVitestCensusPath))
+        .pipe(Effect.flatMap(decodeCensusJson));
+      deepStrictEqual(
+        A.map(census, (row) => path.basename(row.file)),
+        ["a.test.ts", "z.test.ts"]
+      );
+      assertTrue(timing.fileCount === census.length);
+    })
+  );
+
   it.effect(
     "rejects newly detected membership when the baseline is absent",
     Effect.fnUntraced(function* () {
@@ -569,7 +630,7 @@ it.layer(BunCrypto.layer)((it) => {
         assertTrue(diffEffectVitestFindings(live, legacy).introduced.length === 0);
         const merged = preserveEffectVitestExceptions(live, document);
         assertTrue(merged[0]?.status === "open");
-        assertTrue(O.isNone(merged[0]?.reason ?? O.none()), "Unproved legacy exception reasons must not transfer");
+        deepStrictEqual(merged[0]?.reason ?? O.none(), O.none(), "Unproved legacy exception reasons must not transfer");
       }
     })
   );
