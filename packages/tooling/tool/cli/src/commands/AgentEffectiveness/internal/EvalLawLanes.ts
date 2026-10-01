@@ -502,7 +502,7 @@ const measureTsgo =
   (sandbox: LawSandbox, sourceFiles: ReadonlyArray<string>) =>
   (result: SubprocessResult): LawLaneOutcome => {
     const diagnosticLines = pipe(result.output, Str.split("\n"), A.map(Str.trim), A.filter(isTsgoDiagnosticLine));
-    const [environmentDiagnostics, violations] = A.partition(diagnosticLines, (line) =>
+    const [violations, environmentDiagnostics] = A.partition(diagnosticLines, (line) =>
       pipe(
         tsgoDiagnosticFile(line),
         O.filter((file) => A.contains(sourceFiles, file)),
@@ -629,7 +629,7 @@ const measureBiome =
       onNone: () =>
         unrunnableLane("biome", `Biome exited ${result.exitCode} without a JSON report: ${excerpt(result.output)}`),
       onSome: (report) => {
-        const [environmentDiagnostics, violations] = A.partition(
+        const [violations, environmentDiagnostics] = A.partition(
           report.diagnostics,
           biomeDiagnosticOutcome(sourceFiles)
         );

@@ -272,3 +272,85 @@ full-proof prerequisite for publishing. Use hosted checks and review closure
 to establish exact-head merge readiness. Keep the census, compatibility,
 independent review, implementation and exact-main acceptance requirements.
 Continue using PR #1328 for all remaining work.
+
+## 2026-09-29: continuation after PR #1328 merged
+
+Hosted state confirms PR #1328 merged at `3bfb7d0f33` on 2026-09-29 before
+campaign completion. Under the existing delegated judgment and one-remaining-PR
+mandate, use one successor PR for all remaining work. This is an execution
+reconciliation, not a new user ruling or acceptance claim. Preserve the dated
+instructions above as history. Keep every substantive census, compatibility,
+independent review, implementation and exact-main completion requirement.
+
+The R46 runtime probe remains rejected after a scripted payload mismatch.
+Prepare a new independently reviewed fixture and source binding; do not retry
+the failed attempt in place or grant it retrospective acceptance.
+
+## 2026-10-01: R48 source-refresh dispositions
+
+Main deleted the JSONSchema source that owned the disqualified
+`json-schema-node-keywords` record. Apply the live-projection rule from the
+inventory contract: preserve the 726-row projection at
+`history/inventory/2026-10-01-pre-r48-source-refresh.jsonl` and remove that
+record from the live inventory. The current inventory is 725 rows: 108
+qualified, 617 disqualified and zero applied.
+
+Re-derive the R48 partition from existing source paths and retire the 40 lane
+areas removed by main. Do not spend provider calls proving paths already known
+to be absent. The R46 empty report root's filesystem device number may change
+across the documented workstation reboot; its unchanged inode, owner, mode and
+emptiness remain the relevant preservation facts. These dispositions authorize
+input preparation only. They grant no admission, census, dry-round, P3 or
+implementation credit.
+
+## 2026-10-01: R49 LiteralKit source-anchor refresh
+
+Main's keyed-API migration retained both LiteralKit PropertyDescriptor owners
+but moved them within the shortened file. Preserve the previous 725-row
+projection at
+`history/inventory/2026-10-01-pre-r49-literalkit-reanchor.jsonl` and re-anchor
+`literalkit-attach-helper-descriptors` to line 308 and
+`literalkit-readonly-property` to line 437. Their D1 classifications remain:
+the three ECMAScript descriptor attributes are independent controls. This is a
+source-citation repair only and grants no census, dry-round, P3 or
+implementation credit.
+
+## 2026-10-01: R50 schema-retirement anchor reconciliation
+
+Main `90517df719fa1eb1a24c00b6ba8bdad2d26d8b8f` was merged into the
+campaign branch at `2d38ac6827c599248f7fd643feaf75e2a0fe406b`. Because that
+advance occurred before R49 materialized any census stage, its independently
+approved inputs and 105-case runtime remain historical preparation with no
+launch, probe, census or convergence credit.
+
+R50 recomputed the source partition as 3,152 files across 27 lanes with 82
+exclusions. It retired 53 absent scan areas, including eight newly removed
+Schema areas, and found no missing owner files or designs. Independent review
+adjudicated all 76 inventory-anchor conflicts: apply 72 reviewed row changes
+and retain four rows unchanged. Ten changes correct pre-existing owner
+citations, sixty re-anchor retained owners, and two reselect ambiguous spans.
+The status projection remains 725 rows: 108 qualified, 617 disqualified and
+zero applied.
+
+Preserve the exact pre-change projection at
+`history/inventory/2026-10-01-pre-r50-anchor-drift.jsonl`, whose SHA-256 is
+`0078790a38a060c7ac40c1e75f79974d012c6b9b0758e6d85f3ee379f9123a46`.
+The approved patch produced SHA-256
+`90709fd80b90660493849f106c6e417b37452c7dbf1469c92583e412c95dbfff`.
+A hosted follow-up review then found that the `practice-kg-options` owner
+citation selected the unrelated `bundleOut` field at line 80. Re-anchor that
+owner to its `PracticeKgOptions` declaration at line 78; the corrected live
+projection has SHA-256
+`4e64ea1832090715bca8d92a966b6f1290a5d4d882074ceb824d1fd66652d91f`.
+Retain the Practice knowledge-graph owner: its Schema defect and equivalence
+configuration still represents the same independent policy choices after the
+old `includeStack` constructor moved. The informational stale StepExec note on
+`r28-cli-commands-a-c-eval-law-lanes-spawn-options` is outside this anchor
+patch and grants no additional finding or disposition.
+
+These rulings install reviewed current-source citations plus that hosted
+follow-up correction only. Rebuild and
+independently review the complete R50 admission inputs after this packet edit
+and recheck exact source identity before any runtime or provider execution.
+They grant no current-source admission, probe, census, dry-round, P3,
+ratification or implementation credit.
