@@ -640,3 +640,13 @@ write attribution for one isolated task execution. Its 439 repository read
 paths and 21 attributed writes provide bounded coverage. The `.git` mapping
 and undecoded ring contents remain explicit; no complete semantic-input
 closure or tuple promotion follows from the trace.
+
+### Private issuer approval lookup
+
+The supervisor can now open a verification-only capability from a private
+approval record fixed at issuer provisioning. Submitted pilot evidence does not
+choose its trusted binding. Edited, missing, unsafe or revoked approval fails
+closed; the current focused run passes 39 tests. This is an implementation
+control, not a new native run or accepted qualification. The complete evidence
+bundle and policy-to-promotion importer remain unfinished, and both qualified
+transition guards remain closed. See the [checkpoint](../../turborepo-cache-trust-observability/research/owned-producer-private-approval.json).

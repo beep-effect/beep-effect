@@ -214,3 +214,15 @@ Supervised issuance and reopening passed under the new profile. Native
 controls rejected a different claimed checkout, an ignored workspace module,
 changed workflow identities and a revoked issuer. Full package verification
 passed (audit 638.8 seconds, docgen 27.0 seconds). These checks do not grant policy approval or qualify a computation.
+
+### Private approval verifier
+
+The [private approval checkpoint](./research/owned-producer-private-approval.json)
+records a verification-only capability loaded from supervisor-owned approval.
+Provisioning writes the binding separately from submitted evidence and fixes its
+digest in issuer material. Opening rejects edited, missing or unsafe approval;
+live verification rechecks the approval, key material and revocation. All 39
+focused tests and source type checking pass. Full package verification passes:
+audit 649.6 seconds and docgen 39.2 seconds.
+The accepted policy document, complete authenticated evidence bundle and
+operational promotion importer remain open. No qualification is granted.

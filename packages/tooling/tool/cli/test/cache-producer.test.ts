@@ -3,6 +3,7 @@ import {
   initializeCacheProducerIssuer,
   makeCacheProducerIssuer,
   openCacheProducerIssuer,
+  openCacheProducerVerifier,
   revokeCacheProducerIssuer,
 } from "@beep/repo-cli/test/Cache";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -239,6 +240,86 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("persistent produ
         yield* fs.writeFile(path.join(directory, "issuer.key"), new Uint8Array(length));
         expect(Result.isFailure(yield* openCacheProducerIssuer(directory, binding).pipe(Effect.result))).toBe(true);
       }
+    }).pipe(Effect.scoped)
+  );
+});
+
+it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("private approval verifier", (it) => {
+  it.effect("loads independent approval and exposes verification only", () =>
+    Effect.gen(function* () {
+      const { directory, receipt, envelope } = yield* persistentSetup();
+      const verifier = yield* openCacheProducerVerifier(directory);
+      expect(R.keys(verifier)).toEqual(["verify"]);
+      expect(yield* verifier.verify(envelope, receipt)).toEqual(receipt);
+    }).pipe(Effect.scoped)
+  );
+  it.effect("rejects an edited approval at open and through an existing verifier", () =>
+    Effect.gen(function* () {
+      const { fs, path, directory, binding, receipt, envelope } = yield* persistentSetup();
+      const verifier = yield* openCacheProducerVerifier(directory);
+      const changed = yield* S.decodeUnknownEffect(CacheProducerBinding)({
+        ...binding,
+        policyDigest: Str.repeat(64)("0"),
+      });
+      yield* fs.writeFileString(
+        path.join(directory, "approval.json"),
+        yield* S.encodeEffect(S.fromJsonString(CacheProducerBinding))(changed)
+      );
+      expect(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result))).toBe(true);
+      expect(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result))).toBe(true);
+    }).pipe(Effect.scoped)
+  );
+  it.effect("refuses missing approval without reconstructing it from submitted evidence", () =>
+    Effect.gen(function* () {
+      const { fs, path, directory, receipt, envelope } = yield* persistentSetup();
+      const verifier = yield* openCacheProducerVerifier(directory);
+      const file = path.join(directory, "approval.json");
+      yield* fs.remove(file);
+      expect(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result))).toBe(true);
+      expect(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result))).toBe(true);
+      expect(yield* fs.exists(file)).toBe(false);
+    }).pipe(Effect.scoped)
+  );
+  it.effect("rejects permissive, symbolic and hard-linked approval records", () =>
+    Effect.gen(function* () {
+      const { fs, path, directory, receipt, envelope } = yield* persistentSetup();
+      const verifier = yield* openCacheProducerVerifier(directory);
+      const file = path.join(directory, "approval.json");
+      const moved = path.join(directory, "original-approval.json");
+      yield* fs.chmod(file, 0o644);
+      expect(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result))).toBe(true);
+      yield* fs.chmod(file, 0o600);
+      yield* fs.rename(file, moved);
+      yield* fs.symlink(moved, file);
+      expect(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result))).toBe(true);
+      yield* fs.remove(file);
+      yield* fs.link(moved, file);
+      expect(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result))).toBe(true);
+    }).pipe(Effect.scoped)
+  );
+  it.effect("rejects malformed, invalid UTF-8 and oversized approval before verification", () =>
+    Effect.gen(function* () {
+      const { fs, path, directory } = yield* persistentSetup();
+      for (const bytes of [
+        new Uint8Array(),
+        new Uint8Array([255]),
+        new TextEncoder().encode("{}"),
+        new Uint8Array(16385),
+      ]) {
+        yield* fs.writeFile(path.join(directory, "approval.json"), bytes);
+        expect(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result))).toBe(true);
+      }
+    }).pipe(Effect.scoped)
+  );
+  it.effect("honors revocation and rejects a receipt from a different provisioned issuer", () =>
+    Effect.gen(function* () {
+      const { directory, receipt, envelope } = yield* persistentSetup();
+      const other = yield* persistentSetup();
+      const verifier = yield* openCacheProducerVerifier(directory);
+      expect(Result.isFailure(yield* verifier.verify(other.envelope, receipt).pipe(Effect.result))).toBe(true);
+      yield* revokeCacheProducerIssuer(directory);
+      expect(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result))).toBe(true);
+      expect(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result))).toBe(true);
     }).pipe(Effect.scoped)
   );
 });

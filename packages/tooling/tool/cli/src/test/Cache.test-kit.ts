@@ -41,6 +41,7 @@ export {
   initializeCacheProducerIssuer,
   makeCacheProducerIssuer,
   openCacheProducerIssuer,
+  openCacheProducerVerifier,
   revokeCacheProducerIssuer,
 } from "../commands/Cache/Cache.producer.ts";
 export * as CacheRuntimeProfile from "../commands/Cache/Cache.profile.ts";

@@ -260,6 +260,72 @@ export const openCacheProducerIssuer = Effect.fn("Producer.openCacheProducerIssu
   };
 });
 
+const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(
+  function* (directory: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const uid = yield* inspectIssuerDirectory(directory);
+    const file = path.join(directory, "approval.json");
+    const info = yield* fs.stat(file);
+    const limit = 16384;
+    if (
+      info.type !== "File" ||
+      (info.mode & 0o777) !== 0o600 ||
+      !O.contains(info.uid, uid) ||
+      !O.contains(info.nlink, 1) ||
+      info.size === BigInt(0) ||
+      info.size > BigInt(limit)
+    )
+      return yield* CacheCommandError.new("Producer approval must be a bounded private single-link file.");
+    const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(limit));
+    if (O.isNone(read.contents)) return yield* CacheCommandError.new("Producer approval is unavailable.");
+    const bytes = read.contents.value;
+    const text = yield* Effect.try({
+      try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+      catch: () => CacheCommandError.new("Producer approval must be valid UTF-8."),
+    });
+    return yield* decodeBinding(text);
+  },
+  Effect.mapError(() => CacheCommandError.new("Producer approval is unavailable or unsafe."))
+);
+
+/**
+ * Open a verification-only capability from independently provisioned private approval.
+ *
+ * **Details**
+ * The supervisor selects the store outside reader authority. Submitted evidence
+ * never selects an issuer or supplies its expected binding. The approval record
+ * must match the digest fixed in issuer material; every verification rechecks
+ * both records and revocation. No signing method or mutable expected binding is
+ * returned. This authenticates pilot observations only, not qualification policy
+ * satisfaction. Legacy stores without an approval record fail closed.
+ *
+ * **Example** (Reference the private approval verifier)
+ * ```ts
+ * import { openCacheProducerVerifier } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof openCacheProducerVerifier === "function")
+ * ```
+ *
+ * @internal
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const openCacheProducerVerifier = Effect.fn("Producer.openCacheProducerVerifier")(function* (directory: string) {
+  const trusted = yield* readIssuerApproval(directory);
+  const issuer = yield* openCacheProducerIssuer(directory, trusted);
+  return {
+    verify: Effect.fn("Producer.approvedVerify")(function* (
+      envelope: CacheProducerEnvelope,
+      receipt: CacheSignedPilotReceipt
+    ) {
+      const current = yield* readIssuerApproval(directory);
+      if (!S.toEquivalence(CacheProducerBinding)(current, trusted))
+        return yield* CacheCommandError.new("Producer approval changed after verification opened.");
+      return yield* issuer.verify(envelope, receipt);
+    }),
+  };
+});
+
 /**
  * Provision a new private issuer directory exclusively; existing stores are refused.
  *
@@ -267,7 +333,7 @@ export const openCacheProducerIssuer = Effect.fn("Producer.openCacheProducerIssu
  * The parent must already exist. Failed initialization leaves the reserved
  * directory for operator inspection and never silently recreates a lost key.
  * Provisioning fixes the approved workflow/computation binding in the private
- * material. It is an explicit trusted-supervisor action, never an observation
+ * material and writes its private approval record. It is an explicit trusted-supervisor action, never an observation
  * import or a receipt-selected key lookup. A new binding requires a new issuer.
  * Callers must keep this location outside every reader mount.
  *
@@ -290,6 +356,10 @@ export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCache
     yield* fs.makeDirectory(directory, { mode: 0o700 });
     yield* inspectIssuerDirectory(directory);
     const trusted = yield* encodeBinding(expected).pipe(Effect.flatMap(decodeBinding));
+    yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeBinding(trusted), {
+      flag: "wx",
+      mode: 0o600,
+    });
     const approved = yield* bindingDigest(trusted).pipe(Effect.flatMap(S.decodeEffect(S.Uint8ArrayFromHex)));
     const bytes = new Uint8Array(persistedMaterialBytes);
     bytes.set(yield* crypto.randomBytes(64));
