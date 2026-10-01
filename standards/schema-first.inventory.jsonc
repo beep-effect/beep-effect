@@ -440,6 +440,14 @@
       "reason": "Exact future-constructor wire schema. S.StructWithRest preserves every unknown top-level Pandoc JSON field unchanged; an S.Class cannot retain arbitrary future keys and would break strict/lossless interchange identity."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/SemanticVersion.ts",
+      "symbol": "SemanticVersionSchema",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Declaration-emit name for the SemanticVersion template-literal schema (it extends typeof the schema, not a data shape); the schema itself is the model. Surfaced when P5 removed the schema's codec static."
+    },
+    {
       "file": "packages/foundation/modeling/schema/test/CurrencyCode.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",

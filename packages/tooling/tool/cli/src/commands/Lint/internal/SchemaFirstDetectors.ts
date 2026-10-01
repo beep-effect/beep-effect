@@ -9,13 +9,14 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, flow, HashSet, MutableHashMap, Order, pipe, Result } from "effect";
+import { Effect, flow, HashSet, MutableHashMap, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind, ts } from "ts-morph";
 import { SchemaFirstInventoryReadError } from "../Lint.errors.ts";
 import { SchemaFirstInventoryEntry } from "../Lint.schemas.ts";
 import type {
+  CallExpression,
   InterfaceDeclaration,
   Symbol as MorphSymbol,
   SourceFile,
@@ -1415,36 +1416,54 @@ const schemaModuleNames = (sourceFile: SourceFile): HashSet.HashSet<string> =>
     )
   );
 
-const unresolvedWithStatics = (expression: Node): boolean =>
-  Node.isPropertyAccessExpression(expression)
-    ? O.exists(unresolvedReceiverModule(expression.getExpression()), (module) => module === "schema-utils")
-    : O.exists(
+// The member a callee names: `withStatics`, `SchemaUtils.withStatics`, `SchemaUtils["withStatics"]`.
+const calleeMember = (expression: Node): O.Option<{ readonly nameNode: Node; readonly name: string }> =>
+  Node.isIdentifier(expression)
+    ? O.some({ nameNode: expression, name: expression.getText() })
+    : Node.isPropertyAccessExpression(expression)
+      ? O.some({ nameNode: expression.getNameNode(), name: expression.getName() })
+      : Node.isElementAccessExpression(expression)
+        ? pipe(
+            memberAccessName(expression),
+            O.flatMap((name) =>
+              O.map(O.fromUndefinedOr(expression.getArgumentExpression()), (nameNode) => ({ nameNode, name }))
+            )
+          )
+        : O.none();
+
+// When the module does not resolve: a named import of `withStatics` (aliased or not) from a SchemaUtils
+// module, or a `withStatics` member reached through the SchemaUtils namespace.
+const unresolvedWithStatics = (expression: Node, name: string): boolean =>
+  Node.isIdentifier(expression)
+    ? O.exists(
         unresolvedWrapperBinding(expression),
         ({ module, imported }) =>
-          module === "schema-utils" && O.exists(imported, (name) => Str.Equivalence(name, "withStatics"))
-      );
+          module === "schema-utils" &&
+          O.exists(imported, (importedName) => Str.Equivalence(importedName, "withStatics"))
+      )
+    : (Node.isPropertyAccessExpression(expression) || Node.isElementAccessExpression(expression)) &&
+      Str.Equivalence(name, "withStatics") &&
+      O.exists(unresolvedReceiverModule(expression.getExpression()), (module) => module === "schema-utils");
 
-// A `withStatics` callee that resolves to the SchemaUtils declaration, or, when the module does not
-// resolve, is imported from a SchemaUtils module or reached through the `SchemaUtils` namespace.
+// A `withStatics` callee resolved through the checker to the SchemaUtils declaration, whatever local
+// name or access form reaches it; when the module does not resolve, the import declaration decides.
 const isWithStaticsCallee = (callee: Node): boolean => {
   const expression = unwrapParentheses(callee);
-  const nameNode = Node.isPropertyAccessExpression(expression) ? expression.getNameNode() : expression;
-  if (!Str.Equivalence(nameNode.getText(), "withStatics")) {
-    return false;
-  }
-  const resolved = pipe(
-    O.fromUndefinedOr(nameNode.getSymbol()),
-    O.flatMap(aliasedTarget),
-    O.map((target) => target.getDeclarations())
-  );
-  return O.match(resolved, {
-    onSome: (declarations) =>
-      A.isReadonlyArrayNonEmpty(declarations)
-        ? A.some(declarations, (declaration) =>
-            SCHEMA_UTILS_SOURCE_PATTERN.test(declaration.getSourceFile().getFilePath())
-          )
-        : unresolvedWithStatics(expression),
-    onNone: () => unresolvedWithStatics(expression),
+  return O.exists(calleeMember(expression), ({ nameNode, name }) => {
+    const declarations = pipe(
+      O.fromUndefinedOr(nameNode.getSymbol()),
+      O.flatMap(aliasedTarget),
+      O.map((target) => ({ name: target.getName(), declarations: target.getDeclarations() })),
+      O.filter(({ declarations }) => A.isReadonlyArrayNonEmpty(declarations))
+    );
+    return O.match(declarations, {
+      onSome: (target) =>
+        Str.Equivalence(target.name, "withStatics") &&
+        A.some(target.declarations, (declaration) =>
+          SCHEMA_UTILS_SOURCE_PATTERN.test(declaration.getSourceFile().getFilePath())
+        ),
+      onNone: () => unresolvedWithStatics(expression, name),
+    });
   });
 };
 
@@ -1463,20 +1482,61 @@ const returnedStaticsObject = (callback: Node): O.Option<Node> => {
   return pipe(returned, O.map(unwrapParentheses), O.filter(Node.isObjectLiteralExpression));
 };
 
-// A call to an effect/Schema codec function, applied or not: `S.is(schema)`, `S.decodeUnknownSync(schema)(u)`.
+// A call to an effect/Schema codec function: `S.is(...)`, `S.decodeUnknownSync(...)`.
 const isCodecCall =
   (schemaNames: HashSet.HashSet<string>) =>
-  (node: Node): boolean => {
+  (node: Node): node is CallExpression => {
     if (!Node.isCallExpression(node)) {
       return false;
     }
     const callee = unwrapParentheses(node.getExpression());
-    return Node.isPropertyAccessExpression(callee)
-      ? isSchemaCodecFunction(callee.getName()) &&
-          Node.isIdentifier(callee.getExpression()) &&
-          HashSet.has(schemaNames, callee.getExpression().getText())
-      : isCodecCall(schemaNames)(callee);
+    if (!Node.isPropertyAccessExpression(callee) || !isSchemaCodecFunction(callee.getName())) {
+      return false;
+    }
+    const namespace = callee.getExpression();
+    return Node.isIdentifier(namespace) && HashSet.has(schemaNames, namespace.getText()) && !isShadowed(namespace);
   };
+
+// A local binding (parameter, `const`, nested declaration) that hides the effect/Schema import of the
+// same name; an unresolved name keeps the import-based reading.
+const isShadowed = (identifier: Node): boolean =>
+  O.exists(
+    O.map(O.fromUndefinedOr(identifier.getSymbol()), (symbol) => symbol.getDeclarations()),
+    (declarations) =>
+      A.isReadonlyArrayNonEmpty(declarations) &&
+      !A.some(
+        declarations,
+        (declaration) =>
+          Node.isNamespaceImport(declaration) || Node.isImportSpecifier(declaration) || Node.isImportClause(declaration)
+      )
+  );
+
+// The names that denote the schema inside a statics callback: its first parameter, and the name of
+// the declaration the decorated schema is bound to (a parameterless callback closes over it).
+const schemaBindingNames = (callback: Node): HashSet.HashSet<string> => {
+  const parameter =
+    Node.isArrowFunction(callback) || Node.isFunctionExpression(callback)
+      ? O.toArray(O.map(A.head(callback.getParameters()), (declaration) => declaration.getName()))
+      : A.empty<string>();
+  const owner = O.toArray(
+    O.map(O.fromUndefinedOr(callback.getFirstAncestorByKind(SyntaxKind.VariableDeclaration)), (declaration) =>
+      declaration.getName()
+    )
+  );
+  return HashSet.fromIterable([...parameter, ...owner]);
+};
+
+// `S.<codec>(schema)` over the schema or a composition of it (`S.fromJsonString(schema)`); options may follow.
+const isSchemaCodec =
+  (schemaNames: HashSet.HashSet<string>, bindings: HashSet.HashSet<string>) =>
+  (node: Node): boolean =>
+    isCodecCall(schemaNames)(node) &&
+    O.exists(A.head(node.getArguments()), (argument) =>
+      A.some(
+        [argument, ...argument.getDescendantsOfKind(SyntaxKind.Identifier)],
+        (candidate) => Node.isIdentifier(candidate) && HashSet.has(bindings, candidate.getText())
+      )
+    );
 
 // The expression a function-like returns: its expression body or its only `return`.
 const returnedExpression = (fn: Node): O.Option<Node> => {
@@ -1496,40 +1556,70 @@ const returnedExpression = (fn: Node): O.Option<Node> => {
     : O.none();
 };
 
-// A codec facade value: a codec call, a function that only returns one, or a name the statics
-// callback binds to either.
-const isCodecFacadeValue = (schemaNames: HashSet.HashSet<string>, callback: Node, depth: number) => {
-  const recur = (node: Node): boolean => {
+// A function whose only result is a schema codec applied to the function's own parameters:
+// `(u) => S.decodeUnknownOption(schema)(u)`, `parse(u) { return S.decodeUnknownSync(schema)(u) }`.
+const isForwardingCodecFunction =
+  (schemaNames: HashSet.HashSet<string>, bindings: HashSet.HashSet<string>) =>
+  (fn: Node): boolean => {
+    if (!(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isMethodDeclaration(fn))) {
+      return false;
+    }
+    const parameters = HashSet.fromIterable(A.map(fn.getParameters(), (declaration) => declaration.getName()));
+    return O.exists(returnedExpression(fn), (returned) => {
+      if (!Node.isCallExpression(returned)) {
+        return false;
+      }
+      return (
+        isSchemaCodec(schemaNames, bindings)(unwrapParentheses(returned.getExpression())) &&
+        A.every(returned.getArguments(), (argument) => {
+          const operand = unwrapParentheses(argument);
+          return Node.isIdentifier(operand) && HashSet.has(parameters, operand.getText());
+        })
+      );
+    });
+  };
+
+// A statics value that is a codec: an unapplied schema codec, a function that only forwards into
+// one, or a name the callback binds to either.
+const isCodecFacadeValue =
+  (schemaNames: HashSet.HashSet<string>, bindings: HashSet.HashSet<string>, callback: Node, depth: number) =>
+  (node: Node): boolean => {
     const value = unwrapParentheses(node);
-    if (isCodecCall(schemaNames)(value)) {
+    if (isSchemaCodec(schemaNames, bindings)(value) || isForwardingCodecFunction(schemaNames, bindings)(value)) {
       return true;
     }
-    if (Node.isArrowFunction(value) || Node.isFunctionExpression(value)) {
-      return O.exists(returnedExpression(value), isCodecCall(schemaNames));
-    }
-    if (Node.isIdentifier(value) && depth < 3) {
-      return pipe(
+    return (
+      Node.isIdentifier(value) &&
+      depth < 3 &&
+      pipe(
         A.findFirst(
           callback.getDescendantsOfKind(SyntaxKind.VariableDeclaration),
           (declaration) => declaration.getName() === value.getText()
         ),
         O.flatMap((declaration) => O.fromUndefinedOr(declaration.getInitializer())),
-        O.exists(isCodecFacadeValue(schemaNames, callback, depth + 1))
-      );
-    }
-    return false;
+        O.exists(isCodecFacadeValue(schemaNames, bindings, callback, depth + 1))
+      )
+    );
   };
-  return recur;
-};
 
 const isCodecFacade =
   (schemaNames: HashSet.HashSet<string>, callback: Node) =>
-  (property: Node): boolean =>
-    Node.isPropertyAssignment(property)
-      ? O.exists(O.fromUndefinedOr(property.getInitializer()), isCodecFacadeValue(schemaNames, callback, 0))
+  (property: Node): boolean => {
+    const bindings = schemaBindingNames(callback);
+    const isFacade = isCodecFacadeValue(schemaNames, bindings, callback, 0);
+    return Node.isPropertyAssignment(property)
+      ? O.exists(O.fromUndefinedOr(property.getInitializer()), isFacade)
       : Node.isShorthandPropertyAssignment(property)
-        ? isCodecFacadeValue(schemaNames, callback, 0)(property.getNameNode())
-        : Node.isMethodDeclaration(property) && O.exists(returnedExpression(property), isCodecCall(schemaNames));
+        ? isFacade(property.getNameNode())
+        : isForwardingCodecFunction(schemaNames, bindings)(property);
+  };
+
+const facadeName = (property: Node): string =>
+  Node.isPropertyAssignment(property) ||
+  Node.isShorthandPropertyAssignment(property) ||
+  Node.isMethodDeclaration(property)
+    ? property.getName()
+    : "member";
 
 const codecFacadeCandidates = (sourceFile: SourceFile): ReadonlyArray<ParityCandidate> => {
   if (!WITH_STATICS_SIGNAL_PATTERN.test(sourceFile.getFullText())) {
@@ -1552,13 +1642,7 @@ const codecFacadeCandidates = (sourceFile: SourceFile): ReadonlyArray<ParityCand
         O.getOrElse(A.empty<Node>)
       )
     ),
-    A.filterMap((property) =>
-      Node.isPropertyAssignment(property) ||
-      Node.isShorthandPropertyAssignment(property) ||
-      Node.isMethodDeclaration(property)
-        ? Result.succeed({ wrapper: codecFacadeWrapper(property.getName()), node: property })
-        : Result.failVoid
-    )
+    A.map((property) => ({ wrapper: codecFacadeWrapper(facadeName(property)), node: property }))
   );
 };
 

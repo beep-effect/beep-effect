@@ -401,6 +401,73 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
     })
   );
 
+  it.effect("flags the SemanticVersion arrow facade, aliased and bracket-access callees, and bound shorthands", () =>
+    Effect.gen(function* () {
+      expect(
+        readable(
+          yield* parityEntries([
+            'import * as S from "effect/Schema";',
+            'import { SchemaUtils } from "@beep/schema";',
+            'import { withStatics as attach } from "@beep/schema/SchemaUtils/withStatics";',
+            "export const SemanticVersion = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => ({",
+            "    decodeUnknownOption: (u: unknown) => S.decodeUnknownOption(schema)(u),",
+            "  }))",
+            ");",
+            "export const Aliased = S.String.pipe(attach((schema) => ({ is: S.is(schema) })));",
+            'export const Bracketed = S.String.pipe(SchemaUtils["withStatics"]((schema) => ({ is: S.is(schema) })));',
+            "export const Bound = S.String.pipe(",
+            "  SchemaUtils.withStatics((schema) => {",
+            "    const decodeOption = S.decodeUnknownOption(schema);",
+            "    const alias = decodeOption;",
+            "    return { decodeOption, alias };",
+            "  })",
+            ");",
+            "export const Closed = S.String.pipe(SchemaUtils.withStatics(() => ({ is: S.is(Closed) })));",
+            "export const Composed = S.String.pipe(",
+            "  SchemaUtils.withStatics((self) => ({ decodeJson: S.decodeUnknownEffect(S.fromJsonString(self)) }))",
+            ");",
+          ])
+        )
+      ).toEqual([
+        "SFV4-codec-static SemanticVersion::decodeUnknownOption@<hash>",
+        "SFV4-codec-static Aliased::is@<hash>",
+        "SFV4-codec-static Bracketed::is@<hash>",
+        "SFV4-codec-static Bound::decodeOption@<hash>",
+        "SFV4-codec-static Bound::alias@<hash>",
+        "SFV4-codec-static Closed::is@<hash>",
+        "SFV4-codec-static Composed::decodeJson@<hash>",
+      ]);
+    })
+  );
+
+  it.effect("leaves domain statics that use a codec internally unflagged", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* parityEntries([
+          'import * as S from "effect/Schema";',
+          'import { Result } from "effect";',
+          'import { SchemaUtils } from "@beep/schema";',
+          "const Other = S.String;",
+          "export const Config = S.Struct({ path: S.String }).pipe(",
+          "  SchemaUtils.withStatics((schema) => ({",
+          '    default: Result.getOrThrow(S.decodeResult(schema)({ path: "/" })),',
+          '    describe: (u: unknown) => (S.is(Other)(u) ? `other ${u}` : "none"),',
+          "    widened: (u: unknown) => S.is(schema)(`${u}`),",
+          "    noReturn() {},",
+          "  }))",
+          ");",
+          "export const Shadowed = S.String.pipe(",
+          "  SchemaUtils.withStatics((schema) => {",
+          "    const S = { is: (value: unknown) => (candidate: unknown) => value === candidate };",
+          "    return { is: S.is(schema) };",
+          "  }))",
+          ");",
+        ])
+      ).toEqual([]);
+    })
+  );
+
   it.effect("ignores withStatics that does not come from @beep/schema and codec calls off other namespaces", () =>
     Effect.gen(function* () {
       expect(
@@ -427,15 +494,26 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
       project
         .getSourceFileOrThrow("packages/foundation/modeling/schema/src/SchemaUtils/index.ts")
         .addExportDeclaration({ moduleSpecifier: "./withStatics.ts" });
+      project.createSourceFile(
+        "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts",
+        "export const withCodecStatics = (keys: ReadonlyArray<string>) => <S>(schema: S): S => schema;"
+      );
+      project
+        .getSourceFileOrThrow("packages/foundation/modeling/schema/src/SchemaUtils/index.ts")
+        .addExportDeclaration({ moduleSpecifier: "./withCodecStatics.ts" });
       expect(
         readable(
           yield* parityEntriesIn(project, [
             'import * as S from "effect/Schema";',
             'import { SchemaUtils } from "@beep/schema";',
             "export const Named = S.String.pipe(SchemaUtils.withStatics((schema) => ({ encode: S.encodeUnknownSync(schema) })));",
+            'export const Coded = S.String.pipe(SchemaUtils.withCodecStatics(["is"]));',
           ])
         )
-      ).toEqual(["SFV4-codec-static Named::encode@<hash>"]);
+      ).toEqual(["SFV4-codec-static Named::encode@<hash>", "SFV4-codec-static Coded::withCodecStatics@<hash>"]);
+      expect(declarationPathsOf(project.getSourceFileOrThrow(fixtureFile))("withCodecStatics")).toEqual([
+        "src/SchemaUtils/withCodecStatics.ts",
+      ]);
     })
   );
 });
