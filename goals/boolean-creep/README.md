@@ -8,7 +8,10 @@ At that initial handoff, the merge commit and the prior published commit
 `5509f037aa2bdf8fe03cb0930a7f7a79dd1823ac`. This historical tree equality
 is recorded in `data/r54-continuation-2026-10-01.json`.
 
-The successor now includes main `f7c23dd21265d723b2fb4a1a2b58c51c037ea6f1`.
+The successor now includes main `9e136082a1212b2906cb29c8bd92656b55bf07bb`.
+PR #1398 supplied the generated Vitest alias repair; its merge changed only
+`vitest.aliases.generated.json`. Current R54 evidence must bind this successor
+source identity before admission.
 Source cited by qualified owners changed after the original `ec71f01a` binding,
 including `ContradictionTriageView.tsx` and `speech-input.tsx`. The earlier review
 cannot establish current-source coverage. R54 corrections remain private and
