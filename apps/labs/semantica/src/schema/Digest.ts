@@ -10,7 +10,7 @@ import type { Crypto } from "effect";
 const utf8Encoder = new TextEncoder();
 
 const sha256CanonicalEffect = (value: unknown) =>
-  Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(canonicalJson(value)));
+  S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(canonicalJson(value)));
 
 /**
  * Hashes an already encoded JSON-compatible preimage with canonical key order.

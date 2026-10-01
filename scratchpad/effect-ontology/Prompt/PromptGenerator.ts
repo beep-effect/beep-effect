@@ -6,7 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -236,7 +236,6 @@ const NegativeExampleOutput = S.Struct({
     })
   ),
 }).pipe(
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"]),
   $I.annoteSchema("NegativeExampleOutput", {
     description: "Optional structured metadata carried by a negative extraction example.",
   })
@@ -807,7 +806,7 @@ const buildNegativeExamplesSection = (examples: ReadonlyArray<ScoredExample>): P
   const lines: Array<PromptDoc> = [Doc.text("=== EXTRACTION WARNINGS (Avoid These Mistakes) ==="), Doc.empty];
 
   for (const neg of negatives) {
-    const output = NegativeExampleOutput.decodeUnknownOption(neg.expectedOutput);
+    const output = S.decodeUnknownOption(NegativeExampleOutput)(neg.expectedOutput);
 
     lines.push(Doc.text(`❌ DO NOT: ${optionText("Avoid this pattern")(neg.explanation)}`));
 

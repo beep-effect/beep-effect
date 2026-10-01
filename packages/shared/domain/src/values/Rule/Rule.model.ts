@@ -60,11 +60,7 @@ export const Effect = EffectBase.pipe(
   $I.annoteSchema("Effect", {
     description: "Effect of a rule: allow, deny, ask.",
   }),
-  SchemaUtils.withLiteralKitStatics(EffectBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownResult(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(EffectBase)
 );
 
 /**

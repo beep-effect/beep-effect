@@ -45,8 +45,8 @@ describe("beep identity", () => {
   it("names five mark paths: two strokes, one frame, two lenses", () => {
     expect(beep.mark.strokes.length).toBe(2);
     expect(beep.mark.glasses.lenses.length).toBe(2);
-    expect(SvgPaint.is("currentColor")).toBe(true);
-    expect(SvgPaint.is("green")).toBe(false);
+    expect(S.is(SvgPaint)("currentColor")).toBe(true);
+    expect(S.is(SvgPaint)("green")).toBe(false);
   });
 });
 

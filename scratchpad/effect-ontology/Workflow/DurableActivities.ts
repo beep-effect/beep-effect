@@ -27,7 +27,6 @@ import { datasetToProvBundle, provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_USED, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
-import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import {
@@ -41,7 +40,7 @@ import {
   MutableHashMap,
   MutableHashSet,
   Order,
-  Schedule,
+  Schedule, Result,
 } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -95,9 +94,7 @@ import { refineKnowledgeGraph } from "../Utils/RefineKG.ts";
 import { mergeGraphs } from "./Merge.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/DurableActivities");
-const PrettyShaclValidationReportFromJsonString = S.fromJsonString(ShaclValidationReport, { space: 2 }).pipe(
-  SchemaUtils.withCodecStatics(["encodeEffect"])
-);
+const PrettyShaclValidationReportFromJsonString = S.fromJsonString(ShaclValidationReport, { space: 2 });
 const isActivityError = S.is(ActivityError);
 const preserveActivityError = (error: unknown): ActivityError =>
   isActivityError(error) ? error : toActivityError(error);
@@ -463,7 +460,7 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
       Entity.make({
         id: EntityId.make(localName),
         mention,
-        types: A.map(types, (type) => IRI.decodeUnknownSync(type)),
+        types: A.map(types, (type) => Result.getOrThrow(S.decodeResult(IRI)(type))),
         attributes: {},
       })
     );
@@ -489,7 +486,7 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
         relations.push(
           Relation.make({
             subjectId,
-            predicate: IRI.decodeUnknownSync(predicate),
+            predicate: Result.getOrThrow(S.decodeResult(IRI)(predicate)),
             object: RelationObject.cases.EntityReference.make({ value: objectId }),
           })
         );
@@ -681,7 +678,7 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
       });
 
       return {
-        resolvedUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${resolutionPath}`),
+        resolvedUri: Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${resolutionPath}`)),
         entitiesTotal: S.Natural.make(totalEntities),
         clustersFormed: S.Natural.make(resolutionGraph.stats.clusterCount),
         relationsTotal: S.Natural.make(totalRelations),
@@ -828,7 +825,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       yield* storage.set(validationGraphPath, resolvedGraph);
 
       const reportPath = PathLayout.batch.validationReport(input.batchId);
-      const reportJson = yield* PrettyShaclValidationReportFromJsonString.encodeEffect(report);
+      const reportJson = yield* S.encodeEffect(PrettyShaclValidationReportFromJsonString)(report);
       yield* storage.set(reportPath, reportJson);
 
       const end = yield* DateTime.now;
@@ -842,13 +839,13 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       });
 
       return {
-        validatedUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${validationGraphPath}`),
+        validatedUri: Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${validationGraphPath}`)),
         conforms: report.validation.conforms,
         violations: S.Natural.make(report.validation.violations.length),
         violationSummary: P.isTruthy(report.validation.violations.length)
           ? summarizeViolations(report.validation.violations)
           : [],
-        reportUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${reportPath}`),
+        reportUri: Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${reportPath}`)),
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       };
     }).pipe(Effect.mapError(preserveActivityError)),
@@ -1085,7 +1082,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
       const end = yield* DateTime.now;
 
       return {
-        canonicalUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${canonicalPath}`),
+        canonicalUri: Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${canonicalPath}`)),
         triplesIngested: S.Natural.make(stats.tripleCount),
         durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
       };
@@ -1649,7 +1646,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
         });
         const end = yield* DateTime.now;
         return {
-          enrichedGraphUri: GcsUri.decodeUnknownSync(input.resolvedGraphUri),
+          enrichedGraphUri: Result.getOrThrow(S.decodeUnknownResult(GcsUri)(input.resolvedGraphUri)),
           inferredTripleCount: S.Natural.make(0),
           totalTripleCount: S.Natural.make(0),
           provenanceQuadCount: S.Natural.make(0),
@@ -1757,7 +1754,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
       });
 
       return {
-        enrichedGraphUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${enrichedPath}`),
+        enrichedGraphUri: Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${enrichedPath}`)),
         inferredTripleCount: S.Natural.make(delta.deltaCount),
         totalTripleCount: S.Natural.make(rdfStoreSize(enrichedStore)),
         provenanceQuadCount: S.Natural.make(provenanceQuadCount),
@@ -1978,8 +1975,8 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
 
       // 7. Build OntologyEmbeddings blob
       // Use actual provider model from metadata, not hardcoded fallback
-      const ontologyUri = GcsUri.decodeUnknownSync(input.ontologyUri);
-      const embeddingsBlob = yield* OntologyEmbeddings.decodeUnknownEffect({
+      const ontologyUri = Result.getOrThrow(S.decodeUnknownResult(GcsUri)(input.ontologyUri));
+      const embeddingsBlob = yield* S.decodeUnknownEffect(OntologyEmbeddings)({
         ontologyUri,
         version: ContentHash.make(version),
         model: O.getOrElse(input.model, () => providerMetadata.modelId),
@@ -1990,7 +1987,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       });
 
       // 8. Serialize and store
-      const embeddingsJson = yield* OntologyEmbeddingsJson.encodeEffect(embeddingsBlob);
+      const embeddingsJson = yield* S.encodeEffect(OntologyEmbeddingsJson)(embeddingsBlob);
       const embeddingsPath = stripGsPrefix(OntologyEmbeddings.storagePathFor(ontologyUri));
       yield* storage.set(embeddingsPath, embeddingsJson);
 
@@ -2005,7 +2002,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       });
 
       return {
-        embeddingsUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${embeddingsPath}`),
+        embeddingsUri: Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${embeddingsPath}`)),
         version,
         classCount: S.Natural.make(classEmbeddings.length),
         propertyCount: S.Natural.make(propertyEmbeddings.length),
@@ -2918,7 +2915,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
       });
 
       return {
-        enrichedManifestUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${enrichedManifestPath}`),
+        enrichedManifestUri: Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${enrichedManifestPath}`)),
         totalDocuments: S.Natural.make(documentMetadata.length),
         classifiedCount: S.Natural.make(classifiedCount),
         failedCount: S.Natural.make(failedCount),

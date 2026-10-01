@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, flow, Match, SchemaIssue, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -1311,7 +1311,8 @@ const HookPulseLegacyV1Record = S.Struct({
  *
  * ```ts
  * import { HookPulseV1FromLegacyRecord } from "@beep/repo-ai-metrics"
- * const migrate = HookPulseV1FromLegacyRecord.decodeUnknownEffect
+ * import * as S from "effect/Schema"
+ * const migrate = S.decodeUnknownEffect(HookPulseV1FromLegacyRecord)
  * const pulse = migrate({
  *   schemaVersion: "hook-pulse/v1",
  *   ts: "2026-08-01T06:40:07.000Z",
@@ -1358,8 +1359,7 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
   ),
   $I.annoteSchema("HookPulseV1FromLegacyRecord", {
     description: "Migration codec that pseudonymizes private identifiers in legacy hook-pulse/v1 ledger rows.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  })
 );
 
 /**
@@ -1405,7 +1405,8 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
  * ```ts
  * import { HookPulseV1FromRawEvent } from "@beep/repo-ai-metrics"
  * import { Result } from "effect"
- * const decode = HookPulseV1FromRawEvent.decodeUnknownResult
+ * import * as S from "effect/Schema"
+ * const decode = S.decodeUnknownResult(HookPulseV1FromRawEvent)
  *
  * const pulse = Result.getOrThrow(
  *   decode({
@@ -1588,8 +1589,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
   ),
   $I.annoteSchema("HookPulseV1FromRawEvent", {
     description: "Canonical hook-pulse codec that derives wait attribution from whitelisted raw event fields.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "decodeUnknownResult", "encodeResult", "encodeUnknownEffect"])
+  })
 );
 
 /**

@@ -10,24 +10,10 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { DiscordHttpStatus } from "./Discord.models.ts";
-import type * as O from "effect/Option";
 
 const $I = $DiscordId.create("Discord.errors");
 
 const DiscordErrorReasonBase = LiteralKit(["request", "transport", "response-status", "response-decoding"]);
-// Shared driver codec-statics idiom; drivers are independent and have no in-family home — future foundation capability candidate.
-// fallow-ignore-next-line code-duplication -- driver-local error-reason codec statics avoid cross-driver coupling
-const withDiscordErrorReasonCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(
-  schema: Sch
-): Sch & {
-  readonly decodeOption: (input: unknown) => O.Option<Sch["Type"]>;
-  readonly fromUnknown: (input: unknown) => Effect.Effect<Sch["Type"], S.SchemaError, Sch["DecodingServices"]>;
-} =>
-  SchemaUtils.withStatics((self: Sch) => ({
-    fromUnknown: S.decodeUnknownEffect(self),
-    decodeOption: S.decodeUnknownOption(self),
-  }))(schema);
-
 /**
  * Literal vocabulary for recoverable failures at the Discord REST boundary.
  *
@@ -47,8 +33,7 @@ export const DiscordErrorReason = DiscordErrorReasonBase.pipe(
   $I.annoteSchema("DiscordErrorReason", {
     description: "Literal vocabulary for recoverable failures at the Discord REST boundary.",
   }),
-  SchemaUtils.withLiteralKitStatics(DiscordErrorReasonBase),
-  withDiscordErrorReasonCodecStatics
+  SchemaUtils.withLiteralKitStatics(DiscordErrorReasonBase)
 );
 
 /**

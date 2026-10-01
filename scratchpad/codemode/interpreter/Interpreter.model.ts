@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, N, O, P } from "@beep/utils";
 import { Effect, MutableHashMap, Result, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
@@ -153,8 +153,9 @@ const AstValue: S.Codec<unknown, unknown> = S.suspend(() =>
  *
  * ```ts
  * import { AstNode } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import * as S from "effect/Schema"
  *
- * const node = AstNode.decodeUnknownSync({ type: "Identifier", name: "count" })
+ * const node = S.decodeUnknownSync(AstNode)({ type: "Identifier", name: "count" })
  * console.log(node.type, node.name)
  * // Identifier count
  * ```
@@ -172,8 +173,7 @@ export const AstNode = S.StructWithRest(
 ).pipe(
   $I.annoteSchema("AstNode", {
     description: "An Acorn syntax node with a required type discriminator and optional source location.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
+  })
 );
 
 /**
@@ -1656,9 +1656,10 @@ export class ErrorConstructorReference extends S.TaggedClass<ErrorConstructorRef
  *   GlobalNamespace,
  *   RuntimeReference,
  * } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import * as S from "effect/Schema"
  *
  * const ns = GlobalNamespace.new("JSON")
- * console.log(RuntimeReference.is(ns), RuntimeReference.guards.GlobalNamespace(ns))
+ * console.log(S.is(RuntimeReference)(ns), RuntimeReference.guards.GlobalNamespace(ns))
  * // true true
  * ```
  *
@@ -1690,8 +1691,7 @@ export const RuntimeReference = S.Union([
   $I.annoteSchema("RuntimeReference", {
     description: "All schema-owned interpreter references and control wrappers.",
   }),
-  S.toTaggedUnion("_tag"),
-  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
+  S.toTaggedUnion("_tag")
 );
 
 /**
@@ -1878,9 +1878,10 @@ export class InterpreterRuntimeError extends S.TaggedError<InterpreterRuntimeErr
  *   InterpreterFailure,
  *   InterpreterRuntimeError,
  * } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import * as S from "effect/Schema"
  *
  * const error = InterpreterRuntimeError.new("boom")
- * console.log(InterpreterFailure.is(error), InterpreterFailure.guards.ProgramThrow(error))
+ * console.log(S.is(InterpreterFailure)(error), InterpreterFailure.guards.ProgramThrow(error))
  * // true false
  * ```
  *
@@ -1899,8 +1900,7 @@ export const InterpreterFailure = S.Union([
   $I.annoteSchema("InterpreterFailure", {
     description: "Closed recoverable failure channel for guest evaluation and host tool calls.",
   }),
-  S.toTaggedUnion("_tag"),
-  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
+  S.toTaggedUnion("_tag")
 );
 
 /**
@@ -1952,7 +1952,7 @@ export const tryInterpreter: {
     Result.try({
       try: evaluate,
       catch: (error) =>
-        InterpreterFailure.is(error)
+        S.is(InterpreterFailure)(error)
           ? error
           : InterpreterRuntimeError.new(P.isError(error) ? error.message : globalThis.String(error), node),
     })
@@ -2034,7 +2034,7 @@ export const asNode: {
   (context: string): (value: unknown) => AstNode;
   (value: unknown, context: string): AstNode;
 } = dual(2, (value: unknown, context: string): AstNode => {
-  if (!AstNode.is(value)) {
+  if (!S.is(AstNode)(value)) {
     throw InterpreterRuntimeError.new(`Invalid AST node while reading ${context}.`);
   }
   return value;

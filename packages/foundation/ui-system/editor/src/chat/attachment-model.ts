@@ -58,8 +58,9 @@ export const IMAGE_MIME_TYPES = ImageMimeType.pick(["image/png", "image/jpeg", "
  *
  * ```ts import.meta.vitest name="Validating image MIME type"
  * import { ImageAttachmentMimeType } from "@beep/editor/chat/attachment-model"
+ * import * as S from "effect/Schema"
  *
- * ImageAttachmentMimeType.is("image/png") // => true
+ * S.is(ImageAttachmentMimeType)("image/png") // => true
  * ```
  *
  * @category schemas
@@ -68,8 +69,7 @@ export const IMAGE_MIME_TYPES = ImageMimeType.pick(["image/png", "image/jpeg", "
 export const ImageAttachmentMimeType = S.Literals(IMAGE_MIME_TYPES).pipe(
   $I.annoteSchema("ImageAttachmentMimeType", {
     description: "The vision-eligible image MIME subset captured as thumbnailed attachments.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -502,7 +502,7 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
  * @since 0.0.0
  */
 export const isImageAttachment = (attachment: ComposerAttachment): boolean =>
-  ImageAttachmentMimeType.is(attachment.mimeType);
+  S.is(ImageAttachmentMimeType)(attachment.mimeType);
 
 /**
  * Read a captured `File` into a {@link ComposerAttachment} synchronously, or a

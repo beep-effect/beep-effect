@@ -6,9 +6,8 @@ import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import { cast } from "effect/Function";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { hasFunctionStatic, invokeStatic } from "./StaticProbes.ts";
+import { hasFunctionStatic } from "./StaticProbes.ts";
 import type * as EntityId from "@beep/shared-domain/entity/EntityId";
 
 const decodeUnknownIdentityAnyIdentityComposer = S.decodeUnknownEffect(Identity.AnyIdentityComposer);
@@ -391,7 +390,6 @@ const codecStaticKeys = [
   "decodeUnknownSync",
   "encodeEffect",
   "encodeUnknownEffect",
-  "equivalence",
   "is",
 ];
 
@@ -408,14 +406,12 @@ describe("P3 identity namespaces", () => {
     }
   });
 
-  it("carry the factory-attached codec statics at runtime", () => {
+  it("carry no codec statics: codecs are effect/Schema free functions", () => {
     for (const spec of specs) {
       for (const key of codecStaticKeys) {
-        assertTrue(hasFunctionStatic(spec.schema, key), `${spec.label}.${key}`);
+        assertFalse(hasFunctionStatic(spec.schema, key), `${spec.label}.${key}`);
       }
-      assertFalse(hasFunctionStatic(spec.schema, "fromUnknown"), `${spec.label}.fromUnknown`);
-      assertFalse(hasFunctionStatic(spec.schema, "decodeOption"), `${spec.label}.decodeOption`);
-      expect(O.getOrThrow(invokeStatic(spec.schema, "decodeUnknownSync", 1)), spec.label).toBe(1);
+      assertTrue(S.is(spec.schema)(1), spec.label);
     }
   });
 

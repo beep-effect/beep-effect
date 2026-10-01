@@ -11,7 +11,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Clock, Context, DateTime, Duration, Effect, Inspectable, Layer, Queue, Ref, Stream } from "effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -101,7 +100,7 @@ export class JobWithMetadata extends S.Class<JobWithMetadata>($I`JobWithMetadata
  *     timestamp: "2026-07-25T12:00:00.000Z"
  *   }
  * })
- * console.log(O.exists(entry, EventEntry.is)) // true
+ * console.log(O.exists(entry, S.is(EventEntry))) // true
  * console.log(O.map(entry, (value) => value.event)) // Some("ClaimCorrected")
  * ```
  *
@@ -111,8 +110,7 @@ export class JobWithMetadata extends S.Class<JobWithMetadata>($I`JobWithMetadata
 export const EventEntry = S.toType(OntologyEventEntry).pipe(
   $I.annoteSchema("EventEntry", {
     description: "Canonical journal event payload consumed by EventBus subscribers.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
+  })
 );
 
 /**
@@ -348,7 +346,7 @@ export const EventBusServiceMemory = Layer.effect(
       Effect.gen(function* () {
         const now = yield* DateTime.now;
         const sequence = yield* Ref.getAndUpdate(eventIdCounter, (value) => value + 1);
-        const entry = yield* EventEntry.decodeUnknownEffect({
+        const entry = yield* S.decodeUnknownEffect(EventEntry)({
           id: `evt_${yield* Clock.currentTimeMillis}_${sequence}`,
           event: prepared.event,
           primaryKey: prepared.primaryKey,
@@ -686,7 +684,7 @@ export const EventBusServiceSql = Layer.effect(
         Stream.mapEffect((entry) =>
           Effect.gen(function* () {
             const payload = yield* decodeEventPayload(entry.event, entry.payload);
-            return yield* EventEntry.decodeUnknownEffect({
+            return yield* S.decodeUnknownEffect(EventEntry)({
               id: entry.idString,
               event: entry.event,
               primaryKey: entry.primaryKey,

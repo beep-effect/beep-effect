@@ -30,7 +30,8 @@ export * as Error from "./Error/index.ts";
  * **Example** (Use index)
  * ```ts
  * import { Identity } from "@effect-ontology/index"
- * console.log(Identity.ContentHash.is("a".repeat(64))) // true
+ * import * as S from "effect/Schema"
+ * console.log(S.is(Identity.ContentHash)("a".repeat(64))) // true
  * ```
  *
  * @category interop
@@ -56,7 +57,8 @@ export * as Model from "./Model/index.ts";
  * **Example** (Use index)
  * ```ts
  * import { PathLayout } from "@effect-ontology/index"
- * console.log(PathLayout.StoragePathSegment.is("article-42")) // true
+ * import * as S from "effect/Schema"
+ * console.log(S.is(PathLayout.StoragePathSegment)("article-42")) // true
  * ```
  *
  * @category interop

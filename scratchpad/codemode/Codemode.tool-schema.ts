@@ -6,7 +6,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { A, O, P, pipe, R, Str } from "@beep/utils";
 import { Effect, flow, HashSet, JsonPointer, Result, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
@@ -132,7 +131,6 @@ const renderLiteral = (value: unknown): string =>
  * @since 0.0.0
  */
 export const IdentifierSegment = S.String.check(S.isPattern(/^[A-Za-z_$][A-Za-z0-9_$]*$/u)).pipe(
-  SchemaUtils.withCodecStatics(["is"]),
   $I.annoteSchema("IdentifierSegment", {
     description: "An ECMAScript identifier segment safe to render after a dot.",
   })
@@ -163,7 +161,7 @@ export type IdentifierSegment = typeof IdentifierSegment.Type;
  * @category guards
  * @since 0.0.0
  */
-export const identifierSegment = IdentifierSegment.is;
+export const identifierSegment = S.is(IdentifierSegment);
 
 const renderKey = (name: string): string => (identifierSegment(name) ? name : renderLiteral(name));
 

@@ -1,7 +1,8 @@
 import { $RepoConfigsId } from "@beep/identity";
-import { NativePathToPosixPath, SchemaUtils } from "@beep/schema";
+import { NativePathToPosixPath } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, flow, Inspectable, pipe, Result, SchemaIssue, SchemaTransformation } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { parse, printParseErrorCode } from "jsonc-parser";
@@ -91,7 +92,7 @@ export class EffectLawsAllowlistLookupKey extends S.Class<EffectLawsAllowlistLoo
     description: "Normalized key used to compare effect-law findings with allowlist entries.",
   })
 ) {
-  static readonly equivalence = SchemaUtils.toEquivalence(EffectLawsAllowlistLookupKey);
+  static readonly equivalence = S.toEquivalence(EffectLawsAllowlistLookupKey);
 }
 
 const encodeUnsupported = (transformationName: string) => (): Effect.Effect<string, SchemaIssue.Issue> =>
@@ -134,17 +135,15 @@ export const AllowlistJsoncTextToUnknown = S.String.pipe(
   ),
   $I.annoteSchema("AllowlistJsoncTextToUnknown", {
     description: "JSONC text transformation that parses allowlist source into unknown data.",
-  }),
-  SchemaUtils.withStatics((self) => ({
-    decodeDocumentEffect: S.decodeUnknownEffect(self.pipe(S.decodeTo(EffectLawsAllowlistDocument))),
-  }))
+  })
 );
 
-// unary by contract: `options` stays reachable through the schema statics these alias;
-// a dual is undecidable here because `input` is `unknown`.
+const AllowlistJsoncTextToDocument = AllowlistJsoncTextToUnknown.pipe(S.decodeTo(EffectLawsAllowlistDocument));
+
+// unary by contract: a dual is undecidable here because `input` is `unknown`.
 export const decodeAllowlistDocumentFromJsoncText: (
   input: unknown
-) => Effect.Effect<EffectLawsAllowlistDocument, S.SchemaError> = AllowlistJsoncTextToUnknown.decodeDocumentEffect;
+) => Effect.Effect<EffectLawsAllowlistDocument, S.SchemaError> = S.decodeUnknownEffect(AllowlistJsoncTextToDocument);
 
 export const decodeAllowlistCheckInput: (input: unknown) => O.Option<EffectLawsAllowlistCheckInput> =
   EffectLawsAllowlistCheckInput.decodeOption;
@@ -154,7 +153,10 @@ export const encodeAllowlistSnapshot = (
   input: EffectLawsAllowlistSnapshot
 ): (typeof EffectLawsAllowlistSnapshot)["Encoded"] =>
   Result.getOrThrow(EffectLawsAllowlistSnapshot.encodeResult(input));
-export const areLookupKeysEquivalent = EffectLawsAllowlistLookupKey.equivalence;
+export const areLookupKeysEquivalent: {
+  (that: EffectLawsAllowlistLookupKey): (self: EffectLawsAllowlistLookupKey) => boolean;
+  (self: EffectLawsAllowlistLookupKey, that: EffectLawsAllowlistLookupKey): boolean;
+} = dual(2, EffectLawsAllowlistLookupKey.equivalence);
 
 export const formatSchemaDiagnostics = (issue: SchemaIssue.Issue): ReadonlyArray<string> => {
   const formatter = SchemaIssue.makeFormatterStandardSchemaV1();

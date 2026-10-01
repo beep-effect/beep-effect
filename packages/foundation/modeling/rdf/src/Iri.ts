@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RdfId } from "@beep/identity/packages";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, Str } from "@beep/utils";
 import { Number as N, pipe } from "effect";
 import * as O from "effect/Option";
@@ -870,10 +869,6 @@ const iriChecks = makeNonEmptyReferenceChecks("IRI", "IRI", "An RFC 3987 IRI.", 
 export const IRIReference = S.String.pipe(
   S.check(iriReferenceChecks),
   S.brand("IRIReference"),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
-  SchemaUtils.withStatics((schema) => ({
-    equivalence: SchemaUtils.toEquivalence(schema),
-  })),
   $I.annoteSchema("IRIReference", {
     description: "RFC 3987 IRI reference syntax, including both absolute and relative forms.",
   })
@@ -916,8 +911,7 @@ export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks).p
   S.brand("RelativeIRIReference"),
   $I.annoteSchema("RelativeIRIReference", {
     description: "RFC 3987 relative IRI reference syntax (`irelative-ref`).",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -958,8 +952,7 @@ export const AbsoluteIRI = S.String.pipe(
   S.brand("AbsoluteIRI"),
   $I.annoteSchema("AbsoluteIRI", {
     description: "RFC 3987 absolute IRI syntax without a fragment component.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -1000,14 +993,7 @@ export const IRI = S.String.pipe(
   S.brand("IRI"),
   $I.annoteSchema("IRI", {
     description: "RFC 3987 IRI syntax.",
-  }),
-  SchemaUtils.withCodecStatics([
-    "decodeEffect",
-    "decodeUnknownOption",
-    "decodeUnknownResult",
-    "decodeUnknownSync",
-    "is",
-  ])
+  })
 );
 
 /**

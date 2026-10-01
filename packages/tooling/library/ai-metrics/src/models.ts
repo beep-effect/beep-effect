@@ -198,7 +198,6 @@ export const CodexTranscriptEventName = LiteralKit([
   "turn_context",
   "user_message",
 ]).pipe(
-  SchemaUtils.withStatics((schema) => ({ isAny: S.is(schema) })),
   $I.annoteSchema("CodexTranscriptEventName", {
     description: "Bounded event-name vocabulary accepted from Codex transcript records.",
   })
@@ -235,7 +234,6 @@ export const ClaudeTranscriptEventName = LiteralKit([
   "tool_use",
   "user",
 ]).pipe(
-  SchemaUtils.withStatics((schema) => ({ isAny: S.is(schema) })),
   $I.annoteSchema("ClaudeTranscriptEventName", {
     description: "Bounded event-name vocabulary accepted from Claude transcript records.",
   })
@@ -274,7 +272,6 @@ export const OpenClawTranscriptEventName = LiteralKit([
   "tool_call",
   "tool_result",
 ]).pipe(
-  SchemaUtils.withStatics((schema) => ({ isAny: S.is(schema) })),
   $I.annoteSchema("OpenClawTranscriptEventName", {
     description: "Bounded event-name vocabulary accepted from OpenClaw transcript records.",
   })

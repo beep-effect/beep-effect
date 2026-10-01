@@ -104,7 +104,7 @@ const hasCodeBlockDroppedAttr = (attr: PandocAttr.Type): boolean =>
   attr.id.length > 0 ||
   attr.classes.length > 1 ||
   attr.keyValues.length > 0 ||
-  O.exists(O.fromUndefinedOr(attr.classes[0]), (language) => O.isNone(Md.CodeFenceLanguage.decodeOption(language)));
+  O.exists(O.fromUndefinedOr(attr.classes[0]), (language) => O.isNone(S.decodeOption(Md.CodeFenceLanguage)(language)));
 
 const hasOrderedListMarkerLoss = (node: OrderedList.Type): boolean =>
   node.style !== "DefaultStyle" || node.delimiter !== "DefaultDelim";
@@ -634,7 +634,7 @@ const mdListItemChildrenText = (children: ReadonlyArray<Md.ListItemChild>): stri
   };
 
   for (const child of children) {
-    if (Md.Inline.is(child)) {
+    if (S.is(Md.Inline)(child)) {
       A.appendInPlace(pendingInlines, child);
     } else {
       flushInlines();
@@ -673,7 +673,7 @@ const mdListItemChildrenToPandocBlocks = Effect.fn("mdListItemChildrenToPandocBl
     }
   });
   for (const [index, child] of children.entries()) {
-    if (Md.Inline.is(child)) {
+    if (S.is(Md.Inline)(child)) {
       if (pendingInlines.length === 0) {
         pendingStartIndex = index;
       }
@@ -857,7 +857,7 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
           // Pandoc code-block classes are arbitrary external tokens; fold the
           // first class through CodeFenceLanguage so non-conforming hints drop
           // to None (matching the Pre codec) instead of throwing on construction.
-          language: O.flatMap(O.fromUndefinedOr(node.attr.classes[0]), Md.CodeFenceLanguage.decodeOption),
+          language: O.flatMap(O.fromUndefinedOr(node.attr.classes[0]), S.decodeOption(Md.CodeFenceLanguage)),
           value: node.text,
         }),
       })

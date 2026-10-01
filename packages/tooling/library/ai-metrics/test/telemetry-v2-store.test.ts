@@ -4,11 +4,14 @@ import {
   FlightRecordCompositionInput,
   FlightRecordCompositionInputArbitrary,
   FlightRecordWriteEvent,
+  FlightRecordWriteEventJson,
   IngestEnumeration,
   IngestManifest,
   requireAbsoluteAiMetricsDataRoot,
   SessionLeaseReconciliation,
+  SessionLeaseReconciliationJson,
   SessionLeaseTransition,
+  SessionLeaseTransitionJson,
   TelemetryV2Store,
 } from "@beep/repo-ai-metrics";
 import { it } from "@beep/test-runner";
@@ -156,7 +159,7 @@ it.layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
         const first = yield* store.writeFlightRecord(input);
         const second = yield* store.writeFlightRecord(input);
-        const persisted = yield* FlightRecordWriteEvent.decodeJsonEffect(
+        const persisted = yield* S.decodeEffect(FlightRecordWriteEventJson)(
           yield* fs.readFileString(path.join(dataRoot, first.receipt.relativePath))
         );
 
@@ -187,7 +190,7 @@ it.layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
         const receipt = yield* store.appendFlightRecordEvent(invalidEvent);
         const persistedText = yield* fs.readFileString(path.join(dataRoot, receipt.relativePath));
-        const persisted = yield* FlightRecordWriteEvent.decodeJsonEffect(persistedText);
+        const persisted = yield* S.decodeEffect(FlightRecordWriteEventJson)(persistedText);
 
         expect(persisted.status).toBe("invalid");
         expect(persistedText).not.toMatch(/"(?:prompt|command|toolArgument|toolResult|path)"/iu);
@@ -217,10 +220,10 @@ it.layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
         const transitionReceipt = yield* store.appendSessionLeaseTransition(transition);
         const reconciliationReceipt = yield* store.appendSessionLeaseReconciliation(reconciliation);
-        const persistedTransition = yield* SessionLeaseTransition.decodeJsonEffect(
+        const persistedTransition = yield* S.decodeEffect(SessionLeaseTransitionJson)(
           yield* fs.readFileString(path.join(dataRoot, transitionReceipt.relativePath))
         );
-        const persistedReconciliation = yield* SessionLeaseReconciliation.decodeJsonEffect(
+        const persistedReconciliation = yield* S.decodeEffect(SessionLeaseReconciliationJson)(
           yield* fs.readFileString(path.join(dataRoot, reconciliationReceipt.relativePath))
         );
 

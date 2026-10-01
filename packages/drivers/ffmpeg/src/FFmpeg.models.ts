@@ -6,7 +6,6 @@
  */
 
 import { $FfmpegId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -54,8 +53,7 @@ export const PositiveFrameRate = S.Finite.check(
 ).pipe(
   $I.annoteSchema("PositiveFrameRate", {
     description: "Positive finite frame extraction rate in frames per second.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**
@@ -179,8 +177,7 @@ export const SafeFramePrefix = S.String.check(
 ).pipe(
   $I.annoteSchema("SafeFramePrefix", {
     description: "Frame filename prefix that cannot escape the output directory.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
+  })
 );
 
 /**
@@ -226,8 +223,7 @@ export const NonNegativeSeconds = S.Finite.check(
 ).pipe(
   $I.annoteSchema("NonNegativeSeconds", {
     description: "Non-negative finite duration measured in seconds.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**
@@ -273,8 +269,7 @@ export const FrameIndex = S.Int.check(
 ).pipe(
   $I.annoteSchema("FrameIndex", {
     description: "Zero-based non-negative integer frame index.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**
@@ -320,8 +315,7 @@ export const FrameCount = S.Int.check(
 ).pipe(
   $I.annoteSchema("FrameCount", {
     description: "Non-negative integer frame count.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
+  })
 );
 
 /**

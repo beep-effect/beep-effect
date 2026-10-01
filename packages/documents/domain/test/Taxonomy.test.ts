@@ -80,12 +80,14 @@ describe("@beep/documents-domain taxonomy seed", () => {
   );
 
   it("retains native tagged-union utilities alongside its selected decoder", () => {
-    const outcome = FilingOutcome.decodeUnknownSync({
-      confidence: 1,
-      kind: "filed",
-      rationale: "Matched deterministic taxonomy token for pleadings.",
-      taxonomyConceptId: "pleadings",
-    });
+    const outcome = Result.getOrThrow(
+      S.decodeResult(FilingOutcome)({
+        confidence: 1,
+        kind: "filed",
+        rationale: "Matched deterministic taxonomy token for pleadings.",
+        taxonomyConceptId: "pleadings",
+      })
+    );
 
     pipe(FilingOutcome.guards.filed(outcome), assertTrue);
     expect(FilingOutcome.match(outcome, { filed: () => "filed", inboxed: () => "inboxed" })).toBe("filed");

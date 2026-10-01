@@ -144,32 +144,44 @@ Normal host, network, application, or timeout failures still require diagnosis.
 The 14-instance cap limits concurrency, not a monthly budget: billing continues
 for each running VM until its ephemeral teardown completes.
 
-## Deployment evidence — pending (2026-10-01 Spot pool spread)
+## Deployment evidence — 2026-10-01 (Spot pool spread)
 
-The source change sets `instance_allocation_strategy` to `capacity-optimized`,
-widens `runnerInstanceTypes` to eight 64 GiB x86_64 types (`r7a.2xlarge`,
-`r7i.2xlarge`, `r6i.2xlarge`, `r6a.2xlarge`, `m7a.4xlarge`, `m7i.4xlarge`,
-`m6a.4xlarge`, `m6i.4xlarge`), and adds public subnets C, D and E in
-`us-east-1c`, `us-east-1d` and `us-east-1f` (`10.88.32.0/20`,
-`10.88.48.0/20`, `10.88.64.0/20`) on the existing public route table. Purchase
-model, the two-worker cap and the empty On-Demand failover list are unchanged.
-It is not deployed. The operator runs the steps from "Deploy and verify":
+Source: `instance_allocation_strategy` `capacity-optimized`, eight 64 GiB
+x86_64 instance types (`r7a.2xlarge`, `r7i.2xlarge`, `r6i.2xlarge`,
+`r6a.2xlarge`, `m7a.4xlarge`, `m7i.4xlarge`, `m6a.4xlarge`, `m6i.4xlarge`), and
+public subnets C, D and E in `us-east-1c`, `us-east-1d` and `us-east-1f`
+(`10.88.32.0/20`, `10.88.48.0/20`, `10.88.64.0/20`) on the existing public
+route table. Purchase model, the two-worker cap and the empty On-Demand
+failover list are unchanged.
 
-1. `op run --env-file=<path> -- true >/dev/null`, then use the same wrapper for
-   Pulumi against the S3 backend and the `production` stack in
-   `infra/ci-runners`.
-2. `bun run beep quality package-verify @beep/infra`.
-3. Review a saved Pulumi preview. Expected changes: three new subnets and three
-   route-table associations, and scale-up Lambda environment updates for the
-   strategy, instance types and subnet list. Existing subnets
-   A and B, the security groups, the AMI, the cap and the purchase model must
-   not change.
-4. Apply the reviewed plan with the operator attending (`pulumi up -s
-   production`), then confirm with `pulumi preview --expect-no-changes`.
-5. Confirm a heavy job succeeds on a newly launched Spot worker, and record
-   the launch types and zones here. Over the following days, repeat the
-   reclaim count from "Attribute a runner loss" to compare with the 41
-   evictions per 564 launches baseline.
+- Applied 2026-10-01 12:03–12:05 UTC from a clean `origin/main` checkout with a
+  saved plan (`pulumi preview --diff --refresh --save-plan`, then
+  `pulumi up --plan`), the operator confirming the reviewed preview first:
+  6 created (three subnets, three route-table associations), 4 updated (AWS
+  provider version, the runner module, the scale-up Lambda environment and a
+  new launch-template version), 210 unchanged, no deletions or replacements.
+- Pulumi's recorded state predated the 2026-09-15 containment, which had been
+  applied as live Lambda edits. The preview therefore also showed On-Demand to
+  Spot, cap 14 to 2, the failover list removal and
+  `scale_up_reserved_concurrent_executions: 1`. Each was compared with the live
+  Lambda configuration and concurrency before the apply and was already live;
+  the apply only brought the state in line. Diff a preview against the live
+  configuration, not against the state alone.
+- A second `pulumi preview --refresh --expect-no-changes` reported 220
+  unchanged resources.
+- The apply resets `RUNNERS_MAXIMUM_COUNT` to the source value. A temporary
+  burst cap that was live during the apply was re-applied afterwards with that
+  burst's own `set-cap.sh`, after the no-drift check, and its restore guard was
+  left in place.
+- Live check after the apply: the scale-up Lambda environment carries
+  `capacity-optimized`, `spot`, all eight types and five subnet ids; all five
+  subnets are `available` and route `0.0.0.0/0` to the internet gateway. The
+  first three workers launched after the apply were two `m6a.4xlarge` in
+  `us-east-1a` and one `m7i.4xlarge` in `us-east-1d`, all Spot.
+- Open: repeat the reclaim count from "Attribute a runner loss" over the
+  following days and compare with the baseline of 41 evictions per 564
+  launches before deciding whether to shard the Coverage Regression and Lint
+  Policy lanes.
 
 ## Deployment evidence — 2026-09-09
 

@@ -76,9 +76,10 @@ export interface SegmentStrategy<I, B> {
  * import { Inline } from "@beep/md/Md.model"
  * import { segmentInlineRuns } from "@beep/md/Md.behavior"
  * import { Md } from "@beep/md"
+ * import * as S from "effect/Schema"
  *
  * const segments = segmentInlineRuns([Md.text("a"), Md.text("b"), Md.p("para")], {
- *   isInline: Inline.is,
+ *   isInline: S.is(Inline),
  *   renderInlineRun: (run) => `inline:${run.length}`,
  *   renderBlock: (block) => `block:${block._tag}`,
  * })

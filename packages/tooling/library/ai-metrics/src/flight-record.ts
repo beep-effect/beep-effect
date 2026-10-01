@@ -679,9 +679,7 @@ export const FlightRecordWriteEvent = S.Union([
   $I.annoteSchema("FlightRecordWriteEvent", {
     description: "Accepted record or content-free invalid/quarantine receipt, preventing silent decoder drops.",
   }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeJsonEffect: S.decodeUnknownEffect(S.fromJsonString(schema)),
-    encodeJsonEffect: S.encodeUnknownEffect(S.fromJsonString(schema)),
+  SchemaUtils.withStatics(() => ({
     makeAccepted: (record: FlightRecord): FlightRecordWriteEvent => AcceptedFlightRecordWrite.make({ record }),
   }))
 );
@@ -694,3 +692,22 @@ export const FlightRecordWriteEvent = S.Union([
  * @since 0.0.0
  */
 export type FlightRecordWriteEvent = typeof FlightRecordWriteEvent.Type;
+
+/**
+ * FlightRecordWriteEvent encoded as one JSON string, the line format the telemetry-v2 store
+ * appends and reads back.
+ *
+ * **Example** (Round-trip a flight-record write line)
+ *
+ * ```ts
+ * import { FlightRecordWriteEventJson } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * const decode = S.decodeUnknownEffect(FlightRecordWriteEventJson)
+ * console.log(typeof decode) // "function"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FlightRecordWriteEventJson = S.fromJsonString(FlightRecordWriteEvent);

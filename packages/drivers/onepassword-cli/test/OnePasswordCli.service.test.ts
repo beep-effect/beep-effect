@@ -75,7 +75,7 @@ const missingRunner = (_command: string, _args: ReadonlyArray<string>) =>
 describe("@beep/onepassword-cli", () => {
   it("keeps encoded 1Password CLI wire shapes byte-identical", () => {
     const account = OnePasswordCliAccount.make({
-      account: O.some(OnePasswordCliDiagnosticText.decodeUnknownSync("example.1password.com")),
+      account: O.some(Result.getOrThrow(S.decodeResult(OnePasswordCliDiagnosticText)("example.1password.com"))),
       signedIn: true,
     });
     const signedOutAccount = OnePasswordCliAccount.make({
@@ -84,16 +84,16 @@ describe("@beep/onepassword-cli", () => {
     const errorOptions = OnePasswordCliErrorOptions.make({
       command: O.some("op"),
       exitCode: O.some(OnePasswordCliExitCode.make(1)),
-      stderr: O.some(OnePasswordCliDiagnosticText.decodeUnknownSync(" secret not found\n")),
-      stdout: O.some(OnePasswordCliDiagnosticText.decodeUnknownSync("")),
+      stderr: O.some(Result.getOrThrow(S.decodeResult(OnePasswordCliDiagnosticText)(" secret not found\n"))),
+      stdout: O.some(Result.getOrThrow(S.decodeResult(OnePasswordCliDiagnosticText)(""))),
     });
     const error = OnePasswordCliError.make({
       command: O.some("op"),
       exitCode: O.some(OnePasswordCliExitCode.make(1)),
       message: "1Password CLI could not resolve the secret reference.",
       operation: "read",
-      stderr: O.some(OnePasswordCliDiagnosticText.decodeUnknownSync("secret not found")),
-      stdout: O.some(OnePasswordCliDiagnosticText.decodeUnknownSync("")),
+      stderr: O.some(Result.getOrThrow(S.decodeResult(OnePasswordCliDiagnosticText)("secret not found"))),
+      stdout: O.some(Result.getOrThrow(S.decodeResult(OnePasswordCliDiagnosticText)(""))),
     });
     const processResult = OnePasswordCliProcessResult.make({
       exitCode: OnePasswordCliExitCode.make(0),

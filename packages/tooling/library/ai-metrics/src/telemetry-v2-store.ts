@@ -12,14 +12,15 @@ import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FlightRecord, FlightRecordWriteEvent } from "./flight-record.ts";
+import { FlightRecord, FlightRecordWriteEvent, FlightRecordWriteEventJson } from "./flight-record.ts";
 import { IngestEnumeration, IngestManifest } from "./ingest-manifest.ts";
 import { hashPublicTextSha256 } from "./privacy.ts";
-import { SessionLeaseReconciliation, SessionLeaseTransition } from "./session-lease.ts";
+import { SessionLeaseReconciliationJson, SessionLeaseTransitionJson } from "./session-lease.ts";
 import { combineOipTaints, weakestEvidenceTier } from "./telemetry-v2.ts";
 import type { AiMetricsAbsoluteDataRoot } from "./data-root.ts";
 import type { FlightRecordCompositionInput } from "./flight-record.ts";
 import type { IngestSubject } from "./ingest-manifest.ts";
+import type { SessionLeaseReconciliation, SessionLeaseTransition } from "./session-lease.ts";
 
 const $I = $RepoAiMetricsId.create("telemetry-v2-store");
 const artifactReceiptSchemaVersion = "telemetry-v2/artifact-receipt/v1";
@@ -320,7 +321,7 @@ const makeTelemetryV2Store = Effect.fnUntraced(function* (dataRoot: AiMetricsAbs
   const appendFlightRecordEvent = Effect.fn("TelemetryV2Store.appendFlightRecordEvent")(function* (
     event: FlightRecordWriteEvent
   ) {
-    const json = yield* FlightRecordWriteEvent.encodeJsonEffect(event).pipe(
+    const json = yield* S.encodeUnknownEffect(FlightRecordWriteEventJson)(event).pipe(
       Effect.mapError((cause) =>
         storeFailure("encode-flight-record-event", "Failed to encode a flight-record write event.", cause)
       )
@@ -363,7 +364,7 @@ const makeTelemetryV2Store = Effect.fnUntraced(function* (dataRoot: AiMetricsAbs
   const appendSessionLeaseTransition = Effect.fn("TelemetryV2Store.appendSessionLeaseTransition")(function* (
     transition: SessionLeaseTransition
   ) {
-    const json = yield* SessionLeaseTransition.encodeJsonEffect(transition).pipe(
+    const json = yield* S.encodeUnknownEffect(SessionLeaseTransitionJson)(transition).pipe(
       Effect.mapError((cause) =>
         storeFailure("encode-session-lease-transition", "Failed to encode a session-lease transition.", cause)
       )
@@ -374,7 +375,7 @@ const makeTelemetryV2Store = Effect.fnUntraced(function* (dataRoot: AiMetricsAbs
   const appendSessionLeaseReconciliation = Effect.fn("TelemetryV2Store.appendSessionLeaseReconciliation")(function* (
     reconciliation: SessionLeaseReconciliation
   ) {
-    const json = yield* SessionLeaseReconciliation.encodeJsonEffect(reconciliation).pipe(
+    const json = yield* S.encodeUnknownEffect(SessionLeaseReconciliationJson)(reconciliation).pipe(
       Effect.mapError((cause) =>
         storeFailure("encode-session-lease-reconciliation", "Failed to encode a session-lease reconciliation.", cause)
       )
@@ -430,8 +431,9 @@ const makeTelemetryV2Store = Effect.fnUntraced(function* (dataRoot: AiMetricsAbs
  * ```ts
  * import { AiMetricsAbsoluteDataRoot, TelemetryV2Store } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
- * const root = Effect.runSync(AiMetricsAbsoluteDataRoot.decodeEffect("/var/lib/beep/ai-metrics"))
+ * const root = Effect.runSync(S.decodeEffect(AiMetricsAbsoluteDataRoot)("/var/lib/beep/ai-metrics"))
  * const layer = TelemetryV2Store.layer(root)
  * console.log(layer)
  * ```
@@ -448,8 +450,9 @@ export class TelemetryV2Store extends Context.Service<TelemetryV2Store, Telemetr
    * ```ts
    * import { AiMetricsAbsoluteDataRoot, TelemetryV2Store } from "@beep/repo-ai-metrics"
    * import { Effect } from "effect"
+   * import * as S from "effect/Schema"
    *
-   * const root = Effect.runSync(AiMetricsAbsoluteDataRoot.decodeEffect("/var/lib/beep/ai-metrics"))
+   * const root = Effect.runSync(S.decodeEffect(AiMetricsAbsoluteDataRoot)("/var/lib/beep/ai-metrics"))
    * console.log(TelemetryV2Store.layer(root))
    * ```
    *

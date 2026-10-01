@@ -349,7 +349,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       }
 
       const canonical = canonicalOpt.value;
-      const canonicalEntityId = yield* CanonicalEntityId.decodeEffect(canonical.id);
+      const canonicalEntityId = yield* S.decodeEffect(CanonicalEntityId)(canonical.id);
 
       // Embed the alias
       const prefixedMention = `${action.ontologyId}: ${action.aliasMention}`;

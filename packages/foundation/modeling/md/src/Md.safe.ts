@@ -533,7 +533,7 @@ const unsafeUrlIssue: {
     path: SafetyPath
   ): ReadonlyArray<DocumentSafetyViolation> => {
     const policy = destinationKind === "image" ? UserContentImageUrlPolicySpec : UserContentLinkUrlPolicySpec;
-    const isSafeHtmlUrl = destinationKind === "image" ? SafeImageUrlAttribute.is : SafeUrlAttribute.is;
+    const isSafeHtmlUrl = destinationKind === "image" ? S.is(SafeImageUrlAttribute) : S.is(SafeUrlAttribute);
 
     return isUrlDestinationAllowedWithPolicy(destination, policy) && isSafeHtmlUrl(destination)
       ? []
@@ -595,7 +595,7 @@ const inlineSafetyIssues: {
 );
 
 const listItemChildSafetyIssues = (child: ListItemChild, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation> =>
-  Inline.is(child) ? inlineSafetyIssues(child, path) : blockSafetyIssues(child, path);
+  S.is(Inline)(child) ? inlineSafetyIssues(child, path) : blockSafetyIssues(child, path);
 
 const listChildrenSafetyIssues = (
   children: ReadonlyArray<{ readonly children: ReadonlyArray<ListItemChild> }>,
@@ -649,7 +649,7 @@ const listItemChildFootnoteDefinitionOccurrences = (
   child: ListItemChild,
   path: SafetyPath
 ): ReadonlyArray<FootnoteDefinitionOccurrence> =>
-  Inline.is(child) ? A.emptyReadonly() : blockFootnoteDefinitionOccurrences(child, path);
+  S.is(Inline)(child) ? A.emptyReadonly() : blockFootnoteDefinitionOccurrences(child, path);
 
 const listFootnoteDefinitionOccurrences = (
   children: ReadonlyArray<{ readonly children: ReadonlyArray<ListItemChild> }>,

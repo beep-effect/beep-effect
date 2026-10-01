@@ -7,7 +7,6 @@
 
 import { $SharedDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as S from "effect/Schema";
 
 const $I = $SharedDomainId.create("entity/SourceKind");
 const SourceKindBase = LiteralKit(["User", "Agent", "Admin", "Application", "System", "Sync", "Connector"]);
@@ -16,11 +15,7 @@ const SourceKindWithStatics = SourceKindBase.pipe(
   $I.annoteSchema("SourceKind", {
     description: "Canonical denormalized source of persisted entity data.",
   }),
-  SchemaUtils.withLiteralKitStatics(SourceKindBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownResult(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(SourceKindBase)
 );
 
 type SourceKindSchemaBase = typeof SourceKindWithStatics;

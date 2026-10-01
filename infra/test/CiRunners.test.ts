@@ -289,7 +289,7 @@ describe("@beep/infra CiRunners", () => {
   it.effect(
     "decodes optional Pulumi config shape",
     Effect.fnUntraced(function* () {
-      const decoded = yield* CiRunnersPulumiConfigValues.decodeEffect({
+      const decoded = yield* S.decodeEffect(CiRunnersPulumiConfigValues)({
         instanceType: "m7i.2xlarge",
         rootVolumeSizeGb: 150,
       });

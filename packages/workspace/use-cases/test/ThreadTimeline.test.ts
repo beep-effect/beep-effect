@@ -103,7 +103,7 @@ describe("ThreadTimeline", () => {
       };
       const timeline = yield* decodeUnknownThreadThreadTimeline(wireTimeline);
       expect(yield* encodeThreadThreadTimeline(timeline)).toStrictEqual(wireTimeline);
-      expect(Thread.TimelineItem.is(timeline.turns[0]?.items[0])).toBe(true);
+      expect(S.is(Thread.TimelineItem)(timeline.turns[0]?.items[0])).toBe(true);
 
       expect(
         yield* decodeThreadTimelineTurn({
@@ -116,7 +116,7 @@ describe("ThreadTimeline", () => {
       ).toBeDefined();
 
       const unavailable = ServerThread.ThreadStoreUnavailable.make({ reason: "database unavailable" });
-      expect(ServerThread.ThreadStoreError.is(unavailable)).toBe(true);
+      expect(S.is(ServerThread.ThreadStoreError)(unavailable)).toBe(true);
       expect(yield* encodeServerThreadThreadStoreError(unavailable)).toStrictEqual({
         _tag: "ThreadStoreUnavailable",
         reason: "database unavailable",

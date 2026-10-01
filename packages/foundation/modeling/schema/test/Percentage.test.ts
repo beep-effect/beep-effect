@@ -14,11 +14,12 @@ import {
 } from "@beep/schema/Percentage";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import * as S from "effect/Schema";
 
 describe("Percentage", () => {
   it("exposes only the selected schema guard", () => {
-    expect(Percentage.is(0)).toBe(true);
-    expect(Percentage.is(100)).toBe(true);
+    expect(S.is(Percentage)(0)).toBe(true);
+    expect(S.is(Percentage)(100)).toBe(true);
     expect(isPercentage(50.5)).toBe(true);
     expect(isPercentage(-1)).toBe(false);
     expect(isPercentage(101)).toBe(false);

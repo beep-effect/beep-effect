@@ -15,7 +15,6 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Percentage } from "@beep/schema/Percentage";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { DateTime, Duration, Effect, pipe } from "effect";
 import * as O from "effect/Option";
@@ -1862,7 +1861,6 @@ export const ProgressEvent = S.Union([
   RateLimitedEvent,
 ]).pipe(
   S.toTaggedUnion("_tag"),
-  SchemaUtils.withStatics((schema) => ({ decodeUnknownEffect: S.decodeUnknownEffect(schema) })),
   $I.annoteSchema("ProgressEvent", {
     description: "Exhaustive discriminated union of extraction progress stream events.",
   })

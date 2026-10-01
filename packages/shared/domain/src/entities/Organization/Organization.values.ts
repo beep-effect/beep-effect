@@ -37,11 +37,7 @@ export const LicenseTier = LicenseTierBase.pipe(
   $I.annoteSchema("LicenseTier", {
     description: "Commercial license tier assigned to a shared-kernel organization.",
   }),
-  SchemaUtils.withLiteralKitStatics(LicenseTierBase),
-  SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownResult(schema),
-    decodeOption: S.decodeUnknownOption(schema),
-  }))
+  SchemaUtils.withLiteralKitStatics(LicenseTierBase)
 );
 
 /**

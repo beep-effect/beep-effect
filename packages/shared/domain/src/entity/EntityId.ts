@@ -101,8 +101,7 @@ export const EntityIdValue = PosInt.check(
   S.brand("EntityIdValue"),
   $I.annoteSchema("EntityIdValue", {
     description: "Storage-neutral positive integer used by shared-kernel persisted entity ids.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync", "is"])
+  })
 );
 
 /**
@@ -430,61 +429,10 @@ type EntityIdEquivalence<TBrand extends string> = {
   bivarianceHack(self: EntityIdValueFor<TBrand>, that: EntityIdValueFor<TBrand>): boolean;
 }["bivarianceHack"];
 
-type EntityIdSchema<TBrand extends string> = S.Codec<EntityIdValueFor<TBrand>, number>;
-
-/**
- * Codec statics carried by every entity id built with {@link factory}.
- *
- * **Details**
- *
- * The factory pipes each branded id schema through
- * The factory selects the direct codec runners used across the entity-id
- * fleet: `is`, `decodeUnknownSync`, `decodeUnknownOption`, `decodeEffect`,
- * `decodeUnknownEffect`, `encodeEffect`, and `encodeUnknownEffect`. JSON
- * boundaries remain explicit `S.fromJsonString(...)` schemas. The dual
- * `equivalence` helper is omitted because the factory deliberately attaches
- * its own plain two-argument entity-id equivalence.
- *
- * **Example** (Guard through factory-attached codec statics)
- *
- * ```ts
- * import { $SharedDomainId } from "@beep/identity/packages"
- * import * as EntityId from "@beep/shared-domain/entity/EntityId"
- *
- * const $I = $SharedDomainId.create("identity/Shared")
- * const OrganizationId = EntityId.factory("shared", $I)("organization")
- * const statics: EntityId.EntityIdCodecStatics<"SharedOrganizationId"> = OrganizationId
- *
- * console.log(statics.is(1))
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type EntityIdCodecStatics<TBrand extends string> = SchemaUtils.SelectedCodecStatics<
-  EntityIdSchema<TBrand>,
-  readonly [
-    "decodeEffect",
-    "decodeUnknownEffect",
-    "decodeUnknownOption",
-    "decodeUnknownSync",
-    "encodeEffect",
-    "encodeUnknownEffect",
-    "is",
-  ]
->;
-
 const decodeOptionsResult = S.decodeUnknownResult(Options);
 
 /**
  * Any entity id schema produced by {@link factory}.
- *
- * **Gotchas**
- *
- * `Any` intentionally omits {@link EntityIdCodecStatics}: widening it would
- * break `extends EntityId.Any` consumers through `Brand` invariance. Narrowing
- * a factory id to `Any` keeps the entity metadata statics but drops the codec
- * groups, so keep the concrete id type when you need them.
  *
  * **Example** (Any factory entity id)
  *
@@ -515,8 +463,7 @@ type Maker<Slice extends string> = <
   ResolvedResource<Slice, Name, Overrides>,
   ResolvedEntityType<Slice, Name, Overrides>,
   ResolvedBrand<Slice, Name, Overrides>
-> &
-  EntityIdCodecStatics<ResolvedBrand<Slice, Name, Overrides>>;
+>;
 
 type Factory = {
   <const Slice extends string>(slice: Slice, identity: IdentityComposer<string>): Maker<Slice>;
@@ -612,11 +559,10 @@ const buildDefinition = <
  *
  * **Details**
  *
- * Every produced id schema carries the entity metadata statics plus the
- * selected direct codec surface described by {@link EntityIdCodecStatics}.
- * The codec helpers are attached before the entity metadata statics so the
- * factory's plain entity-id `equivalence` stays canonical, including on
- * schemas produced by a later `.annotate(...)` call.
+ * Every produced id schema carries the entity metadata statics, including a
+ * plain two-argument entity-id `equivalence` that survives a later
+ * `.annotate(...)` call. Decode and guard through the `effect/Schema` free
+ * functions (`S.is(OrganizationId)`, `S.decodeUnknownEffect(OrganizationId)`).
  *
  * **Example** (Build slice-scoped id maker)
  *
@@ -647,8 +593,7 @@ export const factory: Factory = dual(
       ResolvedResource<Slice, Name, Overrides>,
       ResolvedEntityType<Slice, Name, Overrides>,
       ResolvedBrand<Slice, Name, Overrides>
-    > &
-      EntityIdCodecStatics<ResolvedBrand<Slice, Name, Overrides>> => {
+    > => {
       const definition = buildDefinition(slice, name, overrides);
       const schema = EntityIdValue.pipe(
         // S.brand cannot prove a generic brand key is a single literal; each resolved brand is one.
@@ -661,27 +606,14 @@ export const factory: Factory = dual(
       );
       const typedSchema = schema as S.Codec<EntityIdValueFor<ResolvedBrand<Slice, Name, Overrides>>, number>;
 
-      return attachEntityIdStatics(
-        typedSchema.pipe(
-          SchemaUtils.withCodecStatics([
-            "decodeEffect",
-            "decodeUnknownEffect",
-            "decodeUnknownOption",
-            "decodeUnknownSync",
-            "encodeEffect",
-            "encodeUnknownEffect",
-            "is",
-          ])
-        ),
-        {
-          brand: definition.brand,
-          definition,
-          entityType: definition.entityType,
-          equivalence: S.toEquivalence(typedSchema),
-          resource: definition.resource,
-          slice,
-          tableName: definition.tableName,
-        }
-      );
+      return attachEntityIdStatics(typedSchema, {
+        brand: definition.brand,
+        definition,
+        entityType: definition.entityType,
+        equivalence: S.toEquivalence(typedSchema),
+        resource: definition.resource,
+        slice,
+        tableName: definition.tableName,
+      });
     }
 );

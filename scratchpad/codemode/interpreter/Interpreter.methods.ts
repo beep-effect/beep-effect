@@ -170,7 +170,7 @@ const isSupportedRuntimeCallback = RuntimeReference.isAnyOf([
  * @since 0.0.0
  */
 export const isSupportedCallback = (value: unknown): value is SupportedCallback =>
-  RuntimeReference.is(value) &&
+  S.is(RuntimeReference)(value) &&
   isSupportedRuntimeCallback(value) &&
   // Callable namespaces dispatch like JS: Array/Object/Date/RegExp construct,
   // new-requiring constructors throw a TypeError. Math/JSON/console stay non-callable.

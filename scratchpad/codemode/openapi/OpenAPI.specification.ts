@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit } from "@beep/schema";
 import { A, O, P, pipe, R, Str, Struct, thunkEmptyStr } from "@beep/utils";
 import { flow, HashMap, HashSet, Order, Result, Effect } from "effect";
 import { dual } from "effect/Function";
@@ -36,8 +36,8 @@ const decodeURLFromStringResult = S.decodeResult(S.URLFromString);
 const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.specification");
 const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 
-const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics(["is"]));
-const NonEmptyString = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
+const UnknownRecord = S.Record(S.String, S.Unknown);
+const NonEmptyString = S.NonEmptyString;
 const SuccessStatus = S.String.check(S.isPattern(/^2\d\d$/u));
 const isSuccessStatus = S.is(SuccessStatus);
 
@@ -150,7 +150,7 @@ const nestedSchemaMaps = LiteralKit(["patternProperties", "dependentSchemas", "$
  * @category predicates
  * @since 0.0.0
  */
-export const isRecord = UnknownRecord.is;
+export const isRecord = S.is(UnknownRecord);
 
 /**
  * Decodes a non-empty string without scattering nullish checks across the
@@ -170,7 +170,7 @@ export const isRecord = UnknownRecord.is;
  * @category parsing
  * @since 0.0.0
  */
-export const nonEmptyString = (input: unknown): O.Option<string> => NonEmptyString.decodeUnknownOption(input);
+export const nonEmptyString = (input: unknown): O.Option<string> => S.decodeUnknownOption(NonEmptyString)(input);
 
 /**
  * Own-property lookup for spec-controlled records.

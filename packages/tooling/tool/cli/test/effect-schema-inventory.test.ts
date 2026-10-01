@@ -958,6 +958,15 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
     );
     assertTrue(prefix?._tag === "stale");
     strictEqual(prefix.column, 4);
+    const lead = Str.repeat(50)("x");
+    const [deep] = diffEffectSchemaInventoryFiles(
+      [EffectSchemaInventoryFile.make({ name: "a.jsonl", content: `${lead}A\n` })],
+      HashMap.make(["a.jsonl", `${lead}B\n`])
+    );
+    assertTrue(deep?._tag === "stale");
+    strictEqual(deep.column, 51);
+    strictEqual(deep.expected, `…${Str.repeat(40)("x")}A`);
+    strictEqual(deep.actual, `…${Str.repeat(40)("x")}B`);
     const [longer] = diffEffectSchemaInventoryFiles(
       [EffectSchemaInventoryFile.make({ name: "a.jsonl", content: "a" })],
       HashMap.make(["a.jsonl", "a\nb"])

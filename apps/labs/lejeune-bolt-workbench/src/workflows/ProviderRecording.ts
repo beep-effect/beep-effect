@@ -112,7 +112,7 @@ export const verifyProviderRecording = Effect.fn("lejeune.provider.verify_record
   recording: ProviderRecording,
   sourceText: string
 ) {
-  const candidateJson = yield* ProviderCandidateListFromJsonString.encodeEffect(recording.candidates).pipe(
+  const candidateJson = yield* S.encodeEffect(ProviderCandidateListFromJsonString)(recording.candidates).pipe(
     Effect.mapError((cause) =>
       providerIntegrityError(
         "candidate-encoding",
@@ -121,7 +121,7 @@ export const verifyProviderRecording = Effect.fn("lejeune.provider.verify_record
       )
     )
   );
-  const digest = yield* Sha256HexFromBytes.decodeEffect(strToU8(candidateJson)).pipe(
+  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(strToU8(candidateJson)).pipe(
     Effect.mapError((cause) =>
       providerIntegrityError("candidate-digest", "The provider candidate digest could not be computed.", cause)
     )

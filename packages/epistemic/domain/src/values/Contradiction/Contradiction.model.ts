@@ -37,8 +37,9 @@ const TrimmedText = S.String.pipe(S.decodeTo(S.NonEmptyString, SchemaTransformat
  *
  * ```ts
  * import { ContradictionCandidateKey } from "@beep/epistemic-domain/values/Contradiction"
+ * import * as S from "effect/Schema"
  *
- * console.log(ContradictionCandidateKey.is("a".repeat(64)))
+ * console.log(S.is(ContradictionCandidateKey)("a".repeat(64)))
  * ```
  *
  * @category identifiers
@@ -48,8 +49,7 @@ export const ContradictionCandidateKey = Sha256Hex.pipe(
   S.brand("ContradictionCandidateKey"),
   $I.annoteSchema("ContradictionCandidateKey", {
     description: "SHA-256 digest identifying one canonical contradiction candidate and match basis.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -76,8 +76,9 @@ export type ContradictionCandidateKey = typeof ContradictionCandidateKey.Type;
  *
  * ```ts
  * import { ContradictionReceiptKey } from "@beep/epistemic-domain/values/Contradiction"
+ * import * as S from "effect/Schema"
  *
- * console.log(ContradictionReceiptKey.is("b".repeat(64)))
+ * console.log(S.is(ContradictionReceiptKey)("b".repeat(64)))
  * ```
  *
  * @category identifiers
@@ -87,8 +88,7 @@ export const ContradictionReceiptKey = Sha256Hex.pipe(
   S.brand("ContradictionReceiptKey"),
   $I.annoteSchema("ContradictionReceiptKey", {
     description: "Caller-owned SHA-256 idempotency key for one contradiction-submission receipt.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -116,9 +116,10 @@ export type ContradictionReceiptKey = typeof ContradictionReceiptKey.Type;
  * ```ts
  * import { ContradictionCandidateDigest } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
+ * import * as S from "effect/Schema"
  *
  * const digest = ContradictionCandidateDigest.make(Str.repeat(64)("a"))
- * console.log(ContradictionCandidateDigest.is(digest)) // true
+ * console.log(S.is(ContradictionCandidateDigest)(digest)) // true
  * ```
  *
  * @category identifiers
@@ -128,8 +129,7 @@ export const ContradictionCandidateDigest = Sha256Hex.pipe(
   S.brand("ContradictionCandidateDigest"),
   $I.annoteSchema("ContradictionCandidateDigest", {
     description: "SHA-256 digest guarding the complete immutable payload stored for a contradiction candidate.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -143,9 +143,10 @@ export const ContradictionCandidateDigest = Sha256Hex.pipe(
  *   type ContradictionCandidateDigest as CandidateDigestValue,
  * } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
+ * import * as S from "effect/Schema"
  *
  * const digest: CandidateDigestValue = ContradictionCandidateDigest.make(Str.repeat(64)("a"))
- * console.log(ContradictionCandidateDigest.is(digest)) // true
+ * console.log(S.is(ContradictionCandidateDigest)(digest)) // true
  * ```
  *
  * @category type-level
@@ -161,9 +162,10 @@ export type ContradictionCandidateDigest = typeof ContradictionCandidateDigest.T
  * ```ts
  * import { ContradictionEvidenceDigest } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
+ * import * as S from "effect/Schema"
  *
  * const digest = ContradictionEvidenceDigest.make(Str.repeat(64)("b"))
- * console.log(ContradictionEvidenceDigest.is(digest)) // true
+ * console.log(S.is(ContradictionEvidenceDigest)(digest)) // true
  * ```
  *
  * @category identifiers
@@ -173,8 +175,7 @@ export const ContradictionEvidenceDigest = Sha256Hex.pipe(
   S.brand("ContradictionEvidenceDigest"),
   $I.annoteSchema("ContradictionEvidenceDigest", {
     description: "Order-independent SHA-256 digest of the exact evidence ids in one contradiction basis.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -188,9 +189,10 @@ export const ContradictionEvidenceDigest = Sha256Hex.pipe(
  *   type ContradictionEvidenceDigest as EvidenceDigestValue,
  * } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
+ * import * as S from "effect/Schema"
  *
  * const digest: EvidenceDigestValue = ContradictionEvidenceDigest.make(Str.repeat(64)("b"))
- * console.log(ContradictionEvidenceDigest.is(digest)) // true
+ * console.log(S.is(ContradictionEvidenceDigest)(digest)) // true
  * ```
  *
  * @category type-level
@@ -206,9 +208,10 @@ export type ContradictionEvidenceDigest = typeof ContradictionEvidenceDigest.Typ
  * ```ts
  * import { ContradictionProposalId } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
+ * import * as S from "effect/Schema"
  *
  * const proposalId = ContradictionProposalId.make(Str.repeat(64)("c"))
- * console.log(ContradictionProposalId.is(proposalId)) // true
+ * console.log(S.is(ContradictionProposalId)(proposalId)) // true
  * ```
  *
  * @category identifiers
@@ -218,8 +221,7 @@ export const ContradictionProposalId = Sha256Hex.pipe(
   S.brand("ContradictionProposalId"),
   $I.annoteSchema("ContradictionProposalId", {
     description: "Stable SHA-256 identifier for one persisted contradiction resolution proposal.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -233,9 +235,10 @@ export const ContradictionProposalId = Sha256Hex.pipe(
  *   type ContradictionProposalId as ProposalIdValue,
  * } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
+ * import * as S from "effect/Schema"
  *
  * const proposalId: ProposalIdValue = ContradictionProposalId.make(Str.repeat(64)("c"))
- * console.log(ContradictionProposalId.is(proposalId)) // true
+ * console.log(S.is(ContradictionProposalId)(proposalId)) // true
  * ```
  *
  * @category type-level
@@ -251,9 +254,10 @@ export type ContradictionProposalId = typeof ContradictionProposalId.Type;
  * ```ts
  * import { ContradictionProposalDigest } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
+ * import * as S from "effect/Schema"
  *
  * const digest = ContradictionProposalDigest.make(Str.repeat(64)("d"))
- * console.log(ContradictionProposalDigest.is(digest)) // true
+ * console.log(S.is(ContradictionProposalDigest)(digest)) // true
  * ```
  *
  * @category identifiers
@@ -263,8 +267,7 @@ export const ContradictionProposalDigest = Sha256Hex.pipe(
   S.brand("ContradictionProposalDigest"),
   $I.annoteSchema("ContradictionProposalDigest", {
     description: "SHA-256 digest binding a proposal id to its losing belief, replacement, validity, and rationale.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**
@@ -278,9 +281,10 @@ export const ContradictionProposalDigest = Sha256Hex.pipe(
  *   type ContradictionProposalDigest as ProposalDigestValue,
  * } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Str from "effect/String"
+ * import * as S from "effect/Schema"
  *
  * const digest: ProposalDigestValue = ContradictionProposalDigest.make(Str.repeat(64)("d"))
- * console.log(ContradictionProposalDigest.is(digest)) // true
+ * console.log(S.is(ContradictionProposalDigest)(digest)) // true
  * ```
  *
  * @category type-level
@@ -1214,12 +1218,13 @@ type ContradictionEvidenceDigestFn = {
  *   contradictionEvidenceDigest,
  * } from "@beep/epistemic-domain/values/Contradiction"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
+ * import * as S from "effect/Schema"
  *
  * const digest = contradictionEvidenceDigest(
  *   [Epistemic.EvidenceId.make(1)],
  *   [Epistemic.EvidenceId.make(2)]
  * )
- * console.log(ContradictionEvidenceDigest.is(digest)) // true
+ * console.log(S.is(ContradictionEvidenceDigest)(digest)) // true
  * ```
  *
  * @category encoding

@@ -332,7 +332,10 @@ describe("dock gesture command parity", () => {
         expect(tabs.active.id).toBe(panelThree.id);
         expect(DockWorkspace.groupCount(merged.state)).toBe(1);
         expect(
-          DockWorkspace.equals(yield* engine.decodeSnapshot(yield* engine.encodeSnapshot(merged.state)), merged.state)
+          S.toEquivalence(DockWorkspace)(
+            yield* engine.decodeSnapshot(yield* engine.encodeSnapshot(merged.state)),
+            merged.state
+          )
         ).toBe(true);
 
         const inactive = yield* requireChanged(

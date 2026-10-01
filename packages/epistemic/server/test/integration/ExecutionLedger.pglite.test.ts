@@ -22,7 +22,7 @@ import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
-import { DateTime, Effect, Layer, pipe } from "effect";
+import { DateTime, Effect, Layer, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -56,7 +56,7 @@ const migrateLedger = Effect.fnUntraced(function* () {
   yield* migrate(db, { migrationsFolder, migrationsSchema });
 });
 
-const revision = PolicyRevision.decodeUnknownSync("1.0.0");
+const revision = Result.getOrThrow(S.decodeResult(PolicyRevision)("1.0.0"));
 
 const decisionContent = (input: {
   readonly runKey: string;

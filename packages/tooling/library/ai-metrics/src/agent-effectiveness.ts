@@ -399,9 +399,10 @@ export type AgentEffectivenessArtifactSchemaVersion = typeof AgentEffectivenessA
  *
  * ```ts
  * import { AgentEffectivenessAnnotationValue } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
  *
- * console.log(AgentEffectivenessAnnotationValue.is(0.98)) // true
- * console.log(AgentEffectivenessAnnotationValue.is({ score: 0.98 })) // false
+ * console.log(S.is(AgentEffectivenessAnnotationValue)(0.98)) // true
+ * console.log(S.is(AgentEffectivenessAnnotationValue)({ score: 0.98 })) // false
  * ```
  *
  * @category models
@@ -410,8 +411,7 @@ export type AgentEffectivenessArtifactSchemaVersion = typeof AgentEffectivenessA
 export const AgentEffectivenessAnnotationValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
   $I.annoteSchema("AgentEffectivenessAnnotationValue", {
     description: "Sanitized primitive value allowed in an agent-effectiveness annotation plan.",
-  }),
-  SchemaUtils.withCodecStatics(["is"])
+  })
 );
 
 /**

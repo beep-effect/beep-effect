@@ -2023,7 +2023,7 @@ export const yeetInboxReviewThreadRowIds = Effect.fn("Yeet.yeetInboxReviewThread
 ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
   return A.flatMap(yield* readYeetInboxHeldLines(repoRoot), (line) =>
     YeetInboxRowJson.decodeOption(line).pipe(
-      O.filter((row): row is YeetReviewThreadRow => row.kind === "review-thread"),
+      O.filter(S.is(YeetReviewThreadRow)),
       O.filter((row) => row.capsule.prNumber === prNumber && row.capsule.threadId === threadId),
       O.map((row) => row.id),
       O.toArray

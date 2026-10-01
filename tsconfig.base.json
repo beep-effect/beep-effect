@@ -100,12 +100,15 @@
         // No per-file overrides: every rule is an error everywhere, tests included (tsgo-045 D2).
         "overrides": [],
         "diagnosticSeverity": {
-          // Every rule the compiler ships is listed explicitly, and every one is an error.
-          // Rules omitted from this map run at their upstream default, so silence here
-          // would not mean "disabled" — it would mean "whatever upstream decided", which
-          // changes under us on every compiler bump. `beep quality tsgo-rules` enforces
-          // both halves: the listed set must match the installed compiler exactly, and no
-          // entry may be anything other than "error".
+          // Every rule the compiler ships is listed explicitly, and every one is an error
+          // except the declared-off set. Rules omitted from this map run at their upstream
+          // default, so silence here would not mean "disabled" — it would mean "whatever
+          // upstream decided", which changes under us on every compiler bump.
+          // `beep quality tsgo-rules` enforces both halves: the listed set must match the
+          // installed compiler exactly, and every entry is "error" unless
+          // `tsgoDisabledRules` in the Quality command declares it "off" with a reason.
+          // Declared off: experimentalApiUsage and unstableApiUsage (the repo builds on
+          // `effect/unstable/*` by design).
           "abortControllerInEffect": "error",
           "acquireReleaseDisposable": "error",
           "allOfMapToForEach": "error",
@@ -116,6 +119,8 @@
           "catchChainToFirstSuccessOf": "error",
           "catchConditionalRefailToCatchIf": "error",
           "catchDieToOrDie": "error",
+          "catchIfTagToCatchTag": "error",
+          "catchRefailToTapError": "error",
           "catchTagToCatchReason": "error",
           "catchToIgnore": "error",
           "catchToOrElseSucceed": "error",
@@ -135,8 +140,10 @@
           "effectMapFlatten": "error",
           "effectMapVoid": "error",
           "effectSucceedWithVoid": "error",
+          "experimentalApiUsage": "off",
           "extendsNativeError": "error",
           "flatMapConditionalToFilterOrFail": "error",
+          "flatMapIgnoredParamToAndThen": "error",
           "flatMapToMap": "error",
           "floatingEffect": "error",
           "floatingEffectInVitest": "error",
@@ -218,7 +225,8 @@
           "unnecessaryPipe": "error",
           "unnecessaryPipeChain": "error",
           "unnecessaryTypeofType": "error",
-          "unsafeEffectTypeAssertion": "error"
+          "unsafeEffectTypeAssertion": "error",
+          "unstableApiUsage": "off"
         }
       }
     ]

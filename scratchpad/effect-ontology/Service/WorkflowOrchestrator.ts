@@ -32,7 +32,7 @@ import {
   Match,
   Order,
   Ref,
-  Schedule,
+  Schedule, Result,
 } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -336,7 +336,7 @@ const pollResultToBatchState = Match.type<Workflow.Result<BatchState, AnyWorkflo
  */
 export const pollToBatchState = Effect.fn("WorkflowOrchestrator.pollToBatchState")(function* (executionId: string) {
   const engine = yield* WorkflowEngine.WorkflowEngine;
-  const batchId = yield* BatchId.decodeEffect(executionId).pipe(
+  const batchId = yield* S.decodeEffect(BatchId)(executionId).pipe(
     Effect.mapError(() => WorkflowError.make({ message: `Invalid batch workflow execution ID: ${executionId}` }))
   );
   const result = yield* engine.poll(BatchExtractionWorkflow, executionId);
@@ -473,7 +473,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
               preprocessing: payload.preprocessing,
             }).execute
           : Effect.succeed({
-              enrichedManifestUri: GcsUri.decodeUnknownSync(manifestUri),
+              enrichedManifestUri: Result.getOrThrow(S.decodeResult(GcsUri)(manifestUri)),
               totalDocuments: S.Natural.make(manifest.documents.length),
               classifiedCount: S.Natural.make(0),
               failedCount: S.Natural.make(0),
@@ -507,7 +507,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
               error: Inspectable.toStringUnknown(error),
             });
             return {
-              enrichedManifestUri: GcsUri.decodeUnknownSync(manifestUri),
+              enrichedManifestUri: Result.getOrThrow(S.decodeResult(GcsUri)(manifestUri)),
               totalDocuments: S.Natural.make(manifest.documents.length),
               classifiedCount: S.Natural.make(0),
               failedCount: S.Natural.make(0),
@@ -564,7 +564,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       // Initialize document status tracking for partial failure visibility
       const documentStatusesRef = yield* Ref.make<Array<DocumentStatus>>(
         A.map(manifest.documents, (doc) => ({
-          documentId: DocumentId.decodeUnknownSync(doc.documentId),
+          documentId: Result.getOrThrow(S.decodeResult(DocumentId)(doc.documentId)),
           status: "pending",
         }))
       );
@@ -678,7 +678,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
                       status: "success",
                       startedAt,
                       completedAt,
-                      graphUri: GcsUri.decodeUnknownSync(result.output.graphUri),
+                      graphUri: Result.getOrThrow(S.decodeResult(GcsUri)(result.output.graphUri)),
                       entityCount: S.Natural.make(result.output.entityCount),
                       relationCount: S.Natural.make(result.output.relationCount),
                       claimCount: S.Natural.make(result.output.claimCount),

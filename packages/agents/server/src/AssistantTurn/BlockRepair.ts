@@ -11,7 +11,6 @@ import { BlockRepairFailed } from "@beep/agents-use-cases/AssistantTurn.repair-e
 import { generateAnthropicToolJson } from "@beep/anthropic";
 import { $AgentsServerId } from "@beep/identity/packages";
 import { redactString } from "@beep/observability";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Effect, JsonPatch, Metric } from "effect";
 import * as A from "effect/Array";
 import { AnthropicStructuredOutput, Tool, Toolkit } from "effect/ai";
@@ -430,12 +429,7 @@ export const PatchOpSummary = S.Union([AddPatchOpSummary, RemovePatchOpSummary, 
   $I.annoteSchema("PatchOpSummary", {
     description: "A single JSON Patch operation.",
   }),
-  SchemaUtils.withCodecStatics(["encodeResult"]),
-  (schema) =>
-    schema.pipe(
-      S.toTaggedUnion("op"),
-      SchemaUtils.withStatics(() => ({ encodeResult: schema.encodeResult }))
-    )
+  S.toTaggedUnion("op")
 );
 
 /**

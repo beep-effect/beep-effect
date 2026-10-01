@@ -341,9 +341,9 @@ const activatePanelCommand = Effect.fn("DockReducer.activatePanel")(function* (
     empty: O.none<GroupId>,
     populated: ({ maximized }) => maximized,
   });
-  const panelChanged = !PanelId.equals(tabs.active.id, command.panelId);
+  const panelChanged = !S.toEquivalence(PanelId)(tabs.active.id, command.panelId);
   const reveal = !tabs.metadata.visible;
-  const restore = O.exists(maximized, (groupId) => !GroupId.equals(groupId, tabs.groupId));
+  const restore = O.exists(maximized, (groupId) => !S.toEquivalence(GroupId)(groupId, tabs.groupId));
   if (!panelChanged && !reveal && !restore) return unchanged(state, envelope, "panel-already-active");
   const activated = panelChanged
     ? yield* Effect.fromOption(TabsNode.activate(tabs, command.panelId), () =>
@@ -450,7 +450,7 @@ const updatePanel = Effect.fn("DockReducer.updatePanel")(function* (
             TabsNode.fromPanels(
               tabs.groupId,
               A.map(TabsNode.panels(tabs), (candidate) =>
-                Bool.match(PanelId.equals(candidate.id, panel.id), {
+                Bool.match(S.toEquivalence(PanelId)(candidate.id, panel.id), {
                   onTrue: () => updated,
                   onFalse: () => candidate,
                 })
@@ -500,7 +500,7 @@ const updateGroup = Effect.fn("DockReducer.updateGroup")(function* (
   );
   const nextMaximized = Bool.match(
     Bool.and(
-      O.exists(maximized, (id) => GroupId.equals(id, tabs.groupId)),
+      O.exists(maximized, (id) => S.toEquivalence(GroupId)(id, tabs.groupId)),
       !metadata.visible
     ),
     // fallow-ignore-next-line code-duplication -- hiding the maximized group clears maximization while preserving other state
@@ -513,7 +513,7 @@ const updateGroup = Effect.fn("DockReducer.updateGroup")(function* (
   return yield* changedMany(state, envelope, (revision) => [
     DockWorkspace.withRevision(next, revision),
     Bool.and(
-      O.exists(maximized, (id) => GroupId.equals(id, tabs.groupId)),
+      O.exists(maximized, (id) => S.toEquivalence(GroupId)(id, tabs.groupId)),
       !metadata.visible
     ) && O.isSome(maximized)
       ? [GroupUpdatedEvent.make({ groupId: tabs.groupId }), GroupRestoredEvent.make({ groupId: maximized.value })]
@@ -550,7 +550,7 @@ const resizeSplit = Effect.fn("DockReducer.resizeSplit")(function* (
   const split = yield* Effect.fromOption(DockWorkspace.findSplit(state, command.splitId), () =>
     reject(envelope, "split-not-found", `Split '${command.splitId}' does not exist.`)
   );
-  return yield* Bool.match(SplitRatio.equals(SplitLayout.ratio(split.layout), command.ratio), {
+  return yield* Bool.match(S.toEquivalence(SplitRatio)(SplitLayout.ratio(split.layout), command.ratio), {
     onTrue: () => Effect.succeed(unchanged(state, envelope, "split-ratio-unchanged")),
     onFalse: () => {
       const resized = SplitNode.withRatio(split, command.ratio);
@@ -579,7 +579,7 @@ const maximizeGroup = Effect.fn("DockReducer.maximizeGroup")(function* (
       const tabs = yield* Effect.fromOption(DockNode.findTabs(workspace.root, command.groupId), () =>
         reject(envelope, "group-not-found", `Group '${command.groupId}' does not exist.`)
       );
-      if (O.exists(workspace.maximized, (groupId) => GroupId.equals(groupId, command.groupId))) {
+      if (O.exists(workspace.maximized, (groupId) => S.toEquivalence(GroupId)(groupId, command.groupId))) {
         return unchanged(workspace, envelope, "group-already-maximized");
       }
       const reveal = !tabs.metadata.visible;
@@ -711,7 +711,7 @@ const dockFloatingGroup = Effect.fn("DockReducer.dockFloatingGroup")(function* (
         ),
         () => reject(envelope, "group-not-found", `Docked target group '${target.groupId}' does not exist.`)
       );
-      if (GroupId.equals(source.groupId, current.groupId))
+      if (S.toEquivalence(GroupId)(source.groupId, current.groupId))
         return yield* reject(envelope, "same-group-move", "A group cannot merge into itself.");
       const index = N.clamp(
         O.getOrElse(target.index, () => A.length(TabsNode.panels(current))),
@@ -865,11 +865,13 @@ const movePanelForest = Effect.fn("DockReducer.movePanelForest")(function* (
   const panel = yield* Effect.fromOption(Panel.findInTabs(source, command.panelId), () =>
     reject(envelope, "panel-not-found", `Panel '${command.panelId}' does not exist.`)
   );
-  if (DockMoveTarget.guards.tab(command.target) && GroupId.equals(source.groupId, command.target.groupId)) {
+  if (DockMoveTarget.guards.tab(command.target) && S.toEquivalence(GroupId)(source.groupId, command.target.groupId)) {
     if (O.isNone(command.target.index))
       return yield* reject(envelope, "same-group-move", "A same-group move requires an insertion index.");
     const panels = TabsNode.panels(source);
-    const current = O.getOrThrow(A.findFirstIndex(panels, (candidate) => PanelId.equals(candidate.id, panel.id)));
+    const current = O.getOrThrow(
+      A.findFirstIndex(panels, (candidate) => S.toEquivalence(PanelId)(candidate.id, panel.id))
+    );
     const without = A.remove(panels, current);
     const index = N.clamp(command.target.index.value, { minimum: 0, maximum: A.length(without) });
     if (Eq.equals(current, index)) return unchanged(state, envelope, "panel-position-unchanged");
@@ -970,7 +972,7 @@ const moveGroupForest = Effect.fn("DockReducer.moveGroupForest")(function* (
   const removed = DockWorkspace.removeTabs(state, source.groupId);
   return yield* DockGroupMoveTarget.match(command.target, {
     tab: Effect.fnUntraced(function* (target) {
-      if (GroupId.equals(source.groupId, target.groupId))
+      if (S.toEquivalence(GroupId)(source.groupId, target.groupId))
         return yield* reject(envelope, "same-group-move", "A group cannot merge into itself.");
       const destination = yield* Effect.fromOption(DockWorkspace.findTabs(removed, target.groupId), () =>
         reject(envelope, "group-not-found", `Group '${target.groupId}' does not exist.`)
@@ -998,7 +1000,7 @@ const moveGroupForest = Effect.fn("DockReducer.moveGroupForest")(function* (
       ]);
     }),
     groupSplit: Effect.fnUntraced(function* (target) {
-      if (GroupId.equals(source.groupId, target.referenceGroupId))
+      if (S.toEquivalence(GroupId)(source.groupId, target.referenceGroupId))
         return yield* reject(envelope, "same-group-move", "A group cannot relocate beside itself.");
       if (O.isSome(DockWorkspace.findSplit(removed, target.splitId)))
         return yield* reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`);

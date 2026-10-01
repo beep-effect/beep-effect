@@ -361,7 +361,6 @@ regular-expression helper, assertion, or comment.
 **Target:**
 
 ```ts
-import { SchemaUtils } from "@beep/schema";
 import { $PackageNameId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
@@ -383,8 +382,7 @@ export const Slug = S.String.check(
     S.brand("Slug"),
     $I.annoteSchema("Slug", {
       description: "Lowercase identifier used in stable URL and storage keys.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 
 export type Slug = typeof Slug.Type;
@@ -522,58 +520,47 @@ for a real nested domain choice.
 exercise the exhaustive matcher. Adding a case must create a compile-time
 obligation at every exhaustive match.
 
-### Pattern 5: Colocate a repeated helper surface without building a helper wall
+### Pattern 5: Call codecs as Effect/Schema free functions; attach only domain helpers
 
-**Rationale:** Call sites should express `EntityId.is(value)` or
-`EntityId.equivalence(left, right)` rather than re-deriving the same behavior
-throughout the codebase.
+**Rationale:** Guards, decoders, encoders and equivalences are upstream free
+functions over the schema (`S.is`, `S.decodeUnknownOption`,
+`S.toEquivalence`, ...). Effect caches each schema's parser per AST, so
+`S.is(EntityId)(value)` at a call site allocates a closure and never
+recompiles. Codec statics (`SchemaUtils.withCodecStatics`, codec facades
+attached through `withStatics`) were retired under the Upstream-First
+Foundation/Modeling decision; the `SFV4-codec-static` gate holds that line.
 
 **Smell:**
 
 ```ts
-const isEntityId = S.is(EntityId);
-const decodeEntityId = S.decodeUnknownOption(EntityId);
-const entityIdEquivalence = S.toEquivalence(EntityId);
+export const EntityId = EntityIdBase.pipe(
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    equivalence: S.toEquivalence(schema),
+  }))
+);
 ```
 
 **Target:**
 
 ```ts
-export const EntityId = EntityIdBase.pipe(
-  SchemaUtils.withCodecStatics,
-  SchemaUtils.withStatics((schema) => ({
-    equivalence: S.toEquivalence(schema),
-  }))
-);
+export const EntityId = EntityIdBase;
 
-export type EntityId = typeof EntityId.Type;
+// at the call site, or hoisted once when a module calls it repeatedly
+const decodeEntityId = S.decodeUnknownOption(EntityId);
+const sameEntityId = S.toEquivalence(EntityId);
 ```
 
-For an `S.Class`, keep class identity and attach only repeatedly useful
-statics in the class body:
+`SchemaUtils.withStatics` stays for domain helpers that are not codecs
+(constructors such as `create` or `fromParts`, renderers such as `toHtml`).
 
-```ts
-export class Entity extends S.Class<Entity>($I`Entity`)(
-  {
-    id: EntityId,
-    label: S.NonEmptyString,
-  },
-  $I.annote("Entity", {
-    description: "Named domain entity.",
-  })
-) {
-  static readonly is = S.is(Entity);
-  static readonly equivalence = S.toEquivalence(Entity);
-}
-```
+**Carve-out:** A codec bound with parse options belongs in one named
+module-level function next to the schema, so every caller shares the options.
+Avoid attaching unrelated algorithms, runtime services, or functions that
+create an import cycle.
 
-**Carve-out:** A one-use decoder is usually clearer at its boundary. Avoid
-attaching unrelated algorithms, runtime services, or functions that create an
-import cycle. Treat synchronous throwing statics as trusted-boundary tools,
-not general external decoders.
-
-**Proof:** Search consumers for duplicate guards/decoders, replace repeated
-ones, and verify the schema remains constructible and decodable.
+**Proof:** `bun run beep lint schema-first` reports no `SFV4-codec-static`
+occurrence, and the schema remains constructible and decodable.
 
 ### Pattern 6: Keep decoding and JSON in Effect/Schema
 

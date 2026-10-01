@@ -57,7 +57,7 @@ import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { A, O } from "@beep/utils";
 import { and, count, desc, eq, getColumns, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
-import { DateTime, Effect, Match, Order, pipe, Semaphore } from "effect";
+import { DateTime, Effect, Match, Order, pipe, Result, Semaphore } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import { supersedeEdgeFactInTransaction, supersessionHeadOf } from "../EdgeAuthority/EdgeAuthority.repo.ts";
@@ -166,13 +166,19 @@ const edgeMatchesCandidateBelief = (
   );
 
 const candidatePublicIdFor = (orgId: ContradictionCandidate["orgId"], candidateKey: string) =>
-  candidatePublicId.decodeUnknownSync(`${Epistemic.ContradictionCandidateId.tableName}_a${orgId}${candidateKey}`);
+  Result.getOrThrow(
+    S.decodeResult(candidatePublicId)(`${Epistemic.ContradictionCandidateId.tableName}_a${orgId}${candidateKey}`)
+  );
 
 const receiptPublicIdFor = (orgId: ContradictionReceipt["orgId"], receiptKey: string) =>
-  receiptPublicId.decodeUnknownSync(`${Epistemic.ContradictionReceiptId.tableName}_a${orgId}${receiptKey}`);
+  Result.getOrThrow(
+    S.decodeResult(receiptPublicId)(`${Epistemic.ContradictionReceiptId.tableName}_a${orgId}${receiptKey}`)
+  );
 
 const dispositionPublicIdFor = (orgId: ContradictionDisposition["orgId"], candidateKey: string) =>
-  dispositionPublicId.decodeUnknownSync(`${Epistemic.ContradictionDispositionId.tableName}_a${orgId}${candidateKey}`);
+  Result.getOrThrow(
+    S.decodeResult(dispositionPublicId)(`${Epistemic.ContradictionDispositionId.tableName}_a${orgId}${candidateKey}`)
+  );
 
 const repositoryUnavailable =
   (operation: "get" | "list" | "review" | "submit") =>
@@ -188,7 +194,7 @@ const repositoryUnavailable =
 const toReviewFailure = Match.type<unknown>().pipe(
   Match.when(ContradictionRepositoryUnavailable.is, (error) => error),
   Match.when(ContradictionReviewConflict.is, (error) => error),
-  Match.when(EdgeAuthorityError.is, (error) => error),
+  Match.when(S.is(EdgeAuthorityError), (error) => error),
   Match.orElse((cause) =>
     ContradictionRepositoryUnavailable.during("review", "review failed against contradiction-triage storage", cause)
   )

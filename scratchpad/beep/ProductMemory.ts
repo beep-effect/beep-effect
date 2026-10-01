@@ -24,6 +24,7 @@ import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 import { Model, NonNegativeInt, optionalNull, pg, Table, textBoundsCheck } from "./Kit.ts";
+import { Result } from "effect";
 
 const $I = $ScratchpadId.create("beep/ProductMemory");
 
@@ -505,7 +506,7 @@ const nonBlank = S.makeFilter((value: string) => (Str.isEmpty(Str.trim(value)) ?
 const triggerJson = S.fromJsonString(S.JsonObject);
 
 const triggerWithinLimit = S.makeFilter((value: typeof triggerJson.Type) =>
-  Str.length(S.encodeSync(triggerJson)(value)) > MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS
+  Str.length(Result.getOrThrow(S.encodeResult(triggerJson)(value))) > MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS
     ? "ledger trigger condition exceeds the serialized limit"
     : undefined,
 );

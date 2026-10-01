@@ -44,7 +44,7 @@ describe("Round 5 canonical boundaries", () => {
         const first = yield* getRunIdFromText("canonical content");
         const second = yield* getRunIdFromText("canonical content");
 
-        assert.isTrue(ExtractionRunId.is(first));
+        assert.isTrue(S.is(ExtractionRunId)(first));
         assert.strictEqual(first, second);
       })
     );

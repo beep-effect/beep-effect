@@ -58,7 +58,7 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
+import { optionalPulumiConfigFields } from "./internal/PulumiConfigSchema.ts";
 
 const $I = $InfraId.create("CiRunners");
 
@@ -396,9 +396,7 @@ export const CiRunnersPulumiConfigValues = S.Class<CiRunnersPulumiConfigValuesFi
   $I.annote("CiRunnersPulumiConfigValues", {
     description: "Optional Pulumi config values before CI runner groundwork defaults are applied.",
   })
-)
-  .mapFields(optionalPulumiConfigFields)
-  .pipe(withPulumiConfigDecodeEffect);
+).mapFields(optionalPulumiConfigFields);
 
 /**
  * Runtime type for {@link CiRunnersPulumiConfigValues}.

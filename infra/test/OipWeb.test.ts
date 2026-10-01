@@ -114,7 +114,7 @@ describe("@beep/infra OipWeb", () => {
   it.effect(
     "decodes optional Pulumi config shape",
     Effect.fnUntraced(function* () {
-      const decoded = yield* OipWebPulumiConfigValues.decodeEffect({
+      const decoded = yield* S.decodeEffect(OipWebPulumiConfigValues)({
         attachProductionDomains: true,
         attachStagingDomain: false,
         createDynamoDbLockTable: true,
