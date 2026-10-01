@@ -1,5 +1,6 @@
 name = "impeccable_asset_producer"
 description = "Produces clean reusable raster assets from approved Impeccable mock references without redesigning the direction."
+model = "gpt-6.1-sol"
 model_reasoning_effort = "medium"
 nickname_candidates = ["Asset Plate", "Clean Plate", "Re-Render"]
 developer_instructions = '''

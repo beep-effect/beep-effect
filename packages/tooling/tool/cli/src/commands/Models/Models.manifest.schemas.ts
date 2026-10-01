@@ -45,6 +45,8 @@ const RoutingRoleKit = LiteralKit([
   "cursor.review",
   "cursor.mechanical",
   "cursor.never",
+  "fallback.cursor",
+  "fallback.grok",
   "qa.judge",
   "graft.deep",
   "research.routine",

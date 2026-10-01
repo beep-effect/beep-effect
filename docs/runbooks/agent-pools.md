@@ -8,25 +8,34 @@ signatures. Goal B (`beep agent-pool pick`) automates the picker; until then, ch
 
 ## Pool order
 
-Three steps, evaluated in order on every admitted lane (D2, D7, D8, amended 2026-09-24):
+The approved model defaults and delegation policy (operator, 2026-10-01) replaced the
+three-step pool order of 2026-09-24 (Opus only → authorized Cursor → hold). Two chains now
+exist, keyed by the orchestrator that started the work, and each step runs at medium effort
+where the route supports it:
 
-1. **Opus pool.** Every sub-agent, delegation, and Workflow child runs on Claude Opus 5.5,
-   pinned by the explicit id `claude-opus-5-5` (the `opus` alias resolved to `claude-opus-5`
-   before 2026-09-25 and is not a pin). Research, review, implementation, exploration,
-   distillation, and QA judging all route here. The pool is the orchestrating session's own
-   Anthropic account; a rate-limit error is the floor signal (see Meters).
-2. **Cursor pool (operator-authorized).** When the operator authorizes Cursor volume for a
-   lane, launch `cursor-agent -p` on the seat for the lane tier (D6, D17). Cursor counts as
-   available until a lane proves otherwise (see Meters). Do not spin up Cursor lanes on your
-   own initiative.
-3. **Hold and notify.** When Opus is rate limited and no Cursor lane was authorized, queue
-   the lane and notify the operator. Fable children are never the fallback pool (D7).
-   `grok-4.6` proxy lanes (CLIProxyAPI, xAI) stay reserved for research-class work (D7) — not
-   to be confused with `cursor-grok-4.6-xhigh`, the Cursor volume fallback seat (D16).
+| Originator | 1 | 2 | 3 |
+| --- | --- | --- | --- |
+| Codex | `gpt-6.1-sol` medium through the Codex CLI, plugin, or `claudex` proxy | `cursor-agent --model claude-opus-5-5` | grok-build (`grok -m grok-4.7 --effort medium`) |
+| Claude Code | direct `claude-opus-5-5` medium (Agent tool, Workflow child, `claude -p`) | `cursor-agent --model claude-opus-5-5` | grok-build (`grok -m grok-4.7 --effort medium`) |
 
-**Codex is opt-in only.** `codex exec`, `/codex:*`, the Codex companion, and `gpt-6-astra`
-proxy children run only when the operator names Codex for a task; the codex-security scan is
-the one tool that is Codex by nature. The meter and recipe below stay for that case.
+Defaults: Codex `gpt-6.1-sol` medium (`~/.codex/config.toml`), Claude Code `claude-opus-5-5`
+medium (`~/.claude/settings.json`). Within these routes Codex uses only GPT-6.1-Sol and direct
+Claude uses only Opus 5.5; same-provider substitution (`gpt-6-astra`, `claude-opus-5`, the
+`opus` alias) is a drift, not a fallback. Lightweight routes (`gpt-5.6-luna` default children)
+keep their lightweight tasks.
+
+Step down a chain only on a confirmed quota, availability, or unsupported-model failure. Direct
+Claude never appears in the Codex chain and direct Codex never in the Claude chain. Cursor and
+grok-build workers never delegate onward: they return a result or blocker to the originating
+orchestrator, which owns every cross-provider decision and launch. An unfavorable review or an
+ordinary code failure is remediated on the same route. Only existing subscriptions and
+explicitly authorized API billing are used; when a chain is exhausted, report the concrete
+blockers and hold the dependent work. Every route may implement, explore, research, and review
+(goal admission reviews included) under the same reviewer separation, source-bound evidence,
+and acceptance gates.
+
+**Codex is no longer opt-in.** The 2026-09-24 restriction is superseded; a Codex orchestrator
+runs its own chain. The meter and recipe below describe that route.
 
 ## Meters
 
@@ -38,7 +47,7 @@ account's rate limit") marks the Opus pool below floor for the session: finish w
 running, then hold and notify (step 3) unless the operator has authorized a Cursor lane.
 `claude` shows the live windows with `/usage`.
 
-### Codex (opt-in lanes)
+### Codex
 
 The Codex app-server protocol exposes `account/rateLimits/read` and
 `account/rateLimits/updated` (confirmed from `codex app-server generate-json-schema`,
@@ -101,8 +110,22 @@ https://cursor.com/help/models-and-usage/usage-limits):
 | Tier | Primary | Fallback | Bucket | Input / output ($/1M) |
 | --- | --- | --- | --- | --- |
 | Volume implementation | `composer-2.5` | `cursor-grok-4.6-xhigh` | Cursor Models | $0.50 / $2.50; $2 / $6 |
-| Review / adversarial | `claude-opus-5-thinking-high` | `gpt-5.6-sol-xhigh` | Other Models | $5 / $25; $4 / $20 |
+| Fallback (policy 2026-10-01) | `claude-opus-5-5` | — | Other Models | Opus 5.5 list price |
+| Review / adversarial (legacy seat) | `claude-opus-5-thinking-high` | `gpt-5.6-sol-xhigh` | Other Models | $5 / $25; $4 / $20 |
 | Lightweight mechanical | `composer-2.5` | `gpt-5.6-luna-high` | Cursor Models → Other | $0.50 / $2.50; $0.20 / $1.20 |
+
+Manifest projection of the Cursor seats (tool-owned block):
+
+<!-- beep-models:begin cursor-seats -->
+| Role | Surface | Model | Effort |
+| --- | --- | --- | --- |
+| fallback.cursor | cursor-seat | `claude-opus-5-5` | — |
+| cursor.volume | cursor-seat | `composer-2.5` | — |
+| cursor.review | cursor-seat | `claude-opus-5-thinking-high` | — |
+| cursor.mechanical | cursor-seat | `composer-2.5` | — |
+
+superseded: gpt-5.6-sol, gpt-6-astra, grok-4.5, gpt-5.4, gpt-5.4-mini
+<!-- beep-models:end cursor-seats -->
 
 **Never list (D16, D18):** any `-fast` id (`composer-2.5-fast` is 6× input), `auto`, `kimi-k3-*`,
 `claude-fable-5-1-*` — on any Cursor lane, volume or review. Always pin the non-fast id
@@ -326,7 +349,7 @@ Artifacts: `explorations/cursor-agent-pool/ops/hooks-smoke/`.
 
 ## Opus lane recipe
 
-Every delegation carries the explicit id. Native subagent through the Agent tool:
+Every delegation carries the explicit id and medium effort. Native subagent through the Agent tool:
 
 ```text
 Agent({ subagent_type: "general-purpose", model: "claude-opus-5-5", prompt: "<bounded task>" })
@@ -337,6 +360,25 @@ Workflow child:
 ```js
 await agent("<bounded task>", { model: "claude-opus-5-5", phase: "Implement" })
 ```
+
+Cursor fallback (step 2 of either chain), verified 2026-10-01:
+
+```sh
+timeout 1800 cursor-agent -p --trust --force --sandbox enabled --workspace "$PWD" \
+  --model claude-opus-5-5 --output-format stream-json "<bounded task>" </dev/null
+```
+
+`claude-opus-5-5` is absent from `cursor-agent --list-models` yet accepted; the stream-json
+init event reports `"model":"Claude Opus 5.5 300K Medium"`, so medium effort is baked into the
+seat and `claude-opus-5-5[effort=medium]` is rejected. grok-build fallback (step 3):
+
+```sh
+grok -m grok-4.7 --effort medium --always-approve --no-subagents --max-turns 60 \
+  -p "<bounded task>" --output-format streaming-json --no-auto-update </dev/null
+```
+
+`modelUsage` reports `grok-4.7-build`; `--effort` is accepted but not echoed back. Neither
+worker delegates onward.
 
 Bounded scope, files written early and refined in place, and the orchestrator stages by name —
 the same prompt contract as the Cursor lane. Continue related follow-ups on the same subagent
@@ -350,22 +392,23 @@ in the workstation CLIProxyAPI build) carries the id, run Opus 5.5 children from
 `claude` session; `beep models check` reports the `child.heavy` × `proxy-workflow` binding as
 `unknown-model` while the gap stands. Do not set `CLAUDE_CODE_SUBAGENT_MODEL` in proxy wrappers.
 
-## Codex lane recipe (opt-in)
+## Codex lane recipe
 
-Only when the operator names Codex for the task (see Pool order), launch the volume lane
-unchanged (D2):
+A Codex orchestrator (or a task the operator names Codex for) launches the volume lane:
 
 ```sh
-codex exec --model gpt-6-astra -c 'model_reasoning_effort="medium"' \
+codex exec --model gpt-6.1-sol -c 'model_reasoning_effort="medium"' \
   "<bounded task prompt>" </dev/null
 ```
 
 Run it from the lane's worktree root. Working-directory, sandbox, `--add-dir`, and commit-capable
 flags follow the operator's Codex rules; this runbook does not restate them.
 
-Pin model and reasoning effort per `AGENTS.md` "Codex (opt-in only)". The Codex plugin/companion
-(`--model gpt-6-astra --effort medium`) and proxy Workflow children (`gpt-6-astra(medium)`) use
-the same pins.
+Pin model and reasoning effort per `AGENTS.md` "Volume pools". The Codex plugin/companion
+(`--model gpt-6.1-sol --effort medium`) and proxy Workflow children (`gpt-6.1-sol(medium)`) use
+the same pins. Verified 2026-10-01: the session rollout records `model=gpt-6.1-sol`,
+`reasoning_effort=medium`; `~/.codex/models_cache.json` had not yet listed the id, so the
+interactive picker may lag while `-m gpt-6.1-sol` works.
 
 ## Failure signatures and remedies
 
