@@ -7,8 +7,8 @@
 // A write refuses any sample whose compiler output reports a type error.
 {
   "schemaVersion": "check-census-baseline/v1",
-  "measuredAt": "2026-10-01T13:34:05.035Z",
-  "commit": "e2bd4f33777ce2fa05968389812d851218a95d4c",
+  "measuredAt": "2026-10-01T14:05:07.161Z",
+  "commit": "cb4b0b0cdfdedc9588c301dad18fa6e36a367d78",
   "dirtyWorktree": false,
   "compiler": "7.0.2+effect-tsgo.0.45.0",
   "command": "bun run tsc -p <tsconfig> --noEmit --extendedDiagnostics --singleThreaded --tsBuildInfoFile <fresh>",
@@ -19,21 +19,21 @@
       "tsconfig": "packages/foundation/modeling/schema/tsconfig.json",
       "instantiations": 446382,
       "types": 133906,
-      "checkTimeMs": 1286
+      "checkTimeMs": 913
     },
     {
       "name": "@beep/repo-cli",
       "tsconfig": "packages/tooling/tool/cli/tsconfig.json",
-      "instantiations": 4205620,
-      "types": 1078922,
-      "checkTimeMs": 19229
+      "instantiations": 4205649,
+      "types": 1078977,
+      "checkTimeMs": 14411
     },
     {
       "name": "@beep/law-practice-domain",
       "tsconfig": "packages/law-practice/domain/tsconfig.json",
       "instantiations": 799552,
       "types": 248667,
-      "checkTimeMs": 1426
+      "checkTimeMs": 1860
     }
   ],
   "typeperfFixtures": [
@@ -42,21 +42,21 @@
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.baseline.json",
       "instantiations": 17333,
       "types": 6891,
-      "checkTimeMs": 31
+      "checkTimeMs": 32
     },
     {
       "name": "@beep/schema#typeperf/literal-kit-tagged-union",
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.literal-kit-tagged-union.json",
       "instantiations": 20584,
       "types": 7644,
-      "checkTimeMs": 26
+      "checkTimeMs": 32
     },
     {
       "name": "@beep/schema#typeperf/literal-kit-keyed-api",
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.literal-kit-keyed-api.json",
       "instantiations": 17913,
       "types": 7035,
-      "checkTimeMs": 23
+      "checkTimeMs": 28
     }
   ]
 }
