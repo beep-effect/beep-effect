@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 
@@ -26,24 +26,24 @@ const $I = $LawPracticeDomainId.create("values/SessionLawCitation/SessionLawCita
  * **Example** (Make California session-law citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { SessionLawCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = SessionLawCitation.make({
  *   text: "Stats. 1974, ch. 1516",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "Stats. 1974, ch. 1516",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  *   jurisdiction: "CA",
  *   code: "Stats.",
- *   year: NonNegativeInt.make(1974),
+ *   year: S.Natural.make(1974),
  *   chapter: "1516",
  * })
  *
@@ -63,7 +63,7 @@ export class SessionLawCitation extends S.Class<SessionLawCitation>($I`SessionLa
     code: S.String.annotateKey({
       description: 'Session-law compilation label (e.g. "Stats." for CA, "Nev. Stat." for NV).',
     }),
-    year: NonNegativeInt.annotateKey({
+    year: S.Natural.annotateKey({
       description: "Session year.",
     }),
     chapter: S.String.annotateKey({
@@ -71,35 +71,35 @@ export class SessionLawCitation extends S.Class<SessionLawCitation>($I`SessionLa
     }),
     section: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Single cited section, or the first of a list/range.",
       })
     ),
     sections: S.Array(S.String).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Multiple cited sections (§§ 6, 7, 8 -> ["6","7","8"]).',
       })
     ),
     sectionRange: S.Struct({ start: S.String, end: S.String }).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Section range (§§ 25-26 -> {start:"25",end:"26"}).',
       })
     ),
     page: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Single cited page, or the first of a range.",
       })
     ),
     pageRange: S.Struct({ start: S.String, end: S.String }).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Page range (pp. 3038-3039, at 2590-95).",
       })

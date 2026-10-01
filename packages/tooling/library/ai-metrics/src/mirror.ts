@@ -7,7 +7,7 @@
 
 import { DuckDb, DuckDbConnectionOptions, DuckDbParquetExport } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Layer, Path, pipe, Tuple } from "effect";
 import * as R from "effect/Record";
@@ -467,8 +467,14 @@ export class AiMetricsMirrorBundleInput extends S.Class<AiMetricsMirrorBundleInp
     bundleId: S.optionalKey(S.String),
     bundleRoot: S.optionalKey(S.String),
     dataRoot: S.String,
-    remoteRoot: S.String.pipe(SchemaUtils.withKeyDefaults(defaultRemoteMirrorRoot)),
-    target: AiMetricsDeployTarget.pipe(SchemaUtils.withKeyDefaults(AiMetricsDeployTarget.Enum.dankserver)),
+    remoteRoot: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultRemoteMirrorRoot)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultRemoteMirrorRoot))
+    ),
+    target: AiMetricsDeployTarget.pipe(
+      S.withConstructorDefault(Effect.succeed(AiMetricsDeployTarget.Enum.dankserver)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(AiMetricsDeployTarget.Enum.dankserver))
+    ),
   },
   $I.annote("AiMetricsMirrorBundleInput", {
     description: "Local derived storage and remote target roots for one deploy-safe P7 mirror bundle build.",
@@ -589,12 +595,12 @@ export class AiMetricsMirrorStatus extends S.Class<AiMetricsMirrorStatus>($I`AiM
     bundleId: S.String,
     createdAtEpochMillis: S.Finite,
     mirrorStatusSchemaVersion: S.Literal(AiMetricsMirrorSchemaVersion.Enum["beep.ai_metrics.mirror_status.v1"]).pipe(
-      SchemaUtils.withConstantDefault(AiMetricsMirrorSchemaVersion.Enum["beep.ai_metrics.mirror_status.v1"])
+      S.withConstructorDefault(Effect.succeed(AiMetricsMirrorSchemaVersion.Enum["beep.ai_metrics.mirror_status.v1"]))
     ),
     remoteRoot: S.String,
     rowCounts: S.Record(S.String, S.Finite),
     syncStatus: AiMetricsMirrorSyncStatus.pipe(
-      SchemaUtils.withConstantDefault(AiMetricsMirrorSyncStatus.Enum.not_synced)
+      S.withConstructorDefault(Effect.succeed(AiMetricsMirrorSyncStatus.Enum.not_synced))
     ),
     target: AiMetricsDeployTarget,
   },
@@ -658,7 +664,7 @@ export class AiMetricsMirrorBundleManifest extends S.Class<AiMetricsMirrorBundle
     createdAtEpochMillis: S.Finite,
     includedTables: S.Array(S.String),
     mirrorStatusSchemaVersion: S.Literal(AiMetricsMirrorSchemaVersion.Enum["beep.ai_metrics.mirror_status.v1"]).pipe(
-      SchemaUtils.withConstantDefault(AiMetricsMirrorSchemaVersion.Enum["beep.ai_metrics.mirror_status.v1"])
+      S.withConstructorDefault(Effect.succeed(AiMetricsMirrorSchemaVersion.Enum["beep.ai_metrics.mirror_status.v1"]))
     ),
     omittedDataClasses: S.Array(AiMetricsMirrorOmittedDataClass),
     omittedTables: S.Array(S.String),
@@ -667,10 +673,12 @@ export class AiMetricsMirrorBundleManifest extends S.Class<AiMetricsMirrorBundle
     remoteRoot: S.String,
     rowCounts: S.Record(S.String, S.Finite),
     schemaVersion: S.Literal(AiMetricsMirrorSchemaVersion.Enum["beep.ai_metrics.mirror_bundle.v1"]).pipe(
-      SchemaUtils.withConstantDefault(AiMetricsMirrorSchemaVersion.Enum["beep.ai_metrics.mirror_bundle.v1"])
+      S.withConstructorDefault(Effect.succeed(AiMetricsMirrorSchemaVersion.Enum["beep.ai_metrics.mirror_bundle.v1"]))
     ),
     sourceDataClass: AiMetricsMirrorSourceDataClass.pipe(
-      SchemaUtils.withConstantDefault(AiMetricsMirrorSourceDataClass.Enum.workstation_local_sanitized_derived_storage)
+      S.withConstructorDefault(
+        Effect.succeed(AiMetricsMirrorSourceDataClass.Enum.workstation_local_sanitized_derived_storage)
+      )
     ),
     target: AiMetricsDeployTarget,
   },
@@ -992,7 +1000,7 @@ export const buildAiMetricsMirrorBundle = Effect.fn("AiMetrics.buildAiMetricsMir
     bundleId,
     createdAtEpochMillis,
     includedTables: A.map(tables, (table) => table.tableName),
-    omittedDataClasses: AiMetricsMirrorOmittedDataClass.Options,
+    omittedDataClasses: AiMetricsMirrorOmittedDataClass.literals,
     omittedTables: A.fromIterable(omittedMirrorTables),
     p6ProofPreserved: true,
     privacyProof: AiMetricsMirrorPrivacyProof.make({

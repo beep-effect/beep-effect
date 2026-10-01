@@ -10,8 +10,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
+import { LiteralKit } from "@beep/schema";
 import { Cause, Effect, Exit, Match } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -19,6 +18,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { UUID } from "../../../internal/schema/Uuid.ts";
 import { YeetRunMode } from "./Planner.ts";
 import { YeetOutcome } from "./Verdict.ts";
 
@@ -284,7 +284,7 @@ export const ProofJobPhase = LiteralKit(["submitted", "running", "finished", "te
  *
  * ```ts
  * import { ProofJobPhase } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobPhase.Options.length > 0) // true
+ * console.log(ProofJobPhase.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -353,7 +353,7 @@ export const ProofJobServiceResult = LiteralKit([
  *
  * ```ts
  * import { ProofJobServiceResult } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobServiceResult.Options.length > 0) // true
+ * console.log(ProofJobServiceResult.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -388,7 +388,7 @@ export const ProofJobExitCode = LiteralKit(["exited", "killed", "dumped"]).pipe(
  *
  * ```ts
  * import { ProofJobExitCode } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobExitCode.Options.length > 0) // true
+ * console.log(ProofJobExitCode.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -434,7 +434,7 @@ export const ProofJobTerminationReason = LiteralKit([
  *
  * ```ts
  * import { ProofJobTerminationReason } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobTerminationReason.Options.length > 0) // true
+ * console.log(ProofJobTerminationReason.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -513,7 +513,7 @@ export const ProofJobRowSeverity = LiteralKit(["P1", "P2"]).pipe(
  *
  * ```ts
  * import { ProofJobRowSeverity } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobRowSeverity.Options.length > 0) // true
+ * console.log(ProofJobRowSeverity.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -548,7 +548,7 @@ export const ProofJobObservedVia = LiteralKit(["job-wait", "job-status", "inbox-
  *
  * ```ts
  * import { ProofJobObservedVia } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobObservedVia.Options.length > 0) // true
+ * console.log(ProofJobObservedVia.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -589,7 +589,7 @@ export const ProofJobCancelOutcome = LiteralKit([
  *
  * ```ts
  * import { ProofJobCancelOutcome } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobCancelOutcome.Options.length > 0) // true
+ * console.log(ProofJobCancelOutcome.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -604,7 +604,7 @@ export type ProofJobCancelOutcome = typeof ProofJobCancelOutcome.Type;
  *
  * ```ts
  * import { proofJobUnitName } from "@beep/repo-cli/test/Yeet"
- * import { UUID } from "@beep/schema/String"
+ * import { UUID } from "@beep/repo-cli/test/SharedInternals"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *
@@ -680,9 +680,9 @@ export class ProofJobRequest extends S.Class<ProofJobRequest>($I`ProofJobRequest
 export class ProofJobSubmitter extends S.Class<ProofJobSubmitter>($I`ProofJobSubmitter`)(
   {
     pid: S.Int,
-    procStart: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    procStart: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     cwd: S.NonEmptyString,
-    harness: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    harness: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProofJobSubmitter", {
     description: "Pid, process-start identity, working directory, and optional harness name of the submitting process.",
@@ -723,8 +723,8 @@ export class ProofJobUnit extends S.Class<ProofJobUnit>($I`ProofJobUnit`)(
     logPath: S.NonEmptyString,
     execStart: S.Array(S.String),
     execStopPost: S.Array(S.String),
-    maxRuntimeSeconds: S.Int.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    invocationId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    maxRuntimeSeconds: S.Int.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    invocationId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProofJobUnit", {
     description:
@@ -751,8 +751,8 @@ export class ProofJobUnit extends S.Class<ProofJobUnit>($I`ProofJobUnit`)(
 export class ProofJobRunner extends S.Class<ProofJobRunner>($I`ProofJobRunner`)(
   {
     pid: S.Int,
-    procStart: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    procStart: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     startedAt: S.String,
   },
   $I.annote("ProofJobRunner", {
@@ -784,8 +784,8 @@ export class ProofJobRunner extends S.Class<ProofJobRunner>($I`ProofJobRunner`)(
 export class ProofJobOutcome extends S.Class<ProofJobOutcome>($I`ProofJobOutcome`)(
   {
     verdictOutcome: YeetOutcome,
-    verdictPath: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    verdictPath: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     endedAt: S.String,
   },
   $I.annote("ProofJobOutcome", {
@@ -889,9 +889,9 @@ export const proofJobOutcomeForExit: {
 export class ProofJobSystemdResult extends S.Class<ProofJobSystemdResult>($I`ProofJobSystemdResult`)(
   {
     serviceResult: ProofJobServiceResult,
-    exitCode: ProofJobExitCode.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    exitStatus: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    invocationId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    exitCode: ProofJobExitCode.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    exitStatus: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    invocationId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     finalizedAt: S.String,
   },
   $I.annote("ProofJobSystemdResult", {
@@ -900,6 +900,7 @@ export class ProofJobSystemdResult extends S.Class<ProofJobSystemdResult>($I`Pro
   })
 ) {}
 
+const proofJobRecordReturnedWaveRowIdsDefault = A.empty<string>();
 /**
  * One durable job record, `.beep/yeet/jobs/<jobId>.json` (ruling 36).
  *
@@ -928,7 +929,7 @@ export class ProofJobSystemdResult extends S.Class<ProofJobSystemdResult>($I`Pro
  *
  * ```ts
  * import { ProofJobRecord, ProofJobRequest, ProofJobSubmitter, ProofJobUnit } from "@beep/repo-cli/test/Yeet"
- * import { UUID } from "@beep/schema/String"
+ * import { UUID } from "@beep/repo-cli/test/SharedInternals"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
@@ -964,15 +965,21 @@ export class ProofJobRecord extends S.Class<ProofJobRecord>($I`ProofJobRecord`)(
     request: ProofJobRequest,
     submitter: ProofJobSubmitter,
     unit: ProofJobUnit,
-    runner: ProofJobRunner.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    outcome: ProofJobOutcome.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    systemd: ProofJobSystemdResult.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    terminationReason: ProofJobTerminationReason.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    cancelRequestedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    publishedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    prNumber: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    returnedWaveRowIds: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
-    returnedWaveRedSetKey: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    runner: ProofJobRunner.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    outcome: ProofJobOutcome.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    systemd: ProofJobSystemdResult.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    terminationReason: ProofJobTerminationReason.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    cancelRequestedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    publishedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    prNumber: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    returnedWaveRowIds: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(proofJobRecordReturnedWaveRowIdsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(proofJobRecordReturnedWaveRowIdsDefault))
+    ),
+    returnedWaveRedSetKey: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProofJobRecord", {
     description:
@@ -1063,7 +1070,7 @@ export const proofJobRowSeverityFor: {
  *
  * ```ts
  * import { YeetProofJobCapsule } from "@beep/repo-cli/test/Yeet"
- * import { UUID } from "@beep/schema/String"
+ * import { UUID } from "@beep/repo-cli/test/SharedInternals"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *
@@ -1137,7 +1144,7 @@ export class ProofJobSubmission extends S.Class<ProofJobSubmission>($I`ProofJobS
     submitter: ProofJobSubmitter,
     execPath: S.NonEmptyString,
     entrypoint: S.NonEmptyString,
-    maxRuntimeSeconds: S.Int.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    maxRuntimeSeconds: S.Int.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProofJobSubmission", {
     description:
@@ -1163,7 +1170,7 @@ export class ProofJobSubmission extends S.Class<ProofJobSubmission>($I`ProofJobS
  */
 export class ProofJobWaitOptions extends S.Class<ProofJobWaitOptions>($I`ProofJobWaitOptions`)(
   {
-    timeoutMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    timeoutMs: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pollIntervalMs: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(2000))),
   },
   $I.annote("ProofJobWaitOptions", {
@@ -1187,7 +1194,7 @@ export class ProofJobWaitOptions extends S.Class<ProofJobWaitOptions>($I`ProofJo
  * ```ts
  * import { ProofJobWaitOutcome } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(ProofJobWaitOutcome.Options) // ["success", "failure", "wave", "terminated"]
+ * console.log(ProofJobWaitOutcome.literals) // ["success", "failure", "wave", "terminated"]
  * ```
  *
  * @category models
@@ -1284,14 +1291,14 @@ export const proofJobWaitExitFor = (outcome: ProofJobWaitOutcome): ProofJobWaitE
  * ```ts
  * import { proofJobWaitExitTable, ProofJobWaitOutcome } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(proofJobWaitExitTable.length === ProofJobWaitOutcome.Options.length) // true
+ * console.log(proofJobWaitExitTable.length === ProofJobWaitOutcome.literals.length) // true
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
 export const proofJobWaitExitTable: ReadonlyArray<ProofJobWaitExit> = A.map(
-  ProofJobWaitOutcome.Options,
+  ProofJobWaitOutcome.literals,
   proofJobWaitExitFor
 );
 
@@ -1345,7 +1352,7 @@ export const proofJobSettledWaitOutcome = (record: Pick<ProofJobRecord, "phase" 
 export class ProofJobFinalization extends S.Class<ProofJobFinalization>($I`ProofJobFinalization`)(
   {
     record: ProofJobRecord,
-    inboxRowId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    inboxRowId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     attemptTerminated: S.Boolean,
     duplicate: S.Boolean,
   },

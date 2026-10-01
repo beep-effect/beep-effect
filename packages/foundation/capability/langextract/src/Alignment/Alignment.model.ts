@@ -8,9 +8,7 @@
 import { $LangExtractId } from "@beep/identity";
 import { AlignmentStatus, ExtractionCandidate, GroundedExtraction } from "@beep/langextract/Extraction";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
@@ -43,7 +41,9 @@ const $I = $LangExtractId.create("Alignment");
  * @category schemas
  * @since 0.0.0
  */
-export const AlignedStatus = LiteralKit(AlignmentStatus.omitOptions(["unaligned"])).pipe(
+export const AlignedStatus = LiteralKit(
+  AlignmentStatus.pick(["match_exact", "match_lesser", "match_minimal_fold", "match_fuzzy"]).literals
+).pipe(
   $I.annoteSchema("AlignedStatus", {
     description:
       "Alignment status of a successfully matched candidate; absence of a match is Option.none, never a member.",
@@ -63,10 +63,10 @@ export type AlignedStatus = typeof AlignedStatus.Type;
  * **Example** (Type a matched slice)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import type { MatchedText } from "@beep/langextract/Alignment"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const match: MatchedText = [NonNegativeInt.make(4), "Lovelace"]
+ * const match: MatchedText = [S.Natural.make(4), "Lovelace"]
  * console.log(match[1])
  * ```
  *
@@ -74,7 +74,7 @@ export type AlignedStatus = typeof AlignedStatus.Type;
  * @since 0.0.0
  */
 export const MatchedText = S.Tuple([
-  NonNegativeInt.pipe(
+  S.Natural.pipe(
     $I.annoteKey("MatchedText.start", {
       description: "UTF-16 start offset of the matched slice in the source text.",
     })
@@ -103,11 +103,11 @@ export type MatchedText = typeof MatchedText.Type;
  * **Example** (Type a scored match)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import type { ScoredMatch } from "@beep/langextract/Alignment"
  * import { UnitInterval } from "@beep/nlp/Handoff"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const scored: ScoredMatch = [NonNegativeInt.make(0), "Acme.", UnitInterval.make(0.8)]
+ * const scored: ScoredMatch = [S.Natural.make(0), "Acme.", UnitInterval.make(0.8)]
  * console.log(scored[2])
  * ```
  *
@@ -149,10 +149,10 @@ export type ScoredMatch = typeof ScoredMatch.Type;
  * **Example** (Type an aligned match)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import type { AlignedMatch } from "@beep/langextract/Alignment"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const aligned: AlignedMatch = ["match_exact", NonNegativeInt.make(0), "Ada"]
+ * const aligned: AlignedMatch = ["match_exact", S.Natural.make(0), "Ada"]
  * console.log(aligned[0])
  * ```
  *
@@ -226,8 +226,8 @@ export declare namespace AlignedMatch {
  */
 export class AlignmentSource extends S.Class<AlignmentSource>($I`AlignmentSource`)(
   {
-    fuzzyThreshold: UnitInterval.pipe(SchemaUtils.withConstantDefault<number>(DEFAULT_FUZZY_THRESHOLD)),
-    maxExtractions: NonNegativeInt.pipe(SchemaUtils.withConstantDefault<number>(DEFAULT_MAX_EXTRACTIONS)),
+    fuzzyThreshold: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed<number>(DEFAULT_FUZZY_THRESHOLD))),
+    maxExtractions: S.Natural.pipe(S.withConstructorDefault(Effect.succeed<number>(DEFAULT_MAX_EXTRACTIONS))),
     sourceText: S.String,
   },
   $I.annote("AlignmentSource", {
@@ -334,10 +334,7 @@ export const SpanFromMatch = MatchedText.pipe(
             )
           );
         }
-        const match: MatchedText = [
-          NonNegativeInt.make(span.start),
-          Str.slice(span.start, span.end)(source.sourceText),
-        ];
+        const match: MatchedText = [S.Natural.make(span.start), Str.slice(span.start, span.end)(source.sourceText)];
         return Effect.succeed(match);
       })
     ),
@@ -412,7 +409,7 @@ export const AlignedMatchFromMatchedText = (status: AlignedStatus) =>
         return aligned;
       }),
       encode: SchemaGetter.transform(([, start, text]: AlignedMatch.Encoded) => {
-        const match: MatchedText = [NonNegativeInt.make(start), text];
+        const match: MatchedText = [S.Natural.make(start), text];
         return match;
       }),
     }),

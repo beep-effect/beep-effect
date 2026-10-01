@@ -9,14 +9,14 @@ import {
   processStartIdentityForPid,
   processStartTimeForPid,
 } from "@beep/repo-cli/test/RepoRun";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { Effect, FileSystem } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { vi } from "vitest";
 
 const DEAD_PID = 2_147_483_647;
 const isProcessStartIdentity = S.is(ProcessStartIdentity);
@@ -38,8 +38,8 @@ const withProcStat = Effect.fnUntraced(function* <Value, Error, Requirements>(
 
 describe("ProcessIdentity", () => {
   it("models every supported source-prefixed identity", () => {
-    expect(ProcessIdentitySource.Options).toStrictEqual(["proc", "ps", "win"]);
-    expect(ProcessIdentityStatus.Options).toStrictEqual(["alive", "dead", "unknown"]);
+    expect(ProcessIdentitySource.literals).toStrictEqual(["proc", "ps", "win"]);
+    expect(ProcessIdentityStatus.literals).toStrictEqual(["alive", "dead", "unknown"]);
     expect(isProcessStartIdentity("proc:8241991")).toBe(true);
     expect(isProcessStartIdentity("ps:Thu Sep  3 12:00:00 2026")).toBe(true);
     expect(isProcessStartIdentity("win:638925552000000000")).toBe(true);

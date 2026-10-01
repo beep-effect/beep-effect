@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -48,7 +47,7 @@ const FrontmatterFields = S.Record(S.String, S.Unknown).pipe(
  */
 export class FrontmatterDocument extends S.Class<FrontmatterDocument>($I`FrontmatterDocument`)(
   {
-    frontmatter: S.OptionFromOptionalKey(FrontmatterFields).pipe(SchemaUtils.withNoneDefault),
+    frontmatter: S.OptionFromOptionalKey(FrontmatterFields).pipe(S.withConstructorDefault(Effect.succeedNone)),
     body: S.String,
   },
   $I.annote("FrontmatterDocument", {

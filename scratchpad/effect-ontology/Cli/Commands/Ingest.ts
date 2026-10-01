@@ -10,14 +10,13 @@ import type * as Crypto from "effect/Crypto";
  * @since 0.0.0
  */
 
-import { NonNegativeInt } from "@beep/schema/Int";
 import type { PlatformError } from "effect";
 import { Console, DateTime, Effect, FileSystem, Path, Random } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import type * as S from "effect/Schema";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
@@ -144,7 +143,7 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
       documentId: docId,
       sourceUri,
       contentType,
-      sizeBytes: NonNegativeInt.make(Number(stat.size)),
+      sizeBytes: S.Natural.make(Number(stat.size)),
     });
     yield* Console.log(`  Uploaded: ${file} -> ${storageKey}`);
   }

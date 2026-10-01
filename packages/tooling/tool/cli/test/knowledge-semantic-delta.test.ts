@@ -1,3 +1,8 @@
+const probeWarningStderr = "\u001B[31mwarning\u001B[0m at /home/operator/private/runtime.ts\u0001";
+const probeFailureStdout = "unsafe stdout from /home/operator/private/stdout.ts";
+const probeFailureStderr =
+  "\u001B[31mSyntaxError\u001B[0m in /home/operator/private/stderr.ts\u0001\r\nsecond\rspoof at /secret and C:\\secret and /home/üser/prójects/tökens.ts:3:7 plus /données/été near /var/💼client-secret/config.ts:3:7 (see https://example.com/keep-this-path)";
+
 import {
   decodeKnowledgeUtf8,
   encodeKnowledgeSemanticDeltaReportJson,
@@ -22,10 +27,10 @@ import {
   renderKnowledgeSemanticDeltaHumanReport,
 } from "@beep/repo-cli/test/Knowledge";
 import { findRepoRoot } from "@beep/repo-utils";
-import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Crypto, Effect, Exit, FileSystem, HashSet, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
@@ -323,7 +328,7 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
               KnowledgeRename.make({
                 sourcePath: "docs/old.md",
                 targetPath: "docs/new.md",
-                score: NonNegativeInt.make(100),
+                score: S.Natural.make(100),
               }),
             ],
           }
@@ -346,7 +351,7 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
               KnowledgeRename.make({
                 sourcePath: "docs/old.md",
                 targetPath: "docs/new.md",
-                score: NonNegativeInt.make(80),
+                score: S.Natural.make(80),
               }),
             ],
           }
@@ -669,7 +674,7 @@ describe("knowledge semantic-delta negative controls", () => {
               KnowledgeRename.make({
                 sourcePath: "docs/old.md",
                 targetPath: "docs/new.md",
-                score: NonNegativeInt.make(100),
+                score: S.Natural.make(100),
               }),
             ],
           }
@@ -919,7 +924,7 @@ describe("knowledge semantic-delta probe policy", () => {
 
       expect(skipped.probePolicy).toBe("skipped-untrusted-context");
       expect(skipped.introduced).toEqual([]);
-      expect(Exit.isFailure(probed)).toBe(true);
+      assertTrue(Exit.isFailure(probed));
     }).pipe(provideScopedLayer(testLayer))
   );
 
@@ -1380,10 +1385,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
   it.effect("reports malformed command output with labeled sanitized stderr and expected counts", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const harness = yield* makeProbeHarness(
-          "resolved\tgoals\tdoctor\nextra",
-          "\u001B[31mwarning\u001B[0m at /home/operator/private/runtime.ts\u0001"
-        );
+        const harness = yield* makeProbeHarness("resolved\tgoals\tdoctor\nextra", probeWarningStderr);
         const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
 
         assert.strictEqual(error._tag, "KnowledgeOperationalError");
@@ -1435,11 +1437,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
   it.effect("redacts checkout archive scratch and arbitrary absolute paths from boot failures", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const harness = yield* makeProbeHarness(
-          "unsafe stdout from /home/operator/private/stdout.ts",
-          "\u001B[31mSyntaxError\u001B[0m in /home/operator/private/stderr.ts\u0001\r\nsecond\rspoof at /secret and C:\\secret and /home/üser/prójects/tökens.ts:3:7 plus /données/été near /var/💼client-secret/config.ts:3:7 (see https://example.com/keep-this-path)",
-          1
-        );
+        const harness = yield* makeProbeHarness(probeFailureStdout, probeFailureStderr, 1);
         const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
 
         assert.strictEqual(error._tag, "KnowledgeProbeBootError");

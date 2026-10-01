@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { FederalRuleComponentSpan } from "../ComponentSpan/index.ts";
@@ -26,21 +26,21 @@ const $I = $LawPracticeDomainId.create("values/StateRuleCitation/StateRuleCitati
  * **Example** (Creating a state rule citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { StateRuleCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = StateRuleCitation.make({
  *   text: "Fla. R. Civ. P. 1.510",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "Fla. R. Civ. P. 1.510",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  *   jurisdiction: "FL",
  *   ruleSet: "civil",
  *   rule: "1.510",
@@ -67,14 +67,14 @@ export class StateRuleCitation extends S.Class<StateRuleCitation>($I`StateRuleCi
     }),
     subsection: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Subsection chain (e.g., "(b)(6)").',
       })
     ),
     spans: FederalRuleComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating the sub-parts of this citation within the source text.",
       })

@@ -6,18 +6,18 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientChannel, CacheClientPin } from "@beep/repo-configs/cache";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.protocol.schemas");
 const ProtocolCase = LiteralKit(["producer", "replay", "missing-tag", "invalid-tag", "corrupt-body", "wrong-key"]);
 type ProtocolCase = typeof ProtocolCase.Type;
-const Artifact = S.Struct({ sha256: Sha256Hex, bytes: NonNegativeInt });
+const Artifact = S.Struct({ sha256: Sha256Hex, bytes: S.Natural });
 type Artifact = typeof Artifact.Type;
 const NativeOutcome = S.TaggedUnion({
   Produced: { output: Artifact },
   Replayed: { output: Artifact },
-  Rejected: { exitCode: S.Int, restoredOutputs: NonNegativeInt },
+  Rejected: { exitCode: S.Int, restoredOutputs: S.Natural },
 });
 type NativeOutcome = typeof NativeOutcome.Type;
 const NativeRun = S.Struct({

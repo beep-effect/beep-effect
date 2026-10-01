@@ -83,7 +83,7 @@ const $I = $RepoCliId.create("commands/Yeet/internal/GateStaleness");
  * ```ts
  * import { GateArtifactKind } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(GateArtifactKind.Options)
+ * console.log(GateArtifactKind.literals)
  * ```
  *
  * @category models
@@ -365,7 +365,8 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
     scope: "repo-code",
   }),
   // Read by `lint:schema-first` (Lint/SchemaFirst.ts) as the tracked-finding
-  // inventory it ratchets against.
+  // inventory it ratchets against. `--write` only shrinks its parity backlog, so
+  // this repair never admits a new parity occurrence.
   GateArtifactDescriptor.make({
     artifactPath: SchemaFirstInventoryPath,
     gateId: "schema-first-inventory",

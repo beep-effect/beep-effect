@@ -14,7 +14,6 @@ import {
 } from "@beep/ontology-domain/aggregates/Session";
 import { RunOntologySparqlResult } from "@beep/ontology-use-cases/aggregates/Session";
 import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
-import { NonNegativeInt } from "@beep/schema";
 import { SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
@@ -22,6 +21,7 @@ import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Deferred, Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import { AtomRegistry, Reactivity } from "effect/reactivity";
+import * as S from "effect/Schema";
 
 const sessionId = SessionId.make("session-1");
 
@@ -41,7 +41,7 @@ const staleRows = RunOntologySparqlResult.make({
   profile: "select",
   submittedQuery: "SELECT ?s WHERE { ?s ?p ?o }",
   normalizedQuery: "SELECT ?s WHERE { ?s ?p ?o } LIMIT 100",
-  effectiveLimit: NonNegativeInt.make(100),
+  effectiveLimit: S.Natural.make(100),
   limitInjected: true,
   truncated: false,
   rawResultCount: 1,

@@ -7,7 +7,6 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { UUID } from "@beep/schema/String";
 import * as O from "@beep/utils/Option";
 import {
   Cause,
@@ -44,6 +43,7 @@ import {
   sortedUniquePaths,
   withQualityAdmission,
 } from "../../../internal/repo-run/index.ts";
+import { UUID } from "../../../internal/schema/Uuid.ts";
 import {
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
   FlakeQuarantineArtifactJson,

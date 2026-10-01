@@ -31,7 +31,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { DateTime, Effect, flow, HashMap, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -217,6 +217,7 @@ export const yeetCheckRecordInstant = (value: string | null | undefined): O.Opti
 export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
   {
     name: S.NonEmptyString,
+    description: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     outcome: YeetCheckOutcome,
     required: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
     link: S.NullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(null))),
@@ -224,18 +225,58 @@ export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
       S.withConstructorDefault(Effect.succeed(YeetCheckSignal.make({ bucket: "", state: "" })))
     ),
     workflow: S.NullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(null))),
-    startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    completedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    startedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    completedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetWatchCheck", {
     description: "One PR check's name, classified outcome, and raw record within a watch snapshot.",
   })
 ) {}
 
-const instantMillis = (instant: string): number =>
-  O.getOrElse(O.map(DateTime.make(instant), DateTime.toEpochMillis), () => Number.POSITIVE_INFINITY);
+/**
+ * Whether one reported check prevents merge readiness.
+ *
+ * **Details**
+ * Pending checks and failures block regardless of heavy-tier admission or
+ * required-check classification. Only an optional Vercel deployment with an
+ * explicit rate-limit description is exempt; missing evidence fails closed.
+ *
+ * **Example** (An optional heavy failure blocks)
+ *
+ * ```ts
+ * import { YeetWatchCheck, yeetCheckBlocksMerge } from "@beep/repo-cli/test/Yeet";
+ *
+ * yeetCheckBlocksMerge(YeetWatchCheck.make({
+ *   name: "Heavy / Coverage Regression",
+ *   outcome: "fail",
+ *   required: false,
+ * })); // true
+ * ```
+ *
+ * @param check - The classified check and its original failure description.
+ * @returns Whether the check blocks readiness under the repository merge policy.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetCheckBlocksMerge = (check: YeetWatchCheck): boolean =>
+  check.outcome === "pending" ||
+  (check.outcome === "fail" &&
+    !(
+      !check.required &&
+      /^Vercel\s*[-–—]\s*\S/u.test(check.name) &&
+      O.exists(check.description, (description) =>
+        /^Deployment rate limited\s*[-–—]\s*retry in \d+ (?:seconds?|minutes?|hours?|days?)\.?$/iu.test(description)
+      )
+    ));
 
-const instantOrder: Order.Order<string> = Order.mapInput(Order.Number, instantMillis);
+const instantOrder: Order.Order<string> = Order.mapInput(
+  Order.Number,
+  flow(
+    DateTime.make,
+    O.map(DateTime.toEpochMillis),
+    O.getOrElse(() => Number.POSITIVE_INFINITY)
+  )
+);
 
 const headRedOrder: Order.Order<YeetHeadRed> = Order.mapInput(instantOrder, (red: YeetHeadRed) => red.at);
 
@@ -310,6 +351,7 @@ export class YeetWatchThread extends S.Class<YeetWatchThread>($I`YeetWatchThread
   })
 ) {}
 
+const yeetWatchSnapshotLabelsDefault = A.empty<string>();
 /**
  * Everything one watch poll observed about the pull request.
  *
@@ -343,14 +385,17 @@ export class YeetWatchThread extends S.Class<YeetWatchThread>($I`YeetWatchThread
  */
 export class YeetWatchSnapshot extends S.Class<YeetWatchSnapshot>($I`YeetWatchSnapshot`)(
   {
-    settle: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    settle: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     checks: S.Array(YeetWatchCheck),
     headSha: S.NonEmptyString,
     mergeable: S.String,
     mergeStateStatus: S.String.pipe(S.withConstructorDefault(Effect.succeed("UNKNOWN"))),
     prNumber: S.Finite,
     state: S.String,
-    labels: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    labels: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetWatchSnapshotLabelsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetWatchSnapshotLabelsDefault))
+    ),
     threads: S.Array(YeetWatchThread),
     criteria: YeetMergeReadyCriteria.pipe(
       S.withConstructorDefault(
@@ -364,6 +409,7 @@ export class YeetWatchSnapshot extends S.Class<YeetWatchSnapshot>($I`YeetWatchSn
             mergeable: false,
             mergeStateAcceptable: false,
             reviewDecisionAcceptable: false,
+            closeoutGatesPassed: false,
             greptileScore: O.none(),
           })
         )
@@ -596,6 +642,7 @@ export class YeetHeadChanged extends S.Class<YeetHeadChanged>($I`YeetHeadChanged
   })
 ) {}
 
+const yeetSettleChangedGatedDefault = A.empty<string>();
 /**
  * The settle wait reason changed between polls.
  *
@@ -638,7 +685,10 @@ export class YeetSettleChanged extends S.Class<YeetSettleChanged>($I`YeetSettleC
     to: S.NullOr(YeetSettleReason),
     pending: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
     missing: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
-    gated: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    gated: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetSettleChangedGatedDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetSettleChangedGatedDefault))
+    ),
   },
   $I.annote("YeetSettleChanged", {
     description: "The merge loop's settle wait reason moved between polls, with the open census.",
@@ -1070,7 +1120,7 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
       ? A.empty()
       : [YeetMergeabilityChanged.make({ at, headSha: next.headSha, from: prev.mergeable, to: next.mergeable })];
 
-  const criteriaEvents = A.flatMap(YeetMergeReadyCriterion.Options, (criterion): ReadonlyArray<YeetWatchEvent> => {
+  const criteriaEvents = A.flatMap(YeetMergeReadyCriterion.literals, (criterion): ReadonlyArray<YeetWatchEvent> => {
     const before = mergeReadyCriterionHolds(prev.criteria, criterion);
     const after = mergeReadyCriterionHolds(next.criteria, criterion);
     return before === after

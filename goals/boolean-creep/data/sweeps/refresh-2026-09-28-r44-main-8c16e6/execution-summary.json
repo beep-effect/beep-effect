@@ -1,0 +1,338 @@
+{
+  "lanes": [
+    {
+      "lane": "r44-foundation-primitive",
+      "startedAt": 1790628465.228178,
+      "endedAt": 1790628510.7885432,
+      "status": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 8
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transcriptSha256": "c8e50499c8c4c6990c7756741a31e2692dbb2da06782087b0bfa52e22222c3c0",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r44-foundation-capability",
+      "startedAt": 1790628510.7888818,
+      "endedAt": 1790628680.9607046,
+      "status": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 20
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transcriptSha256": "acff87c737e521c6263f261ff18300fe7b33d5a5d098c5926c44ea88b3877be0",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r44-foundation-modeling-rest",
+      "startedAt": 1790628680.961452,
+      "endedAt": 1790628905.8164318,
+      "status": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 33
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transcriptSha256": "6dd66f86dfe3761fc330b8ba8f731f7d7bc75593614227d0cfebf31cdf8cca90",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r44-foundation-schema-a-m",
+      "startedAt": 1790628905.817267,
+      "endedAt": 1790629057.6738348,
+      "status": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 23
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transcriptSha256": "4c2b477598b0a4eb96a1db6db248ecb963d86ad57fc70d5a227329e0c0898325",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r44-foundation-schema-n-z",
+      "startedAt": 1790629057.6744778,
+      "endedAt": 1790629190.9825156,
+      "status": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 16
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transcriptSha256": "dc614c9342ab4590a60102f3df28d785e595a647dd26a9eae6b0cec05157c9c3",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r44-foundation-ui",
+      "startedAt": 1790629190.9830306,
+      "endedAt": 1790629360.6419272,
+      "status": "failed",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "reason": "Refusal: trailing-invalid-stream",
+      "transcriptSha256": "9234b7a30b99e10d57530bdf0dee2352595d54ae0fa091472c3f87756a968e8f",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r44-drivers-a-f",
+      "startedAt": null,
+      "endedAt": 1790629360.6427917,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-drivers-g-m",
+      "startedAt": null,
+      "endedAt": 1790629360.6428766,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-drivers-n-r",
+      "startedAt": null,
+      "endedAt": 1790629360.6429284,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-drivers-s-z",
+      "startedAt": null,
+      "endedAt": 1790629360.6429782,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-architecture-ecosystem-internal",
+      "startedAt": null,
+      "endedAt": 1790629360.6430264,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-agents-workspace",
+      "startedAt": null,
+      "endedAt": 1790629360.6430843,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-epistemic-ontology",
+      "startedAt": null,
+      "endedAt": 1790629360.643134,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-shared-documents",
+      "startedAt": null,
+      "endedAt": 1790629360.6431818,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-law-practice-domain",
+      "startedAt": null,
+      "endedAt": 1790629360.6432264,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-law-practice-runtime",
+      "startedAt": null,
+      "endedAt": 1790629360.643274,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-apps",
+      "startedAt": null,
+      "endedAt": 1790629360.64332,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-tooling-library-observability",
+      "startedAt": null,
+      "endedAt": 1790629360.643374,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-tooling-library-support",
+      "startedAt": null,
+      "endedAt": 1790629360.6434233,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-tooling-policy",
+      "startedAt": null,
+      "endedAt": 1790629360.6434686,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-tool-docgen",
+      "startedAt": null,
+      "endedAt": 1790629360.6435127,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-cli-internal-root",
+      "startedAt": null,
+      "endedAt": 1790629360.6435559,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-cli-commands-a-c",
+      "startedAt": null,
+      "endedAt": 1790629360.6435995,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-cli-commands-d-k",
+      "startedAt": null,
+      "endedAt": 1790629360.6436436,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-cli-commands-l-q",
+      "startedAt": null,
+      "endedAt": 1790629360.6436899,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-cli-commands-r-z",
+      "startedAt": null,
+      "endedAt": 1790629360.6437354,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    },
+    {
+      "lane": "r44-cli-yeet",
+      "startedAt": null,
+      "endedAt": 1790629360.643782,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: trailing-invalid-stream"
+    }
+  ],
+  "stopReason": "Refusal: trailing-invalid-stream",
+  "executionComplete": false,
+  "coverageAccepted": false,
+  "dryCredit": false,
+  "P3": false,
+  "privateOriginalSha256": "2b4e6876ae6c14d39909f59a3d105ed3ac4183742ee7e309225f96bbdb927512",
+  "sanitization": "Removed session/request identifiers and usage accounting; lane outcomes unchanged."
+}

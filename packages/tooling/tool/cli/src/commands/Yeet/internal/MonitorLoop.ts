@@ -51,8 +51,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
+import { LiteralKit } from "@beep/schema";
 import { Console, DateTime, Duration, Effect, flow, HashSet, Match, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -69,6 +68,7 @@ import {
   githubJobShapeEvidence,
 } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "../../../internal/repo-run/index.ts";
+import { UUID } from "../../../internal/schema/Uuid.ts";
 import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { detectNoLocationTs2589Flake } from "../../Quality/internal/FlakeQuarantine.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -216,7 +216,7 @@ const mergeLoopPollInterval = Duration.seconds(30);
  * ```ts
  * import { YeetMonitorFlakeClass } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetMonitorFlakeClass.Options)
+ * console.log(YeetMonitorFlakeClass.literals)
  * ```
  *
  * @category models
@@ -360,9 +360,15 @@ export class YeetMonitorFailedJob extends S.Class<YeetMonitorFailedJob>($I`YeetM
   {
     databaseId: S.Finite,
     name: S.String,
-    flakeClass: YeetMonitorFlakeClass.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    logPending: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    runCompleted: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    flakeClass: YeetMonitorFlakeClass.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    logPending: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    runCompleted: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
   },
   $I.annote("YeetMonitorFailedJob", {
     description: "One failed hosted job paired with the flake class its log matched, if any.",
@@ -1110,45 +1116,70 @@ const renderMergeReadyGate = (snapshot: YeetStatusSnapshot): string =>
 // merge-base diff read once per head; `families` are the gated families folded
 // from the ruleset; `admission` is re-decided every poll from the snapshot's
 // labels, the only admission input that changes without a push.
+const monitorHeadStateFamiliesDefault = A.empty<YeetGatedContextFamily>();
+const monitorHeadStateChangedPathsDefault = A.empty<string>();
+const monitorHeadStateRegisteredDefault = HashSet.empty<string>();
+const monitorHeadStateConflictCorruptNoticedDefault = HashSet.empty<number>();
 class MonitorHeadState extends S.Class<MonitorHeadState>($I`MonitorHeadState`)(
   {
     timeline: YeetHeadTimeline,
     firstObservedMs: S.Finite,
     settleClockMs: S.Finite,
-    expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    families: S.Array(YeetGatedContextFamily).pipe(SchemaUtils.withKeyDefaults(A.empty<YeetGatedContextFamily>())),
-    changedPaths: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
-    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    families: S.Array(YeetGatedContextFamily).pipe(
+      S.withConstructorDefault(Effect.succeed(monitorHeadStateFamiliesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(monitorHeadStateFamiliesDefault))
+    ),
+    changedPaths: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(monitorHeadStateChangedPathsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(monitorHeadStateChangedPathsDefault))
+    ),
+    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     // Every check name ever reported for this head: an absent one later is pending, not missing.
-    registered: S.HashSet(S.String).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<string>())),
-    announcedRow: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    registered: S.HashSet(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(monitorHeadStateRegisteredDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(monitorHeadStateRegisteredDefault))
+    ),
+    announcedRow: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     // The head's open P0 base-conflict row (until-ready only): the id of the
     // latest conflict generation, written once when that conflict is first read
     // and reset when a `cleared` ack closes it, so a conflict that returns on
     // the same head writes the next generation.
-    conflictRow: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    conflictRow: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     // Whether this loop already knows the head's conflict row, from writing it or
     // from an inbox lookup, so a restarted loop recalls it once, not every poll.
-    conflictRecalled: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    conflictRecalled: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     // Whether this loop already said why a conflict on this head writes no row
     // (its generation carries another ack kind than `cleared`): once per head.
-    conflictAckNoticed: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    conflictAckNoticed: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     // The conflict generations on this head whose ack receipt does not decode
     // and that this loop already named: the walk passes them silently on every
     // conflicted poll, so each is said once per head.
-    conflictCorruptNoticed: S.HashSet(S.Int).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<number>())),
+    conflictCorruptNoticed: S.HashSet(S.Int).pipe(
+      S.withConstructorDefault(Effect.succeed(monitorHeadStateConflictCorruptNoticedDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(monitorHeadStateConflictCorruptNoticedDefault))
+    ),
     // Whether the wave record has been pinned to this head (until-ready only);
     // a new head starts unpinned, so the first converging poll supersedes.
-    wavePinned: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    wavePinned: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     // The red set the last conclusive triage classified on this head; the same
     // set again skips the failed-job and log reads (the loop polls through reds).
-    triagedReds: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    triagedReds: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     // The required red set an attached until-ready loop takes as already known
     // on this head, set when the head is pinned: the key an earlier monitor
     // stamped for it, or else this loop's first observation. A red set that
     // names a red beyond it is a new wave even if its row id was already there.
-    waveRedSet: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    waveRedSet: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("MonitorHeadState", {
     description:
@@ -1188,9 +1219,9 @@ const readPushedAt = Effect.fn("YeetMonitorLoop.readPushedAt")(function* (
 class MonitorPoll extends S.Class<MonitorPoll>($I`MonitorPoll`)(
   {
     budget: S.HashSet(S.String),
-    head: MonitorHeadState.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    terminal: YeetMonitorTerminalState.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    failure: YeetCommandError.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    head: MonitorHeadState.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    terminal: YeetMonitorTerminalState.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    failure: YeetCommandError.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     // Whether this tick replayed the durable comment stream. The loop keeps
     // its first cycle open until a tick reports true, so a failed read or a
     // read without a pull request number cannot spend the one replay.
@@ -1217,7 +1248,7 @@ const bindRequiredCensus = (snapshot: YeetStatusSnapshot, verdict: YeetSettleVer
     mergeReady: O.map(snapshot.mergeReady, (ready) => {
       const criteria = YeetMergeReadyCriteria.make({ ...ready.criteria, requiredChecksGreen: false });
       const failing = A.findFirst(
-        YeetMergeReadyCriterion.Options,
+        YeetMergeReadyCriterion.literals,
         (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
       );
       return YeetMergeReady.make({ ready: false, criteria, failing });

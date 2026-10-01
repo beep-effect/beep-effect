@@ -5,7 +5,8 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -327,7 +328,7 @@ export class CacheTaskContract extends S.Class<CacheTaskContract>($I`CacheTaskCo
     negativeCases: S.NonEmptyArray(S.NonEmptyString),
     crossRoot: S.Boolean,
     configuration: CacheTaskConfiguration,
-    activation: CacheActivationProjection.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    activation: CacheActivationProjection.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CacheTaskContract", { description: "Complete reviewed obligations for a finite executable computation." })
 ) {}
@@ -397,7 +398,7 @@ export const isCacheTransitionAllowed: {
 const sameKey = S.toEquivalence(CacheQualificationKey);
 const samePins = S.toEquivalence(CacheQualificationPins);
 const sameClient = S.toEquivalence(CacheClientPin);
-const pairKinds = CacheEvidenceKind.pickOptions(["fresh-fresh", "fresh-remote-hit"]);
+const pairKinds = CacheEvidenceKind.pick(["fresh-fresh", "fresh-remote-hit"]).literals;
 
 const contractPromotionFailures = (
   contract: CacheTaskContract,
@@ -522,7 +523,7 @@ export const cachePromotionFailures: {
     );
     return A.appendAll(
       contractPromotionFailures(contract, observations),
-      A.flatMap(CacheClientChannel.Options, (channel) => {
+      A.flatMap(CacheClientChannel.literals, (channel) => {
         const rows = A.filter(valid, (entry) => entry.channel === channel);
         return [
           ...isolatedPairFailures(channel, rows),

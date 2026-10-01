@@ -1,4 +1,4 @@
-import { MimeType, NonNegativeInt } from "@beep/schema";
+import { MimeType } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
@@ -69,18 +69,18 @@ describe("effect-ontology schema-owned domain behavior", () => {
   );
 
   it("keeps token estimation and priority pure, deterministic, and schema-owned", () => {
-    expect(DocumentMetadata.estimateTokens(NonNegativeInt.make(0))).toBe(0);
-    expect(DocumentMetadata.estimateTokens(NonNegativeInt.make(1))).toBe(1);
-    expect(DocumentMetadata.estimateTokens(NonNegativeInt.make(9))).toBe(3);
+    expect(DocumentMetadata.estimateTokens(S.Natural.make(0))).toBe(0);
+    expect(DocumentMetadata.estimateTokens(S.Natural.make(1))).toBe(1);
+    expect(DocumentMetadata.estimateTokens(S.Natural.make(9))).toBe(3);
 
     const sparse = DocumentMetadata.computePriority(
       ComplexityScore.make(0.5),
-      NonNegativeInt.make(500),
+      S.Natural.make(500),
       EntityDensity.Enum.sparse
     );
     const dense = DocumentMetadata.computePriority(
       ComplexityScore.make(0.5),
-      NonNegativeInt.make(500),
+      S.Natural.make(500),
       EntityDensity.Enum.dense
     );
 
@@ -96,7 +96,7 @@ describe("effect-ontology schema-owned domain behavior", () => {
         documentId: DocumentId.make("doc-abc123def456"),
         sourceUri,
         contentType: MimeType.make("text/plain"),
-        sizeBytes: NonNegativeInt.make(4_000),
+        sizeBytes: S.Natural.make(4_000),
         preprocessedAt,
       });
 

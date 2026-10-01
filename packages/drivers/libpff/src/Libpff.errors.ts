@@ -6,8 +6,9 @@
  */
 
 import { $LibpffId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -63,10 +64,10 @@ export type LibpffErrorReason = typeof LibpffErrorReason.Type;
  * **Example** (Make options with exitCode)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { LibpffErrorOptions } from "@beep/libpff"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const options = LibpffErrorOptions.make({ exitCode: NonNegativeInt.make(2) })
+ * const options = LibpffErrorOptions.make({ exitCode: S.Natural.make(2) })
  * console.log(options.exitCode)
  * ```
  *
@@ -78,7 +79,7 @@ export class LibpffErrorOptions extends S.Class<LibpffErrorOptions>($I`LibpffErr
     cause: S.optionalKey(S.String).annotateKey({
       description: "Sanitized technical cause string when one is safe to retain.",
     }),
-    exitCode: S.optionalKey(NonNegativeInt).annotateKey({
+    exitCode: S.optionalKey(S.Natural).annotateKey({
       description: "Process exit status associated with the libpff failure when one was available.",
     }),
     processClassification: S.optionalKey(LibpffProcessClassification).annotateKey({
@@ -109,13 +110,13 @@ export class LibpffError extends S.TaggedError<LibpffError>($I`LibpffError`)(
   "LibpffError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Sanitized technical cause string when one is safe to retain.",
       })
     ),
-    exitCode: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
+    exitCode: S.OptionFromOptionalKey(S.Natural).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Process exit status associated with the libpff failure when one was available.",
       })
@@ -124,7 +125,7 @@ export class LibpffError extends S.TaggedError<LibpffError>($I`LibpffError`)(
       description: "Redacted technical error reason.",
     }),
     processClassification: S.OptionFromOptionalKey(LibpffProcessClassification).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Sanitized process-failure classification derived from bounded stderr.",
       })

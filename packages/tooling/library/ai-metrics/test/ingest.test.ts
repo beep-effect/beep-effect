@@ -92,7 +92,6 @@ import {
   writeAiMetricsConfigSnapshotArtifacts,
   writeAiMetricsDerivedStorage,
 } from "@beep/repo-ai-metrics";
-import { NonEmptyTrimmedStr } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -321,11 +320,12 @@ const retentionMutationResultLaw = {
   encode: S.encodeUnknownEffect(AiMetricsRetentionMutationResult),
   equivalent: S.toEquivalence(AiMetricsRetentionMutationResult),
 };
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 const nonEmptyTrimmedStringLaw = {
-  arbitrary: Arbitrary.schema(NonEmptyTrimmedStr),
-  decode: S.decodeUnknownEffect(NonEmptyTrimmedStr),
-  encode: S.encodeUnknownEffect(NonEmptyTrimmedStr),
-  equivalent: S.toEquivalence(NonEmptyTrimmedStr),
+  arbitrary: Arbitrary.schema(TrimmedNonEmptyString),
+  decode: S.decodeUnknownEffect(TrimmedNonEmptyString),
+  encode: S.encodeUnknownEffect(TrimmedNonEmptyString),
+  equivalent: S.toEquivalence(TrimmedNonEmptyString),
 };
 
 const phoenixService = <A extends { readonly tool: string }>(spec: { readonly services: ReadonlyArray<A> }) =>

@@ -11,6 +11,9 @@
 | `role-b` | Role B idiom exemplars (39 modules) | Effect-TS/effect | see `CAPTURE.md` module list; `research/idiom-role-b.json` | idiom rubric | reference |
 | `hint-28` | rc.112..main schema commits | Effect-TS/effect | `research/upstream-delta.md` per-commit `path:line` | delta | reference |
 | `docs` | `packages/effect/SCHEMA.md`, `migration/schema.md` | Effect-TS/effect | repo root / `packages/effect/` | doctrine | reference |
+| `reopen-inventory` | 2026-09-28 inventory refresh `51d4a2f08a` → `e5f7d12af9` | Effect-TS/effect | `research/2026-09-28-inventory-refresh.md` | inventory pin (D4) | reference |
+| `schemautils-census` | 2026-09-28 SchemaUtils census (39 exports, D7, D9, D10) | Effect-TS/effect + this repo | `research/2026-09-28-schemautils-census.md`; tool `research/tools/census-schemautils.py` | retirement rows, per-AST cache finding | reference |
+| `compiler-evaluation` | 2026-09-28 schema compiler spikes (D1, D6, D8, D10) | Effect-TS/effect + this repo | `research/2026-09-28-compiler-evaluation.md`; spikes `research/tools/spike-harness.ts`, `spike-bulk-schemas.ts`, `spike-bulk.ts`, `spike-recursive.ts` | compiler verdict evidence (DEFER, 2026-09-28) | reference |
 | `perf` | `packages/effect/typeperf/suites/schema/fixtures` (22), `runtimeperf/suites/schema` | Effect-TS/effect | see `research/performance-baseline.md` | measurement | port-with-attribution (harness shape only) |
 
 **How these inform this packet:** Role A rows are the adoption/retirement oracle; Role B shows how upstream authors consume Schema (rubric only, not targets unless align lifts the exclusion); the hint list bounds the rc window; perf suites give the measurement shape.
@@ -19,7 +22,7 @@
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| Effect-TS/effect (`inventoryPin` `e5f7d12af9abef188f7dc39b0207af1801b03ffd`, main snapshot, rc.118 line; 2026-09-12 research ran at `51d4a2f08a`; local `.repos/effect` -> `$HOME/YeeBois/references/effect/effect`, pinned bytes read with `git -C .repos/effect show <inventoryPin>:<path>`, remotes `origin` = Effect-TS/effect, `fork` = beep-effect/effect) | MIT (`LICENSE`, Effectful Technologies Inc) | port-with-attribution allowed; this packet's direction is the reverse (delete repo code, consume upstream), so nothing is vendored | Schema surfaces (Role A) as adoption targets; Role B modules as idiom exemplars; `SCHEMA.md` + `migration/schema.md` as doctrine; rc.112..main commits as the hint list |
+| Effect-TS/effect (`inventoryPin` `df77fff9396fe31de72d1947ecb5b74f8cee89e1`, main snapshot, rc.118 line, moved from `e5f7d12af9` on 2026-09-29; 2026-09-12 research ran at `51d4a2f08a`; local `.repos/effect` -> `$HOME/YeeBois/references/effect/effect`, pinned bytes read with `git -C .repos/effect show <inventoryPin>:<path>`, remotes `origin` = Effect-TS/effect, `fork` = beep-effect/effect) | MIT (`LICENSE`, Effectful Technologies Inc) | port-with-attribution allowed; this packet's direction is the reverse (delete repo code, consume upstream), so nothing is vendored | Schema surfaces (Role A) as adoption targets; Role B modules as idiom exemplars; `SCHEMA.md` + `migration/schema.md` as doctrine; rc.112..main commits as the hint list |
 
 ## 3. External research sources
 
@@ -47,13 +50,13 @@ Local-only sources (no URL; cite the on-disk path): the graft graph of the refer
 | Effect reference provisioning | `scripts/setup-effect-ref.sh`, `.repos/effect` symlink | reuse |
 | `beep graft` command (cache sync / deep) | `packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts` | reuse as-is; effect index is plain `graft build <dir>` |
 | `@beep/schema` concept modules (137) | `packages/foundation/modeling/schema/src` | retire 50 / Role B retire 6 / adapt 4 (LiteralKit, MappedLiteralKit, SchemaUtils, Float) / keep 77 (post-align 2026-09-15; research proposed 52 / 2 / 77 / 6) |
-| Deterministic upstream symbol extractor | proposed `scripts/upstream-parity-inventory.ts` (prototype: `research/tools/schema-inventory.ts`) | NET-NEW |
+| Deterministic upstream symbol extractor | shipped in goal P1 (2026-09-29) as `bun run beep lint effect-schema-inventory`, `packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts`; rows in `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/` (the research prototype under `research/tools/` was deleted) | NET-NEW, landed |
 | Prompt templating from inventory rows | goal P1 | NET-NEW; the research-stage "parity policy edges + independent baseline" superseded by the `SFV4-*` cut on the existing schema-first ratchet |
 | Doctrine entry + README policy | `standards/architecture/DECISIONS.md`, `packages/foundation/modeling/schema/README.md` | proposed text in `research/gate-and-knowledge-plumbing.md` §(g) |
 
 ## 5. Cross-links & provenance
 
 - Packet: `README.md`, `CAPTURE.md`, `DECISIONS.md`, `RESEARCH.md`, this ledger.
-- Lane reports: `research/retirement-A-F.md`, `research/retirement-G-Z.md`, `research/idiom-families.md`, `research/upstream-delta.md`, `research/upstream-verification-supplement.md`, `research/performance-baseline.md`, `research/performance-verification-supplement.md`, `research/gate-and-knowledge-plumbing.md`, `research/inventory/`, `research/tools/`.
+- Lane reports: `research/2026-09-28-inventory-refresh.md`, `research/2026-09-28-schemautils-census.md`, `research/2026-09-28-compiler-evaluation.md`, `research/retirement-A-F.md`, `research/retirement-G-Z.md`, `research/idiom-families.md`, `research/upstream-delta.md`, `research/upstream-verification-supplement.md`, `research/performance-baseline.md`, `research/performance-verification-supplement.md`, `research/gate-and-knowledge-plumbing.md`, `research/tools/` (spikes and the SchemaUtils census script); the inventory rows moved to `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/` in goal P1.
 - Adjacent packets: `goals/schema-utils-selective-codec-statics` (overlaps the SchemaUtils ADAPT; its Yeet PR #927 merged 2026-08-31 as `2731847346`, manifest not yet closed), `goals/schema-first-v4-capabilities`, `goals/beep-schema-topology`, `goals/effect-vitest-canon` (fixture pin procedure), `explorations/effect-jsdoc-quality`.
 - Doctrine: `standards/architecture/11-evolution-and-deprecation.md`, `standards/architecture/DECISIONS.md` (2026-07-08 PGlite precedent), `standards/architecture/07-non-slice-families.md`.

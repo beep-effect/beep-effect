@@ -6,9 +6,11 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { AbsoluteIRI, IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils, SemanticVersion } from "@beep/schema";
+import { SemanticVersion } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName } from "../Identity.ts";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/OntologyBrowser");
 
@@ -44,13 +46,13 @@ export class VocabularyRef extends S.Class<VocabularyRef>($I`VocabularyRef`)(
       description: "Human-readable vocabulary name.",
     }),
     publisher: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional publisher or standards organization.",
       })
     ),
     specUrl: S.OptionFromOptionalKey(AbsoluteIRI).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional absolute IRI of the vocabulary specification.",
       })
@@ -101,7 +103,7 @@ export class OntologySummary extends S.Class<OntologySummary>($I`OntologySummary
       description: "Human-readable ontology title.",
     }),
     description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional non-empty ontology description.",
       })
@@ -109,13 +111,13 @@ export class OntologySummary extends S.Class<OntologySummary>($I`OntologySummary
     version: SemanticVersion.annotateKey({
       description: "Ontology release version.",
     }),
-    classCount: NonNegativeInt.annotateKey({
+    classCount: S.Natural.annotateKey({
       description: "Number of domain classes.",
     }),
-    propertyCount: NonNegativeInt.annotateKey({
+    propertyCount: S.Natural.annotateKey({
       description: "Number of ontology properties.",
     }),
-    importCount: NonNegativeInt.annotateKey({
+    importCount: S.Natural.annotateKey({
       description: "Number of imported vocabularies.",
     }),
   },
@@ -126,6 +128,7 @@ export class OntologySummary extends S.Class<OntologySummary>($I`OntologySummary
   static readonly is = S.is(OntologySummary);
 }
 
+const ontologyListResponseOntologiesDefault = A.empty<OntologySummary>();
 /**
  * Response containing all visible ontology summaries.
  *
@@ -142,7 +145,7 @@ export class OntologySummary extends S.Class<OntologySummary>($I`OntologySummary
 export class OntologyListResponse extends S.Class<OntologyListResponse>($I`OntologyListResponse`)(
   {
     ontologies: S.Array(OntologySummary).pipe(
-      SchemaUtils.withEmptyArrayDefaults<OntologySummary>(),
+      S.withConstructorDefault(Effect.succeed(ontologyListResponseOntologiesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyListResponseOntologiesDefault)),
       S.annotateKey({
         description: "Visible ontology summaries; defaults to an empty collection.",
       })
@@ -181,19 +184,19 @@ export class ClassSummary extends S.Class<ClassSummary>($I`ClassSummary`)(
       description: "Non-empty local name of the class.",
     }),
     label: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional rdfs:label.",
       })
     ),
     comment: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional rdfs:comment.",
       })
     ),
     superClass: S.OptionFromOptionalKey(IRI).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional direct superclass IRI.",
       })
@@ -241,25 +244,25 @@ export class PropertySummary extends S.Class<PropertySummary>($I`PropertySummary
       description: "Non-empty local name of the property.",
     }),
     label: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional rdfs:label.",
       })
     ),
     comment: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional rdfs:comment.",
       })
     ),
     domain: S.OptionFromOptionalKey(IRI).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional domain class IRI.",
       })
     ),
     range: S.OptionFromOptionalKey(IRI).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional range class or datatype IRI.",
       })
@@ -275,6 +278,7 @@ export class PropertySummary extends S.Class<PropertySummary>($I`PropertySummary
   static readonly is = S.is(PropertySummary);
 }
 
+const ontologyClassesResponseClassesDefault = A.empty<ClassSummary>();
 /**
  * Pageless response listing every class in an ontology.
  *
@@ -301,11 +305,11 @@ export class OntologyClassesResponse extends S.Class<OntologyClassesResponse>($I
     ontologyId: OntologyName.annotateKey({
       description: "Registry identifier of the ontology being browsed.",
     }),
-    total: NonNegativeInt.annotateKey({
+    total: S.Natural.annotateKey({
       description: "Reported total number of ontology classes.",
     }),
     classes: S.Array(ClassSummary).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ClassSummary>(),
+      S.withConstructorDefault(Effect.succeed(ontologyClassesResponseClassesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyClassesResponseClassesDefault)),
       S.annotateKey({
         description: "Class projections; defaults to an empty collection.",
       })
@@ -316,6 +320,7 @@ export class OntologyClassesResponse extends S.Class<OntologyClassesResponse>($I
   })
 ) {}
 
+const ontologyPropertiesResponsePropertiesDefault = A.empty<PropertySummary>();
 /**
  * Pageless response listing every property in an ontology.
  *
@@ -342,11 +347,11 @@ export class OntologyPropertiesResponse extends S.Class<OntologyPropertiesRespon
     ontologyId: OntologyName.annotateKey({
       description: "Registry identifier of the ontology being browsed.",
     }),
-    total: NonNegativeInt.annotateKey({
+    total: S.Natural.annotateKey({
       description: "Reported total number of ontology properties.",
     }),
     properties: S.Array(PropertySummary).pipe(
-      SchemaUtils.withEmptyArrayDefaults<PropertySummary>(),
+      S.withConstructorDefault(Effect.succeed(ontologyPropertiesResponsePropertiesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyPropertiesResponsePropertiesDefault)),
       S.annotateKey({
         description: "Property projections; defaults to an empty collection.",
       })
@@ -357,6 +362,10 @@ export class OntologyPropertiesResponse extends S.Class<OntologyPropertiesRespon
   })
 ) {}
 
+const ontologyDetailResponseImportsDefault = A.empty<VocabularyRef>();
+const ontologyDetailResponseClassesDefault = A.empty<ClassSummary>();
+const ontologyDetailResponsePropertiesDefault = A.empty<PropertySummary>();
+const ontologyDetailResponseSeeAlsoDefault = A.empty<IRI>();
 /**
  * Detailed browser projection of one ontology.
  *
@@ -397,7 +406,7 @@ export class OntologyDetailResponse extends S.Class<OntologyDetailResponse>($I`O
       description: "Human-readable ontology title.",
     }),
     description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional non-empty ontology description.",
       })
@@ -406,13 +415,13 @@ export class OntologyDetailResponse extends S.Class<OntologyDetailResponse>($I`O
       description: "Ontology release version.",
     }),
     creator: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional ontology creator or author.",
       })
     ),
     created: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional UTC ontology creation instant.",
       })
@@ -421,25 +430,25 @@ export class OntologyDetailResponse extends S.Class<OntologyDetailResponse>($I`O
       description: "Absolute namespace IRI used for extracted resources.",
     }),
     imports: S.Array(VocabularyRef).pipe(
-      SchemaUtils.withEmptyArrayDefaults<VocabularyRef>(),
+      S.withConstructorDefault(Effect.succeed(ontologyDetailResponseImportsDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyDetailResponseImportsDefault)),
       S.annotateKey({
         description: "Imported standards vocabularies; defaults to an empty collection.",
       })
     ),
     classes: S.Array(ClassSummary).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ClassSummary>(),
+      S.withConstructorDefault(Effect.succeed(ontologyDetailResponseClassesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyDetailResponseClassesDefault)),
       S.annotateKey({
         description: "Domain class projections; defaults to an empty collection.",
       })
     ),
     properties: S.Array(PropertySummary).pipe(
-      SchemaUtils.withEmptyArrayDefaults<PropertySummary>(),
+      S.withConstructorDefault(Effect.succeed(ontologyDetailResponsePropertiesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyDetailResponsePropertiesDefault)),
       S.annotateKey({
         description: "Domain property projections; defaults to an empty collection.",
       })
     ),
     seeAlso: S.Array(IRI).pipe(
-      SchemaUtils.withEmptyArrayDefaults<IRI>(),
+      S.withConstructorDefault(Effect.succeed(ontologyDetailResponseSeeAlsoDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyDetailResponseSeeAlsoDefault)),
       S.annotateKey({
         description: "Related semantic resource IRIs; defaults to an empty collection.",
       })

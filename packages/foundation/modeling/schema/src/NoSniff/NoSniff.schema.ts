@@ -63,7 +63,7 @@ export const NoSniffValue = NoSniffValueBase.pipe(
 export type NoSniffValue = typeof NoSniffValue.Type;
 const isNoSniffValue = S.is(NoSniffValue);
 
-const NoSniffOptionBase = LiteralKit([false, ...NoSniffValueBase.Options]);
+const NoSniffOptionBase = LiteralKit([false, ...NoSniffValueBase.literals]);
 
 /**
  * Schema for `X-Content-Type-Options` option values, including `false` to disable.
@@ -124,7 +124,7 @@ export type NoSniffOption = typeof NoSniffOption.Type;
 export class NoSniffResponseHeader extends S.Class<NoSniffResponseHeader>($I`NoSniffResponseHeader`)(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromUndefinedOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("NoSniffResponseHeader", {
     description: "The `X-Content-Type-Options` response header.",

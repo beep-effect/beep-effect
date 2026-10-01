@@ -8,7 +8,7 @@
 import { DuckDb, DuckDbParquetExport } from "@beep/duckdb";
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -879,7 +879,7 @@ export class AiMetricsDerivedStorageWriteResult extends S.Class<AiMetricsDerived
     archiveObjectCount: S.Natural,
     duckDbPath: S.String,
     ingestRunId: S.String,
-    parquetExportDir: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    parquetExportDir: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     parquetExportMode: AiMetricsParquetExportMode,
     parquetTables: S.Array(AiMetricsDerivedTable),
     sourceFileCount: S.Natural,
@@ -1071,7 +1071,7 @@ const exportDerivedTablesToParquet = Effect.fn("AiMetrics.derivedStorage.exportD
   const pathApi = yield* Path.Path;
   const duckdb = yield* DuckDb;
   yield* Effect.forEach(
-    AiMetricsDerivedTable.Options,
+    AiMetricsDerivedTable.literals,
     (tableName) =>
       duckdb.copyTableToParquet(
         DuckDbParquetExport.make({
@@ -1552,7 +1552,7 @@ export const writeAiMetricsDerivedStorage = Effect.fn("AiMetrics.writeAiMetricsD
       ingestRunId: input.ingestRunId,
       parquetExportDir,
       parquetExportMode: input.parquetExportMode,
-      parquetTables: O.isSome(parquetExportDir) ? AiMetricsDerivedTable.Options : [],
+      parquetTables: O.isSome(parquetExportDir) ? AiMetricsDerivedTable.literals : [],
       sourceFileCount: input.records.length,
       turnCount,
     });

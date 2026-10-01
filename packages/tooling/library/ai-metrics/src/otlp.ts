@@ -101,7 +101,7 @@ const isAiMetricsOtlpAttributeKey = S.is(AiMetricsOtlpAttributeKey);
  * @category constants
  * @since 0.0.0
  */
-export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = AiMetricsOtlpAttributeKey.Options;
+export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = AiMetricsOtlpAttributeKey.literals;
 
 const OpenInferenceSpanKind = LiteralKit(["AGENT", "CHAIN", "LLM", "TOOL"]);
 const OtlpTraceId = S.String.check(S.isPattern(/^[0-9a-f]{32}$/u)).pipe(
@@ -253,12 +253,12 @@ export class AiMetricsOtlpSpanProjection extends S.Class<AiMetricsOtlpSpanProjec
      * themselves, so one agent session arrives as one trace instead of as many
      * unrelated roots.
      */
-    parentSpanId: S.OptionFromOptionalKey(OtlpSpanId).pipe(SchemaUtils.withNoneDefault),
+    parentSpanId: S.OptionFromOptionalKey(OtlpSpanId).pipe(S.withConstructorDefault(Effect.succeedNone)),
     spanId: OtlpSpanId,
     spanName: S.NonEmptyString,
     traceId: OtlpTraceId,
     /** Turn watermark identity, absent only on synthetic session spans. */
-    turnId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    turnId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AiMetricsOtlpSpanProjection", {
     description: "Redacted span identity, name, and bounded attributes derived from AI metrics DuckDB storage.",

@@ -5,7 +5,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { StatutesAtLargeComponentSpan } from "../ComponentSpan/index.ts";
@@ -24,23 +25,23 @@ const $I = $LawPracticeDomainId.create("values/StatutesAtLargeCitation/StatutesA
  * **Example** (Make Statutes at Large citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { StatutesAtLargeCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = StatutesAtLargeCitation.make({
  *   text: "100 Stat. 3743",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "100 Stat. 3743",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
- *   volume: NonNegativeInt.make(100),
- *   page: NonNegativeInt.make(3743),
+ *   patternsChecked: S.Natural.make(1),
+ *   volume: S.Natural.make(100),
+ *   page: S.Natural.make(3743),
  * })
  *
  * console.log(citation.type) // "statutesAtLarge"
@@ -53,23 +54,23 @@ export class StatutesAtLargeCitation extends S.Class<StatutesAtLargeCitation>($I
   {
     ...CitationBase.fields,
     type: S.tag("statutesAtLarge"),
-    volume: S.Union([NonNegativeInt, S.String]).annotateKey({
+    volume: S.Union([S.Natural, S.String]).annotateKey({
       description: "Statutes at Large volume.",
     }),
-    page: NonNegativeInt.annotateKey({
+    page: S.Natural.annotateKey({
       description: "Page number.",
     }),
-    pincite: NonNegativeInt.pipe(
+    pincite: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           'Specific pincite page, from a trailing ", NNN" suffix (100 Stat. 3743, 3755 -> page=3743, pincite=3755) (#639).',
       })
     ),
-    pinciteEndPage: NonNegativeInt.pipe(
+    pinciteEndPage: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "End page for range pincites (3755-58 -> 3758) (#639).",
       })
@@ -79,16 +80,16 @@ export class StatutesAtLargeCitation extends S.Class<StatutesAtLargeCitation>($I
         description: "True when the pincite is a range (3755-58) (#639).",
       })
     ),
-    year: NonNegativeInt.pipe(
+    year: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Publication year (if extracted).",
       })
     ),
     spans: StatutesAtLargeComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating the sub-parts of this citation within the source text.",
       })

@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
@@ -104,7 +104,7 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
       return CacheProducerWorkflowFile.make({
         path: relative,
         sha256: yield* digest(bytes),
-        mode: NonNegativeInt.make(info.mode & 0o777),
+        mode: S.Natural.make(info.mode & 0o777),
         linkTarget,
       });
     }),

@@ -53,7 +53,7 @@ export const NoOpenValue = NoOpenValueBase.pipe(
  * import { NoOpenValue } from "@beep/schema/NoOpen"
  *
  * const value: NoOpenValue = "noopen"
- * console.log(NoOpenValue.Options.includes(value))
+ * console.log(NoOpenValue.literals.includes(value))
  * ```
  *
  * @category models
@@ -62,7 +62,7 @@ export const NoOpenValue = NoOpenValueBase.pipe(
 export type NoOpenValue = typeof NoOpenValue.Type;
 const isNoOpenValue = S.is(NoOpenValue);
 
-const NoOpenOptionBase = LiteralKit([false, ...NoOpenValueBase.Options]);
+const NoOpenOptionBase = LiteralKit([false, ...NoOpenValueBase.literals]);
 
 /**
  * Schema for enabled or disabled `X-Download-Options` options.
@@ -123,7 +123,7 @@ export type NoOpenOption = typeof NoOpenOption.Type;
 export class NoOpenResponseHeader extends S.Class<NoOpenResponseHeader>($I`NoOpenResponseHeader`)(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromUndefinedOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("NoOpenResponseHeader", {
     description: "The `X-Download-Options` response header.",

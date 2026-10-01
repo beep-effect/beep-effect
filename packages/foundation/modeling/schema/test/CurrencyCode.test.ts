@@ -16,7 +16,7 @@ describe("CurrencyCode", () => {
     Effect.fnUntraced(function* () {
       expect(yield* decodeCurrencyCodeEffect("USD")).toBe("USD");
       expect(yield* decodeCurrencyCodeEffect("EUR")).toBe("EUR");
-      expect(CurrencyCode.Options).toContain("USD");
+      expect(CurrencyCode.literals).toContain("USD");
       expect(USD).toBe("USD");
     })
   );
@@ -25,7 +25,7 @@ describe("CurrencyCode", () => {
     "exports a generated currency-name literal schema",
     Effect.fnUntraced(function* () {
       expect(yield* decodeCurrencyNameEffect("US Dollar")).toBe("US Dollar");
-      expect(CurrencyName.Options).toContain("Euro");
+      expect(CurrencyName.literals).toContain("Euro");
     })
   );
 

@@ -184,7 +184,7 @@ export class EvaluateSkillCompletionInput extends S.Class<EvaluateSkillCompletio
  * ```ts
  * import { CompletionInvariantReason } from "@beep/skill-contract"
  *
- * console.log(CompletionInvariantReason.Options)
+ * console.log(CompletionInvariantReason.literals)
  * ```
  *
  * @category errors

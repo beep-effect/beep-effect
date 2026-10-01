@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { AnnotationComponentSpan } from "../ComponentSpan/index.ts";
@@ -26,24 +26,24 @@ const $I = $LawPracticeDomainId.create("values/AnnotationCitation/AnnotationCita
  * **Example** (Constructing an AnnotationCitation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { AnnotationCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = AnnotationCitation.make({
  *   text: "100 A.L.R.2d 1234",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "100 A.L.R.2d 1234",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  *   series: "A.L.R.2d",
- *   volume: NonNegativeInt.make(100),
- *   page: NonNegativeInt.make(1234),
+ *   volume: S.Natural.make(100),
+ *   page: S.Natural.make(1234),
  * })
  *
  * console.log(citation.type) // "annotation"
@@ -59,22 +59,22 @@ export class AnnotationCitation extends S.Class<AnnotationCitation>($I`Annotatio
     series: S.String.annotateKey({
       description: "A.L.R. series identifier (A.L.R., A.L.R.2d, A.L.R. Fed., etc.).",
     }),
-    volume: NonNegativeInt.annotateKey({
+    volume: S.Natural.annotateKey({
       description: "Volume number.",
     }),
-    page: NonNegativeInt.annotateKey({
+    page: S.Natural.annotateKey({
       description: "Page number where the annotation begins.",
     }),
-    year: NonNegativeInt.pipe(
+    year: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Publication year (if extracted from parenthetical).",
       })
     ),
     spans: AnnotationComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating this citation's sub-parts within the source text.",
       })

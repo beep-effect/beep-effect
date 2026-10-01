@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { RestatementComponentSpan } from "../ComponentSpan/index.ts";
@@ -26,21 +26,21 @@ const $I = $LawPracticeDomainId.create("values/RestatementCitation/RestatementCi
  * **Example** (Make RestatementCitation value)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestatementCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = RestatementCitation.make({
  *   text: "Restatement (Second) of Torts § 402A",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "Restatement (Second) of Torts § 402A",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  *   edition: "Second",
  *   subject: "Torts",
  *   section: "402A",
@@ -67,14 +67,14 @@ export class RestatementCitation extends S.Class<RestatementCitation>($I`Restate
     }),
     subsection: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Subsection chain (e.g., "(1)(b)") — undefined when not cited.',
       })
     ),
     spans: RestatementComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating this citation's sub-parts within the source text.",
       })

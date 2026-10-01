@@ -27,8 +27,6 @@ import {
   M365ListSitesRequest,
   M365SkippedEncryptedItem,
 } from "@beep/m365";
-import { NonNegativeInt, PosInt } from "@beep/schema";
-import { HttpStatus } from "@beep/schema/HttpStatus";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -44,6 +42,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import type * as HttpClientError from "effect/http/HttpClientError";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeGraphDriveResult = S.decodeResult(GraphDrive);
 const decodeGraphDriveItemResult = S.decodeResult(GraphDriveItem);
@@ -180,7 +180,7 @@ const TestHttpClientLayer = Layer.effect(
 const testConfig = (maxRetries = 0): M365ConfigInput =>
   M365ConfigInput.make({
     clientId: "client-id",
-    maxRetries: NonNegativeInt.make(maxRetries),
+    maxRetries: S.Natural.make(maxRetries),
     tenantId: "common",
   });
 
@@ -681,11 +681,11 @@ describe("@beep/m365 service", () => {
         );
         assertSome(
           O.flatMap(error, (error) => error.retryAfterSeconds),
-          NonNegativeInt.make(12)
+          S.Natural.make(12)
         );
         assertSome(
           O.flatMap(error, (error) => error.status),
-          HttpStatus.make(429)
+          429
         );
       })
     );

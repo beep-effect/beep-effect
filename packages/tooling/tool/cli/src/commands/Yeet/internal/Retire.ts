@@ -14,7 +14,6 @@
  * @since 0.0.0
  */
 
-import { NonEmptyTrimmedStr } from "@beep/schema";
 import { Config, Effect } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -42,7 +41,7 @@ const isProcessPid = S.is(ProcessPid);
 // Claude Code exports its own pid under this name to every tool shell it
 // spawns; that harness key lives here, in the command that runs under it, so
 // the worktree service only ever learns "the marker that names the session".
-const SESSION_PID_ENV = NonEmptyTrimmedStr.make("CLAUDE_PID");
+const SESSION_PID_ENV = "CLAUDE_PID";
 
 // The lane's own CLI always carries --retire, whatever branch the clone sits on.
 const REPO_CLI_ENTRY_PATH = "packages/tooling/tool/cli/src/bin.ts";

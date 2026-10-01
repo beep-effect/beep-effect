@@ -20,6 +20,7 @@ import {
   reconcileAttemptJournalsForCheckout,
   releaseJournalFileLock,
 } from "@beep/repo-cli/test/RepoRun";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   acquireFullProofFallbackLockOrObserveAtPath,
   acquireFullProofFallbackLockOrObserveAtPathForTesting,
@@ -145,8 +146,6 @@ import {
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { findRepoRoot } from "@beep/repo-utils";
-import { NonNegativeInt } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -527,14 +526,14 @@ const fallowOkEnvelope = (options: {
     rawOutputRef: `.beep/fallow/raw/${options.feature}.json`,
     attributionKinds: [attribution],
     findingAttributionSummary: FindingAttributionSummary.make({
-      introduced: NonNegativeInt.make(options.blocking ? 1 : 0),
-      inheritedAdjacent: NonNegativeInt.make(options.blocking ? 0 : 1),
-      notApplicable: NonNegativeInt.make(0),
+      introduced: S.Natural.make(options.blocking ? 1 : 0),
+      inheritedAdjacent: S.Natural.make(options.blocking ? 0 : 1),
+      notApplicable: S.Natural.make(0),
     }),
     status: "ok",
-    exitStatus: NonNegativeInt.make(options.blocking ? 1 : 0),
+    exitStatus: S.Natural.make(options.blocking ? 1 : 0),
     report: FallowReportPayload.make({
-      findingCount: NonNegativeInt.make(1),
+      findingCount: S.Natural.make(1),
       findings: [finding],
     }),
   });
@@ -1027,7 +1026,7 @@ describe("yeet planner", () => {
       "pr",
       "checks",
       "--json",
-      "name,state,bucket,link,workflow,completedAt,startedAt",
+      "name,state,bucket,link,workflow,completedAt,startedAt,description",
     ]);
   });
 
@@ -2190,6 +2189,35 @@ describe("yeet quality issue index", () => {
         reason: "Schema-first policy finding",
       })
     );
+  });
+
+  it("keys an anchored parity finding by its occurrence anchor, not its line", () => {
+    const lintStep = feedbackStep("feedback:lint", "lint");
+    const parityIssueAt = (line: number) =>
+      qualityIssuesFromStepResult(
+        context,
+        lintStep,
+        RepoStepRunResult.make({
+          stepId: lintStep.id,
+          commandText: "bun run beep lint schema-first",
+          exitCode: 1,
+          output:
+            '[schema-first:issue] {"category":"schema-first-policy","ruleId":"SFV4-default-wrapper",' +
+            `"severity":"error","file":"packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts","line":${line},` +
+            '"symbol":"Widget.title","occurrence":"Widget.title::withNoneDefault@3f2a9c41b0de",' +
+            '"message":"SchemaUtils.withNoneDefault wraps an upstream schema default.",' +
+            '"remediation":"Use S.withConstructorDefault directly."}',
+          rawOutputRef: ".beep/yeet/logs/lint-schema-first.log",
+        })
+      );
+    const [before] = parityIssueAt(12);
+    const [after] = parityIssueAt(40);
+
+    expect(before?.id).toBe(after?.id);
+    expect(before?.id).toContain("::Widget.title::withNoneDefault@3f2a9c41b0de::");
+    expect(before?.id).not.toContain("::12::");
+    expect(before).toMatchObject({ subCategory: "SFV4-default-wrapper", line: 12 });
+    expect(after).toMatchObject({ line: 40 });
   });
 
   it("renders deterministic per-package Markdown packets", () => {

@@ -15,9 +15,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { RoundNumber, SequenceNumber } from "@beep/qa-capture";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Qa/Inventory.schemas");
@@ -36,7 +36,7 @@ const $I = $RepoCliId.create("commands/Qa/Inventory.schemas");
  * import { QaSeverity } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
  * console.log(QaSeverity.is.P0("P0")) // true
- * console.log(QaSeverity.Options.length) // 3
+ * console.log(QaSeverity.literals.length) // 3
  * ```
  *
  * @category schemas
@@ -132,7 +132,7 @@ export type QaLens = typeof QaLens.Type;
  * ```ts
  * import { QaEvidenceKind } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
- * console.log(QaEvidenceKind.Options.length) // 5
+ * console.log(QaEvidenceKind.literals.length) // 5
  * ```
  *
  * @category schemas
@@ -263,7 +263,7 @@ export class QaEvidenceRef extends S.Class<QaEvidenceRef>($I`QaEvidenceRef`)(
       })
     ),
     frameRange: S.OptionFromOptionalKey(S.Tuple([S.Int, S.Int])).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("QaEvidenceRef.frameRange", {
         description: "Inclusive first/last frame indexes inside a strip or sheet, when relevant.",
       })
@@ -372,7 +372,7 @@ export class QaFinding extends S.Class<QaFinding>($I`QaFinding`)(
       })
     ),
     resolvedInRound: S.OptionFromOptionalKey(RoundNumber).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("QaFinding.resolvedInRound", {
         description: "Round that closed the finding, when a later round confirmed the fix.",
       })

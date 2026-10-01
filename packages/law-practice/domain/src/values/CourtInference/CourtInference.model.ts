@@ -11,7 +11,7 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Tuple } from "effect";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/CourtInference/CourtInference.model");
@@ -25,7 +25,7 @@ const CourtLevelBase = LiteralKit(["supreme", "appellate", "trial", "unknown"]);
  *
  * Backed by a {@link LiteralKit} so callers get the schema plus derived
  * helpers: `CourtLevel.Enum` for typed literal access, `CourtLevel.is` for
- * per-literal guards, and `CourtLevel.Options` for the full literal list.
+ * per-literal guards, and `CourtLevel.literals` for the full literal list.
  *
  * **Example** (Decode and use helpers)
  *
@@ -67,7 +67,7 @@ export const CourtLevel = CourtLevelBase.pipe(
  */
 export type CourtLevel = typeof CourtLevel.Type;
 
-const KnownCourtLevel = LiteralKit(CourtLevelBase.pickOptions(["supreme", "appellate", "trial"]));
+const KnownCourtLevel = LiteralKit(CourtLevelBase.pick(["supreme", "appellate", "trial"]).literals);
 
 const CourtJurisdictionBase = LiteralKit(["federal", "state", "unknown"]);
 
@@ -78,7 +78,7 @@ const CourtJurisdictionBase = LiteralKit(["federal", "state", "unknown"]);
  *
  * Backed by a {@link LiteralKit} so callers get the schema plus derived
  * helpers: `CourtJurisdiction.Enum` for typed literal access,
- * `CourtJurisdiction.is` for per-literal guards, and `CourtJurisdiction.Options`
+ * `CourtJurisdiction.is` for per-literal guards, and `CourtJurisdiction.literals`
  * for the full literal list.
  *
  * **Example** (Decode and use helpers)
@@ -182,7 +182,7 @@ export const CourtInference = CourtJurisdiction.mapMembers(
         }),
         state: S.String.pipe(
           S.OptionFromOptionalKey,
-          SchemaUtils.withNoneDefault,
+          S.withConstructorDefault(Effect.succeedNone),
           S.annotateKey({
             description: "2-letter state code when the reporter identifies one state.",
           })

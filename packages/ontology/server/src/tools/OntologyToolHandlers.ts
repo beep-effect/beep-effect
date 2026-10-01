@@ -27,10 +27,10 @@ import {
   RepairOntologyTool,
 } from "@beep/ontology-use-cases/tools";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
-import { NonNegativeInt } from "@beep/schema";
 import { Effect, Layer } from "effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { SessionServerLayer } from "../aggregates/Session/Session.layer.ts";
 import type { PublishProvenanceRequest } from "@beep/ontology-use-cases/tools";
 import type * as Tool from "effect/ai/Tool";
@@ -235,8 +235,8 @@ export const publishProvenance = Effect.fn("Ontology.Tools.publishProvenance")(f
     .pipe(Effect.mapError(publicationFailure));
   return PublishProvenanceResponse.make({
     provPath: request.provPath,
-    publishedBytes: NonNegativeInt.make(file.source.length),
-    status: NonNegativeInt.make(response.status),
+    publishedBytes: S.Natural.make(file.source.length),
+    status: S.Natural.make(response.status),
   });
 });
 

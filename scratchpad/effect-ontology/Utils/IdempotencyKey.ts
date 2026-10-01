@@ -13,8 +13,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt } from "@beep/schema/Int";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Struct from "@beep/utils/Struct";
 import { Effect, Inspectable, Order, pipe } from "effect";
@@ -26,6 +24,7 @@ import * as Str from "effect/String";
 import { IdempotencyKey } from "../Domain/Identity.ts";
 import { dual4 } from "./Dual.ts";
 import { sha256Sync, sha256SyncFull } from "./Hash.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Utils/IdempotencyKey");
 
@@ -56,10 +55,10 @@ export { IdempotencyKey };
  * @since 0.0.0
  */
 export const ExtractionParams = S.Struct({
-  maxTokens: PosInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  temperature: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  maxTokens: PosInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  temperature: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   includeConfidence: S.optionalKey(S.Boolean),
-  groundingThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  groundingThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("ExtractionParams", {
     description: "Parameters that affect extraction output",

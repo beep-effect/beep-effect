@@ -7,11 +7,11 @@
 
 import { $SkillContractId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { ISOStr } from "@beep/schema/Timestamp";
-import { HashSet, Tuple } from "effect";
+import { DateTime, HashSet, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { SchemaReference } from "./SchemaReference.ts";
 import type { LiteralKit as LiteralKitSchema } from "@beep/schema/LiteralKit";
@@ -79,7 +79,7 @@ export const makeGateId = <const Ids extends GateIdLiterals>(ids: LiteralKitSche
   ids.pipe(
     S.check(S.isNonEmpty()),
     S.brand("GateId"),
-    $I.annoteSchema(`ConsumerGateId(${A.join(ids.Options, "|")})`, {
+    $I.annoteSchema(`ConsumerGateId(${A.join(ids.literals, "|")})`, {
       description: "Consumer-owned finite gate identifier domain carrying the kernel GateId brand.",
     })
   );
@@ -92,7 +92,7 @@ export const makeGateId = <const Ids extends GateIdLiterals>(ids: LiteralKitSche
  * ```ts import.meta.vitest name="Inspect severity options"
  * import { GateSeverity } from "@beep/skill-contract"
  *
- * GateSeverity.Options // => ["blocking", "advisory"]
+ * GateSeverity.literals // => ["blocking", "advisory"]
  * ```
  *
  * @category schemas
@@ -120,7 +120,7 @@ export type GateSeverity = typeof GateSeverity.Type;
  * ```ts import.meta.vitest name="Inspect applicability kinds"
  * import { GateApplicabilityKind } from "@beep/skill-contract"
  *
- * GateApplicabilityKind.Options // => ["always", "conditional"]
+ * GateApplicabilityKind.literals // => ["always", "conditional"]
  * ```
  *
  * @category schemas
@@ -389,7 +389,7 @@ export class GateRegistry extends S.Class<GateRegistry>($I`GateRegistry`)(
  * ```ts import.meta.vitest name="Inspect gate outcomes"
  * import { GateOutcome } from "@beep/skill-contract"
  *
- * GateOutcome.Options // => ["allowed", "denied"]
+ * GateOutcome.literals // => ["allowed", "denied"]
  * ```
  *
  * @category schemas
@@ -409,6 +409,61 @@ export const GateOutcome = LiteralKit(["allowed", "denied"]).pipe(
  */
 export type GateOutcome = typeof GateOutcome.Type;
 
+/**
+ * Trimmed, non-empty datetime string that `DateTime.make` parses, kept verbatim on the wire.
+ *
+ * **Details**
+ *
+ * Receipt and audit timestamps are serialized strings, so this schema validates
+ * the text and never rewrites it: `"2026-08-24T00:00:00Z"` stays without
+ * milliseconds. `S.DateTimeUtcFromString` would re-encode it as
+ * `"2026-08-24T00:00:00.000Z"`.
+ *
+ * **Example** (Decode a receipt timestamp)
+ *
+ * ```ts import.meta.vitest name="Decode a receipt timestamp"
+ * import { IsoDateTimeString } from "@beep/skill-contract/Gate"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownOption(IsoDateTimeString)(" 2026-08-24T00:00:00Z ")
+ * O.getOrNull(decoded) // => "2026-08-24T00:00:00Z"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const IsoDateTimeString = S.Trim.check(
+  S.isNonEmpty({ message: "String must not be empty" }),
+  S.makeFilter((value: string) => O.isSome(DateTime.make(value)), {
+    identifier: $I`IsoDateTimeStringCheck`,
+    title: "ISO DateTime String",
+    description: "Accepts any string DateTime.make parses; generation stays inside a constructive ISO 8601 UTC shape.",
+    // The predicate is parse-based, so native generation would rejection-sample
+    // arbitrary strings; the day range 01-28 keeps every candidate a valid date.
+    arbitraryConstraint: {
+      patterns: [
+        {
+          source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}Z$",
+          flags: "",
+        },
+      ],
+    },
+  })
+).pipe(
+  $I.annoteSchema("IsoDateTimeString", {
+    description: "Trimmed, non-empty datetime string that DateTime.make parses, kept verbatim.",
+  })
+);
+
+/**
+ * Runtime type decoded by {@link IsoDateTimeString}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type IsoDateTimeString = typeof IsoDateTimeString.Type;
+
 const gateAuditRecordImpl = <const Identifier extends string, const Outcome extends GateOutcome, Detail extends S.Top>(
   identifier: Identifier,
   outcome: Outcome,
@@ -418,7 +473,7 @@ const gateAuditRecordImpl = <const Identifier extends string, const Outcome exte
     detail,
     evaluator: S.NonEmptyString,
     gateId: GateId,
-    occurredAt: ISOStr,
+    occurredAt: IsoDateTimeString,
     outcome: S.Literal(outcome),
     reason: S.NonEmptyString,
   }).pipe(
@@ -502,7 +557,6 @@ const gateVerdictImpl = <const Identifier extends string, AllowedDetail extends 
  *
  * ```ts import.meta.vitest name="Construct an allowed verdict"
  * import { GateId, GateVerdict } from "@beep/skill-contract"
- * import { ISOStr } from "@beep/schema/Timestamp"
  * import * as S from "effect/Schema"
  *
  * const Detail = S.Struct({ paths: S.Array(S.String) })
@@ -512,7 +566,7 @@ const gateVerdictImpl = <const Identifier extends string, AllowedDetail extends 
  *     detail: { paths: ["report.md"] },
  *     evaluator: "example",
  *     gateId: GateId.make("artifact-exists"),
- *     occurredAt: ISOStr.make("2026-08-24T00:00:00.000Z"),
+ *     occurredAt: "2026-08-24T00:00:00.000Z",
  *     outcome: "allowed",
  *     reason: "Every artifact exists."
  *   }

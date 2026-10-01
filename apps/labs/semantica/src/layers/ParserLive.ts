@@ -8,13 +8,14 @@ import {
 } from "@beep/file-processing/Artifact";
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { SourceTextExtractor } from "@beep/provenance";
-import { NonNegativeInt, PosixPath } from "@beep/schema";
+import { PosixPath } from "@beep/schema";
 import { Effect, Layer, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { getDocumentProxy } from "unpdf";
 import { extractHtmlText } from "@/parse/Html";
@@ -95,7 +96,7 @@ const makePdfOperation = (document: SourceDocument, bytes: Uint8Array): ExtractF
       locator: ArtifactLocator.make({ kind: "memory", value: relativePath }),
       name: sourceName(document),
       relativePath,
-      sizeBytes: NonNegativeInt.make(bytes.byteLength),
+      sizeBytes: S.Natural.make(bytes.byteLength),
     }),
   });
 };

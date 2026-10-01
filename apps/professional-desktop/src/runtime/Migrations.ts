@@ -15,7 +15,6 @@
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { profilePhase } from "@beep/observability/PhaseProfiler";
 import { MigrationBundleLegacyNameSet, migrateBundle, PostgresDrizzle } from "@beep/postgres";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -91,7 +90,10 @@ export class ProfessionalDesktopMigrationOptions extends S.Class<ProfessionalDes
   $I`ProfessionalDesktopMigrationOptions`
 )(
   {
-    migrationsSchema: PostgresSchemaName.pipe(SchemaUtils.withKeyDefaults(migrationsSchema)).annotateKey({
+    migrationsSchema: PostgresSchemaName.pipe(
+      S.withConstructorDefault(Effect.succeed(migrationsSchema)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(migrationsSchema))
+    ).annotateKey({
       description: "Drizzle migration journal schema used by the Professional Desktop sidecar database.",
     }),
   },

@@ -18,7 +18,6 @@ import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } 
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { NonNegativeInt } from "@beep/schema/Int";
 import {
   ShaclValidationError,
   ShaclValidationRequest,
@@ -277,8 +276,8 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
           return ShaclValidationReport.make({
             validation: ShaclValidationResult.make({ conforms, violations, truncated: false }),
             validatedAt: now,
-            dataGraphTripleCount: NonNegativeInt.make(rdfStoreSize(dataStore)),
-            shapesGraphTripleCount: NonNegativeInt.make(rdfStoreSize(shapesStore)),
+            dataGraphTripleCount: S.Natural.make(rdfStoreSize(dataStore)),
+            shapesGraphTripleCount: S.Natural.make(rdfStoreSize(shapesStore)),
             durationMs: Duration.zero,
           });
         });
@@ -319,16 +318,16 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
             if (failOnViolation && violationCount > 0) {
               return yield* ValidationPolicyError.make({
                 message: `Validation policy failed: ${violationCount} violation(s) found`,
-                violationCount: NonNegativeInt.make(violationCount),
-                warningCount: NonNegativeInt.make(warningCount),
+                violationCount: S.Natural.make(violationCount),
+                warningCount: S.Natural.make(warningCount),
                 severity: "violation",
               });
             }
             if (failOnWarning && warningCount > 0) {
               return yield* ValidationPolicyError.make({
                 message: `Validation policy failed: ${warningCount} warning(s) found`,
-                violationCount: NonNegativeInt.make(violationCount),
-                warningCount: NonNegativeInt.make(warningCount),
+                violationCount: S.Natural.make(violationCount),
+                warningCount: S.Natural.make(warningCount),
                 severity: "warning",
               });
             }
@@ -392,8 +391,8 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
           return ShaclValidationReport.make({
             validation: report,
             validatedAt: start,
-            dataGraphTripleCount: NonNegativeInt.make(rdfStoreSize(dataStore)),
-            shapesGraphTripleCount: NonNegativeInt.make(rdfStoreSize(shapesStore)),
+            dataGraphTripleCount: S.Natural.make(rdfStoreSize(dataStore)),
+            shapesGraphTripleCount: S.Natural.make(rdfStoreSize(shapesStore)),
             durationMs: DateTime.distance(start, end),
           });
         });
@@ -623,16 +622,16 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
             if (failOnViolation && violationCount > 0) {
               return yield* ValidationPolicyError.make({
                 message: `Validation policy failed: ${violationCount} violation(s) found`,
-                violationCount: NonNegativeInt.make(violationCount),
-                warningCount: NonNegativeInt.make(warningCount),
+                violationCount: S.Natural.make(violationCount),
+                warningCount: S.Natural.make(warningCount),
                 severity: "violation",
               });
             }
             if (failOnWarning && warningCount > 0) {
               return yield* ValidationPolicyError.make({
                 message: `Validation policy failed: ${warningCount} warning(s) found`,
-                violationCount: NonNegativeInt.make(violationCount),
-                warningCount: NonNegativeInt.make(warningCount),
+                violationCount: S.Natural.make(violationCount),
+                warningCount: S.Natural.make(warningCount),
                 severity: "warning",
               });
             }

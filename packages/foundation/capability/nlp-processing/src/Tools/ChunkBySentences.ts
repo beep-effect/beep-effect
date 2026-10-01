@@ -6,9 +6,9 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 import { AiSentenceChunk, AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/ChunkBySentences");
@@ -32,9 +32,9 @@ class ChunkBySentencesParameters extends S.Class<ChunkBySentencesParameters>($I`
 
 class ChunkBySentencesSuccess extends S.Class<ChunkBySentencesSuccess>($I`ChunkBySentencesSuccess`)(
   {
-    chunkCount: NonNegativeInt,
+    chunkCount: S.Natural,
     chunks: S.Array(AiSentenceChunk),
-    originalSentenceCount: NonNegativeInt,
+    originalSentenceCount: S.Natural,
   },
   $I.annote("ChunkBySentencesSuccess", {
     description: "Sentence-aligned text chunks and their source sentence counts.",

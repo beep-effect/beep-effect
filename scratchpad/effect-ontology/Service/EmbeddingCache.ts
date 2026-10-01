@@ -10,8 +10,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
-import { EpochMillis } from "@beep/schema/Timestamp";
 import { Clock, Context, Duration, Effect, HashMap, Inspectable, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -23,6 +21,7 @@ import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import { ConfigService } from "./Config.ts";
 import type { StorageServiceMethods } from "./Storage.ts";
 import { StorageService } from "./Storage.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCache");
 
@@ -63,7 +62,7 @@ export type Embedding = typeof Embedding.Type;
  */
 interface CacheEntry {
   readonly embedding: Embedding;
-  readonly createdAt: EpochMillis;
+  readonly createdAt: S.Natural;
   readonly lastAccessedAt: number;
 }
 
@@ -86,15 +85,19 @@ const evictLeastRecentlyUsed = (
   return O.match(lruKey, { onNone: () => map, onSome: (key) => HashMap.remove(map, key) });
 };
 
+const embeddingCacheConfigTtlDefault = Duration.hours(1);
+const embeddingCacheConfigMaxEntriesDefault = PosInt.make(10_000);
 /**
  * Entry lifetime and capacity bound for an embedding cache.
  *
  * **Example** (Configure cache lifetime and capacity)
  *
  * ```ts
- * import { PosInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Duration } from "effect"
  * import { EmbeddingCacheConfig } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config = EmbeddingCacheConfig.make({
  *   ttl: Duration.minutes(30),
@@ -108,8 +111,8 @@ const evictLeastRecentlyUsed = (
  */
 export class EmbeddingCacheConfig extends S.Class<EmbeddingCacheConfig>($I`EmbeddingCacheConfig`)(
   {
-    ttl: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.hours(1))),
-    maxEntries: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(10_000))),
+    ttl: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(embeddingCacheConfigTtlDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingCacheConfigTtlDefault))),
+    maxEntries: PosInt.pipe(S.withConstructorDefault(Effect.succeed(embeddingCacheConfigMaxEntriesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingCacheConfigMaxEntriesDefault))),
   },
   $I.annote("EmbeddingCacheConfig", {
     description: "Entry lifetime and capacity bound for an embedding cache.",
@@ -122,8 +125,10 @@ export class EmbeddingCacheConfig extends S.Class<EmbeddingCacheConfig>($I`Embed
  * **Example** (Configure an embedding cache)
  *
  * ```ts
- * import { PosInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import type { EmbeddingCacheConfigInput } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config: EmbeddingCacheConfigInput = { maxEntries: PosInt.make(100) }
  * console.log(config)
@@ -230,7 +235,7 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
               const evicted = evictLRU(map);
               return HashMap.set(evicted, hash, {
                 embedding,
-                createdAt: EpochMillis.make(now),
+                createdAt: S.Natural.make(now),
                 lastAccessedAt: now,
               });
             });
@@ -379,7 +384,7 @@ export class PersistentEmbeddingCache extends Context.Service<
  */
 const PersistentEmbeddingEntry = S.Struct({
   vector: Embedding,
-  createdAt: EpochMillis,
+  createdAt: S.Natural,
 });
 
 const EmbeddingBlob = S.Struct({
@@ -489,7 +494,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
       embeddings: {
         [hash]: {
           vector: embedding,
-          createdAt: EpochMillis.make(now),
+          createdAt: S.Natural.make(now),
         },
       },
     };
@@ -552,7 +557,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
           const evicted = evictLRU(m);
           return HashMap.set(evicted, hash, {
             embedding: persisted.value,
-            createdAt: EpochMillis.make(now),
+            createdAt: S.Natural.make(now),
             lastAccessedAt: now,
           });
         });
@@ -575,7 +580,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
         const evicted = evictLRU(map);
         return HashMap.set(evicted, hash, {
           embedding,
-          createdAt: EpochMillis.make(now),
+          createdAt: S.Natural.make(now),
           lastAccessedAt: now,
         });
       });
@@ -720,7 +725,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
             const evicted = evictLRU(map);
             return HashMap.set(evicted, hash, {
               embedding,
-              createdAt: EpochMillis.make(now),
+              createdAt: S.Natural.make(now),
               lastAccessedAt: now,
             });
           });

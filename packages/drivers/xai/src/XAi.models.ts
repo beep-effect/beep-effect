@@ -7,7 +7,7 @@
 
 import { $XaiId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { pipe, Tuple } from "effect";
+import { Effect, pipe, Tuple } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
@@ -172,9 +172,18 @@ export class XAiRequestOptions extends S.Class<XAiRequestOptions>($I`XAiRequestO
     bytes: S.optionalKey(S.Uint8Array),
     contentType: S.optionalKey(S.String),
     formData: S.optionalKey(S.instanceOf(FormData)),
-    headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(emptyStringRecord)),
-    path: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(emptyStringRecord)),
-    query: S.Record(S.String, XAiQueryValue).pipe(SchemaUtils.withKeyDefaults(emptyQueryRecord)),
+    headers: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(emptyStringRecord)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(emptyStringRecord))
+    ),
+    path: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(emptyStringRecord)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(emptyStringRecord))
+    ),
+    query: S.Record(S.String, XAiQueryValue).pipe(
+      S.withConstructorDefault(Effect.succeed(emptyQueryRecord)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(emptyQueryRecord))
+    ),
   },
   $I.annote("XAiRequestOptions", {
     description: "Request options accepted by every xAI endpoint method.",
@@ -209,7 +218,7 @@ export class XAiJsonResponse extends S.TaggedClass<XAiJsonResponse>($I`XAiJsonRe
   "Json",
   {
     body: S.Unknown,
-    contentType: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    contentType: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     headers: S.Record(S.String, S.String),
     status: XAiHttpStatusCode,
   },
@@ -241,7 +250,7 @@ export class XAiJsonResponse extends S.TaggedClass<XAiJsonResponse>($I`XAiJsonRe
 export class XAiTextResponse extends S.TaggedClass<XAiTextResponse>($I`XAiTextResponse`)(
   "Text",
   {
-    contentType: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    contentType: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     headers: S.Record(S.String, S.String),
     status: XAiHttpStatusCode,
     text: S.String,
@@ -275,7 +284,7 @@ export class XAiBinaryResponse extends S.TaggedClass<XAiBinaryResponse>($I`XAiBi
   "Binary",
   {
     bytes: S.Uint8Array,
-    contentType: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    contentType: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     headers: S.Record(S.String, S.String),
     status: XAiHttpStatusCode,
   },
@@ -306,7 +315,7 @@ export class XAiBinaryResponse extends S.TaggedClass<XAiBinaryResponse>($I`XAiBi
 export class XAiNoBodyResponse extends S.TaggedClass<XAiNoBodyResponse>($I`XAiNoBodyResponse`)(
   "NoBody",
   {
-    contentType: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    contentType: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     headers: S.Record(S.String, S.String),
     status: XAiHttpStatusCode,
   },

@@ -29,7 +29,7 @@ persisting structured artifacts that compound into durable, reusable knowledge.
    manifest **P3 Close** step; a Stop hook over-fires and is harness-specific.
 3. **Governance schema, governance home.** `ReflectionFrontmatter` lives with the
    CLI lint tooling (mirroring `QualityIssueIndex` / `SchemaFirst`), reusing
-   `@beep/schema` `LiteralKit` + `decodeYamlTextAs`.
+   `@beep/schema` `LiteralKit` + the repo-cli YAML text decoder over `effect/encoding/Yaml`.
 4. **Per-session immutable files** `history/reflections/<YYYY-MM-DD>-<agent>.md`,
    not a rolling log (append-only ⇒ conflict-free).
 5. **Opt-in enforcement.** Packets with `reflectionRequired: true` (the `_template`

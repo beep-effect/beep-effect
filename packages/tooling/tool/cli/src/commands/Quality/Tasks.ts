@@ -8,7 +8,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import {
@@ -68,6 +67,7 @@ import {
 } from "../../internal/process/index.ts";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../internal/repo-run/ChangedFiles.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { PosInt } from "../../internal/schema/PosInt.ts";
 import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.ts";
 import {
   cleanCoverageRegressionOutputs,
@@ -294,7 +294,7 @@ const isLintPolicySubcommand = (value: string | undefined): boolean =>
 
 const isQualityTaskBypassArg = (arg: string): boolean =>
   isExactQualityTaskBypassArgName(arg) ||
-  A.some(QualityTaskBypassArgName.Options, (name) => Str.startsWith(`${name}=`)(arg));
+  A.some(QualityTaskBypassArgName.literals, (name) => Str.startsWith(`${name}=`)(arg));
 
 const hasQualityTaskBypassArg = (argv: ReadonlyArray<string>): boolean => A.some(argv, isQualityTaskBypassArg);
 
@@ -2865,7 +2865,7 @@ const rootCheckSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
 ];
 
 // Policy lint retains Check's accepted overrides and adds its four-worker budget.
-const PolicyLintConcurrency = LiteralKit([...QualityCheckConcurrency.Options, "4"]).pipe(
+const PolicyLintConcurrency = LiteralKit([...QualityCheckConcurrency.literals, "4"]).pipe(
   $RepoCliId.create("commands/Quality/Tasks").annoteSchema("PolicyLintConcurrency", {
     description: "Bounded policy lint workers, defaulting to four with Check lane overrides.",
   })

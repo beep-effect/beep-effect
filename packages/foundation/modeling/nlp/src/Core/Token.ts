@@ -6,9 +6,9 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { thunkFalse, thunkTrue } from "@beep/utils";
-import { Brand } from "effect";
+import { Brand, Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -35,7 +35,7 @@ const $I = $NlpId.create("Core/Token");
  * @category models
  * @since 0.0.0
  */
-export type TokenIndex = Brand.Branded<NonNegativeInt, "TokenIndex">;
+export type TokenIndex = Brand.Branded<number, "TokenIndex">;
 
 /**
  * Narrow an unknown value to a non-negative token index.
@@ -69,7 +69,7 @@ export const isTokenIndex = (u: unknown): u is TokenIndex => TokenIndex.is(u);
  * @category validation
  * @since 0.0.0
  */
-export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>(S.makeFilter(S.is(NonNegativeInt)));
+export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>(S.makeFilter(S.is(S.Natural)));
 
 /**
  * Schema that decodes non-negative numbers into {@link TokenIndex} values.
@@ -86,8 +86,8 @@ export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>
  * @category validation
  * @since 0.0.0
  */
-export const TokenIndex = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegativeInt.ast).pipe(
-  S.fromBrand("TokenIndex", tokenIndex),
+export const TokenIndex = S.make<(typeof S.Natural)["Rebuild"]>(S.Natural.ast).pipe(
+  S.brand("TokenIndex"),
   $I.annoteSchema("TokenIndex", {
     description: "Non-negative ordered index for an NLP token.",
   }),
@@ -113,7 +113,7 @@ export const TokenIndex = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegative
  * @category models
  * @since 0.0.0
  */
-export type CharPosition = Brand.Branded<NonNegativeInt, "CharPosition">;
+export type CharPosition = Brand.Branded<number, "CharPosition">;
 
 /**
  * Narrow an unknown value to a non-negative character offset.
@@ -147,9 +147,7 @@ export const isCharPosition = (u: unknown): u is CharPosition => CharPosition.is
  * @category validation
  * @since 0.0.0
  */
-export const charPosition: Brand.Constructor<CharPosition> = Brand.check<CharPosition>(
-  S.makeFilter(S.is(NonNegativeInt))
-);
+export const charPosition: Brand.Constructor<CharPosition> = Brand.check<CharPosition>(S.makeFilter(S.is(S.Natural)));
 
 /**
  * Schema that decodes non-negative numbers into {@link CharPosition} values.
@@ -166,8 +164,8 @@ export const charPosition: Brand.Constructor<CharPosition> = Brand.check<CharPos
  * @category validation
  * @since 0.0.0
  */
-export const CharPosition = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegativeInt.ast).pipe(
-  S.fromBrand("CharPosition", charPosition),
+export const CharPosition = S.make<(typeof S.Natural)["Rebuild"]>(S.Natural.ast).pipe(
+  S.brand("CharPosition"),
   $I.annoteSchema("CharPosition", {
     description: "Non-negative character offset in source NLP text.",
   }),
@@ -222,20 +220,20 @@ export class Token extends S.Class<Token>($I`Token`)(
     index: TokenIndex,
     start: CharPosition,
     end: CharPosition,
-    pos: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    lemma: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    stem: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    normal: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    shape: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    prefix: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suffix: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    case: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    uniqueId: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    abbrevFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    contractionFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopWordFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    negationFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    precedingSpaces: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    pos: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    lemma: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stem: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    normal: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    shape: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    prefix: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suffix: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    case: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    uniqueId: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    abbrevFlag: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    contractionFlag: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopWordFlag: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    negationFlag: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    precedingSpaces: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     tags: S.Array(S.String),
   },
   $I.annote("Token", {

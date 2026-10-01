@@ -1,6 +1,6 @@
 import { CodegenPostProcessError } from "@beep/codegen-kit";
 import { $RunpodId } from "@beep/identity";
-import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit } from "@beep/schema";
 import { A, Str, Struct } from "@beep/utils";
 import * as OpenApiPatch from "@effect/openapi-generator/OpenApiPatch";
 import { Effect, flow, Match, Order, pipe } from "effect";
@@ -90,15 +90,23 @@ class OpenApiResponse extends S.Class<OpenApiResponse>($I`OpenApiResponse`)(
   })
 ) {}
 
+const openApiOperationParametersDefault = A.empty<OpenApiParameter>();
+const openApiOperationResponsesDefault = R.empty();
 class OpenApiOperation extends S.Class<OpenApiOperation>($I`OpenApiOperation`)(
   {
     operationId: S.String,
     summary: S.optionalKey(S.String),
     description: S.optionalKey(S.String),
     tags: S.String.pipe(S.Array, S.optionalKey),
-    parameters: S.Array(OpenApiParameter).pipe(SchemaUtils.withEmptyArrayDefaults<OpenApiParameter>()),
+    parameters: S.Array(OpenApiParameter).pipe(
+      S.withConstructorDefault(Effect.succeed(openApiOperationParametersDefault)),
+      S.withDecodingDefaultType(Effect.succeed(openApiOperationParametersDefault))
+    ),
     requestBody: S.optionalKey(OpenApiRequestBody),
-    responses: S.Record(S.String, OpenApiResponse).pipe(SchemaUtils.withKeyDefaults(R.empty())),
+    responses: S.Record(S.String, OpenApiResponse).pipe(
+      S.withConstructorDefault(Effect.succeed(openApiOperationResponsesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openApiOperationResponsesDefault))
+    ),
     security: S.Record(S.String, S.Array(S.String)).pipe(S.Array, S.optionalKey),
   },
   $I.annote("OpenApiOperation", {
@@ -106,6 +114,7 @@ class OpenApiOperation extends S.Class<OpenApiOperation>($I`OpenApiOperation`)(
   })
 ) {}
 
+const openApiPathItemParametersDefault = A.empty<OpenApiParameter>();
 class OpenApiPathItem extends S.Class<OpenApiPathItem>($I`OpenApiPathItem`)(
   {
     get: S.optionalKey(OpenApiOperation),
@@ -113,16 +122,23 @@ class OpenApiPathItem extends S.Class<OpenApiPathItem>($I`OpenApiPathItem`)(
     patch: S.optionalKey(OpenApiOperation),
     put: S.optionalKey(OpenApiOperation),
     delete: S.optionalKey(OpenApiOperation),
-    parameters: S.Array(OpenApiParameter).pipe(SchemaUtils.withEmptyArrayDefaults<OpenApiParameter>()),
+    parameters: S.Array(OpenApiParameter).pipe(
+      S.withConstructorDefault(Effect.succeed(openApiPathItemParametersDefault)),
+      S.withDecodingDefaultType(Effect.succeed(openApiPathItemParametersDefault))
+    ),
   },
   $I.annote("OpenApiPathItem", {
     description: "OpenAPI path item subset consumed by the Runpod generator.",
   })
 ) {}
 
+const openApiComponentsSchemasDefault = R.empty();
 class OpenApiComponents extends S.Class<OpenApiComponents>($I`OpenApiComponents`)(
   {
-    schemas: S.Record(S.String, JsonSchema).pipe(SchemaUtils.withKeyDefaults(R.empty())),
+    schemas: S.Record(S.String, JsonSchema).pipe(
+      S.withConstructorDefault(Effect.succeed(openApiComponentsSchemasDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openApiComponentsSchemasDefault))
+    ),
   },
   $I.annote("OpenApiComponents", {
     description: "OpenAPI components subset consumed by the Runpod generator.",
@@ -167,7 +183,7 @@ type RequestField = {
   readonly schemaExpression: string;
 };
 
-const HTTP_METHODS = RunpodGeneratorHttpMethod.From.Options;
+const HTTP_METHODS = A.map(RunpodGeneratorHttpMethod.Pairs, ([method]) => method);
 const UnauthenticatedOperationId = LiteralKit(["GetOpenAPI", "GetDocs"]);
 const DYNAMIC_ENUM_HINTS = [
   "accelerator",
@@ -867,7 +883,7 @@ export const RunpodOperationId = RunpodOperationIdBase.pipe(
  */
 export type RunpodOperationId = typeof RunpodOperationId.Type;
 
-const RunpodRequestBodyKindBase = LiteralKit(${JSON.stringify(OperationRequestBodyKind.Options)});
+const RunpodRequestBodyKindBase = LiteralKit(${JSON.stringify(OperationRequestBodyKind.literals)});
 /**
  * Request body encoding used by a Runpod operation.
  *
@@ -909,7 +925,7 @@ export const RunpodRequestBodyKind = RunpodRequestBodyKindBase.pipe(
  */
 export type RunpodRequestBodyKind = typeof RunpodRequestBodyKind.Type;
 
-const RunpodResponseBodyKindBase = LiteralKit(${JSON.stringify(OperationResponseBodyKind.Options)});
+const RunpodResponseBodyKindBase = LiteralKit(${JSON.stringify(OperationResponseBodyKind.literals)});
 /**
  * Response body decoding used by a Runpod operation.
  *

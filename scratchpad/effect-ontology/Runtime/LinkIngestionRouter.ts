@@ -10,7 +10,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Context, DateTime, Effect, FiberSet, HashSet, Inspectable, Layer, Random, Schedule } from "effect";
 import * as A from "effect/Array";
@@ -35,7 +34,7 @@ const CreateBatchFromLinksBody = S.Struct({
   targetNamespace: S.optionalKey(S.String),
 }).pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
 
-const NonTerminalBatchStage = BatchStage.pick(BatchStage.omitOptions(["Complete", "Failed"]));
+const NonTerminalBatchStage = BatchStage.pick(["Pending", "Preprocessing", "Extracting", "Resolving", "Validating", "Ingesting"]);
 
 class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError>($I`BatchNotTerminalError`)(
   "BatchNotTerminalError",
@@ -181,7 +180,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
         documentId: DocumentId.fromContentHash(ContentHash.decodeUnknownSync(link.contentHash)),
         sourceUri: GcsUri.resolve(link.storageUri, GcsBucket.decodeUnknownSync(bucket)),
         contentType: "text/markdown",
-        sizeBytes: NonNegativeInt.make(P.isNotNull(link.wordCount) ? link.wordCount * 5 : 0),
+        sizeBytes: S.Natural.make(P.isNotNull(link.wordCount) ? link.wordCount * 5 : 0),
       }));
       const ontologyVersion = yield* ontologyService.generateVersion(ontologyId, entry.value.iri);
       const now = yield* DateTime.now;

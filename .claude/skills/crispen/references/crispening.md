@@ -16,17 +16,20 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 
 | Symbol | Signature (abridged) | Kills | Live site |
 |--------|----------------------|-------|-----------|
-| `SchemaUtils.withNoneDefault` | `(self: Sch & { "~type.make.in": O.Option<A> }) => withConstructorDefault<Sch>` | explicit `O.none()` at every `make` call | `Lexical.model.ts:688,766,781,788` |
-| `SchemaUtils.withConstantDefault` | `<const A>(v: A) => (self: Sch & { "~type.make.in": A }) => withConstructorDefault<Sch>` | `version: 1` / `format: ""` at construction (wire stays required) | `Lexical.model.ts:681,772,776` |
-| `SchemaUtils.withKeyDefaults` | `dual` `(self, v) => withDecodingDefaultKey<withConstructorDefault<Sch>>` | double-wiring a default for **both** make and decode | `SchemaUtils/withKeyDefaults.ts:50` |
-| `SchemaUtils.withEmptyArrayDefaults` | `(self) => …` default `A.empty<T>()` for make + missing-key decode | repeated `[]` default wiring on array fields | `SchemaUtils/withKeyDefaults.ts:114` |
+| `S.withConstructorDefault(Effect.succeedNone)` | upstream; `Option` field defaults to `O.none()` at construction | explicit `O.none()` at every `make` call | `Lexical.model.ts` |
+| `S.withConstructorDefault(Effect.succeed(v))` | upstream; constant default at construction | `version: 1` / `format: ""` at construction (wire stays required) | `Lexical.model.ts` |
+| `S.withConstructorDefault(Effect.succeed(v))` + `S.withDecodingDefaultTypeKey(Effect.succeed(v))` | upstream pair; bind a constructed `v` to one const first | double-wiring a default for **both** make and missing-key decode | `ScanState.ts` |
+| `S.withConstructorDefault(Effect.succeed(empty))` + `S.withDecodingDefaultType(Effect.succeed(empty))` | upstream pair over one `const empty = A.empty<T>()` | repeated `[]` default wiring on array fields | `Md.model.ts` |
 | `SchemaUtils.BoolKeyDefaultFalse` / `BoolKeyDefaultTrue` | annotated boolean field defaulting make + missing key | `O.getOrElse(O.fromUndefinedOr(...), thunkFalse)` plumbing | `Md.model.ts:1101,1468` |
 | `SchemaUtils.withEncodeDefault` | `dual` decode-only default, keeps encode strict | a decode fallback that must NOT leak into the encoded shape | `SchemaUtils/withEncodeDefault.ts:40` |
 | `SchemaUtils.optionalKeyWithDefault` | `dual` optional key + default | v4 replacement for `S.optionalWith(s, { exact, default })` | `SchemaUtils/optionalKeyWithDefaults.ts:29` |
 
-> `withConstantDefault` / `withNoneDefault` are **constructor-only** (they wrap
-> `S.withConstructorDefault`), so the encoded/wire contract stays unchanged. Use
-> `withKeyDefaults` when a missing key on **decode** should also default.
+> `S.withConstructorDefault` alone is **constructor-only**, so the encoded/wire
+> contract stays unchanged. Add `S.withDecodingDefaultTypeKey` (same value) when a
+> missing key on **decode** should also default; a literal default for a
+> literal-typed schema takes `as const` there, or `Effect.succeed` widens it.
+> The `SchemaUtils` default helpers that wrapped these were retired under the
+> Upstream-First Foundation/Modeling decision.
 
 ### Statics & guards — kill the top-of-file decode/guard wall
 
@@ -46,7 +49,7 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 
 | Symbol | API | Kills | Live site |
 |--------|-----|-------|-----------|
-| `LiteralKit([...])` | `.Options`, `.Enum`, `.is`, `.pickOptions`, `.omitOptions`, `.$match`, `.thunk`, `.toTaggedUnion` | duplicate literal arrays + enum-like objects + ad-hoc literal guards; N near-identical nodes | `Md.model.ts:830` (`HeadingLevel`), `Lexical.model.ts:508` (`HeadingTag`) |
+| `LiteralKit([...])` | `.Enum`, `.is`, `.$match`, `.toTaggedUnion`; inherited `S.Literals` `.literals`, `.pick(...)`, `.mapMembers(...)` | duplicate literal arrays + enum-like objects + ad-hoc literal guards; N near-identical nodes | `Lexical.model.ts:755` (`HeadingTag`) |
 | `MappedLiteralKit([[from,to]])` | `.From.Enum` (from→to), `.To.Enum` (to→from), `.Pairs`, `.is` | a hand-written bidirectional lookup table + its inverse | code/protocol maps (e.g. `level↔"h1".."h6"`, SQLSTATE) |
 
 > **Key-stringification gotcha.** Non-string literals become string helper keys:
@@ -140,10 +143,10 @@ export const Block = S.Union([Heading, P, BlockQuote, /* … */]).pipe(SchemaUti
 ```ts
 // before: new ParagraphNode({ ...ParagraphDefaults, children })  // version:1, direction:none, format:"", indent:0 …
 // after (fields carry their own defaults):
-version: LexicalNodeVersion.pipe(SchemaUtils.withConstantDefault(1)),        // Lexical.model.ts:681
-format:  ElementFormat.pipe(SchemaUtils.withConstantDefault<ElementFormat>("")), // :772
-indent:  LexicalIndentDepth.pipe(SchemaUtils.withConstantDefault<number>(0)),     // :776
-direction: SomeDirection.pipe(SchemaUtils.withNoneDefault),                        // :688
+version: LexicalNodeVersion.pipe(S.withConstructorDefault(Effect.succeed(1))),                 // Lexical.model.ts
+format:  ElementFormat.pipe(S.withConstructorDefault(Effect.succeed<ElementFormat>(""))),
+indent:  LexicalIndentDepth.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
+direction: SomeDirection.pipe(S.withConstructorDefault(Effect.succeedNone)),
 // call site: ParagraphNode.makeEffect({ children })
 ```
 
@@ -151,7 +154,7 @@ direction: SomeDirection.pipe(SchemaUtils.withNoneDefault),                     
 ```ts
 // before: backgroundColor: string | null;  … color != null ? color : fallback
 // after:
-backgroundColor: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
+backgroundColor: S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
 // use: O.getOrElse(cell.backgroundColor, () => fallback) — no null in domain code.
 ```
 
@@ -189,10 +192,11 @@ Md.ts          — public builder namespace (Md.h1 … Md.table)
 `@beep/lexical-schema` specializes differently: `.model` / `.behavior` / `.codec` /
 `.normalize`. No package uses all five suffixes — pick per package.
 
-**8. Lesson — a value→function schema is a breaking change.** Exposing a *typed*
-`Effect<A,E,R>` schema legitimately requires a phantom-typed function
-(`export const EffectSchema = <A,E,R>() => S.declare<Effect.Effect<A,E,R>>(isEffect, …)`),
-because `S.declare` can't runtime-check type args. But turning a schema **value** into a
-**function** breaks every value-form consumer: tests and `**Example**` blocks must now call
-`EffectSchema()` (or `S.is(EffectSchema())`), not pass the bare function. When you
-parameterize a schema, sweep the guard/decode/example call sites in the same change.
+**8. Lesson — a value→function schema is a breaking change.** A schema whose type
+arguments are phantom (`S.declare` can't runtime-check them) tempts a type-parameterized
+factory (`<A,E,R>() => S.declare(...)`). Turning a schema **value** into a **function**
+breaks every value-form consumer: tests and `**Example**` blocks must now call the factory
+(or `S.is(factory())`), not pass the bare function. When you parameterize a schema, sweep
+the guard/decode/example call sites in the same change. For typed `Effect<A,E,R>` values,
+skip the factory: declare at the consumer with a typed guard,
+`S.declare((u): u is Effect.Effect<A, E, R> => Effect.isEffect(u))`.

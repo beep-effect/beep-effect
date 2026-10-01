@@ -10,7 +10,6 @@
  */
 
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
-import { NonNegativeInt } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Match, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -21,7 +20,7 @@ import type { ExtractFileOperation, FileProcessingOperationErrorReason } from "@
 
 const isTikaError = S.is(TikaError);
 
-const unsupportedMediaTypeStatus = NonNegativeInt.make(415);
+const unsupportedMediaTypeStatus = S.Natural.make(415);
 
 const extractionFailedMessage = "Tika extraction failed inside the driver boundary.";
 

@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { FileExtension } from "@beep/schema/FileExtension";
 import { FileName } from "@beep/schema/FileName";
 import { MimeType } from "@beep/schema/MimeType";
@@ -199,7 +199,7 @@ export type ContentDigest = typeof ContentDigest.Type;
  * ```ts import.meta.vitest name="Check locator kind options"
  * import { ArtifactLocatorKind } from "@beep/file-processing/Artifact"
  *
- * ArtifactLocatorKind.Options.includes("memory") // => true
+ * ArtifactLocatorKind.literals.includes("memory") // => true
  * ```
  *
  * @category schemas
@@ -267,7 +267,6 @@ export class ArtifactLocator extends S.Class<ArtifactLocator>($I`ArtifactLocator
  *
  * ```ts import.meta.vitest name="Construct SourceArtifact instance"
  * import { ArtifactId, ArtifactLocator, ContentDigest, SourceArtifact } from "@beep/file-processing/Artifact"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -284,7 +283,7 @@ export class ArtifactLocator extends S.Class<ArtifactLocator>($I`ArtifactLocator
  *     locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
  *     name: "README.md",
  *     relativePath,
- *     sizeBytes: NonNegativeInt.make(11),
+ *     sizeBytes: S.Natural.make(11),
  *     text: "hello"
  *   }).extension
  * })
@@ -305,7 +304,7 @@ export class SourceArtifact extends S.Class<SourceArtifact>($I`SourceArtifact`)(
     mediaType: S.optionalKey(MimeType),
     name: ArtifactName,
     relativePath: PosixPath,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     text: S.optionalKey(S.String),
   },
   $I.annote("SourceArtifact", {
@@ -320,7 +319,6 @@ export class SourceArtifact extends S.Class<SourceArtifact>($I`SourceArtifact`)(
  *
  * ```ts import.meta.vitest name="Construct ArtifactReference instance"
  * import { ArtifactId, ArtifactReference } from "@beep/file-processing/Artifact"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -332,7 +330,7 @@ export class SourceArtifact extends S.Class<SourceArtifact>($I`SourceArtifact`)(
  *   return ArtifactReference.make({
  *     id: artifactId,
  *     relativePath,
- *     sizeBytes: NonNegativeInt.make(5)
+ *     sizeBytes: S.Natural.make(5)
  *   }).relativePath
  * })
  *
@@ -348,7 +346,7 @@ export class ArtifactReference extends S.Class<ArtifactReference>($I`ArtifactRef
     id: ArtifactId,
     mediaType: S.optionalKey(MimeType),
     relativePath: PosixPath,
-    sizeBytes: S.optionalKey(NonNegativeInt),
+    sizeBytes: S.optionalKey(S.Natural),
   },
   $I.annote("ArtifactReference", {
     description: "Reference to an artifact materialized by an operation.",

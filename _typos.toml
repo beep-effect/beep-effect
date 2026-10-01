@@ -125,11 +125,15 @@ extend-exclude = [
   # Detector evidence quotes source excerpts truncated at fixed character limits.
   # Their partial identifiers are machine output, not authored prose.
   "standards/effect-vitest.inventory.jsonc",
+  # schema-inventory/v1 rows cap upstream signatures and summaries at fixed
+  # lengths, so truncated identifiers are machine output, not authored prose.
+  "packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/*.jsonl",
   "**/internal/data/**",
   "packages/law-practice/domain/src/internal/generated/free-law-project/**",
   "**/src-tauri/gen/**",
   "**/src-tauri/target/**",
   "packages/drivers/venice-ai/swagger.yaml",
+  "packages/drivers/venice-ai/test/fixtures/swagger.json",
   # Vendored, version-pinned WHATWG/webref spec data for @beep/html (see data/SOURCES.md).
   "packages/foundation/modeling/html/data/**",
   # Generated registered BCP 47 subtags are machine-owned identifiers, not prose.

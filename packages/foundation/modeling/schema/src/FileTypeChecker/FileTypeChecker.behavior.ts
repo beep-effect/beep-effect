@@ -10,7 +10,6 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { isArrayBuf } from "../ArrayBuffer.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { FileTypeCatalog } from "./FileTypeChecker.catalog.ts";
 import {
@@ -42,7 +41,7 @@ const isArrayBufferRepresentation = S.is(S.instanceOf(globalThis.ArrayBuffer));
 const byteEquivalence = S.toEquivalence(Byte);
 const fileTypeEquivalence = S.toEquivalence(FileType);
 const containsFileType = A.containsWith(fileTypeEquivalence);
-const CollisionFileType = LiteralKit(FileType.pickOptions(["avif", "heic", "flv", "m4v", "mp4", "mkv", "webm"]));
+const CollisionFileType = LiteralKit(FileType.pick(["avif", "heic", "flv", "m4v", "mp4", "mkv", "webm"]).literals);
 const isCollisionType = S.is(CollisionFileType);
 
 const copyBoundedUint8Array = O.liftThrowable(
@@ -67,7 +66,7 @@ const compileSignature = (signature: FileSignature): CompiledSignature => {
   };
 };
 
-const compiledCatalog: ReadonlyArray<CompiledFileType> = A.map(FileType.Options, (type) => {
+const compiledCatalog: ReadonlyArray<CompiledFileType> = A.map(FileType.literals, (type) => {
   const info = FileTypeCatalog[type];
   return {
     info,
@@ -227,7 +226,7 @@ const selectFileChunker = Match.type<FileContent>().pipe(
     isArrayBufferRepresentation,
     (buffer): FileChunker =>
       (chunkSize) =>
-        isArrayBuf(buffer) ? pipe(copyBoundedArrayBuffer(buffer, chunkSize), O.flatMap(decodeBoundedBytes)) : O.none()
+        pipe(copyBoundedArrayBuffer(buffer, chunkSize), O.flatMap(decodeBoundedBytes))
   ),
   Match.orElse((): FileChunker => O.none)
 );

@@ -10,6 +10,7 @@
 
 import { $AiProviderCliId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $AiProviderCliId.create("AiProviderCliHome.models");
@@ -90,7 +91,7 @@ export type AiProviderCliHomeMode = typeof AiProviderCliHomeMode.Type;
  * ```ts
  * import { AiProviderCliCodexSharedDirectory } from "@beep/ai-provider-cli"
  *
- * console.log(AiProviderCliCodexSharedDirectory.Options.length) // 9
+ * console.log(AiProviderCliCodexSharedDirectory.literals.length) // 9
  * ```
  *
  * @category models
@@ -135,7 +136,7 @@ export type AiProviderCliCodexSharedDirectory = typeof AiProviderCliCodexSharedD
  * ```ts
  * import { AiProviderCliCodexPrivateEntry } from "@beep/ai-provider-cli"
  *
- * console.log(AiProviderCliCodexPrivateEntry.Options) // ["auth.json", "models_cache.json"]
+ * console.log(AiProviderCliCodexPrivateEntry.literals) // ["auth.json", "models_cache.json"]
  * ```
  *
  * @category models
@@ -174,7 +175,7 @@ export type AiProviderCliCodexPrivateEntry = typeof AiProviderCliCodexPrivateEnt
  * ```ts
  * import { AiProviderCliCodexLocalEntry } from "@beep/ai-provider-cli"
  *
- * console.log(AiProviderCliCodexLocalEntry.Options) // ["log", "memories", "tmp"]
+ * console.log(AiProviderCliCodexLocalEntry.literals) // ["log", "memories", "tmp"]
  * ```
  *
  * @category models
@@ -237,9 +238,11 @@ export class AiProviderCliCodexHomeLayout extends S.Class<AiProviderCliCodexHome
   $I`AiProviderCliCodexHomeLayout`
 )(
   {
-    effectiveHomePath: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Home path injected into the Codex child environment, when one applies.",
-    }),
+    effectiveHomePath: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Home path injected into the Codex child environment, when one applies.",
+      }),
     mode: AiProviderCliHomeMode.annotateKey({
       description: "Whether the layout is direct or a shadow-home auth overlay.",
     }),

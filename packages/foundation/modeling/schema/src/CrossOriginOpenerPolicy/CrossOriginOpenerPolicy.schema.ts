@@ -62,7 +62,7 @@ export const CoopValue = CoopValueBase.pipe(
 export type CoopValue = typeof CoopValue.Type;
 const isCoopValue = S.is(CoopValue);
 
-const CrossOriginOpenerPolicyOptionBase = LiteralKit([false, ...CoopValueBase.Options]);
+const CrossOriginOpenerPolicyOptionBase = LiteralKit([false, ...CoopValueBase.literals]);
 
 /**
  * Schema for `Cross-Origin-Opener-Policy` option values, including `false` to disable.
@@ -128,7 +128,7 @@ export class CrossOriginOpenerPolicyResponseHeader extends S.Class<CrossOriginOp
 )(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromUndefinedOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CrossOriginOpenerPolicyResponseHeader", {
     description: "The `Cross-Origin-Opener-Policy` response header.",

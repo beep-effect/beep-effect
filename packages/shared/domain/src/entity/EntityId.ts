@@ -7,12 +7,12 @@
 
 import { $SharedDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { Str } from "@beep/utils";
-import { pipe, Result } from "effect";
+import { Effect, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 import type { IdentityComposer } from "@beep/identity";
 import type * as BrandNS from "effect/Brand";
 
@@ -163,23 +163,23 @@ export type EntityIdValueFor<TBrand extends string> = BrandNS.Branded<EntityIdVa
 export class Options extends S.Class<Options>($I`Options`)(
   {
     brand: S.OptionFromOptionalKey(EntityIdPascalToken).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional schema brand override for the generated entity id." })
     ),
     description: S.OptionFromOptionalKey(EntityIdDescription).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional human-readable description override for the generated entity id." })
     ),
     entityType: S.OptionFromOptionalKey(EntityIdPascalToken).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional PascalCase entity type override for the generated entity id." })
     ),
     resource: S.OptionFromOptionalKey(EntityIdResource).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional dot-separated authorization resource override." })
     ),
     tableName: S.OptionFromOptionalKey(EntityIdToken).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional SQL table-name override for the generated entity id." })
     ),
   },
@@ -651,7 +651,10 @@ export const factory: Factory = dual(
       EntityIdCodecStatics<ResolvedBrand<Slice, Name, Overrides>> => {
       const definition = buildDefinition(slice, name, overrides);
       const schema = EntityIdValue.pipe(
-        S.brand(definition.brand),
+        // S.brand cannot prove a generic brand key is a single literal; each resolved brand is one.
+        S.brand<ResolvedBrand<Slice, Name, Overrides>>(
+          definition.brand as Parameters<typeof S.brand<ResolvedBrand<Slice, Name, Overrides>>>[0]
+        ),
         identity.annoteSchema(definition.brand, {
           description: definition.description,
         })

@@ -8,6 +8,7 @@
 import { resolveThemeMode, ThemeMode } from "@beep/ui/themes";
 import * as P from "@beep/utils/Predicate";
 import * as Effect from "effect/Effect";
+import * as F from "effect/Function";
 import { KeyValueStore } from "effect/persistence";
 import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
@@ -35,7 +36,7 @@ export const workbenchThemeModeAtom = Atom.kvs({
   runtime: professionalStorageRuntime,
   key: THEME_STORAGE_KEY,
   schema: ThemeMode,
-  defaultValue: ThemeMode.thunk.system,
+  defaultValue: F.constant(ThemeMode.Enum.system),
 });
 
 /**

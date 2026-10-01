@@ -7,7 +7,7 @@
 
 import { createRequire } from "node:module";
 import { $WinkId } from "@beep/identity";
-import { Defect, NonNegativeInt } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Context, Effect, Inspectable, Layer } from "effect";
 import { dual } from "effect/Function";
@@ -51,9 +51,9 @@ type TokenUtilities = {
 
 class NGramResult extends S.Class<NGramResult>($I`NGramResult`)(
   {
-    ngrams: S.Record(S.String, NonNegativeInt),
-    totalNGrams: NonNegativeInt,
-    uniqueNGrams: NonNegativeInt,
+    ngrams: S.Record(S.String, S.Natural),
+    totalNGrams: S.Natural,
+    uniqueNGrams: S.Natural,
   },
   $I.annote("NGramResult", {
     description: "Result of n-gram analysis, including n-gram counts, total n-grams, and unique n-grams.",
@@ -63,8 +63,8 @@ class NGramResult extends S.Class<NGramResult>($I`NGramResult`)(
 const isNGramRecord = (value: unknown): value is Record<string, number> => P.isObject(value);
 const isStringArray = (value: unknown): value is ReadonlyArray<string> =>
   A.isArray(value) && A.every(value, P.isString);
-const sanitizeCount = (count: unknown): NonNegativeInt =>
-  NonNegativeInt.make(P.isNumber(count) && count >= 0 ? Math.floor(count) : 0);
+const sanitizeCount = (count: unknown): number =>
+  S.Natural.make(P.isNumber(count) && count >= 0 ? Math.floor(count) : 0);
 
 type WinkUtilsShape = {
   readonly bagOfNGrams: {
@@ -109,26 +109,26 @@ const sanitizeNGramResult = (
   value: Record<string, number> | ReadonlyArray<string> | ReadonlySet<string>
 ): NGramResult => {
   if (isStringArray(value)) {
-    const ngrams = R.fromEntries(A.map(value, (entry) => [entry, NonNegativeInt.make(1)] as const));
+    const ngrams = R.fromEntries(A.map(value, (entry) => [entry, S.Natural.make(1)] as const));
     return {
       ngrams,
-      totalNGrams: NonNegativeInt.make(value.length),
-      uniqueNGrams: NonNegativeInt.make(value.length),
+      totalNGrams: S.Natural.make(value.length),
+      uniqueNGrams: S.Natural.make(value.length),
     };
   }
 
   if (value instanceof Set) {
     const entries = A.fromIterable(value);
-    const ngrams = R.fromEntries(A.map(entries, (entry) => [entry, NonNegativeInt.make(1)] as const));
+    const ngrams = R.fromEntries(A.map(entries, (entry) => [entry, S.Natural.make(1)] as const));
     return {
       ngrams,
-      totalNGrams: NonNegativeInt.make(entries.length),
-      uniqueNGrams: NonNegativeInt.make(entries.length),
+      totalNGrams: S.Natural.make(entries.length),
+      uniqueNGrams: S.Natural.make(entries.length),
     };
   }
 
   if (!isNGramRecord(value)) {
-    return { ngrams: {}, totalNGrams: NonNegativeInt.make(0), uniqueNGrams: NonNegativeInt.make(0) };
+    return { ngrams: {}, totalNGrams: S.Natural.make(0), uniqueNGrams: S.Natural.make(0) };
   }
 
   const ngrams = R.fromEntries(A.map(R.toEntries(value), ([key, count]) => [key, sanitizeCount(count)] as const));
@@ -136,8 +136,8 @@ const sanitizeNGramResult = (
 
   return {
     ngrams,
-    totalNGrams: NonNegativeInt.make(totalNGrams),
-    uniqueNGrams: NonNegativeInt.make(R.keys(ngrams).length),
+    totalNGrams: S.Natural.make(totalNGrams),
+    uniqueNGrams: S.Natural.make(R.keys(ngrams).length),
   };
 };
 

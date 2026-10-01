@@ -12,13 +12,15 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+// fallow-ignore-file code-duplication -- consumer-local composition that replaces the retired `@beep/schema` `SchemaUtils.withNoneDefault` (optionalDefect); the upstream-first doctrine (standards/architecture/DECISIONS.md, 2026-09-29) forbids a shared replacement.
 
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 
 const $I = $EpistemicUseCasesId.create("EdgeAuthority/EdgeAuthority.errors");
 
@@ -67,7 +69,7 @@ export const EdgeAuthorityOperation = EdgeAuthorityOperationBase.pipe(
  */
 export type EdgeAuthorityOperation = typeof EdgeAuthorityOperation.Type;
 
-const EdgeWriteOperationBase = LiteralKit(EdgeAuthorityOperationBase.pickOptions(["record", "supersede"]));
+const EdgeWriteOperationBase = LiteralKit(EdgeAuthorityOperationBase.pick(["record", "supersede"]).literals);
 
 /**
  * The subset of {@link EdgeAuthorityOperation} that writes. Constraint violations
@@ -113,7 +115,7 @@ export type EdgeWriteOperation = typeof EdgeWriteOperation.Type;
 
 const optionalDefect = (description: string) =>
   S.OptionFromOptionalKey(Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
+    .pipe(S.withConstructorDefault(Effect.succeedNone))
     .annotateKey({
       description,
     });
@@ -133,10 +135,12 @@ const optionalDefect = (description: string) =>
  * **Example** (Build stale version conflict)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
- * import { PosInt } from "@beep/schema/Int"
  * import * as O from "effect/Option"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const key = LogicalEdgeKey.make("abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe")
  * const error = SupersessionConflict.staleVersion(key, PosInt.make(2), PosInt.make(3))
@@ -157,7 +161,7 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I
     logicalKey: LogicalEdgeKey.annotateKey({
       description: "Logical edge whose supersession was rejected.",
     }),
-    observedVersion: PosInt.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault).annotateKey({
+    observedVersion: PosInt.pipe(S.OptionFromNullOr, S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Version actually found at the open head; absent when no open head could be read.",
     }),
   },
@@ -175,9 +179,10 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I
    * **Example** (Construct stale version conflict)
    *
    * ```ts
+   * import * as S from "effect/Schema"
    * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
    * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
-   * import { PosInt } from "@beep/schema/Int"
+   * const PosInt = S.Int.check(S.isGreaterThan(0))
    *
    * const key = LogicalEdgeKey.make("abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe")
    * console.log(SupersessionConflict.staleVersion(key, PosInt.make(1), PosInt.make(4))._tag)
@@ -205,10 +210,12 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I
    * **Example** (Construct lock loser conflict)
    *
    * ```ts
+   * import * as S from "effect/Schema"
    * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
    * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
-   * import { PosInt } from "@beep/schema/Int"
    * import * as O from "effect/Option"
+   *
+   * const PosInt = S.Int.check(S.isGreaterThan(0))
    *
    * const key = LogicalEdgeKey.make("abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe")
    * console.log(O.isNone(SupersessionConflict.lockLoser(key, PosInt.make(1)).observedVersion))
@@ -230,10 +237,12 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I
    * **Example** (Construct backstop conflict)
    *
    * ```ts
+   * import * as S from "effect/Schema"
    * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
    * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
-   * import { PosInt } from "@beep/schema/Int"
    * import * as O from "effect/Option"
+   *
+   * const PosInt = S.Int.check(S.isGreaterThan(0))
    *
    * const key = LogicalEdgeKey.make("abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe")
    * const error = SupersessionConflict.backstop(key, PosInt.make(2), new Error("epistemic_edge_open_head_idx"))

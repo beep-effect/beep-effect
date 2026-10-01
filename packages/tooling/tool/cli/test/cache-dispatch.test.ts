@@ -28,11 +28,12 @@ import {
   CacheTaskConfiguration,
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
@@ -41,7 +42,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { vi } from "vitest";
 
 const digest = Sha256Hex.make(Str.repeat(64)("a"));
 const key = CacheQualificationKey.make({
@@ -60,7 +60,7 @@ const baseline = CachePolicyBaseline.make({
   projection: CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] }),
 });
 const entry = CacheQualificationEntry.make({ key, status: { state: "excluded", review } });
-const store = CacheQualificationStore.make({ revision: NonNegativeInt.make(1), entries: [entry], history: [] });
+const store = CacheQualificationStore.make({ revision: S.Natural.make(1), entries: [entry], history: [] });
 const executable = CacheExecutablePin.make({ version: "1.4.2", sha256: digest });
 const identity = CacheLiveIdentity.make({
   key,
@@ -144,7 +144,7 @@ const fixture = Effect.fn("CacheDispatchTest.fixture")(function* (
     transition: path.join(root, "transition.json"),
     activation: path.join(root, "activation.json"),
   };
-  const transitionRequest = CacheTransitionRequest.make({ expectedRevision: NonNegativeInt.make(0), entry });
+  const transitionRequest = CacheTransitionRequest.make({ expectedRevision: S.Natural.make(0), entry });
   const activationRequest = CacheActivationRequest.make({
     computation: key.computation,
     path: activation.path,

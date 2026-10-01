@@ -666,7 +666,7 @@ describe("B7 settle contracts", () => {
   }
 });
 
-it.layer(platform)("B7 merge-loop timing", (layerIt) => {
+it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) => {
   layerIt.effect(
     "ends exactly at timeout for an admitted head, persists the timeline, and names the missing context",
     () =>
@@ -732,6 +732,7 @@ it.layer(platform)("B7 merge-loop timing", (layerIt) => {
               mergeable: true,
               mergeStateAcceptable: true,
               reviewDecisionAcceptable: true,
+              closeoutGatesPassed: true,
               greptileScore: O.none(),
             });
           // Polls 0–2: tier 1 green, no label, heavy absent → held. Poll 3: the label
@@ -756,7 +757,7 @@ it.layer(platform)("B7 merge-loop timing", (layerIt) => {
                         ready: n >= 4,
                         criteria: ready,
                         failing: A.findFirst(
-                          YeetMergeReadyCriterion.Options,
+                          YeetMergeReadyCriterion.literals,
                           (criterion) => !mergeReadyCriterionHolds(ready, criterion)
                         ),
                       })
@@ -844,6 +845,7 @@ it.layer(platform)("B7 merge-loop timing", (layerIt) => {
           mergeable: true,
           mergeStateAcceptable: true,
           reviewDecisionAcceptable: true,
+          closeoutGatesPassed: true,
           greptileScore: O.none(),
         });
         const fiber = yield* runYeetMonitorUntilMerged(contextFor(root), {

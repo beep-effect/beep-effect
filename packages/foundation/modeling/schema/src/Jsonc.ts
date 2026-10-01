@@ -10,7 +10,6 @@ import { A } from "@beep/utils";
 import { Effect, flow, pipe, SchemaIssue, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
-import { isNonNegative } from "./Number.ts";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Jsonc");
@@ -33,9 +32,9 @@ const $I = $SchemaId.create("Jsonc");
  */
 export class JsoncParseDiagnostic extends S.Class<JsoncParseDiagnostic>($I`JsoncParseDiagnostic`)(
   {
-    code: S.Int.check(isNonNegative),
-    offset: S.Int.check(isNonNegative),
-    length: S.Int.check(isNonNegative),
+    code: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    offset: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    length: S.Int.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("JsoncParseDiagnostic", {
     description: "Single JSONC parse diagnostic produced by jsonc-parser.",

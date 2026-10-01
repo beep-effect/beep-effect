@@ -1,7 +1,8 @@
 import { fileURLToPath } from "node:url";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import { describe, expect, it } from "vitest";
 
 const sourceRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const driverPath = `${sourceRoot}scripts/regenerate-merge-driver.sh`;

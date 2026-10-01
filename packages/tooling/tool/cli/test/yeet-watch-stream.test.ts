@@ -20,12 +20,15 @@ import {
   YeetWatchSnapshot,
   YeetWatchStarted,
   YeetWatchThread,
+  yeetCheckBlocksMerge,
   yeetWatchCheckIsRequired,
   yeetWatchCommentEvent,
   yeetWatchEndReason,
   yeetWatchThreadOutstanding,
 } from "@beep/repo-cli/test/Yeet";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, strictEqual } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -34,6 +37,7 @@ import * as Str from "effect/String";
 import type { YeetCheckTransition, YeetHeadChanged, YeetReviewThreadStateTag } from "@beep/repo-cli/test/Yeet";
 
 const decodeUnknownYeetWatchEventJson = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
+const decodeYeetWatchCheck = S.decodeEffect(YeetWatchCheck);
 
 const AT = "2026-08-17T00:00:00Z";
 
@@ -63,6 +67,7 @@ const criteria = (value: boolean) =>
     mergeable: value,
     mergeStateAcceptable: value,
     reviewDecisionAcceptable: value,
+    closeoutGatesPassed: value,
     greptileScore: O.none(),
   });
 
@@ -222,7 +227,7 @@ describe("diffYeetWatchSnapshots", () => {
       prev: snapshot({ criteria: criteria(false) }),
     });
 
-    expect(A.map(events, (event) => event.kind)).toEqual(A.replicate("merge-ready-criterion-changed", 8));
+    expect(A.map(events, (event) => event.kind)).toEqual(A.replicate("merge-ready-criterion-changed", 9));
     expect(
       A.map(events, (event) => (event.kind === "merge-ready-criterion-changed" ? event.criterion : "unexpected"))
     ).toEqual([
@@ -234,6 +239,7 @@ describe("diffYeetWatchSnapshots", () => {
       "mergeable",
       "merge-state-acceptable",
       "review-decision-acceptable",
+      "closeout-gates-passed",
     ]);
   });
 });
@@ -261,7 +267,7 @@ describe("yeetWatchEndReason", () => {
 
   it("continues while any check is pending", () => {
     const reason = yeetWatchEndReason(snapshot({ checks: [check("A", "pass"), check("B", "pending")] }));
-    expect(O.isNone(reason)).toBe(true);
+    assertNone(reason);
   });
 
   it("ends all-terminal when no check is pending", () => {
@@ -462,3 +468,74 @@ it.effect("decodes legacy watch-ended rows with zero optional failures", () =>
     expect(row).toEqual(YeetWatchEnded.make({ at: "now", headSha: "abc", reason: "all-terminal", failing: 0 }));
   })
 );
+
+describe("merge-blocking checks", () => {
+  it.each([
+    { check: YeetWatchCheck.make({ name: "Heavy / Lint", outcome: "fail", required: false }), blocked: true },
+    { check: YeetWatchCheck.make({ name: "Heavy / Lint", outcome: "pending", required: false }), blocked: true },
+    { check: YeetWatchCheck.make({ name: "Heavy / Lint", outcome: "skip", required: false }), blocked: false },
+    { check: YeetWatchCheck.make({ name: "Heavy / Lint", outcome: "pass", required: false }), blocked: false },
+    {
+      check: YeetWatchCheck.make({
+        name: "Vercel – todox",
+        outcome: "fail",
+        required: false,
+        description: O.some("Deployment rate limited — retry in 24 hours."),
+      }),
+      blocked: false,
+    },
+    {
+      check: YeetWatchCheck.make({
+        name: "Vercel – todox",
+        outcome: "pending",
+        required: false,
+        description: O.some("Deployment rate limited — retry in 24 hours."),
+      }),
+      blocked: true,
+    },
+    {
+      check: YeetWatchCheck.make({
+        name: "Vercel – todox",
+        outcome: "fail",
+        required: true,
+        description: O.some("Deployment rate limited — retry in 24 hours."),
+      }),
+      blocked: true,
+    },
+    {
+      check: YeetWatchCheck.make({
+        name: "Vercel – todox",
+        outcome: "fail",
+        required: false,
+        description: O.some("Deployment failed: build error."),
+      }),
+      blocked: true,
+    },
+    {
+      check: YeetWatchCheck.make({
+        name: "Vercel Preview Comments",
+        outcome: "fail",
+        required: false,
+        description: O.some("Deployment rate limited — retry in 24 hours."),
+      }),
+      blocked: true,
+    },
+  ])("classifies $check", ({ check, blocked }) => {
+    strictEqual(yeetCheckBlocksMerge(check), blocked);
+  });
+
+  it.effect("decodes historical check records without rate-limit evidence", () =>
+    Effect.gen(function* () {
+      const check = yield* decodeYeetWatchCheck({
+        name: "Vercel – todox",
+        outcome: "fail",
+        required: false,
+        link: null,
+        workflow: null,
+        signal: { bucket: "fail", state: "FAILURE" },
+      });
+      assertNone(check.description);
+      strictEqual(yeetCheckBlocksMerge(check), true);
+    })
+  );
+});

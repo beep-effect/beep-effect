@@ -8,12 +8,12 @@
 
 import { $WorkspaceServerId } from "@beep/identity";
 import { Document } from "@beep/md/Md.model";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Message, MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-domain/entities/Thread";
 import { Turn } from "@beep/workspace-domain/entities/Turn";
 import { Effect, HashMap } from "effect";
 import * as S from "effect/Schema";
+import { PosInt } from "../../internal/PosInt.ts";
 
 const $I = $WorkspaceServerId.create("aggregates/Thread/ThreadStore.repo.internal");
 
@@ -23,8 +23,10 @@ const $I = $WorkspaceServerId.create("aggregates/Thread/ThreadStore.repo.interna
  * **Example** (Create Thread entity input)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test"
- * import { PosInt } from "@beep/schema/Int"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const { ThreadEntityInput } = ThreadStoreRepoTestSchemas
  * const input = ThreadEntityInput.make({
@@ -61,8 +63,10 @@ export class ThreadEntityInput extends S.Class<ThreadEntityInput>($I`ThreadEntit
  * **Example** (Create Turn entity input)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test"
- * import { NonNegativeInt, PosInt } from "@beep/schema/Int"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const { TurnEntityInput } = ThreadStoreRepoTestSchemas
  * const input = TurnEntityInput.make({
@@ -70,7 +74,7 @@ export class ThreadEntityInput extends S.Class<ThreadEntityInput>($I`ThreadEntit
  *   messageId: PosInt.make(2),
  *   parentTurnId: null,
  *   threadId: PosInt.make(1),
- *   turnIndex: NonNegativeInt.make(0),
+ *   turnIndex: S.Natural.make(0),
  * })
  * console.log(input.turnIndex)
  * ```
@@ -92,7 +96,7 @@ export class TurnEntityInput extends S.Class<TurnEntityInput>($I`TurnEntityInput
     threadId: PosInt.annotateKey({
       description: "Positive Thread id that owns this Turn.",
     }),
-    turnIndex: NonNegativeInt.annotateKey({
+    turnIndex: S.Natural.annotateKey({
       description: "Zero-based non-negative order of this Turn within its Thread.",
     }),
   },
@@ -107,9 +111,11 @@ export class TurnEntityInput extends S.Class<TurnEntityInput>($I`TurnEntityInput
  * **Example** (Create Message entity input)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Document } from "@beep/md/Md.model"
  * import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test"
- * import { PosInt } from "@beep/schema/Int"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const { MessageEntityInput } = ThreadStoreRepoTestSchemas
  * const input = MessageEntityInput.make({

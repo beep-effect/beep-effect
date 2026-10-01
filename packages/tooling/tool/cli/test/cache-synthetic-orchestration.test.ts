@@ -5,6 +5,7 @@ import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Crypto, Effect, FileSystem, Layer, Match, Path, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
@@ -228,13 +229,28 @@ describe("synthetic orchestration process boundary", () => {
     }, provideScopedLayer(platform))
   );
 
-  for (const fault of faults.omitOptions(["none"])) {
+  for (const fault of faults.pick([
+    "extra-task",
+    "wrong-command",
+    "remote",
+    "foreign-hit",
+    "unknown-cache",
+    "missing-verdict",
+    "wrong-verdict",
+    "extra-output",
+    "missing-log",
+    "extra-summary",
+    "bad-client-version",
+    "bad-bun-version",
+    "drift-client",
+    "drift-bun",
+  ]).literals) {
     it.effect(
       `rejects ${fault} and still removes disposable roots`,
       Effect.fnUntraced(function* () {
         const { root, fs, path, run } = yield* fixture(fault);
         const result = yield* run().pipe(Effect.result);
-        expect(Result.isFailure(result)).toBe(true);
+        result.pipe(Result.isFailure, assertTrue);
         expect(yield* fs.readDirectory(path.join(root, ".beep/cache/experiments"))).toEqual(["owner"]);
       }, provideScopedLayer(platform))
     );
@@ -256,7 +272,7 @@ describe("synthetic orchestration process boundary", () => {
         }),
         CacheSyntheticRequest.make({ ...request, channel: "canary" }),
       ]) {
-        expect(Result.isFailure(yield* run(changed).pipe(Effect.result))).toBe(true);
+        (yield* run(changed).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       }
       expect(calls).toEqual([]);
     }, provideScopedLayer(platform))

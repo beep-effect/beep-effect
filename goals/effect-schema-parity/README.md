@@ -9,7 +9,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 ## Mission
 
 Retire or trim every `@beep/schema` concept upstream Effect covers at the
-main snapshot `e5f7d12af9` (rc.118 line), migrate
+main snapshot `df77fff939` (rc.118 line), migrate
 consumers by codemod, and leave an rc-pinned inventory plus a schema-first
 gate that hold parity on every effect bump. Six phases, one PR train.
 
@@ -35,7 +35,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Doctrine PR, not started; it opens after PR #1154 (this packet) merges.
+P0 Doctrine PR, not started. The pin catch-up PR (inventory regenerated at
+`df77fff939`, SPEC goal-time row 2026-09-29) goes first; P0 follows it.
 Next concrete action: from a lane branch off main, write the dated entry in `standards/architecture/DECISIONS.md` and the
 rule text in `standards/architecture/11-evolution-and-deprecation.md` per
 `SPEC.md` §Phase Contract, narrow the AGENTS.md LiteralKit line, add the
@@ -43,12 +44,19 @@ rule text in `standards/architecture/11-evolution-and-deprecation.md` per
 
 ## Latest Evidence
 
+2026-09-29: PR #1330 bumped the Effect snapshot to `df77fff939` without
+regenerating the inventory. The catch-up PR regenerated it with the
+prototype tools (2,232 rows, verifier PASS), moved `inventoryPin` in the
+packet, and logged the miss in `research/OPPORTUNITIES.md`.
+
 2026-09-28: the source exploration reopened at decompose because upstream
 shipped schema compilers (effect #7908); see its `DECISIONS.md` 2026-09-28
 entry. This packet was amended in place by the `SPEC.md` goal-time row of the
 same date: pin `inventoryPin` `e5f7d12af9`, fixture `effect-schema-rc118`,
 bump rule for any pin change, Opus 5.5 lanes, and the P5 precondition met by
-PR #927. The compiler verdict is pending the operator; no phase has started.
+PR #927. The SchemaUtils census landed in P2, P3 and P5. The operator ruled
+the schema compilers DEFER (no compilers goal) and kept `isCodecDataFirst`;
+the exploration graduated again the same day. No phase has started.
 
 Earlier: exploration definition-of-ready passed on 2026-09-15
 (`explorations/effect-schema-parity/MAP.md`, final section). Packet

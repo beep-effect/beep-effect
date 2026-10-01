@@ -14,7 +14,6 @@ import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import type { IRI } from "@beep/rdf";
 import { ProvBundle } from "@beep/rdf/Prov";
-import { NonNegativeInt } from "@beep/schema";
 import * as A from "@beep/utils/Array";
 import { DateTime, HashMap, HashSet, Inspectable, MutableHashMap, Order } from "effect";
 import * as Eq from "effect/Equal";
@@ -66,7 +65,7 @@ export class MergeConflict extends S.Class<MergeConflict>($I`MergeConflict`)(
     entityId: EntityId.annotateKey({ description: "Entity whose attributes conflict." }),
     property: S.NonEmptyString.annotateKey({ description: "Entity property with conflicting values." }),
     values: S.Array(S.Unknown).annotateKey({ description: "Conflicting values observed for the property." }),
-    chunkIndexes: S.Array(NonNegativeInt).annotateKey({
+    chunkIndexes: S.Array(S.Natural).annotateKey({
       description: "Source chunk indexes that contributed conflicting values.",
     }),
   },

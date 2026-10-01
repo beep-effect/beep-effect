@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Context, Effect, Equal, FileSystem, HashSet, Layer, Number as N, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -166,7 +166,7 @@ export type FixtureExpectation = typeof FixtureExpectation.Type;
  * @since 0.0.0
  */
 export const FixtureDegradedKind = LiteralKit(
-  DegradedKind.pickOptions(["invalid-utf8", "truncated", "extraction-failed"])
+  DegradedKind.pick(["invalid-utf8", "truncated", "extraction-failed"]).literals
 ).annotate(
   $I.annote("FixtureDegradedKind", {
     description: "Invalid UTF-8, truncation, or extraction failure declared by a degraded F1 fixture.",
@@ -211,7 +211,7 @@ const F1FixtureFields = S.Struct({
   expectation: FixtureExpectation,
   degradedKind: S.OptionFromNullOr(FixtureDegradedKind),
   sha256: Sha256Hex,
-  bytes: NonNegativeInt,
+  bytes: S.Natural,
   summary: S.NonEmptyString,
 });
 
@@ -237,8 +237,9 @@ const F1FixtureDefinition = F1FixtureFields.check(F1FixtureExpectationCheck);
  * **Example** (Create a parsing Markdown fixture)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { F1Fixture, F1FixtureId } from "@/fixtures/F1"
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const fixture = F1Fixture.make({
@@ -248,7 +249,7 @@ const F1FixtureDefinition = F1FixtureFields.check(F1FixtureExpectationCheck);
  *   expectation: "parses",
  *   degradedKind: O.none(),
  *   sha256: Sha256Hex.make("0".repeat(64)),
- *   bytes: NonNegativeInt.make(12),
+ *   bytes: S.Natural.make(12),
  *   summary: "Structured synthetic paper."
  * })
  * console.log(fixture.expectation) // "parses"
@@ -286,10 +287,10 @@ const countFixtures = (index: F1IndexFields, mediaType: FixtureMediaType, expect
   );
 
 const f1HasOneDegradedPerMediaType = (index: F1IndexFields): boolean =>
-  A.every(FixtureMediaType.Options, (mediaType) => Equal.equals(countFixtures(index, mediaType, "degraded"), 1));
+  A.every(FixtureMediaType.literals, (mediaType) => Equal.equals(countFixtures(index, mediaType, "degraded"), 1));
 
 const f1HasTwoParsingFixturesPerMediaType = (index: F1IndexFields): boolean =>
-  A.every(FixtureMediaType.Options, (mediaType) =>
+  A.every(FixtureMediaType.literals, (mediaType) =>
     N.isGreaterThanOrEqualTo(countFixtures(index, mediaType, "parses"), 2)
   );
 
@@ -371,8 +372,8 @@ export const F1Diff = F1DriftKind.toTaggedUnion("kind")({
   "bytes-mismatch": {
     id: F1FixtureId,
     relativePath: S.NonEmptyString,
-    expectedBytes: NonNegativeInt,
-    actualBytes: NonNegativeInt,
+    expectedBytes: S.Natural,
+    actualBytes: S.Natural,
   },
 }).pipe(
   $I.annoteSchema("F1Diff", {

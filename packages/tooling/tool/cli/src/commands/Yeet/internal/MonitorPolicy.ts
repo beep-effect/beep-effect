@@ -30,7 +30,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { DateTime, Duration, Effect, HashSet, Match, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -95,7 +95,7 @@ export const YEET_MONITOR_POLL_ERROR_BUDGET = 5;
  * ```ts
  * import { YeetMonitorTerminalState } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetMonitorTerminalState.Options.length) // 6
+ * console.log(YeetMonitorTerminalState.literals.length) // 6
  * ```
  *
  * @category models
@@ -139,7 +139,7 @@ export type YeetMonitorTerminalState = typeof YeetMonitorTerminalState.Type;
  * ```ts
  * import { YeetMonitorAttachment } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetMonitorAttachment.Options) // ["attached", "detached"]
+ * console.log(YeetMonitorAttachment.literals) // ["attached", "detached"]
  * ```
  *
  * @category models
@@ -431,14 +431,14 @@ export const yeetMonitorExitFor = (terminal: YeetMonitorTerminalState): YeetMoni
  * ```ts
  * import { yeetMonitorExitTable, YeetMonitorTerminalState } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(yeetMonitorExitTable.length === YeetMonitorTerminalState.Options.length) // true
+ * console.log(yeetMonitorExitTable.length === YeetMonitorTerminalState.literals.length) // true
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
 export const yeetMonitorExitTable: ReadonlyArray<YeetMonitorExit> = A.map(
-  YeetMonitorTerminalState.Options,
+  YeetMonitorTerminalState.literals,
   yeetMonitorExitFor
 );
 
@@ -479,12 +479,12 @@ export class YeetHeadTimeline extends S.Class<YeetHeadTimeline>($I`YeetHeadTimel
   {
     headSha: S.NonEmptyString,
     firstObservedAt: S.String,
-    pushedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    redAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    redLane: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    settledAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    closeoutAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    readyAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    pushedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    redAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    redLane: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    settledAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    closeoutAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    readyAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetHeadTimeline", {
     description: "Push, first-red, settle, closeout, and ready instants for one pull request head.",
@@ -769,11 +769,11 @@ export type YeetPushToAckStage = typeof YeetPushToAckStage.Type;
 export class YeetPushToAckTimeline extends S.Class<YeetPushToAckTimeline>($I`YeetPushToAckTimeline`)(
   {
     headSha: S.NonEmptyString,
-    pushedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    redAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    rowAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    injectedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    ackedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    pushedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    redAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    rowAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    injectedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    ackedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetPushToAckTimeline", {
     description: "Push, first-red, row-written, row-injected, and acked instants for one pull request head.",
@@ -868,7 +868,7 @@ const renderPushToAckStage = (
  */
 export const renderYeetPushToAckTimeline = (timeline: YeetPushToAckTimeline): string => {
   const pushed = O.flatMap(timeline.pushedAt, epochMillis);
-  const [, clauses] = A.mapAccum(YeetPushToAckStage.Options, O.none<number>(), (previous, stage) =>
+  const [, clauses] = A.mapAccum(YeetPushToAckStage.literals, O.none<number>(), (previous, stage) =>
     renderPushToAckStage(pushed, previous, stage, pushToAckInstant(timeline, stage))
   );
   return `push→row→ack ${Str.slice(0, 7)(timeline.headSha)}: ${A.join(clauses, ", ")}`;

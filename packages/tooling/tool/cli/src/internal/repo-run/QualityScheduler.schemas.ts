@@ -10,13 +10,13 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
+import { Defect, LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Effect, Runtime } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { UUID } from "../schema/Uuid.ts";
 import { RunScopeRecord } from "./RunScope.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler.schemas");
@@ -61,7 +61,7 @@ export type AdmissionWorkKind = typeof AdmissionWorkKind.Type;
  * ```ts
  * import { AdmissionPriority } from "@beep/repo-cli/test/RepoRun"
  *
- * console.log(AdmissionPriority.Options.length) // 2
+ * console.log(AdmissionPriority.literals.length) // 2
  * ```
  *
  * @category models
@@ -219,11 +219,11 @@ export type ProofStage = typeof ProofStage.Type;
  * @since 0.0.0
  */
 export const attemptInputFactFields = {
-  resolvedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  stage: ProofStage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  resolvedHeadSha: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  stage: ProofStage.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 };
 
 /**
@@ -256,7 +256,7 @@ export const admissionTokenWeight = (kind: AdmissionWorkKind): number =>
   });
 
 const admissionOwnerFields = {
-  attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   ...attemptInputFactFields,
   pid: S.Finite,
   procStart: S.String,
@@ -679,7 +679,7 @@ export class AdmissionConfig extends S.Class<AdmissionConfig>($I`AdmissionConfig
  */
 export class AdmissionRequest extends S.Class<AdmissionRequest>($I`AdmissionRequest`)(
   {
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     ...attemptInputFactFields,
     kind: AdmissionWorkKind,
     weightTokens: S.Finite,

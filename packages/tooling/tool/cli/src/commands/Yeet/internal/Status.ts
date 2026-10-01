@@ -6,11 +6,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
@@ -18,7 +19,7 @@ import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext } from "./ArtifactPaths.ts";
-import { PrCloseoutReportJson } from "./Closeout.ts";
+import { closeoutIssueFromReviewThread, PrCloseoutReportJson } from "./Closeout.ts";
 import {
   collectYeetGateStaleness,
   GateStale,
@@ -50,6 +51,7 @@ import {
   classifyYeetCheckOutcome,
   YeetCheckSignal,
   YeetWatchCheck,
+  yeetCheckBlocksMerge,
   yeetCheckRecordInstant,
   yeetCheckRecordText,
 } from "./WatchStream.ts";
@@ -151,6 +153,12 @@ export class YeetStatusLaneDigest extends S.Class<YeetStatusLaneDigest>($I`YeetS
  * report written for an older pull request head. Legacy summaries decode with
  * no recorded head and therefore remain stale.
  *
+ * `issueCount` is every closeout issue; `gateIssues` names the ones a non-thread
+ * closeout gate raised (the Greptile score and issue-count gates), so merge
+ * readiness can charge those to `closeout-gates-passed` and the rest to
+ * `threads-resolved`. A summary without `gateIssues` predates the split and
+ * charges every issue to threads, as status always did before.
+ *
  * **Example** (Construct a yeet status artifact)
  *
  * ```ts
@@ -173,12 +181,13 @@ export class YeetStatusArtifact extends S.Class<YeetStatusArtifact>($I`YeetStatu
     path: S.String,
     state: YeetStatusArtifactState,
     issueCount: S.optionalKey(S.Finite),
+    gateIssues: S.String.pipe(S.Array, S.optionalKey),
     mode: S.optionalKey(S.String),
     outcome: S.optionalKey(S.String),
     repairCommand: S.optionalKey(S.String),
-    reviewedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    reviewedHeadSha: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     schemaVersion: S.optionalKey(S.String),
-    greptileScore: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    greptileScore: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     laneDigests: YeetStatusLaneDigest.pipe(S.Array, S.optionalKey),
   },
   $I.annote("YeetStatusArtifact", {
@@ -223,15 +232,17 @@ export class YeetStatusReviewThread extends S.Class<YeetStatusReviewThread>($I`Y
     threadId: S.String,
     author: S.String,
     excerpt: S.String,
-    path: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    line: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    commentDatabaseId: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    path: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    line: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    commentDatabaseId: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetStatusReviewThread", {
     description: "One unresolved pull request review thread with the context needed to triage and reply to it.",
   })
 ) {}
 
+const yeetStatusRemoteChecksDefault = A.empty<YeetWatchCheck>();
+const yeetStatusRemoteLabelsDefault = A.empty<string>();
 /**
  * Optional remote pull request summary for `yeet status --remote`.
  *
@@ -255,11 +266,18 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     // Each check's whole record (signal, link, workflow, GitHub's instants), so
     // a row the merge loop writes carries the same capsule a --watch row does.
     // The key default keeps artifacts written before checks existed decoding.
-    checks: YeetWatchCheck.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<YeetWatchCheck>())),
+    checks: YeetWatchCheck.pipe(
+      S.Array,
+      S.withConstructorDefault(Effect.succeed(yeetStatusRemoteChecksDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetStatusRemoteChecksDefault))
+    ),
     checkCount: S.optionalKey(S.Finite),
     failingCheckCount: S.optionalKey(S.Finite),
     isDraft: S.optionalKey(S.Boolean),
-    labels: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    labels: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetStatusRemoteLabelsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetStatusRemoteLabelsDefault))
+    ),
     mergeStateStatus: S.optionalKey(S.String),
     mergeable: S.optionalKey(S.String),
     number: S.optionalKey(S.Finite),
@@ -272,12 +290,21 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     pendingOptionalCheckCount: S.optionalKey(S.Finite),
     unresolvedReviewThreadCount: S.optionalKey(S.Finite),
     unresolvedReviewThreads: S.Array(S.String).pipe(S.optionalKey),
-    unresolvedThreads: S.Array(YeetStatusReviewThread).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    unresolvedThreads: S.Array(YeetStatusReviewThread).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     followUpThreadCount: S.optionalKey(S.Finite),
-    followUpThreads: S.Array(YeetStatusReviewThread).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    followUpThreads: S.Array(YeetStatusReviewThread).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     acknowledgedThreadCount: S.optionalKey(S.Finite),
-    acknowledgedThreads: S.Array(YeetStatusReviewThread).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    headSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    acknowledgedThreads: S.Array(YeetStatusReviewThread).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    headSha: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     rerunFailedCommand: S.optionalKey(S.String),
     rerunFailedDecision: S.optionalKey(S.String),
     reviewDecision: S.optionalKey(S.String),
@@ -289,6 +316,8 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
   })
 ) {}
 
+const yeetStatusSnapshotStaleGatesDefault = A.empty();
+const yeetStatusSnapshotUnprovenGatesDefault = A.empty();
 /**
  * Machine-readable status snapshot emitted by `yeet status`.
  *
@@ -331,13 +360,19 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
     statusPath: S.String,
     verdict: YeetStatusArtifact,
     worktree: YeetStatusWorktree,
-    mergeReady: YeetMergeReadyFromEncoded.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    staleGates: S.Array(GateStale).pipe(SchemaUtils.withKeyDefaults([])),
-    unprovenGates: S.Array(GateUnproven).pipe(SchemaUtils.withKeyDefaults([])),
+    mergeReady: YeetMergeReadyFromEncoded.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    staleGates: S.Array(GateStale).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetStatusSnapshotStaleGatesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetStatusSnapshotStaleGatesDefault))
+    ),
+    unprovenGates: S.Array(GateUnproven).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetStatusSnapshotUnprovenGatesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetStatusSnapshotUnprovenGatesDefault))
+    ),
     // Stamped by the merge loop (B7): push, settle, closeout, and ready
     // instants for the head this snapshot describes. A one-shot `yeet status`
     // read leaves it absent.
-    timeline: YeetHeadTimeline.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    timeline: YeetHeadTimeline.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetStatusSnapshot", {
     description: "Machine-readable status snapshot emitted by yeet status.",
@@ -372,12 +407,16 @@ class GhStatusLabel extends S.Class<GhStatusLabel>($I`GhStatusLabel`)(
   $I.annote("GhStatusLabel", { description: "One label on the pull request as gh pr view reports it." })
 ) {}
 
+const ghStatusPullRequestLabelsDefault = A.empty<GhStatusLabel>();
 class GhStatusPullRequest extends S.Class<GhStatusPullRequest>($I`GhStatusPullRequest`)(
   {
     id: S.String,
     headRefOid: S.String,
     isDraft: S.Boolean,
-    labels: S.Array(GhStatusLabel).pipe(SchemaUtils.withKeyDefaults(A.empty<GhStatusLabel>())),
+    labels: S.Array(GhStatusLabel).pipe(
+      S.withConstructorDefault(Effect.succeed(ghStatusPullRequestLabelsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ghStatusPullRequestLabelsDefault))
+    ),
     mergeStateStatus: S.NullOr(S.String),
     mergeable: S.NullOr(S.String),
     number: S.Finite,
@@ -434,7 +473,10 @@ class GhStatusReviewThread extends S.Class<GhStatusReviewThread>($I`GhStatusRevi
 class GhStatusReviewThreadPageInfo extends S.Class<GhStatusReviewThreadPageInfo>($I`GhStatusReviewThreadPageInfo`)(
   {
     hasNextPage: S.Boolean,
-    endCursor: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)),
+    endCursor: S.NullOr(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(null))
+    ),
   },
   $I.annote("GhStatusReviewThreadPageInfo", {
     description: "Cursor metadata for one page of the Yeet review-thread status read.",
@@ -513,6 +555,7 @@ export class GhStatusWorkflowRun extends S.Class<GhStatusWorkflowRun>($I`GhStatu
 export class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
   {
     bucket: S.String,
+    description: S.String.pipe(S.optionalKey),
     completedAt: S.NullOr(S.String).pipe(S.optionalKey),
     link: S.NullOr(S.String).pipe(S.optionalKey),
     name: S.String,
@@ -540,6 +583,7 @@ const statusWatchCheck = (row: GhStatusCheck, required: boolean): YeetWatchCheck
   const signal = YeetCheckSignal.make({ bucket: row.bucket, state: row.state });
   return YeetWatchCheck.make({
     name: row.name,
+    description: yeetCheckRecordText(row.description),
     outcome: classifyYeetCheckOutcome(signal),
     required,
     link: O.getOrNull(yeetCheckRecordText(row.link)),
@@ -700,16 +744,23 @@ const artifactFromVerdict = (path: string, verdict: YeetVerdict): YeetStatusArti
     ...O.getSomesStruct({ repairCommand: firstFailedRepairCommand(verdict) }),
   });
 
-const artifactFromCloseout = (path: string, report: PrCloseoutReport): YeetStatusArtifact =>
-  YeetStatusArtifact.make({
-    detail: `PR #${report.prNumber}: ${report.issueCount} closeout issue(s), ${report.actionableReviewThreadCount} actionable thread(s)`,
+const artifactFromCloseout = (path: string, report: PrCloseoutReport): YeetStatusArtifact => {
+  const gateIssues = pipe(
+    report.issues,
+    A.filter(P.not(closeoutIssueFromReviewThread)),
+    A.map((issue) => issue.message)
+  );
+  return YeetStatusArtifact.make({
+    detail: `PR #${report.prNumber}: ${report.issueCount} closeout issue(s), ${report.actionableReviewThreadCount} actionable thread(s), ${A.length(gateIssues)} unmet gate(s)`,
     issueCount: report.issueCount,
+    gateIssues,
     path,
     reviewedHeadSha: report.reviewedHeadSha,
     schemaVersion: report.schemaVersion,
     state: "present",
     greptileScore: O.fromUndefinedOr(report.greptile.score),
   });
+};
 
 const readJsonArtifact = Effect.fn("YeetStatus.readJsonArtifact")(function* <Value>(
   path: string,
@@ -1415,14 +1466,41 @@ const CLOSEOUT_COMMAND =
   "run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`";
 const VERIFY_OR_REMOTE_COMMAND = "run `bun run beep yeet verify` or pass `--remote` for PR status";
 
-const requiredChecksAreGreen = (remote: YeetStatusRemote): boolean =>
-  pipe(
+// The unmet gates are the ones the last closeout run was asked to enforce, and
+// they usually wait on a review bot rather than on the operator: name them, then
+// the closeout that re-reads them once the bot has posted on this head.
+const closeoutGatesCommand = (gateIssues: ReadonlyArray<string>): string =>
+  `closeout gate(s) unmet (${A.join(gateIssues, " ")}); once the review bot has posted on the current head, ${CLOSEOUT_COMMAND}`;
+
+// Retain the serialized criterion name while enforcing the complete PR check
+// policy. Count-only failures cannot receive an evidence-based exemption.
+const requiredChecksAreGreen = (remote: YeetStatusRemote): boolean => {
+  const exemptFailures = A.filter(
+    remote.checks,
+    (check) => check.outcome === "fail" && !yeetCheckBlocksMerge(check)
+  ).length;
+  return pipe(
     O.fromUndefinedOr(remote.requiredCheckCount),
     O.exists(
       (count) =>
-        count > 0 && (remote.failingRequiredCheckCount ?? 0) === 0 && (remote.pendingRequiredCheckCount ?? 0) === 0
+        count > 0 &&
+        A.every(
+          [
+            remote.failingRequiredCheckCount,
+            remote.pendingRequiredCheckCount,
+            remote.pendingOptionalCheckCount,
+            remote.pendingCheckCount,
+          ],
+          (value) => (value ?? 0) === 0
+        ) &&
+        A.every(
+          [remote.failingCheckCount, remote.failingOptionalCheckCount],
+          (value) => (value ?? 0) <= exemptFailures
+        ) &&
+        !A.some(remote.checks, yeetCheckBlocksMerge)
     )
   );
+};
 
 const acceptableMergeStateStatuses: ReadonlyArray<string> = ["BEHIND", "CLEAN", "HAS_HOOKS", "UNSTABLE"];
 
@@ -1446,17 +1524,28 @@ const sameHeadSha = S.toEquivalence(S.String);
 const outstandingThreadCount = (remote: YeetStatusRemote): number =>
   (remote.unresolvedReviewThreadCount ?? 0) + (remote.followUpThreadCount ?? 0);
 
+// Closeout issues a review thread raised: every recorded issue a non-thread
+// gate did not. A summary written before the split carries no `gateIssues`, so
+// all of its issues land here, exactly as they did before.
+const closeoutThreadIssueCount = (closeout: YeetStatusArtifact): number =>
+  (closeout.issueCount ?? 0) - A.length(closeout.gateIssues ?? A.empty());
+
 // The live remote thread counts are the authoritative surface; the closeout
 // artifact is a prior run's record and only blocks when it EXISTS and still
-// reports open issues. Requiring its presence would conflate "closeout has
-// not run yet" with "threads are unresolved" — a missing artifact is
-// unknown, and unknown must not masquerade as a named blocker.
+// reports issues a thread raised. Requiring its presence would conflate
+// "closeout has not run yet" with "threads are unresolved" — a missing
+// artifact is unknown, and unknown must not masquerade as a named blocker.
+// Issues from the closeout's other gates never count here: a Greptile score
+// is not a review thread, and naming it as one sends the operator hunting for
+// threads that do not exist.
 const threadsAreResolved = (closeout: YeetStatusArtifact, remote: YeetStatusRemote): boolean =>
-  outstandingThreadCount(remote) === 0 &&
-  !pipe(
-    O.fromUndefinedOr(closeout.issueCount),
-    O.exists((count) => count > 0)
-  );
+  outstandingThreadCount(remote) === 0 && closeoutThreadIssueCount(closeout) <= 0;
+
+// The closeout's non-thread gates (Greptile score and issue count today) hold
+// when the artifact records none unmet. A missing artifact is unknown here for
+// the same reason as above; `closeout-run` is the criterion that names it.
+const closeoutGatesPass = (closeout: YeetStatusArtifact): boolean =>
+  A.isReadonlyArrayEmpty(closeout.gateIssues ?? A.empty());
 
 // The closeout-run criterion binds to a specific revision: a closeout artifact
 // satisfies it only when the head it reviewed is the head the PR currently
@@ -1468,11 +1557,13 @@ const closeoutBindsCurrentHead = (closeout: YeetStatusArtifact, remote: YeetStat
   );
 
 // The first unsatisfied hard criterion in protocol order, or `None` when every
-// one holds. Order mirrors the closeout -> checks -> threads escalation the
-// merge protocol asks an operator to walk.
+// one holds. Order mirrors the escalation the merge protocol asks an operator
+// to walk: closeout -> checks -> threads -> GitHub's merge gates -> the
+// closeout's own non-thread gates. Those gates come last because they usually
+// wait on a review bot, so any blocker the operator can act on is named first.
 const firstFailingCriterion = (criteria: YeetMergeReadyCriteria): O.Option<YeetMergeReadyCriterion> =>
   pipe(
-    YeetMergeReadyCriterion.Options,
+    YeetMergeReadyCriterion.literals,
     A.findFirst((criterion) => !mergeReadyCriterionHolds(criteria, criterion))
   );
 
@@ -1484,12 +1575,15 @@ const firstFailingCriterion = (criteria: YeetMergeReadyCriteria): O.Option<YeetM
  * Status already fetches everything the protocol asks a human to read, so the
  * only thing missing was a name for the answer. Pull request state, draft state,
  * current-head closeout, required checks, threads, mergeability, merge state,
- * and review decision are hard criteria. A missing closeout artifact is
- * its own blocker while the live thread criterion continues to report only the
- * state it knows. A present closeout satisfies `closeout-run` only when its
- * recorded reviewed head equals the current remote head; legacy headless and
- * stale reports remain blockers. The Greptile score rides along as display-only:
- * it is a target the operator judges, not a gate this verdict enforces.
+ * review decision, and the closeout's non-thread gates are hard criteria. A
+ * missing closeout artifact is its own blocker while the live thread criterion
+ * continues to report only the state it knows. A present closeout satisfies
+ * `closeout-run` only when its recorded reviewed head equals the current remote
+ * head; legacy headless and stale reports remain blockers. Closeout issues are
+ * split by source: those a review thread raised block `threads-resolved`, and
+ * those a gate the closeout run was asked to enforce raised (its
+ * `--require-greptile-*` flags) block `closeout-gates-passed`. The Greptile
+ * score itself rides along as display-only.
  *
  * **Gotchas**
  *
@@ -1540,27 +1634,41 @@ export const deriveYeetMergeReady: {
     mergeable: remote.mergeable === "MERGEABLE",
     mergeStateAcceptable: mergeStateIsAcceptable(remote),
     reviewDecisionAcceptable: reviewDecisionIsAcceptable(remote),
+    closeoutGatesPassed: closeoutGatesPass(closeout),
     greptileScore: closeout.greptileScore,
   });
   const failing = firstFailingCriterion(criteria);
   return O.some(YeetMergeReady.make({ ready: O.isNone(failing), failing, criteria }));
 });
 
-// Whether the merge is blocked by review threads and by nothing else. Read
+// Criteria that may stay unmet while replies are still the next step: the
+// threads themselves, and closeout gates that wait on a review bot whatever
+// the replies say.
+const reviewCriteria: ReadonlyArray<YeetMergeReadyCriterion> = ["threads-resolved", "closeout-gates-passed"];
+
+// Threads are the one blocker with a command of its own, and it is suggested
+// only when posting those replies is what is left to do: live threads owe an
+// answer and every criterion outside `reviewCriteria` already holds. Read
 // across every criterion rather than off `failing` alone: `failing` names only
 // the first blocker in protocol order, so threads leading it says nothing
-// about the checks, mergeability, or review decision behind it.
-const threadsAreTheOnlyBlocker = (mergeReady: O.Option<YeetMergeReady>): boolean =>
-  O.exists(
-    mergeReady,
-    (value) =>
-      !mergeReadyCriterionHolds(value.criteria, "threads-resolved") &&
-      A.every(
-        YeetMergeReadyCriterion.Options,
-        (criterion) =>
-          Str.Equivalence(criterion, "threads-resolved") || mergeReadyCriterionHolds(value.criteria, criterion)
-      )
+// about the checks, mergeability, or review decision behind it, and naming
+// replies while the pipeline is also red would send the operator to answer
+// reviewers on a branch that cannot merge either way. A `threads-resolved`
+// failure carried only by the closeout artifact's own thread issues is
+// answered by re-running closeout, not by posting replies nobody is owed.
+const repliesAreTheNextStep = (mergeReady: O.Option<YeetMergeReady>, remote: YeetStatusRemote): boolean =>
+  outstandingThreadCount(remote) > 0 &&
+  O.exists(mergeReady, (value) =>
+    A.every(
+      YeetMergeReadyCriterion.literals,
+      (criterion) => A.contains(reviewCriteria, criterion) || mergeReadyCriterionHolds(value.criteria, criterion)
+    )
   );
+
+// The closeout's own gates lead the blockers only when every other criterion
+// holds, since they come last in protocol order.
+const closeoutGatesAreTheBlocker = (mergeReady: O.Option<YeetMergeReady>): boolean =>
+  O.exists(mergeReady, (value) => O.exists(value.failing, YeetMergeReadyCriterion.is["closeout-gates-passed"]));
 
 const nextCommandForRemote = (
   verdict: YeetStatusArtifact,
@@ -1574,15 +1682,11 @@ const nextCommandForRemote = (
   if (O.exists(mergeReady, (value) => value.ready)) {
     return MERGE_READY_COMMAND;
   }
-  // Threads are the one blocker with a command of its own, and it is suggested
-  // only when posting those replies would finish the job: every other
-  // criterion already holds and live threads are what is left. Naming it while
-  // the pipeline is also red would send the operator to answer reviewers on a
-  // branch that cannot merge either way. A `threads-resolved` failure carried
-  // by the closeout artifact's own issue count is answered by re-running
-  // closeout, not by posting replies nobody is owed.
-  if (threadsAreTheOnlyBlocker(mergeReady) && outstandingThreadCount(remote) > 0) {
+  if (repliesAreTheNextStep(mergeReady, remote)) {
     return REPLY_COMMAND;
+  }
+  if (closeoutGatesAreTheBlocker(mergeReady)) {
+    return closeoutGatesCommand(closeout.gateIssues ?? A.empty());
   }
   if (remote.rerunFailedCommand !== undefined && verdict.outcome === "success") {
     return `${remote.rerunFailedCommand} # ${remote.rerunFailedDecision ?? "same-SHA failed workflow"}`;
@@ -1923,6 +2027,59 @@ export const yeetStatusArtifactFromVerdictForTesting: {
   (verdict: YeetVerdict): (path: string) => YeetStatusArtifact;
   (path: string, verdict: YeetVerdict): YeetStatusArtifact;
 } = dual(2, artifactFromVerdict);
+
+/**
+ * Project a closeout report into the status artifact, exposed for tests.
+ *
+ * **Details**
+ *
+ * The projection is where closeout issues split by source: `gateIssues`
+ * carries the message of every issue a non-thread gate raised, and the rest of
+ * `issueCount` stays charged to review threads.
+ *
+ * **Example** (Carry an unmet Greptile gate into the artifact)
+ *
+ * ```ts
+ * import {
+ *   gateIssues,
+ *   GreptileSummary,
+ *   PrCloseoutOptions,
+ *   PrCloseoutReport,
+ *   yeetStatusArtifactFromCloseoutForTesting,
+ * } from "@beep/repo-cli/test/Yeet"
+ *
+ * const options = PrCloseoutOptions.make({
+ *   bots: "greptile",
+ *   requireGreptileIssues: -1,
+ *   requireGreptileScore: "5/5",
+ *   requireReviewComments: 0,
+ *   retriggerGreptile: false
+ * })
+ * const issues = gateIssues(options, 0, GreptileSummary.make({}))
+ * const report = PrCloseoutReport.make({
+ *   actionableReviewThreadCount: 0,
+ *   botCommentCount: 0,
+ *   greptile: GreptileSummary.make({}),
+ *   issueCount: issues.length,
+ *   issues,
+ *   prNumber: 42,
+ *   prUrl: "https://github.com/o/r/pull/42",
+ *   retriggeredGreptile: false,
+ *   schemaVersion: "yeet-pr-closeout/v1",
+ * })
+ * console.log(yeetStatusArtifactFromCloseoutForTesting("pr-closeout.json", report).gateIssues)
+ * ```
+ *
+ * @param path - The closeout artifact path recorded on the artifact.
+ * @param report - The decoded closeout report.
+ * @returns The status artifact with its issue count split by source.
+ * @category testing
+ * @since 0.0.0
+ */
+export const yeetStatusArtifactFromCloseoutForTesting: {
+  (report: PrCloseoutReport): (path: string) => YeetStatusArtifact;
+  (path: string, report: PrCloseoutReport): YeetStatusArtifact;
+} = dual(2, artifactFromCloseout);
 
 /**
  * Expose next-command selection to focused tests.

@@ -6,8 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { UUID as UUIDSchema } from "@beep/schema/String";
+import { LiteralKit } from "@beep/schema";
 import { Clock, Console, DateTime, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -15,12 +14,13 @@ import { constant, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { UUID as UUIDSchema } from "../schema/Uuid.ts";
 import { acquireJournalFileLock, releaseJournalFileLock } from "./AdmissionJournal.ts";
 import { publishJournalTextAtomically } from "./JournalFile.ts";
 import { ProcessIdentityStatus, processIdentityStatus } from "./ProcessIdentity.ts";
 import { attemptInputFactFields, QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 import { repoRunArtifactId } from "./RepoRunArtifacts.ts";
-import type { UUID } from "@beep/schema/String";
+import type { UUID } from "../schema/Uuid.ts";
 import type { YeetAdmissionLease, YeetAdmissionTicket } from "./QualityScheduler.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/AttemptTerminationJournal");
@@ -124,13 +124,16 @@ export class YeetAttemptJournalCompacted extends S.Class<YeetAttemptJournalCompa
     schemaVersion: S.Literal("yeet-attempt-journal/v1"),
     _tag: S.Literal("journal-compacted"),
     recordedAt: S.String,
-    evictedCount: NonNegativeInt,
+    evictedCount: S.Natural,
     evictedAttemptIds: S.Array(UUIDSchema).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<UUID>())),
       S.withDecodingDefault(Effect.succeed(A.empty<UUID>()))
     ),
     oldestEvictedRecordedAt: S.String,
-    terminalEvictionCutoffRecordedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    terminalEvictionCutoffRecordedAt: S.String.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("YeetAttemptJournalCompacted", {
     description: "Receipt proving that bounded Yeet attempt-journal retention evicted older rows.",
@@ -142,8 +145,8 @@ const AttemptJournalRetentionEvent = S.Union([
     schemaVersion: S.Literal("yeet-attempt-journal/v1"),
     attemptId: UUIDSchema,
     startedAt: S.String,
-    ownerPid: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    ownerProcStart: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    ownerPid: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    ownerProcStart: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     ...attemptInputFactFields,
   }),
   S.TaggedStruct("attempt-finished", {
@@ -317,7 +320,7 @@ const retainedJournalLines = Effect.fn("AttemptTerminationJournal.retainedLines"
       schemaVersion: "yeet-attempt-journal/v1",
       _tag: "journal-compacted",
       recordedAt,
-      evictedCount: NonNegativeInt.make(
+      evictedCount: S.Natural.make(
         A.reduce(previousReceipts, A.length(evictedEvents), (total, previous) => total + previous.evictedCount)
       ),
       evictedAttemptIds: A.dedupe(

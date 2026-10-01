@@ -3,9 +3,10 @@ import {
   isEffectDiagnosticsDirectiveForTesting,
   isRejectedEffectDiagnosticsDirectiveForTesting,
 } from "@beep/repo-cli/commands/Quality/Quality.command";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { pipe } from "effect";
 import * as A from "effect/Array";
-import { describe, expect, it } from "vitest";
 
 describe("Effect diagnostics directive policy", () => {
   const directive = ["@effect", "diagnostics"].join("-");

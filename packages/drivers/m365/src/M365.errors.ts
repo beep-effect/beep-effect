@@ -6,19 +6,99 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { HttpStatus } from "@beep/schema/HttpStatus";
+import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as HttpClientError from "effect/http/HttpClientError";
+import * as HttpStatus from "effect/http/HttpStatus";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $M365Id.create("M365.errors");
 
-const M365HttpStatusArbitraryValues = HttpStatus.To.Options as readonly [number, ...ReadonlyArray<number>];
-const M365HttpStatus = S.Literals(M365HttpStatusArbitraryValues).pipe(
+// The retired `@beep/schema` `HttpStatus` catalog: every name `effect/http/HttpStatus` knows plus the
+// twelve unofficial codes the catalog carried. A status outside it is reported as 500, as before.
+const M365HttpStatus = S.Literals([
+  ...A.map(
+    [
+      "Continue",
+      "SwitchingProtocols",
+      "Processing",
+      "EarlyHints",
+      "Ok",
+      "Created",
+      "Accepted",
+      "NonAuthoritativeInformation",
+      "NoContent",
+      "ResetContent",
+      "PartialContent",
+      "MultiStatus",
+      "AlreadyReported",
+      "ImUsed",
+      "MultipleChoices",
+      "MovedPermanently",
+      "Found",
+      "SeeOther",
+      "NotModified",
+      "TemporaryRedirect",
+      "PermanentRedirect",
+      "BadRequest",
+      "Unauthorized",
+      "PaymentRequired",
+      "Forbidden",
+      "NotFound",
+      "MethodNotAllowed",
+      "NotAcceptable",
+      "ProxyAuthenticationRequired",
+      "RequestTimeout",
+      "Conflict",
+      "Gone",
+      "LengthRequired",
+      "PreconditionFailed",
+      "PayloadTooLarge",
+      "UriTooLong",
+      "UnsupportedMediaType",
+      "RangeNotSatisfiable",
+      "ExpectationFailed",
+      "ImATeapot",
+      "MisdirectedRequest",
+      "UnprocessableEntity",
+      "Locked",
+      "FailedDependency",
+      "TooEarly",
+      "UpgradeRequired",
+      "PreconditionRequired",
+      "TooManyRequests",
+      "RequestHeaderFieldsTooLarge",
+      "UnavailableForLegalReasons",
+      "InternalServerError",
+      "NotImplemented",
+      "BadGateway",
+      "ServiceUnavailable",
+      "GatewayTimeout",
+      "HttpVersionNotSupported",
+      "VariantAlsoNegotiates",
+      "InsufficientStorage",
+      "LoopDetected",
+      "NotExtended",
+      "NetworkAuthenticationRequired",
+    ] satisfies ReadonlyArray<HttpStatus.Literal>,
+    HttpStatus.fromLiteral
+  ),
+  305,
+  306,
+  430,
+  440,
+  494,
+  495,
+  496,
+  499,
+  520,
+  521,
+  525,
+  526,
+]).pipe(
   $I.annoteSchema("M365HttpStatus", {
     description: "Numeric HTTP status code carried by Microsoft 365 driver errors.",
   })
@@ -81,17 +161,14 @@ type M365ErrorOptionsInputRaw = {
 };
 
 const optionalField = <Inner extends S.Top>(inner: Inner, description: string) =>
-  S.OptionFromOptionalKey(inner).pipe(SchemaUtils.withNoneDefault).annotateKey({ description });
+  S.OptionFromOptionalKey(inner).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
 
 class M365ErrorOptionsInput extends S.Class<M365ErrorOptionsInput>($I`M365ErrorOptionsInput`)(
   {
     cause: optionalField(S.Unknown, "Original native or third-party cause when one was available."),
     itemId: optionalField(S.String, "Graph item id involved, if any."),
     resource: optionalField(S.String, "Graph resource family involved, if any."),
-    retryAfterSeconds: optionalField(
-      NonNegativeInt,
-      "Honored Retry-After delay in seconds, if the response was throttled."
-    ),
+    retryAfterSeconds: optionalField(S.Natural, "Honored Retry-After delay in seconds, if the response was throttled."),
     status: optionalField(M365HttpStatus, "HTTP status code associated with the failure, if any."),
     url: optionalField(S.String, "Request URL involved, if any."),
   },
@@ -100,10 +177,10 @@ class M365ErrorOptionsInput extends S.Class<M365ErrorOptionsInput>($I`M365ErrorO
   })
 ) {}
 
-const decodeRetryAfterSecondsOption = S.decodeUnknownOption(NonNegativeInt);
+const decodeRetryAfterSecondsOption = S.decodeUnknownOption(S.Natural);
 const makeHttpStatus: (status: number) => M365HttpStatus = flow(
   S.decodeUnknownOption(M365HttpStatus),
-  O.getOrElse(() => HttpStatus.From.Enum.InternalServerError)
+  O.getOrElse(() => HttpStatus.fromLiteral("InternalServerError"))
 );
 const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365ErrorOptionsInput =>
   M365ErrorOptionsInput.make({
@@ -148,10 +225,7 @@ export class M365Error extends S.TaggedError<M365Error>($I`M365Error`)(
     cause: optionalField(S.String, "Sanitized cause label (tag/name), if any."),
     itemId: optionalField(S.String, "Graph item id involved, if any."),
     resource: optionalField(S.String, "Graph resource family (drives/sites/messages/events), if any."),
-    retryAfterSeconds: optionalField(
-      NonNegativeInt,
-      "Honored Retry-After delay in seconds, if the response was throttled."
-    ),
+    retryAfterSeconds: optionalField(S.Natural, "Honored Retry-After delay in seconds, if the response was throttled."),
     status: optionalField(M365HttpStatus, "HTTP status code, if any."),
     url: optionalField(S.String, "Request URL involved, if any."),
   },

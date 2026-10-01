@@ -6,7 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientPin } from "@beep/repo-configs/cache";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CachePilotReceipt, CachePilotRequest, CachePilotRun, CachePilotTask } from "./Cache.pilot.schemas.ts";
@@ -36,7 +36,7 @@ const SignedOutcome = S.TaggedUnion({
   Executed: {
     selected: CacheSignedPilotTask,
     logSha256: Sha256Hex,
-    logBytes: NonNegativeInt,
+    logBytes: S.Natural,
     replayLogMatches: S.Boolean,
   },
 }).annotate(
@@ -113,7 +113,7 @@ export class CacheSignedPilotProtection extends S.Class<CacheSignedPilotProtecti
  */
 export class CacheSignedPilotPair extends S.Class<CacheSignedPilotPair>($I`CacheSignedPilotPair`)(
   {
-    id: NonNegativeInt,
+    id: S.Natural,
     client: CacheClientPin,
     authoritative: CachePilotRun,
     producer: CacheSignedPilotRun,

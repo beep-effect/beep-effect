@@ -13,7 +13,7 @@ import {
   writeFileWithinCanonicalRootAtomically,
 } from "@beep/file-processing/PathSafety";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { SqliteClient } from "@effect/sql-sqlite-bun";
 import { Storage } from "@google-cloud/storage";
 import {
@@ -185,7 +185,7 @@ export class GenerationMismatchError extends S.TaggedError<GenerationMismatchErr
       description: "Generation expected by the conditional write.",
     }),
     actualGeneration: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Observed storage generation when it was available.",
       })
@@ -301,7 +301,7 @@ export class StorageService extends Context.Service<StorageService, StorageServi
  * ```ts
  * import { StorageBackend } from "@effect-ontology/Service/Storage"
  *
- * console.log(StorageBackend.Options)
+ * console.log(StorageBackend.literals)
  * ```
  *
  * @category schemas

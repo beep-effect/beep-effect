@@ -6,8 +6,9 @@
  */
 
 import { $EcfrId } from "@beep/identity";
-import { Defect, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $EcfrId.create("Ecfr.errors");
@@ -67,11 +68,11 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
  * **Example** (Make options with status)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { EcfrErrorOptions } from "@beep/ecfr"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
- * const options = EcfrErrorOptions.make({ status: O.some(NonNegativeInt.make(503)) })
+ * const options = EcfrErrorOptions.make({ status: O.some(S.Natural.make(503)) })
  * console.log(options.status)
  * ```
  *
@@ -81,13 +82,13 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
 export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOptions`)(
   {
     cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
       })
     ),
-    status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
+    status: S.OptionFromOptionalKey(S.Natural).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "HTTP response status code associated with the eCFR failure when one was available.",
       })
@@ -117,7 +118,7 @@ export class EcfrError extends S.TaggedError<EcfrError>($I`EcfrError`)(
   "EcfrError",
   {
     cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
       })
@@ -125,8 +126,8 @@ export class EcfrError extends S.TaggedError<EcfrError>($I`EcfrError`)(
     reason: EcfrErrorReason.annotateKey({
       description: "Redacted technical error reason.",
     }),
-    status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
+    status: S.OptionFromOptionalKey(S.Natural).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "HTTP response status code associated with the eCFR failure when one was available.",
       })

@@ -126,7 +126,7 @@ export const renderPortfolioIndex: {
   (rows: ReadonlyArray<PortfolioIndexRow>, invalid: ReadonlyArray<string>): string;
 } = dual(2, (rows: ReadonlyArray<PortfolioIndexRow>, invalid: ReadonlyArray<string>): string => {
   const sortedRows = A.sort(rows, rowBySlug);
-  const counts = GoalStatus.Options.map(
+  const counts = GoalStatus.literals.map(
     (status) => `${A.length(A.filter(sortedRows, (row) => row.status === status))} ${status}`
   );
   const lines: Array<string> = [
@@ -138,7 +138,7 @@ export const renderPortfolioIndex: {
     `${A.length(sortedRows) + A.length(invalid)} packets: ${A.join(counts, " · ")}.`,
   ];
 
-  for (const status of GoalStatus.Options) {
+  for (const status of GoalStatus.literals) {
     const groupRows = A.filter(sortedRows, (row) => row.status === status);
     if (!A.isReadonlyArrayNonEmpty(groupRows)) {
       continue;

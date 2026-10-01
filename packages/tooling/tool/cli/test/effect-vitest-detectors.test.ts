@@ -159,6 +159,32 @@ const cases: ReadonlyArray<{
 ];
 
 layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
+  it.effect("retains outcome findings for piped boolean assertions", () =>
+    Effect.gen(function* () {
+      const assertionImports =
+        'import { assertTrue, assertFalse } from "@effect/vitest/utils"; import { pipe } from "effect";';
+      for (const body of [
+        'it.effect("method", () => Fx.gen(function* () { const outcome = yield* Fx.result(program); outcome.pipe(R.isFailure, assertTrue); }));',
+        'it.effect("functional", () => Fx.gen(function* () { const outcome = yield* Fx.result(program); pipe(outcome, R.isSuccess, assertFalse); }));',
+        'it.effect("inline", () => Fx.gen(function* () { (yield* Fx.result(program)).pipe(R.isFailure, assertTrue); }));',
+      ]) {
+        assertTrue(yield* hasRule(`${assertionImports}\n${body}`, "EV005"));
+      }
+    })
+  );
+
+  it.effect("rejects shadowed and unrelated piped outcome assertions", () =>
+    Effect.gen(function* () {
+      const assertionImports = 'import { assertTrue } from "@effect/vitest/utils";';
+      for (const body of [
+        'it.effect("shadow", (assertTrue) => Fx.gen(function* () { const outcome = yield* Fx.result(program); outcome.pipe(R.isFailure, assertTrue); }));',
+        'it.effect("unrelated", () => Fx.gen(function* () { const outcome = yield* Fx.result(program); other.pipe(R.isFailure, assertTrue); }));',
+        'it.effect("not assertion", () => Fx.gen(function* () { const outcome = yield* Fx.result(program); outcome.pipe(R.isFailure, consume); }));',
+      ]) {
+        assertFalse(yield* hasRule(`${assertionImports}\n${body}`, "EV005"));
+      }
+    })
+  );
   it.effect.each(cases)("$ruleId positive AST fixture", ({ positive, ruleId }) =>
     Effect.gen(function* () {
       assertTrue(yield* hasRule(positive, ruleId));

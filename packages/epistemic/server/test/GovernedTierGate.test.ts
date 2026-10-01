@@ -22,13 +22,13 @@ import {
 } from "@beep/epistemic-server/GovernedTierGate";
 import { ExecutionLedger, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { CurrentMcpCaller, dispatchWithTierGate, McpCallerIdentity, TierGate, TierGateSettlement } from "@beep/mcp-kit";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { Deferred, Duration, Effect, Fiber, pipe, Ref } from "effect";
 import { Tool } from "effect/ai";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 import type { TierGateShape } from "@beep/mcp-kit";
@@ -53,7 +53,7 @@ const ungrantedTool = Tool.make("ontology_unlisted_mutation");
 // Real dispatches carry a session id; clientId varies per HTTP request, so a
 // helper that pins the session while varying the client mirrors production.
 const callerOf = (sessionId: string, clientId = 1) =>
-  O.some(McpCallerIdentity.make({ clientId: NonNegativeInt.make(clientId), sessionId: O.some(sessionId) }));
+  O.some(McpCallerIdentity.make({ clientId: S.Natural.make(clientId), sessionId: O.some(sessionId) }));
 
 interface Harness {
   readonly decisions: Ref.Ref<ReadonlyArray<ExecutionDecisionRecord>>;
@@ -125,7 +125,7 @@ describe("GovernedTierGate", () => {
     // The literals are deliberately mirrored without an import — foundation
     // may not import slices — and the domain designates this package as the
     // home of the member-equality assertion (ExecutionRecord.model.ts).
-    expect([...TierGateSettlement.Options]).toEqual([...ExecutionSettlement.Options]);
+    expect([...TierGateSettlement.literals]).toEqual([...ExecutionSettlement.literals]);
   });
 
   it.effect(
@@ -380,7 +380,7 @@ describe("GovernedTierGate", () => {
       expect(reasons).toEqual([refusalGuidance, refusalGuidance, refusalGuidance]);
       // And the constant carries none of the bounded vocabulary.
       pipe(
-        A.some(DenialReason.Options, (reason) => Str.includes(reason)(refusalGuidance)),
+        A.some(DenialReason.literals, (reason) => Str.includes(reason)(refusalGuidance)),
         assertFalse
       );
     })

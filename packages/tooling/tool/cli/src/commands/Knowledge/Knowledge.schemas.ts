@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -64,7 +64,7 @@ type KnowledgePublicDetail = typeof KnowledgePublicDetail.Type;
  * import { KnowledgeFindingKind } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
  *
  * console.log(KnowledgeFindingKind.is["index-drift"]("index-drift")) // true
- * console.log(KnowledgeFindingKind.Options.length) // 14
+ * console.log(KnowledgeFindingKind.literals.length) // 14
  * ```
  *
  * @category models
@@ -131,7 +131,7 @@ export const isKnowledgeFindingKind = S.is(KnowledgeFindingKind);
  * import { KnowledgeFindingSeverity } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
  *
  * console.log(KnowledgeFindingSeverity.is.blocking("blocking")) // true
- * console.log(KnowledgeFindingSeverity.Options.length) // 2
+ * console.log(KnowledgeFindingSeverity.literals.length) // 2
  * ```
  *
  * @category models
@@ -200,7 +200,7 @@ export const isKnowledgeFindingSeverity = S.is(KnowledgeFindingSeverity);
  * import { KnowledgeProbePolicy } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
  *
  * console.log(KnowledgeProbePolicy.is.enabled("enabled")) // true
- * console.log(KnowledgeProbePolicy.Options.length) // 3
+ * console.log(KnowledgeProbePolicy.literals.length) // 3
  * ```
  *
  * @category models
@@ -321,13 +321,13 @@ export type KnowledgeFindingId = typeof KnowledgeFindingId.Type;
  * **Example** (Locate a finding for rendering)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { KnowledgeFindingLocation } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const location = KnowledgeFindingLocation.make({
  *   path: "CLAUDE.md",
- *   line: NonNegativeInt.make(42),
- *   column: NonNegativeInt.make(7),
+ *   line: S.Natural.make(42),
+ *   column: S.Natural.make(7),
  * })
  *
  * console.log(`${location.path}:${location.line}`) // "CLAUDE.md:42"
@@ -339,8 +339,8 @@ export type KnowledgeFindingId = typeof KnowledgeFindingId.Type;
 export class KnowledgeFindingLocation extends S.Class<KnowledgeFindingLocation>($I`KnowledgeFindingLocation`)(
   {
     path: S.String,
-    line: S.optionalKey(NonNegativeInt),
-    column: S.optionalKey(NonNegativeInt),
+    line: S.optionalKey(S.Natural),
+    column: S.optionalKey(S.Natural),
   },
   $I.annote("KnowledgeFindingLocation", {
     description: "Display location of a finding; path and offsets are excluded from identity.",
@@ -386,7 +386,6 @@ const KnowledgePublicFindingLocation = KnowledgeFindingLocation.check(
  *   KnowledgeFindingId,
  *   KnowledgeFindingLocation,
  * } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
  * const finding = KnowledgeFinding.make({
@@ -397,7 +396,7 @@ const KnowledgePublicFindingLocation = KnowledgeFindingLocation.check(
  *   severity: "blocking",
  *   documentId: "base:CLAUDE.md",
  *   subject: "repo-path:goals/missing.md",
- *   occurrence: NonNegativeInt.make(0),
+ *   occurrence: S.Natural.make(0),
  *   location: KnowledgeFindingLocation.make({ path: "CLAUDE.md" }),
  *   message: "Tracked path does not exist: goals/missing.md.",
  *   remediation: "Update the inline path or add the tracked target.",
@@ -418,7 +417,7 @@ export class KnowledgeFinding extends S.Class<KnowledgeFinding>($I`KnowledgeFind
     severity: KnowledgeFindingSeverity,
     documentId: KnowledgePublicText,
     subject: KnowledgePublicText,
-    occurrence: NonNegativeInt,
+    occurrence: S.Natural,
     location: KnowledgePublicFindingLocation,
     message: KnowledgePublicText,
     remediation: KnowledgePublicText,
@@ -483,7 +482,6 @@ export const decodeKnowledgeFinding: {
  *   KnowledgeFindingId,
  *   KnowledgeFindingLocation,
  * } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *
@@ -495,7 +493,7 @@ export const decodeKnowledgeFinding: {
  *   severity: "blocking",
  *   documentId: "base:goals/INDEX.md",
  *   subject: "producer://goals/index",
- *   occurrence: NonNegativeInt.make(0),
+ *   occurrence: S.Natural.make(0),
  *   location: KnowledgeFindingLocation.make({ path: "goals/INDEX.md" }),
  *   message: "goals/INDEX.md differs from the current-checkout projection of the archive data.",
  *   remediation: "Run the goals index generator and commit the regenerated index.",
@@ -560,13 +558,13 @@ export class KnowledgeTrackedEntry extends S.Class<KnowledgeTrackedEntry>($I`Kno
  * **Example** (Carry rename lineage into the delta)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { KnowledgeRename } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const rename = KnowledgeRename.make({
  *   sourcePath: "docs/old-guide.md",
  *   targetPath: "docs/guide.md",
- *   score: NonNegativeInt.make(97),
+ *   score: S.Natural.make(97),
  * })
  *
  * console.log(rename.score >= 50) // true
@@ -579,7 +577,7 @@ export class KnowledgeRename extends S.Class<KnowledgeRename>($I`KnowledgeRename
   {
     sourcePath: S.String,
     targetPath: S.String,
-    score: NonNegativeInt,
+    score: S.Natural,
   },
   $I.annote("KnowledgeRename", {
     description: "A Git rename at or above the ratified 50 percent similarity threshold.",

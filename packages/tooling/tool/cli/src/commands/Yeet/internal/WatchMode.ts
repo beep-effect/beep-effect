@@ -37,11 +37,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { Console, DateTime, Duration, Effect, FileSystem, flow, HashSet, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
@@ -50,7 +50,7 @@ import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../..
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetCheckOutcome } from "./CheckOutcome.ts";
-import { PrCloseoutReportJson } from "./Closeout.ts";
+import { closeoutIssueFromReviewThread, PrCloseoutReportJson } from "./Closeout.ts";
 import { convergeYeetInbox, YeetConvergeObservation } from "./Converge.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import {
@@ -100,6 +100,7 @@ import {
   YeetWatchSnapshot,
   YeetWatchStarted,
   YeetWatchThread,
+  yeetCheckBlocksMerge,
   yeetCheckRecordText,
   yeetWatchCommentEvent,
   yeetWatchEndReason,
@@ -118,12 +119,16 @@ class WatchPullRequestLabel extends S.Class<WatchPullRequestLabel>($I`WatchPullR
   $I.annote("WatchPullRequestLabel", { description: "One label on the pull request as gh pr view reports it." })
 ) {}
 
+const watchPullRequestViewLabelsDefault = A.empty<WatchPullRequestLabel>();
 class WatchPullRequestView extends S.Class<WatchPullRequestView>($I`WatchPullRequestView`)(
   {
     headRefOid: S.NonEmptyString,
     id: S.NonEmptyString,
     isDraft: S.Boolean,
-    labels: S.Array(WatchPullRequestLabel).pipe(SchemaUtils.withKeyDefaults(A.empty<WatchPullRequestLabel>())),
+    labels: S.Array(WatchPullRequestLabel).pipe(
+      S.withConstructorDefault(Effect.succeed(watchPullRequestViewLabelsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(watchPullRequestViewLabelsDefault))
+    ),
     mergeable: S.NullOr(S.String),
     mergeStateStatus: S.NullOr(S.String),
     number: S.Finite,
@@ -138,6 +143,7 @@ class WatchPullRequestView extends S.Class<WatchPullRequestView>($I`WatchPullReq
 class WatchCheckRow extends S.Class<WatchCheckRow>($I`WatchCheckRow`)(
   {
     bucket: S.String,
+    description: S.String.pipe(S.optionalKey),
     link: S.NullOr(S.String),
     name: S.String,
     state: S.String,
@@ -153,8 +159,14 @@ class WatchThreadComment extends S.Class<WatchThreadComment>($I`WatchThreadComme
   $I.annote("WatchThreadComment", { description: "One review-thread comment reduced to its author and timestamp." })
 ) {}
 
+const watchThreadCommentConnectionNodesDefault = A.empty<WatchThreadComment>();
 class WatchThreadCommentConnection extends S.Class<WatchThreadCommentConnection>($I`WatchThreadCommentConnection`)(
-  { nodes: S.Array(WatchThreadComment).pipe(SchemaUtils.withKeyDefaults(A.empty<WatchThreadComment>())) },
+  {
+    nodes: S.Array(WatchThreadComment).pipe(
+      S.withConstructorDefault(Effect.succeed(watchThreadCommentConnectionNodesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(watchThreadCommentConnectionNodesDefault))
+    ),
+  },
   $I.annote("WatchThreadCommentConnection", { description: "The newest-comment connection of one review thread." })
 ) {}
 
@@ -166,9 +178,18 @@ class WatchThreadNode extends S.Class<WatchThreadNode>($I`WatchThreadNode`)(
   {
     id: S.NonEmptyString,
     isResolved: S.Boolean,
-    isOutdated: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    path: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)),
-    line: S.NullOr(S.Finite).pipe(SchemaUtils.withKeyDefaults(null)),
+    isOutdated: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    path: S.NullOr(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(null))
+    ),
+    line: S.NullOr(S.Finite).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(null))
+    ),
     resolvedBy: GhActor.pipe(S.NullOr, S.optionalKey),
     latest: S.optionalKey(WatchThreadCommentConnection),
   },
@@ -216,7 +237,7 @@ const checksRead = Effect.fn("Yeet.checksRead")(function* (
 > {
   const result = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket,link,workflow"],
+    ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket,link,workflow,description"],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to read PR checks for yeet watch.")));
   if (result.exitCode !== 0 && !NO_CHECKS_REPORTED.test(result.output)) {
@@ -400,17 +421,36 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   const closeoutRun = O.exists(closeout, (report) =>
     O.exists(report.reviewedHeadSha, (reviewedHeadSha) => reviewedHeadSha === view.headRefOid)
   );
+  const checks = A.map(checkRows, (row) => {
+    const signal = YeetCheckSignal.make({ bucket: row.bucket, state: row.state });
+    return YeetWatchCheck.make({
+      name: row.name,
+      description: yeetCheckRecordText(row.description),
+      outcome: classifyYeetCheckOutcome(signal),
+      required: A.some(requiredCheckRows, (requiredRow) => requiredRow.name === row.name),
+      link: O.getOrNull(yeetCheckRecordText(row.link)),
+      signal,
+      workflow: O.getOrNull(yeetCheckRecordText(row.workflow)),
+    });
+  });
   const requiredChecksGreen =
     A.isReadonlyArrayNonEmpty(requiredCheckRows) &&
+    !A.some(checks, yeetCheckBlocksMerge) &&
     A.every(requiredCheckRows, (row) => {
       const outcome = classifyYeetCheckOutcome(YeetCheckSignal.make({ bucket: row.bucket, state: row.state }));
       return YeetCheckOutcome.is.pass(outcome) || YeetCheckOutcome.is.skip(outcome);
     });
-  // Same predicate the status gate uses: a thread the author resolved with a
+  // Same predicates the status gate uses: a thread the author resolved with a
   // human reviewer speaking last still owes an answer, so a watch that only
   // asked `isResolved` would call the pull request ready while the gate held.
+  // Closeout issues split by source, so an unmet Greptile gate blocks
+  // `closeout-gates-passed` and never reads as an open thread.
   const threadsResolved =
-    !A.some(threadStates, yeetReviewThreadStateOutstanding) && !O.exists(closeout, (report) => report.issueCount > 0);
+    !A.some(threadStates, yeetReviewThreadStateOutstanding) &&
+    !O.exists(closeout, (report) => A.some(report.issues, closeoutIssueFromReviewThread));
+  const closeoutGatesPassed = !O.exists(closeout, (report) =>
+    A.some(report.issues, P.not(closeoutIssueFromReviewThread))
+  );
   const mergeStateStatus = view.mergeStateStatus ?? "UNKNOWN";
   const criteria = YeetMergeReadyCriteria.make({
     prOpen: Str.toUpperCase(view.state) === "OPEN",
@@ -424,21 +464,12 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
       view.reviewDecision === null ||
       Str.isEmpty(view.reviewDecision) ||
       Str.toUpperCase(view.reviewDecision) === "APPROVED",
+    closeoutGatesPassed,
     greptileScore: O.none(),
   });
 
   return YeetWatchSnapshot.make({
-    checks: A.map(checkRows, (row) => {
-      const signal = YeetCheckSignal.make({ bucket: row.bucket, state: row.state });
-      return YeetWatchCheck.make({
-        name: row.name,
-        outcome: classifyYeetCheckOutcome(signal),
-        required: A.some(requiredCheckRows, (requiredRow) => requiredRow.name === row.name),
-        link: O.getOrNull(yeetCheckRecordText(row.link)),
-        signal,
-        workflow: O.getOrNull(yeetCheckRecordText(row.workflow)),
-      });
-    }),
+    checks,
     headSha: view.headRefOid,
     mergeable: view.mergeable ?? "UNKNOWN",
     mergeStateStatus,
@@ -455,18 +486,30 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
 // held never counts toward the settle budget (ttc B8). `changedPaths` is read
 // once per head; `admission` is re-decided every poll from the snapshot's
 // labels, the only admission input that changes without a push.
+const watchSettleStateFamiliesDefault = A.empty<YeetGatedContextFamily>();
+const watchSettleStateChangedPathsDefault = A.empty<string>();
+const watchSettleStateRegisteredDefault = HashSet.empty<string>();
 class WatchSettleState extends S.Class<WatchSettleState>($I`WatchSettleState`)(
   {
     headSha: S.NonEmptyString,
     firstObservedMs: S.Finite,
     settleClockMs: S.Finite,
-    expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    families: S.Array(YeetGatedContextFamily).pipe(SchemaUtils.withKeyDefaults(A.empty<YeetGatedContextFamily>())),
-    changedPaths: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
-    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    families: S.Array(YeetGatedContextFamily).pipe(
+      S.withConstructorDefault(Effect.succeed(watchSettleStateFamiliesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(watchSettleStateFamiliesDefault))
+    ),
+    changedPaths: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(watchSettleStateChangedPathsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(watchSettleStateChangedPathsDefault))
+    ),
+    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     // Every check name ever reported for this head: an absent one later is pending, not missing.
-    registered: S.HashSet(S.String).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<string>())),
-    verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    registered: S.HashSet(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(watchSettleStateRegisteredDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(watchSettleStateRegisteredDefault))
+    ),
+    verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("WatchSettleState", {
     description: "One head's cached ruleset, gated families, merge-base diff, admission, and settle clock origin.",

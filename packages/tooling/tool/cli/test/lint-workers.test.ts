@@ -3,16 +3,18 @@ import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
 import { readTurboCacheEnvironment } from "@beep/repo-cli/test/SharedInternals";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { it } from "@effect/vitest";
+import { beforeEach, describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Config, ConfigProvider, Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { beforeEach, describe, expect, vi } from "vitest";
+import { vi } from "vitest";
 import type {
   canUseTurboCacheSecretSession,
   turboEnvironmentHealthWarnings,
@@ -103,7 +105,7 @@ describe("thin lint workers", { concurrent: false }, () => {
         expect(yield* fs.readFileString(turboFile)).toBe(turbo);
         yield* fs.writeFileString(turboFile, turboBefore);
         const turboDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
-        expect(Exit.isFailure(turboDrift)).toBe(true);
+        assertTrue(Exit.isFailure(turboDrift));
         if (Exit.isFailure(turboDrift)) {
           const message = Cause.pretty(turboDrift.cause);
           expect(message).toContain('turbo.json tasks["//#lint:policy-fingerprint"].inputs');
@@ -123,7 +125,7 @@ describe("thin lint workers", { concurrent: false }, () => {
         yield* run(["policy-fingerprint", "--check"]);
         yield* fs.writeFileString(file, "invalid json");
         const fileDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
-        expect(Exit.isFailure(fileDrift)).toBe(true);
+        assertTrue(Exit.isFailure(fileDrift));
         if (Exit.isFailure(fileDrift)) {
           const message = Cause.pretty(fileDrift.cause);
           expect(message).toContain("Policy fingerprint drift: standards/policy-tools.fingerprint.json;");
@@ -133,7 +135,7 @@ describe("thin lint workers", { concurrent: false }, () => {
         expect(yield* run(["policy-fingerprint", "--write"]).pipe(Effect.isFailure)).toBe(true);
         expect(yield* fs.readFileString(file)).toBe("invalid json");
         const bothDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
-        expect(Exit.isFailure(bothDrift)).toBe(true);
+        assertTrue(Exit.isFailure(bothDrift));
         if (Exit.isFailure(bothDrift)) {
           expect(Cause.pretty(bothDrift.cause)).toContain(
             'Policy fingerprint drift: standards/policy-tools.fingerprint.json; turbo.json tasks["//#lint:policy-fingerprint"].inputs;'

@@ -6,15 +6,17 @@
  */
 
 import { $SkillContractId } from "@beep/identity/packages";
-import { PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { NonNegativeInt } from "@beep/schema/Number";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { DateTime, Duration, Number as Num, Predicate, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { EvidenceReceipt, EvidenceSubject } from "./EvidenceReceipt.ts";
-import { EvidencePredicateType } from "./Gate.ts";
+import { EvidencePredicateType, IsoDateTimeString } from "./Gate.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const $I = $SkillContractId.create("Recovery");
 
@@ -113,9 +115,9 @@ export class RecoveryBudget extends S.Class<RecoveryBudget>($I`RecoveryBudget`)(
  */
 export class RecoveryBudgetConsumed extends S.Class<RecoveryBudgetConsumed>($I`RecoveryBudgetConsumed`)(
   {
-    attempts: NonNegativeInt,
+    attempts: S.Natural,
     elapsed: BudgetDuration,
-    operations: NonNegativeInt,
+    operations: S.Natural,
   },
   $I.annote("RecoveryBudgetConsumed", {
     description: "Attempt, operation, and elapsed-time budget consumed by a recovery sequence.",
@@ -130,7 +132,7 @@ export class RecoveryBudgetConsumed extends S.Class<RecoveryBudgetConsumed>($I`R
  * ```ts import.meta.vitest name="Inspect attempt outcomes"
  * import { RecoveryAttemptOutcome } from "@beep/skill-contract"
  *
- * RecoveryAttemptOutcome.Options // => ["succeeded", "failed", "aborted"]
+ * RecoveryAttemptOutcome.literals // => ["succeeded", "failed", "aborted"]
  * ```
  *
  * @category schemas
@@ -167,12 +169,12 @@ export type RecoveryAttemptOutcome = typeof RecoveryAttemptOutcome.Type;
 export class RecoveryAttemptReceipt extends S.Class<RecoveryAttemptReceipt>($I`RecoveryAttemptReceipt`)(
   {
     attempt: PosInt,
-    endedAt: ISOStr,
+    endedAt: IsoDateTimeString,
     observations: S.Array(EvidenceSubject),
-    operations: NonNegativeInt,
+    operations: S.Natural,
     outcome: RecoveryAttemptOutcome,
     reason: S.OptionFromOptionalKey(S.NonEmptyString),
-    startedAt: ISOStr,
+    startedAt: IsoDateTimeString,
   },
   $I.annote("RecoveryAttemptReceipt", {
     description: "Auditable timestamps, outcome, operation count, and evidence observations for one attempt.",
@@ -187,7 +189,7 @@ export class RecoveryAttemptReceipt extends S.Class<RecoveryAttemptReceipt>($I`R
  * ```ts
  * import { FailureTerminalReason } from "@beep/skill-contract"
  *
- * console.log(FailureTerminalReason.Options)
+ * console.log(FailureTerminalReason.literals)
  * ```
  *
  * @category schemas

@@ -5,6 +5,16 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
+// A delimiter escape that yields an unbalanced group reaches the pattern
+// decoder, which no single-character delimiter can do through `ParserOptions.new`.
+class UnbalancedDelimiterOptions extends ParserOptions.extend<UnbalancedDelimiterOptions>("UnbalancedDelimiterOptions")(
+  {}
+) {
+  override get escapedDelimiter(): string {
+    return "(";
+  }
+}
+
 const decodeParserOptionsEffect = S.decodeEffect(ParserOptions);
 
 describe("ParserOptions", () => {
@@ -76,5 +86,12 @@ describe("ParserOptions", () => {
   it("wraps invalid delimiter input in ParserOptionsError", () => {
     expect(() => ParserOptions.new({ delimiter: "::" })).toThrow(ParserOptionsError);
     expect(() => ParserOptions.new({ delimiter: "::" })).toThrow("delimiter option must be one character long");
+  });
+
+  it("rejects an invalid next-token pattern with the pattern check message", () => {
+    const options = UnbalancedDelimiterOptions.make(ParserOptions.new());
+
+    expect(() => options.NEXT_TOKEN_REGEXP).toThrow(ParserOptionsError);
+    expect(() => options.NEXT_TOKEN_REGEXP).toThrow("Expected a valid regular expression pattern string");
   });
 });

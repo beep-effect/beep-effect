@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -184,7 +184,7 @@ export class PrCloseoutReport extends S.Class<PrCloseoutReport>($I`PrCloseoutRep
     issues: S.Array(QualityIssue),
     prNumber: S.Finite,
     prUrl: S.String,
-    reviewedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    reviewedHeadSha: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     retriggeredGreptile: S.Boolean,
     schemaVersion: S.Literal("yeet-pr-closeout/v1"),
     states: S.Array(PrCloseoutGateState).pipe(

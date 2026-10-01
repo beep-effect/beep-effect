@@ -8,8 +8,8 @@
 
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -98,7 +98,7 @@ export type HtmlChildView = typeof HtmlChildView.Type;
  */
 export const HtmlRootView = S.Struct({
   ...htmlChildViewFields,
-  doctype: S.OptionFromOptionalKey(Doctype).pipe(SchemaUtils.withNoneDefault),
+  doctype: S.OptionFromOptionalKey(Doctype).pipe(S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("HtmlRootView", {
     description: "HTML conformance root view with an optional document type declaration.",

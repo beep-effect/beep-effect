@@ -15,9 +15,10 @@
  */
 
 import { $ExiftoolId } from "@beep/identity/packages";
-import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Fn, LiteralKit } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, N, O, P, pipe, Str } from "@beep/utils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { BeepQaProvenance, EpochMilliseconds, TagAssignment } from "./Exiftool.models.ts";
 
@@ -80,7 +81,7 @@ export const BEEP_QA_XMP_GROUP = `XMP-${BEEP_QA_XMP_NAMESPACE_PREFIX}`;
  * ```ts
  * import { BeepQaTagName } from "@beep/exiftool"
  *
- * console.log(BeepQaTagName.Options)
+ * console.log(BeepQaTagName.literals)
  * ```
  *
  * @category schemas
@@ -277,19 +278,22 @@ export type XmpNamespaceUri = typeof XmpNamespaceUri.Type;
 export class RenderBeepQaConfigOptions extends S.Class<RenderBeepQaConfigOptions>($I`RenderBeepQaConfigOptions`)(
   {
     namespacePrefix: XmpNamespacePrefix.pipe(
-      SchemaUtils.withKeyDefaults(BEEP_QA_XMP_NAMESPACE_PREFIX),
+      S.withConstructorDefault(Effect.succeed(BEEP_QA_XMP_NAMESPACE_PREFIX)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(BEEP_QA_XMP_NAMESPACE_PREFIX)),
       $I.annoteKey("RenderBeepQaConfigOptions.namespacePrefix", {
         description: "XMP namespace prefix registered by the rendered config.",
       })
     ),
     namespaceUri: XmpNamespaceUri.pipe(
-      SchemaUtils.withKeyDefaults(BEEP_QA_XMP_NAMESPACE_URI),
+      S.withConstructorDefault(Effect.succeed(BEEP_QA_XMP_NAMESPACE_URI)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(BEEP_QA_XMP_NAMESPACE_URI)),
       $I.annoteKey("RenderBeepQaConfigOptions.namespaceUri", {
         description: "XMP namespace URI registered by the rendered config.",
       })
     ),
     propertyNames: S.Array(XmpPropertyName).pipe(
-      SchemaUtils.withKeyDefaults(BeepQaTagName.Options),
+      S.withConstructorDefault(Effect.succeed(BeepQaTagName.literals)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(BeepQaTagName.literals)),
       $I.annoteKey("RenderBeepQaConfigOptions.propertyNames", {
         description: "String-writable property names declared inside the namespace.",
       })

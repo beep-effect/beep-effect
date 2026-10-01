@@ -7,20 +7,28 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { SimilarityMethod } from "@beep/nlp/Core/Similarity";
-import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { Effect } from "effect";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
 import { AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/TverskySimilarity");
 
+const tverskySimilarityParametersAlphaDefault = UnitInterval.make(0.5);
+const tverskySimilarityParametersBetaDefault = UnitInterval.make(0.5);
 class TverskySimilarityParameters extends S.Class<TverskySimilarityParameters>($I`TverskySimilarityParameters`)(
   {
-    alpha: SchemaUtils.withKeyDefaults(UnitInterval, UnitInterval.make(0.5)).annotateKey({
+    alpha: UnitInterval.pipe(
+      S.withConstructorDefault(Effect.succeed(tverskySimilarityParametersAlphaDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(tverskySimilarityParametersAlphaDefault))
+    ).annotateKey({
       description: "Weight for terms present in text1 but absent in text2 (default: 0.5)",
     }),
-    beta: SchemaUtils.withKeyDefaults(UnitInterval, UnitInterval.make(0.5)).annotateKey({
+    beta: UnitInterval.pipe(
+      S.withConstructorDefault(Effect.succeed(tverskySimilarityParametersBetaDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(tverskySimilarityParametersBetaDefault))
+    ).annotateKey({
       description: "Weight for terms present in text2 but absent in text1 (default: 0.5)",
     }),
     text1: S.String.annotateKey({

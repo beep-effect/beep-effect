@@ -14,11 +14,6 @@ export * from "./collectAnnotationsAt.ts";
  * @since 0.0.0
  * @category utilities
  */
-export * from "./encoders.ts";
-/**
- * @since 0.0.0
- * @category utilities
- */
 export * from "./isCodecDataFirst.ts";
 /**
  * @since 0.0.0
@@ -39,22 +34,12 @@ export * from "./pluck.ts";
  * @since 0.0.0
  * @category utilities
  */
-export * from "./split.ts";
-/**
- * @since 0.0.0
- * @category utilities
- */
 export * from "./toEquivalence.ts";
 /**
  * @since 0.0.0
  * @category utilities
  */
 export * from "./withCodecStatics.ts";
-/**
- * @since 0.0.0
- * @category utilities
- */
-export * from "./withConstructorDefaults.ts";
 /**
  * @since 0.0.0
  * @category utilities

@@ -28,7 +28,7 @@ export * from "./Activity.ts";
  * **Example** (Use index)
  * ```ts
  * import { AuthenticationReason } from "@effect-ontology/Error/index"
- * console.log(AuthenticationReason.Options)
+ * console.log(AuthenticationReason.literals)
  * ```
  *
  * @category errors
@@ -171,7 +171,7 @@ export * from "./Rdf.ts";
  * **Example** (Use index)
  * ```ts
  * import { ValidationPolicySeverity } from "@effect-ontology/Error/index"
- * console.log(ValidationPolicySeverity.Options)
+ * console.log(ValidationPolicySeverity.literals)
  * ```
  *
  * @category errors

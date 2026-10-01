@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { CacheClientPin } from "@beep/repo-configs/cache";
-import { LiteralKit, NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { Crypto, Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
@@ -175,7 +175,7 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
     );
     const runs: Array<CacheProtocolObservation["runs"][number]> = [];
     const failures: Array<CacheProtocolReadFailure> = [];
-    for (const name of cases.Options) {
+    for (const name of cases.literals) {
       const fault = name === "producer" || name === "replay" || name === "wrong-key" ? "none" : name;
       yield* fixture.setScenario(CacheFixtureScenario.make({ id: name, fault }));
       const work = path.join(directory, name);
@@ -302,9 +302,9 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
           outcome: positive
             ? {
                 _tag: name === "producer" ? "Produced" : "Replayed",
-                output: { sha256: yield* hashBytes(output), bytes: NonNegativeInt.make(output.byteLength) },
+                output: { sha256: yield* hashBytes(output), bytes: S.Natural.make(output.byteLength) },
               }
-            : { _tag: "Rejected", exitCode: captured.exitCode, restoredOutputs: NonNegativeInt.make(0) },
+            : { _tag: "Rejected", exitCode: captured.exitCode, restoredOutputs: S.Natural.make(0) },
         });
       }
     }

@@ -25,10 +25,10 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Cause, Exit, flow, Match, Number as N, pipe, Struct } from "effect";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { decodeNonNegativeInt } from "./internal/decode.ts";
@@ -163,10 +163,10 @@ export class CauseFingerprint extends S.Class<CauseFingerprint>($I`CauseFingerpr
  */
 const CauseSummaryFields = {
   fingerprint: CauseFingerprint,
-  reasonCount: NonNegativeInt,
-  errorCount: NonNegativeInt,
-  defectCount: NonNegativeInt,
-  interruptCount: NonNegativeInt,
+  reasonCount: S.Natural,
+  errorCount: S.Natural,
+  defectCount: S.Natural,
+  interruptCount: S.Natural,
   primaryMessage: S.String,
   pretty: S.String,
 };
@@ -225,7 +225,7 @@ export type CauseSummary = typeof CauseSummary.Type;
 const ObservedExitSummaryFields = {
   fingerprint: CauseFingerprint,
   interrupted: S.Boolean,
-  reasonCount: NonNegativeInt,
+  reasonCount: S.Natural,
   primaryMessage: S.String,
 };
 
@@ -390,12 +390,12 @@ const classifyReasonCounts = flow(
             pipe(counts.defectCount, O.liftPredicate(N.isGreaterThan(0)), O.as(CauseClassification.Enum.defect))
           ),
           O.firstSomeOf,
-          O.orElseSome(CauseClassification.thunk.failure)
+          O.orElseSome(constant(CauseClassification.Enum.failure))
         )
       )
     )
   ),
-  O.getOrElse(CauseClassification.thunk.empty)
+  O.getOrElse(constant(CauseClassification.Enum.empty))
 );
 
 /**

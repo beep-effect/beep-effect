@@ -12,6 +12,7 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("entities/IdsSubmissionFact/IdsSubmissionFact.values");
@@ -21,10 +22,12 @@ const IdsStatementTypeBase = LiteralKit(["e1-foreign-citation", "e2-no-prior-kno
 const IdsOfficeTreatmentStateBase = LiteralKit(["considered", "not-considered", "partially-considered"]);
 
 const optionalDate = (description: string) =>
-  S.OptionFromNullOr(S.DateTimeUtcFromMillis).pipe(SchemaUtils.withNoneDefault).annotateKey({ description });
+  S.OptionFromNullOr(S.DateTimeUtcFromMillis)
+    .pipe(S.withConstructorDefault(Effect.succeedNone))
+    .annotateKey({ description });
 
 const optionalText = (description: string) =>
-  S.OptionFromNullOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({ description });
+  S.OptionFromNullOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
 
 /**
  * What kind of submission act a record describes.
@@ -331,7 +334,7 @@ export class IdsStatementFacts extends S.Class<IdsStatementFacts>($I`IdsStatemen
     statementPresent: S.Boolean.annotateKey({
       description: "Whether a 37 CFR 1.97(e) statement accompanied the submission.",
     }),
-    statementType: S.OptionFromNullOr(IdsStatementType).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    statementType: S.OptionFromNullOr(IdsStatementType).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Which 37 CFR 1.97(e) statement was present, when one was.",
     }),
   },

@@ -13,7 +13,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils, URLStr } from "@beep/schema";
-import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import { Clock, Context, Duration, Effect, Layer, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -22,7 +21,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
-import { Milliseconds } from "../Domain/Error/Base.ts";
+import { HttpStatusCode, Milliseconds } from "../Domain/Error/Base.ts";
 import { JinaApiError, JinaParseError, JinaRateLimitError, JinaTimeoutError } from "../Domain/Error/Jina.ts";
 import { JinaContent } from "../Domain/Model/EnrichedContent.ts";
 import { ConfigService } from "./Config.ts";
@@ -50,12 +49,12 @@ const $I = $ScratchpadId.create("effect-ontology/Service/JinaReaderClient");
  */
 export class FetchOptions extends S.Class<FetchOptions>($I`FetchOptions`)(
   {
-    includeImages: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    includeLinks: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    returnLinks: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    targetSelector: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    waitForSelector: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    timeout: S.Duration.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    includeImages: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+    includeLinks: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+    returnLinks: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+    targetSelector: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    waitForSelector: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    timeout: S.Duration.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("FetchOptions", {
     description: "Reader rendering switches, optional selectors, and optional request-timeout override.",
@@ -105,7 +104,7 @@ export type FetchOptionsInput = (typeof FetchOptions)["~type.make.in"];
 export class JinaResponse extends S.Class<JinaResponse>($I`JinaResponse`)(
   {
     content: JinaContent,
-    links: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    links: S.Array(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("JinaResponse", {
     description: "Reader content and optional forward links discovered in the source page.",
@@ -123,11 +122,11 @@ const JinaApiResponse = S.Struct({
     title: S.String,
     url: S.String,
     content: S.String,
-    description: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    publishedTime: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    siteName: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    image: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    links: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    description: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    publishedTime: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    siteName: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    image: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    links: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }),
 }).pipe(
   SchemaUtils.withCodecStatics(["decodeUnknownEffect"])

@@ -26,7 +26,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -117,8 +117,8 @@ export const ReplyPullRequestNumber = S.Int.check(S.isGreaterThan(0)).pipe(
 export type ReplyPullRequestNumber = typeof ReplyPullRequestNumber.Type;
 
 const replyTargetFields = {
-  threadId: ReplyThreadId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  commentId: ReplyCommentId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  threadId: ReplyThreadId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  commentId: ReplyCommentId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 } satisfies S.Struct.Fields;
 
 /**
@@ -240,7 +240,7 @@ export class ReplyDrafts extends S.Class<ReplyDrafts>($I`ReplyDrafts`)(
  * ```ts
  * import { ReplyOutcomeStatus } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(ReplyOutcomeStatus.Options)
+ * console.log(ReplyOutcomeStatus.literals)
  * ```
  *
  * @category models

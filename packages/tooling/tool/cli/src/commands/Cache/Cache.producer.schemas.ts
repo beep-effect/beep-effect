@@ -6,7 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientChannel, CacheClientPin, CacheQualificationKey } from "@beep/repo-configs/cache";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as S from "effect/Schema";
 
@@ -61,8 +61,8 @@ export class CacheProducerBody extends S.Class<CacheProducerBody>($I`CacheProduc
     issuer: Sha256Hex,
     binding: CacheProducerBinding,
     payloadSha256: Sha256Hex,
-    issuedAtMs: NonNegativeInt,
-    expiresAtMs: NonNegativeInt,
+    issuedAtMs: S.Natural,
+    expiresAtMs: S.Natural,
   },
   $I.annote("CacheProducerBody", {
     description: "Versioned identity, payload digest and bounded validity authenticated by an issuer.",

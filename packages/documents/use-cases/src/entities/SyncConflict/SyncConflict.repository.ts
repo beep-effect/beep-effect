@@ -9,12 +9,11 @@
 import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
 import { DmsProvider, RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, UnknownRecord } from "@beep/schema";
+import { UnknownRecord } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
 
 const $I = $DocumentsUseCasesId.create("entities/SyncConflict/SyncConflict.repository");
 
@@ -46,16 +45,16 @@ export class SyncConflictSeed extends S.Class<SyncConflictSeed>($I`SyncConflictS
     conflictKind: DomainSyncConflict.SyncConflictKind.annotateKey({
       description: "Kind of remote drift detected for the mirrored item.",
     }),
-    localRelPath: S.Option(VaultRelPath).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    localRelPath: S.Option(VaultRelPath).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Vault-relative path of the affected local item; none when unmapped locally.",
     }),
     provider: DmsProvider.annotateKey({
       description: "DMS provider whose event stream reported the drift.",
     }),
-    remoteEventId: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    remoteEventId: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider event identifier that surfaced the drift; none for synthetic detections.",
     }),
-    remoteId: S.Option(RemoteItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    remoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider identifier of the drifted remote item; none when the event omits it.",
     }),
     remotePayload: UnknownRecord.annotateKey({
@@ -64,7 +63,7 @@ export class SyncConflictSeed extends S.Class<SyncConflictSeed>($I`SyncConflictS
     resolutionStatus: DomainSyncConflict.SyncConflictResolution.annotateKey({
       description: "Review status of the drift record.",
     }),
-    syncItemId: S.Option(Documents.SyncItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    syncItemId: S.Option(Documents.SyncItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Sync-tracking row the drift maps to; none when the remote item is unknown locally.",
     }),
     workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({

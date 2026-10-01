@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.protocol.fixture.schemas");
@@ -125,14 +125,14 @@ export class CacheFixtureScenario extends S.Class<CacheFixtureScenario>($I`Cache
  */
 export class CacheFixtureEvent extends S.Class<CacheFixtureEvent>($I`CacheFixtureEvent`)(
   {
-    sequence: NonNegativeInt,
+    sequence: S.Natural,
     scenario: CacheFixtureScenario,
     operation: LiteralKit(["status", "put", "get", "head", "events", "batch", "rejected"]),
     role: LiteralKit(["reader", "writer", "unknown"]),
     status: S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })),
     artifact: S.OptionFromNullOr(CacheFixtureArtifactKey),
     digest: S.OptionFromNullOr(Sha256Hex),
-    bytes: NonNegativeInt,
+    bytes: S.Natural,
     tagPresent: S.Boolean,
   },
   $I.annote("CacheFixtureEvent", { description: "Sanitized fixture request, selected bytes and response disposition." })

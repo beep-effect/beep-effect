@@ -30,6 +30,7 @@ import { renderKnowledgeRefsCheckSection } from "@beep/repo-cli/test/Knowledge";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Crypto, Effect, Exit, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
@@ -577,12 +578,12 @@ describe("knowledge refs listing", () => {
   );
 
   it("derives the quiet set from the remediation table and keeps it disjoint from the gated set", () => {
-    const noRemediation = A.filter(KnowledgeRefClassification.Options, (classification) =>
+    const noRemediation = A.filter(KnowledgeRefClassification.literals, (classification) =>
       Str.startsWith("None;")(knowledgeRefRemediation(classification, KnowledgeRefMissing.make({})))
     );
-    expect(A.sort(noRemediation, Str.Order)).toEqual(A.sort(KnowledgeRefQuietClassification.Options, Str.Order));
+    expect(A.sort(noRemediation, Str.Order)).toEqual(A.sort(KnowledgeRefQuietClassification.literals, Str.Order));
     expect(
-      A.filter(KnowledgeRefQuietClassification.Options, (classification) =>
+      A.filter(KnowledgeRefQuietClassification.literals, (classification) =>
         HashSet.has(KNOWLEDGE_REFS_GATED_CLASSIFICATIONS, classification)
       )
     ).toEqual([]);
@@ -654,7 +655,7 @@ describe("knowledge refs check gate", () => {
           "Run it from /home/example/checkouts/beep-effect and sync the mirror at ~/mirrors/firecrawl.\n",
       });
       const exit = yield* Effect.exit(applyKnowledgeRefsCheck(report, { json: false }));
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       const logs = yield* TestConsole.logLines;
       expect(A.some(logs, (line) => Str.startsWith("check: 2 live gated observation(s)")(Str.trim(String(line))))).toBe(
         true

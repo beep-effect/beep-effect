@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as S from "effect/Schema";
 import { CacheSignedPilotReceipt } from "./Cache.pilot.signed.schemas.ts";
@@ -26,7 +25,7 @@ const $I = $RepoCliId.create("commands/Cache/Cache.workflow.schemas");
  * @since 0.0.0
  */
 export class CacheProducerWorkflowFile extends S.Class<CacheProducerWorkflowFile>($I`CacheProducerWorkflowFile`)(
-  { ...CacheCensusSource.fields, mode: NonNegativeInt, linkTarget: S.OptionFromOptionalKey(S.NonEmptyString) },
+  { ...CacheCensusSource.fields, mode: S.Natural, linkTarget: S.OptionFromOptionalKey(S.NonEmptyString) },
   $I.annote("CacheProducerWorkflowFile", {
     description: "Exact bytes and resolution of one declared supervisor source file.",
   })

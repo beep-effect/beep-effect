@@ -10,8 +10,6 @@
  * @since 0.0.0
  */
 
-import { NodeIndex } from "@beep/schema/Graph";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
   DateTime,
@@ -51,6 +49,7 @@ import { dual2, dual3 } from "../Utils/Dual.ts";
 import { mergeEntityFields } from "../Utils/Entity.ts";
 import { computeEntitySimilarity, detectResolutionMethod, shouldConsiderMerge } from "../Utils/Similarity.ts";
 import { simpleTokenize } from "../Utils/String.ts";
+import * as S from "effect/Schema";
 
 // =============================================================================
 // Graph-Based Clustering
@@ -463,7 +462,7 @@ export const buildEntityResolutionGraph = dual2(
         mention: e.mention,
         types: e.types,
         attributes: { ...e.attributes },
-        chunkIndex: O.getOrElse(e.chunkIndex, () => NonNegativeInt.make(idx)),
+        chunkIndex: O.getOrElse(e.chunkIndex, () => S.Natural.make(idx)),
       })
     );
 
@@ -532,7 +531,7 @@ export const buildEntityResolutionGraph = dual2(
     });
 
     // Phase 5: Build Effect Graph (two-tier: MentionRecords → ResolvedEntities)
-    const entityIndex: Record<string, NodeIndex> = {};
+    const entityIndex: Record<string, Graph.NodeIndex> = {};
     const resolvedIndexes = MutableHashMap.empty<string, Graph.NodeIndex>();
 
     const graph = Graph.directed<ERNode, EREdge>((mutable) => {
@@ -545,7 +544,7 @@ export const buildEntityResolutionGraph = dual2(
       // Add MentionRecord nodes + ResolutionEdges with REAL similarity scores
       for (const mr of mentionRecords) {
         const mrIdx = Graph.addNode(mutable, mr);
-        entityIndex[mr.id] = NodeIndex.make(mrIdx);
+        entityIndex[mr.id] = mrIdx;
 
         const canonicalId = canonicalMap[mr.id];
         if (P.isTruthy(canonicalId)) {
@@ -607,10 +606,10 @@ export const buildEntityResolutionGraph = dual2(
       canonicalMap,
       createdAt,
       stats: EntityResolutionStats.make({
-        mentionCount: NonNegativeInt.make(mentionRecords.length),
-        resolvedCount: NonNegativeInt.make(resolvedEntities.length),
-        relationCount: NonNegativeInt.make(kg.relations.length),
-        clusterCount: NonNegativeInt.make(clusters.length),
+        mentionCount: S.Natural.make(mentionRecords.length),
+        resolvedCount: S.Natural.make(resolvedEntities.length),
+        relationCount: S.Natural.make(kg.relations.length),
+        clusterCount: S.Natural.make(clusters.length),
       }),
     });
   })

@@ -9,8 +9,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
+import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
@@ -18,6 +17,7 @@ import { dual, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/RepoRun.models.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { UUID } from "../../../internal/schema/Uuid.ts";
 import { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import {
   GithubCheckFailurePolicy,
@@ -31,9 +31,9 @@ import type * as HashSet from "effect/HashSet";
 import type { QualityTaskLaneRun } from "../../Quality/Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Verdict");
-const OptionalVerdictString = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionalVerdictString = S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
 const NullableInputDigest = S.OptionFromNullOr(S.String).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   S.withDecodingDefaultKey(Effect.succeed(null))
 );
 
@@ -45,7 +45,7 @@ const NullableInputDigest = S.OptionFromNullOr(S.String).pipe(
  * ```ts
  * import { YeetLaneStatus } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetLaneStatus.Options)
+ * console.log(YeetLaneStatus.literals)
  * ```
  *
  * @category models
@@ -163,7 +163,7 @@ export class YeetVerdictLane extends S.Class<YeetVerdictLane>($I`YeetVerdictLane
     peakRssKb: S.optionalKey(S.Finite),
     exitCode: S.optionalKey(S.Finite),
     repairCommand: S.optionalKey(S.String),
-    tier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    tier: YeetProofTier.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     startedAt: OptionalVerdictString,
     endedAt: OptionalVerdictString,
     inputDigest: NullableInputDigest,
@@ -204,17 +204,24 @@ export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
  *
  * **Details**
  *
- * Only hard criteria appear here. The Greptile score is a displayed
- * target rather than a gate, so it is carried on
- * {@link YeetMergeReadyCriteria} for the operator to read and can never be the
- * value of {@link YeetMergeReady.failing}.
+ * Only hard criteria appear here, in the order the protocol names a blocker.
+ * `threads-resolved` covers review threads alone: live outstanding threads and
+ * closeout issues a thread raised. `closeout-gates-passed` covers every other
+ * gate the last closeout run was asked to enforce (the Greptile score and
+ * issue-count gates today), so a bot gate is never reported as an open thread.
+ * It comes last because it is the one criterion whose threshold is an
+ * operator's closeout flag and whose unmet state usually means a review bot has
+ * not posted yet; every structural blocker ahead of it is named first. The
+ * Greptile score itself is a displayed value rather than a criterion, so it is
+ * carried on {@link YeetMergeReadyCriteria} for the operator to read and can
+ * never be the value of {@link YeetMergeReady.failing}.
  *
  * **Example** (List the merge-ready criteria)
  *
  * ```ts
  * import { YeetMergeReadyCriterion } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetMergeReadyCriterion.Options)
+ * console.log(YeetMergeReadyCriterion.literals)
  * ```
  *
  * @category models
@@ -229,6 +236,7 @@ export const YeetMergeReadyCriterion = LiteralKit([
   "mergeable",
   "merge-state-acceptable",
   "review-decision-acceptable",
+  "closeout-gates-passed",
 ]).pipe(
   $I.annoteSchema("YeetMergeReadyCriterion", {
     title: "Yeet Merge Ready Criterion",
@@ -262,6 +270,7 @@ export type YeetMergeReadyCriterion = typeof YeetMergeReadyCriterion.Type;
  *   mergeable: true,
  *   mergeStateAcceptable: true,
  *   reviewDecisionAcceptable: true,
+ *   closeoutGatesPassed: true,
  *   greptileScore: O.some("5/5"),
  * })
  * console.log(criteria.requiredChecksGreen)
@@ -280,7 +289,8 @@ export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`Y
     mergeable: S.Boolean,
     mergeStateAcceptable: S.Boolean,
     reviewDecisionAcceptable: S.Boolean,
-    greptileScore: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    closeoutGatesPassed: S.Boolean,
+    greptileScore: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetMergeReadyCriteria", {
     description: "Observed state of every truthful merge-protocol criterion; the Greptile score is display-only.",
@@ -297,7 +307,8 @@ export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`Y
  *
  * const criteria = YeetMergeReadyCriteria.make({
  *   prOpen: true, notDraft: true, closeoutRun: true, requiredChecksGreen: false,
- *   threadsResolved: true, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true
+ *   threadsResolved: true, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true,
+ *   closeoutGatesPassed: true
  * })
  * console.log(mergeReadyCriterionHolds(criteria, "required-checks-green")) // false
  * ```
@@ -321,6 +332,7 @@ export const mergeReadyCriterionHolds: {
     mergeable: () => criteria.mergeable,
     "merge-state-acceptable": () => criteria.mergeStateAcceptable,
     "review-decision-acceptable": () => criteria.reviewDecisionAcceptable,
+    "closeout-gates-passed": () => criteria.closeoutGatesPassed,
   })
 );
 
@@ -344,7 +356,7 @@ const YeetMergeReadyCoherenceCheck = S.makeFilter(
     O.match(value.failing, {
       onNone: () =>
         value.ready &&
-        A.every(YeetMergeReadyCriterion.Options, (criterion) => mergeReadyCriterionHolds(value.criteria, criterion))
+        A.every(YeetMergeReadyCriterion.literals, (criterion) => mergeReadyCriterionHolds(value.criteria, criterion))
           ? undefined
           : {
               path: ["failing"],
@@ -379,6 +391,7 @@ const YeetMergeReadyEncoded = S.Struct({
     mergeable: S.optionalKey(S.Boolean),
     mergeStateAcceptable: S.optionalKey(S.Boolean),
     reviewDecisionAcceptable: S.optionalKey(S.Boolean),
+    closeoutGatesPassed: S.optionalKey(S.Boolean),
     greptileScore: S.optionalKey(S.String),
   }),
 }).pipe(
@@ -398,6 +411,10 @@ const normalizeLegacyMergeReadyCriteria = (value: EncodedMergeReady) => ({
   mergeable: value.criteria.mergeable ?? false,
   mergeStateAcceptable: value.criteria.mergeStateAcceptable ?? false,
   reviewDecisionAcceptable: value.criteria.reviewDecisionAcceptable ?? false,
+  // Records written before the split folded every closeout issue into
+  // `threadsResolved`, so a resolved record there had no unmet closeout gate
+  // and an unresolved one cannot rule one out: the old value is exact.
+  closeoutGatesPassed: value.criteria.closeoutGatesPassed ?? value.criteria.threadsResolved,
   ...O.getSomesStruct({ greptileScore: O.fromUndefinedOr(value.criteria.greptileScore) }),
 });
 
@@ -414,7 +431,7 @@ const normalizeLegacyYeetMergeReady = (value: typeof YeetMergeReadyEncoded.Type)
   const criteria = normalizeLegacyMergeReadyCriteria(value);
   const complete = legacyMergeReadyCriteriaComplete(value);
   const firstFailing = A.findFirst(
-    YeetMergeReadyCriterion.Options,
+    YeetMergeReadyCriterion.literals,
     (criterion) =>
       !mergeReadyCriterionHolds(
         YeetMergeReadyCriteria.make({
@@ -450,7 +467,7 @@ const normalizeLegacyYeetMergeReady = (value: typeof YeetMergeReadyEncoded.Type)
  *
  * The three fields are mutually derivable, so a cross-field check makes an
  * incoherent record undecodable rather than merely wrong: `ready` is true
- * exactly when `failing` is `None` and all three hard criteria hold, and a named
+ * exactly when `failing` is `None` and every hard criterion holds, and a named
  * `failing` criterion must be the one recorded as unsatisfied. The Greptile
  * score is display-only and is not part of the check.
  *
@@ -465,7 +482,8 @@ const normalizeLegacyYeetMergeReady = (value: typeof YeetMergeReadyEncoded.Type)
  *   failing: O.some("threads-resolved"),
  *   criteria: YeetMergeReadyCriteria.make({
  *     prOpen: true, notDraft: true, closeoutRun: true, requiredChecksGreen: true,
- *     threadsResolved: false, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true
+ *     threadsResolved: false, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true,
+ *     closeoutGatesPassed: true
  *   }),
  * })
  * console.log(mergeReady.ready)
@@ -477,7 +495,7 @@ const normalizeLegacyYeetMergeReady = (value: typeof YeetMergeReadyEncoded.Type)
 export class YeetMergeReady extends S.Class<YeetMergeReady>($I`YeetMergeReady`)(
   S.Struct({
     ready: S.Boolean,
-    failing: YeetMergeReadyCriterion.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    failing: YeetMergeReadyCriterion.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     criteria: YeetMergeReadyCriteria,
   }).pipe(S.check(YeetMergeReadyCoherenceCheck)),
   $I.annote("YeetMergeReady", {
@@ -495,8 +513,11 @@ export class YeetMergeReady extends S.Class<YeetMergeReady>($I`YeetMergeReady`)(
  * This codec accepts the legacy encoded shape, supplies `closeoutRun: false`,
  * and downgrades a formerly ready record to `failing: "closeout-run"` before
  * the coherence check runs, so old readiness is safely blocked while the
- * artifact's outcome and repair guidance stay readable. Construction stays on
- * {@link YeetMergeReady} — this codec exists only at decode boundaries.
+ * artifact's outcome and repair guidance stay readable. Records written before
+ * `closeoutGatesPassed` existed take it from their `threadsResolved`, which
+ * then counted every closeout issue, so their verdict and blocker are unchanged.
+ * Construction stays on {@link YeetMergeReady} — this codec exists only at
+ * decode boundaries.
  *
  * **Example** (Decode a legacy merge-ready record)
  *
@@ -586,20 +607,20 @@ export class YeetVerdict extends S.Class<YeetVerdict>($I`YeetVerdict`)(
     packetPaths: S.Array(S.String),
     pushed: S.Boolean,
     runId: S.String,
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     resolvedHeadSha: OptionalVerdictString,
     diffFingerprint: OptionalVerdictString,
-    proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    endedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    startedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    endedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     indexPath: S.optionalKey(S.String),
     baseFreshness: S.optionalKey(YeetBaseFreshness),
     stash: S.optionalKey(YeetStashState),
     flakeQuarantine: FlakeQuarantineIncident.pipe(S.Array, S.optionalKey),
     failedStepId: S.optionalKey(S.String),
     failureKind: YeetFailureKind.pipe(S.optionalKey),
-    mergeReady: YeetMergeReadyFromEncoded.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    mergeReady: YeetMergeReadyFromEncoded.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetVerdict", {
     description: "Machine-readable verdict for one yeet run, including per-lane repair commands.",
@@ -794,16 +815,16 @@ const innerLanesForWrapper = (
 export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`BuildYeetVerdictInput`)(
   {
     base: S.String,
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     resolvedHeadSha: OptionalVerdictString,
     diffFingerprint: OptionalVerdictString,
-    proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     baseFreshness: S.optionalKey(YeetBaseFreshness),
     branch: S.String,
     createdAt: S.String,
-    startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    endedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    startedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    endedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     executed: S.Array(YeetExecutedStep),
     innerLaneReports: S.Array(QualityTaskLaneRunReport).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<QualityTaskLaneRunReport>()))

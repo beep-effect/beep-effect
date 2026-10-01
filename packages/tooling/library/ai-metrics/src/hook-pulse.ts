@@ -6,13 +6,14 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegNum, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, flow, Match, SchemaIssue, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
+import * as F from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -200,7 +201,7 @@ export type HookPulseSchemaVersion = typeof HookPulseSchemaVersion.Type;
  *
  * const isClaudeCode = HookPulseAgentKind.is["claude-code"]
  *
- * console.log(HookPulseAgentKind.Options) // ["claude-code", "codex-cli"]
+ * console.log(HookPulseAgentKind.literals) // ["claude-code", "codex-cli"]
  * console.log(isClaudeCode(HookPulseAgentKind.Enum["claude-code"])) // true
  * console.log(isClaudeCode(HookPulseAgentKind.Enum["codex-cli"])) // false
  * ```
@@ -250,7 +251,7 @@ export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
  *
  * console.log(startsHumanWait(HookPulseEvent.Enum.PermissionRequest)) // true
  * console.log(startsHumanWait(HookPulseEvent.Enum.PreToolUse)) // false
- * console.log(HookPulseEvent.Options.length) // 9
+ * console.log(HookPulseEvent.literals.length) // 9
  * ```
  *
  * @see {@link HookPulseWaitReason} for the attribution derived from these events.
@@ -352,7 +353,7 @@ export type HookPulseInstrumentClass = typeof HookPulseInstrumentClass.Type;
  * const isObserved = HookPulseEvidenceTier.is.observed
  *
  * // Strongest first: a record clamps down this ladder, never up it.
- * console.log(HookPulseEvidenceTier.Options) // ["observed", "derived", "heuristic", "unknown"]
+ * console.log(HookPulseEvidenceTier.literals) // ["observed", "derived", "heuristic", "unknown"]
  * console.log(isObserved(HookPulseEvidenceTier.Enum.observed)) // true
  * console.log(isObserved(HookPulseEvidenceTier.Enum.derived)) // false
  * ```
@@ -672,7 +673,7 @@ export class HookPulseRawEvent extends S.Class<HookPulseRawEvent>($I`HookPulseRa
     transcript_path: S.String,
     permission_mode: S.OptionFromOptionalKey(S.String),
     notification_type: S.OptionFromOptionalKey(S.String),
-    duration_ms: S.OptionFromOptionalKey(NonNegNum),
+    duration_ms: S.OptionFromOptionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0))),
     reason: S.OptionFromOptionalKey(S.String),
     is_interrupt: S.OptionFromOptionalKey(S.Boolean),
     tool_input: S.OptionFromOptionalKey(HookPulseRawToolInput).pipe(
@@ -856,11 +857,11 @@ const hookPulseContextSurfaceKey = (event: HookPulseRawEvent, repoRoot: string):
 
 const derivePermissionWaitReason = (toolName: O.Option<string>): HookPulseWaitReason =>
   O.match(toolName, {
-    onNone: HookPulseWaitReason.thunk.unknown,
+    onNone: F.constant(HookPulseWaitReason.Enum.unknown),
     onSome: (name) =>
       Bool.match(Eq.equals(name, "ExitPlanMode"), {
-        onFalse: HookPulseWaitReason.thunk["tool-permission"],
-        onTrue: HookPulseWaitReason.thunk["plan-approval"],
+        onFalse: F.constant(HookPulseWaitReason.Enum["tool-permission"]),
+        onTrue: F.constant(HookPulseWaitReason.Enum["plan-approval"]),
       }),
   });
 
@@ -870,29 +871,29 @@ const deriveWaitReason = (
   notificationType: O.Option<string>
 ): HookPulseWaitReason =>
   HookPulseEvent.$match(hookEvent, {
-    PreToolUse: HookPulseWaitReason.thunk.none,
+    PreToolUse: F.constant(HookPulseWaitReason.Enum.none),
     PermissionRequest: () => derivePermissionWaitReason(toolName),
-    PostToolUse: HookPulseWaitReason.thunk.none,
+    PostToolUse: F.constant(HookPulseWaitReason.Enum.none),
     // A bracket *end*, not a human wait: the harness emits either PostToolUse or
     // PostToolUseFailure for a tool call, never both.
-    PostToolUseFailure: HookPulseWaitReason.thunk.none,
+    PostToolUseFailure: F.constant(HookPulseWaitReason.Enum.none),
     Notification: () =>
       Bool.match(O.exists(notificationType, HookPulseNotificationType.is.idle_prompt), {
-        onFalse: HookPulseWaitReason.thunk.unknown,
-        onTrue: HookPulseWaitReason.thunk["idle-input"],
+        onFalse: F.constant(HookPulseWaitReason.Enum.unknown),
+        onTrue: F.constant(HookPulseWaitReason.Enum["idle-input"]),
       }),
-    UserPromptSubmit: HookPulseWaitReason.thunk.none,
-    Stop: HookPulseWaitReason.thunk.none,
-    SessionEnd: HookPulseWaitReason.thunk.none,
-    PermissionDenied: HookPulseWaitReason.thunk.none,
+    UserPromptSubmit: F.constant(HookPulseWaitReason.Enum.none),
+    Stop: F.constant(HookPulseWaitReason.Enum.none),
+    SessionEnd: F.constant(HookPulseWaitReason.Enum.none),
+    PermissionDenied: F.constant(HookPulseWaitReason.Enum.none),
   });
 
 const clampDerivedEvidenceTier = (evidenceTier: HookPulseEvidenceTier): HookPulseEvidenceTier =>
   HookPulseEvidenceTier.$match(evidenceTier, {
-    observed: HookPulseEvidenceTier.thunk.derived,
-    derived: HookPulseEvidenceTier.thunk.derived,
-    heuristic: HookPulseEvidenceTier.thunk.heuristic,
-    unknown: HookPulseEvidenceTier.thunk.unknown,
+    observed: F.constant(HookPulseEvidenceTier.Enum.derived),
+    derived: F.constant(HookPulseEvidenceTier.Enum.derived),
+    heuristic: F.constant(HookPulseEvidenceTier.Enum.heuristic),
+    unknown: F.constant(HookPulseEvidenceTier.Enum.unknown),
   });
 
 const isHookPulseNotificationType = S.is(HookPulseNotificationType);
@@ -1000,12 +1001,12 @@ const HookPulseEventOwnedField = LiteralKit(["notificationType", "sessionEndReas
 type HookPulseEventOwnedField = typeof HookPulseEventOwnedField.Type;
 
 const hookPulseEventOwningField = HookPulseEventOwnedField.$match({
-  notificationType: HookPulseEvent.thunk.Notification,
-  sessionEndReason: HookPulseEvent.thunk.SessionEnd,
-  isInterrupt: HookPulseEvent.thunk.PostToolUseFailure,
+  notificationType: F.constant(HookPulseEvent.Enum.Notification),
+  sessionEndReason: F.constant(HookPulseEvent.Enum.SessionEnd),
+  isInterrupt: F.constant(HookPulseEvent.Enum.PostToolUseFailure),
   // A surface counts as touched only once its tool call succeeded, so the
   // completion event owns it; PreToolUse would count denied and failed calls.
-  surface: HookPulseEvent.thunk.PostToolUse,
+  surface: F.constant(HookPulseEvent.Enum.PostToolUse),
 });
 
 const doesHookPulseEventOwnField = (field: HookPulseEventOwnedField, hookEvent: HookPulseEvent): boolean =>
@@ -1143,7 +1144,7 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     transcriptPath: S.OptionFromOptionalKey(Sha256Hex),
     permissionMode: S.OptionFromOptionalKey(S.String),
     notificationType: S.OptionFromOptionalKey(HookPulseNotificationType),
-    durationMs: S.OptionFromOptionalKey(NonNegNum),
+    durationMs: S.OptionFromOptionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0))),
     sessionEndReason: S.OptionFromOptionalKey(S.String),
     // Separates "the human hit escape" from "the tool errored". The first is a
     // human action and belongs in a human-wait instrument; the raw `error`
@@ -1159,7 +1160,7 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
         S.makeFilter(
           (input) =>
             A.getSomes(
-              A.map(HookPulseEventOwnedField.Options, (field) =>
+              A.map(HookPulseEventOwnedField.literals, (field) =>
                 O.match(hookPulseEventOwnedFieldValue(input, field), {
                   onNone: O.none,
                   onSome: () =>
@@ -1274,7 +1275,7 @@ const HookPulseLegacyV1Record = S.Struct({
   transcriptPath: S.optionalKey(S.String),
   permissionMode: S.optionalKey(S.String),
   notificationType: S.optionalKey(HookPulseNotificationType),
-  durationMs: S.optionalKey(NonNegNum),
+  durationMs: S.optionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0))),
   sessionEndReason: S.optionalKey(S.String),
 });
 

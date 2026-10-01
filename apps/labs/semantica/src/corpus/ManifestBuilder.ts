@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
+import { SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { Context, Crypto, Effect, Equal, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -214,7 +214,7 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
           id,
           relativePath,
           sha256: yield* hashBytes(bytes),
-          bytes: NonNegativeInt.make(bytes.byteLength),
+          bytes: S.Natural.make(bytes.byteLength),
         });
       }),
       { concurrency: 4 }
@@ -233,7 +233,7 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
       selection: CorpusManifestSelection.make({
         rule: "first-25-by-id",
         take: 25,
-        onDisk: NonNegativeInt.make(A.length(ids)),
+        onDisk: S.Natural.make(A.length(ids)),
       }),
       rows,
       corpusHash,

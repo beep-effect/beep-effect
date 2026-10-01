@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { $AgentsDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Agents from "@beep/shared-domain/identity/Agents";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { AuthSnapshot, BinaryPath, EnvVars, HomePath, InstanceLabel, ProviderKind } from "./ProviderInstance.values.ts";
 
@@ -41,13 +41,13 @@ export class ProviderInstance extends ProductEntity.Entity<ProviderInstance>()(A
     binaryPath: BinaryPath.annotateKey({
       description: "Filesystem path to the provider CLI binary.",
     }).pipe(pg.text(), pg.columnName("binary_path")),
-    envVars: EnvVars.pipe(SchemaUtils.withConstantDefault<EnvVars>({}))
+    envVars: EnvVars.pipe(S.withConstructorDefault(Effect.succeed<EnvVars>({})))
       .annotateKey({
         description: "Extra token-safe child-process environment; defaults to empty at construction.",
       })
       .pipe(pg.jsonb(), pg.columnName("env_vars")),
     homePath: S.OptionFromNullOr(HomePath)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Optional isolated HOME directory; encodes absence as SQL/wire null.",
       })
@@ -59,7 +59,7 @@ export class ProviderInstance extends ProductEntity.Entity<ProviderInstance>()(A
       description: "Display label for the instance.",
     }).pipe(pg.text()),
     lastProbe: S.OptionFromNullOr(AuthSnapshot)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Latest auth-probe snapshot; encodes absence as SQL/wire null.",
       })

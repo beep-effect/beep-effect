@@ -7,9 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError } from "@beep/repo-utils";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { HUNDRED as HUNDRED_PERCENTAGE, Percentage, ZERO as ZERO_PERCENTAGE } from "@beep/schema/Percentage";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import {
@@ -219,10 +218,10 @@ const coverageConfigurationError = (message: string, cause: unknown): DomainErro
  */
 export class CoverageUncoveredCounts extends S.Class<CoverageUncoveredCounts>($I`CoverageUncoveredCounts`)(
   {
-    lines: NonNegativeInt,
-    statements: NonNegativeInt,
-    branches: NonNegativeInt,
-    functions: NonNegativeInt,
+    lines: S.Natural,
+    statements: S.Natural,
+    branches: S.Natural,
+    functions: S.Natural,
   },
   $I.annote("CoverageUncoveredCounts", {
     description: "Absolute uncovered counts per metric for one workspace package.",
@@ -424,9 +423,9 @@ const baselineDecodeError = (cause: unknown): DomainError =>
 
 class VitestCoverageMetric extends S.Class<VitestCoverageMetric>($I`VitestCoverageMetric`)(
   {
-    total: NonNegativeInt,
-    covered: NonNegativeInt,
-    skipped: NonNegativeInt,
+    total: S.Natural,
+    covered: S.Natural,
+    skipped: S.Natural,
     pct: VitestCoveragePct,
   },
   $I.annote("VitestCoverageMetric", {
@@ -569,7 +568,7 @@ export class CoverageBaselineChangeSet extends S.Class<CoverageBaselineChangeSet
   {
     baseDescription: S.NonEmptyString,
     packageNames: S.Array(S.String),
-    dependentPackageNames: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
+    dependentPackageNames: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([]))),
     fullReasons: S.Array(S.String),
   },
   $I.annote("CoverageBaselineChangeSet", {
@@ -616,7 +615,7 @@ export class CoverageBaselineWritePlan extends S.Class<CoverageBaselineWritePlan
     changeSet: CoverageBaselineChangeSet,
     packages: S.Record(S.String, CoveragePackageBaseline),
     dispositions: S.Record(S.String, CoverageBaselineRowDisposition),
-    carriedUnmeasured: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
+    carriedUnmeasured: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([]))),
   },
   $I.annote("CoverageBaselineWritePlan", {
     description:
@@ -643,7 +642,7 @@ export class CoverageBaselineWritePlan extends S.Class<CoverageBaselineWritePlan
  */
 const CoverageComparisonFailureFields = {
   actual: Percentage,
-  filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   metric: CoverageMetricName,
   packageName: S.String,
   packagePath: CoverageRepoRelativePackagePath,
@@ -657,8 +656,11 @@ class CoverageBaselineDropFailure extends S.TaggedClass<CoverageBaselineDropFail
     // Present only when this pull request lowered the row and the package was
     // not allowed to judge itself: the diagnostic then names both the value the
     // branch proposed and the witness that withheld it.
-    loweredTo: Percentage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    loweredExclusion: CoverageSelfJudgeExclusion.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    loweredTo: Percentage.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    loweredExclusion: CoverageSelfJudgeExclusion.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("CoverageBaselineDropFailure", {
     description: "One package or existing-file metric that dropped below its committed baseline.",
@@ -671,7 +673,7 @@ class CoverageNewUncoveredFileFailure extends S.TaggedClass<CoverageNewUncovered
   "new-uncovered-file",
   {
     ...CoverageComparisonFailureFields,
-    uncovered: NonNegativeInt,
+    uncovered: S.Natural,
   },
   $I.annote("CoverageNewUncoveredFileFailure", {
     description: "A newly observed file with uncovered units and no prior file baseline identity.",
@@ -686,9 +688,9 @@ class CoverageRaisedRowFailure extends S.TaggedClass<CoverageRaisedRowFailure>($
     proposed: Percentage,
     // A row can be stricter by count alone (same percentage, fewer uncovered
     // units), so the counts travel with the percentages for the diagnostic.
-    baseUncovered: NonNegativeInt,
-    proposedUncovered: NonNegativeInt,
-    actualUncovered: NonNegativeInt,
+    baseUncovered: S.Natural,
+    proposedUncovered: S.Natural,
+    actualUncovered: S.Natural,
   },
   $I.annote("CoverageRaisedRowFailure", {
     description:
@@ -774,7 +776,7 @@ export class CoverageLoweredFloor extends S.Class<CoverageLoweredFloor>($I`Cover
   {
     packageName: S.String,
     packagePath: CoverageRepoRelativePackagePath,
-    filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     metric: CoverageMetricName,
     base: Percentage,
     lowered: Percentage,
@@ -822,7 +824,7 @@ export class CoverageLoweredFloor extends S.Class<CoverageLoweredFloor>($I`Cover
 export class CoverageMeasuredRowProposal extends S.Class<CoverageMeasuredRowProposal>($I`CoverageMeasuredRowProposal`)(
   {
     packageName: S.String,
-    filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    filePath: CoverageRepoRelativeFilePath.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     row: CoverageFileBaseline,
   },
   $I.annote("CoverageMeasuredRowProposal", {
@@ -907,16 +909,18 @@ export class CoverageComparisonResult extends S.Class<CoverageComparisonResult>(
     newPackages: S.Array(CoverageSnapshotEntry),
     followUpDebt: S.Array(CoverageSnapshotEntry),
     loweredFloors: S.Array(CoverageLoweredFloor).pipe(
-      SchemaUtils.withConstantDefault<ReadonlyArray<CoverageLoweredFloor>>([])
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<CoverageLoweredFloor>>([]))
     ),
     measuredProposals: S.Array(CoverageMeasuredRowProposal).pipe(
-      SchemaUtils.withConstantDefault<ReadonlyArray<CoverageMeasuredRowProposal>>([])
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<CoverageMeasuredRowProposal>>([]))
     ),
     packageRowRemovals: S.Array(CoveragePackageRowRemovedFailure).pipe(
-      SchemaUtils.withConstantDefault<ReadonlyArray<CoveragePackageRowRemovedFailure>>([])
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<CoveragePackageRowRemovedFailure>>([]))
     ),
-    selfJudgeEligiblePackageNames: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
-    basePinned: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(false)),
+    selfJudgeEligiblePackageNames: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([]))
+    ),
+    basePinned: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed<boolean>(false))),
   },
   $I.annote("CoverageComparisonResult", {
     description: "Outcome of comparing current coverage against the committed baseline.",
@@ -969,8 +973,8 @@ export class CoverageComparisonBaselines extends S.Class<CoverageComparisonBasel
     // The merge-base document decides authorship: a row that differs from it is
     // one this branch wrote. Reading the base tip instead would attribute every
     // row `main` moved after the branch diverged to the branch.
-    mergeBase: CoverageRegressionBaseline.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    selfJudge: CoverageSelfJudgeScope.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    mergeBase: CoverageRegressionBaseline.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    selfJudge: CoverageSelfJudgeScope.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CoverageComparisonBaselines", {
     description: "Base-pinned comparison floors plus the branch's own baseline rows when a base is pinned.",
@@ -982,7 +986,7 @@ const baseOnlyComparison = (baseline: CoverageRegressionBaseline): CoverageCompa
 
 const decodeVitestCoverageSummary = S.decodeUnknownEffect(S.fromJsonString(VitestCoverageSummary));
 
-const metricNames = CoverageMetricName.Options;
+const metricNames = CoverageMetricName.literals;
 
 /**
  * Whether the pull request's row is a stricter floor than the base revision's
@@ -1068,8 +1072,7 @@ const coveragePercentageFromCounts = (metric: VitestCoverageMetric): Percentage 
     ? HUNDRED_PERCENTAGE
     : Percentage.make(Math.floor((1_000 * 100 * metric.covered) / metric.total / 10) / 100);
 
-const uncoveredCount = (metric: VitestCoverageMetric): NonNegativeInt =>
-  NonNegativeInt.make(metric.total - metric.covered);
+const uncoveredCount = (metric: VitestCoverageMetric): number => S.Natural.make(metric.total - metric.covered);
 
 const toCoverageUncoveredCounts = (summary: VitestCoverageSummaryTotal): CoverageUncoveredCounts =>
   CoverageUncoveredCounts.make({
@@ -1453,7 +1456,7 @@ export class CoverageBaselineWriteOptions extends S.Class<CoverageBaselineWriteO
   $I`CoverageBaselineWriteOptions`
 )(
   {
-    carryUnmeasured: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(false)),
+    carryUnmeasured: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed<boolean>(false))),
     replaceAll: S.Boolean,
   },
   $I.annote("CoverageBaselineWriteOptions", {
@@ -1658,13 +1661,13 @@ const rationaleRecordEquivalence = S.toEquivalence(S.Record(S.String, S.NonEmpty
  * **Example** (One changed row)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import {
  *   coverageBaselineRowDelta,
  *   CoveragePackageBaseline,
  *   CoverageRegressionBaseline,
  *   CoverageUncoveredCounts
  * } from "@beep/repo-cli/test/Quality"
- * import { NonNegativeInt } from "@beep/schema/Number"
  * import { Percentage } from "@beep/schema/Percentage"
  *
  * const pct = (value: number) => ({
@@ -1678,10 +1681,10 @@ const rationaleRecordEquivalence = S.toEquivalence(S.Record(S.String, S.NonEmpty
  *     path: "packages/example",
  *     ...pct(value),
  *     uncovered: CoverageUncoveredCounts.make({
- *       lines: NonNegativeInt.make(0),
- *       statements: NonNegativeInt.make(0),
- *       branches: NonNegativeInt.make(0),
- *       functions: NonNegativeInt.make(0)
+ *       lines: S.Natural.make(0),
+ *       statements: S.Natural.make(0),
+ *       branches: S.Natural.make(0),
+ *       functions: S.Natural.make(0)
  *     }),
  *     files: {}
  *   })
@@ -2960,7 +2963,7 @@ const raisedVanishedFileRowJudgements = (
               actual: ZERO_PERCENTAGE,
               baseUncovered: base.uncovered[metric],
               proposedUncovered: proposed.uncovered[metric],
-              actualUncovered: NonNegativeInt.make(0),
+              actualUncovered: S.Natural.make(0),
             })
           )
         : O.none()
@@ -3088,7 +3091,7 @@ const loweredMetricUncovered = (
   base: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
   proposed: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
   metrics: ReadonlyArray<CoverageMetricName>
-): NonNegativeInt => (A.contains(metrics, metric) ? proposed.uncovered[metric] : base.uncovered[metric]);
+): number => (A.contains(metrics, metric) ? proposed.uncovered[metric] : base.uncovered[metric]);
 
 // Per-metric selection: a package can have one metric lowered here and another
 // still governed by the base floor, and the uncovered counts must travel with

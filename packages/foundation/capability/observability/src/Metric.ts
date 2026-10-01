@@ -27,7 +27,7 @@
 import { $ObservabilityId } from "@beep/identity/packages";
 import { P } from "@beep/utils";
 import { Clock, Duration, Effect, Exit, Match, Metric, pipe } from "effect";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { PhaseOutcome } from "./PhaseProfiler.ts";
 
@@ -119,7 +119,7 @@ const phaseOutcomeFromExit = <A, E>(exit: Exit.Exit<A, E>): PhaseOutcome =>
   Match.value(exit).pipe(
     Match.when(Exit.isSuccess, () => PhaseOutcome.Enum.completed),
     Match.when(Exit.hasInterrupts, () => PhaseOutcome.Enum.interrupted),
-    Match.orElse(PhaseOutcome.thunk.failed)
+    Match.orElse(constant(PhaseOutcome.Enum.failed))
   );
 
 const incrementOutcomeCounter = (outcome: PhaseOutcome, options: ObserveWorkflowOptions): Effect.Effect<void> =>

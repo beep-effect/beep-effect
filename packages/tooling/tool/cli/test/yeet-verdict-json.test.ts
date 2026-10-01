@@ -1,3 +1,4 @@
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   YeetMergeReady,
   YeetMergeReadyCriteria,
@@ -6,8 +7,9 @@ import {
   YeetVerdictJson,
   YeetVerdictLane,
 } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 
@@ -63,7 +65,7 @@ describe("YeetVerdictJson", () => {
     Effect.gen(function* () {
       const text = yield* YeetVerdictJson.encode(verdict);
       const decoded = yield* YeetVerdictJson.decode(text);
-      expect(decoded.attemptId).toEqual(O.some(ATTEMPT_ID));
+      assertSome(decoded.attemptId, ATTEMPT_ID);
       expect(decoded).toEqual(verdict);
     })
   );
@@ -103,6 +105,7 @@ describe("YeetVerdictJson", () => {
               mergeable: true,
               mergeStateAcceptable: true,
               reviewDecisionAcceptable: true,
+              closeoutGatesPassed: true,
               greptileScore: O.some("5/5"),
             }),
           })
@@ -119,14 +122,14 @@ describe("YeetVerdictJson", () => {
   it.effect("decodes a verdict written before mergeReady existed", () =>
     Effect.gen(function* () {
       const decoded = yield* YeetVerdictJson.decode(priorVersionVerdictJson);
-      expect(decoded.mergeReady).toEqual(O.none());
-      expect(decoded.attemptId).toEqual(O.none());
+      assertNone(decoded.mergeReady);
+      assertNone(decoded.attemptId);
       expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
     })
   );
 
   it("keeps the Greptile score out of the hard criterion domain", () => {
-    expect(YeetMergeReadyCriterion.Options).toEqual([
+    expect(YeetMergeReadyCriterion.literals).toEqual([
       "pr-open",
       "not-draft",
       "closeout-run",
@@ -135,6 +138,7 @@ describe("YeetVerdictJson", () => {
       "mergeable",
       "merge-state-acceptable",
       "review-decision-acceptable",
+      "closeout-gates-passed",
     ]);
   });
 });

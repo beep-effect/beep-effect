@@ -6,9 +6,8 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Brand, Chunk, pipe, Result } from "effect";
+import { Brand, Chunk, Effect, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -81,7 +80,7 @@ export type DocumentId = typeof DocumentId.Type;
  * @category models
  * @since 0.0.0
  */
-export type DocumentIndex = Brand.Branded<NonNegativeInt, "DocumentIndex">;
+export type DocumentIndex = Brand.Branded<number, "DocumentIndex">;
 
 /**
  * Construct a branded document index after validating it is non-negative.
@@ -99,7 +98,7 @@ export type DocumentIndex = Brand.Branded<NonNegativeInt, "DocumentIndex">;
  * @since 0.0.0
  */
 export const documentIndex: Brand.Constructor<DocumentIndex> = Brand.check<DocumentIndex>(
-  S.makeFilter(S.is(NonNegativeInt))
+  S.makeFilter(S.is(S.Natural))
 );
 
 /**
@@ -117,8 +116,8 @@ export const documentIndex: Brand.Constructor<DocumentIndex> = Brand.check<Docum
  * @category validation
  * @since 0.0.0
  */
-export const DocumentIndex = NonNegativeInt.pipe(
-  S.fromBrand("DocumentIndex", documentIndex),
+export const DocumentIndex = S.Natural.pipe(
+  S.brand("DocumentIndex"),
   $I.annoteSchema("DocumentIndex", {
     description: "Non-negative ordered index for an NLP document.",
   })
@@ -203,7 +202,7 @@ export class Document extends S.Class<Document>($I`Document`)(
     text: S.String,
     tokens: S.Chunk(Token),
     sentences: S.Chunk(Sentence),
-    sentiment: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    sentiment: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Document", {
     description: "Immutable NLP document with token and sentence structure.",

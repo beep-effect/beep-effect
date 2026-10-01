@@ -18,7 +18,6 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { isOptionLike } from "@beep/repo-utils";
-import { NonNegativeInt } from "@beep/schema";
 import { Effect, FileSystem, flow, Number as N, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -52,7 +51,7 @@ export class GitRenameEntry extends S.Class<GitRenameEntry>($I`GitRenameEntry`)(
   {
     sourcePath: S.String,
     targetPath: S.String,
-    score: NonNegativeInt,
+    score: S.Natural,
   },
   $I.annote("GitRenameEntry", {
     description: "Rename source, target, and similarity score parsed from Git's NUL-delimited output.",
@@ -146,7 +145,7 @@ const readNameStatusRecord = (fields: ReadonlyArray<string>, index: number): O.O
   }
   return O.map(renameScoreFromStatus(status), (score) => ({
     width,
-    rename: O.some(GitRenameEntry.make({ sourcePath, targetPath, score: NonNegativeInt.make(score) })),
+    rename: O.some(GitRenameEntry.make({ sourcePath, targetPath, score: S.Natural.make(score) })),
   }));
 };
 

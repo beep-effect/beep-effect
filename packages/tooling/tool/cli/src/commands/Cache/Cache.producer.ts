@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { CacheClientPin, CacheQualificationKey } from "@beep/repo-configs/cache";
-import { NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { Clock, Crypto, Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
@@ -97,8 +97,8 @@ const makeIssuer = Effect.fn("Producer.makeIssuer")(function* (
       issuer,
       binding: trusted,
       payloadSha256: yield* payloadDigest(receipt),
-      issuedAtMs: NonNegativeInt.make(now),
-      expiresAtMs: NonNegativeInt.make(now + maxLifetimeMs),
+      issuedAtMs: S.Natural.make(now),
+      expiresAtMs: S.Natural.make(now + maxLifetimeMs),
     });
     return CacheProducerEnvelope.make({ body, mac: yield* mac(body) });
   });
@@ -198,7 +198,7 @@ const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(
       info.size !== BigInt(persistedMaterialBytes)
     )
       return yield* CacheCommandError.new("Producer material must be a private single-link approval-bound file.");
-    const read = yield* readContainedFileBytesNoFollow(directory, file, NonNegativeInt.make(persistedMaterialBytes));
+    const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(persistedMaterialBytes));
     if (O.isNone(read.contents) || read.contents.value.length !== persistedMaterialBytes)
       return yield* CacheCommandError.new("Producer material is unavailable.");
     return Redacted.make(read.contents.value);

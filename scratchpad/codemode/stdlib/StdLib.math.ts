@@ -56,7 +56,7 @@ export const mathConstants = LiteralKit(["PI", "E", "LN2", "LN10", "LOG2E", "LOG
  */
 export type mathConstants = typeof mathConstants.Type;
 
-const DirectMathMethod = LiteralKit(mathMethods.omitOptions(["random", "sumPrecise"]));
+const DirectMathMethod = LiteralKit(mathMethods.pick(["max", "min", "abs", "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "floor", "ceil", "round", "trunc", "sign", "sqrt", "cbrt", "pow", "hypot", "cos", "cosh", "sin", "sinh", "tan", "tanh", "log", "log2", "log10", "log1p", "exp", "expm1", "f16round", "fround", "clz32", "imul"]).literals);
 type DirectMathMethod = Exclude<MathMethod, "random" | "sumPrecise">;
 
 /**

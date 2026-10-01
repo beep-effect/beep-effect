@@ -1,0 +1,222 @@
+{
+  "kind": "boolean-creep-derived-formula-enumeration/v1",
+  "sourceFile": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
+  "sourceSha256": "9ad14c399cbbcacf5911ef8a621d2b49f3887b676e313d3f34432d27848a501f",
+  "designFile": "goals/boolean-creep/designs/r3-foundation-invariant-enforcement-channels.md",
+  "designSha256": "e160fc888b3915a2e215838fe97a00ce66b209fbc0767a9b8ee9be56e33238b7",
+  "method": "Exhaustive Python transcription of the current source formula at lines275-295. Supporting mathematical evidence, not a TypeScript execution or replacement P3 review.",
+  "sourceVectors": 32,
+  "representableEightBooleanTuples": 256,
+  "acceptedVectors": 17,
+  "acceptedVectorDecidabilityPairs": 46,
+  "dispositionCounts": {
+    "rejectsAll": 15,
+    "explicitGap": 3,
+    "localMechanical": 6,
+    "typeLevelOnly": 1,
+    "typeAndLocal": 7
+  },
+  "decidabilityOrder": [
+    "typeLevel",
+    "localRuntime",
+    "contextualRuntime",
+    "externalAuthority",
+    "undecidable"
+  ],
+  "rows": [
+    {
+      "sourceVector": [false, false, false, false, false],
+      "derivedAliases": [false, false, true],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [false, false, false, false, true],
+      "derivedAliases": [false, true, true],
+      "acceptedDecidabilities": [false, true, true, true, true],
+      "disposition": "explicitGap"
+    },
+    {
+      "sourceVector": [false, false, false, true, false],
+      "derivedAliases": [false, true, true],
+      "acceptedDecidabilities": [false, true, true, true, true],
+      "disposition": "explicitGap"
+    },
+    {
+      "sourceVector": [false, false, false, true, true],
+      "derivedAliases": [false, true, true],
+      "acceptedDecidabilities": [false, true, true, true, true],
+      "disposition": "explicitGap"
+    },
+    {
+      "sourceVector": [false, false, true, false, false],
+      "derivedAliases": [true, false, true],
+      "acceptedDecidabilities": [false, true, true, false, false],
+      "disposition": "localMechanical"
+    },
+    {
+      "sourceVector": [false, false, true, false, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [false, false, true, true, false],
+      "derivedAliases": [true, true, true],
+      "acceptedDecidabilities": [false, true, true, false, false],
+      "disposition": "localMechanical"
+    },
+    {
+      "sourceVector": [false, false, true, true, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [false, true, false, false, false],
+      "derivedAliases": [true, false, true],
+      "acceptedDecidabilities": [false, true, true, false, false],
+      "disposition": "localMechanical"
+    },
+    {
+      "sourceVector": [false, true, false, false, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [false, true, false, true, false],
+      "derivedAliases": [true, true, true],
+      "acceptedDecidabilities": [false, true, true, false, false],
+      "disposition": "localMechanical"
+    },
+    {
+      "sourceVector": [false, true, false, true, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [false, true, true, false, false],
+      "derivedAliases": [true, false, true],
+      "acceptedDecidabilities": [false, true, true, false, false],
+      "disposition": "localMechanical"
+    },
+    {
+      "sourceVector": [false, true, true, false, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [false, true, true, true, false],
+      "derivedAliases": [true, true, true],
+      "acceptedDecidabilities": [false, true, true, false, false],
+      "disposition": "localMechanical"
+    },
+    {
+      "sourceVector": [false, true, true, true, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [true, false, false, false, false],
+      "derivedAliases": [true, false, true],
+      "acceptedDecidabilities": [true, false, false, false, false],
+      "disposition": "typeLevelOnly"
+    },
+    {
+      "sourceVector": [true, false, false, false, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [true, false, false, true, false],
+      "derivedAliases": [true, true, true],
+      "acceptedDecidabilities": [true, true, true, false, false],
+      "disposition": "typeAndLocal"
+    },
+    {
+      "sourceVector": [true, false, false, true, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [true, false, true, false, false],
+      "derivedAliases": [true, false, true],
+      "acceptedDecidabilities": [true, true, true, false, false],
+      "disposition": "typeAndLocal"
+    },
+    {
+      "sourceVector": [true, false, true, false, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [true, false, true, true, false],
+      "derivedAliases": [true, true, true],
+      "acceptedDecidabilities": [true, true, true, false, false],
+      "disposition": "typeAndLocal"
+    },
+    {
+      "sourceVector": [true, false, true, true, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [true, true, false, false, false],
+      "derivedAliases": [true, false, true],
+      "acceptedDecidabilities": [true, true, true, false, false],
+      "disposition": "typeAndLocal"
+    },
+    {
+      "sourceVector": [true, true, false, false, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [true, true, false, true, false],
+      "derivedAliases": [true, true, true],
+      "acceptedDecidabilities": [true, true, true, false, false],
+      "disposition": "typeAndLocal"
+    },
+    {
+      "sourceVector": [true, true, false, true, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [true, true, true, false, false],
+      "derivedAliases": [true, false, true],
+      "acceptedDecidabilities": [true, true, true, false, false],
+      "disposition": "typeAndLocal"
+    },
+    {
+      "sourceVector": [true, true, true, false, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    },
+    {
+      "sourceVector": [true, true, true, true, false],
+      "derivedAliases": [true, true, true],
+      "acceptedDecidabilities": [true, true, true, false, false],
+      "disposition": "typeAndLocal"
+    },
+    {
+      "sourceVector": [true, true, true, true, true],
+      "derivedAliases": [true, true, false],
+      "acceptedDecidabilities": [false, false, false, false, false],
+      "disposition": "rejectsAll"
+    }
+  ],
+  "implementationCredit": false,
+  "P3Credit": false
+}

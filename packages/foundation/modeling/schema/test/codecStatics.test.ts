@@ -1,11 +1,6 @@
 import { fcRuns } from "@beep/fc-runs";
 import { staticDescriptorInstaller } from "@beep/schema/SchemaUtils/internal/staticDescriptors";
-import {
-  CodecStaticKey,
-  CodecStaticSelectionError,
-  classStatics,
-  withCodecStatics,
-} from "@beep/schema/SchemaUtils/withCodecStatics";
+import { CodecStaticKey, CodecStaticSelectionError, withCodecStatics } from "@beep/schema/SchemaUtils/withCodecStatics";
 import { withStatics } from "@beep/schema/SchemaUtils/withStatics";
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
@@ -23,17 +18,6 @@ const decodeUnknownCountEffect = S.decodeUnknownEffect(Count);
 const finiteArbitrary = Arbitrary.schema(S.Finite);
 const isCodecStaticKey = S.is(CodecStaticKey);
 const isCount = S.is(Count);
-
-class User extends S.Class<User>("CodecStaticUser")({ name: S.String }) {
-  static readonly utils = classStatics(this, ["decodeUnknownEffect", "is"]);
-}
-
-class Event extends S.TaggedClass<Event>("CodecStaticEvent")("event", { value: S.Finite }) {
-  static readonly utils = classStatics(this, ["is"]);
-}
-
-const decodeUnknownUserEffect = S.decodeUnknownEffect(User);
-const isUser = S.is(User);
 
 const invalidSelectionsAreRejectedAtCompileTime = () => {
   // @ts-expect-error Duplicate selections are rejected by the tuple type.
@@ -225,6 +209,15 @@ describe("staticDescriptorInstaller", () => {
     expect(target.is).toBe(is);
   });
 
+  it("replaces configurable legacy statics that carry a different value", () => {
+    const previous = () => false;
+    const next = () => true;
+    const target = { is: previous };
+
+    expect(staticDescriptorInstaller.install(target, { is: next })).toBe(target);
+    expect(target.is).toBe(next);
+  });
+
   it("replaces a different configurable static in legacy mode", () => {
     const target = { value: 1 };
 
@@ -256,25 +249,4 @@ describe("staticDescriptorInstaller", () => {
       "Cannot define static 'value'."
     );
   });
-});
-
-describe("classStatics", () => {
-  it.effect(
-    "provides frozen destructurable bags without replacing class constructors",
-    Effect.fnUntraced(function* () {
-      const { decodeUnknownEffect, is } = User.utils;
-      const user = User.make({ name: "Ada" });
-      const event = Event.make({ value: 1 });
-
-      expect(is(user)).toBe(true);
-      expect((yield* decodeUnknownEffect({ name: "Grace" })).name).toBe("Grace");
-      expect(Event.utils.is(event)).toBe(true);
-      expect(Object.isFrozen(User.utils)).toBe(true);
-      expect(Object.isFrozen(Event.utils)).toBe(true);
-      expect(Reflect.has(User, "decodeUnknownEffect")).toBe(false);
-      expectTypeOf(User.utils.decodeUnknownEffect).toEqualTypeOf(decodeUnknownUserEffect);
-      expectTypeOf(User.utils.is).toEqualTypeOf(isUser);
-      expectTypeOf(User.utils).not.toHaveProperty("decodeUnknownSync");
-    })
-  );
 });

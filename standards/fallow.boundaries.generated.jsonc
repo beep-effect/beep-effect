@@ -1064,14 +1064,12 @@
         "allow": [
           "@beep/anthropic",
           "@beep/identity",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/anthropic",
           "@beep/identity",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ]
@@ -1550,7 +1548,6 @@
           "@beep/dock-react",
           "@beep/identity",
           "@beep/pretext",
-          "@beep/schema",
           "@beep/test-runner"
         ],
         "allowTypeOnly": [
@@ -1558,7 +1555,6 @@
           "@beep/dock-react",
           "@beep/identity",
           "@beep/pretext",
-          "@beep/schema",
           "@beep/test-runner"
         ]
       },
@@ -1770,7 +1766,6 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
         ],
@@ -1779,7 +1774,6 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
         ]
@@ -2495,7 +2489,6 @@
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
@@ -2504,7 +2497,6 @@
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ]
@@ -2897,14 +2889,12 @@
         "allow": [
           "@beep/identity",
           "@beep/openai",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/openai",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ]

@@ -13,7 +13,7 @@ import {
   HubSpotUpsertContactRequest,
 } from "@beep/hubspot";
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Clock, Effect, Layer, pipe } from "effect";
 import { FetchHttpClient } from "effect/http";
@@ -68,10 +68,10 @@ type ContactSubmissionErrorOptions = {
 export class ContactSubmissionError extends S.TaggedError<ContactSubmissionError>($I`ContactSubmissionError`)(
   "ContactSubmissionError",
   {
-    provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    provider: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    providerReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     reason: ContactSubmissionErrorReason,
-    status: S.OptionFromOptionalKey(ContactProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
+    status: S.OptionFromOptionalKey(ContactProviderHttpStatus).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annoteError<ContactSubmissionError>("ContactSubmissionError", {
     description: "Typed server-side contact submission boundary failure.",
@@ -266,7 +266,7 @@ const contactResponseForError = (_error: ContactSubmissionError): ContactSubmiss
  * **Example** (Submit contact via Effect)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
  * import { submitContact } from "@beep/oip-web/contact"
  *
@@ -274,7 +274,7 @@ const contactResponseForError = (_error: ContactSubmissionError): ContactSubmiss
  *   email: "builder@example.com",
  *   message: "I would like to discuss a patent matter.",
  *   name: "Builder",
- *   submittedAt: NonNegativeInt.make(0)
+ *   submittedAt: S.Natural.make(0)
  * })
  *
  * Effect.runPromise(program)

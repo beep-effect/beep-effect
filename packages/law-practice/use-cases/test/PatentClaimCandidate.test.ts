@@ -1,12 +1,14 @@
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const claimText = "A sensor (optical) comprising a detector.";
 const evidenceQuote = "A sensor (optical)\ncomprising a detector.";
@@ -50,8 +52,8 @@ const input = (
   return PatentClaimCandidateInput.make({
     claim: candidateClaim,
     claimsHeading,
-    claimsSectionEnd: NonNegativeInt.make(claimsSectionEnd),
-    claimsSectionStart: NonNegativeInt.make(claimsSectionStart),
+    claimsSectionEnd: S.Natural.make(claimsSectionEnd),
+    claimsSectionStart: S.Natural.make(claimsSectionStart),
     digest,
     docket: "20001US05",
     entitySeed: PosInt.make(1),

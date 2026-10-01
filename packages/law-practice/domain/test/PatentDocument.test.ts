@@ -9,7 +9,6 @@ import {
   PatentClaims,
 } from "@beep/law-practice-domain/values/PatentDocument";
 import { Md } from "@beep/md";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -18,6 +17,8 @@ import { Effect, Exit, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodePatentApplicationDocumentResult = S.decodeResult(PatentApplicationDocument);
 const decodePatentApplicationSectionsResult = S.decodeResult(PatentApplicationSections);
@@ -99,7 +100,7 @@ describe("PatentDocument", () => {
     Effect.fnUntraced(function* () {
       const document = yield* normalizePatentApplicationDocument(patentFixture);
 
-      expect(A.map(document.sections, ({ role }) => role)).toStrictEqual(PatentApplicationSectionRole.Options);
+      expect(A.map(document.sections, ({ role }) => role)).toStrictEqual(PatentApplicationSectionRole.literals);
       expect(document.sections).toHaveLength(13);
       expect(document.claims).toHaveLength(3);
       expect(document.claims[0]).toMatchObject({
@@ -168,15 +169,15 @@ describe("PatentDocument", () => {
       content: "Sensor system",
       heading: "TITLE OF THE INVENTION",
       role: "title-of-invention",
-      sourceEnd: NonNegativeInt.make(36),
-      sourceStart: NonNegativeInt.make(23),
+      sourceEnd: S.Natural.make(36),
+      sourceStart: S.Natural.make(23),
     });
     const background = PatentApplicationSection.make({
       content: "Sensor background",
       heading: "BACKGROUND",
       role: "background",
-      sourceEnd: NonNegativeInt.make(65),
-      sourceStart: NonNegativeInt.make(48),
+      sourceEnd: S.Natural.make(65),
+      sourceStart: S.Natural.make(48),
     });
     const rejectedOrder = decodePatentApplicationSectionsResult([background, title]);
     const rejectedDuplicate = decodePatentApplicationSectionsResult([title, title]);
@@ -211,15 +212,15 @@ describe("PatentDocument", () => {
       content: "Sensor system",
       heading: "TITLE OF THE INVENTION",
       role: "title-of-invention",
-      sourceEnd: NonNegativeInt.make(13),
-      sourceStart: NonNegativeInt.make(0),
+      sourceEnd: S.Natural.make(13),
+      sourceStart: S.Natural.make(0),
     });
     const claims = PatentApplicationSection.make({
       content: "1. A system comprising a sensor.",
       heading: "CLAIMS",
       role: "claims",
-      sourceEnd: NonNegativeInt.make(40),
-      sourceStart: NonNegativeInt.make(7),
+      sourceEnd: S.Natural.make(40),
+      sourceStart: S.Natural.make(7),
     });
     const claim = independentClaim(1);
 

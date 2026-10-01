@@ -19,9 +19,10 @@ import {
   LedgerDisposition,
   MechanismClass,
 } from "@beep/repo-ai-metrics";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { O, pipe, Str } from "@beep/utils";
 import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { HarnessLedgerInputError } from "./HarnessLedger.errors.ts";
 
@@ -49,7 +50,9 @@ const WindowSessions = S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(1));
  * @category models
  * @since 0.0.0
  */
-export const HarnessLedgerAdmission = LiteralKit(LedgerDisposition.omitOptions(["proposed"])).pipe(
+export const HarnessLedgerAdmission = LiteralKit(
+  LedgerDisposition.pick(["accepted", "rejected", "deferred", "waived", "tombstoned"]).literals
+).pipe(
   $I.annoteSchema("HarnessLedgerAdmission", {
     description: "Human admission outcome recorded by a disposition row.",
   })
@@ -71,13 +74,13 @@ export type HarnessLedgerAdmission = typeof HarnessLedgerAdmission.Type;
  * ```ts
  * import { PrunableSurfaceKind } from "@beep/repo-cli/commands/HarnessLedger"
  *
- * console.log(PrunableSurfaceKind.Options) // ["skill", "hook", "mcp-server"]
+ * console.log(PrunableSurfaceKind.literals) // ["skill", "hook", "mcp-server"]
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const PrunableSurfaceKind = LiteralKit(ContextSurfaceKind.pickOptions(["skill", "hook", "mcp-server"])).pipe(
+export const PrunableSurfaceKind = LiteralKit(ContextSurfaceKind.pick(["skill", "hook", "mcp-server"]).literals).pipe(
   $I.annoteSchema("PrunableSurfaceKind", {
     description: "Pruning surface kinds; hook rows remain decodable, but enumeration waits for execution telemetry.",
   })
@@ -234,7 +237,7 @@ export const parseHarnessEditSpec = Effect.fn("HarnessLedger.parseHarnessEditSpe
  */
 export const parseHarnessSurfaceSpec = Effect.fn("HarnessLedger.parseHarnessSurfaceSpec")(function* (spec: string) {
   const invalid = HarnessLedgerInputError.new(
-    `--touched "${spec}" is not <kind>:<name> with kind one of ${ContextSurfaceKind.Options.join(" | ")}.`
+    `--touched "${spec}" is not <kind>:<name> with kind one of ${ContextSurfaceKind.literals.join(" | ")}.`
   );
   const [kind, name] = yield* Effect.fromOption(splitPrefixed(spec)).pipe(Effect.mapError(() => invalid));
   return yield* decodeSurfaceRef({ kind, name }).pipe(Effect.mapError(() => invalid));
@@ -264,16 +267,17 @@ export class HarnessLedgerProposeOptions extends S.Class<HarnessLedgerProposeOpt
     repoRoot: S.String,
     mechanismClass: MechanismClass,
     edit: HarnessEditRef,
-    hypothesis: S.OptionFromOptionalKey(BehavioralClaim).pipe(SchemaUtils.withNoneDefault),
-    modelId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    reasoningEffort: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    repoRevision: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    hypothesis: S.OptionFromOptionalKey(BehavioralClaim).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    modelId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    reasoningEffort: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    repoRevision: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("HarnessLedgerProposeOptions", {
     description: "Inputs for proposing one harness edit and capturing its fingerprint.",
   })
 ) {}
 
+const harnessLedgerDispositionOptionsTouchedDefault = A.empty();
 /**
  * Options for `harness-ledger disposition`.
  *
@@ -302,9 +306,12 @@ export class HarnessLedgerDispositionOptions extends S.Class<HarnessLedgerDispos
     rowId: HarnessLedgerRowId,
     to: HarnessLedgerAdmission,
     evidence: S.NonEmptyString,
-    delta: S.OptionFromOptionalKey(HarnessLedgerDelta).pipe(SchemaUtils.withNoneDefault),
-    resurrectWhen: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    touched: S.Array(HarnessLedgerSurfaceRef).pipe(SchemaUtils.withKeyDefaults([])),
+    delta: S.OptionFromOptionalKey(HarnessLedgerDelta).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    resurrectWhen: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    touched: S.Array(HarnessLedgerSurfaceRef).pipe(
+      S.withConstructorDefault(Effect.succeed(harnessLedgerDispositionOptionsTouchedDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(harnessLedgerDispositionOptionsTouchedDefault))
+    ),
   },
   $I.annote("HarnessLedgerDispositionOptions", {
     description: "Inputs for appending a disposition row that supersedes the latest row of a chain.",
@@ -328,11 +335,14 @@ export class HarnessLedgerDispositionOptions extends S.Class<HarnessLedgerDispos
 export class HarnessLedgerListOptions extends S.Class<HarnessLedgerListOptions>($I`HarnessLedgerListOptions`)(
   {
     repoRoot: S.String,
-    staleOnly: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    disposition: S.OptionFromOptionalKey(LedgerDisposition).pipe(SchemaUtils.withNoneDefault),
-    month: S.OptionFromOptionalKey(HarnessLedgerMonth).pipe(SchemaUtils.withNoneDefault),
-    modelId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    reasoningEffort: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    staleOnly: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    disposition: S.OptionFromOptionalKey(LedgerDisposition).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    month: S.OptionFromOptionalKey(HarnessLedgerMonth).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    modelId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    reasoningEffort: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("HarnessLedgerListOptions", {
     description: "Filters for listing the latest row of every ledger chain.",
@@ -384,9 +394,12 @@ export class HarnessLedgerPruneOptions extends S.Class<HarnessLedgerPruneOptions
     repoRoot: S.String,
     stateDir: S.String,
     windowSessions: WindowSessions,
-    write: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    modelId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    reasoningEffort: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    write: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    modelId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    reasoningEffort: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("HarnessLedgerPruneOptions", {
     description: "Repo root, hook-pulse state dir, session window, and write mode for pruning proposals.",

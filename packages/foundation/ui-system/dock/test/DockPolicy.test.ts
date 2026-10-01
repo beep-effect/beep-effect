@@ -24,12 +24,12 @@ import {
   TabsNode,
   TextPanelView,
 } from "@beep/dock";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";
+import * as S from "effect/Schema";
 import {
   dispatch,
   envelope,
@@ -117,7 +117,7 @@ describe("DockPolicy", () => {
             "policy-reorder",
             MovePanelCommand.make({
               panelId: panelTwo.id,
-              target: TabPlacement.make({ groupId: groupOne, index: O.some(NonNegativeInt.make(0)) }),
+              target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(0)) }),
             })
           )
         );

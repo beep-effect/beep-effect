@@ -6,11 +6,11 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Context, Effect, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ExtractionTelemetry, ProviderTokenUsage } from "../Domain/Model/ExtractionTelemetry.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 export { ExtractionTelemetry, ProviderTokenUsage } from "../Domain/Model/ExtractionTelemetry.ts";
 
@@ -18,13 +18,13 @@ const $I = $ScratchpadId.create("effect-ontology/Telemetry/ExtractionTelemetry")
 
 class UsageState extends S.Class<UsageState>($I`UsageState`)(
   {
-    chunkCount: NonNegativeInt,
-    attemptCount: NonNegativeInt,
-    recordedAttempts: NonNegativeInt,
-    reportedAttempts: NonNegativeInt,
-    completeAttempts: NonNegativeInt,
-    inputTokens: NonNegativeInt,
-    outputTokens: NonNegativeInt,
+    chunkCount: S.Natural,
+    attemptCount: S.Natural,
+    recordedAttempts: S.Natural,
+    reportedAttempts: S.Natural,
+    completeAttempts: S.Natural,
+    inputTokens: S.Natural,
+    outputTokens: S.Natural,
   },
   $I.annote("UsageState", {
     description: "Mutable-ref payload used to aggregate provider usage within one extraction request.",
@@ -33,17 +33,19 @@ class UsageState extends S.Class<UsageState>($I`UsageState`)(
 
 const emptyUsageState = (): UsageState =>
   UsageState.make({
-    chunkCount: NonNegativeInt.make(0),
-    attemptCount: NonNegativeInt.make(0),
-    recordedAttempts: NonNegativeInt.make(0),
-    reportedAttempts: NonNegativeInt.make(0),
-    completeAttempts: NonNegativeInt.make(0),
-    inputTokens: NonNegativeInt.make(0),
-    outputTokens: NonNegativeInt.make(0),
+    chunkCount: S.Natural.make(0),
+    attemptCount: S.Natural.make(0),
+    recordedAttempts: S.Natural.make(0),
+    reportedAttempts: S.Natural.make(0),
+    completeAttempts: S.Natural.make(0),
+    inputTokens: S.Natural.make(0),
+    outputTokens: S.Natural.make(0),
   });
 
-const increment = (value: NonNegativeInt): NonNegativeInt => NonNegativeInt.make(value + 1);
-const add = (left: NonNegativeInt, right: NonNegativeInt): NonNegativeInt => NonNegativeInt.make(left + right);
+const decodeUnknownNatural = S.decodeUnknownOption(S.Natural);
+
+const increment = (value: number): number => S.Natural.make(value + 1);
+const add = (left: number, right: number): number => S.Natural.make(left + right);
 
 const toUsage = (state: UsageState): ProviderTokenUsage => {
   if (state.reportedAttempts === 0) {
@@ -97,10 +99,10 @@ export class ExtractionTelemetryCollector extends Context.Service<
   {
     readonly startAttempt: Effect.Effect<void>;
     readonly recordUsage: (
-      inputTokens: O.Option<NonNegativeInt>,
-      outputTokens: O.Option<NonNegativeInt>
+      inputTokens: O.Option<number>,
+      outputTokens: O.Option<number>
     ) => Effect.Effect<void>;
-    readonly recordChunkCount: (chunkCount: NonNegativeInt) => Effect.Effect<void>;
+    readonly recordChunkCount: (chunkCount: number) => Effect.Effect<void>;
     readonly snapshot: Effect.Effect<ExtractionTelemetry>;
   }
 >()($I`ExtractionTelemetryCollector`) {}
@@ -112,7 +114,7 @@ const makeExtractionTelemetry = Effect.fn("ExtractionTelemetry.make")(function* 
       UsageState.make({ ...current, attemptCount: increment(current.attemptCount) })
     ),
     recordUsage: Effect.fn("ExtractionTelemetry.recordUsage")(
-      (inputTokens: O.Option<NonNegativeInt>, outputTokens: O.Option<NonNegativeInt>) =>
+      (inputTokens: O.Option<number>, outputTokens: O.Option<number>) =>
         Ref.update(state, (current) => {
           const reported = O.isSome(inputTokens) || O.isSome(outputTokens);
           const complete = O.isSome(inputTokens) && O.isSome(outputTokens);
@@ -135,7 +137,7 @@ const makeExtractionTelemetry = Effect.fn("ExtractionTelemetry.make")(function* 
           });
         })
     ),
-    recordChunkCount: Effect.fn("ExtractionTelemetry.recordChunkCount")((chunkCount: NonNegativeInt) =>
+    recordChunkCount: Effect.fn("ExtractionTelemetry.recordChunkCount")((chunkCount: number) =>
       Ref.update(state, (current) => UsageState.make({ ...current, chunkCount }))
     ),
     snapshot: Ref.get(state).pipe(
@@ -215,8 +217,8 @@ export const recordProviderUsage = (usage: {
         onNone: () => Effect.void,
         onSome: (telemetry) =>
           telemetry.recordUsage(
-            NonNegativeInt.decodeUnknownOption(usage.inputTokens),
-            NonNegativeInt.decodeUnknownOption(usage.outputTokens)
+            decodeUnknownNatural(usage.inputTokens),
+            decodeUnknownNatural(usage.outputTokens)
           ),
       })
     )
@@ -228,12 +230,12 @@ export const recordProviderUsage = (usage: {
  * **Example** (Record two chunks)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
  * import { captureExtractionTelemetry, recordExtractionChunkCount } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *
  * const [, snapshot] = Effect.runSync(
- *   captureExtractionTelemetry(recordExtractionChunkCount(NonNegativeInt.make(2)))
+ *   captureExtractionTelemetry(recordExtractionChunkCount(S.Natural.make(2)))
  * )
  * console.log(snapshot.chunkCount) // 2
  * ```
@@ -242,7 +244,7 @@ export const recordProviderUsage = (usage: {
  * @category observability
  * @since 0.0.0
  */
-export const recordExtractionChunkCount = (chunkCount: NonNegativeInt): Effect.Effect<void> =>
+export const recordExtractionChunkCount = (chunkCount: number): Effect.Effect<void> =>
   Effect.serviceOption(ExtractionTelemetryCollector).pipe(
     Effect.flatMap(
       O.match({

@@ -10,12 +10,10 @@ import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Documen
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
 import { DmsProvider, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
 
 const $I = $DocumentsUseCasesId.create("entities/SyncOperation/SyncOperation.repository");
 
@@ -28,14 +26,13 @@ const $I = $DocumentsUseCasesId.create("entities/SyncOperation/SyncOperation.rep
  * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"
  * import { SyncOperationSeed } from "@beep/documents-use-cases/entities/SyncOperation/server"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
  *
  * const seed = SyncOperationSeed.make({
- *   attemptCount: S.decodeUnknownSync(NonNegativeInt)(0),
+ *   attemptCount: S.decodeUnknownSync(S.Natural)(0),
  *   idempotencyKey: "sync-item-1:uploadFile:1",
- *   inputGeneration: S.decodeUnknownSync(NonNegativeInt)(1),
+ *   inputGeneration: S.decodeUnknownSync(S.Natural)(1),
  *   operationType: "uploadFile",
  *   provider: "box",
  *   status: "queued",
@@ -52,19 +49,19 @@ const $I = $DocumentsUseCasesId.create("entities/SyncOperation/SyncOperation.rep
  */
 export class SyncOperationSeed extends S.Class<SyncOperationSeed>($I`SyncOperationSeed`)(
   {
-    attemptCount: NonNegativeInt.annotateKey({
+    attemptCount: S.Natural.annotateKey({
       description: "Number of push attempts already made for this operation.",
     }),
     idempotencyKey: S.NonEmptyString.annotateKey({
       description: "Unique key deduplicating replays of the same push operation.",
     }),
-    inputContentDigest: S.Option(DocumentContentDigest).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    inputContentDigest: S.Option(DocumentContentDigest).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Digest of the local content captured when the operation was queued; none for folders.",
     }),
-    inputGeneration: NonNegativeInt.annotateKey({
+    inputGeneration: S.Natural.annotateKey({
       description: "Local generation counter captured when the operation was queued.",
     }),
-    lastError: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    lastError: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Most recent attempt failure message; none while the operation is healthy.",
     }),
     operationType: DomainSyncOperation.SyncOperationType.annotateKey({
@@ -82,7 +79,7 @@ export class SyncOperationSeed extends S.Class<SyncOperationSeed>($I`SyncOperati
     targetName: S.NonEmptyString.annotateKey({
       description: "Remote item name to apply with this operation.",
     }),
-    targetParentRelPath: S.Option(VaultRelPath).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    targetParentRelPath: S.Option(VaultRelPath).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Vault-relative path of the intended remote parent folder; none targets the mirror root.",
     }),
     targetRelPath: VaultRelPath.annotateKey({

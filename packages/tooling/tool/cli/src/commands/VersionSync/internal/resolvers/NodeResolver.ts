@@ -9,19 +9,18 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
-import { decodeYamlTextAs } from "@beep/schema/Yaml";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, identity, Path, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { decodeYamlTextWith } from "../../../../internal/schema/TextCodec.ts";
 import {
   VersionCategoryReport,
-  VersionCategoryStatusThunk,
   VersionDriftItem,
   VersionSyncError,
+  versionCategoryStatusFromDrift,
 } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/NodeResolver");
@@ -37,7 +36,7 @@ export class NodeVersionLocation extends S.Class<NodeVersionLocation>($I`NodeVer
   {
     file: S.String,
     jobName: S.String,
-    stepIndex: NonNegativeInt,
+    stepIndex: S.Natural,
     currentValue: S.String,
     yamlPath: S.Array(S.Union([S.String, S.Finite])),
   },
@@ -104,6 +103,8 @@ class WorkflowDocument extends S.Class<WorkflowDocument>($I`WorkflowDocument`)(
     description: "Subset of GitHub workflow YAML fields required for node-version discovery.",
   })
 ) {}
+
+const decodeWorkflowDocument = decodeYamlTextWith(S.decodeUnknownEffect(WorkflowDocument));
 
 const UnknownNodeVersionValueToString = S.Unknown.pipe(
   S.decodeTo(
@@ -188,7 +189,7 @@ const findNodeVersionLocations: (
 ) => Effect.Effect<Array<NodeVersionLocation>, VersionSyncError> = Effect.fn(function* (content, relativeFile) {
   let locations = A.empty<NodeVersionLocation>();
 
-  const workflow = yield* decodeYamlTextAs(WorkflowDocument)(content).pipe(
+  const workflow = yield* decodeWorkflowDocument(content).pipe(
     VersionSyncError.mapError("Failed to parse workflow YAML", relativeFile)
   );
 
@@ -214,7 +215,7 @@ const findNodeVersionLocations: (
         NodeVersionLocation.make({
           file: relativeFile,
           jobName,
-          stepIndex: NonNegativeInt.make(stepIdx),
+          stepIndex: S.Natural.make(stepIdx),
           currentValue: nodeVersion,
           yamlPath: ["jobs", jobName, "steps", stepIdx, "with", "node-version"],
         })
@@ -252,10 +253,7 @@ export const buildNodeReport: (state: NodeVersionState) => VersionCategoryReport
   }
 
   return VersionCategoryReport.cases.node.make({
-    status: A.match(items, {
-      onEmpty: VersionCategoryStatusThunk.ok,
-      onNonEmpty: VersionCategoryStatusThunk.drift,
-    }),
+    status: versionCategoryStatusFromDrift(items),
     items,
     latest: O.none(),
     error: O.none(),

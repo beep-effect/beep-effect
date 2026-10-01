@@ -31,6 +31,7 @@ import { findRepoRoot } from "@beep/repo-utils/Root";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
@@ -322,8 +323,8 @@ layer(TestLayer)("skills provenance service", (it) => {
       });
 
       expect((yield* decodeSkillSnapshot(snapshot(1))).fileCount).toBe(1);
-      expect(Exit.isFailure(yield* Effect.exit(decodeSkillSnapshot(snapshot(0))))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decodeSkillSnapshot(snapshot(2))))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(decodeSkillSnapshot(snapshot(0)))));
+      assertTrue(Exit.isFailure(yield* Effect.exit(decodeSkillSnapshot(snapshot(2)))));
     })
   );
 

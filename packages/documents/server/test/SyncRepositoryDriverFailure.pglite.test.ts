@@ -33,7 +33,6 @@ import {
   SyncItemSeed,
 } from "@beep/documents-use-cases/entities/SyncItem/server";
 import { makeDrizzleLayer } from "@beep/postgres";
-import { NonNegativeInt } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
@@ -42,12 +41,13 @@ import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const remoteId = RemoteItemId.make("9001");
 const conflictId = Documents.SyncConflictId.make(1);
-const generationOne = NonNegativeInt.make(1);
+const generationOne = S.Natural.make(1);
 
 const itemSeed = SyncItemSeed.make({
   itemKind: "file",

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { BunHttpServer } from "@effect/platform-bun";
 import { Effect, Ref } from "effect";
 import * as A from "effect/Array";
@@ -84,14 +84,14 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
       tag: O.Option<string> = O.none()
     ) {
       const event = CacheFixtureEvent.make({
-        sequence: NonNegativeInt.make(id),
+        sequence: S.Natural.make(id),
         scenario: current,
         operation,
         role,
         status,
         artifact,
         digest: O.isSome(artifact) && status === 200 ? O.some(yield* hashBytes(body)) : O.none(),
-        bytes: NonNegativeInt.make(body.byteLength),
+        bytes: S.Natural.make(body.byteLength),
         tagPresent: O.isSome(tag),
       });
       yield* Ref.update(events, (all) => (all.length < requestLimit + 1 ? A.append(all, event) : all));

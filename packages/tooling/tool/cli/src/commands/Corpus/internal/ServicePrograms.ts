@@ -37,7 +37,7 @@ import {
 } from "@beep/file-processing/Strategy";
 import { $RepoCliId } from "@beep/identity/packages";
 import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
-import { NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig } from "@beep/tika";
 import { makeUsptoError, normalizeUsptoApplicationNumber, normalizeUsptoPatentNumber, Uspto } from "@beep/uspto";
@@ -481,9 +481,9 @@ const buildCatalogRunSummaries = (
       return total + 1;
     });
     return CorpusCatalogRunSummary.make({
-      distinctDigests: NonNegativeInt.make(A.length(digests)),
-      newDistinctDigests: NonNegativeInt.make(newDistinctDigests),
-      recordCount: NonNegativeInt.make(A.length(runRecords)),
+      distinctDigests: S.Natural.make(A.length(digests)),
+      newDistinctDigests: S.Natural.make(newDistinctDigests),
+      recordCount: S.Natural.make(A.length(runRecords)),
       runLabel,
     });
   });
@@ -750,16 +750,16 @@ const catalogCorpusImpl = Effect.fn("CorpusCommandService.catalogCorpus")(functi
     .pipe(CorpusCommandError.mapError(`Failed writing restoration manifest "${restorationManifestPath}".`));
 
   const summary = CorpusCatalogSummary.make({
-    distinctDigests: NonNegativeInt.make(sourceTotals.distinctDigests),
-    duplicateFiles: NonNegativeInt.make(duplicateTotals.duplicateFiles),
-    duplicateSets: NonNegativeInt.make(duplicateTotals.duplicateSets),
-    matchedRestorations: NonNegativeInt.make(matchedCount),
-    redundantBytes: NonNegativeInt.make(duplicateTotals.redundantBytes),
+    distinctDigests: S.Natural.make(sourceTotals.distinctDigests),
+    duplicateFiles: S.Natural.make(duplicateTotals.duplicateFiles),
+    duplicateSets: S.Natural.make(duplicateTotals.duplicateSets),
+    matchedRestorations: S.Natural.make(matchedCount),
+    redundantBytes: S.Natural.make(duplicateTotals.redundantBytes),
     runs: runSummaries,
-    sourceFiles: NonNegativeInt.make(sourceTotals.sourceFiles),
-    totalBytes: NonNegativeInt.make(sourceTotals.totalBytes),
-    unmatchedContentFiles: NonNegativeInt.make(unmatchedContentCount),
-    unmatchedMetadataFiles: NonNegativeInt.make(unmatchedMetadataCount),
+    sourceFiles: S.Natural.make(sourceTotals.sourceFiles),
+    totalBytes: S.Natural.make(sourceTotals.totalBytes),
+    unmatchedContentFiles: S.Natural.make(unmatchedContentCount),
+    unmatchedMetadataFiles: S.Natural.make(unmatchedMetadataCount),
   });
 
   const summaryJson = yield* encodeCorpusCatalogSummaryJson(summary).pipe(
@@ -1346,8 +1346,8 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   yield* writeCorpusStringFile(path.join(outDir, "failures.jsonl"), jsonlContent(failureLines));
 
   const summary = CorpusExtractSummary.make({
-    childArtifactCount: NonNegativeInt.make(childArtifactCount),
-    duplicatesSkipped: NonNegativeInt.make(duplicatesSkipped),
+    childArtifactCount: S.Natural.make(childArtifactCount),
+    duplicatesSkipped: S.Natural.make(duplicatesSkipped),
     failedCount: coverage.failedCount,
     skippedCount: coverage.skippedCount,
     sourceCount: coverage.sourceCount,
@@ -1434,7 +1434,7 @@ const collectSalvageSourceFiles = Effect.fn("CorpusCommandService.collectSalvage
       mtimeIso: mtime.mtimeIso,
       originPath,
       relativePath: rawRelative,
-      sizeBytes: NonNegativeInt.make(Number(info.size)),
+      sizeBytes: S.Natural.make(Number(info.size)),
       sourceLabel: spec.sourceLabel,
     });
   });
@@ -1685,11 +1685,11 @@ const salvageCorpusImpl = Effect.fn("CorpusCommandService.salvageCorpus")(functi
   const copied = A.length(A.filter(records, (record) => record.copyMode === "copied"));
   const bytesChecked = A.reduce(records, 0, (total, record) => total + record.sizeBytes);
   const summary = CorpusSalvageSummary.make({
-    bytesChecked: NonNegativeInt.make(bytesChecked),
-    matched: NonNegativeInt.make(A.length(records)),
-    mismatched: NonNegativeInt.make(0),
-    missing: NonNegativeInt.make(0),
-    recordsChecked: NonNegativeInt.make(A.length(records)),
+    bytesChecked: S.Natural.make(bytesChecked),
+    matched: S.Natural.make(A.length(records)),
+    mismatched: S.Natural.make(0),
+    missing: S.Natural.make(0),
+    recordsChecked: S.Natural.make(A.length(records)),
   });
   yield* Console.log(
     `corpus salvage: sources=${A.length(sources)} records=${A.length(records)} copied=${copied} provenanceOnly=${provenanceOnly} manifest="${manifestPath}"`
@@ -1751,11 +1751,11 @@ const verifySalvageImpl = Effect.fn("CorpusCommandService.verifySalvage")(functi
   const bytesChecked = A.reduce(results, 0, (total, result) => total + result.sizeBytes);
 
   const summary = CorpusSalvageSummary.make({
-    bytesChecked: NonNegativeInt.make(bytesChecked),
-    matched: NonNegativeInt.make(matched),
-    mismatched: NonNegativeInt.make(mismatched),
-    missing: NonNegativeInt.make(missing),
-    recordsChecked: NonNegativeInt.make(A.length(results)),
+    bytesChecked: S.Natural.make(bytesChecked),
+    matched: S.Natural.make(matched),
+    mismatched: S.Natural.make(mismatched),
+    missing: S.Natural.make(missing),
+    recordsChecked: S.Natural.make(A.length(results)),
   });
   const summaryJson = yield* encodeCorpusSalvageSummaryJson(summary).pipe(
     CorpusCommandError.mapError("Salvage verification summary failed JSON encoding.")
@@ -2064,11 +2064,11 @@ const archiveMoveImpl = Effect.fn("CorpusCommandService.archiveMove")(function* 
   const records = A.map(plans, (plan) =>
     CorpusArchiveMoveManifestRecord.make({
       archivePath: plan.archivePath,
-      copiedCount: NonNegativeInt.make(plan.copiedCount),
-      fileCount: NonNegativeInt.make(A.length(plan.files)),
+      copiedCount: S.Natural.make(plan.copiedCount),
+      fileCount: S.Natural.make(A.length(plan.files)),
       movedAt,
       originPath: plan.originPath,
-      provenanceOnlyCount: NonNegativeInt.make(plan.provenanceOnlyCount),
+      provenanceOnlyCount: S.Natural.make(plan.provenanceOnlyCount),
     })
   );
   const manifestLines = yield* Effect.forEach(records, (record) =>
@@ -2085,10 +2085,10 @@ const archiveMoveImpl = Effect.fn("CorpusCommandService.archiveMove")(function* 
   const copiedRecords = A.reduce(plans, 0, (total, plan) => total + plan.copiedCount);
   const provenanceOnlyRecords = A.reduce(plans, 0, (total, plan) => total + plan.provenanceOnlyCount);
   const summary = CorpusArchiveMoveSummary.make({
-    copiedRecords: NonNegativeInt.make(copiedRecords),
-    filesCovered: NonNegativeInt.make(filesCovered),
-    provenanceOnlyRecords: NonNegativeInt.make(provenanceOnlyRecords),
-    sourcesMoved: NonNegativeInt.make(A.length(plans)),
+    copiedRecords: S.Natural.make(copiedRecords),
+    filesCovered: S.Natural.make(filesCovered),
+    provenanceOnlyRecords: S.Natural.make(provenanceOnlyRecords),
+    sourcesMoved: S.Natural.make(A.length(plans)),
   });
   yield* Console.log(
     `corpus archive-move: sources=${summary.sourcesMoved} files=${summary.filesCovered} copied=${summary.copiedRecords} provenanceOnly=${summary.provenanceOnlyRecords} manifest="${manifestPath}"`
@@ -2448,7 +2448,7 @@ const organizeRecordFor = (
       docketFamily: O.fromUndefinedOr(row.docketFamily),
       organizedRelativePath: O.fromUndefinedOr(organizedRelative),
     }),
-    ...O.getSomesStruct({ versionIndex: O.map(O.fromUndefinedOr(versionIndex), NonNegativeInt.make) }),
+    ...O.getSomesStruct({ versionIndex: O.map(O.fromUndefinedOr(versionIndex), S.Natural.make) }),
   });
 
 const writeOrganizedTable = Effect.fn("CorpusCommandService.writeOrganizedTable")(function* (
@@ -2496,16 +2496,16 @@ const buildOrganizeSummary = (input: {
     A.flatMap(input.plan, (row) => (row.docketFamily === undefined ? [] : [row.docketFamily]))
   );
   return CorpusOrganizeSummary.make({
-    canonicalArtifacts: NonNegativeInt.make(A.length(input.plan)),
-    clientFiles: NonNegativeInt.make(input.counts.client),
-    docketFamilies: NonNegativeInt.make(docketFamilies.size),
-    docketFiles: NonNegativeInt.make(input.counts.docket),
-    duplicatesSkipped: NonNegativeInt.make(input.duplicatesSkipped),
-    emailArchives: NonNegativeInt.make(input.counts["email-archive"]),
-    emailExportFiles: NonNegativeInt.make(input.counts["email-export"]),
-    restoredNames: NonNegativeInt.make(A.length(A.filter(input.records, (record) => record.restoredFromRecycleBin))),
-    unsortedFiles: NonNegativeInt.make(input.counts.unsorted),
-    versionGroups: NonNegativeInt.make(input.multiVersionGroups),
+    canonicalArtifacts: S.Natural.make(A.length(input.plan)),
+    clientFiles: S.Natural.make(input.counts.client),
+    docketFamilies: S.Natural.make(docketFamilies.size),
+    docketFiles: S.Natural.make(input.counts.docket),
+    duplicatesSkipped: S.Natural.make(input.duplicatesSkipped),
+    emailArchives: S.Natural.make(input.counts["email-archive"]),
+    emailExportFiles: S.Natural.make(input.counts["email-export"]),
+    restoredNames: S.Natural.make(A.length(A.filter(input.records, (record) => record.restoredFromRecycleBin))),
+    unsortedFiles: S.Natural.make(input.counts.unsorted),
+    versionGroups: S.Natural.make(input.multiVersionGroups),
   });
 };
 
@@ -2711,16 +2711,14 @@ const buildFamilyByTextName = Effect.fn("CorpusCommandService.buildFamilyByTextN
 const buildEnrichSummary = (records: ReadonlyArray<CorpusEnrichmentRecord>): CorpusEnrichSummary => {
   const resolvedRecords = A.filter(records, (record) => record.status === "resolved");
   return CorpusEnrichSummary.make({
-    applicationCandidates: NonNegativeInt.make(
+    applicationCandidates: S.Natural.make(
       A.length(A.filter(records, (record) => record.candidateKind === "application"))
     ),
-    failedLookups: NonNegativeInt.make(A.length(A.filter(records, (record) => record.status === "failed"))),
-    familyAnchors: NonNegativeInt.make(
-      A.length(A.filter(resolvedRecords, (record) => A.length(record.docketFamilies) > 0))
-    ),
-    notFound: NonNegativeInt.make(A.length(A.filter(records, (record) => record.status === "not-found"))),
-    patentCandidates: NonNegativeInt.make(A.length(A.filter(records, (record) => record.candidateKind === "patent"))),
-    resolved: NonNegativeInt.make(A.length(resolvedRecords)),
+    failedLookups: S.Natural.make(A.length(A.filter(records, (record) => record.status === "failed"))),
+    familyAnchors: S.Natural.make(A.length(A.filter(resolvedRecords, (record) => A.length(record.docketFamilies) > 0))),
+    notFound: S.Natural.make(A.length(A.filter(records, (record) => record.status === "not-found"))),
+    patentCandidates: S.Natural.make(A.length(A.filter(records, (record) => record.candidateKind === "patent"))),
+    resolved: S.Natural.make(A.length(resolvedRecords)),
   });
 };
 
@@ -2802,7 +2800,7 @@ const enrichCorpusImpl = Effect.fn("CorpusCommandService.enrichCorpus")(function
             candidate: normalized,
             candidateKind: candidate.kind,
             docketFamilies: [...candidate.docketFamilies].sort(),
-            occurrenceCount: NonNegativeInt.make(candidate.occurrenceCount),
+            occurrenceCount: S.Natural.make(candidate.occurrenceCount),
             parentApplicationNumbers: [],
             status,
           });
@@ -2817,7 +2815,7 @@ const enrichCorpusImpl = Effect.fn("CorpusCommandService.enrichCorpus")(function
           candidate: normalized,
           candidateKind: candidate.kind,
           docketFamilies: [...candidate.docketFamilies].sort(),
-          occurrenceCount: NonNegativeInt.make(candidate.occurrenceCount),
+          occurrenceCount: S.Natural.make(candidate.occurrenceCount),
           parentApplicationNumbers: continuity.parentApplicationNumbers,
           status: "resolved",
           ...O.getSomesStruct({

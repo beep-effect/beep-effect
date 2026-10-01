@@ -7,6 +7,7 @@
 import { $BrandId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { HexColor } from "@beep/schema/Color";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $BrandId.create("Brand.schema");
@@ -66,7 +67,7 @@ export type PrintableText = typeof PrintableText.Type;
  * ```ts
  * import { ScaleStep } from "@beep/brand"
  *
- * console.log(ScaleStep.Options.length)
+ * console.log(ScaleStep.literals.length)
  * ```
  *
  * @category models
@@ -101,7 +102,7 @@ export type ScaleStep = typeof ScaleStep.Type;
  * ```ts
  * import { SurfaceStep } from "@beep/brand"
  *
- * console.log(SurfaceStep.Options)
+ * console.log(SurfaceStep.literals)
  * ```
  *
  * @category models
@@ -745,7 +746,7 @@ export class MarkSvgRequest extends S.Class<MarkSvgRequest>($I`MarkSvgRequest`)(
     }),
     paint: MarkPaint.annotateKey({ description: "Colors for the mark." }),
     ground: S.OptionFromOptionalKey(MarkGround)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Optional ground rectangle behind the mark." }),
   },
   $I.annote("MarkSvgRequest", { description: "Request to render the mark as a standalone SVG document." })

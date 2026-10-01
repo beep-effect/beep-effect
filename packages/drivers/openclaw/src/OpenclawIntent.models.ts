@@ -12,6 +12,8 @@
 
 import { $OpenclawId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -91,7 +93,7 @@ export type OpenclawSecretReference = typeof OpenclawSecretReference.Type;
  * ```ts
  * import { OpenclawTargetVersion } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawTargetVersion.Options) // ["2026.7.1-2"]
+ * console.log(OpenclawTargetVersion.literals) // ["2026.7.1-2"]
  * ```
  *
  * @category models
@@ -206,7 +208,7 @@ export type OpenclawGatewayPort = typeof OpenclawGatewayPort.Type;
  * ```ts
  * import { OpenclawGatewayBind } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawGatewayBind.Options) // ["loopback"]
+ * console.log(OpenclawGatewayBind.literals) // ["loopback"]
  * ```
  *
  * @category models
@@ -257,7 +259,10 @@ export class OpenclawGatewayIntent extends S.Class<OpenclawGatewayIntent>($I`Ope
     authTokenRef: OpenclawSecretReference.annotateKey({
       description: "op:// reference resolved at runtime into the gateway auth token.",
     }),
-    bind: OpenclawGatewayBind.pipe(SchemaUtils.withKeyDefaults("loopback")).annotateKey({
+    bind: OpenclawGatewayBind.pipe(
+      S.withConstructorDefault(Effect.succeed("loopback" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("loopback" as const))
+    ).annotateKey({
       description: "Gateway network bind policy; managed deployments stay on loopback.",
     }),
     port: OpenclawGatewayPort.annotateKey({
@@ -276,7 +281,7 @@ export class OpenclawGatewayIntent extends S.Class<OpenclawGatewayIntent>($I`Ope
  * ```ts
  * import { OpenclawConfidentialityPolicy } from "@beep/openclaw"
  *
- * console.log(OpenclawConfidentialityPolicy.Options) // ["advisory"]
+ * console.log(OpenclawConfidentialityPolicy.literals) // ["advisory"]
  * ```
  *
  * @category models
@@ -312,7 +317,7 @@ export type OpenclawConfidentialityPolicy = typeof OpenclawConfidentialityPolicy
  * ```ts
  * import { OpenclawClientDataPolicy } from "@beep/openclaw"
  *
- * console.log(OpenclawClientDataPolicy.Options) // ["synthetic-only"]
+ * console.log(OpenclawClientDataPolicy.literals) // ["synthetic-only"]
  * ```
  *
  * @category models
@@ -450,7 +455,7 @@ export class OpenclawAgentIntent extends S.Class<OpenclawAgentIntent>($I`Opencla
  * ```ts
  * import { OpenclawProviderApi } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawProviderApi.Options) // ["ollama", "openai-compat"]
+ * console.log(OpenclawProviderApi.literals) // ["ollama", "openai-compat"]
  * ```
  *
  * @category models
@@ -486,7 +491,7 @@ export type OpenclawProviderApi = typeof OpenclawProviderApi.Type;
  * ```ts
  * import { OpenclawModelInputKind } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawModelInputKind.Options) // ["text", "image"]
+ * console.log(OpenclawModelInputKind.literals) // ["text", "image"]
  * ```
  *
  * @category models
@@ -640,7 +645,7 @@ export type OpenclawProviderApiKey = typeof OpenclawProviderApiKey.Type;
  */
 export class OpenclawModelProviderParams extends S.Class<OpenclawModelProviderParams>($I`OpenclawModelProviderParams`)(
   {
-    numCtx: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    numCtx: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Context window override (rendered as params.num_ctx), when declared.",
     }),
   },
@@ -724,7 +729,7 @@ export class OpenclawModelProviderIntent extends S.Class<OpenclawModelProviderIn
     ).annotateKey({
       description: "http(s) base URL of the provider endpoint.",
     }),
-    contextTokens: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    contextTokens: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Declared provider context token budget, when known.",
     }),
     id: S.NonEmptyString.annotateKey({
@@ -733,9 +738,11 @@ export class OpenclawModelProviderIntent extends S.Class<OpenclawModelProviderIn
     models: S.Array(OpenclawModelDeclaration).annotateKey({
       description: "Models declared under this provider.",
     }),
-    params: S.OptionFromOptionalKey(OpenclawModelProviderParams).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional tuning parameters forwarded to the provider.",
-    }),
+    params: S.OptionFromOptionalKey(OpenclawModelProviderParams)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Optional tuning parameters forwarded to the provider.",
+      }),
   }).check(
     S.makeFilter((provider) => provider.apiKey._tag !== "SecretRef" || Str.startsWith("https://")(provider.baseUrl), {
       identifier: "OpenclawSecretProviderHttpsInvariant",
@@ -756,7 +763,7 @@ export class OpenclawModelProviderIntent extends S.Class<OpenclawModelProviderIn
  * ```ts
  * import { OpenclawAuthProfileMode } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawAuthProfileMode.Options) // ["api_key", "oauth"]
+ * console.log(OpenclawAuthProfileMode.literals) // ["api_key", "oauth"]
  * ```
  *
  * @category models
@@ -827,7 +834,7 @@ export class OpenclawAuthProfileIntent extends S.Class<OpenclawAuthProfileIntent
  * ```ts
  * import { OpenclawTelegramDmPolicy } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawTelegramDmPolicy.Options) // ["pairing", "disabled", "open"]
+ * console.log(OpenclawTelegramDmPolicy.literals) // ["pairing", "disabled", "open"]
  * ```
  *
  * @category models
@@ -863,7 +870,7 @@ export type OpenclawTelegramDmPolicy = typeof OpenclawTelegramDmPolicy.Type;
  * ```ts
  * import { OpenclawTelegramGroupPolicy } from "@beep/openclaw/OpenclawIntent.models"
  *
- * console.log(OpenclawTelegramGroupPolicy.Options) // ["open", "disabled"]
+ * console.log(OpenclawTelegramGroupPolicy.literals) // ["open", "disabled"]
  * ```
  *
  * @category models
@@ -909,9 +916,11 @@ export type OpenclawTelegramGroupPolicy = typeof OpenclawTelegramGroupPolicy.Typ
  */
 export class OpenclawTelegramGroupIntent extends S.Class<OpenclawTelegramGroupIntent>($I`OpenclawTelegramGroupIntent`)(
   {
-    groupPolicy: S.OptionFromOptionalKey(OpenclawTelegramGroupPolicy).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Per-group policy override, when declared.",
-    }),
+    groupPolicy: S.OptionFromOptionalKey(OpenclawTelegramGroupPolicy)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Per-group policy override, when declared.",
+      }),
     requireMention: S.Boolean.annotateKey({
       description: "Whether the bot only reacts to messages that mention it.",
     }),
@@ -921,6 +930,7 @@ export class OpenclawTelegramGroupIntent extends S.Class<OpenclawTelegramGroupIn
   })
 ) {}
 
+const openclawTelegramIntentGroupsDefault = R.empty();
 /**
  * Desired Telegram channel configuration.
  *
@@ -944,24 +954,32 @@ export class OpenclawTelegramIntent extends S.Class<OpenclawTelegramIntent>($I`O
     botTokenRef: OpenclawSecretReference.annotateKey({
       description: "op:// reference resolved at runtime into the Telegram bot token.",
     }),
-    defaultTo: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Default send target (e.g. a group username), when declared.",
-    }),
+    defaultTo: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Default send target (e.g. a group username), when declared.",
+      }),
     dmPolicy: OpenclawTelegramDmPolicy.annotateKey({
       description: "Direct-message policy for the Telegram channel.",
     }),
     groupPolicy: OpenclawTelegramGroupPolicy.annotateKey({
       description: "Default group participation policy.",
     }),
-    groups: S.Record(S.String, OpenclawTelegramGroupIntent).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "Per-group behavior keyed by Telegram group id.",
-    }),
+    groups: S.Record(S.String, OpenclawTelegramGroupIntent)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawTelegramIntentGroupsDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawTelegramIntentGroupsDefault))
+      )
+      .annotateKey({
+        description: "Per-group behavior keyed by Telegram group id.",
+      }),
   },
   $I.annote("OpenclawTelegramIntent", {
     description: "Desired Telegram channel configuration with a secret-referenced bot token.",
   })
 ) {}
 
+const openclawSecretsResolverIntentPassEnvDefault = ["OP_SERVICE_ACCOUNT_TOKEN", "PATH"];
 /**
  * Exec-provider secret resolver wiring for op:// references.
  *
@@ -991,7 +1009,10 @@ export class OpenclawSecretsResolverIntent extends S.Class<OpenclawSecretsResolv
       description: "Absolute path of the pinned 1Password CLI binary.",
     }),
     passEnv: S.Array(S.NonEmptyString)
-      .pipe(SchemaUtils.withKeyDefaults(["OP_SERVICE_ACCOUNT_TOKEN", "PATH"]))
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawSecretsResolverIntentPassEnvDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawSecretsResolverIntentPassEnvDefault))
+      )
       .annotateKey({
         description: "Environment variable names forwarded to the resolver process.",
       }),
@@ -1004,6 +1025,7 @@ export class OpenclawSecretsResolverIntent extends S.Class<OpenclawSecretsResolv
   })
 ) {}
 
+const openclawGuardrailsIntentToolsDenyDefault = ["*"];
 /**
  * Guardrails applied to every rendered deployment.
  *
@@ -1021,7 +1043,10 @@ export class OpenclawSecretsResolverIntent extends S.Class<OpenclawSecretsResolv
 export class OpenclawGuardrailsIntent extends S.Class<OpenclawGuardrailsIntent>($I`OpenclawGuardrailsIntent`)(
   {
     toolsDeny: S.Array(S.String)
-      .pipe(SchemaUtils.withKeyDefaults(["*"]))
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawGuardrailsIntentToolsDenyDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawGuardrailsIntentToolsDenyDefault))
+      )
       .annotateKey({
         description: "Tool deny-list rendered into tools.deny; defaults to deny-all.",
       }),
@@ -1098,6 +1123,9 @@ export class OpenclawLoggingIntent extends S.Class<OpenclawLoggingIntent>($I`Ope
   })
 ) {}
 
+const openclawDeploymentIntentAuthProfilesDefault = A.empty();
+const openclawDeploymentIntentGuardrailsDefault = OpenclawGuardrailsIntent.make({});
+const openclawDeploymentIntentSkillsDefault = A.empty();
 /**
  * Root desired-intent document for one OpenClaw deployment.
  *
@@ -1158,9 +1186,14 @@ export class OpenclawDeploymentIntent extends S.Class<OpenclawDeploymentIntent>(
     agent: OpenclawAgentIntent.annotateKey({
       description: "Agent registered with the deployment.",
     }),
-    authProfiles: S.Array(OpenclawAuthProfileIntent).pipe(SchemaUtils.withKeyDefaults([])).annotateKey({
-      description: "Non-secret auth.profiles metadata entries.",
-    }),
+    authProfiles: S.Array(OpenclawAuthProfileIntent)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawDeploymentIntentAuthProfilesDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawDeploymentIntentAuthProfilesDefault))
+      )
+      .annotateKey({
+        description: "Non-secret auth.profiles metadata entries.",
+      }),
     controlUi: OpenclawControlUiIntent.annotateKey({
       description: "Loopback Control UI configuration.",
     }),
@@ -1168,7 +1201,8 @@ export class OpenclawDeploymentIntent extends S.Class<OpenclawDeploymentIntent>(
       description: "Gateway listener and auth-token configuration.",
     }),
     guardrails: OpenclawGuardrailsIntent.pipe(
-      SchemaUtils.withKeyDefaults(OpenclawGuardrailsIntent.make({}))
+      S.withConstructorDefault(Effect.succeed(openclawDeploymentIntentGuardrailsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openclawDeploymentIntentGuardrailsDefault))
     ).annotateKey({
       description: "Deployment guardrails; defaults to deny-all tools.",
     }),
@@ -1187,12 +1221,19 @@ export class OpenclawDeploymentIntent extends S.Class<OpenclawDeploymentIntent>(
     secretsResolver: OpenclawSecretsResolverIntent.annotateKey({
       description: "Exec-provider secret resolver wiring for op:// references.",
     }),
-    skills: S.Array(OpenclawSkillPin).pipe(SchemaUtils.withKeyDefaults([])).annotateKey({
-      description: "Pinned skill artifacts consumed by the generation engine, never by the render adapter.",
-    }),
-    telegram: S.OptionFromOptionalKey(OpenclawTelegramIntent).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Telegram channel configuration, when the deployment enables it.",
-    }),
+    skills: S.Array(OpenclawSkillPin)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawDeploymentIntentSkillsDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawDeploymentIntentSkillsDefault))
+      )
+      .annotateKey({
+        description: "Pinned skill artifacts consumed by the generation engine, never by the render adapter.",
+      }),
+    telegram: S.OptionFromOptionalKey(OpenclawTelegramIntent)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Telegram channel configuration, when the deployment enables it.",
+      }),
   },
   $I.annote("OpenclawDeploymentIntent", {
     description: "Root desired-intent document for one OpenClaw deployment.",

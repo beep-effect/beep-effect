@@ -70,7 +70,7 @@ export const QaCommandLayers = Layer.mergeAll(
   SessionStore.layer
 ).pipe(Layer.provideMerge(Layer.mergeAll(FFmpegLive, Witness.layer)));
 
-const laneFlag = Flag.Literals("lane", CaptureLane.Options).pipe(
+const laneFlag = Flag.Literals("lane", CaptureLane.literals).pipe(
   Flag.withDescription("Recording lane: playwright drives a headless harness, obs records a real window"),
   Flag.withDefault(CaptureLane.Enum.playwright)
 );

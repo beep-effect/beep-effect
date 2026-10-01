@@ -1,5 +1,6 @@
 {
-  "$schema": "https://v2-11-4.turborepo.dev/schema.json",
+  "$schema": "https://v2-11-5.turborepo.dev/schema.json",
+  "agentGuidance": false,
   "futureFlags": {
     "affectedUsingTaskInputs": true,
     "filterUsingTasks": true,
@@ -868,6 +869,7 @@
         "!**/src-tauri/gen/**",
         "!**/src-tauri/target/**",
         "!packages/drivers/venice-ai/swagger.yaml",
+        "!packages/drivers/venice-ai/test/fixtures/swagger.json",
         "!packages/foundation/modeling/html/data/**",
         "!packages/foundation/modeling/html/src/internal/Html.language-tag-registry.generated.ts",
         "!patches/**"

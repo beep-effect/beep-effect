@@ -70,3 +70,32 @@ identifying error text.
   production occurrences, the largest SchemaUtils surface.
 - **Would have prevented it:** census by exported symbol from the barrel's
   export list, never by file name.
+
+## 2026-09-28 — A session account switch stalled a benchmark lane
+
+- **Doing:** Lane C running the Pandoc spike while the orchestrating session
+  re-authenticated.
+- **Evidence:** the lane went idle after "waiting for the recursive run to
+  finish", and its report was never written; the first PR merged without it
+  and the lane had to be resumed on a follow-up branch.
+- **Would have prevented it:** lanes write partial reports to disk before any
+  long-running step, so a stall loses numbers, not the whole write-up.
+
+## 2026-09-28 — Spike output directory is not git-ignored
+
+- **Doing:** Lane C writing AOT build output for the spikes.
+- **Evidence:** `research/tools/.tmp/` is not ignored, so AOT modules went to
+  the OS temp dir instead. The first `Build.build` smoke also deadlocked on a
+  self-import under top-level await until the schemas moved to their own module.
+- **Would have prevented it:** an ignored scratch directory for exploration
+  tools, and a note in the spike harness on keeping `Build` targets in a
+  separate module.
+
+## 2026-09-28 — Benchmarks ran on a loaded workstation
+
+- **Doing:** taking the D6 spike numbers.
+- **Evidence:** load averaged 33-66 across both runs (other sessions), so only
+  per-pass ratios against the interpreter are findings; absolute ops/sec are
+  inflated.
+- **Would have prevented it:** a scheduler admission slot for benchmark lanes,
+  or running spikes in a quiet window.

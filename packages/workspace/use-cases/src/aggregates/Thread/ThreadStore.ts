@@ -13,14 +13,12 @@
 
 import { $WorkspaceUseCasesId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
-import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Message, MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Turn } from "@beep/workspace-domain/entities/Turn";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import type { Thread } from "@beep/workspace-domain/entities/Thread";
-import type { Effect } from "effect";
 import type { ThreadStoreConflict, ThreadStoreNotFound, ThreadStoreUnavailable } from "./Thread.errors.ts";
 import type { ThreadTimeline } from "./ThreadTimeline.ts";
 
@@ -97,7 +95,7 @@ export class AppendTurnInput extends S.Class<AppendTurnInput>($I`AppendTurnInput
     content: Document.annotateKey({
       description: "Message content appended as the turn's first visible message.",
     }),
-    parentTurnId: S.Option(WorkspaceIdentity.TurnId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    parentTurnId: S.Option(WorkspaceIdentity.TurnId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional parent turn when appending a branch/edit.",
     }),
     role: MessageRole.annotateKey({

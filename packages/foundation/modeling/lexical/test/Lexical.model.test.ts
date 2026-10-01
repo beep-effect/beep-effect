@@ -23,7 +23,6 @@ import {
   TextNode,
 } from "@beep/lexical-schema";
 import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
-import { PosInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -35,12 +34,15 @@ import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { createEditor } from "lexical";
 import type { SerializedTableCellNode } from "@lexical/table";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeEditorStateWireFromJson = S.decodeEffect(EditorStateWireFromJson);
 const decodeEditorStateFromJsonResult = S.decodeResult(EditorStateFromJson, { onExcessProperty: "error" });
@@ -635,9 +637,9 @@ describe("Lexical.model", { concurrent: false }, () => {
           };
           const source = yield* UnknownFromJsonString.encodeEffect(state);
           const canonicalTag = ListType.$match(listType, {
-            number: ListTag.thunk.ol,
-            bullet: ListTag.thunk.ul,
-            check: ListTag.thunk.ul,
+            number: F.constant(ListTag.Enum.ol),
+            bullet: F.constant(ListTag.Enum.ul),
+            check: F.constant(ListTag.Enum.ul),
           });
           const semanticNode = yield* decodeUnknownListNode({ ...node, tag: canonicalTag });
           const semanticMismatch = { ...semanticNode, tag };
@@ -672,9 +674,9 @@ describe("Lexical.model", { concurrent: false }, () => {
     { node: ListNodeArbitrary },
     ({ node }) => {
       const expectedTag = ListType.$match(node.listType, {
-        number: ListTag.thunk.ol,
-        bullet: ListTag.thunk.ul,
-        check: ListTag.thunk.ul,
+        number: F.constant(ListTag.Enum.ol),
+        bullet: F.constant(ListTag.Enum.ul),
+        check: F.constant(ListTag.Enum.ul),
       });
       expect(node.tag).toBe(expectedTag);
     },

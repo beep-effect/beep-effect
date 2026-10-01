@@ -21,10 +21,11 @@ import {
   validationRequirementsForGoalDoctorFinding,
 } from "@beep/repo-cli/test/Goals";
 import { findRepoRoot } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
-import { assertExitSuccess, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import { describe, expect } from "@effect/vitest";
+import { assertExitSuccess, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -490,7 +491,7 @@ describe("goals plan validation mapping", () => {
   ];
 
   it("maps every blocking doctor finding kind to at least one validation requirement", () => {
-    for (const kind of GoalDoctorFindingKind.Options) {
+    for (const kind of GoalDoctorFindingKind.literals) {
       const requirements = validationRequirementsForGoalDoctorFinding(kind);
       if (A.contains(BLOCKING_KINDS, kind)) {
         expect(A.isReadonlyArrayNonEmpty(requirements)).toBe(true);
@@ -618,7 +619,7 @@ describe("goals bootstrap command gate", () => {
                 "--json",
               ])
             );
-            expect(Exit.isSuccess(happy)).toBe(true);
+            assertTrue(Exit.isSuccess(happy));
           })
         ).pipe(provideScopedLayer(commandTestLayer))
       ),
@@ -647,12 +648,12 @@ describe("goals adopt command gate", () => {
             expectReportedExit(missingPlan);
 
             const happy = yield* Effect.exit(runGoalsCommand(["adopt", "fixture-packet", "--plan", "--json"]));
-            expect(Exit.isSuccess(happy)).toBe(true);
+            assertTrue(Exit.isSuccess(happy));
 
             const human = yield* Effect.exit(
               runGoalsCommand(["adopt", "fixture-packet", "--plan", "--toward", "standard-delivery"])
             );
-            expect(Exit.isSuccess(human)).toBe(true);
+            assertTrue(Exit.isSuccess(human));
 
             const notFound = yield* Effect.exit(runGoalsCommand(["adopt", "missing-packet", "--plan"]));
             expectReportedExit(notFound);

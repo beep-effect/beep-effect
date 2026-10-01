@@ -88,6 +88,7 @@ const snapshot = (
     mergeable: true,
     mergeStateAcceptable: true,
     reviewDecisionAcceptable: true,
+    closeoutGatesPassed: true,
     greptileScore: O.none(),
   });
   const ready = criteria.prOpen && bound && criteria.requiredChecksGreen && threads;
@@ -121,7 +122,7 @@ const snapshot = (
         ready,
         criteria,
         failing: A.findFirst(
-          YeetMergeReadyCriterion.Options,
+          YeetMergeReadyCriterion.literals,
           (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
         ),
       })
@@ -787,7 +788,7 @@ it.layer(platform, { timeout: "30 seconds" })((it) =>
 
 // The triage line promises further polling only where the loop keeps polling:
 // an attached run stops on the same poll with `wave`, so its line must not.
-for (const attachment of YeetMonitorAttachment.Options)
+for (const attachment of YeetMonitorAttachment.literals)
   it.layer(platform, { timeout: "30 seconds" })((it) =>
     it.effect(`${attachment}: the required-red line matches whether the loop keeps polling`, () =>
       fixture((root) =>
@@ -881,7 +882,7 @@ describe("attached wave return", () => {
     assertNone(yeetAttachedMonitorRerunCommand(["bun", "/repo/bin.ts", "yeet", "monitor", "--base", "it's"]));
     assertNone(yeetAttachedMonitorRerunCommand(["bun", "/repo/vitest.mjs", "run", "test"]));
   });
-  for (const attachment of YeetMonitorAttachment.Options)
+  for (const attachment of YeetMonitorAttachment.literals)
     it.layer(platform, { timeout: "30 seconds" })((it) =>
       it.effect(`${attachment}: green then a required red`, () =>
         fixture((root) =>
@@ -926,7 +927,7 @@ describe("attached wave return", () => {
 });
 
 it("uses one complete exit table and read-only automatic closeout options", () => {
-  expect(A.map(yeetMonitorExitTable, (row) => row.terminal)).toEqual(YeetMonitorTerminalState.Options);
+  expect(A.map(yeetMonitorExitTable, (row) => row.terminal)).toEqual(YeetMonitorTerminalState.literals);
   for (const row of yeetMonitorExitTable)
     expect(row.exitCode).toBe(
       row.terminal === "ready" || row.terminal === "merged" ? 0 : row.terminal === "wave" ? 2 : 1

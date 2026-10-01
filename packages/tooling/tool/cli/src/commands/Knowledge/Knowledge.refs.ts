@@ -13,7 +13,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { Effect, flow, HashMap, HashSet, Match, MutableHashMap, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -62,7 +62,7 @@ const nfc = Str.normalize("NFC");
  * import { KnowledgeRefKind } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefKind.is["repo-path"]("repo-path")) // true
- * console.log(KnowledgeRefKind.Options.length) // 4
+ * console.log(KnowledgeRefKind.literals.length) // 4
  * ```
  *
  * @category models
@@ -116,7 +116,7 @@ export const isKnowledgeRefKind = S.is(KnowledgeRefKind);
  * import { KnowledgeHostAnchor } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeHostAnchor.is["home-relative"]("home-relative")) // true
- * console.log(KnowledgeHostAnchor.Options.length) // 5
+ * console.log(KnowledgeHostAnchor.literals.length) // 5
  * ```
  *
  * @category models
@@ -175,7 +175,7 @@ export const isKnowledgeHostAnchor = S.is(KnowledgeHostAnchor);
  * import { KnowledgeRefSurface } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefSurface.is.archival("archival")) // true
- * console.log(KnowledgeRefSurface.Options.length) // 2
+ * console.log(KnowledgeRefSurface.literals.length) // 2
  * ```
  *
  * @category models
@@ -228,7 +228,7 @@ export const isKnowledgeRefSurface = S.is(KnowledgeRefSurface);
  * import { KnowledgeRefSurfaceFilter } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefSurfaceFilter.is.all("all")) // true
- * console.log(KnowledgeRefSurfaceFilter.Options.length) // 3
+ * console.log(KnowledgeRefSurfaceFilter.literals.length) // 3
  * ```
  *
  * @see {@link KnowledgeRefSurface} for the per-observation disposition it filters on.
@@ -266,7 +266,7 @@ export type KnowledgeRefSurfaceFilter = typeof KnowledgeRefSurfaceFilter.Type;
  * import { KnowledgeRefClassification } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefClassification.is["broken-target"]("broken-target")) // true
- * console.log(KnowledgeRefClassification.Options.length) // 12
+ * console.log(KnowledgeRefClassification.literals.length) // 12
  * ```
  *
  * @see {@link classifyKnowledgeRef} for the ordered rule table that assigns them.
@@ -337,7 +337,7 @@ export const isKnowledgeRefClassification = S.is(KnowledgeRefClassification);
  * import { KnowledgeRefQuietClassification } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefQuietClassification.is.verified("verified")) // true
- * console.log(KnowledgeRefQuietClassification.Options.length) // 5
+ * console.log(KnowledgeRefQuietClassification.literals.length) // 5
  * ```
  *
  * @see {@link isKnowledgeRefQuietClassification} for the derived guard the listing filters with.
@@ -398,7 +398,7 @@ export const isKnowledgeRefQuietClassification = S.is(KnowledgeRefQuietClassific
  * import { KnowledgeRefResolutionStatus } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeRefResolutionStatus.is["not-applicable"]("not-applicable")) // true
- * console.log(KnowledgeRefResolutionStatus.Options.length) // 5
+ * console.log(KnowledgeRefResolutionStatus.literals.length) // 5
  * ```
  *
  * @category models
@@ -440,7 +440,7 @@ export type KnowledgeRefResolutionStatus = typeof KnowledgeRefResolutionStatus.T
  * import { KnowledgeSkipReason } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * console.log(KnowledgeSkipReason.is.symlink("symlink")) // true
- * console.log(KnowledgeSkipReason.Options.length) // 3
+ * console.log(KnowledgeSkipReason.literals.length) // 3
  * ```
  *
  * @category models
@@ -937,7 +937,6 @@ export class KnowledgeSkippedBlob extends S.Class<KnowledgeSkippedBlob>($I`Knowl
  *   KnowledgeRefObservation,
  * } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  * import { KnowledgeFindingLocation } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
  * const observation = KnowledgeRefObservation.make({
@@ -946,7 +945,7 @@ export class KnowledgeSkippedBlob extends S.Class<KnowledgeSkippedBlob>($I`Knowl
  *   ),
  *   ref: KnowledgeHostPathRef.make({ raw: "/tmp/portless", anchor: "temp" }),
  *   documentId: ".claude/skills/portless/SKILL.md",
- *   occurrence: NonNegativeInt.make(0),
+ *   occurrence: S.Natural.make(0),
  *   surface: "live",
  *   classification: "documented-temp-convention",
  *   resolution: KnowledgeRefNotApplicable.make({}),
@@ -965,7 +964,7 @@ export class KnowledgeRefObservation extends S.Class<KnowledgeRefObservation>($I
     refId: KnowledgeRefId,
     ref: KnowledgeRef,
     documentId: S.String,
-    occurrence: NonNegativeInt,
+    occurrence: S.Natural,
     surface: KnowledgeRefSurface,
     classification: KnowledgeRefClassification,
     resolution: KnowledgeRefResolution,
@@ -3039,14 +3038,14 @@ export const scanKnowledgeRefsTree = Effect.fn("Knowledge.scanRefsTree")(functio
       refId,
       ref: candidate.ref,
       documentId,
-      occurrence: NonNegativeInt.make(occurrence),
+      occurrence: S.Natural.make(occurrence),
       surface: candidate.surface,
       classification,
       resolution,
       location: KnowledgeFindingLocation.make({
         path: candidate.documentPath,
-        line: NonNegativeInt.make(candidate.line),
-        column: NonNegativeInt.make(candidate.column),
+        line: S.Natural.make(candidate.line),
+        column: S.Natural.make(candidate.column),
       }),
       remediation: knowledgeRefRemediation(classification, resolution),
     });

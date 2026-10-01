@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ArtifactId, ArtifactReference, OperationId } from "../Artifact/Artifact.schema.ts";
 import { FileFormatFamily, FileProcessingSkipReason } from "../Strategy/Strategy.schema.ts";
@@ -15,8 +15,8 @@ const $I = $FileProcessingId.create("Extraction");
 
 class TextSpanBase extends S.Class<TextSpanBase>($I`TextSpan`)(
   {
-    endOffset: NonNegativeInt,
-    startOffset: NonNegativeInt,
+    endOffset: S.Natural,
+    startOffset: S.Natural,
     text: S.String,
   },
   $I.annote("TextSpan", {
@@ -32,7 +32,7 @@ class TextSpanBase extends S.Class<TextSpanBase>($I`TextSpan`)(
  * ```ts import.meta.vitest name="Check skipped status option"
  * import { SourceProcessingStatus } from "@beep/file-processing/Extraction"
  *
- * SourceProcessingStatus.Options.includes("skipped") // => true
+ * SourceProcessingStatus.literals.includes("skipped") // => true
  * ```
  *
  * @category schemas
@@ -102,10 +102,10 @@ export class TextArtifactReference extends S.Class<TextArtifactReference>($I`Tex
  * **Example** (Make text span value)
  *
  * ```ts import.meta.vitest name="Make text span value"
+ * import * as S from "effect/Schema"
  * import { TextSpan } from "@beep/file-processing/Extraction"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const span = TextSpan.make({ endOffset: NonNegativeInt.make(5), startOffset: NonNegativeInt.make(0), text: "hello" })
+ * const span = TextSpan.make({ endOffset: S.Natural.make(5), startOffset: S.Natural.make(0), text: "hello" })
  * span.text // => "hello"
  * ```
  *
@@ -127,10 +127,10 @@ export const TextSpan = TextSpanBase.check(
  * **Example** (Type text span value)
  *
  * ```ts import.meta.vitest name="Type text span value"
+ * import * as S from "effect/Schema"
  * import { TextSpan } from "@beep/file-processing/Extraction"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const span: TextSpan = TextSpan.make({ endOffset: NonNegativeInt.make(5), startOffset: NonNegativeInt.make(0), text: "hello" })
+ * const span: TextSpan = TextSpan.make({ endOffset: S.Natural.make(5), startOffset: S.Natural.make(0), text: "hello" })
  * span.text // => "hello"
  * ```
  *

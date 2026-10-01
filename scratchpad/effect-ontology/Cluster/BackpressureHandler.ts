@@ -13,8 +13,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt } from "@beep/schema/Int";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Effect, Fiber, HashSet, Queue, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -22,6 +20,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { ProgressEvent } from "../Contract/ProgressStreaming.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cluster/BackpressureHandler");
 
@@ -38,15 +37,20 @@ export type ExtractionProgressEvent = ProgressEvent;
 // Types
 // =============================================================================
 
+const backpressureConfigMaxQueuedEventsDefault = PosInt.make(1000);
+const backpressureConfigSamplingThresholdDefault = UnitInterval.make(0.8);
+const backpressureConfigSamplingRateDefault = UnitInterval.make(0.1);
 /**
  * Queue capacity and sampling ratios applied when a progress consumer is slow.
  *
  * **Example** (Construct a tight sampling config)
  *
  * ```ts
- * import { PosInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { BackpressureConfig } from "@effect-ontology/Cluster/BackpressureHandler"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config = BackpressureConfig.make({
  *   maxQueuedEvents: PosInt.make(8),
@@ -64,21 +68,21 @@ export class BackpressureConfig extends S.Class<BackpressureConfig>($I`Backpress
   {
     /** Maximum queued events before dropping starts */
     maxQueuedEvents: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(1000)),
+      S.withConstructorDefault(Effect.succeed(backpressureConfigMaxQueuedEventsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigMaxQueuedEventsDefault)),
       $I.annoteKey("BackpressureConfig.maxQueuedEvents", {
         description: "Maximum queued events before dropping starts",
       })
     ),
     /** Queue load threshold (0-1) to start sampling */
     samplingThreshold: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.8)),
+      S.withConstructorDefault(Effect.succeed(backpressureConfigSamplingThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigSamplingThresholdDefault)),
       $I.annoteKey("BackpressureConfig.samplingThreshold", {
         description: "Queue load threshold (0-1) to start sampling",
       })
     ),
     /** Sampling rate when threshold exceeded (0-1, e.g., 0.1 = keep 10%) */
     samplingRate: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.1)),
+      S.withConstructorDefault(Effect.succeed(backpressureConfigSamplingRateDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigSamplingRateDefault)),
       $I.annoteKey("BackpressureConfig.samplingRate", {
         description: "Sampling rate when threshold exceeded (0-1, e.g., 0.1 = keep 10%)",
       })

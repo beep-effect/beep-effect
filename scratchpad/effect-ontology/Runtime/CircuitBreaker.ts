@@ -16,11 +16,12 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Clock, Duration, Effect, Number as N, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CircuitOpenError } from "../Domain/Error/Circuit.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/CircuitBreaker");
 const NonNegativeCounter = S.Finite.check(
@@ -35,7 +36,7 @@ const NonNegativeCounter = S.Finite.check(
  * ```ts
  * import { CircuitState } from "@effect-ontology/Runtime/CircuitBreaker"
  *
- * console.log(CircuitState.Options)
+ * console.log(CircuitState.literals)
  * ```
  *
  * @category schemas
@@ -64,15 +65,20 @@ export const CircuitState = LiteralKit(["closed", "open", "half_open"]).pipe(
  */
 export type CircuitState = typeof CircuitState.Type;
 
+const circuitBreakerConfigMaxFailuresDefault = PosInt.make(5);
+const circuitBreakerConfigResetTimeoutDefault = Duration.minutes(2);
+const circuitBreakerConfigSuccessThresholdDefault = PosInt.make(2);
 /**
  * Failure, recovery-delay, and recovery-success thresholds for {@link makeCircuitBreaker}.
  *
  * **Example** (Construct a fail-fast circuit config)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Duration } from "effect"
- * import { PosInt } from "@beep/schema/Int"
  * import { CircuitBreakerConfig } from "@effect-ontology/Runtime/CircuitBreaker"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config = CircuitBreakerConfig.make({
  *   maxFailures: PosInt.make(1),
@@ -87,9 +93,9 @@ export type CircuitState = typeof CircuitState.Type;
  */
 export class CircuitBreakerConfig extends S.Class<CircuitBreakerConfig>($I`CircuitBreakerConfig`)(
   {
-    maxFailures: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(5))),
-    resetTimeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.minutes(2))),
-    successThreshold: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(2))),
+    maxFailures: PosInt.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigMaxFailuresDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigMaxFailuresDefault))),
+    resetTimeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigResetTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigResetTimeoutDefault))),
+    successThreshold: PosInt.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault))),
   },
   $I.annote("CircuitBreakerConfig", {
     description: "Failure, recovery-delay, and recovery-success thresholds for a circuit breaker.",
@@ -142,9 +148,11 @@ class CircuitBreakerState extends S.Class<CircuitBreakerState>($I`CircuitBreaker
  * **Example** (Open the circuit after one failure)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Duration, Effect } from "effect"
- * import { PosInt } from "@beep/schema/Int"
  * import { makeCircuitBreaker } from "@effect-ontology/Runtime/CircuitBreaker"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const state = Effect.runSync(
  *   Effect.gen(function* () {

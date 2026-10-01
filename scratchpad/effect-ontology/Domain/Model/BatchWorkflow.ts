@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Number as Num, pipe } from "effect";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Number as Num, pipe, Effect } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
@@ -39,9 +39,9 @@ const DocumentStatusDefinition = S.Union([
     status: S.tag("success"),
     documentId: DocumentId,
     graphUri: GcsUri,
-    entityCount: NonNegativeInt,
-    relationCount: NonNegativeInt,
-    claimCount: NonNegativeInt,
+    entityCount: S.Natural,
+    relationCount: S.Natural,
+    claimCount: S.Natural,
     startedAt: S.DateTimeUtcFromString,
     completedAt: S.DateTimeUtcFromString,
   }),
@@ -49,7 +49,7 @@ const DocumentStatusDefinition = S.Union([
     status: S.tag("failed"),
     documentId: DocumentId,
     error: DocumentFailure,
-    startedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
+    startedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     completedAt: S.DateTimeUtcFromString,
   }),
 ]).pipe(S.toTaggedUnion("status"));
@@ -150,7 +150,7 @@ class BatchFailure extends S.Class<BatchFailure>($I`BatchFailure`)(
   {
     code: S.NonEmptyString,
     message: S.NonEmptyString,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: false })).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: false })).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BatchFailure", {
     description: "Stable failure code, user-facing diagnostic, and optional defect cause.",
@@ -159,14 +159,14 @@ class BatchFailure extends S.Class<BatchFailure>($I`BatchFailure`)(
 
 class BatchCompletionStats extends S.Class<BatchCompletionStats>($I`BatchCompletionStats`)(
   {
-    documentsProcessed: NonNegativeInt,
-    documentsSucceeded: NonNegativeInt,
-    documentsFailed: NonNegativeInt,
-    entitiesExtracted: NonNegativeInt,
-    relationsExtracted: NonNegativeInt,
-    claimsExtracted: NonNegativeInt,
-    clustersResolved: NonNegativeInt,
-    triplesIngested: NonNegativeInt,
+    documentsProcessed: S.Natural,
+    documentsSucceeded: S.Natural,
+    documentsFailed: S.Natural,
+    entitiesExtracted: S.Natural,
+    relationsExtracted: S.Natural,
+    claimsExtracted: S.Natural,
+    clustersResolved: S.Natural,
+    triplesIngested: S.Natural,
     totalDurationMs: S.DurationFromMillis,
   },
   $I.annote("BatchCompletionStats", {
@@ -218,32 +218,34 @@ export const BatchStage = LiteralKit([
  */
 export type BatchStage = typeof BatchStage.Type;
 
+const batchStateDefinitionDocumentStatusesDefault = A.empty<DocumentStatus>();
+const batchStateDefinitionDocumentStatusesDefault2 = A.empty<DocumentStatus>();
 /** Internal stage-specific members from which the public {@link BatchState} schema is derived. */
 const BatchStateDefinition = S.TaggedUnion({
   Pending: {
     ...BatchIdentityFields,
-    documentCount: NonNegativeInt,
+    documentCount: S.Natural,
   },
   Preprocessing: {
     ...BatchIdentityFields,
-    documentsTotal: NonNegativeInt,
-    documentsClassified: NonNegativeInt,
-    documentsFailed: NonNegativeInt,
-    enrichedManifestUri: S.OptionFromOptionalKey(GcsUri).pipe(SchemaUtils.withNoneDefault),
+    documentsTotal: S.Natural,
+    documentsClassified: S.Natural,
+    documentsFailed: S.Natural,
+    enrichedManifestUri: S.OptionFromOptionalKey(GcsUri).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   Extracting: {
     ...BatchIdentityFields,
-    documentsTotal: NonNegativeInt,
-    documentsCompleted: NonNegativeInt,
-    documentsFailed: NonNegativeInt,
-    currentDocumentId: S.OptionFromOptionalKey(DocumentId).pipe(SchemaUtils.withNoneDefault),
-    documentStatuses: S.Array(DocumentStatus).pipe(SchemaUtils.withEmptyArrayDefaults<DocumentStatus>()),
+    documentsTotal: S.Natural,
+    documentsCompleted: S.Natural,
+    documentsFailed: S.Natural,
+    currentDocumentId: S.OptionFromOptionalKey(DocumentId).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    documentStatuses: S.Array(DocumentStatus).pipe(S.withConstructorDefault(Effect.succeed(batchStateDefinitionDocumentStatusesDefault)), S.withDecodingDefaultType(Effect.succeed(batchStateDefinitionDocumentStatusesDefault))),
   },
   Resolving: {
     ...BatchIdentityFields,
     extractionOutputUri: GcsUri,
-    entitiesTotal: NonNegativeInt,
-    clustersFormed: NonNegativeInt,
+    entitiesTotal: S.Natural,
+    clustersFormed: S.Natural,
   },
   Validating: {
     ...BatchIdentityFields,
@@ -253,14 +255,14 @@ const BatchStateDefinition = S.TaggedUnion({
   Ingesting: {
     ...BatchIdentityFields,
     validatedGraphUri: GcsUri,
-    triplesTotal: NonNegativeInt,
-    triplesIngested: NonNegativeInt,
+    triplesTotal: S.Natural,
+    triplesIngested: S.Natural,
   },
   Complete: {
     ...BatchIdentityFields,
     canonicalGraphUri: GcsUri,
     stats: BatchCompletionStats,
-    documentStatuses: S.Array(DocumentStatus).pipe(SchemaUtils.withEmptyArrayDefaults<DocumentStatus>()),
+    documentStatuses: S.Array(DocumentStatus).pipe(S.withConstructorDefault(Effect.succeed(batchStateDefinitionDocumentStatusesDefault2)), S.withDecodingDefaultType(Effect.succeed(batchStateDefinitionDocumentStatusesDefault2))),
     completedAt: S.DateTimeUtcFromString,
   },
   Failed: {
@@ -270,7 +272,7 @@ const BatchStateDefinition = S.TaggedUnion({
     error: BatchFailure,
     lastSuccessfulStage: S.OptionFromOptionalKey(
       S.Literals(["pending", "preprocessing", "extracting", "resolving", "validating", "ingesting"])
-    ).pipe(SchemaUtils.withNoneDefault),
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
 });
 

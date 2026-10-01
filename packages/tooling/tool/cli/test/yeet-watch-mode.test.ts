@@ -2,7 +2,9 @@ import { HEAVY_ADMISSION_LABEL } from "@beep/repo-cli/commands/Ci";
 import {
   collectYeetWatchSnapshot,
   GreptileSummary,
+  gateIssues,
   loadYeetRemediationWave,
+  PrCloseoutOptions,
   PrCloseoutReport,
   PrCloseoutReportJson,
   RepoRunContext,
@@ -27,6 +29,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertDefined, strictEqual } from "@effect/vitest/utils";
 import { DateTime, Effect, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -114,6 +117,7 @@ const codeDiff = "packages/a/src/index.ts\0";
 
 interface CheckRowFixture {
   readonly bucket: string;
+  readonly description?: string;
   readonly link?: string;
   readonly name: string;
   readonly state: string;
@@ -124,6 +128,7 @@ const checksJson = (rows: ReadonlyArray<CheckRowFixture>) =>
   JSON.stringify(
     A.map(rows, (row) => ({
       bucket: row.bucket,
+      description: row.description,
       link: row.link ?? "https://github.com/beep/beep/actions/runs/1/job/2",
       name: row.name,
       state: row.state,
@@ -270,6 +275,92 @@ const readInboxRows = Effect.fn("readInboxRows")(function* (root: string) {
 });
 
 describe("collectYeetWatchSnapshot", () => {
+  it.layer(
+    scriptedSpawnerLayer([
+      {
+        view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+        checks: { exitCode: 0, output: checksJson([{ name: "Lint", bucket: "skipping", state: "SKIPPED" }]) },
+        requiredChecks: { exitCode: 0, output: checksJson([{ name: "Lint", bucket: "skipping", state: "SKIPPED" }]) },
+        threads: { exitCode: 0, output: threadsJson([]) },
+      },
+    ]),
+    { timeout: "10 seconds" }
+  )("accepts a skipped required check", (it) => {
+    it.effect("keeps readiness green while preserving the skip outcome", () =>
+      Effect.gen(function* () {
+        const snapshot = yield* collectYeetWatchSnapshot(context);
+        strictEqual(snapshot.criteria.requiredChecksGreen, true);
+        const check = snapshot.checks[0];
+        assertDefined(check);
+        strictEqual(check.required, true);
+        strictEqual(check.outcome, "skip");
+      })
+    );
+  });
+
+  it.layer(
+    scriptedSpawnerLayer([
+      {
+        view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+        checks: {
+          exitCode: 0,
+          output: checksJson([
+            { name: "Lint", bucket: "pass", state: "SUCCESS" },
+            {
+              name: "Heavy / Coverage Regression",
+              bucket: "fail",
+              state: "FAILURE",
+              description: "Coverage regression",
+            },
+          ]),
+        },
+        requiredChecks: { exitCode: 0, output: checksJson([{ name: "Lint", bucket: "pass", state: "SUCCESS" }]) },
+        threads: { exitCode: 0, output: threadsJson([]) },
+      },
+    ]),
+    { timeout: "10 seconds" }
+  )("blocks optional heavy failures while retaining their failure evidence", (it) => {
+    it.effect("classifies the optional check", () =>
+      Effect.gen(function* () {
+        const snapshot = yield* collectYeetWatchSnapshot(context);
+        strictEqual(snapshot.criteria.requiredChecksGreen, false);
+        const failure = snapshot.checks[1];
+        assertDefined(failure);
+        strictEqual(O.getOrThrow(failure.description), "Coverage regression");
+      })
+    );
+  });
+
+  it.layer(
+    scriptedSpawnerLayer([
+      {
+        view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+        checks: {
+          exitCode: 0,
+          output: checksJson([
+            { name: "Lint", bucket: "pass", state: "SUCCESS" },
+            {
+              name: "Vercel – todox",
+              bucket: "fail",
+              state: "FAILURE",
+              description: "Deployment rate limited — retry in 24 hours.",
+            },
+          ]),
+        },
+        requiredChecks: { exitCode: 0, output: checksJson([{ name: "Lint", bucket: "pass", state: "SUCCESS" }]) },
+        threads: { exitCode: 0, output: threadsJson([]) },
+      },
+    ]),
+    { timeout: "10 seconds" }
+  )("allows an explicitly rate-limited optional Vercel deployment", (it) => {
+    it.effect("classifies the optional check", () =>
+      Effect.gen(function* () {
+        const snapshot = yield* collectYeetWatchSnapshot(context);
+        strictEqual(snapshot.criteria.requiredChecksGreen, true);
+      })
+    );
+  });
+
   it.effect("decodes, classifies, and keeps each check's own record", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetWatchSnapshot(context);
@@ -458,6 +549,63 @@ describe("collectYeetWatchSnapshot", () => {
       )
     )
   );
+
+  it.layer(
+    Layer.mergeAll(
+      PlatformLayer,
+      scriptedSpawnerLayer([
+        {
+          view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+          checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Check", state: "SUCCESS" }]) },
+          threads: { exitCode: 0, output: threadsJson([]) },
+        },
+      ])
+    ),
+    { timeout: "10 seconds" }
+  )("splits closeout issues by source", (it) => {
+    it.effect(
+      "charges a closeout's unmet Greptile gates to closeout-gates-passed, not to threads",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        // Watch reads the closeout artifact under `<repoRoot>/.beep/yeet/runs/`.
+        const root = yield* fs.makeTempDirectoryScoped();
+        const subjectContext = contextFor(root);
+        const closeoutPath = yield* runArtifactPathForContext(subjectContext, "pr-closeout.json");
+        yield* fs.makeDirectory(closeoutPath.slice(0, closeoutPath.lastIndexOf("/")), { recursive: true });
+        const greptile = GreptileSummary.make({});
+        const issues = gateIssues(
+          PrCloseoutOptions.make({
+            bots: "greptile",
+            requireGreptileIssues: 0,
+            requireGreptileScore: "5/5",
+            requireReviewComments: 0,
+            retriggerGreptile: false,
+          }),
+          0,
+          greptile
+        );
+        const report = PrCloseoutReport.make({
+          actionableReviewThreadCount: 0,
+          botCommentCount: 0,
+          greptile,
+          issueCount: A.length(issues),
+          issues,
+          prNumber: 751,
+          prUrl: "https://github.com/beep/beep/pull/751",
+          reviewedHeadSha: O.some("aaa111"),
+          retriggeredGreptile: false,
+          schemaVersion: "yeet-pr-closeout/v1",
+        });
+        yield* fs.writeFileString(closeoutPath, yield* PrCloseoutReportJson.encode(report));
+
+        const snapshot = yield* collectYeetWatchSnapshot(subjectContext);
+
+        strictEqual(A.length(issues), 2);
+        strictEqual(snapshot.criteria.threadsResolved, true);
+        strictEqual(snapshot.criteria.closeoutGatesPassed, false);
+      })
+    );
+  });
 
   it.effect("rejects a paginated review-thread response without a usable cursor", () =>
     Effect.gen(function* () {

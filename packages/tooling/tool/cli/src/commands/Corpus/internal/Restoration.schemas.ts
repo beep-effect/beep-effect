@@ -6,12 +6,14 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { PosInt } from "../../../internal/schema/PosInt.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/Restoration.schemas");
 
@@ -156,27 +158,37 @@ const PreservationCrashPoint = LiteralKit(["none", "after-payload-sync", "after-
   })
 );
 
+const restorationPreserveOptionsChunkSizeBytesDefault = PosInt.make(8 * 1024 * 1024);
+const restorationPreserveOptionsCollectorDestinationPrefixSegmentsDefault = S.Natural.make(2);
+const restorationPreserveOptionsExpectedCollectorCopiedCountDefault = S.Natural.make(10_871);
+const restorationPreserveOptionsExpectedCollectorErrorCountDefault = S.Natural.make(5_986);
+const restorationPreserveOptionsExpectedCollectorExcludedSecretCountDefault = S.Natural.make(12);
+const restorationPreserveOptionsExpectedCollectorPresentSuccessfulRowCountDefault = S.Natural.make(21_489);
+const restorationPreserveOptionsExpectedCollectorResumedCountDefault = S.Natural.make(11_639);
+const restorationPreserveOptionsExpectedCollectorUniqueSuccessfulDestinationCountDefault = S.Natural.make(10_871);
 /**
  * Validated inputs for one preservation run.
  *
  * **Example** (Create preservation options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestorationPreserveOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = RestorationPreserveOptions.make({
  *   absentRecycleTreePath: "/media/absent-recycle-tree",
  *   capacityCeilingBytes: PosInt.make(1024),
  *   corpusRoot: "/data/corpus",
- *   expectedCollectorRowCount: NonNegativeInt.make(28508),
- *   expectedMissingRecyclePayloadCount: NonNegativeInt.make(13),
- *   expectedMutatedDestinationCount: NonNegativeInt.make(1021),
- *   expectedRootArchiveBytes: NonNegativeInt.make(147731138560),
- *   expectedSourceDirectoryCount: NonNegativeInt.make(755),
- *   expectedSourceFileCount: NonNegativeInt.make(12156),
- *   expectedSourceTreeBytes: NonNegativeInt.make(207772579526),
- *   minimumFreeAfterBytes: NonNegativeInt.make(128),
+ *   expectedCollectorRowCount: S.Natural.make(28508),
+ *   expectedMissingRecyclePayloadCount: S.Natural.make(13),
+ *   expectedMutatedDestinationCount: S.Natural.make(1021),
+ *   expectedRootArchiveBytes: S.Natural.make(147731138560),
+ *   expectedSourceDirectoryCount: S.Natural.make(755),
+ *   expectedSourceFileCount: S.Natural.make(12156),
+ *   expectedSourceTreeBytes: S.Natural.make(207772579526),
+ *   minimumFreeAfterBytes: S.Natural.make(128),
  *   rootArchivePath: "/media/archive.zip",
  *   sourceManifestPath: "/media/salvage/_meta/manifest.jsonl",
  *   sourceRoot: "/media/salvage"
@@ -191,30 +203,66 @@ export class RestorationPreserveOptions extends S.Class<RestorationPreserveOptio
   {
     absentRecycleTreePath: S.NonEmptyString,
     capacityCeilingBytes: PosInt,
-    chunkSizeBytes: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(8 * 1024 * 1024))),
-    collectorDestinationPrefixSegments: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(2))),
+    chunkSizeBytes: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsChunkSizeBytesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(restorationPreserveOptionsChunkSizeBytesDefault))
+    ),
+    collectorDestinationPrefixSegments: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsCollectorDestinationPrefixSegmentsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(restorationPreserveOptionsCollectorDestinationPrefixSegmentsDefault))
+    ),
     corpusRoot: S.NonEmptyString,
-    crashPoint: PreservationCrashPoint.pipe(SchemaUtils.withKeyDefaults("none")),
-    expectedCollectorRowCount: NonNegativeInt,
-    expectedCollectorCopiedCount: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(10_871))),
-    expectedCollectorErrorCount: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(5_986))),
-    expectedCollectorExcludedSecretCount: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(12))),
-    expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.pipe(
-      SchemaUtils.withKeyDefaults(NonNegativeInt.make(21_489))
+    crashPoint: PreservationCrashPoint.pipe(
+      S.withConstructorDefault(Effect.succeed("none" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("none" as const))
     ),
-    expectedCollectorResumedCount: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(11_639))),
-    expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.pipe(
-      SchemaUtils.withKeyDefaults(NonNegativeInt.make(10_871))
+    expectedCollectorRowCount: S.Natural,
+    expectedCollectorCopiedCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsExpectedCollectorCopiedCountDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(restorationPreserveOptionsExpectedCollectorCopiedCountDefault))
     ),
-    expectedMissingRecyclePayloadCount: NonNegativeInt,
-    expectedMutatedDestinationCount: NonNegativeInt,
-    expectedRootArchiveBytes: NonNegativeInt,
-    expectedSourceDirectoryCount: NonNegativeInt,
-    expectedSourceFileCount: NonNegativeInt,
-    expectedSourceTreeBytes: NonNegativeInt,
-    minimumFreeAfterBytes: NonNegativeInt,
+    expectedCollectorErrorCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsExpectedCollectorErrorCountDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(restorationPreserveOptionsExpectedCollectorErrorCountDefault))
+    ),
+    expectedCollectorExcludedSecretCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsExpectedCollectorExcludedSecretCountDefault)),
+      S.withDecodingDefaultTypeKey(
+        Effect.succeed(restorationPreserveOptionsExpectedCollectorExcludedSecretCountDefault)
+      )
+    ),
+    expectedCollectorPresentSuccessfulRowCount: S.Natural.pipe(
+      S.withConstructorDefault(
+        Effect.succeed(restorationPreserveOptionsExpectedCollectorPresentSuccessfulRowCountDefault)
+      ),
+      S.withDecodingDefaultTypeKey(
+        Effect.succeed(restorationPreserveOptionsExpectedCollectorPresentSuccessfulRowCountDefault)
+      )
+    ),
+    expectedCollectorResumedCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(restorationPreserveOptionsExpectedCollectorResumedCountDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(restorationPreserveOptionsExpectedCollectorResumedCountDefault))
+    ),
+    expectedCollectorUniqueSuccessfulDestinationCount: S.Natural.pipe(
+      S.withConstructorDefault(
+        Effect.succeed(restorationPreserveOptionsExpectedCollectorUniqueSuccessfulDestinationCountDefault)
+      ),
+      S.withDecodingDefaultTypeKey(
+        Effect.succeed(restorationPreserveOptionsExpectedCollectorUniqueSuccessfulDestinationCountDefault)
+      )
+    ),
+    expectedMissingRecyclePayloadCount: S.Natural,
+    expectedMutatedDestinationCount: S.Natural,
+    expectedRootArchiveBytes: S.Natural,
+    expectedSourceDirectoryCount: S.Natural,
+    expectedSourceFileCount: S.Natural,
+    expectedSourceTreeBytes: S.Natural,
+    minimumFreeAfterBytes: S.Natural,
     rootArchivePath: S.NonEmptyString,
-    runLabel: RunLabel.pipe(SchemaUtils.withKeyDefaults("t7-salvage-2026-08-10")),
+    runLabel: RunLabel.pipe(
+      S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("t7-salvage-2026-08-10"))
+    ),
     sourceManifestPath: S.NonEmptyString,
     sourceRoot: S.NonEmptyString,
   },
@@ -242,7 +290,10 @@ export class RestorationPreserveOptions extends S.Class<RestorationPreserveOptio
 export class RestorationVerifyOptions extends S.Class<RestorationVerifyOptions>($I`RestorationVerifyOptions`)(
   {
     corpusRoot: S.NonEmptyString,
-    runLabel: RunLabel.pipe(SchemaUtils.withKeyDefaults("t7-salvage-2026-08-10")),
+    runLabel: RunLabel.pipe(
+      S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("t7-salvage-2026-08-10"))
+    ),
   },
   $I.annote("RestorationVerifyOptions", {
     description: "Corpus root and preservation run label independently reparsed and verified from a fresh process.",
@@ -299,12 +350,14 @@ const TransformationEvidenceIdentity = S.Struct({
  * **Example** (Create mail restoration options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestorationMailOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = RestorationMailOptions.make({
  *   corpusRoot: "/data/corpus",
- *   expectedStoreCount: NonNegativeInt.make(1),
+ *   expectedStoreCount: S.Natural.make(1),
  *   maxAmplificationRatio: 4,
  *   maxElapsedMillis: PosInt.make(60000),
  *   maxTotalElapsedMillis: PosInt.make(60000),
@@ -321,19 +374,31 @@ const TransformationEvidenceIdentity = S.Struct({
  */
 export class RestorationMailOptions extends S.Class<RestorationMailOptions>($I`RestorationMailOptions`)(
   {
-    bwrapPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("bwrap")),
+    bwrapPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("bwrap")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("bwrap"))
+    ),
     corpusRoot: S.NonEmptyString,
-    expectedStoreCount: NonNegativeInt,
+    expectedStoreCount: S.Natural,
     maxAmplificationRatio: PositiveFinite,
     maxElapsedMillis: PosInt,
     maxTotalElapsedMillis: PosInt,
     maxTotalOutputBytes: PosInt,
     pffexportPath: S.NonEmptyString,
-    runLabel: RunLabel.pipe(SchemaUtils.withKeyDefaults("t7-salvage-2026-08-10")),
+    runLabel: RunLabel.pipe(
+      S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("t7-salvage-2026-08-10"))
+    ),
     scope: MailRestorationScope,
-    systemdRunPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("systemd-run")),
+    systemdRunPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("systemd-run")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("systemd-run"))
+    ),
     tikaJarPath: S.NonEmptyString,
-    javaPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("java")),
+    javaPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("java")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("java"))
+    ),
   },
   $I.annote("RestorationMailOptions", {
     description:
@@ -347,13 +412,15 @@ export class RestorationMailOptions extends S.Class<RestorationMailOptions>($I`R
  * **Example** (Create recycle reconciliation options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestorationRecycleOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = RestorationRecycleOptions.make({
  *   corpusRoot: "/data/corpus",
- *   expectedMissingContentCount: NonNegativeInt.make(13),
- *   expectedSurfaceCount: NonNegativeInt.make(3),
+ *   expectedMissingContentCount: S.Natural.make(13),
+ *   expectedSurfaceCount: S.Natural.make(3),
  *   maxTotalElapsedMillis: PosInt.make(3600000),
  *   maxTotalOutputBytes: PosInt.make(1073741824)
  * })
@@ -366,11 +433,14 @@ export class RestorationMailOptions extends S.Class<RestorationMailOptions>($I`R
 export class RestorationRecycleOptions extends S.Class<RestorationRecycleOptions>($I`RestorationRecycleOptions`)(
   {
     corpusRoot: S.NonEmptyString,
-    expectedMissingContentCount: NonNegativeInt,
-    expectedSurfaceCount: NonNegativeInt,
+    expectedMissingContentCount: S.Natural,
+    expectedSurfaceCount: S.Natural,
     maxTotalElapsedMillis: PosInt,
     maxTotalOutputBytes: PosInt,
-    runLabel: RunLabel.pipe(SchemaUtils.withKeyDefaults("t7-salvage-2026-08-10")),
+    runLabel: RunLabel.pipe(
+      S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("t7-salvage-2026-08-10"))
+    ),
   },
   $I.annote("RestorationRecycleOptions", {
     description: "Expected three-volume and inherited-missing-payload denominators for recycle reconciliation.",
@@ -383,14 +453,16 @@ export class RestorationRecycleOptions extends S.Class<RestorationRecycleOptions
  * **Example** (Create legacy-Word conversion options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestorationLegacyWordOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = RestorationLegacyWordOptions.make({
  *   converterPath: "soffice",
  *   corpusRoot: "/data/corpus",
  *   expectedConverterVersion: "LibreOffice 26.2.0.0",
- *   expectedOccurrenceCount: NonNegativeInt.make(564),
+ *   expectedOccurrenceCount: S.Natural.make(564),
  *   maxElapsedMillis: PosInt.make(60000),
  *   maxTotalElapsedMillis: PosInt.make(3600000),
  *   maxTotalOutputBytes: PosInt.make(1073741824),
@@ -407,20 +479,38 @@ export class RestorationLegacyWordOptions extends S.Class<RestorationLegacyWordO
   $I`RestorationLegacyWordOptions`
 )(
   {
-    bwrapPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("bwrap")),
-    comparePath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("compare")),
+    bwrapPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("bwrap")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("bwrap"))
+    ),
+    comparePath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("compare")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("compare"))
+    ),
     converterPath: S.NonEmptyString,
     corpusRoot: S.NonEmptyString,
     expectedConverterVersion: S.NonEmptyString,
-    expectedOccurrenceCount: NonNegativeInt,
-    javaPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("java")),
+    expectedOccurrenceCount: S.Natural,
+    javaPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("java")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("java"))
+    ),
     maxElapsedMillis: PosInt,
     maxTotalElapsedMillis: PosInt,
     maxTotalOutputBytes: PosInt,
     maxVisualRmse: NonNegativeFinite,
-    pdfinfoPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("pdfinfo")),
-    pdftoppmPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("pdftoppm")),
-    runLabel: RunLabel.pipe(SchemaUtils.withKeyDefaults("t7-salvage-2026-08-10")),
+    pdfinfoPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("pdfinfo")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("pdfinfo"))
+    ),
+    pdftoppmPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("pdftoppm")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("pdftoppm"))
+    ),
+    runLabel: RunLabel.pipe(
+      S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("t7-salvage-2026-08-10"))
+    ),
     tikaJarPath: S.NonEmptyString,
   },
   $I.annote("RestorationLegacyWordOptions", {
@@ -432,7 +522,7 @@ export class RestorationLegacyWordOptions extends S.Class<RestorationLegacyWordO
 class CollectorCopiedManifestRecord extends S.Class<CollectorCopiedManifestRecord>($I`CollectorCopiedManifestRecord`)(
   {
     dst: S.NonEmptyString,
-    size: NonNegativeInt,
+    size: S.Natural,
     src: S.NonEmptyString,
     status: S.Literal("copied"),
   },
@@ -446,7 +536,7 @@ class CollectorResumedManifestRecord extends S.Class<CollectorResumedManifestRec
 )(
   {
     dst: S.NonEmptyString,
-    size: NonNegativeInt,
+    size: S.Natural,
     src: S.NonEmptyString,
     status: S.Literal("resumed"),
   },
@@ -538,8 +628,8 @@ export const decodeCollectorManifestRecordJson = JsonStringCodec(CollectorManife
 
 class SourceStat extends S.Class<SourceStat>($I`SourceStat`)(
   {
-    mtimeMillis: NonNegativeInt,
-    sizeBytes: NonNegativeInt,
+    mtimeMillis: S.Natural,
+    sizeBytes: S.Natural,
   },
   $I.annote("SourceStat", {
     description: "Source size and modification time observed before or after a streaming copy attempt.",
@@ -549,14 +639,14 @@ class SourceStat extends S.Class<SourceStat>($I`SourceStat`)(
 class ArchivePreflightRecord extends S.Class<ArchivePreflightRecord>($I`ArchivePreflightRecord`)(
   {
     approved: S.Boolean,
-    approvedCeilingBytes: NonNegativeInt,
-    availableBytes: NonNegativeInt,
-    directoryCount: NonNegativeInt,
-    fileCount: NonNegativeInt,
-    minimumFreeAfterBytes: NonNegativeInt,
+    approvedCeilingBytes: S.Natural,
+    availableBytes: S.Natural,
+    directoryCount: S.Natural,
+    fileCount: S.Natural,
+    minimumFreeAfterBytes: S.Natural,
     recordedAt: RecordedAt,
     recordType: S.Literal("archive-preflight"),
-    requiredBytes: NonNegativeInt,
+    requiredBytes: S.Natural,
     runId: RunId,
     schemaVersion: SchemaVersion,
   },
@@ -592,11 +682,11 @@ class ArchiveFilePassRecord extends S.Class<ArchiveFilePassRecord>($I`ArchiveFil
     preCopySource: SourceStat,
     recordedAt: RecordedAt,
     recordType: S.Literal("archive-file-pass"),
-    resumedBytes: NonNegativeInt,
+    resumedBytes: S.Natural,
     runId: RunId,
     schemaVersion: SchemaVersion,
     sha256: Sha256Hex,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     sourceLabel: S.NonEmptyString,
     sourceRelativePath: RelativePath,
   },
@@ -672,7 +762,7 @@ class InheritedLossRecord extends S.Class<InheritedLossRecord>($I`InheritedLossR
   {
     approved: S.Literal(true),
     category: InheritedLossCategory,
-    count: NonNegativeInt,
+    count: S.Natural,
     recordedAt: RecordedAt,
     recordType: S.Literal("inherited-loss"),
     runId: RunId,
@@ -686,7 +776,7 @@ class InheritedLossRecord extends S.Class<InheritedLossRecord>($I`InheritedLossR
 class ArchiveManifestSealRecord extends S.Class<ArchiveManifestSealRecord>($I`ArchiveManifestSealRecord`)(
   {
     manifestSha256: Sha256Hex,
-    recordCount: NonNegativeInt,
+    recordCount: S.Natural,
     recordedAt: RecordedAt,
     recordType: S.Literal("archive-manifest-seal"),
     runId: RunId,
@@ -786,7 +876,7 @@ class ArchiveVerificationPassRecord extends S.Class<ArchiveVerificationPassRecor
     objectId: ObjectId,
     recordType: S.Literal("verification-pass"),
     sha256: Sha256Hex,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
   },
   $I.annote("ArchiveVerificationPassRecord", {
     description: "Fresh-process destination byte verification PASS for one terminal archive object.",
@@ -869,18 +959,18 @@ export const encodeArchiveVerificationRecordJson = JsonStringCodec(ArchiveVerifi
  * **Example** (Build a passing family summary)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestorationRunSummary } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = RestorationRunSummary.make({
- *   elapsedMillis: NonNegativeInt.make(10),
- *   exceptionCount: NonNegativeInt.make(0),
+ *   elapsedMillis: S.Natural.make(10),
+ *   exceptionCount: S.Natural.make(0),
  *   family: "preservation",
- *   inputBytes: NonNegativeInt.make(4),
- *   outputBytes: NonNegativeInt.make(4),
- *   passCount: NonNegativeInt.make(1),
- *   sourceCount: NonNegativeInt.make(1),
- *   unapprovedCount: NonNegativeInt.make(0)
+ *   inputBytes: S.Natural.make(4),
+ *   outputBytes: S.Natural.make(4),
+ *   passCount: S.Natural.make(1),
+ *   sourceCount: S.Natural.make(1),
+ *   unapprovedCount: S.Natural.make(0)
  * })
  * console.log(summary.passCount) // 1
  * ```
@@ -890,14 +980,14 @@ export const encodeArchiveVerificationRecordJson = JsonStringCodec(ArchiveVerifi
  */
 export class RestorationRunSummary extends S.Class<RestorationRunSummary>($I`RestorationRunSummary`)(
   {
-    elapsedMillis: NonNegativeInt,
-    exceptionCount: NonNegativeInt,
+    elapsedMillis: S.Natural,
+    exceptionCount: S.Natural,
     family: RestorationFamily,
-    inputBytes: NonNegativeInt,
-    outputBytes: NonNegativeInt,
-    passCount: NonNegativeInt,
-    sourceCount: NonNegativeInt,
-    unapprovedCount: NonNegativeInt,
+    inputBytes: S.Natural,
+    outputBytes: S.Natural,
+    passCount: S.Natural,
+    sourceCount: S.Natural,
+    unapprovedCount: S.Natural,
   },
   $I.annote("RestorationRunSummary", {
     description: "Aggregate-only terminal counts and byte/time measurements for one acceptance family.",
@@ -910,27 +1000,28 @@ export class RestorationRunSummary extends S.Class<RestorationRunSummary>($I`Res
  * **Example** (Build a reconciled acceptance record)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestorationAcceptanceRecord } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema"
  *
  * const record = RestorationAcceptanceRecord.make({
  *   evidenceSha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
- *   elapsedMillis: NonNegativeInt.make(1),
- *   exceptionCount: NonNegativeInt.make(0),
- *   expectedTerminalCount: NonNegativeInt.make(1),
+ *   elapsedMillis: S.Natural.make(1),
+ *   exceptionCount: S.Natural.make(0),
+ *   expectedTerminalCount: S.Natural.make(1),
  *   family: "preservation",
- *   inputBytes: NonNegativeInt.make(4),
+ *   inputBytes: S.Natural.make(4),
  *   outputTreeSha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
- *   outputBytes: NonNegativeInt.make(4),
- *   passCount: NonNegativeInt.make(1),
+ *   outputBytes: S.Natural.make(4),
+ *   passCount: S.Natural.make(1),
  *   preservationRunId: "preservation-1",
  *   preservationSealSha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
  *   recordedAt: "2026-08-27T00:00:00.000Z",
  *   runLabel: "restoration-1",
  *   schemaVersion: "oppold-corpus-restoration/v1",
- *   sourceCount: NonNegativeInt.make(1),
+ *   sourceCount: S.Natural.make(1),
  *   status: "pass",
- *   terminalCount: NonNegativeInt.make(1),
+ *   terminalCount: S.Natural.make(1),
  *   unapprovedCount: 0
  * })
  * console.log(record.status) // "pass"
@@ -942,23 +1033,23 @@ export class RestorationRunSummary extends S.Class<RestorationRunSummary>($I`Res
 export class RestorationAcceptanceRecord extends S.Class<RestorationAcceptanceRecord>($I`RestorationAcceptanceRecord`)(
   {
     evidenceSha256: Sha256Hex,
-    elapsedMillis: NonNegativeInt,
-    exceptionCount: NonNegativeInt,
-    expectedTerminalCount: NonNegativeInt,
+    elapsedMillis: S.Natural,
+    exceptionCount: S.Natural,
+    expectedTerminalCount: S.Natural,
     family: RestorationFamily,
-    inputBytes: NonNegativeInt,
+    inputBytes: S.Natural,
     mailScope: S.optionalKey(MailRestorationScope),
-    outputBytes: NonNegativeInt,
+    outputBytes: S.Natural,
     outputTreeSha256: Sha256Hex,
-    passCount: NonNegativeInt,
+    passCount: S.Natural,
     preservationRunId: RunId,
     preservationSealSha256: Sha256Hex,
     recordedAt: RecordedAt,
     runLabel: RunLabel,
     schemaVersion: SchemaVersion,
-    sourceCount: NonNegativeInt,
+    sourceCount: S.Natural,
     status: S.Literal("pass"),
-    terminalCount: NonNegativeInt,
+    terminalCount: S.Natural,
     transformationRunId: S.optionalKey(RunId),
     unapprovedCount: S.Literal(0),
   },
@@ -973,29 +1064,30 @@ export class RestorationAcceptanceRecord extends S.Class<RestorationAcceptanceRe
  * **Example** (Encode preservation acceptance)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestorationAcceptanceRecord, encodeRestorationAcceptanceRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const digest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
  * const row = RestorationAcceptanceRecord.make({
  *   evidenceSha256: digest,
- *   elapsedMillis: NonNegativeInt.make(1),
- *   exceptionCount: NonNegativeInt.make(0),
- *   expectedTerminalCount: NonNegativeInt.make(1),
+ *   elapsedMillis: S.Natural.make(1),
+ *   exceptionCount: S.Natural.make(0),
+ *   expectedTerminalCount: S.Natural.make(1),
  *   family: "preservation",
- *   inputBytes: NonNegativeInt.make(4),
- *   outputBytes: NonNegativeInt.make(4),
+ *   inputBytes: S.Natural.make(4),
+ *   outputBytes: S.Natural.make(4),
  *   outputTreeSha256: digest,
- *   passCount: NonNegativeInt.make(1),
+ *   passCount: S.Natural.make(1),
  *   preservationRunId: "preservation-1",
  *   preservationSealSha256: digest,
  *   recordedAt: "2026-08-27T00:00:00.000Z",
  *   runLabel: "restoration-1",
  *   schemaVersion: "oppold-corpus-restoration/v1",
- *   sourceCount: NonNegativeInt.make(1),
+ *   sourceCount: S.Natural.make(1),
  *   status: "pass",
- *   terminalCount: NonNegativeInt.make(1),
+ *   terminalCount: S.Natural.make(1),
  *   unapprovedCount: 0
  * })
  * console.log(Effect.isEffect(encodeRestorationAcceptanceRecordJson(row))) // true
@@ -1039,7 +1131,7 @@ const MailDisposition = LiteralKit(["defer", "process", "quarantine"]).pipe(
 class FamilyRunStartRecord extends S.Class<FamilyRunStartRecord>($I`FamilyRunStartRecord`)(
   {
     ...TransformationEvidenceIdentity.fields,
-    expectedCount: NonNegativeInt,
+    expectedCount: S.Natural,
     family: TransformationFamily,
     mailScope: S.optionalKey(MailRestorationScope),
     maxTotalElapsedMillis: PosInt,
@@ -1058,10 +1150,10 @@ class FamilyAttemptStartRecord extends S.Class<FamilyAttemptStartRecord>($I`Fami
     ...TransformationEvidenceIdentity.fields,
     attemptId: AttemptId,
     family: TransformationFamily,
-    inputBytes: NonNegativeInt,
+    inputBytes: S.Natural,
     mailScope: S.optionalKey(MailRestorationScope),
     recordType: S.Literal("family-attempt-start"),
-    retryOrdinal: NonNegativeInt,
+    retryOrdinal: S.Natural,
     sourceId: ObjectId,
     sourceSha256: Sha256Hex,
   },
@@ -1081,10 +1173,10 @@ class FamilyAttemptInterruptedRecord extends S.Class<FamilyAttemptInterruptedRec
     family: TransformationFamily,
     mailScope: S.optionalKey(MailRestorationScope),
     recordType: S.Literal("family-attempt-interrupted"),
-    retainedOutputBytes: NonNegativeInt,
+    retainedOutputBytes: S.Natural,
     retainedOutputRelativePath: RelativePath,
     retainedOutputSha256: Sha256Hex,
-    retryOrdinal: NonNegativeInt,
+    retryOrdinal: S.Natural,
     sourceId: ObjectId,
   },
   $I.annote("FamilyAttemptInterruptedRecord", {
@@ -1096,19 +1188,19 @@ class FamilyAttemptInterruptedRecord extends S.Class<FamilyAttemptInterruptedRec
 class MailStorePassRecord extends S.Class<MailStorePassRecord>($I`MailStorePassRecord`)(
   {
     ...TransformationEvidenceIdentity.fields,
-    accountedChildCount: NonNegativeInt,
+    accountedChildCount: S.Natural,
     attemptId: AttemptId,
-    childCount: NonNegativeInt,
-    elapsedMillis: NonNegativeInt,
+    childCount: S.Natural,
+    elapsedMillis: S.Natural,
     family: S.Literal("mail"),
-    inputBytes: NonNegativeInt,
+    inputBytes: S.Natural,
     mailScope: MailRestorationScope,
     objectId: ObjectId,
-    outputBytes: NonNegativeInt,
+    outputBytes: S.Natural,
     postProcessSha256: Sha256Hex,
     recordType: S.Literal("mail-store-pass"),
     sha256: Sha256Hex,
-    warningCount: NonNegativeInt,
+    warningCount: S.Natural,
   },
   $I.annote("MailStorePassRecord", {
     description: "Terminal mail-store PASS with zero unaccounted children and measured amplification.",
@@ -1127,7 +1219,7 @@ class MailStoreExceptionRecord extends S.Class<MailStoreExceptionRecord>($I`Mail
     message: S.NonEmptyString,
     objectId: ObjectId,
     recordType: S.Literal("mail-store-exception"),
-    retainedOutputBytes: NonNegativeInt,
+    retainedOutputBytes: S.Natural,
     retainedOutputSha256: Sha256Hex,
     sourceFamily: LiteralKit(["eml", "msg", "ost", "pst", "residue"]),
   },
@@ -1162,7 +1254,7 @@ class MailChildPassRecord extends S.Class<MailChildPassRecord>($I`MailChildPassR
     mailScope: MailRestorationScope,
     recordType: S.Literal("mail-child-pass"),
     sha256: Sha256Hex,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     sourceObjectId: ObjectId,
   },
   $I.annote("MailChildPassRecord", {
@@ -1199,7 +1291,7 @@ const RecycleJoinClass = LiteralKit(["duplicate", "missing-content", "orphan-con
 class RecycleJoinRecord extends S.Class<RecycleJoinRecord>($I`RecycleJoinRecord`)(
   {
     ...TransformationEvidenceIdentity.fields,
-    count: NonNegativeInt,
+    count: S.Natural,
     family: S.Literal("recycle"),
     joinClass: RecycleJoinClass,
     recordType: S.Literal("recycle-join"),
@@ -1269,14 +1361,14 @@ class FamilyAcceptancePassRecord extends S.Class<FamilyAcceptancePassRecord>($I`
   {
     ...TransformationEvidenceIdentity.fields,
     evidenceSha256: Sha256Hex,
-    expectedCount: NonNegativeInt,
+    expectedCount: S.Natural,
     family: TransformationFamily,
     mailScope: S.optionalKey(MailRestorationScope),
     maxTotalElapsedMillis: PosInt,
     maxTotalOutputBytes: PosInt,
     outputTreeSha256: Sha256Hex,
     recordType: S.Literal("family-acceptance-pass"),
-    terminalCount: NonNegativeInt,
+    terminalCount: S.Natural,
     unapprovedCount: S.Literal(0),
   },
   $I.annote("FamilyAcceptancePassRecord", {
@@ -1288,7 +1380,7 @@ class FamilyAcceptanceFailureRecord extends S.Class<FamilyAcceptanceFailureRecor
   {
     ...TransformationEvidenceIdentity.fields,
     evidenceSha256: Sha256Hex,
-    expectedCount: NonNegativeInt,
+    expectedCount: S.Natural,
     family: TransformationFamily,
     mailScope: S.optionalKey(MailRestorationScope),
     maxTotalElapsedMillis: PosInt,
@@ -1296,8 +1388,8 @@ class FamilyAcceptanceFailureRecord extends S.Class<FamilyAcceptanceFailureRecor
     message: S.NonEmptyString,
     outputTreeSha256: Sha256Hex,
     recordType: S.Literal("family-acceptance-failure"),
-    terminalCount: NonNegativeInt,
-    unapprovedCount: NonNegativeInt,
+    terminalCount: S.Natural,
+    unapprovedCount: S.Natural,
   },
   $I.annote("FamilyAcceptanceFailureRecord", {
     description: "Fail-closed family acceptance record for an incomplete denominator or unapproved terminal row.",
@@ -1307,19 +1399,19 @@ class FamilyAcceptanceFailureRecord extends S.Class<FamilyAcceptanceFailureRecor
 class FamilyRunSummaryRecord extends S.Class<FamilyRunSummaryRecord>($I`FamilyRunSummaryRecord`)(
   {
     ...TransformationEvidenceIdentity.fields,
-    elapsedMillis: NonNegativeInt,
-    exceptionCount: NonNegativeInt,
+    elapsedMillis: S.Natural,
+    exceptionCount: S.Natural,
     family: TransformationFamily,
-    inputBytes: NonNegativeInt,
+    inputBytes: S.Natural,
     mailScope: S.optionalKey(MailRestorationScope),
     maxTotalElapsedMillis: PosInt,
     maxTotalOutputBytes: PosInt,
     outputTreeSha256: Sha256Hex,
-    outputBytes: NonNegativeInt,
-    passCount: NonNegativeInt,
+    outputBytes: S.Natural,
+    passCount: S.Natural,
     recordType: S.Literal("family-run-summary"),
-    sourceCount: NonNegativeInt,
-    unapprovedCount: NonNegativeInt,
+    sourceCount: S.Natural,
+    unapprovedCount: S.Natural,
   },
   $I.annote("FamilyRunSummaryRecord", {
     description: "Measured aggregate summary paired with one transformation-family acceptance row.",

@@ -30,8 +30,10 @@ import {
   selectJudgeEvidence,
   windowSeqsForLabel,
 } from "@beep/repo-cli/commands/Qa";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -81,7 +83,7 @@ describe("commands/Qa Inventory.schemas", () => {
       const exit = yield* Effect.exit(
         decodeQaInventory(inventoryInput([finding("R4-01", "P0", "frames/a.png", [2])], 0))
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 
@@ -90,7 +92,7 @@ describe("commands/Qa Inventory.schemas", () => {
       const exit = yield* Effect.exit(
         decodeQaInventory(inventoryInput([finding("R4-1", "P0", "frames/a.png", [2])], 1))
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 
@@ -121,7 +123,7 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
   });
 
   it("returns none when the output holds no fenced block", () => {
-    expect(O.isNone(extractLastJsonBlock("no json here at all"))).toBe(true);
+    assertNone(extractLastJsonBlock("no json here at all"));
   });
 
   it("salvages a correct unfenced object when the judge omits fences entirely", () => {
@@ -169,7 +171,7 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
   });
 
   it("returns none when braces never balance into valid JSON", () => {
-    expect(O.isNone(extractLastJsonBlock("opening { and prose {still not json}"))).toBe(true);
+    assertNone(extractLastJsonBlock("opening { and prose {still not json}"));
   });
 
   // The bound only needs to separate linear from quadratic (quadratic on 40k
@@ -181,7 +183,7 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
     const extracted = extractLastJsonBlock(hostile);
     const elapsedMs = globalThis.performance.now() - startedAt;
 
-    expect(O.isNone(extracted)).toBe(true);
+    assertNone(extracted);
     expect(elapsedMs).toBeLessThan(5000);
   });
 

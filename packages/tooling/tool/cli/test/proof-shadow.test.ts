@@ -8,6 +8,7 @@ import {
   TurboRunSummary,
   TurboSummaryTask,
 } from "@beep/repo-cli/test/Quality";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   buildProofShadowReport,
   changedPackagesForAttempt,
@@ -38,7 +39,6 @@ import {
   YeetAttemptStarted,
   YeetProofReportOptions,
 } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";

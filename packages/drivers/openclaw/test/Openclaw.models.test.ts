@@ -40,7 +40,6 @@ import {
   OpenclawTelegramSendResult,
   OpenclawVersionInfo,
 } from "@beep/openclaw/Openclaw.models";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -206,7 +205,7 @@ describe("@beep/openclaw models", () => {
         }),
       },
       ok: true,
-      pluginErrorCount: NonNegativeInt.make(0),
+      pluginErrorCount: S.Natural.make(0),
       pluginsLoaded: ["telegram", "ollama"],
     });
     const probe = OpenclawHttpProbe.make({
@@ -229,7 +228,7 @@ describe("@beep/openclaw models", () => {
     });
     const reloaded = OpenclawSecretsReloaded.make({
       _tag: "Reloaded",
-      warningCount: NonNegativeInt.make(0),
+      warningCount: S.Natural.make(0),
     });
     const degraded = OpenclawSecretsReloadDegraded.make({
       _tag: "Degraded",

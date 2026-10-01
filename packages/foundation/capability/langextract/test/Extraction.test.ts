@@ -8,7 +8,6 @@ import {
 } from "@beep/langextract/Extraction";
 import { DocumentId } from "@beep/nlp/Core";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
@@ -91,7 +90,7 @@ describe("parseModelOutput", () => {
         confidence: O.some(UnitInterval.make(0.9)),
         label: "person",
         matchedText: "Ada Lovelace",
-        span: Contract.Span.make({ end: NonNegativeInt.make(12), start: NonNegativeInt.make(0) }),
+        span: Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(0) }),
         text: "Ada Lovelace",
       });
 
@@ -127,7 +126,7 @@ describe("parseModelOutput", () => {
       const missingMatchedText = yield* decodeUnknownGroundedExtraction({
         alignmentStatus: "match_exact",
         label: "person",
-        span: Contract.Span.make({ end: NonNegativeInt.make(12), start: NonNegativeInt.make(0) }),
+        span: Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(0) }),
         text: "Ada Lovelace",
       }).pipe(Effect.flip);
 

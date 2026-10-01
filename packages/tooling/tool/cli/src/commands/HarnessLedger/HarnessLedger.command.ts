@@ -130,12 +130,12 @@ const buildHypothesis = Effect.fn("HarnessLedger.buildHypothesis")(function* (
 export const harnessLedgerProposeCommand = Command.make(
   "propose",
   {
-    mechanism: Flag.Literals("mechanism", MechanismClass.Options).pipe(
-      Flag.withDescription(`Mechanism class: ${A.join(MechanismClass.Options, " | ")}`)
+    mechanism: Flag.Literals("mechanism", MechanismClass.literals).pipe(
+      Flag.withDescription(`Mechanism class: ${A.join(MechanismClass.literals, " | ")}`)
     ),
     edit: Flag.String("edit").pipe(Flag.withDescription("Edit reference: commit:<sha> | diff:<sha256> | pending")),
     hypothesis: Flag.String("hypothesis").pipe(Flag.withDescription("Falsifiable behavioral claim"), Flag.optional),
-    expectedSurface: Flag.Literals("expected-surface", ContextSurfaceKind.Options).pipe(
+    expectedSurface: Flag.Literals("expected-surface", ContextSurfaceKind.literals).pipe(
       Flag.withDescription("Surface kind the claim expects to move"),
       Flag.optional
     ),
@@ -219,8 +219,8 @@ export const harnessLedgerDispositionCommand = Command.make(
   "disposition",
   {
     row: Flag.String("row").pipe(Flag.withDescription("Row id to supersede (must be the latest row of its chain)")),
-    to: Flag.Literals("to", HarnessLedgerAdmission.Options).pipe(
-      Flag.withDescription(`Disposition: ${A.join(HarnessLedgerAdmission.Options, " | ")}`)
+    to: Flag.Literals("to", HarnessLedgerAdmission.literals).pipe(
+      Flag.withDescription(`Disposition: ${A.join(HarnessLedgerAdmission.literals, " | ")}`)
     ),
     evidence: Flag.String("evidence").pipe(Flag.withDescription("Evidence for the disposition (required)")),
     score: Flag.Finite("score").pipe(Flag.withDescription("Measured score delta (with --cost)"), Flag.optional),
@@ -329,7 +329,7 @@ export const harnessLedgerListCommand = Command.make(
         "Only rows whose harness surfaces changed, or whose model/effort differs from an explicit --model/--reasoning-effort; omitted components are not compared"
       )
     ),
-    disposition: Flag.Literals("disposition", LedgerDisposition.Options).pipe(
+    disposition: Flag.Literals("disposition", LedgerDisposition.literals).pipe(
       Flag.withDescription("Only chains whose latest row has this disposition"),
       Flag.optional
     ),

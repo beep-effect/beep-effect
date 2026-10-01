@@ -33,6 +33,7 @@ import { runGoalsDoctor } from "../Goals/Doctor.ts";
 import { resolveLawsPackageScope, scanLawsPackage } from "../Laws/LawsPackage.ts";
 import { readLintPolicySweeps, runRootDeprecatedApisTask, runRootLintPolicyTask } from "../Quality/index.ts";
 import { lintEcosystemPolarityCommand } from "./EcosystemPolarity.ts";
+import { lintEffectSchemaInventoryCommand } from "./EffectSchemaInventory.ts";
 import { lintEffectVitestCommand } from "./EffectVitest.ts";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
 import { lintJudgeRubricCommand } from "./JudgeRubric.ts";
@@ -43,6 +44,7 @@ import { lintReflectionArtifactsCommand } from "./ReflectionArtifact.ts";
 import { lintRoadmapRefsCommand } from "./RoadmapRefs.ts";
 import { lintSchemaCatalogCommand } from "./SchemaCatalog.ts";
 import { lintSchemaFirstCommand } from "./SchemaFirst.ts";
+import { lintSchemaParityCodemodCommand } from "./SchemaParityCodemod.ts";
 import { lintSchemaTopologyCommand } from "./SchemaTopology.ts";
 import { lintTsconfigOverlayCommand } from "./TsconfigOverlay.ts";
 
@@ -1153,6 +1155,7 @@ const lintSubcommands = [
   lintJsdocCommand,
   lintLawsCommand,
   lintEcosystemPolarityCommand,
+  lintEffectSchemaInventoryCommand,
   lintEffectVitestCommand,
   lintGoalPacketsCommand,
   lintIdentityRegistryCommand,
@@ -1164,6 +1167,7 @@ const lintSubcommands = [
   lintRoadmapRefsCommand,
   lintSchemaCatalogCommand,
   lintSchemaFirstCommand,
+  lintSchemaParityCodemodCommand,
   lintSchemaTopologyCommand,
   lintToolingSchemaFirstCommand,
   lintTsconfigOverlayCommand,

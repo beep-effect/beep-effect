@@ -6,7 +6,6 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { HistorySignal } from "../HistorySignal/index.ts";
 import { Span } from "../Span/index.ts";
@@ -25,19 +24,19 @@ const $I = $LawPracticeDomainId.create("values/SubsequentHistoryEntry/Subsequent
  * **Example** (Affirmed history entry)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Span, SubsequentHistoryEntry } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const entry = SubsequentHistoryEntry.make({
  *   signal: "affirmed",
  *   rawSignal: "aff'd",
  *   signalSpan: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(5),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(5),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(5),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(5),
  *   }),
- *   order: NonNegativeInt.make(0),
+ *   order: S.Natural.make(0),
  * })
  *
  * console.log(entry.signal) // "affirmed"
@@ -58,7 +57,7 @@ export class SubsequentHistoryEntry extends S.Class<SubsequentHistoryEntry>($I`S
     signalSpan: Span.annotateKey({
       description: "Position of the signal text in the document.",
     }),
-    order: NonNegativeInt.annotateKey({
+    order: S.Natural.annotateKey({
       description: "Order in the history chain (0-based).",
     }),
   },

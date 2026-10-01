@@ -49,7 +49,10 @@ authority.
 
 | File | What it holds | Size |
 |------|---------------|------|
-| `research/inventory/` + `research/tools/` | The knowledge-layer prototype: `schema-inventory/v1` JSONL rows for the 14 Role A `.ts` modules, generator, verifier, INDEX and README | 2,105 rows / 853 KB |
+| `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/` | The knowledge layer: `schema-inventory/v1` JSONL rows, INDEX and README, moved here from this packet's research inventory directory in goal P1 (2026-09-29); generator, verifier and prompt generator are `bun run beep lint effect-schema-inventory` | 2,232 rows / 998 KB (was 2,105 rows / 853 KB at `51d4a2f08a`) |
+| `research/2026-09-28-inventory-refresh.md` | Reopen: inventory regenerated at `inventoryPin` `e5f7d12af9` (D4), module moves out of `unstable/`, generator and verifier repairs | 19 KB |
+| `research/2026-09-28-schemautils-census.md` + `research/tools/census-schemautils.py` | Reopen: every SchemaUtils export with upstream equivalent, consumer counts per scope, DELETE / ADAPT / KEEP and phase (32 / 4 / 3); D10 finding that the per-AST parser cache predates the compilers | 28 KB |
+| `research/2026-09-28-compiler-evaluation.md` + `research/tools/spike-{harness,bulk-schemas,bulk,recursive}.ts` | Reopen: interpreter vs selective JIT vs AOT spikes (D6): about 3.7x on transformation-free wire structs, 1.2–1.4x on classes and transformed rows, no gain on Pandoc; fallback nodes, CSP and repo-fit answers; the draft that the operator ruled DEFER | 24 KB |
 | `research/retirement-A-F.md`, `research/retirement-G-Z.md` | Per-concept retirement audit of every top-level `@beep/schema` concept (137) with upstream citations, consumer counts, dispositions and migration recipes | 43 + 54 KB |
 | `research/idiom-families.md` | 30 usage families audited across 3,173 source files; 21 candidates, 9 rejected hypotheses, 1 correction to an existing gate | 582 lines |
 | `research/upstream-delta.md` + `research/upstream-verification-supplement.md` | All 28 rc.112..main commits tagged ADOPT / MIGRATE / RETIRE-LEAD / NOOP with repo exposure counts; the supplement is an independent second pass that withdrew two recommendations | 22 + 8 KB |
@@ -59,24 +62,32 @@ authority.
 
 ### Knowledge layer (DECISIONS "Knowledge layer")
 
-- **Symbol inventory.** `research/tools/schema-inventory.ts` (TypeScript 6.0.3
-  JS API, run with `bun run` from the repo root) extracts every exported
-  declaration of the 14 Role A modules into `research/inventory/<module>.jsonl`.
+- **Symbol inventory.** (Historical research state; goal P1 productized the
+  generator as `bun run beep lint effect-schema-inventory` and moved the rows
+  to `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/`.
+  The research scripts named below were deleted in P1.)
+  The research generator, research/tools/schema-inventory.ts (TypeScript 6.0.3
+  JS API, run with `bun run` from the repo root), extracted every exported
+  declaration of the 14 Role A modules into research/inventory/(module).jsonl.
   Row identity is `(module, symbol, kind)`; fields: `sha`, `file`, `line`,
   `symbol`, `kind`, `category`, `since`, `deprecated`, `internal`, `signature`
   (one line, 300 chars), `summary` (first JSDoc paragraph, 400 chars),
   `hasExample`, `overloads`. Totals: 2,105 rows; `effect/Schema` alone 1,026
   (165 consts, 149 functions, 193 interfaces, 453 members). Largest Schema.ts
-  category: `models` (175). Extraction gaps are documented in
-  `research/inventory/README.md` (bare `export *` not expanded, no
+  category: `models` (175). Extraction gaps are documented in the contract,
+  now `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/README.md` (bare `export *` not expanded, no
   binder-level declaration merging, one level of members, `@internal` rows
   retained and flagged rather than dropped).
-- **Two extractors collided.** Two generations of the inventory lane ran at
-  once; the survivor keys by `(module, symbol, kind)` while the verifier was
-  written for a unique-symbol contract, so `verify-schema-inventory.ts`
-  currently fails on `effect/unstable/arbitrary` rows. A single-writer
-  reconcile lane is aligning generator, verifier, INDEX and README; until its
-  PASS output is in the README, treat the inventory as UNVERIFIED.
+- **Two extractors collided (historical, resolved).** During research two
+  generations of the inventory lane ran at once; the survivor keyed by
+  `(module, symbol, kind)` while the research verifier was written for a
+  unique-symbol contract, so that verifier failed on `effect/unstable/arbitrary`
+  rows. A single-writer reconcile aligned generator, verifier, INDEX and README
+  on 2026-09-28. Current status: the inventory is verified. Local
+  `bun run beep lint effect-schema-inventory --check` reproduces the fixture
+  byte for byte from `.repos/effect` at the pin, and the hosted repo-cli
+  fixture test checks row shape, unique identities, the pin and the INDEX digest
+  without an Effect checkout.
 - **graft index at the effect checkout.** Built 2026-09-12 with
   `graft build "$HOME/YeeBois/dev/effect" -e .ts`: 1,571 files, 30 s, 117 MB,
   structural only (no LLM pass). `graft skeleton

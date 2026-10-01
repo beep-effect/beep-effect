@@ -6,7 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientPin, CacheQualificationKey, CacheTaskConfiguration } from "@beep/repo-configs/cache";
-import { LiteralKit, NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { Crypto, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
@@ -128,7 +128,7 @@ const NativeTask = S.Struct({
 });
 const NativeSummary = S.Struct({ tasks: S.Array(NativeTask) });
 class PilotFile extends S.Class<PilotFile>($I`PilotFile`)(
-  { path: S.NonEmptyString, mode: NonNegativeInt, sha256: Sha256Hex },
+  { path: S.NonEmptyString, mode: S.Natural, sha256: Sha256Hex },
   $I.annote("PilotFile", { description: "A regular package source file observed before or after execution." })
 ) {}
 class PilotRoot extends S.Class<PilotRoot>($I`PilotRoot`)(
@@ -233,7 +233,7 @@ const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
         const link = yield* fs.readLink(path.join(root, child)).pipe(Effect.option);
         if (O.isSome(link)) {
           files.push(
-            PilotFile.make({ path: child, mode: NonNegativeInt.make(0o120000), sha256: yield* hashText(link.value) })
+            PilotFile.make({ path: child, mode: S.Natural.make(0o120000), sha256: yield* hashText(link.value) })
           );
           return;
         }
@@ -243,7 +243,7 @@ const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
           files.push(
             PilotFile.make({
               path: child,
-              mode: NonNegativeInt.make(info.mode & 0o777),
+              mode: S.Natural.make(info.mode & 0o777),
               sha256: yield* readBytes(root, child).pipe(Effect.flatMap(hashBytes)),
             })
           );
@@ -658,7 +658,7 @@ const runPilot = Effect.fn("CachePilot.run")(
     const firstRoot = O.getOrThrow(A.head(roots));
     const verifySandboxLibraries = Effect.fn("CachePilot.verifySandboxLibraries")(function* () {
       yield* Effect.forEach(
-        CacheRuntimeExecutable.Options,
+        CacheRuntimeExecutable.literals,
         Effect.fn("CachePilot.verifySandboxLibrary")(function* (role) {
           const executable = CacheRuntimeExecutable.$match({
             bun: () => "/tools/bun",
@@ -807,7 +807,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       const log = yield* readContainedFileBytesNoFollow(
         fixture.directory,
         "identity-log/turbo-lint.log",
-        NonNegativeInt.make(64 * 1024)
+        S.Natural.make(64 * 1024)
       );
       const replayLogMatches =
         O.isSome(log.contents) && (yield* hashBytes(log.contents.value)) === (yield* hashText(text));
@@ -956,7 +956,7 @@ const runPilot = Effect.fn("CachePilot.run")(
             _tag: "Executed",
             selected: observation,
             logSha256: yield* hashText(text),
-            logBytes: NonNegativeInt.make(new TextEncoder().encode(text).byteLength),
+            logBytes: S.Natural.make(new TextEncoder().encode(text).byteLength),
             replayLogMatches,
           };
         }),
@@ -1192,7 +1192,7 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
                   "Signed pilot lacks matching direct miss/upload/download evidence."
                 );
               return CacheSignedPilotPair.make({
-                id: NonNegativeInt.make(pair),
+                id: S.Natural.make(pair),
                 client,
                 authoritative,
                 producer,
@@ -1481,7 +1481,10 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
     const runMutationControls = Effect.fn("CachePilot.runMutationControls")(function* () {
       const runMutationControl = Effect.fn("CachePilot.runMutationControl")(function* (id: typeof mutationIds.Type) {
         const fixture = yield* prepare(sourceRoots[0], "root-a", `mutation-${id}`);
-        const expectedBaselineExit = A.contains(mutationIds.pickOptions(["root-lint-config", "dependency-source"]), id)
+        const expectedBaselineExit = A.contains(
+          mutationIds.pick(["root-lint-config", "dependency-source"]).literals,
+          id
+        )
           ? 1
           : 0;
         if (id === "root-lint-config")
@@ -1605,7 +1608,7 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
         });
         yield* applyMutation();
         if (
-          !A.contains(mutationIds.pickOptions(["child-task-config", "missing-child-config", "dependency-source"]), id)
+          !A.contains(mutationIds.pick(["child-task-config", "missing-child-config", "dependency-source"]).literals, id)
         )
           changedFixture = yield* overlayRootFile(fixture, changedPath, changedText);
         if (needsProfile && id === "root-lint-config")
@@ -1635,7 +1638,7 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
         checks.push(CacheSyntheticCheck.make({ name: `invalidation-${id}`, passed }));
         return passed;
       });
-      for (const id of mutationIds.Options) {
+      for (const id of mutationIds.literals) {
         if (!(yield* runMutationControl(id))) break;
       }
     });
@@ -1735,7 +1738,7 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
         }
         return true;
       });
-      for (const reason of CachePilotNonExecution.fields.reason.Options) {
+      for (const reason of CachePilotNonExecution.fields.reason.literals) {
         if (!(yield* runNonExecutionControl(reason))) break;
       }
     });

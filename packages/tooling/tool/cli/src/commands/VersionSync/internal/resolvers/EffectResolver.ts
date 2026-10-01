@@ -17,8 +17,8 @@ import * as S from "effect/Schema";
 import {
   VersionCategoryReport,
   VersionCategoryStatusEnum,
-  VersionCategoryStatusThunk,
   VersionDriftItem,
+  versionCategoryStatusFromDrift,
 } from "../../VersionSync.schemas.ts";
 import { readRootPackageJson } from "./RootCatalog.ts";
 import type { FileSystem, Path } from "effect";
@@ -226,10 +226,7 @@ export const buildEffectReport: (state: EffectCatalogState) => VersionCategoryRe
   }
 
   return VersionCategoryReport.cases.effect.make({
-    status: A.match(items, {
-      onEmpty: VersionCategoryStatusThunk.ok,
-      onNonEmpty: VersionCategoryStatusThunk.drift,
-    }),
+    status: versionCategoryStatusFromDrift(items),
     items,
     latest: O.some(state.canonicalSpecifier),
     error: O.none(),

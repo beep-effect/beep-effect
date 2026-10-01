@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -34,7 +34,6 @@ type JsonEncodeEffect<Input> = {
  * ```ts import.meta.vitest name="Make succeeded source record"
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { SucceededSourceProcessingRecord } from "@beep/file-processing/Extraction"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -53,7 +52,7 @@ type JsonEncodeEffect<Input> = {
  *     format: "markdown",
  *     operationId,
  *     relativePath,
- *     sizeBytes: NonNegativeInt.make(11),
+ *     sizeBytes: S.Natural.make(11),
  *     status: "succeeded",
  *     textPath
  *   }).status
@@ -75,7 +74,7 @@ export class SucceededSourceProcessingRecord extends S.Class<SucceededSourceProc
     format: FileFormatFamily,
     operationId: OperationId,
     relativePath: PosixPath,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     status: S.Literal("succeeded"),
     textPath: S.optionalKey(PosixPath),
   },
@@ -92,7 +91,6 @@ export class SucceededSourceProcessingRecord extends S.Class<SucceededSourceProc
  * ```ts import.meta.vitest name="Make skipped source record"
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { SkippedSourceProcessingRecord } from "@beep/file-processing/Extraction"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -110,7 +108,7 @@ export class SucceededSourceProcessingRecord extends S.Class<SucceededSourceProc
  *     format: "xls",
  *     operationId,
  *     relativePath,
- *     sizeBytes: NonNegativeInt.make(64),
+ *     sizeBytes: S.Natural.make(64),
  *     skipReason: "format-out-of-scope",
  *     status: "skipped"
  *   }).skipReason
@@ -132,7 +130,7 @@ export class SkippedSourceProcessingRecord extends S.Class<SkippedSourceProcessi
     format: FileFormatFamily,
     operationId: OperationId,
     relativePath: PosixPath,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     skipReason: FileProcessingSkipReason,
     status: S.Literal("skipped"),
   },
@@ -149,7 +147,6 @@ export class SkippedSourceProcessingRecord extends S.Class<SkippedSourceProcessi
  * ```ts import.meta.vitest name="Make failed source record"
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { FailedSourceProcessingRecord } from "@beep/file-processing/Extraction"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -166,7 +163,7 @@ export class SkippedSourceProcessingRecord extends S.Class<SkippedSourceProcessi
  *     format: "unknown",
  *     operationId,
  *     relativePath,
- *     sizeBytes: NonNegativeInt.make(0),
+ *     sizeBytes: S.Natural.make(0),
  *     status: "failed"
  *   }).status
  * })
@@ -187,7 +184,7 @@ export class FailedSourceProcessingRecord extends S.Class<FailedSourceProcessing
     format: FileFormatFamily,
     operationId: OperationId,
     relativePath: PosixPath,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     status: S.Literal("failed"),
   },
   $I.annote("FailedSourceProcessingRecord", {
@@ -557,12 +554,12 @@ export class FileProcessingCoverageSummary extends S.Class<FileProcessingCoverag
   $I`FileProcessingCoverageSummary`
 )(
   {
-    byFormat: S.Record(FileFormatFamily, S.Record(SourceProcessingStatus, NonNegativeInt)),
-    failedCount: NonNegativeInt,
-    skippedCount: NonNegativeInt,
-    sourceCount: NonNegativeInt,
-    succeededCount: NonNegativeInt,
-    textArtifactCount: NonNegativeInt,
+    byFormat: S.Record(FileFormatFamily, S.Record(SourceProcessingStatus, S.Natural)),
+    failedCount: S.Natural,
+    skippedCount: S.Natural,
+    sourceCount: S.Natural,
+    succeededCount: S.Natural,
+    textArtifactCount: S.Natural,
   },
   $I.annote("FileProcessingCoverageSummary", {
     description: "Aggregate processing coverage counts for the proof manifest.",

@@ -27,7 +27,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Config, Console, DateTime, Effect, FileSystem, HashSet, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -173,7 +173,7 @@ export class YeetPrWaveOwnerVerdict extends S.Class<YeetPrWaveOwnerVerdict>($I`Y
   {
     live: S.Boolean,
     reason: YeetPrWaveOwnerReason,
-    owner: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    owner: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetPrWaveOwnerVerdict", {
     description: "Whether a pull request's owner session is live, why, and the owner's harness and workspace label.",
@@ -188,7 +188,7 @@ export class YeetPrWaveOwnerVerdict extends S.Class<YeetPrWaveOwnerVerdict>($I`Y
  * ```ts
  * import { YeetPrWaveUrgency } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetPrWaveUrgency.Options) // ["critical", "normal"]
+ * console.log(YeetPrWaveUrgency.literals) // ["critical", "normal"]
  * ```
  *
  * @category models
@@ -299,7 +299,7 @@ export const YeetPrWaveDescriptorJson = JsonStringCodec(YeetPrWaveDescriptor);
  * ```ts
  * import { YeetPrWaveEscalationOutcome } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetPrWaveEscalationOutcome.Options.length) // 4
+ * console.log(YeetPrWaveEscalationOutcome.literals.length) // 4
  * ```
  *
  * @category models

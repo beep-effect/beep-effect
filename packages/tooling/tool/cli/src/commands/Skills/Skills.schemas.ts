@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as Effect from "effect/Effect";
@@ -32,7 +32,7 @@ const gitRevisionPattern = /^[0-9a-f]{40}$/u;
  *
  * console.log(SkillSourceType.is.github("github")) // true
  * console.log(SkillSourceType.is.github("gitlab")) // false
- * console.log(SkillSourceType.Options.length) // 1
+ * console.log(SkillSourceType.literals.length) // 1
  * ```
  *
  * @category models
@@ -103,7 +103,7 @@ export type SkillSnapshotAlgorithm = typeof SkillSnapshotAlgorithm.Type;
  *
  * console.log(SkillTreeMode.is["100755"]("100755")) // true
  * console.log(SkillTreeMode.is["120000"]("040000")) // false
- * console.log(SkillTreeMode.Options.length) // 3
+ * console.log(SkillTreeMode.literals.length) // 3
  * ```
  *
  * @category models
@@ -140,7 +140,7 @@ export type SkillTreeMode = typeof SkillTreeMode.Type;
  *
  * console.log(SkillProvenanceStatus.is.exact("exact")) // true
  * console.log(SkillProvenanceStatus.is.inferred("exact")) // false
- * console.log(SkillProvenanceStatus.Options.length) // 3
+ * console.log(SkillProvenanceStatus.literals.length) // 3
  * ```
  *
  * @category models
@@ -176,7 +176,7 @@ export type SkillProvenanceStatus = typeof SkillProvenanceStatus.Type;
  *
  * console.log(SkillProvenanceConfidence.is.high("high")) // true
  * console.log(SkillProvenanceConfidence.is.unresolved("unresolved")) // true
- * console.log(SkillProvenanceConfidence.Options.length) // 4
+ * console.log(SkillProvenanceConfidence.literals.length) // 4
  * ```
  *
  * @category models
@@ -212,7 +212,7 @@ export type SkillProvenanceConfidence = typeof SkillProvenanceConfidence.Type;
  *
  * console.log(SkillProvenanceEvidence.is["exact-tree"]("exact-tree")) // true
  * console.log(SkillProvenanceEvidence.is["path-history"]("vibes")) // false
- * console.log(SkillProvenanceEvidence.Options.length) // 4
+ * console.log(SkillProvenanceEvidence.literals.length) // 4
  * ```
  *
  * @category models
@@ -253,7 +253,7 @@ export type SkillProvenanceEvidence = typeof SkillProvenanceEvidence.Type;
  *
  * console.log(SkillPatchLabel.is["temporary-drift"]("temporary-drift")) // true
  * console.log(SkillPatchLabel.is.policy("temporary-drift")) // false
- * console.log(SkillPatchLabel.Options.length) // 3
+ * console.log(SkillPatchLabel.literals.length) // 3
  * ```
  *
  * @category models
@@ -557,7 +557,7 @@ export class SkillSnapshot extends S.Class<SkillSnapshot>($I`SkillSnapshot`)(
   S.Struct({
     algorithm: SkillSnapshotAlgorithm,
     treeHash: Sha256Hex,
-    fileCount: NonNegativeInt,
+    fileCount: S.Natural,
     manifestHash: Sha256Hex,
     manifest: S.Array(SkillSnapshotFile),
   }).check(SkillSnapshotFileCountCheck),
@@ -637,8 +637,8 @@ export class SkillProvenance extends S.Class<SkillProvenance>($I`SkillProvenance
   {
     status: SkillProvenanceStatus,
     confidence: SkillProvenanceConfidence,
-    matchedFileCount: NonNegativeInt,
-    upstreamFileCount: NonNegativeInt,
+    matchedFileCount: S.Natural,
+    upstreamFileCount: S.Natural,
     evidence: S.Array(SkillProvenanceEvidence),
   },
   $I.annote("SkillProvenance", {

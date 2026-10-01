@@ -6,11 +6,12 @@
  */
 
 import { $AiSyncId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { decodeTomlTextAs } from "@beep/schema/Toml";
+import { LiteralKit } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import { Effect, FileSystem, Match, Path, SchemaIssue } from "effect";
 import * as A from "effect/Array";
+import * as Toml from "effect/encoding/Toml";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { AiSyncError, AiSyncValidationResult, ValidateRepoConfig } from "./models.ts";
 import { ClaudeMcpJson, ClaudeSettings, CodexConfig, NormalizedAgentInstructionDocument } from "./schemas.ts";
@@ -20,14 +21,31 @@ const $I = $AiSyncId.create("validation");
 
 const decodeJsonTextAs = <Schema extends S.Top>(schema: Schema) => S.decodeUnknownEffect(S.fromJsonString(schema));
 
-const decodeCodexToml = decodeTomlTextAs(CodexConfig);
+// effect/encoding/Toml ships the parser but no schema codec; Codex config is only ever read,
+// and a parse failure surfaces as the same SchemaError a schema codec would raise.
+const parseTomlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
+  Effect.try({
+    try: () => Toml.parse(text),
+    catch: (cause) =>
+      new S.SchemaError(
+        new SchemaIssue.InvalidValue({
+          message: `Invalid TOML input (${P.isError(cause) ? cause.message : String(cause)}).`,
+        })
+      ),
+  });
+const decodeTomlTextWith =
+  <A, E, R>(decode: (input: unknown) => Effect.Effect<A, E, R>) =>
+  (text: string): Effect.Effect<A, E | S.SchemaError, R> =>
+    Effect.flatMap(parseTomlText(text), decode);
+
+const decodeCodexToml = decodeTomlTextWith(S.decodeUnknownEffect(CodexConfig));
 const decodeClaudeMcpJson = decodeJsonTextAs(ClaudeMcpJson);
 const decodeClaudeSettingsJson = decodeJsonTextAs(ClaudeSettings);
 
 class CodexRepoWorkspaceWritePolicy extends S.Class<CodexRepoWorkspaceWritePolicy>($I`CodexRepoWorkspaceWritePolicy`)(
   {
-    network_access: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    writable_roots: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    network_access: S.Boolean.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    writable_roots: S.Array(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CodexRepoWorkspaceWritePolicy", {
     description: "Checked-in Codex workspace-write egress and external writable-root policy.",
@@ -36,16 +54,19 @@ class CodexRepoWorkspaceWritePolicy extends S.Class<CodexRepoWorkspaceWritePolic
 
 class CodexRepoSafetyPolicy extends S.Class<CodexRepoSafetyPolicy>($I`CodexRepoSafetyPolicy`)(
   {
-    approval_policy: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    sandbox_mode: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    sandbox_workspace_write: CodexRepoWorkspaceWritePolicy.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    approval_policy: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    sandbox_mode: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    sandbox_workspace_write: CodexRepoWorkspaceWritePolicy.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("CodexRepoSafetyPolicy", {
     description: "Repository safety-policy projection of Codex config, separate from native schema validation.",
   })
 ) {}
 
-const decodeCodexRepoSafetyPolicy = decodeTomlTextAs(CodexRepoSafetyPolicy);
+const decodeCodexRepoSafetyPolicy = decodeTomlTextWith(S.decodeUnknownEffect(CodexRepoSafetyPolicy));
 
 const ClaudeRepoPermissionMode = LiteralKit([
   "default",
@@ -62,9 +83,9 @@ const ClaudeRepoPermissionMode = LiteralKit([
 
 class ClaudeRepoPermissions extends S.Class<ClaudeRepoPermissions>($I`ClaudeRepoPermissions`)(
   {
-    allow: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    defaultMode: ClaudeRepoPermissionMode.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    deny: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    allow: S.Array(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    defaultMode: ClaudeRepoPermissionMode.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    deny: S.Array(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ClaudeRepoPermissions", {
     description: "Checked-in Claude approval mode, Bash allowlist, and deny rules inspected by the repo policy.",
@@ -73,7 +94,7 @@ class ClaudeRepoPermissions extends S.Class<ClaudeRepoPermissions>($I`ClaudeRepo
 
 class ClaudeRepoPermissionPolicy extends S.Class<ClaudeRepoPermissionPolicy>($I`ClaudeRepoPermissionPolicy`)(
   {
-    permissions: ClaudeRepoPermissions.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    permissions: ClaudeRepoPermissions.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ClaudeRepoPermissionPolicy", {
     description: "Repository safety-policy projection of Claude settings, separate from native schema validation.",
@@ -267,7 +288,7 @@ const validateClaudeRepoSafetyPolicy = (content: string) =>
       );
       const unapprovedPermissions = A.filter(allowedPermissions, unapprovedClaudePermission);
       const missingRequiredDenyPermissions = A.filter(
-        RequiredClaudeRepoDenyPermission.Options,
+        RequiredClaudeRepoDenyPermission.literals,
         (permission) => !A.contains(deniedPermissions, permission)
       );
       const unexpectedDenyPermissions = A.filter(

@@ -12,8 +12,8 @@ import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance/TextAnc
 import { IRI } from "@beep/rdf";
 import type { ProvRecord } from "@beep/rdf/Prov";
 import { ObjectRef, Activity as ProvActivity, ProvBundle, Entity as ProvEntity } from "@beep/rdf/Prov";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Hash, pipe, SchemaGetter, Tuple } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Hash, pipe, SchemaGetter, Tuple, Effect } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
@@ -28,7 +28,7 @@ const noConfidence: () => O.Option<Confidence> = O.none;
 const EvidenceSpanShape = S.Struct({
   ...TextAnchorFields,
   confidence: S.OptionFromOptionalKey(Confidence).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({
       description: "System confidence in the evidence span when measured.",
     })
@@ -52,7 +52,7 @@ const LegacyEvidenceSpan = S.Struct({
   text: TextAnchorFields.quote,
   startChar: TextAnchorFields.startChar,
   endChar: TextAnchorFields.endChar,
-  confidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
+  confidence: S.OptionFromOptionalKey(Confidence).pipe(S.withConstructorDefault(Effect.succeedNone)),
 });
 type LegacyEvidenceSpanValue = typeof LegacyEvidenceSpan.Type;
 type CanonicalEvidenceSpanEncoded = typeof CanonicalEvidenceSpan.Encoded;
@@ -98,8 +98,8 @@ export const EvidenceSpan = LegacyEvidenceSpan.pipe(
     encode: SchemaGetter.transform(
       (span: CanonicalEvidenceSpanEncoded): LegacyEvidenceSpanValue => ({
         text: span.quote,
-        startChar: NonNegativeInt.make(span.startChar),
-        endChar: NonNegativeInt.make(span.endChar),
+        startChar: S.Natural.make(span.startChar),
+        endChar: S.Natural.make(span.endChar),
         confidence: O.map(O.fromUndefinedOr(span.confidence), Confidence.make),
       })
     ),
@@ -225,7 +225,7 @@ export class EntityObservation extends S.Class<EntityObservation>($I`EntityObser
       description: "One or more source-text spans used to identify and ground the entity.",
     }),
     grounding: GroundingDecision.pipe(
-      SchemaUtils.withKeyDefaults(NotEvaluatedGrounding),
+      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)), S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
       S.annotateKey({ description: "Grounding outcome for this occurrence." })
     ),
   },
@@ -266,7 +266,7 @@ export class RelationObservation extends S.Class<RelationObservation>($I`Relatio
       description: "One or more source-text spans used to ground the relation.",
     }),
     grounding: GroundingDecision.pipe(
-      SchemaUtils.withKeyDefaults(NotEvaluatedGrounding),
+      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)), S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
       S.annotateKey({ description: "Grounding outcome for this occurrence." })
     ),
   },
@@ -325,6 +325,9 @@ export const makeExtractionProvenanceBundle: {
     })
 );
 
+const entityAttributesDefault = {};
+const entityMentionsDefault = A.empty<EvidenceSpan>();
+const entityObservationsDefault = A.empty<EntityObservation>();
 /**
  * Entity extracted from text and classified by an ontology.
  *
@@ -365,45 +368,45 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
       description: "One or more ontology classes instantiated by the entity.",
     }),
     attributes: Attributes.pipe(
-      SchemaUtils.withKeyDefaults({}),
+      S.withConstructorDefault(Effect.succeed(entityAttributesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityAttributesDefault)),
       S.annotateKey({
         description: "Ontology property values asserted for the entity.",
       })
     ),
-    chunkIndex: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
+    chunkIndex: S.OptionFromOptionalKey(S.Natural).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Zero-based source chunk index when available." })
     ),
     chunkId: S.OptionFromOptionalKey(ChunkId).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Stable source chunk identifier when available." })
     ),
     documentId: S.OptionFromOptionalKey(DocumentId).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Content-derived source document identifier when available." })
     ),
     sourceUri: S.OptionFromOptionalKey(GcsUri).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Canonical source-object URI when available." })
     ),
     extractedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "UTC system instant at which extraction occurred." })
     ),
     eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "UTC domain instant described by the source when available." })
     ),
     mentions: S.Array(EvidenceSpan).pipe(
-      SchemaUtils.withEmptyArrayDefaults<EvidenceSpan>(),
+      S.withConstructorDefault(Effect.succeed(entityMentionsDefault)), S.withDecodingDefaultType(Effect.succeed(entityMentionsDefault)),
       S.annotateKey({ description: "All source spans supporting this entity." })
     ),
     grounding: GroundingDecision.pipe(
-      SchemaUtils.withKeyDefaults(NotEvaluatedGrounding),
+      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)), S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
       S.annotateKey({ description: "Current aggregate grounding decision for the entity." })
     ),
     observations: S.Array(EntityObservation).pipe(
-      SchemaUtils.withEmptyArrayDefaults<EntityObservation>(),
+      S.withConstructorDefault(Effect.succeed(entityObservationsDefault)), S.withDecodingDefaultType(Effect.succeed(entityObservationsDefault)),
       S.annotateKey({ description: "All evidence-anchored observations retained for this entity." })
     ),
   },
@@ -500,6 +503,7 @@ export const RelationObject = S.TaggedUnion({
  */
 export type RelationObject = typeof RelationObject.Type;
 
+const relationObservationsDefault = A.empty<RelationObservation>();
 /**
  * Ontology relation between an extracted subject and a typed object value.
  *
@@ -535,15 +539,15 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
       description: "Explicit entity reference or literal object value.",
     }),
     evidence: S.OptionFromOptionalKey(EvidenceSpan).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Source span supporting the relation when available." })
     ),
     grounding: GroundingDecision.pipe(
-      SchemaUtils.withKeyDefaults(NotEvaluatedGrounding),
+      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)), S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
       S.annotateKey({ description: "Current aggregate grounding decision for the relation." })
     ),
     observations: S.Array(RelationObservation).pipe(
-      SchemaUtils.withEmptyArrayDefaults<RelationObservation>(),
+      S.withConstructorDefault(Effect.succeed(relationObservationsDefault)), S.withDecodingDefaultType(Effect.succeed(relationObservationsDefault)),
       S.annotateKey({ description: "All evidence-anchored observations retained for this relation." })
     ),
   },
@@ -635,6 +639,11 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
   }
 }
 
+const knowledgeGraphEntitiesDefault = A.empty<Entity>();
+const knowledgeGraphRelationsDefault = A.empty<Relation>();
+const knowledgeGraphProvenanceDefault = emptyProvenance();
+const knowledgeGraphEntityObservationsDefault = A.empty<EntityObservation>();
+const knowledgeGraphRelationObservationsDefault = A.empty<RelationObservation>();
 /**
  * Complete entity-and-relation extraction result.
  *
@@ -662,27 +671,27 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
 export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
   {
     entities: S.Array(Entity).pipe(
-      SchemaUtils.withEmptyArrayDefaults<Entity>(),
+      S.withConstructorDefault(Effect.succeed(knowledgeGraphEntitiesDefault)), S.withDecodingDefaultType(Effect.succeed(knowledgeGraphEntitiesDefault)),
       S.annotateKey({ description: "All extracted entities." })
     ),
     relations: S.Array(Relation).pipe(
-      SchemaUtils.withEmptyArrayDefaults<Relation>(),
+      S.withConstructorDefault(Effect.succeed(knowledgeGraphRelationsDefault)), S.withDecodingDefaultType(Effect.succeed(knowledgeGraphRelationsDefault)),
       S.annotateKey({ description: "All extracted ontology relations." })
     ),
     sourceText: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Original source text when retained for provenance." })
     ),
     provenance: ProvBundle.pipe(
-      SchemaUtils.withKeyDefaults(emptyProvenance()),
+      S.withConstructorDefault(Effect.succeed(knowledgeGraphProvenanceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(knowledgeGraphProvenanceDefault)),
       S.annotateKey({ description: "Canonical PROV records retained for graph-level audit." })
     ),
     entityObservations: S.Array(EntityObservation).pipe(
-      SchemaUtils.withEmptyArrayDefaults<EntityObservation>(),
+      S.withConstructorDefault(Effect.succeed(knowledgeGraphEntityObservationsDefault)), S.withDecodingDefaultType(Effect.succeed(knowledgeGraphEntityObservationsDefault)),
       S.annotateKey({ description: "Entity observations retained even when policy excludes their facts." })
     ),
     relationObservations: S.Array(RelationObservation).pipe(
-      SchemaUtils.withEmptyArrayDefaults<RelationObservation>(),
+      S.withConstructorDefault(Effect.succeed(knowledgeGraphRelationObservationsDefault)), S.withDecodingDefaultType(Effect.succeed(knowledgeGraphRelationObservationsDefault)),
       S.annotateKey({ description: "Relation observations retained even when policy excludes their facts." })
     ),
   },
@@ -781,8 +790,8 @@ export const EvidenceSpanArbitrary = Arbitrary.schema(EvidenceSpanModel).pipe(
   Arbitrary.map((value) =>
     EvidenceSpanModel.make({
       ...value,
-      startChar: NonNegativeInt.make(0),
-      endChar: NonNegativeInt.make(value.quote.length),
+      startChar: S.Natural.make(0),
+      endChar: S.Natural.make(value.quote.length),
     })
   )
 );

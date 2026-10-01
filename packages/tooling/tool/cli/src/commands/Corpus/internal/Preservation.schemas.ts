@@ -14,8 +14,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { EffectSchema, Fn, LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
-import { Tuple } from "effect";
+import { Fn, LiteralKit, Sha256Hex } from "@beep/schema";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { CorpusProvenanceRecord } from "./Salvage.schemas.ts";
@@ -96,7 +96,7 @@ export class PreservationObjectIdentity extends S.Class<PreservationObjectIdenti
     mtimeEpoch: S.Int,
     mtimeIso: S.NonEmptyString,
     relativePath: S.NonEmptyString,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     sourceClass: PreservationSourceClass,
   },
   $I.annote("PreservationObjectIdentity", {
@@ -126,7 +126,7 @@ export class PreservationObjectIdentity extends S.Class<PreservationObjectIdenti
 export class SourceStabilityObservation extends S.Class<SourceStabilityObservation>($I`SourceStabilityObservation`)(
   {
     mtimeEpoch: S.Int,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
   },
   $I.annote("SourceStabilityObservation", {
     title: "Source Stability Observation",
@@ -155,7 +155,7 @@ export class SourceStabilityObservation extends S.Class<SourceStabilityObservati
  */
 export class StreamingHashResult extends S.Class<StreamingHashResult>($I`StreamingHashResult`)(
   {
-    bytes: NonNegativeInt,
+    bytes: S.Natural,
     sha256: Sha256Hex,
   },
   $I.annote("StreamingHashResult", {
@@ -167,7 +167,7 @@ export class StreamingHashResult extends S.Class<StreamingHashResult>($I`Streami
 class CopiedOutcome extends S.Class<CopiedOutcome>($I`CopiedOutcome`)(
   {
     kind: S.tag("copied"),
-    bytesCopied: NonNegativeInt,
+    bytesCopied: S.Natural,
     sha256: Sha256Hex,
     statAfter: SourceStabilityObservation,
     statBefore: SourceStabilityObservation,
@@ -180,8 +180,8 @@ class CopiedOutcome extends S.Class<CopiedOutcome>($I`CopiedOutcome`)(
 class ResumeCompletedOutcome extends S.Class<ResumeCompletedOutcome>($I`ResumeCompletedOutcome`)(
   {
     kind: S.tag("resume-completed"),
-    bytesCopied: NonNegativeInt,
-    bytesReused: NonNegativeInt,
+    bytesCopied: S.Natural,
+    bytesReused: S.Natural,
     sha256: Sha256Hex,
     statAfter: SourceStabilityObservation,
     statBefore: SourceStabilityObservation,
@@ -195,7 +195,7 @@ class ResumeCompletedOutcome extends S.Class<ResumeCompletedOutcome>($I`ResumeCo
 class AlreadyCompleteOutcome extends S.Class<AlreadyCompleteOutcome>($I`AlreadyCompleteOutcome`)(
   {
     kind: S.tag("already-complete"),
-    bytesReused: NonNegativeInt,
+    bytesReused: S.Natural,
     sha256: Sha256Hex,
     statAfter: SourceStabilityObservation,
     statBefore: SourceStabilityObservation,
@@ -209,7 +209,7 @@ class AlreadyCompleteOutcome extends S.Class<AlreadyCompleteOutcome>($I`AlreadyC
 class ResumeDiscardedOutcome extends S.Class<ResumeDiscardedOutcome>($I`ResumeDiscardedOutcome`)(
   {
     kind: S.tag("resume-discarded"),
-    bytesDiscarded: NonNegativeInt,
+    bytesDiscarded: S.Natural,
   },
   $I.annote("ResumeDiscardedOutcome", {
     description:
@@ -247,7 +247,7 @@ class UnreadableOutcome extends S.Class<UnreadableOutcome>($I`UnreadableOutcome`
  * ```ts
  * import { PreservationAttemptKind } from "@beep/repo-cli/commands/Corpus"
  *
- * console.log(PreservationAttemptKind.Options.length) // 6
+ * console.log(PreservationAttemptKind.literals.length) // 6
  * ```
  *
  * @category schemas
@@ -307,7 +307,7 @@ export type PreservationAttemptKind = typeof PreservationAttemptKind.Type;
  * @since 0.0.0
  */
 export const PreservationPassKind = LiteralKit(
-  PreservationAttemptKind.pickOptions(["copied", "resume-completed", "already-complete"])
+  PreservationAttemptKind.pick(["copied", "resume-completed", "already-complete"]).literals
 ).pipe(
   $I.annoteSchema("PreservationPassKind", {
     title: "Preservation Pass Kind",
@@ -434,7 +434,7 @@ export type PreservationAttemptOutcome = typeof PreservationAttemptOutcome.Type;
 export class PreservationManifestRow extends S.Class<PreservationManifestRow>($I`PreservationManifestRow`)(
   {
     archivedAt: S.NonEmptyString,
-    attempt: NonNegativeInt,
+    attempt: S.Natural,
     destRelativePath: S.NonEmptyString,
     object: PreservationObjectIdentity,
     outcome: PreservationAttemptOutcome,
@@ -530,7 +530,7 @@ export type InheritedLossClass = typeof InheritedLossClass.Type;
  */
 export class InheritedLossRow extends S.Class<InheritedLossRow>($I`InheritedLossRow`)(
   {
-    count: NonNegativeInt,
+    count: S.Natural,
     evidenceRef: S.NonEmptyString,
     lossClass: InheritedLossClass,
     note: S.optionalKey(S.NonEmptyString),
@@ -566,12 +566,12 @@ export class InheritedLossRow extends S.Class<InheritedLossRow>($I`InheritedLoss
  */
 export class CapacityMeasurement extends S.Class<CapacityMeasurement>($I`CapacityMeasurement`)(
   {
-    destFreeBytes: NonNegativeInt,
+    destFreeBytes: S.Natural,
     measuredAt: S.NonEmptyString,
-    objectCount: NonNegativeInt,
-    requiredBytes: NonNegativeInt,
+    objectCount: S.Natural,
+    requiredBytes: S.Natural,
     sourceRoot: S.NonEmptyString,
-    sourceBytes: NonNegativeInt,
+    sourceBytes: S.Natural,
   },
   $I.annote("CapacityMeasurement", {
     title: "Capacity Measurement",
@@ -633,7 +633,7 @@ export class ArchiveWriterLiveOptions extends S.Class<ArchiveWriterLiveOptions>(
   {
     afterPayloadSync: Fn({
       input: ArchiveWriterPayloadSyncHookInput,
-      output: EffectSchema<void, never, never>(),
+      output: S.declare((u): u is Effect.Effect<void> => Effect.isEffect(u)),
     }).pipe(S.optionalKey),
   },
   $I.annote("ArchiveWriterLiveOptions", {
@@ -683,7 +683,7 @@ class PreflightApproved extends S.Class<PreflightApproved>($I`PreflightApproved`
     kind: S.tag("approved"),
     approvedAt: S.NonEmptyString,
     approvedBy: S.NonEmptyString,
-    ceilingBytes: NonNegativeInt,
+    ceilingBytes: S.Natural,
     measurement: CapacityMeasurement,
   },
   $I.annote("PreflightApproved", {
@@ -783,9 +783,9 @@ export const CapacityPreflightJson = JsonStringCodec(CapacityPreflight);
  */
 export class PreservationRunSummary extends S.Class<PreservationRunSummary>($I`PreservationRunSummary`)(
   {
-    attempted: NonNegativeInt,
-    passed: NonNegativeInt,
-    unapproved: NonNegativeInt,
+    attempted: S.Natural,
+    passed: S.Natural,
+    unapproved: S.Natural,
   },
   $I.annote("PreservationRunSummary", {
     title: "Preservation Run Summary",
@@ -815,8 +815,8 @@ class MissingDestinationOutcome extends S.Class<MissingDestinationOutcome>($I`Mi
 class SizeMismatchOutcome extends S.Class<SizeMismatchOutcome>($I`SizeMismatchOutcome`)(
   {
     kind: S.tag("size-mismatch"),
-    actualBytes: NonNegativeInt,
-    expectedBytes: NonNegativeInt,
+    actualBytes: S.Natural,
+    expectedBytes: S.Natural,
   },
   $I.annote("SizeMismatchOutcome", {
     description: "Destination length diverged from the manifest row before hashing.",
@@ -958,12 +958,12 @@ export class PreservationVerificationSummary extends S.Class<PreservationVerific
   $I`PreservationVerificationSummary`
 )(
   {
-    bytesVerified: NonNegativeInt,
-    hashMismatched: NonNegativeInt,
-    missing: NonNegativeInt,
-    rowsChecked: NonNegativeInt,
-    sizeMismatched: NonNegativeInt,
-    verified: NonNegativeInt,
+    bytesVerified: S.Natural,
+    hashMismatched: S.Natural,
+    missing: S.Natural,
+    rowsChecked: S.Natural,
+    sizeMismatched: S.Natural,
+    verified: S.Natural,
   },
   $I.annote("PreservationVerificationSummary", {
     title: "Preservation Verification Summary",
@@ -1044,7 +1044,7 @@ export class T7ArchiveProvenanceRecord extends S.Class<T7ArchiveProvenanceRecord
     mtimeIso: S.NonEmptyString,
     relativePath: S.NonEmptyString,
     sha256: Sha256Hex,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     sourceClass: PreservationSourceClass,
   },
   $I.annote("T7ArchiveProvenanceRecord", {

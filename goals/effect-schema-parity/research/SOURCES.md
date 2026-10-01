@@ -23,8 +23,8 @@ Never fabricate a URL; cite the on-disk section when none exists.
 | `hint-28` | rc.112..main schema commits | Effect-TS/effect | `explorations/effect-schema-parity/research/upstream-delta.md` per-commit `path:line` | delta | reference |
 | `docs` | `packages/effect/SCHEMA.md`, `migration/schema.md` | Effect-TS/effect | repo root / `packages/effect/` | doctrine | reference |
 | `perf` | `packages/effect/typeperf/suites/schema`, `runtimeperf/suites/schema` | Effect-TS/effect | `explorations/effect-schema-parity/research/performance-baseline.md` | measurement | port-with-attribution (harness shape only, P5) |
-| `inventory` | `schema-inventory/v1` rows, 2,105 over 14 modules | this repo (prototype) | `explorations/effect-schema-parity/research/inventory/*.jsonl`, contract in `inventory/README.md` | knowledge layer | MOVE to `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/` (P1) |
-| `tools` | inventory generator and verifier | this repo (prototype) | `explorations/effect-schema-parity/research/tools/schema-inventory.ts`, `verify-schema-inventory.ts` | knowledge layer | MOVE into repo-cli (P1) |
+| `inventory` | `schema-inventory/v1` rows, 2,232 over 24 modules at `inventoryPin` `df77fff939` | this repo | `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/*.jsonl`, contract in that directory's `README.md` | knowledge layer | MOVED with `git mv` from the exploration's research inventory directory (P1, 2026-09-29) |
+| `tools` | inventory generator, `--check` verifier, and lane prompt generator | this repo | `bun run beep lint effect-schema-inventory` (`packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts`) | knowledge layer | MOVED into repo-cli (P1, 2026-09-29); the exploration's prototype scripts were deleted |
 
 **How these inform implementation:** Role A rows are the adoption oracle for
 every retirement and the source of lane prompts; Role B modules are targets
@@ -36,7 +36,7 @@ become the P1 fixture and command.
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| Effect-TS/effect (`inventoryPin` `e5f7d12af9abef188f7dc39b0207af1801b03ffd`, main snapshot, rc.118 line, from the root `package.json` catalog; 2026-09-12 research ran at `51d4a2f08a`; local `.repos/effect` -> `$HOME/YeeBois/references/effect/effect`) | MIT (`LICENSE`, Effectful Technologies Inc) | port-with-attribution allowed; direction is reverse (delete repo code, consume upstream), so nothing is vendored except the typeperf harness shape | Schema surfaces (Role A) as adoption targets; six Role B modules as group-G targets; `SCHEMA.md` and `migration/schema.md` as doctrine; rc.112..main commits as the hint list |
+| Effect-TS/effect (`inventoryPin` `df77fff9396fe31de72d1947ecb5b74f8cee89e1`, main snapshot, rc.118 line, from the root `package.json` catalog (moved from `e5f7d12af9` on 2026-09-29); 2026-09-12 research ran at `51d4a2f08a`; local `.repos/effect` -> `$HOME/YeeBois/references/effect/effect`) | MIT (`LICENSE`, Effectful Technologies Inc) | port-with-attribution allowed; direction is reverse (delete repo code, consume upstream), so nothing is vendored except the typeperf harness shape | Schema surfaces (Role A) as adoption targets; six Role B modules as group-G targets; `SCHEMA.md` and `migration/schema.md` as doctrine; rc.112..main commits as the hint list |
 
 ## 3. External research sources
 
@@ -75,8 +75,9 @@ Dispositions as graduated in `explorations/effect-schema-parity/MAP.md`
 | LiteralKit, MappedLiteralKit | `.../schema/src/LiteralKit/LiteralKit.schema.ts`, `.../MappedLiteralKit/MappedLiteralKit.schema.ts` | ADAPT: trim four facets, drop `enumMapping`, override `rebuild` (P2) |
 | SchemaUtils | `.../schema/src/SchemaUtils/withCodecStatics.ts:420`, `collectAnnotationsAt.ts:149` | ADAPT after `goals/schema-utils-selective-codec-statics` merges (P5; met by PR #927, 2026-08-31) |
 | Tracked generated baselines | `standards/schema-first.inventory.jsonc`, `standards/schema-catalog.generated.jsonc`, `standards/coverage.regression-baseline.jsonc`, `standards/jsdoc-documentation.inventory.md` | regenerate per PR |
-| Inventory generator command and fixture | proposed under `commands/Lint/`, `test/fixtures/effect-schema-rc118/` | NET-NEW command from the prototype (P1) |
-| Boundary table, facet census gate, lane prompt templates | `SPEC.md`, `ops/prompts/` | NET-NEW (procedure and prose) |
+| Inventory generator command and fixture | `bun run beep lint effect-schema-inventory` (`packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts`); fixture `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/` | LANDED in P1 (2026-09-29), productized from the research prototype |
+| Lane prompts | `bun run beep lint effect-schema-inventory --prompt <module>`, writing `ops/prompts/` | LANDED in P1 (2026-09-29); first slice `ops/prompts/effect-SchemaIssue.md` |
+| Boundary table, facet census gate | `SPEC.md` | NET-NEW (procedure and prose) |
 
 ## 5. Cross-links & provenance
 
@@ -87,6 +88,12 @@ Dispositions as graduated in `explorations/effect-schema-parity/MAP.md`
   `upstream-verification-supplement.md`, `performance-baseline.md`,
   `performance-verification-supplement.md`, `gate-and-knowledge-plumbing.md`,
   `inventory/`, `tools/`.
+- Goal research reports: `goals/effect-schema-parity/research/2026-09-29-p3-gates.md`
+  (P3 facet census for Number, Int, Unknown, Opaque and the PR 3b defaults;
+  boundary evidence for groups D and E), regenerated by
+  `goals/effect-schema-parity/research/tools/facet-census.ts`,
+  `goals/effect-schema-parity/research/tools/facet-probe.ts` and
+  `goals/effect-schema-parity/research/tools/boundary-probe.ts`.
 - Adjacent goals: `goals/schema-utils-selective-codec-statics` (P5
   precondition, met by its Yeet PR #927 merged 2026-08-31), `goals/schema-first-v4-capabilities` and
   `goals/schema-first-zero-actionables` (gate-then-zero precedent),

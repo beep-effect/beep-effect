@@ -57,7 +57,7 @@ it.effect("preserves the manifest.json wire shape", () =>
         bundleId: "p7-mirror-1",
         createdAtEpochMillis: 1_717_000_000_000,
         includedTables: ["ai_metrics_turns"],
-        omittedDataClasses: AiMetricsMirrorOmittedDataClass.Options,
+        omittedDataClasses: AiMetricsMirrorOmittedDataClass.literals,
         omittedTables: ["ai_metrics_raw_archive_objects"],
         p6ProofPreserved: true,
         privacyProof,

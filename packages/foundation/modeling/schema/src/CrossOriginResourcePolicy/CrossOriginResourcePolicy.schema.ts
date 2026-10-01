@@ -61,7 +61,7 @@ export const CorpValue = CorpValueBase.pipe(
 export type CorpValue = typeof CorpValue.Type;
 const isCorpValue = S.is(CorpValue);
 
-const CrossOriginResourcePolicyOptionBase = LiteralKit([false, ...CorpValueBase.Options]);
+const CrossOriginResourcePolicyOptionBase = LiteralKit([false, ...CorpValueBase.literals]);
 
 /**
  * Schema for enabled or disabled `Cross-Origin-Resource-Policy` options.
@@ -126,7 +126,7 @@ export class CrossOriginResourcePolicyResponseHeader extends S.Class<CrossOrigin
 )(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromUndefinedOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CrossOriginResourcePolicyResponseHeader", {
     description: "The `Cross-Origin-Resource-Policy` response header.",

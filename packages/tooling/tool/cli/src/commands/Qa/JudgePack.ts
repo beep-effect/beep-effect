@@ -20,7 +20,7 @@ import { FFmpeg, ProbeVideoRequest } from "@beep/ffmpeg";
 import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { ClockSync, END_SEEK_GUARD_SECONDS, epochToVideoSeconds, SessionStore } from "@beep/qa-capture";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, O, Str, thunkEmptyReadonlyArray, thunkEmptyStr } from "@beep/utils";
 import { Effect, FileSystem, Match, Number as N, Order, Path, pipe } from "effect";
 import * as Eq from "effect/Equal";
@@ -86,7 +86,7 @@ export const JUDGE_PROMPT_TEMPLATE = ".claude/skills/browser-qa-loop/resources/j
  * ```ts
  * import { JudgeEvidenceKind } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
- * console.log(JudgeEvidenceKind.Options.length) // 3
+ * console.log(JudgeEvidenceKind.literals.length) // 3
  * ```
  *
  * @category schemas
@@ -333,15 +333,31 @@ const LegacyAssertion = S.Struct({
   ok: S.Boolean,
 });
 
+const legacyScenarioAssertionsDefault = A.empty();
+const legacyScenarioNotesDefault = A.empty();
+const legacyScenarioScreenshotsDefault = A.empty();
 const LegacyScenario = S.Struct({
-  assertions: S.Array(LegacyAssertion).pipe(SchemaUtils.withKeyDefaults([])),
+  assertions: S.Array(LegacyAssertion).pipe(
+    S.withConstructorDefault(Effect.succeed(legacyScenarioAssertionsDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(legacyScenarioAssertionsDefault))
+  ),
   name: S.String,
-  notes: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults([])),
-  screenshots: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults([])),
+  notes: S.Array(S.String).pipe(
+    S.withConstructorDefault(Effect.succeed(legacyScenarioNotesDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(legacyScenarioNotesDefault))
+  ),
+  screenshots: S.Array(S.String).pipe(
+    S.withConstructorDefault(Effect.succeed(legacyScenarioScreenshotsDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(legacyScenarioScreenshotsDefault))
+  ),
 });
 
+const legacyManifestScenariosDefault = A.empty();
 const LegacyManifest = S.Struct({
-  scenarios: S.Array(LegacyScenario).pipe(SchemaUtils.withKeyDefaults([])),
+  scenarios: S.Array(LegacyScenario).pipe(
+    S.withConstructorDefault(Effect.succeed(legacyManifestScenariosDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(legacyManifestScenariosDefault))
+  ),
 });
 
 const LegacyManifestJson = S.fromJsonString(LegacyManifest);
@@ -461,7 +477,7 @@ export class RenderTimelineOptions extends S.Class<RenderTimelineOptions>($I`Ren
       })
     ),
     legacy: S.OptionFromOptionalKey(LegacyManifest).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("RenderTimelineOptions.legacy", {
         description: "Legacy screenshot-harness manifest supplying scenario notes, when the round produced one.",
       })

@@ -39,7 +39,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
@@ -66,7 +67,7 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Sweep.schemas");
  * ```ts
  * import { SweepStepId } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(SweepStepId.Options)
+ * console.log(SweepStepId.literals)
  * ```
  *
  * @category models
@@ -203,7 +204,7 @@ export class SweepPlan extends S.Class<SweepPlan>($I`SweepPlan`)(
 export class SweepStepExecuted extends S.Class<SweepStepExecuted>($I`SweepStepExecuted`)(
   {
     status: S.tag("executed"),
-    detail: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    detail: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SweepStepExecuted", {
     description: "A sweep step that ran its action.",
@@ -309,7 +310,7 @@ export class SweepReportStep extends S.Class<SweepReportStep>($I`SweepReportStep
   {
     id: SweepStepId,
     outcome: SweepStepOutcome,
-    durationMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    durationMs: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SweepReportStep", {
     description: "One planned sweep step paired with the outcome of attempting it.",

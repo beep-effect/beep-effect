@@ -26,7 +26,6 @@ import {
   ReporterVocabularyArtifact,
   ReporterVocabularyRecord,
 } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { A, O, Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
@@ -59,14 +58,14 @@ const secondReporter = reporters.records[1]!;
 const courtsArtifact = (records: ReadonlyArray<CourtVocabularyRecord>) =>
   CourtVocabularyArtifact.make({
     ...courts,
-    stableIdCount: NonNegativeInt.make(A.length(records)),
+    stableIdCount: S.Natural.make(A.length(records)),
     records,
   });
 
 const reportersArtifact = (records: ReadonlyArray<ReporterVocabularyRecord>) =>
   ReporterVocabularyArtifact.make({
     ...reporters,
-    stableIdCount: NonNegativeInt.make(A.length(records)),
+    stableIdCount: S.Natural.make(A.length(records)),
     records,
   });
 
@@ -145,9 +144,9 @@ describe("CourtReporterVocabulary", () => {
     const types = A.sort(A.dedupe(A.getSomes(A.map(courts.records, ({ type }) => type))), Order.String);
     const citeTypes = A.sort(A.dedupe(A.map(reporters.records, ({ citeType }) => citeType)), Order.String);
 
-    expect(systems).toStrictEqual(CourtSystem.Options);
-    expect(types).toStrictEqual(CourtType.Options);
-    expect(citeTypes).toStrictEqual(ReporterCiteType.Options);
+    expect(systems).toStrictEqual(CourtSystem.literals);
+    expect(types).toStrictEqual(CourtType.literals);
+    expect(citeTypes).toStrictEqual(ReporterCiteType.literals);
   });
 
   it("resolves stable identities and preserves ambiguous aliases", () => {
@@ -281,7 +280,7 @@ describe("CourtReporterVocabulary", () => {
       classify({ courts: [currentCourt] }, { courts: [reusedCourt] }),
       classify({ courts: [currentCourt] }, { courts: [] }),
       classify({ schemaVersion: "court-reporter-vocabulary/v0" }, { schemaVersion: "court-reporter-vocabulary/v1" }),
-      classify({ projectionVersion: NonNegativeInt.make(0) }, { projectionVersion: NonNegativeInt.make(1) }),
+      classify({ projectionVersion: S.Natural.make(0) }, { projectionVersion: S.Natural.make(1) }),
       classify({ courts: [tombstonedCourt, secondCourt] }, { courts: [removedSuccessorCourt, secondCourt] }),
     ];
     const expectedChanges = [
@@ -355,7 +354,7 @@ describe("CourtReporterVocabulary", () => {
       Order.String
     );
 
-    expect(kinds).toStrictEqual(A.sort([...ArtifactDriftChangeKind.Options], Order.String));
+    expect(kinds).toStrictEqual(A.sort([...ArtifactDriftChangeKind.literals], Order.String));
     expect(
       A.every([...A.take(reports, 2), ...reports.slice(3, 7)], ({ compatibility }) => compatibility === "compatible")
     ).toBe(true);

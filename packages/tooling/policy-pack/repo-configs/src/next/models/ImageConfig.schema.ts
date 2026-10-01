@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, NonNegNum, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Struct } from "@beep/utils";
 import { Result } from "effect";
 import * as S from "effect/Schema";
@@ -73,7 +73,7 @@ const ImageQuality = S.Int.check(S.isBetween({ minimum: 1, maximum: 100 })).pipe
 export class ImageLoaderProps extends S.Class<ImageLoaderProps>($I`ImageLoaderProps`)(
   {
     src: S.String,
-    width: NonNegNum,
+    width: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
     quality: S.optionalKey(ImageQuality),
   },
   $I.annote("ImageLoaderProps", {
@@ -238,7 +238,7 @@ export type ImageFormat = typeof ImageFormat.Type;
 export class ImageConfigComplete extends S.Class<ImageConfigComplete>($I`ImageConfigComplete`)(
   {
     /** @see [Device sizes documentation](https://nextjs.org/docs/api-reference/next/image#device-sizes) */
-    deviceSizes: NonNegativeInt.pipe(
+    deviceSizes: S.Natural.pipe(
       S.Array,
       S.mutable,
       S.annotateKey({
@@ -247,7 +247,7 @@ export class ImageConfigComplete extends S.Class<ImageConfigComplete>($I`ImageCo
     ),
 
     /** @see [Image sizing documentation](https://nextjs.org/docs/app/building-your-application/optimizing/images#image-sizing) */
-    imageSizes: NonNegativeInt.pipe(
+    imageSizes: S.Natural.pipe(
       S.Array,
       S.mutable,
       S.annotateKey({
@@ -276,7 +276,7 @@ export class ImageConfigComplete extends S.Class<ImageConfigComplete>($I`ImageCo
     }),
 
     /** @see [Cache behavior](https://nextjs.org/docs/api-reference/next/image#caching-behavior) */
-    minimumCacheTTL: NonNegativeInt.annotateKey({
+    minimumCacheTTL: S.Natural.annotateKey({
       documentation: "https://nextjs.org/docs/api-reference/next/image#caching-behavior",
     }),
 
@@ -290,17 +290,17 @@ export class ImageConfigComplete extends S.Class<ImageConfigComplete>($I`ImageCo
     ),
 
     /** @see [Maximum Disk Cache Size (in bytes)](https://nextjs.org/docs/api-reference/next/image#maximumdiskcachesize) */
-    maximumDiskCacheSize: S.UndefinedOr(NonNegativeInt).annotateKey({
+    maximumDiskCacheSize: S.UndefinedOr(S.Natural).annotateKey({
       documentation: "https://nextjs.org/docs/api-reference/next/image#maximumdiskcachesize",
     }),
 
     /** @see [Maximum Redirects](https://nextjs.org/docs/api-reference/next/image#maximumredirects) */
-    maximumRedirects: NonNegativeInt.annotateKey({
+    maximumRedirects: S.Natural.annotateKey({
       documentation: "https://nextjs.org/docs/api-reference/next/image#maximumredirects",
     }),
 
     /** @see [Maximum Response Body](https://nextjs.org/docs/api-reference/next/image#maximumresponsebody) */
-    maximumResponseBody: NonNegativeInt.annotateKey({
+    maximumResponseBody: S.Natural.annotateKey({
       documentation: "https://nextjs.org/docs/api-reference/next/image#maximumresponsebody",
     }),
 

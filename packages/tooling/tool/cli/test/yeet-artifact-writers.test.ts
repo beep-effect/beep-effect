@@ -1,4 +1,5 @@
 import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/test/Quality";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   attemptJournalPath,
   decodeYeetAttemptJournalEvent,
@@ -28,10 +29,10 @@ import {
   YeetStatusWorktree,
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -99,6 +100,7 @@ const blockedMergeReady = YeetMergeReady.make({
     mergeable: true,
     mergeStateAcceptable: true,
     reviewDecisionAcceptable: true,
+    closeoutGatesPassed: true,
     greptileScore: O.some("5/5"),
   }),
 });

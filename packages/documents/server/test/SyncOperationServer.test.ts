@@ -14,7 +14,6 @@ import {
   SyncOperationRepositoryNotFound,
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
-import { NonNegativeInt } from "@beep/schema";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -32,8 +31,8 @@ const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const itemOne = Documents.SyncItemId.make(1);
 const itemTwo = Documents.SyncItemId.make(2);
 const relPath = VaultRelPath.make("matters/client-default/complaint.pdf");
-const zeroAttempts = NonNegativeInt.make(0);
-const generationOne = NonNegativeInt.make(1);
+const zeroAttempts = S.Natural.make(0);
+const generationOne = S.Natural.make(1);
 
 const operationSeed = (idempotencyKey: string, syncItemId: Documents.SyncItemId) =>
   SyncOperationSeed.make({

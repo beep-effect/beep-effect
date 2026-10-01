@@ -18,7 +18,6 @@ import { EpistemicServerDrizzleLive } from "@beep/epistemic-server/layer";
 import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { CurrentMcpCaller, dispatchWithTierGate, McpCallerIdentity, TierGate } from "@beep/mcp-kit";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
@@ -27,6 +26,7 @@ import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Duration, Effect, Layer, pipe, Ref } from "effect";
 import { Tool } from "effect/ai";
+import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import type { TierGateShape } from "@beep/mcp-kit";
 
@@ -72,7 +72,7 @@ const ungrantedTool = Tool.make("ontology_unlisted_mutation");
 // The session id keys the run; clientId varies per request in production, so
 // the harness pins the session and lets the client id drift.
 const callerOf = (sessionId: string, clientId = 1) =>
-  O.some(McpCallerIdentity.make({ clientId: NonNegativeInt.make(clientId), sessionId: O.some(sessionId) }));
+  O.some(McpCallerIdentity.make({ clientId: S.Natural.make(clientId), sessionId: O.some(sessionId) }));
 
 const makeGate = () =>
   makeGovernedTierGate(gateOptions).pipe(Effect.provideService(EpistemicConfig, testEpistemicConfig));

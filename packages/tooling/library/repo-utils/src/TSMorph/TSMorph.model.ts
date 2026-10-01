@@ -5,17 +5,10 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import {
-  ArrayOfNonEmptyStrings,
-  FilePath,
-  LiteralKit,
-  NonNegativeInt,
-  SchemaUtils,
-  Sha256Hex,
-  Sha256HexFromBytes,
-} from "@beep/schema";
+import { FilePath, LiteralKit, SchemaUtils, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, Match, Result, SchemaGetter, Tuple } from "effect";
+import * as F from "effect/Function";
 import * as S from "effect/Schema";
 import { Project, SourceFile, Node as TsMorphNode } from "ts-morph";
 import { TSSyntaxKind } from "../TypeScript/index.ts";
@@ -101,7 +94,7 @@ const typeScriptDeclarationFilePathChecks = S.makeFilterGroup(
   }
 );
 
-const symbolKindOptions = TSSyntaxKind.pickOptions([
+const symbolKindOptions = TSSyntaxKind.pick([
   "FunctionDeclaration",
   "ClassDeclaration",
   "MethodDeclaration",
@@ -111,7 +104,7 @@ const symbolKindOptions = TSSyntaxKind.pickOptions([
   "InterfaceDeclaration",
   "TypeAliasDeclaration",
   "EnumDeclaration",
-] as const);
+] as const).literals;
 
 /**
  * Repository root directory path schema.
@@ -539,15 +532,15 @@ export type SymbolCategory = typeof SymbolCategory.Type;
  * @since 0.0.0
  */
 export const symbolCategoryFromKind = SymbolKind.$match({
-  FunctionDeclaration: SymbolCategory.thunk.function,
-  ClassDeclaration: SymbolCategory.thunk.class,
-  MethodDeclaration: SymbolCategory.thunk.member,
-  Constructor: SymbolCategory.thunk.member,
-  GetAccessor: SymbolCategory.thunk.member,
-  SetAccessor: SymbolCategory.thunk.member,
-  InterfaceDeclaration: SymbolCategory.thunk.type,
-  TypeAliasDeclaration: SymbolCategory.thunk.type,
-  EnumDeclaration: SymbolCategory.thunk.type,
+  FunctionDeclaration: F.constant(SymbolCategory.Enum.function),
+  ClassDeclaration: F.constant(SymbolCategory.Enum.class),
+  MethodDeclaration: F.constant(SymbolCategory.Enum.member),
+  Constructor: F.constant(SymbolCategory.Enum.member),
+  GetAccessor: F.constant(SymbolCategory.Enum.member),
+  SetAccessor: F.constant(SymbolCategory.Enum.member),
+  InterfaceDeclaration: F.constant(SymbolCategory.Enum.type),
+  TypeAliasDeclaration: F.constant(SymbolCategory.Enum.type),
+  EnumDeclaration: F.constant(SymbolCategory.Enum.type),
 });
 
 /**
@@ -716,7 +709,7 @@ export type ColumnNumber = typeof ColumnNumber.Type;
  * @category models
  * @since 0.0.0
  */
-export const ByteOffset = NonNegativeInt.pipe(
+export const ByteOffset = S.Natural.pipe(
   S.brand("ByteOffset"),
   $I.annoteSchema("ByteOffset", {
     description: "A non-negative byte offset within a source file.",
@@ -753,7 +746,7 @@ export type ByteOffset = typeof ByteOffset.Type;
  * @category models
  * @since 0.0.0
  */
-export const ByteLength = NonNegativeInt.pipe(
+export const ByteLength = S.Natural.pipe(
   S.brand("ByteLength"),
   $I.annoteSchema("ByteLength", {
     description: "A non-negative byte length for a source span.",
@@ -1427,10 +1420,10 @@ export class Symbol extends S.Class<Symbol>($I`Symbol`)(
     summary: S.OptionFromNullOr(S.NonEmptyString).annotateKey({
       description: "Optional one-line summary for quick retrieval results.",
     }),
-    decorators: ArrayOfNonEmptyStrings.annotateKey({
+    decorators: S.Array(S.NonEmptyString).annotateKey({
       description: "Decorator names or decorator expressions applied to the symbol.",
     }),
-    keywords: ArrayOfNonEmptyStrings.annotateKey({
+    keywords: S.Array(S.NonEmptyString).annotateKey({
       description: "Search keywords derived from the symbol.",
     }),
     parentId: S.OptionFromNullOr(SymbolId).annotateKey({
@@ -2122,7 +2115,7 @@ export class TsMorphSymbolSearchResult extends S.Class<TsMorphSymbolSearchResult
     symbols: S.Array(Symbol).annotateKey({
       description: "Matching normalized symbols in rank order.",
     }),
-    total: NonNegativeInt.annotateKey({
+    total: S.Natural.annotateKey({
       description: "Total number of matching symbols before limit truncation.",
     }),
   },
@@ -2218,7 +2211,7 @@ export type TsMorphDiagnosticCategory = typeof TsMorphDiagnosticCategory.Type;
 
 class TsMorphDiagnosticBase extends S.Class<TsMorphDiagnosticBase>($I`TsMorphDiagnosticBase`)(
   {
-    code: NonNegativeInt,
+    code: S.Natural,
     message: S.NonEmptyString,
     source: S.OptionFromNullOr(S.NonEmptyString),
     startLine: LineNumber,

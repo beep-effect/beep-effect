@@ -8,9 +8,11 @@
 import {$ScratchpadId} from "@beep/identity";
 import * as S from "effect/Schema";
 import {LiteralKit} from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import {SemverFromString} from "@beep/schema/Semver";
-import {FilePath, PosInt} from "@beep/schema";
+import { FilePath } from "@beep/schema";
+import { Effect } from "effect";
+import * as A from "effect/Array";
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 
 const $I = $ScratchpadId.create("ontoskills/registry/Registry.models");
@@ -205,7 +207,7 @@ export class InstalledSkillStateValueBase extends S.Class<InstalledSkillStateVal
     packageId: S.String,
     source: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
     ),
     installedAt: S.DateTimeUtcFromString,
     installRoot: FilePath,
@@ -644,8 +646,8 @@ export class RegistrySource extends S.Class<RegistrySource>($I`RegistrySource`)(
   {
     name: S.String,
     indexUrl: S.URLFromString,
-    trustTier: TrustTier.pipe(SchemaUtils.withKeyDefaults(TrustTier.Enum.community)),
-    sourceKind: SourceKind.pipe(SchemaUtils.withKeyDefaults(SourceKind.Enum.ontology))
+    trustTier: TrustTier.pipe(S.withConstructorDefault(Effect.succeed(TrustTier.Enum.community)), S.withDecodingDefaultTypeKey(Effect.succeed(TrustTier.Enum.community))),
+    sourceKind: SourceKind.pipe(S.withConstructorDefault(Effect.succeed(SourceKind.Enum.ontology)), S.withDecodingDefaultTypeKey(Effect.succeed(SourceKind.Enum.ontology)))
   },
   $I.annote("RegistrySource", {
     description: "Configured registry source with an index URL, default trust tier, and source kind."
@@ -677,14 +679,15 @@ export class RegistryPackageEntry extends S.Class<RegistryPackageEntry>($I`Regis
   {
     packageId: S.String,
     manifestPath: FilePath,
-    trustTier: TrustTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    sourceKind: SourceKind.pipe(SchemaUtils.withKeyDefaults(SourceKind.Enum.ontology)),
+    trustTier: TrustTier.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    sourceKind: SourceKind.pipe(S.withConstructorDefault(Effect.succeed(SourceKind.Enum.ontology)), S.withDecodingDefaultTypeKey(Effect.succeed(SourceKind.Enum.ontology))),
   },
   $I.annote("RegistryPackageEntry", {
     description: "Catalog row pointing at one package manifest path with optional trust override."
   })
 ) {}
 
+const embeddingModelInfoDimensionDefault = PosInt.make(384);
 /**
  * Global embedding model declaration used by a registry index for retrieval.
  *
@@ -704,16 +707,17 @@ export class RegistryPackageEntry extends S.Class<RegistryPackageEntry>($I`Regis
  */
 export class EmbeddingModelInfo extends S.Class<EmbeddingModelInfo>($I`EmbeddingModelInfo`)(
   {
-    modelName: S.String.pipe(SchemaUtils.withKeyDefaults("sentence-transformers/all-MiniLM-L6-v2")),
-    dimension: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(384))),
-    modelFile: S.String.pipe(SchemaUtils.withKeyDefaults("model.onnx")),
-    tokenizerFile: S.String.pipe(SchemaUtils.withKeyDefaults("tokenizer.json")),
+    modelName: S.String.pipe(S.withConstructorDefault(Effect.succeed("sentence-transformers/all-MiniLM-L6-v2")), S.withDecodingDefaultTypeKey(Effect.succeed("sentence-transformers/all-MiniLM-L6-v2"))),
+    dimension: PosInt.pipe(S.withConstructorDefault(Effect.succeed(embeddingModelInfoDimensionDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingModelInfoDimensionDefault))),
+    modelFile: S.String.pipe(S.withConstructorDefault(Effect.succeed("model.onnx")), S.withDecodingDefaultTypeKey(Effect.succeed("model.onnx"))),
+    tokenizerFile: S.String.pipe(S.withConstructorDefault(Effect.succeed("tokenizer.json")), S.withDecodingDefaultTypeKey(Effect.succeed("tokenizer.json"))),
   },
   $I.annote("EmbeddingModelInfo", {
     description: "Global embedding model declaration used by a registry index for retrieval."
   })
 ) {}
 
+const registryIndexPackagesDefault = A.empty<string>();
 /**
  * Source index listing package identifiers and the embedding model used to retrieve them.
  *
@@ -736,7 +740,7 @@ export class EmbeddingModelInfo extends S.Class<EmbeddingModelInfo>($I`Embedding
  */
 export class RegistryIndex extends S.Class<RegistryIndex>($I`RegistryIndex`)(
   {
-    packages: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>()),
+    packages: S.String.pipe(S.Array, S.withConstructorDefault(Effect.succeed(registryIndexPackagesDefault)), S.withDecodingDefaultType(Effect.succeed(registryIndexPackagesDefault))),
     embeddingModel: EmbeddingModelInfo,
   },
   $I.annote("RegistryIndex", {
@@ -744,6 +748,7 @@ export class RegistryIndex extends S.Class<RegistryIndex>($I`RegistryIndex`)(
   })
 ) {}
 
+const authorTargetPackagesDefault = A.empty<RegistryPackageEntry>();
 /**
  * Resolution result for an author-level install covering every package under that author.
  *
@@ -770,7 +775,7 @@ export class AuthorTarget extends S.TaggedClass<AuthorTarget>($I`AuthorTarget`)(
   "AuthorTarget",
   {
     author: S.String,
-    packages: RegistryPackageEntry.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<RegistryPackageEntry>())
+    packages: RegistryPackageEntry.pipe(S.Array, S.withConstructorDefault(Effect.succeed(authorTargetPackagesDefault)), S.withDecodingDefaultType(Effect.succeed(authorTargetPackagesDefault)))
   },
   $I.annote("AuthorTarget", {
     description: "Resolution result for an author-level install covering every package under that author."
@@ -811,6 +816,7 @@ export class PackageTarget extends S.TaggedClass<PackageTarget>($I`PackageTarget
   })
 ) {}
 
+const skillTargetSiblingDepsDefault = A.empty<string>();
 /**
  * Resolution result for a skill-level install, including sibling dependency identifiers.
  *
@@ -844,7 +850,7 @@ export class SkillTarget extends S.TaggedClass<SkillTarget>($I`SkillTarget`)(
     package:RegistryPackageEntry,
     skillId: S.String,
     standalone: S.Boolean,
-    siblingDeps: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>())
+    siblingDeps: S.String.pipe(S.Array, S.withConstructorDefault(Effect.succeed(skillTargetSiblingDepsDefault)), S.withDecodingDefaultType(Effect.succeed(skillTargetSiblingDepsDefault)))
   },
   $I.annote("SkillTarget", {
     description: "Resolution result for a skill-level install, including sibling dependency identifiers."

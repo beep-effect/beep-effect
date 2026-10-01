@@ -223,13 +223,13 @@ Already present to compose against (verified via `rg`/`ls`, 2026-06-29):
 - **Crypto/id primitives present, including repo-native UUID modeling** —
   `@noble/hashes@^2.2.0` (HMAC-SHA256/BLAKE2b, `package.json:77`) and `uuid@^14.0.1`
   (`package.json:230`, catalog-pinned, v4 via `crypto.getRandomValues` CSPRNG). Do
-  not start from the raw `uuid` package alone (Codex gate-1): `@beep/schema` already
-  exports a branded `UUID` string schema
-  (`packages/foundation/modeling/schema/src/String.ts:16-39`, via `S.isUUID()`) and
+  not start from the raw `uuid` package alone (Codex gate-1): `@beep/schema` exported a
+  branded `UUID` string schema (its `String` concept, via `S.isUUID()`; retired on
+  2026-09-29 in favor of the upstream `S.Trim.check(S.isNonEmpty(), S.isUUID())`) and
   a `Model.UuidV4Insert` / `Model.UuidV4WithGenerate` v4 insert helper
   (`packages/foundation/modeling/schema/src/Model/Model.uuid.ts:71-96`, exported at
   `Model/index.ts:34`). Note `S.isUUID()` validates *general* RFC 4122, not
-  strict-v4 — derive a named `StrictUuidV4PdfBasename` schema from `String.UUID`
+  strict-v4 — derive a named `StrictUuidV4PdfBasename` schema from that composition
   only if the route must reject non-v4 UUIDs and enforce the `.pdf` suffix in one
   decoded path-param model, documenting why the general schema is insufficient.
 - **`Redacted` is a repo-wide idiom** — used in `@beep/uspto`, `@beep/sanity`

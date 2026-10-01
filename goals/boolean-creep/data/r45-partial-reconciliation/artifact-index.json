@@ -1,0 +1,21 @@
+{
+  "kind": "boolean-creep-public-artifact-index/v1",
+  "artifacts": [
+    {
+      "file": "goals/boolean-creep/data/r45-partial-reconciliation/README.md",
+      "sha256": "f982732ca38e6bd67da88c308af0bc63789cef3529ae14691ab89fe18b88e891"
+    },
+    {
+      "file": "goals/boolean-creep/data/r45-partial-reconciliation/integration.json",
+      "sha256": "d183909d585937991adc177ac0b17384c592dff949f9633654608761777071a9"
+    },
+    {
+      "file": "goals/boolean-creep/data/r45-partial-reconciliation/lane-reconciliation.json",
+      "sha256": "3cd9d473d120e06beeee45e0b169e9b983d1b47f856da7ce74064a2667dbb40d"
+    },
+    {
+      "file": "goals/boolean-creep/data/r45-partial-reconciliation/post-terminal-frozen-input-verification.json",
+      "sha256": "dbac18477b437ded6f99b69e9eac36139ea17d6732ce93fdf7b4d7130edfa829"
+    }
+  ]
+}

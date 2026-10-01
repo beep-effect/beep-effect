@@ -11,7 +11,6 @@ import { BlockRepairFailed } from "@beep/agents-use-cases/AssistantTurn.repair-e
 import { generateAnthropicToolJson } from "@beep/anthropic";
 import { $AgentsServerId } from "@beep/identity/packages";
 import { redactString } from "@beep/observability";
-import { isNonNegative } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Effect, JsonPatch, Metric } from "effect";
 import * as A from "effect/Array";
@@ -26,19 +25,19 @@ const $I = $AgentsServerId.create("AssistantTurn/BlockRepair");
 const REPAIR_ATTEMPTS = 2;
 const PATCH_PATH_LIMIT = 128;
 
-const BlockIndex = S.Int.check(isNonNegative).pipe(
+const BlockIndex = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("BlockIndex", {
     description: "Non-negative integer index of an assistant block inside a turn envelope.",
   })
 );
 
-const PatchOperationCount = S.Int.check(isNonNegative).pipe(
+const PatchOperationCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("PatchOperationCount", {
     description: "Non-negative integer count of structural JSON Patch operations.",
   })
 );
 
-const RepairTokenCount = S.Int.check(isNonNegative).pipe(
+const RepairTokenCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("RepairTokenCount", {
     description: "Non-negative provider token count accumulated across assistant-block repair calls.",
   })

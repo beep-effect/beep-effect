@@ -37,7 +37,7 @@ import {
   validateRefreshedCapacityForTesting,
 } from "@beep/repo-cli/commands/Corpus/internal/Preservation";
 import { decodeProvenanceLinesForTesting } from "@beep/repo-cli/commands/Corpus/internal/ServicePrograms";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -50,6 +50,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const isPreservationManifestRow = S.is(PreservationManifestRow);
+const isArchiveWriterHookOutput = S.is(ArchiveWriterLiveOptions.fields.afterPayloadSync.schema.outputSchema);
 
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeInheritedLossRow = S.decodeUnknownEffect(S.fromJsonString(InheritedLossRow));
@@ -106,7 +107,7 @@ const identityFor = Effect.fn("CorpusPreservationTest.identityFor")(function* (
     mtimeEpoch,
     mtimeIso: "2026-08-27T00:00:00Z",
     relativePath,
-    sizeBytes: NonNegativeInt.make(Number(info.size)),
+    sizeBytes: S.Natural.make(Number(info.size)),
     sourceClass: "salvage-tree",
   });
 });
@@ -119,7 +120,7 @@ const rowFor = Effect.fn("CorpusPreservationTest.rowFor")(function* (
 ) {
   return PreservationManifestRow.make({
     archivedAt: "2026-08-27T00:00:00Z",
-    attempt: NonNegativeInt.make(attempt),
+    attempt: S.Natural.make(attempt),
     destRelativePath,
     object,
     outcome,
@@ -138,6 +139,10 @@ const serviceLayer = (
   ).pipe(Layer.provideMerge(NodeServices.layer));
 
 describe("T7 corpus preservation", () => {
+  it("declares the payload-sync hook output as an Effect", () => {
+    expect(isArchiveWriterHookOutput(Effect.void)).toBe(true);
+    expect(isArchiveWriterHookOutput(undefined)).toBe(false);
+  });
   it.effect("validates refreshed roots and copy-time destination capacity", () =>
     Effect.gen(function* () {
       const rootMismatch = yield* validateRefreshedCapacityForTesting("/approved", "/current", 1, 1, 1).pipe(
@@ -346,7 +351,7 @@ describe("T7 corpus preservation", () => {
           relativePath: "source.bin",
           salvagedAt: "2026-08-27T00:00:00Z",
           sha256: yield* hashBytes(legacyBytes).pipe(Effect.provide(baseContext)),
-          sizeBytes: NonNegativeInt.make(legacyBytes.byteLength),
+          sizeBytes: S.Natural.make(legacyBytes.byteLength),
           sourceLabel: "synthetic-source",
         });
         yield* fs.writeFileString(provenancePath, `${yield* CorpusLedgerRecordJson.encode(legacy)}\n`, { flag: "a" });
@@ -1040,16 +1045,16 @@ describe("T7 corpus preservation", () => {
         const sourceSha = yield* hashBytes(bytes).pipe(Effect.provide(baseContext));
         const statBefore = SourceStabilityObservation.make({
           mtimeEpoch: 0,
-          sizeBytes: NonNegativeInt.make(bytes.byteLength),
+          sizeBytes: S.Natural.make(bytes.byteLength),
         });
         const statAfter = SourceStabilityObservation.make({
           mtimeEpoch: 1,
-          sizeBytes: NonNegativeInt.make(bytes.byteLength),
+          sizeBytes: S.Natural.make(bytes.byteLength),
         });
         const escapeIdentity = yield* identityFor(source, "escape.bin").pipe(Effect.provide(baseContext));
         yield* store.append(
           yield* rowFor(escapeIdentity, "../source.bin", {
-            bytesReused: NonNegativeInt.make(bytes.byteLength),
+            bytesReused: S.Natural.make(bytes.byteLength),
             kind: "already-complete",
             sha256: sourceSha,
             statAfter,
@@ -1060,7 +1065,7 @@ describe("T7 corpus preservation", () => {
         yield* fs.symlink(source, path.join(archiveRoot, "symlink.bin"));
         yield* store.append(
           yield* rowFor(symlinkIdentity, "symlink.bin", {
-            bytesReused: NonNegativeInt.make(bytes.byteLength),
+            bytesReused: S.Natural.make(bytes.byteLength),
             kind: "already-complete",
             sha256: sourceSha,
             statAfter,
@@ -1071,7 +1076,7 @@ describe("T7 corpus preservation", () => {
         yield* fs.makeDirectory(path.join(archiveRoot, "directory.bin"));
         yield* store.append(
           yield* rowFor(directoryIdentity, "directory.bin", {
-            bytesReused: NonNegativeInt.make(bytes.byteLength),
+            bytesReused: S.Natural.make(bytes.byteLength),
             kind: "already-complete",
             sha256: sourceSha,
             statAfter,
@@ -1082,8 +1087,8 @@ describe("T7 corpus preservation", () => {
         yield* fs.writeFile(path.join(archiveRoot, "resumed.bin"), bytes);
         yield* store.append(
           yield* rowFor(resumedIdentity, "resumed.bin", {
-            bytesCopied: NonNegativeInt.make(0),
-            bytesReused: NonNegativeInt.make(bytes.byteLength),
+            bytesCopied: S.Natural.make(0),
+            bytesReused: S.Natural.make(bytes.byteLength),
             kind: "resume-completed",
             sha256: sourceSha,
             statAfter,
@@ -1101,7 +1106,7 @@ describe("T7 corpus preservation", () => {
           yield* rowFor(
             yield* identityFor(source, "discarded.bin").pipe(Effect.provide(baseContext)),
             "discarded.bin",
-            { bytesDiscarded: NonNegativeInt.make(1), kind: "resume-discarded" }
+            { bytesDiscarded: S.Natural.make(1), kind: "resume-discarded" }
           )
         );
         yield* store.append(
@@ -1148,15 +1153,15 @@ describe("T7 corpus preservation", () => {
           mtimeEpoch: 0,
           mtimeIso: "2026-08-27T00:00:00Z",
           relativePath: "synthetic.bin",
-          sizeBytes: NonNegativeInt.make(0),
+          sizeBytes: S.Natural.make(0),
           sourceClass: "salvage-tree",
         });
         const row = yield* rowFor(object, "synthetic.bin", {
-          bytesReused: NonNegativeInt.make(0),
+          bytesReused: S.Natural.make(0),
           kind: "already-complete",
           sha256: sha,
-          statAfter: SourceStabilityObservation.make({ mtimeEpoch: 0, sizeBytes: NonNegativeInt.make(0) }),
-          statBefore: SourceStabilityObservation.make({ mtimeEpoch: 0, sizeBytes: NonNegativeInt.make(0) }),
+          statAfter: SourceStabilityObservation.make({ mtimeEpoch: 0, sizeBytes: S.Natural.make(0) }),
+          statBefore: SourceStabilityObservation.make({ mtimeEpoch: 0, sizeBytes: S.Natural.make(0) }),
         });
         const encodedRow = yield* PreservationManifestRowJson.encode(row);
         expect(yield* PreservationManifestRowJson.decode(encodedRow)).toEqual(row);
@@ -1164,7 +1169,7 @@ describe("T7 corpus preservation", () => {
           isPreservationManifestRow({
             ...row,
             outcome: {
-              bytesReused: NonNegativeInt.make(0),
+              bytesReused: S.Natural.make(0),
               kind: "already-complete",
               sha256: sha,
             },
@@ -1179,7 +1184,7 @@ describe("T7 corpus preservation", () => {
           relativePath: "source.bin",
           salvagedAt: "2026-08-27T00:00:00Z",
           sha256: sha,
-          sizeBytes: NonNegativeInt.make(0),
+          sizeBytes: S.Natural.make(0),
           sourceLabel: "synthetic-source",
         });
         const archive = T7ArchiveProvenanceRecord.make({
@@ -1190,7 +1195,7 @@ describe("T7 corpus preservation", () => {
           record: "t7-archive/v1",
           relativePath: "synthetic.bin",
           sha256: sha,
-          sizeBytes: NonNegativeInt.make(0),
+          sizeBytes: S.Natural.make(0),
           sourceClass: "salvage-tree",
         });
         const stream = yield* Effect.forEach([legacy, archive], CorpusLedgerRecordJson.encode);
