@@ -442,6 +442,15 @@ export const turboCacheSecretSessionEnvironment = (
       value !== undefined && (!isUnresolvedSecretReference(value) || isTurboCacheSecretEnvName(name))
   );
 
+const isUnrelatedSecretReference = (value: string | undefined, name: string): boolean =>
+  isUnresolvedSecretReference(value) && !isTurboCacheSecretEnvName(name);
+
+// Unset markers for a direct spawn, which extends the ambient environment; the
+// Turbo credential references are handled by their own fail-closed scrub.
+const unrelatedSecretReferenceScrub = (
+  environment: Readonly<Record<string, string | undefined>>
+): Record<string, undefined> => R.map(R.filter(environment, isUnrelatedSecretReference), () => undefined);
+
 const secretReferenceProbe = Effect.fn("EnvConfig.secretReferenceProbe")(function* (
   repoRoot: string,
   environment: Record<string, string>,
@@ -617,9 +626,11 @@ export const turboEnvExtendsAmbient: {
  * Forces `TURBO_UI=false` so the child never enables its interactive TUI (which
  * can leave the terminal in mouse-capture mode when a task tears down), and
  * scrubs `TURBO_API`/`TURBO_TOKEN`/`TURBO_TEAM` when they are unresolved
- * `op://` references. A wrapped spawn receives a complete sanitized environment
- * for use with `extendEnv: false`. Returns an empty object for any non-turbo
- * command.
+ * `op://` references. A direct spawn also unsets every other unresolved
+ * reference, so a checkout's `.env` cannot leak per-clone strings into the task
+ * hashes that the shared cache directory keys on. A wrapped spawn receives a
+ * complete sanitized environment for use with `extendEnv: false`. Returns an
+ * empty object for any non-turbo command.
  *
  * **Gotchas**
  *
@@ -674,6 +685,10 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
   const unresolvedToken = isUnresolvedSecretReference(pipe(turboToken, O.getOrUndefined));
   const unresolvedTeam = isUnresolvedSecretReference(pipe(turboTeam, O.getOrUndefined));
   return {
+    // Unresolved references are inert strings to a task, but Turbo still hashes
+    // any it declares in `env`, so per-checkout `.env` drift would split the
+    // shared cache. They leave a direct spawn just as they leave a wrapped one.
+    ...unrelatedSecretReferenceScrub(environment),
     // Spawned turbo inherits the parent TTY; its interactive TUI enables
     // crossterm mouse capture (DECSET ?1000/?1002/?1003/?1006) and, when a
     // failed task tears the run down, the child is killed before it can restore

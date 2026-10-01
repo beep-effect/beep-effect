@@ -1,0 +1,1609 @@
+{
+  "kind": "r53-unflagged-citations/v1",
+  "exhaustive": false,
+  "detectorLimits": "Reviewer sweep covers file-qualified tokens, backtick continuations and row-file-attributed bare numbers. Compressed tokens (e.g. 'Detectors627') and cross-file prose citations can escape it; the builder detector must be fixed rather than relying on this list.",
+  "inventoryNotes": [
+    {
+      "id": "dock-tab-drag-phase",
+      "field": "evidence[0].note",
+      "citationToken": "112",
+      "file": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+      "num": 112,
+      "status": "moved",
+      "new": 113,
+      "ruling": "PROPOSED (not applied): 112 -> 113 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-merge-ready-verdict",
+      "field": "evidence[1].note",
+      "citationToken": "at353",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 353,
+      "status": "moved",
+      "new": 349,
+      "ruling": "PROPOSED (not applied): 353 -> 349 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-merge-ready-verdict",
+      "field": "evidence[1].note",
+      "citationToken": "old347",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 347,
+      "status": "moved",
+      "new": 343,
+      "ruling": "historical clause; leave unchanged"
+    },
+    {
+      "id": "color-support-level-flags",
+      "field": "notes",
+      "citationToken": "256",
+      "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+      "num": 256,
+      "status": "moved",
+      "new": 255,
+      "ruling": "false-positive (count/version/round label, not a line citation)"
+    },
+    {
+      "id": "color-support-level-flags",
+      "field": "evidence[0].note",
+      "citationToken": "has256",
+      "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+      "num": 256,
+      "status": "moved",
+      "new": 255,
+      "ruling": "false-positive (count/version/round label, not a line citation)"
+    },
+    {
+      "id": "allow-list-url-policy-relative-flags",
+      "field": "notes",
+      "citationToken": "191",
+      "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+      "num": 191,
+      "status": "moved",
+      "new": 189,
+      "ruling": "historical clause; leave unchanged"
+    },
+    {
+      "id": "allow-list-url-policy-relative-flags",
+      "field": "notes",
+      "citationToken": "125",
+      "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+      "num": 125,
+      "status": "moved",
+      "new": 123,
+      "ruling": "historical clause; leave unchanged"
+    },
+    {
+      "id": "use-number-input-options",
+      "field": "disqualifier.note",
+      "citationToken": "UseNumberInputOptions702-731",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "num": 702,
+      "status": "moved",
+      "new": 701,
+      "ruling": "PROPOSED (not applied): 702 -> 701 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "use-number-input-options",
+      "field": "disqualifier.note",
+      "citationToken": "at878-885",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "num": 878,
+      "status": "moved",
+      "new": 877,
+      "ruling": "PROPOSED (not applied): 878 -> 877 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "number-input-modifier-keys",
+      "field": "disqualifier.note",
+      "citationToken": "makeStepModifierState227-228",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "num": 227,
+      "status": "moved",
+      "new": 226,
+      "ruling": "PROPOSED (not applied): 227 -> 226 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "number-input-step-modifiers",
+      "field": "disqualifier.note",
+      "citationToken": "makeStepModifierState227-228",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "num": 227,
+      "status": "moved",
+      "new": 226,
+      "ruling": "PROPOSED (not applied): 227 -> 226 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "number-input-step-modifiers",
+      "field": "disqualifier.note",
+      "citationToken": "getStepRatio230-240",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "num": 230,
+      "status": "moved",
+      "new": 229,
+      "ruling": "PROPOSED (not applied): 230 -> 229 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "create-package-template-type-flags",
+      "field": "notes",
+      "citationToken": "Constructor at line 1479",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "num": 1479,
+      "status": "moved",
+      "new": 1477,
+      "ruling": "PROPOSED (not applied): 1479 -> 1477 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "create-package-template-type-flags",
+      "field": "evidence[0].note",
+      "citationToken": "flags1489-1499",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "num": 1489,
+      "status": "moved",
+      "new": 1487,
+      "ruling": "PROPOSED (not applied): 1489 -> 1487 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "create-package-template-type-flags",
+      "field": "evidence[1].note",
+      "citationToken": "inference1190-1334",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "num": 1190,
+      "status": "moved",
+      "new": 1188,
+      "ruling": "PROPOSED (not applied): 1190 -> 1188 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "create-package-scaffold-shape",
+      "field": "notes",
+      "citationToken": "allocation1417",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "num": 1417,
+      "status": "moved",
+      "new": 1415,
+      "ruling": "PROPOSED (not applied): 1417 -> 1415 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "create-package-scaffold-shape",
+      "field": "evidence[0].note",
+      "citationToken": "1190-1217",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "num": 1190,
+      "status": "moved",
+      "new": 1188,
+      "ruling": "PROPOSED (not applied): 1190 -> 1188 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "create-package-scaffold-shape",
+      "field": "evidence[0].note",
+      "citationToken": "1220-1224",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "num": 1220,
+      "status": "moved",
+      "new": 1218,
+      "ruling": "PROPOSED (not applied): 1220 -> 1218 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "create-package-scaffold-shape",
+      "field": "evidence[0].note",
+      "citationToken": "1322-1334",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "num": 1322,
+      "status": "moved",
+      "new": 1320,
+      "ruling": "PROPOSED (not applied): 1322 -> 1320 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-verdict-commit-push",
+      "field": "disqualifier.note",
+      "citationToken": "567",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 567,
+      "status": "moved",
+      "new": 580,
+      "ruling": "PROPOSED (not applied): 567 -> 580 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-verdict-commit-push",
+      "field": "disqualifier.note",
+      "citationToken": "562",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 562,
+      "status": "moved",
+      "new": 575,
+      "ruling": "PROPOSED (not applied): 562 -> 575 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "html-picture-source-sizes-auto",
+      "field": "notes",
+      "citationToken": "R28",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "num": 28,
+      "status": "moved",
+      "new": 27,
+      "ruling": "false-positive (count/version/round label, not a line citation)"
+    },
+    {
+      "id": "yeet-merge-ready-criterion-changed",
+      "field": "notes",
+      "citationToken": "class433",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "num": 433,
+      "status": "moved",
+      "new": 432,
+      "ruling": "PROPOSED (not applied): 433 -> 432 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-merge-ready-criterion-changed",
+      "field": "notes",
+      "citationToken": "members444-445",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "num": 444,
+      "status": "moved",
+      "new": 443,
+      "ruling": "PROPOSED (not applied): 444 -> 443 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-merge-ready-criterion-changed",
+      "field": "notes",
+      "citationToken": "annotation447-448",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "num": 447,
+      "status": "moved",
+      "new": 446,
+      "ruling": "PROPOSED (not applied): 447 -> 446 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-merge-ready-criterion-changed",
+      "field": "notes",
+      "citationToken": "differ950",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "num": 950,
+      "status": "moved",
+      "new": 949,
+      "ruling": "PROPOSED (not applied): 950 -> 949 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-merge-ready-criterion-changed",
+      "field": "evidence[0].note",
+      "citationToken": "at950",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "num": 950,
+      "status": "moved",
+      "new": 949,
+      "ruling": "PROPOSED (not applied): 950 -> 949 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-merge-ready-criterion-changed",
+      "field": "evidence[0].note",
+      "citationToken": "events953-959",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "num": 953,
+      "status": "moved",
+      "new": 952,
+      "ruling": "PROPOSED (not applied): 953 -> 952 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-merge-ready-criterion-changed",
+      "field": "evidence[1].note",
+      "citationToken": "annotation447-448",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "num": 447,
+      "status": "moved",
+      "new": 446,
+      "ruling": "PROPOSED (not applied): 447 -> 446 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "r2-foundation-retry1-number-input-spin-disabled",
+      "field": "disqualifier.note",
+      "citationToken": "at997-998",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "num": 997,
+      "status": "moved",
+      "new": 996,
+      "ruling": "PROPOSED (not applied): 997 -> 996 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "r2-foundation-retry1-number-input-spin-disabled",
+      "field": "disqualifier.note",
+      "citationToken": "at1023",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "num": 1023,
+      "status": "moved",
+      "new": 1022,
+      "ruling": "PROPOSED (not applied): 1023 -> 1022 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "r2-foundation-iri-ipv6-segment-facts",
+      "field": "notes",
+      "citationToken": "355",
+      "file": "packages/foundation/modeling/rdf/src/Iri.ts",
+      "num": 355,
+      "status": "moved",
+      "new": 354,
+      "ruling": "historical clause; leave unchanged"
+    },
+    {
+      "id": "r2-foundation-iri-ipv6-segment-facts",
+      "field": "notes",
+      "citationToken": "306",
+      "file": "packages/foundation/modeling/rdf/src/Iri.ts",
+      "num": 306,
+      "status": "moved",
+      "new": 305,
+      "ruling": "historical clause; leave unchanged"
+    },
+    {
+      "id": "html-img-sizes-disposition",
+      "field": "notes",
+      "citationToken": "64",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "num": 64,
+      "status": "moved",
+      "new": 63,
+      "ruling": "false-positive (count/version/round label, not a line citation)"
+    },
+    {
+      "id": "html-img-sizes-disposition",
+      "field": "notes",
+      "citationToken": "40",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "num": 40,
+      "status": "moved",
+      "new": 39,
+      "ruling": "false-positive (count/version/round label, not a line citation)"
+    },
+    {
+      "id": "html-img-sizes-disposition",
+      "field": "evidence[1].note",
+      "citationToken": "64",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "num": 64,
+      "status": "moved",
+      "new": 63,
+      "ruling": "false-positive (count/version/round label, not a line citation)"
+    },
+    {
+      "id": "html-link-imagesizes-disposition",
+      "field": "notes",
+      "citationToken": "100",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "num": 100,
+      "status": "moved",
+      "new": 99,
+      "ruling": "false-positive (count/version/round label, not a line citation)"
+    },
+    {
+      "id": "html-link-imagesizes-disposition",
+      "field": "notes",
+      "citationToken": "110",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "num": 110,
+      "status": "moved",
+      "new": 109,
+      "ruling": "false-positive (count/version/round label, not a line citation)"
+    },
+    {
+      "id": "html-link-imagesizes-disposition",
+      "field": "notes",
+      "citationToken": "111",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "num": 111,
+      "status": "moved",
+      "new": 110,
+      "ruling": "false-positive (count/version/round label, not a line citation)"
+    },
+    {
+      "id": "html-link-imagesizes-disposition",
+      "field": "notes",
+      "citationToken": "32",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "num": 32,
+      "status": "moved",
+      "new": 31,
+      "ruling": "false-positive (count/version/round label, not a line citation)"
+    },
+    {
+      "id": "tabstrip-overflow-disposition",
+      "field": "notes",
+      "citationToken": "r25",
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 25,
+      "status": "moved",
+      "new": 26,
+      "ruling": "false-positive (count/version/round label, not a line citation)"
+    },
+    {
+      "id": "r26-cli-commands-a-c-create-package-execute-mutation-flags",
+      "field": "disqualifier.note",
+      "citationToken": "1619",
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "num": 1619,
+      "status": "moved",
+      "new": 1617,
+      "ruling": "PROPOSED (not applied): 1619 -> 1617 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "r28-drivers-a-f-ffmpeg-extract-frames-remove-options",
+      "field": "disqualifier.note",
+      "citationToken": "at2091",
+      "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+      "num": 2091,
+      "status": "moved",
+      "new": 2116,
+      "ruling": "PROPOSED (not applied): 2091 -> 2116 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+      "field": "disqualifier.note",
+      "citationToken": "2768-2771",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "num": 2768,
+      "status": "moved",
+      "new": 2899,
+      "ruling": "historical clause; leave unchanged"
+    },
+    {
+      "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+      "field": "disqualifier.note",
+      "citationToken": "2483",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "num": 2483,
+      "status": "moved",
+      "new": 2614,
+      "ruling": "historical clause; leave unchanged"
+    },
+    {
+      "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+      "field": "disqualifier.note",
+      "citationToken": "at2397",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "num": 2397,
+      "status": "moved",
+      "new": 2528,
+      "ruling": "historical clause; leave unchanged"
+    },
+    {
+      "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+      "field": "disqualifier.note",
+      "citationToken": "at2406",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "num": 2406,
+      "status": "moved",
+      "new": 2537,
+      "ruling": "historical clause; leave unchanged"
+    },
+    {
+      "id": "acp-patched-protocol-options",
+      "field": "disqualifier.note",
+      "citationToken": "504-505",
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "num": 504,
+      "status": "moved",
+      "new": 496,
+      "ruling": "PROPOSED (not applied): 504 -> 496 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "acp-patched-protocol-options",
+      "field": "disqualifier.note",
+      "citationToken": "502",
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "num": 502,
+      "status": "moved",
+      "new": 494,
+      "ruling": "PROPOSED (not applied): 502 -> 494 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-status-remote-check-phase",
+      "field": "notes",
+      "citationToken": "2026-09",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 2026,
+      "status": "moved",
+      "new": 2011,
+      "ruling": "false-positive (date)"
+    },
+    {
+      "id": "yeet-status-remote-check-phase",
+      "field": "evidence[0].note",
+      "citationToken": "at1310",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1310,
+      "status": "moved",
+      "new": 1311,
+      "ruling": "PROPOSED (not applied): 1310 -> 1311 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-status-remote-check-phase",
+      "field": "evidence[0].note",
+      "citationToken": "constructors1265",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1265,
+      "status": "moved",
+      "new": 1266,
+      "ruling": "PROPOSED (not applied): 1265 -> 1266 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "id": "yeet-status-remote-check-phase",
+      "field": "evidence[0].note",
+      "citationToken": "Explicit, dated 2026-09",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 2026,
+      "status": "moved",
+      "new": 2011,
+      "ruling": "false-positive (date)"
+    },
+    {
+      "id": "effect-vitest-lint-options",
+      "field": "disqualifier.note",
+      "citationToken": "468",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "num": 468,
+      "status": "moved",
+      "new": 470,
+      "ruling": "misattributed by sweep (note cites EffectVitestScan.ts); re-check against that file"
+    },
+    {
+      "id": "effect-vitest-lint-options",
+      "field": "disqualifier.note",
+      "citationToken": "472",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "num": 472,
+      "status": "moved",
+      "new": 474,
+      "ruling": "misattributed by sweep (note cites EffectVitestScan.ts); re-check against that file"
+    }
+  ],
+  "designs": [
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 8,
+      "file": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+      "num": 33,
+      "status": "moved",
+      "new": 34,
+      "tok": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx:33",
+      "ruling": "PROPOSED (not applied): 33 -> 34 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 77,
+      "file": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+      "num": 33,
+      "status": "moved",
+      "new": 34,
+      "tok": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx:33",
+      "ruling": "PROPOSED (not applied): 33 -> 34 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 78,
+      "file": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+      "num": 112,
+      "status": "moved",
+      "new": 113,
+      "tok": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx:112",
+      "ruling": "PROPOSED (not applied): 112 -> 113 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 79,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 33,
+      "status": "moved",
+      "new": 34,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:33",
+      "ruling": "PROPOSED (not applied): 33 -> 34 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 80,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 108,
+      "status": "changed",
+      "new": null,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:108",
+      "ruling": "cited line content changed: authored resolution required"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 81,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 113,
+      "status": "moved",
+      "new": 114,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:113",
+      "ruling": "PROPOSED (not applied): 113 -> 114 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 82,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 121,
+      "status": "moved",
+      "new": 122,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:121",
+      "ruling": "PROPOSED (not applied): 121 -> 122 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 83,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 133,
+      "status": "changed",
+      "new": null,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:133",
+      "ruling": "cited line content changed: authored resolution required"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 84,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 143,
+      "status": "changed",
+      "new": null,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:143",
+      "ruling": "cited line content changed: authored resolution required"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 85,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 150,
+      "status": "moved",
+      "new": 155,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:150",
+      "ruling": "PROPOSED (not applied): 150 -> 155 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 86,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 158,
+      "status": "moved",
+      "new": 163,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:158",
+      "ruling": "PROPOSED (not applied): 158 -> 163 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 87,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 170,
+      "status": "moved",
+      "new": 175,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:170",
+      "ruling": "PROPOSED (not applied): 170 -> 175 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 88,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 178,
+      "status": "moved",
+      "new": 183,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:178",
+      "ruling": "PROPOSED (not applied): 178 -> 183 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 89,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 181,
+      "status": "moved",
+      "new": 186,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:181",
+      "ruling": "PROPOSED (not applied): 181 -> 186 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 90,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 191,
+      "status": "moved",
+      "new": 196,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:191",
+      "ruling": "PROPOSED (not applied): 191 -> 196 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 97,
+      "file": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+      "num": 112,
+      "status": "moved",
+      "new": 113,
+      "tok": "`:112`",
+      "ruling": "PROPOSED (not applied): 112 -> 113 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 98,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 113,
+      "status": "moved",
+      "new": 114,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:113",
+      "ruling": "PROPOSED (not applied): 113 -> 114 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 99,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 143,
+      "status": "changed",
+      "new": null,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:143",
+      "ruling": "cited line content changed: authored resolution required"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 100,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 170,
+      "status": "moved",
+      "new": 175,
+      "tok": "`:170`",
+      "ruling": "PROPOSED (not applied): 170 -> 175 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "line": 102,
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "num": 178,
+      "status": "moved",
+      "new": 183,
+      "tok": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx:178",
+      "ruling": "PROPOSED (not applied): 178 -> 183 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+      "line": 8,
+      "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
+      "num": 377,
+      "status": "moved",
+      "new": 380,
+      "tok": "packages/drivers/duckdb/src/DuckDb.service.ts:377",
+      "ruling": "PROPOSED (not applied): 377 -> 380 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+      "line": 9,
+      "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
+      "num": 384,
+      "status": "moved",
+      "new": 387,
+      "tok": "packages/drivers/duckdb/src/DuckDb.service.ts:384",
+      "ruling": "PROPOSED (not applied): 384 -> 387 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+      "line": 60,
+      "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
+      "num": 26,
+      "status": "moved",
+      "new": 29,
+      "tok": "packages/drivers/duckdb/src/DuckDb.service.ts:26",
+      "ruling": "PROPOSED (not applied): 26 -> 29 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/epistemic-candidate-comparison-action-gates.md",
+      "line": 154,
+      "file": "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts",
+      "num": 954,
+      "status": "moved",
+      "new": 958,
+      "tok": "Contradiction.model.ts:954-1131",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/epistemic-candidate-comparison-action-gates.md",
+      "line": 154,
+      "file": "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts",
+      "num": 1131,
+      "status": "moved",
+      "new": 1135,
+      "tok": "Contradiction.model.ts:954-1131",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/epistemic-proposal-card-action-flags.md",
+      "line": 156,
+      "file": "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts",
+      "num": 845,
+      "status": "moved",
+      "new": 849,
+      "tok": "Contradiction.model.ts:845-930,954-1136",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/epistemic-proposal-card-action-flags.md",
+      "line": 156,
+      "file": "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts",
+      "num": 930,
+      "status": "moved",
+      "new": 934,
+      "tok": "Contradiction.model.ts:845-930,954-1136",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/epistemic-proposal-card-action-flags.md",
+      "line": 156,
+      "file": "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts",
+      "num": 954,
+      "status": "moved",
+      "new": 958,
+      "tok": "Contradiction.model.ts:845-930,954-1136",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/epistemic-proposal-card-action-flags.md",
+      "line": 156,
+      "file": "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts",
+      "num": 1136,
+      "status": "moved",
+      "new": 1140,
+      "tok": "Contradiction.model.ts:845-930,954-1136",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+      "line": 115,
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "num": 81,
+      "status": "moved",
+      "new": 80,
+      "tok": "`:81`",
+      "ruling": "PROPOSED (not applied): 81 -> 80 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+      "line": 121,
+      "file": "scratchpad/effect-ontology/Domain/Error/index.ts",
+      "num": 76,
+      "status": "moved",
+      "new": 77,
+      "tok": "index.ts:76-91",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+      "line": 121,
+      "file": "scratchpad/effect-ontology/Domain/Model/index.ts",
+      "num": 76,
+      "status": "moved",
+      "new": 77,
+      "tok": "index.ts:76-91",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+      "line": 121,
+      "file": "scratchpad/effect-ontology/Domain/index.ts",
+      "num": 76,
+      "status": "moved",
+      "new": 78,
+      "tok": "index.ts:76-91",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+      "line": 121,
+      "file": "scratchpad/effect-ontology/Domain/Error/index.ts",
+      "num": 91,
+      "status": "moved",
+      "new": 92,
+      "tok": "index.ts:76-91",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+      "line": 121,
+      "file": "scratchpad/effect-ontology/Domain/Model/index.ts",
+      "num": 91,
+      "status": "moved",
+      "new": 92,
+      "tok": "index.ts:76-91",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+      "line": 121,
+      "file": "scratchpad/effect-ontology/Domain/index.ts",
+      "num": 91,
+      "status": "moved",
+      "new": 93,
+      "tok": "index.ts:76-91",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+      "line": 122,
+      "file": "packages/foundation/modeling/html/src/Html.policy.ts",
+      "num": 895,
+      "status": "moved",
+      "new": 890,
+      "tok": "`:895`",
+      "ruling": "PROPOSED (not applied): 895 -> 890 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/r2-apps-contact-form-submit-phase.md",
+      "line": 92,
+      "file": "apps/oip-web/src/contact/ContactSubmission.model.ts",
+      "num": 97,
+      "status": "moved",
+      "new": 93,
+      "tok": "apps/oip-web/src/contact/ContactSubmission.model.ts:97",
+      "ruling": "PROPOSED (not applied): 97 -> 93 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/r27-cli-commands-d-k-normalize-manifest-dedupe-move.md",
+      "line": 68,
+      "file": "goals/boolean-creep/README.md",
+      "num": 416,
+      "status": "moved",
+      "new": 423,
+      "tok": "README.md:416",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/r27-cli-commands-d-k-normalize-manifest-dedupe-move.md",
+      "line": 221,
+      "file": "scratchpad/effect-ontology/Domain/Model/index.ts",
+      "num": 43,
+      "status": "moved",
+      "new": 44,
+      "tok": "index.ts:43",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/r27-cli-commands-d-k-normalize-manifest-dedupe-move.md",
+      "line": 221,
+      "file": "scratchpad/effect-ontology/Domain/index.ts",
+      "num": 43,
+      "status": "moved",
+      "new": 44,
+      "tok": "index.ts:43",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/r27-cli-commands-d-k-normalize-manifest-dedupe-move.md",
+      "line": 221,
+      "file": "scratchpad/effect-ontology/Domain/Error/index.ts",
+      "num": 50,
+      "status": "moved",
+      "new": 51,
+      "tok": "`:50`",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/r27-cli-commands-d-k-normalize-manifest-dedupe-move.md",
+      "line": 221,
+      "file": "scratchpad/effect-ontology/Domain/Model/index.ts",
+      "num": 50,
+      "status": "moved",
+      "new": 51,
+      "tok": "`:50`",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/r27-cli-commands-d-k-normalize-manifest-dedupe-move.md",
+      "line": 221,
+      "file": "scratchpad/effect-ontology/Domain/index.ts",
+      "num": 50,
+      "status": "moved",
+      "new": 51,
+      "tok": "`:50`",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/r29-yeet-sweep-worktree-probe-address.md",
+      "line": 79,
+      "file": "packages/architecture-lab/use-cases/package.json",
+      "num": 77,
+      "status": "changed",
+      "new": null,
+      "tok": "package.json:67,70,77",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/r29-yeet-sweep-worktree-probe-address.md",
+      "line": 79,
+      "file": "packages/workspace/use-cases/package.json",
+      "num": 77,
+      "status": "changed",
+      "new": null,
+      "tok": "package.json:67,70,77",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/r3-drivers-arch-tool-name-collision-stage-flags.md",
+      "line": 127,
+      "file": "packages/drivers/box/scripts/generate.ts",
+      "num": 51,
+      "status": "moved",
+      "new": 50,
+      "tok": "scripts/generate.ts:10,51-75",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/r3-drivers-arch-tool-name-collision-stage-flags.md",
+      "line": 127,
+      "file": "packages/drivers/box/scripts/generate.ts",
+      "num": 75,
+      "status": "moved",
+      "new": 74,
+      "tok": "scripts/generate.ts:10,51-75",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md",
+      "line": 18,
+      "file": "packages/tooling/tool/cli/test/yeet-watch-stream.test.ts",
+      "num": 189,
+      "status": "moved",
+      "new": 188,
+      "tok": "`:189–209`",
+      "ruling": "PROPOSED (not applied): 189 -> 188 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md",
+      "line": 18,
+      "file": "packages/tooling/tool/cli/test/yeet-watch-stream.test.ts",
+      "num": 209,
+      "status": "moved",
+      "new": 208,
+      "tok": "`:189–209`",
+      "ruling": "PROPOSED (not applied): 209 -> 208 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md",
+      "line": 43,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "num": 862,
+      "status": "moved",
+      "new": 861,
+      "tok": "`:862`",
+      "ruling": "PROPOSED (not applied): 862 -> 861 (byte-identical move; builder detector missed it)"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 14,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 345,
+      "status": "moved",
+      "new": 341,
+      "tok": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:345",
+      "ruling": "pin-historical (0be1f13); leave unchanged"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 15,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 353,
+      "status": "moved",
+      "new": 349,
+      "tok": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:353",
+      "ruling": "pin-historical (0be1f13); leave unchanged"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 17,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 286,
+      "status": "moved",
+      "new": 285,
+      "tok": "`:271-286`",
+      "ruling": "pin-historical (0be1f13); leave unchanged"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 17,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 475,
+      "status": "moved",
+      "new": 488,
+      "tok": "`:475-478`",
+      "ruling": "pin-historical (0be1f13); leave unchanged"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 17,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 478,
+      "status": "moved",
+      "new": 491,
+      "tok": "`:475-478`",
+      "ruling": "pin-historical (0be1f13); leave unchanged"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 17,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 336,
+      "status": "moved",
+      "new": 332,
+      "tok": "`:336-365`",
+      "ruling": "pin-historical (0be1f13); leave unchanged"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 17,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 365,
+      "status": "moved",
+      "new": 361,
+      "tok": "`:336-365`",
+      "ruling": "pin-historical (0be1f13); leave unchanged"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 17,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 367,
+      "status": "moved",
+      "new": 363,
+      "tok": "`:367-386`",
+      "ruling": "pin-historical (0be1f13); leave unchanged"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 17,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "num": 386,
+      "status": "moved",
+      "new": 391,
+      "tok": "`:367-386`",
+      "ruling": "pin-historical (0be1f13); leave unchanged"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 19,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1176,
+      "status": "moved",
+      "new": 1177,
+      "tok": "Status.ts:1176-1180",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 19,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1180,
+      "status": "moved",
+      "new": 1181,
+      "tok": "Status.ts:1176-1180",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 80,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 307,
+      "status": "moved",
+      "new": 308,
+      "tok": "Status.ts:307",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 81,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1176,
+      "status": "moved",
+      "new": 1177,
+      "tok": "Status.ts:1176-1249",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 81,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1249,
+      "status": "moved",
+      "new": 1250,
+      "tok": "Status.ts:1176-1249",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 82,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1260,
+      "status": "moved",
+      "new": 1261,
+      "tok": "Status.ts:1260,1421-1430",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 82,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1421,
+      "status": "moved",
+      "new": 1422,
+      "tok": "Status.ts:1260,1421-1430",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 82,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1430,
+      "status": "moved",
+      "new": 1431,
+      "tok": "Status.ts:1260,1421-1430",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 107,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1248,
+      "status": "moved",
+      "new": 1249,
+      "tok": "Status.ts:1248-1249",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 107,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1249,
+      "status": "moved",
+      "new": 1250,
+      "tok": "Status.ts:1248-1249",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 107,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1421,
+      "status": "moved",
+      "new": 1422,
+      "tok": "`:1421-1430`",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "line": 107,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1430,
+      "status": "moved",
+      "new": 1431,
+      "tok": "`:1421-1430`",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 47,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 215,
+      "status": "moved",
+      "new": 216,
+      "tok": "Status.ts:215-229",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 47,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 229,
+      "status": "moved",
+      "new": 230,
+      "tok": "Status.ts:215-229",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 52,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1388,
+      "status": "moved",
+      "new": 1389,
+      "tok": "Status.ts:1388-1401",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 52,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1401,
+      "status": "moved",
+      "new": 1402,
+      "tok": "Status.ts:1388-1401",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 55,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 311,
+      "status": "moved",
+      "new": 312,
+      "tok": "Status.ts:311-336",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 55,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 336,
+      "status": "moved",
+      "new": 337,
+      "tok": "Status.ts:311-336",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 83,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1197,
+      "status": "moved",
+      "new": 1198,
+      "tok": "Status.ts:1197",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 152,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 235,
+      "status": "moved",
+      "new": 236,
+      "tok": "Status.ts:235-281",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 152,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 281,
+      "status": "moved",
+      "new": 282,
+      "tok": "Status.ts:235-281",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 153,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 289,
+      "status": "moved",
+      "new": 290,
+      "tok": "Status.ts:289-359",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 153,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 359,
+      "status": "moved",
+      "new": 360,
+      "tok": "Status.ts:289-359",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 154,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1197,
+      "status": "moved",
+      "new": 1198,
+      "tok": "Status.ts:1197",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 155,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1252,
+      "status": "moved",
+      "new": 1253,
+      "tok": "Status.ts:1252-1346",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 155,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1346,
+      "status": "moved",
+      "new": 1347,
+      "tok": "Status.ts:1252-1346",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 156,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1360,
+      "status": "moved",
+      "new": 1361,
+      "tok": "Status.ts:1360-1410",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 156,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1410,
+      "status": "moved",
+      "new": 1411,
+      "tok": "Status.ts:1360-1410",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 157,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1472,
+      "status": "changed",
+      "new": null,
+      "tok": "Status.ts:1472-1489",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 157,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1489,
+      "status": "moved",
+      "new": 1485,
+      "tok": "Status.ts:1472-1489",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 158,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1495,
+      "status": "moved",
+      "new": 1491,
+      "tok": "Status.ts:1495-1551",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 158,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1551,
+      "status": "moved",
+      "new": 1540,
+      "tok": "Status.ts:1495-1551",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 159,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1571,
+      "status": "moved",
+      "new": 1558,
+      "tok": "Status.ts:1571-1609",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 159,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1609,
+      "status": "moved",
+      "new": 1596,
+      "tok": "Status.ts:1571-1609",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 160,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1619,
+      "status": "moved",
+      "new": 1606,
+      "tok": "Status.ts:1619-1628",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 160,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1628,
+      "status": "moved",
+      "new": 1615,
+      "tok": "Status.ts:1619-1628",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 161,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1685,
+      "status": "moved",
+      "new": 1662,
+      "tok": "Status.ts:1685-1716",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 161,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1716,
+      "status": "moved",
+      "new": 1690,
+      "tok": "Status.ts:1685-1716",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 162,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1768,
+      "status": "moved",
+      "new": 1742,
+      "tok": "Status.ts:1768-1788",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 162,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1788,
+      "status": "moved",
+      "new": 1762,
+      "tok": "Status.ts:1768-1788",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 163,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1806,
+      "status": "moved",
+      "new": 1780,
+      "tok": "Status.ts:1806-1819",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 163,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1819,
+      "status": "moved",
+      "new": 1793,
+      "tok": "Status.ts:1806-1819",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 164,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1875,
+      "status": "moved",
+      "new": 1849,
+      "tok": "Status.ts:1875-1888",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 164,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1888,
+      "status": "moved",
+      "new": 1862,
+      "tok": "Status.ts:1875-1888",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    },
+    {
+      "design": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "line": 188,
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "num": 1473,
+      "status": "changed",
+      "new": null,
+      "tok": "Status.ts:1473",
+      "ruling": "ambiguous basename: resolve the referent before acting"
+    }
+  ]
+}

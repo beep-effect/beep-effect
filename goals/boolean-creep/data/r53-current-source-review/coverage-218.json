@@ -1,0 +1,1746 @@
+[
+  {
+    "id": "dock-tab-drag-phase",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "dock-tab-drag-phase",
+    "where": "evidence[0]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "yeet-merge-ready-verdict",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "yeet-merge-ready-verdict",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "evidence[0]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "yeet-merge-ready-verdict",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "evidence[1]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "yeet-status-github-thread-mirror",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "yeet-status-github-thread-mirror",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "drivers-acp-protocol-logging-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "drivers-acp-protocol-logging-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "drivers-openclaw-channel-health",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "drivers-openclaw-channel-health",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "drivers-obs-record-status",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "drivers-obs-record-status",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "drivers-read-lines-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "drivers-read-lines-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "drivers-text-stats-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "drivers-text-stats-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "drivers-sample-lines-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "drivers-sample-lines-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "drivers-read-jsonl-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "drivers-read-jsonl-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "drivers-load-lines-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "drivers-load-lines-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "drivers-process-file-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "drivers-process-file-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "drivers-filter-lines-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "drivers-filter-lines-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "drivers-extract-matches-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "drivers-extract-matches-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "color-support-level-flags",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "color-support-level-flags",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "nlp-token-annotation-flags",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "nlp-token-annotation-flags",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "allow-list-url-policy-relative-flags",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "allow-list-url-policy-relative-flags",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "use-number-input-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "use-number-input-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "outcome-label",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "outcome-label",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "ai-metrics-retention-mutation-result",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "ai-metrics-retention-mutation-result",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "ai-metrics-retention-restore-drill-result",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "ai-metrics-retention-restore-drill-result",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "npm-package-json",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "npm-package-json",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "tsconfig-compiler-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "tsconfig-compiler-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "tsconfig-build-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "tsconfig-build-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "ts-node-config",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "ts-node-config",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "redirect-permanent",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "redirect-permanent",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "create-package-template-type-flags",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "create-package-template-type-flags",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "create-package-template-type-flags",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "create-package-template-type-flags",
+    "where": "evidence[0]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "create-package-template-type-flags",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "create-package-template-type-flags",
+    "where": "evidence[1]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "create-package-scaffold-shape",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "create-package-scaffold-shape",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "create-package-scaffold-shape",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "create-package-scaffold-shape",
+    "where": "evidence[0]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "create-package-scaffold-shape",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "create-package-scaffold-shape",
+    "where": "evidence[1]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "yeet-verdict-commit-push",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "yeet-verdict-commit-push",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "openclaw-channel-account-status",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "openclaw-channel-account-status",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "nlp-mcp-dataset-load-lines-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "nlp-mcp-dataset-load-lines-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "nlp-mcp-text-read-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "nlp-mcp-text-read-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "nlp-mcp-text-stream-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "nlp-mcp-text-stream-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "nlp-mcp-pipeline-process-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "nlp-mcp-pipeline-process-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "yeet-merge-ready-encoded",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "yeet-merge-ready-encoded",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "duckdb-transaction-began-closed",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "duckdb-transaction-began-closed",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "evidence[0]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "duckdb-transaction-began-closed",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "evidence[1]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "jsonc-parser-sdk-flags",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "jsonc-parser-sdk-flags",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "taxonomy-loader-manifest-presence",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "taxonomy-loader-manifest-presence",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "tsconfig-compiler-options-export",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "tsconfig-compiler-options-export",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "ts-node-compiler-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "ts-node-compiler-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "repo-package-json",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "repo-package-json",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "yeet-merge-ready-criterion-changed",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "yeet-merge-ready-criterion-changed",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "yeet-merge-ready-criterion-changed",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "yeet-merge-ready-criterion-changed",
+    "where": "evidence[0]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "yeet-merge-ready-criterion-changed",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "yeet-merge-ready-criterion-changed",
+    "where": "evidence[1]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r2-foundation-tabstrip-floating-overflow",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r2-foundation-tabstrip-floating-overflow",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r2-foundation-retry1-number-input-spin-disabled",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r2-foundation-retry1-number-input-spin-disabled",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r3-tooling-fn-schema-inline-contracts",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r3-tooling-fn-schema-inline-contracts",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "with-codec-statics-install-on-owned-schema",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "with-codec-statics-install-on-owned-schema",
+    "where": "record",
+    "ruling": "approve-withdrawal",
+    "reason": "owner removed; no successor with same Boolean contract"
+  },
+  {
+    "id": "with-statics-attach-statics",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "with-statics-attach-statics",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "acp-client-protocol-capabilities",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "acp-client-protocol-capabilities",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "acp-server-protocol-capabilities",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "acp-server-protocol-capabilities",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r2-foundation-iri-ipv6-segment-facts",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r2-foundation-iri-ipv6-segment-facts",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r2-foundation-dock-ghost-axis-flips",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r2-foundation-dock-ghost-axis-flips",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r2-foundation-static-descriptors-mode",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r2-foundation-static-descriptors-mode",
+    "where": "record",
+    "ruling": "approve-withdrawal",
+    "reason": "owner removed; no successor with same Boolean contract"
+  },
+  {
+    "id": "practice-kg-closed-world-four-hints",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "practice-kg-closed-world-four-hints",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r24-drivers-n-r-openclaw-channel-account-probe-ok-error",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r24-drivers-n-r-openclaw-channel-account-probe-ok-error",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r25-foundation-schema-n-z-semver-prerelease-numeric-flags",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r25-foundation-schema-n-z-semver-prerelease-numeric-flags",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "tabstrip-overflow-disposition",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "tabstrip-overflow-disposition",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "evidence[0]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r25-tooling-library-policy-test-outcome-label-quality-gate",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r25-tooling-library-policy-test-outcome-label-quality-gate",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r26-foundation-ui-activate-panel-reasons",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r26-foundation-ui-activate-panel-reasons",
+    "where": "record",
+    "ruling": "retain-unchanged",
+    "reason": "Reducer.ts:344 changed only PanelId.equals -> S.toEquivalence(PanelId). At cf97 PanelId.equals = SchemaUtils.toEquivalence(schema) = dual(2, S.toEquivalence(schema)); two-argument call is identical. Same line, owner, members panelChanged/reveal/restore and D1 contract (restore line changed identically for GroupId). Row retained byte-identical."
+  },
+  {
+    "id": "create-package-retired-name-reconciliation",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "create-package-retired-name-reconciliation",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "create-package-retired-name-reconciliation",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "create-package-retired-name-reconciliation",
+    "where": "evidence[0]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r26-cli-commands-a-c-create-package-execute-mutation-flags",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r26-cli-commands-a-c-create-package-execute-mutation-flags",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r27-cli-commands-a-c-ecosystem-package-json-flags",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r27-cli-commands-a-c-ecosystem-package-json-flags",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r28-drivers-a-f-ffmpeg-with-staging-directory-remove-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r28-drivers-a-f-ffmpeg-with-staging-directory-remove-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r28-drivers-a-f-ffmpeg-extract-frames-remove-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r28-drivers-a-f-ffmpeg-extract-frames-remove-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r28-tooling-policy-jsonc-parse-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r28-tooling-policy-jsonc-parse-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r29-tooling-library-observability-retention-remove-plan-paths",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r29-tooling-library-observability-retention-remove-plan-paths",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r29-cli-commands-l-q-test-tsgo-tempdir-remove-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r29-cli-commands-l-q-test-tsgo-tempdir-remove-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r29-cli-commands-l-q-collect-output-capture-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r29-cli-commands-l-q-collect-output-capture-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r29-cli-commands-l-q-test-tsgo-turbo-capture-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r29-cli-commands-l-q-test-tsgo-turbo-capture-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "acp-patched-protocol-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "acp-patched-protocol-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "yeet-status-remote-check-phase",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "yeet-status-remote-check-phase",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "yeet-status-remote-check-phase",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "yeet-status-remote-check-phase",
+    "where": "evidence[0]",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "effect-vitest-lint-options",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "effect-vitest-lint-options",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "r32-cli-yeet-watch-thread-node",
+    "gate": "inventory anchor into a file changed sin",
+    "owner": "r32-cli-yeet-watch-thread-node",
+    "where": "record",
+    "ruling": "approve-anchor-move",
+    "reason": "independent hunk map + text equality + window equality"
+  },
+  {
+    "id": "NC-dock-tab-drag-phase-ccefc959",
+    "gate": "note/design citation into a file changed",
+    "owner": "dock-tab-drag-phase",
+    "where": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-dock-tab-drag-phase-afdf0e27",
+    "gate": "note/design citation into a file changed",
+    "owner": "dock-tab-drag-phase",
+    "where": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-dock-tab-drag-phase-e5c3270a",
+    "gate": "note/design citation into a file changed",
+    "owner": "dock-tab-drag-phase",
+    "where": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-dock-tab-drag-phase-d2c82bf9",
+    "gate": "note/design citation into a file changed",
+    "owner": "dock-tab-drag-phase",
+    "where": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-4a7a47de",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-3b5369e9",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-87440af1",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-4cb5699b",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-719083c1",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-dcf6dde1",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-d2b56848",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-9720a632",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-c47da0b4",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-bf68bb4c",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-2450c088",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-merge-ready-verdict-6408cdc3",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-verdict",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 0be1f13; Verdict.ts/WatchMode/WatchStream/test citations already moved by cf97"
+  },
+  {
+    "id": "NC-runners-bake-freshness-dff5202e",
+    "gate": "note/design citation into a file changed",
+    "owner": "runners-bake-freshness",
+    "where": "goals/boolean-creep/designs/runners-bake-freshness.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-desktop-panel-menu-item-state-64f62579",
+    "gate": "note/design citation into a file changed",
+    "owner": "desktop-panel-menu-item-state",
+    "where": "goals/boolean-creep/designs/desktop-panel-menu-item-state.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-desktop-panel-menu-item-state-5b00e488",
+    "gate": "note/design citation into a file changed",
+    "owner": "desktop-panel-menu-item-state",
+    "where": "goals/boolean-creep/designs/desktop-panel-menu-item-state.md",
+    "ruling": "revert",
+    "reason": "pin-historical: design bound to 93217d9; Dock.models-tree.ts:597-598 already moved by cf97"
+  },
+  {
+    "id": "NC-desktop-panel-menu-item-state-a516358a",
+    "gate": "note/design citation into a file changed",
+    "owner": "desktop-panel-menu-item-state",
+    "where": "goals/boolean-creep/designs/desktop-panel-menu-item-state.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-epistemic-review-dialog-reason-gates-b3447f02",
+    "gate": "note/design citation into a file changed",
+    "owner": "epistemic-review-dialog-reason-gates",
+    "where": "goals/boolean-creep/designs/epistemic-review-dialog-reason-gates.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-color-support-level-flags-bfe0354e",
+    "gate": "note/design citation into a file changed",
+    "owner": "color-support-level-flags",
+    "where": "goals/boolean-creep/designs/color-support-level-flags.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-color-support-level-flags-71c85510",
+    "gate": "note/design citation into a file changed",
+    "owner": "color-support-level-flags",
+    "where": "goals/boolean-creep/designs/color-support-level-flags.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-color-support-level-flags-b27738aa",
+    "gate": "note/design citation into a file changed",
+    "owner": "color-support-level-flags",
+    "where": "goals/boolean-creep/designs/color-support-level-flags.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-color-support-level-flags-a1c5e249",
+    "gate": "note/design citation into a file changed",
+    "owner": "color-support-level-flags",
+    "where": "goals/boolean-creep/designs/color-support-level-flags.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-color-support-level-flags-80745e5e",
+    "gate": "note/design citation into a file changed",
+    "owner": "color-support-level-flags",
+    "where": "goals/boolean-creep/designs/color-support-level-flags.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-color-support-level-flags-fafea8af",
+    "gate": "note/design citation into a file changed",
+    "owner": "color-support-level-flags",
+    "where": "goals/boolean-creep/designs/color-support-level-flags.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-allow-list-url-policy-relative-flags-dcd0283b",
+    "gate": "note/design citation into a file changed",
+    "owner": "allow-list-url-policy-relative-flags",
+    "where": "inventory:allow-list-url-policy-relative-flags:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-tsconfig-compiler-options-cbc73d99",
+    "gate": "note/design citation into a file changed",
+    "owner": "tsconfig-compiler-options",
+    "where": "inventory:tsconfig-compiler-options:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-create-package-template-type-flags-3a82cbc4",
+    "gate": "note/design citation into a file changed",
+    "owner": "create-package-template-type-flags",
+    "where": "goals/boolean-creep/designs/create-package-template-type-flags.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-statutes-at-large-pincite-is-range-bb932f5b",
+    "gate": "note/design citation into a file changed",
+    "owner": "statutes-at-large-pincite-is-range",
+    "where": "goals/boolean-creep/designs/statutes-at-large-pincite-is-range.md",
+    "ruling": "non-conflict",
+    "reason": "'package.json:37-67' is packages/law-practice/domain/package.json (unchanged); cited src paths unchanged. No edit."
+  },
+  {
+    "id": "NC-yeet-merge-ready-encoded-b6f69457",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-encoded",
+    "where": "inventory:yeet-merge-ready-encoded:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-duckdb-transaction-began-closed-683bd773",
+    "gate": "note/design citation into a file changed",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-duckdb-transaction-began-closed-d4fd815c",
+    "gate": "note/design citation into a file changed",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-duckdb-transaction-began-closed-230a3d4b",
+    "gate": "note/design citation into a file changed",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-duckdb-transaction-began-closed-29ca3839",
+    "gate": "note/design citation into a file changed",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-duckdb-transaction-began-closed-3b1f1aa7",
+    "gate": "note/design citation into a file changed",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-duckdb-transaction-began-closed-3145882c",
+    "gate": "note/design citation into a file changed",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-duckdb-transaction-began-closed-d513ea07",
+    "gate": "note/design citation into a file changed",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-duckdb-transaction-began-closed-12985378",
+    "gate": "note/design citation into a file changed",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-duckdb-transaction-began-closed-e9902ff5",
+    "gate": "note/design citation into a file changed",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-duckdb-transaction-began-closed-8fcd45b8",
+    "gate": "note/design citation into a file changed",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-duckdb-transaction-began-closed-9f385a16",
+    "gate": "note/design citation into a file changed",
+    "owner": "duckdb-transaction-began-closed",
+    "where": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-jsonc-parser-sdk-flags-1e3d3b59",
+    "gate": "note/design citation into a file changed",
+    "owner": "jsonc-parser-sdk-flags",
+    "where": "inventory:jsonc-parser-sdk-flags:notes",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-tsconfig-compiler-options-export-8a0e2dc5",
+    "gate": "note/design citation into a file changed",
+    "owner": "tsconfig-compiler-options-export",
+    "where": "inventory:tsconfig-compiler-options-export:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-ts-node-compiler-options-036061f2",
+    "gate": "note/design citation into a file changed",
+    "owner": "ts-node-compiler-options",
+    "where": "inventory:ts-node-compiler-options:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-yeet-merge-ready-criterion-changed-abdde675",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-criterion-changed",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-yeet-merge-ready-criterion-changed-86dbcdf4",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-criterion-changed",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-yeet-merge-ready-criterion-changed-3ee9cc67",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-criterion-changed",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-yeet-merge-ready-criterion-changed-d2688ab5",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-criterion-changed",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-yeet-merge-ready-criterion-changed-275d068d",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-criterion-changed",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-yeet-merge-ready-criterion-changed-0c34ef3d",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-merge-ready-criterion-changed",
+    "where": "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-html-dl-child-grammar-b1fa2434",
+    "gate": "note/design citation into a file changed",
+    "owner": "html-dl-child-grammar",
+    "where": "goals/boolean-creep/designs/html-dl-child-grammar.md",
+    "ruling": "defer-authored",
+    "reason": "Same deleted import at :13; '1732-1733' unchanged. Needs an authored design update; no digit edit."
+  },
+  {
+    "id": "NC-r3-tooling-schema-first-fn-eligibility-84e04845",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-tooling-schema-first-fn-eligibility",
+    "where": "inventory:r3-tooling-schema-first-fn-eligibility:evidence[0].note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r3-tooling-schema-first-fn-eligibility-de3cf949",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-tooling-schema-first-fn-eligibility",
+    "where": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+    "ruling": "revert",
+    "reason": "pin-historical: body bound to 93217d9 and superseded by the R39 appendix (HEAD 220d942); SchemaFirstDetectors lines already moved by cf97"
+  },
+  {
+    "id": "NC-r3-tooling-schema-first-fn-eligibility-7ba8863b",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-tooling-schema-first-fn-eligibility",
+    "where": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+    "ruling": "revert",
+    "reason": "pin-historical: body bound to 93217d9 and superseded by the R39 appendix (HEAD 220d942); SchemaFirstDetectors lines already moved by cf97"
+  },
+  {
+    "id": "NC-r3-tooling-schema-first-fn-eligibility-3c2202a4",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-tooling-schema-first-fn-eligibility",
+    "where": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+    "ruling": "revert",
+    "reason": "pin-historical: body bound to 93217d9 and superseded by the R39 appendix (HEAD 220d942); SchemaFirstDetectors lines already moved by cf97"
+  },
+  {
+    "id": "NC-r3-tooling-schema-first-fn-eligibility-c2dc4a13",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-tooling-schema-first-fn-eligibility",
+    "where": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+    "ruling": "revert",
+    "reason": "pin-historical: body bound to 93217d9 and superseded by the R39 appendix (HEAD 220d942); SchemaFirstDetectors lines already moved by cf97"
+  },
+  {
+    "id": "NC-r3-tooling-schema-first-fn-eligibility-921d41da",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-tooling-schema-first-fn-eligibility",
+    "where": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+    "ruling": "revert",
+    "reason": "pin-historical: body bound to 93217d9 and superseded by the R39 appendix (HEAD 220d942); SchemaFirstDetectors lines already moved by cf97"
+  },
+  {
+    "id": "NC-r3-tooling-schema-first-fn-eligibility-4ebe9687",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-tooling-schema-first-fn-eligibility",
+    "where": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+    "ruling": "revert",
+    "reason": "pin-historical: body bound to 93217d9 and superseded by the R39 appendix (HEAD 220d942); SchemaFirstDetectors lines already moved by cf97"
+  },
+  {
+    "id": "NC-html-datalist-child-grammar-7c3c7675",
+    "gate": "note/design citation into a file changed",
+    "owner": "html-datalist-child-grammar",
+    "where": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+    "ruling": "defer-authored",
+    "reason": "Html.conformance.ts:13 root '@beep/schema' (SchemaUtils) import was deleted by the codec-statics retirement; no exact successor exists, and the claim 'reuse schema import' no longer holds. Needs an authored design update. ':81' on the same line moved to ':80' (applied)."
+  },
+  {
+    "id": "NC-html-datalist-child-grammar-71be4e54",
+    "gate": "note/design citation into a file changed",
+    "owner": "html-datalist-child-grammar",
+    "where": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-r2-foundation-iri-ipv6-segment-facts-972d530f",
+    "gate": "note/design citation into a file changed",
+    "owner": "r2-foundation-iri-ipv6-segment-facts",
+    "where": "inventory:r2-foundation-iri-ipv6-segment-facts:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r3-foundation-invariant-enforcement-channels-083100ff",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-foundation-invariant-enforcement-channels",
+    "where": "goals/boolean-creep/designs/r3-foundation-invariant-enforcement-channels.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-html-img-sizes-disposition-4dac61e5",
+    "gate": "note/design citation into a file changed",
+    "owner": "html-img-sizes-disposition",
+    "where": "goals/boolean-creep/designs/html-img-sizes-disposition.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-html-img-sizes-disposition-d7bd6d3a",
+    "gate": "note/design citation into a file changed",
+    "owner": "html-img-sizes-disposition",
+    "where": "goals/boolean-creep/designs/html-img-sizes-disposition.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-html-img-sizes-disposition-de10199d",
+    "gate": "note/design citation into a file changed",
+    "owner": "html-img-sizes-disposition",
+    "where": "goals/boolean-creep/designs/html-img-sizes-disposition.md",
+    "ruling": "non-conflict",
+    "reason": "'package.json:44-74' refers to the owner package packages/foundation/modeling/html/package.json (unchanged), not root package.json. No edit."
+  },
+  {
+    "id": "NC-html-link-imagesizes-disposition-ee086474",
+    "gate": "note/design citation into a file changed",
+    "owner": "html-link-imagesizes-disposition",
+    "where": "goals/boolean-creep/designs/html-link-imagesizes-disposition.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-html-link-imagesizes-disposition-95f75d9d",
+    "gate": "note/design citation into a file changed",
+    "owner": "html-link-imagesizes-disposition",
+    "where": "goals/boolean-creep/designs/html-link-imagesizes-disposition.md",
+    "ruling": "non-conflict",
+    "reason": "Same as html-img: owner html/package.json unchanged. No edit."
+  },
+  {
+    "id": "NC-tabstrip-overflow-disposition-c1a6fb15",
+    "gate": "note/design citation into a file changed",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-tabstrip-overflow-disposition-4a3da157",
+    "gate": "note/design citation into a file changed",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-tabstrip-overflow-disposition-bedc3028",
+    "gate": "note/design citation into a file changed",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-tabstrip-overflow-disposition-2199c948",
+    "gate": "note/design citation into a file changed",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-tabstrip-overflow-disposition-f844fc1a",
+    "gate": "note/design citation into a file changed",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-tabstrip-overflow-disposition-46547910",
+    "gate": "note/design citation into a file changed",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-tabstrip-overflow-disposition-4e79be10",
+    "gate": "note/design citation into a file changed",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-tabstrip-overflow-disposition-46ee31cc",
+    "gate": "note/design citation into a file changed",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-tabstrip-overflow-disposition-3a9e5769",
+    "gate": "note/design citation into a file changed",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-tabstrip-overflow-disposition-5949cf10",
+    "gate": "note/design citation into a file changed",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-tabstrip-overflow-disposition-70d0ec08",
+    "gate": "note/design citation into a file changed",
+    "owner": "tabstrip-overflow-disposition",
+    "where": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+    "ruling": "complete/add",
+    "reason": "completed-builder-partial"
+  },
+  {
+    "id": "NC-ids-statement-presence-kind-15b276eb",
+    "gate": "note/design citation into a file changed",
+    "owner": "ids-statement-presence-kind",
+    "where": "goals/boolean-creep/designs/ids-statement-presence-kind.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-package-inventory-docgen-coverage-3c3305de",
+    "gate": "note/design citation into a file changed",
+    "owner": "package-inventory-docgen-coverage",
+    "where": "goals/boolean-creep/designs/package-inventory-docgen-coverage.md",
+    "ruling": "revert",
+    "reason": "pin-historical: section bound to HEAD ab77f10/main 9a1bd38; cited Quality.command.ts lines already moved by cf97"
+  },
+  {
+    "id": "NC-package-inventory-docgen-coverage-d5453a6c",
+    "gate": "note/design citation into a file changed",
+    "owner": "package-inventory-docgen-coverage",
+    "where": "goals/boolean-creep/designs/package-inventory-docgen-coverage.md",
+    "ruling": "revert",
+    "reason": "pin-historical: section bound to HEAD ab77f10/main 9a1bd38; cited Quality.command.ts lines already moved by cf97"
+  },
+  {
+    "id": "NC-create-package-retired-name-reconciliation-b6240fbd",
+    "gate": "note/design citation into a file changed",
+    "owner": "create-package-retired-name-reconciliation",
+    "where": "goals/boolean-creep/designs/create-package-retired-name-reconciliation.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-create-package-retired-name-reconciliation-b243b232",
+    "gate": "note/design citation into a file changed",
+    "owner": "create-package-retired-name-reconciliation",
+    "where": "goals/boolean-creep/designs/create-package-retired-name-reconciliation.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-create-package-retired-name-reconciliation-fe106a63",
+    "gate": "note/design citation into a file changed",
+    "owner": "create-package-retired-name-reconciliation",
+    "where": "goals/boolean-creep/designs/create-package-retired-name-reconciliation.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-create-package-retired-name-reconciliation-831de872",
+    "gate": "note/design citation into a file changed",
+    "owner": "create-package-retired-name-reconciliation",
+    "where": "goals/boolean-creep/designs/create-package-retired-name-reconciliation.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-create-package-retired-name-reconciliation-8264eefe",
+    "gate": "note/design citation into a file changed",
+    "owner": "create-package-retired-name-reconciliation",
+    "where": "goals/boolean-creep/designs/create-package-retired-name-reconciliation.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-create-package-retired-name-reconciliation-cc1ccbab",
+    "gate": "note/design citation into a file changed",
+    "owner": "create-package-retired-name-reconciliation",
+    "where": "goals/boolean-creep/designs/create-package-retired-name-reconciliation.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-r27-cli-commands-a-c-ecosystem-package-json-flags-bb9313e8",
+    "gate": "note/design citation into a file changed",
+    "owner": "r27-cli-commands-a-c-ecosystem-package-json-flags",
+    "where": "inventory:r27-cli-commands-a-c-ecosystem-package-json-flags:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r27-cli-commands-l-q-tsgo-smoke-compiler-options-4fff4c2a",
+    "gate": "note/design citation into a file changed",
+    "owner": "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+    "where": "inventory:r27-cli-commands-l-q-tsgo-smoke-compiler-options:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r27-cli-commands-d-k-normalize-manifest-dedupe-move-7f0f9cc5",
+    "gate": "note/design citation into a file changed",
+    "owner": "r27-cli-commands-d-k-normalize-manifest-dedupe-move",
+    "where": "goals/boolean-creep/designs/r27-cli-commands-d-k-normalize-manifest-dedupe-move.md",
+    "ruling": "non-conflict",
+    "reason": "'package `package.json:39`, `:109`' is packages/tooling/tool/cli/package.json (unchanged). No edit."
+  },
+  {
+    "id": "NC-r27-cli-commands-l-q-github-check-lane-proof-reuse-817c9b03",
+    "gate": "note/design citation into a file changed",
+    "owner": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+    "where": "goals/boolean-creep/designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+    "ruling": "revert",
+    "reason": "pin-historical: bound to 0be1f13 where Quality.command.ts:774-794 is runGithubCheckLaneGroup; unrelated text at cf97"
+  },
+  {
+    "id": "NC-r28-tooling-policy-jsonc-parse-options-9b07b64b",
+    "gate": "note/design citation into a file changed",
+    "owner": "r28-tooling-policy-jsonc-parse-options",
+    "where": "inventory:r28-tooling-policy-jsonc-parse-options:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options-b9c06608",
+    "gate": "note/design citation into a file changed",
+    "owner": "r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options",
+    "where": "inventory:r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options-01ba7393",
+    "gate": "note/design citation into a file changed",
+    "owner": "r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options",
+    "where": "inventory:r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r29-cli-commands-l-q-test-tsgo-tempdir-remove-options-6efdc945",
+    "gate": "note/design citation into a file changed",
+    "owner": "r29-cli-commands-l-q-test-tsgo-tempdir-remove-options",
+    "where": "inventory:r29-cli-commands-l-q-test-tsgo-tempdir-remove-options:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r29-cli-commands-l-q-collect-output-capture-options-42234a28",
+    "gate": "note/design citation into a file changed",
+    "owner": "r29-cli-commands-l-q-collect-output-capture-options",
+    "where": "inventory:r29-cli-commands-l-q-collect-output-capture-options:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r29-cli-commands-l-q-test-tsgo-turbo-capture-options-aebe0a7b",
+    "gate": "note/design citation into a file changed",
+    "owner": "r29-cli-commands-l-q-test-tsgo-turbo-capture-options",
+    "where": "inventory:r29-cli-commands-l-q-test-tsgo-turbo-capture-options:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options-c294d114",
+    "gate": "note/design citation into a file changed",
+    "owner": "r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options",
+    "where": "inventory:r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r30-cli-commands-l-q-github-check-lane-outcome-b812998b",
+    "gate": "note/design citation into a file changed",
+    "owner": "r30-cli-commands-l-q-github-check-lane-outcome",
+    "where": "goals/boolean-creep/designs/r30-cli-commands-l-q-github-check-lane-outcome.md",
+    "ruling": "revert",
+    "reason": "pin-historical: R37 section bound to HEAD 84058d6; Quality.command.ts:774-794 already moved by cf97"
+  },
+  {
+    "id": "NC-yeet-status-remote-check-phase-cea822a6",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-status-remote-check-phase",
+    "where": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-yeet-status-remote-check-phase-28aac7a4",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-status-remote-check-phase",
+    "where": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-yeet-status-remote-check-phase-e9459fe6",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-status-remote-check-phase",
+    "where": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-yeet-status-remote-check-phase-6491bec3",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-status-remote-check-phase",
+    "where": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-yeet-status-remote-check-phase-bde3b763",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-status-remote-check-phase",
+    "where": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+    "ruling": "complete/add",
+    "reason": "reviewer-added (omitted conflict / manual item)"
+  },
+  {
+    "id": "NC-yeet-status-remote-check-phase-9d084400",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-status-remote-check-phase",
+    "where": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+    "ruling": "complete/add",
+    "reason": "reviewer-added (omitted conflict / manual item)"
+  },
+  {
+    "id": "NC-yeet-status-remote-check-phase-575c95af",
+    "gate": "note/design citation into a file changed",
+    "owner": "yeet-status-remote-check-phase",
+    "where": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+    "ruling": "complete/add",
+    "reason": "reviewer-added (omitted conflict / manual item)"
+  },
+  {
+    "id": "NC-create-package-template-type-flags-52e355dd",
+    "gate": "note/design citation into a file changed",
+    "owner": "create-package-template-type-flags",
+    "where": "goals/boolean-creep/designs/create-package-template-type-flags.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-create-package-template-type-flags-412b855b",
+    "gate": "note/design citation into a file changed",
+    "owner": "create-package-template-type-flags",
+    "where": "goals/boolean-creep/designs/create-package-template-type-flags.md",
+    "ruling": "resolve-move",
+    "reason": "Same referent; L89 completed in full: declaration734-767->732-765, validation1190-1414->1188-1412, writer1479-1504->1477-1502 (all pin-same, byte-identical moves)."
+  },
+  {
+    "id": "NC-create-package-scaffold-shape-92d1080a",
+    "gate": "note/design citation into a file changed",
+    "owner": "create-package-scaffold-shape",
+    "where": "goals/boolean-creep/designs/create-package-scaffold-shape.md",
+    "ruling": "resolve-move",
+    "reason": "'validation1190-1414' is prose + CreatePackage.command.ts (not ai-sync validation.ts). Design pinned 0be1f13; pin->cf97 maps 'same', so citation was exact at cf97. cf97->HEAD 1190->1188, 1414->1412 (span preserved). Applied in corrected design set (L117)."
+  },
+  {
+    "id": "NC-worktree-removal-mode-21741709",
+    "gate": "note/design citation into a file changed",
+    "owner": "worktree-removal-mode",
+    "where": "goals/boolean-creep/designs/worktree-removal-mode.md",
+    "ruling": "non-conflict",
+    "reason": "'Name491' is Worktree.schemas.ts:491 (the name field of WorktreeRemovalRequest, cf. 'Worktree.schemas.ts489-513' two lines up), not FileName.ts; Worktree.schemas.ts unchanged cf97->HEAD. No edit."
+  },
+  {
+    "id": "NC-html-select-child-grammar-9d62e178",
+    "gate": "note/design citation into a file changed",
+    "owner": "html-select-child-grammar",
+    "where": "goals/boolean-creep/designs/html-select-child-grammar.md",
+    "ruling": "approve",
+    "reason": "accepted-as-builder"
+  },
+  {
+    "id": "NC-r3-tooling-docker-tag-kind-flags-f58c28fd",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-tooling-docker-tag-kind-flags",
+    "where": "goals/boolean-creep/designs/r3-tooling-docker-tag-kind-flags.md",
+    "ruling": "revert",
+    "reason": "wrong-file: 'schemas137-150' resolved to ai-sync/src/schemas.ts; referent VersionSync schemas unchanged; line also bound to HEAD ab77f10"
+  },
+  {
+    "id": "NC-r3-tooling-schema-first-fn-eligibility-3cc2356f",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-tooling-schema-first-fn-eligibility",
+    "where": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+    "ruling": "revert",
+    "reason": "pin-historical: body bound to 93217d9 and superseded by the R39 appendix (HEAD 220d942); SchemaFirstDetectors lines already moved by cf97"
+  },
+  {
+    "id": "NC-r3-tooling-schema-first-fn-eligibility-08b1b18c",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-tooling-schema-first-fn-eligibility",
+    "where": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+    "ruling": "revert",
+    "reason": "pin-historical: body bound to 93217d9 and superseded by the R39 appendix (HEAD 220d942); SchemaFirstDetectors lines already moved by cf97"
+  },
+  {
+    "id": "NC-r3-tooling-schema-first-fn-eligibility-6ed51028",
+    "gate": "note/design citation into a file changed",
+    "owner": "r3-tooling-schema-first-fn-eligibility",
+    "where": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+    "ruling": "revert",
+    "reason": "pin-historical: body bound to 93217d9 and superseded by the R39 appendix (HEAD 220d942); SchemaFirstDetectors lines already moved by cf97"
+  },
+  {
+    "id": "NC-r25-tool-docgen-cli-config-toggles-75d30c75",
+    "gate": "note/design citation into a file changed",
+    "owner": "r25-tool-docgen-cli-config-toggles",
+    "where": "inventory:r25-tool-docgen-cli-config-toggles:notes",
+    "ruling": "non-conflict",
+    "reason": "'Command.make156' is docgen/src/CLI.ts:156 (Command.make) in a note bound to HEAD 93217d9; CLI.ts unchanged cf97->HEAD. Builder misresolved basename to apps/labs/semantica canary Command.ts. No edit."
+  },
+  {
+    "id": "NC-citation-blank-page-78415933",
+    "gate": "note/design citation into a file changed",
+    "owner": "citation-blank-page",
+    "where": "goals/boolean-creep/designs/citation-blank-page.md",
+    "ruling": "revert",
+    "reason": "wrong-file: 'Annotation464' resolved to rdf WebAnnotation.ts; referent is law-practice Citation.models.ts (unchanged cf97->HEAD); design pinned at 0be1f13 where 464 maps to cf97:471"
+  },
+  {
+    "id": "NC-r28-cli-quality-coverage-resolved-operation-e90f08f5",
+    "gate": "note/design citation into a file changed",
+    "owner": "r28-cli-quality-coverage-resolved-operation",
+    "where": "inventory:r28-cli-quality-coverage-resolved-operation:evidence[2].note",
+    "ruling": "non-conflict",
+    "reason": "'validation3556-3560' is prose 'validation' + Tasks.ts lines (the evidence cite file); Tasks.ts unchanged cf97->HEAD. Builder misresolved to ai-sync validation.ts. No edit."
+  },
+  {
+    "id": "NC-r28-cli-internal-root-tmpfs-stub-observations-4800cd8e",
+    "gate": "note/design citation into a file changed",
+    "owner": "r28-cli-internal-root-tmpfs-stub-observations",
+    "where": "goals/boolean-creep/designs/r28-cli-internal-root-tmpfs-stub-observations.md",
+    "ruling": "revert",
+    "reason": "wrong-file: 'schemas147-162' resolved to ai-sync/src/schemas.ts; referent TmpfsReap.schemas.ts (TmpfsReapCandidate at 147) unchanged"
+  },
+  {
+    "id": "NC-r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options-985aecbc",
+    "gate": "note/design citation into a file changed",
+    "owner": "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
+    "where": "inventory:r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options:disqualifier.note",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r32-cli-create-package-check-overlay-compiler-options-8aad948a",
+    "gate": "note/design citation into a file changed",
+    "owner": "r32-cli-create-package-check-overlay-compiler-options",
+    "where": "inventory:r32-cli-create-package-check-overlay-compiler-options:notes",
+    "ruling": "corrected-note",
+    "reason": "author edit corrected per rule R1/R2 (see corrected inventory patch)"
+  },
+  {
+    "id": "NC-r32-cli-yeet-settle-budget-phase-85f1505d",
+    "gate": "note/design citation into a file changed",
+    "owner": "r32-cli-yeet-settle-budget-phase",
+    "where": "inventory:r32-cli-yeet-settle-budget-phase:disqualifier.note",
+    "ruling": "defer-archived",
+    "reason": "'WatchMode.ts1112-1116' is out of range at cf97 (WatchMode.ts has 1098 lines) and no pin binds it; stale before R53. No current successor is derivable without inventing one. Leave text unchanged; carry as inherited debt (not R53-introduced)."
+  },
+  {
+    "id": "NC-r36-epistemic-ontology-document-toolbar-input-b2e05ff9",
+    "gate": "note/design citation into a file changed",
+    "owner": "r36-epistemic-ontology-document-toolbar-input",
+    "where": "goals/boolean-creep/designs/r36-epistemic-ontology-document-toolbar-input.md",
+    "ruling": "revert",
+    "reason": "not-a-citation: 'React19.3.0' is a dependency version; builder rewrote it to React20.3.0"
+  },
+  {
+    "id": "NC-r36-epistemic-ontology-document-toolbar-input-f4acbd82",
+    "gate": "note/design citation into a file changed",
+    "owner": "r36-epistemic-ontology-document-toolbar-input",
+    "where": "goals/boolean-creep/designs/r36-epistemic-ontology-document-toolbar-input.md",
+    "ruling": "revert",
+    "reason": "not-a-citation: 'React19.3.0' is a dependency version; builder rewrote it to React20.3.0"
+  },
+  {
+    "id": "CF-1-seed-anchor-missing",
+    "gate": "goals/boolean-creep/ops/validate-invento",
+    "owner": "CF-1-seed-anchor-missing",
+    "where": null,
+    "ruling": "resolved-by-withdrawal",
+    "reason": "packet validator passes on both candidates; fails on current inventory (receipt)"
+  }
+]

@@ -1,10 +1,25 @@
 {
-  "$schema": "https://v2-11-5.turborepo.dev/schema.json",
+  "$schema": "https://v2-11-6.turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
     "build": {
       "inputs": ["$TURBO_EXTENDS$", ".env*"],
-      "env": ["$TURBO_EXTENDS$", "ANALYZE"]
+      "env": [
+        "$TURBO_EXTENDS$",
+        "ANALYZE",
+        "APP_ADMINS_EMAILS",
+        "ALLOWED_EMAILS",
+        "DATABASE_URL",
+        "DATABASE_URL_UNPOOLED",
+        "EMAIL_*",
+        "AUTH_*",
+        "OPENAI_*",
+        "SECURITY_*",
+        "OAUTH_*",
+        "NEXT_PUBLIC_*",
+        "LIVEBLOCKS_*",
+        "RESEND_*"
+      ]
     }
   }
 }

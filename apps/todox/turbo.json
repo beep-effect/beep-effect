@@ -1,0 +1,23 @@
+{
+  "$schema": "https://v2-11-6.turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": [
+        "$TURBO_EXTENDS$",
+        "APP_ADMINS_EMAILS",
+        "ALLOWED_EMAILS",
+        "DATABASE_URL",
+        "DATABASE_URL_UNPOOLED",
+        "EMAIL_*",
+        "AUTH_*",
+        "OPENAI_*",
+        "SECURITY_*",
+        "OAUTH_*",
+        "NEXT_PUBLIC_*",
+        "LIVEBLOCKS_*",
+        "RESEND_*"
+      ]
+    }
+  }
+}

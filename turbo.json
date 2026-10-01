@@ -1,5 +1,5 @@
 {
-  "$schema": "https://v2-11-5.turborepo.dev/schema.json",
+  "$schema": "https://v2-11-6.turborepo.dev/schema.json",
   "agentGuidance": false,
   "futureFlags": {
     "affectedUsingTaskInputs": true,
@@ -276,20 +276,6 @@
         "$TURBO_ROOT$/tools/tsgo-shim/package.json",
         ".env",
         ".env.*"
-      ],
-      "env": [
-        "APP_ADMINS_EMAILS",
-        "ALLOWED_EMAILS",
-        "DATABASE_URL",
-        "DATABASE_URL_UNPOOLED",
-        "EMAIL_*",
-        "AUTH_*",
-        "OPENAI_*",
-        "SECURITY_*",
-        "OAUTH_*",
-        "NEXT_PUBLIC_*",
-        "LIVEBLOCKS_*",
-        "RESEND_*"
       ],
       "outputs": [
         "dist/**",
