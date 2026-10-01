@@ -4,14 +4,15 @@ import {
   writeJSDocDocumentationInventory,
 } from "@beep/repo-cli/test/Quality";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
+import { Console, Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
+import * as TestConsole from "effect/testing/TestConsole";
 import * as jsonc from "jsonc-parser";
 
 /**
@@ -113,7 +114,9 @@ const acquireFixtureRepo = Effect.fnUntraced(function* (options: {
 }) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const repoRoot = yield* fs.makeTempDirectory();
+  const repoRoot = yield* Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>
+    fs.remove(directory, { recursive: true }).pipe(Effect.orDie)
+  );
 
   yield* writeJsonFile(path.join(repoRoot, "package.json"), {
     name: "fixture-root",
@@ -143,21 +146,6 @@ const acquireFixtureRepo = Effect.fnUntraced(function* (options: {
 
   return repoRoot;
 });
-
-const withFixtureRepo = Effect.fnUntraced(function* <A, E, R>(
-  options: { readonly topoSortScript: string; readonly packages: ReadonlyArray<FixturePackage> },
-  use: (repoRoot: string) => Effect.Effect<A, E, R>
-) {
-  return yield* Effect.acquireUseRelease(
-    acquireFixtureRepo(options),
-    use,
-    Effect.fnUntraced(function* (repoRoot) {
-      const fs = yield* FileSystem.FileSystem;
-      yield* fs.remove(repoRoot, { recursive: true });
-    })
-  ).pipe(provideScopedLayer(PlatformLayer));
-});
-
 const buildInventory = Effect.fnUntraced(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -174,10 +162,11 @@ const buildInventory = Effect.fnUntraced(function* (repoRoot: string) {
   return parseJsoncText(yield* fs.readFileString(outputJsonPath)) as InventoryJson;
 });
 
-describe("JSDoc inventory detector fixes (P1-B)", () => {
-  it("ignores JSDoc-looking tags inside fenced example source", () => {
-    expect(
-      tagsFromComment(`/**
+it.layer(PlatformLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
+  describe("JSDoc inventory detector fixes (P1-B)", () => {
+    it("ignores JSDoc-looking tags inside fenced example source", () => {
+      expect(
+        tagsFromComment(`/**
  * Outer summary.
  *
  * \`\`\`ts
@@ -188,11 +177,11 @@ describe("JSDoc inventory detector fixes (P1-B)", () => {
  * @category helpers
  * @since 0.0.0
  */`)
-    ).toEqual(["@category", "@since"]);
-  });
+      ).toEqual(["@category", "@since"]);
+    });
 
-  it("preserves outer legacy tags after a complete nested JSDoc example", () => {
-    const comments = jsdocCommentsFromSource(`/**
+    it("preserves outer legacy tags after a complete nested JSDoc example", () => {
+      const comments = jsdocCommentsFromSource(`/**
  * Outer summary.
  *
  * \`\`\`ts
@@ -208,12 +197,12 @@ describe("JSDoc inventory detector fixes (P1-B)", () => {
  * @since 0.0.0
  */`);
 
-    expect(comments).toHaveLength(1);
-    expect(tagsFromComment(comments[0] ?? "")).toEqual(["@remarks", "@category", "@since"]);
-  });
+      expect(comments).toHaveLength(1);
+      expect(tagsFromComment(comments[0] ?? "")).toEqual(["@remarks", "@category", "@since"]);
+    });
 
-  it("keeps delimiter-prefixed source inside the active fence", () => {
-    const comments = jsdocCommentsFromSource(`/**
+    it("keeps delimiter-prefixed source inside the active fence", () => {
+      const comments = jsdocCommentsFromSource(`/**
  * Outer summary.
  *
  * \`\`\`ts
@@ -228,14 +217,13 @@ describe("JSDoc inventory detector fixes (P1-B)", () => {
  * @since 0.0.0
  */`);
 
-    expect(comments).toHaveLength(1);
-    expect(tagsFromComment(comments[0] ?? "")).toEqual(["@category", "@since"]);
-  });
+      expect(comments).toHaveLength(1);
+      expect(tagsFromComment(comments[0] ?? "")).toEqual(["@category", "@since"]);
+    });
 
-  it("checks sectionless prose, loose fences, and empty titled examples", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
+    it.effect("checks sectionless prose, loose fences, and empty titled examples", () =>
+      Effect.flatMap(
+        acquireFixtureRepo({
           topoSortScript: "printf '@beep/demo\\n'",
           packages: [
             {
@@ -282,7 +270,7 @@ export const emptyExample = 1;
               ],
             },
           ],
-        },
+        }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
           const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
@@ -296,22 +284,23 @@ export const emptyExample = 1;
             expect.arrayContaining(["empty-section", "malformed-example"])
           );
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("exempts re-export declarations from requiredExportTags and missingSummary while direct exports still fire (R2, R5)", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
-          topoSortScript: "printf '@beep/demo\\n'",
-          packages: [
-            {
-              name: "@beep/demo",
-              dir: "demo",
-              files: [
-                [
-                  "src/lib.ts",
-                  `/**
+    it.effect(
+      "exempts re-export declarations from requiredExportTags and missingSummary while direct exports still fire (R2, R5)",
+      () =>
+        Effect.flatMap(
+          acquireFixtureRepo({
+            topoSortScript: "printf '@beep/demo\\n'",
+            packages: [
+              {
+                name: "@beep/demo",
+                dir: "demo",
+                files: [
+                  [
+                    "src/lib.ts",
+                    `/**
  * Demo library value re-exported by the package barrel.
  *
  * @example
@@ -325,10 +314,10 @@ export const emptyExample = 1;
  */
 export const libValue = "lib";
 `,
-                ],
-                [
-                  "src/index.ts",
-                  `/**
+                  ],
+                  [
+                    "src/index.ts",
+                    `/**
  * Demo package documentation.
  *
  * @packageDocumentation
@@ -345,41 +334,40 @@ export * from "./lib.ts";
  */
 export const directHelperWithoutExample = (): void => {};
 `,
+                  ],
                 ],
-              ],
-            },
-          ],
-        },
-        Effect.fnUntraced(function* (repoRoot) {
-          const inventory = yield* buildInventory(repoRoot);
-          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
-          expect(pkg).toBeDefined();
+              },
+            ],
+          }),
+          Effect.fnUntraced(function* (repoRoot) {
+            const inventory = yield* buildInventory(repoRoot);
+            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            expect(pkg).toBeDefined();
 
-          const reExportEntry = pkg?.exports.find((entry) => entry.exportKind === "re-export");
-          expect(reExportEntry).toBeDefined();
-          expect(reExportEntry?.missingRequiredTags).toEqual([]);
-          expect(reExportEntry?.missingSummary).toBe(false);
-          expect(reExportEntry?.remediationStatus).toBe("resolved");
+            const reExportEntry = pkg?.exports.find((entry) => entry.exportKind === "re-export");
+            expect(reExportEntry).toBeDefined();
+            expect(reExportEntry?.missingRequiredTags).toEqual([]);
+            expect(reExportEntry?.missingSummary).toBe(false);
+            expect(reExportEntry?.remediationStatus).toBe("resolved");
 
-          const directEntry = pkg?.exports.find((entry) => entry.symbolName === "directHelperWithoutExample");
-          expect(directEntry).toBeDefined();
-          expect(directEntry?.missingRequiredTags).toContain("@example");
-          expect(directEntry?.remediationStatus).toBe("open");
+            const directEntry = pkg?.exports.find((entry) => entry.symbolName === "directHelperWithoutExample");
+            expect(directEntry).toBeDefined();
+            expect(directEntry?.missingRequiredTags).toContain("@example");
+            expect(directEntry?.remediationStatus).toBe("open");
 
-          // Re-export declarations remain counted as public surface; only
-          // their findings stop. Total public exports = the re-export node +
-          // the direct helper (from index.ts) + libValue (from lib.ts).
-          expect(pkg?.sourceCoverage.publicExportCount).toBe(3);
-          // The re-export no longer contributes to the missing-@example total.
-          expect(pkg?.counts.missingExportExamples).toBe(1);
-        })
-      )
-    ));
+            // Re-export declarations remain counted as public surface; only
+            // their findings stop. Total public exports = the re-export node +
+            // the direct helper (from index.ts) + libValue (from lib.ts).
+            expect(pkg?.sourceCoverage.publicExportCount).toBe(3);
+            // The re-export no longer contributes to the missing-@example total.
+            expect(pkg?.counts.missingExportExamples).toBe(1);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("filters phantom package names parsed from topo-sort dependency section headers (R3-J2)", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
+    it.effect("filters phantom package names parsed from topo-sort dependency section headers (R3-J2)", () =>
+      Effect.flatMap(
+        acquireFixtureRepo({
           topoSortScript:
             "printf 'dependencies 0\\ndevDependencies 1\\npeerDependencies 2\\noptionalDependencies 3\\n@beep/demo 4\\n'",
           packages: [
@@ -414,20 +402,19 @@ export const demoValue = "demo";
               ],
             },
           ],
-        },
+        }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
 
           expect(inventory.packages.map((entry) => entry.packageName)).toEqual(["@beep/demo"]);
           expect(inventory.packages.some((entry) => entry.status === "missing-workspace-metadata")).toBe(false);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("parses real workspace package names from topo-sort output in topological order (R3-J2)", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
+    it.effect("parses real workspace package names from topo-sort output in topological order (R3-J2)", () =>
+      Effect.flatMap(
+        acquireFixtureRepo({
           topoSortScript: "printf 'devDependencies 0\\n@beep/demo 1\\ndependencies 2\\n@beep/demo-two 3\\n'",
           packages: [
             {
@@ -491,28 +478,29 @@ export const demoTwoValue = "demo-two";
               ],
             },
           ],
-        },
+        }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
 
           expect(inventory.packages.map((entry) => entry.packageName)).toEqual(["@beep/demo", "@beep/demo-two"]);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("strips multi-line import statements before flagging type assertions while real assertions outside imports still fire (R3-J3)", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
-          topoSortScript: "printf '@beep/demo\\n'",
-          packages: [
-            {
-              name: "@beep/demo",
-              dir: "demo",
-              files: [
-                [
-                  "src/index.ts",
-                  `/**
+    it.effect(
+      "strips multi-line import statements before flagging type assertions while real assertions outside imports still fire (R3-J3)",
+      () =>
+        Effect.flatMap(
+          acquireFixtureRepo({
+            topoSortScript: "printf '@beep/demo\\n'",
+            packages: [
+              {
+                name: "@beep/demo",
+                dir: "demo",
+                files: [
+                  [
+                    "src/index.ts",
+                    `/**
  * Demo package documentation.
  *
  * @packageDocumentation
@@ -558,45 +546,46 @@ export const multiLineImportAliasExample = (): void => {};
  */
 export const realUnsafeExample = (): void => {};
 `,
+                  ],
                 ],
-              ],
-            },
-          ],
-        },
-        Effect.fnUntraced(function* (repoRoot) {
-          const inventory = yield* buildInventory(repoRoot);
-          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
-          expect(pkg).toBeDefined();
+              },
+            ],
+          }),
+          Effect.fnUntraced(function* (repoRoot) {
+            const inventory = yield* buildInventory(repoRoot);
+            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            expect(pkg).toBeDefined();
 
-          const safeEntry = pkg?.exports.find((entry) => entry.symbolName === "multiLineImportAliasExample");
-          expect(safeEntry).toBeDefined();
-          expect(safeEntry?.unsafeExampleViolations).toEqual([]);
-          expect(safeEntry?.remediationStatus).toBe("resolved");
+            const safeEntry = pkg?.exports.find((entry) => entry.symbolName === "multiLineImportAliasExample");
+            expect(safeEntry).toBeDefined();
+            expect(safeEntry?.unsafeExampleViolations).toEqual([]);
+            expect(safeEntry?.remediationStatus).toBe("resolved");
 
-          const unsafeEntry = pkg?.exports.find((entry) => entry.symbolName === "realUnsafeExample");
-          expect(unsafeEntry).toBeDefined();
-          const rules = unsafeEntry?.unsafeExampleViolations.map((violation) => violation.rule);
-          expect(rules).toEqual(
-            expect.arrayContaining(["no-declare-statements", "no-any-in-examples", "no-type-assertions-in-examples"])
-          );
-          expect(unsafeEntry?.unsafeExampleViolations.length).toBe(3);
-        })
-      )
-    ));
+            const unsafeEntry = pkg?.exports.find((entry) => entry.symbolName === "realUnsafeExample");
+            expect(unsafeEntry).toBeDefined();
+            const rules = unsafeEntry?.unsafeExampleViolations.map((violation) => violation.rule);
+            expect(rules).toEqual(
+              expect.arrayContaining(["no-declare-statements", "no-any-in-examples", "no-type-assertions-in-examples"])
+            );
+            expect(unsafeEntry?.unsafeExampleViolations.length).toBe(3);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("consolidates a documented-first-signature function-overload group into a single resolved entry (R19)", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
-          topoSortScript: "printf '@beep/demo\\n'",
-          packages: [
-            {
-              name: "@beep/demo",
-              dir: "demo",
-              files: [
-                [
-                  "src/index.ts",
-                  `/**
+    it.effect(
+      "consolidates a documented-first-signature function-overload group into a single resolved entry (R19)",
+      () =>
+        Effect.flatMap(
+          acquireFixtureRepo({
+            topoSortScript: "printf '@beep/demo\\n'",
+            packages: [
+              {
+                name: "@beep/demo",
+                dir: "demo",
+                files: [
+                  [
+                    "src/index.ts",
+                    `/**
  * Demo package documentation.
  *
  * @packageDocumentation
@@ -621,30 +610,29 @@ export function formatValue(value: number | string): string {
   return String(value);
 }
 `,
+                  ],
                 ],
-              ],
-            },
-          ],
-        },
-        Effect.fnUntraced(function* (repoRoot) {
-          const inventory = yield* buildInventory(repoRoot);
-          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
-          expect(pkg).toBeDefined();
+              },
+            ],
+          }),
+          Effect.fnUntraced(function* (repoRoot) {
+            const inventory = yield* buildInventory(repoRoot);
+            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            expect(pkg).toBeDefined();
 
-          const groupEntries = pkg?.exports.filter((entry) => entry.symbolName === "formatValue") ?? [];
-          // One overload signature + one continuation signature + the
-          // implementation must score as ONE entry, not three.
-          expect(groupEntries.length).toBe(1);
-          expect(groupEntries[0]?.missingRequiredTags).toEqual([]);
-          expect(groupEntries[0]?.remediationStatus).toBe("resolved");
-        })
-      )
-    ));
+            const groupEntries = pkg?.exports.filter((entry) => entry.symbolName === "formatValue") ?? [];
+            // One overload signature + one continuation signature + the
+            // implementation must score as ONE entry, not three.
+            expect(groupEntries.length).toBe(1);
+            expect(groupEntries[0]?.missingRequiredTags).toEqual([]);
+            expect(groupEntries[0]?.remediationStatus).toBe("resolved");
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("consolidates a fully undocumented function-overload group into a single open entry (R19)", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
+    it.effect("consolidates a fully undocumented function-overload group into a single open entry (R19)", () =>
+      Effect.flatMap(
+        acquireFixtureRepo({
           topoSortScript: "printf '@beep/demo\\n'",
           packages: [
             {
@@ -686,7 +674,7 @@ export function rawConvert(value: number | string): string {
               ],
             },
           ],
-        },
+        }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
           const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
@@ -701,13 +689,12 @@ export function rawConvert(value: number | string): string {
           );
           expect(groupEntries[0]?.remediationStatus).toBe("open");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("still flags a malformed doc block on a non-anchor overload signature (R19)", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
+    it.effect("still flags a malformed doc block on a non-anchor overload signature (R19)", () =>
+      Effect.flatMap(
+        acquireFixtureRepo({
           topoSortScript: "printf '@beep/demo\\n'",
           packages: [
             {
@@ -748,7 +735,7 @@ export function parseValue(value: string, radix?: number): number {
               ],
             },
           ],
-        },
+        }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
           const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
@@ -762,22 +749,23 @@ export function parseValue(value: string, radix?: number): number {
           expect(groupEntries[0]?.missingRequiredTags).toEqual([]);
           expect(groupEntries[0]?.remediationStatus).toBe("open");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("attributes the doc block to the export assignment for a default-exported call expression while an undocumented sibling still opens (R20)", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
-          topoSortScript: "printf '@beep/demo\\n'",
-          packages: [
-            {
-              name: "@beep/demo",
-              dir: "demo",
-              files: [
-                [
-                  "src/index.ts",
-                  `/**
+    it.effect(
+      "attributes the doc block to the export assignment for a default-exported call expression while an undocumented sibling still opens (R20)",
+      () =>
+        Effect.flatMap(
+          acquireFixtureRepo({
+            topoSortScript: "printf '@beep/demo\\n'",
+            packages: [
+              {
+                name: "@beep/demo",
+                dir: "demo",
+                files: [
+                  [
+                    "src/index.ts",
+                    `/**
  * Demo package documentation.
  *
  * @packageDocumentation
@@ -787,10 +775,10 @@ export function parseValue(value: string, radix?: number): number {
 export { default as documentedRule } from "./documentedRule.ts";
 export { default as undocumentedRule } from "./undocumentedRule.ts";
 `,
-                ],
-                [
-                  "src/documentedRule.ts",
-                  `/**
+                  ],
+                  [
+                    "src/documentedRule.ts",
+                    `/**
  * Demo ESLint rule module, documented on its export assignment rather than
  * the inner call expression (the shape \`export default rule(...)\` takes).
  *
@@ -807,42 +795,41 @@ export default defineRule({
   meta: { type: "problem" },
 });
 `,
-                ],
-                [
-                  "src/undocumentedRule.ts",
-                  `export default defineRule({
+                  ],
+                  [
+                    "src/undocumentedRule.ts",
+                    `export default defineRule({
   meta: { type: "problem" },
 });
 `,
+                  ],
                 ],
-              ],
-            },
-          ],
-        },
-        Effect.fnUntraced(function* (repoRoot) {
-          const inventory = yield* buildInventory(repoRoot);
-          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
-          expect(pkg).toBeDefined();
+              },
+            ],
+          }),
+          Effect.fnUntraced(function* (repoRoot) {
+            const inventory = yield* buildInventory(repoRoot);
+            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            expect(pkg).toBeDefined();
 
-          const documented = pkg?.exports.find((entry) => entry.repoPath.endsWith("/documentedRule.ts"));
-          expect(documented).toBeDefined();
-          expect(documented?.missingRequiredTags).toEqual([]);
-          expect(documented?.remediationStatus).toBe("resolved");
+            const documented = pkg?.exports.find((entry) => entry.repoPath.endsWith("/documentedRule.ts"));
+            expect(documented).toBeDefined();
+            expect(documented?.missingRequiredTags).toEqual([]);
+            expect(documented?.remediationStatus).toBe("resolved");
 
-          const undocumented = pkg?.exports.find((entry) => entry.repoPath.endsWith("/undocumentedRule.ts"));
-          expect(undocumented).toBeDefined();
-          expect(undocumented?.missingRequiredTags).toEqual(
-            expect.arrayContaining(["@example", "@category", "@since"])
-          );
-          expect(undocumented?.remediationStatus).toBe("open");
-        })
-      )
-    ));
+            const undocumented = pkg?.exports.find((entry) => entry.repoPath.endsWith("/undocumentedRule.ts"));
+            expect(undocumented).toBeDefined();
+            expect(undocumented?.missingRequiredTags).toEqual(
+              expect.arrayContaining(["@example", "@category", "@since"])
+            );
+            expect(undocumented?.remediationStatus).toBe("open");
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("reads leading-comment JSDoc on destructured BindingElement exports (R24)", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
+    it.effect("reads leading-comment JSDoc on destructured BindingElement exports (R24)", () =>
+      Effect.flatMap(
+        acquireFixtureRepo({
           topoSortScript: "printf '@beep/demo\\n'",
           packages: [
             {
@@ -881,7 +868,7 @@ export const {
               ],
             },
           ],
-        },
+        }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
           const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
@@ -902,22 +889,23 @@ export const {
           );
           expect(undocumented?.remediationStatus).toBe("open");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("strips string literal contents before flagging declare/any/as-assertion patterns while real unsafe code outside strings still fires (R20, R21)", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
-          topoSortScript: "printf '@beep/demo\\n'",
-          packages: [
-            {
-              name: "@beep/demo",
-              dir: "demo",
-              files: [
-                [
-                  "src/index.ts",
-                  `/**
+    it.effect(
+      "strips string literal contents before flagging declare/any/as-assertion patterns while real unsafe code outside strings still fires (R20, R21)",
+      () =>
+        Effect.flatMap(
+          acquireFixtureRepo({
+            topoSortScript: "printf '@beep/demo\\n'",
+            packages: [
+              {
+                name: "@beep/demo",
+                dir: "demo",
+                files: [
+                  [
+                    "src/index.ts",
+                    `/**
  * Demo package documentation.
  *
  * @packageDocumentation
@@ -959,44 +947,45 @@ export const describeRuleExample = (): void => {};
  */
 export const realUnsafeStringLiteralExample = (): void => {};
 `,
+                  ],
                 ],
-              ],
-            },
-          ],
-        },
-        Effect.fnUntraced(function* (repoRoot) {
-          const inventory = yield* buildInventory(repoRoot);
-          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
-          expect(pkg).toBeDefined();
+              },
+            ],
+          }),
+          Effect.fnUntraced(function* (repoRoot) {
+            const inventory = yield* buildInventory(repoRoot);
+            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            expect(pkg).toBeDefined();
 
-          const safeEntry = pkg?.exports.find((entry) => entry.symbolName === "describeRuleExample");
-          expect(safeEntry).toBeDefined();
-          expect(safeEntry?.unsafeExampleViolations).toEqual([]);
-          expect(safeEntry?.remediationStatus).toBe("resolved");
+            const safeEntry = pkg?.exports.find((entry) => entry.symbolName === "describeRuleExample");
+            expect(safeEntry).toBeDefined();
+            expect(safeEntry?.unsafeExampleViolations).toEqual([]);
+            expect(safeEntry?.remediationStatus).toBe("resolved");
 
-          const unsafeEntry = pkg?.exports.find((entry) => entry.symbolName === "realUnsafeStringLiteralExample");
-          expect(unsafeEntry).toBeDefined();
-          const rules = unsafeEntry?.unsafeExampleViolations.map((violation) => violation.rule);
-          expect(rules).toEqual(
-            expect.arrayContaining(["no-declare-statements", "no-any-in-examples", "no-type-assertions-in-examples"])
-          );
-        })
-      )
-    ));
+            const unsafeEntry = pkg?.exports.find((entry) => entry.symbolName === "realUnsafeStringLiteralExample");
+            expect(unsafeEntry).toBeDefined();
+            const rules = unsafeEntry?.unsafeExampleViolations.map((violation) => violation.rule);
+            expect(rules).toEqual(
+              expect.arrayContaining(["no-declare-statements", "no-any-in-examples", "no-type-assertions-in-examples"])
+            );
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("scans a namespaced-barrel target's own declarations exactly like a flat-barrel target, with only the barrel line itself exempt (R9)", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
-          topoSortScript: "printf '@beep/demo\\n'",
-          packages: [
-            {
-              name: "@beep/demo",
-              dir: "demo",
-              files: [
-                [
-                  "src/index.ts",
-                  `/**
+    it.effect(
+      "scans a namespaced-barrel target's own declarations exactly like a flat-barrel target, with only the barrel line itself exempt (R9)",
+      () =>
+        Effect.flatMap(
+          acquireFixtureRepo({
+            topoSortScript: "printf '@beep/demo\\n'",
+            packages: [
+              {
+                name: "@beep/demo",
+                dir: "demo",
+                files: [
+                  [
+                    "src/index.ts",
+                    `/**
  * Demo package documentation.
  *
  * @packageDocumentation
@@ -1019,51 +1008,51 @@ export * as Ns from "./nsTarget.ts";
 
 export * from "./flatTarget.ts";
 `,
-                ],
-                [
-                  "src/nsTarget.ts",
-                  `export const undocumentedNs = 1;
+                  ],
+                  [
+                    "src/nsTarget.ts",
+                    `export const undocumentedNs = 1;
 `,
-                ],
-                [
-                  "src/flatTarget.ts",
-                  `export const undocumentedFlat = 1;
+                  ],
+                  [
+                    "src/flatTarget.ts",
+                    `export const undocumentedFlat = 1;
 `,
+                  ],
                 ],
-              ],
-            },
-          ],
-        },
-        Effect.fnUntraced(function* (repoRoot) {
-          const inventory = yield* buildInventory(repoRoot);
-          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
-          expect(pkg).toBeDefined();
+              },
+            ],
+          }),
+          Effect.fnUntraced(function* (repoRoot) {
+            const inventory = yield* buildInventory(repoRoot);
+            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            expect(pkg).toBeDefined();
 
-          const nsTargetEntry = pkg?.exports.find((entry) => entry.symbolName === "undocumentedNs");
-          expect(nsTargetEntry).toBeDefined();
-          expect(nsTargetEntry?.remediationStatus).toBe("open");
-          expect(nsTargetEntry?.missingRequiredTags).toEqual(
-            expect.arrayContaining(["@example", "@category", "@since"])
-          );
+            const nsTargetEntry = pkg?.exports.find((entry) => entry.symbolName === "undocumentedNs");
+            expect(nsTargetEntry).toBeDefined();
+            expect(nsTargetEntry?.remediationStatus).toBe("open");
+            expect(nsTargetEntry?.missingRequiredTags).toEqual(
+              expect.arrayContaining(["@example", "@category", "@since"])
+            );
 
-          const flatTargetEntry = pkg?.exports.find((entry) => entry.symbolName === "undocumentedFlat");
-          expect(flatTargetEntry).toBeDefined();
-          expect(flatTargetEntry?.remediationStatus).toBe("open");
-          expect(flatTargetEntry?.missingRequiredTags).toEqual(
-            expect.arrayContaining(["@example", "@category", "@since"])
-          );
+            const flatTargetEntry = pkg?.exports.find((entry) => entry.symbolName === "undocumentedFlat");
+            expect(flatTargetEntry).toBeDefined();
+            expect(flatTargetEntry?.remediationStatus).toBe("open");
+            expect(flatTargetEntry?.missingRequiredTags).toEqual(
+              expect.arrayContaining(["@example", "@category", "@since"])
+            );
 
-          const namespacedBarrelLine = pkg?.exports.find(
-            (entry) => entry.exportKind === "re-export" && entry.symbolName?.includes("Ns")
-          );
-          expect(namespacedBarrelLine).toBeDefined();
-          expect(namespacedBarrelLine?.remediationStatus).toBe("resolved");
-        })
-      )
-    ));
+            const namespacedBarrelLine = pkg?.exports.find(
+              (entry) => entry.exportKind === "re-export" && entry.symbolName?.includes("Ns")
+            );
+            expect(namespacedBarrelLine).toBeDefined();
+            expect(namespacedBarrelLine?.remediationStatus).toBe("resolved");
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("does not treat string-literal /** as a JSDoc comment opener", () => {
-    const comments = jsdocCommentsFromSource(`
+    it("does not treat string-literal /** as a JSDoc comment opener", () => {
+      const comments = jsdocCommentsFromSource(`
 const root = Str.endsWith("/**")(path);
 project.addSourceFilesAtPaths(\`\${base}/**/*.ts\`);
 /**
@@ -1072,15 +1061,14 @@ project.addSourceFilesAtPaths(\`\${base}/**/*.ts\`);
  */
 export const real = 1;
 `);
-    expect(comments).toHaveLength(1);
-    expect(comments[0]).toContain("Real doc.");
-    expect(comments[0]).not.toContain("addSourceFilesAtPaths");
-  });
+      expect(comments).toHaveLength(1);
+      expect(comments[0]).toContain("Real doc.");
+      expect(comments[0]).not.toContain("addSourceFilesAtPaths");
+    });
 
-  it("flags Effect and discovered foundation roots in examples without banning other workspace roots", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        {
+    it.effect("flags Effect and discovered foundation roots in examples without banning other workspace roots", () =>
+      Effect.flatMap(
+        acquireFixtureRepo({
           topoSortScript: "printf '@beep/foundation-demo\\n@beep/consumer\\n'",
           packages: [
             {
@@ -1164,7 +1152,7 @@ export const consumerValue = 1;
               ],
             },
           ],
-        },
+        }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
           const consumer = inventory.packages.find((entry) => entry.packageName === "@beep/consumer");
@@ -1185,6 +1173,7 @@ export const consumerValue = 1;
           expect(consumer?.counts.exampleImportFindings).toBe(8);
           expect(consumer?.counts.documentationRuleFindings["no-root-package-import"]).toBe(8);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+  });
 });

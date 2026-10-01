@@ -102,7 +102,110 @@ describe("SymbolId schema arbitrary", () => {
   );
 });
 
+const makeIsolatedRepository = Effect.fn("TSMorphTest.makeIsolatedRepository")(function* (
+  marker: string,
+  configName: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped();
+  yield* fs.makeDirectory(path.join(root, ".git"));
+  yield* fs.makeDirectory(path.join(root, "src"));
+  yield* fs.writeFileString(
+    path.join(root, configName),
+    '{"compilerOptions":{"noLib":true},"include":["src/**/*.ts"]}'
+  );
+  yield* fs.writeFileString(path.join(root, "src/index.ts"), `export function ${marker}() { return 1; }\n`);
+  return root;
+});
+
 it.layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
+  it.effect.each([true, false])("isolates repository project pools when loadTsconfigFiles is %s", (loadTsconfigFiles) =>
+    Effect.gen(function* () {
+      const service = yield* TSMorphService;
+      for (const marker of ["firstMarker", "secondMarker"]) {
+        const root = yield* makeIsolatedRepository(marker, "tsconfig.pool-isolation.json");
+        const result = yield* service.inspectProject(
+          yield* decodeProjectInspectionRequest({
+            entrypoint: { _tag: "tsconfig", tsConfigPath: "tsconfig.pool-isolation.json" },
+            repoRootPath: root,
+            mode: "syntax",
+            referencePolicy: "workspaceOnly",
+            filePaths: ["src/index.ts"],
+            sourceFileGlobs: [],
+            loadTsconfigFiles,
+          }),
+          ({ project, sourceFiles }) => ({
+            texts: A.map(sourceFiles, (file) => file.getFullText()),
+            projectTexts: A.map(project.getSourceFiles(), (file) => file.getFullText()),
+          })
+        );
+        expect(result.texts).toEqual([`export function ${marker}() { return 1; }\n`]);
+        expect(result.projectTexts).toEqual([`export function ${marker}() { return 1; }\n`]);
+      }
+    })
+  );
+
+  it.effect("resolves cached scope ids within the current root and rejects ambiguous external lookup", () =>
+    Effect.gen(function* () {
+      const service = yield* TSMorphService;
+      const firstRoot = yield* makeIsolatedRepository("firstMarker", "tsconfig.scope-isolation.json");
+      const secondRoot = yield* makeIsolatedRepository("secondMarker", "tsconfig.scope-isolation.json");
+      const originalCwd = yield* Effect.acquireRelease(
+        Effect.sync(() => process.cwd()),
+        (cwd) => Effect.sync(() => process.chdir(cwd))
+      );
+      const firstScope = yield* service.resolveProjectScope(
+        yield* decodeProjectScopeRequest({
+          entrypoint: { _tag: "tsconfig", tsConfigPath: "tsconfig.scope-isolation.json" },
+          repoRootPath: firstRoot,
+          mode: "syntax",
+          referencePolicy: "workspaceOnly",
+        })
+      );
+      const firstOnly = yield* service.getFileOutline(
+        yield* decodeFileOutlineRequest({ scopeId: firstScope.scopeId, filePath: "src/index.ts" })
+      );
+      expect(A.map(firstOnly.symbols, (symbol) => symbol.name)).toContain("firstMarker");
+      const secondScope = yield* service.resolveProjectScope(
+        yield* decodeProjectScopeRequest({
+          entrypoint: { _tag: "tsconfig", tsConfigPath: "tsconfig.scope-isolation.json" },
+          repoRootPath: secondRoot,
+          mode: "syntax",
+          referencePolicy: "workspaceOnly",
+        })
+      );
+      expect(secondScope.scopeId).toBe(firstScope.scopeId);
+      for (const { root, marker } of [
+        { root: firstRoot, marker: "firstMarker" },
+        { root: secondRoot, marker: "secondMarker" },
+        { root: firstRoot, marker: "firstMarker" },
+      ]) {
+        yield* Effect.sync(() => process.chdir(root));
+        const outline = yield* service.getFileOutline(
+          yield* decodeFileOutlineRequest({ scopeId: firstScope.scopeId, filePath: "src/index.ts" })
+        );
+        expect(A.map(outline.symbols, (symbol) => symbol.name)).toContain(marker);
+        const symbols = yield* service.searchSymbols(
+          yield* decodeSymbolSearchRequest({
+            scopeId: firstScope.scopeId,
+            query: "Marker",
+            categories: [],
+            kinds: [],
+            limit: 10,
+          })
+        );
+        expect(A.map(symbols.symbols, (symbol) => symbol.name)).toEqual([marker]);
+      }
+      yield* Effect.sync(() => process.chdir(originalCwd));
+      const error = yield* service
+        .getFileOutline(yield* decodeFileOutlineRequest({ scopeId: firstScope.scopeId, filePath: "src/index.ts" }))
+        .pipe(Effect.flip);
+      expect(error._tag).toBe("TsMorphScopeResolutionError");
+      expect(error.message).toContain("ambiguous across repository roots");
+    })
+  );
+
   describe("resolveProjectScope", () => {
     it.effect(
       "resolves a workspace tsconfig into a stable scope",

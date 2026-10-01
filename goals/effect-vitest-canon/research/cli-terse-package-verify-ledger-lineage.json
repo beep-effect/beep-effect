@@ -1,0 +1,569 @@
+{
+  "sourceFixSha": "0509e816699426115a3e751fc2d4ce0703fec875",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:142:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:172:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:203:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:232:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:259:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:279:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:304:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:327:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:348:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:365:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:376:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:390:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:412:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:475:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:534:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:568:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:111:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:146:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:169:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:191:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:238:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:266:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:289:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:312:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:338:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:381:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:416:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:449:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:495:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:539:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:589:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:628:runPromise@4#1",
+    "EV003:packages/tooling/tool/cli/test/package-verify.test.ts:96:withTempDirectory@26#1"
+  ],
+  "runtimeLineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:111:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "exempts ecosystem members in full and explicit include scans",
+      "currentTitle": "exempts ecosystem members in full and explicit include scans",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 112,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; const source = A.join( [ 'import * as A from \"effect/Array\";', \"\", \"export const values = { onNone:"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:146:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports helper simplifications in dry-run check mode without rewriting files",
+      "currentTitle": "reports helper simplifications in dry-run check mode without rewriting files",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 147,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeHelperWrapperFixture; const summary = yield* runTerseRules(false, true); const source ="
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:169:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rewrites supported helper wrappers in write mode",
+      "currentTitle": "rewrites supported helper wrappers in write mode",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 170,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeHelperWrapperFixture; const summary = yield* runTerseRules(true, false); const source ="
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:191:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "leaves bare nullary generic constructor thunks alone in check and write modes",
+      "currentTitle": "leaves bare nullary generic constructor thunks alone in check and write modes",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 192,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; const source = A.join( [ 'import * as A from \"effect/Array\";', 'import * as O from \"effect/Option\";'"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:238:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "leaves already-terse code unchanged",
+      "currentTitle": "leaves already-terse code unchanged",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 239,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ 'import * as A from \"effect/Array\";', \"\", \"export"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:266:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "detects flow candidates and shared thunk helpers in dry-run mode",
+      "currentTitle": "detects flow candidates and shared thunk helpers in dry-run mode",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 267,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeFlowThunkFixture; const summary = yield* runTerseRules(false, true); const source = yiel"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:289:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rewrites shared thunk helper cases while keeping flow-only candidates blocking",
+      "currentTitle": "rewrites shared thunk helper cases while keeping flow-only candidates blocking",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 290,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeFlowThunkFixture; const summary = yield* runTerseRules(true, false); const source = yiel"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:312:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "ignores type-only thunk imports when checking shared helper availability",
+      "currentTitle": "ignores type-only thunk imports when checking shared helper availability",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 313,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ 'import { type thunkUndefined, thunk0 } from \"@be"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:338:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports whole-object Option match compaction candidates without rewriting files",
+      "currentTitle": "reports whole-object Option match compaction candidates without rewriting files",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 339,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ 'import { pipe } from \"effect\";', 'import * as O"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:381:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports object-spread Option match compaction candidates",
+      "currentTitle": "reports object-spread Option match compaction candidates",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 382,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ 'import * as O from \"effect/Option\";', \"\", \"decla"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:416:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports conditional optional object spread candidates",
+      "currentTitle": "reports conditional optional object spread candidates",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 417,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ \"declare const name: string | undefined;\", \"decla"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:449:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "ignores JSX prop spreads and non-object optional spreads",
+      "currentTitle": "ignores JSX prop spreads and non-object optional spreads",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 450,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ \"declare const id: string | undefined;\", \"declare"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:495:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports nested Option and Bool match candidates",
+      "currentTitle": "reports nested Option and Bool match candidates",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 496,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ 'import * as Bool from \"effect/Boolean\";', 'impor"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:539:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports explicit dual-overload helper candidates",
+      "currentTitle": "reports explicit dual-overload helper candidates",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 540,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ \"type PackageOptions = Readonly<{ packageName: st"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:589:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "does not enforce broad nested ternary or if shapes",
+      "currentTitle": "does not enforce broad nested ternary or if shapes",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 590,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ \"export const nestedTernary = (first: boolean, se"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/terse-effect.test.ts:628:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "ignores clean Option object helpers and schema-boundary Option helpers",
+      "currentTitle": "ignores clean Option object helpers and schema-boundary Option helpers",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 629,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDefaultTsconfig; yield* writeProjectFile( DemoSourcePath, A.join( [ 'import * as O from \"effect/Option\";', 'import *"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:142:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "does not run the package audit when its closure build fails",
+      "currentTitle": "does not run the package audit when its closure build fails",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 147,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const markerPath = path.join(tmpDir, \"audit-ran\"); co"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:172:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refreshes environment-only stale upstream output before running the audit",
+      "currentTitle": "refreshes environment-only stale upstream output before running the audit",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 177,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const distStatePath = path.join(tmpDir, \"dist-state\")"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:203:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "runs the audit when Turbo skips fresh upstream builds from cache",
+      "currentTitle": "runs the audit when Turbo skips fresh upstream builds from cache",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 208,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const markerPath = path.join(tmpDir, \"audit-ran\"); co"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:232:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "attributes an audit failure after a successful dependency build",
+      "currentTitle": "attributes an audit failure after a successful dependency build",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 237,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const result = yield* runPackageVerifyStepPlanForTesting([ QualityTaskStep.make({ label: \"audit:build-closure\", command: \"sh\""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:259:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "maps dependency-build spawn failures to the package-verify error surface",
+      "currentTitle": "maps dependency-build spawn failures to the package-verify error surface",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 264,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => runPackageVerifyStepPlanForTesting([ QualityTaskStep.make({ label: \"audit:build-closure\", command: \"missing-package-verify-command\", args: [\"build\"], c"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:279:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "runs quick verification and records the repository head",
+      "currentTitle": "runs quick verification and records the repository head",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 284,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.acquireUseRelease( Effect.sync(() => vi.spyOn(process, \"cwd\").mockReturnValue(tmpDir)), () => Effect.gen(function* () { const fs = yield* FileSy"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:304:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "skips the dependency build when the package has no audit script",
+      "currentTitle": "skips the dependency build when the package has no audit script",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 309,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { yield* seedWorkspaceRepository(tmpDir, { docgen: \"true\" }); const report = yield* runPackageVerifyAtRootForTesting(tmpDir, {"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:327:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "surfaces malformed workspace manifests",
+      "currentTitle": "surfaces malformed workspace manifests",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 332,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const packageDir = path.join(tmpDir, \"packages/demo\")"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:348:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "surfaces a missing repository HEAD after verification",
+      "currentTitle": "surfaces a missing repository HEAD after verification",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 353,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { yield* seedWorkspaceRepository(tmpDir, { \"beep:lint\": \"true\", \"beep:check\": \"true\" }, { commit: false }); const error = yield"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:365:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects more than one package argument before discovery",
+      "currentTitle": "rejects more than one package argument before discovery",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 370,
+          "evidence": "Effect.runPromise( runPackageVerifyCli({ packageArgs: [\"@beep/a\", \"@beep/b\"], quick: true }).pipe( Effect.flip, Effect.map((error) => { expect(error.message).toContain(\"expected at most one package ar"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:376:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "selects an explicit workspace package",
+      "currentTitle": "selects an explicit workspace package",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 381,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const selected = yield* selectPackageVerifyTargetForTesting({ changedFiles: [], packageName: O.some(\"@beep/demo\"), repoRoot: \"/repo\", workspaces: [demoWork"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:390:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "fails when changed files span multiple packages",
+      "currentTitle": "fails when changed files span multiple packages",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 395,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const exit = yield* Effect.exit( selectPackageVerifyTargetForTesting({ changedFiles: [\"packages/demo/src/index.ts\", \"apps/app/src/main.ts\"], packageName: O"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:412:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "collects deleted package paths for workspace auto-detection",
+      "currentTitle": "collects deleted package paths for workspace auto-detection",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 417,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const sourceFile = path.join(tmpDir, \"packages/demo/s"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:475:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "writes package failures to the shared inbox and clears them on success",
+      "currentTitle": "writes package failures to the shared inbox and clears them on success",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 481,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const result = (ok: boolean) => PackageVerifyStepResult.make({ step: \"check\", script: \"beep:check\", skipped: false, ok, durat"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:534:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "clears quick lint and check poison after a successful full audit",
+      "currentTitle": "clears quick lint and check poison after a successful full audit",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 540,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const step = (name: \"lint\" | \"check\" | \"audit\", ok: boolean) => PackageVerifyStepResult.make({ step: name, script: `beep:${na"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/package-verify.test.ts:568:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "records the Turbo closure build in a genuine audit failure capsule",
+      "currentTitle": "records the Turbo closure build in a genuine audit failure capsule",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 574,
+          "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { yield* recordPackageVerifyInboxForTesting( PackageVerifyReport.make({ headSha: \"abc123\", packageName: \"@beep/demo\", packageDi"
+        }
+      ],
+      "afterMatches": []
+    }
+  ],
+  "helperLineage": [
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/package-verify.test.ts:96:withTempDirectory@26#1",
+      "beforeDetectorId": "EV003:packages/tooling/tool/cli/test/package-verify.test.ts:101:withTempDirectory@26#1",
+      "occurrence": "v2:2f49f5b9325f758761c5ffa159b94c4cd59bd63ad69d0fef2a9e3209f0cfdc6f",
+      "evidence": "<Result, Error, Requirements>( use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements> ) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; ret",
+      "judgment": "All 13 uses are terminal. Public test scope owns acquireRelease; cleanup failures become visible defects, with no ignored failures. Native filesystem judgment remains open."
+    }
+  ],
+  "additionalCorrection": "One QA-helper native Git callback now retains live clock for capture cleanup deadlines; no previously fixed rows counted again.",
+  "addedCurrentRows": 0,
+  "counts": {
+    "open": 1707,
+    "fixed": 1776,
+    "exception": 12
+  },
+  "fullPackageProof": "passed: audit 689.0s; docgen 20.3s; exit 0; source 0509e816699426115a3e751fc2d4ce0703fec875"
+}
