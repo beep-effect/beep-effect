@@ -15,7 +15,7 @@ const Glyph = (props: { readonly children: JSX.Element | ReadonlyArray<JSX.Eleme
     strokeWidth={2}
     strokeLinecap="round"
     strokeLinejoin="round"
-    style={{ display: "block" }}
+    data-dock-icon=""
   >
     {props.children}
   </svg>

@@ -81,6 +81,94 @@ roughly 11 minutes after termination. This exceeded the former
 decision subsequently returned the pool to Spot; the interruption evidence
 remains relevant to cost per successful completion.
 
+## Automatic runner-loss rerun
+
+`.github/workflows/rerun-runner-loss.yml` re-runs jobs that failed because
+their runner died. It runs on `workflow_run` after every completed `Check` and
+`Heavy Admit` run that concluded `failure`, on a GitHub-hosted runner, and
+calls `bun run beep ci rerun-runner-loss --run-id <id> --attempt <n>`. The
+command reads the run, that attempt's jobs, and each failed job's check-run
+annotations, then decides:
+
+- A job is lost when it concluded `failure`, an annotation reads "lost
+  communication with the server", and none of its steps concluded `failure`.
+  The Spot evictions of 2026-09-29..10-01 all had this shape: earlier steps
+  `success`, the running step without a conclusion.
+- Nothing happens unless at least one lost job is under its rerun bound and
+  the attempt is still the run's latest.
+- Retries are bounded per job. A job, followed across attempts by name, is
+  re-run at most 3 times (`--max-job-reruns`). A separate ceiling stops all
+  reruns once the run reaches attempt 8 (`--max-attempt`), so no run can
+  loop. The job summary names every lost job either bound leaves red.
+- Nothing happens unless the run's SHA is still current: the head of an open
+  pull request for `pull_request` runs, the branch tip for `push` runs. A
+  rerun of a superseded head's run re-enters the branch concurrency group and
+  cancels the current head's run (observed 2026-09-30).
+- Only lost jobs are re-run, one `gh run rerun --job <id>` per evaluation,
+  starting with the lost job that has the fewest reruns. The command never
+  uses `--failed`, so a job that failed for a real reason stays red. The job
+  summary names it as left red.
+- GitHub runs one job rerun per run at a time. Each rerun creates a new
+  attempt, which copies the jobs it did not re-run under new ids and without
+  their annotations. When that attempt completes, the next evaluation traces
+  each copy back to its original by name and timestamps, then re-runs the
+  next lost job. Three jobs lost in one attempt are re-run in attempts 2, 3
+  and 4.
+
+### Post-merge verification
+
+Reruns chain from one attempt to the next. When one job has been re-run, the
+remaining lost jobs are re-run only when the next attempt completes and
+triggers another evaluation. That depends on a fact nobody has observed yet:
+whether an attempt requested with the workflow's own `GITHUB_TOKEN` fires
+`workflow_run: completed` when it finishes. On the first real eviction after
+this lands on `main`:
+
+1. Open the `Rerun Runner Loss` run for attempt N and note the job it re-ran.
+2. When attempt N+1 of the same run completes, check
+   `gh run list --workflow rerun-runner-loss.yml` for a new run. Its job
+   summary should name attempt N+1.
+3. If none appears, GitHub suppresses the event. Each run then gets one
+   automatic rerun, and further losses fall to yeet monitor or an operator
+   until the fallback lands.
+
+The planned fallback (not implemented) is a `schedule:` trigger every 15
+minutes that calls the same command for every `Check` and `Heavy Admit` run
+that completed in the last hour. The command's gates already make repeated
+evaluation of a run safe.
+
+Every evaluation writes a job summary with the verdict, the reason, and each
+failed job's id, runner name, loss verdict, prior reruns and action. Read it from the
+`Rerun Runner Loss` run, or reproduce a decision locally without side effects:
+
+```sh
+bun run beep ci rerun-runner-loss --run-id <run-id> [--attempt <n>] --dry-run
+```
+
+The workflow runs default-branch code only. It never checks out the
+triggering pull request, and its token carries `actions: write` plus read
+access to checks, contents and pull requests, with no repository secrets.
+Changes to the workflow take effect after they merge to `main`.
+
+Disable it with the repository variable `BEEP_RERUN_RUNNER_LOSS=false`
+(`gh variable set BEEP_RERUN_RUNNER_LOSS --body false`), or with
+`gh workflow disable "Rerun Runner Loss"`. Either stops new evaluations at
+once. Before re-running a job by hand, check the run's `run_attempt` so the
+automatic rerun is not duplicated.
+
+### Known gap: yeet monitor misses mid-job evictions
+
+`detectGithubJobShapeClass` in
+`packages/tooling/tool/cli/src/internal/github/JobShape.ts` classifies a job
+as `runner-loss` only when *every* step has a null conclusion. A Spot eviction
+in the middle of a job leaves the earlier steps (`Set up job`, checkout, setup)
+at `success`, and only the running step and later steps at null. The rule
+therefore does not match, and `yeet monitor`'s `runner-loss` fingerprint misses
+these jobs. Evidence: run 36763005302 attempt 1, where Lint Policy, Coverage
+Regression and Docgen were all lost after setup succeeded. The automatic rerun
+above detects these jobs by annotation instead. Changing the shape rule is
+tracked as a follow-up.
+
 ## Termination credential access
 
 The pinned `github-aws-runners/github-runner/aws` v7.10.1 module grants its

@@ -115,7 +115,7 @@ export function VerifiedSourceTextViewer({
             <>
               {Str.slice(0, relativeStart)(pageText)}
               <mark
-                className="box-decoration-clone rounded-xs bg-amber-300 px-0.5 text-amber-950 ring-1 ring-amber-500/50 dark:bg-amber-400"
+                className="box-decoration-clone rounded-xs bg-highlight px-0.5 text-highlight-foreground ring-1 ring-warning/50"
                 data-slot="verified-source-anchor"
                 ref={autoScrollToAnchor ? scrollAnchorIntoView : undefined}
               >

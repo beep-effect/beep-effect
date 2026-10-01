@@ -25,18 +25,27 @@ import { commandCounter } from "./AdapterState.ts";
 import { SectionPreview, TabInsertionPreview } from "./Gesture.models.ts";
 import type { AnchoredBox, DockGeometry, MovePanelCommand, Panel, SplitNode } from "@beep/dock";
 import type { Dual2, Dual3 } from "@beep/dock/internal/Dual";
-import type React from "react";
 import type { DockAtomGraph } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
 import type { DropPreview, PointerPosition, TabDrag, TabRect } from "./Gesture.models.ts";
 
-export const boxStyle = (box: DockBox): React.CSSProperties => ({
-  position: "absolute",
-  left: box.left,
-  top: box.top,
-  width: box.width,
-  height: box.height,
-});
+/**
+ * Formats a kernel length as the CSS pixel string the dock stylesheet reads back
+ * from a `--dock-*` custom property.
+ *
+ * **Example** (Writing a group box as custom properties)
+ *
+ * ```ts
+ * import { px } from "@beep/dock-react/internal/DropCompiler"
+ *
+ * const style = { "--dock-left": px(404), "--dock-width": px(320) }
+ * // style["--dock-left"] === "404px"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const px = (value: number): string => `${value}px`;
 
 export const positionOf = (event: PointerEvent): PointerPosition => ({
   left: event.clientX,

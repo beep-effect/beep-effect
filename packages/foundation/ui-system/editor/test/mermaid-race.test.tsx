@@ -91,7 +91,9 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
           )
         )
       );
-      expect(within(view.container).getByTestId("mermaid-diagram")).toHaveStyle({ contain: "paint" });
+      // Paint containment is the `contain-paint` utility; jsdom does not resolve stylesheets, so the
+      // contract is the class on the trusted wrapper.
+      expect(within(view.container).getByTestId("mermaid-diagram")).toHaveClass("contain-paint");
 
       yield* Effect.sync(() => {
         act(() => firstRender?.resolve({ svg: mermaidSvg(firstRender.id, '<g data-source="first"></g>') }));

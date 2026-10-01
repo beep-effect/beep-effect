@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-01T10:13:02.194Z
+Generated: 2026-10-01T18:54:37.425Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
 | publicModules | 2822 |
-| publicExports | 20062 |
+| publicExports | 20068 |
 | openModules | 366 |
 | openExports | 2860 |
 | missingExportExamples | 5 |
@@ -106,7 +106,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 48 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 77 |
 | 49 | `@beep/openai-compat` | `packages/drivers/openai-compat` | needs-remediation | 4 | 54 | 0 | 9 |
 | 50 | `@beep/epistemic-client` | `packages/epistemic/client` | needs-remediation | 4 | 25 | 0 | 1 |
-| 51 | `@beep/ui` | `packages/foundation/ui-system/ui` | needs-remediation | 134 | 555 | 1 | 7 |
+| 51 | `@beep/ui` | `packages/foundation/ui-system/ui` | needs-remediation | 134 | 557 | 1 | 7 |
 | 52 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
 | 53 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 89 | 1 | 16 |
 | 54 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 32 | 114 | 4 | 21 |
@@ -159,7 +159,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 101 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 22 | 82 | 1 | 30 |
 | 102 | `@beep/brand` | `packages/foundation/ui-system/brand` | needs-remediation | 7 | 50 | 0 | 43 |
 | 103 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
-| 104 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 36 | 211 | 13 | 14 |
+| 104 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 36 | 212 | 13 | 14 |
 | 105 | `@beep/ontology-server` | `packages/ontology/server` | needs-remediation | 8 | 24 | 0 | 2 |
 | 106 | `@beep/workspace-server` | `packages/workspace/server` | needs-remediation | 12 | 32 | 0 | 4 |
 | 107 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 28 | 0 | 0 |
@@ -171,7 +171,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 113 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 1 |
 | 114 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 40 | 6 | 3 |
 | 115 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
-| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 290 | 2556 | 47 | 267 |
+| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 290 | 2559 | 47 | 267 |
 | 117 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 87 | 0 | 18 |
 | 118 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 3 |
 | 119 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 9 | 32 | 1 | 0 |
@@ -702,7 +702,7 @@ Export findings:
 - `src/SecureHeaderError/SecureHeaderError.errors.ts:404` `Error` (type) - 1 example import violation(s)
 - `src/SecureHeaderOptions/SecureHeaderOptions.schema.ts:168` `createHeadersObject` (const) - 1 example import violation(s)
 - `src/SecureHeaderOptions/SecureHeaderOptions.schema.ts:200` `createSecureHeaders` (const) - 1 example import violation(s)
-- `src/SemanticVersion.ts:57` `SemanticVersionSchema` (interface) - 1 documentation section/link violation(s)
+- `src/SemanticVersion.ts:53` `SemanticVersionSchema` (interface) - 1 documentation section/link violation(s)
 - `src/Semver.ts:643` `SemverFromString` (const) - 1 example import violation(s)
 - `src/Sha256.ts:112` `Sha256HexFromBytes` (const) - 1 example import violation(s)
 - `src/Sha256.ts:142` `Sha256HexFromBytes` (type) - 1 example import violation(s)
@@ -1788,9 +1788,9 @@ Export findings:
 - `src/JsonUtils.ts:67` `jsonStringifyCompact` (const) - 1 example import violation(s)
 - `src/JsonUtils.ts:94` `jsonParse` (const) - 1 example import violation(s)
 - `src/Root.ts:46` `findRepoRoot` (const) - 1 example import violation(s)
-- `src/TSMorph/TSMorph.service.ts:390` `TSMorphService` (class) - 1 example import violation(s)
-- `src/TSMorph/TSMorph.service.ts:713` `createTSMorphService` (const) - 1 example import violation(s)
-- `src/TSMorph/TSMorph.service.ts:1392` `TSMorphServiceLive` (const) - 1 example import violation(s)
+- `src/TSMorph/TSMorph.service.ts:397` `TSMorphService` (class) - 1 example import violation(s)
+- `src/TSMorph/TSMorph.service.ts:728` `createTSMorphService` (const) - 1 example import violation(s)
+- `src/TSMorph/TSMorph.service.ts:1439` `TSMorphServiceLive` (const) - 1 example import violation(s)
 - `src/TsConfig.ts:51` `collectTsConfigPaths` (const) - 1 example import violation(s)
 - `src/Workspaces.ts:120` `resolveWorkspaceDirs` (const) - 1 example import violation(s)
 - `src/Workspaces.ts:227` `getWorkspaceDir` (const) - 1 example import violation(s)
@@ -1824,17 +1824,17 @@ Path: `packages/drivers/duckdb`
 
 Export findings:
 - `src/DuckDb.errors.ts:173` `DuckDbError` (class) - 1 example import violation(s)
-- `src/DuckDb.service.ts:83` `DuckDbClient` (interface) - 1 example import violation(s)
-- `src/DuckDb.service.ts:177` `DuckDbShape` (interface) - 1 example import violation(s)
-- `src/DuckDb.service.ts:492` `DuckDb` (class) - 1 example import violation(s)
+- `src/DuckDb.service.ts:85` `DuckDbClient` (interface) - 1 example import violation(s)
+- `src/DuckDb.service.ts:179` `DuckDbShape` (interface) - 1 example import violation(s)
+- `src/DuckDb.service.ts:494` `DuckDb` (class) - 1 example import violation(s)
 
 ### @beep/ffmpeg
 
 Path: `packages/drivers/ffmpeg`
 
 Export findings:
-- `src/FFmpeg.service.ts:141` `FFmpegEventSink` (type) - 1 example import violation(s)
-- `src/FFmpeg.service.ts:169` `FFmpegShape` (interface) - 1 example import violation(s)
+- `src/FFmpeg.service.ts:153` `FFmpegEventSink` (type) - 1 example import violation(s)
+- `src/FFmpeg.service.ts:181` `FFmpegShape` (interface) - 1 example import violation(s)
 
 ### @beep/nlp-processing
 
@@ -2495,11 +2495,11 @@ Export findings:
 - `src/Box.config.ts:183` `layer` (const) - 1 example import violation(s)
 - `src/Box.config.ts:207` `layerConfig` (const) - 1 example import violation(s)
 - `src/Box.service.ts:118` `Box` (class) - 1 example import violation(s)
-- `src/Box.streaming.ts:83` `BoxByteInput` (type) - 1 example import violation(s)
-- `src/Box.streaming.ts:101` `BoxByteStream` (type) - 1 example import violation(s)
-- `src/Box.streaming.ts:432` `BoxUploadFilePartByUrlPayload` (class) - 1 example import violation(s)
-- `src/Box.streaming.ts:592` `BoxGetZipDownloadContentPayload` (class) - 1 example import violation(s)
-- `src/Box.streaming.ts:1007` `makeStreamingOperations` (const) - 1 example import violation(s)
+- `src/Box.streaming.ts:85` `BoxByteInput` (type) - 1 example import violation(s)
+- `src/Box.streaming.ts:103` `BoxByteStream` (type) - 1 example import violation(s)
+- `src/Box.streaming.ts:434` `BoxUploadFilePartByUrlPayload` (class) - 1 example import violation(s)
+- `src/Box.streaming.ts:594` `BoxGetZipDownloadContentPayload` (class) - 1 example import violation(s)
+- `src/Box.streaming.ts:1009` `makeStreamingOperations` (const) - 1 example import violation(s)
 
 ### @beep/documents-use-cases
 
@@ -2583,10 +2583,10 @@ Export findings:
 - `src/FaceDetection.models.ts:143` `RawFaceDetectionConfidence` (const) - 1 example import violation(s)
 - `src/FaceDetection.models.ts:613` `decodeFaceDetectionModelConfig` (const) - 1 example import violation(s)
 - `src/FaceDetection.models.ts:641` `decodeFaceDetectionImageRequest` (const) - 1 example import violation(s)
-- `src/FaceDetection.service.ts:207` `LoadedFaceDetector` (interface) - 1 example import violation(s)
-- `src/FaceDetection.service.ts:255` `FaceDetectionServiceShape` (interface) - 1 example import violation(s)
-- `src/FaceDetection.service.ts:314` `FaceDetectionService` (class) - 1 example import violation(s)
-- `src/FaceDetection.service.ts:958` `withDetector` (const) - 1 example import violation(s)
+- `src/FaceDetection.service.ts:209` `LoadedFaceDetector` (interface) - 1 example import violation(s)
+- `src/FaceDetection.service.ts:257` `FaceDetectionServiceShape` (interface) - 1 example import violation(s)
+- `src/FaceDetection.service.ts:316` `FaceDetectionService` (class) - 1 example import violation(s)
+- `src/FaceDetection.service.ts:960` `withDetector` (const) - 1 example import violation(s)
 
 ### @beep/repo-docgen
 
@@ -3103,7 +3103,7 @@ Export findings:
 - `src/DockReact.types.ts:148` `DockviewAdapterApi` (type) - 1 example import violation(s)
 - `src/DockReact.types.ts:184` `DockTitleMinimaOptions` (type) - 1 example import violation(s)
 - `src/DockReact.types.ts:208` `DockviewReactProps` (type) - 1 example import violation(s)
-- `src/DockviewReact.tsx:236` `DockviewReact` (const) - 3 example import violation(s)
+- `src/DockviewReact.tsx:244` `DockviewReact` (const) - 3 example import violation(s)
 
 ### @beep/drizzle
 
@@ -3465,8 +3465,8 @@ Export findings:
 - `src/commands/Ci/Ci.command.ts:270` `appendTurboSummary` (const) - 1 example import violation(s)
 - `src/commands/Ci/CiAdmission.ts:57` `HeavyAdmissionJson` (const) - 1 example import violation(s)
 - `src/commands/Ci/CiAdmission.ts:121` `runCiAdmission` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:368` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:1429` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:369` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:1442` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/HeavyAdmission.ts:497` `readHeavyAdmissionChangedPaths` (const) - 1 example import violation(s)
 - `src/commands/Ci/HeavyAdmission.ts:545` `readHeavyAdmissionEvent` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.capture.schemas.ts:631` `CodexFindingsCapturePayload` (class) - 1 example import violation(s)
@@ -3632,8 +3632,8 @@ Export findings:
 - `src/commands/Quality/CheckCensusGate.ts:1140` `CheckCensusSampler` (class) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:1252` `collectAuditDiffInputForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:2470` `qualityFallowCommand` (const) - 1 example import violation(s)
-- `src/commands/Quality/Quality.command.ts:948` `runBunAudit` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1078` `devQualityStepsForTesting` (const) - 1 example import violation(s)
+- `src/commands/Quality/Quality.command.ts:1020` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1150` `devQualityStepsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:105` `selectOsvIgnoreIdsForAudit` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:154` `activeOsvIgnoreIdsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.render.ts:71` `printQualityProfileConfig` (const) - 1 example import violation(s)
@@ -4197,10 +4197,10 @@ Module findings:
 - `src/OpenClaw.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/CiFleetController.ts:579` `CiFleetControllerPulumiConfigValues` (const) - missing @example
-- `src/CiFleetController.ts:615` `CiFleetControllerConfig` (class) - missing @example
-- `src/CiFleetController.ts:647` `makeCiFleetControllerConfig` (const) - missing @example
-- `src/CiFleetController.ts:671` `loadCiFleetControllerConfig` (const) - missing @example
+- `src/CiFleetController.ts:595` `CiFleetControllerPulumiConfigValues` (const) - missing @example
+- `src/CiFleetController.ts:631` `CiFleetControllerConfig` (class) - missing @example
+- `src/CiFleetController.ts:663` `makeCiFleetControllerConfig` (const) - missing @example
+- `src/CiFleetController.ts:687` `loadCiFleetControllerConfig` (const) - missing @example
 - `src/OpenClaw.ts:398` `OpenClawExpectedIdentity` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:581` `OpenClawDeploymentConfig` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:823` `OpenClawBackupConfig` (class) - 1 documentation section/link violation(s)

@@ -20,6 +20,8 @@ import type { YeetVerdict, YeetVerdictLane } from "@beep/repo-cli/test/Yeet";
 const OSV_HINT = "Inspect the OSV finding and rerun `bun run beep quality github-checks security`.";
 const CHANGESET_HINT_PREFIX = "Run `bun run beep quality changeset-status --since origin/main`.";
 const GOALS_INDEX_HINT = "Run `bun run beep goals index`, inspect the update, then rerun the cheap-gates tier.";
+const SHADCN_HINT =
+  "Run `bun run lint:shadcn`, fix every finding with the recipes in docs/runbooks/design-system-lint.md (no allow-lists or disable comments), then rerun the failing tier.";
 const TYPOS_HINT =
   "Run the typos checker on the flagged files and fix the spelling, or whitelist intentional terms in `_typos.toml`.";
 
@@ -281,6 +283,8 @@ describe("yeet verdict lane repair commands", () => {
 describe("lane-run hint helpers", () => {
   it("matches catalog hints by exact lane id only", () => {
     assertSome(knownSubLaneRemediationForLaneId("goals:index-check"), GOALS_INDEX_HINT);
+    assertSome(knownSubLaneRemediationForLaneId("quality:shadcn-lint"), SHADCN_HINT);
+    assertSome(knownSubLaneRemediationFromOutput("[beep-cli] lint:shadcn: failed in 12ms"), SHADCN_HINT);
     assertNone(knownSubLaneRemediationForLaneId("quality:coverage"));
     assertNone(knownSubLaneRemediationForLaneId("repo-sanity:changeset-graph"));
   });

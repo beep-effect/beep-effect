@@ -359,7 +359,7 @@ const SpeechInputRecordButton = forwardRef<HTMLButtonElement, SpeechInputRecordB
         className={cn(
           buttonVariants({ size: speechInput.size }),
           "relative flex flex-shrink-0 items-center justify-center transition-all",
-          speechInput.isConnected && "scale-[80%]",
+          speechInput.isConnected && "scale-80",
           className
         )}
         aria-label={speechInput.isConnected ? "Stop recording" : "Start recording"}
@@ -368,19 +368,19 @@ const SpeechInputRecordButton = forwardRef<HTMLButtonElement, SpeechInputRecordB
         <div
           className={cn(
             "bg-primary absolute h-4 w-4 rounded-full transition-all duration-200",
-            speechInput.isConnecting ? "scale-90 opacity-100" : "scale-[60%] opacity-0"
+            speechInput.isConnecting ? "scale-90 opacity-100" : "scale-60 opacity-0"
           )}
         />
         <SquareIcon
           className={cn(
             "text-destructive absolute h-4 w-4 fill-current transition-all duration-200",
-            !speechInput.isConnecting && speechInput.isConnected ? "scale-100 opacity-100" : "scale-[60%] opacity-0"
+            !speechInput.isConnecting && speechInput.isConnected ? "scale-100 opacity-100" : "scale-60 opacity-0"
           )}
         />
         <MicrophoneIcon
           className={cn(
             "absolute h-4 w-4 transition-all duration-200",
-            !speechInput.isConnecting && !speechInput.isConnected ? "scale-100 opacity-100" : "scale-[60%] opacity-0"
+            !speechInput.isConnecting && !speechInput.isConnected ? "scale-100 opacity-100" : "scale-60 opacity-0"
           )}
         />
       </Button>
@@ -422,10 +422,8 @@ const SpeechInputPreview = forwardRef<HTMLDivElement, SpeechInputPreviewProps>(f
       // @ts-expect-error inert is not yet in React types
       inert={speechInput.isConnected ? undefined : Str.empty}
       className={cn(
-        "relative flex h-8 flex-shrink-0 items-center overflow-hidden text-sm transition-[opacity,transform,width] duration-200 ease-out",
-        showPlaceholder
-          ? "text-muted-foreground italic"
-          : "text-muted-foreground [mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%-16px),transparent)]",
+        "relative flex h-8 flex-shrink-0 items-center overflow-hidden text-sm transition-opacity-transform-width duration-200 ease-out",
+        showPlaceholder ? "text-muted-foreground italic" : "text-muted-foreground mask-fade-x",
         speechInput.isConnected ? "w-28 opacity-100" : "w-0 opacity-0",
         className
       )}
@@ -477,8 +475,8 @@ const SpeechInputCancelButton = forwardRef<HTMLButtonElement, SpeechInputCancelB
         }}
         className={cn(
           buttonVariants({ size: speechInput.size }),
-          "flex-shrink-0 transition-[opacity,transform,width] duration-200 ease-out",
-          speechInput.isConnected ? "scale-[80%] opacity-100" : "pointer-events-none w-0 scale-100 opacity-0",
+          "flex-shrink-0 transition-opacity-transform-width duration-200 ease-out",
+          speechInput.isConnected ? "scale-80 opacity-100" : "pointer-events-none w-0 scale-100 opacity-0",
           className
         )}
         aria-label="Cancel recording"

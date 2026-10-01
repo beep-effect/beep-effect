@@ -1,4 +1,7 @@
 @import "@beep/ui/styles/globals.css";
+/* The dock chrome stylesheet is part of the app theme, so `.desktop-dock` is a class the
+   design-system lint lane (and anyone reading the theme) can see. */
+@import "./dock.css";
 
 /* Tailwind v4 auto content-detection roots at this file and skips node_modules,
    so the @beep/ui + @beep/editor sources (workspace symlinks under node_modules)
@@ -27,6 +30,10 @@
    Light = green-on-parchment (oip-web parchment bg); dark = near-black green
    "workbench" (trustgraph aesthetic). @beep/ui defaults are untouched. */
 :root {
+  /* The shared theme maps `--font-mono` to `--font-geist-mono`, which the Next apps get from
+     next/font. This Vite app loads no Geist face, so without a value here `font-mono` computes
+     to an invalid family and silently inherits the sans face. */
+  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --background: oklch(0.95 0.015 85);
   --foreground: oklch(0.27 0.03 145);
   --card: oklch(0.985 0.008 85);
@@ -80,4 +87,10 @@
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.62 0.13 145);
+}
+
+/* App-local layout tokens for the vault sync panel. */
+@theme inline {
+  --width-sync-panel: min(44rem, calc(100% - 3rem));
+  --max-height-viewport-inset: calc(100vh - 6rem);
 }

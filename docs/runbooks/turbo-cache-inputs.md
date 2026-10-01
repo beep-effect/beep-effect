@@ -106,7 +106,7 @@ maintained representation of the scanner's workspace discovery.
 | `lint:effect-imports-markdown` | Retain authored Markdown consumed by the scanner, including internal docs it actually reads. |
 | `goals:index-check` | Retain goal inputs and implementation dependency. |
 | `knowledge:semantic-delta`, `knowledge:refs-check`, `goals:doctor`, `changeset:status` | Remain uncached; Git state and reference/packet checks are not qualified for result replay. |
-| `lint:oxlint`, `lint:jsdoc-module-tags`, `lint:typos`, `knip:check`, `jsdoc:inventory:check` | Remain uncached; preserve each scanner/report contract. |
+| `lint:oxlint`, `lint:shadcn`, `lint:jsdoc-module-tags`, `lint:typos`, `knip:check`, `jsdoc:inventory:check` | Remain uncached; preserve each scanner/report contract. `lint:shadcn` also reads the theme stylesheets, `components.json`, tsconfig paths, and package exports. |
 | `fallow:audit:check`, `fallow:health:check`, `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`, `fallow:security:advisory`, `fallow:fix-preview:advisory`, `fallow:dead-code:check`, `fallow:boundaries:config-check` | Remain uncached with their baseline/environment/report contracts. |
 | `repo-sanity:bun-audit` | Remains uncached because vulnerability data can change independently of source. |
 

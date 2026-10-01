@@ -71,8 +71,8 @@ function Stage({
 }) {
   return (
     <div
-      className="bg-card text-card-foreground border-border relative isolate flex items-center justify-center overflow-hidden rounded-xl border"
-      style={{ height }}
+      className="bg-card text-card-foreground border-border relative isolate flex h-(--stage-height) items-center justify-center overflow-hidden rounded-xl border"
+      style={{ "--stage-height": `${height}px` } as React.CSSProperties}
     >
       <OrbBackground {...orbProps} />
       {children}
@@ -183,7 +183,7 @@ export const Static: Story = {
 export const HeroSection: Story = {
   render: (args) => (
     <div className="p-6">
-      <div className="bg-background relative isolate flex min-h-[460px] flex-col items-center justify-center overflow-hidden rounded-2xl border">
+      <div className="bg-background relative isolate flex min-h-115 flex-col items-center justify-center overflow-hidden rounded-2xl border">
         <OrbBackground {...args} />
         <div className="relative z-10 flex max-w-lg flex-col items-center gap-5 px-6 text-center">
           <span className="border-border bg-background/60 text-muted-foreground rounded-full border px-3 py-1 text-xs backdrop-blur-sm">

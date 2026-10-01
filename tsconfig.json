@@ -2019,6 +2019,9 @@
       ],
       "@beep/repo-cli/commands/Refs": [
         "./packages/tooling/tool/cli/src/commands/Refs/index.ts"
+      ],
+      "@beep/dock-react/dock.css": [
+        "./packages/foundation/ui-system/dock-react/src/dock.css"
       ]
     }
   }

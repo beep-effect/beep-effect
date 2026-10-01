@@ -1,9 +1,12 @@
-/* Scoped under .dock-story so the dock's ARIA/data-attribute hooks never
-   restyle other stories' tablists or buttons. The adapter emits functional
-   inline styles only (boxes, flex direction); everything visual hangs off
-   its data attributes and roles. */
+@import "../src/dock.css";
 
-.dock-story {
+/* Scoped under [data-dock-story] so the dock's ARIA/data-attribute hooks never
+   restyle other stories' tablists or buttons. The adapter's own stylesheet
+   (imported above, the same one hosts import as "@beep/dock-react/dock.css")
+   owns the mechanics; everything visual hangs off its data attributes and
+   roles. */
+
+[data-dock-story] {
   height: 100vh;
   min-height: 480px;
   position: relative;
@@ -14,14 +17,14 @@
   font-family: system-ui, sans-serif;
 }
 
-.dock-story section[data-group-id] {
+[data-dock-story] section[data-group-id] {
   background: #1d222a;
   border: 1px solid #333a44;
   border-radius: 8px;
   overflow: hidden;
 }
 
-.dock-story [role="tablist"] {
+[data-dock-story] [role="tablist"] {
   display: flex;
   align-items: center;
   gap: 2px;
@@ -32,7 +35,7 @@
   user-select: none;
 }
 
-.dock-story [role="tab"] {
+[data-dock-story] [role="tab"] {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -43,12 +46,12 @@
   white-space: nowrap;
 }
 
-.dock-story [role="tab"][data-active="true"] {
+[data-dock-story] [role="tab"][data-active="true"] {
   background: #333b47;
   color: #ffffff;
 }
 
-.dock-story [role="tablist"] button {
+[data-dock-story] [role="tablist"] button {
   background: transparent;
   border: none;
   color: #8892a0;
@@ -58,12 +61,12 @@
   border-radius: 4px;
 }
 
-.dock-story [role="tablist"] button:hover {
+[data-dock-story] [role="tablist"] button:hover {
   background: #3a4250;
   color: #e6e6e6;
 }
 
-.dock-story [role="menu"] {
+[data-dock-story] [role="menu"] {
   min-width: 150px;
   padding: 4px;
   background: #232830;
@@ -72,30 +75,30 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
 }
 
-.dock-story [role="menu"] button {
+[data-dock-story] [role="menu"] button {
   display: block;
   width: 100%;
   text-align: start;
   white-space: nowrap;
 }
 
-.dock-story [data-drop-caret] {
+[data-dock-story] [data-drop-caret] {
   background: #3b82f6;
   border-radius: 2px;
   box-shadow: 0 0 6px rgba(59, 130, 246, 0.8);
 }
 
-.dock-story [data-drop-indicator] {
+[data-dock-story] [data-drop-indicator] {
   background: rgba(59, 130, 246, 0.24);
   border: 1px solid rgba(96, 165, 250, 0.9);
   box-sizing: border-box;
 }
 
-.dock-story [data-content-host] {
+[data-dock-story] [data-content-host] {
   background: #171a1f;
 }
 
-.dock-story [data-panel-target] {
+[data-dock-story] [data-panel-target] {
   height: 100%;
   padding: 10px 14px;
   font-size: 13px;
@@ -104,15 +107,15 @@
   box-sizing: border-box;
 }
 
-.dock-story [data-sash-id] {
+[data-dock-story] [data-sash-id] {
   border-radius: 3px;
 }
 
-.dock-story [data-sash-id]:hover {
+[data-dock-story] [data-sash-id]:hover {
   background: rgba(59, 130, 246, 0.45);
 }
 
-.dock-story [data-floating-pane] {
+[data-dock-story] [data-floating-pane] {
   border: 1px solid #4a5364;
   border-radius: 8px;
   background: #1d222a;
@@ -120,26 +123,26 @@
   overflow: hidden;
 }
 
-.dock-story [data-floating-header] {
+[data-dock-story] [data-floating-header] {
   background: #232830;
 }
 
-.dock-story [data-floating-resize] {
+[data-dock-story] [data-floating-resize] {
   background: rgba(136, 146, 160, 0.35);
   border-radius: 3px;
 }
 
-.dock-story-notes h2 {
+[data-dock-story-notes] h2 {
   margin: 0 0 6px;
   font-size: 14px;
 }
 
-.dock-story-notes p {
+[data-dock-story-notes] p {
   margin: 0 0 8px;
   color: #c2c9d2;
 }
 
-.dock-story-notes-meta {
+[data-dock-story-notes-meta] {
   font-size: 11px;
   color: #8892a0;
 }

@@ -245,10 +245,11 @@ export function InspectorList({
                     data-state={O.getOrUndefined(row.state)}
                     data-actor={row.actor}
                     data-post={O.isSome(row.postDelayMs) ? "" : undefined}
-                    style={O.match(row.postDelayMs, {
-                      onNone: () => undefined,
-                      onSome: (ms) => ({ "--post-delay": `${ms}ms` }) as CSSProperties,
-                    })}
+                    style={
+                      O.isSome(row.postDelayMs)
+                        ? ({ "--post-delay": `${row.postDelayMs.value}ms` } as CSSProperties)
+                        : undefined
+                    }
                     aria-expanded={isOpen}
                     aria-controls={inspectorId}
                     onClick={() => toggle(row.id)}

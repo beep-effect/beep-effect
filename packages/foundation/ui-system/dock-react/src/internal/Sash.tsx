@@ -6,8 +6,9 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { makeOperation } from "./AdapterState.ts";
-import { boxStyle, clampRatio, positionOf, releaseCapture, splitExtent } from "./DropCompiler.ts";
+import { clampRatio, positionOf, px, releaseCapture, splitExtent } from "./DropCompiler.ts";
 import { SashDrag } from "./Gesture.models.ts";
+import type React from "react";
 import type { DockAtomGraph } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
 
@@ -122,12 +123,14 @@ export const Sash = (props: {
       ref={attach}
       data-sash-id={props.splitId}
       data-axis={sash.value.axis}
-      style={{
-        ...boxStyle(sash.value.box),
-        cursor: Eq.equals(sash.value.axis, "horizontal") ? "col-resize" : "row-resize",
-        touchAction: "none",
-        userSelect: "none",
-      }}
+      style={
+        {
+          "--dock-left": px(sash.value.box.left),
+          "--dock-top": px(sash.value.box.top),
+          "--dock-width": px(sash.value.box.width),
+          "--dock-height": px(sash.value.box.height),
+        } as React.CSSProperties
+      }
     />
   );
 };
