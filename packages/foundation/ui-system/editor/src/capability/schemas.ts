@@ -300,7 +300,7 @@ export type Platform = typeof Platform.Type;
  * ```ts import.meta.vitest name="Inspect modifier order"
  * import { Modifier } from "@beep/editor/capability/schemas"
  *
- * Modifier.Options // => ["control", "meta", "alt", "shift"]
+ * Modifier.literals // => ["control", "meta", "alt", "shift"]
  * ```
  *
  * @category schemas
@@ -348,7 +348,7 @@ const modifierToToken = Modifier.$match({
 });
 
 const sortModifiers = (modifiers: ReadonlyArray<Modifier>): ReadonlyArray<Modifier> =>
-  A.flatMap(Modifier.Options, (expected) => A.filter(modifiers, (modifier) => Equal.equals(modifier, expected)));
+  A.flatMap(Modifier.literals, (expected) => A.filter(modifiers, (modifier) => Equal.equals(modifier, expected)));
 
 const uniqueModifiers = S.makeFilter<ReadonlyArray<Modifier>>(
   (modifiers) => {

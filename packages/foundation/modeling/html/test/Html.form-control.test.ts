@@ -44,10 +44,10 @@ describe("HTML form-control semantic states", () => {
     const states = R.keys(HTML_INPUT_ATTRIBUTE_APPLICABILITY);
     const applicableAttributes = A.flatten(R.values(HTML_INPUT_ATTRIBUTE_APPLICABILITY));
 
-    expect(states).toHaveLength(HtmlInputStateName.Options.length);
-    expect(A.every(HtmlInputStateName.Options, (state) => A.contains(states, state))).toBe(true);
+    expect(states).toHaveLength(HtmlInputStateName.literals.length);
+    expect(A.every(HtmlInputStateName.literals, (state) => A.contains(states, state))).toBe(true);
     expect(A.every(states, isHtmlInputStateName)).toBe(true);
-    expect(HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES).toEqual(HtmlConditionalInputAttributeName.Options);
+    expect(HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES).toEqual(HtmlConditionalInputAttributeName.literals);
     expect(A.every(applicableAttributes, isHtmlConditionalInputAttributeName)).toBe(true);
     expect(isHtmlInputStateName("unsupported")).toBe(false);
     expect(isHtmlConditionalInputAttributeName("nonstandard")).toBe(false);

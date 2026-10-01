@@ -79,7 +79,7 @@ const encodeUnknownSkillMarkdownProjectionResult = S.encodeUnknownResult(SkillMa
  * ```ts
  * import { SkillArtifactDenialReason } from "@beep/skill-contract"
  *
- * console.log(SkillArtifactDenialReason.Options)
+ * console.log(SkillArtifactDenialReason.literals)
  * ```
  *
  * @category schemas

@@ -1563,7 +1563,7 @@ const closeoutBindsCurrentHead = (closeout: YeetStatusArtifact, remote: YeetStat
 // wait on a review bot, so any blocker the operator can act on is named first.
 const firstFailingCriterion = (criteria: YeetMergeReadyCriteria): O.Option<YeetMergeReadyCriterion> =>
   pipe(
-    YeetMergeReadyCriterion.Options,
+    YeetMergeReadyCriterion.literals,
     A.findFirst((criterion) => !mergeReadyCriterionHolds(criteria, criterion))
   );
 
@@ -1660,7 +1660,7 @@ const repliesAreTheNextStep = (mergeReady: O.Option<YeetMergeReady>, remote: Yee
   outstandingThreadCount(remote) > 0 &&
   O.exists(mergeReady, (value) =>
     A.every(
-      YeetMergeReadyCriterion.Options,
+      YeetMergeReadyCriterion.literals,
       (criterion) => A.contains(reviewCriteria, criterion) || mergeReadyCriterionHolds(value.criteria, criterion)
     )
   );

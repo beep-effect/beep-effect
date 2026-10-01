@@ -65,7 +65,7 @@ export const attachCacheEntrypointReview = Effect.fn("CacheEntrypoints.attachRev
   if (
     A.isReadonlyArrayNonEmpty(
       A.difference(
-        CacheEntrypointArtifactFormat.Options,
+        CacheEntrypointArtifactFormat.literals,
         A.map(request.artifacts, (row) => row.format)
       )
     )

@@ -98,7 +98,7 @@ const completeObservations = () => {
       receipt: CacheEvidenceReference.make({ path: `receipts/${n}.json`, sha256: digest(n) }),
     });
   };
-  return A.flatMap(CacheClientChannel.Options, (channel) => [
+  return A.flatMap(CacheClientChannel.literals, (channel) => [
     ...A.map(A.range(1, 3), () => row(channel, "fresh-fresh")),
     ...A.map(A.range(1, 3), () => row(channel, "fresh-remote-hit")),
     ...A.map(A.range(1, 10), () => row(channel, "shadow")),
@@ -106,7 +106,7 @@ const completeObservations = () => {
     row(channel, "orchestration-invariance", ["admission"]),
     ...A.map(contract.negativeCases, (subject) => row(channel, "negative-case", [subject])),
     ...A.map(
-      CacheEvidenceKind.pickOptions(["cross-root", "concurrency", "capture-safety", "conformance", "trust"]),
+      CacheEvidenceKind.pick(["cross-root", "concurrency", "capture-safety", "conformance", "trust"]).literals,
       (kind) => row(channel, kind)
     ),
   ]);
@@ -160,8 +160,8 @@ describe("cache qualification policy", () => {
       "qualified:candidate",
       "suspended:candidate",
     ];
-    for (const from of CacheQualificationState.Options) {
-      for (const to of CacheQualificationState.Options) {
+    for (const from of CacheQualificationState.literals) {
+      for (const to of CacheQualificationState.literals) {
         expect(isCacheTransitionAllowed(from, to), `data-first transition ${from} -> ${to}`).toBe(
           A.contains(expected, `${from}:${to}`)
         );

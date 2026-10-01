@@ -199,7 +199,7 @@ export type ContentDigest = typeof ContentDigest.Type;
  * ```ts import.meta.vitest name="Check locator kind options"
  * import { ArtifactLocatorKind } from "@beep/file-processing/Artifact"
  *
- * ArtifactLocatorKind.Options.includes("memory") // => true
+ * ArtifactLocatorKind.literals.includes("memory") // => true
  * ```
  *
  * @category schemas

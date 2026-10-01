@@ -35,7 +35,7 @@ const fixture = Effect.fn("CacheEntrypointsTest.fixture")(function* () {
   const source = yield* write("entrypoint.ts", "export const command = 'source only';\n");
   const review = yield* write("review.md", "Reviewed source; runtime work is outstanding.\n");
   const artifacts = yield* Effect.forEach(
-    CacheEntrypointArtifactFormat.Options,
+    CacheEntrypointArtifactFormat.literals,
     Effect.fnUntraced(function* (format, index) {
       const document = {
         schemaVersion: format,

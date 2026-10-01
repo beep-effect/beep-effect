@@ -128,7 +128,7 @@ export const ValidWindowsPlainPathSegment = S.NonEmptyString.check(
  */
 export type ValidWindowsPlainPathSegment = typeof ValidWindowsPlainPathSegment.Type;
 
-const windowsDotSegmentSet = HashSet.fromIterable(WindowsDotSegment.Options);
+const windowsDotSegmentSet = HashSet.fromIterable(WindowsDotSegment.literals);
 const isWindowsDotSegment = (value: string): value is WindowsDotSegment => HashSet.has(windowsDotSegmentSet, value);
 
 /**

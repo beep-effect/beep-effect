@@ -229,7 +229,22 @@ describe("synthetic orchestration process boundary", () => {
     }, provideScopedLayer(platform))
   );
 
-  for (const fault of faults.omitOptions(["none"])) {
+  for (const fault of faults.pick([
+    "extra-task",
+    "wrong-command",
+    "remote",
+    "foreign-hit",
+    "unknown-cache",
+    "missing-verdict",
+    "wrong-verdict",
+    "extra-output",
+    "missing-log",
+    "extra-summary",
+    "bad-client-version",
+    "bad-bun-version",
+    "drift-client",
+    "drift-bun",
+  ]).literals) {
     it.effect(
       `rejects ${fault} and still removes disposable roots`,
       Effect.fnUntraced(function* () {

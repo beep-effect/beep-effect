@@ -85,7 +85,7 @@ export type DeclarationKind = typeof DeclarationKind.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const TypeKind = LiteralKit(DeclarationKind.pickOptions(["interface", "type"])).pipe(
+export const TypeKind = LiteralKit(DeclarationKind.pick(["interface", "type"]).literals).pipe(
   $I.annoteSchema("TypeKind", {
     description: "Declaration kinds that live in the type namespace.",
   })

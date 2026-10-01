@@ -1112,7 +1112,7 @@ export class AgentEffectivenessDoctorReport extends S.Class<AgentEffectivenessDo
     jsdocWorkerEval: AgentEffectivenessJsdocWorkerSection,
     phoenix: AgentEffectivenessPhoenixSection,
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-doctor/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-doctor/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-doctor/v1"])
@@ -1296,7 +1296,7 @@ export class AgentEffectivenessAnnotationPlan extends S.Class<AgentEffectiveness
     generatedAt: S.String,
     mutationPolicy: AgentEffectivenessMutationPolicy,
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-annotation-plan/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-annotation-plan/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-annotation-plan/v1"])
@@ -1397,7 +1397,7 @@ export class AgentEffectivenessAnnotationCheckReport extends S.Class<AgentEffect
     findings: S.Array(AgentEffectivenessAnnotationCheckFinding),
     generatedAt: S.String,
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-annotation-check/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-annotation-check/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-annotation-check/v1"])
@@ -1497,7 +1497,7 @@ export const AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION = "agent-effectivene
  * import { AgentEffectivenessDatasetKind } from "@beep/repo-ai-metrics"
  *
  * console.log(AgentEffectivenessDatasetKind.Enum["agent-loop-health"]) // agent-loop-health
- * console.log(AgentEffectivenessDatasetKind.Options.length) // 5
+ * console.log(AgentEffectivenessDatasetKind.literals.length) // 5
  * ```
  *
  * @category models
@@ -1661,7 +1661,7 @@ export class AgentEffectivenessDatasetBundle extends S.Class<AgentEffectivenessD
     generatedAt: S.String,
     projectName: S.String,
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-datasets/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-datasets/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-datasets/v1"])
@@ -1691,7 +1691,7 @@ export class AgentEffectivenessDatasetBundle extends S.Class<AgentEffectivenessD
  * import { AgentEffectivenessPromptRole } from "@beep/repo-ai-metrics"
  *
  * console.log(AgentEffectivenessPromptRole.Enum.user) // user
- * console.log(AgentEffectivenessPromptRole.Options.length) // 2
+ * console.log(AgentEffectivenessPromptRole.literals.length) // 2
  * ```
  *
  * @category models
@@ -1830,7 +1830,7 @@ export class AgentEffectivenessPromptBundle extends S.Class<AgentEffectivenessPr
     projectName: S.String,
     prompts: S.Array(AgentEffectivenessPromptSpec),
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-prompts/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-prompts/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-prompts/v1"])
@@ -1924,7 +1924,7 @@ export class AgentEffectivenessExperimentBundle extends S.Class<AgentEffectivene
     generatedAt: S.String,
     projectName: S.String,
     schemaVersion: S.Literals(
-      AgentEffectivenessArtifactSchemaVersion.pickOptions(["agent-effectiveness-experiments/v1"])
+      AgentEffectivenessArtifactSchemaVersion.pick(["agent-effectiveness-experiments/v1"]).literals
     ).pipe(
       S.withConstructorDefault(
         Effect.succeed(AgentEffectivenessArtifactSchemaVersion.Enum["agent-effectiveness-experiments/v1"])

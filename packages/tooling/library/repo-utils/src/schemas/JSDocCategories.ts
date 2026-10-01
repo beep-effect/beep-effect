@@ -275,7 +275,7 @@ const JSDOC_CATEGORY_REJECTED_VALUES: Readonly<Record<string, string>> = {
 };
 
 const canonicalCategoryOption = (value: string): O.Option<JSDocCategory> =>
-  A.findFirst(JSDocCategory.Options, (category) => category === value);
+  A.findFirst(JSDocCategory.literals, (category) => category === value);
 
 const aliasedCategoryOption = (value: string): O.Option<JSDocCategory> => R.get(JSDOC_CATEGORY_ALIASES, value);
 

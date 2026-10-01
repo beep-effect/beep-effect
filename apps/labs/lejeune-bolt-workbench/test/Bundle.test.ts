@@ -171,7 +171,7 @@ describe("LeJeune deterministic fixture bundle", () => {
         const artifacts = yield* buildFixtureArtifacts;
         const fixtures = yield* buildNormalizedFixtures(artifacts);
         const results = yield* evaluateRules(fixtures);
-        const ontologyClasses: ReadonlyArray<OntologyClassNameValue> = OntologyClassName.Options;
+        const ontologyClasses: ReadonlyArray<OntologyClassNameValue> = OntologyClassName.literals;
 
         expect(ontologyClasses).toEqual([
           "ProductVariant",

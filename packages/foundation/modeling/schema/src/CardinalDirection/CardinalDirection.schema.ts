@@ -17,7 +17,7 @@ const $I = $SchemaId.create("person/CardinalDirection");
  * ```ts
  * import { CardinalDirection } from "@beep/schema/CardinalDirection"
  *
- * console.log(CardinalDirection.Options.includes("north"))
+ * console.log(CardinalDirection.literals.includes("north"))
  * ```
  *
  * CardinalDirection - The cardinal directions
@@ -45,7 +45,7 @@ export type CardinalDirection = typeof CardinalDirection.Type;
  * ```ts
  * import { CardinalDirectionAbbrev } from "@beep/schema/CardinalDirection"
  *
- * console.log(CardinalDirectionAbbrev.Options.includes("N"))
+ * console.log(CardinalDirectionAbbrev.literals.includes("N"))
  * ```
  *
  * @category validation
@@ -72,7 +72,7 @@ export type CardinalDirectionAbbrev = typeof CardinalDirectionAbbrev.Type;
  * ```ts
  * import { Schema } from "@beep/schema/CardinalDirection"
  *
- * console.log(Schema.Options.includes("north"))
+ * console.log(Schema.literals.includes("north"))
  * ```
  *
  * @category validation
@@ -95,7 +95,7 @@ export type Schema = CardinalDirection;
  * ```ts
  * import { Abbrev } from "@beep/schema/CardinalDirection"
  *
- * console.log(Abbrev.Options.includes("N"))
+ * console.log(Abbrev.literals.includes("N"))
  * ```
  *
  * @category validation

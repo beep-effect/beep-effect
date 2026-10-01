@@ -77,10 +77,10 @@ export const fontStack = (stack: FontStack): string =>
   pipe([stack.family, ...stack.fallbacks], A.map(quoteFamily), A.join(", "));
 
 const scaleLines = (scheme: ColorScheme): ReadonlyArray<string> =>
-  A.map(ScaleStep.Options, (step) => declaration(`color-brand-${step}`, scheme.brand[step]));
+  A.map(ScaleStep.literals, (step) => declaration(`color-brand-${step}`, scheme.brand[step]));
 
 const surfaceLines = (scheme: ColorScheme): ReadonlyArray<string> =>
-  A.map(SurfaceStep.Options, (step) => declaration(`color-surface-${step}`, scheme.surface[step]));
+  A.map(SurfaceStep.literals, (step) => declaration(`color-surface-${step}`, scheme.surface[step]));
 
 const roleLines = (scheme: ColorScheme): ReadonlyArray<string> => [
   declaration("color-fg", scheme.foreground.base),

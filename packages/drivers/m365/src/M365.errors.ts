@@ -7,18 +7,98 @@
 
 import { $M365Id } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { HttpStatus } from "@beep/schema/HttpStatus";
 import { O } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as HttpClientError from "effect/http/HttpClientError";
+import * as HttpStatus from "effect/http/HttpStatus";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $M365Id.create("M365.errors");
 
-const M365HttpStatusArbitraryValues = HttpStatus.To.Options as readonly [number, ...ReadonlyArray<number>];
-const M365HttpStatus = S.Literals(M365HttpStatusArbitraryValues).pipe(
+// The retired `@beep/schema` `HttpStatus` catalog: every name `effect/http/HttpStatus` knows plus the
+// twelve unofficial codes the catalog carried. A status outside it is reported as 500, as before.
+const M365HttpStatus = S.Literals([
+  ...A.map(
+    [
+      "Continue",
+      "SwitchingProtocols",
+      "Processing",
+      "EarlyHints",
+      "Ok",
+      "Created",
+      "Accepted",
+      "NonAuthoritativeInformation",
+      "NoContent",
+      "ResetContent",
+      "PartialContent",
+      "MultiStatus",
+      "AlreadyReported",
+      "ImUsed",
+      "MultipleChoices",
+      "MovedPermanently",
+      "Found",
+      "SeeOther",
+      "NotModified",
+      "TemporaryRedirect",
+      "PermanentRedirect",
+      "BadRequest",
+      "Unauthorized",
+      "PaymentRequired",
+      "Forbidden",
+      "NotFound",
+      "MethodNotAllowed",
+      "NotAcceptable",
+      "ProxyAuthenticationRequired",
+      "RequestTimeout",
+      "Conflict",
+      "Gone",
+      "LengthRequired",
+      "PreconditionFailed",
+      "PayloadTooLarge",
+      "UriTooLong",
+      "UnsupportedMediaType",
+      "RangeNotSatisfiable",
+      "ExpectationFailed",
+      "ImATeapot",
+      "MisdirectedRequest",
+      "UnprocessableEntity",
+      "Locked",
+      "FailedDependency",
+      "TooEarly",
+      "UpgradeRequired",
+      "PreconditionRequired",
+      "TooManyRequests",
+      "RequestHeaderFieldsTooLarge",
+      "UnavailableForLegalReasons",
+      "InternalServerError",
+      "NotImplemented",
+      "BadGateway",
+      "ServiceUnavailable",
+      "GatewayTimeout",
+      "HttpVersionNotSupported",
+      "VariantAlsoNegotiates",
+      "InsufficientStorage",
+      "LoopDetected",
+      "NotExtended",
+      "NetworkAuthenticationRequired",
+    ] satisfies ReadonlyArray<HttpStatus.Literal>,
+    HttpStatus.fromLiteral
+  ),
+  305,
+  306,
+  430,
+  440,
+  494,
+  495,
+  496,
+  499,
+  520,
+  521,
+  525,
+  526,
+]).pipe(
   $I.annoteSchema("M365HttpStatus", {
     description: "Numeric HTTP status code carried by Microsoft 365 driver errors.",
   })
@@ -100,7 +180,7 @@ class M365ErrorOptionsInput extends S.Class<M365ErrorOptionsInput>($I`M365ErrorO
 const decodeRetryAfterSecondsOption = S.decodeUnknownOption(S.Natural);
 const makeHttpStatus: (status: number) => M365HttpStatus = flow(
   S.decodeUnknownOption(M365HttpStatus),
-  O.getOrElse(() => HttpStatus.From.Enum.InternalServerError)
+  O.getOrElse(() => HttpStatus.fromLiteral("InternalServerError"))
 );
 const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365ErrorOptionsInput =>
   M365ErrorOptionsInput.make({

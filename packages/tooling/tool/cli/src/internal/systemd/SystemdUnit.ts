@@ -81,7 +81,7 @@ export const resolveSystemdBunPath = Effect.fn("SystemdUnit.resolveBunPath")(fun
   // stat follows the shim's symlink, so the executable bits are those of the
   // binary the unit would actually run.
   const found = yield* Effect.findFirst(
-    A.map(SystemdBunCandidate.Options, (candidate) => path.join(home, candidate)),
+    A.map(SystemdBunCandidate.literals, (candidate) => path.join(home, candidate)),
     (candidate) =>
       fs.stat(candidate).pipe(
         Effect.map((info) => Eq.equals(info.type, "File") && (info.mode & 0o111) !== 0),

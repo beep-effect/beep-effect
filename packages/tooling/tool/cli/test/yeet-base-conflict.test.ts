@@ -115,7 +115,7 @@ const snapshot = (root: string, input: SnapshotInput) => {
     greptileScore: O.none(),
   });
   const failing = A.findFirst(
-    YeetMergeReadyCriterion.Options,
+    YeetMergeReadyCriterion.literals,
     (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
   );
   return YeetStatusSnapshot.make({
@@ -1010,9 +1010,9 @@ const sampleResolution = (kind: YeetAckResolutionKind) =>
 it.layer(platform, { timeout: "30 seconds" })("cleared ack kind", (it) => {
   it.effect("every resolution kind has a union member that round-trips and renders", () =>
     Effect.gen(function* () {
-      expect(YeetAckResolutionKind.Options).toContain("cleared");
-      expect(A.length(YeetAckResolutionKind.Options)).toBe(7);
-      for (const kind of YeetAckResolutionKind.Options) {
+      expect(YeetAckResolutionKind.literals).toContain("cleared");
+      expect(A.length(YeetAckResolutionKind.literals)).toBe(7);
+      for (const kind of YeetAckResolutionKind.literals) {
         const resolution = sampleResolution(kind);
         expect(resolution.kind).toBe(kind);
         const receipt = YeetAckReceipt.make({ ackedAt: at, id: "row-abc", resolution });

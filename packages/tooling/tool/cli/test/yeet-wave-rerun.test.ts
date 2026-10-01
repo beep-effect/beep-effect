@@ -158,7 +158,7 @@ const snapshot = (root: string, checks: ReadonlyArray<YeetWatchCheck>, state: st
         ready: false,
         criteria,
         failing: A.findFirst(
-          YeetMergeReadyCriterion.Options,
+          YeetMergeReadyCriterion.literals,
           (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
         ),
       })

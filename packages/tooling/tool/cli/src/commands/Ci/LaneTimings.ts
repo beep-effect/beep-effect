@@ -78,7 +78,7 @@ const $I = $RepoCliId.create("commands/Ci/LaneTimings");
  * ```ts
  * import { CiRunnerClass } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(CiRunnerClass.Options)
+ * console.log(CiRunnerClass.literals)
  * ```
  *
  * @category models
@@ -991,7 +991,7 @@ export const collectCiLaneTimings = Effect.fn("Ci.collectCiLaneTimings")(functio
  * ```ts
  * import { CiLaneTimingWindowEvent } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(CiLaneTimingWindowEvent.Options)
+ * console.log(CiLaneTimingWindowEvent.literals)
  * ```
  *
  * @category models
@@ -1091,7 +1091,7 @@ export class CiLaneTimingWindowOptions extends S.Class<CiLaneTimingWindowOptions
  * ```ts
  * import { CiLaneTimingWindowGuardReason } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(CiLaneTimingWindowGuardReason.Options)
+ * console.log(CiLaneTimingWindowGuardReason.literals)
  * ```
  *
  * @category models
@@ -1725,7 +1725,7 @@ const windowRunOrder = Order.combine(
 
 const windowEventsFor = (event: CiLaneTimingWindowEvent): ReadonlyArray<typeof CiLaneTimingWindowRunEvent.Type> =>
   CiLaneTimingWindowEvent.$match(event, {
-    all: () => CiLaneTimingWindowRunEvent.Options,
+    all: () => CiLaneTimingWindowRunEvent.literals,
     pull_request: () => [CiLaneTimingWindowRunEvent.Enum.pull_request],
     push: () => [CiLaneTimingWindowRunEvent.Enum.push],
   });
@@ -2779,7 +2779,7 @@ export const assessCiLaneTimingWindowBounds: {
 } = dual(
   2,
   (options: CiLaneTimingWindowOptions, now: DateTime.Utc): ReadonlyArray<CiLaneTimingWindowGuardReason> =>
-    A.filter(CiLaneTimingWindowGuardReason.Options, (reason) =>
+    A.filter(CiLaneTimingWindowGuardReason.literals, (reason) =>
       CI_LANE_TIMING_WINDOW_GUARD_BREACH[reason](options, now)
     )
 );
@@ -2913,7 +2913,7 @@ const workflowFlag = Flag.String("workflow").pipe(
   Flag.withDescription("Workflow file used by the bounded census")
 );
 
-const eventFlag = Flag.Literals("event", CiLaneTimingWindowEvent.Options).pipe(
+const eventFlag = Flag.Literals("event", CiLaneTimingWindowEvent.literals).pipe(
   Flag.withDefault(CiLaneTimingWindowEvent.Enum.all),
   Flag.withDescription("Workflow event population used by the bounded census")
 );

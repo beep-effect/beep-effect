@@ -817,7 +817,7 @@ const titleFlag = Flag.String("title").pipe(Flag.withDescription("Human title fo
 const missionFlag = Flag.String("mission").pipe(
   Flag.withDescription("One-line mission shown in the generated goals/INDEX.md")
 );
-const archetypeFlag = Flag.Literals("archetype", PhaseArchetype.Options).pipe(
+const archetypeFlag = Flag.Literals("archetype", PhaseArchetype.literals).pipe(
   Flag.withDefault(PhaseArchetype.Enum["standard-delivery"]),
   Flag.withDescription("Ordered phase shape: standard-delivery (template phases) or report-first")
 );

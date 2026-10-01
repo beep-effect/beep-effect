@@ -1540,7 +1540,7 @@ const resolveSettings = Effect.fnUntraced(function* (options: ResidueReapOptions
   return {
     beepCacheRoot,
     checkoutRoots: yield* distinctCheckoutRoots(nonEmptyOr(options.checkoutRoots, [repoRoot])),
-    classes: nonEmptyOr(options.classes, ResidueReapClass.Options),
+    classes: nonEmptyOr(options.classes, ResidueReapClass.literals),
     codexRoot: path.join(homeRoot, ".codex"),
     homeRoot,
     policy,

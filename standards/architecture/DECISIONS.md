@@ -880,7 +880,7 @@ Decision:
 
 `@beep/schema` uses namespace-first concept modules as the canonical topology
 for reusable schema concepts. Public concept subpaths are flat, for example
-`@beep/schema/Glob`, `@beep/schema/Color`, and `@beep/schema/HttpStatus`. Consumers import those modules as namespaces and use
+`@beep/schema/Glob`, `@beep/schema/Color`, and `@beep/schema/HttpHeaders`. Consumers import those modules as namespaces and use
 concise role members such as `Schema`, `Input`, `FromInput`, `Object`, and
 `Unit`.
 
@@ -893,7 +893,7 @@ public concept.
 
 Former topical suites are represented by leaf concept modules, not broad suite
 aggregators. Import `@beep/schema/EvmAddress`, `@beep/schema/DomReactNode`, or
-`@beep/schema/HttpStatus` directly instead of importing retired aggregators
+`@beep/schema/HttpHeaders` directly instead of importing retired aggregators
 such as `@beep/schema/Blockchain`, `@beep/schema/Dom`, or
 `@beep/schema/Http`. Promote source concepts rather than every exported symbol;
 for example, `HttpStatus` remains one concept module rather than a public

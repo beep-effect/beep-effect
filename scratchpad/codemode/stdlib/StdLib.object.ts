@@ -47,7 +47,7 @@ const $I = $ScratchpadId.create("codemode/stdlib/StdLib.object");
  * @since 0.0.0
  */
 export const objectMethodsPreservingIdentity = LiteralKit(
-  objectStatics.pickOptions(["assign", "values", "entries", "fromEntries"])
+  objectStatics.pick(["assign", "values", "entries", "fromEntries"]).literals
 ).pipe(
   $I.annoteSchema("objectMethodsPreservingIdentity", {
     description: "Object statics that keep the target object's identity.",
@@ -65,7 +65,7 @@ export type objectMethodsPreservingIdentity = typeof objectMethodsPreservingIden
 
 export { objectStatics } from "../Codemode.method-names.ts";
 
-const DirectObjectMethod = LiteralKit(objectStatics.omitOptions(["fromEntries", "groupBy"]));
+const DirectObjectMethod = LiteralKit(objectStatics.pick(["keys", "values", "entries", "hasOwn", "is", "assign"]).literals);
 type DirectObjectMethod = Exclude<ObjectStatic, "fromEntries" | "groupBy">;
 
 /**

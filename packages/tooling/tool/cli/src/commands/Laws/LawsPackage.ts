@@ -54,8 +54,8 @@ export const resolveLawsPackageScope = Effect.fn("LawsPackage.resolveScope")(fun
     packageDir,
     overlayPath,
     laws: Str.startsWith("packages/")(packageDir)
-      ? LawsPackageLaw.Options
-      : LawsPackageLaw.omitOptions(["package-test-imports"]),
+      ? LawsPackageLaw.literals
+      : LawsPackageLaw.pick(["terse-effect", "native-runtime", "frozen-grant-set", "effect-fn"]).literals,
   });
 });
 

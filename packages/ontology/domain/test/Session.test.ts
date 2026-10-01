@@ -113,7 +113,7 @@ describe("Ontology Session aggregate", () => {
   });
 
   it("applies remove operations without mutating other partitions", () => {
-    const untouched = A.filter(GraphPartition.Options, (partition) => partition !== "asserted");
+    const untouched = A.filter(GraphPartition.literals, (partition) => partition !== "asserted");
     const seeded = appendChanges(
       createSession(CreateSessionInput.make({ id: sessionId, baseDataset: makeDataset([nameQuad, knowsQuad]) })),
       A.map(untouched, (partition) =>

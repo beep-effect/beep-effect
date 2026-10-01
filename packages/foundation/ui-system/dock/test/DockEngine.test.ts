@@ -420,7 +420,7 @@ describe("DockEngine", () => {
         const engine = yield* DockEngine;
         const root = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
 
-        yield* Effect.forEach(DockSide.Options, (side) =>
+        yield* Effect.forEach(DockSide.literals, (side) =>
           Effect.gen(function* () {
             const opened = yield* requireChanged(
               yield* engine.transition(

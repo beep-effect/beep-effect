@@ -639,7 +639,7 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
     })
   );
 
-  for (const closureFault of closureFaultDomain.omitOptions(["none"])) {
+  for (const closureFault of closureFaultDomain.pick(["cached", "unexpected"]).literals) {
     it.effect(
       `rejects ${closureFault} dependencies before creating an experiment`,
       Effect.fnUntraced(function* () {
@@ -650,7 +650,22 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
     );
   }
 
-  for (const fault of faultDomain.omitOptions(["none"])) {
+  for (const fault of faultDomain.pick([
+    "remote-hit",
+    "dependency-hit",
+    "missing-runtime-key",
+    "wrong-command",
+    "extra-summary",
+    "unsafe-log",
+    "missing-log",
+    "initial-divergence",
+    "source-write",
+    "dependency-source-write",
+    "dependency-link-write",
+    "missing-selected",
+    "library-mismatch",
+    "version-mismatch",
+  ]).literals) {
     it.effect(
       `rejects ${fault} without producing a receipt`,
       Effect.fnUntraced(function* () {

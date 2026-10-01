@@ -85,7 +85,7 @@ export interface PackageScriptsPolicyShape {
 
 const decodeManifest = S.decodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)));
 const scriptCodecs = R.fromEntries(
-  A.map(PackageKind.Options, (kind) => {
+  A.map(PackageKind.literals, (kind) => {
     const codec = scriptsBlockFromRecord(kind);
     return [kind, { decode: S.decodeUnknownEffect(codec), encode: S.encodeEffect(codec) }] as const;
   })
@@ -192,7 +192,7 @@ const derivationConflicts = (evidence: DerivationEvidence, manifestPath: string,
 const diffBlock: PackageScriptsPolicyShape["diff"] = (actual, expected) => {
   if (PackageKind.is.exempt(actual.kind)) return [];
   const drift: Array<PackageScriptsDrift> = [];
-  for (const name of TaskScriptName.Options) {
+  for (const name of TaskScriptName.literals) {
     drift.push(...taskDrift(actual, expected, name));
   }
   for (const [name] of expected.impls) {
@@ -264,7 +264,9 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
       });
       const collectEvidence = Effect.fnUntraced(function* (repoRoot: string, entries: ReadonlyArray<string>) {
         let owners = HashSet.empty<string>();
-        const generators = HashSet.fromIterable(A.map(CodegenGeneratorPackage.Options, (dir) => `${dir}/package.json`));
+        const generators = HashSet.fromIterable(
+          A.map(CodegenGeneratorPackage.literals, (dir) => `${dir}/package.json`)
+        );
         const sources = yield* fsUtils.globFiles(["packages/**/src/**/*.{ts,tsx}", "apps/**/src/**/*.{ts,tsx}"], {
           cwd: repoRoot,
           ignore: ["**/node_modules/**", "**/.context/**", "**/test/fixtures/**", "**/*.d.ts"],

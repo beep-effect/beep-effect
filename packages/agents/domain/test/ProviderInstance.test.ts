@@ -202,7 +202,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
       UnauthenticatedSnapshot.make({ probedAt }),
       ProbeFailedSnapshot.make({ probedAt }),
     ];
-    const guidance = A.flatMap(ProviderKind.Options, (kind) =>
+    const guidance = A.flatMap(ProviderKind.literals, (kind) =>
       A.map(snapshots, (snapshot) => loginGuidance(kind, snapshot))
     );
 
