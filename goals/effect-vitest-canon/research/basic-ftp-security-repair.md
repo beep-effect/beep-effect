@@ -17,7 +17,9 @@ this prevents FTP bounce behavior and is intentionally retained. No opt-out
 is introduced. See [the advisory](https://github.com/advisories/GHSA-c475-qrg2-pj4r)
 and [v6 release notes](https://github.com/patrickjuchli/basic-ftp/releases/tag/v6.0.0).
 
-A private local FTP fixture verifies get-uri 6.0.5 against the override:
+The committed `packages/tooling/tool/cli/test/basic-ftp-compatibility.test.ts`
+runs a bounded loopback FTP fixture against the checkout's installed Box SDK
+dependency chain, including get-uri 6.0.5 and the override:
 exact PAC-file download content, modification timestamp, ENOTFOUND for a missing
 file, and ENOTMODIFIED for a cached file. A malformed directory listing with
 65,536 repeated owner/group tokens followed by a normal row parses in under
@@ -27,3 +29,9 @@ Frozen-lockfile installation passes. The same OSV scanner image and arguments
 used by hosted Security pass against copies of the updated lockfile and
 unchanged scanner configuration: 3,334 packages scanned, no issues found,
 exit 0. Checkout dependency tracing confirms basic-ftp resolves to 6.2.1.
+
+The regression passes under Node and Bun with CI tracing enabled. A negative
+control that corrupts the transferred payload fails both the fixture assertion
+and the parent test's exit-code assertion. The restored fixture passes again.
+Native sockets and module resolution remain native: MemoryFileSystem cannot
+represent these boundaries. No extra dependency or external FTP service is used.

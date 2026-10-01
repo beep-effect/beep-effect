@@ -6272,3 +6272,20 @@ fields together with toMatchObject, retaining all value checks without redundant
 branches. Fallow audit now passes. Schema inventory regeneration reset two
 fixture-codec exception dispositions after their source lines moved; preserve
 the reviewed reasons and update only those line references.
+
+
+### Repeatable dependency compatibility and moving-base proof
+
+PR 1390 review comment 4157512624 identified that the basic-ftp compatibility
+check was retained only in a private fixture. Promote the bounded loopback
+fixture into the CLI unit suite so future installed dependency changes exercise
+the actual Box SDK dependency chain. Preserve download content, mtime, missing
+file, cached-file, and parser assertions; a corrupted-payload negative control
+proves the child failure reaches the test verdict.
+
+The full CLI package run on a44bf66445 passed 253 test files and failed only
+yeet-pr-wave-notifier's byte-equality comparison with origin/main after that
+ref advanced. The notifier changed upstream while the proof ran. Merge main
+and rerun the proof; do not weaken the assertion or classify this as a migrated
+test regression. Future proofs should capture their comparison base once, or
+report a moving-base mismatch explicitly rather than as an unexplained failure.
