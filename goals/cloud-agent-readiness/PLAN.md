@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `in-progress` — P0 complete 2026-10-01; P1 is next.
+Status: `in-progress` — P0 and P1 complete 2026-10-01 (PR #1378); P2 is next.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Probe a fresh cloud container and record every failure with its command. | [`research/2026-10-01-container-probe.md`](./research/2026-10-01-container-probe.md) (F1–F14) exists; decisions D1–D7 are written into `SPEC.md`. |
-| P1 Toolchain bootstrap | pending | `scripts/cloud-session-setup.sh`: pinned bun (D1), preflight for denied hosts (D2), frozen install with CI's retry, post-install assertion. | Acceptance rows 1–3 pass; `shellcheck` clean; the script runs green on a workstation and in the cloud once `pkg.pr.new` is allowed. |
+| P1 Toolchain bootstrap | complete | `scripts/cloud-session-setup.sh`: pinned bun (D1), preflight for denied hosts (D2), frozen install with CI's retry, post-install assertion. | Acceptance rows 1–3 pass; `shellcheck` clean; the script runs green on a workstation and in the cloud once `pkg.pr.new` is allowed. |
 | P2 Harness host awareness | pending | `BEEP_AGENT_HOST=cloud` guards in `.claude/hooks/*` and `graft-hooks.cjs`; MCP expectations recorded (D3, D7). | Acceptance row 4 passes; pulse conformance green if a literal was added. |
 | P3 Publish handoff | pending | Document and exercise the D4 end state from a cloud session: proof → push → PR via API → `ready-for-heavy` requested in the body; operator closeout steps named. | A dated `history/` note shows the loop on one package (acceptance row 6). |
 | P4 Doctrine | pending | `AGENTS.md` "Cloud sessions" section, `docs/runbooks/cloud-sessions.md`, cross-links, roadmap accelerator row, fourth meter in `agent-pools.md` (D6). | Acceptance row 5 passes; docs cross-link check green. |
@@ -37,8 +37,10 @@ Phase ids here match `ops/manifest.json` `phases[]` exactly.
 6. Assert `node_modules/effect/package.json` exists and `bun run beep --help`
    exits `0`; otherwise exit non-zero with the first missing package named
    (never report success on a silent partial install, F6).
-7. Export `BEEP_AGENT_HOST=cloud` in the printed environment line when
-   `--host cloud` was passed; never infer it.
+7. Write `BEEP_AGENT_HOST=cloud` into the env file only when `--host cloud`
+   was passed; never infer it. Binaries are installed into the directory that
+   already holds the caller's `bun`, so the caller's PATH needs no change; the
+   env file matters only when no bun existed or the host flag was passed.
 
 Optional extension, not acceptance: `--with-effect-ref` runs
 `scripts/setup-effect-ref.sh` with `BEEP_REFERENCES_ROOT=~/.cache/beep/references`

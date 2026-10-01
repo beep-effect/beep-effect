@@ -18,7 +18,7 @@ contract:
 - `goals/cloud-agent-readiness/SPEC.md` (decisions D1–D7)
 - `goals/cloud-agent-readiness/PLAN.md`
 - `goals/cloud-agent-readiness/ops/manifest.json`
-- `goals/cloud-agent-readiness/research/2026-10-01-container-probe.md` (F1–F14)
+- `goals/cloud-agent-readiness/research/2026-10-01-container-probe.md` (F1–F15)
 
 Read those first, then `AGENTS.md`, `CLAUDE.md`, `docs/runbooks/agent-pools.md`,
 and `.github/actions/setup-monorepo-ci/action.yml` (the known-good install

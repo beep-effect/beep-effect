@@ -72,17 +72,23 @@ probe() {
 reachable() { case "$1" in 2*|3*) return 0 ;; *) return 1 ;; esac; }
 
 cd "$REPO_ROOT"
+case "$(uname -s)-$(uname -m)" in
+  Linux-x86_64) ;;
+  *) printf 'cloud-session-setup: only Linux x86_64 containers are supported (this is %s-%s); use the workstation toolchain (mise) instead\n' "$(uname -s)" "$(uname -m)" >&2; exit 2 ;;
+esac
 want="$(tr -d '[:space:]' < .bun-version)"
 have="$(bun --version 2>/dev/null || true)"
 bun_url="https://github.com/oven-sh/bun/releases/download/bun-v${want}/bun-linux-x64.zip"
 probe_pkg="$(rg -o -m1 'https://pkg\.pr\.new/[^"]+' package.json | head -1 || true)"
+# Fail closed: the probe must hit a real snapshot URL, never the site root.
+[ -n "$probe_pkg" ] || { printf 'cloud-session-setup: no pkg.pr.new URL in package.json; cannot probe the snapshot registry\n' >&2; exit 1; }
 
 # --check: probe every route and gate, report all of them, then exit (0, or 78
 # when a required host is denied). Nothing is written.
 if $CHECK_ONLY; then
   gh_code="$(probe "$bun_url")"
   npm_code="$(probe "https://registry.npmjs.org/bun/${want}")"
-  pkg_code="$(probe "${probe_pkg:-https://pkg.pr.new/}")"
+  pkg_code="$(probe "$probe_pkg")"
   log "check: bun=${have:-missing} (pinned ${want}) bun-release=HTTP ${gh_code} npm=HTTP ${npm_code} pkg.pr.new=HTTP ${pkg_code}"
   log "check: gitleaks=$(command -v gitleaks >/dev/null 2>&1 && gitleaks version || echo missing) typos=$(command -v typos >/dev/null 2>&1 && typos --version | cut -d' ' -f2 || echo missing) shellcheck=$(command -v shellcheck >/dev/null 2>&1 && echo present || echo missing)"
   log "check: gh=$(gh auth status >/dev/null 2>&1 && echo ok || echo unauthenticated) systemd-user=$(systemctl --user is-system-running >/dev/null 2>&1 && echo ok || echo absent) op=$(command -v op >/dev/null 2>&1 && echo present || echo absent)"
@@ -153,7 +159,7 @@ install_tool shellcheck "https://github.com/koalaman/shellcheck/releases/downloa
 log "gitleaks $(gitleaks version); typos $(typos --version | cut -d' ' -f2); shellcheck $(command -v shellcheck >/dev/null 2>&1 && shellcheck --version | sed -n 's/^version: //p' || echo missing)"
 
 # 3. Preflight the Effect snapshot registry (D2). A denial is a network-policy error.
-pkg_code="$(probe "${probe_pkg:-https://pkg.pr.new/}")"
+pkg_code="$(probe "$probe_pkg")"
 reachable "$pkg_code" || fail78 "pkg.pr.new (HTTP ${pkg_code})" "add pkg.pr.new to the environment's allowed domains (Network access) — every Effect 4.0.0 snapshot package is served from it"
 log "pkg.pr.new reachable (HTTP ${pkg_code})"
 

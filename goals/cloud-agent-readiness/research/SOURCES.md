@@ -11,7 +11,7 @@
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `probe-2026-10-01` | Container probe findings F1–F14 | this repo | `goals/cloud-agent-readiness/research/2026-10-01-container-probe.md` | what breaks in a fresh cloud container | primary evidence |
+| `probe-2026-10-01` | Container probe findings F1–F15 | this repo | `goals/cloud-agent-readiness/research/2026-10-01-container-probe.md` | what breaks in a fresh cloud container | primary evidence |
 | `ci-setup` | Known-good bun provisioning and frozen install with retry | this repo | `.github/actions/setup-monorepo-ci/action.yml:160-300` | toolchain bootstrap recipe | reuse (mirror the retry and the digest comparison) |
 | `bun-pins` | Pinned bun version and release-archive digest | this repo | `.bun-version`, `.bun-linux-x64.sha256`, `package.json` (`packageManager`), `mise.toml` | pins the script must honor | reuse, read-only |
 | `effect-snapshot` | Effect 4.0.0 snapshot served from `pkg.pr.new` (34 lockfile entries) | this repo | `package.json:22-27`, `bun.lock:3238-3239`, PR #1368 | the denied registry | reference (non-goal to move) |

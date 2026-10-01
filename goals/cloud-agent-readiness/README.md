@@ -43,17 +43,17 @@ portfolio can spend them until this lands.
 2. [`SPEC.md`](./SPEC.md) - normative source of truth, including decisions D1–D7.
 3. [`PLAN.md`](./PLAN.md) - active execution plan.
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
-5. [`research/2026-10-01-container-probe.md`](./research/2026-10-01-container-probe.md) - the evidence (F1–F14).
+5. [`research/2026-10-01-container-probe.md`](./research/2026-10-01-container-probe.md) - the evidence (F1–F15).
 6. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
 7. [`history/`](./history/) - evidence and closeouts, once they exist.
 
 ## Current Phase
 
-P0 Research is complete (the probe). Next concrete action: P1 Toolchain
-bootstrap — author `scripts/cloud-session-setup.sh` so one command takes a
-fresh container from clone to a green `bun install --frozen-lockfile` and a
-working `bun run beep --help`, and fails fast with a named remedy when the
-environment's network policy denies a host.
+P0 Research and P1 Toolchain bootstrap are complete (PR #1378 landed
+`scripts/cloud-session-setup.sh`, proven end to end in a cloud container on
+2026-10-01). Next concrete action: P2 Harness host awareness — guard the
+desktop-only hooks behind `BEEP_AGENT_HOST=cloud` and record the MCP
+expectations (D3, D7).
 
 ## Latest Evidence
 

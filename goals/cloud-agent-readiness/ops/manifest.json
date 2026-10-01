@@ -61,7 +61,8 @@
     {
       "id": "P1",
       "name": "Toolchain bootstrap",
-      "status": "pending"
+      "status": "complete",
+      "exit": "scripts/cloud-session-setup.sh landed in PR #1378: digest-verified bun and tool provisioning, exit-78 preflight, frozen install with retry, full snapshot-package assertion; proven end to end in a cloud container on 2026-10-01."
     },
     {
       "id": "P2",
