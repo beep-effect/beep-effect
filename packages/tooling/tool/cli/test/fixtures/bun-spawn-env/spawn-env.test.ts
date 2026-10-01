@@ -3,6 +3,7 @@ import { it } from "@beep/test-runner";
 import { assert, beforeAll } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Config, Effect } from "effect";
+import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
@@ -14,9 +15,10 @@ class SpawnEnvScenario extends S.Class<SpawnEnvScenario>($I`SpawnEnvScenario`)(
     env: S.optionalKey(S.Record(S.String, S.UndefinedOr(S.String))),
     parentExpression: S.String,
     childExpression: S.String,
+    witnessExpression: S.String,
   },
   $I.annote("SpawnEnvScenario", {
-    description: "A caller environment and the two synthetic values expected in the real child.",
+    description: "A caller environment and the three synthetic values expected in the real child.",
   })
 ) {}
 
@@ -25,30 +27,35 @@ const scenarios = [
     name: "omitted inherits",
     parentExpression: '"synthetic-parent"',
     childExpression: "undefined",
+    witnessExpression: '"synthetic-unmentioned-parent"',
   }),
   SpawnEnvScenario.make({
     name: "empty replaces",
     env: {},
     parentExpression: "undefined",
     childExpression: "undefined",
+    witnessExpression: "undefined",
   }),
   SpawnEnvScenario.make({
     name: "partial replaces",
     env: { BEEP_PARITY_CHILD: "synthetic-child" },
     parentExpression: "undefined",
     childExpression: '"synthetic-child"',
+    witnessExpression: "undefined",
   }),
   SpawnEnvScenario.make({
     name: "explicit override",
     env: { BEEP_PARITY_PARENT: "synthetic-override" },
     parentExpression: '"synthetic-override"',
     childExpression: "undefined",
+    witnessExpression: "undefined",
   }),
   SpawnEnvScenario.make({
     name: "undefined removes",
     env: { BEEP_PARITY_PARENT: undefined },
     parentExpression: "undefined",
     childExpression: "undefined",
+    witnessExpression: "undefined",
   }),
 ];
 
@@ -57,6 +64,10 @@ beforeAll(() =>
     Effect.gen(function* () {
       assert.strictEqual(yield* Config.String("BEEP_PARITY_PARENT"), "synthetic-parent");
       assertNone(yield* Config.option(Config.String("BEEP_PARITY_CHILD")));
+      assert.strictEqual(yield* Config.String("BEEP_PARITY_WITNESS"), "synthetic-unmentioned-parent");
+      const undefinedScenario = A.getUnsafe(scenarios, 4);
+      assert.strictEqual(P.hasProperty(undefinedScenario, "env"), true);
+      assert.strictEqual(P.hasProperty(undefinedScenario.env, "BEEP_PARITY_PARENT"), true);
       assert.strictEqual(P.isUndefined(process.versions.bun), (yield* Config.String("BEEP_PARITY_RUNTIME")) === "node");
     })
   )
@@ -64,7 +75,7 @@ beforeAll(() =>
 
 for (const scenario of scenarios) {
   for (const objectForm of [false, true]) {
-    const program = `process.exit(process.env.BEEP_PARITY_PARENT === ${scenario.parentExpression} && process.env.BEEP_PARITY_CHILD === ${scenario.childExpression} ? 0 : 61)`;
+    const program = `process.exit(process.env.BEEP_PARITY_PARENT === ${scenario.parentExpression} && process.env.BEEP_PARITY_CHILD === ${scenario.childExpression} && process.env.BEEP_PARITY_WITNESS === ${scenario.witnessExpression} ? 0 : 61)`;
     const command = [process.execPath, "-e", program];
     const environment = P.isUndefined(scenario.env) ? {} : { env: scenario.env };
     it.effect(`spawnSync ${scenario.name} object=${objectForm}`, () =>

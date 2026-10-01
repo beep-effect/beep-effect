@@ -101,6 +101,7 @@ it.layer(NodeServices.layer, {
           timeout: "30 seconds",
           env: {
             BEEP_PARITY_PARENT: "synthetic-parent",
+            BEEP_PARITY_WITNESS: "synthetic-unmentioned-parent",
             BEEP_PARITY_CHILD: undefined,
             BEEP_PARITY_RUNTIME: runtime,
             CI: "true",

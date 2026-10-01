@@ -6376,3 +6376,11 @@ Repair outcome: a fixture-local `tsconfig.json` extends the CLI test project, ex
 ## 2026-10-01: Dependency cohort changed during publication
 
 Fresh main added the dependency catalog update (`a448474b15`) and basic-ftp security repair (`e442f4f61a`). The lane had already pushed its fixture project repair, but continued full proof would describe the older Vitest cohort. The owning publication process was deliberately stopped with exit 130, then main merged cleanly and frozen installation passed. Applied selection passes 72 tests on both Node 22 and Bun under Vitest 5.0.3, while immutable Effect Vitest API hashes remain unchanged. Preserve the interrupted receipt and require full verification on the updated head. Checking base/dependency freshness before launching a long proof reduces avoidable repeated work; no historical timing or pass is reassigned to the new cohort.
+
+### 2026-10-01 — Merge-preview baseline conflict after a green local proof
+
+The current-cohort publish completed all 32 local proof lanes, including coverage, then stopped at the merge-preview gate because main conflicted in `standards/effect-vitest.inventory.jsonc`. The failed publish is not a merged-preview or hosted closeout pass. The merge preserved both branches' exception reasons and regenerated the baseline against the merged source; the authoritative finding ledger was not replaced. A generator-aware baseline reconciliation at the merge boundary would prevent manually inspecting thousands of conflict lines.
+
+### 2026-10-01 — Spawn environment oracle missed selective inheritance
+
+The bounded Grok review identified that the two-marker regression could miss a parent merge that removed only those markers. A third synthetic parent marker now checks omission inheritance and replacement for every explicit environment scenario, including override and undefined entries. The selective-merge control passed all 20 original Node cases and failed 16 strengthened cases; the old full merge failed eight original and 16 strengthened cases. Both runtime fixtures and wrappers passed privately. The stronger regression is now applied; ordinary package and hosted proof remain pending. Tests observe only synthetic markers and emit no environment values.
