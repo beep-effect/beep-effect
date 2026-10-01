@@ -356,6 +356,7 @@
         "@effect/vitest": "catalog:",
         "@electric-sql/pglite": "catalog:",
         "@electric-sql/pglite-legacy-046": "npm:@electric-sql/pglite@0.4.6",
+        "@statelyai/sdk": "catalog:",
         "@tauri-apps/cli": "catalog:",
         "@testing-library/dom": "catalog:",
         "@testing-library/jest-dom": "catalog:",
@@ -1717,6 +1718,7 @@
       "devDependencies": {
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/ecosystem/effect-drizzle": {

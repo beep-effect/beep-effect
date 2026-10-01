@@ -55,8 +55,9 @@ import {
 import { logIntakeCause } from "./Intake.telemetry.ts";
 import { intakeBatchMachine } from "./IntakeBatch.machine.ts";
 import type { EffectSourceArgs } from "@xstate/effect";
-import type { EmittedFrom, SnapshotFrom } from "xstate";
+import type { SnapshotFrom } from "xstate";
 import type { DocumentIntakeVaultStatus, VaultSelectionOutcome } from "./DocumentIntake.models.ts";
+import type { IntakeBatchEmittedEvent } from "./IntakeBatch.machine.ts";
 
 const MAX_CONFIG_RETRY_MILLIS = 30_000;
 
@@ -522,7 +523,7 @@ export const documentIntakeMachine = setupEffect({
           // `enq.listen` does not infer the emitted event from its type filter.
           enq.listen(batch, "file.result", (emitted) => ({
             type: "FILE_RESULT",
-            entry: (emitted as EmittedFrom<typeof intakeBatchMachine>).entry,
+            entry: (emitted as IntakeBatchEmittedEvent).entry,
           }));
           enq.subscribeTo(batch, {
             done: (output) => ({ type: "BATCH_SETTLED", sequence, output }),

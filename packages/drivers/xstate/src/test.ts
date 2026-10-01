@@ -19,22 +19,11 @@ import * as fc from "fast-check";
 import type { EffectActorOptions, RequirementsFrom } from "@xstate/effect";
 import type { TestSut, TestSutContext, TestSutSession } from "@xstate/test";
 import type { Duration, Layer } from "effect";
-import type { AnyActorLogic, EventFromLogic, SnapshotFrom } from "xstate";
+import type { AnyActorLogic, EventFromLogic, Snapshot, SnapshotFrom } from "xstate";
 
-/**
- * Sampling options for {@link arbitraryFromSchema}.
- *
- * @category models
- * @since 0.0.0
- */
-export interface SchemaArbitraryOptions {
-  /** How many values to sample from the schema arbitrary. Defaults to 32. */
-  readonly count?: number;
-  /** Seed for deterministic sampling. Defaults to 0. */
-  readonly seed?: string | number;
-}
-
-const sampleOptions = (options?: SchemaArbitraryOptions): Arbitrary.SampleOptions => ({
+// Defaults keep sampling deterministic: 32 values from seed 0 unless the caller says otherwise.
+const sampleOptions = (options?: Arbitrary.SampleOptions): Arbitrary.SampleOptions => ({
+  ...options,
   count: options?.count ?? 32,
   seed: options?.seed ?? 0,
 });
@@ -71,19 +60,19 @@ const sampleOptions = (options?: SchemaArbitraryOptions): Arbitrary.SampleOption
  */
 export const arbitraryFromSchema: {
   (
-    options?: SchemaArbitraryOptions
+    options?: Arbitrary.SampleOptions
   ): <Schema extends S.Constraint>(
     schema: Schema
   ) => Effect.Effect<fc.Arbitrary<Schema["Type"]>, Arbitrary.SampleError>;
   <Schema extends S.Constraint>(
     schema: Schema,
-    options?: SchemaArbitraryOptions
+    options?: Arbitrary.SampleOptions
   ): Effect.Effect<fc.Arbitrary<Schema["Type"]>, Arbitrary.SampleError>;
 } = dual(
   (args) => S.isSchema(args[0]),
   <Schema extends S.Constraint>(
     schema: Schema,
-    options?: SchemaArbitraryOptions
+    options?: Arbitrary.SampleOptions
   ): Effect.Effect<fc.Arbitrary<Schema["Type"]>, Arbitrary.SampleError> =>
     Effect.map(Arbitrary.sampleEffect(Arbitrary.schema(schema), sampleOptions(options)), (values) =>
       fc.constantFrom(...values)
@@ -128,19 +117,19 @@ const isSchemaRecord = (input: unknown): input is Readonly<Record<string, S.Cons
  */
 export const eventsFromSchemas: {
   (
-    options?: SchemaArbitraryOptions
+    options?: Arbitrary.SampleOptions
   ): <const Schemas extends Readonly<Record<string, S.Constraint>>>(
     schemas: Schemas
   ) => Effect.Effect<EventArbitraries<Schemas>, Arbitrary.SampleError>;
   <const Schemas extends Readonly<Record<string, S.Constraint>>>(
     schemas: Schemas,
-    options?: SchemaArbitraryOptions
+    options?: Arbitrary.SampleOptions
   ): Effect.Effect<EventArbitraries<Schemas>, Arbitrary.SampleError>;
 } = dual(
   (args) => isSchemaRecord(args[0]),
   <const Schemas extends Readonly<Record<string, S.Constraint>>>(
     schemas: Schemas,
-    options?: SchemaArbitraryOptions
+    options?: Arbitrary.SampleOptions
   ): Effect.Effect<EventArbitraries<Schemas>, Arbitrary.SampleError> =>
     pipe(
       Effect.forEach(R.toEntries(schemas), ([key, schema]) =>
@@ -187,12 +176,9 @@ const structurallyEquivalent = (left: unknown, right: unknown): boolean => {
  * @category projections
  * @since 0.0.0
  */
-export const projectValueAndContext = (snapshot: {
-  readonly value?: unknown;
-  readonly context?: unknown;
-}): unknown => ({
-  value: snapshot.value,
-  context: snapshot.context,
+export const projectValueAndContext = (snapshot: Snapshot<unknown>): unknown => ({
+  value: "value" in snapshot ? snapshot.value : undefined,
+  context: "context" in snapshot ? snapshot.context : undefined,
 });
 
 /**

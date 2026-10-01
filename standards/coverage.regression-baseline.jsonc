@@ -19612,15 +19612,15 @@
     },
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
-      "lines": 72.71,
-      "statements": 71.5,
-      "branches": 63.75,
-      "functions": 62.35,
+      "lines": 75.33,
+      "statements": 74.2,
+      "branches": 68.33,
+      "functions": 65.88,
       "uncovered": {
-        "lines": 681,
-        "statements": 758,
-        "branches": 191,
-        "functions": 448
+        "lines": 635,
+        "statements": 705,
+        "branches": 177,
+        "functions": 408
       },
       "files": {
         "apps/professional-desktop/src/App.tsx": {
@@ -19684,10 +19684,10 @@
           }
         },
         "apps/professional-desktop/src/chat/UsageRecordSink.ts": {
-          "lines": 62.5,
-          "statements": 64.7,
+          "lines": 64.7,
+          "statements": 66.66,
           "branches": 100,
-          "functions": 42.85,
+          "functions": 50,
           "uncovered": {
             "lines": 6,
             "statements": 6,
@@ -19698,12 +19698,12 @@
         "apps/professional-desktop/src/chat/ui/ChatApp.tsx": {
           "lines": 65.21,
           "statements": 62.5,
-          "branches": 50,
+          "branches": 75,
           "functions": 35.71,
           "uncovered": {
             "lines": 8,
             "statements": 9,
-            "branches": 2,
+            "branches": 1,
             "functions": 9
           }
         },
@@ -19723,7 +19723,7 @@
           "lines": 83.33,
           "statements": 78.68,
           "branches": 73.33,
-          "functions": 65.51,
+          "functions": 66.1,
           "uncovered": {
             "lines": 18,
             "statements": 26,
@@ -19770,12 +19770,12 @@
         "apps/professional-desktop/src/chat/ui/Sidebar.tsx": {
           "lines": 68.18,
           "statements": 62.5,
-          "branches": 38.46,
+          "branches": 53.84,
           "functions": 30,
           "uncovered": {
             "lines": 7,
             "statements": 9,
-            "branches": 8,
+            "branches": 6,
             "functions": 7
           }
         },
@@ -19865,9 +19865,9 @@
         },
         "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts": {
           "lines": 88.14,
-          "statements": 88.26,
+          "statements": 88.55,
           "branches": 80.64,
-          "functions": 60.41,
+          "functions": 62.74,
           "uncovered": {
             "lines": 23,
             "statements": 23,
@@ -19899,6 +19899,42 @@
             "functions": 0
           }
         },
+        "apps/professional-desktop/src/intake/DesktopIntake.client.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/professional-desktop/src/intake/DocumentIntake.machine.ts": {
+          "lines": 99.16,
+          "statements": 99.18,
+          "branches": 100,
+          "functions": 98,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "apps/professional-desktop/src/intake/DocumentIntake.models.ts": {
+          "lines": 100,
+          "statements": 98.11,
+          "branches": 100,
+          "functions": 95.65,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "apps/professional-desktop/src/intake/DocumentIntakeOrchestrator.ts": {
           "lines": 0,
           "statements": 0,
@@ -19912,10 +19948,10 @@
           }
         },
         "apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx": {
-          "lines": 33.33,
-          "statements": 32.14,
-          "branches": 25,
-          "functions": 15.38,
+          "lines": 35.71,
+          "statements": 34.48,
+          "branches": 33.33,
+          "functions": 17.5,
           "uncovered": {
             "lines": 36,
             "statements": 38,
@@ -19924,15 +19960,51 @@
           }
         },
         "apps/professional-desktop/src/intake/Intake.atoms.ts": {
-          "lines": 87.38,
-          "statements": 85.95,
-          "branches": 77.77,
-          "functions": 78.22,
+          "lines": 96.82,
+          "statements": 97.01,
+          "branches": 100,
+          "functions": 93.93,
           "uncovered": {
-            "lines": 27,
-            "statements": 33,
-            "branches": 8,
-            "functions": 27
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "apps/professional-desktop/src/intake/Intake.inspection.ts": {
+          "lines": 92.3,
+          "statements": 92.85,
+          "branches": 80,
+          "functions": 75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "apps/professional-desktop/src/intake/Intake.telemetry.ts": {
+          "lines": 80,
+          "statements": 80,
+          "branches": 100,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "apps/professional-desktop/src/intake/IntakeBatch.machine.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "apps/professional-desktop/src/intake/VaultDirectoryPicker.rpc.ts": {
@@ -19957,6 +20029,18 @@
             "statements": 4,
             "branches": 2,
             "functions": 2
+          }
+        },
+        "apps/professional-desktop/src/internal/PosInt.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "apps/professional-desktop/src/lib/failureMessage.ts": {
@@ -20128,10 +20212,10 @@
           }
         },
         "apps/professional-desktop/src/spikes/CosmosSpike.tsx": {
-          "lines": 65.42,
-          "statements": 64.86,
+          "lines": 64.07,
+          "statements": 63.88,
           "branches": 40,
-          "functions": 56.6,
+          "functions": 55.76,
           "uncovered": {
             "lines": 37,
             "statements": 39,
@@ -20188,15 +20272,15 @@
           }
         },
         "apps/professional-desktop/src/sync/Sync.atoms.ts": {
-          "lines": 85,
-          "statements": 83.07,
+          "lines": 95,
+          "statements": 92.3,
           "branches": 100,
-          "functions": 75,
+          "functions": 84.37,
           "uncovered": {
-            "lines": 9,
-            "statements": 11,
+            "lines": 3,
+            "statements": 5,
             "branches": 0,
-            "functions": 8
+            "functions": 5
           }
         },
         "apps/professional-desktop/src/sync/VaultSyncOrchestrator.ts": {
@@ -20212,15 +20296,15 @@
           }
         },
         "apps/professional-desktop/src/sync/VaultSyncPanel.tsx": {
-          "lines": 81.63,
-          "statements": 82,
-          "branches": 81.81,
-          "functions": 68.96,
+          "lines": 85.71,
+          "statements": 86,
+          "branches": 84.84,
+          "functions": 75.86,
           "uncovered": {
-            "lines": 9,
-            "statements": 9,
-            "branches": 6,
-            "functions": 9
+            "lines": 7,
+            "statements": 7,
+            "branches": 5,
+            "functions": 7
           }
         },
         "apps/professional-desktop/src/theme/Theme.atoms.ts": {
@@ -20296,15 +20380,15 @@
           }
         },
         "apps/professional-desktop/src/transport/TauriIpcSocket.ts": {
-          "lines": 59.3,
-          "statements": 54.83,
-          "branches": 40,
-          "functions": 30.61,
+          "lines": 77.64,
+          "statements": 73.33,
+          "branches": 62.5,
+          "functions": 54.54,
           "uncovered": {
-            "lines": 35,
-            "statements": 42,
-            "branches": 6,
-            "functions": 34
+            "lines": 19,
+            "statements": 24,
+            "branches": 3,
+            "functions": 20
           }
         },
         "apps/professional-desktop/src/workspace/ProfessionalWorkspace.ts": {
@@ -38482,6 +38566,81 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/xstate": {
+      "path": "packages/drivers/xstate",
+      "lines": 93.51,
+      "statements": 93.22,
+      "branches": 76.47,
+      "functions": 89.65,
+      "uncovered": {
+        "lines": 7,
+        "statements": 8,
+        "branches": 12,
+        "functions": 6
+      },
+      "files": {
+        "packages/drivers/xstate/src/MachineExport.ts": {
+          "lines": 83.33,
+          "statements": 85.71,
+          "branches": 100,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/drivers/xstate/src/StatelyInspector.service.ts": {
+          "lines": 92.72,
+          "statements": 93.1,
+          "branches": 76.19,
+          "functions": 88.88,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 5,
+            "functions": 3
+          }
+        },
+        "packages/drivers/xstate/src/Xstate.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/xstate/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/xstate/src/test.ts": {
+          "lines": 95.55,
+          "statements": 94.11,
+          "branches": 76.66,
+          "functions": 92.85,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 7,
+            "functions": 2
           }
         }
       }

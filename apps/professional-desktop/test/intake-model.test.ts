@@ -82,7 +82,7 @@ describe("document intake statechart model", { concurrent: false }, () => {
     })
   );
 
-  it.live("every shortest path through the surface events keeps the view projection consistent", () =>
+  it.effect("every shortest path through the surface events keeps the view projection consistent", () =>
     Effect.gen(function* () {
       const { coverage, results } = yield* Effect.promise(() =>
         testPaths(intakeModel, {
@@ -108,7 +108,7 @@ describe("document intake statechart model", { concurrent: false }, () => {
     })
   );
 
-  it.live("random event sequences never break the view projection", () =>
+  it.effect("random event sequences never break the view projection", () =>
     Effect.gen(function* () {
       const { coverage } = yield* Effect.promise(() =>
         propertyTest(intakeModel, {
@@ -127,7 +127,7 @@ describe("document intake statechart model", { concurrent: false }, () => {
     })
   );
 
-  it.live("the Effect-hosted actor agrees with the pure model", () =>
+  it.effect("the Effect-hosted actor agrees with the pure model", () =>
     Effect.promise(() =>
       propertyTest(intakeModel, {
         seed: 5,

@@ -1,6 +1,6 @@
 import { it } from "@beep/test-runner";
 import { WorkspaceVaultActionError } from "@beep/workspace-use-cases/public";
-import { afterEach, describe, expect } from "@effect/vitest";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -10,7 +10,6 @@ import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import { Atom, AtomRegistry, Reactivity } from "effect/reactivity";
 import * as Stream from "effect/Stream";
-import { vi } from "vitest";
 import { DesktopIntakeClient } from "@/intake/DesktopIntake.client";
 import { VaultSelectionState } from "@/intake/DocumentIntake.models";
 import {
@@ -70,7 +69,7 @@ afterEach(() => {
 
 // Spies are restored after each case, so cases must not interleave.
 describe("document intake surface", { concurrent: false }, () => {
-  it.live(
+  it.effect(
     "starts pending, opens onboarding, and enables intake once a picked vault is saved",
     Effect.fnUntraced(function* () {
       const config = yield* Ref.make(unconfiguredVault);
@@ -95,10 +94,10 @@ describe("document intake surface", { concurrent: false }, () => {
       expect(yield* Ref.get(saved)).toMatchObject([{ vaultRootPath: selectedPath, workspaceId }]);
       // The file-input ref callback and every handler stay referentially stable.
       expect(ready.actions).toBe(onboarding.actions);
-    }, Effect.scoped)
+    })
   );
 
-  it.live(
+  it.effect(
     "reports an unreadable vault configuration and recovers when the operator retries",
     Effect.fnUntraced(function* () {
       const attempts = yield* Ref.make(0);
@@ -116,10 +115,10 @@ describe("document intake surface", { concurrent: false }, () => {
       unavailable.actions.retryVaultConfig();
       yield* waitFor((current) => current.vaultStatus === "configured");
       expect(yield* Ref.get(attempts)).toBe(2);
-    }, Effect.scoped)
+    })
   );
 
-  it.live(
+  it.effect(
     "walks the manual path form through guidance, cancellation, and a saved path",
     Effect.fnUntraced(function* () {
       const config = yield* Ref.make(unconfiguredVault);
@@ -148,10 +147,10 @@ describe("document intake surface", { concurrent: false }, () => {
       yield* waitFor((current) => current.state.vaultSelection.kind === "manual");
       actions.submitManualVaultPath(selectedPath);
       yield* waitFor((current) => current.vaultStatus === "configured");
-    }, Effect.scoped)
+    })
   );
 
-  it.live(
+  it.effect(
     "owns the drag highlight and boundary narrowing",
     Effect.fnUntraced(function* () {
       const { waitFor } = yield* mountSurface({ GetWorkspaceVault: () => Effect.succeed(configuredVault) });
@@ -174,10 +173,10 @@ describe("document intake surface", { concurrent: false }, () => {
 
       actions.dragLeave({ currentTarget: container, relatedTarget: null });
       yield* waitFor((current) => !current.state.isDragging);
-    }, Effect.scoped)
+    })
   );
 
-  it.live(
+  it.effect(
     "prevents a configured drop, files the batch, and clears the results on request",
     Effect.fnUntraced(function* () {
       const { waitFor } = yield* mountSurface({ GetWorkspaceVault: () => Effect.succeed(configuredVault) });
@@ -195,10 +194,10 @@ describe("document intake surface", { concurrent: false }, () => {
 
       actions.clearResults();
       yield* waitFor((current) => A.isReadonlyArrayEmpty(current.state.results));
-    }, Effect.scoped)
+    })
   );
 
-  it.live(
+  it.effect(
     "leaves drags and drops to the browser until a vault is configured",
     Effect.fnUntraced(function* () {
       const { waitFor } = yield* mountSurface({
@@ -218,11 +217,12 @@ describe("document intake surface", { concurrent: false }, () => {
       expect(preventDefault).not.toHaveBeenCalled();
       expect(choosing.state.isDragging).toBe(false);
       expect(choosing.state.results).toEqual([]);
-    }, Effect.scoped)
+    })
   );
 });
 
 describe("intake file input", { concurrent: false }, () => {
+  // The registry's idle timers are real, so this case waits in live time.
   it.live(
     "keeps the hidden file input available after the registry idle TTL",
     Effect.fnUntraced(function* () {
@@ -254,10 +254,10 @@ describe("intake file input", { concurrent: false }, () => {
 
       expect(click).toHaveBeenCalledOnce();
       releaseOpenPicker();
-    }, Effect.scoped)
+    })
   );
 
-  it.live(
+  it.effect(
     "routes the surface file-input actions to the same hidden input",
     Effect.fnUntraced(function* () {
       const { registry, waitFor } = yield* mountSurface({ GetWorkspaceVault: () => Effect.succeed(configuredVault) });
@@ -272,6 +272,6 @@ describe("intake file input", { concurrent: false }, () => {
 
       assertSome(registry.get(intakeFileInputAtoms(workspaceId)), input);
       expect(click).toHaveBeenCalledOnce();
-    }, Effect.scoped)
+    })
   );
 });

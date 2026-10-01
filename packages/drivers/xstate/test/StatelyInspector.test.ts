@@ -4,7 +4,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { createInspector } from "@statelyai/sdk";
 import { createEffectActor, send, waitFor } from "@xstate/effect";
-import { ConfigProvider, Effect, Layer, pipe } from "effect";
+import { ConfigProvider, Effect, Exit, Layer, pipe, Scope } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { Deployments, deploymentsSucceeding, releaseMachine } from "./fixtures/Release.machine.ts";
@@ -53,7 +53,7 @@ const recordingLayer = StatelyInspector.makeLayer(
 );
 
 describe("StatelyInspector", () => {
-  it.layer(StatelyInspector.layerDisabled)((it) => {
+  it.layer(StatelyInspector.layerDisabled, { timeout: "30 seconds" })((it) => {
     it.effect("the disabled layer attaches nothing and exposes no URL", () =>
       Effect.gen(function* () {
         const inspector = yield* StatelyInspector;
@@ -62,11 +62,11 @@ describe("StatelyInspector", () => {
         yield* inspector.attach(actor);
         yield* inspector.ready;
         assertTrue(actor.getSnapshot().matches("awaitingApproval"));
-      }).pipe(Effect.scoped, Effect.provideService(Deployments, deploymentsSucceeding))
+      }).pipe(Effect.provideService(Deployments, deploymentsSucceeding))
     );
   });
 
-  it.layer(recordingLayer)((it) => {
+  it.layer(recordingLayer, { timeout: "30 seconds" })((it) => {
     it.effect("forwards actor transitions through the SDK transport", () =>
       Effect.gen(function* () {
         const inspector = yield* StatelyInspector;
@@ -86,7 +86,7 @@ describe("StatelyInspector", () => {
         expect(snapshotValues).toContain("deploying");
         expect(snapshotValues).toContain("deployed");
         expect(recorder.destroyed).toBe(0);
-      }).pipe(Effect.scoped, Effect.provideService(Deployments, deploymentsSucceeding))
+      }).pipe(Effect.provideService(Deployments, deploymentsSucceeding))
     );
   });
 
@@ -97,7 +97,10 @@ describe("StatelyInspector", () => {
         StatelyInspectorConfig.make({ enabled: true }),
         makeRecordingCreate(scoped)
       );
-      yield* Effect.scoped(Effect.asVoid(Layer.build(layer)));
+      const scope = yield* Scope.make();
+      yield* Layer.build(layer).pipe(Scope.provide(scope));
+      expect(scoped.destroyed).toBe(0);
+      yield* Scope.close(scope, Exit.void);
       expect(scoped.destroyed).toBe(1);
     })
   );

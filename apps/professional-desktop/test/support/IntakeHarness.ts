@@ -4,6 +4,7 @@ import { createEffectActor } from "@xstate/effect";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Queue from "effect/Queue";
+import { Reactivity } from "effect/reactivity";
 import { DesktopIntakeClient } from "@/intake/DesktopIntake.client";
 import { documentIntakeMachine } from "@/intake/DocumentIntake.machine";
 import { DocumentIntakeInput } from "@/intake/DocumentIntake.models";
@@ -50,12 +51,21 @@ export const intakeFile = (name: string): File => {
   return file;
 };
 
-export const startIntakeWithRetryBase = (configRetryBaseMillis: number) => (client: DesktopIntakeClient["Service"]) =>
+const startIntakeWithRetryBase = (configRetryBaseMillis: number) => (client: DesktopIntakeClient["Service"]) =>
   createEffectActor(documentIntakeMachine, {
     input: DocumentIntakeInput.make({ workspaceId, configRetryBaseMillis }),
   }).pipe(Effect.provideService(DesktopIntakeClient, client));
 
 export const startIntake = startIntakeWithRetryBase(2000);
+
+// A retry test advances its own TestClock, so it runs outside the shared layer
+// block and brings a Reactivity service of its own.
+export const startIntakeIsolated = (configRetryBaseMillis: number) => (client: DesktopIntakeClient["Service"]) =>
+  Effect.flatMap(Reactivity.make, (reactivity) =>
+    startIntakeWithRetryBase(configRetryBaseMillis)(client).pipe(
+      Effect.provideService(Reactivity.Reactivity, reactivity)
+    )
+  );
 
 type IntakeActor = Effect.Success<ReturnType<typeof startIntake>>;
 

@@ -24,7 +24,7 @@ import {
   recordSettledBatches,
   selectedPath,
   startIntake,
-  startIntakeWithRetryBase,
+  startIntakeIsolated,
   unconfiguredVault,
   workspaceId,
 } from "./support/IntakeHarness.ts";
@@ -45,7 +45,7 @@ const configured = () => Effect.succeed(configuredVault);
 
 // The Tauri `invoke` mock and `__TAURI_INTERNALS__` are process globals.
 describe("document intake machine", { concurrent: false }, () => {
-  it.layer(Reactivity.layer)((it) => {
+  it.layer(Reactivity.layer, { timeout: "30 seconds" })((it) => {
     describe("vault configuration", () => {
       it.effect(
         "is pending until the configuration feed resolves",
@@ -54,7 +54,7 @@ describe("document intake machine", { concurrent: false }, () => {
           const snapshot = actor.getSnapshot();
           expect(vaultStatusOf(snapshot)).toBe("pending");
           expect(documentIntakeStateOf(snapshot).vaultSelection.kind).toBe("idle");
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -65,7 +65,7 @@ describe("document intake machine", { concurrent: false }, () => {
             current.matches({ vault: { watching: { unconfigured: "idle" } } })
           );
           expect(vaultStatusOf(snapshot)).toBe("needs-onboarding");
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -79,75 +79,7 @@ describe("document intake machine", { concurrent: false }, () => {
           yield* Ref.set(config, unconfiguredVault);
           yield* Reactivity.invalidate([workspaceVaultKey(workspaceId)]);
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: "unconfigured" } }));
-        }, Effect.scoped)
-      );
-
-      it.effect(
-        "retries a failed configuration read on a doubling backoff",
-        Effect.fnUntraced(function* () {
-          const attempts = yield* Ref.make(0);
-          const actor = yield* startIntake(
-            intakeClient({
-              GetWorkspaceVault: () =>
-                Effect.flatMap(
-                  Ref.updateAndGet(attempts, (count) => count + 1),
-                  (count) =>
-                    count < 3
-                      ? Effect.fail(WorkspaceVaultActionError.new("Vault store unavailable."))
-                      : Effect.succeed(configuredVault)
-                ),
-            })
-          );
-          const failed = yield* waitFor(actor, (current) => current.matches({ vault: "loadFailed" }));
-          expect(vaultStatusOf(failed)).toBe("unavailable");
-          expect(failed.context.configAttempt).toBe(0);
-
-          // First retry after the base delay.
-          yield* TestClock.adjust("2 seconds");
-          yield* waitFor(
-            actor,
-            (current) => current.matches({ vault: "loadFailed" }) && current.context.configAttempt === 1
-          );
-          expect(yield* Ref.get(attempts)).toBe(2);
-
-          // The second delay doubled: two more seconds are not enough.
-          yield* TestClock.adjust("2 seconds");
-          expect(yield* Ref.get(attempts)).toBe(2);
-          expect(actor.getSnapshot().matches({ vault: "loadFailed" })).toBe(true);
-
-          yield* TestClock.adjust("2 seconds");
-          const recovered = yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
-          expect(yield* Ref.get(attempts)).toBe(3);
-          expect(recovered.context.configAttempt).toBe(0);
-        }, Effect.scoped)
-      );
-
-      it.effect(
-        "caps the retry delay at thirty seconds",
-        Effect.fnUntraced(function* () {
-          const attempts = yield* Ref.make(0);
-          const actor = yield* startIntakeWithRetryBase(20_000)(
-            intakeClient({
-              GetWorkspaceVault: () =>
-                Effect.flatMap(
-                  Ref.updateAndGet(attempts, (count) => count + 1),
-                  (count) =>
-                    count < 3
-                      ? Effect.fail(WorkspaceVaultActionError.new("Vault store unavailable."))
-                      : Effect.succeed(configuredVault)
-                ),
-            })
-          );
-          yield* waitFor(actor, (current) => current.matches({ vault: "loadFailed" }));
-          yield* TestClock.adjust("20 seconds");
-          yield* waitFor(
-            actor,
-            (current) => current.matches({ vault: "loadFailed" }) && current.context.configAttempt === 1
-          );
-          // Doubling would wait forty seconds; the cap is thirty.
-          yield* TestClock.adjust("30 seconds");
-          yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -170,7 +102,7 @@ describe("document intake machine", { concurrent: false }, () => {
           yield* send(actor, { type: "RETRY_CONFIG" });
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: "unconfigured" } }));
           expect(yield* Ref.get(attempts)).toBe(2);
-        }, Effect.scoped)
+        })
       );
     });
 
@@ -221,7 +153,7 @@ describe("document intake machine", { concurrent: false }, () => {
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
           expect(yield* Ref.get(saved)).toMatchObject([{ vaultRootPath: selectedPath, workspaceId }]);
           expect(yield* Queue.takeN(outcomes, 2)).toEqual(["selected", "success"]);
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -239,7 +171,7 @@ describe("document intake machine", { concurrent: false }, () => {
           );
           expect(vaultSelectionOf(snapshot).kind).toBe("idle");
           expect(yield* Queue.takeN(outcomes, 1)).toEqual(["cancelled"]);
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -261,7 +193,7 @@ describe("document intake machine", { concurrent: false }, () => {
           picker.resolve(null);
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: { unconfigured: "idle" } } }));
           expect(invoke).toHaveBeenCalledTimes(1);
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -286,7 +218,7 @@ describe("document intake machine", { concurrent: false }, () => {
           yield* send(actor, { type: "CHOOSE_VAULT" });
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: { unconfigured: "idle" } } }));
           expect(yield* Queue.takeN(outcomes, 2)).toEqual(["picker_failure", "cancelled"]);
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -310,7 +242,7 @@ describe("document intake machine", { concurrent: false }, () => {
           expect(vaultSelectionOf(failed)).toStrictEqual(
             VaultSelectionState.cases.failed.make({ message: "The selected vault is not writable." })
           );
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -327,7 +259,7 @@ describe("document intake machine", { concurrent: false }, () => {
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: { unconfigured: "idle" } } }));
           yield* send(actor, { type: "CHOOSE_VAULT" });
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -344,7 +276,7 @@ describe("document intake machine", { concurrent: false }, () => {
           yield* send(actor, { type: "CHOOSE_VAULT" });
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: { unconfigured: "idle" } } }));
           expect(yield* Queue.takeN(outcomes, 1)).toEqual(["cancelled"]);
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -365,7 +297,7 @@ describe("document intake machine", { concurrent: false }, () => {
           expect(prompt).not.toHaveBeenCalled();
           expect(vaultSelectionOf(manual)).toStrictEqual(VaultSelectionState.cases.manual.make());
           prompt.mockRestore();
-        }, Effect.scoped)
+        })
       );
     });
 
@@ -402,7 +334,7 @@ describe("document intake machine", { concurrent: false }, () => {
           yield* send(actor, { type: "SUBMIT_MANUAL_PATH", rawPath: `  ${selectedPath}  ` });
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
           expect(yield* Ref.get(saved)).toMatchObject([{ vaultRootPath: selectedPath }]);
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -414,7 +346,7 @@ describe("document intake machine", { concurrent: false }, () => {
           expect(vaultSelectionOf(guided)).toStrictEqual(
             VaultSelectionState.cases.manual.make({ message: O.some("Enter the absolute path of a local folder.") })
           );
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -436,7 +368,7 @@ describe("document intake machine", { concurrent: false }, () => {
               message: O.some("The selected vault is not writable."),
             })
           );
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -448,7 +380,7 @@ describe("document intake machine", { concurrent: false }, () => {
             current.matches({ vault: { watching: { unconfigured: { manual: "saving" } } } })
           );
           expect(vaultSelectionOf(saving).kind).toBe("saving");
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -457,7 +389,7 @@ describe("document intake machine", { concurrent: false }, () => {
           const actor = yield* openManualForm({});
           yield* send(actor, { type: "CANCEL_MANUAL" });
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: { unconfigured: "idle" } } }));
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -475,7 +407,7 @@ describe("document intake machine", { concurrent: false }, () => {
           yield* waitFor(actor, (current) =>
             current.matches({ vault: { watching: { unconfigured: { picker: "sidecar" } } } })
           );
-        }, Effect.scoped)
+        })
       );
     });
 
@@ -499,7 +431,7 @@ describe("document intake machine", { concurrent: false }, () => {
             current.matches({ vault: { watching: { configured: "idle" } } })
           );
           expect(documentIntakeStateOf(idle).isDragging).toBe(false);
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -535,7 +467,7 @@ describe("document intake machine", { concurrent: false }, () => {
 
           yield* send(actor, { type: "CLEAR_RESULTS" });
           yield* waitFor(actor, (current) => A.isReadonlyArrayEmpty(current.context.results));
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -549,7 +481,7 @@ describe("document intake machine", { concurrent: false }, () => {
             (current) => current.matches({ batches: "idle" }) && A.length(current.context.results) === 1
           );
           expect(done.context.results[0]?.kind).toBe("failure");
-        }, Effect.scoped)
+        })
       );
 
       it.effect(
@@ -564,8 +496,80 @@ describe("document intake machine", { concurrent: false }, () => {
           );
           expect(dragging.matches({ batches: "idle" })).toBe(true);
           expect(dragging.context.batchSequence).toBe(0);
-        }, Effect.scoped)
+        })
       );
     });
   });
+});
+
+// A retry test advances its own TestClock, so these run outside the shared layer
+// block with a Reactivity service of their own.
+describe("document intake configuration retry", () => {
+  it.effect(
+    "retries a failed configuration read on a doubling backoff",
+    Effect.fnUntraced(function* () {
+      const attempts = yield* Ref.make(0);
+      const actor = yield* startIntakeIsolated(2000)(
+        intakeClient({
+          GetWorkspaceVault: () =>
+            Effect.flatMap(
+              Ref.updateAndGet(attempts, (count) => count + 1),
+              (count) =>
+                count < 3
+                  ? Effect.fail(WorkspaceVaultActionError.new("Vault store unavailable."))
+                  : Effect.succeed(configuredVault)
+            ),
+        })
+      );
+      const failed = yield* waitFor(actor, (current) => current.matches({ vault: "loadFailed" }));
+      expect(vaultStatusOf(failed)).toBe("unavailable");
+      expect(failed.context.configAttempt).toBe(0);
+
+      // First retry after the base delay.
+      yield* TestClock.adjust("2 seconds");
+      yield* waitFor(
+        actor,
+        (current) => current.matches({ vault: "loadFailed" }) && current.context.configAttempt === 1
+      );
+      expect(yield* Ref.get(attempts)).toBe(2);
+
+      // The second delay doubled: two more seconds are not enough.
+      yield* TestClock.adjust("2 seconds");
+      expect(yield* Ref.get(attempts)).toBe(2);
+      expect(actor.getSnapshot().matches({ vault: "loadFailed" })).toBe(true);
+
+      yield* TestClock.adjust("2 seconds");
+      const recovered = yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
+      expect(yield* Ref.get(attempts)).toBe(3);
+      expect(recovered.context.configAttempt).toBe(0);
+    })
+  );
+
+  it.effect(
+    "caps the retry delay at thirty seconds",
+    Effect.fnUntraced(function* () {
+      const attempts = yield* Ref.make(0);
+      const actor = yield* startIntakeIsolated(20_000)(
+        intakeClient({
+          GetWorkspaceVault: () =>
+            Effect.flatMap(
+              Ref.updateAndGet(attempts, (count) => count + 1),
+              (count) =>
+                count < 3
+                  ? Effect.fail(WorkspaceVaultActionError.new("Vault store unavailable."))
+                  : Effect.succeed(configuredVault)
+            ),
+        })
+      );
+      yield* waitFor(actor, (current) => current.matches({ vault: "loadFailed" }));
+      yield* TestClock.adjust("20 seconds");
+      yield* waitFor(
+        actor,
+        (current) => current.matches({ vault: "loadFailed" }) && current.context.configAttempt === 1
+      );
+      // Doubling would wait forty seconds; the cap is thirty.
+      yield* TestClock.adjust("30 seconds");
+      yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
+    })
+  );
 });

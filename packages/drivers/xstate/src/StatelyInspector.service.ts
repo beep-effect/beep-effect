@@ -13,29 +13,22 @@ import * as P from "effect/Predicate";
 import { StatelyInspectorConfig, StatelyInspectorConfigFromEnv } from "./StatelyInspector.config.ts";
 import { StatelyInspectorError } from "./Xstate.errors.ts";
 import type { CreateInspectorOptions, Inspector } from "@statelyai/sdk";
+import type { EffectActor } from "@xstate/effect";
 import type { ConfigError } from "effect/Config";
 import type * as Scope from "effect/Scope";
-import type { AnyEventObject, InspectionEvent, Snapshot, Subscription } from "xstate";
+import type { AnyActorLogic, AnyEventObject, InspectionEvent, Snapshot } from "xstate";
 
 const $I = $XstateId.create("StatelyInspector.service");
 
 /**
- * The slice of an actor handle the inspector bridge needs: `EffectActor.inspect`
- * and the matching method on xstate's own actors.
+ * The slice of an `EffectActor` the inspector bridge reads: the root snapshot,
+ * the inspection event feed, the logic (machines expose their `config` for the
+ * visualizer) and the session id xstate assigned when the actor started.
  *
  * @category models
  * @since 0.0.0
  */
-export interface InspectableActor {
-  /** The current snapshot, sent as the root actor's initial state. */
-  readonly getSnapshot: () => Snapshot<unknown>;
-  /** Observes the inspection events of this actor and its children. */
-  readonly inspect: (observer: (event: InspectionEvent) => void) => Subscription;
-  /** The actor logic; machines expose their `config` for the visualizer. */
-  readonly logic: unknown;
-  /** Session id xstate assigned when the actor started. */
-  readonly sessionId: string | undefined;
-}
+export type InspectableActor = Pick<EffectActor<AnyActorLogic>, "getSnapshot" | "inspect" | "logic" | "sessionId">;
 
 /**
  * Factory for the SDK inspector, injectable for tests that supply a transport.

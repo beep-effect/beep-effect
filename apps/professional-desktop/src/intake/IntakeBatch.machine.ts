@@ -39,7 +39,7 @@ import {
 } from "./DocumentIntake.models.ts";
 import { logIntakeCause } from "./Intake.telemetry.ts";
 import type { EffectSourceArgs } from "@xstate/effect";
-import type { SnapshotFrom } from "xstate";
+import type { EmittedFrom } from "xstate";
 
 const intakeFailureMessage = failureMessageOr("Intake failed.");
 
@@ -209,9 +209,9 @@ export const intakeBatchMachine = setupEffect({
 });
 
 /**
- * Snapshot type of {@link intakeBatchMachine}.
+ * Event one {@link intakeBatchMachine} actor emits after each file settles.
  *
  * @category models
  * @since 0.0.0
  */
-export type IntakeBatchSnapshot = SnapshotFrom<typeof intakeBatchMachine>;
+export type IntakeBatchEmittedEvent = EmittedFrom<typeof intakeBatchMachine>;

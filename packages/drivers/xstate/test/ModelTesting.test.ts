@@ -94,7 +94,7 @@ describe("model-based testing of the release machine", () => {
 });
 
 describe("effectActorSut", () => {
-  it.live("the Effect-hosted interpreter agrees with the pure model", () =>
+  it.effect("the Effect-hosted interpreter agrees with the pure model", () =>
     Effect.promise(() =>
       propertyTest(counterMachine, {
         seed: 3,
@@ -114,6 +114,6 @@ describe("TestClock drives delayed transitions", () => {
       yield* TestClock.adjust("30 seconds");
       const snapshot = yield* waitFor(actor, (current) => current.matches("expired"), { timeout: "1 second" });
       expect(snapshot.status).toBe("done");
-    }).pipe(Effect.scoped, Effect.provideService(Deployments, deploymentsSucceeding))
+    }).pipe(Effect.provideService(Deployments, deploymentsSucceeding))
   );
 });

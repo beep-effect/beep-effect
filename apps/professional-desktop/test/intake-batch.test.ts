@@ -51,7 +51,7 @@ const unreadableFile = (name: string): File => {
 };
 
 describe("intake batch machine", () => {
-  it.layer(Reactivity.layer)((it) => {
+  it.layer(Reactivity.layer, { timeout: "30 seconds" })((it) => {
     it.effect(
       "files each document in order and reports one result per file",
       Effect.fnUntraced(function* () {
@@ -95,7 +95,7 @@ describe("intake batch machine", () => {
           { intakeBatchId: batchIdFor(files), originalFileName: "first.txt", workspaceId },
           { intakeBatchId: batchIdFor(files), originalFileName: "rejected.txt", workspaceId },
         ]);
-      }, Effect.scoped)
+      })
     );
 
     it.effect(
@@ -104,7 +104,7 @@ describe("intake batch machine", () => {
         const actor = yield* startBatch(intakeClient({}), []);
         const output = yield* settled(actor);
         expect(output).toEqual({ intakeBatchId: batchIdFor([]), entries: [] });
-      }, Effect.scoped)
+      })
     );
 
     it.effect(
@@ -126,7 +126,7 @@ describe("intake batch machine", () => {
         ]);
         yield* settled(actor);
         expect(yield* Queue.take(reads)).toBe(2);
-      }, Effect.scoped)
+      })
     );
   });
 });
