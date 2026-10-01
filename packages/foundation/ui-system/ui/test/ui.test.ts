@@ -54,6 +54,22 @@ describe("@beep/ui", () => {
     ]);
   });
 
+  it("renders series colors into the server markup as container custom properties", () => {
+    const markup = renderToStaticMarkup(
+      createElement(ChartContainer, {
+        config: {
+          revenue: { label: "Revenue", color: "var(--chart-1)" },
+          expenses: { label: "Expenses", theme: { light: "var(--chart-2)", dark: "var(--chart-3)" } },
+        },
+        style: { minHeight: 120 },
+        children: createElement(ChartTooltipContent, { active: false }),
+      })
+    );
+    expect(markup).toContain("--color-revenue:var(--chart-1)");
+    expect(markup).toContain("--color-expenses:light-dark(var(--chart-2), var(--chart-3))");
+    expect(markup).toContain("min-height:120px");
+  });
+
   it("renders the chart container without a runtime <style> element", () => {
     const markup = renderChartTooltip();
     expect(markup).not.toContain("<style");

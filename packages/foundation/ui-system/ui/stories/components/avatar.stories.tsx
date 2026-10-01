@@ -7,8 +7,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
  * compound component: compose `AvatarImage` and `AvatarFallback` inside an `Avatar`
  * root. The image is loaded out of band and only swaps in once it resolves
  * successfully; until then (or on error) the `AvatarFallback` — typically the user's
- * initials — is shown. The root is a `size-10` rounded-full `span`; override `className`
- * to resize or reshape it.
+ * initials — is shown. The root is a `size-10` rounded-full `span`; resize it with the
+ * `size` prop and reshape it with the `shape` prop. `className` is for layout only
+ * (margin, placement): the design-system lint reports appearance classes on components.
  *
  * Imported from `@beep/ui/components/avatar`.
  */
@@ -17,9 +18,23 @@ const meta = {
   component: Avatar,
   tags: ["autodocs"],
   argTypes: {
+    size: {
+      control: "select",
+      options: ["sm", "default", "lg"],
+      description:
+        "Avatar diameter: `sm` (2rem), `default` (2.5rem) or `lg` (3.5rem). Scales the fallback text with it.",
+      table: { defaultValue: { summary: "default" } },
+    },
+    shape: {
+      control: "select",
+      options: ["circle", "rounded"],
+      description: "`circle` or `rounded` (a rounded square) for the root, the image and the fallback.",
+      table: { defaultValue: { summary: "circle" } },
+    },
     className: {
       control: "text",
-      description: "Additional classes merged onto the root container (e.g. size or shape overrides).",
+      description:
+        "Layout classes merged onto the root container (margin, placement). Size and shape come from the props.",
     },
     children: {
       control: false,

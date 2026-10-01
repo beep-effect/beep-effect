@@ -7,7 +7,7 @@
 "use client";
 
 import { cn } from "@beep/ui/lib/utils";
-import { A, O, P, Str, Struct } from "@beep/utils";
+import { A, O, P, R, Str, Struct } from "@beep/utils";
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 import { requireReactContext } from "../lib/react-invariant.ts";
@@ -100,6 +100,7 @@ function ChartContainer({
   className,
   children,
   config,
+  style,
   initialDimension = INITIAL_DIMENSION,
   ...props
 }: React.ComponentProps<"div"> & {
@@ -112,27 +113,14 @@ function ChartContainer({
 }) {
   const uniqueId = React.useId();
   const chartId = `chart-${id ?? Str.replace(/:/g, "")(uniqueId)}`;
-  const colorProperties = chartColorProperties(config);
-  const colorPropertiesKey = A.join(
-    A.map(colorProperties, ([name, value]) => `${name}:${value}`),
-    ";"
-  );
-  // The series colors are CSS custom properties on this container, set through the CSSOM
-  // because their names come from the config keys. No stylesheet is generated at runtime.
-  // Keyed on the serialized properties so an inline config object does not re-apply them every render.
-  const applyColorProperties = React.useCallback(
-    (node: HTMLDivElement | null) => {
-      if (node === null) return;
-      A.forEach(colorProperties, ([name, value]) => node.style.setProperty(name, value));
-      return () => A.forEach(colorProperties, ([name]) => node.style.removeProperty(name));
-    },
-    [colorPropertiesKey]
-  );
+  // The series colors are custom properties named after the config keys, so they cannot be a
+  // literal style object. They ride on the container's props instead: present in the server
+  // markup, and diffed by React when the config changes. No stylesheet is generated at runtime.
+  const surfaceProps = chartSurfaceProps(config, style);
 
   return (
     <ChartContext.Provider value={{ config }}>
       <div
-        ref={applyColorProperties}
         data-slot="chart"
         data-chart={chartId}
         className={cn(
@@ -140,6 +128,7 @@ function ChartContainer({
           className
         )}
         {...props}
+        {...surfaceProps}
       >
         <RechartsPrimitive.ResponsiveContainer initialDimension={initialDimension}>
           {children}
@@ -190,6 +179,14 @@ const chartColorProperties = (config: ChartConfig): ReadonlyArray<readonly [stri
     }
     return itemConfig.color === undefined ? [] : [[`--color-${key}`, itemConfig.color]];
   });
+
+// The container's `style` prop: the series color properties first, then the caller's own style.
+const chartSurfaceProps = (
+  config: ChartConfig,
+  style: React.CSSProperties | undefined
+): { readonly style: React.CSSProperties } => ({
+  style: { ...R.fromEntries(chartColorProperties(config)), ...style },
+});
 
 /**
  * Recharts tooltip primitive paired with {@link ChartTooltipContent}.

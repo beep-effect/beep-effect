@@ -55,16 +55,27 @@ const buttonVariants = cva(
         "icon-sm": "size-7 rounded-control in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
       },
+      disabledTone: {
+        fade: "",
+        muted: "disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      disabledTone: "fade",
     },
   }
 );
 
 /**
  * Base UI button with shared size and variant styling.
+ *
+ * **Details**
+ *
+ * `disabledTone` picks how a disabled button reads, in step with
+ * `@beep/ui/components/button`. `"fade"` (the default) dims the button's own variant to
+ * half opacity; `"muted"` swaps it for a full-opacity muted chip.
  *
  * **Example** (Render submit Save button)
  *
@@ -83,9 +94,16 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  disabledTone = "fade",
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
-  return <ButtonPrimitive data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />;
+  return (
+    <ButtonPrimitive
+      data-slot="button"
+      className={cn(buttonVariants({ variant, size, disabledTone, className }))}
+      {...props}
+    />
+  );
 }
 
 /**
