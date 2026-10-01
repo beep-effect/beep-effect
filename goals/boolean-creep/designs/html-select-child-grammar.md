@@ -39,7 +39,7 @@ Keep the private LiteralKit unannotated when using its helpers directly. If loca
 
 # Migration inventory
 
-- Html.conformance.ts14: add LiteralKit to the existing @beep/schema import. Coordinate this shared import with the description-list and datalist owners.
+- Html.conformance.ts12-25: add a dedicated LiteralKit import from @beep/schema. Coordinate this import with the description-list and datalist owners.
 - Html.conformance.ts1732-1733: place the named private literal near the grammar owners; retain existing regexes and all neighboring predicates.
 - Html.conformance.ts1922-1933: replace the pair and OR with the derived literal and exhaustive literal match.
 - Html.conformance.ts1743-1768: preserve element/sequence projection and issue closure exactly.
