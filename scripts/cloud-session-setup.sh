@@ -53,11 +53,17 @@ if [ "$(command -v bun 2>/dev/null || true)" = "${HOME}/.bun/bin/bun" ]; then
 fi
 
 # Download URL -> file, verifying the archive digest. Returns 1 when the host
-# is unreachable, denied, or stalls (bounded so a hung transfer still reaches
-# the fallback route), 2 on a digest mismatch (a hard failure).
+# is unreachable or denied, 2 on a digest mismatch (a hard failure), 4 when
+# the transfer timed out (bounded so a hung transfer still reaches the
+# fallback route; a timeout is reported as slow, never as a denial).
 fetch_verified() {
-  local url="$1" out="$2" expected="$3" actual
-  curl -fsSL --connect-timeout 20 --max-time 300 -o "$out" "$url" || return 1
+  local url="$1" out="$2" expected="$3" actual rc=0
+  curl -fsSL --connect-timeout 20 --max-time 300 -o "$out" "$url" || rc=$?
+  if [ "$rc" -eq 28 ]; then
+    log "download of ${url} timed out (20s connect / 300s total); this is a slow transfer, not a denied host"
+    return 4
+  fi
+  [ "$rc" -eq 0 ] || return 1
   actual="$(sha256sum "$out" | cut -d' ' -f1)"
   if [ "$actual" != "$expected" ]; then
     log "digest mismatch for ${url}: expected ${expected}, got ${actual}"
@@ -119,9 +125,17 @@ if [ "$have" != "$want" ]; then
   else
     rc=$?
     [ "$rc" -eq 2 ] && exit 1
-    log "github.com release download denied; trying the npm route"
+    bun_timed_out=false
+    [ "$rc" -eq 4 ] && bun_timed_out=true
+    if $bun_timed_out; then
+      log "github.com release download timed out; trying the npm route"
+    else
+      log "github.com release download denied; trying the npm route"
+    fi
     if command -v npm >/dev/null 2>&1 && npm install --prefix "${work}/npm" --no-audit --no-fund "bun@${want}" >/dev/null 2>&1; then
       new_bun="$(readlink -f "${work}/npm/node_modules/.bin/bun")"
+    elif $bun_timed_out; then
+      log "bun ${want} not provisioned: the github.com download timed out (slow transfer, not a denial) and the npm route failed; rerun, or check proxy throughput"; exit 1
     else
       fail78 "github.com and registry.npmjs.org" "allow github.com release downloads or registry.npmjs.org so bun ${want} can be provisioned"
     fi
@@ -129,13 +143,19 @@ if [ "$have" != "$want" ]; then
   cp "$new_bun" "${BIN_DIR}/bun.new" && chmod 755 "${BIN_DIR}/bun.new" && mv -f "${BIN_DIR}/bun.new" "${BIN_DIR}/bun"
   [ -e "${BIN_DIR}/bunx" ] || ln -s bun "${BIN_DIR}/bunx"
   hash -r
+  # The freshly provisioned binary must win for the rest of this script even
+  # when a stale bun directory sits earlier on PATH. ORIG_PATH decides the
+  # handoff message, so this does not change what the caller is told.
+  export PATH="${BIN_DIR}:${PATH}"
+elif [ -x "${BIN_DIR}/bun" ] && [ "$("${BIN_DIR}/bun" --version 2>/dev/null || true)" != "$want" ]; then
+  # The caller's bun already matches the pin (a mise-managed one, say) but an
+  # earlier setup left an older bun in the cache directory. Remove it so the
+  # env file cannot put it ahead of the correct one; PATH is left alone.
+  log "removing stale ${BIN_DIR}/bun ($("${BIN_DIR}/bun" --version 2>/dev/null || echo unreadable)) so it cannot shadow the caller's pinned bun"
+  rm -f "${BIN_DIR}/bun" "${BIN_DIR}/bunx"
 fi
-# Always put BIN_DIR first for the rest of this script: a stale bun directory
-# earlier on PATH would otherwise shadow the provisioned binary even when
-# BIN_DIR is already present further down. ORIG_PATH decides the handoff.
-export PATH="${BIN_DIR}:${PATH}"
 [ "$(bun --version)" = "$want" ] || { log "bun is still $(bun --version) after provisioning"; exit 1; }
-log "bun $(bun --version) (pinned ${want}) in ${BIN_DIR}"
+log "bun $(bun --version) (pinned ${want}) at $(command -v bun)"
 
 # 2. Commit-gate tools lefthook needs (F15), each verified against its pinned
 #    archive digest. shellcheck is verification-only and never blocks setup.
@@ -162,6 +182,7 @@ tool_failed() {
   case "$2" in
     2) exit 1 ;;
     3) log "could not extract the ${1} archive into ${BIN_DIR} (disk space or permissions)"; exit 1 ;;
+    4) log "${1} not provisioned: the download timed out (slow transfer, not a denial); rerun, or check proxy throughput"; exit 1 ;;
     *) fail78 "github.com (${1})" "allow github.com release downloads; lefthook's pre-commit gate needs ${1}" ;;
   esac
 }
@@ -171,7 +192,10 @@ install_tool typos "https://github.com/crate-ci/typos/releases/download/v${TYPOS
   || tool_failed typos $?
 install_tool shellcheck "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" "$SHELLCHECK_SHA256" \
   || warn "shellcheck not provisioned (verification-only; setup continues)"
-log "gitleaks $(gitleaks version); typos $(typos --version | cut -d' ' -f2); shellcheck $(command -v shellcheck >/dev/null 2>&1 && shellcheck --version | sed -n 's/^version: //p' || echo missing)"
+# Report from BIN_DIR by path: it is not necessarily on this script's PATH.
+shellcheck_version="missing"
+if [ -x "${BIN_DIR}/shellcheck" ]; then shellcheck_version="$("${BIN_DIR}/shellcheck" --version | sed -n 's/^version: //p')"; fi
+log "gitleaks $("${BIN_DIR}/gitleaks" version); typos $("${BIN_DIR}/typos" --version | cut -d' ' -f2); shellcheck ${shellcheck_version}"
 
 # 3. Preflight the Effect snapshot registry (D2). A denial is a network-policy error.
 pkg_code="$(probe "$probe_pkg")"
