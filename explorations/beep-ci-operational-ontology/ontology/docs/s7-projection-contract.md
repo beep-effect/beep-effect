@@ -260,3 +260,45 @@ and episode binding in memory; they do not certify vocabulary ratification.
 - No live-journal tailing daemon — v1 projects from explicit inputs; the Tx
   wrapper holds state in-process only.
 - No KPI ETL (separate incubation lane per the incubation-home decision).
+
+## 7. 2026-10-01 amendment — deployed deltas since the baseline
+
+Authority: DECISIONS.md, "2026-10-01 — graduation sitting" (Rulings 9 and 11).
+Sections 1–6 record the 2026-08-30 baseline; emission stays `s7-emission/v2`.
+
+- **Baseline reference.** `ontology-s7-projection` (§1) was the lane branch and
+  is not a ref. The resolvable baseline is `1cdce452ae` (#936/#940, 2026-08-31):
+  TAXONOMY `term_count` 38 and the 79-event golden journal. HEAD TAXONOMY has 52
+  terms (#1089).
+- **Journal versions.** The lab decodes the deployed 9-member admission-journal
+  union (v1–v3). Replay folds v2 `admission-lease-evicted` rows as releases, so
+  §3.1's TokenLedgerState is reconstructed from admitted, released and
+  lease-evicted deltas. v3 `admission-enqueued` and `admission-withdrawn` are
+  decoded and folded as no-ops: queue-entry censorship is closed at the data
+  level for v3 writers and stays recorded, not modeled, in the lab. The replay
+  corpus is still the v1 golden journal; the lab test suite runs 19 tests at
+  `04993ae26a`.
+- **§3.4 deployed skip set.** Since #929 the deployed scheduler skips on
+  same-checkout lease, legacy same-origin drain, fresh origin stamp, or
+  saturated review-fix class cap, and hosts below the memory envelope keep an
+  exclusive fallback origin lease (`scope.md` 2026-10-01 amendment). Admission
+  v1 models none of the checkout or origin terms; v3 rows carry `checkoutRoot`.
+- **Evidence.** `bun run evidence:s7 --check` reproduces PASS 41/41 on journal
+  `cf30b993…`. `research/s7-replay-evidence.md` is the 2026-08-31 render; the
+  generator prose has folded v2 lease-eviction rows since #964. The bare
+  `evidence:s7` script rewrites that frozen file; re-rendering it needs a
+  DECISIONS entry.
+- **Seam (§3.2, §6).** Ruling 11 authorizes widening the S7-v2 seam as goal
+  scope, design first: the amendment of §3.2 and §6 and the `PlanEpisodeInput`
+  widening are the first deliverable of workstream W6 in goal phase P2
+  (`goals/ciops-ontology-pipeline`) and land before any `planEpisode` body.
+  `PlanEpisodeInput` (today `{ episodeId }`) widens to carry the gate-order
+  handoff path and sha256 (`gate-order-handoff/v1`,
+  `goals/time-to-certainty/research/gate-order-handoff.json`), and the success
+  type becomes a lane-step proposal. The lab decodes only the handoff subset it
+  reads, pinned by sha256 and never importing repo-cli. Lane steps stay
+  provisional in `ciops-prov:` until an auditor run ratifies a lane-scheduling
+  relation; `schedulesWorkUnit` stays unratified until run 4
+  (`research/auditor-run4-intake.md` Queue E item 2). Until that amendment
+  lands, §3.2 and §6 bind as written and `planEpisode` stays the
+  `PlannerNotImplementedError` stub.

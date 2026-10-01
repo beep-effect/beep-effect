@@ -139,3 +139,22 @@ layer above build graphs is unoccupied ground, and the packet's levers-as-projec
 thesis has no named competitor as of 2026-08-27. R5 adds a fourth angle from the
 agentic-AI side: the nearest ESWC-published neighbor explicitly defers runtime/dynamic
 semantics to future work.
+
+## 2026-10-01 — state at graduation audit
+
+- Counts at `04993ae26a`: 26 CQs (18 Must / 7 Should / 1 Could, 3 recorded Won'ts); 25
+  executing tests + 20 must-fail fixtures; pre-glossary 42 classes / 70 properties / 4
+  individuals; TAXONOMY 52 terms (15 flagged); S6 registry 87 predicates, 2/25 CQs fully
+  ratified; validators 0 blockers / 0 warns. R1–R5 (with R4-deep and R4-firecrawl) all landed
+  on 2026-08-27 and are distilled above; the "Lane conclusions" header's "R4 in flight" is its
+  morning state.
+- KPI state. No reading under `research/kpi-measurement-rules.md` v1 exists yet (see its
+  v1.1 amendment). The nearest measured proxy is time-to-certainty M1 (red-to-green per
+  branch, a different episode definition): P0 baseline P50 43.3 min / P95 3.95 h (n=328,
+  its `research/baseline.md`, ruling 8); at close (round 25, 2026-09-28) the post-P0 P50 is
+  1.02 h. That is a censored lower bound: 58 closed episodes against 129 right-censored
+  streaks (`goals/time-to-certainty/research/economics-close.md`). The 2026-08-27 read
+  (41.3 min / 3.1 h) stays this packet's S0 baseline. The two series are mapped, never
+  equated.
+- New veins since S0: the admission transition journal (v1–v3), `journal-compacted` receipts,
+  and the owning-clone proof ledger (issuance only). Capability inventory: `research/SOURCES.md` §4.

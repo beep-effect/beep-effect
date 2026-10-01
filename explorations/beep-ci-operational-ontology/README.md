@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `research`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -21,168 +21,46 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
-Auditor run 3 is closed and projected; run-4 pre-work is in flight. A September 16
-security closeout refresh moved only stale repository citation line numbers in
-the Stage A/B manifests; capture provenance and payload bytes remain unchanged.
-The run-4 questions below remain open:
+None in this packet. It graduated on 2026-10-01 into
+[`goals/ciops-ontology-pipeline`](../../goals/ciops-ontology-pipeline/README.md) at the
+graduation sitting ([DECISIONS.md](./DECISIONS.md), 2026-10-01, Rulings 1–11), which chose
+one goal with a stated-verdict done bar (graduation Ruling 3). Execution lives in the goal.
+The goal opens at P0 Inheritance (MAP W1): its `research/SOURCES.md` carries this packet's
+ledger forward as primary, and a reproducible lever query backfills the change-event ledger
+under the graduation Ruling 6 admission criterion, after the `iv-929` and `iv-1006` rows the
+graduation PR wrote. This packet stays as provenance and as the goal's declared ontology
+working tree (`ontology/**`, `research/scripts/**`; graduation Ruling 7).
 
-1. **PR #1092 is merged** (`e16e7a9297`): auditor skill v15 — required per-seat
-   `effort` provenance on the run-manifest contract with its own self-test family
-   (158 families), and the kind-level denotation-grain sentence with its
-   empty-candidate clause. Lane brief and report:
-   [research/run4-lanes/](./research/run4-lanes/).
-2. **Run-4 intake docket merged in PR #1095** (`9292600368`) as a pre-pin draft in
-   [research/auditor-run4-intake.md](./research/auditor-run4-intake.md):
-   the prior-run chain (`b9c140ccd31b`, 284 rows), Queue A (15 flagged TAXONOMY
-   records), Queue B (rat-047..052), Queue C (all 138 unresolved rows exactly once:
-   84 live in three buckets, 54 carried by the fifteen sitting-2 clusters), Queue D
-   (the eight withdrawals and a dated organic eviction census), Queue E (CQ-019/020
-   leftovers), Queue F (S6 POLICY `corpus_tree`/`corpus_base`), and the engine
-   follow-ups queued for a later pin (NDJSON configuration support, historical
-   archive-path handling, index rows referencing more than one proposal per
-   observation). The 2026-09-12 verification restored omitted evidence duties and
-   recorded a dated census; its corrections and the three routing decisions (J01
-   rebucketed to C(iii), J02 reworded as independent instrumentation requirements, J03
-   left to the run-4 sitting) landed with
-   [the verification report](./research/run4-lanes/run4-docket-verification-report.md).
-   Every count is re-verified at the run-4 pin.
-3. **Run 4 proper** waits on time-to-certainty C4 (the proof-ledger writer): the
-   Ruling-17 issuance and custody flags (rat-047/048/051/052) cannot discharge before
-   it. Choreography is run 3's: pin commit → evidence tag → frozen run in a detached
-   worktree at the tag → seats → gate → sittings → one PR, with gate fixes pushed the
-   moment they appear. C3.3, C3.4, C3.5, C3.6, C4a, C4 and C5 are all unchecked
-   in `goals/time-to-certainty/PLAN.md` at this verification.
+The gated candidates in [MAP.md](./MAP.md) are re-entry points, not goals; each gate's
+firing condition is in MAP.md:
 
-The provisional `ciops-prov:` namespace keeps open closure and exclusion from
-negation/ratified typing. Sitting 3 presented no separate namespace proposal;
-S8 IRI design remains deferred.
+- `ciops-iri-formalization`: S8 (IRI scheme, OWL 2 RL + SHACL formalization, rules
+  compilation), DEFERRED by graduation Ruling 2. Until it fires, `ciops-prov:` stays
+  provisional with open closure and exclusion from negation and ratified typing.
+- `ciops-auditor-run5`: the next auditor turn after run 4, carrying the run-4 index as its
+  prior chain.
+- `ciops-yeet-projection`: promotion of proven projection pieces into a slice package that
+  repo-cli or yeet consumes.
+  Until then `apps/labs/ciops` stays `active`, owned by the goal (graduation Ruling 5).
 
-Routing for token-heavy Codex work stays `gpt-6-astra` at `medium`
-([decision update](./DECISIONS.md)); auditor seats keep the packet's 2026-08-27
-directive (`max`). Completed stages, kept for the trail:
+Standing re-entry rule: when a MAP gate fires, reopen this packet at `decompose`; a fired
+gate never spawns a goal directly.
 
-**§4b NORMALIZATION GATE IS COMPLETE AND RATIFIED** (2026-08-29; PR #889). The
-`ontology-foundational-auditor` skill ran as written over the S4 harvest: 1,112
-observations, 692 hypotheses, 235 analysis pairs + 235 blinded pairs, 232 proposals,
-five adversarial rounds, mechanical `--gate` PASSED, **31 terms ratified** by the
-steward (rat-001..031), 216 conceded, 57.75% unresolved-fraction waiver ratified. The
-run is rotated and replayable from
-[`ontology/extraction/s4/beep-ci-ops/runs/`](./ontology/extraction/s4/beep-ci-ops/runs/)
-(manifest, index, observations, the vendored judging engine, replay notes). **S5 IS COMPLETE AND RATIFIED** (2026-08-30): the binding contract is
-[`ontology/docs/s5-taxonomy-contract.md`](./ontology/docs/s5-taxonomy-contract.md),
-sittings 1–4 are scribed in DECISIONS.md (337 candidates, 104 LEDGER entries, the
-docket policy, and the seat-round rulings), the ratified 38-term
-`extraction/s5/TAXONOMY.yaml` passes the `--s5` gate at 0 blockers / 0 warns, and
-`apply_s5_dispositions.py` projected every ruling onto the generated S4 surfaces —
-nothing `candidate`/`open` remains.
-**S6 IS COMPLETE AND RATIFIED** (2026-08-30): the binding contract is
-[`ontology/docs/s6-abox-contract.md`](./ontology/docs/s6-abox-contract.md), the two
-S6 sittings are scribed in DECISIONS.md, and
-[`ontology/extraction/s6/`](./ontology/extraction/s6/) carries the ratified A-Box
-(policy individual + 7 parameters, 4 token weights, 2 priority enumerations), the
-83-predicate registry (CQ coverage 1/25 — the ratified-vs-CQ vocabulary gap is
-machine-visible run-2 input), the provisional 138-package census graph, the pinned
-golden snapshot (79 redacted admission-journal events), SHACL closure+typing shapes,
-and the `--s6` gate at 0 blockers / 0 warns. The deferral is discharged
-(`apply_s6_dispositions.py`): historical rulings intact, S4 statuses accepted.
-**AUDITOR RUN 2 IS COMPLETE AND RATIFIED** (2026-09-03, `orun-2026-09-03T02:46:18Z`,
-gate `ARTIFACTS VALID — GATE PASSED`): 21 ratifications (`rat-032..rat-052` — 15
-clean accepts + 6 flagged reuse mappings), all 149 carried run-1 rows adjudicated
-(146 retired, 3 kept with named corpus requirements), 24 proposals withdrawn or
-deferred with named run-3 evidence, unresolved-fraction waiver (56%) steward-ratified.
-The run report is
-[`work-run2/impl-report.md`](./ontology/extraction/s4/beep-ci-ops/work-run2/impl-report.md);
-sittings 1–3 are scribed in DECISIONS.md.
-**THE CQ-020 AMENDMENT IS APPLIED** (2026-09-03, post-merge as sanctioned): the ordering
-question now asks for the SeatRequest sequence under its governing
-`AdmissionProjectionSpecification`, with the step's literal `hasScopeTag` (a distinct
-data property — the no-punning ruling keeps `hasScope` an object property), and the S6
-predicate registry regenerated to track it.
-**AUDITOR RUN 3 IS COMPLETE AND RATIFIED** (2026-09-10, `orun-2026-09-10T02:10:52Z`,
-gate `ARTIFACTS VALID — GATE PASSED` at pin `1c7cd98289`, PR #1078): 18 flagged
-ratifications `rat-053..rat-070` (the thirteen-member ordering cluster plus five
-recorded-value reuse mappings), 8 withdrawals with named run-4 evidence, the 68 carried
-run-2 rows adjudicated (14 retired, 54 re-parked), unresolved 84/198 = 42%, no waiver.
-The S5 gate amendment and the run-2/run-3 projection landed in PR #1089 (TAXONOMY
-38 → 52 terms carrying `ratification`/`flags`, the superset S6 tripwire,
-`later_ratifications` on DISPOSITIONS rows). Run report:
-[`work-run3/impl-report.md`](./ontology/extraction/s4/beep-ci-ops/work-run3/impl-report.md).
-Stage A and Stage B capture history follows.
-Stage A PINNED 2026-09-08 in `run3-fleet/` and `run3-checkout-identity/`:
-existing admission journals, fleet attempts/verdicts, live granted/queued work,
-and one timestamped checkout inventory. The latest Ruling 22 fleet refresh covers 97 checkouts; the
-inventory binds 107 after the review-fix refresh, including registered worktrees outside the required run-file
-globs. The failure-signature occurrence rider is present; cache-plan execution
-resolution and proof-ledger issuance rows are absent. Stage B is now pinned in
-`run3b-fleet/` and `run3b-synthetic/`; proof-ledger issuance rows are re-parked to
-run 4 under Ruling 17. S7 emission v2 supplies the ordering-cluster evidence;
-S8 stays deferred. Stage B proof is in [the report](./research/run3-lanes/stage-b-report.md).
-The review-fix lane has replaced both pins with encoded output paths, stricter
-receipt checks, and runtime redaction; Fable owns publication and PR replies.
-Current fleet and synthetic proof is in
-[the #1037 reconciliation report](./research/run3-lanes/reconcile-1037-report.md).
-The producer spec is tree-resident after #1033; #1032 and #1037 are merged into the follow-up.
-Checkout-identity proof remains in [the prior review-fix report](./research/run3-lanes/stage-a-review-fixes-report.md).
-Historical capture details and the original lane handoff are in
-[the Stage A report](./research/run3-lanes/stage-a-report.md); the orchestrator
-committed and published the pin (the implementation lane's sandbox could not
-write the linked worktree's Git metadata — receipt in `research/OPPORTUNITIES.md`).
-Do NOT rerun §4b or run 2.
-
-**The 3-round pre-S4 review loop is COMPLETE** (2026-08-27). Round 3 (seat H codex
-ultra delta-attack, seat I codex max disposition audit, seat J grok xhigh carrier
-fidelity) landed 26 blockers / 18 warns — including two structural catches: the
-repo's `**/docs` gitignore had silently kept the ENTIRE `ontology/docs/` authority
-surface out of every commit (I-01, fixed with a negation rule), and CQ-009 audited a
-checkout exclusion the deployed scheduler never had (origin-keyed; H-04/J-B3). All
-adopted fixes are landed and executable: 26 CQs (18 Must / 7 Should / 1 Could), 25
-executing tests + 19 must-fail fixtures + binding-contract machinery, validator 0
-blockers / 1 aggregated S5-visibility warn, real `--s4-lane` mode. Full map:
-[round3-triage.md](./research/reviews/pre-s4/round3-triage.md).
-
-**S4 EXTRACTION IS COMPLETE** (same day): all seven lanes ran at codex max under the
-frozen contract (corpus `469136d2a8`), every output passed the `--s4-lane` validator
-independently, and the §5 merge landed — **337 candidates / 1,038 facts / 104 ledger
-entries** at [`ontology/extraction/s4/`](./ontology/extraction/s4/)
-(`CANDIDATES.yaml` / `FACTS.yaml` / `LEDGER.yaml` is the S4→S5 queue). The §4b
-normalization gate that followed is recorded above; the mirror-resync precondition it
-named is moot now that the judging engine is vendored with the archived run.
-
-Superseded context below (kept for the trail):
-
-Rounds 1 AND 2 of the pre-S4 quality loop are fixed and recorded
-([round2-triage](./research/reviews/pre-s4/round2-triage.md)); the suite is now
-EXECUTABLY guarded (`regen_cq_artifacts` → `validate_packet` → `run_cq_suite`: 18 seed
-tests + 8 must-fail fixtures + non-vacuity antecedents, all green). A second external
-partner review (foundational-ontology audit, UFO/OntoClean lens —
-[full text](./research/reviews/pre-s4/round2-partner-review2.md), disposition in
-triage addendum 2) reframed S4 as candidate-bootstrap + ontological NORMALIZATION and
-added frontier question 6 (terminology renames, admission-law semantic-support
-category, P95≠charge≠limit, closure contract, starvation invariant). Round 3 — the
-cap's last — is RESERVED for the post-grill delta plus a disposition-map audit.
-Blocking everything: the grill frontier (now 6 questions, mirrored in manifest).
-
-The pre-S4 quality loop (round 1 of 3) is fixed and recorded
-([triage](./research/reviews/pre-s4/round1-triage.md), incl. the external
-partner-review addendum); the **round-1 grill frontier is OPEN, awaiting operator
-rulings** (mirrored in manifest openQuestions): (1) scheduling-vocabulary Must CQs —
-now reshaped by verified reality drift: **PR #870 (merged 2026-08-27T19:52Z) deployed a
-weighted admission scheduler** whose LiteralKits (AdmissionWorkKind/AdmissionPriority)
-and ticket/lease schemas are the real carriers for SeatRequest/queue vocabulary, while
-DRR stays prospective design; (2) ScheduleProposal (schedule-as-A-Box; also unlocks the
-partner's stronger CQ-019B scope-narrowness form); (3) cache-posture + cost-charging
-Should CQs; (4) kpi-measurement-rules.md codification; (5) rebase/pin the corpus to
-≥ `debbbb51f7` before S4 (the branch predates #870). After rulings: apply → round 2
-delta panel (A/B/C changed surfaces, D re-attacks post-grill) → S4 under
-[`ontology/docs/s4-lane-contract.md`](./ontology/docs/s4-lane-contract.md).
+Routing for any future work here follows the repo pool doctrine (`AGENTS.md` "Volume
+pools", graduation Ruling 4). Completed-stage history is in the Trail below.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
-2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0).
-3. [`DECISIONS.md`](./DECISIONS.md) - grilling log (8 locked decisions + amendments, pre-seeded 2026-08-27).
-4. [`prose/2026-08-27-pre-packet-session.md`](./prose/2026-08-27-pre-packet-session.md) - distilled pre-packet session narrative.
-5. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
+2. [`BRIEF.md`](./BRIEF.md) - shaped pitch (stage 3).
+3. [`MAP.md`](./MAP.md) - goal decomposition, capability check, gated re-entry points (stage 4).
+4. [`DECISIONS.md`](./DECISIONS.md) - ruling log: 41 dated entries (2026-08-27 → 2026-10-01 graduation sitting).
+5. [`RESEARCH.md`](./RESEARCH.md) - S0/S3 grounding and the 2026-10-01 state at graduation audit.
+6. [`research/kpi-measurement-rules.md`](./research/kpi-measurement-rules.md) - the KPI ETL law (v1 + v1.1 amendment).
+7. [`ontology/docs/`](./ontology/docs/) - binding stage contracts (S4–S7), CQs, scope, ORSD.
+8. [`research/auditor-run4-intake.md`](./research/auditor-run4-intake.md) - run-4 pre-pin docket.
+9. [`../../apps/labs/ciops/`](../../apps/labs/ciops/) - `@beep/ciops`, the S7 projection lab.
+10. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0); [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
 
 ## The Pipeline (grilled v2)
 
@@ -192,7 +70,56 @@ parameterization → S6 A-Box ratification & predicates → S7 projection functi
 loop-closer) → S8 OWL 2 RL + SHACL formalization, rules compilation → S9 dogfood proof &
 graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
+> *2026-10-01 amendment (graduation sitting, Ruling 2).* S0–S7 v1 are complete. S7 is
+> `apps/labs/ciops`, bound by
+> [`ontology/docs/s7-projection-contract.md`](./ontology/docs/s7-projection-contract.md)
+> (2026-08-30), and auditor runs 1–3 are ratified. Graduation now follows S7 and hands
+> execution to [`goals/ciops-ontology-pipeline`](../../goals/ciops-ontology-pipeline/README.md):
+> the S7-v2 lane-DAG planner (`planEpisode` in
+> `apps/labs/ciops/src/projection/CiOpsProjection.ts` still fails with
+> `PlannerNotImplementedError`; its seam widening is goal scope, design first, per graduation
+> Ruling 11), auditor run 4 and the S9 dogfood statement are goal phases. S8 (OWL 2 RL +
+> SHACL formalization, rules compilation, IRI scheme) is **DEFERRED** to the gated MAP
+> candidate `ciops-iri-formalization`, and so are reasoning-stack's RL/rules-compilation leg,
+> the S5 "formal T-Box only at S8" clause and incubation-home's `packages/ontology` artifact
+> flow.
+
 ## Trail
+
+- 2026-10-01: Graduation audit (five lanes plus skeptic pass at main `04993ae26a`, 207
+  commits past the 2026-09-12 anchor), then two DECISIONS entries: the admission-journal
+  snapshot ruling and the graduation sitting (Rulings 1–11). The admission-journal
+  snapshot at `research/evidence/journal-snapshot-2026-10-01/` (MANIFEST.md and
+  SHA256SUMS.txt committed, payload gitignored, with a committed redacted projection;
+  695 rows with 46 withdrawals and 1 ticket eviction) keeps the docket's Queue D organic
+  evidence past the journal's 200-admission retention trim. Time-to-certainty C3.3–C3.6,
+  C4a, C4.1 (shadow
+  proof-ledger writer, 2026-09-21), C5, D1, D2, A3 and the A1 close re-run are checked; C4.2
+  waits on its ruling 80 and that packet is paused (2026-09-28). C4.1 satisfies the run-4
+  gate for the issuance and custody legs, and the realization and copy legs wait for C4.2
+  (Ruling 1); S8 DEFERRED to `ciops-iri-formalization` and pipeline v2 amended (Ruling 2);
+  one goal with a stated-verdict done bar (Ruling 3); every auditor seat on Opus 5.5 under
+  the 2026-09-24 pool doctrine (Ruling 4); `apps/labs/ciops` stays `active`, owned by the
+  goal (Ruling 5); iv-929 and iv-1006 written to the change-event ledger (Ruling 6); the
+  ontology tree stays in place (Ruling 7); CQ-009 errata now, re-scope at the run-4 pin
+  (Ruling 9); merged preview is a TierLocalFullProof sub-partition in KPI law v1.1
+  (Ruling 10); the S7-v2 seam widening is goal scope, design first (Ruling 11).
+  gate-order-handoff/v1 is now sha256 `a4d7d22e…` after the time-to-certainty #1321/#1322
+  ruling-77 pin move (seed values and 32-lane order unchanged; the 2026-09-25 line's
+  `c9619cee…` is correct as dated). `bun run evidence:s7 --check` reproduces PASS 41/41 on
+  journal `cf30b993…`; `research/s7-replay-evidence.md` is the 2026-08-31 render
+  (generator prose has folded v2 lease-eviction rows since #964) and is not re-rendered.
+  Run-3 corpus verify modes and the frozen corpus regression suite are red at HEAD on
+  post-pin citation drift (#1160's un-ruled line refresh was itself red at merge) and
+  #1168/#1239 schema drift. Run-3 pins are now verified by tree-pinned citation replay
+  (`research/scripts/verify_run3_citations.py`: pin-tag manifest bytes against each
+  manifest's recorded `corpus_tree`, reached through the capture evidence tag
+  `evidence/beep-ci-ops/orun-2026-09-10T02-10-52Z-capture` on `a9035c364e`), the
+  generators' current-tree check is advisory, and the suite is retired by ruling and left
+  byte-identical (Ruling 8).
+  HEAD counts: 87 predicates (2/25 CQs fully ratified), 26 CQs, 25 tests + 20 must-fail
+  fixtures, pre-glossary 42/70/4, TAXONOMY 52 terms; validators 0/0. BRIEF.md and MAP.md
+  added; graduated into `goals/ciops-ontology-pipeline`.
 
 - 2026-09-25: time-to-certainty D1 (rulings 76–79) hands the pre-push gate order as
   gate-order-handoff/v1 (sha256 c9619cee69e05a8e45555696292579864cbadcc965d2be4f4251a41182554c9b)

@@ -40,7 +40,7 @@ bun run beep codex security scan \
 ```
 
 Preflight invokes upstream dry-run without starting a scan. Standard scans use
-gpt-6-astra with medium reasoning and docs/security/threat-model.md. The adapter
+gpt-6.1-sol with medium reasoning and docs/security/threat-model.md. The adapter
 does not patch, publish, or create a PR. Cost is an estimate, not a hard cap;
 the local timeout bounds execution separately. Budgets must be positive and at
 most $100; timeout must be 1–120 minutes. Nonzero upstream results remain
