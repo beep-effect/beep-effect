@@ -190,7 +190,8 @@ const runNotifier = Effect.fnUntraced(function* (
   maxStage: SequenceBreakNotificationStage = "initial",
   originCwd = "",
   openUri = "",
-  originTerminal = ""
+  originTerminal = "",
+  openRelation = ""
 ) {
   const command = Match.value(originTerminal).pipe(
     Match.when("ghostty", () => ({
@@ -216,6 +217,7 @@ const runNotifier = Effect.fnUntraced(function* (
         originCwd,
         openUri,
         originTerminal,
+        openRelation,
       ],
     }))
   );
@@ -236,6 +238,7 @@ const runNotifier = Effect.fnUntraced(function* (
       BEEP_SEQUENCE_BREAK_NTFY_TOKEN: ntfyToken,
       BEEP_SEQUENCE_BREAK_REMINDER_SECONDS: "0",
       BEEP_SEQUENCE_BREAK_URGENT_SECONDS: "0",
+      BEEP_SEQUENCE_BREAK_CLOSE_WATCH_SECONDS: "0",
       BEEP_TEST_NOTIFIER: notifierPath,
       BEEP_TEST_SESSION: SESSION_ID,
       BEEP_TEST_TS: REQUEST_TS,
@@ -259,7 +262,12 @@ const runNotifier = Effect.fnUntraced(function* (
   return { exitCode, stderr, stdout };
 });
 
-const runWriter = Effect.fnUntraced(function* (store: NotifierStore, stdin: string, foreground?: boolean) {
+const runWriter = Effect.fnUntraced(function* (
+  store: NotifierStore,
+  stdin: string,
+  foreground?: boolean,
+  hostEnv: Readonly<Record<string, string>> = {}
+) {
   const handle = yield* ChildProcess.make(writerPath, [], {
     cwd: repoRoot,
     extendEnv: true,
@@ -278,7 +286,15 @@ const runWriter = Effect.fnUntraced(function* (store: NotifierStore, stdin: stri
       BEEP_SEQUENCE_BREAK_DESKTOP_ENABLED: "1",
       BEEP_SEQUENCE_BREAK_FOREGROUND: foreground === false ? "0" : "1",
       BEEP_SEQUENCE_BREAK_MAX_STAGE: "initial",
+      BEEP_SEQUENCE_BREAK_CLOSE_WATCH_SECONDS: "0",
       BEEP_SEQUENCE_BREAK_NTFY_TOPIC: "",
+      BEEP_SEQUENCE_BREAK_OPEN_URI: "",
+      CLAUDE_CODE_HOST_SESSION_ID: "",
+      CLAUDE_CODE_SESSION_ID: "",
+      CODEX_INTERNAL_ORIGINATOR_OVERRIDE: "",
+      CODEX_THREAD_ID: "",
+      TERM_PROGRAM: "",
+      ...hostEnv,
     },
     stdin: { stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true },
     stdout: "pipe",
@@ -656,6 +672,201 @@ esac
             expect(yield* fs.readFileString(`${store.stateHome}/desktop.txt`)).not.toContain("--action");
           })
       );
+    })
+  );
+
+  it.effect("labels a headless child's parent task route and opens only that task", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* Effect.forEach(
+        [
+          {
+            uri: "codex://threads/12345678-1234-1234-1234-123456789abc",
+            host: "Headless child of a ChatGPT Desktop task",
+          },
+          {
+            uri: "claude://code/continue?session=local_parent-session",
+            host: "Headless child of a Claude Desktop session",
+          },
+        ],
+        ({ host, uri }) =>
+          Effect.gen(function* () {
+            const store = yield* makeNotifierStore();
+            yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+            yield* fs.writeFileString(
+              `${store.fakeBin}/notify-send`,
+              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
+            );
+            yield* fs.writeFileString(
+              `${store.fakeBin}/xdg-open`,
+              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt"\n'
+            );
+            yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
+            expectSilentSuccess(yield* runNotifier(store, "", "", "initial", "/workspace/clone", uri, "", "parent"));
+            yield* waitForNotificationRows(store, 2);
+            const opened = yield* fs
+              .readFileString(`${store.stateHome}/opened.txt`)
+              .pipe(
+                Effect.retry(Schedule.recurs(200).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(10))))),
+                TestClock.withLive
+              );
+            expect(opened).toBe(`${uri}\n`);
+            const desktop = yield* fs.readFileString(`${store.stateHome}/desktop.txt`);
+            expect(desktop).toContain("--action=default=Open parent task");
+            expect(desktop).toContain(host);
+          })
+      );
+    })
+  );
+
+  it.effect("rejects malformed parent routes and unknown route relations", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* Effect.forEach(
+        [
+          { uri: "https://example.com", relation: "parent" },
+          { uri: "codex://threads/not-a-uuid", relation: "parent" },
+          { uri: "claude://code/continue?session=last", relation: "parent" },
+          { uri: "codex://threads/12345678-1234-1234-1234-123456789abc", relation: "sibling" },
+        ],
+        ({ relation, uri }) =>
+          Effect.gen(function* () {
+            const store = yield* makeNotifierStore();
+            yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+            yield* fs.writeFileString(
+              `${store.fakeBin}/notify-send`,
+              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\n'
+            );
+            expectSilentSuccess(yield* runNotifier(store, "", "", "initial", "/workspace/clone", uri, "", relation));
+            expect(yield* fs.readFileString(`${store.stateHome}/desktop.txt`)).not.toContain("--action");
+          })
+      );
+    })
+  );
+
+  it.effect("derives self and parent desktop routes from the hook host environment", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const rawSessionId = "sequence-break-route-session";
+      const rawCwd = "/workspace/sequence-break-route";
+      const codexThread = "12345678-1234-1234-1234-123456789abc";
+      yield* Effect.forEach(
+        [
+          {
+            hostEnv: { CLAUDE_CODE_HOST_SESSION_ID: "local_desktop-session", CLAUDE_CODE_SESSION_ID: rawSessionId },
+            uri: "claude://code/continue?session=local_desktop-session",
+            label: "Open task",
+          },
+          {
+            hostEnv: { CLAUDE_CODE_HOST_SESSION_ID: "local_desktop-session", CLAUDE_CODE_SESSION_ID: "launcher" },
+            uri: "claude://code/continue?session=local_desktop-session",
+            label: "Open parent task",
+          },
+          {
+            hostEnv: { CODEX_INTERNAL_ORIGINATOR_OVERRIDE: "Codex Desktop", CODEX_THREAD_ID: codexThread },
+            uri: `codex://threads/${codexThread}`,
+            label: "Open parent task",
+          },
+        ],
+        ({ hostEnv, label, uri }) =>
+          Effect.gen(function* () {
+            const store = yield* makeNotifierStore();
+            const sessionDigest = yield* hashPrivateIdentifier(rawSessionId, O.none());
+            const cwdDigest = yield* hashPrivateIdentifier(rawCwd, O.none());
+            const prePath = store.hookPath.replace(SESSION_ID, sessionDigest);
+            yield* fs.writeFileString(
+              prePath,
+              `${yield* preToolUseLine(sessionDigest, cwdDigest, "2020-01-01T00:00:00.000Z")}\n`
+            );
+            yield* fs.writeFileString(
+              `${store.fakeBin}/notify-send`,
+              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
+            );
+            yield* fs.writeFileString(
+              `${store.fakeBin}/xdg-open`,
+              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt"\n'
+            );
+            yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
+            expectSilentSuccess(
+              yield* runWriter(
+                { ...store, hookPath: prePath },
+                yield* writerPermissionRequestInput(rawSessionId, rawCwd),
+                true,
+                hostEnv
+              )
+            );
+            const opened = yield* fs
+              .readFileString(`${store.stateHome}/opened.txt`)
+              .pipe(
+                Effect.retry(Schedule.recurs(200).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(10))))),
+                TestClock.withLive
+              );
+            expect(opened).toBe(`${uri}\n`);
+            expect(yield* fs.readFileString(`${store.stateHome}/desktop.txt`)).toContain(`--action=default=${label}`);
+          })
+      );
+    })
+  );
+
+  it.effect("replaces one persistent desktop card across escalation stages", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+      yield* fs.writeFileString(
+        `${store.fakeBin}/notify-send`,
+        `#!/usr/bin/env bash
+case " $* " in *" --print-id "*) ;; *) exit 1 ;; esac
+case " $* " in *" --replace-id=77 "*) echo replace ;; *) echo new ;; esac >>"$HOME/calls.txt"
+printf '77\\n'
+`
+      );
+      expectSilentSuccess(yield* runNotifier(store, "", "", "urgent", "/workspace/clone"));
+      expect(yield* fs.readFileString(`${store.stateHome}/calls.txt`)).toBe("new\nreplace\nreplace\n");
+    })
+  );
+
+  it.effect("closes the desktop card once the wait resolves", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+      yield* fs.writeFileString(`${store.stateHome}/resolve.ndjson`, `${yield* postToolUseLine}\n`);
+      // The operator answers as soon as the card appears.
+      yield* fs.writeFileString(
+        `${store.fakeBin}/notify-send`,
+        `#!/usr/bin/env bash\ncat "$HOME/resolve.ndjson" >>'${store.hookPath}'\nprintf '77\\n'\n`
+      );
+      yield* fs.writeFileString(
+        `${store.fakeBin}/gdbus`,
+        '#!/usr/bin/env bash\nprintf "%s\\n" "$*" >>"$HOME/gdbus.txt"\n'
+      );
+      yield* fs.chmod(`${store.fakeBin}/gdbus`, 0o755);
+      expectSilentSuccess(yield* runNotifier(store, "", "", "urgent", "/workspace/clone"));
+      const closed = yield* fs.readFileString(`${store.stateHome}/gdbus.txt`);
+      expect(closed).toContain("org.freedesktop.Notifications.CloseNotification 77");
+      expect(
+        A.map(
+          A.filter(yield* decodedNotifications(store), ({ transport }) => transport === "desktop"),
+          ({ stage, delivery }) => ({ stage, delivery })
+        )
+      ).toEqual([
+        { stage: "initial", delivery: { status: "sent" } },
+        { stage: "reminder", delivery: { status: "skipped", reason: "bracket-resolved" } },
+      ]);
+    })
+  );
+
+  it.effect("leaves an unresolved card in place", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+      yield* fs.writeFileString(`${store.fakeBin}/notify-send`, "#!/usr/bin/env bash\nprintf '77\\n'\n");
+      yield* fs.writeFileString(`${store.fakeBin}/gdbus`, '#!/usr/bin/env bash\ntouch "$HOME/closed"\n');
+      yield* fs.chmod(`${store.fakeBin}/gdbus`, 0o755);
+      expectSilentSuccess(yield* runNotifier(store, "", "", "urgent", "/workspace/clone"));
+      pipe(yield* fs.exists(`${store.stateHome}/closed`), assertFalse);
     })
   );
 

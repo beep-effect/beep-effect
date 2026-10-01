@@ -15,7 +15,8 @@ set -uo pipefail
 
 # Every path is fail-open. A notifier defect must not answer, deny, delay, or
 # otherwise perturb the coding-agent permission decision.
-trap 'trap - EXIT; exit 0' EXIT
+action_id_file=""
+trap 'rm -f "${action_id_file}"; trap - EXIT; exit 0' EXIT
 
 agent_kind="${1:-}"
 session_id="${2:-}"
@@ -27,7 +28,12 @@ notifier_rev="${7:-}"
 origin_cwd="${8:-}"
 open_uri="${9:-}"
 origin_terminal="${10:-}"
+open_relation="${11:-self}"
 action_listener_pid=""
+# One desktop card per wait: reminder stages replace it, resolution closes it.
+desktop_notification_id=""
+runtime_dir=""
+bus_address=""
 # Do not propagate a local navigation override to transport subprocesses.
 unset BEEP_SEQUENCE_BREAK_OPEN_URI
 
@@ -419,15 +425,21 @@ desktop_origin() {
 
 # Only explicit, session-specific app routes are accepted. Never evaluate a
 # callback command, accept an arbitrary URL, or fall back to "last session".
-case "${agent_kind}:${open_uri}" in
-  codex-cli:codex://threads/*)
+# A "self" route must name the notifying agent's own app. A "parent" route
+# names the desktop task that launched a headless child, so either app is
+# valid, and the notification labels it as the parent rather than the session.
+case "${open_relation}" in self | parent) ;; *) open_relation="self" ;; esac
+case "${open_relation}:${agent_kind}:${open_uri}" in
+  self:codex-cli:codex://threads/* | parent:*:codex://threads/*)
     if [[ ! "${open_uri#codex://threads/}" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then open_uri=""; fi
     ;;
-  claude-code:claude://code/continue\?session=local_*)
+  self:claude-code:claude://code/continue\?session=local_* | parent:*:claude://code/continue\?session=local_*)
     if [[ ! "${open_uri#claude://code/continue\?session=local_}" =~ ^[A-Za-z0-9-]{1,64}$ ]]; then open_uri=""; fi
     ;;
   *) open_uri="" ;;
 esac
+open_label="Open task"
+[ "${open_relation}" != "parent" ] || open_label="Open parent task"
 local_origin="$(desktop_origin)"
 
 # A bounded background listener owns the notification action. Its stdout is
@@ -439,7 +451,7 @@ deliver_action_notification() {
   (
     XDG_RUNTIME_DIR="${runtime_dir}" DBUS_SESSION_BUS_ADDRESS="${bus_address}" \
       timeout 3600s stdbuf -oL notify-send --app-name="beep agent" --urgency="${urgency}" --expire-time=0 \
-      --print-id --action="default=Open task" "${title}" "${body}" 7>/dev/null |
+      --print-id --action="default=${open_label}" "${title}" "${body}" 7>/dev/null |
       {
         local notification_id action
         if ! IFS= read -r notification_id; then
@@ -450,6 +462,7 @@ deliver_action_notification() {
           "" | *[!0-9]*) append_delivery desktop "${stage}" failed command-failed "${measured_age}"; exit 0 ;;
         esac
         append_delivery desktop "${stage}" sent "" "${measured_age}"
+        [ -z "${action_id_file}" ] || printf '%s' "${notification_id}" >"${action_id_file}" 2>/dev/null || true
         if IFS= read -r action && [ "${action}" = "default" ] && [ ! -e "${disarm_sentinel}" ] &&
           [ "$(bracket_status)" = "open" ]; then
           XDG_RUNTIME_DIR="${runtime_dir}" DBUS_SESSION_BUS_ADDRESS="${bus_address}" \
@@ -463,7 +476,8 @@ deliver_action_notification() {
 deliver_desktop() {
   local stage="${1}"
   local measured_age="${2}"
-  local urgency title body exit_code runtime_dir bus_address
+  local urgency title body exit_code output
+  local replace=()
   if [ "${BEEP_SEQUENCE_BREAK_DESKTOP_ENABLED:-1}" != "1" ]; then
     append_delivery desktop "${stage}" skipped transport-unconfigured "${measured_age}"
     return 0
@@ -480,9 +494,15 @@ deliver_desktop() {
     tool-permission) title="${title} needs permission" ;;
   esac
   body="${local_origin}"
-  case "${open_uri}" in
-    codex:*) body="${body} · ChatGPT Desktop" ;;
-    claude:*) body="${body} · Claude Desktop" ;;
+  # A child's own Ghostty surface is a closer destination than its parent task.
+  if [ "${open_relation}" = "parent" ] && [ "${origin_terminal}" = "ghostty" ] && [ -t 7 ]; then
+    open_uri=""
+  fi
+  case "${open_relation}:${open_uri}" in
+    self:codex:*) body="${body} · ChatGPT Desktop" ;;
+    self:claude:*) body="${body} · Claude Desktop" ;;
+    parent:codex:*) body="${body} · Headless child of a ChatGPT Desktop task" ;;
+    parent:claude:*) body="${body} · Headless child of a Claude Desktop session" ;;
     *) [ "${origin_terminal}" != "ghostty" ] || body="${body} · Ghostty" ;;
   esac
   [ -z "${body}" ] || body="${body}
@@ -542,11 +562,20 @@ deliver_desktop() {
       append_delivery desktop "${stage}" skipped storm-damped "${measured_age}"
       return 0
     fi
+    if [ -z "${action_id_file}" ]; then
+      action_id_file="$(mktemp "${damping_dir}/${damping_key}.notification.XXXXXX")" || action_id_file=""
+    fi
     deliver_action_notification "${stage}" "${measured_age}" "${urgency}" "${title}" "${body}"
     return 0
   fi
-  if XDG_RUNTIME_DIR="${runtime_dir}" DBUS_SESSION_BUS_ADDRESS="${bus_address}" \
-    timeout 2s notify-send --app-name="beep agent" --urgency="${urgency}" --expire-time=0 "${title}" "${body}"; then
+  [ -z "${desktop_notification_id}" ] || replace=(--replace-id="${desktop_notification_id}")
+  if output="$(
+    XDG_RUNTIME_DIR="${runtime_dir}" DBUS_SESSION_BUS_ADDRESS="${bus_address}" \
+      timeout 2s notify-send --app-name="beep agent" --urgency="${urgency}" --expire-time=0 --print-id \
+      "${replace[@]}" "${title}" "${body}" </dev/null 2>/dev/null
+  )"; then
+    output="${output%%$'\n'*}"
+    case "${output}" in "" | *[!0-9]*) ;; *) desktop_notification_id="${output}" ;; esac
     append_delivery desktop "${stage}" sent "" "${measured_age}"
   else
     exit_code=$?
@@ -668,6 +697,67 @@ deliver_ntfy() {
   fi
 }
 
+# Closing the persistent card once the wait resolves is best effort. Only the
+# ID this worker received is closed; the session bus is never asked to list or
+# close anything else.
+close_desktop() {
+  local notification_id="${desktop_notification_id}"
+  if [ -z "${notification_id}" ] && [ -n "${action_id_file}" ] && [ -s "${action_id_file}" ]; then
+    notification_id="$(head -c 32 "${action_id_file}" 2>/dev/null)" || notification_id=""
+  fi
+  case "${notification_id}" in "" | *[!0-9]*) return 0 ;; esac
+  [ -n "${bus_address}" ] || return 0
+  command -v gdbus >/dev/null 2>&1 || return 0
+  XDG_RUNTIME_DIR="${runtime_dir}" DBUS_SESSION_BUS_ADDRESS="${bus_address}" \
+    timeout 2s gdbus call --session --dest org.freedesktop.Notifications \
+    --object-path /org/freedesktop/Notifications \
+    --method org.freedesktop.Notifications.CloseNotification "${notification_id}" \
+    </dev/null >/dev/null 2>&1 || true
+}
+
+# Sleeps up to $1 seconds in poll-sized steps, returning early once the wait is
+# no longer open so a resolved card closes promptly. Prints the last observed
+# bracket status; fails only when the shared kill switch disarms the worker.
+wait_while_open() {
+  local remaining="${1}" step status
+  while [ "${remaining}" -gt 0 ]; do
+    step="${poll_seconds}"
+    [ "${step}" -le "${remaining}" ] || step="${remaining}"
+    sleep "${step}" || return 1
+    remaining=$((remaining - step))
+    [ ! -e "${disarm_sentinel}" ] || return 1
+    status="$(bracket_status)" || status="unknown"
+    if [ "${status}" != "open" ]; then
+      printf '%s' "${status}"
+      return 0
+    fi
+  done
+  [ ! -e "${disarm_sentinel}" ] || return 1
+  status="$(bracket_status)" || status="unknown"
+  printf '%s' "${status}"
+}
+
+# A resolved wait closes its card; an unattributable one leaves it in place,
+# because the worker can no longer prove the decision was made.
+settle_after() {
+  local stage="${1}" status="${2}"
+  case "${status}" in
+    resolved)
+      append_pair_skipped "${stage}" bracket-resolved
+      close_desktop
+      ;;
+    *) append_pair_skipped "${stage}" bracket-unattributed ;;
+  esac
+}
+
+# After the last escalation stage, keep watching (bounded) only to close the
+# card when the decision lands.
+watch_until_resolved() {
+  local status
+  status="$(wait_while_open "${close_watch_seconds}")" || return 0
+  [ "${status}" != "resolved" ] || close_desktop
+}
+
 deliver_stage() {
   local stage="${1}"
   local measured_age
@@ -679,10 +769,19 @@ deliver_stage() {
   deliver_ntfy "${stage}" "${measured_age}"
 }
 
+poll_seconds="${BEEP_SEQUENCE_BREAK_POLL_SECONDS:-15}"
+close_watch_seconds="${BEEP_SEQUENCE_BREAK_CLOSE_WATCH_SECONDS:-3600}"
+case "${poll_seconds}" in "" | *[!0-9]* | 0) poll_seconds=15 ;; esac
+case "${close_watch_seconds}" in "" | *[!0-9]*) close_watch_seconds=3600 ;; esac
+
 deliver_stage initial
 
 max_stage="${BEEP_SEQUENCE_BREAK_MAX_STAGE:-urgent}"
-case "${max_stage}" in initial) exit 0 ;; reminder | urgent) ;; *) max_stage=urgent ;; esac
+case "${max_stage}" in initial | reminder | urgent) ;; *) max_stage=urgent ;; esac
+if [ "${max_stage}" = "initial" ]; then
+  watch_until_resolved
+  exit 0
+fi
 
 reminder_seconds="${BEEP_SEQUENCE_BREAK_REMINDER_SECONDS:-300}"
 urgent_seconds="${BEEP_SEQUENCE_BREAK_URGENT_SECONDS:-900}"
@@ -692,26 +791,24 @@ if [ "${urgent_seconds}" -lt "${reminder_seconds}" ]; then
   urgent_seconds="${reminder_seconds}"
 fi
 
-sleep "${reminder_seconds}" || exit 0
-if [ -e "${disarm_sentinel}" ]; then exit 0; fi
-reminder_status="$(bracket_status)" || reminder_status="unknown"
-case "${reminder_status}" in
-  open) deliver_stage reminder ;;
-  resolved) append_pair_skipped reminder bracket-resolved; exit 0 ;;
-  *) append_pair_skipped reminder bracket-unattributed; exit 0 ;;
-esac
+reminder_status="$(wait_while_open "${reminder_seconds}")" || exit 0
+if [ "${reminder_status}" != "open" ]; then
+  settle_after reminder "${reminder_status}"
+  exit 0
+fi
+deliver_stage reminder
 
 if [ "${max_stage}" = "reminder" ]; then
+  watch_until_resolved
   exit 0
 fi
 
-sleep "$((urgent_seconds - reminder_seconds))" || exit 0
-if [ -e "${disarm_sentinel}" ]; then exit 0; fi
-urgent_status="$(bracket_status)" || urgent_status="unknown"
-case "${urgent_status}" in
-  open) deliver_stage urgent ;;
-  resolved) append_pair_skipped urgent bracket-resolved ;;
-  *) append_pair_skipped urgent bracket-unattributed ;;
-esac
+urgent_status="$(wait_while_open "$((urgent_seconds - reminder_seconds))")" || exit 0
+if [ "${urgent_status}" != "open" ]; then
+  settle_after urgent "${urgent_status}"
+  exit 0
+fi
+deliver_stage urgent
+watch_until_resolved
 
 exit 0
