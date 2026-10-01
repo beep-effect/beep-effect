@@ -302,6 +302,38 @@ it.live(
       yield* fs.writeFileString(ledger, prior);
       const cache = yield* CacheQualificationService;
       const transition = CacheTransitionRequest.make({ expectedRevision: S.Natural.make(2), entry: qualified });
+
+      for (const patch of [{ signedExecution: O.none() }, { activation: O.none() }]) {
+        const incompleteContract = CacheTaskContract.make({ ...contract, ...patch });
+        const incompleteEntry = CacheQualificationEntry.make({
+          key: contract.key,
+          status: { state: "qualified", contract: incompleteContract, review, receipts: [reference] },
+        });
+        const failure = yield* cache
+          .transition(root, CacheTransitionRequest.make({ ...transition, entry: incompleteEntry }))
+          .pipe(Effect.flip);
+        expect(failure.message).toBe("Signed qualification requires a reviewed execution profile and activation.");
+        expect(yield* fs.readFileString(ledger)).toBe(prior);
+        const priorStore = yield* S.decodeEffect(S.fromJsonString(CacheQualificationStore))(prior);
+        yield* fs.writeFileString(
+          ledger,
+          yield* S.encodeEffect(S.fromJsonString(CacheQualificationStore))(
+            CacheQualificationStore.make({
+              ...priorStore,
+              revision: 3,
+              entries: [incompleteEntry],
+              history: [
+                ...priorStore.history,
+                CacheQualificationEvent.make({ revision: S.Int.make(3), entry: incompleteEntry }),
+              ],
+            })
+          )
+        );
+        expect((yield* cache.audit(root).pipe(Effect.flip)).message).toBe(
+          "Signed qualification requires a reviewed execution profile and activation."
+        );
+        yield* fs.writeFileString(ledger, prior);
+      }
       const result = yield* cache.transition(root, transition);
       expect(result.revision).toBe(3);
       expect(

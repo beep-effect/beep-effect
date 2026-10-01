@@ -267,7 +267,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("persistent produ
       yield* revokeCacheProducerIssuer(directory);
       expect(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result))).toBe(true);
       expect(Result.isFailure(yield* issuer.verify(envelope, receipt).pipe(Effect.result))).toBe(true);
-      expect(Result.isFailure(yield* openCacheProducerIssuer(directory, binding).pipe(Effect.result))).toBe(true);
+      expect((yield* openCacheProducerIssuer(directory, binding).pipe(Effect.flip)).message).toBe(
+        "Producer issuer is revoked."
+      );
     }).pipe(Effect.scoped)
   );
   it.effect("fails closed for missing and replaced material without recreating it", () =>

@@ -11,6 +11,7 @@ import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $RepoConfigsId.create("cache/Cache.policy");
 
@@ -442,6 +443,8 @@ const contractPromotionFailures = (
   observations: ReadonlyArray<CacheQualificationObservation>
 ): ReadonlyArray<string> => {
   let failures = A.empty<string>();
+  if (Str.endsWith("-private-loopback-signed-v1")(contract.key.profile) && O.isNone(contract.signedExecution))
+    failures = A.append(failures, "signed-execution-missing-profile");
   if (O.isSome(contract.signedExecution)) {
     const execution = contract.signedExecution.value;
     const expected = CacheQualificationKey.make({

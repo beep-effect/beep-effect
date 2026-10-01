@@ -12,6 +12,7 @@ import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import {
   currentEffectiveUserIdOption,
@@ -71,6 +72,13 @@ export const validateCacheProducerApproval = Effect.fn("Producer.validateApprova
   approval: CacheProducerApproval
 ) {
   const { binding, contract } = approval;
+  if (
+    Str.endsWith("-private-loopback-signed-v1")(contract.key.profile) &&
+    (O.isNone(contract.signedExecution) || O.isNone(contract.activation))
+  )
+    return yield* CacheCommandError.new(
+      "Signed producer approval requires a reviewed execution profile and activation."
+    );
   const sourceConfiguration = O.match(contract.signedExecution, {
     onNone: () => contract.pins.configuration,
     onSome: (execution) => execution.sourceConfiguration,
@@ -327,31 +335,28 @@ export const inspectCacheProducerDirectory = Effect.fn("Producer.inspectIssuerDi
   return uid.value;
 });
 
-const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(
-  function* (directory: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const uid = yield* inspectCacheProducerDirectory(directory);
-    // readDirectory detects even a dangling revocation marker; errors fail closed.
-    const entries = yield* fs.readDirectory(directory);
-    if (A.contains(entries, "revoked")) return yield* CacheCommandError.new("Producer issuer is revoked.");
-    const file = path.join(directory, "issuer.key");
-    const info = yield* fs.stat(file);
-    if (
-      info.type !== "File" ||
-      (info.mode & 0o777) !== 0o600 ||
-      !O.contains(info.uid, uid) ||
-      !O.contains(info.nlink, 1) ||
-      info.size !== BigInt(persistedMaterialBytes)
-    )
-      return yield* CacheCommandError.new("Producer material must be a private single-link approval-bound file.");
-    const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(persistedMaterialBytes));
-    if (O.isNone(read.contents) || read.contents.value.length !== persistedMaterialBytes)
-      return yield* CacheCommandError.new("Producer material is unavailable.");
-    return Redacted.make(read.contents.value);
-  },
-  Effect.mapError(() => CacheCommandError.new("Producer store is unavailable, unsafe or revoked."))
-);
+const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(function* (directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const uid = yield* inspectCacheProducerDirectory(directory);
+  // readDirectory detects even a dangling revocation marker; errors fail closed.
+  const entries = yield* fs.readDirectory(directory);
+  if (A.contains(entries, "revoked")) return yield* CacheCommandError.new("Producer issuer is revoked.");
+  const file = path.join(directory, "issuer.key");
+  const info = yield* fs.stat(file);
+  if (
+    info.type !== "File" ||
+    (info.mode & 0o777) !== 0o600 ||
+    !O.contains(info.uid, uid) ||
+    !O.contains(info.nlink, 1) ||
+    info.size !== BigInt(persistedMaterialBytes)
+  )
+    return yield* CacheCommandError.new("Producer material must be a private single-link approval-bound file.");
+  const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(persistedMaterialBytes));
+  if (O.isNone(read.contents) || read.contents.value.length !== persistedMaterialBytes)
+    return yield* CacheCommandError.new("Producer material is unavailable.");
+  return Redacted.make(read.contents.value);
+}, CacheCommandError.mapError("Producer store is unavailable, unsafe or revoked."));
 
 /**
  * Open an existing supervisor-owned issuer without creating or replacing material.
@@ -407,36 +412,33 @@ export const openCacheProducerIssuer = Effect.fn("Producer.openCacheProducerIssu
   };
 });
 
-const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(
-  function* (directory: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const uid = yield* inspectCacheProducerDirectory(directory);
-    const file = path.join(directory, "approval.json");
-    const info = yield* fs.stat(file);
-    const limit = 16384;
-    if (
-      info.type !== "File" ||
-      (info.mode & 0o777) !== 0o600 ||
-      !O.contains(info.uid, uid) ||
-      !O.contains(info.nlink, 1) ||
-      info.size === BigInt(0) ||
-      info.size > BigInt(limit)
-    )
-      return yield* CacheCommandError.new("Producer approval must be a bounded private single-link file.");
-    const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(limit));
-    if (O.isNone(read.contents)) return yield* CacheCommandError.new("Producer approval is unavailable.");
-    const bytes = read.contents.value;
-    const text = yield* Effect.try({
-      try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
-      catch: () => CacheCommandError.new("Producer approval must be valid UTF-8."),
-    });
-    const approval = yield* decodeApproval(text);
-    yield* validateCacheProducerApproval(approval);
-    return approval;
-  },
-  Effect.mapError(() => CacheCommandError.new("Producer approval is unavailable or unsafe."))
-);
+const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(function* (directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const uid = yield* inspectCacheProducerDirectory(directory);
+  const file = path.join(directory, "approval.json");
+  const info = yield* fs.stat(file);
+  const limit = 16384;
+  if (
+    info.type !== "File" ||
+    (info.mode & 0o777) !== 0o600 ||
+    !O.contains(info.uid, uid) ||
+    !O.contains(info.nlink, 1) ||
+    info.size === BigInt(0) ||
+    info.size > BigInt(limit)
+  )
+    return yield* CacheCommandError.new("Producer approval must be a bounded private single-link file.");
+  const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(limit));
+  if (O.isNone(read.contents)) return yield* CacheCommandError.new("Producer approval is unavailable.");
+  const bytes = read.contents.value;
+  const text = yield* Effect.try({
+    try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+    catch: () => CacheCommandError.new("Producer approval must be valid UTF-8."),
+  });
+  const approval = yield* decodeApproval(text);
+  yield* validateCacheProducerApproval(approval);
+  return approval;
+}, CacheCommandError.mapError("Producer approval is unavailable or unsafe."));
 
 /**
  * Open a verification-only capability from independently provisioned private approval.
@@ -500,33 +502,34 @@ export const openCacheProducerVerifier = Effect.fn("Producer.openCacheProducerVe
  * @category fixtures
  * @since 0.0.0
  */
-export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCacheProducerIssuer")(
-  function* (directory: string, expected: CacheProducerBinding, contract: CacheTaskContract) {
-    const approval = yield* encodeApproval(CacheProducerApproval.make({ binding: expected, contract })).pipe(
-      Effect.flatMap(decodeApproval)
-    );
-    yield* validateCacheProducerApproval(approval);
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const crypto = yield* Crypto.Crypto;
-    if (!path.isAbsolute(directory)) return yield* CacheCommandError.new("Producer store path must be absolute.");
-    yield* fs.makeDirectory(directory, { mode: 0o700 });
-    yield* inspectCacheProducerDirectory(directory);
-    const trusted = approval.binding;
-    yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeApproval(approval), {
-      flag: "wx",
-      mode: 0o600,
-    });
-    const approved = yield* bindingDigest(trusted).pipe(Effect.flatMap(S.decodeEffect(S.Uint8ArrayFromHex)));
-    const bytes = new Uint8Array(persistedMaterialBytes);
-    bytes.set(yield* crypto.randomBytes(64));
-    bytes.set(approved, 64);
-    const material = Redacted.make(bytes);
-    yield* fs.writeFile(path.join(directory, "issuer.key"), Redacted.value(material), { flag: "wx", mode: 0o600 });
-    return yield* openCacheProducerIssuer(directory, trusted);
-  },
-  Effect.mapError(() => CacheCommandError.new("Cannot exclusively provision producer store."))
-);
+export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCacheProducerIssuer")(function* (
+  directory: string,
+  expected: CacheProducerBinding,
+  contract: CacheTaskContract
+) {
+  const approval = yield* encodeApproval(CacheProducerApproval.make({ binding: expected, contract })).pipe(
+    Effect.flatMap(decodeApproval)
+  );
+  yield* validateCacheProducerApproval(approval);
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const crypto = yield* Crypto.Crypto;
+  if (!path.isAbsolute(directory)) return yield* CacheCommandError.new("Producer store path must be absolute.");
+  yield* fs.makeDirectory(directory, { mode: 0o700 });
+  yield* inspectCacheProducerDirectory(directory);
+  const trusted = approval.binding;
+  yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeApproval(approval), {
+    flag: "wx",
+    mode: 0o600,
+  });
+  const approved = yield* bindingDigest(trusted).pipe(Effect.flatMap(S.decodeEffect(S.Uint8ArrayFromHex)));
+  const bytes = new Uint8Array(persistedMaterialBytes);
+  bytes.set(yield* crypto.randomBytes(64));
+  bytes.set(approved, 64);
+  const material = Redacted.make(bytes);
+  yield* fs.writeFile(path.join(directory, "issuer.key"), Redacted.value(material), { flag: "wx", mode: 0o600 });
+  return yield* openCacheProducerIssuer(directory, trusted);
+}, CacheCommandError.mapError("Cannot exclusively provision producer store."));
 
 /**
  * Revoke an existing issuer, including instances opened before revocation.
@@ -541,12 +544,9 @@ export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCache
  * @category fixtures
  * @since 0.0.0
  */
-export const revokeCacheProducerIssuer = Effect.fn("Producer.revokeCacheProducerIssuer")(
-  function* (directory: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    yield* inspectCacheProducerDirectory(directory);
-    yield* fs.writeFileString(path.join(directory, "revoked"), "revoked\n", { flag: "wx", mode: 0o600 });
-  },
-  Effect.mapError(() => CacheCommandError.new("Cannot revoke producer store."))
-);
+export const revokeCacheProducerIssuer = Effect.fn("Producer.revokeCacheProducerIssuer")(function* (directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* inspectCacheProducerDirectory(directory);
+  yield* fs.writeFileString(path.join(directory, "revoked"), "revoked\n", { flag: "wx", mode: 0o600 });
+}, CacheCommandError.mapError("Cannot revoke producer store."));

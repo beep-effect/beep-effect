@@ -48,6 +48,23 @@ const setup = Effect.gen(function* () {
   return { bundle, approval: CacheProducerApproval.make({ binding, contract }) };
 });
 it.layer(NodeCrypto.layer)("producer evidence projections", (it) => {
+  it.effect("rejects signed approval with an omitted profile or activation even after rehashing policy", () =>
+    Effect.gen(function* () {
+      const { approval } = yield* setup;
+      for (const patch of [{ signedExecution: O.none() }, { activation: O.none() }]) {
+        const contract = CacheTaskContract.make({ ...approval.contract, ...patch });
+        const binding = CacheProducerBinding.make({
+          ...approval.binding,
+          policyDigest: yield* hashCacheProducerContract(contract),
+        });
+        const failure = yield* validateCacheProducerApproval(CacheProducerApproval.make({ binding, contract })).pipe(
+          Effect.flip
+        );
+        expect(failure.message).toBe("Signed producer approval requires a reviewed execution profile and activation.");
+      }
+    })
+  );
+
   it.effect("requires schema-generated source configuration identities to match producer approval", () =>
     Effect.gen(function* () {
       const { bundle, approval } = yield* setup;
@@ -258,7 +275,7 @@ it.layer(NodeCrypto.layer)("producer evidence projections", (it) => {
       });
       const fragments = yield* deriveCacheProducerEvidence(bundle, approval);
       const observations = A.map(fragments, (fragment) => fragment.observation);
-      expect(A.some(observations, (row) => A.contains(row.subjects, "activation-projection"))).toBe(false);
+      expect(A.some(observations, (row) => A.contains(row.subjects, "activation-projection"))).toBe(true);
       expect(A.filter(observations, (row) => row.kind === "concurrency")).toHaveLength(1);
       expect(A.filter(observations, (row) => row.kind === "cross-root")).toHaveLength(3);
       const negative = A.flatMap(

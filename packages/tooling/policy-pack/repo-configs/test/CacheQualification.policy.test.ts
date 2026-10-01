@@ -646,6 +646,9 @@ it.effect("keeps signed execution identities distinct and rejects inconsistent a
       signedExecution: O.some(execution),
     });
     expect(cachePromotionFailures(signed, [])).toContain("signed-execution-missing-activation");
+    expect(cachePromotionFailures(CacheTaskContract.make({ ...signed, signedExecution: O.none() }), [])).toContain(
+      "signed-execution-missing-profile"
+    );
     const activation = CacheActivationProjection.make({
       path: "packages/fixture/turbo.json",
       before: CacheEvidenceReference.make({ path: "before.json", sha256: digest(108) }),

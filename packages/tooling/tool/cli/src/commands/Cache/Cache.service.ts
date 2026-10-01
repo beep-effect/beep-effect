@@ -27,6 +27,7 @@ import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { readContainedFileBytesNoFollow, writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { PosInt } from "../../internal/schema/PosInt.ts";
@@ -398,6 +399,11 @@ const validateContractEligibility = Effect.fn("CacheQualification.validateContra
   contract: CacheTaskContract
 ) {
   if (!sameKey(key, contract.key)) return yield* CacheCommandError.new("Transition contract uses a different tuple.");
+  if (
+    Str.endsWith("-private-loopback-signed-v1")(key.profile) &&
+    (O.isNone(contract.signedExecution) || O.isNone(contract.activation))
+  )
+    return yield* CacheCommandError.new("Signed qualification requires a reviewed execution profile and activation.");
   if (contract.configuration.persistent || contract.configuration.interactive) {
     return yield* CacheCommandError.new("Persistent or interactive commands cannot be qualified.");
   }
