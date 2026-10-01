@@ -47,7 +47,7 @@ Targeted source/barrel search found no existing overflow phase owner. The nearby
 
 # Guard-deletion accounting
 
-Delete `unmeasured` and `allFit` at lines 358-360, the implication encoded by `unmeasured || widthFits`, and the `Bool.match(allFit)` branch at line 361. One literal derivation and match owns the three legal outcomes. Retain `measuredThisMount`, `firstMeasurement`, and the freshness render guard: they enforce cross-render publication rather than restating measurement fit.
+Delete `unmeasured` and `allFit` at lines 363-365, the implication encoded by `unmeasured || widthFits`, and the `Bool.match(allFit)` branch at line 366. One literal derivation and match owns the three legal outcomes. Retain `measuredThisMount`, `firstMeasurement`, and the freshness render guard: they enforce cross-render publication rather than restating measurement fit.
 
 # Encoded-side impact
 

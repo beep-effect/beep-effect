@@ -72,33 +72,15 @@ I supply reviewer-corrected artifacts for the author's scope. They are **not suf
 - `ledger-unflagged-citations.json` — proposed fixes, not applied and not exhaustive.
 - `ledger-inherited-debt.json` — drift that predates R53, plus claims invalidated by the codec-statics retirement. These include html-img L64 "reuse the existing `@beep/schema`/SchemaUtils import" and r3-foundation L125 "preserve JSON decoding".
 
-## How to apply
+## Retained validation path
 
-1. Do not apply the author patch.
-2. Preferred: fix the builder and re-run, then re-review. The fix needs:
-   - pin and historical-clause awareness;
-   - basename resolution against the row or design context;
-   - handling of `:NNN` continuations and bare `at N` / `line N` citations;
-   - exclusion of version strings;
-   - detection of cited lines whose content changed.
-3. If the verified subset must land now:
-   - Archive the inventory first.
-   - Apply `corrected/inventory-patch.json` with per-line `beforeRawSha256` checks. The result must hash to `a957b778…e207`.
-   - Apply the 18 corrected design files by `sha256Before` / `sha256After`.
-   - Treat both ledgers as the open blocking list before any admission.
+Commit `a71c727164` applied the reviewer-corrected subset. The repository retains everything needed to verify the landed bytes:
 
-## Validation receipts (`validation/`)
+- `history/inventory/2026-10-01-pre-r53-source-refresh.jsonl` is the complete 725-row input with SHA-256 `6e1026fd7b98d89550cfa3ec448cb4de08b22eb4377c12c1bcd9bc8b3576df6f`.
+- `data/inventory.jsonl` is the 723-row corrected result with SHA-256 `a957b7780afaa5dbe6f59628570e74d845e78bdf2ede485b0b4956496c9ce207`.
+- `git diff 50e9c4bc41bae20a916e75cdcaaa2c6df453bf6e a71c727164 -- goals/boolean-creep` reconstructs every applied inventory and design change.
+- `coverage-218.json` records a ruling for every conflict in the rejected author proposal. `manual-item-resolutions.json` records all 13 manual rulings.
+- `ledger-unflagged-citations.json` and `ledger-inherited-debt.json` are the open blocking lists. They must be reconciled before input admission.
+- `bun goals/boolean-creep/ops/validate-inventory.ts` validates source references and inventory structure against the checked-out source.
 
-| File | What it checks |
-| --- | --- |
-| `linemap.py` | Independent hunk mapper |
-| `verify_inventory.py`, `verify_bytes.py` | Author patch |
-| `anchor_semantics.py`, `weak-anchor-windows.txt` | Anchors and weak anchors |
-| `verify_designs.py`, `design_semantics.py`, `design_pin_check.py` | Author design patches and their pin binding |
-| `sweep_unflagged_notes.py`, `sweep_designs.py` | Unflagged-citation sweeps |
-| `build_corrected_inventory.py`, `verify_corrected_inventory.py` | Corrected inventory patch |
-| `build_corrected_designs.py`, `design_spec.py`, `note_spec.json` | Corrected design set and correction specs |
-| `span-interior-receipt.txt` | Interiors of span-changing ranges |
-| `packet-validator-receipt.txt` | Packet validator runs |
-
-Every produced file is bound by SHA-256 in `review.json` → `producedFileSha256`.
+The private reviewer scripts and rejected intermediate patch are intentionally omitted. The committed archive, result, exact Git diff, coverage ledger, manual rulings, and open ledgers are the durable validation surface.
