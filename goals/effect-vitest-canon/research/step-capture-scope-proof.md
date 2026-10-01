@@ -1,5 +1,7 @@
 # Step-capture lifetime and filesystem review
 
+The runner-migration proof below applies to source commit `cd91ae37a1`.
+
 The migration preserves 22 test registrations, all 54 assertion expressions,
 and the embedded Bun subprocess program. Nineteen whole-test or dynamic helper
 providers become public layer registrations and eight explicit short scopes.
@@ -30,3 +32,23 @@ verification passed: audit 959.6 seconds, docgen 23.9 seconds. No campaign findi
 alone. The ratchet adds 39 reviewed records: eight short scopes, nineteen layer
 registrations, nine controlled clock advances and three intentional sleeps.
 Historical baseline records remain intact.
+
+## Subsequent semantic hardening
+
+The two tee cases now assert joined parent stdout independently of captured
+output. A private tee-disabled control fails both new stdout assertions while
+the original capture assertions still pass. The spies pass writes through and
+restore themselves at scope exit.
+
+Four temporary allocations use the existing makeTempDirectoryScoped primitive,
+which installs cleanup immediately and surfaces removal errors. Two short
+acquireUseRelease brackets retain their original boundaries and use orDie for
+cleanup failure. Private post-suite probes observed all six roots and confirmed
+they were absent on both Node and Bun (22 tests passed on each).
+
+Applied hardening: Node 22 PASS in 4.67 seconds, Bun 22 PASS in 3.50 seconds.
+The subsequent import-only correction routes vi through Effect Vitest's public
+entry point. Root test types and the ratchet pass. Full package verification of
+the hardened source passes: audit 1,107.5 seconds and docgen 41.2 seconds.
+This later proof covers the stdout oracles and cleanup hardening. The 39 reviewed baseline IDs and dispositions are
+preserved while their current source metadata is refreshed.

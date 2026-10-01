@@ -16,7 +16,7 @@ import { NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Deferred, Duration, Effect, Exit, Fiber, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
@@ -32,6 +32,7 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 const isCaptureCommandTimedOutError = S.is(CaptureCommandTimedOutError);
 
 const encoder = new TextEncoder();
+const decodeStdoutChunk = S.decodeUnknownEffect(S.String);
 
 const ActiveAdmissionWorkload = S.fromJsonString(
   S.Struct({
@@ -201,12 +202,18 @@ describe("StepExec capture pipe lifecycle", () => {
   it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
     it.effect("tees captured chunks to the parent stdout while still capturing them", () =>
       Effect.gen(function* () {
+        const stdout = yield* Effect.acquireRelease(
+          Effect.sync(() => vi.spyOn(process.stdout, "write")),
+          (spy) => Effect.sync(() => spy.mockRestore())
+        );
         const captured = yield* runCaptured({
           command: "echo",
           args: ["teed-line"],
           tee: true,
         });
         expect(captured.output).toContain("teed-line");
+        const chunks = yield* Effect.forEach(stdout.mock.calls, ([chunk]) => decodeStdoutChunk(chunk));
+        expect(A.join(chunks, "")).toContain("teed-line\n");
       })
     );
   });
@@ -216,6 +223,10 @@ describe("StepExec capture pipe lifecycle", () => {
   it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
     it.effect("tees a bounded capture while the bound still clips the output", () =>
       Effect.gen(function* () {
+        const stdout = yield* Effect.acquireRelease(
+          Effect.sync(() => vi.spyOn(process.stdout, "write")),
+          (spy) => Effect.sync(() => spy.mockRestore())
+        );
         const captured = yield* runCaptured({
           command: "echo",
           args: ["bounded-teed-line"],
@@ -225,6 +236,8 @@ describe("StepExec capture pipe lifecycle", () => {
         });
         expect(captured.truncated).toBe(true);
         expect(captured.output).toContain("[clipped]");
+        const chunks = yield* Effect.forEach(stdout.mock.calls, ([chunk]) => decodeStdoutChunk(chunk));
+        expect(A.join(chunks, "")).toContain("bounded-teed-line\n");
       })
     );
   });
@@ -310,7 +323,7 @@ describe("StepExec capture pipe lifecycle", () => {
           expect(writeFailure.message).toContain("Failed to write admission workload");
 
           const fs = yield* FileSystem.FileSystem;
-          const root = yield* fs.makeTempDirectory({ prefix: "step-exec-missing-proc-" });
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "step-exec-missing-proc-" });
           const missing = yield* makeStuckSpawner({
             output: "",
             killEndsStream: false,
@@ -321,8 +334,7 @@ describe("StepExec capture pipe lifecycle", () => {
           const registrationFailure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
             withAdmissionWorkloadBinding(`${root}/workload`, "lease-proc"),
             Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, missing.spawner),
-            Effect.flip,
-            Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore))
+            Effect.flip
           );
           expect(registrationFailure.message).toContain("Failed to read process generation");
         })
@@ -358,7 +370,7 @@ describe("StepExec capture pipe lifecycle", () => {
       it.effect("names the liveness probe when process-generation recovery cannot confirm the exit", () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          const root = yield* fs.makeTempDirectory({ prefix: "step-exec-unprobed-proc-" });
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "step-exec-unprobed-proc-" });
           const unprobed = yield* makeStuckSpawner({
             output: "",
             killEndsStream: false,
@@ -370,8 +382,7 @@ describe("StepExec capture pipe lifecycle", () => {
           const failure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
             withAdmissionWorkloadBinding(`${root}/workload`, "lease-unprobed"),
             Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, unprobed.spawner),
-            Effect.flip,
-            Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore))
+            Effect.flip
           );
 
           expect(failure.message).toContain("Failed to confirm process exit");
@@ -385,14 +396,13 @@ describe("StepExec capture pipe lifecycle", () => {
       it.effect("preserves the exit result when a short-lived child is reaped before generation registration", () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          const root = yield* fs.makeTempDirectory({ prefix: "step-exec-reaped-proc-" });
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "step-exec-reaped-proc-" });
           const reaped = yield* makeStuckSpawner({ output: "done", killEndsStream: false, pid: 2_000_000_000 });
           yield* Deferred.succeed(reaped.closed, void 0);
 
           const result = yield* runCaptured({ command: "fast-step", args: [] }).pipe(
             withAdmissionWorkloadBinding(`${root}/workload`, "lease-reaped"),
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, reaped.spawner),
-            Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore))
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, reaped.spawner)
           );
 
           expect(result).toMatchObject({ exitCode: 0, output: "done" });
@@ -438,7 +448,7 @@ describe("StepExec capture pipe lifecycle", () => {
                 expect(nested).toContain('"leaseId":"nested-lease"');
                 expect(yield* fs.readFileString(outerPath)).toBe(outer);
               }),
-            (root) => fs.remove(root, { recursive: true }).pipe(Effect.ignore)
+            (root) => fs.remove(root, { recursive: true }).pipe(Effect.orDie)
           );
         })
       );
@@ -450,7 +460,7 @@ describe("StepExec capture pipe lifecycle", () => {
       it.effect("distinguishes inherited, matching explicit, and owned explicit admission generations", () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          const root = yield* fs.makeTempDirectory({ prefix: "step-exec-inherited-" });
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "step-exec-inherited-" });
           const inheritedPath = `${root}/inherited.workload`;
           const ownedPath = `${root}/owned.workload`;
           const { closed, spawner } = yield* makeStuckSpawner({
@@ -499,7 +509,7 @@ describe("StepExec capture pipe lifecycle", () => {
                 if (previousLease === undefined) delete Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
                 else Bun.env.BEEP_YEET_ADMISSION_LEASE_ID = previousLease;
               })
-          ).pipe(Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore)));
+          );
         })
       );
     }
@@ -562,7 +572,7 @@ BunRuntime.runMain(
                 }
                 expect(nestedAlive).toBe(false);
               }),
-            (root) => fs.remove(root, { recursive: true }).pipe(Effect.ignore)
+            (root) => fs.remove(root, { recursive: true }).pipe(Effect.orDie)
           );
         }),
       15_000
