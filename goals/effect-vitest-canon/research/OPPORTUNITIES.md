@@ -6021,3 +6021,13 @@ On PR #1365 the CodeRabbit status check reported success while its comment
 reported a spending-cap refusal. Treat the provider message as evidence that
 the review did not run; a successful status alone is insufficient proof of
 review coverage. Preserve that distinction when reporting independent review.
+
+## Inline command spans must remain valid after wrapping
+
+The PR #1365 full local lint-policy proof found two inherited
+`tsdoc-code-span-missing-delimiter` warnings in the `CheckCensusSampler`
+documentation in `CheckCensusGate.ts`. The inline compiler command crossed a
+comment-line boundary. The source matched main, and the passing JSDoc Ratchet
+did not establish that the separate ESLint syntax gate passed. Split the
+command into closed inline spans, preserving every flag. Validate comment
+formatting with the syntax gate as well as inventory and docgen checks.
