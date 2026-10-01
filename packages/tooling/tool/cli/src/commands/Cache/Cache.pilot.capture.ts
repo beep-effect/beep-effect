@@ -58,8 +58,13 @@ const extractPilotLog = Effect.fn("CachePilot.extractLog")(function* (
       : input.cacheEnabled
         ? `cache miss, executing ${input.taskHash}\n`
         : `cache bypass, force executing ${input.taskHash}\n`;
-  if (!O.contains(progress)(A.head(selectedLines)))
+  if (!O.contains(progress)(A.head(selectedLines))) {
+    if (O.contains(`cache bypass, force executing ${input.taskHash}\n`)(A.head(selectedLines)))
+      return yield* CacheCommandError.new(
+        "Selected pilot output reports a cache bypass instead of its expected boundary."
+      );
     return yield* CacheCommandError.new("Selected pilot output is missing its exact native progress boundary.");
+  }
   const text = A.join(A.drop(selectedLines, 1), "");
   if (new TextEncoder().encode(text).byteLength > 64 * 1024)
     return yield* CacheCommandError.new("Selected pilot task log exceeded its 64 KiB bound.");

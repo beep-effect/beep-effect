@@ -2903,3 +2903,20 @@ checks. Retained checkpoints:
 verification for this snapshot remains running. These results establish the
 reader boundary around the synthetic protected material; approved durable
 issuance and trusted import remain outstanding.
+
+## Signed matrix expansion: 2026-10-01
+
+Signed observations now require three enabled-configuration fresh/fresh pairs,
+three baseline remote pairs and ten independent signed shadow comparisons.
+The validator checks distinct root/run/summary identities, same-input fresh
+execution, exact output and replay logs, direct wire evidence, reader protection
+and scenario-derived hash expectations. Fresh controls use empty independent
+local cache directories and must report native fresh origins.
+
+The native stable development run passed all 45 executions on the older frozen
+pilot profile. Source typechecking and 75 tests across six files pass. See the
+[development checkpoint](./research/signed-matrix-development-stable.json).
+Full package verification passed: audit 619.7 seconds and docgen 20.2 seconds. This does not refresh
+the final profile, accept producer authority or qualify a tuple. Signed mutation,
+non-execution, capture and actual task-overlap controls, accepted policy import
+and final-source reconciliation remain required.

@@ -10,8 +10,99 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CachePilotOutcome } from "./Cache.pilot.schemas.ts";
+import { CacheSignedPilotShadow } from "./Cache.pilot.signed.schemas.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
-import type { CacheSignedPilotReceipt } from "./Cache.pilot.signed.schemas.ts";
+import type {
+  CacheSignedPilotFreshPair,
+  CacheSignedPilotPair,
+  CacheSignedPilotReceipt,
+} from "./Cache.pilot.signed.schemas.ts";
+
+/**
+ * Reject divergent or reused fresh execution before signed remote reuse starts.
+ *
+ * **Example** (Reference the fresh comparison gate)
+ * ```ts
+ * import { validateCacheSignedPilotFreshPair } from "@beep/repo-cli/commands/Cache"
+ * console.assert(typeof validateCacheSignedPilotFreshPair === "function")
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const validateCacheSignedPilotFreshPair = Effect.fn("CachePilot.validateSignedFreshPair")(function* (
+  pair: CacheSignedPilotFreshPair,
+  key: CacheQualificationKey
+) {
+  const { left, right } = pair;
+  if (!CachePilotOutcome.isAnyOf(["Executed"])(left.outcome) || !CachePilotOutcome.isAnyOf(["Executed"])(right.outcome))
+    return yield* CacheCommandError.new("Signed fresh pair must execute the selected computation.");
+  if (
+    left.id === right.id ||
+    left.summarySha256 === right.summarySha256 ||
+    pair.leftRoot === pair.rightRoot ||
+    left.root === right.root ||
+    !A.every(
+      [left, right],
+      (run) =>
+        run.cacheEnabled &&
+        run.graphExitCode === 0 &&
+        run.nativeRuntimeKeyObserved &&
+        run.sourceTreeUnchanged &&
+        A.every(run.dependencies, (task) => task.origin === "fresh" && task.exitCode === 0)
+    ) ||
+    !A.every(
+      [left.outcome, right.outcome],
+      (outcome) =>
+        outcome.selected.origin === "fresh" &&
+        outcome.selected.exitCode === 0 &&
+        outcome.selected.computation === key.computation &&
+        outcome.replayLogMatches
+    ) ||
+    left.outcome.selected.taskHash !== right.outcome.selected.taskHash ||
+    left.outcome.selected.inputsDigest !== right.outcome.selected.inputsDigest ||
+    left.outcome.logSha256 !== right.outcome.logSha256 ||
+    left.outcome.logBytes !== right.outcome.logBytes
+  )
+    return yield* CacheCommandError.new("Signed fresh pair lacks isolated, same-input successful fresh execution.");
+  return pair;
+});
+
+const changesShadowHash = S.is(
+  CacheSignedPilotShadow.fields.case.pick([
+    "source-comment",
+    "added-source",
+    "readme",
+    "declared-env",
+    "declared-env-empty",
+  ])
+);
+
+/**
+ * Derive the signed shadow hash expectation from its fixed scenario.
+ *
+ * **Details**
+ * The owned runner invokes this before starting the next shadow. Receipt
+ * validation also checks the comparison's wire, output and protection facts.
+ *
+ * **Example** (Reference the shadow gate)
+ * ```ts
+ * import { validateCacheSignedPilotShadow } from "@beep/repo-cli/commands/Cache"
+ * console.assert(typeof validateCacheSignedPilotShadow === "function")
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const validateCacheSignedPilotShadow = Effect.fn("CachePilot.validateSignedShadow")(function* (
+  shadow: CacheSignedPilotShadow,
+  baseline: CacheSignedPilotPair
+) {
+  const changed = shadow.comparison.producer.outcome.selected.taskHash !== baseline.producer.outcome.selected.taskHash;
+  if (changed !== changesShadowHash(shadow.case))
+    return yield* CacheCommandError.new("Signed shadow violates its scenario-derived hash expectation.");
+  return shadow;
+});
 
 /**
  * Reject inconsistent signed pilot reports without conferring producer trust.
@@ -40,15 +131,53 @@ export const validateCacheSignedPilotReceipt = Effect.fn("CachePilot.validateSig
     return yield* CacheCommandError.new("Signed pilot profile differs from its base tuple.");
   if (O.isNone(receipt.runtimeLinker))
     return yield* CacheCommandError.new("Signed pilot runtime linkage evidence is missing.");
-  const pairs = receipt.pairs;
-  const runs = A.flatMap(pairs, (pair) => [pair.authoritative, pair.producer, pair.replay]);
+  const pairs = receipt.comparisons;
+  const freshPairs = receipt.freshPairs;
+  const freshRuns = A.flatMap(freshPairs, (pair) => [pair.left, pair.right]);
+  const runs = A.appendAll(
+    A.flatMap(pairs, (pair) => [pair.authoritative, pair.producer, pair.replay]),
+    freshRuns
+  );
   if (
-    A.dedupe(A.map(pairs, (pair) => pair.id)).length !== 3 ||
-    A.dedupe(A.map(pairs, (pair) => pair.client.namespace)).length !== 3 ||
-    A.dedupe(A.map(runs, (run) => run.id)).length !== 9 ||
-    A.dedupe(A.map(runs, (run) => run.summarySha256)).length !== 9
+    A.dedupe(A.map(receipt.shadows, (shadow) => shadow.case)).length !== 10 ||
+    A.dedupe(A.map(pairs, (pair) => pair.id)).length !== 13 ||
+    A.dedupe(A.map(freshPairs, (pair) => pair.id)).length !== 3 ||
+    A.dedupe(A.map(pairs, (pair) => pair.client.namespace)).length !== 13 ||
+    A.dedupe(A.map(runs, (run) => run.id)).length !== 45 ||
+    A.dedupe(A.map(runs, (run) => run.summarySha256)).length !== 45
   )
     return yield* CacheCommandError.new("Signed pilot pairs, namespaces, runs and summaries must be independent.");
+  const isolationRoots = A.appendAll(
+    A.flatMap(freshPairs, (pair) => [pair.leftRoot, pair.rightRoot]),
+    A.flatMap(pairs, (pair) => [pair.authorityRoot, pair.producerRoot, pair.replayRoot])
+  );
+  if (A.dedupe(isolationRoots).length !== 45)
+    return yield* CacheCommandError.new("Signed comparisons reuse an isolation root.");
+  yield* Effect.forEach(freshPairs, (pair) => validateCacheSignedPilotFreshPair(pair, receipt.key), { discard: true });
+  const baseline = yield* A.head(receipt.pairs).pipe(
+    Effect.fromOption(() => CacheCommandError.new("Signed baseline comparison is missing."))
+  );
+  const baselineTask = baseline.producer.outcome.selected;
+  if (
+    !A.every(
+      receipt.pairs,
+      (pair) =>
+        pair.producer.outcome.selected.taskHash === baselineTask.taskHash &&
+        pair.producer.outcome.selected.inputsDigest === baselineTask.inputsDigest
+    )
+  )
+    return yield* CacheCommandError.new("Signed baseline comparisons disagree on their inputs.");
+  for (const run of freshRuns) {
+    if (
+      !CachePilotOutcome.isAnyOf(["Executed"])(run.outcome) ||
+      run.outcome.selected.taskHash !== baselineTask.taskHash ||
+      run.outcome.selected.inputsDigest !== baselineTask.inputsDigest
+    )
+      return yield* CacheCommandError.new("Enabled fresh controls differ from the signed baseline inputs.");
+  }
+  yield* Effect.forEach(receipt.shadows, (shadow) => validateCacheSignedPilotShadow(shadow, baseline), {
+    discard: true,
+  });
   for (const pair of pairs) {
     if (
       !S.toEquivalence(CacheClientPin)(

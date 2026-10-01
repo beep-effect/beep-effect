@@ -17,7 +17,7 @@ const run = (pair: number, role: number) => ({
   nativeRuntimeKeyObserved: true,
   sourceTreeUnchanged: true,
   dependencies: [{ ...task, computation: "@beep/types#lint", origin: "fresh" }],
-  summarySha256: digest(`${pair * 3 + role + 1}`),
+  summarySha256: Str.padStart(64, "0")(`${pair * 3 + role + 1}`),
   outcome: {
     _tag: "Executed",
     selected: { ...task, origin: role === 2 ? "remote-hit" : "fresh" },
@@ -45,8 +45,27 @@ const baseKey = {
 };
 const linked = { path: "/fixture/loader", target: "/fixture/loader", sha256: digest("a") };
 const staticLink = { _tag: "Static" };
+const comparison = (pair: number) => ({
+  protection: {
+    mechanism: "nested-reader-denial/v1",
+    protectedFiles: 2,
+    readsDenied: true,
+    writesDenied: true,
+    writerEnvironmentHidden: true,
+    protectedBytesUnchanged: true,
+  },
+  id: pair,
+  authorityRoot: Str.padStart(64, "0")(`${100 + pair * 3}`),
+  producerRoot: Str.padStart(64, "0")(`${101 + pair * 3}`),
+  replayRoot: Str.padStart(64, "0")(`${102 + pair * 3}`),
+  client: { ...pin, namespace: `team_pair_${pair}` },
+  authoritative: run(pair, 0),
+  producer: run(pair, 1),
+  replay: run(pair, 2),
+  events: A.map(A.range(0, 2), (role) => event(pair, role)),
+});
 export const signedPilotInput = {
-  schemaVersion: "cache-pilot-signed/v2",
+  schemaVersion: "cache-pilot-signed/v3",
   authority: "signed-pilot-observation-only",
   network: "private-loopback-nested-readers/v1",
   baseKey,
@@ -83,20 +102,66 @@ export const signedPilotInput = {
   configurationDigest: digest("a"),
   toolchainDigest: digest("a"),
   signedRootConfiguration: digest("a"),
-  pairs: A.map(A.range(0, 2), (pair) => ({
-    protection: {
-      mechanism: "nested-reader-denial/v1",
-      protectedFiles: 2,
-      readsDenied: true,
-      writesDenied: true,
-      writerEnvironmentHidden: true,
-      protectedBytesUnchanged: true,
-    },
+  freshPairs: A.map(A.range(0, 2), (pair) => ({
     id: pair,
-    client: { ...pin, namespace: `team_pair_${pair}` },
-    authoritative: run(pair, 0),
-    producer: run(pair, 1),
-    replay: run(pair, 2),
-    events: A.map(A.range(0, 2), (role) => event(pair, role)),
+    leftRoot: digest(["1", "3", "5"][pair]),
+    rightRoot: digest(["2", "4", "6"][pair]),
+    left: {
+      ...run(pair, 0),
+      id: `fresh-${pair}-left`,
+      cacheEnabled: true,
+      summarySha256: digest(["a", "c", "e"][pair]),
+      outcome: { ...run(pair, 0).outcome, replayLogMatches: true },
+    },
+    right: {
+      ...run(pair, 0),
+      id: `fresh-${pair}-right`,
+      root: "root-b",
+      cacheEnabled: true,
+      summarySha256: digest(["b", "d", "f"][pair]),
+      outcome: { ...run(pair, 0).outcome, replayLogMatches: true },
+    },
   })),
+  pairs: A.map(A.range(0, 2), comparison),
+  shadows: A.map(
+    [
+      "baseline",
+      "source-comment",
+      "added-source",
+      "readme",
+      "declared-env",
+      "declared-env-empty",
+      "orchestration-env",
+      "locale",
+      "timezone",
+      "absolute-root",
+    ],
+    (name, index) => {
+      const pair = comparison(index + 3);
+      const changed = A.contains(
+        ["source-comment", "added-source", "readme", "declared-env", "declared-env-empty"],
+        name
+      );
+      const taskHash = changed ? Str.padStart(16, "0")(`${index + 1}`) : task.taskHash;
+      return {
+        case: name,
+        comparison: {
+          ...pair,
+          authoritative: {
+            ...pair.authoritative,
+            outcome: { ...pair.authoritative.outcome, selected: { ...pair.authoritative.outcome.selected, taskHash } },
+          },
+          producer: {
+            ...pair.producer,
+            outcome: { ...pair.producer.outcome, selected: { ...pair.producer.outcome.selected, taskHash } },
+          },
+          replay: {
+            ...pair.replay,
+            outcome: { ...pair.replay.outcome, selected: { ...pair.replay.outcome.selected, taskHash } },
+          },
+          events: A.map(pair.events, (event) => ({ ...event, artifact: taskHash })),
+        },
+      };
+    }
+  ),
 };

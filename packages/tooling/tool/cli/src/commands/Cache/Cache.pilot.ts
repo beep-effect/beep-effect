@@ -50,12 +50,15 @@ import {
   CacheSignedPilotLogInput,
 } from "./Cache.pilot.schemas.ts";
 import {
+  CacheSignedPilotFreshPair,
   CacheSignedPilotPair,
   CacheSignedPilotProtection,
   CacheSignedPilotReceipt,
   CacheSignedPilotRun,
+  CacheSignedPilotShadow,
   CacheSignedPilotTask,
 } from "./Cache.pilot.signed.schemas.ts";
+import { validateCacheSignedPilotFreshPair, validateCacheSignedPilotShadow } from "./Cache.pilot.signed.ts";
 import { renderCacheIdentityLintProfile, verifyCacheIdentityLintProfile } from "./Cache.profile.ts";
 import { CacheFixtureCredentials, CacheFixtureScenario } from "./Cache.protocol.fixture.schemas.ts";
 import { makeCacheProtocolFixture } from "./Cache.protocol.fixture.ts";
@@ -152,7 +155,7 @@ class PilotRoot extends S.Class<PilotRoot>($I`PilotRoot`)(
 ) {}
 class PilotShadowScenario extends S.Class<PilotShadowScenario>($I`PilotShadowScenario`)(
   {
-    id: S.NonEmptyString,
+    id: CacheSignedPilotShadow.fields.case,
     sourceChange: LiteralKit(["none", "source-comment", "added-source", "readme"]),
     env: S.Record(S.String, S.String),
     guest: S.NonEmptyString,
@@ -1010,6 +1013,76 @@ const runPilot = Effect.fn("CachePilot.run")(
       yield* verifyCacheDependencies(root, dependencies);
     });
 
+    const applyShadowSource = Effect.fn("CachePilot.applyShadowSource")(function* (
+      fixture: PilotRoot,
+      scenario: PilotShadowScenario
+    ) {
+      if (scenario.sourceChange === "source-comment") {
+        const original = yield* readBytes(fixture.identity, "src/index.ts").pipe(Effect.flatMap(decodeText));
+        yield* writeContainedFileString(
+          fixture.identity,
+          "src/index.ts",
+          `${original}\n// Qualification shadow input.\n`
+        );
+      } else if (scenario.sourceChange === "added-source") {
+        yield* writeContainedFileString(
+          fixture.identity,
+          "src/qualification-shadow.ts",
+          'export const qualificationShadow = "fixture";\n'
+        );
+      } else if (scenario.sourceChange === "readme") {
+        const original = yield* readBytes(fixture.identity, "README.md").pipe(Effect.flatMap(decodeText));
+        yield* writeContainedFileString(fixture.identity, "README.md", `${original}\nQualification shadow input.\n`);
+      }
+    });
+    const unchanged = PilotShadowScenario.make({
+      id: "baseline",
+      sourceChange: "none",
+      env: {},
+      guest: "/fixture",
+      expectedInputHash: "stable",
+    });
+    const scenarios = [
+      unchanged,
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "source-comment",
+        sourceChange: "source-comment",
+        expectedInputHash: "changed",
+      }),
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "added-source",
+        sourceChange: "added-source",
+        expectedInputHash: "changed",
+      }),
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "readme",
+        sourceChange: "readme",
+        expectedInputHash: "changed",
+      }),
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "declared-env",
+        env: { BEEP_ESLINT_PROFILE: "qualification" },
+        expectedInputHash: "changed",
+      }),
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "declared-env-empty",
+        env: { BEEP_ESLINT_PROFILE: "" },
+        expectedInputHash: "changed",
+      }),
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "orchestration-env",
+        env: { BEEP_AGENT_SESSION_ID: "qualification-canary-metadata" },
+      }),
+      PilotShadowScenario.make({ ...unchanged, id: "locale", env: { LANG: "C.UTF-8", LC_ALL: "C.UTF-8" } }),
+      PilotShadowScenario.make({ ...unchanged, id: "timezone", env: { TZ: "Pacific/Honolulu" } }),
+      PilotShadowScenario.make({ ...unchanged, id: "absolute-root", guest: "/fixture-other" }),
+    ];
     if (mode === "signed") {
       const crypto = yield* Crypto.Crypto;
       const rootConfig = yield* readBytes(root, "turbo.json").pipe(
@@ -1035,173 +1108,207 @@ const runPilot = Effect.fn("CachePilot.run")(
         usesGlobal ? R.set(rootConfig, "global", signedConfiguration) : signedConfiguration
       );
       const signedRootConfiguration = yield* hashText(signedConfig);
-      const pairs = yield* Effect.forEach(
+      const freshPairs = yield* Effect.forEach(
         A.range(0, 2),
-        (pair) =>
-          Effect.scoped(
-            Effect.gen(function* () {
-              const namespace = `team_${request.channel}_${yield* hashText(`${request.client.namespace}:${pair}`)}`;
-              const client = CacheClientPin.make({ ...request.client, namespace });
-              const writer = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
-              const reader = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
-              const signing = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
-              const issuerCanary = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
-              const secrets = [writer, reader, signing, issuerCanary];
-              const fresh = yield* prepare(sourceRootA, "root-a", `signed-${pair}-authority`).pipe(
-                Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
-              );
-              const producerRoot = yield* prepare(sourceRootA, "root-a", `signed-${pair}-producer`).pipe(
-                Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
-              );
-              const readerRoot = yield* prepare(sourceRootB, "root-b", `signed-${pair}-reader`).pipe(
-                Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
-              );
-              const authoritative = yield* execute(fresh, `signed-${pair}-authority`, false, false);
-              const fixture = yield* makeCacheProtocolFixture(
-                CacheFixtureCredentials.make({ namespace, writer, reader })
-              );
-              const transport = PilotTransport.make({
-                endpoint: fixture.url,
-                namespace,
-                bearer: writer,
-                signing,
-                secrets,
-              });
-              yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-producer`, fault: "none" }));
-              const producer = yield* executeNative(
-                producerRoot,
-                `signed-${pair}-producer`,
-                true,
-                true,
-                "/fixture",
-                {},
-                O.some(transport)
-              ).pipe(Effect.flatMap(S.decodeUnknownEffect(CacheSignedPilotRun)));
-              const protectedKeyPath = path.join(experiment, `protected-${pair}.key`);
-              const protectedRecordPath = path.join(experiment, `protected-${pair}.json`);
-              const protectedRecord = yield* JsonStringCodec(CacheSignedPilotRun).encode(producer);
-              yield* writeContainedFileString(experiment, `protected-${pair}.key`, Redacted.value(issuerCanary));
-              yield* writeContainedFileString(experiment, `protected-${pair}.json`, protectedRecord);
-              yield* fs.chmod(protectedKeyPath, 0o600);
-              yield* fs.chmod(protectedRecordPath, 0o600);
-              yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-reader`, fault: "none" }));
-              const replay = yield* executeNative(
-                readerRoot,
-                `signed-${pair}-reader`,
-                true,
-                true,
-                "/fixture",
-                {},
-                O.some(PilotTransport.make({ ...transport, bearer: reader }))
-              ).pipe(Effect.flatMap(S.decodeUnknownEffect(CacheSignedPilotRun)));
-              const protectedPaths = yield* S.String.pipe(S.Array, JsonStringCodec).encode([
-                protectedKeyPath,
-                protectedRecordPath,
-              ]);
-              const forbiddenDigests = yield* S.String.pipe(S.Array, JsonStringCodec).encode([
-                yield* writer.pipe(Redacted.value, hashText),
-                yield* issuerCanary.pipe(Redacted.value, hashText),
-              ]);
-              const issuerProbe = yield* S.String.pipe(S.OptionFromNullOr, JsonStringCodec).encode(
-                protectedIssuerMaterial
-              );
-              const probeScript = `const fs=require("node:fs");const crypto=require("node:crypto");
+        Effect.fn("CachePilot.signedFreshPair")(function* (pair) {
+          const leftRoot = yield* prepare(sourceRootA, "root-a", `signed-fresh-${pair}-left`).pipe(
+            Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+          );
+          const rightRoot = yield* prepare(sourceRootB, "root-b", `signed-fresh-${pair}-right`).pipe(
+            Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+          );
+          // Each new root starts without a cache; native observations must still prove fresh execution.
+          for (const fixture of [leftRoot, rightRoot])
+            if (yield* fs.exists(path.join(fixture.directory, "cache")))
+              return yield* CacheCommandError.new("Signed fresh comparison requires a new isolated cache directory.");
+          const left = yield* execute(leftRoot, `signed-fresh-${pair}-left`, true, true);
+          const right = yield* execute(rightRoot, `signed-fresh-${pair}-right`, true, true);
+          const result = CacheSignedPilotFreshPair.make({
+            id: pair,
+            leftRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(leftRoot.directory)}`),
+            rightRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(rightRoot.directory)}`),
+            left,
+            right,
+          });
+          yield* validateCacheSignedPilotFreshPair(result, current.source.key);
+          return result;
+        }),
+        { concurrency: 1 }
+      );
+      const runSignedPair = Effect.fn("CachePilot.signedPair")(function* (pair: number, scenario: PilotShadowScenario) {
+        const namespace = `team_${request.channel}_${yield* hashText(`${request.client.namespace}:${pair}`)}`;
+        const client = CacheClientPin.make({ ...request.client, namespace });
+        const writer = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
+        const reader = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
+        const signing = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
+        const issuerCanary = Redacted.make(Hex.encode(yield* crypto.randomBytes(32)));
+        const secrets = [writer, reader, signing, issuerCanary];
+        const fresh = yield* prepare(sourceRootA, "root-a", `signed-${pair}-authority`).pipe(
+          Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+        );
+        const producerRoot = yield* prepare(sourceRootA, "root-a", `signed-${pair}-producer`).pipe(
+          Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+        );
+        const readerRoot = yield* prepare(sourceRootB, "root-b", `signed-${pair}-reader`).pipe(
+          Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+        );
+        yield* Effect.forEach([fresh, producerRoot, readerRoot], (fixture) => applyShadowSource(fixture, scenario), {
+          concurrency: 1,
+          discard: true,
+        });
+        const authoritative = yield* execute(
+          fresh,
+          `signed-${pair}-authority`,
+          false,
+          false,
+          scenario.guest,
+          scenario.env
+        );
+        const fixture = yield* makeCacheProtocolFixture(CacheFixtureCredentials.make({ namespace, writer, reader }));
+        const transport = PilotTransport.make({
+          endpoint: fixture.url,
+          namespace,
+          bearer: writer,
+          signing,
+          secrets,
+        });
+        yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-producer`, fault: "none" }));
+        const producer = yield* executeNative(
+          producerRoot,
+          `signed-${pair}-producer`,
+          true,
+          true,
+          scenario.guest,
+          scenario.env,
+          O.some(transport)
+        ).pipe(Effect.flatMap(S.decodeUnknownEffect(CacheSignedPilotRun)));
+        const protectedKeyPath = path.join(experiment, `protected-${pair}.key`);
+        const protectedRecordPath = path.join(experiment, `protected-${pair}.json`);
+        const protectedRecord = yield* JsonStringCodec(CacheSignedPilotRun).encode(producer);
+        yield* writeContainedFileString(experiment, `protected-${pair}.key`, Redacted.value(issuerCanary));
+        yield* writeContainedFileString(experiment, `protected-${pair}.json`, protectedRecord);
+        yield* fs.chmod(protectedKeyPath, 0o600);
+        yield* fs.chmod(protectedRecordPath, 0o600);
+        yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-reader`, fault: "none" }));
+        const replay = yield* executeNative(
+          readerRoot,
+          `signed-${pair}-reader`,
+          true,
+          true,
+          "/fixture",
+          scenario.env,
+          O.some(PilotTransport.make({ ...transport, bearer: reader }))
+        ).pipe(Effect.flatMap(S.decodeUnknownEffect(CacheSignedPilotRun)));
+        const protectedPaths = yield* S.String.pipe(S.Array, JsonStringCodec).encode([
+          protectedKeyPath,
+          protectedRecordPath,
+        ]);
+        const forbiddenDigests = yield* S.String.pipe(S.Array, JsonStringCodec).encode([
+          yield* writer.pipe(Redacted.value, hashText),
+          yield* issuerCanary.pipe(Redacted.value, hashText),
+        ]);
+        const issuerProbe = yield* S.String.pipe(S.OptionFromNullOr, JsonStringCodec).encode(protectedIssuerMaterial);
+        const probeScript = `const fs=require("node:fs");const crypto=require("node:crypto");
 const paths=${protectedPaths};const forbidden=${forbiddenDigests};const issuer=${issuerProbe};
 const denied=(file,flags)=>{try{const fd=fs.openSync(file,flags);fs.closeSync(fd);return false;}catch(error){if(error.code==="ENOENT"||error.code==="EACCES"||error.code==="EPERM"||error.code==="EROFS")return true;throw error;}};
 const values=Object.values(process.env);try{for(const item of fs.readFileSync("/proc/1/environ","utf8").split("\\0")){const at=item.indexOf("=");if(at>=0)values.push(item.slice(at+1));}}catch(error){if(error.code!=="ENOENT"&&error.code!=="EACCES"&&error.code!=="EPERM")throw error;}
 const hidden=values.every(value=>!forbidden.includes(crypto.createHash("sha256").update(value).digest("hex")));
 console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(file=>denied(file,"r")),writesDenied:paths.every(file=>denied(file,"r+")),writerEnvironmentHidden:hidden,issuerMaterialDenied:issuer===null?undefined:denied(issuer,"r")&&denied(issuer,"r+")}));`;
-              const protectionProbe = yield* invoke(
-                readerRoot,
-                "/fixture",
-                ["/tools/bun", "-e", probeScript],
-                {},
-                O.some(PilotTransport.make({ ...transport, bearer: reader }))
-              );
-              if (
-                protectionProbe.exitCode !== 0 ||
-                protectionProbe.truncated ||
-                Str.trim(protectionProbe.stderr) !== ""
-              )
-                return yield* CacheCommandError.new("Signed pilot reader protection probe failed.");
-              const protectionResult = yield* JsonStringCodec(S.JsonObject).decode(protectionProbe.stdout);
-              const protectedBytesUnchanged =
-                (yield* readBytes(experiment, `protected-${pair}.key`, 1024).pipe(Effect.flatMap(decodeText))) ===
-                  Redacted.value(issuerCanary) &&
-                (yield* readBytes(experiment, `protected-${pair}.json`, 256 * 1024).pipe(
-                  Effect.flatMap(decodeText)
-                )) === protectedRecord;
-              const protection = yield* S.decodeUnknownEffect(CacheSignedPilotProtection)({
-                ...protectionResult,
-                mechanism: "nested-reader-denial/v1",
-                protectedBytesUnchanged,
-              });
-              if (
-                !CachePilotOutcome.isAnyOf(["Executed"])(authoritative.outcome) ||
-                authoritative.graphExitCode !== 0 ||
-                producer.graphExitCode !== 0 ||
-                replay.graphExitCode !== 0 ||
-                authoritative.outcome.selected.origin !== "fresh" ||
-                producer.outcome.selected.origin !== "fresh" ||
-                replay.outcome.selected.origin !== "remote-hit" ||
-                authoritative.outcome.logSha256 !== producer.outcome.logSha256 ||
-                producer.outcome.logSha256 !== replay.outcome.logSha256 ||
-                producer.outcome.selected.taskHash !== replay.outcome.selected.taskHash ||
-                producer.outcome.selected.inputsDigest !== replay.outcome.selected.inputsDigest ||
-                !producer.outcome.replayLogMatches ||
-                !replay.outcome.replayLogMatches ||
-                producer.summarySha256 === replay.summarySha256
-              )
-                return yield* CacheCommandError.new(
-                  "Signed pilot diverged from fresh authority or lacked independent remote replay."
-                );
-              const events = yield* fixture.events;
-              const taskHash = producer.outcome.selected.taskHash;
-              const puts = A.filter(events, (event) => event.operation === "put");
-              const reads = A.filter(events, (event) => event.operation === "get" && event.role === "reader");
-              const put = yield* A.head(puts).pipe(
-                Effect.fromOption(() => CacheCommandError.new("Signed producer upload missing."))
-              );
-              const read = yield* A.head(reads).pipe(
-                Effect.fromOption(() => CacheCommandError.new("Signed reader download missing."))
-              );
-              if (
-                puts.length !== 1 ||
-                reads.length !== 1 ||
-                put.status !== 200 ||
-                put.role !== "writer" ||
-                read.status !== 200 ||
-                !O.contains(taskHash)(put.artifact) ||
-                !O.contains(taskHash)(read.artifact) ||
-                !put.tagPresent ||
-                !read.tagPresent ||
-                put.bytes === 0 ||
-                put.bytes !== read.bytes ||
-                O.isNone(put.digest) ||
-                !O.contains(put.digest.value)(read.digest) ||
-                !A.some(
-                  events,
-                  (event) =>
-                    event.operation === "get" &&
-                    event.role === "writer" &&
-                    event.status === 404 &&
-                    O.contains(taskHash)(event.artifact)
-                )
-              )
-                return yield* CacheCommandError.new(
-                  "Signed pilot lacks matching direct miss/upload/download evidence."
-                );
-              return CacheSignedPilotPair.make({
-                id: S.Natural.make(pair),
-                client,
-                authoritative,
-                producer,
-                replay,
-                events,
-                protection,
-              });
-            })
-          ),
+        const protectionProbe = yield* invoke(
+          readerRoot,
+          "/fixture",
+          ["/tools/bun", "-e", probeScript],
+          scenario.env,
+          O.some(PilotTransport.make({ ...transport, bearer: reader }))
+        );
+        if (protectionProbe.exitCode !== 0 || protectionProbe.truncated || Str.trim(protectionProbe.stderr) !== "")
+          return yield* CacheCommandError.new("Signed pilot reader protection probe failed.");
+        const protectionResult = yield* JsonStringCodec(S.JsonObject).decode(protectionProbe.stdout);
+        const protectedBytesUnchanged =
+          (yield* readBytes(experiment, `protected-${pair}.key`, 1024).pipe(Effect.flatMap(decodeText))) ===
+            Redacted.value(issuerCanary) &&
+          (yield* readBytes(experiment, `protected-${pair}.json`, 256 * 1024).pipe(Effect.flatMap(decodeText))) ===
+            protectedRecord;
+        const protection = yield* S.decodeUnknownEffect(CacheSignedPilotProtection)({
+          ...protectionResult,
+          mechanism: "nested-reader-denial/v1",
+          protectedBytesUnchanged,
+        });
+        if (
+          !CachePilotOutcome.isAnyOf(["Executed"])(authoritative.outcome) ||
+          authoritative.graphExitCode !== 0 ||
+          producer.graphExitCode !== 0 ||
+          replay.graphExitCode !== 0 ||
+          authoritative.outcome.selected.origin !== "fresh" ||
+          producer.outcome.selected.origin !== "fresh" ||
+          replay.outcome.selected.origin !== "remote-hit" ||
+          authoritative.outcome.logSha256 !== producer.outcome.logSha256 ||
+          producer.outcome.logSha256 !== replay.outcome.logSha256 ||
+          producer.outcome.selected.taskHash !== replay.outcome.selected.taskHash ||
+          producer.outcome.selected.inputsDigest !== replay.outcome.selected.inputsDigest ||
+          !producer.outcome.replayLogMatches ||
+          !replay.outcome.replayLogMatches ||
+          producer.summarySha256 === replay.summarySha256
+        )
+          return yield* CacheCommandError.new(
+            "Signed pilot diverged from fresh authority or lacked independent remote replay."
+          );
+        const events = yield* fixture.events;
+        const taskHash = producer.outcome.selected.taskHash;
+        const puts = A.filter(events, (event) => event.operation === "put");
+        const reads = A.filter(events, (event) => event.operation === "get" && event.role === "reader");
+        const put = yield* A.head(puts).pipe(
+          Effect.fromOption(() => CacheCommandError.new("Signed producer upload missing."))
+        );
+        const read = yield* A.head(reads).pipe(
+          Effect.fromOption(() => CacheCommandError.new("Signed reader download missing."))
+        );
+        if (
+          puts.length !== 1 ||
+          reads.length !== 1 ||
+          put.status !== 200 ||
+          put.role !== "writer" ||
+          read.status !== 200 ||
+          !O.contains(taskHash)(put.artifact) ||
+          !O.contains(taskHash)(read.artifact) ||
+          !put.tagPresent ||
+          !read.tagPresent ||
+          put.bytes === 0 ||
+          put.bytes !== read.bytes ||
+          O.isNone(put.digest) ||
+          !O.contains(put.digest.value)(read.digest) ||
+          !A.some(
+            events,
+            (event) =>
+              event.operation === "get" &&
+              event.role === "writer" &&
+              event.status === 404 &&
+              O.contains(taskHash)(event.artifact)
+          )
+        )
+          return yield* CacheCommandError.new("Signed pilot lacks matching direct miss/upload/download evidence.");
+        return CacheSignedPilotPair.make({
+          id: S.Natural.make(pair),
+          client,
+          authorityRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(fresh.directory)}`),
+          producerRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(producerRoot.directory)}`),
+          replayRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(readerRoot.directory)}`),
+          authoritative,
+          producer,
+          replay,
+          events,
+          protection,
+        });
+      }, Effect.scoped);
+      const pairs = yield* Effect.forEach(A.range(0, 2), (pair) => runSignedPair(pair, unchanged), { concurrency: 1 });
+      const baselinePair = O.getOrThrow(A.head(pairs));
+      const shadows = yield* Effect.forEach(
+        scenarios,
+        Effect.fn("CachePilot.signedShadow")(function* (scenario, index) {
+          const comparison = yield* runSignedPair(index + 3, scenario);
+          const shadow = CacheSignedPilotShadow.make({ case: scenario.id, comparison });
+          return yield* validateCacheSignedPilotShadow(shadow, baselinePair);
+        }),
         { concurrency: 1 }
       );
       yield* verifyFinalIntegrity();
@@ -1224,6 +1331,8 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
         configurationDigest: current.source.configurationDigest,
         toolchainDigest: current.source.toolchainDigest,
         signedRootConfiguration,
+        shadows,
+        freshPairs,
         pairs,
       });
     }
@@ -1308,82 +1417,12 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
       });
       yield* runInitialComparisons();
       const baseline = O.getOrThrow(A.get(runs, 0));
-      const applyShadowSource = Effect.fn("CachePilot.applyShadowSource")(function* (
-        fixture: PilotRoot,
-        scenario: PilotShadowScenario
-      ) {
-        if (scenario.sourceChange === "source-comment") {
-          const original = yield* readBytes(fixture.identity, "src/index.ts").pipe(Effect.flatMap(decodeText));
-          yield* writeContainedFileString(
-            fixture.identity,
-            "src/index.ts",
-            `${original}\n// Qualification shadow input.\n`
-          );
-        } else if (scenario.sourceChange === "added-source") {
-          yield* writeContainedFileString(
-            fixture.identity,
-            "src/qualification-shadow.ts",
-            'export const qualificationShadow = "fixture";\n'
-          );
-        } else if (scenario.sourceChange === "readme") {
-          const original = yield* readBytes(fixture.identity, "README.md").pipe(Effect.flatMap(decodeText));
-          yield* writeContainedFileString(fixture.identity, "README.md", `${original}\nQualification shadow input.\n`);
-        }
-      });
       const equivalentShadowReplay = (authoritative: CachePilotRun, produced: CachePilotRun, replayed: CachePilotRun) =>
         compare(authoritative, produced, false) &&
         compare(produced, replayed, true) &&
         CachePilotOutcome.isAnyOf(["Executed"])(replayed.outcome) &&
         replayed.outcome.selected.origin === "local-hit";
       const runShadowComparisons = Effect.fn("CachePilot.runShadowComparisons")(function* () {
-        const unchanged = PilotShadowScenario.make({
-          id: "baseline",
-          sourceChange: "none",
-          env: {},
-          guest: "/fixture",
-          expectedInputHash: "stable",
-        });
-        const scenarios = [
-          unchanged,
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "source-comment",
-            sourceChange: "source-comment",
-            expectedInputHash: "changed",
-          }),
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "added-source",
-            sourceChange: "added-source",
-            expectedInputHash: "changed",
-          }),
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "readme",
-            sourceChange: "readme",
-            expectedInputHash: "changed",
-          }),
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "declared-env",
-            env: { BEEP_ESLINT_PROFILE: "qualification" },
-            expectedInputHash: "changed",
-          }),
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "declared-env-empty",
-            env: { BEEP_ESLINT_PROFILE: "" },
-            expectedInputHash: "changed",
-          }),
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "orchestration-env",
-            env: { BEEP_AGENT_SESSION_ID: "qualification-canary-metadata" },
-          }),
-          PilotShadowScenario.make({ ...unchanged, id: "locale", env: { LANG: "C.UTF-8", LC_ALL: "C.UTF-8" } }),
-          PilotShadowScenario.make({ ...unchanged, id: "timezone", env: { TZ: "Pacific/Honolulu" } }),
-          PilotShadowScenario.make({ ...unchanged, id: "absolute-root", guest: "/fixture-other" }),
-        ];
         for (const scenario of scenarios) {
           const writer = yield* prepare(sourceRootA, "root-a", `shadow-${scenario.id}-a`);
           const reader = yield* prepare(sourceRootB, "root-b", `shadow-${scenario.id}-b`);

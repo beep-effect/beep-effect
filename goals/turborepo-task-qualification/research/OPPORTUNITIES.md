@@ -2593,3 +2593,17 @@ omitted the filesystem utility layer consumed by the census. The probe now
 uses the existing `FsUtilsLive` composition. Reusing the complete established
 runner layer setup would have prevented the failed observation; no production
 service or evidence gate was weakened.
+
+### Signed fresh controls confused configured caching with disabled cache I/O
+
+The expanded signed-pilot development control failed at its exact native progress
+boundary. A bounded diagnostic recognized only fixed, approved messages and
+confirmed that `--cache=local:` emitted the native cache-bypass boundary, while
+the new enabled-config comparison expected a cache miss. This is an introduced
+harness mismatch; neither attempt is passing qualification evidence. The fresh
+controls now use normal local caching in newly created, independent directories
+whose cache path must not already exist. Native summaries must still prove fresh
+execution, and exact task output plus persisted replay-log comparisons remain
+mandatory. Testing configured cache state separately from cache I/O mode would
+have prevented the failed run. Final qualification still requires current pins
+and the remaining signed matrix.

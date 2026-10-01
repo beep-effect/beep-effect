@@ -125,11 +125,13 @@ export {
   CacheSignedPilotLogInput,
 } from "./Cache.pilot.schemas.ts";
 export {
+  CacheSignedPilotFreshPair,
   CacheSignedPilotPair,
   CacheSignedPilotProtection,
   CacheSignedPilotReceipt,
   CacheSignedPilotRequest,
   CacheSignedPilotRun,
+  CacheSignedPilotShadow,
   CacheSignedPilotTask,
 } from "./Cache.pilot.signed.schemas.ts";
 /**
@@ -138,7 +140,11 @@ export {
  * @category validation
  * @since 0.0.0
  */
-export { validateCacheSignedPilotReceipt } from "./Cache.pilot.signed.ts";
+export {
+  validateCacheSignedPilotFreshPair,
+  validateCacheSignedPilotReceipt,
+  validateCacheSignedPilotShadow,
+} from "./Cache.pilot.signed.ts";
 /**
  * Run native identity lint qualification controls.
  *

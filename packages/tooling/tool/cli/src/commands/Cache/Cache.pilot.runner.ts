@@ -211,7 +211,7 @@ BunRuntime.runMain(Effect.gen(function* () {
         if (O.isSome(protectedIssuerMaterial)) {
           if (
             !O.contains(issuerDigest, yield* hashIssuerMaterial(protectedIssuerMaterial.value)) ||
-            !A.every(report.pairs, (pair) => O.contains(pair.protection.issuerMaterialDenied, true))
+            !A.every(report.comparisons, (pair) => O.contains(pair.protection.issuerMaterialDenied, true))
           )
             return yield* CacheCommandError.new(
               "Persistent issuer material was exposed or changed during the signed pilot."

@@ -8,6 +8,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { CachePilotReceipt, CachePilotRequest, CachePilotRun, CachePilotTask } from "./Cache.pilot.schemas.ts";
 import { CacheFixtureEvent } from "./Cache.protocol.fixture.schemas.ts";
@@ -115,6 +116,9 @@ export class CacheSignedPilotPair extends S.Class<CacheSignedPilotPair>($I`Cache
   {
     id: S.Natural,
     client: CacheClientPin,
+    authorityRoot: Sha256Hex,
+    producerRoot: Sha256Hex,
+    replayRoot: Sha256Hex,
     authoritative: CachePilotRun,
     producer: CacheSignedPilotRun,
     replay: CacheSignedPilotRun,
@@ -124,6 +128,66 @@ export class CacheSignedPilotPair extends S.Class<CacheSignedPilotPair>($I`Cache
   $I.annote("CacheSignedPilotPair", {
     description:
       "One empty-store namespace with separate authority, producer and reader roots and sanitized wire observations.",
+  })
+) {}
+
+/**
+ * Two isolated fresh executions under the same enabled signed configuration.
+ *
+ * **Details**
+ * Both runs start with separate empty local caches. Native origins, inputs, task hashes,
+ * output logs and independent summaries must be checked by the receipt validator.
+ *
+ * **Example** (Inspect fresh comparison roots)
+ * ```ts
+ * import { CacheSignedPilotFreshPair } from "@beep/repo-cli/commands/Cache"
+ * console.assert("left" in CacheSignedPilotFreshPair.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheSignedPilotFreshPair extends S.Class<CacheSignedPilotFreshPair>($I`CacheSignedPilotFreshPair`)(
+  { id: S.Natural, leftRoot: Sha256Hex, rightRoot: Sha256Hex, left: CachePilotRun, right: CachePilotRun },
+  $I.annote("CacheSignedPilotFreshPair", {
+    description: "Same-configuration fresh comparison; cache-disabled normal authority remains a separate observation.",
+  })
+) {}
+
+/**
+ * One of the ten required signed shadow scenarios with its independent remote comparison.
+ *
+ * **Details**
+ * Expected hash changes are derived from the scenario by the validator;
+ * a caller-supplied success flag cannot satisfy this contract.
+ *
+ * **Example** (Inspect signed shadow evidence)
+ * ```ts
+ * import { CacheSignedPilotShadow } from "@beep/repo-cli/commands/Cache"
+ * console.assert("comparison" in CacheSignedPilotShadow.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheSignedPilotShadow extends S.Class<CacheSignedPilotShadow>($I`CacheSignedPilotShadow`)(
+  {
+    case: LiteralKit([
+      "baseline",
+      "source-comment",
+      "added-source",
+      "readme",
+      "declared-env",
+      "declared-env-empty",
+      "orchestration-env",
+      "locale",
+      "timezone",
+      "absolute-root",
+    ]),
+    comparison: CacheSignedPilotPair,
+  },
+  $I.annote("CacheSignedPilotShadow", {
+    description: "Signed remote replay compared with fresh authority for one fixed perturbation.",
   })
 ) {}
 
@@ -141,7 +205,7 @@ export class CacheSignedPilotPair extends S.Class<CacheSignedPilotPair>($I`Cache
  */
 export class CacheSignedPilotReceipt extends S.Class<CacheSignedPilotReceipt>($I`CacheSignedPilotReceipt`)(
   {
-    schemaVersion: S.tag("cache-pilot-signed/v2"),
+    schemaVersion: S.tag("cache-pilot-signed/v3"),
     authority: S.tag("signed-pilot-observation-only"),
     network: S.tag("private-loopback-nested-readers/v1"),
     key: CachePilotReceipt.fields.key,
@@ -159,13 +223,35 @@ export class CacheSignedPilotReceipt extends S.Class<CacheSignedPilotReceipt>($I
     configurationDigest: Sha256Hex,
     toolchainDigest: Sha256Hex,
     signedRootConfiguration: Sha256Hex,
+    shadows: S.Array(CacheSignedPilotShadow).check(S.isMinLength(10), S.isMaxLength(10)),
+    freshPairs: S.Array(CacheSignedPilotFreshPair).check(S.isMinLength(3), S.isMaxLength(3)),
     pairs: S.Array(CacheSignedPilotPair).check(S.isMinLength(3), S.isMaxLength(3)),
   },
   $I.annote("CacheSignedPilotReceipt", {
     description:
-      "Three signed real-pilot pairs bound to an explicit network profile; operational protected-receipt validation remains required.",
+      "Three fresh pairs, three signed remote pairs and ten remote shadows bound to an explicit network profile; operational protected-receipt validation remains required.",
   })
-) {}
+) {
+  /**
+   * Every baseline and shadow remote comparison requiring receipt validation.
+   *
+   * **Example** (Select all protected comparisons)
+   * ```ts
+   * import { CacheSignedPilotReceipt } from "@beep/repo-cli/commands/Cache"
+   * const comparisons = (receipt: CacheSignedPilotReceipt) => receipt.comparisons
+   * console.assert(typeof comparisons === "function")
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get comparisons(): ReadonlyArray<CacheSignedPilotPair> {
+    return A.appendAll(
+      this.pairs,
+      A.map(this.shadows, (shadow) => shadow.comparison)
+    );
+  }
+}
 
 /**
  * Bind a signed experiment to a source checkout independently of the runner checkout.
