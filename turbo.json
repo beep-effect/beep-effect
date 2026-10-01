@@ -277,20 +277,6 @@
         ".env",
         ".env.*"
       ],
-      "env": [
-        "APP_ADMINS_EMAILS",
-        "ALLOWED_EMAILS",
-        "DATABASE_URL",
-        "DATABASE_URL_UNPOOLED",
-        "EMAIL_*",
-        "AUTH_*",
-        "OPENAI_*",
-        "SECURITY_*",
-        "OAUTH_*",
-        "NEXT_PUBLIC_*",
-        "LIVEBLOCKS_*",
-        "RESEND_*"
-      ],
       "outputs": [
         "dist/**",
         "build/**",
