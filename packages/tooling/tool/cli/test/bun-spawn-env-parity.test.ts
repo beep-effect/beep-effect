@@ -32,6 +32,8 @@ const ConformanceReport = S.Struct({
   })
 );
 const isNonEmptyExecutable = S.is(S.NonEmptyString);
+const executablePathDelimiter = process.platform === "win32" ? ";" : ":";
+const nodeExecutableName = process.platform === "win32" ? "node.exe" : "node";
 
 // bunx --bun places a node -> bun shim before the host PATH. Probe candidates
 // instead of trusting names, npm_node_execpath, NODE, or the outer process.execPath.
@@ -39,8 +41,8 @@ const hostNodeExecutable = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const searchPath = yield* Config.String("PATH");
-  for (const directory of Str.split(process.platform === "win32" ? ";" : ":")(searchPath)) {
-    const candidate = path.join(directory, process.platform === "win32" ? "node.exe" : "node");
+  for (const directory of Str.split(executablePathDelimiter)(searchPath)) {
+    const candidate = path.join(directory, nodeExecutableName);
     if (!(yield* fs.exists(candidate))) {
       continue;
     }

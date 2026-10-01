@@ -7,3 +7,5 @@ The tracked regression runs twenty cases independently on actual Node and Bun. I
 Applied generated package command `CI=true bun run test test/bun-spawn-env-parity.test.ts` passes both outer cases in 3.12 seconds. Root configuration and applied fixture/wrapper typechecks pass. Private controls establish that the old Node adapter fails eight empty/partial replacement cases, a named-node route under bunx fails runtime identity, and an unavailable host Node fails explicitly without skipping. Hostile inherited lane flags are removed only for the nested fixture. No real secret values are involved.
 
 These focused results establish the applied regression. Full package and hosted proof remain separate gates. Current full-goal inventory and phase acceptance remain open.
+
+Published checkpoint cf0a95ed04 full CLI package proof passes: audit615.1s and docgen21.1s. The resolver refinement hoists the same two platform choices outside the loop; private generated-script and routing controls remain qualified. Real applied Fallow and new package proof are required for that refinement.
