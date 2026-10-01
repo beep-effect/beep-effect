@@ -1111,9 +1111,9 @@ const makeCheckCensusSampler = Effect.fnUntraced(function* (
  *
  * **Details**
  *
- * The live service spawns `tsc -p <tsconfig> --noEmit --extendedDiagnostics
- * --singleThreaded --tsBuildInfoFile <fresh>` through the platform
- * `ChildProcessSpawner`, with a build-info file in a scoped temporary
+ * The live service spawns
+ * `tsc -p <tsconfig> --noEmit --extendedDiagnostics --singleThreaded --tsBuildInfoFile <fresh>`
+ * through the platform `ChildProcessSpawner`, with a build-info file in a scoped temporary
  * directory under `.beep/quality/` so no incremental state is ever reused.
  * `CheckCensusSampler.make(options)` builds the live service; tests provide
  * a fixed implementation instead.
