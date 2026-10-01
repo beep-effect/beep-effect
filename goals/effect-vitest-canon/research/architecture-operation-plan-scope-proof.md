@@ -1,8 +1,7 @@
 # Architecture operation-plan fixture qualification
 
-This is private candidate evidence. Source application, root test types,
-ratchet reconciliation and full package proof remain pending. Campaign rows
-remain open until a verified source commit exists.
+The candidate is applied after merging main at `65fb90dbb0`. Campaign rows
+remain open until the new full package proof and source commit exist.
 
 The candidate removes the local provider clone and 28 provider invocations,
 using 14 public instrumented runner layer registrations. It preserves native
@@ -24,3 +23,11 @@ of successful test bodies. The control observes the intended failure and
 asserts the allocated root is absent after scope closure. It passes on Node
 (4.48 seconds) and Bun (2.76 seconds). Private hashes and logs bind these results
 to the candidate; none substitutes for the forthcoming applied package proof.
+
+The final combined applied architecture/runner suite passes 42 tests on Node
+(6.38 seconds) and Bun (3.78 seconds). Root test types and full package proof
+are tracked separately; baseline reconciliation preserves historical rows.
+
+Final applied root test types and the detector ratchet pass with zero new
+findings. Full package proof passes: audit 760.8 seconds and docgen 25.0
+seconds. Campaign reconciliation will bind fixes to the source commit.

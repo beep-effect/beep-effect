@@ -6207,3 +6207,14 @@ accept already-absent roots, and keep other release failures visible. Add an
 immediate setup-failure control rather than treating the successful test body
 as proof that the root lifetime is safe. This pattern should be checked when
 reviewing other temporary-directory migrations with explicit early removal.
+
+### Inbox Memory qualification must exercise Bun's native writer path
+
+A private inbox-view trial passed all 19 cases on Node but failed eight on Bun
+with `ENOENT ... posix_spawn 'flock'`. The append path writes an active-index
+input through FileSystem, then starts a native flock/sh process with repoRoot
+as cwd. A Memory-only root does not exist for that process. Keep append and
+symlink cases native; qualify only the three read-only view fixtures for Memory.
+Node-only green evidence would have missed this boundary. A future test helper
+could declare native subprocess requirements so platform promotion reviews do
+not have to discover them from a runtime-specific failure.
