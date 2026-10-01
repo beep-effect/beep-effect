@@ -202,13 +202,14 @@ export const reviewFollowUpThreadIssue = (thread: GhReviewThread): QualityIssue 
  *
  * **Details**
  *
- * Closeout reports carry two kinds of blocking issue in one list: those a
- * review thread raised (an unresolved thread, an unanswered follow-up, or the
+ * Closeout reports carry two kinds of issue in one list: those a review thread
+ * raised (an unresolved thread, an unanswered follow-up, or the
  * actionable-thread count gate), all categorised `pr-review`, and those a
- * non-thread gate raised, such as the Greptile score and issue-count gates.
- * Merge readiness charges the first kind to `threads-resolved` and the second
- * to `closeout-gates-passed`; reading the category here keeps every reader of
- * a closeout report on the same split.
+ * review-bot gate raised, such as the opt-in Greptile score and issue-count
+ * gates. Both fail `yeet closeout`'s exit code. Merge readiness holds on the
+ * first kind through `threads-resolved` and only displays the second, since
+ * review-bot gates are advisory; reading the category here keeps every reader
+ * of a closeout report on the same split.
  *
  * **Example** (Split closeout issues by source)
  *
@@ -229,7 +230,7 @@ export const reviewFollowUpThreadIssue = (thread: GhReviewThread): QualityIssue 
  * strictEqual(scoreGate !== undefined && closeoutIssueFromReviewThread(scoreGate), false)
  * ```
  *
- * @param issue - One blocking issue from a closeout report.
+ * @param issue - One issue from a closeout report.
  * @returns Whether a review thread raised the issue.
  * @category predicates
  * @since 0.0.0
@@ -573,7 +574,13 @@ const greptileCountGateIssues = (options: PrCloseoutOptions, greptile: GreptileS
     : [];
 
 /**
- * Derive blocking closeout issues from review-thread and Greptile gate inputs.
+ * Derive closeout issues from review-thread and Greptile gate inputs.
+ *
+ * **Details**
+ *
+ * Every issue fails `yeet closeout`'s exit code. Only the review-thread ones
+ * (`pr-review`) hold merge readiness; the Greptile gates, set only by the
+ * opt-in `--require-greptile-*` flags, are advisory there.
  *
  * **Example** (Failed review gate issues)
  *

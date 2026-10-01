@@ -1,20 +1,27 @@
 ## Current source refresh, 2026-10-01
 
-Main `90517df719fa1eb1a24c00b6ba8bdad2d26d8b8f` is merged at campaign
-source `2d38ac6827c599248f7fd643feaf75e2a0fe406b`. R49 input and runtime
-approvals became historical before any stage materialized. R50 recomputed
-3,152 corpus files, 27 lanes and 82 exclusions, then independently reviewed
-all 76 inventory-anchor conflicts. The approved patch updates 72 citations,
-retains four rows unchanged, and preserves the 725 / 108 / 617 / zero-applied
-projection. The prior inventory is archived at
-`history/inventory/2026-10-01-pre-r50-anchor-drift.jsonl`.
+PR #1339 merged at `04993ae26acd6f93f308a1ae949e4f2a5a4e864c`
+before the campaign completed. The remaining work continues in the single
+successor PR #1372. Main's Effect 4.0.0 snapshot
+`cf97523f40d690a0da02233b2e4a734d4e6fae9e` is merged into that branch at
+`b4f3af4be11580c1b708b60b24670ff311e4b682`.
 
-Rebuild the R50 inputs against the packet commit, obtain a fresh independent
-input review, and recheck source identity before runtime admission. Continue
-with the bounded runtime review and provider probe only after those gates pass.
-No R49 or R50 preparation currently supplies census, dry-round, P3 or
-implementation credit. Push each coherent remediation as soon as it is ready;
-hosted checks may run while the next private campaign gate proceeds.
+R51 refreshed four changed source citations and retained the prior projection
+in `history/inventory/2026-10-01-pre-r51-source-refresh.jsonl`. Hosted review
+then corrected the remaining StepExec locator and the current design map. R52
+independently reviewed and installed 13 design-map refreshes at
+`f61291298581fdf28ea3e12f26acd8df1d792a3f`. Its fresh independent input
+review approves all 40 deterministic inputs: 3,152 corpus files, 27 lanes,
+82 exclusions, 53 retired areas, 725 inventory rows and 4,114 frozen inputs.
+The inventory remains 108 qualified, 617 disqualified and zero applied.
+
+This packet update changes the exact tree identity, so perform one final R52
+input rebind with the stricter private title matcher before runtime admission.
+Continue with bounded runtime review and the provider probe only after that
+gate passes. R50/R51 preparations and the pre-rebind R52 approval grant no
+census, dry-round, P3, ratification or implementation credit. Push each
+coherent remediation as soon as it is ready; hosted checks may run while the
+next private campaign gate proceeds.
 
 ## Historical R49 source refresh, 2026-10-01
 

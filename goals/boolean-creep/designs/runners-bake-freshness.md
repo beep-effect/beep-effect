@@ -55,7 +55,7 @@ One named full-report transformation checks the old decoded Options, payload equ
 
 Placement stays within `Runners.schemas.ts`; comparison of AWS observations stays in `Runners.service.ts`; rendering and effects stay in `Runners.command.ts`. Existing command-role standards at `standards/architecture/07-non-slice-families.md:337-357` support these locations. A shared utility package or a new helper role is not justified by this one command. No new public probe kind, variant, legacy struct, or helper carrier is added to the curated barrel. The existing two public report names retain responsibility for the model and wire codec.
 
-Dependency baseline is Effect `4.0.0-rc.117` (`package.json:161`).
+Dependency baseline is Effect `4.0.0` snapshot `b5a2d4c1d6` (`package.json:161`).
 Both installed and local-reference SchemaTransformation source now expose
 `transformEffect`, not the historical `transformOrFail`. Bind current API bytes
 and validate the actual class-backed constructor and codec composition during
@@ -88,7 +88,7 @@ All paths in the first two columns below are relative to `packages/tooling/tool/
 
 The private audit binds the directly inspected source/test/barrel files. Root `src/index.ts:328` exports only `runnersCommand`; the explicit package export is `package.json:51` (published counterpart at 121), so no root model export must be added. Existing command API exposure is preserved.
 
-Outside the package, `.github/workflows/check.yml:330` invokes the manifest check and consumes its success/failure as a warning. `infra/ci-runners/runner-image.json` is a minimal manifest input, not persisted `BakeCheckReport` output. The runbook `docs/runbooks/aws-cost-operations.md:631` instructs operators to check both intended and live images and explicitly denies that matching intended provenance proves deployment. No changes to these consumers are needed, but their behavior constrains the refactor. The retained design-refresh audit documents are historical references only. This refresh preserves the prior design in immutable `design.before.md`; the parent owns its canonical history archive. Historical documents must not be rewritten to manufacture current review credit.
+Outside the package, `.github/workflows/check.yml:330` invokes the manifest check and consumes its success/failure as a warning. `infra/ci-runners/runner-image.json` is a minimal manifest input, not persisted `BakeCheckReport` output. The runbook `docs/runbooks/aws-cost-operations.md:636` instructs operators to check both intended and live images and explicitly denies that matching intended provenance proves deployment. No changes to these consumers are needed, but their behavior constrains the refactor. The retained design-refresh audit documents are historical references only. This refresh preserves the prior design in immutable `design.before.md`; the parent owns its canonical history archive. Historical documents must not be rewritten to manufacture current review credit.
 
 The companion `runners-bake-cli-mode` audit proposes D1 reclassification of the raw diagnostic request. This freshness migration has **no command-mode union prerequisite**. Preserve `resolveBakeMode`'s two forms, raw flags, manifest-requires-check validation, public facade/testing seam, and all diagnostic ordering. That owner has no guard-deletion credit to share with this report design.
 
