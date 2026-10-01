@@ -190,6 +190,7 @@ failures. Worker and supervisor both invoke it. It joins native exchanges to
 direct wire events, rejects duplicate or altered evidence, and preserves a
 genuine producer miss. The 24 focused tests and source type check pass. Both
 retained native reports pass revalidation after their saved hashes were checked;
-seven edited variants per report fail. Fresh stable/canary executions are queued,
-and full package verification passes: audit 627.0 seconds, docgen 21.8 seconds. This does not grant qualification or
+seven edited variants per report fail. Fresh stable 2.11.5 and exact canary 2.11.5-canary.2 executions each pass nine
+native cases with 23 wire events. Full package verification passes: audit 627.0
+seconds, docgen 21.8 seconds. This does not grant qualification or
 replace the remaining authenticated-bundle and operational-import work.

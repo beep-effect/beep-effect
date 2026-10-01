@@ -37,8 +37,34 @@
       "auditSeconds": 627.0,
       "docgenSeconds": 21.8
     },
-    "freshNativeStable": "queued",
-    "freshNativeCanary": "queued"
+    "freshNativeStable": {
+      "exitCode": 0,
+      "implementationRevision": "3d9ac523201d095ab9378f3617513a5f78349a1c",
+      "client": {
+        "version": "2.11.5",
+        "sha256": "479733d3000c9393afb0c421d003cd26417bdb9e0ff525cf1445a7e1f29bb8bc",
+        "namespace": "team_qualification_complete_protocol_stable_0bb2"
+      },
+      "nativeCases": 9,
+      "wireEvents": 23,
+      "rawSha256": "47d88b83c0a26e476f67c1e0d8acc74f60f303b0e2057553e91f3dd341c17aa2",
+      "bunSha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "authority": "synthetic-native-observation-only"
+    },
+    "freshNativeCanary": {
+      "exitCode": 0,
+      "implementationRevision": "3d9ac523201d095ab9378f3617513a5f78349a1c",
+      "client": {
+        "version": "2.11.5-canary.2",
+        "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+        "namespace": "team_qualification_complete_protocol_canary_0bb2"
+      },
+      "nativeCases": 9,
+      "wireEvents": 23,
+      "rawSha256": "57d18b639335a4d03efdc98f4f3be4b65b5d4a33fd849a41c268f3b9f0168850",
+      "bunSha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "authority": "synthetic-native-observation-only"
+    }
   },
   "limitations": [
     "Relationship checks alone confer no producer or qualification authority.",
