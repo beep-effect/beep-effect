@@ -3,7 +3,7 @@
 Main advanced again to `e324f01e1e1fefaab1a40144dc66544826798fe1` and was
 merged in `c47a403805e1cf9a56bd54c1ec1388b5503374c4`. R49 recomputes the
 current corpus after the LiteralKit keyed-API migration. Two surviving
-LiteralKit D1 rows were re-anchored to lines 307 and 437, with the prior
+LiteralKit D1 rows were re-anchored to lines 308 and 437, with the prior
 725-row projection retained in history. The inventory remains 725 rows: 108
 qualified, 617 disqualified and zero applied. R48 is historical and grants no
 execution or convergence credit.

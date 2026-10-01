@@ -309,7 +309,7 @@ Main's keyed-API migration retained both LiteralKit PropertyDescriptor owners
 but moved them within the shortened file. Preserve the previous 725-row
 projection at
 `history/inventory/2026-10-01-pre-r49-literalkit-reanchor.jsonl` and re-anchor
-`literalkit-attach-helper-descriptors` to line 307 and
+`literalkit-attach-helper-descriptors` to line 308 and
 `literalkit-readonly-property` to line 437. Their D1 classifications remain:
 the three ECMAScript descriptor attributes are independent controls. This is a
 source-citation repair only and grants no census, dry-round, P3 or
