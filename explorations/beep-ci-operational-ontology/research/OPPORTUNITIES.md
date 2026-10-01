@@ -775,3 +775,16 @@
 
 ## 2026-09-25: time-to-certainty D1 hands the pre-push ordering inputs to the planner seam
 - goals/time-to-certainty/research/gate-order-handoff.json (gate-order-handoff/v1, sha256 c9619cee69e05a8e45555696292579864cbadcc965d2be4f4251a41182554c9b) carries the 32-lane pre-push order with each lane's A1 cost P50 (seconds in the seed; resolved P50/P95 in ms beside it, as CQ-003's p50Ms/p95Ms), a cost basis (a1-lane-row 16, a1-proxy-row 15, external-run 1; draft CostProvenance mapping census, default and measured, the steward's call), A1 first-red share (count over 832 first failures, numerators over 1610 red attempts; not CQ-018's probability), A4 precision (no CQ or term) and verified pointers into goals/time-to-certainty/research/economics.json (sha256 37e854ef…); it is offered by path as input to the S7-v2 planEpisode seam and not wired (no ciops code reads a goals/ path; S8 formalizes the terms, S9 dogfoods them); PlanEpisodeInput, apps/labs/ciops and research/control-interventions.yaml are unchanged. Open item for the steward: iv-1006-wave-order (B3, PR #1006), with #1068 and this PR's merge as later landing instants of the same ladder, draft values in goals/time-to-certainty/research/d1-ordering-handoff.md §4 (ttc rulings 76–79).
+
+## 2026-10-01: graduation drive — orchestration friction
+- Workflow sub-agents (Opus 5.5) could not write their prose reports to the scratchpad in one audit
+  lane: the harness refused the file write with "Subagents should return findings as text", so the
+  lane's report survived only in its structured return and the synthesis lane rebuilt the apply plan
+  from structured results plus skeptic logs. Prevention: have lanes return the report body in the
+  structured result as well as writing it, and never make a later stage depend on a report file.
+- A lane passed a literal `~` inside `UV_CACHE_DIR`, which created a stray ignored directory named
+  `~` under the auditor skill in the worktree (deleted before staging). Prevention: expand `$HOME` in
+  every lane recipe; never pass `~` through a quoted environment assignment.
+- The packet validator needs `rdflib` (+ `pyshacl` for `--s6`), which the offline uv cache lacked;
+  `uv run --with pyyaml --with rdflib --with pyshacl` with network resolved it. Prevention: record the
+  full `--with` set beside every validator invocation in the packet docs.

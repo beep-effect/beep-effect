@@ -1,0 +1,134 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ciops-ontology-pipeline",
+    "packetId": "goal-packet/v1:b4601e724c8cf9670c4466d85ce3191bb5bc4417e0678cbea48434a1857f698e",
+    "title": "CI-Ops Ontology Pipeline",
+    "status": "active",
+    "created": "2026-10-01",
+    "updated": "2026-10-01",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ciops-ontology-pipeline",
+  "lifecycle": "active",
+  "statusNote": "Graduated 2026-10-01 from explorations/beep-ci-operational-ontology (graduation sitting Rulings 1-11). Five slices: inheritance and change events, Stage C capture with proof-ledger capture, projection on live data, auditor run 4, KPI verdict. Run 4 gate per graduation Ruling 1: time-to-certainty C4.1 checked and post-#1321 owning-clone ledger facts from both local stages; realization and copy legs name time-to-certainty C4.2 (its ruling 80). Seats run on Opus 5.5 (Ruling 4); the v16 seat launcher (W2) is optional. The done bar is a stated verdict under KPI law v1.1; improvement is reported, not required (Ruling 3). apps/labs/ciops stays an active lab owned by this goal (Ruling 5), and the ontology working tree stays under the exploration packet (Ruling 7). Rulings from 2026-10-01 on land in research/decisions.md.",
+  "mission": "Operate the ratified CI operational ontology as a pipeline: project live admission and wave-order data through the S7 engine, hold CQ regression green, ratify auditor run 4, and state the fleet time-to-certainty verdict.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/beep-ci-operational-ontology",
+    "graduated": "2026-10-01",
+    "note": "Graduates the exploration's Spark target (the operational ontology pipeline itself). Owns the KPI definition, T-Box/A-Box/CQs, auditor runs, apps/labs/ciops and the planEpisode body, the change-event ledger and the verdict. goals/time-to-certainty keeps M1-M5, yeet economics, the proof ledger and C4.2, the deployed wave order and the gate-order handoff's single writer (its ruling 79); facts cross only as documents read by path and sha256."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until: (1) the fleet-aggregated P50/P95 time-to-certainty per verification episode is computed under research/kpi-measurement-rules.md v1.1 (seat-request clock, tier partitions with merged preview as a sub-partition of TierLocalFullProof, cut and uncut with censored counts, starvation beside percentiles) over an operator-ratified post-baseline window, every OperationalChangeEvent in that window is tagged under adoption-qualified membership, and the verdict is stated beside goals/time-to-certainty economics-close M1 with the episode-definition mapping (improvement reported, not required); (2) the CQ suite and the packet validators (base, --s5, --s6) are green on the final tree; (3) the S7 projection is byte-deterministic (same input, byte-equal Turtle) and differential replay passes on the frozen golden and reports first-choice agreement on the run-4 Stage C pin, with planEpisode consuming gate-order-handoff/v1 by path and sha256; (4) auditor run 4 is ratified (gate PASSED, sittings scribed) or closed by a steward ruling that names why; (5) the final PR is driven to Yeet merge-ready with the status flip and closeout reflection riding it.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ciops-ontology-pipeline/README.md",
+    "goals/ciops-ontology-pipeline/SPEC.md",
+    "goals/ciops-ontology-pipeline/PLAN.md",
+    "goals/ciops-ontology-pipeline/GOAL.md",
+    "goals/ciops-ontology-pipeline/research/SOURCES.md",
+    "goals/ciops-ontology-pipeline/research/decisions.md",
+    "explorations/beep-ci-operational-ontology/BRIEF.md",
+    "explorations/beep-ci-operational-ontology/MAP.md",
+    "explorations/beep-ci-operational-ontology/DECISIONS.md",
+    "explorations/beep-ci-operational-ontology/RESEARCH.md",
+    "explorations/beep-ci-operational-ontology/research/SOURCES.md",
+    "explorations/beep-ci-operational-ontology/research/auditor-run4-intake.md",
+    "explorations/beep-ci-operational-ontology/research/kpi-measurement-rules.md",
+    "explorations/beep-ci-operational-ontology/research/control-interventions.yaml",
+    "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md",
+    "goals/time-to-certainty/research/gate-order-handoff.json",
+    "goals/time-to-certainty/research/economics-close.json"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/decisions.md",
+    "../../explorations/beep-ci-operational-ontology/RESEARCH.md",
+    "../../explorations/beep-ci-operational-ontology/research/SOURCES.md",
+    "../../explorations/beep-ci-operational-ontology/research/kpi-measurement-rules.md",
+    "../../explorations/beep-ci-operational-ontology/research/auditor-run4-intake.md",
+    "../../explorations/beep-ci-operational-ontology/DECISIONS.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ciops-ontology-pipeline/GOAL.md"
+    }
+  ],
+  "provides": [
+    "ciops/operational-ontology",
+    "ciops/projection-engine",
+    "ciops/kpi-verdict"
+  ],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Inheritance and change events (W1); optional seat launcher (W2)",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Stage C capture and proof-ledger capture (W3-W4)",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Projection on live data and planEpisode body (W5-W6)",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Auditor run 4 (W7)",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "KPI reading and verdict (W8-W9)",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ciops-ontology-pipeline/GOAL.md)\" -le 4000",
+    "jq . goals/ciops-ontology-pipeline/ops/manifest.json",
+    "bun run beep goals doctor",
+    "bun run beep explore atlas --check",
+    "git diff --check -- goals/ciops-ontology-pipeline",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep quality package-verify @beep/ciops",
+    "cd explorations/beep-ci-operational-ontology && uv run --with pyyaml --with rdflib python research/scripts/validate_packet.py",
+    "cd explorations/beep-ci-operational-ontology && uv run --with pyyaml --with rdflib python research/scripts/validate_packet.py --s5",
+    "cd explorations/beep-ci-operational-ontology && uv run --with pyyaml --with rdflib --with pyshacl python research/scripts/validate_packet.py --s6",
+    "cd explorations/beep-ci-operational-ontology && uv run --with pyyaml --with rdflib --with pyoxigraph python research/scripts/run_cq_suite.py"
+  ],
+  "stopConditions": [
+    "A change would edit a frozen pin or any byte under explorations/beep-ci-operational-ontology/ontology/extraction/** outside an append under a new run or pin root; the only repair routes are the exploration's run-3 Rulings 22 (unratified pins) and 23 (ratified pins).",
+    "A step would re-run auditor runs 1-3, the 4b normalization, or the S5/S6/S7 baselines.",
+    "A change would add a scheduler, lock, or repo-cli integration of the projection, or make apps/labs/ciops importable by repo-cli or product code.",
+    "A change would edit goals/time-to-certainty tracked artifacts beyond a dated receipt, or would turn on proof reuse.",
+    "S8 IRI-scheme, OWL 2 RL formalization, or rules-compilation work becomes necessary: stop and reopen the exploration at decompose for ciops-iri-formalization.",
+    "A capture would place raw process identities, host paths, uids, hostnames, or session ids in the public tree (residue scan non-empty).",
+    "Run 4 would launch without the graduation Ruling 1 gate holding, or with seats routed against graduation Ruling 4."
+  ]
+}

@@ -28,7 +28,8 @@
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run",
     "dev": "portless ciops.labs.beep sh -c 'bun --watch src/main.ts'",
-    "evidence:s7": "bun run scripts/generate-replay-evidence.ts"
+    "evidence:s7": "bun run scripts/generate-replay-evidence.ts --check",
+    "evidence:s7:write": "bun run scripts/generate-replay-evidence.ts --write"
   },
   "dependencies": {
     "@beep/identity": "workspace:^",

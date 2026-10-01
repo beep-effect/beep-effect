@@ -27645,6 +27645,27 @@
       "reason": "Actual committed repository specification paths and bytes are the subject. Seeding MemoryFileSystem with expected filenames would fabricate this provenance. Public scoped platform provision preserves those checks, all9catalog entries and4generated contracts."
     },
     {
+      "id": "EV010:apps/labs/ciops/test/evidence.test.ts:3:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/ciops",
+      "file": "apps/labs/ciops/test/evidence.test.ts",
+      "line": 3,
+      "endLine": 3,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:apps/labs/ciops/test/projection.test.ts:4:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",

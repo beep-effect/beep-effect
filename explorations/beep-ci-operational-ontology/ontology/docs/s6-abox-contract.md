@@ -174,3 +174,10 @@ Together with the dated S5 amendment and the run-2/run-3 projection, this change
 discharges the gate block recorded in §6 and the VerificationLane placement wait
 in §5. Sections 1–6 remain the historical record. Ratification deferrals remain
 flags; the amendment does not discharge the run-4 identity or provenance duties.
+
+## 8. 2026-10-01 amendment — config class name
+
+Authority: DECISIONS.md, "2026-10-01 — graduation sitting".
+§1's `SchedulerConfig` reads `AdmissionConfig` (`QualityScheduler.schemas.ts`;
+:279 at the S6 corpus commit `62a5cafd91`, :641 at `04993ae26a`). The S6
+extraction (`etl_policy.py`) always used AdmissionConfig.
