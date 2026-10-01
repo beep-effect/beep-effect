@@ -311,7 +311,7 @@
     "ip-address": "10.7.1",
     "detailed-xml-validator": "2.1.0",
     "fast-uri": "^3.1.7",
-    "hono": "^4.13.0",
+    "hono": "^4.13.7",
     "js-yaml": "5.4.1",
     "lodash-es": "^4.18.1",
     "minimatch": "10.2.5",
