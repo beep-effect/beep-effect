@@ -42,12 +42,13 @@ log() { printf 'cloud-session-setup: %s\n' "$*"; }
 warn() { printf 'cloud-session-setup: WARN: %s\n' "$*" >&2; }
 fail78() { printf 'cloud-session-setup: DENIED %s — remedy: %s\n' "$1" "$2" >&2; exit 78; }
 
-# Where binaries go: the directory holding the caller's bun (already on PATH),
-# else a cache directory the printed env file adds to PATH.
-if command -v bun >/dev/null 2>&1; then
-  BIN_DIR="$(dirname "$(command -v bun)")"
-else
-  BIN_DIR="${CACHE}/bin"
+# Where binaries go: bun's own install directory (~/.bun/bin) when that is
+# where the caller's bun lives, because it is already on PATH; otherwise a cache
+# directory the env file adds to PATH. Never a mise shim directory or any other
+# toolchain-managed location (a workstation keeps its own bun management).
+BIN_DIR="${CACHE}/bin"
+if [ "$(command -v bun 2>/dev/null || true)" = "${HOME}/.bun/bin/bun" ]; then
+  BIN_DIR="${HOME}/.bun/bin"
 fi
 
 # Download URL -> file, verifying the archive digest. Returns 1 when the host
@@ -141,19 +142,27 @@ extract_tool() {
   esac
 }
 # install_tool <name> <url> <sha256>: 0 installed or already in BIN_DIR, 1 host denied,
-# 2 digest mismatch. Presence is checked in BIN_DIR, not on PATH, so a tool that
+# 2 digest mismatch, 3 extraction failed (a local problem, never a network denial). Presence is checked in BIN_DIR, not on PATH, so a tool that
 # happens to be reachable in this shell is still installed for later shells.
 install_tool() {
   local name="$1" url="$2" expected="$3"
   local archive="${CACHE}/${name}.archive"
   [ -x "${BIN_DIR}/${name}" ] && return 0
   fetch_verified "$url" "$archive" "$expected" || return $?
-  extract_tool "$name" "$archive"
+  extract_tool "$name" "$archive" || return 3
+}
+# tool_failed <name> <rc>: map install_tool's non-zero codes to the right exit.
+tool_failed() {
+  case "$2" in
+    2) exit 1 ;;
+    3) log "could not extract the ${1} archive into ${BIN_DIR} (disk space or permissions)"; exit 1 ;;
+    *) fail78 "github.com (${1})" "allow github.com release downloads; lefthook's pre-commit gate needs ${1}" ;;
+  esac
 }
 install_tool gitleaks "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" "$GITLEAKS_SHA256" \
-  || { [ $? -eq 2 ] && exit 1; fail78 "github.com (gitleaks)" "allow github.com release downloads; lefthook's pre-commit gate needs gitleaks"; }
+  || tool_failed gitleaks $?
 install_tool typos "https://github.com/crate-ci/typos/releases/download/v${TYPOS_VERSION}/typos-v${TYPOS_VERSION}-x86_64-unknown-linux-musl.tar.gz" "$TYPOS_SHA256" \
-  || { [ $? -eq 2 ] && exit 1; fail78 "github.com (typos)" "allow github.com release downloads; lefthook's pre-commit gate needs typos"; }
+  || tool_failed typos $?
 install_tool shellcheck "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" "$SHELLCHECK_SHA256" \
   || warn "shellcheck not provisioned (verification-only; setup continues)"
 log "gitleaks $(gitleaks version); typos $(typos --version | cut -d' ' -f2); shellcheck $(command -v shellcheck >/dev/null 2>&1 && shellcheck --version | sed -n 's/^version: //p' || echo missing)"
