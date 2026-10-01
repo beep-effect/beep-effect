@@ -19,7 +19,6 @@ import {
   RunpodRawRequest,
   RunpodRawResponse,
 } from "@beep/runpod";
-import { decodeJsonString } from "@beep/schema/Json";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
@@ -34,6 +33,8 @@ import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+
+const decodeUnknownJsonEffect = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const decodeUnknownPodCreateInput = S.decodeUnknownEffect(PodCreateInput);
 
@@ -260,7 +261,7 @@ describe("@beep/runpod", () => {
         const deleteCapture = yield* captureAt(captures, 3, "delete pod capture");
         const capturedBody = yield* pipe(
           bodyTextFromCapture(createCapture, "create pod body"),
-          Effect.flatMap(decodeJsonString),
+          Effect.flatMap(decodeUnknownJsonEffect),
           Effect.flatMap(decodeCapturedCreatePodBody)
         );
 

@@ -7,8 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { SchemaUtils } from "@beep/schema";
 import { A, N, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -53,7 +52,7 @@ const $I = $RepoAiMetricsId.create("scorecard");
 export class AiMetricsScorecardError extends S.TaggedError<AiMetricsScorecardError>($I`AiMetricsScorecardError`)(
   "AiMetricsScorecardError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsScorecardError>("AiMetricsScorecardError", {
@@ -579,7 +578,7 @@ class CoverageCountsRow extends S.Class<CoverageCountsRow>($I`CoverageCountsRow`
   static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(CoverageCountsRow));
 }
 
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const scorecardFailure = (message: string, cause: unknown): AiMetricsScorecardError =>
   AiMetricsScorecardError.make({ cause, message });

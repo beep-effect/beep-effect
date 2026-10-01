@@ -5,7 +5,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { dual } from "effect/Function";
 import { A, O, P, pipe, Str } from "@beep/utils";
 import { parse } from "acorn";
@@ -28,6 +27,8 @@ import { normalizeError } from "./Interpreter.errors.ts";
 import { DiagnosticKind, InterpreterRuntimeError, ProgramNode, tryInterpreter } from "./Interpreter.model.ts";
 import { PromiseRuntime } from "./Interpreter.promises.ts";
 import { Interpreter } from "./Interpreter.runtime.ts";
+
+const encodeUnknownJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const decodeUnknownDataValue = S.decodeUnknownEffect(DataValue);
 const decodeUnknownProgramNode = S.decodeUnknownEffect(ProgramNode);
 const encodeUnknownDiagnosticModelResult = S.encodeUnknownResult(DiagnosticModel);
@@ -333,7 +334,7 @@ const boundLogs = (logs: ReadonlyArray<string>, maxBytes: number) => {
 const boundFailureDiagnostic = (diagnostic: DiagnosticModel, maxOutputBytes: number) => {
   const serialized = pipe(
     encodeUnknownDiagnosticModelResult(diagnostic),
-    Rs.flatMap(UnknownFromJsonString.encodeUnknownResult),
+    Rs.flatMap(encodeUnknownJsonResult),
     Rs.getOrElse(() => "null")
   );
   const bytes = utf8ByteLength(serialized);
@@ -356,7 +357,7 @@ const boundOutput = (result: ResultModel, maxOutputBytes: number): ResultModel =
   ResultModel.match(result, {
     Success: (success) => {
       const serialized = pipe(
-        UnknownFromJsonString.encodeUnknownResult(success.value),
+        encodeUnknownJsonResult(success.value),
         Rs.getOrElse(() => "null")
       );
       const bytes = utf8ByteLength(serialized);
@@ -372,7 +373,7 @@ const boundOutput = (result: ResultModel, maxOutputBytes: number): ResultModel =
       for (const warning of warnings) {
         const warningJson = pipe(
           encodeUnknownDiagnosticModelResult(warning),
-          Rs.flatMap(UnknownFromJsonString.encodeUnknownResult),
+          Rs.flatMap(encodeUnknownJsonResult),
           Rs.getOrElse(() => "null")
         );
         const warningSize = utf8ByteLength(warningJson) + 1;

@@ -8,7 +8,6 @@
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $FfmpegId } from "@beep/identity/packages";
 import { Fn } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
 import { Context, Effect, FileSystem, HashSet, Layer, Number as N, Order, Path, pipe, Ref, Stream } from "effect";
 import * as P from "effect/Predicate";
@@ -69,7 +68,7 @@ import type * as PlatformError from "effect/PlatformError";
 import type { FFmpegEvent } from "./FFmpeg.models.ts";
 
 const $I = $FfmpegId.create("FFmpeg.service");
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const NumberOrString = S.Union([S.Finite, S.String]);
 type FFmpegConfigInputOptions = (typeof FFmpegConfigInput)["~type.make.in"];
 

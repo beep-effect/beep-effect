@@ -33,7 +33,6 @@ import {
   UnknownInline,
   UnknownMeta,
 } from "@beep/pandoc-ast/Pandoc.model";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { R } from "@beep/utils";
@@ -48,6 +47,9 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaIssue from "effect/SchemaIssue";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
+const encodeUnknownJsonEffect = S.encodeUnknownEffect(UnknownJson);
 
 const decodePandocJsonFromString = S.decodeEffect(PandocJsonFromString);
 const encodeTable = S.encodeEffect(Table);
@@ -89,7 +91,7 @@ const SemanticClosureDocumentArbitrary = Arbitrary.all([
   )
 );
 const JsonArbitrary = Arbitrary.schema(S.Json);
-const decodeUnknownJsonString = UnknownFromJsonString.decodeUnknownEffect;
+const decodeUnknownJsonString = S.decodeUnknownEffect(UnknownJson);
 const emptyAttr = ["", [], []];
 const pinnedPandocConstructorNames = [
   "Pandoc",
@@ -1054,7 +1056,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       expect(semantic.meta.future?._tag).toBe("unknownMeta");
       const lossless = yield* decodePandocJsonLossless(wire);
       expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
-      const source = yield* UnknownFromJsonString.encodeUnknownEffect(wire);
+      const source = yield* encodeUnknownJsonEffect(wire);
       const fromString = yield* decodePandocJsonStringLossless(source);
       const output = yield* encodePandocJsonStringLossless(fromString);
       expect(yield* decodeUnknownJsonString(output)).toEqual(yield* decodeUnknownJsonString(source));

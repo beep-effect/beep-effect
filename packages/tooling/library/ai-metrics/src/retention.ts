@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Match, Order, Path, pipe } from "effect";
@@ -275,7 +275,7 @@ const validateRawArchivePath = (
 export class AiMetricsRetentionError extends S.TaggedError<AiMetricsRetentionError>($I`AiMetricsRetentionError`)(
   "AiMetricsRetentionError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsRetentionError>("AiMetricsRetentionError", {

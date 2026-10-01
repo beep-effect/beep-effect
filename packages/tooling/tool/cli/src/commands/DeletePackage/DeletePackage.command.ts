@@ -9,7 +9,6 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError, decodePackageJsonEffect, findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Config, Console, Effect, FileSystem, Path, pipe } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
@@ -50,6 +49,8 @@ import type {
   RegistrationObservation,
   RegistrationPlan,
 } from "../../internal/cli/RegistrationGeometry/index.ts";
+
+const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 const decodeDeletePackageManifestJson = S.decodeEffect(S.fromJsonString(DeletePackageManifest));
 
@@ -285,7 +286,7 @@ const removeWorkspaceLiteral = Effect.fn("DeletePackage.removeWorkspaceLiteral")
   const path = yield* Path.Path;
   const file = path.join(repoRoot, "package.json");
   const content = yield* fs.readFileString(file);
-  const unknown = yield* UnknownFromJsonString.decodeEffect(content).pipe(
+  const unknown = yield* decodeJsonEffect(content).pipe(
     Effect.mapError(DomainError.newCause(`Failed to parse ${file}.`))
   );
   const manifest = yield* decodePackageJsonEffect(unknown).pipe(

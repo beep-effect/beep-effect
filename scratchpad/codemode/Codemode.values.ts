@@ -7,7 +7,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { type SafeObject, SafeObject as SafeObjectSchema } from "@beep/schema/SafeObject";
 import * as N from "effect/Number";
 import * as P from "effect/Predicate";
 import { Equal, Fiber } from "effect";
@@ -15,6 +14,43 @@ import * as S from "effect/Schema";
 import type { InterpreterFailure } from "./interpreter/Interpreter.model.ts";
 
 const $I = $ScratchpadId.create("codemode/Codemode.values");
+
+/**
+ * Nominally branded string-keyed guest object.
+ *
+ * **Details**
+ *
+ * A CodeMode-local composition of `S.Record(S.String, S.Unknown)` and the
+ * `SafeObject` brand, replacing the retired `@beep/schema` SafeObject concept
+ * with the same decoded type. The brand is nominal: it does not sanitize
+ * property names or guarantee JSON serialization.
+ *
+ * **Example** (Brand an empty guest object)
+ *
+ * ```ts
+ * import { SafeObject } from "../../../codemode/Codemode.values.ts"
+ *
+ * const value = SafeObject.make({ enabled: true })
+ * console.log(value.enabled) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SafeObject = S.Record(S.String, S.Unknown).pipe(
+  S.brand("SafeObject"),
+  $I.annoteSchema("SafeObject", {
+    description: "A nominally branded record with string keys and unknown values.",
+  })
+);
+
+/**
+ * Runtime type of {@link SafeObject}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SafeObject = typeof SafeObject.Type;
 
 /**
  * Guest JavaScript numbers, including NaN and both infinities.
@@ -80,7 +116,7 @@ export type CodeModeNumber = typeof CodeModeNumber.Type;
  * @category constructors
  * @since 0.0.0
  */
-export const makeEmptySafeObject = (): SafeObject => SafeObjectSchema.make(Object.create(null));
+export const makeEmptySafeObject = (): SafeObject => SafeObject.make(Object.create(null));
 
 const CodeModeFiber = S.declare((u: unknown): u is Fiber.Fiber<unknown, InterpreterFailure> => Fiber.isFiber(u)).pipe(
   $I.annoteSchema("CodeModeFiber", {

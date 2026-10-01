@@ -12,7 +12,6 @@ import {
   makeFaceDetectionService,
   withDetector,
 } from "@beep/face-detection";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { Console, Crypto, Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path, pipe } from "effect";
 import * as Hex from "effect/encoding/Hex";
@@ -157,7 +156,7 @@ interface ImagePathOperations {
 }
 
 const decodeFileSha256Hash = S.decodeUnknownEffect(FileSha256Hash);
-const encodeUnknownJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const byAuditSourceName = Order.mapInput(Order.String, (source: AuditSourceFile) => source.name);
 const byAuditEntryName = Order.mapInput(Order.String, (entry: ImageAuditEntry) => entry.sourceName);
 const bySkippedEntryName = Order.mapInput(Order.String, (entry: ImageAuditSkippedEntry) => entry.sourceName);

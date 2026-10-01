@@ -25,7 +25,6 @@ import { assert, describe, expect } from "@effect/vitest";
 import { Deferred, Effect, Fiber, PubSub, Queue, Redacted, Ref } from "effect";
 import { Socket } from "effect/socket";
 import type { ObsIdentify, ObsIncomingMessage, ObsRequestEnvelope } from "@beep/obs";
-import type { UnknownRecord } from "@beep/schema";
 import type * as Cause from "effect/Cause";
 
 const textDecoder = new TextDecoder();
@@ -132,7 +131,7 @@ const makeFakeObsServer = Effect.fnUntraced(function* (options?: FakeObsServerOp
 const respondSuccess = (
   envelope: ObsRequestEnvelope,
   emit: EmitMessage,
-  responseData: O.Option<UnknownRecord>
+  responseData: O.Option<Readonly<Record<string, unknown>>>
 ): Effect.Effect<void> =>
   emit(
     ObsRequestResponseMessage.make({

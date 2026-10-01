@@ -141,11 +141,6 @@ export * from "./Html.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Json.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Jsonc.ts";
 /**
  * @since 0.0.0
@@ -173,18 +168,6 @@ export * from "./Markdown.ts";
  */
 export * from "./MimeType.ts";
 /**
- * Opaque payload schemas (`Defect`, `OpaqueUnknown`) whose equivalence is declared always-true.
- *
- * @category schemas
- * @since 0.0.0
- */
-export * from "./Opaque.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Options.ts";
-/**
  * Transport-layer port number schemas and codecs.
  *
  * **Example** (Decode port from string)
@@ -207,36 +190,6 @@ export * from "./Port.ts";
  * @category validation
  */
 export * from "./PosixPath.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Primitive.ts";
-/**
- * @since 0.0.0
- * @category schemas
- */
-export * from "./Record/index.ts";
-/**
- * Nominal safe-object schema and object-keyword normalization codec.
- *
- * **Example** (Decode safe object value)
- *
- * ```ts import.meta.vitest name="Decode safe object value"
- * import { SafeObject } from "@beep/schema"
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- *
- * const value = await Effect.runPromise(
- *   S.decodeUnknownEffect(SafeObject)({ enabled: true })
- * )
- * value.enabled // => true
- * ```
- *
- * @category validation
- * @since 0.0.0
- */
-export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -277,16 +230,6 @@ export * from "./Slug.ts";
  * @category validation
  */
 export * from "./TerritoryCode.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Transformations.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Unknown.ts";
 /**
  * @since 0.0.0
  * @category validation
