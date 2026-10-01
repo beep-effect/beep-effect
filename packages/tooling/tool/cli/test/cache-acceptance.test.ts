@@ -25,9 +25,8 @@ import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -48,7 +47,7 @@ const setup = Effect.gen(function* () {
   });
   return { bundle, approval: CacheProducerApproval.make({ binding, contract }) };
 });
-it.layer(NodeCrypto.layer)("producer evidence projections", (it) => {
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("producer evidence projections", (it) => {
   it.effect("rejects signed approval with an omitted profile or activation even after rehashing policy", () =>
     Effect.gen(function* () {
       const { approval } = yield* setup;
@@ -66,26 +65,22 @@ it.layer(NodeCrypto.layer)("producer evidence projections", (it) => {
     })
   );
 
-  it.effect("requires schema-generated source configuration identities to match producer approval", () =>
-    Effect.gen(function* () {
-      const { bundle, approval } = yield* setup;
-      const checked = yield* Arbitrary.checkEffect(
-        Arbitrary.schema(Sha256Hex),
-        (configurationDigest) =>
-          Effect.gen(function* () {
-            const altered = CacheProducerBundle.make({
-              ...bundle,
-              pilot: { ...bundle.pilot, configurationDigest },
-            });
-            expect(yield* deriveCacheProducerEvidence(altered, approval).pipe(Effect.isSuccess)).toBe(
-              configurationDigest === bundle.pilot.configurationDigest
-            );
-            return true;
-          }),
-        fcRuns(20)
-      );
-      expect(checked._tag).toBe("Passed");
-    })
+  it.effect.prop(
+    "requires schema-generated source configuration identities to match producer approval",
+    { configurationDigest: Sha256Hex },
+    ({ configurationDigest }) =>
+      Effect.gen(function* () {
+        const { bundle, approval } = yield* setup;
+        const altered = CacheProducerBundle.make({
+          ...bundle,
+          pilot: { ...bundle.pilot, configurationDigest },
+        });
+        strictEqual(
+          yield* deriveCacheProducerEvidence(altered, approval).pipe(Effect.isSuccess),
+          configurationDigest === bundle.pilot.configurationDigest
+        );
+      }),
+    { arbitrary: fcRuns(20) }
   );
 
   it.effect("binds separate source and execution identities to independently approved signed reports", () =>
@@ -353,181 +348,194 @@ it.layer(NodeCrypto.layer)("producer evidence projections", (it) => {
   );
 });
 
-it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("authenticated import preview", (it) => {
-  it.effect("accepts only a fully covered approved policy and preserves envelope expiry", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped();
-      const { bundle, approval } = yield* setup;
-      const contract = CacheTaskContract.make({ ...approval.contract, semanticInputClasses: ["source-comment"] });
-      const binding = CacheProducerBinding.make({
-        ...approval.binding,
-        policyDigest: yield* hashCacheProducerContract(contract),
-      });
-      const canary = yield* S.decodeUnknownEffect(CacheProducerBundle)(canaryInput);
-      const canaryBinding = CacheProducerBinding.make({
-        ...binding,
-        channel: "canary",
-        client: canary.pilot.client,
-        protocolClient: canary.protocol.observation.client,
-      });
-      const trust = CacheProducerTrustLocations.make({
-        stable: path.join(root, "stable"),
-        canary: path.join(root, "canary"),
-      });
-      const stableIssuer = yield* initializeCacheProducerIssuer(trust.stable, binding, contract);
-      const canaryIssuer = yield* initializeCacheProducerIssuer(trust.canary, canaryBinding, contract);
-      const request = CacheProducerImportRequest.make({
-        observations: {
-          stable: CacheProducerObservation.make({ observation: bundle, envelope: yield* stableIssuer.issue(bundle) }),
-          canary: CacheProducerObservation.make({ observation: canary, envelope: yield* canaryIssuer.issue(canary) }),
-        },
-      });
-      const result = yield* validateCacheProducerImport(request, trust);
-      expect(result.failures).toEqual([]);
-      expect(result.contract).toEqual(contract);
-      expect(A.sort(yield* fs.readDirectory(root), Str.Order)).toEqual(["canary", "stable"]);
-      const directory = path.join(root, "accepted");
-      yield* fs.makeDirectory(directory, { mode: 0o700 });
-      const reference = yield* persistCacheProducerAcceptance(directory, request, trust);
-      expect(yield* persistCacheProducerAcceptance(directory, request, trust)).toEqual(reference);
-      expect((yield* readCacheProducerAcceptance(directory, reference, trust)).contract).toEqual(contract);
-      const file = path.join(directory, `${reference.sha256}.json`);
-      const original = yield* fs.readFileString(file);
-      expect(yield* fs.readDirectory(directory)).toEqual([`${reference.sha256}.json`]);
-      yield* fs.chmod(file, 0o644);
-      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)));
-      yield* fs.chmod(file, 0o600);
-      yield* fs.writeFileString(file, "{}");
-      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)));
-      assertTrue(
-        Result.isFailure(yield* persistCacheProducerAcceptance(directory, request, trust).pipe(Effect.result))
-      );
-      expect(yield* fs.readFileString(file)).toBe("{}");
-      yield* fs.writeFileString(file, original);
-      const moved = path.join(root, "moved-record.json");
-      yield* fs.rename(file, moved);
-      yield* fs.symlink(moved, file);
-      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)));
-      yield* fs.remove(file);
-      yield* fs.rename(moved, file);
-      const alias = path.join(root, "alias");
-      yield* fs.symlink(directory, alias);
-      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(alias, reference, trust).pipe(Effect.result)));
-      const hardlink = path.join(root, "hardlink.json");
-      yield* fs.link(file, hardlink);
-      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)));
-      yield* fs.remove(hardlink);
-      const forged = CacheProducerImportRequest.make({
-        observations: {
-          stable: request.observations.canary,
-          canary: request.observations.stable,
-        },
-      });
-      const forgedText = yield* S.encodeEffect(S.fromJsonString(CacheProducerImportRequest))(forged);
-      const forgedReference = CacheProducerAcceptanceReference.make({
-        sha256: yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(forgedText)),
-      });
-      yield* fs.writeFileString(path.join(directory, `${forgedReference.sha256}.json`), forgedText, {
-        mode: 0o600,
-        flag: "wx",
-      });
-      assertTrue(
-        Result.isFailure(yield* readCacheProducerAcceptance(directory, forgedReference, trust).pipe(Effect.result))
-      );
-      yield* TestClock.adjust("25 hours");
-      assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)));
-      expect(yield* fs.exists(file)).toBe(true);
-      assertTrue(Result.isFailure(yield* validateCacheProducerImport(request, trust).pipe(Effect.result)));
-    }).pipe(Effect.scoped)
-  );
+it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 seconds" })(
+  "authenticated import preview",
+  (it) => {
+    it.effect("accepts only a fully covered approved policy and preserves envelope expiry", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const { bundle, approval } = yield* setup;
+        const contract = CacheTaskContract.make({ ...approval.contract, semanticInputClasses: ["source-comment"] });
+        const binding = CacheProducerBinding.make({
+          ...approval.binding,
+          policyDigest: yield* hashCacheProducerContract(contract),
+        });
+        const canary = yield* S.decodeUnknownEffect(CacheProducerBundle)(canaryInput);
+        const canaryBinding = CacheProducerBinding.make({
+          ...binding,
+          channel: "canary",
+          client: canary.pilot.client,
+          protocolClient: canary.protocol.observation.client,
+        });
+        const trust = CacheProducerTrustLocations.make({
+          stable: path.join(root, "stable"),
+          canary: path.join(root, "canary"),
+        });
+        const stableIssuer = yield* initializeCacheProducerIssuer(trust.stable, binding, contract);
+        const canaryIssuer = yield* initializeCacheProducerIssuer(trust.canary, canaryBinding, contract);
+        const request = CacheProducerImportRequest.make({
+          observations: {
+            stable: CacheProducerObservation.make({ observation: bundle, envelope: yield* stableIssuer.issue(bundle) }),
+            canary: CacheProducerObservation.make({ observation: canary, envelope: yield* canaryIssuer.issue(canary) }),
+          },
+        });
+        const result = yield* validateCacheProducerImport(request, trust);
+        expect(result.failures).toEqual([]);
+        expect(result.contract).toEqual(contract);
+        expect(A.sort(yield* fs.readDirectory(root), Str.Order)).toEqual(["canary", "stable"]);
+        const directory = path.join(root, "accepted");
+        yield* fs.makeDirectory(directory, { mode: 0o700 });
+        const reference = yield* persistCacheProducerAcceptance(directory, request, trust);
+        expect(yield* persistCacheProducerAcceptance(directory, request, trust)).toEqual(reference);
+        expect((yield* readCacheProducerAcceptance(directory, reference, trust)).contract).toEqual(contract);
+        const file = path.join(directory, `${reference.sha256}.json`);
+        const original = yield* fs.readFileString(file);
+        expect(yield* fs.readDirectory(directory)).toEqual([`${reference.sha256}.json`]);
+        yield* fs.chmod(file, 0o644);
+        assertTrue(
+          Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result))
+        );
+        yield* fs.chmod(file, 0o600);
+        yield* fs.writeFileString(file, "{}");
+        assertTrue(
+          Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result))
+        );
+        assertTrue(
+          Result.isFailure(yield* persistCacheProducerAcceptance(directory, request, trust).pipe(Effect.result))
+        );
+        expect(yield* fs.readFileString(file)).toBe("{}");
+        yield* fs.writeFileString(file, original);
+        const moved = path.join(root, "moved-record.json");
+        yield* fs.rename(file, moved);
+        yield* fs.symlink(moved, file);
+        assertTrue(
+          Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result))
+        );
+        yield* fs.remove(file);
+        yield* fs.rename(moved, file);
+        const alias = path.join(root, "alias");
+        yield* fs.symlink(directory, alias);
+        assertTrue(Result.isFailure(yield* readCacheProducerAcceptance(alias, reference, trust).pipe(Effect.result)));
+        const hardlink = path.join(root, "hardlink.json");
+        yield* fs.link(file, hardlink);
+        assertTrue(
+          Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result))
+        );
+        yield* fs.remove(hardlink);
+        const forged = CacheProducerImportRequest.make({
+          observations: {
+            stable: request.observations.canary,
+            canary: request.observations.stable,
+          },
+        });
+        const forgedText = yield* S.encodeEffect(S.fromJsonString(CacheProducerImportRequest))(forged);
+        const forgedReference = CacheProducerAcceptanceReference.make({
+          sha256: yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(forgedText)),
+        });
+        yield* fs.writeFileString(path.join(directory, `${forgedReference.sha256}.json`), forgedText, {
+          mode: 0o600,
+          flag: "wx",
+        });
+        assertTrue(
+          Result.isFailure(yield* readCacheProducerAcceptance(directory, forgedReference, trust).pipe(Effect.result))
+        );
+        yield* TestClock.adjust("25 hours");
+        assertTrue(
+          Result.isFailure(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result))
+        );
+        expect(yield* fs.exists(file)).toBe(true);
+        assertTrue(Result.isFailure(yield* validateCacheProducerImport(request, trust).pipe(Effect.result)));
+      })
+    );
 
-  it.effect("authenticates both channels and rejects swapped trust, mismatched policies and revocation", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped();
-      const { bundle, approval } = yield* setup;
-      const canary = yield* S.decodeUnknownEffect(CacheProducerBundle)(canaryInput);
-      const canaryBinding = CacheProducerBinding.make({
-        ...approval.binding,
-        channel: "canary",
-        client: canary.pilot.client,
-        protocolClient: canary.protocol.observation.client,
-      });
-      const trust = CacheProducerTrustLocations.make({
-        stable: path.join(root, "stable"),
-        canary: path.join(root, "canary"),
-      });
-      const stableIssuer = yield* initializeCacheProducerIssuer(trust.stable, approval.binding, approval.contract);
-      const canaryIssuer = yield* initializeCacheProducerIssuer(trust.canary, canaryBinding, approval.contract);
-      const request = CacheProducerImportRequest.make({
-        observations: {
-          stable: CacheProducerObservation.make({ observation: bundle, envelope: yield* stableIssuer.issue(bundle) }),
-          canary: CacheProducerObservation.make({ observation: canary, envelope: yield* canaryIssuer.issue(canary) }),
-        },
-      });
-      const preview = yield* previewCacheProducerImport(request, trust);
-      expect(preview.authority).toBe("authenticated-import-preview-only");
-      expect(preview.contract).toEqual(approval.contract);
-      assertTrue(Result.isFailure(yield* validateCacheProducerImport(request, trust).pipe(Effect.result)));
-      const deniedDirectory = path.join(root, "denied-import");
-      assertTrue(
-        Result.isFailure(yield* persistCacheProducerAcceptance(deniedDirectory, request, trust).pipe(Effect.result))
-      );
-      expect(yield* fs.exists(deniedDirectory)).toBe(false);
-      for (const channel of ["stable", "canary"]) {
-        expect(preview.failures).not.toContain(`${channel}:missing-capture-safety`);
-        expect(preview.failures).not.toContain(`${channel}:missing-trust`);
-        expect(preview.failures).not.toContain(`${channel}:missing-isolated-fresh-fresh`);
-        expect(preview.failures).not.toContain(`${channel}:missing-shadow-decisions`);
-      }
-      expect(A.sort(yield* fs.readDirectory(root), Str.Order)).toEqual(["canary", "stable"]);
-      const swapped = yield* previewCacheProducerImport(
-        request,
-        CacheProducerTrustLocations.make({ stable: trust.canary, canary: trust.stable })
-      ).pipe(Effect.result);
-      assertTrue(Result.isFailure(swapped));
-      const changedContract = CacheTaskContract.make({ ...approval.contract, negativeCases: ["other-policy"] });
-      const changedBinding = CacheProducerBinding.make({
-        ...canaryBinding,
-        policyDigest: yield* hashCacheProducerContract(changedContract),
-      });
-      const changedDirectory = path.join(root, "changed-policy");
-      const changedIssuer = yield* initializeCacheProducerIssuer(changedDirectory, changedBinding, changedContract);
-      const changedReport = CacheProducerObservation.make({
-        observation: canary,
-        envelope: yield* changedIssuer.issue(canary),
-      });
-      const mismatched = yield* previewCacheProducerImport(
-        CacheProducerImportRequest.make({ observations: { ...request.observations, canary: changedReport } }),
-        CacheProducerTrustLocations.make({ stable: trust.stable, canary: changedDirectory })
-      ).pipe(Effect.result);
-      assertTrue(Result.isFailure(mismatched));
-      if (Result.isFailure(mismatched)) expect(mismatched.failure.message).toContain("same reviewed task contract");
-      yield* revokeCacheProducerIssuer(trust.canary);
-      assertTrue(Result.isFailure(yield* previewCacheProducerImport(request, trust).pipe(Effect.result)));
-    }).pipe(Effect.scoped)
-  );
+    it.effect("authenticates both channels and rejects swapped trust, mismatched policies and revocation", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const { bundle, approval } = yield* setup;
+        const canary = yield* S.decodeUnknownEffect(CacheProducerBundle)(canaryInput);
+        const canaryBinding = CacheProducerBinding.make({
+          ...approval.binding,
+          channel: "canary",
+          client: canary.pilot.client,
+          protocolClient: canary.protocol.observation.client,
+        });
+        const trust = CacheProducerTrustLocations.make({
+          stable: path.join(root, "stable"),
+          canary: path.join(root, "canary"),
+        });
+        const stableIssuer = yield* initializeCacheProducerIssuer(trust.stable, approval.binding, approval.contract);
+        const canaryIssuer = yield* initializeCacheProducerIssuer(trust.canary, canaryBinding, approval.contract);
+        const request = CacheProducerImportRequest.make({
+          observations: {
+            stable: CacheProducerObservation.make({ observation: bundle, envelope: yield* stableIssuer.issue(bundle) }),
+            canary: CacheProducerObservation.make({ observation: canary, envelope: yield* canaryIssuer.issue(canary) }),
+          },
+        });
+        const preview = yield* previewCacheProducerImport(request, trust);
+        expect(preview.authority).toBe("authenticated-import-preview-only");
+        expect(preview.contract).toEqual(approval.contract);
+        assertTrue(Result.isFailure(yield* validateCacheProducerImport(request, trust).pipe(Effect.result)));
+        const deniedDirectory = path.join(root, "denied-import");
+        assertTrue(
+          Result.isFailure(yield* persistCacheProducerAcceptance(deniedDirectory, request, trust).pipe(Effect.result))
+        );
+        expect(yield* fs.exists(deniedDirectory)).toBe(false);
+        for (const channel of ["stable", "canary"]) {
+          expect(preview.failures).not.toContain(`${channel}:missing-capture-safety`);
+          expect(preview.failures).not.toContain(`${channel}:missing-trust`);
+          expect(preview.failures).not.toContain(`${channel}:missing-isolated-fresh-fresh`);
+          expect(preview.failures).not.toContain(`${channel}:missing-shadow-decisions`);
+        }
+        expect(A.sort(yield* fs.readDirectory(root), Str.Order)).toEqual(["canary", "stable"]);
+        const swapped = yield* previewCacheProducerImport(
+          request,
+          CacheProducerTrustLocations.make({ stable: trust.canary, canary: trust.stable })
+        ).pipe(Effect.result);
+        assertTrue(Result.isFailure(swapped));
+        const changedContract = CacheTaskContract.make({ ...approval.contract, negativeCases: ["other-policy"] });
+        const changedBinding = CacheProducerBinding.make({
+          ...canaryBinding,
+          policyDigest: yield* hashCacheProducerContract(changedContract),
+        });
+        const changedDirectory = path.join(root, "changed-policy");
+        const changedIssuer = yield* initializeCacheProducerIssuer(changedDirectory, changedBinding, changedContract);
+        const changedReport = CacheProducerObservation.make({
+          observation: canary,
+          envelope: yield* changedIssuer.issue(canary),
+        });
+        const mismatched = yield* previewCacheProducerImport(
+          CacheProducerImportRequest.make({ observations: { ...request.observations, canary: changedReport } }),
+          CacheProducerTrustLocations.make({ stable: trust.stable, canary: changedDirectory })
+        ).pipe(Effect.result);
+        assertTrue(Result.isFailure(mismatched));
+        if (Result.isFailure(mismatched)) expect(mismatched.failure.message).toContain("same reviewed task contract");
+        yield* revokeCacheProducerIssuer(trust.canary);
+        assertTrue(Result.isFailure(yield* previewCacheProducerImport(request, trust).pipe(Effect.result)));
+      })
+    );
 
-  it.effect("rejects one authenticated stable report reused as both channels", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped();
-      const directory = path.join(root, "issuer");
-      const { bundle, approval } = yield* setup;
-      const issuer = yield* initializeCacheProducerIssuer(directory, approval.binding, approval.contract);
-      const report = CacheProducerObservation.make({ observation: bundle, envelope: yield* issuer.issue(bundle) });
-      const request = CacheProducerImportRequest.make({ observations: { stable: report, canary: report } });
-      const result = yield* previewCacheProducerImport(
-        request,
-        CacheProducerTrustLocations.make({ stable: directory, canary: directory })
-      ).pipe(Effect.result);
-      assertTrue(Result.isFailure(result));
-      if (Result.isFailure(result)) expect(result.failure.message).toContain("Import channel does not match");
-      expect(yield* fs.readDirectory(root)).toEqual(["issuer"]);
-    }).pipe(Effect.scoped)
-  );
-});
+    it.effect("rejects one authenticated stable report reused as both channels", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const directory = path.join(root, "issuer");
+        const { bundle, approval } = yield* setup;
+        const issuer = yield* initializeCacheProducerIssuer(directory, approval.binding, approval.contract);
+        const report = CacheProducerObservation.make({ observation: bundle, envelope: yield* issuer.issue(bundle) });
+        const request = CacheProducerImportRequest.make({ observations: { stable: report, canary: report } });
+        const result = yield* previewCacheProducerImport(
+          request,
+          CacheProducerTrustLocations.make({ stable: directory, canary: directory })
+        ).pipe(Effect.result);
+        assertTrue(Result.isFailure(result));
+        if (Result.isFailure(result)) expect(result.failure.message).toContain("Import channel does not match");
+        expect(yield* fs.readDirectory(root)).toEqual(["issuer"]);
+      })
+    );
+  }
+);

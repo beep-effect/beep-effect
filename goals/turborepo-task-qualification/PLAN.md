@@ -3112,3 +3112,21 @@ The hosted Security finding requires a narrow basic-ftp 6.2.1 override before cu
 PR #1389 review identified omission of signed execution metadata as an approval bypass. Signed-profile approval now requires both reviewed execution metadata and activation; pure promotion policy reports a missing profile, and operational eligibility rejects omitted fields for transitions and persisted qualified entries. Acceptance fixtures now carry the complete profile. Regressions reject rehashed incomplete approvals and preserve the ledger on refusal. Issuer operations use the existing domain-error-preserving mapper, retaining explicit revocation diagnostics while keeping generic context for foreign failures.
 
 Forty focused tests pass across the cache acceptance/producer suites after fixture corrections (39 in the combined run plus the corrected operational regression), canonical test typechecking and CLI lint/check pass, and full policy package verification passes (audit 12.8s, docgen 4.1s). Full CLI proof follows publication. The frozen workflow inspection, activation preview and dependency materialization completed at the preceding head; they establish preparation only and must be rebound to the reviewed implementation before native issuance.
+
+### Test-policy repair and base refresh
+
+Predicate assertions and native property registrations reduced new Effect Vitest
+findings from 192 to 60 without enlarging the detector baseline. The acceptance
+suite now uses its test-owned scope and explicit layer hook budgets. Its nine
+tests, test typecheck, and scoped package lint/check pass. Main was merged through
+`ec71f01a0f` after full CLI verification reported 5,152 passing tests and one
+notifier comparison against a moved `origin/main`; all 26 acceptance/notifier
+tests pass after the merge. Full verification is not yet green.
+
+Removing the operational test's explicit timeout restores the existing shared
+deep-sweep timeout policy. The unchanged checks pass at 400 and 1,000 runs, with
+the latter taking 70.99 seconds. The frozen workflow inspection passed for the
+preceding `426ccee8c7` revision and the signed root projection was prepared, but
+main changed Turbo inputs; refresh those bindings after the repair batch before
+issuing native evidence. Fallow, remaining resource-policy reviews, native v9
+qualification, semantic closure and adoption handoff remain outstanding.
