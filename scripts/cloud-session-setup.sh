@@ -135,7 +135,11 @@ if [ "$have" != "$want" ]; then
     if command -v npm >/dev/null 2>&1 && npm install --prefix "${work}/npm" --no-audit --no-fund "bun@${want}" >/dev/null 2>&1; then
       new_bun="$(readlink -f "${work}/npm/node_modules/.bin/bun")"
     elif $bun_timed_out; then
-      log "bun ${want} not provisioned: the github.com download timed out (slow transfer, not a denial) and the npm route failed; rerun, or check proxy throughput"; exit 1
+      # Name a denied npm route even when GitHub only timed out, so the
+      # operator is not told to retry a transfer that policy would block.
+      npm_code="$(probe "https://registry.npmjs.org/bun/${want}")"
+      reachable "$npm_code" || fail78 "registry.npmjs.org (HTTP ${npm_code}); the github.com release download timed out" "allow registry.npmjs.org, or rerun once github.com release downloads complete within 300s"
+      log "bun ${want} not provisioned: the github.com download timed out (slow transfer, not a denial) and the npm install failed although registry.npmjs.org is reachable (HTTP ${npm_code}); rerun, or check proxy throughput"; exit 1
     else
       fail78 "github.com and registry.npmjs.org" "allow github.com release downloads or registry.npmjs.org so bun ${want} can be provisioned"
     fi
@@ -193,8 +197,12 @@ install_tool typos "https://github.com/crate-ci/typos/releases/download/v${TYPOS
 install_tool shellcheck "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" "$SHELLCHECK_SHA256" \
   || warn "shellcheck not provisioned (verification-only; setup continues)"
 # Report from BIN_DIR by path: it is not necessarily on this script's PATH.
+# shellcheck is verification-only: an unreadable binary must not stop setup.
 shellcheck_version="missing"
-if [ -x "${BIN_DIR}/shellcheck" ]; then shellcheck_version="$("${BIN_DIR}/shellcheck" --version | sed -n 's/^version: //p')"; fi
+if [ -x "${BIN_DIR}/shellcheck" ]; then
+  shellcheck_version="$("${BIN_DIR}/shellcheck" --version 2>/dev/null | sed -n 's/^version: //p')" || shellcheck_version="unreadable"
+  [ -n "$shellcheck_version" ] || shellcheck_version="unreadable"
+fi
 log "gitleaks $("${BIN_DIR}/gitleaks" version); typos $("${BIN_DIR}/typos" --version | cut -d' ' -f2); shellcheck ${shellcheck_version}"
 
 # 3. Preflight the Effect snapshot registry (D2). A denial is a network-policy error.
