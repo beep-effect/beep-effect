@@ -431,8 +431,9 @@ const makeTelemetryV2Store = Effect.fnUntraced(function* (dataRoot: AiMetricsAbs
  * ```ts
  * import { AiMetricsAbsoluteDataRoot, TelemetryV2Store } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
- * const root = Effect.runSync(AiMetricsAbsoluteDataRoot.decodeEffect("/var/lib/beep/ai-metrics"))
+ * const root = Effect.runSync(S.decodeEffect(AiMetricsAbsoluteDataRoot)("/var/lib/beep/ai-metrics"))
  * const layer = TelemetryV2Store.layer(root)
  * console.log(layer)
  * ```
@@ -449,8 +450,9 @@ export class TelemetryV2Store extends Context.Service<TelemetryV2Store, Telemetr
    * ```ts
    * import { AiMetricsAbsoluteDataRoot, TelemetryV2Store } from "@beep/repo-ai-metrics"
    * import { Effect } from "effect"
+   * import * as S from "effect/Schema"
    *
-   * const root = Effect.runSync(AiMetricsAbsoluteDataRoot.decodeEffect("/var/lib/beep/ai-metrics"))
+   * const root = Effect.runSync(S.decodeEffect(AiMetricsAbsoluteDataRoot)("/var/lib/beep/ai-metrics"))
    * console.log(TelemetryV2Store.layer(root))
    * ```
    *

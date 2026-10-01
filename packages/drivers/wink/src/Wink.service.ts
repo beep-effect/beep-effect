@@ -43,8 +43,9 @@ type WinkCustomEntityRecord = {
  *
  * ```ts
  * import { InstanceId } from "@beep/wink"
+ * import * as S from "effect/Schema"
  *
- * const instanceId = InstanceId.decodeUnknownSync("wink-engine-example-1")
+ * const instanceId = S.decodeUnknownSync(InstanceId)("wink-engine-example-1")
  * console.log(instanceId)
  * ```
  *

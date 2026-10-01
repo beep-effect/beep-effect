@@ -189,8 +189,9 @@ export class ExecutionLedgerUnavailable extends S.TaggedError<ExecutionLedgerUna
  *
  * ```ts
  * import { ExecutionLedgerError, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger"
+ * import * as S from "effect/Schema"
  *
- * console.log(ExecutionLedgerError.is(ExecutionLedgerUnavailable.during("appendDecision", "write failed")))
+ * console.log(S.is(ExecutionLedgerError)(ExecutionLedgerUnavailable.during("appendDecision", "write failed")))
  * ```
  *
  * @category errors

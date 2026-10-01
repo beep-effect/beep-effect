@@ -1,3 +1,14 @@
+/**
+ * CLI: Fetch and Link Ingestion Commands
+ *
+ * **Details**
+ *
+ * Commands for fetching web content via Jina Reader API,
+ * ingesting URLs to storage, and managing ingested documents.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { getSomesStruct } from "@beep/utils/Option";
 import { thunkEmptyStr } from "@beep/utils/thunk";
 import type { DrizzleError } from "drizzle-orm";

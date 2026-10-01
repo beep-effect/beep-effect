@@ -61,9 +61,10 @@ const SanityErrorReasonBase = LiteralKit([
  * ```ts
  * import { SanityErrorReason } from "@beep/sanity"
  * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * console.log(O.isSome(SanityErrorReason.decodeOption("transport"))) // true
- * console.log(O.isSome(SanityErrorReason.decodeOption("unexpected"))) // false
+ * console.log(O.isSome(S.decodeUnknownOption(SanityErrorReason)("transport"))) // true
+ * console.log(O.isSome(S.decodeUnknownOption(SanityErrorReason)("unexpected"))) // false
  * ```
  *
  * @category errors

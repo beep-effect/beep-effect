@@ -205,9 +205,10 @@ export type HomePath = typeof HomePath.Type;
  *
  * ```ts
  * import { EnvVarName } from "@beep/agents-domain/entities/ProviderInstance"
+ * import * as S from "effect/Schema"
  *
- * console.log(EnvVarName.is("NO_PROXY")) // true
- * console.log(EnvVarName.is("ANTHROPIC_API_KEY")) // false
+ * console.log(S.is(EnvVarName)("NO_PROXY")) // true
+ * console.log(S.is(EnvVarName)("ANTHROPIC_API_KEY")) // false
  * ```
  *
  * @category schemas
@@ -466,12 +467,13 @@ export class ProbeFailedSnapshot extends S.Class<ProbeFailedSnapshot>($I`ProbeFa
  *
  * ```ts
  * import { AuthSnapshot } from "@beep/agents-domain/entities/ProviderInstance"
+ * import * as S from "effect/Schema"
  *
- * const snapshot = AuthSnapshot.decodeUnknownSync({
+ * const snapshot = S.decodeUnknownSync(AuthSnapshot)({
  *   status: "unauthenticated",
  *   probedAt: "2026-07-11T00:00:00.000Z",
  * })
- * console.log(AuthSnapshot.is(snapshot))
+ * console.log(S.is(AuthSnapshot)(snapshot))
  * ```
  *
  * @category schemas

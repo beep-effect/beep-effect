@@ -34,10 +34,11 @@ const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.references");
  * ```ts
  * import { GlobalNamespace } from "../../../codemode/interpreter/Interpreter.model.ts"
  * import { RuntimeReferenceValue } from "../../../codemode/interpreter/Interpreter.references.ts"
+ * import * as S from "effect/Schema"
  *
- * console.log(RuntimeReferenceValue.is(GlobalNamespace.new("JSON")))
+ * console.log(S.is(RuntimeReferenceValue)(GlobalNamespace.new("JSON")))
  * // true
- * console.log(RuntimeReferenceValue.is({ kind: "plain" }))
+ * console.log(S.is(RuntimeReferenceValue)({ kind: "plain" }))
  * // false
  * ```
  *

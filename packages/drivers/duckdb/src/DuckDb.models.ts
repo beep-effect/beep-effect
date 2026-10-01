@@ -107,8 +107,9 @@ export class DuckDbParquetExport extends S.Class<DuckDbParquetExport>($I`DuckDbP
  *
  * ```ts
  * import { DuckDbRow } from "@beep/duckdb"
+ * import * as S from "effect/Schema"
  *
- * const row = DuckDbRow.decodeUnknownSync({ count: 1, id: "run-1" })
+ * const row = S.decodeUnknownSync(DuckDbRow)({ count: 1, id: "run-1" })
  * console.log(row.id) // "run-1"
  * ```
  *
@@ -152,8 +153,9 @@ export type DuckDbRow = typeof DuckDbRow.Type;
  *
  * ```ts
  * import { DuckDbRows } from "@beep/duckdb"
+ * import * as S from "effect/Schema"
  *
- * const rows = DuckDbRows.decodeUnknownSync([{ id: "run-1" }])
+ * const rows = S.decodeUnknownSync(DuckDbRows)([{ id: "run-1" }])
  * console.log(rows.length) // 1
  * ```
  *

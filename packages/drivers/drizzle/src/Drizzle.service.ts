@@ -26,8 +26,9 @@ const $I = $DrizzleId.create("Drizzle.service");
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { DrizzleRows } from "@beep/drizzle"
+ * import * as S from "effect/Schema"
  *
- * const rows = DrizzleRows.decodeUnknownSync([{ id: 1 }])
+ * const rows = S.decodeUnknownSync(DrizzleRows)([{ id: 1 }])
  * deepStrictEqual(rows, [{ id: 1 }])
  * ```
  *

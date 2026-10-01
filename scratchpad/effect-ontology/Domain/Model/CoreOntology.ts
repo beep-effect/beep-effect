@@ -171,9 +171,10 @@ const withSeedDerivedIdStatics =
  * **Example** (Use MentionId)
  * ```ts
  * import { MentionId } from "@effect-ontology/Model/CoreOntology"
+ * import * as S from "effect/Schema"
  *
- * console.log(MentionId.is("mention-a1b2c3d4e5f6")) // true
- * console.log(MentionId.is("mention-DEADBEEFCAFE")) // false
+ * console.log(S.is(MentionId)("mention-a1b2c3d4e5f6")) // true
+ * console.log(S.is(MentionId)("mention-DEADBEEFCAFE")) // false
  * ```
  *
  * @invariant `mention-` followed by exactly 12 lowercase hexadecimal characters.
@@ -321,9 +322,10 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
  * **Example** (Use CanonicalEntityId)
  * ```ts
  * import { CanonicalEntityId } from "@effect-ontology/Model/CoreOntology"
+ * import * as S from "effect/Schema"
  *
- * console.log(CanonicalEntityId.is("entity-a1b2c3d4e5f6")) // true
- * console.log(CanonicalEntityId.is("Bruce Harrell")) // false
+ * console.log(S.is(CanonicalEntityId)("entity-a1b2c3d4e5f6")) // true
+ * console.log(S.is(CanonicalEntityId)("Bruce Harrell")) // false
  * ```
  *
  * @category identifiers
@@ -436,9 +438,10 @@ export class TrackedEntity extends S.Class<TrackedEntity>($I`TrackedEntity`)(
  * **Example** (Use EventId)
  * ```ts
  * import { EventId } from "@effect-ontology/Model/CoreOntology"
+ * import * as S from "effect/Schema"
  *
- * console.log(EventId.is("event-a1b2c3d4e5f6")) // true
- * console.log(EventId.is("event-DEADBEEFCAFE")) // false
+ * console.log(S.is(EventId)("event-a1b2c3d4e5f6")) // true
+ * console.log(S.is(EventId)("event-DEADBEEFCAFE")) // false
  * ```
  *
  * @category identifiers

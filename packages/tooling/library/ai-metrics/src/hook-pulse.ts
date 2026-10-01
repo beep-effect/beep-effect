@@ -1288,7 +1288,8 @@ const HookPulseLegacyV1Record = S.Struct({
  *
  * ```ts
  * import { HookPulseV1FromLegacyRecord } from "@beep/repo-ai-metrics"
- * const migrate = HookPulseV1FromLegacyRecord.decodeUnknownEffect
+ * import * as S from "effect/Schema"
+ * const migrate = S.decodeUnknownEffect(HookPulseV1FromLegacyRecord)
  * const pulse = migrate({
  *   schemaVersion: "hook-pulse/v1",
  *   ts: "2026-08-01T06:40:07.000Z",
@@ -1377,7 +1378,8 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
  * ```ts
  * import { HookPulseV1FromRawEvent } from "@beep/repo-ai-metrics"
  * import { Result } from "effect"
- * const decode = HookPulseV1FromRawEvent.decodeUnknownResult
+ * import * as S from "effect/Schema"
+ * const decode = S.decodeUnknownResult(HookPulseV1FromRawEvent)
  *
  * const pulse = Result.getOrThrow(
  *   decode({

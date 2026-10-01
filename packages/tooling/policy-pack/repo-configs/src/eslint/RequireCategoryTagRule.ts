@@ -1,3 +1,10 @@
+/**
+ * Custom ESLint rule enforcing category tags on exported symbols.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { A, Str } from "@beep/utils";
 import { thunkFalse, thunkUndefined } from "@beep/utils/thunk";
 import { flow, HashSet, pipe } from "effect";

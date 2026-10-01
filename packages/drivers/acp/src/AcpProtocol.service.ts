@@ -181,8 +181,9 @@ type AcpProtocolLogEventMember<T extends AcpProtocolLogDirection> = {
  *
  * ```ts
  * import { AcpProtocolLogEvent } from "@beep/acp/protocol"
+ * import * as S from "effect/Schema"
  *
- * const event = AcpProtocolLogEvent.decodeUnknownSync({
+ * const event = S.decodeUnknownSync(AcpProtocolLogEvent)({
  *   direction: "incoming",
  *   stage: "raw",
  *   payload: "{}"
@@ -322,8 +323,9 @@ const AcpExtensionNotification = S.TaggedStruct("ExtNotification", {
  *
  * ```ts
  * import { AcpIncomingNotification } from "@beep/acp/protocol"
+ * import * as S from "effect/Schema"
  *
- * const notification = AcpIncomingNotification.decodeUnknownSync({
+ * const notification = S.decodeUnknownSync(AcpIncomingNotification)({
  *   _tag: "ExtNotification",
  *   method: "x/custom",
  *   params: { ok: true }

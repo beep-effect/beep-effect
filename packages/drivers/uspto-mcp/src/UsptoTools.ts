@@ -120,13 +120,14 @@ export class UsptoToolError extends S.Class<UsptoToolError>($I`UsptoToolError`)(
  *
  * ```ts
  * import { UsptoMcpFailure, UsptoToolError } from "@beep/uspto-mcp/UsptoTools"
+ * import * as S from "effect/Schema"
  *
  * const failure = UsptoToolError.make({
  *   message: "USPTO request failed",
  *   reason: "transport",
  *   tool: "uspto_get_documents"
  * })
- * console.log(UsptoMcpFailure.is(failure))
+ * console.log(S.is(UsptoMcpFailure)(failure))
  * // true
  * ```
  *
@@ -146,13 +147,14 @@ export const UsptoMcpFailure = S.Union([ApiKeyRequiredFailure, UsptoToolError]).
  *
  * ```ts
  * import { UsptoMcpFailure, UsptoToolError } from "@beep/uspto-mcp/UsptoTools"
+ * import * as S from "effect/Schema"
  *
  * const failure: UsptoMcpFailure = UsptoToolError.make({
  *   message: "USPTO request failed",
  *   reason: "transport",
  *   tool: "uspto_get_documents"
  * })
- * console.log(UsptoMcpFailure.is(failure))
+ * console.log(S.is(UsptoMcpFailure)(failure))
  * // true
  * ```
  *

@@ -108,9 +108,10 @@ export const EpistemicPolicyRevisionConfig = Config.schema(PolicyRevision, "EPIS
  * ```ts
  * import { defaultPolicyRevision, EpistemicServerConfig } from "@beep/epistemic-config/server"
  * import { SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
+ * import * as S from "effect/Schema"
  *
  * const config = EpistemicServerConfig.make({
- *   destinationAllowlist: [SinkDestination.decodeUnknownSync("https://registry.example")],
+ *   destinationAllowlist: [S.decodeUnknownSync(SinkDestination)("https://registry.example")],
  *   policyRevision: defaultPolicyRevision
  * })
  * console.log(config.destinationAllowlist.length) // 1

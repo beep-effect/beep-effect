@@ -41,7 +41,8 @@ export * from "./Auth.ts";
  * **Example** (Use index)
  * ```ts
  * import { ErrorMessage } from "@effect-ontology/Error/index"
- * console.log(ErrorMessage.is("Request failed.")) // true
+ * import * as S from "effect/Schema"
+ * console.log(S.is(ErrorMessage)("Request failed.")) // true
  * ```
  *
  * @category errors

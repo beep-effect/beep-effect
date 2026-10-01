@@ -2021,9 +2021,10 @@ export declare namespace UnknownInline {
  *
  * ```ts import.meta.vitest name="Checking inline union"
  * import { PandocInline, Str } from "@beep/pandoc-ast/Pandoc.model"
+ * import * as S from "effect/Schema"
  *
  * const inline = Str.make({ text: "hi" })
- * PandocInline.is(inline) // => true
+ * S.is(PandocInline)(inline) // => true
  * ```
  *
  * @category models
@@ -3540,9 +3541,10 @@ export declare namespace UnknownBlock {
  *
  * ```ts import.meta.vitest name="Checking block union"
  * import { PandocBlock, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ * import * as S from "effect/Schema"
  *
  * const block = Para.make({ children: [Str.make({ text: "hi" })] })
- * PandocBlock.is(block) // => true
+ * S.is(PandocBlock)(block) // => true
  * ```
  *
  * @category models
@@ -3958,8 +3960,9 @@ export class UnknownMeta extends S.TaggedClass<UnknownMeta>($I`UnknownMeta`)(
  *
  * ```ts
  * import { MetaString, PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
+ * import * as S from "effect/Schema"
  *
- * console.log(PandocMetaValue.is(MetaString.make({ value: "Doc" })))
+ * console.log(S.is(PandocMetaValue)(MetaString.make({ value: "Doc" })))
  * ```
  *
  * @category schemas

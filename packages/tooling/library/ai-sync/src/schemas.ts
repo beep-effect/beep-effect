@@ -76,8 +76,9 @@ export type AgentInstructionDocument = typeof AgentInstructionDocument.Type;
  * ```ts
  * import { Effect } from "effect"
  * import { NormalizedAgentInstructionDocument } from "@beep/ai-sync"
+ * import * as S from "effect/Schema"
  *
- * const program = NormalizedAgentInstructionDocument.decodeEffect("# Rules  ")
+ * const program = S.decodeUnknownEffect(NormalizedAgentInstructionDocument)("# Rules  ")
  * Effect.runPromise(program).then((document) => console.log(document))
  * ```
  *

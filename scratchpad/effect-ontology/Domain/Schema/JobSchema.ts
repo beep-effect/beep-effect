@@ -27,8 +27,9 @@ const backgroundJobIdPattern = /^job-[0-9a-f]{12}$/;
  * **Example** (Use BackgroundJobId)
  * ```ts
  * import { BackgroundJobId } from "@effect-ontology/Schema/JobSchema"
+ * import * as S from "effect/Schema"
  *
- * console.log(BackgroundJobId.is("job-abc123def456")) // true
+ * console.log(S.is(BackgroundJobId)("job-abc123def456")) // true
  * ```
  *
  * @invariant Uses `job-` followed by exactly twelve lowercase hexadecimal

@@ -164,9 +164,10 @@ const TextEncodingBase = LiteralKit(["ascii", "latin1", "utf-8"]);
  * import { TextEncoding } from "@beep/nlp-mcp/Streaming/TextStream"
  *
  * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
- *   const encoding = yield* TextEncoding.fromUnknown("utf-8")
+ *   const encoding = yield* S.decodeUnknownEffect(TextEncoding)("utf-8")
  *   console.log(encoding) // "utf-8"
  * })
  * ```

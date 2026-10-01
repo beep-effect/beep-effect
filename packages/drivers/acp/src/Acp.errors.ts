@@ -442,8 +442,9 @@ export class AcpRequestError extends S.TaggedError<AcpRequestError>($I`AcpReques
  *
  * ```ts
  * import { AcpError, AcpRequestError } from "@beep/acp/errors"
+ * import * as S from "effect/Schema"
  *
- * console.log(AcpError.is(AcpRequestError.methodNotFound("x/test")))
+ * console.log(S.is(AcpError)(AcpRequestError.methodNotFound("x/test")))
  * ```
  *
  * @category errors

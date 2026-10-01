@@ -109,9 +109,10 @@ const makeImageOwnerPathSchema = <const Name extends string, const Suffix extend
  * **Example** (Use StoragePathSegment)
  * ```ts
  * import { StoragePathSegment } from "@effect-ontology/PathLayout"
+ * import * as S from "effect/Schema"
  *
- * console.log(StoragePathSegment.is("link-2026_07")) // true
- * console.log(StoragePathSegment.is("../escape")) // false
+ * console.log(S.is(StoragePathSegment)("link-2026_07")) // true
+ * console.log(S.is(StoragePathSegment)("../escape")) // false
  * ```
  *
  * @invariant One to 128 ASCII letters, digits, dots, underscores, colons,

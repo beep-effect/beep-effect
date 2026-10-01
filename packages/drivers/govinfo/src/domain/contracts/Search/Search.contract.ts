@@ -198,8 +198,9 @@ export class FailureInternalServerError extends S.TaggedError<FailureInternalSer
  *
  * ```ts
  * import { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
+ * import * as S from "effect/Schema"
  *
- * console.log(Failure.is({ _tag: "FailureNotFound", status: 404 }))
+ * console.log(S.is(Failure)({ _tag: "FailureNotFound", status: 404 }))
  * ```
  *
  * @category errors

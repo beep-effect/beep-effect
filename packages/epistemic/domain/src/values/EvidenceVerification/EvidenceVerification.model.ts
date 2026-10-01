@@ -31,8 +31,9 @@ const manifestationEncodingVersion = "evidence-verification-manifestation/v1";
  *
  * ```ts
  * import { EvidenceVerificationManifestationKey } from "@beep/epistemic-domain/values/EvidenceVerification"
+ * import * as S from "effect/Schema"
  *
- * console.log(EvidenceVerificationManifestationKey.is("a".repeat(64))) // true
+ * console.log(S.is(EvidenceVerificationManifestationKey)("a".repeat(64))) // true
  * ```
  *
  * @category identifiers

@@ -84,8 +84,9 @@ export const phoneCountryOptions = A.filter(countryOptions, (option) => isSuppor
  *
  * ```ts
  * import { PhoneNumberE164 } from "@beep/ui/components/phone-input"
+ * import * as S from "effect/Schema"
  *
- * const supportLine = PhoneNumberE164.decodeUnknownSync("+14155552671")
+ * const supportLine = S.decodeUnknownSync(PhoneNumberE164)("+14155552671")
  *
  * console.log(supportLine.startsWith("+"))
  * ```

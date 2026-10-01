@@ -115,8 +115,9 @@ const PgExternalSchemaPrefix = S.String.check(
  *
  * ```ts
  * import { PgExternalConnectionUri } from "@beep/test-utils"
+ * import * as S from "effect/Schema"
  *
- * console.log(PgExternalConnectionUri.is("postgres://postgres:postgres@127.0.0.1:5432/postgres"))
+ * console.log(S.is(PgExternalConnectionUri)("postgres://postgres:postgres@127.0.0.1:5432/postgres"))
  * ```
  *
  * @category models

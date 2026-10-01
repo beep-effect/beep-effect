@@ -38,8 +38,9 @@ const ruleIdPattern = /^rule-[a-z0-9]+(?:-[a-z0-9]+)*$/;
  * **Example** (Use ClaimId)
  * ```ts
  * import { ClaimId } from "@effect-ontology/Schema/KnowledgeModel"
+ * import * as S from "effect/Schema"
  *
- * console.log(ClaimId.is("claim-abc123def456")) // true
+ * console.log(S.is(ClaimId)("claim-abc123def456")) // true
  * ```
  *
  * @invariant Uses `claim-` followed by exactly twelve lowercase hexadecimal
@@ -84,8 +85,9 @@ export type ClaimId = typeof ClaimId.Type;
  * **Example** (Use AssertionId)
  * ```ts
  * import { AssertionId } from "@effect-ontology/Schema/KnowledgeModel"
+ * import * as S from "effect/Schema"
  *
- * console.log(AssertionId.is("assertion-abc123def456")) // true
+ * console.log(S.is(AssertionId)("assertion-abc123def456")) // true
  * ```
  *
  * @invariant Uses `assertion-` followed by exactly twelve lowercase
@@ -130,8 +132,9 @@ export type AssertionId = typeof AssertionId.Type;
  * **Example** (Use DerivedAssertionId)
  * ```ts
  * import { DerivedAssertionId } from "@effect-ontology/Schema/KnowledgeModel"
+ * import * as S from "effect/Schema"
  *
- * console.log(DerivedAssertionId.is("derived-abc123def456")) // true
+ * console.log(S.is(DerivedAssertionId)("derived-abc123def456")) // true
  * ```
  *
  * @invariant Uses `derived-` followed by exactly twelve lowercase hexadecimal
@@ -179,8 +182,9 @@ export type DerivedAssertionId = typeof DerivedAssertionId.Type;
  * **Example** (Use RuleId)
  * ```ts
  * import { RuleId } from "@effect-ontology/Schema/KnowledgeModel"
+ * import * as S from "effect/Schema"
  *
- * console.log(RuleId.is("rule-subclass-transitivity")) // true
+ * console.log(S.is(RuleId)("rule-subclass-transitivity")) // true
  * ```
  *
  * @invariant Uses a `rule-` prefix followed by canonical lowercase
@@ -674,8 +678,9 @@ export class DerivedAssertion extends S.Class<DerivedAssertion>($I`DerivedAssert
  * **Example** (Use EventId)
  * ```ts
  * import { EventId } from "@effect-ontology/Schema/KnowledgeModel"
+ * import * as S from "effect/Schema"
  *
- * console.log(EventId.is("event-abc123def456")) // true
+ * console.log(S.is(EventId)("event-abc123def456")) // true
  * ```
  *
  * @invariant Uses `event-` followed by exactly twelve lowercase hexadecimal

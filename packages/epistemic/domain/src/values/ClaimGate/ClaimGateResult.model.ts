@@ -26,9 +26,10 @@ const ClaimGateSeverityBase = LiteralKit(["info", "warning", "violation"]);
  * ```ts
  * import { ClaimGateSeverity } from "@beep/epistemic-domain"
  * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
- *   const severity = yield* ClaimGateSeverity.fromUnknown("violation")
+ *   const severity = yield* S.decodeUnknownEffect(ClaimGateSeverity)("violation")
  *   console.log(severity) // "violation"
  * })
  * ```

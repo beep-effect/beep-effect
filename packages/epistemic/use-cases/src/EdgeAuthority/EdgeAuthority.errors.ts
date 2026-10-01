@@ -379,8 +379,9 @@ export class EdgeRepositoryUnavailable extends S.TaggedError<EdgeRepositoryUnava
  *
  * ```ts
  * import { EdgeAuthorityError, EdgeRepositoryUnavailable } from "@beep/epistemic-use-cases/EdgeAuthority"
+ * import * as S from "effect/Schema"
  *
- * console.log(EdgeAuthorityError.is(EdgeRepositoryUnavailable.during("readAsOf", "maintenance")))
+ * console.log(S.is(EdgeAuthorityError)(EdgeRepositoryUnavailable.during("readAsOf", "maintenance")))
  * ```
  *
  * @category errors

@@ -270,8 +270,9 @@ export type BracketStringToPatternElement = typeof BracketStringToPatternElement
  *
  * ```ts import.meta.vitest name="Parse string array elements"
  * import { PatternElementsFromString } from "@beep/nlp/Core/PatternParsers"
+ * import * as S from "effect/Schema"
  *
- * const elements = PatternElementsFromString.decodeUnknownSync(["[NOUN]"])
+ * const elements = S.decodeUnknownSync(PatternElementsFromString)(["[NOUN]"])
  * elements[0]?._tag // => "POSPatternElement"
  * ```
  *

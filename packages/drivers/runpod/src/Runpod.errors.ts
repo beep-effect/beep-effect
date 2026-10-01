@@ -32,8 +32,9 @@ const RunpodDocsErrorReasonBase = LiteralKit(["config", "parse", "response decod
  *
  * ```ts
  * import { RunpodHttpStatusCode } from "@beep/runpod"
+ * import * as S from "effect/Schema"
  *
- * console.log(RunpodHttpStatusCode.is(200))
+ * console.log(S.is(RunpodHttpStatusCode)(200))
  * ```
  *
  * @category models

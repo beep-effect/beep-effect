@@ -588,8 +588,9 @@ export type TableDimension = typeof TableDimension.Type;
  *
  * ```ts
  * import { ArtifactRefId } from "@beep/lexical-schema/Lexical.model"
+ * import * as S from "effect/Schema"
  *
- * console.log(ArtifactRefId.decodeUnknownSync("artifact-123"))
+ * console.log(S.decodeUnknownSync(ArtifactRefId)("artifact-123"))
  * ```
  *
  * @category models

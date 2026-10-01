@@ -153,8 +153,9 @@ const AstValue: S.Codec<unknown, unknown> = S.suspend(() =>
  *
  * ```ts
  * import { AstNode } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import * as S from "effect/Schema"
  *
- * const node = AstNode.decodeUnknownSync({ type: "Identifier", name: "count" })
+ * const node = S.decodeUnknownSync(AstNode)({ type: "Identifier", name: "count" })
  * console.log(node.type, node.name)
  * // Identifier count
  * ```
@@ -1655,9 +1656,10 @@ export class ErrorConstructorReference extends S.TaggedClass<ErrorConstructorRef
  *   GlobalNamespace,
  *   RuntimeReference,
  * } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import * as S from "effect/Schema"
  *
  * const ns = GlobalNamespace.new("JSON")
- * console.log(RuntimeReference.is(ns), RuntimeReference.guards.GlobalNamespace(ns))
+ * console.log(S.is(RuntimeReference)(ns), RuntimeReference.guards.GlobalNamespace(ns))
  * // true true
  * ```
  *
@@ -1876,9 +1878,10 @@ export class InterpreterRuntimeError extends S.TaggedError<InterpreterRuntimeErr
  *   InterpreterFailure,
  *   InterpreterRuntimeError,
  * } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import * as S from "effect/Schema"
  *
  * const error = InterpreterRuntimeError.new("boom")
- * console.log(InterpreterFailure.is(error), InterpreterFailure.guards.ProgramThrow(error))
+ * console.log(S.is(InterpreterFailure)(error), InterpreterFailure.guards.ProgramThrow(error))
  * // true false
  * ```
  *

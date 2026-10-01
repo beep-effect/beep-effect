@@ -58,8 +58,9 @@ export const IMAGE_MIME_TYPES = ImageMimeType.pick(["image/png", "image/jpeg", "
  *
  * ```ts import.meta.vitest name="Validating image MIME type"
  * import { ImageAttachmentMimeType } from "@beep/editor/chat/attachment-model"
+ * import * as S from "effect/Schema"
  *
- * ImageAttachmentMimeType.is("image/png") // => true
+ * S.is(ImageAttachmentMimeType)("image/png") // => true
  * ```
  *
  * @category schemas

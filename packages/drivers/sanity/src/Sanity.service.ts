@@ -30,9 +30,10 @@ const $I = $SanityId.create("Sanity.service");
  *
  * ```ts
  * import { SanityQueryParamValue } from "@beep/sanity"
+ * import * as S from "effect/Schema"
  *
- * console.log(SanityQueryParamValue.is("home")) // true
- * console.log(SanityQueryParamValue.is({ slug: "home" })) // false
+ * console.log(S.is(SanityQueryParamValue)("home")) // true
+ * console.log(S.is(SanityQueryParamValue)({ slug: "home" })) // false
  * ```
  *
  * @category models

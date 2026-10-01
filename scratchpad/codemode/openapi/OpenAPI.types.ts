@@ -97,9 +97,10 @@ export type JsonSchema = typeof JsonSchema.Type;
  * ```ts
  * import * as O from "effect/Option"
  * import { OperationId } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import * as S from "effect/Schema"
  *
- * console.log(O.getOrThrow(OperationId.decodeUnknownOption("getHealth")))
- * console.log(O.isNone(OperationId.decodeUnknownOption("")))
+ * console.log(O.getOrThrow(S.decodeUnknownOption(OperationId)("getHealth")))
+ * console.log(O.isNone(S.decodeUnknownOption(OperationId)("")))
  * ```
  *
  * @see {@link Operation} for the operation identity that stores this id.
@@ -137,8 +138,9 @@ export type OperationId = typeof OperationId.Type;
  * ```ts
  * import * as O from "effect/Option"
  * import { HttpMethod } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import * as S from "effect/Schema"
  *
- * console.log(O.getOrThrow(HttpMethod.decodeOption("post")))
+ * console.log(O.getOrThrow(S.decodeUnknownOption(HttpMethod)("post")))
  * console.log(HttpMethod.To.Enum.POST)
  * ```
  *
@@ -178,9 +180,10 @@ export type HttpMethod = typeof HttpMethod.Type;
  * ```ts
  * import * as O from "effect/Option"
  * import { ApiPath } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import * as S from "effect/Schema"
  *
- * console.log(O.getOrThrow(ApiPath.decodeUnknownOption("/users/{id}")))
- * console.log(O.isNone(ApiPath.decodeUnknownOption("users")))
+ * console.log(O.getOrThrow(S.decodeUnknownOption(ApiPath)("/users/{id}")))
+ * console.log(O.isNone(S.decodeUnknownOption(ApiPath)("users")))
  * ```
  *
  * @see {@link Operation} for the operation that stores this path.
@@ -210,11 +213,12 @@ export type ApiPath = typeof ApiPath.Type;
  * ```ts
  * import * as O from "effect/Option"
  * import { ApiPath, Operation } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import * as S from "effect/Schema"
  *
  * const operation = Operation.new(
  *   O.none(),
  *   "GET",
- *   O.getOrThrow(ApiPath.decodeUnknownOption("/health")),
+ *   O.getOrThrow(S.decodeUnknownOption(ApiPath)("/health")),
  *   O.none(),
  *   O.none(),
  * )
@@ -710,11 +714,12 @@ export type Credential = typeof Credential.Type;
  * ```ts
  * import * as O from "effect/Option"
  * import { ApiKeyHeader, ApiPath, AuthContext, Operation, SecuritySchemeApiKey } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import * as S from "effect/Schema"
  *
  * const operation = Operation.new(
  *   O.none(),
  *   "GET",
- *   O.getOrThrow(ApiPath.decodeUnknownOption("/health")),
+ *   O.getOrThrow(S.decodeUnknownOption(ApiPath)("/health")),
  *   O.none(),
  *   O.none(),
  * )
@@ -1189,9 +1194,10 @@ const SecuritySchemeMap = S.HashMap(S.String, SecurityScheme);
  * import { HashMap } from "effect"
  * import * as O from "effect/Option"
  * import { ApiPath, Operation, Plan } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import * as S from "effect/Schema"
  *
  * const plan = Plan.new(
- *   Operation.new(O.none(), "GET", O.getOrThrow(ApiPath.decodeUnknownOption("/health")), O.none(), O.none()),
+ *   Operation.new(O.none(), "GET", O.getOrThrow(S.decodeUnknownOption(ApiPath)("/health")), O.none(), O.none()),
  *   "https://api.example.test/health",
  *   [],
  *   O.none(),

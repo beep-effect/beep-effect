@@ -252,6 +252,7 @@ export class PracticeKgCandidateClaimsNotLoadedResult extends S.Class<PracticeKg
  *
  * ```ts
  * import { PracticeKgCandidateClaimsNotLoadedResult, PracticeKgCandidateClaimsResult } from "@beep/law-practice-use-cases/server"
+ * import * as S from "effect/Schema"
  *
  * const result = PracticeKgCandidateClaimsNotLoadedResult.make({
  *   available: false,
@@ -259,7 +260,7 @@ export class PracticeKgCandidateClaimsNotLoadedResult extends S.Class<PracticeKg
  *   epistemic_status: "candidate-unreviewed",
  *   reason: "claims batch not yet loaded"
  * })
- * console.log(PracticeKgCandidateClaimsResult.is(result)) // true
+ * console.log(S.is(PracticeKgCandidateClaimsResult)(result)) // true
  * ```
  *
  * @category models

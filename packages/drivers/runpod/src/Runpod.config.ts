@@ -22,8 +22,9 @@ const normalizeConfigUrl = Str.replace(/\/+$/, "");
  *
  * ```ts
  * import { RunpodConfigUrl } from "@beep/runpod"
+ * import * as S from "effect/Schema"
  *
- * const url = RunpodConfigUrl.decodeUnknownSync("https://rest.runpod.io/v1/")
+ * const url = S.decodeUnknownSync(RunpodConfigUrl)("https://rest.runpod.io/v1/")
  * console.log(url)
  * ```
  *
@@ -47,8 +48,9 @@ export const RunpodConfigUrl = S.String.pipe(
  *
  * ```ts
  * import { RunpodConfigUrl } from "@beep/runpod"
+ * import * as S from "effect/Schema"
  *
- * const url: RunpodConfigUrl = RunpodConfigUrl.decodeUnknownSync("https://rest.runpod.io/v1/")
+ * const url: RunpodConfigUrl = S.decodeUnknownSync(RunpodConfigUrl)("https://rest.runpod.io/v1/")
  * console.log(url)
  * ```
  *

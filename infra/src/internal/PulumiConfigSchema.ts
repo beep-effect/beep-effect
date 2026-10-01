@@ -1,3 +1,9 @@
+/**
+ * Internal helpers for Pulumi config schemas.
+ *
+ * @since 0.0.0
+ */
+
 import { Struct } from "@beep/utils";
 import * as pulumi from "@pulumi/pulumi";
 import * as S from "effect/Schema";

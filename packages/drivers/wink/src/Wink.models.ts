@@ -69,8 +69,9 @@ const patternElementToBracketString = (pattern: Pattern): ReadonlyArray<string> 
  *
  * ```ts
  * import { EntityGroupName } from "@beep/wink"
+ * import * as S from "effect/Schema"
  *
- * const entityGroupName = EntityGroupName.decodeUnknownSync("ProductName")
+ * const entityGroupName = S.decodeUnknownSync(EntityGroupName)("ProductName")
  * console.log(entityGroupName)
  * ```
  *

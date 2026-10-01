@@ -1,3 +1,10 @@
+/**
+ * Deterministic fixture SDK facade for the Agentic Professional Runtime proof.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { PromotionGateRequest, PromotionGateVerdict, PromotionTenantRef } from "@beep/shared-use-cases/PromotionGate";
 import { A } from "@beep/utils";
 import { Effect, flow, HashMap, HashSet, Result } from "effect";

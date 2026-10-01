@@ -131,8 +131,9 @@ export class WorkItemRepositoryUnavailable extends S.TaggedError<WorkItemReposit
  *   WorkItemRepositoryError,
  *   WorkItemRepositoryUnavailable,
  * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
+ * import * as S from "effect/Schema"
  *
- * const isRepositoryError = WorkItemRepositoryError.is
+ * const isRepositoryError = S.is(WorkItemRepositoryError)
  *
  * console.log(isRepositoryError(WorkItemRepositoryUnavailable.make({ reason: "maintenance" }))) // true
  * ```

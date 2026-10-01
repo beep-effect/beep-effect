@@ -18,9 +18,10 @@ const $I = $DockId.create("Dock.ids");
  *
  * ```ts import.meta.vitest name="Make and check PanelId"
  * import { PanelId } from "@beep/dock"
+ * import * as S from "effect/Schema"
  *
  * const id = PanelId.make("panel-one")
- * PanelId.is(id) // => true
+ * S.is(PanelId)(id) // => true
  * ```
  *
  * @category identifiers
@@ -56,9 +57,10 @@ export type PanelId = typeof PanelId.Type;
  *
  * ```ts import.meta.vitest name="Make and check GroupId"
  * import { GroupId } from "@beep/dock"
+ * import * as S from "effect/Schema"
  *
  * const id = GroupId.make("group-one")
- * GroupId.is(id) // => true
+ * S.is(GroupId)(id) // => true
  * ```
  *
  * @category identifiers
@@ -94,9 +96,10 @@ export type GroupId = typeof GroupId.Type;
  *
  * ```ts import.meta.vitest name="Make and check SplitId"
  * import { SplitId } from "@beep/dock"
+ * import * as S from "effect/Schema"
  *
  * const id = SplitId.make("split-one")
- * SplitId.is(id) // => true
+ * S.is(SplitId)(id) // => true
  * ```
  *
  * @category identifiers
@@ -132,9 +135,10 @@ export type SplitId = typeof SplitId.Type;
  *
  * ```ts import.meta.vitest name="Make and check CommandId"
  * import { CommandId } from "@beep/dock"
+ * import * as S from "effect/Schema"
  *
  * const id = CommandId.make("command-open-one")
- * CommandId.is(id) // => true
+ * S.is(CommandId)(id) // => true
  * ```
  *
  * @category identifiers
@@ -170,9 +174,10 @@ export type CommandId = typeof CommandId.Type;
  *
  * ```ts import.meta.vitest name="Make and check RendererKey"
  * import { RendererKey } from "@beep/dock"
+ * import * as S from "effect/Schema"
  *
  * const key = RendererKey.make("markdown-preview")
- * RendererKey.is(key) // => true
+ * S.is(RendererKey)(key) // => true
  * ```
  *
  * @category identifiers

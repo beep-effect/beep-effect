@@ -642,8 +642,9 @@ export class BrandIdentity extends S.Class<BrandIdentity>($I`BrandIdentity`)(
  *
  * ```ts
  * import { SvgPaint } from "@beep/brand"
+ * import * as S from "effect/Schema"
  *
- * console.log(SvgPaint.is("currentColor"))
+ * console.log(S.is(SvgPaint)("currentColor"))
  * ```
  *
  * @category models

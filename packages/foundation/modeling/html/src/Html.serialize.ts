@@ -126,6 +126,7 @@ const issueSafeHtml = (html: string): SafeHtmlValue => {
  * ```ts import.meta.vitest name="Check SafeHtml provenance"
  * import { conform, enforceSafeHtml, Fragment, SafeHtml, serializeSafe } from "@beep/html"
  * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
  * const html = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(
@@ -133,8 +134,8 @@ const issueSafeHtml = (html: string): SafeHtmlValue => {
  *     Effect.flatMap(serializeSafe)
  *   )
  * )
- * SafeHtml.is(html) // => true
- * SafeHtml.is({ ...html }) // => false
+ * S.is(SafeHtml)(html) // => true
+ * S.is(SafeHtml)({ ...html }) // => false
  * ```
  *
  * @category schemas

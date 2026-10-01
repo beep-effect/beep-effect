@@ -672,8 +672,9 @@ export class ObsRequestResponseMessage extends S.Class<ObsRequestResponseMessage
  *
  * ```ts
  * import { ObsIncomingMessage } from "@beep/obs"
+ * import * as S from "effect/Schema"
  *
- * console.log(ObsIncomingMessage.is({ op: 2, d: { negotiatedRpcVersion: 1 } }))
+ * console.log(S.is(ObsIncomingMessage)({ op: 2, d: { negotiatedRpcVersion: 1 } }))
  * ```
  *
  * @category schemas
@@ -722,8 +723,9 @@ const ObsOutgoingMessageWithCodecStatics = S.Union([ObsIdentifyMessage, ObsReque
  *
  * ```ts
  * import { ObsOutgoingMessage } from "@beep/obs"
+ * import * as S from "effect/Schema"
  *
- * console.log(ObsOutgoingMessage.is({ op: 1, d: { rpcVersion: 1, eventSubscriptions: 79 } }))
+ * console.log(S.is(ObsOutgoingMessage)({ op: 1, d: { rpcVersion: 1, eventSubscriptions: 79 } }))
  * ```
  *
  * @category schemas

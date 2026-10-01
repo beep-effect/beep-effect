@@ -137,9 +137,10 @@ const FilePathChecks = S.makeFilterGroup(
  * ```ts import.meta.vitest name="Decode valid file paths"
  * import * as Effect from "effect/Effect"
  * import { FilePath } from "@beep/schema/FilePath"
+ * import * as S from "effect/Schema"
  *
- * const posix = await Effect.runPromise(FilePath.decodeUnknownEffect("/usr/local/bin/node"))
- * const relative = await Effect.runPromise(FilePath.decodeUnknownEffect("src/index.ts"))
+ * const posix = await Effect.runPromise(S.decodeUnknownEffect(FilePath)("/usr/local/bin/node"))
+ * const relative = await Effect.runPromise(S.decodeUnknownEffect(FilePath)("src/index.ts"))
  * ```
  *
  * **Example** (Reject bare root paths)

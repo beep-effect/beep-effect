@@ -30,8 +30,9 @@ const tikaContentKey = "X-TIKA:content";
  *
  * ```ts
  * import { TikaContentText } from "@beep/tika"
+ * import * as S from "effect/Schema"
  *
- * const text = TikaContentText.decodeUnknownSync("  hello corpus\n")
+ * const text = S.decodeUnknownSync(TikaContentText)("  hello corpus\n")
  * console.log(text) // "hello corpus"
  * ```
  *

@@ -281,11 +281,12 @@ export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFai
  *
  * ```ts
  * import { ToolCall, ToolCallEnded, ToolCallStarted, ToolCallSucceeded } from "@beep/scratchpad/codemode"
+ * import * as S from "effect/Schema"
  *
  * const started = ToolCallStarted.new(0, ToolCall.new("search"), {})
  * const ended = ToolCallSucceeded.new(started, 5)
  *
- * console.log(ToolCallEnded.is(ended)) // true
+ * console.log(S.is(ToolCallEnded)(ended)) // true
  * console.log(ended._tag) // "success"
  * ```
  *

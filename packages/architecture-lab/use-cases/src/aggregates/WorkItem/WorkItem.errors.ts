@@ -177,8 +177,9 @@ export class WorkItemActionFailed extends S.TaggedError<WorkItemActionFailed>($I
  *   WorkItemActionError,
  *   WorkItemActionFailed,
  * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
+ * import * as S from "effect/Schema"
  *
- * const isActionError = WorkItemActionError.is
+ * const isActionError = S.is(WorkItemActionError)
  *
  * console.log(isActionError(WorkItemActionFailed.make({ reason: "Repository unavailable" }))) // true
  * ```

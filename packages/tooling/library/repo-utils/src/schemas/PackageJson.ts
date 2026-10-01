@@ -42,7 +42,8 @@ const exportConditionPattern = /^(?:[^.0-9]+|types@.+)$/;
  *
  * ```ts
  * import { NpmPackageName } from "@beep/repo-utils/schemas/PackageJson"
- * const isValid = NpmPackageName.is("@beep/example")
+ * import * as S from "effect/Schema"
+ * const isValid = S.is(NpmPackageName)("@beep/example")
  * console.log(isValid)
  * ```
  *
@@ -66,7 +67,8 @@ export const NpmPackageName = S.String.check(S.isMinLength(1))
  *
  * ```ts
  * import { RepoPackageName } from "@beep/repo-utils/schemas/PackageJson"
- * const isValid = RepoPackageName.is("@beep/repo-utils")
+ * import * as S from "effect/Schema"
+ * const isValid = S.is(RepoPackageName)("@beep/repo-utils")
  * console.log(isValid)
  * ```
  *
@@ -98,7 +100,8 @@ const PackageManager = S.String.check(S.isPattern(packageManagerPattern)).pipe(
  *
  * ```ts
  * import { RelativeDotPath } from "@beep/repo-utils/schemas/PackageJson"
- * const isPath = RelativeDotPath.is("./src/index.ts")
+ * import * as S from "effect/Schema"
+ * const isPath = S.is(RelativeDotPath)("./src/index.ts")
  * console.log(isPath)
  * ```
  *
@@ -147,7 +150,8 @@ const StringArray = S.Array(S.String).pipe(
  *
  * ```ts
  * import { NonEmptyStringValue } from "@beep/repo-utils/schemas/PackageJson"
- * const isNonEmpty = NonEmptyStringValue.is("catalog:")
+ * import * as S from "effect/Schema"
+ * const isNonEmpty = S.is(NonEmptyStringValue)("catalog:")
  * console.log(isNonEmpty)
  * ```
  *

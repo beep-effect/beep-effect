@@ -87,7 +87,8 @@ export class ProviderProbeUnavailable extends S.TaggedError<ProviderProbeUnavail
  *
  * ```ts
  * import { ProviderActionError, ProviderProbeUnavailable } from "@beep/agents-use-cases/public"
- * console.log(ProviderActionError.is(ProviderProbeUnavailable.make({ guidance: "Try again." }))) // true
+ * import * as S from "effect/Schema"
+ * console.log(S.is(ProviderActionError)(ProviderProbeUnavailable.make({ guidance: "Try again." }))) // true
  * ```
  *
  * @category errors

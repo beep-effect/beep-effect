@@ -445,10 +445,11 @@ export class CodeModeURL extends S.TaggedClass<CodeModeURL>($I`CodeModeURL`)(
  *
  * ```ts
  * import { CodeModeDate, CodeModeValue } from "../../../codemode/Codemode.values.ts"
+ * import * as S from "effect/Schema"
  *
  * const date = CodeModeDate.new(0)
  *
- * console.log(CodeModeValue.is(date)) // true
+ * console.log(S.is(CodeModeValue)(date)) // true
  * console.log(date._tag) // "CodeModeDate"
  * ```
  *

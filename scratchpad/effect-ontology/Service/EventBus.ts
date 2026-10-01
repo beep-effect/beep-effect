@@ -100,7 +100,7 @@ export class JobWithMetadata extends S.Class<JobWithMetadata>($I`JobWithMetadata
  *     timestamp: "2026-07-25T12:00:00.000Z"
  *   }
  * })
- * console.log(O.exists(entry, EventEntry.is)) // true
+ * console.log(O.exists(entry, S.is(EventEntry))) // true
  * console.log(O.map(entry, (value) => value.event)) // Some("ClaimCorrected")
  * ```
  *

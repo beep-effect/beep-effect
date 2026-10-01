@@ -27,7 +27,8 @@ const wildcardFileStemPattern = /(?:^|\/)\*\.tsx?$/u;
  *
  * ```ts
  * import { RootAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
- * const isRootTarget = RootAliasTarget.is("./packages/example/src/index.ts")
+ * import * as S from "effect/Schema"
+ * const isRootTarget = S.is(RootAliasTarget)("./packages/example/src/index.ts")
  * console.log(isRootTarget)
  * ```
  *
@@ -63,7 +64,8 @@ export type RootAliasTarget = typeof RootAliasTarget.Type;
  *
  * ```ts
  * import { WildcardAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
- * const isWildcardTarget = WildcardAliasTarget.is("./packages/example/src/*")
+ * import * as S from "effect/Schema"
+ * const isWildcardTarget = S.is(WildcardAliasTarget)("./packages/example/src/*")
  * console.log(isWildcardTarget)
  * ```
  *

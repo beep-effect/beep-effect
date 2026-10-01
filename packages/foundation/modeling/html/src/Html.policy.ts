@@ -485,12 +485,13 @@ const issueSafeHtmlAst = (conformant: ConformantHtml): SafeHtmlAstValue => {
  * ```ts import.meta.vitest name="Issue and check safe proof"
  * import { conform, enforceSafeHtml, Fragment, SafeHtmlAst } from "@beep/html"
  * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
  * const proof = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(enforceSafeHtml))
  * )
- * SafeHtmlAst.is(proof) // => true
- * SafeHtmlAst.is({ ...proof }) // => false
+ * S.is(SafeHtmlAst)(proof) // => true
+ * S.is(SafeHtmlAst)({ ...proof }) // => false
  * ```
  *
  * @category schemas
@@ -532,12 +533,13 @@ export type SafeHtmlAst = typeof SafeHtmlAst.Type;
  * ```ts import.meta.vitest name="Check safe node provenance"
  * import { conform, enforceSafeHtml, Fragment, SafeHtmlNode } from "@beep/html"
  * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
  * const proof = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(enforceSafeHtml))
  * )
- * SafeHtmlNode.is(proof) // => true
- * SafeHtmlNode.is({ ...proof }) // => false
+ * S.is(SafeHtmlNode)(proof) // => true
+ * S.is(SafeHtmlNode)({ ...proof }) // => false
  * ```
  *
  * @category schemas

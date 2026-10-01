@@ -80,10 +80,11 @@ export type PrefixFor<Entity extends EntityId.Any> = Entity["tableName"];
  * import type { PublicEntityIdValueFor } from "@beep/shared-domain/entity/PublicEntityId"
  * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ * import * as S from "effect/Schema"
  *
  * const id: PublicEntityIdValueFor<"shared_organization", "SharedOrganizationPublicId"> = fromCuid(
  *   OrganizationId,
- *   Cuid.decodeUnknownSync("a123")
+ *   S.decodeUnknownSync(Cuid)("a123")
  * )
  * console.log(id)
  * ```
@@ -106,8 +107,9 @@ export type PublicEntityIdValueFor<Prefix extends string, TBrand extends string>
  * import type { PublicEntityIdFor } from "@beep/shared-domain/entity/PublicEntityId"
  * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ * import * as S from "effect/Schema"
  *
- * const id: PublicEntityIdFor<typeof OrganizationId> = fromCuid(OrganizationId, Cuid.decodeUnknownSync("a123"))
+ * const id: PublicEntityIdFor<typeof OrganizationId> = fromCuid(OrganizationId, S.decodeUnknownSync(Cuid)("a123"))
  * console.log(id)
  * ```
  *
@@ -238,8 +240,9 @@ export const factory = <const Entity extends EntityId.Any>(
  * import { Cuid } from "@beep/schema/Cuid"
  * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ * import * as S from "effect/Schema"
  *
- * const id = fromCuid(OrganizationId, Cuid.decodeUnknownSync("a123"))
+ * const id = fromCuid(OrganizationId, S.decodeUnknownSync(Cuid)("a123"))
  * console.log(id)
  * ```
  *

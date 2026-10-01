@@ -25,9 +25,10 @@ const agentIdPattern = /^[a-z][a-z0-9_-]*$/;
  * **Example** (Use AgentId)
  * ```ts
  * import { AgentId } from "@effect-ontology/Model/Agent"
+ * import * as S from "effect/Schema"
  *
  * const id = AgentId.make("corrector-v2")
- * console.log(AgentId.is(id)) // true
+ * console.log(S.is(AgentId)(id)) // true
  * ```
  *
  * @invariant Starts with a lowercase letter and then contains only lowercase

@@ -130,6 +130,7 @@ export class OfficeActionCandidateExtraction extends S.Class<OfficeActionCandida
  * ```ts
  * import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw"
  * import { OfficeActionReviewError } from "@beep/law-practice-use-cases/OfficeActionReview"
+ * import * as S from "effect/Schema"
  *
  * const error = IrToLawExtractionError.fromReason("required-extraction-unaligned", {
  *   alignmentStatus: "unaligned",
@@ -137,7 +138,7 @@ export class OfficeActionCandidateExtraction extends S.Class<OfficeActionCandida
  *   message: "The distinction could not be grounded."
  * })
  *
- * console.log(OfficeActionReviewError.is(error)) // true
+ * console.log(S.is(OfficeActionReviewError)(error)) // true
  * ```
  *
  * @category errors

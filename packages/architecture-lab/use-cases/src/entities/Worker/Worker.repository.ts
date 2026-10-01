@@ -131,8 +131,9 @@ export class WorkerRepositoryUnavailable extends S.TaggedError<WorkerRepositoryU
  *   WorkerRepositoryUnavailable,
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
  * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
+ * import * as S from "effect/Schema"
  *
- * const isRepositoryError = WorkerRepositoryError.is
+ * const isRepositoryError = S.is(WorkerRepositoryError)
  *
  * console.log(isRepositoryError(WorkerRepositoryUnavailable.make({ reason: "maintenance" }))) // true
  * ```

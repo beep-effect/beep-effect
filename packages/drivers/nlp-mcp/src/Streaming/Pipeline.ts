@@ -34,9 +34,10 @@ const PipelineStageBase = LiteralKit(["lowercase", "normalizeWhitespace", "remov
  * import { PipelineStage } from "@beep/nlp-mcp/Streaming/Pipeline"
  *
  * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
- *   const stage = yield* PipelineStage.fromUnknown("normalizeWhitespace")
+ *   const stage = yield* S.decodeUnknownEffect(PipelineStage)("normalizeWhitespace")
  *   console.log(stage) // "normalizeWhitespace"
  * })
  * ```

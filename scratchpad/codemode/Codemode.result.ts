@@ -201,13 +201,14 @@ export class FailureModel extends S.TaggedClass<FailureModel>($I`FailureModel`)(
  *
  * ```ts
  * import { CodeMode } from "@beep/scratchpad/codemode"
+ * import * as S from "effect/Schema"
  *
  * const model = CodeMode.SuccessModel.make({
  *   value: 1,
  *   toolCalls: [],
  * })
  *
- * console.log(CodeMode.ResultModel.is(model)) // true
+ * console.log(S.is(CodeMode.ResultModel)(model)) // true
  * console.log(model._tag) // "Success"
  * ```
  *

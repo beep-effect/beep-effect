@@ -130,8 +130,9 @@ export const YouTubeVideoId = S.String.check(
  *
  * ```ts
  * import { FootnoteIdentifier } from "@beep/md/Md.model"
+ * import * as S from "effect/Schema"
  *
- * const identifier = FootnoteIdentifier.decodeUnknownSync("note-1")
+ * const identifier = S.decodeUnknownSync(FootnoteIdentifier)("note-1")
  * console.log(identifier)
  * ```
  *
@@ -160,8 +161,9 @@ export const FootnoteIdentifier = S.NonEmptyString.check(
  * ```ts
  * import type { FootnoteIdentifier as FootnoteIdentifierValue } from "@beep/md/Md.model"
  * import { FootnoteIdentifier } from "@beep/md/Md.model"
+ * import * as S from "effect/Schema"
  *
- * const identifier: FootnoteIdentifierValue = FootnoteIdentifier.decodeUnknownSync("note-1")
+ * const identifier: FootnoteIdentifierValue = S.decodeUnknownSync(FootnoteIdentifier)("note-1")
  * console.log(identifier)
  * ```
  *

@@ -73,8 +73,9 @@ const FilingOutcomeBase = FilingOutcomeKind.toTaggedUnion("kind")({
  *
  * ```ts
  * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
+ * import * as S from "effect/Schema"
  *
- * const outcome = FilingOutcome.decodeUnknownSync({
+ * const outcome = S.decodeUnknownSync(FilingOutcome)({
  *   kind: "filed",
  *   confidence: 1,
  *   rationale: "Matched deterministic taxonomy token for pleadings.",
