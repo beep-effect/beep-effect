@@ -10,10 +10,11 @@
  * very first `check` run is expected to report the `xhigh` and `high` copies
  * as `stale` rather than silently adopting them.
  *
- * Since the 2026-09-24 directive every sub-agent, delegation, and Workflow
- * child is `child.heavy` = `claude-opus-5-5` (the explicit id; the `opus`
- * alias is not a pin). The `codex.heavy` bindings stay pinned for the
- * Codex-only clients, which are opt-in lanes rather than the default pool.
+ * Since the 2026-10-01 policy the two orchestrator chains are explicit:
+ * `child.heavy` = `claude-opus-5-5` (the explicit id; the `opus` alias is not
+ * a pin) for Claude Code, `codex.heavy` = `gpt-6.1-sol` medium for Codex, and
+ * the shared fallbacks `fallback.cursor` (`claude-opus-5-5` on the Cursor
+ * seat) then `fallback.grok` (`grok-4.7` medium on grok-build).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -75,9 +76,16 @@ const binding = (
     note,
   });
 
-const codexOptIn = O.some("Codex opt-in lane only since 2026-09-24; default delegation is child.heavy.");
+const codexDefault = O.some("Codex default since 2026-10-01; Codex uses only GPT-6.1-Sol for substantive work.");
+const cursorFallback = O.some(
+  "Step 2 of both chains since 2026-10-01; absent from --list-models yet accepted, effort medium baked in."
+);
+const fableProxyOrchestrator = O.some(
+  "claudep keeps Fable: CLIProxyAPI cannot route claude-opus-5-5 (registry gap); operator decision pending."
+);
+const grokFallback = O.some("Step 3 of both chains since 2026-10-01; the grok CLI reports grok-4.7-build.");
 const opusDefault = O.some(
-  "Every sub-agent, delegation, and Workflow child since 2026-09-24; explicit id, never the opus alias."
+  "Claude Code default and every sub-agent, delegation, and Workflow child; explicit id, never the opus alias."
 );
 const opusProxyGap = O.some(
   "Same route for proxy sessions; unknown-model until the CLIProxyAPI registry lists claude-opus-5-5 (absent 2026-09-27)."
@@ -182,15 +190,32 @@ const agentRollout = (id: string, path: string): ModelSyncTarget =>
 const seedBindings: ReadonlyArray<ModelBinding> = [
   binding("child.heavy", "claude-code", "claude-opus-5-5", O.none(), [], opusDefault),
   binding("child.heavy", "proxy-workflow", "claude-opus-5-5", O.none(), [], opusProxyGap),
-  binding("codex.heavy", "codex-cli", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"], codexOptIn),
-  binding("codex.heavy", "codex-plugin", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"], codexOptIn),
-  binding("codex.heavy", "proxy-workflow", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"], codexOptIn),
-  binding("codex.heavy", "jetbrains-codex", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"], codexOptIn),
-  binding("codex.plan", "codex-cli", "gpt-6-astra", O.some("medium"), [], codexOptIn),
+  binding("codex.heavy", "codex-cli", "gpt-6.1-sol", O.some("medium"), ["gpt-6-astra", "gpt-5.6-sol"], codexDefault),
+  binding("codex.heavy", "codex-plugin", "gpt-6.1-sol", O.some("medium"), ["gpt-6-astra", "gpt-5.6-sol"], codexDefault),
+  binding(
+    "codex.heavy",
+    "proxy-workflow",
+    "gpt-6.1-sol",
+    O.some("medium"),
+    ["gpt-6-astra", "gpt-5.6-sol"],
+    codexDefault
+  ),
+  binding(
+    "codex.heavy",
+    "jetbrains-codex",
+    "gpt-6.1-sol",
+    O.some("medium"),
+    ["gpt-6-astra", "gpt-5.6-sol"],
+    codexDefault
+  ),
+  binding("codex.plan", "codex-cli", "gpt-6.1-sol", O.some("medium"), ["gpt-6-astra"], codexDefault),
+  binding("fallback.cursor", "cursor-seat", "claude-opus-5-5", O.none(), [], cursorFallback),
+  binding("fallback.grok", "grok-cli", "grok-4.7", O.some("medium"), [], grokFallback),
   binding("child.lightweight", "proxy-workflow", "gpt-5.6-luna", O.none()),
   binding("research.web", "grok-cli", "grok-4.6", O.some("xhigh"), ["grok-4.5"]),
   binding("research.web", "proxy-workflow", "grok-4.6", O.none(), ["grok-4.5"]),
-  binding("orchestrator", "claude-code", "claude-fable-5-1", O.none()),
+  binding("orchestrator", "claude-code", "claude-opus-5-5", O.some("medium"), ["claude-fable-5-1"], opusDefault),
+  binding("orchestrator", "proxy-workflow", "claude-fable-5-1", O.none(), [], fableProxyOrchestrator),
   binding("cursor.volume", "cursor-seat", "composer-2.5", O.none()),
   binding("cursor.review", "cursor-seat", "claude-opus-5-thinking-high", O.none()),
   binding("cursor.mechanical", "cursor-seat", "composer-2.5", O.none()),
@@ -208,6 +233,12 @@ const seedSuperseded: ReadonlyArray<SupersededModel> = [
     retiredAt,
     replacedBy: O.some(modelId("gpt-6-astra")),
     note: O.some("Superseded as the token-heavy Codex default on 2026-09-08."),
+  }),
+  SupersededModel.make({
+    id: modelId("gpt-6-astra"),
+    retiredAt: DateTime.makeUnsafe("2026-10-01T00:00:00Z"),
+    replacedBy: O.some(modelId("gpt-6.1-sol")),
+    note: O.some("Superseded as the Codex default by the 2026-10-01 model defaults policy."),
   }),
   SupersededModel.make({
     id: modelId("grok-4.5"),
@@ -312,14 +343,14 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
   target("home.grok.config", "home", "$HOME/.grok/config.toml", true, [
     {
       _tag: "toml-table-key",
-      binding: at("research.web", "grok-cli", "model"),
+      binding: at("fallback.grok", "grok-cli", "model"),
       render: verbatim,
       table: "models",
       key: "default",
     },
     {
       _tag: "toml-table-key",
-      binding: at("research.web", "grok-cli", "effort"),
+      binding: at("fallback.grok", "grok-cli", "effort"),
       render: verbatim,
       table: "models",
       key: "default_reasoning_effort",
@@ -358,7 +389,7 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
     },
     {
       _tag: "shell-assign",
-      binding: at("orchestrator", "claude-code", "model"),
+      binding: at("orchestrator", "proxy-workflow", "model"),
       render: verbatim,
       variable: "--model",
       within: O.some("claudep"),
@@ -430,7 +461,7 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
  *
  * **Details**
  *
- * Eighteen bindings cover the routing concepts the census named; the targets
+ * Twenty-one bindings cover the routing concepts the census named; the targets
  * are the repo rows of ruling 9 plus the home rows of ruling 7 and the
  * `$HOME` sweep. Home paths are written `$HOME/…` rather than absolute, so the
  * file stays portable and safe to read aloud.
@@ -441,7 +472,7 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
  * import { seedModelsManifest } from "@beep/repo-cli/commands/Models"
  *
  * console.log(seedModelsManifest.version) // "beep-models/v1"
- * console.log(seedModelsManifest.bindings.length) // 18
+ * console.log(seedModelsManifest.bindings.length) // 21
  * ```
  *
  * @category models
