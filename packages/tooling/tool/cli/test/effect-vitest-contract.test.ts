@@ -6,6 +6,8 @@ import {
   detectEffectVitestFindings,
   diffEffectVitestFindings,
   discoverEffectVitestSourcePaths,
+  EffectVitestCensusPath,
+  EffectVitestCensusRow,
   EffectVitestFinding,
   EffectVitestInventoryDocument,
   EffectVitestInventoryPath,
@@ -17,6 +19,7 @@ import {
   formatEffectVitestIntroducedReport,
   makeEffectVitestFindingKey,
   preserveEffectVitestExceptions,
+  readEffectVitestInventory,
   readEffectVitestPrimitiveGraph,
   runEffectVitestLint,
   verifyEffectVitestPin,
@@ -33,6 +36,7 @@ import * as S from "effect/Schema";
 import { Project } from "ts-morph";
 
 const encodeInventoryJson = S.encodeEffect(S.fromJsonString(EffectVitestInventoryDocument));
+const decodeCensusJson = S.decodeUnknownEffect(S.fromJsonString(S.Array(EffectVitestCensusRow)));
 const isEffectVitestFinding = S.is(EffectVitestFinding);
 const isEffectVitestPackageTiming = S.is(EffectVitestPackageTiming);
 
@@ -107,6 +111,49 @@ it("uses the P0a physical-line convention", () => {
 });
 
 it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it) => {
+  it.effect(
+    "persists the scanned inventory and census to their configured artifact paths",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fsUtils = yield* FsUtils;
+      const output = yield* fs.makeTempDirectoryScoped({ prefix: "effect-vitest-write-contract-" });
+      const inputs = A.map(["z.test.ts", "a.test.ts"], (name) => path.join(output, name));
+      yield* Effect.forEach(inputs, (input) =>
+        fs.writeFileString(
+          input,
+          'import { it } from "@effect/vitest"; import { Effect } from "effect"; it("fixture", () => Effect.runSync(Effect.void));\n'
+        )
+      );
+      const timing = yield* runEffectVitestLint(EffectVitestLintOptions.make({ census: true, write: true })).pipe(
+        Effect.provideService(FsUtils, { ...fsUtils, globFiles: () => Effect.succeed(inputs) }),
+        Effect.provideService(Path.Path, {
+          ...path,
+          resolve: (...segments) =>
+            segments.length === 2 &&
+            (segments[1] === EffectVitestInventoryPath || segments[1] === EffectVitestCensusPath)
+              ? path.resolve(output, segments[1])
+              : path.resolve(...segments),
+        })
+      );
+      const inventory = yield* readEffectVitestInventory(output);
+      assertTrue(O.isSome(inventory));
+      assertTrue(inventory.value.effectVitestVersion === "4.0.0-rc.118");
+      assertTrue(inventory.value.findings.length === timing.findingCount);
+      assertTrue(A.some(inventory.value.findings, (row) => row.ruleId === "EV001"));
+      const findingIds = A.map(inventory.value.findings, (row) => row.id);
+      deepStrictEqual(findingIds, A.sort(findingIds, Str.Order));
+      const census = yield* fs
+        .readFileString(path.join(output, EffectVitestCensusPath))
+        .pipe(Effect.flatMap(decodeCensusJson));
+      deepStrictEqual(
+        A.map(census, (row) => path.basename(row.file)),
+        ["a.test.ts", "z.test.ts"]
+      );
+      assertTrue(timing.fileCount === census.length);
+    })
+  );
+
   it.effect(
     "rejects newly detected membership when the baseline is absent",
     Effect.fnUntraced(function* () {

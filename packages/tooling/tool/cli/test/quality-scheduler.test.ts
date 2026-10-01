@@ -1837,7 +1837,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           const gibRef = yield* Ref.make(50);
           {
             const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
-            return yield* Effect.gen(function* () {
+            yield* Effect.gen(function* () {
               const fs = yield* FileSystem.FileSystem;
               const path = yield* Path.Path;
               const lockPath = path.join(tempRoot.root, `claim-loss-${lossAtRead}.lock`);

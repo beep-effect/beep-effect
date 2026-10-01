@@ -6031,3 +6031,40 @@ comment-line boundary. The source matched main, and the passing JSDoc Ratchet
 did not establish that the separate ESLint syntax gate passed. Split the
 command into closed inline spans, preserving every flag. Validate comment
 formatting with the syntax gate as well as inventory and docgen checks.
+
+
+### Fixture migrations must preserve loop continuation
+
+The PR #1365 full proof failed coverage in `AdmissionJournal.ts`. In
+`quality-scheduler.test.ts`, migration of a fixture callback left a
+`return yield*` inside a three-case loop. The test still passed, but exercised
+only the first claim-ownership-loss case. Removing the early return restores
+all three cases. An AST audit of changed test files found no other successful
+early return inside a loop; the two remaining returns explicitly die on invalid
+fixture evidence. Test-name and assertion parity alone would not catch this.
+Future migration checks should also compare loop exits and callback return
+boundaries. Coverage floors were retained.
+
+### Node Bun.serve port-zero compatibility can collide
+
+Private qualification of the next AI-metrics test migration failed with
+`EADDRINUSE`, followed by `ERR_SERVER_NOT_RUNNING` during cleanup. The unchanged
+`vitest.setup.ts` shim chooses a random port for `port: 0`, instead of obtaining
+an OS-assigned port, and does not handle the listen error before returning.
+The candidate fixture now uses the installed scoped `NodeHttpServer.make`
+constructor with loopback binding and port zero; private Node/Bun runs pass all
+45 tests and cleanup probes confirm five closed listeners. That draft is not
+part of this PR. The shared shim still needs a separate compatibility repair
+that preserves synchronous callers, hostname binding and failed-start cleanup;
+blanket retries or swallowed close errors would conceal the issue.
+
+### Heavy admission needs visible runner-capacity evidence
+
+PR #1365 passed heavy admission while all seven heavy jobs remained queued.
+The Check job had no assigned runner, and the repository runner endpoint
+returned zero runners. A read-only AWS controller query could not proceed
+because the CLI session had expired. Runner assignment later resumed without
+pool changes; these observations do not prove a controller fault. A sanitized
+status surface for queue age, available capacity and controller health would
+help distinguish ordinary Spot/capacity delay from a provisioning failure.
+The documented pool limits and queued jobs were left intact.
