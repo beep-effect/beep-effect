@@ -5,17 +5,17 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { HttpMethod } from "@beep/schema/HttpMethod";
-import { HttpStatusCode } from "@beep/schema/HttpStatus";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A } from "@beep/utils";
-import { Cause, Clock, Duration, Effect, Exit, Layer, Metric, pipe, SchemaAST } from "effect";
+import { Cause, Clock, Duration, Effect, Exit, Layer, Metric, pipe, Result, SchemaAST } from "effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import { HttpApiMiddleware, HttpApiSchema } from "effect/http-api";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { observeHttpRequest, statusClass } from "../Metric.ts";
+import type { HttpMethod } from "effect/http/HttpMethod";
 import type * as HttpServerResponse from "effect/http/HttpServerResponse";
 import type { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 
@@ -23,12 +23,51 @@ const $I = $ObservabilityId.create("server/HttpApiTelemetry");
 const resolveHttpApiStatus = SchemaAST.resolveAt<number>("httpApiStatus");
 
 /**
- * Compatibility export for the canonical schema-owned HTTP status code.
+ * HTTP response status code in the standard three-digit range from 100 through 599.
+ *
+ * **Details**
+ *
+ * Accepts extension codes inside the range as well as the named codes that
+ * `effect/http/HttpStatus` resolves with `fromLiteral`.
+ *
+ * **Example** (Check an HTTP status code)
+ *
+ * ```ts
+ * import { HttpStatusCode } from "@beep/observability/server"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(O.isSome(S.decodeUnknownOption(HttpStatusCode)(599))) // true
+ * console.log(O.isSome(S.decodeUnknownOption(HttpStatusCode)(600))) // false
+ * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export { HttpStatusCode };
+export const HttpStatusCode = S.Natural.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
+  $I.annoteSchema("HttpStatusCode", {
+    description: "HTTP response status code in the standard three-digit range from 100 through 599.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link HttpStatusCode}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HttpStatusCode = typeof HttpStatusCode.Type;
+
+const decodeHttpStatusCodeResult = S.decodeUnknownResult(HttpStatusCode);
+// Status resolution runs in synchronous helpers; an invalid status still reaches the caller as the thrown SchemaError.
+const decodeHttpStatusCode = (status: unknown): HttpStatusCode =>
+  Result.getOrThrowWith(decodeHttpStatusCodeResult(status), identity);
+
+const HttpApiMethod = LiteralKit(["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "TRACE", "QUERY"]).pipe(
+  $I.annoteSchema("HttpApiMethod", {
+    description: "HTTP method of an HTTP API endpoint.",
+  })
+);
 
 class HttpApiStatusField extends S.Class<HttpApiStatusField>($I`HttpApiStatusField`)(
   { status: HttpStatusCode },
@@ -68,7 +107,7 @@ export class HttpApiTelemetryDescriptor extends S.Class<HttpApiTelemetryDescript
     apiName: S.NonEmptyString,
     groupName: S.NonEmptyString,
     endpointName: S.NonEmptyString,
-    method: HttpMethod,
+    method: HttpApiMethod,
     route: S.NonEmptyString,
     successStatus: HttpStatusCode,
   },
@@ -153,11 +192,11 @@ export const httpApiSuccessStatus: {
   (schema: S.Top, fallback?: number): number;
   (fallback?: number): (schema: S.Top) => number;
 } = dual(isHttpApiSuccessStatusDataFirst, (schema: S.Top, fallback = 200): number =>
-  HttpStatusCode.decodeUnknownSync(resolveHttpApiStatus(schema.ast) ?? fallback)
+  decodeHttpStatusCode(resolveHttpApiStatus(schema.ast) ?? fallback)
 );
 
 const httpApiErrorStatus = (schema: S.Top, fallback = 500): number =>
-  HttpStatusCode.decodeUnknownSync(resolveHttpApiStatus(schema.ast) ?? fallback);
+  decodeHttpStatusCode(resolveHttpApiStatus(schema.ast) ?? fallback);
 
 const endpointSuccessSchemas = (endpoint: HttpApiEndpointMetadata): A.NonEmptyReadonlyArray<S.Top> => {
   const schemas = A.fromIterable(endpoint.success);
@@ -334,7 +373,7 @@ export const httpApiFailureStatus: {
   (endpoint: HttpApiEndpointMetadata, error: unknown): O.Option<number> =>
     HttpApiStatusField.decodeOption(error).pipe(
       O.map(({ status }) => status),
-      O.orElse(() => (S.isSchemaError(error) ? O.some(HttpStatusCode.decodeUnknownSync(400)) : O.none())),
+      O.orElse(() => (S.isSchemaError(error) ? O.some(decodeHttpStatusCode(400)) : O.none())),
       O.orElse(() => {
         for (const schema of endpointErrorSchemas(endpoint)) {
           if (S.is(schema)(error)) {
@@ -386,7 +425,7 @@ const observeHttpApiEffectImpl = <E, R>(
       Effect.fnUntraced(function* (startedAt) {
         return yield* Effect.annotateCurrentSpan({
           ...descriptorAnnotations(options.descriptor),
-          http_success_status: HttpStatusCode.decodeUnknownSync(options.descriptor.successStatus),
+          http_success_status: decodeHttpStatusCode(options.descriptor.successStatus),
         }).pipe(
           Effect.andThen(effect.pipe(Effect.annotateLogs(descriptorAnnotations(options.descriptor)))),
           Effect.exit,
@@ -639,7 +678,7 @@ const observeHttpApiHandlerImpl = Effect.fn("observeHttpApiHandlerImpl")(functio
       http_endpoint: options.descriptor.endpointName,
       http_method: options.descriptor.method,
       http_route: options.descriptor.route,
-      http_success_status: HttpStatusCode.decodeUnknownSync(options.descriptor.successStatus),
+      http_success_status: decodeHttpStatusCode(options.descriptor.successStatus),
     }).pipe(
       Effect.andThen(
         effect.pipe(

@@ -17,7 +17,7 @@ const $I = $SchemaId.create("Sex");
  * ```ts
  * import { Sex } from "@beep/schema/Sex"
  *
- * console.log(Sex.Options.includes("female"))
+ * console.log(Sex.literals.includes("female"))
  * ```
  *
  * @category validation
@@ -43,7 +43,7 @@ export type Sex = typeof Sex.Type;
  * ```ts
  * import { Schema } from "@beep/schema/Sex"
  *
- * console.log(Schema.Options.includes("male"))
+ * console.log(Schema.literals.includes("male"))
  * ```
  *
  * @category validation

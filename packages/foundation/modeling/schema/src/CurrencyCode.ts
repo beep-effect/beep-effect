@@ -46,7 +46,7 @@ export const CurrencyCode = LiteralKit(Struct.keysNonEmpty(CurrencyCodesData.Cur
   })
 );
 
-const currencyCodeSet = HashSet.fromIterable(CurrencyCode.Options);
+const currencyCodeSet = HashSet.fromIterable(CurrencyCode.literals);
 
 /**
  * {@inheritDoc CurrencyCode}

@@ -23,7 +23,7 @@ const $I = $LawPracticeDomainId.create("values/ShortFormCitationType/ShortFormCi
  * Backed by a {@link LiteralKit} so callers get the schema plus derived
  * helpers: `ShortFormCitationType.Enum` for typed literal access,
  * `ShortFormCitationType.is` for per-literal guards, and
- * `ShortFormCitationType.Options` for the full literal list.
+ * `ShortFormCitationType.literals` for the full literal list.
  *
  * **Example** (Decode and guard short-form types)
  *

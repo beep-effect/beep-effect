@@ -59,7 +59,7 @@ const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
  * ```ts
  * import { VoyageModel } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
- * console.log(VoyageModel.Options)
+ * console.log(VoyageModel.literals)
  * ```
  *
  * @category schemas

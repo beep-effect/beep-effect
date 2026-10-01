@@ -13,7 +13,6 @@ import { flow } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import { Context, Duration, Effect, Layer, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -21,7 +20,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
-import { Milliseconds } from "../Domain/Error/Base.ts";
+import { HttpStatusCode, Milliseconds } from "../Domain/Error/Base.ts";
 import type { ImageError } from "../Domain/Error/Image.ts";
 import {
   ImageFetchError,

@@ -99,6 +99,7 @@ const isStringValue = P.isString(value)
 import { LiteralKit } from "@beep/schema"
 import { $PackageNameId } from "@beep/identity/packages"
 import { Match, pipe } from "effect"
+import * as F from "effect/Function"
 import * as A from "effect/Array"
 import * as P from "effect/Predicate"
 import * as S from "effect/Schema"
@@ -146,8 +147,8 @@ const splitNonEmpty =
     pipe(Str.split(separator)(value), A.filter(Str.isNonEmpty))
 
 const classifyTopicKind = Match.type<string>().pipe(
-  Match.when(isContainsScopeSeparator, TopicKind.thunk.scoped),
-  Match.orElse(TopicKind.thunk.plain)
+  Match.when(isContainsScopeSeparator, F.constant(TopicKind.Enum.scoped)),
+  Match.orElse(F.constant(TopicKind.Enum.plain))
 )
 
 export const TopicName = S.NonEmptyString.check(

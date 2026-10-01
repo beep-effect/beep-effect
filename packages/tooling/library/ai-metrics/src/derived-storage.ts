@@ -1071,7 +1071,7 @@ const exportDerivedTablesToParquet = Effect.fn("AiMetrics.derivedStorage.exportD
   const pathApi = yield* Path.Path;
   const duckdb = yield* DuckDb;
   yield* Effect.forEach(
-    AiMetricsDerivedTable.Options,
+    AiMetricsDerivedTable.literals,
     (tableName) =>
       duckdb.copyTableToParquet(
         DuckDbParquetExport.make({
@@ -1552,7 +1552,7 @@ export const writeAiMetricsDerivedStorage = Effect.fn("AiMetrics.writeAiMetricsD
       ingestRunId: input.ingestRunId,
       parquetExportDir,
       parquetExportMode: input.parquetExportMode,
-      parquetTables: O.isSome(parquetExportDir) ? AiMetricsDerivedTable.Options : [],
+      parquetTables: O.isSome(parquetExportDir) ? AiMetricsDerivedTable.literals : [],
       sourceFileCount: input.records.length,
       turnCount,
     });

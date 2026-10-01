@@ -5,16 +5,15 @@
  * @since 0.0.0
  */
 
-import * as HttpMethod from "@beep/schema/HttpMethod";
-import { HttpStatus } from "@beep/schema/HttpStatus";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
-import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
+import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse, HttpStatus } from "effect/http";
 import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Str from "effect/String";
 import type * as Layer from "effect/Layer";
 
 const rpcAuthDecisions = Metric.counter("desktop_rpc_auth_decisions_total", { incremental: true });
@@ -69,7 +68,7 @@ export const isAuthorizedRpcSessionRequest: {
 } = dual(
   3,
   (method: string, headers: Headers.Headers, token: Redacted.Redacted): boolean =>
-    HttpMethod.Schema.is.OPTIONS(method) || isAuthorizedRpcSessionHeaders(headers, token)
+    Str.Equivalence(method, "OPTIONS") || isAuthorizedRpcSessionHeaders(headers, token)
 );
 
 /**
@@ -108,7 +107,7 @@ export const requireRpcSessionToken = (token: Redacted.Redacted) =>
                   }),
                   Effect.as(
                     HttpServerResponse.text("Unauthorized desktop RPC session.", {
-                      status: HttpStatus.From.Enum.Unauthorized,
+                      status: HttpStatus.fromLiteral("Unauthorized"),
                     })
                   )
                 )

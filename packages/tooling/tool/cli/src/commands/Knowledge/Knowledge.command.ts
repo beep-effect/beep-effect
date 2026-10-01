@@ -250,7 +250,7 @@ const renderObservation = (observation: KnowledgeRefObservation): string => {
 };
 
 const classificationCounts = (report: KnowledgeRefsReport): ReadonlyArray<string> =>
-  A.map(KnowledgeRefClassification.Options, (classification) => {
+  A.map(KnowledgeRefClassification.literals, (classification) => {
     const count = A.length(
       A.filter(report.observations, (observation) => observation.classification === classification)
     );
@@ -307,7 +307,7 @@ const quietClassCounts = (
 const quietClassLines = (observations: ReadonlyArray<KnowledgeRefObservation>): ReadonlyArray<string> => {
   const counts = quietClassCounts(observations);
   return A.getSomes(
-    A.map(KnowledgeRefQuietClassification.Options, (classification) =>
+    A.map(KnowledgeRefQuietClassification.literals, (classification) =>
       O.map(HashMap.get(counts, classification), (count) => `  ${classification}: ${count} ${OMITTED_HINT}`)
     )
   );

@@ -183,7 +183,7 @@ type RequestField = {
   readonly schemaExpression: string;
 };
 
-const HTTP_METHODS = RunpodGeneratorHttpMethod.From.Options;
+const HTTP_METHODS = A.map(RunpodGeneratorHttpMethod.Pairs, ([method]) => method);
 const UnauthenticatedOperationId = LiteralKit(["GetOpenAPI", "GetDocs"]);
 const DYNAMIC_ENUM_HINTS = [
   "accelerator",
@@ -883,7 +883,7 @@ export const RunpodOperationId = RunpodOperationIdBase.pipe(
  */
 export type RunpodOperationId = typeof RunpodOperationId.Type;
 
-const RunpodRequestBodyKindBase = LiteralKit(${JSON.stringify(OperationRequestBodyKind.Options)});
+const RunpodRequestBodyKindBase = LiteralKit(${JSON.stringify(OperationRequestBodyKind.literals)});
 /**
  * Request body encoding used by a Runpod operation.
  *
@@ -925,7 +925,7 @@ export const RunpodRequestBodyKind = RunpodRequestBodyKindBase.pipe(
  */
 export type RunpodRequestBodyKind = typeof RunpodRequestBodyKind.Type;
 
-const RunpodResponseBodyKindBase = LiteralKit(${JSON.stringify(OperationResponseBodyKind.Options)});
+const RunpodResponseBodyKindBase = LiteralKit(${JSON.stringify(OperationResponseBodyKind.literals)});
 /**
  * Response body decoding used by a Runpod operation.
  *

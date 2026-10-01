@@ -100,7 +100,7 @@ describe("PatentDocument", () => {
     Effect.fnUntraced(function* () {
       const document = yield* normalizePatentApplicationDocument(patentFixture);
 
-      expect(A.map(document.sections, ({ role }) => role)).toStrictEqual(PatentApplicationSectionRole.Options);
+      expect(A.map(document.sections, ({ role }) => role)).toStrictEqual(PatentApplicationSectionRole.literals);
       expect(document.sections).toHaveLength(13);
       expect(document.claims).toHaveLength(3);
       expect(document.claims[0]).toMatchObject({

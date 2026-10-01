@@ -34,7 +34,7 @@ import {
 import { goalStagePosition, loadGoalPacketManifest, previewEventLine } from "./SetStatus.ts";
 import type { PacketTransitionPlan } from "./PacketCore/PacketTransitionWriter.ts";
 
-const TIER_DOMAIN = A.join(PacketRiskTier.Options, " | ");
+const TIER_DOMAIN = A.join(PacketRiskTier.literals, " | ");
 
 const planOverrideForSlug = Effect.fn("Goals.planOverrideForSlug")(function* (
   slug: string,

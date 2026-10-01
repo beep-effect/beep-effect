@@ -34,7 +34,7 @@ import type {
 
 const $I = $RepoCliId.create("commands/Yeet/internal/FallowFeedback");
 
-const fallowEnvelopeFileNames = A.map(FallowFeatureFamily.Options, (feature) => fallowEnvelopeFileName(feature, true));
+const fallowEnvelopeFileNames = A.map(FallowFeatureFamily.literals, (feature) => fallowEnvelopeFileName(feature, true));
 
 // Local aliases keep this module's prior names while sourcing the single
 // shared Fallow report-envelope codec, eliminating producer/consumer drift.

@@ -42,7 +42,7 @@ const $I = $RepoCliId.create("commands/Goals/Goals.schemas");
  * import { GoalStatus } from "@beep/repo-cli/commands/Goals/Goals.schemas"
  *
  * console.log(GoalStatus.is.active("active")) // true
- * console.log(GoalStatus.Options.length) // 5
+ * console.log(GoalStatus.literals.length) // 5
  * ```
  *
  * @category models

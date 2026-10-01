@@ -68,7 +68,7 @@ const compileCompletionPattern = (pattern: string): Effect.Effect<RegExp, AgentE
   });
 
 const isSourceFileName = (entry: string): boolean =>
-  A.some(SourceFileExtension.Options, (extension) => Str.endsWith(extension)(entry));
+  A.some(SourceFileExtension.literals, (extension) => Str.endsWith(extension)(entry));
 
 const listSourceFiles = Effect.fn("AgentEffectivenessEvalScorer.listSourceFiles")(function* (
   root: string

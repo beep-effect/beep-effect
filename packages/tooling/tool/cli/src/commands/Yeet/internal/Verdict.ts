@@ -45,7 +45,7 @@ const NullableInputDigest = S.OptionFromNullOr(S.String).pipe(
  * ```ts
  * import { YeetLaneStatus } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetLaneStatus.Options)
+ * console.log(YeetLaneStatus.literals)
  * ```
  *
  * @category models
@@ -221,7 +221,7 @@ export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
  * ```ts
  * import { YeetMergeReadyCriterion } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetMergeReadyCriterion.Options)
+ * console.log(YeetMergeReadyCriterion.literals)
  * ```
  *
  * @category models
@@ -356,7 +356,7 @@ const YeetMergeReadyCoherenceCheck = S.makeFilter(
     O.match(value.failing, {
       onNone: () =>
         value.ready &&
-        A.every(YeetMergeReadyCriterion.Options, (criterion) => mergeReadyCriterionHolds(value.criteria, criterion))
+        A.every(YeetMergeReadyCriterion.literals, (criterion) => mergeReadyCriterionHolds(value.criteria, criterion))
           ? undefined
           : {
               path: ["failing"],
@@ -431,7 +431,7 @@ const normalizeLegacyYeetMergeReady = (value: typeof YeetMergeReadyEncoded.Type)
   const criteria = normalizeLegacyMergeReadyCriteria(value);
   const complete = legacyMergeReadyCriteriaComplete(value);
   const firstFailing = A.findFirst(
-    YeetMergeReadyCriterion.Options,
+    YeetMergeReadyCriterion.literals,
     (criterion) =>
       !mergeReadyCriterionHolds(
         YeetMergeReadyCriteria.make({

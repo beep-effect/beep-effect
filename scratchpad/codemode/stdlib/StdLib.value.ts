@@ -53,7 +53,7 @@ const $I = $ScratchpadId.create("codemode/stdlib/StdLib.value");
  * @since 0.0.0
  */
 export const valueConstructors = LiteralKit(
-  GlobalNamespaceName.pickOptions(["Date", "RegExp", "Map", "Set", "URL", "URLSearchParams"])
+  GlobalNamespaceName.pick(["Date", "RegExp", "Map", "Set", "URL", "URLSearchParams"]).literals
 ).pipe(
   $I.annoteSchema("valueConstructors", {
     description: "Guest constructor names allocated as CodeMode values.",
@@ -143,7 +143,7 @@ export type BinaryOperator = typeof BinaryOperator.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const AppliedBinaryOperator = LiteralKit(BinaryOperator.omitOptions(["instanceof"])).pipe(
+export const AppliedBinaryOperator = LiteralKit(BinaryOperator.pick(["+", "-", "*", "/", "%", "**", "==", "!=", "===", "!==", "<", "<=", ">", ">=", "&", "|", "^", "<<", ">>", ">>>", "in"]).literals).pipe(
   $I.annoteSchema("AppliedBinaryOperator", {
     description: "Binary operators applied after instanceof is handled separately.",
   })
@@ -329,8 +329,8 @@ export type LogicalAssignmentOperator = typeof LogicalAssignmentOperator.Type;
  */
 export const AssignmentOperator = LiteralKit([
   "=",
-  ...CompoundOperator.Options,
-  ...LogicalAssignmentOperator.Options,
+  ...A.map(CompoundOperator.Pairs, ([operator]) => operator),
+  ...LogicalAssignmentOperator.literals,
 ]).pipe(
   $I.annoteSchema("AssignmentOperator", {
     description: "Guest assignment operators including compound and logical assignment.",

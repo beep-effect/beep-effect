@@ -152,7 +152,7 @@ export const Dir = makeAsciiCaseInsensitiveEnumerated(["ltr", "rtl", "auto"]).pi
  */
 export type Dir = typeof Dir.Type;
 const TranslateBase = LiteralKit(["yes", "no"]);
-const TranslateInput = makeAsciiCaseInsensitiveEnumerated(["", ...TranslateBase.Options]);
+const TranslateInput = makeAsciiCaseInsensitiveEnumerated(["", ...TranslateBase.literals]);
 
 /**
  * `translate` global attribute value.
@@ -196,7 +196,7 @@ export const Translate = TranslateInput.pipe(
  */
 export type Translate = typeof Translate.Type;
 const ContentEditableBase = LiteralKit(["true", "false", "plaintext-only"]);
-const ContentEditableInput = makeAsciiCaseInsensitiveEnumerated(["", ...ContentEditableBase.Options]);
+const ContentEditableInput = makeAsciiCaseInsensitiveEnumerated(["", ...ContentEditableBase.literals]);
 
 /**
  * `contenteditable` global attribute value.
@@ -273,7 +273,7 @@ export const Draggable = makeAsciiCaseInsensitiveEnumerated(["true", "false"]).p
  */
 export type Draggable = typeof Draggable.Type;
 const SpellCheckBase = LiteralKit(["true", "false"]);
-const SpellCheckInput = makeAsciiCaseInsensitiveEnumerated(["", ...SpellCheckBase.Options]);
+const SpellCheckInput = makeAsciiCaseInsensitiveEnumerated(["", ...SpellCheckBase.literals]);
 
 /**
  * `spellcheck` global attribute value.
@@ -317,7 +317,7 @@ export const SpellCheck = SpellCheckInput.pipe(
  */
 export type SpellCheck = typeof SpellCheck.Type;
 const WritingSuggestionsBase = LiteralKit(["true", "false"]);
-const WritingSuggestionsInput = makeAsciiCaseInsensitiveEnumerated(["", ...WritingSuggestionsBase.Options]);
+const WritingSuggestionsInput = makeAsciiCaseInsensitiveEnumerated(["", ...WritingSuggestionsBase.literals]);
 
 /**
  * `writingsuggestions` global attribute value.
@@ -399,7 +399,7 @@ export const AutoCapitalize = makeAsciiCaseInsensitiveEnumerated([
  */
 export type AutoCapitalize = typeof AutoCapitalize.Type;
 const AutoCorrectBase = LiteralKit(["on", "off"]);
-const AutoCorrectInput = makeAsciiCaseInsensitiveEnumerated(["", ...AutoCorrectBase.Options]);
+const AutoCorrectInput = makeAsciiCaseInsensitiveEnumerated(["", ...AutoCorrectBase.literals]);
 
 /**
  * `autocorrect` global attribute value.
@@ -522,7 +522,7 @@ export const EnterKeyHint = makeAsciiCaseInsensitiveEnumerated([
  */
 export type EnterKeyHint = typeof EnterKeyHint.Type;
 const HiddenBase = LiteralKit(["hidden", "until-found"]);
-const HiddenInput = makeAsciiCaseInsensitiveEnumerated(["", ...HiddenBase.Options]);
+const HiddenInput = makeAsciiCaseInsensitiveEnumerated(["", ...HiddenBase.literals]);
 
 /**
  * `hidden` global attribute value.
@@ -566,7 +566,7 @@ export const Hidden = HiddenInput.pipe(
  */
 export type Hidden = typeof Hidden.Type;
 const PopoverBase = LiteralKit(["auto", "manual", "hint"]);
-const PopoverInput = makeAsciiCaseInsensitiveEnumerated(["", ...PopoverBase.Options]);
+const PopoverInput = makeAsciiCaseInsensitiveEnumerated(["", ...PopoverBase.literals]);
 
 /**
  * `popover` global attribute value.
@@ -684,7 +684,7 @@ export const BooleanAttribute = S.Literals([true, ""]).pipe(
 export type BooleanAttribute = typeof BooleanAttribute.Type;
 
 const CrossOriginBase = LiteralKit(["anonymous", "use-credentials"]);
-const CrossOriginInput = makeAsciiCaseInsensitiveEnumerated(["", ...CrossOriginBase.Options]);
+const CrossOriginInput = makeAsciiCaseInsensitiveEnumerated(["", ...CrossOriginBase.literals]);
 
 /**
  * CORS settings attribute with the HTML missing-value spelling normalized.
@@ -2017,7 +2017,7 @@ const ariaAttributeNames = LiteralKit([
   "aria-valuemin",
   "aria-valuenow",
   "aria-valuetext",
-]).Options;
+]).literals;
 
 /**
  * `role` plus the WAI-ARIA `aria-*` state and property attributes. Universally
@@ -2114,7 +2114,7 @@ const eventHandlerNames = LiteralKit([
   "onvolumechange",
   "onwaiting",
   "onwheel",
-]).Options;
+]).literals;
 
 /**
  * The global event-handler content attributes (`on*`). Universally permitted;
