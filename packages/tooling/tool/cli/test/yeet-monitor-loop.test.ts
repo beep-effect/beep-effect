@@ -545,9 +545,37 @@ const runJobsJson = (
     })),
   });
 
+const stampedLog = (lines: ReadonlyArray<string>): string =>
+  A.join(
+    A.map(lines, (line, index) => `2026-10-01T12:00:${`${index}`.padStart(2, "0")}.1234567Z ${line}`),
+    "\n"
+  );
+
+// An `::error::` annotation in a step that passed, then the step that failed
+// the job: the cut must follow the exit-code marker, not the first `##[error]`.
+const annotatedThenTimedOutLog = stampedLog([
+  "##[group]Run bun run lint",
+  "##[error]src/Box.ts: prefer HashMap",
+  "lint finished with annotations",
+  "##[group]Run bun run test",
+  "Error: Test timed out in 30000ms.",
+  "##[error]Process completed with exit code 1.",
+  "Post job cleanup.",
+]);
+
+// A `uses:` step failing on its own message, after a run step whose retry
+// chatter would read as a `ci-timeout` if it leaked into the region.
+const actionStepFailureLog = stampedLog([
+  "##[group]Run bun install --frozen-lockfile",
+  "registry request timed out after 5 seconds, retrying",
+  "##[group]Run actions/cache/restore@v4",
+  "##[error]Cache service responded with 503",
+  "##[start-action display=Save cache;id=__self.cache]",
+]);
+
 describe("isolateYeetMonitorJobLogFailure", () => {
   it("cuts the failing step out of a whole-job log and strips escapes, timestamps and markers", () => {
-    deepStrictEqual(
+    assertSome(
       isolateYeetMonitorJobLogFailure(ts2589EndpointLog),
       A.join(
         [
@@ -563,30 +591,40 @@ describe("isolateYeetMonitorJobLogFailure", () => {
     );
   });
 
-  it("keeps the whole normalized log when no step carries an error marker", () => {
-    deepStrictEqual(
-      isolateYeetMonitorJobLogFailure(
-        "\uFEFF2026-10-01T12:00:00.1Z \u001B[33mwarn\u001B[0m\n2026-10-01T12:00:01.1Z done"
-      ),
-      "warn\ndone"
+  it("keys the cut on the job-failing exit code, not an earlier annotation", () => {
+    assertSome(
+      isolateYeetMonitorJobLogFailure(annotatedThenTimedOutLog),
+      "Run bun run test\nError: Test timed out in 30000ms.\nProcess completed with exit code 1."
+    );
+  });
+
+  it("bounds a failing action step between its own header and the next step marker", () => {
+    assertSome(
+      isolateYeetMonitorJobLogFailure(actionStepFailureLog),
+      "Run actions/cache/restore@v4\nCache service responded with 503"
     );
   });
 
   it("runs to the end of the log when no step follows the failing one", () => {
-    deepStrictEqual(
-      isolateYeetMonitorJobLogFailure(
-        "2026-10-01T12:00:00.1Z ##[group]Run bun test\n2026-10-01T12:00:01.1Z ##[error]boom\n2026-10-01T12:00:02.1Z tail"
-      ),
+    assertSome(
+      isolateYeetMonitorJobLogFailure(stampedLog(["##[group]Run bun test", "##[error]boom", "tail"])),
       "Run bun test\nboom\ntail"
     );
   });
 
-  it("starts at the top of the log when the error precedes every step marker", () => {
-    deepStrictEqual(
+  it("cannot classify a log without any error marker", () => {
+    assertNone(
       isolateYeetMonitorJobLogFailure(
-        "2026-10-01T12:00:00.1Z ##[error]The job was not acquired by Runner\n2026-10-01T12:00:01.1Z ##[group]Run later"
-      ),
-      "The job was not acquired by Runner"
+        "\uFEFF2026-10-01T12:00:00.1Z \u001B[33mwarn\u001B[0m\n2026-10-01T12:00:01.1Z done"
+      )
+    );
+  });
+
+  it("cannot classify a failure that no step boundary precedes", () => {
+    assertNone(
+      isolateYeetMonitorJobLogFailure(
+        stampedLog(["request timed out after 5 seconds", "##[error]The job was not acquired by Runner"])
+      )
     );
   });
 });
@@ -722,6 +760,40 @@ const jobLogFallbackScenarioList: ReadonlyArray<readonly [number, JobLogFallback
   ],
   [985, { name: "Mid-run no gh", primary: "spawn-fails", endpoint: "spawn-fails" }],
   [986, { name: "Primary read", primary: { exitCode: 0, output: genuineTypeErrorLog }, endpoint: "unreachable" }],
+  [
+    987,
+    {
+      name: "Primary read quoting gh",
+      primary: {
+        exitCode: 0,
+        output: ghLog("Test Unit", "Run vitest", [
+          "fixture: run 12 is still in progress; logs will be available when it is complete",
+          "Error: Test timed out in 30000ms.",
+        ]),
+      },
+      endpoint: "unreachable",
+    },
+  ],
+  [
+    988,
+    {
+      name: "Mid-run annotated",
+      primary: ghRunInProgress,
+      endpoint: { exitCode: 0, output: annotatedThenTimedOutLog },
+    },
+  ],
+  [
+    989,
+    { name: "Mid-run action step", primary: ghRunInProgress, endpoint: { exitCode: 0, output: actionStepFailureLog } },
+  ],
+  [
+    990,
+    {
+      name: "Mid-run unbounded",
+      primary: ghRunInProgress,
+      endpoint: { exitCode: 0, output: stampedLog(["timed out after 5 seconds", "##[error]boom"]) },
+    },
+  ],
 ];
 
 const jobLogFallbackScenarios = HashMap.fromIterable(jobLogFallbackScenarioList);
@@ -804,12 +876,27 @@ it.layer(jobLogFallbackSpawnerLayer, { timeout: "30 seconds" })("per-job log end
           [984, null, true],
           [985, null, true],
           [986, null, false],
+          [987, "ci-timeout", false],
+          [988, "ci-timeout", false],
+          [989, null, false],
+          [990, null, true],
         ]
       );
       const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
       deepStrictEqual(
         A.map(plan.decisions, (decision) => decision.status),
-        ["awaiting-run", "needs-code-fix", "needs-code-fix", "awaiting-log", "awaiting-log", "needs-code-fix"]
+        [
+          "awaiting-run",
+          "needs-code-fix",
+          "needs-code-fix",
+          "awaiting-log",
+          "awaiting-log",
+          "needs-code-fix",
+          "awaiting-run",
+          "awaiting-run",
+          "needs-code-fix",
+          "awaiting-log",
+        ]
       );
     })
   );
