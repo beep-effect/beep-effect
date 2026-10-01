@@ -309,6 +309,7 @@ describe("harness-ledger", () => {
         pipe(HashSet.isEmpty(decoded.touched), assertTrue);
         assertNone(decoded.hypothesis);
         assertNone(decoded.repoRevision);
+        assertNone(decoded.decidedUnder);
       })
     );
 
@@ -354,6 +355,21 @@ describe("harness-ledger", () => {
         assertNone(defaulted.previousRowId);
         assertNone(defaulted.targetSurface);
         assertNone(defaulted.windowSessions);
+      })
+    );
+
+    it.effect("roundtrips the decision-time harness hash and rejects a malformed one", () =>
+      Effect.gen(function* () {
+        const decidedUnder = HarnessHash.make(hashC);
+        const row = yield* makeRow({ decidedUnder: O.some(decidedUnder) });
+        const json = yield* encodeRowJson(row);
+        assertSome((yield* decodeRowJson(json)).decidedUnder, decidedUnder);
+        const encoded = yield* asRecord(yield* parseJson(json));
+        expect(encoded.decidedUnder).toBe(hashC);
+        const bad = yield* Effect.flip(decodeRowJson(yield* stringifyJson({ ...encoded, decidedUnder: "harness-b" })));
+        expect(bad._tag).toBe("SchemaError");
+        const legacy = yield* encodeRowJson(yield* makeRow());
+        expect(legacy).not.toContain("decidedUnder");
       })
     );
 

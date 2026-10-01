@@ -7,6 +7,7 @@ import {
   HookPulseV1,
   makeAiMetricsConfigSnapshot,
   makeHarnessFingerprint,
+  makeHarnessLedgerRowId,
 } from "@beep/repo-ai-metrics";
 import {
   HarnessLedgerDispositionOptions,
@@ -606,6 +607,98 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(open.proposals).toHaveLength(0);
       expect([open.alreadyProposed, open.decidedUnderHarness]).toStrictEqual([2, 0]);
       expect(yield* readLedgerLines(root)).toHaveLength(11);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("prune-proposals counts a decision under the harness it was made in, not the proposal's", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      const proposedUnder = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-decided-later-" });
+      const alphaId = yield* contextSurfaceId("skill", "alpha");
+      const betaId = yield* contextSurfaceId("skill", "beta");
+      yield* writeShard(stateDir, "2026-09-25", sessionA, [
+        yield* sessionStart(sessionA, "2026-09-25T09:59:00.000Z", proposedUnder),
+        yield* pulse(sessionA, "2026-09-25T10:00:00.000Z", O.some(alphaId)),
+        yield* pulse(sessionA, "2026-09-25T10:01:00.000Z", O.some(betaId)),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const options = HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1, write: true });
+      const first = yield* ledger.pruneProposals(options);
+      const notion = pipe(A.head(first.proposals), O.getOrThrow);
+      expect(notion.candidate.name).toBe("notion");
+
+      // The harness changes while the proposal is open; the human then rejects it.
+      yield* fs.writeFileString(path.join(root, "AGENTS.md"), "# Changed guidance\n");
+      const decidedUnder = yield* repoHarnessHash(root);
+      expect(decidedUnder).not.toBe(proposedUnder);
+      const rejected = yield* ledger.disposition(
+        HarnessLedgerDispositionOptions.make({
+          repoRoot: root,
+          rowId: notion.row.rowId,
+          to: "rejected",
+          evidence: "human call",
+        })
+      );
+      expect(rejected.fingerprint).toStrictEqual(notion.row.fingerprint);
+      expect(rejected.decidedUnder).toStrictEqual(O.some(decidedUnder));
+
+      // A full window under the decision's harness: the rejection stands.
+      yield* writeShard(stateDir, "2026-09-26", sessionB, [
+        yield* sessionStart(sessionB, "2026-09-26T09:59:00.000Z", decidedUnder),
+        yield* pulse(sessionB, "2026-09-26T10:00:00.000Z", O.some(alphaId)),
+        yield* pulse(sessionB, "2026-09-26T10:01:00.000Z", O.some(betaId)),
+      ]);
+      const again = yield* ledger.pruneProposals(options);
+      expect(again.harnessHash).toBe(decidedUnder);
+      expect(again.proposals).toHaveLength(0);
+      expect([again.alreadyProposed, again.decidedUnderHarness]).toStrictEqual([0, 1]);
+      expect(again.written).toBe(false);
+      expect(yield* readLedgerLines(root)).toHaveLength(2);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("prune-proposals falls back to the fingerprint's harness for a decision row without decidedUnder", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-legacy-decision-" });
+      const alphaId = yield* contextSurfaceId("skill", "alpha");
+      const betaId = yield* contextSurfaceId("skill", "beta");
+      yield* writeShard(stateDir, "2026-09-25", sessionA, [
+        yield* sessionStart(sessionA, "2026-09-25T09:59:00.000Z", current),
+        yield* pulse(sessionA, "2026-09-25T10:00:00.000Z", O.some(alphaId)),
+        yield* pulse(sessionA, "2026-09-25T10:01:00.000Z", O.some(betaId)),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const options = HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1, write: true });
+      const first = yield* ledger.pruneProposals(options);
+      const notion = pipe(A.head(first.proposals), O.getOrThrow);
+      // A decision row written before rows carried `decidedUnder`: same chain,
+      // the proposal's fingerprint, and no decision-time harness hash.
+      const legacy = HarnessLedgerRow.make({
+        ...notion.row,
+        rowId: yield* makeHarnessLedgerRowId(notion.row.createdAt),
+        disposition: "rejected",
+        dispositionEvidence: O.some("human call"),
+        previousRowId: O.some(notion.row.rowId),
+      });
+      expect(legacy.decidedUnder).toStrictEqual(O.none());
+      const line = yield* HarnessLedgerRow.encodeJsonEffect(legacy);
+      expect(line).not.toContain("decidedUnder");
+      // Same createdAt as the proposal, so the same (only) month file.
+      const dir = path.join(root, "harness-ledger", "rows");
+      const files = yield* fs.readDirectory(dir);
+      expect(files).toHaveLength(1);
+      yield* fs.writeFileString(path.join(dir, ...files), `${line}\n`, { flag: "a" });
+
+      const again = yield* ledger.pruneProposals(options);
+      expect(again.proposals).toHaveLength(0);
+      expect([again.alreadyProposed, again.decidedUnderHarness]).toStrictEqual([0, 1]);
     }).pipe(Effect.scoped)
   );
 

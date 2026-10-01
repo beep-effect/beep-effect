@@ -881,6 +881,11 @@ const harnessLedgerRowTouchedDefault = HashSet.empty<ContextSurfaceId>();
  * surface it would retire in `targetSurface` (a hashed id, never a path) and
  * the session window it observed in `windowSessions`.
  *
+ * A disposition row keeps the `fingerprint` of the evidence it supersedes and
+ * records the {@link HarnessHash} the decision was made under in
+ * `decidedUnder`. The key is absent on `proposed` rows and on rows written
+ * before it existed; a reader then falls back to the hash of `fingerprint`.
+ *
  * **Gotchas**
  *
  * `touched` is an `effect/HashSet`, which plain `JSON.stringify` cannot
@@ -938,6 +943,7 @@ export class HarnessLedgerRow extends S.Class<HarnessLedgerRow>($I`HarnessLedger
     windowSessions: S.OptionFromOptionalKey(S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(1))).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
+    decidedUnder: S.OptionFromOptionalKey(HarnessHash).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).check(
     S.makeFilter(
       (row) =>

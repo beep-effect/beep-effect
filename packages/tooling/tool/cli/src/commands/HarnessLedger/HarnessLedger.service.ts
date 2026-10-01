@@ -64,6 +64,9 @@ export interface HarnessLedgerServiceShape {
   /**
    * Append a row superseding the latest row of a chain with a human disposition.
    *
+   * The row keeps the superseded row's fingerprint and records the harness
+   * hash captured now as `decidedUnder`.
+   *
    * @since 0.0.0
    */
   readonly disposition: (
@@ -170,6 +173,12 @@ const appendDisposition = Effect.fn("HarnessLedger.appendDisposition")(function*
       Effect.mapError(HarnessLedgerIoError.wrap(`Failed to hash surface ${surface.kind}:${surface.name}.`))
     )
   );
+  // The row keeps the evidence's fingerprint; the decision belongs to the
+  // harness it is made under, which may have changed since the proposal.
+  const decidedUnder = yield* captureHarnessFingerprint(options.repoRoot, O.none(), O.none()).pipe(
+    Effect.flatMap(deriveHarnessHash),
+    Effect.mapError(HarnessLedgerIoError.wrap("Failed to derive the harness hash of this decision."))
+  );
   const createdAt = yield* DateTime.now;
   const rowId = yield* makeHarnessLedgerRowId(createdAt);
   const row = HarnessLedgerRow.make({
@@ -188,6 +197,7 @@ const appendDisposition = Effect.fn("HarnessLedger.appendDisposition")(function*
     previousRowId: O.some(previous.rowId),
     targetSurface: previous.targetSurface,
     windowSessions: previous.windowSessions,
+    decidedUnder: O.some(decidedUnder),
   });
   yield* appendLedgerRows(options.repoRoot, [row]);
   return row;
@@ -276,16 +286,22 @@ const buildPruneProposals = Effect.fn("HarnessLedger.buildPruneProposals")(funct
 // Why a chain head keeps its target surface from a fresh proposal: an open
 // `proposed` head blocks under any regime; a human decision blocks only while
 // it was recorded under the current harness hash, because evidence gathered
-// under an older harness has expired. A tombstone never blocks.
+// under an older harness has expired. A tombstone never blocks. A decision is
+// dated by `decidedUnder`; a row written before that key existed falls back to
+// the harness hash of its fingerprint.
 const ProposalBlock = LiteralKit(["open-proposal", "standing-decision"]);
 type ProposalBlock = typeof ProposalBlock.Type;
 
 const blockOf = Effect.fn("HarnessLedger.blockOf")(function* (head: HarnessLedgerRow, harnessHash: HarnessHash) {
-  const decided: Effect.Effect<O.Option<ProposalBlock>, HarnessLedgerIoError> = deriveHarnessHash(
-    head.fingerprint
-  ).pipe(
-    Effect.mapError(HarnessLedgerIoError.wrap(`Failed to derive the harness hash of ledger row ${head.rowId}.`)),
-    Effect.map((recorded) => O.liftPredicate(ProposalBlock.Enum["standing-decision"], () => recorded === harnessHash))
+  const recordedUnder: Effect.Effect<HarnessHash, HarnessLedgerIoError> = O.match(head.decidedUnder, {
+    onNone: () =>
+      deriveHarnessHash(head.fingerprint).pipe(
+        Effect.mapError(HarnessLedgerIoError.wrap(`Failed to derive the harness hash of ledger row ${head.rowId}.`))
+      ),
+    onSome: Effect.succeed,
+  });
+  const decided: Effect.Effect<O.Option<ProposalBlock>, HarnessLedgerIoError> = Effect.map(recordedUnder, (recorded) =>
+    O.liftPredicate(ProposalBlock.Enum["standing-decision"], () => recorded === harnessHash)
   );
   return yield* LedgerDisposition.$match(head.disposition, {
     proposed: () => Effect.succeedSome<ProposalBlock>(ProposalBlock.Enum["open-proposal"]),
