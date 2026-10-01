@@ -115,10 +115,27 @@ annotations, then decides:
   next lost job. Three jobs lost in one attempt are re-run in attempts 2, 3
   and 4.
 
-It has not been observed yet whether a rerun requested with the workflow's own
-`GITHUB_TOKEN` fires another `workflow_run` event when it completes. If GitHub
-suppresses that event, each run gets one automatic rerun, and a later loss
-falls back to yeet monitor or an operator.
+### Post-merge verification
+
+Reruns chain from one attempt to the next. When one job has been re-run, the
+remaining lost jobs are re-run only when the next attempt completes and
+triggers another evaluation. That depends on a fact nobody has observed yet:
+whether an attempt requested with the workflow's own `GITHUB_TOKEN` fires
+`workflow_run: completed` when it finishes. On the first real eviction after
+this lands on `main`:
+
+1. Open the `Rerun Runner Loss` run for attempt N and note the job it re-ran.
+2. When attempt N+1 of the same run completes, check
+   `gh run list --workflow rerun-runner-loss.yml` for a new run. Its job
+   summary should name attempt N+1.
+3. If none appears, GitHub suppresses the event. Each run then gets one
+   automatic rerun, and further losses fall to yeet monitor or an operator
+   until the fallback lands.
+
+The planned fallback (not implemented) is a `schedule:` trigger every 15
+minutes that calls the same command for every `Check` and `Heavy Admit` run
+that completed in the last hour. The command's gates already make repeated
+evaluation of a run safe.
 
 Every evaluation writes a job summary with the verdict, the reason, and each
 failed job's id, runner name, loss verdict, prior reruns and action. Read it from the
