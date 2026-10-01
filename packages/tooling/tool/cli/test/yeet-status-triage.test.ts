@@ -34,7 +34,7 @@ import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertFalse, assertInclude, assertNone, assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import { assertInclude, assertNone, assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -894,9 +894,20 @@ const publishedVerdict = YeetStatusArtifact.make({
   state: "present",
 });
 
-describe("yeet merge readiness with closeout gates split from review threads", () => {
+describe("yeet merge readiness with review-bot gates as advisories", () => {
+  it("suggests a closeout that gates on review threads, never on a review bot", () => {
+    const next = yeetStatusNextCommandForTesting(
+      cleanWorktree,
+      publishedVerdict,
+      YeetStatusArtifact.make({ detail: "missing", path: "pr-closeout.json", state: "missing" }),
+      openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 })
+    );
+
+    strictEqual(next, "run `bun run beep yeet closeout --summary --require-review-comments 0`");
+  });
+
   it.effect(
-    "names closeout-gates-passed, not threads-resolved, when zero threads leave only Greptile's unknown gates",
+    "is merge-ready when only Greptile's unknown gates are unmet, and shows them as advisories",
     Effect.fnUntraced(function* () {
       const closeout = yield* persistedGreptileGatedCloseout(A.empty());
       const remote = openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 });
@@ -909,25 +920,16 @@ describe("yeet merge readiness with closeout gates split from review threads", (
       ]);
       assertSome(
         O.map(mergeReady, (value) => value.ready),
-        false
+        true
       );
-      assertSome(
-        O.flatMap(mergeReady, (value) => value.failing),
-        "closeout-gates-passed"
-      );
+      assertNone(O.flatMap(mergeReady, (value) => value.failing));
       assertSome(
         O.map(mergeReady, (value) => value.criteria.threadsResolved),
         true
       );
-      assertSome(
-        O.map(mergeReady, (value) => value.criteria.closeoutGatesPassed),
-        false
-      );
 
       const next = yeetStatusNextCommandForTesting(cleanWorktree, publishedVerdict, closeout, remote);
-      assertInclude(next, "closeout gate(s) unmet (Expected Greptile score 5/5; found unknown.");
-      assertInclude(next, "bun run beep yeet closeout");
-      assertFalse(Str.includes("yeet reply")(next));
+      strictEqual(next, "confirm GitHub mergeability, then merge the PR");
 
       const summary = renderYeetStatusSummary(
         YeetStatusSnapshot.make({
@@ -947,13 +949,17 @@ describe("yeet merge readiness with closeout gates split from review threads", (
         })
       );
       assertInclude(summary, "- review threads: 0 unresolved");
-      assertInclude(summary, "- merge-ready: no, blocked on closeout-gates-passed");
-      assertInclude(summary, "0 actionable thread(s), 2 unmet gate(s)");
+      assertInclude(summary, "- merge-ready: yes");
+      assertInclude(
+        summary,
+        "- review-bot advisories (never block merge-ready): Expected Greptile score 5/5; found unknown."
+      );
+      assertInclude(summary, "0 actionable thread(s), 2 advisory bot gate(s)");
     })
   );
 
   it.effect(
-    "names threads-resolved and suggests yeet reply for a real unresolved thread while the Greptile gates also wait",
+    "names threads-resolved and suggests yeet reply for a real unresolved thread whatever the Greptile gates say",
     Effect.fnUntraced(function* () {
       const closeout = yield* persistedGreptileGatedCloseout([openReviewThread]);
       const remote = openRemote({
@@ -974,10 +980,6 @@ describe("yeet merge readiness with closeout gates split from review threads", (
       );
       assertSome(
         O.map(mergeReady, (value) => value.criteria.threadsResolved),
-        false
-      );
-      assertSome(
-        O.map(mergeReady, (value) => value.criteria.closeoutGatesPassed),
         false
       );
       assertInclude(

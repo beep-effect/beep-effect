@@ -159,29 +159,29 @@ Complete owner source byte-identical to the baseline. Retain successful-summary 
 
 ### Current named test locations
 
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:142` — keeps the promoted-family ratchet empty after the P2 stop
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:146` — validates candidate CLI flags and renders text and JSON summaries
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:206` — is a no-op before a family is promoted
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:226` — plans aliases, Function bindings, and type-only namespaces in candidate mode without writing
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:255` — rejects candidate writes at the exported runner boundary
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:278` — scans the union of explicit files and include prefixes
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:305` — leaves generated source files to their owning generators
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:334` — rewrites promoted roots to per-module imports and never reverses stable submodules
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:380` — keeps executable shebangs ahead of newly emitted imports
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:434` — routes side-effect-only root imports to manual review
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:463` — keeps manual-review line numbers anchored after a shebang prefix
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:498` — leaves an entire declaration unchanged when any binding is unmapped
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:525` — derives foundation mappings from source barrels and both export maps
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:566` — refuses a foundation target missing from the published export map
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:592` — refuses foundation targets when a private package has no published export map
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:619` — queues an ambiguous review when two public leaves expose the same source module
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:646` — merges compatible destination imports and preserves declaration comments
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:682` — merges a comment-bearing declaration without deleting unrelated unused imports
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:720` — preserves aliases instead of inventing collision-prone canonical names
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:754` — rewrites named root re-exports and preserves their exported aliases
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:792` — routes dynamic, import-type, and import-equals roots to structured manual review
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:832` — rewrites imports inside JSDoc TypeScript fences without touching executable imports
-- `packages/tooling/tool/cli/test/effect-imports.test.ts:892` — keeps the Markdown gate advisory until explicitly enforced and supports promoted writes
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:145` — keeps the promoted-family ratchet empty after the P2 stop
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:149` — validates candidate CLI flags and renders text and JSON summaries
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:209` — is a no-op before a family is promoted
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:229` — plans aliases, Function bindings, and type-only namespaces in candidate mode without writing
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:258` — rejects candidate writes at the exported runner boundary
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:281` — scans the union of explicit files and include prefixes
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:308` — leaves generated source files to their owning generators
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:337` — rewrites promoted roots to per-module imports and never reverses stable submodules
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:383` — keeps executable shebangs ahead of newly emitted imports
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:437` — routes side-effect-only root imports to manual review
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:466` — keeps manual-review line numbers anchored after a shebang prefix
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:501` — leaves an entire declaration unchanged when any binding is unmapped
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:528` — derives foundation mappings from source barrels and both export maps
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:569` — refuses a foundation target missing from the published export map
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:595` — refuses foundation targets when a private package has no published export map
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:622` — queues an ambiguous review when two public leaves expose the same source module
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:649` — merges compatible destination imports and preserves declaration comments
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:685` — merges a comment-bearing declaration without deleting unrelated unused imports
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:723` — preserves aliases instead of inventing collision-prone canonical names
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:757` — rewrites named root re-exports and preserves their exported aliases
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:795` — routes dynamic, import-type, and import-equals roots to structured manual review
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:835` — rewrites imports inside JSDoc TypeScript fences without touching executable imports
+- `packages/tooling/tool/cli/test/effect-imports.test.ts:895` — keeps the Markdown gate advisory until explicitly enforced and supports promoted writes
 
 The private review also supplies source-location-maps.json with exact unchanged
 line blocks and explicit changed blocks, plus symbol-locations.json/test-locations.json.

@@ -67,7 +67,6 @@ const criteria = (value: boolean) =>
     mergeable: value,
     mergeStateAcceptable: value,
     reviewDecisionAcceptable: value,
-    closeoutGatesPassed: value,
     greptileScore: O.none(),
   });
 
@@ -227,7 +226,7 @@ describe("diffYeetWatchSnapshots", () => {
       prev: snapshot({ criteria: criteria(false) }),
     });
 
-    expect(A.map(events, (event) => event.kind)).toEqual(A.replicate("merge-ready-criterion-changed", 9));
+    expect(A.map(events, (event) => event.kind)).toEqual(A.replicate("merge-ready-criterion-changed", 8));
     expect(
       A.map(events, (event) => (event.kind === "merge-ready-criterion-changed" ? event.criterion : "unexpected"))
     ).toEqual([
@@ -239,7 +238,6 @@ describe("diffYeetWatchSnapshots", () => {
       "mergeable",
       "merge-state-acceptable",
       "review-decision-acceptable",
-      "closeout-gates-passed",
     ]);
   });
 });

@@ -354,3 +354,44 @@ independently review the complete R50 admission inputs after this packet edit
 and recheck exact source identity before any runtime or provider execution.
 They grant no current-source admission, probe, census, dry-round, P3,
 ratification or implementation credit.
+
+## 2026-10-01: R51/R52 source and design-map reconciliation
+
+PR #1339 merged at `04993ae26acd6f93f308a1ae949e4f2a5a4e864c`
+before campaign completion. Continue the remaining work in one successor PR,
+#1372, under the existing delegated merge authority and immediate-push ruling.
+This execution reconciliation changes no semantic owner contract.
+
+R51 independently approved four current-source citation repairs. Preserve the
+pre-change inventory at
+`history/inventory/2026-10-01-pre-r51-source-refresh.jsonl`. Hosted review then
+corrected the retained StepExec locator and removed stale test-map references;
+preserve that prior inventory at
+`history/inventory/2026-10-01-pre-r51-pr-review-corrections.jsonl`. The live
+inventory SHA-256 is
+`6e1026fd7b98d89550cfa3ec448cb4de08b22eb4377c12c1bcd9bc8b3576df6f`.
+
+After main `cf97523f40d690a0da02233b2e4a734d4e6fae9e` moved Effect to the
+4.0.0 snapshot, R52 independently reviewed 13 stale design maps and approved
+their exact replacement bytes. Install those replacements at
+`f61291298581fdf28ea3e12f26acd8df1d792a3f`. The review also authorizes these
+source-citation dispositions:
+
+- rebind the 12 R39 title maps to `f612912985`;
+- retain the package-verify prose citation as historical, with successor line
+  298 recorded in the deferred ledger;
+- retain the ai-metrics source citation as historical, with successor line 157
+  recorded in the deferred ledger;
+- relabel runners freshness to the `b5a2d4c1d6` Effect snapshot; and
+- leave the ai-metrics package-manifest citation unchanged because it refers to
+  that package's still-current exports block.
+
+The fresh independent R52 input review approves candidate hash
+`51f1f70c979eb174e55f319e35e8a83e57ad599d3d4ab4670c3b032a3adb62f5`:
+40 reproducible inputs, 3,152 corpus files, 27 lanes, 82 exclusions, 53 retired
+areas, 725 inventory rows and 4,114 frozen inputs. Its private title matcher
+must still reject `describe`, `layer`, `suite` and prefix-only title matches
+before the next rebuild. Because this decision entry changes the exact tree,
+perform a final input rebind and independent review before runtime or provider
+execution. No R51/R52 preparation grants probe, census, dry-round, P3,
+ratification or implementation credit.

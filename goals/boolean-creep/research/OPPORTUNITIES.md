@@ -1985,3 +1985,14 @@ Keeping the command in one code span fixes the documentation without changing
 runtime behavior. A changed-source TSDoc syntax check after each main merge
 would have caught the inherited defect before the heavy matrix and before R50
 finished an exact-source admission review.
+
+## 2026-10-01: test-map validation accepted suite headings as tests
+
+The R52 input builder treated `describe(` as a test-call opener, so seven
+design locators one line above their named tests passed its current-map check.
+Independent review found the false positives while adjudicating 1,032 map
+bullets and supplied the exact successor lines. A second review also showed
+that the repaired matcher still accepted `it.layer`, `test.describe` and
+prefix-only title matches, although no frozen input depended on those gaps.
+A syntax-aware title owner check, with negative cases for suite/layer openers
+and closing-quote equality, would have prevented both review cycles.
