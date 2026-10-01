@@ -6289,3 +6289,62 @@ ref advanced. The notifier changed upstream while the proof ran. Merge main
 and rerun the proof; do not weaken the assertion or classify this as a migrated
 test regression. Future proofs should capture their comparison base once, or
 report a moving-base mismatch explicitly rather than as an unexplained failure.
+
+## Generated infrastructure SDK prerequisite after script-suppressed install
+
+The full PR #1390 publication proof on fc0919af93 failed in infra docgen:
+`@pulumi/gharunners/index.ts` reported TS1205, TS1294 and TS4114. The installed
+local SDK had no `bin/index.d.ts`; the compiler therefore consumed generated
+source under the stricter example compiler options. Its existing root
+postinstall runs `infra:prepare-gha-runners`, but the earlier script-suppressed
+dependency installation omitted that prerequisite. Running the existing
+preparation command restored the compiled SDK. This is an installation-state
+failure, not evidence that example strictness should be weakened. Add an
+explicit installed-SDK readiness check to proof preflight, with the existing
+preparation command as its remediation. Scoped infra docgen passed after preparation; full publication proof must still be rerun.
+
+## Memory qualification must prove the selected service
+
+While preparing watch-mode migration, wrapping snapshot fixtures in Memory
+passed all 50 tests, but the scripted command helper internally provided the
+native platform layer. The nested provider shadowed Memory. Make the helper
+platform explicit, and qualify with a service-sensitive control: the fixture
+root exists through FileSystem and does not exist through node:fs. Both controls
+pass on Node and Bun; restoring native fails both. A green run and an imported
+Memory layer alone are insufficient evidence of Memory execution. Preserve this
+check in the filesystem conformance review procedure.
+
+
+## Explicit child environment differs between Node compatibility and Bun
+
+CI runner security qualification with synthetic BEEP_CI_SECRET_ values found
+that filtering those keys from explicit child env passes Bun but fails Node.
+The Node compatibility spawn/spawnSync adapters in vitest.setup.ts merge
+process.env back into supplied env. Explicit blank values repair the fixture
+and both runtime suites pass. Restoring its original ambient spread fails.
+Add adapter conformance cases for omitted env, explicit empty env and explicit
+partial env; align the compatibility behavior with measured Bun semantics.
+This is a remaining parity gap, not evidence that omission is equivalent to
+clearing a variable. No real secret values were used in the controls.
+
+
+## QA round-pipeline negative tests can accept setup defects
+
+While migrating `packages/tooling/tool/cli/test/qa-round-pipeline.test.ts`, an injected filesystem assertion defect was absorbed by tests that assert only `Exit.isFailure`. Native-provider mutation produced 21 failures and eight passes. Evidence: private qualification `qa-round-service-negative.log`; candidate review remains open. Assert the expected typed failure or error payload, and prove that an unrelated setup defect cannot satisfy the intended rejection test. Preserve the existing success and failure scenarios.
+
+
+## Interrupted applied package proof
+
+The first full CLI package proof for this batch ended with exit 130 and
+`All fibers interrupted without error`. It did not establish a verdict.
+Preserve interrupted evidence separately from source failures and resubmit the
+proof against stable inputs. A durable package-proof job would prevent session
+interruption from discarding an otherwise useful verification run.
+
+## Applied batch proof and detector lifetime review, 2026-10-01
+
+The eight applied CLI migrations pass full repo-cli package verification (audit 676.6s, docgen 24.4s) and all 218 focused cases on Node 22.22.3 and Bun 1.4.2. Removal failures, Some presence guards, callback-local consoles and QA error specificity now have applied supporting proof. The spawn environment parity repair still requires tracked integration and its own applied proof.
+
+Detector review: the first applied ratchet reports 71 new EV003 call-site candidates after public-layer migration. Their retained acquireUseRelease brackets own fresh inner roots; shared services belong to public layers and cleanup errors remain visible. Explicit baseline reasons preserve these deliberate shorter lifetimes. The reviewed ratchet reports introduced=0. This refresh also removes stale prior rows and is not evidence that every removed baseline row was repaired by this batch.
+
+Pinned-document friction: current primitives graph pins immutable @effect/vitest 4.0.0 at 67ba4e46a11ccda0b6761578bfd22c04ae00167d, while older goal and charter prose still cites rc.113. Installed index, utils, internal runner and README match the current tag byte for byte. Reconcile historical prose and current-source statements at packet closeout; version strings alone are insufficient API evidence.

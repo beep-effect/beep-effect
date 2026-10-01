@@ -30,3 +30,7 @@ cleanup-error control passes on Node (3.27 seconds) and Bun (1.98 seconds);
 restoring ignore makes it fail on Node (3.40 seconds). Candidate hashes and
 logs are retained privately. Applied package verification and a source commit
 remain required before ledger reconciliation.
+
+## Applied eight-file batch, 2026-10-01
+
+This candidate is now applied in the authoritative inventory-next worktree. Full `bun run beep quality package-verify @beep/repo-cli` completed exit 0: audit 676.6 seconds, docgen 24.4 seconds. Applied CI=true eight-suite proof passes 218/218 tests on Node 22.22.3 (31.01 seconds) and Bun 1.4.2 (16.57 seconds). These are focused correctness timings, not controlled package performance comparisons or hosted proof. Formatting preserves the seven prepared candidate body ASTs. Source commit and ledger reconciliation follow this proof checkpoint; historical private-only statements above describe their original qualification stage.
