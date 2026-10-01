@@ -111,10 +111,10 @@ Complete source byte-identical to the design baseline. Retain syntactic import/r
 
 ### Current named test locations
 
-- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:44` — finds static and interpolated @beep source edges
-- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:78` — rejects runtime manifest edges and bundled dependency fields
-- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:106` — ignores devDependencies, tests, and unrelated changed files
-- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:128` — expands a member src or manifest change to the member's full check
+- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:45` — finds static and interpolated @beep source edges
+- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:79` — rejects runtime manifest edges and bundled dependency fields
+- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:107` — ignores devDependencies, tests, and unrelated changed files
+- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:129` — expands a member src or manifest change to the member's full check
 
 The private review also supplies source-location-maps.json with exact unchanged
 line blocks and explicit changed blocks, plus symbol-locations.json/test-locations.json.
