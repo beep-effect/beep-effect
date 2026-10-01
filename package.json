@@ -100,6 +100,7 @@
     "@scure/base": "^2.4.0",
     "@serwist/next": "^9.5.12",
     "@standard-schema/spec": "^1.1.0",
+    "@statelyai/sdk": "0.37.2",
     "@storybook/addon-a11y": "^10.6.0",
     "@storybook/addon-docs": "^10.6.0",
     "@storybook/addon-themes": "^10.6.0",
@@ -137,6 +138,8 @@
     "@vitest/coverage-v8": "^5.0.2",
     "@zip.js/zip.js": "^2.18.2",
     "@xenova/transformers": "^2.17.2",
+    "@xstate/effect": "0.1.0-alpha.5",
+    "@xstate/test": "2.0.0-alpha.1",
     "ajv": "^8.20.0",
     "babel-plugin-annotate-pure-calls": "^0.5.0",
     "babel-plugin-react-compiler": "^1.0.0",
@@ -168,6 +171,7 @@
     "eslint-plugin-tsdoc": "^0.5.3",
     "exifreader": "^4.46.0",
     "fallow": "^3.30.0",
+    "fast-check": "^4.10.2",
     "fast-xml-parser": "^5.11.1",
     "fast-xml-validator": "1.2.0",
     "fflate": "^0.8.3",
@@ -225,6 +229,7 @@
     "sonner": "^2.0.8",
     "sql-formatter": "^15.9.0",
     "storybook": "^10.6.0",
+    "statelyai": "0.12.3",
     "syncpack": "15.3.3",
     "tailwind-merge": "^3.7.0",
     "tailwindcss": "^4",
@@ -249,6 +254,7 @@
     "wink-nlp": "^2.4.0",
     "wink-nlp-utils": "^2.1.0",
     "ws": "^8.22.0",
+    "xstate": "6.0.0-alpha.63",
     "yaml": "^2.9.1"
   },
   "devDependencies": {
@@ -284,6 +290,7 @@
     "onnxruntime-node": "catalog:",
     "oxlint": "catalog:",
     "picomatch": "catalog:",
+    "statelyai": "catalog:",
     "syncpack": "catalog:",
     "toml": "catalog:",
     "turbo": "catalog:",
@@ -333,7 +340,8 @@
     "onnxruntime-node@1.30.0": "patches/onnxruntime-node@1.30.0.patch",
     "@effect/platform-node-shared@https://pkg.pr.new/Effect-TS/effect/@effect/platform-node-shared@df77fff9396fe31de72d1947ecb5b74f8cee89e1": "patches/@effect%2Fplatform-node-shared@4.0.0-rc.118-df77fff939.patch",
     "drizzle-orm@1.0.0-rc.5-ab785fc": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch",
-    "effect@https://pkg.pr.new/Effect-TS/effect/effect@df77fff9396fe31de72d1947ecb5b74f8cee89e1": "patches/effect@4.0.0-rc.118-df77fff939.patch"
+    "effect@https://pkg.pr.new/Effect-TS/effect/effect@df77fff9396fe31de72d1947ecb5b74f8cee89e1": "patches/effect@4.0.0-rc.118-df77fff939.patch",
+    "@xstate/effect@0.1.0-alpha.5": "patches/@xstate%2Feffect@0.1.0-alpha.5.patch"
   },
   "private": true,
   "repository": {
@@ -560,6 +568,7 @@
     "packages/drivers/openai",
     "apps/todox",
     "packages/drivers/box-provisioning",
-    "packages/drivers/freshbooks"
+    "packages/drivers/freshbooks",
+    "packages/drivers/xstate"
   ]
 }

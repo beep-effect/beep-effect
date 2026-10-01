@@ -1177,9 +1177,6 @@
   "@beep/repo-cli/commands/Goals": [
     "./packages/tooling/tool/cli/src/commands/Goals/index.ts"
   ],
-  "@beep/repo-cli/commands/HarnessLedger": [
-    "./packages/tooling/tool/cli/src/commands/HarnessLedger/index.ts"
-  ],
   "@beep/ontology-server/tools": [
     "./packages/ontology/server/src/tools/index.ts"
   ],
@@ -1877,7 +1874,12 @@
   "@beep/repo-cli/commands/Models": [
     "./packages/tooling/tool/cli/src/commands/Models/index.ts"
   ],
+  "@beep/repo-cli/commands/HarnessLedger": [
+    "./packages/tooling/tool/cli/src/commands/HarnessLedger/index.ts"
+  ],
   "@beep/repo-cli/commands/Refs": [
     "./packages/tooling/tool/cli/src/commands/Refs/index.ts"
-  ]
+  ],
+  "@beep/xstate": ["./packages/drivers/xstate/src/index.ts"],
+  "@beep/xstate/*": ["./packages/drivers/xstate/src/*"]
 }
