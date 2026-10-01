@@ -35,7 +35,7 @@ describe("HTML script semantic states", () => {
   });
 
   it("recognizes the exact JavaScript MIME essence registry as classic script", () => {
-    expect(JavaScriptMimeTypeEssence.Options).toStrictEqual([
+    expect(JavaScriptMimeTypeEssence.literals).toStrictEqual([
       "application/ecmascript",
       "application/javascript",
       "application/x-ecmascript",
@@ -54,7 +54,7 @@ describe("HTML script semantic states", () => {
       "text/x-javascript",
     ]);
 
-    A.forEach(JavaScriptMimeTypeEssence.Options, (mimeType) => {
+    A.forEach(JavaScriptMimeTypeEssence.literals, (mimeType) => {
       expect(
         Result.getOrThrow(resolveScriptState(Script.make({ content: "", type: O.some(Str.toUpperCase(mimeType)) })))
       ).toStrictEqual(ScriptState.cases.classic.make({}));

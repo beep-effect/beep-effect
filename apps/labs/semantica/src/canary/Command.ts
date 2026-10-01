@@ -84,7 +84,7 @@ const outputDirectory = Flag.Path("out").pipe(
   Flag.optional,
   Flag.withDescription("Output directory for eval-report.json and eval-telemetry.json.")
 );
-const selection = Flag.Literals("selection", EvalSelectionMode.Options).pipe(
+const selection = Flag.Literals("selection", EvalSelectionMode.literals).pipe(
   Flag.withDefault(EvalSelectionMode.Enum["f1+w1"]),
   Flag.withDescription("Select committed F1 fixtures only, or F1 plus verified W1 papers.")
 );

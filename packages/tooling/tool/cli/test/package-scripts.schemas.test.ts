@@ -100,14 +100,14 @@ describe("canonical package scripts schemas", () => {
       expect(taskScriptRules).toHaveLength(119);
       yield* Effect.forEach(taskScriptRules, (rule) => decodeRule(rule));
       for (const [name, expected] of presenceRows) {
-        const actual = A.map(PackageKind.Options, (kind) =>
+        const actual = A.map(PackageKind.literals, (kind) =>
           A.findFirst(taskScriptRules, (row) => row.kind === kind && row.name === name)
         );
         expect(A.map(actual, (row) => (row._tag === "Some" ? row.value.presence._tag : "missing")).join(" ")).toBe(
           expected
         );
       }
-      expect(TaskScriptName.Options).toHaveLength(17);
+      expect(TaskScriptName.literals).toHaveLength(17);
       expect(implScriptDefaults).toHaveLength(54);
     })
   );

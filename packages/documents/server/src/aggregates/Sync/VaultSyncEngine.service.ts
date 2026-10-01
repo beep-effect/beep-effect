@@ -279,11 +279,11 @@ type EchoClass = typeof EchoClass.Type;
 
 const echoClassForOperation = (operationType: DomainSyncOperation.SyncOperationType): EchoClass =>
   SyncOperationType.$match(operationType, {
-    createFolder: EchoClass.thunk.content,
-    moveItem: EchoClass.thunk.moved,
-    renameItem: EchoClass.thunk.renamed,
-    uploadFile: EchoClass.thunk.content,
-    uploadFileVersion: EchoClass.thunk.content,
+    createFolder: F.constant(EchoClass.Enum.content),
+    moveItem: F.constant(EchoClass.Enum.moved),
+    renameItem: F.constant(EchoClass.Enum.renamed),
+    uploadFile: F.constant(EchoClass.Enum.content),
+    uploadFileVersion: F.constant(EchoClass.Enum.content),
   });
 
 const echoClassForEvent = (eventType: DmsEventType): O.Option<EchoClass> =>

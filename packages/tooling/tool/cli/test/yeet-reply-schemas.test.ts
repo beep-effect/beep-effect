@@ -59,7 +59,7 @@ const report = ReplyReport.make({
 
 describe("reply outcome statuses", () => {
   it("pins the reply outcome domain", () => {
-    expect(ReplyOutcomeStatus.Options).toEqual(["posted", "resolved", "stale", "failed"]);
+    expect(ReplyOutcomeStatus.literals).toEqual(["posted", "resolved", "stale", "failed"]);
   });
 });
 

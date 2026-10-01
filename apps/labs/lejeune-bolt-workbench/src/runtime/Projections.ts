@@ -337,7 +337,7 @@ const duckDbProjection = Effect.fnUntraced(function* (input: ProjectionInput) {
 
 const ontologyDataset = (rules: ReadonlyArray<RuleResult>): Rdf.Dataset =>
   Rdf.makeDataset([
-    ...A.map(OntologyClassName.Options, (className) =>
+    ...A.map(OntologyClassName.literals, (className) =>
       Rdf.makeQuad(Rdf.makeNamedNode(`${LEJEUNE_ONTOLOGY_NAMESPACE}${className}`), RDF_TYPE, OWL_CLASS)
     ),
     ...A.map(

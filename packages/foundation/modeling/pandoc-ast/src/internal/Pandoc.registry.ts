@@ -32,7 +32,7 @@ const PandocCurrentInlineConstructorName = LiteralKit([
   })
 );
 
-const PandocSupportedInlineConstructorName = LiteralKit(PandocCurrentInlineConstructorName.Options).pipe(
+const PandocSupportedInlineConstructorName = LiteralKit(PandocCurrentInlineConstructorName.literals).pipe(
   $I.annoteSchema("PandocSupportedInlineConstructorName", {
     description: "Pandoc inline constructors represented by the strict semantic model.",
   })
@@ -59,7 +59,7 @@ const PandocCurrentBlockConstructorName = LiteralKit([
   })
 );
 
-const PandocSupportedBlockConstructorName = LiteralKit(PandocCurrentBlockConstructorName.Options).pipe(
+const PandocSupportedBlockConstructorName = LiteralKit(PandocCurrentBlockConstructorName.literals).pipe(
   $I.annoteSchema("PandocSupportedBlockConstructorName", {
     description: "Pandoc block constructors represented by the strict semantic model.",
   })

@@ -79,7 +79,7 @@ export const makeGateId = <const Ids extends GateIdLiterals>(ids: LiteralKitSche
   ids.pipe(
     S.check(S.isNonEmpty()),
     S.brand("GateId"),
-    $I.annoteSchema(`ConsumerGateId(${A.join(ids.Options, "|")})`, {
+    $I.annoteSchema(`ConsumerGateId(${A.join(ids.literals, "|")})`, {
       description: "Consumer-owned finite gate identifier domain carrying the kernel GateId brand.",
     })
   );
@@ -92,7 +92,7 @@ export const makeGateId = <const Ids extends GateIdLiterals>(ids: LiteralKitSche
  * ```ts import.meta.vitest name="Inspect severity options"
  * import { GateSeverity } from "@beep/skill-contract"
  *
- * GateSeverity.Options // => ["blocking", "advisory"]
+ * GateSeverity.literals // => ["blocking", "advisory"]
  * ```
  *
  * @category schemas
@@ -120,7 +120,7 @@ export type GateSeverity = typeof GateSeverity.Type;
  * ```ts import.meta.vitest name="Inspect applicability kinds"
  * import { GateApplicabilityKind } from "@beep/skill-contract"
  *
- * GateApplicabilityKind.Options // => ["always", "conditional"]
+ * GateApplicabilityKind.literals // => ["always", "conditional"]
  * ```
  *
  * @category schemas
@@ -389,7 +389,7 @@ export class GateRegistry extends S.Class<GateRegistry>($I`GateRegistry`)(
  * ```ts import.meta.vitest name="Inspect gate outcomes"
  * import { GateOutcome } from "@beep/skill-contract"
  *
- * GateOutcome.Options // => ["allowed", "denied"]
+ * GateOutcome.literals // => ["allowed", "denied"]
  * ```
  *
  * @category schemas

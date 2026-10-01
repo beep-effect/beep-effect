@@ -89,7 +89,7 @@ const report = {
   variants,
   ciDescriptors: CI_LANE_DESCRIPTORS,
   ci: A.flatMap(variants, (variant) =>
-    A.map(CiLaneId.Options, (lane) => ({
+    A.map(CiLaneId.literals, (lane) => ({
       variant: variant.label,
       lane,
       steps: ciLaneStepsForTesting("/repo", lane, variant.options),
@@ -109,7 +109,7 @@ const report = {
   localDispatch: A.flatMap([false, true], (affected) =>
     A.map([false, true], (onMainBranch) => {
       const shape = CiLocalStepPlan.make({ affected, base: "origin/main", onMainBranch });
-      return { shape, steps: ciLocalStepsForTesting("/repo", CiLaneId.Options, shape) };
+      return { shape, steps: ciLocalStepsForTesting("/repo", CiLaneId.literals, shape) };
     })
   ),
   docgenSelection: A.map(

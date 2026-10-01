@@ -77,7 +77,7 @@ const report = SweepReport.make({
 
 describe("sweep step ids", () => {
   it("pins the sweep step domain in execution order", () => {
-    expect(SweepStepId.Options).toEqual([
+    expect(SweepStepId.literals).toEqual([
       "fetch-prune",
       "ff-main",
       "delete-local-branch",

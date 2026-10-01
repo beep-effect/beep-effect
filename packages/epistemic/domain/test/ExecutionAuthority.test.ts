@@ -460,7 +460,7 @@ describe("ExecutionAuthority", () => {
     });
 
     it("denialGuidance is total with constant, non-interpolated guidance", () => {
-      for (const reason of DenialReason.Options) {
+      for (const reason of DenialReason.literals) {
         const guidance = denialGuidance[reason];
 
         expect(guidance.length).toBeGreaterThan(0);

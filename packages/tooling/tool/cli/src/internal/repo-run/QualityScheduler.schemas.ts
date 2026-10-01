@@ -61,7 +61,7 @@ export type AdmissionWorkKind = typeof AdmissionWorkKind.Type;
  * ```ts
  * import { AdmissionPriority } from "@beep/repo-cli/test/RepoRun"
  *
- * console.log(AdmissionPriority.Options.length) // 2
+ * console.log(AdmissionPriority.literals.length) // 2
  * ```
  *
  * @category models

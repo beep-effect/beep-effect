@@ -80,7 +80,7 @@ beep-effect already owns the entire MCP substrate; this packet is **patterns lay
 ### Schema / identity / decode primitives (#5 + helper plumbing)
 
 - `@beep/schema` identity composer — `packages/foundation/modeling/identity/src/Id.ts` — the `n`/`nSchema`/`nKey`/`nHttp` family backing `$I.annote(...)`/`annotateKey({description})`, already used for per-field descriptions in both servers. The home for porting Zod `.describe()` routing prose into effect Schema.
-- Decode-and-map pattern — `packages/foundation/modeling/schema/src/Jsonl.ts:64-81` — `S.decodeUnknownEffect(...) + Effect.mapError(...)`, the repo precedent for a `ToolValidationError` (replaces the v3 `ParseResult.TreeFormatter.formatErrorSync`, which does NOT exist in v4 — use `effect/SchemaIssue` `makeFormatterStandardSchemaV1()`).
+- Decode-and-map pattern — the retired `@beep/schema` `Jsonl` decoder (removed in the effect-schema-parity group G PR) — `S.decodeUnknownEffect(...) + Effect.mapError(...)`, the repo precedent for a `ToolValidationError` (replaces the v3 `ParseResult.TreeFormatter.formatErrorSync`, which does NOT exist in v4 — use `effect/SchemaIssue` `makeFormatterStandardSchemaV1()`).
 
 ### Gov-legal data drivers (the consumers of this gating layer)
 

@@ -249,9 +249,9 @@ it.layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
   );
 
   it("preserves hook-pulse/v1 literal compatibility without accepting P2-only cases", () => {
-    expect(HookPulseInstrumentClass.Options).toEqual(InstrumentClass.Options);
-    expect(HookPulseEvidenceTier.Options).toEqual(["observed", "derived", "heuristic", "unknown"]);
-    expect(HookPulseWaitReason.Options).toEqual([
+    expect(HookPulseInstrumentClass.literals).toEqual(InstrumentClass.literals);
+    expect(HookPulseEvidenceTier.literals).toEqual(["observed", "derived", "heuristic", "unknown"]);
+    expect(HookPulseWaitReason.literals).toEqual([
       WaitReason.Enum["plan-approval"],
       WaitReason.Enum["tool-permission"],
       WaitReason.Enum["idle-input"],

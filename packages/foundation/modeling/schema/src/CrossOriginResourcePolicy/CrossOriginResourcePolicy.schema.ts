@@ -61,7 +61,7 @@ export const CorpValue = CorpValueBase.pipe(
 export type CorpValue = typeof CorpValue.Type;
 const isCorpValue = S.is(CorpValue);
 
-const CrossOriginResourcePolicyOptionBase = LiteralKit([false, ...CorpValueBase.Options]);
+const CrossOriginResourcePolicyOptionBase = LiteralKit([false, ...CorpValueBase.literals]);
 
 /**
  * Schema for enabled or disabled `Cross-Origin-Resource-Policy` options.

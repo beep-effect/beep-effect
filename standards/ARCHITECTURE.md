@@ -712,7 +712,7 @@ than package exports.
 
 `@beep/schema` uses namespace-first schema concept modules. Reusable schema
 concepts publish flat public subpaths such as `@beep/schema/Glob`,
-`@beep/schema/Color`, and `@beep/schema/HttpStatus`.
+`@beep/schema/Color`, and `@beep/schema/HttpHeaders`.
 Consumers import the concept namespace and use concise role members:
 
 ```ts
@@ -751,7 +751,7 @@ compatibility surfaces. Suite aggregate modules such as
 `@beep/schema/Blockchain`, `@beep/schema/Dom`, `@beep/schema/Http`,
 `@beep/schema/Location`, and `@beep/schema/Person` are retired; import leaf
 concept modules such as `@beep/schema/EvmAddress`,
-`@beep/schema/DomReactNode`, and `@beep/schema/HttpStatus` instead. `Csv` is a
+`@beep/schema/DomReactNode`, and `@beep/schema/HttpHeaders` instead. `Csv` is a
 same-concept schema module and does not re-export sibling CSV parser,
 formatter, option, or error modules. Retired acronym casing aliases such as
 `@beep/schema/ExpectCT` and `@beep/schema/XSSProtection` are not public exports;
@@ -767,10 +767,10 @@ such as parser, formatter, SQL projection, or color-conversion roles.
 Inside a concept namespace, concise role names are canonical: `Schema`,
 `Input`, `FromInput`, `Object`, and `Unit`. Legacy full names such as
 `Glob.Glob` may remain as aliases of `Glob.Schema` during migration.
-Prefer promoted source concepts over per-symbol modules: `HttpStatus` is one
-concept module even though it exports many status literal schemas.
+Prefer promoted source concepts over per-symbol modules: `Color` is one
+concept module even though it exports many color schemas and conversions.
 Package-local tests may use source-only test seams such as
-`@beep/schema/test/Markdown` and `@beep/schema/test/Yaml`; parser internals
+`@beep/schema/test/Markdown`; parser internals
 under `src/internal/` are not public package subpaths. `bun run beep lint
 schema-topology` enforces the retired lowercase topology, retired suite
 aggregators, private role-file exports, promoted concept folder exports,

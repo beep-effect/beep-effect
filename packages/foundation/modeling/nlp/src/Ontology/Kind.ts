@@ -389,17 +389,17 @@ export const Lemma: TypedTextConstructor<"Lemma"> = makeTyped("Lemma");
 // =============================================================================
 
 const kindContainmentCharacterDefault = A.empty();
-const kindContainmentChunkDefault = TextKind.pickOptions(["Token"]);
+const kindContainmentChunkDefault = TextKind.pick(["Token"]).literals;
 const kindContainmentDependencyDefault = A.empty();
-const kindContainmentDocumentDefault = TextKind.pickOptions(["Paragraph", "Sentence"]);
+const kindContainmentDocumentDefault = TextKind.pick(["Paragraph", "Sentence"]).literals;
 const kindContainmentEmbeddingDefault = A.empty();
 const kindContainmentEntityDefault = A.empty();
 const kindContainmentLemmaDefault = A.empty();
-const kindContainmentParagraphDefault = TextKind.pickOptions(["Sentence"]);
+const kindContainmentParagraphDefault = TextKind.pick(["Sentence"]).literals;
 const kindContainmentPOSDefault = A.empty();
 const kindContainmentRelationDefault = A.empty();
-const kindContainmentSentenceDefault = TextKind.pickOptions(["Token", "Chunk", "Dependency", "Entity", "Relation"]);
-const kindContainmentTokenDefault = TextKind.pickOptions(["Character", "POS", "Lemma"]);
+const kindContainmentSentenceDefault = TextKind.pick(["Token", "Chunk", "Dependency", "Entity", "Relation"]).literals;
+const kindContainmentTokenDefault = TextKind.pick(["Character", "POS", "Lemma"]).literals;
 /**
  * Structural containment hierarchy for valid parent-child kind relationships.
  *

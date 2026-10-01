@@ -287,7 +287,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("per-consumer comment waterma
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const context = contextFor(root);
-        expect(A.map(YeetMonitorCommentConsumer.Options, yeetMonitorCommentStateFileName)).toStrictEqual([
+        expect(A.map(YeetMonitorCommentConsumer.literals, yeetMonitorCommentStateFileName)).toStrictEqual([
           "monitor-comments.json",
           "monitor-comments.until-ready.json",
           "monitor-comments.until-merged.json",

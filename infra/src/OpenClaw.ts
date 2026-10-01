@@ -231,7 +231,7 @@ const heredocLines = (input: {
  * ```ts
  * import { OpenClawFileMode } from "@beep/infra"
  *
- * console.log(OpenClawFileMode.Options) // ["0644", "0755"]
+ * console.log(OpenClawFileMode.literals) // ["0644", "0755"]
  * ```
  *
  * @category models

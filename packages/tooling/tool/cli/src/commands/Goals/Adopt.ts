@@ -520,7 +520,7 @@ const missingTemplateRow = (
 };
 
 const slugArgument = Argument.String("slug").pipe(Argument.withDescription("Goal packet slug under goals/"));
-const towardFlag = Flag.Literals("toward", PhaseArchetype.Options).pipe(
+const towardFlag = Flag.Literals("toward", PhaseArchetype.literals).pipe(
   Flag.optional,
   Flag.withDescription("Archetype to measure against; defaults to inference from the packet's phase shape")
 );

@@ -133,7 +133,7 @@ export type PrNumber = typeof PrNumber.Type;
  * ```ts
  * import { PrProvenanceHarness } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(PrProvenanceHarness.Options) // ["claude-code", "codex", "unknown"]
+ * console.log(PrProvenanceHarness.literals) // ["claude-code", "codex", "unknown"]
  * ```
  *
  * @category models
@@ -167,7 +167,7 @@ export type PrProvenanceHarness = typeof PrProvenanceHarness.Type;
  * ```ts
  * import { PrProvenanceEntrypoint } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(PrProvenanceEntrypoint.Options.includes("codex-tui")) // true
+ * console.log(PrProvenanceEntrypoint.literals.includes("codex-tui")) // true
  * ```
  *
  * @category models
@@ -206,7 +206,7 @@ export type PrProvenanceEntrypoint = typeof PrProvenanceEntrypoint.Type;
  * ```ts
  * import { PrProvenanceRole } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(PrProvenanceRole.Options) // ["created", "pushed", "monitored"]
+ * console.log(PrProvenanceRole.literals) // ["created", "pushed", "monitored"]
  * ```
  *
  * @category models
@@ -245,7 +245,7 @@ export type PrProvenanceRole = typeof PrProvenanceRole.Type;
  * ```ts
  * import { PrProvenanceNameSource } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(PrProvenanceNameSource.Options.includes("user")) // true
+ * console.log(PrProvenanceNameSource.literals.includes("user")) // true
  * ```
  *
  * @category models
@@ -285,7 +285,7 @@ export type PrProvenanceNameSource = typeof PrProvenanceNameSource.Type;
  * ```ts
  * import { PrProvenanceSessionHomeSource } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(PrProvenanceSessionHomeSource.Options) // ["transcript", "index", "checkout"]
+ * console.log(PrProvenanceSessionHomeSource.literals) // ["transcript", "index", "checkout"]
  * ```
  *
  * @category models

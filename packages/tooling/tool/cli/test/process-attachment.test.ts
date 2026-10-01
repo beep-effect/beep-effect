@@ -29,7 +29,7 @@ describe("scanProcessAttachments", () => {
       const own = ownAttachments(yield* scanProcessAttachments({ directory: process.cwd(), kinds: ["cwd"] }));
       expect(A.map(own, (attachment) => attachment.kind)).toEqual(["cwd"]);
 
-      const idleScan = yield* scanProcessAttachments({ directory: idle, kinds: ProcessAttachmentKind.Options });
+      const idleScan = yield* scanProcessAttachments({ directory: idle, kinds: ProcessAttachmentKind.literals });
       expect(O.getOrThrow(idleScan)).toEqual([]);
     }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer))
   );

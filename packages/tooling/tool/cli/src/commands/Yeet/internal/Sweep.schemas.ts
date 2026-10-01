@@ -67,7 +67,7 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Sweep.schemas");
  * ```ts
  * import { SweepStepId } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(SweepStepId.Options)
+ * console.log(SweepStepId.literals)
  * ```
  *
  * @category models

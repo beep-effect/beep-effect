@@ -60,7 +60,7 @@ export const RunMode = RunModeKit.pipe(
  * @category models
  * @since 0.0.0
  */
-export const RunModeOptions = RunModeKit.Options;
+export const RunModeOptions = RunModeKit.literals;
 
 /**
  * Pattern-matching helper for {@link RunMode} literals.
@@ -77,22 +77,6 @@ export const RunModeOptions = RunModeKit.Options;
  * @since 0.0.0
  */
 export const RunModeMatch = RunModeKit.$match;
-
-/**
- * Thunk helpers returning each {@link RunMode} literal.
- *
- * **Example** (Invoke write mode thunk)
- *
- * ```ts
- * import { RunModeThunk } from "@beep/repo-cli/internal/cli/RunMode"
- *
- * console.log(RunModeThunk.write())
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const RunModeThunk = RunModeKit.thunk;
 
 /**
  * Enum mapping for {@link RunMode} literals.
