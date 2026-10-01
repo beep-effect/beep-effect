@@ -119,9 +119,9 @@ export const Vertical: Story = {
   args: { orientation: "vertical", className: "w-full max-w-xs" },
   render: (args) => (
     <Carousel {...args}>
-      <CarouselContent className="-mt-1 h-[200px]">
+      <CarouselContent className="h-50">
         {A.map(slides, (slide) => (
-          <CarouselItem key={slide} className="pt-1 basis-1/2">
+          <CarouselItem key={slide} className="basis-1/2">
             <div className="bg-muted flex items-center justify-center rounded-md p-6">
               <span className="text-2xl font-semibold">{slide}</span>
             </div>

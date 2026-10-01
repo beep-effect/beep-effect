@@ -7,17 +7,57 @@
 "use client";
 
 import { useAtomSubscribe, useAtomValue } from "@effect/atom-react";
+import { cva } from "class-variance-authority";
 import * as P from "effect/Predicate";
 import { Atom } from "effect/reactivity";
 import { cn } from "../lib/index.ts";
+import type { VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
-interface AvatarProps extends React.ComponentPropsWithoutRef<"span"> {
+const avatarVariants = cva("group/avatar relative flex shrink-0 overflow-hidden", {
+  variants: {
+    size: {
+      sm: "size-8",
+      default: "size-10",
+      lg: "size-14",
+    },
+    shape: {
+      circle: "rounded-full",
+      rounded: "rounded-lg",
+    },
+  },
+  defaultVariants: {
+    size: "default",
+    shape: "circle",
+  },
+});
+
+interface AvatarProps extends React.ComponentPropsWithoutRef<"span">, VariantProps<typeof avatarVariants> {
   readonly children?: undefined | React.ReactNode;
 }
 
 /**
- * Circular avatar frame for an image with fallback content.
+ * Avatar frame for an image with fallback content.
+ *
+ * **Details**
+ *
+ * `size` sets the frame (`sm` 32px, `default` 40px, `lg` 56px) and scales the fallback
+ * initials with it. `shape: "rounded"` swaps the circle for a rounded square; the fallback
+ * follows the frame's shape.
+ *
+ * **Example** (Large rounded avatar)
+ *
+ * ```tsx
+ * import { Avatar, AvatarFallback } from "@beep/ui/components/avatar"
+ *
+ * export function TeamAvatar() {
+ *   return (
+ *     <Avatar size="lg" shape="rounded">
+ *       <AvatarFallback>BE</AvatarFallback>
+ *     </Avatar>
+ *   )
+ * }
+ * ```
  *
  * **Example** (Avatar with image fallback)
  *
@@ -37,11 +77,13 @@ interface AvatarProps extends React.ComponentPropsWithoutRef<"span"> {
  * @category components
  * @since 0.0.0
  */
-function Avatar({ className, children, ...props }: AvatarProps) {
+function Avatar({ className, children, size = "default", shape = "circle", ...props }: AvatarProps) {
   return (
     <span
       data-slot="avatar"
-      className={cn("relative flex size-10 shrink-0 overflow-hidden rounded-full", className)}
+      data-size={size}
+      data-shape={shape}
+      className={cn(avatarVariants({ size, shape, className }))}
       {...props}
     >
       {children}
@@ -163,7 +205,10 @@ function AvatarFallback({ className, children, ...props }: React.ComponentPropsW
   return (
     <span
       data-slot="avatar-fallback"
-      className={cn("bg-muted flex size-full items-center justify-center rounded-full text-sm font-medium", className)}
+      className={cn(
+        "bg-muted flex size-full items-center justify-center rounded-full text-sm font-medium group-data-[size=sm]/avatar:text-xs group-data-[size=lg]/avatar:text-base group-data-[shape=rounded]/avatar:rounded-lg",
+        className
+      )}
       {...props}
     >
       {children}

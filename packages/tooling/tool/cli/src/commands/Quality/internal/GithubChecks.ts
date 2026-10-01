@@ -374,6 +374,14 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:check", "check"))
   ),
   knipLane(repoRoot, "pre-push"),
+  // Replays the hosted "Shadcn Lint" context (strict @shadcn/lint over apps and packages).
+  githubCheckLane(
+    "quality:shadcn-lint",
+    "pre-push",
+    "repo-quality",
+    "preflight",
+    ciLaneStep(repoRoot, "quality:shadcn-lint", "shadcn-lint")
+  ),
   githubCheckLane(
     "quality:jsdoc-ratchet",
     "pre-push",

@@ -232,6 +232,7 @@ If you touch this, load or run this first. Do not hand-author around it.
 | Effect service / Layer | effect-first-development skill |
 | JSDoc on exports | `.patterns/jsdoc-documentation.md` |
 | Gesture-bearing UI | browser-qa-loop skill |
+| Tailwind className / style props in UI code | bun run lint:shadcn (strict @shadcn/lint; policy .oxlintrc.shadcn.json, runbook docs/runbooks/design-system-lint.md) |
 | PR publish / checks | yeet skill |
 
 ## Dev Servers

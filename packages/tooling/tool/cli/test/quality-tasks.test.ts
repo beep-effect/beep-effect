@@ -966,6 +966,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "quality:lint-policy",
         "quality:check",
         "quality:knip",
+        "quality:shadcn-lint",
         "quality:jsdoc-ratchet",
         "quality:docgen",
         "quality:doctest",
@@ -991,6 +992,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "--summarize",
       ]);
       expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(expectedTurboArgs("knip:check", ["--summarize"]));
+      expect(qualityLaneArgs(lanes, "quality:shadcn-lint")).toEqual(["run", "beep", "ci", "lane", "shadcn-lint"]);
+      assert.deepStrictEqual(
+        O.map(
+          A.findFirst(lanes, (lane) => lane.id === "quality:shadcn-lint"),
+          (lane) => lane.wave
+        ),
+        O.some("preflight")
+      );
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
       // The repo-wide tsgo extras ride inside `quality:check` (root `bun run check`
       // keeps them under `--affected`), so no lane runs `test-tsgo` or `tsgo-smoke` again.
@@ -1093,6 +1102,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(qualityLaneArgs(lanes, "quality:test-integration")).toEqual(hostedArgs("test-integration"));
       expect(qualityLaneArgs(lanes, "quality:coverage")).toEqual(hostedArgs("coverage"));
       expect(qualityLaneArgs(lanes, "quality:codegen")).toEqual(hostedArgs("codegen"));
+      expect(qualityLaneArgs(lanes, "quality:shadcn-lint")).toEqual(hostedArgs("shadcn-lint"));
       expect(qualityLaneArgs(lanes, "quality:commitlint")).toEqual(hostedArgs("commitlint"));
       expect(qualityLaneArgs(lanes, "quality:desktop-ipc")).toEqual(hostedArgs("desktop-ipc"));
       expect(qualityLaneArgs(lanes, "quality:docgen")).toEqual(hostedArgs("docgen"));
@@ -3716,6 +3726,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:jsdoc-module-tags",
         "goals:doctor",
         "lint:oxlint",
+        "lint:shadcn",
         "lint:typos",
         "jsdoc:inventory:check",
       ]);
@@ -3822,6 +3833,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:native-runtime:roots",
           "lint:jsdoc:root",
           "jsdoc:inventory:check",
+          "lint:shadcn",
           "lint:effect-vitest",
           "quality:test-tsgo",
           "ci:jsdoc-ratchet:ratchet",

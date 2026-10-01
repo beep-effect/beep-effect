@@ -199,10 +199,11 @@ const cheapWrapperRow = (
  * A1 did not yet carry an inner-lane duration, the row names the aggregate or
  * related wrapper used as the P50 proxy. First-red shares use the 832
  * attempts whose first actionable failure was reconstructable. Every pointer
- * except `quality:storybook`'s `/hosted/laneRows` sentinel is
- * fixture-verified, including which A1 row it resolves to (see
- * {@link DEFAULT_GATE_ORDER_COST_SOURCES}); storybook's 584 s is one external
- * main run.
+ * except the `/hosted/laneRows` sentinel of `quality:storybook` and
+ * `quality:shadcn-lint` is fixture-verified, including which A1 row it
+ * resolves to (see {@link DEFAULT_GATE_ORDER_COST_SOURCES}); storybook's 584 s
+ * is one external main run, and shadcn-lint's 20 s is a conservative estimate
+ * from a local run until its hosted job has history.
  *
  * **Gotchas**
  *
@@ -281,6 +282,26 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
     ),
     // taskIds: //#knip:check (+ //#lint:policy-fingerprint).
     policyHostedRow("quality:knip", 80, 9, 11 / 832, O.some(20)),
+    // The Shadcn Lint context landed 2026-10-01 with no hosted history, so A1 has no
+    // row for it. 20 s is a conservative hosted P50: the oxlint walk over apps and
+    // packages takes about 4 s wall on the 64-core workstation, and the 4-vCPU hosted
+    // runner plus Turbo start-up is budgeted at five times that. Reseed from the
+    // hosted job's own P50 once it has a green history.
+    // taskIds: //#lint:shadcn.
+    postdatesA1Window(
+      seedRow(
+        "quality:shadcn-lint",
+        20,
+        "/hosted/laneRows",
+        "Conservative hosted P50 for the Shadcn Lint context (added 2026-10-01): about 4 s local oxlint wall time scaled for a 4-vCPU runner plus Turbo start-up; A1 recorded no row for this non-required context.",
+        0,
+        O.none(),
+        "precise",
+        PRECISE_BASIS,
+        "policy-preflight",
+        POLICY_PREFLIGHT_BASIS
+      )
+    ),
     // taskIds: //#jsdoc:inventory:check; CLI compare follows a fresh inventory.
     hostedRow("quality:jsdoc-ratchet", 82, 16, 0),
     hostedRow("quality:docgen", 115, 5, 0),
@@ -432,17 +453,17 @@ const proxyRowCost = (laneId: string, sourceKey: string): GateOrderCostSource =>
  *
  * One entry per seed row: 16 lanes read their own hosted A1 row
  * (`a1-lane-row`), 15 read a group aggregate or wrapper row shared with
- * siblings (`a1-proxy-row`), and `quality:storybook` reads one named run
- * outside A1 (`external-run`). The gate-order fixture checks that each seed
- * duration pointer resolves to the row named here.
+ * siblings (`a1-proxy-row`), and `quality:storybook` and `quality:shadcn-lint`
+ * read a run outside A1 (`external-run`). The gate-order fixture checks that
+ * each seed duration pointer resolves to the row named here.
  *
- * **Example** (Find the storybook cost basis)
+ * **Example** (Count the external-run cost bases)
  *
  * ```ts
  * import { DEFAULT_GATE_ORDER_COST_SOURCES } from "@beep/repo-cli/test/Yeet"
  * import * as A from "effect/Array"
  *
- * console.log(A.filter(DEFAULT_GATE_ORDER_COST_SOURCES, (entry) => entry.costBasis === "external-run").length) // 1
+ * console.log(A.filter(DEFAULT_GATE_ORDER_COST_SOURCES, (entry) => entry.costBasis === "external-run").length) // 2
  * ```
  *
  * @category configuration
@@ -464,6 +485,7 @@ export const DEFAULT_GATE_ORDER_COST_SOURCES: ReadonlyArray<GateOrderCostSource>
   laneRowCost("quality:lint-policy", "Heavy / Lint Policy"),
   laneRowCost("quality:check", "Heavy / Check"),
   laneRowCost("quality:knip", "Knip"),
+  costSource("quality:shadcn-lint", "external-run", O.none()),
   proxyRowCost("quality:jsdoc-ratchet", "Heavy / Doctest"),
   laneRowCost("quality:docgen", "Heavy / Docgen"),
   laneRowCost("quality:doctest", "Heavy / Doctest"),

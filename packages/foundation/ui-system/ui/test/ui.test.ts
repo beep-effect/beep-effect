@@ -1,6 +1,6 @@
 import { it } from "@beep/test-runner";
 import { VERSION } from "@beep/ui";
-import { ChartContainer, ChartTooltipContent } from "@beep/ui/components/chart";
+import { ChartContainer, ChartTooltipContent, chartColorProperties } from "@beep/ui/components/chart";
 import { Input } from "@beep/ui/components/input";
 import { Textarea } from "@beep/ui/components/textarea";
 import { cn } from "@beep/ui/lib/utils";
@@ -40,6 +40,43 @@ describe("@beep/ui", () => {
     expect(markup).not.toContain("Desktop");
   });
 
+  it("maps chart series colors to container custom properties, pairing theme colors with light-dark()", () => {
+    expect(
+      chartColorProperties({
+        revenue: { label: "Revenue", color: "var(--chart-1)" },
+        expenses: { label: "Expenses", theme: { light: "var(--chart-2)", dark: "var(--chart-3)" } },
+        "bad key;": { label: "Skipped", color: "var(--chart-4)" },
+        breakout: { label: "Skipped", color: "red;background:url(x)" },
+        unlabeled: { label: "No color" },
+      })
+    ).toEqual([
+      ["--color-revenue", "var(--chart-1)"],
+      ["--color-expenses", "light-dark(var(--chart-2), var(--chart-3))"],
+    ]);
+  });
+
+  it("renders series colors into the server markup as container custom properties", () => {
+    const markup = renderToStaticMarkup(
+      createElement(ChartContainer, {
+        config: {
+          revenue: { label: "Revenue", color: "var(--chart-1)" },
+          expenses: { label: "Expenses", theme: { light: "var(--chart-2)", dark: "var(--chart-3)" } },
+        },
+        style: { minHeight: 120 },
+        children: createElement(ChartTooltipContent, { active: false }),
+      })
+    );
+    expect(markup).toContain("--color-revenue:var(--chart-1)");
+    expect(markup).toContain("--color-expenses:light-dark(var(--chart-2), var(--chart-3))");
+    expect(markup).toContain("min-height:120px");
+  });
+
+  it("renders the chart container without a runtime <style> element", () => {
+    const markup = renderChartTooltip();
+    expect(markup).not.toContain("<style");
+    expect(markup).toContain('data-slot="chart"');
+  });
+
   it("exports the package version constant", () => {
     expect(VERSION).toBe("0.0.0");
   });
@@ -48,6 +85,13 @@ describe("@beep/ui", () => {
     const optionalHiddenClass: false | string = false;
 
     expect(cn("px-2 py-1", "px-4", optionalHiddenClass, ["text-sm"])).toBe("py-1 px-4 text-sm");
+  });
+
+  it("keeps the design system's custom scales apart from the stock groups they resemble", () => {
+    expect(cn("text-xs-plus", "text-muted-foreground")).toBe("text-xs-plus text-muted-foreground");
+    expect(cn("border-(--color-border)", "border-indicator")).toBe("border-(--color-border) border-indicator");
+    expect(cn("gap-toggle-group", "gap-2")).toBe("gap-2");
+    expect(cn("rounded-md", "rounded-inherit")).toBe("rounded-inherit");
   });
 
   it("renders input validation, form attributes, and caller styling", () => {

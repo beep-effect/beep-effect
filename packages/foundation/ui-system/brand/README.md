@@ -13,6 +13,7 @@ schema-decoded identity, and a test fails when a checked-in file drifts from its
 | `@beep/brand/react` | `BeepMark` and `BeepWordmark` components | React 19 |
 | `@beep/brand/styles/brand.css` | Generated Tailwind v4 `@theme` plus `.dark` scheme | Stylesheet |
 | `@beep/brand/styles/bridge.css` | Opt-in mapping of `@beep/ui` shadcn tokens onto the brand scale | Stylesheet |
+| `@beep/brand/styles/react.css` | Plain-CSS layout for `BeepWordmark`, keyed by `data-beep-wordmark` | Stylesheet |
 | `@beep/brand/assets/*` | `mark.svg`, `favicon.svg`, `wordmark.svg`, `wordmark-light.svg`, and the PNG icon set | Static files |
 
 ## Usage
@@ -33,6 +34,8 @@ bridge. The bridge comes last so its `var()` references resolve.
 @import "@beep/ui/styles/globals.css";
 @import "@beep/brand/styles/brand.css";
 @import "@beep/brand/styles/bridge.css";
+/* Only when the app renders BeepWordmark. */
+@import "@beep/brand/styles/react.css";
 ```
 
 ```tsx
@@ -40,7 +43,7 @@ import { beep } from "@beep/brand"
 import { BeepMark } from "@beep/brand/react"
 
 export const Header = () => (
-  <header style={{ background: beep.dark.surface["0"] }}>
+  <header className="bg-surface-0" title={beep.name}>
     <BeepMark className="size-8 text-brand-400" />
   </header>
 )

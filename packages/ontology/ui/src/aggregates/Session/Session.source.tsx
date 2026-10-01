@@ -44,7 +44,9 @@ export function OntologySourceRegion(): JSX.Element {
       ) : (
         <Textarea
           aria-label="Turtle source"
-          className="min-h-0 flex-1 resize-none rounded-none border-0 font-mono text-xs leading-5 shadow-none focus-visible:ring-0"
+          variant="ghost"
+          font="mono"
+          className="min-h-0 flex-1 resize-none"
           readOnly
           value={source}
         />

@@ -811,6 +811,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "fallow:audit",
         "fallow:dead-code",
         "fallow:health",
+        "quality:shadcn-lint",
         "quality:security",
         "quality:secrets",
         "quality:commitlint",

@@ -80,12 +80,6 @@ import type { AttachmentPort, MentionSource, SendPort, SlashItem } from "./confi
 
 const DEFAULT_ARIA_LABEL = "Message composer";
 
-const EDITABLE_CLASS_NAME =
-  "relative block max-h-60 min-h-10 overflow-auto px-3 py-2.5 text-sm leading-6 focus:outline-none";
-
-const PLACEHOLDER_CLASS_NAME =
-  "text-muted-foreground pointer-events-none absolute top-0 left-0 px-3 py-2.5 text-sm leading-6 select-none";
-
 /**
  * Immutable per-mount configuration for {@link ChatComposer}. The object is
  * decoded/defaulted once and seeded into atoms owned by the Lexical editor; use
@@ -340,8 +334,7 @@ function ComposerSurface({
               // a combobox named only by `aria-placeholder` has no accessible
               // name, so assistive tech announces an unlabeled control.
               ariaLabel={ariaLabel}
-              className={EDITABLE_CLASS_NAME}
-              placeholderClassName={PLACEHOLDER_CLASS_NAME}
+              variant="compact"
               placeholder={placeholder}
             />
           }

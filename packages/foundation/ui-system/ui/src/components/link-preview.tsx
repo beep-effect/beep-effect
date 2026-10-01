@@ -393,7 +393,7 @@ export function LinkPreview({ href, children, className, metadata }: LinkPreview
         }
       />
 
-      <TooltipContent className="max-w-[280px] border border-border bg-popover p-3 text-popover-foreground shadow-lg">
+      <TooltipContent className="max-w-70 border border-border bg-popover p-3 text-popover-foreground shadow-lg">
         {tooltipContent}
       </TooltipContent>
     </Tooltip>
