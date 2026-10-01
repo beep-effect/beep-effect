@@ -16,10 +16,18 @@ import { Node, SyntaxKind, ts } from "ts-morph";
 import { SchemaFirstInventoryReadError } from "../Lint.errors.ts";
 import { SchemaFirstInventoryEntry } from "../Lint.schemas.ts";
 import type {
+  ArrowFunction,
   CallExpression,
+  FunctionDeclaration,
+  FunctionExpression,
+  GetAccessorDeclaration,
   InterfaceDeclaration,
+  MethodDeclaration,
   Symbol as MorphSymbol,
+  ObjectLiteralElementLike,
+  ObjectLiteralExpression,
   SourceFile,
+  SpreadAssignment,
   Type,
   TypeAliasDeclaration,
   TypeElementTypes,
@@ -1449,19 +1457,21 @@ const unresolvedWithStatics = (expression: Node, name: string): boolean =>
       Str.Equivalence(name, "withStatics") &&
       O.exists(unresolvedReceiverModule(expression.getExpression()), (module) => module === "schema-utils");
 
-// For `receiver.name` / `receiver["name"]` whose member has no symbol of its own, the declarations of
-// that member on the receiver's type.
-const receiverMemberDeclarations = (
-  expression: Node,
-  name: string
-): O.Option<{ readonly name: string; readonly declarations: ReadonlyArray<Node> }> =>
-  Node.isPropertyAccessExpression(expression) || Node.isElementAccessExpression(expression)
-    ? pipe(
-        O.fromUndefinedOr(expression.getExpression().getType().getProperty(name)),
-        O.map((symbol) => ({ name: symbol.getName(), declarations: symbol.getDeclarations() })),
-        O.filter(({ declarations }) => A.isReadonlyArrayNonEmpty(declarations))
-      )
-    : O.none();
+// A member whose symbol carries no declaration (a mapped type re-keys it, `{ [K in "withStatics"]: ... }`)
+// still has the declared function type of `withStatics`; the receiver's property is that same
+// transient symbol, so the value type is the only trace left to the SchemaUtils declaration.
+const isWithStaticsValueType = (expression: Node): boolean =>
+  pipe(
+    O.fromUndefinedOr(expression.getType().getSymbol()),
+    O.flatMap((symbol) => A.head(symbol.getDeclarations())),
+    O.flatMap((declaration) => O.fromUndefinedOr(declaration.getParent())),
+    O.exists(
+      (owner) =>
+        Node.isVariableDeclaration(owner) &&
+        Str.Equivalence(owner.getName(), "withStatics") &&
+        SCHEMA_UTILS_SOURCE_PATTERN.test(owner.getSourceFile().getFilePath())
+    )
+  );
 
 // A `withStatics` callee resolved through the checker to the SchemaUtils declaration, whatever local
 // name or access form reaches it; when the module does not resolve, the import declaration decides.
@@ -1474,48 +1484,193 @@ const isWithStaticsCallee = (callee: Node): boolean => {
       O.map((target) => ({ name: target.getName(), declarations: target.getDeclarations() })),
       O.filter(({ declarations }) => A.isReadonlyArrayNonEmpty(declarations))
     );
-    return O.match(
-      O.orElse(declarations, () => receiverMemberDeclarations(expression, name)),
-      {
-        onSome: (target) =>
-          Str.Equivalence(target.name, "withStatics") &&
-          A.some(target.declarations, (declaration) =>
-            SCHEMA_UTILS_SOURCE_PATTERN.test(declaration.getSourceFile().getFilePath())
-          ),
-        onNone: () => unresolvedWithStatics(expression, name),
-      }
-    );
+    return O.match(declarations, {
+      onSome: (target) =>
+        Str.Equivalence(target.name, "withStatics") &&
+        A.some(target.declarations, (declaration) =>
+          SCHEMA_UTILS_SOURCE_PATTERN.test(declaration.getSourceFile().getFilePath())
+        ),
+      onNone: () => isWithStaticsValueType(expression) || unresolvedWithStatics(expression, name),
+    });
   });
 };
 
-// The object literal a `withStatics` callback returns, by expression body or final `return`.
-const returnedStaticsObject = (callback: Node): O.Option<Node> => {
-  if (!(Node.isArrowFunction(callback) || Node.isFunctionExpression(callback))) {
-    return O.none();
+// How far local bindings, callback references and spreads are followed inside one file.
+const FACADE_RESOLUTION_DEPTH = 3;
+
+// An expression without its parentheses and type-only wrappers (`as`, `satisfies`, `!`, `<T>x`): they
+// change what the checker believes, not the value that is attached or called.
+const unwrapTypeWrappers = (node: Node): Node =>
+  Node.isParenthesizedExpression(node) ||
+  Node.isAsExpression(node) ||
+  Node.isSatisfiesExpression(node) ||
+  Node.isNonNullExpression(node) ||
+  Node.isTypeAssertion(node)
+    ? unwrapTypeWrappers(node.getExpression())
+    : node;
+
+type StaticsCallback = ArrowFunction | FunctionExpression | FunctionDeclaration;
+type StaticsFunction = StaticsCallback | MethodDeclaration | GetAccessorDeclaration;
+
+const isStaticsCallback = (node: Node): node is StaticsCallback =>
+  Node.isArrowFunction(node) || Node.isFunctionExpression(node) || Node.isFunctionDeclaration(node);
+
+// The same-file declaration a local identifier resolves to; imports and other modules are a known
+// limit (helpers imported from another module are not followed).
+const localDeclaration = (identifier: Node): O.Option<Node> =>
+  pipe(
+    O.fromUndefinedOr(identifier.getSymbol()),
+    O.flatMap((symbol) => A.head(symbol.getDeclarations())),
+    O.filter((declaration) => declaration.getSourceFile() === identifier.getSourceFile())
+  );
+
+// The initializer of a `const` declaration; a `let` or `var` may be reassigned after it, so its
+// initializer says nothing about the value that is finally used.
+const constInitializer = (declaration: Node): O.Option<Node> =>
+  Node.isVariableDeclaration(declaration) &&
+  Node.isVariableDeclarationList(declaration.getParent()) &&
+  (declaration.getParent().getFlags() & ts.NodeFlags.Const) !== 0
+    ? O.fromUndefinedOr(declaration.getInitializer())
+    : O.none();
+
+// What an expression denotes after following `const` bindings in the same file.
+const followBinding = (node: Node, depth = 0): Node => {
+  const value = unwrapTypeWrappers(node);
+  if (!Node.isIdentifier(value) || depth >= FACADE_RESOLUTION_DEPTH) {
+    return value;
   }
-  const body = callback.getBody();
-  const returned = Node.isBlock(body)
-    ? pipe(
-        A.last(A.filter(body.getStatements(), Node.isReturnStatement)),
-        O.flatMap((statement) => O.fromUndefinedOr(statement.getExpression()))
-      )
-    : O.some(body);
-  return pipe(returned, O.map(unwrapParentheses), O.filter(Node.isObjectLiteralExpression));
+  return pipe(
+    localDeclaration(value),
+    O.flatMap(constInitializer),
+    O.match({ onNone: () => value, onSome: (initializer) => followBinding(initializer, depth + 1) })
+  );
 };
 
-// A call to an effect/Schema codec function: `S.is(...)`, `S.decodeUnknownSync(...)`.
-const isCodecCall =
-  (schemaNames: HashSet.HashSet<string>) =>
-  (node: Node): node is CallExpression => {
-    if (!Node.isCallExpression(node)) {
-      return false;
+// The function a `withStatics` callback argument is: inline, or a same-file function reference.
+const resolveStaticsCallback = (node: Node, depth = 0): O.Option<StaticsCallback> => {
+  const value = unwrapTypeWrappers(node);
+  if (isStaticsCallback(value)) {
+    return O.some(value);
+  }
+  if (!Node.isIdentifier(value) || depth >= FACADE_RESOLUTION_DEPTH) {
+    return O.none();
+  }
+  return pipe(
+    localDeclaration(value),
+    O.flatMap((declaration) =>
+      Node.isFunctionDeclaration(declaration)
+        ? O.some<StaticsCallback>(declaration)
+        : O.flatMap(constInitializer(declaration), (initializer) => resolveStaticsCallback(initializer, depth + 1))
+    )
+  );
+};
+
+// The body of a statics function.
+const functionBody = (fn: StaticsFunction): O.Option<Node> => O.fromUndefinedOr(fn.getBody());
+
+// The expression a function returns: its expression body, or the last `return` of its block.
+const lastReturned = (fn: StaticsFunction): O.Option<Node> =>
+  O.flatMap(functionBody(fn), (body) =>
+    Node.isBlock(body)
+      ? pipe(
+          A.last(A.filter(body.getStatements(), Node.isReturnStatement)),
+          O.flatMap((statement) => O.fromUndefinedOr(statement.getExpression())),
+          O.map(unwrapTypeWrappers)
+        )
+      : O.some(unwrapTypeWrappers(body))
+  );
+
+// The expression a function returns when it does nothing else: an expression body or a single `return`.
+const onlyReturned = (fn: StaticsFunction): O.Option<Node> =>
+  O.flatMap(functionBody(fn), (body) => {
+    if (!Node.isBlock(body)) {
+      return O.some(unwrapTypeWrappers(body));
     }
-    const callee = unwrapParentheses(node.getExpression());
+    const statements = body.getStatements();
+    return statements.length === 1 && Node.isReturnStatement(statements[0])
+      ? pipe(O.fromUndefinedOr(statements[0].getExpression()), O.map(unwrapTypeWrappers))
+      : O.none();
+  });
+
+// The statics object a callback returns, following a local binding (`return statics`).
+const returnedStaticsObject = (callback: StaticsCallback): O.Option<ObjectLiteralExpression> =>
+  pipe(
+    lastReturned(callback),
+    O.map((returned) => followBinding(returned)),
+    O.filter(Node.isObjectLiteralExpression)
+  );
+
+type StaticsMember = Exclude<ObjectLiteralElementLike, SpreadAssignment>;
+
+const NO_STATICS_MEMBERS: ReadonlyArray<StaticsMember> = A.empty();
+
+// The runtime key a member attaches: `is`, `"is"` and `["is"]` (or a `const` bound to "is") are the
+// same key. A computed key that does not resolve to a string literal is unknown: it neither replaces
+// nor is replaced by another member.
+const memberKey = (member: StaticsMember): O.Option<string> => {
+  const nameNode = member.getNameNode();
+  if (Node.isComputedPropertyName(nameNode)) {
+    const value = followBinding(nameNode.getExpression());
+    return Node.isStringLiteral(value) || Node.isNoSubstitutionTemplateLiteral(value)
+      ? O.some(value.getLiteralValue())
+      : O.none();
+  }
+  return O.some(Node.isStringLiteral(nameNode) ? nameNode.getLiteralValue() : nameNode.getText());
+};
+
+const sameKey = (left: StaticsMember, right: StaticsMember): boolean =>
+  O.exists(memberKey(left), (key) => O.exists(memberKey(right), (other) => Str.Equivalence(key, other)));
+
+// Later members replace earlier members of the same key, as they do on the attached object.
+const overrideMembers = (
+  members: ReadonlyArray<StaticsMember>,
+  later: ReadonlyArray<StaticsMember>
+): ReadonlyArray<StaticsMember> => [
+  ...A.filter(members, (member) => !A.some(later, (next) => sameKey(next, member))),
+  ...later,
+];
+
+// Whether a spread that is not a local object literal may replace a member, judged by its type: an
+// `any`, `unknown` or index-signature type may replace every key, an object type only its own keys.
+const spreadMayReplace =
+  (spread: Node) =>
+  (member: StaticsMember): boolean => {
+    const type = spread.getType();
+    return (
+      type.isAny() ||
+      type.isUnknown() ||
+      type.getStringIndexType() !== undefined ||
+      O.exists(memberKey(member), (key) =>
+        A.some(type.getProperties(), (property) => Str.Equivalence(property.getName(), key))
+      )
+    );
+  };
+
+// The members a statics object attaches, with spreads of locally bound objects flattened in. A spread
+// that cannot be resolved removes only the earlier members its type may replace.
+const staticsMembers = (object: ObjectLiteralExpression, depth = 0): ReadonlyArray<StaticsMember> =>
+  A.reduce(object.getProperties(), NO_STATICS_MEMBERS, (members, property) => {
+    if (!Node.isSpreadAssignment(property)) {
+      return overrideMembers(members, [property]);
+    }
+    const spread = followBinding(property.getExpression());
+    return Node.isObjectLiteralExpression(spread) && depth < FACADE_RESOLUTION_DEPTH
+      ? overrideMembers(members, staticsMembers(spread, depth + 1))
+      : A.filter(members, (member) => !spreadMayReplace(property.getExpression())(member));
+  });
+
+// The effect/Schema codec function a call invokes (`S.is(...)` is `is`); none for any other call.
+const codecCallName =
+  (schemaNames: HashSet.HashSet<string>) =>
+  (node: CallExpression): O.Option<string> => {
+    const callee = unwrapTypeWrappers(node.getExpression());
     if (!Node.isPropertyAccessExpression(callee) || !isSchemaCodecFunction(callee.getName())) {
-      return false;
+      return O.none();
     }
     const namespace = callee.getExpression();
-    return Node.isIdentifier(namespace) && HashSet.has(schemaNames, namespace.getText()) && !isShadowed(namespace);
+    return Node.isIdentifier(namespace) && HashSet.has(schemaNames, namespace.getText()) && !isShadowed(namespace)
+      ? O.some(callee.getName())
+      : O.none();
   };
 
 // A local binding (parameter, `const`, nested declaration) that hides the effect/Schema import of the
@@ -1532,115 +1687,218 @@ const isShadowed = (identifier: Node): boolean =>
       )
   );
 
-// The names that denote the schema inside a statics callback: its first parameter, and the name of
-// the declaration the decorated schema is bound to (a parameterless callback closes over it).
-const schemaBindingNames = (callback: Node): HashSet.HashSet<string> => {
-  const parameter =
-    Node.isArrowFunction(callback) || Node.isFunctionExpression(callback)
-      ? O.toArray(O.map(A.head(callback.getParameters()), (declaration) => declaration.getName()))
-      : A.empty<string>();
-  const owner = O.toArray(
-    O.map(O.fromUndefinedOr(callback.getFirstAncestorByKind(SyntaxKind.VariableDeclaration)), (declaration) =>
-      declaration.getName()
-    )
-  );
-  return HashSet.fromIterable([...parameter, ...owner]);
+// The declarations that denote the schema: the callback's first parameter and the declaration the
+// decorated schema is bound to (a parameterless callback closes over it).
+type SchemaBindings = ReadonlyArray<Node>;
+
+const schemaBindings = (callback: StaticsCallback, call: Node): SchemaBindings => [
+  ...O.toArray(A.head(callback.getParameters())),
+  ...O.toArray(O.fromUndefinedOr(call.getFirstAncestorByKind(SyntaxKind.VariableDeclaration))),
+];
+
+// The schema itself, a member call on it (`schema.pipe(...)`), or a call that takes it
+// (`S.fromJsonString(schema)`). An identifier counts only when it resolves to the schema's own
+// declaration: a property name, or a parameter that shadows the schema, is not.
+const isSchemaOperand =
+  (bindings: SchemaBindings) =>
+  (node: Node): boolean => {
+    const value = unwrapTypeWrappers(node);
+    if (Node.isIdentifier(value)) {
+      return O.exists(localDeclaration(value), (declaration) => A.some(bindings, (binding) => binding === declaration));
+    }
+    if (!Node.isCallExpression(value)) {
+      return false;
+    }
+    const callee = unwrapTypeWrappers(value.getExpression());
+    return (
+      (Node.isPropertyAccessExpression(callee) && isSchemaOperand(bindings)(callee.getExpression())) ||
+      A.some(value.getArguments(), isSchemaOperand(bindings))
+    );
+  };
+
+// `S.<codec>(schema)` bound to the schema; `S.asserts` is binary and only forwards (below).
+const isSchemaCodec =
+  (schemaNames: HashSet.HashSet<string>, bindings: SchemaBindings) =>
+  (node: Node): boolean =>
+    Node.isCallExpression(node) &&
+    O.exists(codecCallName(schemaNames)(node), (name) => !Str.Equivalence(name, "asserts")) &&
+    O.exists(A.head(node.getArguments()), isSchemaOperand(bindings));
+
+// Calls that only unwrap a codec result: `Result.getOrThrow(...)`, `O.getOrThrowWith(...)`.
+const UNWRAPPER_NAMES = HashSet.fromIterable(["getOrThrow", "getOrThrowWith"]);
+const isUnwrapperReference = (node: Node): boolean => {
+  const value = unwrapTypeWrappers(node);
+  return Node.isPropertyAccessExpression(value) && HashSet.has(UNWRAPPER_NAMES, value.getName());
 };
 
-// `S.<codec>(schema)` over the schema or a composition of it (`S.fromJsonString(schema)`); options may follow.
-const isSchemaCodec =
-  (schemaNames: HashSet.HashSet<string>, bindings: HashSet.HashSet<string>) =>
+type FacadeContext = {
+  readonly schemaNames: HashSet.HashSet<string>;
+  readonly bindings: SchemaBindings;
+};
+
+const isCodecReference =
+  (context: FacadeContext) =>
   (node: Node): boolean =>
-    isCodecCall(schemaNames)(node) &&
-    O.exists(A.head(node.getArguments()), (argument) =>
-      A.some(
-        [argument, ...argument.getDescendantsOfKind(SyntaxKind.Identifier)],
-        (candidate) => Node.isIdentifier(candidate) && HashSet.has(bindings, candidate.getText())
+    isSchemaCodec(context.schemaNames, context.bindings)(followBinding(node));
+
+const isParameterOperand =
+  (parameters: HashSet.HashSet<string>) =>
+  (node: Node): boolean => {
+    const value = unwrapTypeWrappers(node);
+    return Node.isIdentifier(value) && HashSet.has(parameters, value.getText());
+  };
+
+// One forwarding form, tested against a call whose callee is already unwrapped.
+type ForwardingForm = (
+  context: FacadeContext,
+  parameters: HashSet.HashSet<string>,
+  call: CallExpression,
+  callee: Node
+) => boolean;
+
+// `decode(u)`: a codec applied to the function's own parameters.
+const forwardsCodecCall: ForwardingForm = (context, parameters, call, callee) =>
+  isCodecReference(context)(callee) &&
+  A.isReadonlyArrayNonEmpty(call.getArguments()) &&
+  A.every(call.getArguments(), isParameterOperand(parameters));
+
+// `S.asserts(schema, u)`: the binary assertion forwarding the parameters after the schema.
+const forwardsAssertion: ForwardingForm = (context, parameters, call) => {
+  const rest = A.drop(call.getArguments(), 1);
+  return (
+    O.exists(codecCallName(context.schemaNames)(call), (name) => Str.Equivalence(name, "asserts")) &&
+    O.exists(A.head(call.getArguments()), isSchemaOperand(context.bindings)) &&
+    A.isReadonlyArrayNonEmpty(rest) &&
+    A.every(rest, isParameterOperand(parameters))
+  );
+};
+
+// `Result.getOrThrow(decode(u))`: an unwrapper around a forwarding call.
+const forwardsUnwrapped: ForwardingForm = (context, parameters, call, callee) =>
+  isUnwrapperReference(callee) && O.exists(A.head(call.getArguments()), isForwardingExpression(context, parameters));
+
+const EFFECT_MODULE_PATTERN = /^effect(?:\/|$)/u;
+
+// Whether an identifier is a named or namespace import from `effect` or an `effect/*` module.
+const isEffectImport = (identifier: Node): boolean =>
+  O.exists(
+    localDeclaration(identifier),
+    (declaration) =>
+      (Node.isImportSpecifier(declaration) || Node.isNamespaceImport(declaration)) &&
+      EFFECT_MODULE_PATTERN.test(
+        declaration.getFirstAncestorByKindOrThrow(SyntaxKind.ImportDeclaration).getModuleSpecifierValue()
       )
+  );
+
+// Effect's own `name` function as a callee: the imported `pipe`, or `F.pipe`, `Effect.pipe`,
+// `F["pipe"]` on an effect import. A local or an unrelated module's function of that name is not.
+const isEffectFunctionCallee =
+  (name: string) =>
+  (callee: Node): boolean =>
+    O.exists(calleeMember(callee), (member) => Str.Equivalence(member.name, name)) &&
+    isEffectImport(
+      Node.isPropertyAccessExpression(callee) || Node.isElementAccessExpression(callee)
+        ? callee.getExpression()
+        : callee
     );
 
-// The expression a function-like returns: its expression body or its only `return`.
-const returnedExpression = (fn: Node): O.Option<Node> => {
-  if (!(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isMethodDeclaration(fn))) {
-    return O.none();
-  }
-  const body = fn.getBody();
-  if (body === undefined) {
-    return O.none();
-  }
-  if (!Node.isBlock(body)) {
-    return O.some(unwrapParentheses(body));
-  }
-  const statements = body.getStatements();
-  return statements.length === 1 && Node.isReturnStatement(statements[0])
-    ? pipe(O.fromUndefinedOr(statements[0].getExpression()), O.map(unwrapParentheses))
-    : O.none();
+const isPipeCallee = isEffectFunctionCallee("pipe");
+
+// `pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow)`, also through `F.pipe` or `Effect.pipe`.
+const forwardsPipe: ForwardingForm = (context, parameters, call, callee) => {
+  const args = call.getArguments();
+  return (
+    isPipeCallee(callee) &&
+    O.exists(A.get(args, 0), isParameterOperand(parameters)) &&
+    O.exists(A.get(args, 1), isCodecReference(context)) &&
+    A.every(A.drop(args, 2), isUnwrapperReference)
+  );
 };
 
-// A function whose only result is a schema codec applied to the function's own parameters:
-// `(u) => S.decodeUnknownOption(schema)(u)`, `parse(u) { return S.decodeUnknownSync(schema)(u) }`.
-const isForwardingCodecFunction =
-  (schemaNames: HashSet.HashSet<string>, bindings: HashSet.HashSet<string>) =>
+const FORWARDING_FORMS: ReadonlyArray<ForwardingForm> = [
+  forwardsCodecCall,
+  forwardsAssertion,
+  forwardsUnwrapped,
+  forwardsPipe,
+];
+
+// An expression that only runs a schema codec on the function's own parameters, in one of the
+// forwarding forms above.
+const isForwardingExpression =
+  (context: FacadeContext, parameters: HashSet.HashSet<string>) =>
+  (node: Node): boolean => {
+    const value = unwrapTypeWrappers(node);
+    if (!Node.isCallExpression(value)) {
+      return false;
+    }
+    const callee = unwrapTypeWrappers(value.getExpression());
+    return A.some(FORWARDING_FORMS, (form) => form(context, parameters, value, callee));
+  };
+
+// A function that only forwards its own parameters into a schema codec.
+const isForwardingFunction =
+  (context: FacadeContext) =>
   (fn: Node): boolean => {
     if (!(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isMethodDeclaration(fn))) {
       return false;
     }
     const parameters = HashSet.fromIterable(A.map(fn.getParameters(), (declaration) => declaration.getName()));
-    return O.exists(returnedExpression(fn), (returned) => {
-      if (!Node.isCallExpression(returned)) {
-        return false;
-      }
-      return (
-        isSchemaCodec(schemaNames, bindings)(unwrapParentheses(returned.getExpression())) &&
-        A.every(returned.getArguments(), (argument) => {
-          const operand = unwrapParentheses(argument);
-          return Node.isIdentifier(operand) && HashSet.has(parameters, operand.getText());
-        })
-      );
-    });
+    return O.exists(onlyReturned(fn), isForwardingExpression(context, parameters));
   };
 
-// A statics value that is a codec: an unapplied schema codec, a function that only forwards into
-// one, or a name the callback binds to either.
+// A statics value that is a codec: a schema codec, its `.bind(...)`, a `flow` of it into unwrappers,
+// or a function that only forwards into one, after following local bindings.
 const isCodecFacadeValue =
-  (schemaNames: HashSet.HashSet<string>, bindings: HashSet.HashSet<string>, callback: Node, depth: number) =>
+  (context: FacadeContext) =>
   (node: Node): boolean => {
-    const value = unwrapParentheses(node);
-    if (isSchemaCodec(schemaNames, bindings)(value) || isForwardingCodecFunction(schemaNames, bindings)(value)) {
+    const value = followBinding(node);
+    if (isSchemaCodec(context.schemaNames, context.bindings)(value) || isForwardingFunction(context)(value)) {
       return true;
     }
+    if (!Node.isCallExpression(value)) {
+      return false;
+    }
+    const callee = unwrapTypeWrappers(value.getExpression());
+    if (Node.isPropertyAccessExpression(callee) && Str.Equivalence(callee.getName(), "bind")) {
+      return isCodecReference(context)(callee.getExpression());
+    }
+    const args = value.getArguments();
     return (
-      Node.isIdentifier(value) &&
-      depth < 3 &&
-      pipe(
-        A.findFirst(
-          callback.getDescendantsOfKind(SyntaxKind.VariableDeclaration),
-          (declaration) => declaration.getName() === value.getText()
-        ),
-        O.flatMap((declaration) => O.fromUndefinedOr(declaration.getInitializer())),
-        O.exists(isCodecFacadeValue(schemaNames, bindings, callback, depth + 1))
-      )
+      isEffectFunctionCallee("flow")(callee) &&
+      O.exists(A.head(args), isCodecReference(context)) &&
+      A.every(A.drop(args, 1), isUnwrapperReference)
     );
   };
 
-const isCodecFacade =
-  (schemaNames: HashSet.HashSet<string>, callback: Node) =>
-  (property: Node): boolean => {
-    const bindings = schemaBindingNames(callback);
-    const isFacade = isCodecFacadeValue(schemaNames, bindings, callback, 0);
-    return Node.isPropertyAssignment(property)
-      ? O.exists(O.fromUndefinedOr(property.getInitializer()), isFacade)
-      : Node.isShorthandPropertyAssignment(property)
-        ? isFacade(property.getNameNode())
-        : isForwardingCodecFunction(schemaNames, bindings)(property);
-  };
+// The value a statics member exposes: an initializer, the shorthand's local binding, or a getter's
+// returned expression. Methods are judged as functions instead.
+const staticsMemberValue = (member: StaticsMember): O.Option<Node> => {
+  if (Node.isPropertyAssignment(member)) {
+    return O.fromUndefinedOr(member.getInitializer());
+  }
+  if (Node.isShorthandPropertyAssignment(member)) {
+    return pipe(
+      O.fromUndefinedOr(member.getProject().getTypeChecker().getShorthandAssignmentValueSymbol(member)),
+      O.flatMap((symbol) => A.head(symbol.getDeclarations())),
+      O.flatMap(constInitializer)
+    );
+  }
+  return Node.isGetAccessorDeclaration(member) ? onlyReturned(member) : O.none();
+};
 
-const facadeName = (property: Node): string =>
-  Node.isPropertyAssignment(property) ||
-  Node.isShorthandPropertyAssignment(property) ||
-  Node.isMethodDeclaration(property)
-    ? property.getName()
-    : "member";
+// Whether a statics member is a codec facade; a domain helper is not.
+const isCodecFacadeMember =
+  (context: FacadeContext) =>
+  (member: StaticsMember): boolean =>
+    Node.isMethodDeclaration(member)
+      ? isForwardingFunction(context)(member)
+      : O.exists(staticsMemberValue(member), isCodecFacadeValue(context));
+
+// The key of a statics member that is a codec facade; none for a domain helper or an unknown key.
+const codecFacadeName =
+  (context: FacadeContext) =>
+  (member: StaticsMember): O.Option<string> =>
+    isCodecFacadeMember(context)(member) ? memberKey(member) : O.none();
 
 const codecFacadeCandidates = (sourceFile: SourceFile): ReadonlyArray<ParityCandidate> => {
   if (!WITH_STATICS_SIGNAL_PATTERN.test(sourceFile.getFullText())) {
@@ -1653,17 +1911,23 @@ const codecFacadeCandidates = (sourceFile: SourceFile): ReadonlyArray<ParityCand
     A.flatMap((call) =>
       pipe(
         A.last(call.getArguments()),
+        O.flatMap((argument) => resolveStaticsCallback(argument)),
         O.flatMap((callback) =>
           pipe(
             returnedStaticsObject(callback),
-            O.filter(Node.isObjectLiteralExpression),
-            O.map((object) => A.filter(object.getProperties(), isCodecFacade(schemaNames, callback)))
+            O.map((object) => {
+              const facadeName = codecFacadeName({ schemaNames, bindings: schemaBindings(callback, call) });
+              return A.getSomes(
+                A.map(staticsMembers(object), (member) =>
+                  O.map(facadeName(member), (name) => ({ wrapper: codecFacadeWrapper(name), node: member }))
+                )
+              );
+            })
           )
         ),
-        O.getOrElse(A.empty<Node>)
+        O.getOrElse(A.empty<ParityCandidate>)
       )
-    ),
-    A.map((property) => ({ wrapper: codecFacadeWrapper(facadeName(property)), node: property }))
+    )
   );
 };
 

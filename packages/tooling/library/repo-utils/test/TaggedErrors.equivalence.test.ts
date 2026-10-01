@@ -17,6 +17,7 @@ import { OptionInjectionError } from "@beep/repo-utils/errors/OptionInjectionErr
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { flow, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -27,12 +28,14 @@ const expectDeclaredEquivalence = <A>(schema: S.Schema<A>, a: A, b: A, different
   assertFalse(same(a, different));
 };
 
-const scopeId = ProjectScopeId.fromString("tsconfig.json::syntax#workspaceOnly");
-const otherScopeId = ProjectScopeId.fromString("other/tsconfig.json::syntax#workspaceOnly");
+const decodeProjectScopeId = flow(S.decodeUnknownResult(ProjectScopeId), Result.getOrThrow);
+const decodeSymbolId = flow(S.decodeUnknownResult(SymbolId), Result.getOrThrow);
+const scopeId = decodeProjectScopeId("tsconfig.json::syntax#workspaceOnly");
+const otherScopeId = decodeProjectScopeId("other/tsconfig.json::syntax#workspaceOnly");
 const tsConfigPath = TsConfigFilePath.make("tsconfig.json");
 const filePath = TypeScriptImplementationFilePath.make("src/example.ts");
 const otherFilePath = TypeScriptImplementationFilePath.make("src/other.ts");
-const symbolId = SymbolId.fromString("src/example.ts::Example#ClassDeclaration");
+const symbolId = decodeSymbolId("src/example.ts::Example#ClassDeclaration");
 
 describe("repo-utils declared-field equivalence", () => {
   it("compares TsMorphServiceUnavailableError by fields", () => {

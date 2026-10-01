@@ -410,4 +410,23 @@ describe("@beep/govinfo", () => {
       })
     )
   );
+
+  it.layer(makeGovinfoUnitLayer(keyedConfig), { timeout: "10 seconds" })((it) =>
+    it.effect(
+      "maps an undecodable response to a transport GovinfoError",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* GovinfoTestHttp;
+        const govinfo = yield* Govinfo;
+        yield* testHttp.reset;
+        yield* testHttp.respondWith(() =>
+          Effect.succeed(new Response("not json", { headers: { "content-type": "text/plain" }, status: 200 }))
+        );
+
+        const error = yield* Effect.flip(govinfo.search(makePayload()));
+
+        expect(error.reason).toBe("transport");
+        assertNone(error.status);
+      })
+    )
+  );
 });
