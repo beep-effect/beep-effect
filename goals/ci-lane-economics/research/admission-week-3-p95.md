@@ -208,6 +208,5 @@ day come from the census TSV's unique run ids.
   contains three of the breaching days above (09-26, 09-27, 09-29), so
   censusing it before a queue move lands would measure the same fault.
 - The remaining failure is hosted-runner concurrency under agent fan-out.
-  Shard re-splits cannot fix it. The proposed (unsigned) next decision is
-  `research/repair-decision-3-proposed.md`. No shard or fleet move is made
-  without signing it.
+  Shard re-splits cannot fix it. The next decision, proposed here and signed
+  2026-10-01, is `research/repair-decision-3.md`.
