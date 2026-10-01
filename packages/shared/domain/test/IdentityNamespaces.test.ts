@@ -484,6 +484,14 @@ describe("P3 identity namespaces", () => {
       yield* expectFailure(decodeUnknownIdentityAnyIdentityComposer({ identifier: "@beep/fake" }));
       yield* expectFailure(decodeUnknownIdentityAnyIdentityComposer(() => "@beep/fake/IdentityComposerProbe"));
       yield* expectFailure(decodeUnknownIdentityAnyIdentityComposer(wrongProbeResult));
+
+      const throwingProbe = Object.assign(() => "@beep/fake/IdentityComposerProbe", wrongProbeResult, {
+        string: (): string => {
+          throw new globalThis.Error("probe failure");
+        },
+      });
+      assertFalse(Identity.isIdentityComposer(throwingProbe));
+      yield* expectFailure(decodeUnknownIdentityAnyIdentityComposer(throwingProbe));
     })
   );
 });
