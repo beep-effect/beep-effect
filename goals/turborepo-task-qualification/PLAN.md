@@ -3171,3 +3171,105 @@ reasons and retirement conditions are explicit. This adds six reviewed exception
 rows to the inventory; it does not baseline the remaining open findings or waive
 qualification evidence. The isolated detector run reports 15 new findings after
 recognizing these exceptions.
+
+
+### 2026-10-01 structural validator repair continuation
+
+PR #1389 is published at `5b9c4dda11` after integrating main `ed09a085f3`.
+The reviewed batch passed full CLI audit (681.8 seconds) and docgen (24.9 seconds)
+against its captured source hashes. That proof predates the following changes.
+The three reviewer threads were already resolved upstream when Yeet reply ran;
+no reply was posted. Publication still ended red on Fallow, so this is not a
+merge-ready or qualification closeout.
+
+Signed-receipt validation now uses schema-derived field equivalences and separate
+runtime, outcome, wire, seed, transfer, archive and control validation phases.
+Protocol validation similarly separates native-run, population, exchange,
+integrity-read and transport-failure checks. Existing refusal diagnostics and
+ordering are retained. Both validators have zero scoped health findings.
+Primary integration passed 35 validator tests; the protocol-only isolated proof
+passed 27 tests and package lint/check.
+
+Repeated ephemeral capability generation now shares a lazy crypto Effect, with
+fresh random bytes on every execution. Producer metadata inspection is shared
+across issuer material, approval and acceptance records; caller-specific bounds,
+revocation and no-follow reads remain intact. Their focused primary proof passed
+72 tests. Fixture request routing, atomic uploads, artifact reads, response
+recording and fault injection are separate phases; the final focused proof passed
+51 tests, package lint/check, and zero fixture health findings.
+
+The whole current health inventory has 13 remaining findings, down from 22.
+No thresholds, suppressions or regression baselines were changed. This batch is
+uncommitted and requires new full package verification and Yeet publication.
+Frozen native v9 bindings remain stale, no current real tuple is qualified, and
+native matrix, accepted import, semantic population/adoption, reflection/lifecycle
+and full merge-ready closeout remain required.
+
+
+The subsequent protocol-worker repair separates capture-entry inspection, fixture
+root preparation, bounded native process execution, summary verification, cache
+origin/output validation and outcome recording. Global capture count/byte limits,
+private networking, executable pins, rejection exit behavior, output inventory,
+and final producer identity rechecks remain. The current health scan has eleven
+remaining findings and none in the protocol runner. Twenty-seven protocol/fixture
+tests pass; these do not establish native worker execution or qualification. The
+latest package lint/type proof is recorded separately; final full verification
+and all native acceptance requirements remain open.
+
+
+Further structural repairs remove the introduced signed seed/producer duplication,
+separate fresh-authority and reader-protection checks, derive signed approval
+binding comparisons from schema fields, absorb exact archive-header validation
+into a named schema, and separate signed activation verification from projection.
+The latest audit attributes all four remaining clone groups to inherited code;
+all three introduced groups are removed. The current health scan has six remaining
+findings. No regression baseline, threshold or suppression changed.
+
+The archive/approval/fixture batch passes 83 focused tests, test typechecking,
+and package lint/check. The signed activation phase passes 19 focused tests and
+package lint/check. These are source-level proofs; native qualification remains
+unproven. The full structural batch is uncommitted and needs a fresh full package
+proof. A remote PR refresh encountered GraphQL quota, recorded in OPPORTUNITIES;
+remote status must be refreshed before publication/closeout claims.
+
+
+### 2026-10-01 source-health closure and current-main integration
+
+Evidence derivation separates fresh, remote-replay and shadow comparisons;
+promotion policy separates signed-contract failures without changing blocker
+order. The repo-configs package passed its full audit and docgen proof. The
+supervisor separates issuer mount exclusion and supervised receipt checks;
+pilot invocation setup and signed capture privacy have explicit phases. Their
+55 focused tests and package lint/type checks pass.
+
+The final pilot setup repair separates environment checks, reviewed activation
+resolution and source issuer exclusion. An introduced scope error in the final
+integrity check was detected and fixed by returning the original activation
+request with its verified preview. All 45 affected tests and package lint/type
+checks pass. The pre-merge source-health scan reports zero findings; no threshold,
+baseline or suppression changed.
+
+Main advanced to `a448474b15`, including dependency, Effect, Vitest and Turbo
+updates. It was merged as `545de03f4c`; SHA-256 checks prove all sixteen dirty
+files unchanged through the merge. Installation from the merged frozen lockfile
+succeeded. Source gates and full package proofs must now run on this dependency
+set. Earlier scoped and full results remain historical. Native frozen bindings
+must be refreshed against this new base before qualification execution.
+
+
+After installation on merged main, Fallow audit and health both pass with zero
+introduced findings. Effect Vitest reports zero introduced findings and 2,182
+resolved. Package lint/type checks pass. The fresh full repo-configs proof passes
+its audit (11.1 seconds) and docgen (3.7 seconds). Full CLI verification is running
+against fourteen captured unchanged source/test file hashes. This is a live proof,
+not a completed result. Source remains frozen until it settles. The fresh census
+is preparatory; semantic population closure and native qualification remain open.
+
+
+The full CLI proof completed successfully on `545de03f4c`: audit 631.6 seconds,
+docgen 22.3 seconds. All fourteen captured source/test file hashes were unchanged.
+Together with the fresh full repo-configs proof and passing Fallow/Effect Vitest
+gates, this verifies the structural source repair batch on the updated dependency
+set. Native qualification and semantic population closure remain unproven. The
+new current-source-review-refresh receipt records stale historical review bindings
+without renewing them. Publish this tested batch through Yeet before native work.

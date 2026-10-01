@@ -65,6 +65,7 @@ export {
   hashCacheProducerContract,
   initializeCacheProducerIssuer,
   inspectCacheProducerDirectory,
+  inspectCacheProducerFile,
   makeCacheProducerIssuer,
   openCacheProducerIssuer,
   openCacheProducerVerifier,

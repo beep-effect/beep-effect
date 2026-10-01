@@ -438,24 +438,31 @@ const samePins = S.toEquivalence(CacheQualificationPins);
 const sameClient = S.toEquivalence(CacheClientPin);
 const pairKinds = CacheEvidenceKind.pick(["fresh-fresh", "fresh-remote-hit"]).literals;
 
+const signedContractFailures = (contract: CacheTaskContract): ReadonlyArray<string> => {
+  let failures = A.empty<string>();
+  if (Str.endsWith("-private-loopback-signed-v1")(contract.key.profile) && O.isNone(contract.signedExecution))
+    failures = A.append(failures, "signed-execution-missing-profile");
+  return O.match(contract.signedExecution, {
+    onNone: () => failures,
+    onSome: (execution) => {
+      const expected = CacheQualificationKey.make({
+        ...execution.sourceKey,
+        profile: `${execution.sourceKey.profile}-private-loopback-signed-v1`,
+      });
+      if (!sameKey(contract.key, expected)) failures = A.append(failures, "signed-execution-tuple-drift");
+      if (O.isNone(contract.activation)) failures = A.append(failures, "signed-execution-missing-activation");
+      else if (contract.activation.value.sourceConfiguration !== execution.sourceConfiguration)
+        failures = A.append(failures, "signed-execution-source-drift");
+      return failures;
+    },
+  });
+};
+
 const contractPromotionFailures = (
   contract: CacheTaskContract,
   observations: ReadonlyArray<CacheQualificationObservation>
 ): ReadonlyArray<string> => {
-  let failures = A.empty<string>();
-  if (Str.endsWith("-private-loopback-signed-v1")(contract.key.profile) && O.isNone(contract.signedExecution))
-    failures = A.append(failures, "signed-execution-missing-profile");
-  if (O.isSome(contract.signedExecution)) {
-    const execution = contract.signedExecution.value;
-    const expected = CacheQualificationKey.make({
-      ...execution.sourceKey,
-      profile: `${execution.sourceKey.profile}-private-loopback-signed-v1`,
-    });
-    if (!sameKey(contract.key, expected)) failures = A.append(failures, "signed-execution-tuple-drift");
-    if (O.isNone(contract.activation)) failures = A.append(failures, "signed-execution-missing-activation");
-    else if (contract.activation.value.sourceConfiguration !== execution.sourceConfiguration)
-      failures = A.append(failures, "signed-execution-source-drift");
-  }
+  let failures = signedContractFailures(contract);
   if (contract.key.layer !== "turbo-task-result") failures = A.append(failures, "reuse-layer-owned-elsewhere");
   if (!contract.configuration.cache) failures = A.append(failures, "reuse-disabled-contract");
   if (contract.configuration.persistent || contract.configuration.interactive)

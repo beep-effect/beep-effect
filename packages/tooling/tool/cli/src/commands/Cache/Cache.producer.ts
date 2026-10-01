@@ -13,6 +13,7 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import {
   currentEffectiveUserIdOption,
@@ -39,6 +40,16 @@ const encodeReceipt = S.encodeEffect(S.fromJsonString(CacheProducerBundle));
 const digest = S.decodeEffect(Sha256HexFromBytes);
 const maxLifetimeMs = Duration.toMillis(Duration.hours(24));
 const persistedMaterialBytes = 96;
+const sameSignedApprovalBinding = S.toEquivalence(
+  S.Struct(
+    Struct.pick(CacheProducerBinding.fields, [
+      "activatedConfigurationDigest",
+      "signedConfigurationDigest",
+      "signedRootConfiguration",
+      "runtimeKeyDigest",
+    ])
+  )
+);
 
 /**
  * Bind every reviewed task obligation to the producer's policy identity.
@@ -56,6 +67,32 @@ export const hashCacheProducerContract = Effect.fn("Producer.hashContract")(func
   const text = yield* encodeContract(contract);
   return yield* digest(new TextEncoder().encode(`beep/cache-producer-contract/v1\0${text}`));
 });
+const validateSignedProducerApproval = Effect.fn("Producer.validateSignedApproval")(function* (
+  approval: CacheProducerApproval
+) {
+  const { binding, contract } = approval;
+  if (O.isSome(contract.signedExecution)) {
+    const execution = contract.signedExecution.value;
+    const expectedKey = CacheQualificationKey.make({
+      ...execution.sourceKey,
+      profile: `${execution.sourceKey.profile}-private-loopback-signed-v1`,
+    });
+    if (
+      !S.toEquivalence(CacheQualificationKey)(contract.key, expectedKey) ||
+      O.isNone(contract.activation) ||
+      contract.activation.value.sourceConfiguration !== execution.sourceConfiguration ||
+      !sameSignedApprovalBinding(binding, {
+        activatedConfigurationDigest: execution.activatedConfiguration,
+        signedConfigurationDigest: contract.pins.configuration,
+        signedRootConfiguration: execution.signedRootConfiguration.sha256,
+        runtimeKeyDigest: execution.runtimeKeys[binding.channel],
+      }) ||
+      contract.pins.toolchain !== execution.runtimeKeys.stable
+    )
+      return yield* CacheCommandError.new("Producer approval differs from its reviewed signed execution profile.");
+  }
+});
+
 /**
  * Check the complete reviewed contract against its fixed producer binding.
  *
@@ -95,24 +132,7 @@ export const validateCacheProducerApproval = Effect.fn("Producer.validateApprova
     binding.toolchainDigest !== sourceToolchain
   )
     return yield* CacheCommandError.new("Producer approval's full policy differs from its fixed binding.");
-  if (O.isSome(contract.signedExecution)) {
-    const execution = contract.signedExecution.value;
-    const expectedKey = CacheQualificationKey.make({
-      ...execution.sourceKey,
-      profile: `${execution.sourceKey.profile}-private-loopback-signed-v1`,
-    });
-    if (
-      !S.toEquivalence(CacheQualificationKey)(contract.key, expectedKey) ||
-      O.isNone(contract.activation) ||
-      contract.activation.value.sourceConfiguration !== execution.sourceConfiguration ||
-      binding.activatedConfigurationDigest !== execution.activatedConfiguration ||
-      binding.signedConfigurationDigest !== contract.pins.configuration ||
-      binding.signedRootConfiguration !== execution.signedRootConfiguration.sha256 ||
-      binding.runtimeKeyDigest !== execution.runtimeKeys[binding.channel] ||
-      contract.pins.toolchain !== execution.runtimeKeys.stable
-    )
-      return yield* CacheCommandError.new("Producer approval differs from its reviewed signed execution profile.");
-  }
+  yield* validateSignedProducerApproval(approval);
 });
 
 /**
@@ -335,6 +355,34 @@ export const inspectCacheProducerDirectory = Effect.fn("Producer.inspectIssuerDi
   return uid.value;
 });
 
+/**
+ * Inspect the common ownership and single-link boundary of a private producer file.
+ *
+ * **Details**
+ * Callers retain their own byte bounds and contained no-follow reads. This check
+ * rejects unsafe metadata before either issuer or acceptance bytes are consumed.
+ *
+ * **Example** (Reference the private metadata boundary)
+ * ```ts
+ * import { inspectCacheProducerFile } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof inspectCacheProducerFile === "function")
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const inspectCacheProducerFile = Effect.fn("Producer.inspectPrivateFile")(function* (
+  file: string,
+  uid: number,
+  diagnostic: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const info = yield* fs.stat(file);
+  if (info.type !== "File" || (info.mode & 0o777) !== 0o600 || !O.contains(info.uid, uid) || !O.contains(info.nlink, 1))
+    return yield* CacheCommandError.new(diagnostic);
+  return info;
+});
+
 const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -343,14 +391,9 @@ const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(function* (d
   const entries = yield* fs.readDirectory(directory);
   if (A.contains(entries, "revoked")) return yield* CacheCommandError.new("Producer issuer is revoked.");
   const file = path.join(directory, "issuer.key");
-  const info = yield* fs.stat(file);
-  if (
-    info.type !== "File" ||
-    (info.mode & 0o777) !== 0o600 ||
-    !O.contains(info.uid, uid) ||
-    !O.contains(info.nlink, 1) ||
-    info.size !== BigInt(persistedMaterialBytes)
-  )
+  const diagnostic = "Producer material must be a private single-link approval-bound file.";
+  const info = yield* inspectCacheProducerFile(file, uid, diagnostic);
+  if (info.size !== BigInt(persistedMaterialBytes))
     return yield* CacheCommandError.new("Producer material must be a private single-link approval-bound file.");
   const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(persistedMaterialBytes));
   if (O.isNone(read.contents) || read.contents.value.length !== persistedMaterialBytes)
@@ -413,20 +456,13 @@ export const openCacheProducerIssuer = Effect.fn("Producer.openCacheProducerIssu
 });
 
 const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(function* (directory: string) {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const uid = yield* inspectCacheProducerDirectory(directory);
   const file = path.join(directory, "approval.json");
-  const info = yield* fs.stat(file);
   const limit = 16384;
-  if (
-    info.type !== "File" ||
-    (info.mode & 0o777) !== 0o600 ||
-    !O.contains(info.uid, uid) ||
-    !O.contains(info.nlink, 1) ||
-    info.size === BigInt(0) ||
-    info.size > BigInt(limit)
-  )
+  const diagnostic = "Producer approval must be a bounded private single-link file.";
+  const info = yield* inspectCacheProducerFile(file, uid, diagnostic);
+  if (info.size === BigInt(0) || info.size > BigInt(limit))
     return yield* CacheCommandError.new("Producer approval must be a bounded private single-link file.");
   const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(limit));
   if (O.isNone(read.contents)) return yield* CacheCommandError.new("Producer approval is unavailable.");

@@ -2796,3 +2796,13 @@ the override preserves the normal 30-second limit and uses the existing deep-swe
 policy. The 400-run floor passes locally in 27.54 seconds including startup.
 A test-policy check for explicit timeouts on floor-scaled properties would catch
 this mismatch before hosted execution. No sample count or assertion was removed.
+
+
+### 2026-10-01 — Remote state refresh reached GraphQL quota
+
+While refreshing PR #1389 before the next structural repair,
+`gh pr view 1389 --json state,headRefOid` failed with
+`GraphQL: API rate limit already exceeded`. No remote state was inferred from
+that failure; local repair continues with the published head unchanged. Shared
+account query budgeting and cached exact-head snapshots would reduce redundant
+status requests while preserving the final fresh closeout requirement.

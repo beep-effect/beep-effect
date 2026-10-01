@@ -13,6 +13,7 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
@@ -100,23 +101,27 @@ const scanCaptures = Effect.fn("CacheProtocol.scanCaptures")(function* (
   let pending = [""];
   let count = 0;
   let bytes = 0;
+  const inspectEntry = Effect.fn("CacheProtocol.inspectCaptureEntry")(function* (directoryName: string, name: string) {
+    count += 1;
+    if (count > 64) return yield* CacheCommandError.new("Protocol fixture file count exceeded its bound.");
+    const relative = path.join(directoryName, name);
+    const info = yield* fs.stat(path.join(directory, relative));
+    if (info.type === "Directory") return O.some(relative);
+    {
+      const content = yield* readCacheExperimentBytes(directory, relative, 1024 * 1024);
+      bytes += content.byteLength;
+      if (bytes > 4 * 1024 * 1024) return yield* CacheCommandError.new("Protocol fixture bytes exceeded their bound.");
+      if (!safe(new TextDecoder().decode(content)))
+        return yield* CacheCommandError.new("Protocol artifact contains synthetic credential material.");
+    }
+    return O.none<string>();
+  });
   while (pending.length > 0) {
     const directoryName = O.getOrThrow(A.head(pending));
     pending = A.drop(pending, 1);
     for (const name of yield* fs.readDirectory(path.join(directory, directoryName))) {
-      count += 1;
-      if (count > 64) return yield* CacheCommandError.new("Protocol fixture file count exceeded its bound.");
-      const relative = path.join(directoryName, name);
-      const info = yield* fs.stat(path.join(directory, relative));
-      if (info.type === "Directory") pending.push(relative);
-      else {
-        const content = yield* readCacheExperimentBytes(directory, relative, 1024 * 1024);
-        bytes += content.byteLength;
-        if (bytes > 4 * 1024 * 1024)
-          return yield* CacheCommandError.new("Protocol fixture bytes exceeded their bound.");
-        if (!safe(new TextDecoder().decode(content)))
-          return yield* CacheCommandError.new("Protocol artifact contains synthetic credential material.");
-      }
+      const nested = yield* inspectEntry(directoryName, name);
+      if (O.isSome(nested)) pending.push(nested.value);
     }
   }
 });
@@ -167,9 +172,7 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
     const roots = A.empty<CacheProtocolIsolationRoot>();
     const runs: Array<CacheProtocolObservation["runs"][number]> = [];
     const failures: Array<CacheProtocolReadFailure> = [];
-    for (const name of cases.literals) {
-      const fault = name === "producer" || name === "replay" || name === "wrong-key" ? "none" : name;
-      yield* fixture.setScenario(CacheFixtureScenario.make({ id: name, fault }));
+    const prepareRoot = Effect.fn("CacheProtocol.prepareRoot")(function* (name: CacheProtocolIsolationRoot["case"]) {
       const work = path.join(directory, name);
       yield* fs.makeDirectory(path.join(work, ".turbo"), { recursive: true });
       roots.push(
@@ -200,6 +203,12 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
         "build.ts",
         'if (Bun.env.PROBE_DENY_EXECUTION === "1") process.exit(42);\nawait Bun.write("dist/result.txt", "owned-signed-fixture-output\\n");\n'
       );
+      return work;
+    });
+    const executeCase = Effect.fn("CacheProtocol.executeCase")(function* (
+      name: CacheProtocolIsolationRoot["case"],
+      work: string
+    ) {
       const captured = yield* runCapturedStreams({
         command: "/usr/bin/bwrap",
         args: [
@@ -245,6 +254,12 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
       }).pipe(Effect.timeout(Duration.seconds(120)));
       if (captured.truncated) return yield* CacheCommandError.new("Protocol native capture exceeded its bound.");
       yield* scanCaptures(work, secrets, [captured.stdout, captured.stderr]);
+      return captured;
+    });
+    const readNativeSummary = Effect.fn("CacheProtocol.readNativeSummary")(function* (
+      work: string,
+      captured: Effect.Success<ReturnType<typeof executeCase>>
+    ) {
       const names = yield* fs.readDirectory(path.join(work, ".turbo/runs"));
       if (names.length !== 1) return yield* CacheCommandError.new("Protocol run requires exactly one native summary.");
       const bytes = yield* readCacheExperimentBytes(work, path.join(".turbo/runs", O.getOrThrow(A.head(names))));
@@ -261,14 +276,12 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
         task.execution.exitCode !== captured.exitCode
       )
         return yield* CacheCommandError.new("Protocol native summary disagrees with its process or client pin.");
-      const outputExists = yield* fs.exists(path.join(work, "dist/result.txt"));
-      const outputRootExists = yield* fs.exists(path.join(work, "dist"));
-      const positive = name === "producer" || name === "replay";
-      if (
-        (positive && (captured.exitCode !== 0 || !outputExists)) ||
-        (!positive && (captured.exitCode !== 42 || outputRootExists))
-      )
-        return yield* CacheCommandError.new("Protocol outcome omitted output or allowed rejected fallback execution.");
+      return Tuple.make(task, bytes);
+    });
+    const validateNativeCacheOrigin = Effect.fn("CacheProtocol.validateNativeCacheOrigin")(function* (
+      name: CacheProtocolIsolationRoot["case"],
+      task: Effect.Success<ReturnType<typeof readNativeSummary>>[0]
+    ) {
       if (
         task.cache.status !== (name === "replay" ? "HIT" : "MISS") ||
         (name === "replay" && !O.contains("REMOTE")(task.cache.source))
@@ -276,14 +289,37 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
         return yield* CacheCommandError.new(
           "Protocol replay requires an actual remote hit; other cases require misses."
         );
+    });
+    const validateNativeOutcome = Effect.fn("CacheProtocol.validateNativeOutcome")(function* (
+      name: CacheProtocolIsolationRoot["case"],
+      work: string,
+      captured: Effect.Success<ReturnType<typeof executeCase>>,
+      task: Effect.Success<ReturnType<typeof readNativeSummary>>[0]
+    ) {
+      const outputExists = yield* fs.exists(path.join(work, "dist/result.txt"));
+      const outputRootExists = yield* fs.exists(path.join(work, "dist"));
+      const positive = name === "producer" || name === "replay";
+      if (captured.exitCode !== (positive ? 0 : 42) || (positive ? !outputExists : outputRootExists))
+        return yield* CacheCommandError.new("Protocol outcome omitted output or allowed rejected fallback execution.");
+      yield* validateNativeCacheOrigin(name, task);
       if (
         positive &&
         !S.toEquivalence(S.Array(S.String))(yield* fs.readDirectory(path.join(work, "dist")), ["result.txt"])
       )
         return yield* CacheCommandError.new("Protocol fixture produced an undeclared output.");
+      return positive;
+    });
+    const recordNativeOutcome = Effect.fn("CacheProtocol.recordNativeOutcome")(function* (
+      name: CacheProtocolIsolationRoot["case"],
+      work: string,
+      captured: Effect.Success<ReturnType<typeof executeCase>>,
+      task: Effect.Success<ReturnType<typeof readNativeSummary>>[0],
+      bytes: Uint8Array,
+      positive: boolean
+    ) {
       const summaryDigest = yield* hashBytes(bytes);
       if (extraCase(name))
-        failures.push(
+        return failures.push(
           CacheProtocolReadFailure.make({
             case: name,
             taskHash: task.hash,
@@ -292,21 +328,28 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
             restoredOutputs: 0,
           })
         );
-      else {
-        const output = positive ? yield* readCacheExperimentBytes(work, "dist/result.txt", 4096) : new Uint8Array();
-        runs.push({
-          case: name,
-          taskHash: task.hash,
-          client: request.client,
-          summary: summaryDigest,
-          outcome: positive
-            ? {
-                _tag: name === "producer" ? "Produced" : "Replayed",
-                output: { sha256: yield* hashBytes(output), bytes: S.Natural.make(output.byteLength) },
-              }
-            : { _tag: "Rejected", exitCode: captured.exitCode, restoredOutputs: S.Natural.make(0) },
-        });
-      }
+      const output = positive ? yield* readCacheExperimentBytes(work, "dist/result.txt", 4096) : new Uint8Array();
+      return runs.push({
+        case: name,
+        taskHash: task.hash,
+        client: request.client,
+        summary: summaryDigest,
+        outcome: positive
+          ? {
+              _tag: name === "producer" ? "Produced" : "Replayed",
+              output: { sha256: yield* hashBytes(output), bytes: S.Natural.make(output.byteLength) },
+            }
+          : { _tag: "Rejected", exitCode: captured.exitCode, restoredOutputs: S.Natural.make(0) },
+      });
+    });
+    for (const name of cases.literals) {
+      const fault = name === "producer" || name === "replay" || name === "wrong-key" ? "none" : name;
+      yield* fixture.setScenario(CacheFixtureScenario.make({ id: name, fault }));
+      const work = yield* prepareRoot(name);
+      const captured = yield* executeCase(name, work);
+      const [task, bytes] = yield* readNativeSummary(work, captured);
+      const positive = yield* validateNativeOutcome(name, work, captured, task);
+      yield* recordNativeOutcome(name, work, captured, task, bytes, positive);
     }
     const events = yield* fixture.events;
     const exchanges = A.filter(

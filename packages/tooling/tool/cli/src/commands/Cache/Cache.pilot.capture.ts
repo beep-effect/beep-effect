@@ -26,7 +26,20 @@ const archiveLogPath = "packages/foundation/modeling/identity/.turbo/turbo-lint.
 const ArchiveLogSize = S.Natural.check(S.isLessThanOrEqualTo(64 * 1024)).annotate(
   $I.annote("ArchiveLogSize", { description: "The native pilot log's maximum uncompressed byte count." })
 );
-const isArchiveLogSize = S.is(ArchiveLogSize);
+const ArchiveLogHeader = S.Struct({
+  cksumValid: S.Literal(true),
+  nullBlock: S.Literal(false),
+  needPax: S.Literal(false),
+  type: S.Literal("File"),
+  path: S.Literal(archiveLogPath),
+  linkpath: S.optionalKey(S.Union([S.Undefined, S.Literal("")])),
+  size: ArchiveLogSize,
+}).annotate(
+  $I.annote("ArchiveLogHeader", {
+    description: "Exact bounded regular task-log header accepted from a native signed archive.",
+  })
+);
+const isArchiveLogHeader = S.is(ArchiveLogHeader);
 
 /**
  * Inspect a native zstd archive without extracting any file.
@@ -63,17 +76,9 @@ export const inspectCacheSignedPilotArchive = Effect.fn("CachePilot.inspectSigne
     try: () => new Header(Buffer.from(bytes.subarray(0, 512))),
     catch: () => CacheCommandError.new("Signed pilot archive header is invalid."),
   });
-  const size = header.size;
-  if (
-    !header.cksumValid ||
-    header.nullBlock ||
-    header.needPax ||
-    header.type !== "File" ||
-    header.path !== archiveLogPath ||
-    (header.linkpath !== undefined && header.linkpath !== "") ||
-    !isArchiveLogSize(size)
-  )
+  if (!isArchiveLogHeader(header))
     return yield* CacheCommandError.new("Signed pilot archive is not its expected bounded regular task log.");
+  const size = header.size;
   const framedBytes = 512 + Math.ceil(size / 512) * 512 + 1024;
   if (bytes.byteLength !== framedBytes || bytes.subarray(512 + size).some((byte) => byte !== 0))
     return yield* CacheCommandError.new("Signed pilot archive has extra entries, metadata or nonzero padding.");

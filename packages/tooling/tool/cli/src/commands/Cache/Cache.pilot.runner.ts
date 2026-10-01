@@ -154,13 +154,18 @@ BunRuntime.runMain(Effect.gen(function* () {
           ],
           fs.realPath
         );
-        if (O.isSome(protectedIssuerMaterial)) {
-          const issuer = yield* fs.realPath(protectedIssuerMaterial.value);
-          if (
-            A.some([...mounts, "/usr"], (mount) => isResolvedPathWithinRoot(path, { root: mount, candidate: issuer }))
-          )
-            return yield* CacheCommandError.new("Issuer material must remain outside every signed pilot input mount.");
-        }
+        const verifyIssuerMountIsolation = Effect.fn("CachePilot.verifyIssuerMountIsolation")(function* () {
+          if (O.isSome(protectedIssuerMaterial)) {
+            const issuer = yield* fs.realPath(protectedIssuerMaterial.value);
+            if (
+              A.some([...mounts, "/usr"], (mount) => isResolvedPathWithinRoot(path, { root: mount, candidate: issuer }))
+            )
+              return yield* CacheCommandError.new(
+                "Issuer material must remain outside every signed pilot input mount."
+              );
+          }
+        });
+        yield* verifyIssuerMountIsolation();
         const captured = yield* runCapturedStreams({
           command: "/usr/bin/bwrap",
           args: [
@@ -210,21 +215,24 @@ BunRuntime.runMain(Effect.gen(function* () {
           Effect.flatMap(decodeCacheExperimentText),
           Effect.flatMap(JsonStringCodec(CacheSignedPilotReceipt).decode)
         );
-        if (
-          report.channel !== request.pilot.channel ||
-          !S.toEquivalence(CacheClientPin)(report.client, request.pilot.client) ||
-          report.bun.sha256 !== (yield* hashCacheExperimentExecutable(bun))
-        )
-          return yield* CacheCommandError.new("Signed pilot report differs from its supervised identities.");
-        if (O.isSome(protectedIssuerMaterial)) {
+        const verifySupervisedReceipt = Effect.fn("CachePilot.verifySupervisedReceipt")(function* () {
           if (
-            !O.contains(issuerDigest, yield* hashIssuerMaterial(protectedIssuerMaterial.value)) ||
-            !A.every(report.comparisons, (pair) => O.contains(pair.protection.issuerMaterialDenied, true))
+            report.channel !== request.pilot.channel ||
+            !S.toEquivalence(CacheClientPin)(report.client, request.pilot.client) ||
+            report.bun.sha256 !== (yield* hashCacheExperimentExecutable(bun))
           )
-            return yield* CacheCommandError.new(
-              "Persistent issuer material was exposed or changed during the signed pilot."
-            );
-        }
+            return yield* CacheCommandError.new("Signed pilot report differs from its supervised identities.");
+          if (O.isSome(protectedIssuerMaterial)) {
+            if (
+              !O.contains(issuerDigest, yield* hashIssuerMaterial(protectedIssuerMaterial.value)) ||
+              !A.every(report.comparisons, (pair) => O.contains(pair.protection.issuerMaterialDenied, true))
+            )
+              return yield* CacheCommandError.new(
+                "Persistent issuer material was exposed or changed during the signed pilot."
+              );
+          }
+        });
+        yield* verifySupervisedReceipt();
         return yield* validateCacheSignedPilotReceipt(report);
       })
     )

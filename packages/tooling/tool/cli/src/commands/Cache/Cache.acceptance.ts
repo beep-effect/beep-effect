@@ -148,40 +148,49 @@ export const deriveCacheProducerEvidence = Effect.fn("Producer.deriveEvidence")(
       ["activation-projection"]
     );
   }
-  for (const pair of pilot.freshPairs) {
-    const contents = yield* encodeFresh(pair);
-    const roots = [pair.leftRoot, pair.rightRoot] satisfies CacheQualificationObservation["roots"];
-    yield* retain("fresh-fresh", `fresh-${pair.id}`, roots, contents);
-    const overlaps = O.zipWith(
-      pair.left.selectedTaskInterval,
-      pair.right.selectedTaskInterval,
-      (left, right) => Math.max(left.startTime, right.startTime) < Math.min(left.endTime, right.endTime)
-    );
-    if (O.contains(true)(overlaps)) yield* retain("concurrency", `overlap-${pair.id}`, roots, contents);
-  }
-  for (const pair of pilot.pairs) {
-    const contents = yield* encodePair(pair);
-    const roots = [pair.producerRoot, pair.replayRoot] satisfies CacheQualificationObservation["roots"];
-    yield* retain("fresh-remote-hit", `remote-${pair.id}`, roots, contents);
-    yield* retain("cross-root", `cross-root-${pair.id}`, roots, contents);
-    yield* retain("trust", `reader-protection-${pair.id}`, [pair.replayRoot], contents);
-  }
-  for (const shadow of pilot.shadows) {
-    const contents = yield* encodeShadow(shadow);
-    const roots = [
-      shadow.comparison.producerRoot,
-      shadow.comparison.replayRoot,
-    ] satisfies CacheQualificationObservation["roots"];
-    yield* retain("shadow", shadow.case, roots, contents);
-    if (shadow.case !== "baseline")
-      yield* retain(
-        changesSemanticHash(shadow.case) ? "semantic-invalidation" : "orchestration-invariance",
-        `input-${shadow.case}`,
-        roots,
-        contents,
-        [shadow.case]
+  const retainFreshComparisons = Effect.fn("Producer.retainFreshComparisons")(function* () {
+    for (const pair of pilot.freshPairs) {
+      const contents = yield* encodeFresh(pair);
+      const roots = [pair.leftRoot, pair.rightRoot] satisfies CacheQualificationObservation["roots"];
+      yield* retain("fresh-fresh", `fresh-${pair.id}`, roots, contents);
+      const overlaps = O.zipWith(
+        pair.left.selectedTaskInterval,
+        pair.right.selectedTaskInterval,
+        (left, right) => Math.max(left.startTime, right.startTime) < Math.min(left.endTime, right.endTime)
       );
-  }
+      if (O.contains(true)(overlaps)) yield* retain("concurrency", `overlap-${pair.id}`, roots, contents);
+    }
+  });
+  yield* retainFreshComparisons();
+  const retainRemoteComparisons = Effect.fn("Producer.retainRemoteComparisons")(function* () {
+    for (const pair of pilot.pairs) {
+      const contents = yield* encodePair(pair);
+      const roots = [pair.producerRoot, pair.replayRoot] satisfies CacheQualificationObservation["roots"];
+      yield* retain("fresh-remote-hit", `remote-${pair.id}`, roots, contents);
+      yield* retain("cross-root", `cross-root-${pair.id}`, roots, contents);
+      yield* retain("trust", `reader-protection-${pair.id}`, [pair.replayRoot], contents);
+    }
+  });
+  yield* retainRemoteComparisons();
+  const retainShadowComparisons = Effect.fn("Producer.retainShadowComparisons")(function* () {
+    for (const shadow of pilot.shadows) {
+      const contents = yield* encodeShadow(shadow);
+      const roots = [
+        shadow.comparison.producerRoot,
+        shadow.comparison.replayRoot,
+      ] satisfies CacheQualificationObservation["roots"];
+      yield* retain("shadow", shadow.case, roots, contents);
+      if (shadow.case !== "baseline")
+        yield* retain(
+          changesSemanticHash(shadow.case) ? "semantic-invalidation" : "orchestration-invariance",
+          `input-${shadow.case}`,
+          roots,
+          contents,
+          [shadow.case]
+        );
+    }
+  });
+  yield* retainShadowComparisons();
   for (const mutation of pilot.mutations)
     yield* retain(
       "semantic-invalidation",

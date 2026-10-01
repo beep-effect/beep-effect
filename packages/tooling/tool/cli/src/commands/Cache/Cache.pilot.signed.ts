@@ -10,15 +10,50 @@ import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { cacheSignedCaptureDiagnostic } from "./Cache.pilot.capture.ts";
 import { CachePilotOutcome } from "./Cache.pilot.schemas.ts";
-import { CacheSignedPilotMutation, CacheSignedPilotShadow } from "./Cache.pilot.signed.schemas.ts";
+import { CacheSignedPilotMutation, CacheSignedPilotRun, CacheSignedPilotShadow } from "./Cache.pilot.signed.schemas.ts";
+import { CacheFixtureEvent } from "./Cache.protocol.fixture.schemas.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
+import type { CachePilotRun } from "./Cache.pilot.schemas.ts";
 import type {
   CacheSignedPilotFreshPair,
   CacheSignedPilotPair,
   CacheSignedPilotReceipt,
 } from "./Cache.pilot.signed.schemas.ts";
+
+const equivalentPilotLog = S.toEquivalence(
+  S.Struct(Struct.pick(CachePilotOutcome.cases.Executed.fields, ["logSha256", "logBytes"]))
+);
+const equivalentTaskInputs = S.toEquivalence(
+  S.Struct(
+    Struct.pick(CacheSignedPilotRun.fields.outcome.cases.Executed.fields.selected.fields, ["taskHash", "inputsDigest"])
+  )
+);
+const equivalentSeedContext = S.toEquivalence(
+  S.Struct(
+    Struct.pick(CacheSignedPilotRun.fields, [
+      "cacheEnabled",
+      "nativeRuntimeKeyObserved",
+      "sourceTreeUnchanged",
+      "root",
+      "graphExitCode",
+    ])
+  )
+);
+const equivalentSeedTask = S.toEquivalence(
+  S.Struct(
+    Struct.pick(CacheSignedPilotRun.fields.outcome.cases.Executed.fields.selected.fields, [
+      "exitCode",
+      "origin",
+      "computation",
+    ])
+  )
+);
+const equivalentAcknowledgement = S.toEquivalence(
+  S.Struct(Struct.pick(CacheFixtureEvent.fields, ["status", "tagPresent"]))
+);
 
 /**
  * Reject divergent or reused fresh execution before signed remote reuse starts.
@@ -159,14 +194,18 @@ const validateSignedMutationSeed = Effect.fn("CachePilot.validateSignedMutation"
   if (
     mutation.changedPath !== mutationPaths(mutation.case) ||
     mutation.beforeSha256 === mutation.afterSha256 ||
-    !seed.cacheEnabled ||
-    !seed.nativeRuntimeKeyObserved ||
-    !seed.sourceTreeUnchanged ||
-    seed.root !== mutation.comparison.producer.root ||
-    seed.graphExitCode !== expectedExit ||
-    seed.outcome.selected.exitCode !== expectedExit ||
-    seed.outcome.selected.origin !== "fresh" ||
-    seed.outcome.selected.computation !== key.computation ||
+    !equivalentSeedContext(seed, {
+      cacheEnabled: true,
+      nativeRuntimeKeyObserved: true,
+      sourceTreeUnchanged: true,
+      root: mutation.comparison.producer.root,
+      graphExitCode: expectedExit,
+    }) ||
+    !equivalentSeedTask(seed.outcome.selected, {
+      exitCode: expectedExit,
+      origin: "fresh",
+      computation: key.computation,
+    }) ||
     seed.outcome.selected.taskHash === mutation.comparison.producer.outcome.selected.taskHash ||
     !seed.outcome.replayLogMatches ||
     !A.every(seed.dependencies, (task) => task.origin === "fresh" && task.exitCode === 0)
@@ -216,15 +255,83 @@ const validateSignedOutcomes = Effect.fn("CachePilot.validateSignedOutcomes")(fu
       (outcome) =>
         outcome.selected.exitCode === 0 &&
         outcome.selected.computation === key.computation &&
-        outcome.logSha256 === authoritative.logSha256 &&
-        outcome.logBytes === authoritative.logBytes
+        equivalentPilotLog(outcome, authoritative)
     ) ||
     !producer.outcome.replayLogMatches ||
     !replay.outcome.replayLogMatches ||
-    producer.outcome.selected.taskHash !== replay.outcome.selected.taskHash ||
-    producer.outcome.selected.inputsDigest !== replay.outcome.selected.inputsDigest
+    !equivalentTaskInputs(producer.outcome.selected, replay.outcome.selected)
   )
     return yield* CacheCommandError.new("Signed pilot lacks matching successful fresh authority and remote replay.");
+});
+
+const validateSignedSeedUpload = Effect.fn("CachePilot.validateSignedSeedUpload")(function* (
+  seedPut: CacheFixtureEvent,
+  seedMiss: CacheFixtureEvent,
+  miss: CacheFixtureEvent
+) {
+  if (
+    seedPut.role !== "writer" ||
+    seedPut.status !== 200 ||
+    !seedPut.tagPresent ||
+    seedPut.bytes === 0 ||
+    O.isNone(seedPut.digest) ||
+    !(seedMiss.sequence < seedPut.sequence && seedPut.sequence < miss.sequence)
+  )
+    return yield* CacheCommandError.new("Signed mutation seed upload lacks ordered authenticated bytes.");
+});
+
+const validateSignedSeedWire = Effect.fn("CachePilot.validateSignedSeedWire")(function* (
+  mutation: CacheSignedPilotMutation,
+  misses: ReadonlyArray<CacheFixtureEvent>,
+  puts: ReadonlyArray<CacheFixtureEvent>,
+  miss: CacheFixtureEvent
+) {
+  const seedHash = mutation.seed.outcome.selected.taskHash;
+  const seedMiss = yield* A.findFirst(misses, (event) => O.contains(seedHash)(event.artifact)).pipe(
+    Effect.fromOption(() => CacheCommandError.new("Signed mutation seed omitted its direct cache miss."))
+  );
+  if (seedMiss.status !== 404 || seedMiss.sequence >= miss.sequence)
+    return yield* CacheCommandError.new("Signed mutation seed was not observed before changed execution.");
+  if (!mutationSeedFails(mutation.case)) {
+    const seedPut = yield* A.findFirst(puts, (event) => O.contains(seedHash)(event.artifact)).pipe(
+      Effect.fromOption(() => CacheCommandError.new("Signed mutation successful seed omitted its upload."))
+    );
+    yield* validateSignedSeedUpload(seedPut, seedMiss, miss);
+  }
+});
+
+const validateSignedTransferIdentity = Effect.fn("CachePilot.validateSignedTransferIdentity")(function* (
+  pair: CacheSignedPilotPair,
+  put: CacheFixtureEvent,
+  get: CacheFixtureEvent,
+  miss: CacheFixtureEvent
+) {
+  const hash = pair.producer.outcome.selected.taskHash;
+  if (
+    put.bytes !== get.bytes ||
+    O.isNone(put.digest) ||
+    !O.contains(put.digest.value)(get.digest) ||
+    !A.every([put, get, miss], (event) => O.contains(hash)(event.artifact)) ||
+    !(miss.sequence < put.sequence && put.sequence < get.sequence)
+  )
+    return yield* CacheCommandError.new("Signed pilot upload and download lack ordered matching signed bytes.");
+});
+
+const validateSignedTransfer = Effect.fn("CachePilot.validateSignedTransfer")(function* (
+  pair: CacheSignedPilotPair,
+  put: CacheFixtureEvent,
+  get: CacheFixtureEvent,
+  miss: CacheFixtureEvent
+) {
+  if (
+    put.role !== "writer" ||
+    !A.every([put, get], (event) => equivalentAcknowledgement(event, { status: 200, tagPresent: true })) ||
+    miss.status !== 404 ||
+    put.bytes === 0
+  )
+    return yield* CacheCommandError.new("Signed pilot upload and download lack ordered matching signed bytes.");
+
+  yield* validateSignedTransferIdentity(pair, put, get, miss);
 });
 
 const validateSignedWire = Effect.fn("CachePilot.validateSignedWire")(function* (
@@ -261,45 +368,30 @@ const validateSignedWire = Effect.fn("CachePilot.validateSignedWire")(function* 
   const miss = yield* A.findFirst(misses, (event) => O.contains(hash)(event.artifact)).pipe(
     Effect.fromOption(() => CacheCommandError.new("Missing fresh cache miss."))
   );
-  if (O.isSome(mutation)) {
-    const seedHash = mutation.value.seed.outcome.selected.taskHash;
-    const seedMiss = yield* A.findFirst(misses, (event) => O.contains(seedHash)(event.artifact)).pipe(
-      Effect.fromOption(() => CacheCommandError.new("Signed mutation seed omitted its direct cache miss."))
-    );
-    if (seedMiss.status !== 404 || seedMiss.sequence >= miss.sequence)
-      return yield* CacheCommandError.new("Signed mutation seed was not observed before changed execution.");
-    if (!mutationSeedFails(mutation.value.case)) {
-      const seedPut = yield* A.findFirst(puts, (event) => O.contains(seedHash)(event.artifact)).pipe(
-        Effect.fromOption(() => CacheCommandError.new("Signed mutation successful seed omitted its upload."))
-      );
-      if (
-        seedPut.role !== "writer" ||
-        seedPut.status !== 200 ||
-        !seedPut.tagPresent ||
-        seedPut.bytes === 0 ||
-        O.isNone(seedPut.digest) ||
-        !(seedMiss.sequence < seedPut.sequence && seedPut.sequence < miss.sequence)
-      )
-        return yield* CacheCommandError.new("Signed mutation seed upload lacks ordered authenticated bytes.");
-    }
-  }
-  if (
-    put.role !== "writer" ||
-    put.status !== 200 ||
-    get.status !== 200 ||
-    miss.status !== 404 ||
-    !put.tagPresent ||
-    !get.tagPresent ||
-    put.bytes === 0 ||
-    put.bytes !== get.bytes ||
-    O.isNone(put.digest) ||
-    !O.contains(put.digest.value)(get.digest) ||
-    !A.every([put, get, miss], (event) => O.contains(hash)(event.artifact)) ||
-    !(miss.sequence < put.sequence && put.sequence < get.sequence)
-  )
-    return yield* CacheCommandError.new("Signed pilot upload and download lack ordered matching signed bytes.");
+  if (O.isSome(mutation)) yield* validateSignedSeedWire(mutation.value, misses, puts, miss);
+  yield* validateSignedTransfer(pair, put, get, miss);
 
   return put;
+});
+
+const validateSignedArchive = Effect.fn("CachePilot.validateSignedArchive")(function* (
+  pair: CacheSignedPilotPair,
+  put: CacheFixtureEvent
+) {
+  const producer = pair.producer;
+  if (
+    !O.contains(pair.archive.archiveSha256)(put.digest) ||
+    pair.archive.archiveBytes !== put.bytes ||
+    pair.archive.logSha256 !== producer.outcome.logSha256 ||
+    pair.archive.logBytes !== producer.outcome.logBytes ||
+    pair.archive.archiveBytes === 0 ||
+    pair.archive.archiveBytes > 1024 * 1024 ||
+    pair.archive.logBytes > 64 * 1024 ||
+    pair.archive.decodedBytes !== 512 + Math.ceil(pair.archive.logBytes / 512) * 512 + 1024
+  )
+    return yield* CacheCommandError.new(
+      "Signed archive inspection is not bound to its transferred artifact and task log."
+    );
 });
 
 const validateSignedComparison = Effect.fn("CachePilot.validateSignedComparison")(function* (
@@ -321,20 +413,7 @@ const validateSignedComparison = Effect.fn("CachePilot.validateSignedComparison"
   yield* validateSignedRuntime(pair);
   yield* validateSignedOutcomes(pair, key);
   const put = yield* validateSignedWire(pair, mutation);
-  const producer = pair.producer;
-  if (
-    !O.contains(pair.archive.archiveSha256)(put.digest) ||
-    pair.archive.archiveBytes !== put.bytes ||
-    pair.archive.logSha256 !== producer.outcome.logSha256 ||
-    pair.archive.logBytes !== producer.outcome.logBytes ||
-    pair.archive.archiveBytes === 0 ||
-    pair.archive.archiveBytes > 1024 * 1024 ||
-    pair.archive.logBytes > 64 * 1024 ||
-    pair.archive.decodedBytes !== 512 + Math.ceil(pair.archive.logBytes / 512) * 512 + 1024
-  )
-    return yield* CacheCommandError.new(
-      "Signed archive inspection is not bound to its transferred artifact and task log."
-    );
+  yield* validateSignedArchive(pair, put);
 
   return pair;
 });
@@ -381,6 +460,112 @@ export const validateCacheSignedPilotMutation = Effect.fn("CachePilot.validateSi
   return mutation;
 });
 
+const validateSignedInventory = Effect.fn("CachePilot.validateSignedInventory")(function* (
+  receipt: CacheSignedPilotReceipt,
+  runs: ReadonlyArray<CachePilotRun | CacheSignedPilotRun>
+) {
+  const pairs = receipt.comparisons;
+  const freshPairs = receipt.freshPairs;
+  if (
+    A.dedupe(A.map(receipt.mutations, (mutation) => mutation.case)).length !== 7 ||
+    A.dedupe(A.map(receipt.shadows, (shadow) => shadow.case)).length !== 10 ||
+    A.dedupe(A.map(pairs, (pair) => pair.id)).length !== 20 ||
+    A.dedupe(A.map(freshPairs, (pair) => pair.id)).length !== 3 ||
+    A.dedupe(A.map(pairs, (pair) => pair.client.namespace)).length !== 20 ||
+    A.dedupe(A.map(runs, (run) => run.id)).length !== 73 ||
+    A.dedupe(A.map(runs, (run) => run.summarySha256)).length !== 73
+  )
+    return yield* CacheCommandError.new("Signed pilot pairs, namespaces, runs and summaries must be independent.");
+});
+
+const validateSignedCaptureControls = Effect.fn("CachePilot.validateSignedCaptureControls")(function* (
+  receipt: CacheSignedPilotReceipt,
+  runs: ReadonlyArray<CachePilotRun | CacheSignedPilotRun>
+) {
+  if (
+    A.dedupe(A.map(receipt.captureControls, (control) => control.case)).length !== 4 ||
+    A.dedupe(A.map(receipt.captureControls, (control) => control.summarySha256)).length !== 4 ||
+    A.some(
+      receipt.captureControls,
+      (control) =>
+        control.diagnostic !== cacheSignedCaptureDiagnostic(control.case) ||
+        A.some(runs, (run) => run.summarySha256 === control.summarySha256)
+    )
+  )
+    return yield* CacheCommandError.new(
+      "Native capture controls require distinct cases, summaries and exact rejection diagnostics."
+    );
+});
+
+const validateSignedIsolation = Effect.fn("CachePilot.validateSignedIsolation")(function* (
+  receipt: CacheSignedPilotReceipt,
+  runs: ReadonlyArray<CachePilotRun | CacheSignedPilotRun>
+) {
+  const pairs = receipt.comparisons;
+  const freshPairs = receipt.freshPairs;
+  const isolationRoots = A.appendAll(
+    A.flatMap(freshPairs, (pair) => [pair.leftRoot, pair.rightRoot]),
+    A.appendAll(
+      A.flatMap(pairs, (pair) => [pair.authorityRoot, pair.producerRoot, pair.replayRoot]),
+      A.append(
+        A.map(receipt.nonExecutions, (observation) => observation.isolationRoot),
+        receipt.policyRefusal.isolationRoot
+      )
+    )
+  );
+  const allRoots = A.appendAll(
+    isolationRoots,
+    A.map(receipt.captureControls, (control) => control.isolationRoot)
+  );
+  if (A.dedupe(allRoots).length !== 75)
+    return yield* CacheCommandError.new("Signed comparisons reuse an isolation root.");
+  if (
+    A.some(receipt.nonExecutions, (observation) =>
+      O.exists(observation.summarySha256, (digest) => A.some(runs, (run) => run.summarySha256 === digest))
+    )
+  )
+    return yield* CacheCommandError.new("Non-execution evidence reused an executed task summary.");
+});
+
+const validateSignedPolicyRefusal = Effect.fn("CachePilot.validateSignedPolicyRefusal")(function* (
+  receipt: CacheSignedPilotReceipt,
+  runs: ReadonlyArray<CachePilotRun | CacheSignedPilotRun>,
+  baseline: CacheSignedPilotPair
+) {
+  const baselineTask = baseline.producer.outcome.selected;
+  if (
+    receipt.policyRefusal.computation !== receipt.key.computation ||
+    receipt.policyRefusal.taskHash === baselineTask.taskHash ||
+    A.contains(receipt.policyRefusal.configuration.env, "BEEP_CACHE_TOOLCHAIN_DIGEST") ||
+    receipt.policyRefusal.configuration.persistent ||
+    receipt.policyRefusal.configuration.interactive ||
+    A.some(runs, (run) => run.summarySha256 === receipt.policyRefusal.dryPlanSha256) ||
+    A.some(receipt.nonExecutions, (observation) =>
+      O.contains(receipt.policyRefusal.dryPlanSha256)(observation.summarySha256)
+    )
+  )
+    return yield* CacheCommandError.new(
+      "Missing-child policy refusal does not establish an independent ungoverned dry plan."
+    );
+});
+
+const validateSignedBaselineInputs = Effect.fn("CachePilot.validateSignedBaselineInputs")(function* (
+  receipt: CacheSignedPilotReceipt,
+  freshRuns: ReadonlyArray<CachePilotRun>,
+  baseline: CacheSignedPilotPair
+) {
+  const baselineTask = baseline.producer.outcome.selected;
+  if (!A.every(receipt.pairs, (pair) => equivalentTaskInputs(pair.producer.outcome.selected, baselineTask)))
+    return yield* CacheCommandError.new("Signed baseline comparisons disagree on their inputs.");
+  for (const run of freshRuns) {
+    if (
+      !CachePilotOutcome.isAnyOf(["Executed"])(run.outcome) ||
+      !equivalentTaskInputs(run.outcome.selected, baselineTask)
+    )
+      return yield* CacheCommandError.new("Enabled fresh controls differ from the signed baseline inputs.");
+  }
+});
+
 /**
  * Reject inconsistent signed pilot reports without conferring producer trust.
  *
@@ -423,89 +608,17 @@ export const validateCacheSignedPilotReceipt = Effect.fn("CachePilot.validateSig
       A.map(receipt.mutations, (mutation) => mutation.seed)
     )
   );
-  if (
-    A.dedupe(A.map(receipt.mutations, (mutation) => mutation.case)).length !== 7 ||
-    A.dedupe(A.map(receipt.shadows, (shadow) => shadow.case)).length !== 10 ||
-    A.dedupe(A.map(pairs, (pair) => pair.id)).length !== 20 ||
-    A.dedupe(A.map(freshPairs, (pair) => pair.id)).length !== 3 ||
-    A.dedupe(A.map(pairs, (pair) => pair.client.namespace)).length !== 20 ||
-    A.dedupe(A.map(runs, (run) => run.id)).length !== 73 ||
-    A.dedupe(A.map(runs, (run) => run.summarySha256)).length !== 73
-  )
-    return yield* CacheCommandError.new("Signed pilot pairs, namespaces, runs and summaries must be independent.");
-  if (
-    A.dedupe(A.map(receipt.captureControls, (control) => control.case)).length !== 4 ||
-    A.dedupe(A.map(receipt.captureControls, (control) => control.summarySha256)).length !== 4 ||
-    A.some(
-      receipt.captureControls,
-      (control) =>
-        control.diagnostic !== cacheSignedCaptureDiagnostic(control.case) ||
-        A.some(runs, (run) => run.summarySha256 === control.summarySha256)
-    )
-  )
-    return yield* CacheCommandError.new(
-      "Native capture controls require distinct cases, summaries and exact rejection diagnostics."
-    );
-  const isolationRoots = A.appendAll(
-    A.flatMap(freshPairs, (pair) => [pair.leftRoot, pair.rightRoot]),
-    A.appendAll(
-      A.flatMap(pairs, (pair) => [pair.authorityRoot, pair.producerRoot, pair.replayRoot]),
-      A.append(
-        A.map(receipt.nonExecutions, (observation) => observation.isolationRoot),
-        receipt.policyRefusal.isolationRoot
-      )
-    )
-  );
-  const allRoots = A.appendAll(
-    isolationRoots,
-    A.map(receipt.captureControls, (control) => control.isolationRoot)
-  );
-  if (A.dedupe(allRoots).length !== 75)
-    return yield* CacheCommandError.new("Signed comparisons reuse an isolation root.");
-  if (
-    A.some(receipt.nonExecutions, (observation) =>
-      O.exists(observation.summarySha256, (digest) => A.some(runs, (run) => run.summarySha256 === digest))
-    )
-  )
-    return yield* CacheCommandError.new("Non-execution evidence reused an executed task summary.");
+  yield* validateSignedInventory(receipt, runs);
+  yield* validateSignedCaptureControls(receipt, runs);
+  yield* validateSignedIsolation(receipt, runs);
   yield* Effect.forEach(freshPairs, (pair) => validateCacheSignedPilotFreshPair(pair, receipt.key), { discard: true });
   yield* validateCacheSignedPilotConcurrency(freshPairs);
   const baseline = yield* A.head(receipt.pairs).pipe(
     Effect.fromOption(() => CacheCommandError.new("Signed baseline comparison is missing."))
   );
-  const baselineTask = baseline.producer.outcome.selected;
-  if (
-    receipt.policyRefusal.computation !== receipt.key.computation ||
-    receipt.policyRefusal.taskHash === baselineTask.taskHash ||
-    A.contains(receipt.policyRefusal.configuration.env, "BEEP_CACHE_TOOLCHAIN_DIGEST") ||
-    receipt.policyRefusal.configuration.persistent ||
-    receipt.policyRefusal.configuration.interactive ||
-    A.some(runs, (run) => run.summarySha256 === receipt.policyRefusal.dryPlanSha256) ||
-    A.some(receipt.nonExecutions, (observation) =>
-      O.contains(receipt.policyRefusal.dryPlanSha256)(observation.summarySha256)
-    )
-  )
-    return yield* CacheCommandError.new(
-      "Missing-child policy refusal does not establish an independent ungoverned dry plan."
-    );
+  yield* validateSignedPolicyRefusal(receipt, runs, baseline);
 
-  if (
-    !A.every(
-      receipt.pairs,
-      (pair) =>
-        pair.producer.outcome.selected.taskHash === baselineTask.taskHash &&
-        pair.producer.outcome.selected.inputsDigest === baselineTask.inputsDigest
-    )
-  )
-    return yield* CacheCommandError.new("Signed baseline comparisons disagree on their inputs.");
-  for (const run of freshRuns) {
-    if (
-      !CachePilotOutcome.isAnyOf(["Executed"])(run.outcome) ||
-      run.outcome.selected.taskHash !== baselineTask.taskHash ||
-      run.outcome.selected.inputsDigest !== baselineTask.inputsDigest
-    )
-      return yield* CacheCommandError.new("Enabled fresh controls differ from the signed baseline inputs.");
-  }
+  yield* validateSignedBaselineInputs(receipt, freshRuns, baseline);
   yield* Effect.forEach(receipt.shadows, (shadow) => validateCacheSignedPilotShadow(shadow, baseline), {
     discard: true,
   });

@@ -248,28 +248,31 @@ const contractIdentity = Effect.fn("CacheQualification.contractIdentity")(functi
   if (O.isNone(contract.signedExecution))
     return yield* projectCacheActivation(contract.key, census, toolchain, activation, before, after);
   const execution = contract.signedExecution.value;
-  const expectedKey = CacheQualificationKey.make({
-    ...execution.sourceKey,
-    profile: `${execution.sourceKey.profile}-private-loopback-signed-v1`,
+  const verifySignedActivation = Effect.fn("CacheQualification.verifySignedActivation")(function* () {
+    const expectedKey = CacheQualificationKey.make({
+      ...execution.sourceKey,
+      profile: `${execution.sourceKey.profile}-private-loopback-signed-v1`,
+    });
+    if (!sameKey(contract.key, expectedKey))
+      return yield* CacheCommandError.new("Signed execution tuple differs from its reviewed source tuple.");
+    const source = yield* fingerprintCacheComputation(execution.sourceKey, census, toolchain);
+    if (
+      source.configurationDigest !== execution.sourceConfiguration ||
+      source.toolchainDigest !== execution.sourceToolchain ||
+      source.toolchainDigest !== execution.runtimeKeys.stable
+    )
+      return yield* CacheCommandError.new("Signed execution source or stable runtime identity has drifted.");
+    const target = yield* projectCacheActivation(execution.sourceKey, census, toolchain, activation, before, after);
+    if (target.configurationDigest !== execution.activatedConfiguration)
+      return yield* CacheCommandError.new("Signed execution activation identity has drifted.");
+    const preview = yield* verifyReference(root, execution.activationRequest).pipe(
+      Effect.flatMap(JsonStringCodec(CacheActivationPreview).decode),
+      CacheCommandError.mapError("Cannot decode the reviewed signed activation preview.")
+    );
+    if (!S.toEquivalence(CacheActivationPreview)(preview, CacheActivationPreview.make({ activation, source, target })))
+      return yield* CacheCommandError.new("Signed execution preview differs from the live source and activation.");
   });
-  if (!sameKey(contract.key, expectedKey))
-    return yield* CacheCommandError.new("Signed execution tuple differs from its reviewed source tuple.");
-  const source = yield* fingerprintCacheComputation(execution.sourceKey, census, toolchain);
-  if (
-    source.configurationDigest !== execution.sourceConfiguration ||
-    source.toolchainDigest !== execution.sourceToolchain ||
-    source.toolchainDigest !== execution.runtimeKeys.stable
-  )
-    return yield* CacheCommandError.new("Signed execution source or stable runtime identity has drifted.");
-  const target = yield* projectCacheActivation(execution.sourceKey, census, toolchain, activation, before, after);
-  if (target.configurationDigest !== execution.activatedConfiguration)
-    return yield* CacheCommandError.new("Signed execution activation identity has drifted.");
-  const preview = yield* verifyReference(root, execution.activationRequest).pipe(
-    Effect.flatMap(JsonStringCodec(CacheActivationPreview).decode),
-    CacheCommandError.mapError("Cannot decode the reviewed signed activation preview.")
-  );
-  if (!S.toEquivalence(CacheActivationPreview)(preview, CacheActivationPreview.make({ activation, source, target })))
-    return yield* CacheCommandError.new("Signed execution preview differs from the live source and activation.");
+  yield* verifySignedActivation();
   return yield* projectCacheSignedActivation(
     execution.sourceKey,
     census,

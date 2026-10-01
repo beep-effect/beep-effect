@@ -10,12 +10,53 @@ import { Effect, Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
+import { CacheFixtureEvent } from "./Cache.protocol.fixture.schemas.ts";
 import { CacheProtocolReadFailure } from "./Cache.protocol.runner.schemas.ts";
+import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheProtocolExecution } from "./Cache.protocol.runner.schemas.ts";
-import type { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
 
 const sameClient = S.toEquivalence(CacheClientPin);
+
+const equivalentWireMetadata = S.toEquivalence(
+  S.Struct(Struct.pick(CacheFixtureEvent.fields, ["role", "status", "bytes", "tagPresent"]))
+);
+const equivalentArtifact = S.toEquivalence(CacheProtocolObservation.fields.exchanges.value.fields.artifact);
+
+const validateProtocolNativeRun = Effect.fn("Cache.validateProtocolNativeRun")(function* (
+  run: CacheProtocolObservation["runs"][number],
+  event: CacheProtocolObservation["exchanges"][number],
+  upload: CacheProtocolObservation["exchanges"][number],
+  producedOutput: CacheProtocolObservation["exchanges"][number]["artifact"]
+) {
+  const isProducer = run.case === "producer";
+  if (
+    event.taskHash !== run.taskHash ||
+    event.method !== (isProducer ? "PUT" : "GET") ||
+    !equivalentWireMetadata(
+      { role: event.role, status: event.status, bytes: event.artifact.bytes, tagPresent: event.tag === "present" },
+      {
+        role: isProducer ? "writer" : "reader",
+        status: 200,
+        bytes: upload.artifact.bytes,
+        tagPresent: run.case !== "missing-tag",
+      }
+    ) ||
+    (event.artifact.sha256 === upload.artifact.sha256) !== (run.case !== "corrupt-body")
+  )
+    return yield* CacheCommandError.new(`Protocol ${run.case} has inconsistent wire or storage evidence.`);
+  const outcomeMatches = Match.value(run.outcome).pipe(
+    Match.tags({
+      Produced: () => isProducer,
+      Replayed: ({ output }) => run.case === "replay" && equivalentArtifact(output, producedOutput),
+      Rejected: ({ exitCode, restoredOutputs }) =>
+        run.case !== "producer" && run.case !== "replay" && exitCode !== 0 && restoredOutputs === 0,
+    }),
+    Match.exhaustive
+  );
+  if (!outcomeMatches) return yield* CacheCommandError.new(`Protocol ${run.case} has an inconsistent native outcome.`);
+});
 
 /**
  * Check synthetic signed-replay relationships without granting promotion authority.
@@ -45,12 +86,17 @@ export const validateCacheProtocolObservation = Effect.fn("Cache.validateProtoco
 ) {
   const { runs, exchanges, client } = observation;
   if (
-    runs.length !== 6 ||
-    exchanges.length !== 6 ||
-    A.dedupe(A.map(runs, (run) => run.case)).length !== 6 ||
-    A.dedupe(A.map(exchanges, (event) => event.case)).length !== 6 ||
-    A.dedupe(A.map(exchanges, (event) => event.requestId)).length !== 6 ||
-    A.dedupe(A.map(runs, (run) => run.summary)).length !== 6 ||
+    !A.every(
+      [
+        runs.length,
+        exchanges.length,
+        A.dedupe(A.map(runs, (run) => run.case)).length,
+        A.dedupe(A.map(exchanges, (event) => event.case)).length,
+        A.dedupe(A.map(exchanges, (event) => event.requestId)).length,
+        A.dedupe(A.map(runs, (run) => run.summary)).length,
+      ],
+      (count) => count === 6
+    ) ||
     A.dedupe(A.map(runs, (run) => run.taskHash)).length !== 1 ||
     !A.every(runs, (run) => sameClient(run.client, client))
   )
@@ -68,29 +114,7 @@ export const validateCacheProtocolObservation = Effect.fn("Cache.validateProtoco
     const event = yield* A.findFirst(exchanges, (candidate) => candidate.case === run.case).pipe(
       Effect.fromOption(() => CacheCommandError.new("Protocol exchange is missing."))
     );
-    const isProducer = run.case === "producer";
-    if (
-      event.taskHash !== run.taskHash ||
-      event.status !== 200 ||
-      event.method !== (isProducer ? "PUT" : "GET") ||
-      event.role !== (isProducer ? "writer" : "reader") ||
-      event.tag !== (run.case === "missing-tag" ? "absent" : "present") ||
-      event.artifact.bytes !== upload.artifact.bytes ||
-      (event.artifact.sha256 === upload.artifact.sha256) !== (run.case !== "corrupt-body")
-    )
-      return yield* CacheCommandError.new(`Protocol ${run.case} has inconsistent wire or storage evidence.`);
-    const outcomeMatches = Match.value(run.outcome).pipe(
-      Match.tags({
-        Produced: () => isProducer,
-        Replayed: ({ output }) =>
-          run.case === "replay" && output.sha256 === producedOutput.sha256 && output.bytes === producedOutput.bytes,
-        Rejected: ({ exitCode, restoredOutputs }) =>
-          run.case !== "producer" && run.case !== "replay" && exitCode !== 0 && restoredOutputs === 0,
-      }),
-      Match.exhaustive
-    );
-    if (!outcomeMatches)
-      return yield* CacheCommandError.new(`Protocol ${run.case} has an inconsistent native outcome.`);
+    yield* validateProtocolNativeRun(run, event, upload, producedOutput);
   }
   return observation;
 });
@@ -98,6 +122,113 @@ export const validateCacheProtocolObservation = Effect.fn("Cache.validateProtoco
 const UntamperedCase = LiteralKit(["producer", "replay", "wrong-key"]);
 const isUntamperedCase = S.is(UntamperedCase);
 const isTransportCase = S.is(CacheProtocolReadFailure.fields.case);
+
+const validateProtocolPopulation = Effect.fn("Cache.validateProtocolPopulation")(function* (
+  report: CacheProtocolExecution
+) {
+  const { observation, roots, failures, events } = report;
+  const cases = A.map(observation.runs, (run) => run.case);
+  const allCases = A.appendAll(
+    cases,
+    A.map(failures, (failure) => failure.case)
+  );
+  const summaries = A.appendAll(
+    A.map(observation.runs, (run) => run.summary),
+    A.map(failures, (failure) => failure.summary)
+  );
+  if (
+    !A.every(
+      [
+        roots.length,
+        A.dedupe(A.map(roots, (root) => root.case)).length,
+        A.dedupe(A.map(roots, (root) => root.sha256)).length,
+        A.dedupe(allCases).length,
+        A.dedupe(summaries).length,
+      ],
+      (count) => count === 9
+    ) ||
+    !A.every(roots, (root) => A.contains(allCases, root.case)) ||
+    failures.length !== 3 ||
+    events.length === 0 ||
+    !A.every(
+      events,
+      (event, index) =>
+        event.sequence === index + 1 &&
+        A.contains(allCases, event.scenario.id) &&
+        event.role === (event.scenario.id === "producer" ? "writer" : "reader") &&
+        event.scenario.fault === (isUntamperedCase(event.scenario.id) ? "none" : event.scenario.id)
+    ) ||
+    A.filter(events, (event) => event.operation === "put").length !== 1
+  )
+    return yield* CacheCommandError.new(
+      "Protocol execution requires nine distinct cases, isolated roots and ordered, attributed wire evidence."
+    );
+});
+
+const validateProtocolExchange = Effect.fn("Cache.validateProtocolExchange")(function* (
+  exchange: CacheProtocolObservation["exchanges"][number],
+  event: CacheFixtureEvent
+) {
+  if (
+    event.scenario.id !== exchange.case ||
+    event.operation !== (exchange.method === "PUT" ? "put" : "get") ||
+    !equivalentWireMetadata(event, {
+      role: exchange.role,
+      status: exchange.status,
+      bytes: exchange.artifact.bytes,
+      tagPresent: exchange.tag === "present",
+    }) ||
+    !O.contains(exchange.taskHash)(event.artifact) ||
+    !O.contains(exchange.artifact.sha256)(event.digest)
+  )
+    return yield* CacheCommandError.new("Protocol exchange differs from its direct wire event.");
+});
+
+const validateProtocolReadFailure = Effect.fn("Cache.validateProtocolReadFailure")(function* (
+  failure: CacheProtocolReadFailure,
+  events: ReadonlyArray<CacheFixtureEvent>,
+  upload: CacheProtocolObservation["exchanges"][number]
+) {
+  const reads = A.filter(events, (event) => event.scenario.id === failure.case && event.operation === "get");
+  const status = CacheProtocolReadFailure.fields.case.$match({
+    unavailable: () => 503,
+    throttled: () => 429,
+    "truncated-body": () => 200,
+  })(failure.case);
+  if (
+    failure.taskHash !== upload.taskHash ||
+    reads.length === 0 ||
+    !A.every(reads, (event) => {
+      const emptyBody = () => event.bytes === 0 && !event.tagPresent && O.isNone(event.digest);
+      const bytesMatch = CacheProtocolReadFailure.fields.case.$match({
+        unavailable: emptyBody,
+        throttled: emptyBody,
+        "truncated-body": () =>
+          event.bytes === upload.artifact.bytes - 1 &&
+          event.tagPresent &&
+          O.isSome(event.digest) &&
+          !O.contains(upload.artifact.sha256)(event.digest),
+      })(failure.case);
+      return (
+        event.status === status && event.role === "reader" && O.contains(failure.taskHash)(event.artifact) && bytesMatch
+      );
+    })
+  )
+    return yield* CacheCommandError.new("Protocol read failure lacks corresponding direct wire evidence.");
+});
+
+const validateProtocolIntegrityRead = Effect.fn("Cache.validateProtocolIntegrityRead")(function* (
+  event: CacheFixtureEvent,
+  upload: CacheProtocolObservation["exchanges"][number]
+) {
+  const producerMiss = event.scenario.id === "producer";
+  if (
+    !O.contains(upload.taskHash)(event.artifact) ||
+    event.status !== (producerMiss ? 404 : 200) ||
+    (producerMiss && (event.bytes !== 0 || event.tagPresent || O.isSome(event.digest)))
+  )
+    return yield* CacheCommandError.new("Protocol integrity case contains an unexpected artifact read.");
+});
 
 /**
  * Revalidate all native integrity and transport cases against their direct wire events.
@@ -123,51 +254,15 @@ const isTransportCase = S.is(CacheProtocolReadFailure.fields.case);
 export const validateCacheProtocolExecution = Effect.fn("Cache.validateProtocolExecution")(function* (
   report: CacheProtocolExecution
 ) {
-  const { observation, roots, failures, events } = report;
+  const { observation, failures, events } = report;
   yield* validateCacheProtocolObservation(observation);
-  const cases = A.map(observation.runs, (run) => run.case);
-  const allCases = A.appendAll(
-    cases,
-    A.map(failures, (failure) => failure.case)
-  );
-  const summaries = A.appendAll(
-    A.map(observation.runs, (run) => run.summary),
-    A.map(failures, (failure) => failure.summary)
-  );
-  if (
-    roots.length !== 9 ||
-    A.dedupe(A.map(roots, (root) => root.case)).length !== 9 ||
-    A.dedupe(A.map(roots, (root) => root.sha256)).length !== 9 ||
-    !A.every(roots, (root) => A.contains(allCases, root.case)) ||
-    failures.length !== 3 ||
-    A.dedupe(allCases).length !== 9 ||
-    A.dedupe(summaries).length !== 9 ||
-    events.length === 0 ||
-    !A.every(
-      events,
-      (event, index) =>
-        event.sequence === index + 1 &&
-        A.contains(allCases, event.scenario.id) &&
-        event.role === (event.scenario.id === "producer" ? "writer" : "reader") &&
-        event.scenario.fault === (isUntamperedCase(event.scenario.id) ? "none" : event.scenario.id)
-    ) ||
-    A.filter(events, (event) => event.operation === "put").length !== 1
-  )
-    return yield* CacheCommandError.new(
-      "Protocol execution requires nine distinct cases, isolated roots and ordered, attributed wire evidence."
-    );
+  yield* validateProtocolPopulation(report);
   const upload = yield* A.findFirst(observation.exchanges, (event) => event.case === "producer").pipe(
     Effect.fromOption(() => CacheCommandError.new("Protocol upload is missing."))
   );
   for (const event of events) {
     if (event.operation !== "get" || isTransportCase(event.scenario.id)) continue;
-    const producerMiss = event.scenario.id === "producer";
-    if (
-      !O.contains(upload.taskHash)(event.artifact) ||
-      event.status !== (producerMiss ? 404 : 200) ||
-      (producerMiss && (event.bytes !== 0 || event.tagPresent || O.isSome(event.digest)))
-    )
-      return yield* CacheCommandError.new("Protocol integrity case contains an unexpected artifact read.");
+    yield* validateProtocolIntegrityRead(event, upload);
   }
   const exchanges = A.filter(
     events,
@@ -182,39 +277,9 @@ export const validateCacheProtocolExecution = Effect.fn("Cache.validateProtocolE
     const event = yield* A.findFirst(exchanges, (row) => `wire-${row.sequence}` === exchange.requestId).pipe(
       Effect.fromOption(() => CacheCommandError.new("Protocol exchange lacks its direct wire event."))
     );
-    if (
-      event.scenario.id !== exchange.case ||
-      event.operation !== (exchange.method === "PUT" ? "put" : "get") ||
-      event.role !== exchange.role ||
-      event.status !== exchange.status ||
-      !O.contains(exchange.taskHash)(event.artifact) ||
-      !O.contains(exchange.artifact.sha256)(event.digest) ||
-      event.bytes !== exchange.artifact.bytes ||
-      event.tagPresent !== (exchange.tag === "present")
-    )
-      return yield* CacheCommandError.new("Protocol exchange differs from its direct wire event.");
+    yield* validateProtocolExchange(exchange, event);
   }
-  for (const failure of failures) {
-    const reads = A.filter(events, (event) => event.scenario.id === failure.case && event.operation === "get");
-    const status = failure.case === "unavailable" ? 503 : failure.case === "throttled" ? 429 : 200;
-    if (
-      failure.taskHash !== upload.taskHash ||
-      reads.length === 0 ||
-      !A.every(
-        reads,
-        (event) =>
-          event.status === status &&
-          event.role === "reader" &&
-          O.contains(failure.taskHash)(event.artifact) &&
-          (failure.case === "truncated-body"
-            ? event.bytes === upload.artifact.bytes - 1 &&
-              event.tagPresent &&
-              O.isSome(event.digest) &&
-              !O.contains(upload.artifact.sha256)(event.digest)
-            : event.bytes === 0 && !event.tagPresent && O.isNone(event.digest))
-      )
-    )
-      return yield* CacheCommandError.new("Protocol read failure lacks corresponding direct wire evidence.");
-  }
+  yield* Effect.forEach(failures, (failure) => validateProtocolReadFailure(failure, events, upload), { discard: true });
+
   return report;
 });

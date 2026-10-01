@@ -6,7 +6,6 @@
  */
 import { Sha256HexFromBytes } from "@beep/schema";
 import { Config, Effect, FileSystem, Path } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import {
@@ -16,7 +15,7 @@ import {
 } from "./Cache.acceptance.schemas.ts";
 import { validateCacheProducerImport } from "./Cache.acceptance.ts";
 import { decodeCacheExperimentText } from "./Cache.evidence.ts";
-import { inspectCacheProducerDirectory } from "./Cache.producer.ts";
+import { inspectCacheProducerDirectory, inspectCacheProducerFile } from "./Cache.producer.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheProducerTrustLocations } from "./Cache.acceptance.schemas.ts";
 
@@ -47,19 +46,12 @@ export const readCacheProducerAcceptance = Effect.fn("Producer.readAcceptance")(
   reference: CacheProducerAcceptanceReference,
   trust: CacheProducerTrustLocations
 ) {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const uid = yield* inspectCacheProducerDirectory(directory);
   const file = path.join(directory, `${reference.sha256}.json`);
-  const info = yield* fs.stat(file);
-  if (
-    info.type !== "File" ||
-    (info.mode & 0o777) !== 0o600 ||
-    !O.contains(info.uid, uid) ||
-    !O.contains(info.nlink, 1) ||
-    info.size <= BigInt(0) ||
-    info.size > BigInt(limit)
-  )
+  const diagnostic = "Acceptance record must be a bounded private single-link file.";
+  const info = yield* inspectCacheProducerFile(file, uid, diagnostic);
+  if (info.size <= BigInt(0) || info.size > BigInt(limit))
     return yield* CacheCommandError.new("Acceptance record must be a bounded private single-link file.");
   const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(limit));
   const bytes = yield* read.contents.pipe(

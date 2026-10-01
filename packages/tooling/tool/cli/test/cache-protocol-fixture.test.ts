@@ -7,7 +7,7 @@ import {
 import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, notDeepStrictEqual } from "@effect/vitest/utils";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import { FetchHttpClient, Headers, HttpClient, HttpClientRequest } from "effect/http";
 import * as O from "effect/Option";
@@ -26,6 +26,7 @@ const credentials = CacheFixtureCredentials.make({
 const artifactHash = "0123456789abcdef";
 const otherArtifactHash = "abcdef0123456789";
 const tag = "opaque-fixture-tag";
+const ReadFault = CacheFixtureScenario.fields.fault.pick(["missing-tag", "invalid-tag", "corrupt-body", "none"]);
 const bytes = new TextEncoder().encode("complete fixture artifact");
 const endpoint = (url: string, hash = artifactHash) => `${url}/v8/artifacts/${hash}?teamId=${credentials.namespace}`;
 const get = (url: string) => HttpClient.get(url, { headers: { authorization: `Bearer ${reader}` } });
@@ -146,7 +147,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
       Effect.gen(function* () {
         const fixture = yield* makeCacheProtocolFixture(credentials);
         yield* put(endpoint(fixture.url));
-        for (const fault of ["missing-tag", "invalid-tag", "corrupt-body", "none"] as const) {
+        for (const fault of ReadFault.literals) {
           yield* fixture.setScenario(CacheFixtureScenario.make({ id: fault, fault }));
           const response = yield* get(endpoint(fixture.url));
           const body = new Uint8Array(yield* response.arrayBuffer);
@@ -155,9 +156,12 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
           if (fault === "corrupt-body") expect(body).not.toEqual(bytes);
           else expect(body).toEqual(bytes);
           const responseTag = Headers.get(response.headers, "x-artifact-tag");
-          if (fault === "missing-tag") assertNone(responseTag);
-          else if (fault === "invalid-tag") notDeepStrictEqual(responseTag, O.some(tag));
-          else assertSome(responseTag, tag);
+          const expectTag = () => assertSome(responseTag, tag);
+          Match.value(fault).pipe(
+            Match.when("missing-tag", () => assertNone(responseTag)),
+            Match.when("invalid-tag", () => notDeepStrictEqual(responseTag, O.some(tag))),
+            Match.orElse(expectTag)
+          );
         }
         const events = yield* fixture.events;
         const encoded = yield* S.encodeEffect(S.fromJsonString(S.Array(CacheFixtureEvent)))(events);
