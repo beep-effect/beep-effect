@@ -1,3 +1,67 @@
+## Current source refresh, 2026-10-01
+
+PR #1339 now contains main `90517df719fa1eb1a24c00b6ba8bdad2d26d8b8f`
+at campaign source `2d38ac6827c599248f7fd643feaf75e2a0fe406b`.
+R49's independently approved inputs and runtime became historical before any
+census stage materialized. R50 recomputed 3,152 corpus files across 27 lanes
+with 82 exclusions and independently adjudicated all 76 inventory-anchor
+conflicts. Its approved patch updates 72 rows, leaves four unchanged, and
+preserves 725 total records: 108 qualified, 617 disqualified and zero applied.
+The exact pre-change projection is retained at
+`history/inventory/2026-10-01-pre-r50-anchor-drift.jsonl`.
+
+The next gate is a complete R50 input rebuild and independent review bound to
+the packet commit, followed by a fresh exact-source check before runtime or
+provider execution. These anchor repairs confer no census, dry-round, P3 or
+implementation credit. Publish coherent fixes immediately and allow hosted
+checks to run while the private campaign gates continue.
+
+## Historical R49 source refresh, 2026-10-01
+
+Main advanced again to `e324f01e1e1fefaab1a40144dc66544826798fe1` and was
+merged in `c47a403805e1cf9a56bd54c1ec1388b5503374c4`. R49 recomputes the
+current corpus after the LiteralKit keyed-API migration. Two surviving
+LiteralKit D1 rows were re-anchored to lines 308 and 437, with the prior
+725-row projection retained in history. The inventory remains 725 rows: 108
+qualified, 617 disqualified and zero applied. R48 is historical and grants no
+execution or convergence credit.
+
+Continue the remaining campaign in PR #1339. Main advanced to
+`4a97d3955f7fa0a5d554efb5869170a50dccacde` and was merged in `3075193cf5`.
+The merge changes 746 candidate source paths under packages/apps source
+(excluding apps/labs); this is a changed-path count, not a qualified census.
+R47's prepared inputs remain bound to the older source and cannot establish
+current coverage. Preserve them and the rejected R46 attempt. Refresh the
+complete source partition, frozen inputs and designs against the merged tree.
+
+The saved R47 runner correction addresses the lane-prefix and scope checks.
+Its independent delta review found two further deterministic corrections; no
+runtime, census, dry-round, P3 or implementation acceptance is claimed. The
+deleted JSONSchema owner is retained in
+`history/inventory/2026-10-01-pre-r48-source-refresh.jsonl` and removed from
+the live projection. Inventory is now 725 rows, 108 qualified,
+617 disqualified and zero applied. Push ready fixes immediately
+and use hosted checks for publication readiness under the existing ruling.
+
+## Current execution after PR #1328 merged: 2026-09-29
+
+PR #1328 merged at `3bfb7d0f33d300b30b99f80792c7e61c2ce6bbff` before the
+remaining campaign work was complete. Continue all remaining work in one
+successor PR. The earlier references to open PR #1328 are historical; the
+census, independent review, implementation and exact-main acceptance gates
+remain unchanged.
+
+R46's first runtime probe stopped with `script-sequence-mismatch`: P07's
+synthetic payload differed from the exact scripted bytes. All 30 calls were
+in order, but no probe acceptance or census execution followed. Preserve the
+failed attempt and refresh the fixture through independent review before a
+new admission. The diagnostic replay is not acceptance evidence.
+
+The branch now includes main `4203a309f11930eb60e971931718b73b54efc653`.
+Five CLI source files changed since R46's source. Successor inputs must bind
+the updated source; the R46 review cannot establish current-source coverage.
+Inventory remains 726 rows, 108 qualified, 618 disqualified and zero applied.
+
 ## Current execution amendment — 2026-09-28
 
 The [2026-09-28 decision](./DECISIONS.md) delegates remaining decisions and
