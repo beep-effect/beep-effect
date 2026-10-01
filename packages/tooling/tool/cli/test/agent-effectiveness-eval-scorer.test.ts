@@ -17,6 +17,7 @@ import {
   SkillOptTaskManifest,
 } from "@beep/repo-cli/test/AgentEffectiveness";
 import { findRepoRoot } from "@beep/repo-utils";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -34,6 +35,9 @@ import * as Str from "effect/String";
 const decodeUnknownSkillOptTaskManifestJson = S.decodeUnknownEffect(S.fromJsonString(SkillOptTaskManifest));
 
 const TestLayer = NodeServices.layer;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
+const isScorerError = S.is(AgentEffectivenessEvalScorerError);
 const decodeTaskManifest = S.decodeUnknownEffect(SkillOptTaskManifest);
 const decodeScoreReportJson = S.decodeEffect(S.fromJsonString(AgentEffectivenessEvalScoreReport));
 const encodeLaneReportJson = S.encodeEffect(S.fromJsonString(AgentEffectivenessEvalLaneReport));
@@ -117,10 +121,10 @@ type LaneResponses = {
 };
 
 const biomeReportJson = (changed: number, unchanged: number, diagnostics: ReadonlyArray<unknown> = []) =>
-  JSON.stringify({ summary: { changed, unchanged }, diagnostics });
+  encodeJson({ summary: { changed, unchanged }, diagnostics });
 
 const scannedFilesLine = (files: ReadonlyArray<string>) =>
-  `[schema-first:scanned] ${JSON.stringify(A.map(files, (file) => `packages/fixture/${file}`))}`;
+  `[schema-first:scanned] ${encodeJson(A.map(files, (file) => `packages/fixture/${file}`))}`;
 
 const commandName = (command: string): string => pipe(command, Str.split("/"), A.lastNonEmpty);
 
@@ -151,96 +155,98 @@ const fakeLawLayer = (
     BunCrypto.layer,
     NodeFileSystem.layer,
     NodePath.layer,
-    Layer.succeed(
+    Layer.effect(
       ChildProcessSpawner.ChildProcessSpawner,
-      ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) {
-          return Effect.die("unexpected piped law-lane command");
-        }
-        const name = commandName(command.command);
-        const response: LaneResponse = Match.value(name).pipe(
-          Match.when("biome", () => responses.biome ?? { stdout: biomeReportJson(0, 1) }),
-          Match.when("tsgo", () => responses.tsgo ?? {}),
-          Match.orElse(() => responses.bun ?? { stdout: scannedFilesLine(["src/Contact.ts"]) })
-        );
-        const snapshotConfig = pipe(
-          readConfigArgument(command.args),
-          O.match({
-            onNone: () => Effect.void,
-            onSome: (configPath) =>
-              Effect.gen(function* () {
-                const fs = yield* FileSystem.FileSystem;
-                const text = yield* fs.readFileString(configPath);
-                yield* Ref.update(configs, A.append(text));
-              }).pipe(Effect.provide(NodeFileSystem.layer), Effect.orDie),
-          })
-        );
-        return Ref.update(spawned, A.append(name)).pipe(
-          Effect.andThen(snapshotConfig),
-          Effect.andThen(
-            response === "spawn-failure"
-              ? Effect.fail(
-                  PlatformError.systemError({
-                    _tag: "NotFound",
-                    module: "ChildProcess",
-                    method: "spawn",
-                    description: `${name} is not installed`,
-                  })
-                )
-              : Effect.succeed(outputHandle(response))
-          )
-        );
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        return ChildProcessSpawner.make((command) => {
+          if (!ChildProcess.isStandardCommand(command)) {
+            return Effect.die("unexpected piped law-lane command");
+          }
+          const name = commandName(command.command);
+          const response: LaneResponse = Match.value(name).pipe(
+            Match.when("biome", () => responses.biome ?? { stdout: biomeReportJson(0, 1) }),
+            Match.when("tsgo", () => responses.tsgo ?? {}),
+            Match.orElse(() => responses.bun ?? { stdout: scannedFilesLine(["src/Contact.ts"]) })
+          );
+          const snapshotConfig = pipe(
+            readConfigArgument(command.args),
+            O.match({
+              onNone: () => Effect.void,
+              onSome: (configPath) =>
+                fs.readFileString(configPath).pipe(
+                  Effect.flatMap((text) => Ref.update(configs, A.append(text))),
+                  Effect.orDie
+                ),
+            })
+          );
+          return Ref.update(spawned, A.append(name)).pipe(
+            Effect.andThen(snapshotConfig),
+            Effect.andThen(
+              response === "spawn-failure"
+                ? Effect.fail(
+                    PlatformError.systemError({
+                      _tag: "NotFound",
+                      module: "ChildProcess",
+                      method: "spawn",
+                      description: `${name} is not installed`,
+                    })
+                  )
+                : Effect.succeed(outputHandle(response))
+            )
+          );
+        });
       })
-    )
+    ).pipe(Layer.provide(NodeFileSystem.layer))
   );
 
-const runFakeLaw = (
+const runFakeLaw = Effect.fn("AgentEffectivenessEvalScorerTest.runFakeLaw")(function* (
   responses: LaneResponses,
   prepareRepo: (
     repoRoot: string
-  ) => Effect.Effect<void, unknown, FileSystem.FileSystem | Path.Path> = writeRepoBiomeConfig,
+  ) => Effect.Effect<void, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> = writeRepoBiomeConfig,
   sourceFiles: ReadonlyArray<string> = ["src/Contact.ts"]
-) =>
-  Effect.gen(function* () {
-    const spawned = yield* Ref.make<ReadonlyArray<string>>([]);
-    const configs = yield* Ref.make<ReadonlyArray<string>>([]);
-    const law = yield* Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const fixtureDir = yield* fs.makeTempDirectoryScoped();
-        const repoRoot = yield* fs.makeTempDirectoryScoped();
-        yield* prepareRepo(repoRoot);
-        yield* Effect.forEach(sourceFiles, (file) =>
-          writeText(path.join(fixtureDir, file), "export const contact = 1;\n")
-        );
-        return { repoRoot, law: yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles) };
-      })
-    ).pipe(provideLayer(fakeLawLayer(spawned, configs, responses)));
-    return { ...law, commands: yield* Ref.get(spawned), configs: yield* Ref.get(configs) };
-  });
+) {
+  const spawned = yield* Ref.make<ReadonlyArray<string>>([]);
+  const configs = yield* Ref.make<ReadonlyArray<string>>([]);
+  const law = yield* Effect.scoped(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixtureDir = yield* fs.makeTempDirectoryScoped();
+      const repoRoot = yield* fs.makeTempDirectoryScoped();
+      yield* prepareRepo(repoRoot);
+      yield* Effect.forEach(sourceFiles, (file) =>
+        writeText(path.join(fixtureDir, file), "export const contact = 1;\n")
+      );
+      return { repoRoot, law: yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles) };
+    })
+  ).pipe(provideLayer(fakeLawLayer(spawned, configs, responses)));
+  return { ...law, commands: yield* Ref.get(spawned), configs: yield* Ref.get(configs) };
+});
 
-const writeRepoBiomeConfig = (repoRoot: string) =>
-  Effect.gen(function* () {
-    const path = yield* Path.Path;
-    yield* writeText(
-      path.join(repoRoot, "biome.jsonc"),
-      [
-        "{",
-        "  // repo biome config stand-in",
-        '  "vcs": { "enabled": true, "useIgnoreFile": true },',
-        '  "plugins": ["./rules/root.grit", 7],',
-        '  "files": { "includes": ["**", "!**/out"] },',
-        '  "overrides": [',
-        '    { "includes": ["**/src/**"], "plugins": ["./rules/src.grit"] },',
-        '    { "includes": ["**/test/**"], "linter": { "enabled": false } },',
-        '    "not-an-override"',
-        "  ]",
-        "}",
-        "",
-      ].join("\n")
-    );
-  });
+const writeRepoBiomeConfig = Effect.fn("AgentEffectivenessEvalScorerTest.writeRepoBiomeConfig")(function* (
+  repoRoot: string
+) {
+  const path = yield* Path.Path;
+  yield* writeText(
+    path.join(repoRoot, "biome.jsonc"),
+    [
+      "{",
+      "  // repo biome config stand-in",
+      '  "vcs": { "enabled": true, "useIgnoreFile": true },',
+      '  "plugins": ["./rules/root.grit", 7],',
+      '  "files": { "includes": ["**", "!**/out"] },',
+      '  "overrides": [',
+      '    { "includes": ["**/src/**"], "plugins": ["./rules/src.grit"] },',
+      '    { "includes": ["**/test/**"], "linter": { "enabled": false } },',
+      '    "not-an-override"',
+      "  ]",
+      "}",
+      "",
+    ].join("\n")
+  );
+});
 
 const laneReport = (law: LawEvaluation, lane: AgentEffectivenessEvalLaneReport["lane"]) =>
   pipe(
@@ -431,9 +437,7 @@ describe("agent-effectiveness eval scorer", () => {
       expect(A.sort(commands, Str.Order)).toEqual(["biome", "bun", "tsgo"]);
       expect(A.last(commands)).toEqual(O.some("tsgo"));
 
-      const [biomeConfig, tsgoConfig] = yield* Effect.all(
-        A.map(configs, (text) => S.decodeUnknownEffect(S.UnknownFromJsonString)(text))
-      );
+      const [biomeConfig, tsgoConfig] = yield* Effect.all(A.map(configs, (text) => decodeUnknownJson(text)));
       expect(biomeConfig).toMatchObject({
         root: true,
         vcs: { enabled: false },
@@ -483,9 +487,7 @@ describe("agent-effectiveness eval scorer", () => {
         "biome did not measure a staged source file: it processed 3 of 4.",
       ]);
 
-      const [biomeConfig, tsgoConfig] = yield* Effect.all(
-        A.map(configs, (text) => S.decodeUnknownEffect(S.UnknownFromJsonString)(text))
-      );
+      const [biomeConfig, tsgoConfig] = yield* Effect.all(A.map(configs, (text) => decodeUnknownJson(text)));
       expect(biomeConfig).toMatchObject({ files: { maxSize: 1024 * 1024 * 1024 } });
       expect(tsgoConfig).toMatchObject({
         files: ["packages/fixture/src/Contact.ts", "packages/fixture/src/generated/impl.ts"],
@@ -664,7 +666,7 @@ describe("agent-effectiveness eval scorer", () => {
       expect(Exit.isFailure(exit)).toBe(true);
       const error = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined;
       expect(error).toBeInstanceOf(AgentEffectivenessEvalScorerError);
-      expect(S.is(AgentEffectivenessEvalScorerError)(error) ? error.message : "").toContain(
+      expect(isScorerError(error) ? error.message : "").toContain(
         "Scorer law lanes could not measure the fixture: biome (Biome exited 0 without a JSON report"
       );
     })
@@ -679,7 +681,7 @@ describe("agent-effectiveness eval scorer", () => {
           const repoRoot = yield* findRepoRoot();
           yield* writeText(
             path.join(fixtureDir, "tsconfig.json"),
-            JSON.stringify({ extends: "../../../../../tsconfig.base.json", include: ["src/**/*.ts"] })
+            encodeJson({ extends: "../../../../../tsconfig.base.json", include: ["src/**/*.ts"] })
           );
           yield* writeText(
             path.join(fixtureDir, "src", "Contact.ts"),
@@ -698,11 +700,11 @@ describe("agent-effectiveness eval scorer", () => {
 
           yield* writeText(
             path.join(fixtureDir, "tsconfig.json"),
-            JSON.stringify({ compilerOptions: { noCheck: true, strict: false }, include: [] })
+            encodeJson({ compilerOptions: { noCheck: true, strict: false }, include: [] })
           );
           yield* writeText(
             path.join(fixtureDir, "biome.json"),
-            JSON.stringify({ root: true, formatter: { enabled: false }, linter: { enabled: false } })
+            encodeJson({ root: true, formatter: { enabled: false }, linter: { enabled: false } })
           );
           expect(yield* score).toEqual(baseline);
         })

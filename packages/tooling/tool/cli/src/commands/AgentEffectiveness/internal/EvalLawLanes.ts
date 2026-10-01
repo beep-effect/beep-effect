@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
@@ -125,7 +124,7 @@ const laneOutcome = (
     report: AgentEffectivenessEvalLaneReport.make({
       lane,
       status: A.isReadonlyArrayNonEmpty(diagnostics) ? "environment-failure" : "measured",
-      filesProcessed: NonNegativeInt.make(filesProcessed),
+      filesProcessed: S.Natural.make(filesProcessed),
       environmentDiagnostics: diagnostics,
     }),
   });

@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { A } from "@beep/utils";
 import { Effect } from "effect";
@@ -268,13 +268,13 @@ export type AgentEffectivenessEvalLaneStatus = typeof AgentEffectivenessEvalLane
  * **Example** (Make a measured lane report)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Number"
  * import { AgentEffectivenessEvalLaneReport } from "@beep/repo-cli/commands/AgentEffectiveness"
+ * import * as S from "effect/Schema"
  *
  * const report = AgentEffectivenessEvalLaneReport.make({
  *   lane: "biome",
  *   status: "measured",
- *   filesProcessed: NonNegativeInt.make(1),
+ *   filesProcessed: S.Natural.make(1),
  *   environmentDiagnostics: []
  * })
  * console.log(report.status) // "measured"
@@ -289,7 +289,7 @@ export class AgentEffectivenessEvalLaneReport extends S.Class<AgentEffectiveness
   {
     lane: AgentEffectivenessEvalLawLane,
     status: AgentEffectivenessEvalLaneStatus,
-    filesProcessed: NonNegativeInt,
+    filesProcessed: S.Natural,
     environmentDiagnostics: S.Array(S.String),
   },
   $I.annote("AgentEffectivenessEvalLaneReport", {
