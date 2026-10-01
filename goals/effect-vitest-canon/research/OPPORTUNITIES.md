@@ -6392,3 +6392,23 @@ During the nine-suite proof closeout, `bun run beep lint reflection` selected th
 ### Bun external validation configuration diagnostic
 
 The private strict ledger decoder validated 4,579 rows with zero invalid rows or duplicate IDs and exited 0, then Bun printed `Internal error: directory mismatch` for the root tsconfig override. Keep this runtime diagnostic separate from the successful schema result. A cache-local tsconfig with explicit root aliases would avoid the override boundary; the reproducible engine diagnostic can inform a later Bun issue.
+
+### 2026-10-01 — Hosted repair and proof-scope correction
+
+PR #1390 exposed a deterministic service-key diagnostic in the Corpus test and inherited
+Vitest alias drift. Commit `736f6f7b0c` added the dock CSS TypeScript path without
+regenerating its Vitest alias. The repair names the Corpus service by its canonical
+test path and restores the missing alias. The canonical `lint:tsgo-rules` check passes;
+full `@beep/repo-cli` verification passes audit in 629.9 seconds and docgen in 19.9 seconds.
+
+The 2,287-case runtime reports cover the property sweep plus selected suites. Public
+proof prose and 193 ledger reasons now state that scope; identities, statuses, evidence,
+and fix SHAs are preserved. Future focused configurations must replace `include` after
+merging. An attempted `beep lint tsgo-rules` invocation forwarded an extra Turbo task
+and ended red; the generated root script invokes `beep quality tsgo-rules` correctly.
+
+The publication stopped at integration dependency build with `@beep/ui` TS2589 after
+26 passing lanes; six later lanes were skipped. UI source, root manifest, and lockfile
+match the merged base. An isolated installed TypeScript build with normal declaration
+emission passes. Keep both receipts: the integration failure still needs full-lane
+verification and its execution-context cause remains unproven.

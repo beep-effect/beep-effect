@@ -6,12 +6,12 @@ Seven suite migrations and the two spawn environment regression files are commit
 
 | Check | Result | Elapsed |
 | --- | --- | --- |
-| Node 22.22.3 / Vitest 5.0.3 | 2,287 CLI tests passed; zero failures or pending tests | 378.024 seconds |
-| Bun 1.4.2 / Vitest 5.0.3 | 2,287 CLI tests passed; zero failures or pending tests | 259.808 seconds |
+| Node 22.22.3 / Vitest 5.0.3 | 2,287 property-sweep and selected-suite tests passed; zero failures or pending tests | 378.024 seconds |
+| Bun 1.4.2 / Vitest 5.0.3 | 2,287 property-sweep and selected-suite tests passed; zero failures or pending tests | 259.808 seconds |
 | Full `@beep/repo-cli` package audit | Passed | 657.2 seconds |
 | Package docgen | Passed | 21.5 seconds |
 
-The runtime configuration merged the package default include with the eight selected suite files, so it executed the entire CLI suite. The selected suites independently account for 198 passed cases on each runtime: sweep plan 74, directory handle 5, worktree reap 15, setup reference 7, QA contract parity 19, monitor comment stream 17, Corpus 59 and the outer spawn wrapper 2. The wrapper exercises the nested environment fixture. Future private focused configuration replaces the include after merging; original full-suite reports remain intact.
+The runtime configuration merged the package default include with the eight selected suite files, so it executed the content-selected property sweep plus the selected suites. The selected suites independently account for 198 passed cases on each runtime: sweep plan 74, directory handle 5, worktree reap 15, setup reference 7, QA contract parity 19, monitor comment stream 17, Corpus 59 and the outer spawn wrapper 2. The wrapper exercises the nested environment fixture. Future private focused configuration replaces the include after merging; original runtime reports remain intact.
 
 Both runs used `BEEP_FC_NUM_RUNS=400` and seed `20260708`. These settings govern existing generated laws; they do not turn native fixture cases into property tests. Every public allocating layer retains an explicit 30-second hook budget. Source hashes were checked before and after runtime and package verification; commit hooks applied no further edits.
 
@@ -24,3 +24,5 @@ Corpus preserves six independent singleton schema properties. Its Boolean consum
 The package proof includes ordinary audit and documentation gates; earlier private estimated Fallow coverage diagnostics are not represented as ordinary gate failures or waivers. This receipt does not establish a fresh hosted head, complete PR readiness, a completed inventory, a phase ratification or final goal acceptance. The final baseline is still nonempty, remaining existing inventory must be handled, and packet human phase gates remain in force.
 
 The canonical baseline refresh records 2,092 current findings. Ten current occurrences match reviewed exceptions by file, rule and structural occurrence identity; seven relocated IDs are added separately without replacing historical rows. The sixth historical setup child scope remains reviewed even though the current detector does not emit it. Other newly detected rules remain open for later inventory reconciliation; this batch makes no blanket acceptance claim.
+
+Scope correction: `BEEP_FC_NUM_RUNS=400` activates `fcDeepSweepActive`; shared `include` then derives from `propertyTestInclude(process.cwd())`. The 2,287 passing cases establish the executed property sweep plus eight selected suites, not every ordinary CLI test. The independent package audit/docgen result is unchanged.

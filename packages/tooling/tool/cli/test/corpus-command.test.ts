@@ -1966,7 +1966,7 @@ class ArchiveCopyMutation extends Context.Service<
     readonly mutation: Ref.Ref<O.Option<Effect.Effect<void, PlatformError.PlatformError>>>;
     readonly native: FileSystem.FileSystem;
   }
->()("CorpusTest/ArchiveCopyMutation") {}
+>()("@beep/repo-cli/test/corpus-command.test/ArchiveCopyMutation") {}
 
 const archiveCopyMutationInputs = Layer.effect(
   ArchiveCopyMutation,
