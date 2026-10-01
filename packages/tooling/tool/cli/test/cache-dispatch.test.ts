@@ -35,7 +35,6 @@ import { A } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -244,18 +243,16 @@ describe("cache qualification command dispatch", () => {
       expect(yield* f.run(["execute", "--", ...args]).pipe(Effect.isFailure)).toBe(true);
     }).pipe(provideScopedLayer(testLayer))
   );
-  it.effect("preserves arbitrary reviewed baseline requests through file decoding and command dispatch", () =>
-    Arbitrary.checkEffect(
-      Arbitrary.schema(CacheBaselineRequest),
-      (request) =>
-        Effect.gen(function* () {
-          const f = yield* fixture(emptyAudit, request);
-          yield* f.run(["baseline", "--request", f.requests.baseline]);
-          expect(f.calls).toEqual(["baseline"]);
-          return true;
-        }).pipe(provideScopedLayer(testLayer)),
-      fcRuns(40)
-    ).pipe(Effect.map((result) => expect(result._tag).toBe("Passed")))
+  it.effect.prop(
+    "preserves arbitrary reviewed baseline requests through file decoding and command dispatch",
+    { request: CacheBaselineRequest },
+    ({ request }) =>
+      Effect.gen(function* () {
+        const f = yield* fixture(emptyAudit, request);
+        yield* f.run(["baseline", "--request", f.requests.baseline]);
+        expect(f.calls).toEqual(["baseline"]);
+      }).pipe(provideScopedLayer(testLayer)),
+    { arbitrary: fcRuns(40) }
   );
 
   it.effect("renders the index, audit formats and explicit ledger through the injected authority", () =>

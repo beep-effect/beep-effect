@@ -29,7 +29,7 @@ import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -630,7 +630,7 @@ describe("cache governance audit", () => {
 
 it.effect("keeps signed execution identities distinct and rejects inconsistent activation or tuples", () =>
   Effect.gen(function* () {
-    expect(O.isNone(contract.signedExecution)).toBe(true);
+    assertNone(contract.signedExecution);
     const execution = CacheSignedExecutionProfile.make({
       sourceKey: key,
       sourceConfiguration: digest(101),

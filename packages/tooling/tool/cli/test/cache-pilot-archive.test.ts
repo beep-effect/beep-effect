@@ -20,7 +20,7 @@ const makeTar = (text = "safe task output\n", fields: ConstructorParameters<type
 };
 const inspect = (tar: Uint8Array) => inspectCacheSignedPilotArchive(zstdCompressSync(tar), []);
 
-it.layer(NodeCrypto.layer)("bounded signed pilot archive", (it) => {
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("bounded signed pilot archive", (it) => {
   it.effect("inspects the sole task log without extraction", () =>
     Effect.gen(function* () {
       const result = yield* inspect(makeTar());

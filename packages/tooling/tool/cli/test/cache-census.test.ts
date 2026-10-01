@@ -29,7 +29,6 @@ import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -137,31 +136,29 @@ const activationFixture = Effect.fn("CacheCensusTest.activationFixture")(functio
 const encodeJsonObjectJson = S.encodeEffect(S.fromJsonString(S.JsonObject));
 
 describe("reviewed cache activation projection", () => {
-  it.effect("rejects arbitrary replacement task semantics despite a correctly rebound artifact digest", () =>
-    Arbitrary.checkEffect(
-      Arbitrary.schema(CacheTaskConfiguration),
-      (configuration) =>
-        Effect.gen(function* () {
-          const f = yield* activationFixture();
-          const after = yield* encodeJsonObjectJson({
-            extends: ["//"],
-            tasks: { lint: { ...configuration, cache: true } },
-          });
-          const sha256 = yield* hashBytes(new TextEncoder().encode(after));
-          const activation = CacheActivationProjection.make({
-            ...f.activation,
-            after: CacheEvidenceReference.make({ ...f.activation.after, sha256 }),
-          });
-          const result = yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, after).pipe(
-            Effect.result
-          );
-          result.pipe(Result.isFailure, assertTrue);
-          if (Result.isFailure(result))
-            expect(result.failure.message).toBe("Activation may change only the selected task's cache flag.");
-          return true;
-        }).pipe(provideCrypto),
-      fcRuns(50)
-    ).pipe(Effect.map((result) => expect(result._tag).toBe("Passed")))
+  it.effect.prop(
+    "rejects arbitrary replacement task semantics despite a correctly rebound artifact digest",
+    { configuration: CacheTaskConfiguration },
+    ({ configuration }) =>
+      Effect.gen(function* () {
+        const f = yield* activationFixture();
+        const after = yield* encodeJsonObjectJson({
+          extends: ["//"],
+          tasks: { lint: { ...configuration, cache: true } },
+        });
+        const sha256 = yield* hashBytes(new TextEncoder().encode(after));
+        const activation = CacheActivationProjection.make({
+          ...f.activation,
+          after: CacheEvidenceReference.make({ ...f.activation.after, sha256 }),
+        });
+        const result = yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, after).pipe(
+          Effect.result
+        );
+        result.pipe(Result.isFailure, assertTrue);
+        if (Result.isFailure(result))
+          expect(result.failure.message).toBe("Activation may change only the selected task's cache flag.");
+      }).pipe(provideCrypto),
+    { arbitrary: fcRuns(50) }
   );
 
   it.effect(
