@@ -1,0 +1,1013 @@
+{
+  "sourceFixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae",
+  "closedHistorical": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:364:runSync@6#1",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:398:runSync@6#1",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:422:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:511:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:565:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:639:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:695:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:735:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:787:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:817:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:853:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:917:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1048:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1094:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1145:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1201:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1269:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1298:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1386:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1445:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:603:runSync@6#1",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:623:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:645:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:671:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:702:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:769:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:789:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:840:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:903:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:982:runPromise@6#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:122:runPromise@4#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:150:runPromise@4#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:195:runPromise@4#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:222:runPromise@4#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:257:runPromise@4#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:296:runPromise@4#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:328:runPromise@4#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:357:runPromise@4#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:379:runPromise@4#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:413:runPromise@4#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:70:runPromise@4#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:711:runPromise@11#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:746:runPromise@11#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/create-package-lab.test.ts:96:withTempRepoCommand@28#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/create-package.test.ts:17:provideScopedLayer@2#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/create-package.test.ts:343:withTempRepoCommand@28#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/delete-package.test.ts:31:provideNode@20#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/delete-package.test.ts:36:withTempDirectory@26#1",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae"
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/create-package-lab.test.ts:365:checkEffect@8#1",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c"
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/create-package-lab.test.ts:399:checkEffect@8#1",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c"
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/create-package.test.ts:604:checkEffect@8#1",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c"
+    }
+  ],
+  "runtimeLineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1048:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "creates service apps with canonical composite checks and JSON dependencies",
+      "currentTitle": "creates service apps with canonical composite checks and JSON dependencies",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1040,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ path, rootDir }) => Effect.gen(function* () { yield* bootstrapIdentityWorkspace(rootDir); yield* runCreatePackageCommand([ \"api"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1094:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps runtime-proof apps package-like",
+      "currentTitle": "keeps runtime-proof apps package-like",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1088,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { yield* bootstrapIdentityWorkspace(rootDir); yield* runCreatePackageCommand(["
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1145:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "creates canonical foundation packages with family metadata and workspace-resolved identity registration",
+      "currentTitle": "creates canonical foundation packages with family metadata and workspace-resolved identity registration",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1139,
+          "evidence": "Effect.runPromise( withTempRepoCommand( Effect.gen(function* () { const rootDir = process.cwd(); const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* bootstrapFoundationIdent"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1201:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "generates opt-in Storybook story typecheck config for foundation ui-system packages",
+      "currentTitle": "generates opt-in Storybook story typecheck config for foundation ui-system packages",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1195,
+          "evidence": "Effect.runPromise( withTempRepoCommand( Effect.gen(function* () { const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapFoundationIdentityRoot(rootDir); yield* runCreatePackage"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1269:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects stories tsconfig generation outside foundation ui-system package scaffolds",
+      "currentTitle": "rejects stories tsconfig generation outside foundation ui-system package scaffolds",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1265,
+          "evidence": "Effect.runPromise( withTempRepoCommand( Effect.gen(function* () { const result = yield* runCreatePackageCommand([ \"schema-kit\", \"--family\", \"foundation\", \"--kind\", \"modeling\", \"--description\", \"A sche"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1298:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "creates canonical tooling packages with family metadata",
+      "currentTitle": "creates canonical tooling packages with family metadata",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1294,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig( { workspaces: [\"packages/foundation/*/*\", \"packages/tooling/tool/cli\"], references: [\"packages/foundation/modeling/identity\", \"packages/tooling/tool/cli\""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1386:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "creates canonical driver packages with flat family metadata",
+      "currentTitle": "creates canonical driver packages with flat family metadata",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1382,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig( { workspaces: [\"packages/foundation/*/*\", \"packages/drivers/*\"], references: [\"packages/foundation/modeling/identity\"], paths: { \"@beep/identity\": [\"./pa"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:1445:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "creates polarity-correct ecosystem packages with flat family metadata",
+      "currentTitle": "creates polarity-correct ecosystem packages with flat family metadata",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1443,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig( { workspaces: [\"packages/foundation/*/*\", \"packages/ecosystem/*\"], references: [\"packages/foundation/modeling/identity\"], paths: { \"@beep/identity\": [\"./"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:603:runSync@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "property: Storybook tsconfig schemas round-trip derived values",
+      "currentTitle": "property: Storybook tsconfig schemas round-trip derived values",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:623:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps the checked-in OIP plugin profile aligned with the canonical root profile",
+      "currentTitle": "keeps the checked-in OIP plugin profile aligned with the canonical root profile",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 615,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const path = yield* Path.Path; const repoRoot = yield* findRepoRoot(); const rootConfig = yield* decodeTypeScriptPluginsConfig( yield* readJsoncFile(path.j"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:645:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refreshes bun.lock with bun install --lockfile-only by default",
+      "currentTitle": "refreshes bun.lock with bun install --lockfile-only by default",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 637,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig(PackageParentRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { const binDir = path.join(rootDir, \".bin\"); const bunArgsPath = path.join(roo"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:671:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "scaffolds tool packages with the tool script block and the platform-node dependency",
+      "currentTitle": "scaffolds tool packages with the tool script block and the platform-node dependency",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 663,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig(PackageParentRootConfig, ({ path, rootDir }) => Effect.gen(function* () { yield* bootstrapIdentityWorkspace(rootDir); yield* runCreatePackageCommand([ \"ex"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:702:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "adds top-level package workspaces, identity exports, and shared config sync outputs",
+      "currentTitle": "adds top-level package workspaces, identity exports, and shared config sync outputs",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 692,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig(PackageParentRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { yield* bootstrapIdentityWorkspace(rootDir); yield* runCreatePackageCommand(["
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:769:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "requires an explicit app kind for app scaffolds",
+      "currentTitle": "requires an explicit app kind for app scaffolds",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 759,
+          "evidence": "Effect.runPromise( withTempRepoCommand( Effect.gen(function* () { const result = yield* runCreatePackageCommand([\"proof-app\", \"--type\", \"app\"]).pipe( Effect.match({ onFailure: toFailureMessage, onSucc"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:789:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses to scaffold into a directory that already exists",
+      "currentTitle": "refuses to scaffold into a directory that already exists",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 779,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { yield* bootstrapIdentityWorkspace(rootDir); yield* runCreatePackageCommand(["
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:840:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "creates Next.js apps without package API boilerplate",
+      "currentTitle": "creates Next.js apps without package API boilerplate",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 830,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { yield* bootstrapIdentityWorkspace(rootDir); yield* runCreatePackageCommand(["
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:903:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "creates Tauri apps without package API boilerplate",
+      "currentTitle": "creates Tauri apps without package API boilerplate",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 893,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { yield* bootstrapIdentityWorkspace(rootDir); yield* runCreatePackageCommand(["
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package.test.ts:982:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "creates Vite apps without package API boilerplate and skips workspace append when apps/* covers the path",
+      "currentTitle": "creates Vite apps without package API boilerplate and skips workspace append when apps/* covers the path",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 972,
+          "evidence": "Effect.runPromise( withBootstrappedRootConfig( { workspaces: [\"packages/foundation/modeling/identity\", \"apps/*\"], references: [\"packages/foundation/modeling/identity\"], paths: { \"@beep/identity\": [\"./"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/create-package.test.ts:604:checkEffect@8#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "property: Storybook tsconfig schemas round-trip derived values",
+      "currentTitle": "property: Storybook tsconfig schemas round-trip derived values",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:364:runSync@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "property: lab tsconfig schemas round-trip derived values",
+      "currentTitle": "property: lab tsconfig schemas round-trip derived values",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:398:runSync@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates",
+      "currentTitle": "property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:422:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "scaffolds a nextjs lab with manifest, labs portless label, @beep/ui wiring, and the labs identity segment",
+      "currentTitle": "scaffolds a nextjs lab with manifest, labs portless label, @beep/ui wiring, and the labs identity segment",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 414,
+          "evidence": "Effect.runPromise( withLabsFixture(LabsRootConfig, (context) => Effect.gen(function* () { const { fs, path, rootDir } = context; yield* runCreatePackageCommand([ \"web-lab\", \"--type\", \"app\", \"--app-kin"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:511:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "scaffolds a vite lab with the @beep/ui style chain and lab-only postcss config",
+      "currentTitle": "scaffolds a vite lab with the @beep/ui style chain and lab-only postcss config",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 505,
+          "evidence": "Effect.runPromise( withLabsFixture(LabsRootConfig, (context) => Effect.gen(function* () { const { fs, path, rootDir } = context; yield* runCreatePackageCommand([ \"graph-lab\", \"--type\", \"app\", \"--app-k"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:565:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "scaffolds a service lab with the HttpApi stack and no frontend dependencies",
+      "currentTitle": "scaffolds a service lab with the HttpApi stack and no frontend dependencies",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 561,
+          "evidence": "Effect.runPromise( withLabsFixture(LabsRootConfig, (context) => Effect.gen(function* () { const { fs, path, rootDir } = context; yield* runCreatePackageCommand([ \"probe-svc\", \"--type\", \"app\", \"--app-k"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:639:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "scaffolds a tauri lab with a compilable crate icon and the labs portless devUrl",
+      "currentTitle": "scaffolds a tauri lab with a compilable crate icon and the labs portless devUrl",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 637,
+          "evidence": "Effect.runPromise( withLabsFixture(LabsRootConfig, (context) => Effect.gen(function* () { const { fs, path, rootDir } = context; yield* runCreatePackageCommand([ \"probe-tauri\", \"--type\", \"app\", \"--app"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:695:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rebuilds the labs identity segment sorted when a second lab is created",
+      "currentTitle": "rebuilds the labs identity segment sorted when a second lab is created",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 695,
+          "evidence": "Effect.runPromise( withLabsFixture(LabsRootConfig, (context) => Effect.gen(function* () { yield* runCreatePackageCommand([ \"zeta-lab\", \"--type\", \"app\", \"--app-kind\", \"vite\", \"--lab\", \"--description\","
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:735:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses --lab flag misuse before touching the filesystem",
+      "currentTitle": "refuses --lab flag misuse before touching the filesystem",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 735,
+          "evidence": "Effect.runPromise( withTempRepoCommand( Effect.gen(function* () { const runRefusal = (args: ReadonlyArray<string>) => runCreatePackageCommand(args).pipe( Effect.match({ onFailure: toFailureMessage, on"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:787:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses lab scaffolding when the root workspaces lack the apps/labs/* glob (D5)",
+      "currentTitle": "refuses lab scaffolding when the root workspaces lack the apps/labs/* glob (D5)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 787,
+          "evidence": "Effect.runPromise( withLabsFixture(NoLabsGlobRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { const result = yield* runCreatePackageCommand([ \"probe-lab\", \"--type\", \"app\", \"--app-kind\""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:817:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses a non-lab package targeted into the labs root via --parent-dir",
+      "currentTitle": "refuses a non-lab package targeted into the labs root via --parent-dir",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 817,
+          "evidence": "Effect.runPromise( withLabsFixture(LabsRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { // The inverse of the D5 guard: landing inside apps/labs without // --lab would skip every lab c"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:853:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "gates every create on the retired-packages registry, dry-run included",
+      "currentTitle": "gates every create on the retired-packages registry, dry-run included",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 853,
+          "evidence": "Effect.runPromise( withLabsFixture(LabsRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { yield* writeJsonFile(path.join(rootDir, RETIRED_REGISTRY_PATH), { packages: [{ name: \"@beep/prob"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/create-package-lab.test.ts:917:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "leaves the retired registry untouched when the name is absent",
+      "currentTitle": "leaves the retired registry untouched when the name is absent",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 917,
+          "evidence": "Effect.runPromise( withLabsFixture(LabsRootConfig, ({ fs, path, rootDir }) => Effect.gen(function* () { // The no-op path is unreachable through the command surface \u2014 // create-package only calls the"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/create-package-lab.test.ts:365:checkEffect@8#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "property: lab tsconfig schemas round-trip derived values",
+      "currentTitle": "property: lab tsconfig schemas round-trip derived values",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/create-package-lab.test.ts:399:checkEffect@8#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates",
+      "currentTitle": "property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:122:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects tampered and mismatched deletion notes that reuse the canonical basename",
+      "currentTitle": "rejects tampered and mismatched deletion notes that reuse the canonical basename",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 124,
+          "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const deletionNote = path.join(repoRoo"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:150:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "delete-package --check prints every synthetic residue class and exits nonzero",
+      "currentTitle": "delete-package --check prints every synthetic residue class and exits nonzero",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 152,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.writeFileString(\"bun.lock\", \"\"); yield* fs.writ"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:195:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "classifies identity-accessor importers outside the target tree as hard import dependents",
+      "currentTitle": "classifies identity-accessor importers outside the target tree as hard import dependents",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 197,
+          "evidence": "Effect.runPromise( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.writeFileString( path.join(repoRoot, \"pac"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:222:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "classifies a nested resolved workspace as a hard path dependent of its ancestor",
+      "currentTitle": "classifies a nested resolved workspace as a hard path dependent of its ancestor",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 224,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = yield* fs.realPath(\".\"); yield* fs.write"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:257:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "classifies packet history and ledger references as historical, not live packet claims",
+      "currentTitle": "classifies packet history and ledger references as historical, not live packet claims",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 259,
+          "evidence": "Effect.runPromise( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.writeFileString( path.join(repoRoot, \"pac"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:296:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "ignores machine-local .beep artifacts in the authored-reference probe",
+      "currentTitle": "ignores machine-local .beep artifacts in the authored-reference probe",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 298,
+          "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.makeDirectory(path.join(repo"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:328:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses deleting a live package whose README carries a promotion record",
+      "currentTitle": "refuses deleting a live package whose README carries a promotion record",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 330,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.writeFileString(\"bun.lock\", \"\"); yield* fs.writ"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:357:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses a repository-root workspace target before planning recursive removal",
+      "currentTitle": "refuses a repository-root workspace target before planning recursive removal",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 359,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.writeFileString(\"bun.lock\", \"\"); yield* fs.writeFileString( \"package.json\", '{"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:379:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses a workspace target that contains another resolved workspace",
+      "currentTitle": "refuses a workspace target that contains another resolved workspace",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 381,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.writeFileString(\"bun.lock\", \"\"); yield* fs.writ"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:413:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "revalidates the owned tree before applying a leaf deletion",
+      "currentTitle": "revalidates the owned tree before applying a leaf deletion",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 415,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.writeFileString(\"bun.lock\", \"\"); yield* fs.writ"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:70:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports every synthetic PR #680 residue class without relying on ambient state",
+      "currentTitle": "reports every synthetic PR #680 residue class without relying on ambient state",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 72,
+          "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.makeDirectory(path.join(repo"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:711:runPromise@11#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "subtracts the coverage baseline then runs every shell step in table order",
+      "currentTitle": "subtracts the coverage baseline then runs every shell step in table order",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 713,
+          "evidence": "Effect.runPromise( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.makeDirectory(path.join(repoRoot, \"standa"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package.test.ts:746:runPromise@11#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "fails the stage on the first zero-only step that exits nonzero",
+      "currentTitle": "fails the stage on the first zero-only step that exits nonzero",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 748,
+          "evidence": "Effect.runPromise( withTempDirectory((repoRoot) => Effect.gen(function* () { const exit = yield* Effect.exit(DeletePackageBaselineWriters.run(repoRoot, \"@beep/courtlistener\")); exit.pipe(Exit.isFailur"
+        }
+      ],
+      "afterMatches": []
+    }
+  ],
+  "priorFixes": [
+    {
+      "title": "property: Storybook tsconfig schemas round-trip derived values",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+      "before": {
+        "ref": "e08b24b0042c0c1bbd274de49407e8bade354575",
+        "form": "it",
+        "boundaries": ["Effect.runSync"]
+      },
+      "after": {
+        "ref": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+        "form": "it.effect.prop",
+        "boundaries": []
+      }
+    },
+    {
+      "title": "property: lab tsconfig schemas round-trip derived values",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+      "before": {
+        "ref": "6b1ebc8d33a386a3c57eb990b74a656dd17680a1",
+        "form": "it",
+        "boundaries": ["Effect.runSync"]
+      },
+      "after": {
+        "ref": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+        "form": "it.effect.prop",
+        "boundaries": []
+      }
+    },
+    {
+      "title": "property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+      "before": {
+        "ref": "6b1ebc8d33a386a3c57eb990b74a656dd17680a1",
+        "form": "it",
+        "boundaries": ["Effect.runSync"]
+      },
+      "after": {
+        "ref": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+        "form": "it.effect.prop",
+        "boundaries": []
+      }
+    }
+  ],
+  "helperLineage": [
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/create-package-lab.test.ts:96:withTempRepoCommand@28#1",
+      "beforeDetectorId": "EV003:packages/tooling/tool/cli/test/create-package-lab.test.ts:98:withTempRepoCommand@28#1",
+      "symbol": "withTempRepoCommand",
+      "occurrence": "v2:9db060eac4034da00d136afac28ea5519a62648bf81d93a50f03d6658635ed43",
+      "evidence": "<A2, E, R>(use: Effect.Effect<A2, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = yield* fs.makeTem",
+      "judgment": "Stable services moved to the public file fixture, and terminal temporary resources moved to the public per-test scope. Setup cleanup registration and test-local override behavior are independently verified."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/create-package.test.ts:17:provideScopedLayer@2#1",
+      "beforeDetectorId": "EV003:packages/tooling/tool/cli/test/create-package.test.ts:18:provideScopedLayer@2#1",
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:7e30027013c6028b259f0acb6f89385cd5edeabc6062f779752d5a8f74e27eb2",
+      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.flatMa",
+      "judgment": "Stable services moved to the public file fixture, and terminal temporary resources moved to the public per-test scope. Setup cleanup registration and test-local override behavior are independently verified."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/create-package.test.ts:343:withTempRepoCommand@28#1",
+      "beforeDetectorId": "EV003:packages/tooling/tool/cli/test/create-package.test.ts:340:withTempRepoCommand@28#1",
+      "symbol": "withTempRepoCommand",
+      "occurrence": "v2:ce85c2d3532bb2691e621b51b04dec4efb2249cea8dde3da716c85ca3acb0f8c",
+      "evidence": "<A, E, R>(use: Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = yield* fs.makeTempD",
+      "judgment": "Stable services moved to the public file fixture, and terminal temporary resources moved to the public per-test scope. Setup cleanup registration and test-local override behavior are independently verified."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/delete-package.test.ts:31:provideNode@20#1",
+      "beforeDetectorId": "EV003:packages/tooling/tool/cli/test/delete-package.test.ts:33:provideNode@20#1",
+      "symbol": "provideNode",
+      "occurrence": "v2:a0f83d5376f6ffa70a4b3186c22b2a50be788ac1e0523960cbda1a61e40f6bb5",
+      "evidence": "<A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.scoped( Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))) )",
+      "judgment": "Stable services moved to the public file fixture, and terminal temporary resources moved to the public per-test scope. Setup cleanup registration and test-local override behavior are independently verified."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/delete-package.test.ts:36:withTempDirectory@26#1",
+      "beforeDetectorId": "EV003:packages/tooling/tool/cli/test/delete-package.test.ts:38:withTempDirectory@26#1",
+      "symbol": "withTempDirectory",
+      "occurrence": "v2:cebbdec41488d7bbe7ac40051f15b2a0a5d8d0aceb461215b0aea028d38981d2",
+      "evidence": "<A, E, R>(use: (directory: string) => Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; return yield* fs.makeTempDirectory(); }),",
+      "judgment": "Stable services moved to the public file fixture, and terminal temporary resources moved to the public per-test scope. Setup cleanup registration and test-local override behavior are independently verified."
+    }
+  ],
+  "retainedJudgments": [
+    "EV003:packages/tooling/tool/cli/test/create-package.test.ts:412:withBunShim@20#1"
+  ],
+  "addedCurrentRows": 0,
+  "counts": {
+    "open": 1759,
+    "fixed": 1724,
+    "exception": 12
+  },
+  "fullPackageProof": "Passed CLI cohort proof at source e5eda0f280: audit 884.2 seconds, docgen 24.8 seconds; package source unchanged."
+}

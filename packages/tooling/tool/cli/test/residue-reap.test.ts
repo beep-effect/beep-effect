@@ -19,7 +19,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -637,10 +636,9 @@ describe("residue reap", () => {
 
   it.effect("fails closed when the configured home root is empty or relative", () =>
     Effect.gen(function* () {
-      const empty = yield* Effect.result(runResidueReap({ homeRoot: "" }));
-      empty.pipe(Result.isFailure, assertTrue);
-      const relative = yield* Effect.result(runResidueReap({ homeRoot: "relative/home" }));
-      relative.pipe(Result.isFailure, assertTrue);
+      yield* runResidueReap({ homeRoot: "" }).pipe(Effect.flip);
+
+      yield* runResidueReap({ homeRoot: "relative/home" }).pipe(Effect.flip);
     }).pipe(provideScopedLayer(NodeServices.layer))
   );
 

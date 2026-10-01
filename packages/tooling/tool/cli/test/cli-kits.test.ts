@@ -27,13 +27,18 @@ import {
 } from "@beep/repo-cli/test/Cli";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect, HashSet } from "effect";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Data, Effect, HashSet } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeRunModeEffect = S.decodeEffect(RunMode);
 
 const toError = (cause: unknown) => new Error(String(cause));
+
+class InvalidPathSegment extends Data.TaggedError("InvalidPathSegment")<{
+  readonly message: string;
+}> {}
 
 describe("internal/cli/FailureRendering", () => {
   it("stays quiet by default so causes do not leak transcript paths", () => {
@@ -122,19 +127,19 @@ describe("internal/cli/RunMode", () => {
 
 describe("internal/cli/UnknownProbe", () => {
   it("narrows non-array objects, rejecting arrays and primitives", () => {
-    expect(O.isSome(asRecord({ a: 1 }))).toBe(true);
-    expect(O.isNone(asRecord([1, 2]))).toBe(true);
-    expect(O.isNone(asRecord("nope"))).toBe(true);
+    asRecord({ a: 1 }).pipe(O.isSome, assertTrue);
+    asRecord([1, 2]).pipe(assertNone);
+    asRecord("nope").pipe(assertNone);
     expect(isUnknownRecord({ a: 1 })).toBe(true);
     expect(isUnknownRecord([1, 2])).toBe(false);
     expect(isUnknownRecord(null)).toBe(false);
   });
 
   it("reads present properties data-first and data-last, rejecting arrays and missing keys", () => {
-    expect(unknownRecordProperty({ name: "beep" }, "name")).toStrictEqual(O.some("beep"));
-    expect(unknownRecordProperty("name")({ name: "beep" })).toStrictEqual(O.some("beep"));
-    expect(O.isNone(unknownRecordProperty({ name: "beep" }, "missing"))).toBe(true);
-    expect(O.isNone(unknownRecordProperty([1, 2], "0"))).toBe(true);
+    assertSome(unknownRecordProperty({ name: "beep" }, "name"), "beep");
+    assertSome(unknownRecordProperty("name")({ name: "beep" }), "beep");
+    unknownRecordProperty({ name: "beep" }, "missing").pipe(assertNone);
+    unknownRecordProperty([1, 2], "0").pipe(assertNone);
   });
 
   it("lists sorted keys and treats arrays and non-objects as empty", () => {
@@ -182,13 +187,21 @@ describe("internal/cli/FsGuards", () => {
     expect(caseCollided.targetName).toBe("PHOTO_02.WEBP");
   });
 
-  it("validatePathSegment works data-first and data-last", () => {
-    const options = { onInvalid: (label: string, value: string) => new Error(`${label}: ${value}`) };
-    expect(Effect.runSync(validatePathSegment("source", "ok", options))).toBeUndefined();
-    expect(Effect.runSync(validatePathSegment("ok", options)("source"))).toBeUndefined();
-    expect(() => Effect.runSync(validatePathSegment("source", "..", options))).toThrow();
-    expect(() => Effect.runSync(validatePathSegment("..", options)("source"))).toThrow();
-  });
+  it.effect("validatePathSegment works data-first and data-last", () =>
+    Effect.gen(function* () {
+      const options = {
+        onInvalid: (label: string, value: string) => new InvalidPathSegment({ message: `${label}: ${value}` }),
+      };
+      expect(yield* validatePathSegment("source", "ok", options)).toBeUndefined();
+      expect(yield* validatePathSegment("ok", options)("source")).toBeUndefined();
+      expect(yield* validatePathSegment("source", "..", options).pipe(Effect.flip)).toEqual(
+        new InvalidPathSegment({ message: "source: .." })
+      );
+      expect(yield* validatePathSegment("..", options)("source").pipe(Effect.flip)).toEqual(
+        new InvalidPathSegment({ message: "source: .." })
+      );
+    })
+  );
 
   it("exposes both arities of the filesystem-dependent guards without running them", () => {
     const dirErrors = {

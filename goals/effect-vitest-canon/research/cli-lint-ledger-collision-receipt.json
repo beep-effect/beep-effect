@@ -1,0 +1,13 @@
+{
+  "description": "Distinct findings from different source snapshots share a location-based detector ID. The new ledger row alone receives a disambiguating suffix; original detector identity, evidence and fingerprints are retained.",
+  "collisions": [
+    {
+      "detectorId": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:1010:runPromise@4#1",
+      "ledgerId": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:1010:runPromise@4#2",
+      "historicalOccurrence": "v2:3e0231bb2034ad37566cb4383d00ebbcd514199e3bf1e93d1fc6c26386ba4d87",
+      "newOccurrence": "v2:33c25541bc4245b4cb52a13850c40fb48a41ea16b9ee8a3512f60127c795f146",
+      "historicalEvidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const UnknownFromJsonString = S.fromJsonString(S.U",
+      "newEvidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const sameError = (_self: unknown, _that: unknown)"
+    }
+  ]
+}

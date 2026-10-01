@@ -150,34 +150,34 @@ describe("yeet monitor flake fingerprints", () => {
   });
 
   it("recognizes the no-location TS2589 signature through GitHub log decoration", () => {
-    expect(detectYeetMonitorFlakeClass(ts2589FlakeLog)).toStrictEqual(O.some("ts2589-no-location"));
+    assertSome(detectYeetMonitorFlakeClass(ts2589FlakeLog), "ts2589-no-location");
   });
 
   it("refuses a TS2589 that carries a file location", () => {
     // A located TS2589 is a real depth problem in a real file, not the
     // scheduling-dependent instantiation-count flake.
-    expect(detectYeetMonitorFlakeClass(locatedTs2589Log)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(locatedTs2589Log));
   });
 
   it("refuses an ordinary type error", () => {
-    expect(detectYeetMonitorFlakeClass(genuineTypeErrorLog)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(genuineTypeErrorLog));
   });
 
   it("recognizes both suite-level and job-level timeouts", () => {
-    expect(detectYeetMonitorFlakeClass(suiteTimeoutLog)).toStrictEqual(O.some("ci-timeout"));
-    expect(detectYeetMonitorFlakeClass(jobTimeoutLog)).toStrictEqual(O.some("ci-timeout"));
+    assertSome(detectYeetMonitorFlakeClass(suiteTimeoutLog), "ci-timeout");
+    assertSome(detectYeetMonitorFlakeClass(jobTimeoutLog), "ci-timeout");
   });
 
   it("refuses a bare cancellation", () => {
     // A job cancelled because a sibling failed carries no timeout evidence;
     // classifying it would spend a rerun on a fail-fast side effect.
-    expect(detectYeetMonitorFlakeClass(cancelledSiblingLog)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(cancelledSiblingLog));
   });
 
   it("refuses the retired torn-read TS2306 signature", () => {
     // Retired with the single-project emit law: no build can tear a sibling's
     // dist anymore, so a TS2306 is a genuine defect and must not buy a rerun.
-    expect(detectYeetMonitorFlakeClass(ts2306TornReadLog)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(ts2306TornReadLog));
   });
 });
 
@@ -188,19 +188,17 @@ describe("yeet monitor job-shape fingerprints", () => {
     // rerun cannot paper over branch state.
     const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Run bun run test", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+    assertSome(detectGithubJobShapeClass(job), "setup-5xx");
   });
 
   it("recognizes the setup failure under the runner-setup step name too", () => {
-    expect(detectGithubJobShapeClass(jobRecord("failure", [jobStep("Set up runner", "failure")]))).toStrictEqual(
-      O.some("setup-5xx")
-    );
+    assertSome(detectGithubJobShapeClass(jobRecord("failure", [jobStep("Set up runner", "failure")])), "setup-5xx");
   });
 
   it("recognizes runner loss when the job failed and no step ever concluded", () => {
     const job = jobRecord("failure", [jobStep("Set up job", null), jobStep("Run bun run test", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("runner-loss"));
+    assertSome(detectGithubJobShapeClass(job), "runner-loss");
   });
 
   it("refuses runner loss when any step reached a conclusion", () => {
@@ -208,12 +206,12 @@ describe("yeet monitor job-shape fingerprints", () => {
     // red: the runner was present for the whole job.
     const job = jobRecord("failure", [jobStep("Set up job", "success"), jobStep("Run bun run test", "failure")]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(job));
   });
 
   it("refuses a job with no steps rather than reading absent evidence as runner loss", () => {
     // An empty `steps` list is missing evidence, not evidence of absence.
-    expect(detectGithubJobShapeClass(jobRecord("failure", []))).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(jobRecord("failure", [])));
   });
 
   it("refuses a cancelled job, whose steps are null for a reason that is not runner loss", () => {
@@ -221,11 +219,11 @@ describe("yeet monitor job-shape fingerprints", () => {
     // job-level conclusion is what separates them.
     const job = jobRecord("cancelled", [jobStep("Set up job", null), jobStep("Run bun run test", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(job));
   });
 
   it("refuses a job that has not concluded at all", () => {
-    expect(detectGithubJobShapeClass(jobRecord(null, [jobStep("Set up job", null)]))).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(jobRecord(null, [jobStep("Set up job", null)])));
   });
 
   it("prefers the setup class when a failed setup step coexists with unconcluded steps", () => {
@@ -233,7 +231,7 @@ describe("yeet monitor job-shape fingerprints", () => {
     // names the actual remedy in the operator line.
     const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Complete job", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+    assertSome(detectGithubJobShapeClass(job), "setup-5xx");
   });
 
   it("recognizes an install step that failed before any lane ran", () => {
@@ -246,7 +244,7 @@ describe("yeet monitor job-shape fingerprints", () => {
       jobStep("Run bun run codegen", null),
     ]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("install-failure"));
+    assertSome(detectGithubJobShapeClass(job), "install-failure");
   });
 
   it("still recognizes an install failure past GitHub's own cleanup steps", () => {
@@ -260,7 +258,7 @@ describe("yeet monitor job-shape fingerprints", () => {
       jobStep("Complete job", "success"),
     ]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("install-failure"));
+    assertSome(detectGithubJobShapeClass(job), "install-failure");
   });
 
   it("refuses an install failure when a lane afterwards actually ran", () => {
@@ -271,7 +269,7 @@ describe("yeet monitor job-shape fingerprints", () => {
       jobStep("Run bun run codegen", "failure"),
     ]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(job));
   });
 
   it("prefers the setup class over the install class when setup is what failed", () => {
@@ -279,7 +277,7 @@ describe("yeet monitor job-shape fingerprints", () => {
     // vaguer class shadow the precise one.
     const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Install dependencies", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+    assertSome(detectGithubJobShapeClass(job), "setup-5xx");
   });
 
   it("carries every shape class into the rerun plan with its evidence", () => {
@@ -955,10 +953,10 @@ describe("applyYeetMonitorJobDecision", () => {
 
 describe("yeet monitor loop control", () => {
   it("reads the terminal state out of a gh pr view state string", () => {
-    expect(yeetMonitorTerminalState(O.some("MERGED"))).toStrictEqual(O.some("merged"));
-    expect(yeetMonitorTerminalState(O.some("closed"))).toStrictEqual(O.some("closed"));
-    expect(yeetMonitorTerminalState(O.some("OPEN"))).toStrictEqual(O.none());
-    expect(yeetMonitorTerminalState(O.none())).toStrictEqual(O.none());
+    assertSome(yeetMonitorTerminalState(O.some("MERGED")), "merged");
+    assertSome(yeetMonitorTerminalState(O.some("closed")), "closed");
+    O.some("OPEN").pipe(yeetMonitorTerminalState, assertNone);
+    O.none().pipe(yeetMonitorTerminalState, assertNone);
   });
 
   it("renders each decision so the operator sees the classification, not a bare exit", () => {

@@ -12,7 +12,7 @@ AST comparison confirms all non-import statements remain unchanged. Evidence:
 Eleven additional detector rows from that commit are now fixed: scoped cwd
 acquisition, preserved Boolean/Option assertions, TestConsole ownership, two
 runner imports and the schema-topology layer timeout. The detector ledger now
-contains 260 fixed rows, seven reviewed exceptions and 3,154 open rows, with all
+contains 575 fixed rows, seven reviewed exceptions and 2,842 open rows, with all
 3,415 historical identities preserved and six newly exposed shorter-scope
 judgments added and strict schema validation passing. The full CLI
 package audit and docgen passed after the cwd repair. Four-lens reconciliation,
@@ -382,3 +382,139 @@ Evidence: [resource rows](../resource/beep_repo-cli.jsonl),
 Quoted fixture literals are preserved in the
 [reference evidence receipt](../../../history/2026-09-21-p1-reference-evidence/README.md).
 They are test data, not instructions to use a machine-local path.
+
+## Option presence and CI console follow-up
+
+Commit `a72a31ea9bc8546a58b017d6d4a0b1d9f92b01b0` fixes 99 historical
+Option-presence findings and one newly captured watermark assertion. Two
+identical historical predicates were matched by their duplicate ordinal as
+well as file, occurrence and evidence. The detector ledger has 3,422 unique
+schema-valid rows. The resource ledger has 250 rows, including the reasoned
+short-console lifetime exception. All 1,315 registrations pass before/after
+on Node and Bun; the CI console regression cohort passes all 38 tests on both.
+Full CLI audit/docgen passed, but separate Effect test diagnostics still need
+repair before repository readiness. See
+[the follow-up proof](../../../research/cli-option-presence-and-console-proof.md).
+
+## Option absence predicates
+
+Commit `038fe84ce4` fixes 213 existing EV006 rows and two newly captured
+assertions. All 1,194 registrations match before/after on Node and Bun, with
+zero failures/skips and stable source. Effect test diagnostics are clean,
+and the ratchet removes exactly 215 findings without baseline expansion.
+The detector ledger has 3,424 unique rows: 575 fixed, seven exceptions, and
+2,842 open. Full package proof status remains explicit in
+[the proof](../../../research/cli-option-absence-proof.md).
+
+
+## Option.none comparisons
+
+Commit `f1ac7e358e413e6dcc0b0e95ee52965b512f6a9f` replaces 97 comparisons with public `assertNone`.
+Ninety-three historical rows are fixed, and four newly captured findings have
+separate fixed records. Nine optional subjects are evaluated once and checked
+with `assertDefined`; undefined still fails. Final Effect diagnostics are clean.
+The ratchet reports 4,079 findings with zero introduced; no baseline exception
+was added. The CLI detector ledger now has 3,428 unique rows: 672 fixed,
+seven exceptions and 2,749 open. Final timing and package proof status is in
+[the comparison proof](../../../research/cli-option-none-equality-proof.md).
+
+
+## Option.some comparisons
+
+Commit `484ab21b075e36bad965961ff196ffa74615ebfd` migrates 198 comparisons in 31 files.
+The ledger fixes 182 existing rows and captures 16 additional fixed findings.
+One existing row is matched by the sole remaining identical evidence pair
+after exact occurrence matches assign the other duplicates. The asymmetric
+matcher retains its partial-object comparison; optional subjects preserve
+single evaluation and failure on undefined. The CLI detector ledger contains
+3,444 unique rows: 870 fixed, seven exceptions and 2,567 open. The zero-new
+ratchet reports 3,881 remaining findings. Timing and full package proof status
+is explicit in [the comparison proof](../../../research/cli-option-some-equality-proof.md).
+
+
+## Inline Exit tags and multiline Option residue
+
+Commit `56df0aa64cdecb1b22d4404cb63256c9064290f9` fixes 62 existing EV006 records:
+59 inline Exit Failure-tag assertions and three multiline Option comparisons.
+All 119 test registrations pass before/after on Node and Bun; Effect diagnostics
+and the zero-new ratchet pass. Other finding groups retain their multiplicities.
+The detector ledger has 3,444 unique rows: 932 fixed, seven exceptions and
+2,505 open. There are no new ledger findings in this batch. Full package proof
+status is explicit in [the proof](../../../research/cli-assertion-residual-proof.md).
+
+
+## Boolean predicates and Exit cause assertions
+
+Commit `7dee42b8d9c02137b47d0855d61ac251a76ecb8c` migrates 53 assertions across four files.
+The ledger fixes 43 historical rows and adds ten captured fixed findings; one
+historical row is the unique remaining identical evidence pair after assigning
+other duplicates. All 440 registrations pass before/after on Node and Bun.
+Effect diagnostics and the ratchet pass with zero introduced findings. The CLI
+ledger has 3,454 unique rows: 985 fixed, seven exceptions and 2,462 open.
+Full package proof status remains explicit in
+[the proof](../../../research/cli-predicate-cause-proof.md).
+
+
+## Shared internals and labs ceremony
+
+Commit `ffeeb3a2d0e324be719230f6d37857057b989a2d` migrates two suites while
+retaining 50 tests and 117 assertions. Node/Bun runs and actual type diagnostics
+pass; 24 Effect callbacks have distinct console services. Twenty historical
+rows close and one captured timeout finding is added as fixed, preserving all
+existing IDs. The detector ledger now has 3,496 rows: 1,967 fixed, twelve
+exceptions and 1,517 open. Package-proof status and timing limits are explicit
+in [the proof](../../../research/cli-shared-labs-runtime-proof.md).
+
+
+## CI hook budgets and pure guard runtimes
+
+Signed commits `6665e3dc33` and `f18ae4a35e` close ten historical findings and
+capture one new hook-budget finding as fixed. CI-lane retains 74 passing cases;
+CLI guards retain 25 cases with stronger typed-error assertions. Both runtimes,
+actual test-type diagnostics and package quick gates pass. The ledger has
+3,497 unique rows: 1,978 fixed, twelve exceptions and 1,507 open. Ecosystem
+resource findings remain open while their separate full package proof runs.
+See the CI hook-budget and CLI-kits proof receipts in research for scope.
+
+
+## Ecosystem fixture proof completed
+
+Full CLI audit (776.2 seconds) and docgen (21.7 seconds) pass. Four historical
+runtime rows close with source commit `f18ae4a35e`; the ledger now has 3,497
+rows: 1,982 fixed, twelve exceptions and 1,503 open. Runtime, assertion and
+cleanup evidence is in research/cli-ecosystem-runtime-proof.md.
+
+
+## Repository topology and emit law callbacks
+
+Commit `f524a74ac2` fixes three direct-runtime findings with three passing
+Node/Bun tests and eighteen preserved assertions. The emit audit's existing
+native-filesystem finding is an explicit exception because the subject is the
+actual checkout's package scripts. No new inventory IDs are added. The ledger
+has 3,497 rows: 1,985 fixed, thirteen exceptions and 1,499 open. Validation and
+timing scope are recorded in research/cli-foundation-emit-runtime-proof.md.
+
+## New main compiler integration judgment
+
+The schema parity codemod native integration adds one reviewed EV010 exception.
+The ledger now contains 3,498 rows: 1,985 fixed, fourteen exceptions and 1,499
+open. See research/cli-schema-parity-native-proof.md for compiler provenance
+and Node/Bun verification; historical rows and the baseline remain intact.
+
+
+## Goals doctor fixture ownership
+
+Four historical runtime findings close with source commit `6be36921fe`.
+Six Node/Bun tests preserve twelve assertions; full CLI audit (781.7 seconds)
+and docgen (22.9 seconds) pass. The ledger contains 3,498 rows: 1,989 fixed,
+fourteen exceptions and 1,495 open. Native platform judgment remains open.
+See research/cli-doctor-runtime-resource-proof.md.
+
+
+## Quality dispatch fixture ownership
+
+Eight runtime findings close with `ccfa1913f2` after full CLI audit (674.8
+seconds) and docgen (22.4 seconds). Node/Bun tests and isolation probes pass;
+all 26 assertion trees and eight test names/options remain intact. The ledger
+contains 3,498 rows: 1,997 fixed, fourteen exceptions and 1,487 open.
+See research/cli-dispatch-resource-proof.md.

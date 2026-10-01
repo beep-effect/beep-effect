@@ -22,16 +22,17 @@ import {
   upcastPacketEventJson,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 
 const decodePacketTraceProjectionJson = S.decodeEffect(S.fromJsonString(PacketTraceProjection));
 const decodeUnknownPacketTraceEntryEffect = S.decodeUnknownEffect(PacketTraceEntry);
@@ -94,31 +95,31 @@ const applyPlanInMemory = Effect.fnUntraced(function* (
   return applied;
 });
 
-describe("canonical encoding and digests", () => {
-  it("renders key order deterministically, compact and pretty", () => {
-    expect(canonicalJsonText({ b: 1, a: [true, null] })).toBe('{"a":[true,null],"b":1}');
-    expect(canonicalJsonText({ a: [true, null], b: 1 })).toBe('{"a":[true,null],"b":1}');
-    expect(canonicalJsonTextPretty({ b: 1, a: 2 })).toBe('{\n  "a": 2,\n  "b": 1\n}\n');
-    expect(canonicalJsonText({ a: undefined, b: 1 })).toBe('{"b":1}');
-  });
+it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
+  describe("canonical encoding and digests", () => {
+    it("renders key order deterministically, compact and pretty", () => {
+      expect(canonicalJsonText({ b: 1, a: [true, null] })).toBe('{"a":[true,null],"b":1}');
+      expect(canonicalJsonText({ a: [true, null], b: 1 })).toBe('{"a":[true,null],"b":1}');
+      expect(canonicalJsonTextPretty({ b: 1, a: 2 })).toBe('{\n  "a": 2,\n  "b": 1\n}\n');
+      expect(canonicalJsonText({ a: undefined, b: 1 })).toBe('{"b":1}');
+    });
 
-  it("round-trips event file names and rejects non-CAS names", () => {
-    const digest = "a".repeat(64);
-    const parsed = parsePacketEventFileName(`00002-status-set-${digest}.json`);
-    expect(O.isSome(parsed)).toBe(true);
-    if (O.isSome(parsed)) {
-      expect(parsed.value.seq).toBe(2);
-      expect(parsed.value.type).toBe("status-set");
-      expect(parsed.value.id).toBe(digest);
-    }
-    expect(O.isNone(parsePacketEventFileName("notes.md"))).toBe(true);
-    expect(O.isNone(parsePacketEventFileName(`2-status-set-${digest}.json`))).toBe(true);
-  });
+    it("round-trips event file names and rejects non-CAS names", () => {
+      const digest = "a".repeat(64);
+      const parsed = parsePacketEventFileName(`00002-status-set-${digest}.json`);
+      parsed.pipe(O.isSome, assertTrue);
+      if (O.isSome(parsed)) {
+        expect(parsed.value.seq).toBe(2);
+        expect(parsed.value.type).toBe("status-set");
+        expect(parsed.value.id).toBe(digest);
+      }
+      parsePacketEventFileName("notes.md").pipe(assertNone);
+      parsePacketEventFileName(`2-status-set-${digest}.json`).pipe(assertNone);
+    });
 
-  it(
-    "changes the digest whenever any event content changes",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "changes the digest whenever any event content changes",
+      () =>
         Effect.gen(function* () {
           const base = PacketEvent.make({
             schemaVersion: "packet-event/v1",
@@ -136,49 +137,49 @@ describe("canonical encoding and digests", () => {
           const movedDigest = yield* packetEventDigest(moved);
           expect(baseDigest).toBe(stableDigest);
           expect(baseDigest).not.toBe(movedDigest);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it("upcasts v1 as identity and passes unknown shapes through", () => {
-    const raw = { schemaVersion: "packet-event/v1", seq: 1 };
-    expect(upcastPacketEventJson(raw)).toBe(raw);
-    const unknownVersion = { schemaVersion: "packet-event/v999" };
-    expect(upcastPacketEventJson(unknownVersion)).toBe(unknownVersion);
-    expect(upcastPacketEventJson("scalar")).toBe("scalar");
-    expect("packet-event/v1" in PACKET_EVENT_UPCASTERS).toBe(true);
-  });
-});
-
-describe("schema-derived properties", () => {
-  const PacketTraceEntryArbitrary = Arbitrary.schema(PacketTraceEntry);
-  it.effect.prop(
-    "round-trips arbitrary timeline entries through encode/decode byte-stably",
-    [PacketTraceEntryArbitrary],
-    Effect.fnUntraced(function* ([entry]) {
-      const encoded = yield* encodeUnknownPacketTraceEntryEffect(entry);
-      const reencoded = yield* encodeUnknownPacketTraceEntryEffect(yield* decodeUnknownPacketTraceEntryEffect(encoded));
-      expect(canonicalJsonText(reencoded) === canonicalJsonText(encoded)).toBe(true);
-    }),
-    { arbitrary: fcRuns(50) }
-  );
-});
-
-describe("foldPacketEvents", () => {
-  it("folds an empty stream to revision 0 with no derivations", () => {
-    const derived = foldPacketEvents({ packet: "demo", root: "goals", events: [] });
-    expect(derived.revision).toBe(0);
-    expect(derived.tip).toBeUndefined();
-    expect(derived.status).toBeUndefined();
-    expect(derived.forks).toStrictEqual([]);
-    expect(derived.issues).toStrictEqual([]);
+    it("upcasts v1 as identity and passes unknown shapes through", () => {
+      const raw = { schemaVersion: "packet-event/v1", seq: 1 };
+      expect(upcastPacketEventJson(raw)).toBe(raw);
+      const unknownVersion = { schemaVersion: "packet-event/v999" };
+      expect(upcastPacketEventJson(unknownVersion)).toBe(unknownVersion);
+      expect(upcastPacketEventJson("scalar")).toBe("scalar");
+      expect("packet-event/v1" in PACKET_EVENT_UPCASTERS).toBe(true);
+    });
   });
 
-  it(
-    "derives furthest and resume stages across a loop-back (D3)",
-    () =>
-      Effect.runPromise(
+  describe("schema-derived properties", () => {
+    const PacketTraceEntryArbitrary = Arbitrary.schema(PacketTraceEntry);
+    it.effect.prop(
+      "round-trips arbitrary timeline entries through encode/decode byte-stably",
+      [PacketTraceEntryArbitrary],
+      Effect.fnUntraced(function* ([entry]) {
+        const encoded = yield* encodeUnknownPacketTraceEntryEffect(entry);
+        const reencoded = yield* encodeUnknownPacketTraceEntryEffect(
+          yield* decodeUnknownPacketTraceEntryEffect(encoded)
+        );
+        expect(canonicalJsonText(reencoded) === canonicalJsonText(encoded)).toBe(true);
+      }),
+      { arbitrary: fcRuns(50) }
+    );
+  });
+
+  describe("foldPacketEvents", () => {
+    it("folds an empty stream to revision 0 with no derivations", () => {
+      const derived = foldPacketEvents({ packet: "demo", root: "goals", events: [] });
+      expect(derived.revision).toBe(0);
+      expect(derived.tip).toBeUndefined();
+      expect(derived.status).toBeUndefined();
+      expect(derived.forks).toStrictEqual([]);
+      expect(derived.issues).toStrictEqual([]);
+    });
+
+    it.effect(
+      "derives furthest and resume stages across a loop-back (D3)",
+      () =>
         Effect.gen(function* () {
           const events = yield* chainEvents("demo", [
             {
@@ -194,15 +195,13 @@ describe("foldPacketEvents", () => {
           expect(derived.furthestOrdinal).toBe(4);
           expect(derived.resumeStage).toBe("align");
           expect(derived.status).toBe("active");
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "derives the last risk-tier override on the linear prefix, with its challenge surface",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "derives the last risk-tier override on the linear prefix, with its challenge surface",
+      () =>
         Effect.gen(function* () {
           const events = yield* chainEvents("demo", [
             { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
@@ -220,15 +219,13 @@ describe("foldPacketEvents", () => {
           expect(derived.riskTierOverride?.reason).toBe("scope grew");
           expect(derived.riskTierOverride?.actor).toBe("test");
           expect(derived.riskTierOverride?.at).toBe("2026-08-17T00:02:00.000Z");
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "keeps only the pre-fork risk-tier override when the stream forks",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "keeps only the pre-fork risk-tier override when the stream forks",
+      () =>
         Effect.gen(function* () {
           const events = yield* chainEvents("demo", [
             { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
@@ -270,15 +267,13 @@ describe("foldPacketEvents", () => {
           expect(derived.revision).toBe(2);
           expect(derived.riskTierOverride?.tier).toBe("standard");
           expect(derived.riskTierOverride?.reason).toBe("initial routing");
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "reports two children of one parent as a first-class fork verdict",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "reports two children of one parent as a first-class fork verdict",
+      () =>
         Effect.gen(function* () {
           const events = yield* chainEvents("demo", [
             { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
@@ -313,15 +308,13 @@ describe("foldPacketEvents", () => {
           expect(fork?.children.length).toBe(2);
           // Derivations stop at the unambiguous prefix before the fork.
           expect(derived.revision).toBe(1);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "orders a genesis fork by digest when two roots claim sequence one",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "orders a genesis fork by digest when two roots claim sequence one",
+      () =>
         Effect.gen(function* () {
           const events = yield* chainEvents("demo", [
             { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
@@ -369,15 +362,13 @@ describe("foldPacketEvents", () => {
           expect(derived.forks[1]?.parent).toBe(parentId);
           // Nothing derives past an unresolved genesis fork.
           expect(derived.revision).toBe(0);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "reports a missing parent digest as a chain issue",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "reports a missing parent digest as a chain issue",
+      () =>
         Effect.gen(function* () {
           const orphan = PacketEvent.make({
             schemaVersion: "packet-event/v1",
@@ -401,15 +392,13 @@ describe("foldPacketEvents", () => {
           expect(A.length(derived.issues)).toBe(1);
           expect(derived.issues[0]?.kind).toBe("missing-parent");
           expect(derived.revision).toBe(0);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "orders same-sequence fork verdicts by parent digest",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "orders same-sequence fork verdicts by parent digest",
+      () =>
         Effect.gen(function* () {
           let events = A.empty<StoredPacketEvent>();
           for (const parentByte of ["b", "a"]) {
@@ -434,17 +423,15 @@ describe("foldPacketEvents", () => {
           }
           const derived = foldPacketEvents({ packet: "demo", root: "goals", events });
           expect(A.map(derived.forks, (fork) => fork.parent)).toStrictEqual(["a".repeat(64), "b".repeat(64)]);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
-});
+        }),
+      20_000
+    );
+  });
 
-describe("golden replay (committed fixture)", () => {
-  it(
-    "folds the committed golden stream to the committed derived state and trace, byte-for-byte",
-    () =>
-      Effect.runPromise(
+  describe("golden replay (committed fixture)", () => {
+    it.effect(
+      "folds the committed golden stream to the committed derived state and trace, byte-for-byte",
+      () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const store = yield* PacketEventStore;
@@ -470,15 +457,13 @@ describe("golden replay (committed fixture)", () => {
           const expectedDerived = yield* fs.readFileString(`${GOLDEN_PATH}/expected-derived.json`);
           const encodedDerived = yield* encodeUnknownPacketDerivedState(derived);
           expect(canonicalJsonTextPretty(encodedDerived)).toBe(expectedDerived);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "folds the committed risk-override stream to the committed derived state and trace, byte-for-byte",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "folds the committed risk-override stream to the committed derived state and trace, byte-for-byte",
+      () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const store = yield* PacketEventStore;
@@ -502,15 +487,13 @@ describe("golden replay (committed fixture)", () => {
           const expectedDerived = yield* fs.readFileString(`${RISK_OVERRIDE_PATH}/expected-derived.json`);
           const encodedDerived = yield* encodeUnknownPacketDerivedState(derived);
           expect(canonicalJsonTextPretty(encodedDerived)).toBe(expectedDerived);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "retires the committed v1 trace: stale by decode under the v2 projector, bytes changed",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "retires the committed v1 trace: stale by decode under the v2 projector, bytes changed",
+      () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           // Projections are disposable derived copies: a v1 trace is never
@@ -524,15 +507,13 @@ describe("golden replay (committed fixture)", () => {
           expect(v2Text).not.toBe(v1Text);
           expect(v2Text).toContain('"timeline"');
           expect(v2Text).toContain('"projectorVersion": 2');
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "folds the committed fork fixture to a fork verdict and refuses appends",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "folds the committed fork fixture to a fork verdict and refuses appends",
+      () =>
         Effect.gen(function* () {
           const store = yield* PacketEventStore;
           const locator = PacketStreamLocator.make({ packet: "forked", root: "goals", packetPath: FORKED_PATH });
@@ -569,32 +550,28 @@ describe("golden replay (committed fixture)", () => {
           if (Exit.isFailure(result)) {
             expect(String(Cause.squash(result.cause))).toContain("forked");
           }
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
-});
+        }).pipe(TestClock.withLive),
+      20_000
+    );
+  });
 
-describe("planForkRepair", () => {
-  it(
-    "plans no repair for an unforked stream",
-    () =>
-      Effect.runPromise(
+  describe("planForkRepair", () => {
+    it.effect(
+      "plans no repair for an unforked stream",
+      () =>
         Effect.gen(function* () {
           const events = yield* chainEvents("demo", [
             { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
           ]);
           const plan = yield* planForkRepair({ packet: "demo", root: "goals", events });
-          expect(O.isNone(plan)).toBe(true);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+          plan.pipe(assertNone);
+        }),
+      20_000
+    );
 
-  it(
-    "plans the committed fork fixture: survivor, rebased draft, file removal — and the applied plan folds linear",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "plans the committed fork fixture: survivor, rebased draft, file removal — and the applied plan folds linear",
+      () =>
         Effect.gen(function* () {
           const store = yield* PacketEventStore;
           const listing = yield* store.list(
@@ -618,7 +595,7 @@ describe("planForkRepair", () => {
 
           const losingId = plan.fork.children[1];
           const losing = A.findFirst(listing.events, (stored) => stored.id === losingId);
-          expect(O.isSome(losing)).toBe(true);
+          losing.pipe(O.isSome, assertTrue);
           const draft = plan.rebaseDrafts[0];
           expect(draft?.seq).toBe(4);
           expect(draft?.expectedRevision).toBe(3);
@@ -641,17 +618,15 @@ describe("planForkRepair", () => {
           expect(repaired.revision).toBe(4);
           const timeline = projectPacketTrace(repaired, applied).timeline;
           expect(A.length(timeline)).toBe(4);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
-});
+        }),
+      20_000
+    );
+  });
 
-describe("planForkRepair on genesis forks", () => {
-  it(
-    "plans a genesis fork: absent parent, losing genesis rebased to seq 2",
-    () =>
-      Effect.runPromise(
+  describe("planForkRepair on genesis forks", () => {
+    it.effect(
+      "plans a genesis fork: absent parent, losing genesis rebased to seq 2",
+      () =>
         Effect.gen(function* () {
           const genesisA = PacketEvent.make({
             schemaVersion: "packet-event/v1",
@@ -685,38 +660,36 @@ describe("planForkRepair on genesis forks", () => {
           const repaired = foldPacketEvents({ packet: "demo", root: "goals", events: applied });
           expect(repaired.forks).toStrictEqual([]);
           expect(repaired.revision).toBe(2);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
-});
-
-describe("planForkRepair on nested forks", () => {
-  const siblingOf = Effect.fnUntraced(function* (
-    parentId: string | undefined,
-    seq: number,
-    at: string,
-    body: EventBody
-  ) {
-    const event = PacketEvent.make({
-      schemaVersion: "packet-event/v1",
-      packet: "demo",
-      root: "goals",
-      seq,
-      ...(parentId === undefined ? {} : { parent: parentId }),
-      expectedRevision: seq - 1,
-      at,
-      actor: "test",
-      body,
-    });
-    const id = yield* packetEventDigest(event);
-    return StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event });
+        }),
+      20_000
+    );
   });
 
-  it(
-    "descends to the innermost fork on the surviving path instead of enlarging it",
-    () =>
-      Effect.runPromise(
+  describe("planForkRepair on nested forks", () => {
+    const siblingOf = Effect.fnUntraced(function* (
+      parentId: string | undefined,
+      seq: number,
+      at: string,
+      body: EventBody
+    ) {
+      const event = PacketEvent.make({
+        schemaVersion: "packet-event/v1",
+        packet: "demo",
+        root: "goals",
+        seq,
+        ...(parentId === undefined ? {} : { parent: parentId }),
+        expectedRevision: seq - 1,
+        at,
+        actor: "test",
+        body,
+      });
+      const id = yield* packetEventDigest(event);
+      return StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event });
+    });
+
+    it.effect(
+      "descends to the innermost fork on the surviving path instead of enlarging it",
+      () =>
         Effect.gen(function* () {
           const base = yield* chainEvents("demo", [
             { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
@@ -772,38 +745,36 @@ describe("planForkRepair on nested forks", () => {
           expect(A.length(after.forks)).toBe(2);
           expect(A.every(after.forks, (fork) => A.length(fork.children) === 2)).toBe(true);
           expect(A.some(after.forks, (fork) => fork.parent === plan.fork.parent)).toBe(false);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
-});
-
-describe("store read robustness", () => {
-  const writeStoredEvent = Effect.fnUntraced(function* (directory: string, event: PacketEvent) {
-    const fs = yield* FileSystem.FileSystem;
-    const id = yield* packetEventDigest(event);
-    const content = yield* renderPacketEventFile(event);
-    yield* fs.makeDirectory(directory, { recursive: true });
-    yield* fs.writeFileString(`${directory}/${packetEventFileName(event, id)}`, content);
-    return { id, content };
+        }),
+      20_000
+    );
   });
 
-  const genesisEvent = (packet: string): PacketEvent =>
-    PacketEvent.make({
-      schemaVersion: "packet-event/v1",
-      packet,
-      root: "goals",
-      seq: 1,
-      expectedRevision: 0,
-      at: "2026-08-17T00:00:00.000Z",
-      actor: "test",
-      body: { type: "packet-created", status: "active" },
+  describe("store read robustness", () => {
+    const writeStoredEvent = Effect.fnUntraced(function* (directory: string, event: PacketEvent) {
+      const fs = yield* FileSystem.FileSystem;
+      const id = yield* packetEventDigest(event);
+      const content = yield* renderPacketEventFile(event);
+      yield* fs.makeDirectory(directory, { recursive: true });
+      yield* fs.writeFileString(`${directory}/${packetEventFileName(event, id)}`, content);
+      return { id, content };
     });
 
-  it(
-    "discards unknown keys before computing event identity",
-    () =>
-      Effect.runPromise(
+    const genesisEvent = (packet: string): PacketEvent =>
+      PacketEvent.make({
+        schemaVersion: "packet-event/v1",
+        packet,
+        root: "goals",
+        seq: 1,
+        expectedRevision: 0,
+        at: "2026-08-17T00:00:00.000Z",
+        actor: "test",
+        body: { type: "packet-created", status: "active" },
+      });
+
+    it.effect(
+      "discards unknown keys before computing event identity",
+      () =>
         Effect.gen(function* () {
           const store = yield* PacketEventStore;
           const listing = yield* store.list(
@@ -811,19 +782,17 @@ describe("store read robustness", () => {
           );
           expect(A.length(listing.events)).toBe(1);
           expect(listing.issues).toStrictEqual([]);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "rejects a decoded event whose sequence disagrees with its file name",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "rejects a decoded event whose sequence disagrees with its file name",
+      () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const store = yield* PacketEventStore;
-          const packetPath = yield* fs.makeTempDirectory();
+          const packetPath = yield* fs.makeTempDirectoryScoped();
           const events = `${packetPath}/ops/events`;
           const event = genesisEvent("file-name-mismatch");
           const { id, content } = yield* writeStoredEvent(events, event);
@@ -835,19 +804,17 @@ describe("store read robustness", () => {
           );
           expect(listing.events).toStrictEqual([]);
           expect(A.map(listing.issues, (item) => item.kind)).toStrictEqual(["file-name-mismatch"]);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "does not recursively canonicalize deeply nested unknown input",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "does not recursively canonicalize deeply nested unknown input",
+      () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const store = yield* PacketEventStore;
-          const packetPath = yield* fs.makeTempDirectory();
+          const packetPath = yield* fs.makeTempDirectoryScoped();
           const events = `${packetPath}/ops/events`;
           const event = genesisEvent("deep-unknown");
           const { id, content } = yield* writeStoredEvent(events, event);
@@ -860,15 +827,13 @@ describe("store read robustness", () => {
           );
           expect(A.length(listing.events)).toBe(1);
           expect(listing.issues).toStrictEqual([]);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "rejects copied history whose packet and root disagree with the locator",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "rejects copied history whose packet and root disagree with the locator",
+      () =>
         Effect.gen(function* () {
           const store = yield* PacketEventStore;
           const listing = yield* store.list(
@@ -882,19 +847,17 @@ describe("store read robustness", () => {
           expect(A.map(listing.issues, (item) => item.kind)).toStrictEqual(["packet-mismatch"]);
           expect(listing.issues[0]?.detail).toContain("goals/golden-linear");
           expect(listing.issues[0]?.detail).toContain("explorations/copied-history");
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "reports unreadable names, invalid JSON, undecodable events, and digest or name mismatches as issues",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "reports unreadable names, invalid JSON, undecodable events, and digest or name mismatches as issues",
+      () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const store = yield* PacketEventStore;
-          const packetPath = yield* fs.makeTempDirectory();
+          const packetPath = yield* fs.makeTempDirectoryScoped();
           const events = `${packetPath}/ops/events`;
           const { content } = yield* writeStoredEvent(events, genesisEvent("robust"));
           const digest = "d".repeat(64);
@@ -912,21 +875,18 @@ describe("store read robustness", () => {
           expect(kinds).toContain("file-name-mismatch");
           expect(kinds).toContain("event-invalid");
           expect(kinds).toContain("digest-mismatch");
-          yield* fs.remove(packetPath, { recursive: true, force: true });
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
 
-  it(
-    "refuses appends onto a missing stream, a broken stream, and a mismatched parent",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "refuses appends onto a missing stream, a broken stream, and a mismatched parent",
+      () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const store = yield* PacketEventStore;
 
-          const missingPath = yield* fs.makeTempDirectory();
+          const missingPath = yield* fs.makeTempDirectoryScoped();
           const missingLocator = PacketStreamLocator.make({ packet: "robust", root: "goals", packetPath: missingPath });
           const missing = yield* Effect.exit(store.append(missingLocator, genesisEvent("robust")));
           assertTrue(Exit.isFailure(missing));
@@ -934,7 +894,7 @@ describe("store read robustness", () => {
             expect(String(Cause.squash(missing.cause))).toContain("ops/events");
           }
 
-          const brokenPath = yield* fs.makeTempDirectory();
+          const brokenPath = yield* fs.makeTempDirectoryScoped();
           yield* fs.makeDirectory(`${brokenPath}/ops/events`, { recursive: true });
           yield* fs.writeFileString(`${brokenPath}/ops/events/junk.json`, "{}");
           const brokenLocator = PacketStreamLocator.make({ packet: "robust", root: "goals", packetPath: brokenPath });
@@ -944,7 +904,7 @@ describe("store read robustness", () => {
             expect(String(Cause.squash(broken.cause))).toContain("integrity");
           }
 
-          const parentPath = yield* fs.makeTempDirectory();
+          const parentPath = yield* fs.makeTempDirectoryScoped();
           yield* writeStoredEvent(`${parentPath}/ops/events`, genesisEvent("robust"));
           const parentLocator = PacketStreamLocator.make({ packet: "robust", root: "goals", packetPath: parentPath });
           const wrongParent = PacketEvent.make({
@@ -963,21 +923,15 @@ describe("store read robustness", () => {
           if (Exit.isFailure(conflicted)) {
             expect(String(Cause.squash(conflicted.cause))).toContain("parent digest");
           }
+        }).pipe(TestClock.withLive),
+      20_000
+    );
+  });
 
-          yield* fs.remove(missingPath, { recursive: true, force: true });
-          yield* fs.remove(brokenPath, { recursive: true, force: true });
-          yield* fs.remove(parentPath, { recursive: true, force: true });
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
-});
-
-describe("packetTraceIsStale", () => {
-  it(
-    "flags a moved sourceTip and an outdated projector version",
-    () =>
-      Effect.runPromise(
+  describe("packetTraceIsStale", () => {
+    it.effect(
+      "flags a moved sourceTip and an outdated projector version",
+      () =>
         Effect.gen(function* () {
           const events = yield* chainEvents("demo", [
             { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
@@ -992,8 +946,8 @@ describe("packetTraceIsStale", () => {
 
           const outdated = PacketTraceProjection.make({ ...fresh, projectorVersion: fresh.projectorVersion + 1 });
           expect(packetTraceIsStale(outdated, derived)).toBe(true);
-        }).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        }),
+      20_000
+    );
+  });
 });

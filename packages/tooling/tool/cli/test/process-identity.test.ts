@@ -13,6 +13,7 @@ import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect, vi } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -49,7 +50,7 @@ describe("ProcessIdentity", () => {
 
   it("parses proc stat field 22 after the final closing parenthesis", () => {
     expect(O.getOrThrow(parseAdmissionProcStatStartTime(PROC_STAT))).toBe("8241991");
-    expect(O.isNone(parseAdmissionProcStatStartTime("malformed"))).toBe(true);
+    parseAdmissionProcStatStartTime("malformed").pipe(assertNone);
   });
 
   it.effect("classifies only same-source mismatches as PID reuse", () =>
@@ -103,19 +104,19 @@ describe("ProcessIdentity", () => {
       expect(
         O.getOrThrow(yield* withProcStat(PROC_STAT, processStartIdentityForPid(process.pid, O.some("proc:8241991"))))
       ).toBe("proc:8241991");
-      expect(
-        O.isNone(yield* withProcStat("", processStartIdentityForPid(process.pid, O.some("proc:recorded-start"))))
-      ).toBe(true);
+      (yield* withProcStat("", processStartIdentityForPid(process.pid, O.some("proc:recorded-start")))).pipe(
+        assertNone
+      );
 
       const portable = yield* withProcStat("", processStartIdentityForPid(process.pid));
-      expect(O.isSome(portable)).toBe(true);
+      portable.pipe(O.isSome, assertTrue);
       if (O.isSome(portable)) {
         expect(Str.startsWith("ps:")(portable.value)).toBe(true);
-        expect(O.isSome(yield* processStartIdentityForPid(process.pid, portable))).toBe(true);
+        (yield* processStartIdentityForPid(process.pid, portable)).pipe(O.isSome, assertTrue);
       }
 
-      expect(O.isNone(yield* processStartIdentityForPid(DEAD_PID, O.some("ps:missing")))).toBe(true);
-      expect(O.isNone(yield* processStartIdentityForPid(process.pid, O.some("win:recorded")))).toBe(true);
+      (yield* processStartIdentityForPid(DEAD_PID, O.some("ps:missing"))).pipe(assertNone);
+      (yield* processStartIdentityForPid(process.pid, O.some("win:recorded"))).pipe(assertNone);
     }).pipe(provideScopedLayer(NodeFileSystem.layer))
   );
 
@@ -128,7 +129,7 @@ describe("ProcessIdentity", () => {
       }),
       () =>
         withProcStat("", processStartIdentityForPid(process.pid)).pipe(
-          Effect.tap((identity) => Effect.sync(() => expect(O.isNone(identity)).toBe(true)))
+          Effect.tap((identity) => Effect.sync(() => identity.pipe(assertNone)))
         ),
       (platform) =>
         Effect.sync(() =>
