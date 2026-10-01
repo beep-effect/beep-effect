@@ -1,0 +1,442 @@
+{
+  "sourceFixSha": "bbf8459571d5151f6e05e8564a04205f3039c70b",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:119:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:156:runSync@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:184:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:208:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:234:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:284:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:327:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:383:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:415:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:450:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:484:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:516:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:538:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:585:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:600:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:657:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:722:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:809:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:825:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:849:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:874:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:896:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:927:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:983:runPromise@6#1",
+    "EV007:packages/tooling/tool/cli/test/goals-packet-core.test.ts:157:checkEffect@8#1"
+  ],
+  "priorFix": {
+    "title": "round-trips arbitrary timeline entries through encode/decode byte-stably",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "before": {
+      "ref": "6b1ebc8d33a386a3c57eb990b74a656dd17680a1",
+      "form": "it",
+      "boundaries": ["Effect.runSync"]
+    },
+    "after": {
+      "ref": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+      "form": "it.effect.prop",
+      "boundaries": []
+    }
+  },
+  "lineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:119:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "changes the digest whenever any event content changes",
+      "currentTitle": "changes the digest whenever any event content changes",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 121,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const base = PacketEvent.make({ schemaVersion: \"packet-event/v1\", packet: \"demo\", root: \"goals\", seq: 1, expectedRevision: 0, at: \"2026-08-17T00:00:00.000Z"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:156:runSync@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "round-trips arbitrary timeline entries through encode/decode byte-stably",
+      "currentTitle": "round-trips arbitrary timeline entries through encode/decode byte-stably",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:184:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "derives furthest and resume stages across a loop-back (D3)",
+      "currentTitle": "derives furthest and resume stages across a loop-back (D3)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 181,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const events = yield* chainEvents(\"demo\", [ { body: { type: \"packet-created\", status: \"active\", stage: \"capture\", ordinal: 0 }, at: \"2026-08-17T00:00:00.00"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:208:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "derives the last risk-tier override on the linear prefix, with its challenge surface",
+      "currentTitle": "derives the last risk-tier override on the linear prefix, with its challenge surface",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 205,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const events = yield* chainEvents(\"demo\", [ { body: { type: \"packet-created\", status: \"active\" }, at: \"2026-08-17T00:00:00.000Z\" }, { body: { type: \"risk-t"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:234:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps only the pre-fork risk-tier override when the stream forks",
+      "currentTitle": "keeps only the pre-fork risk-tier override when the stream forks",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 231,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const events = yield* chainEvents(\"demo\", [ { body: { type: \"packet-created\", status: \"active\" }, at: \"2026-08-17T00:00:00.000Z\" }, { body: { type: \"risk-t"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:284:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports two children of one parent as a first-class fork verdict",
+      "currentTitle": "reports two children of one parent as a first-class fork verdict",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 281,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const events = yield* chainEvents(\"demo\", [ { body: { type: \"packet-created\", status: \"active\" }, at: \"2026-08-17T00:00:00.000Z\" }, { body: { type: \"stage-"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:327:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "orders a genesis fork by digest when two roots claim sequence one",
+      "currentTitle": "orders a genesis fork by digest when two roots claim sequence one",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 324,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const events = yield* chainEvents(\"demo\", [ { body: { type: \"packet-created\", status: \"active\" }, at: \"2026-08-17T00:00:00.000Z\" }, ]); // A second parentl"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:383:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports a missing parent digest as a chain issue",
+      "currentTitle": "reports a missing parent digest as a chain issue",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 380,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const orphan = PacketEvent.make({ schemaVersion: \"packet-event/v1\", packet: \"demo\", root: \"goals\", seq: 2, parent: \"b\".repeat(64), expectedRevision: 1, at:"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:415:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "orders same-sequence fork verdicts by parent digest",
+      "currentTitle": "orders same-sequence fork verdicts by parent digest",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 412,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { let events = A.empty<StoredPacketEvent>(); for (const parentByte of [\"b\", \"a\"]) { for (const at of [\"2026-08-17T00:00:00.000Z\", \"2026-08-17T00:00:01.000Z\"]"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:450:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "folds the committed golden stream to the committed derived state and trace, byte-for-byte",
+      "currentTitle": "folds the committed golden stream to the committed derived state and trace, byte-for-byte",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 447,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const store = yield* PacketEventStore; const listing = yield* store.list( PacketStreamLocator.make({ packet: \"gold"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:484:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "folds the committed risk-override stream to the committed derived state and trace, byte-for-byte",
+      "currentTitle": "folds the committed risk-override stream to the committed derived state and trace, byte-for-byte",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 481,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const store = yield* PacketEventStore; const listing = yield* store.list( PacketStreamLocator.make({ packet: \"risk"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:516:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "retires the committed v1 trace: stale by decode under the v2 projector, bytes changed",
+      "currentTitle": "retires the committed v1 trace: stale by decode under the v2 projector, bytes changed",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 513,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; // Projections are disposable derived copies: a v1 trace is never // upcast \u2014 it fails the v2 decode, explore --ch"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:538:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "folds the committed fork fixture to a fork verdict and refuses appends",
+      "currentTitle": "folds the committed fork fixture to a fork verdict and refuses appends",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 535,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const store = yield* PacketEventStore; const locator = PacketStreamLocator.make({ packet: \"forked\", root: \"goals\", packetPath: FORKED_PATH }); const listin"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:585:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "plans no repair for an unforked stream",
+      "currentTitle": "plans no repair for an unforked stream",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 582,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const events = yield* chainEvents(\"demo\", [ { body: { type: \"packet-created\", status: \"active\" }, at: \"2026-08-17T00:00:00.000Z\" }, ]); const plan = yield*"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:600:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "plans the committed fork fixture: survivor, rebased draft, file removal \u2014 and the applied plan folds linear",
+      "currentTitle": "plans the committed fork fixture: survivor, rebased draft, file removal \u2014 and the applied plan folds linear",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 597,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const store = yield* PacketEventStore; const listing = yield* store.list( PacketStreamLocator.make({ packet: \"forked\", root: \"goals\", packetPath: FORKED_PA"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:657:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "plans a genesis fork: absent parent, losing genesis rebased to seq 2",
+      "currentTitle": "plans a genesis fork: absent parent, losing genesis rebased to seq 2",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 654,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const genesisA = PacketEvent.make({ schemaVersion: \"packet-event/v1\", packet: \"demo\", root: \"goals\", seq: 1, expectedRevision: 0, at: \"2026-08-17T00:00:00."
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:722:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "descends to the innermost fork on the surviving path instead of enlarging it",
+      "currentTitle": "descends to the innermost fork on the surviving path instead of enlarging it",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 719,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const base = yield* chainEvents(\"demo\", [ { body: { type: \"packet-created\", status: \"active\" }, at: \"2026-08-17T00:00:00.000Z\" }, { body: { type: \"stage-en"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:809:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "discards unknown keys before computing event identity",
+      "currentTitle": "discards unknown keys before computing event identity",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 806,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const store = yield* PacketEventStore; const listing = yield* store.list( PacketStreamLocator.make({ packet: \"golden-linear\", root: \"goals\", packetPath: RA"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:825:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects a decoded event whose sequence disagrees with its file name",
+      "currentTitle": "rejects a decoded event whose sequence disagrees with its file name",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 822,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const store = yield* PacketEventStore; const packetPath = yield* fs.makeTempDirectory(); const events = `${packetP"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:849:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "does not recursively canonicalize deeply nested unknown input",
+      "currentTitle": "does not recursively canonicalize deeply nested unknown input",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 846,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const store = yield* PacketEventStore; const packetPath = yield* fs.makeTempDirectory(); const events = `${packetP"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:874:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects copied history whose packet and root disagree with the locator",
+      "currentTitle": "rejects copied history whose packet and root disagree with the locator",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 871,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const store = yield* PacketEventStore; const listing = yield* store.list( PacketStreamLocator.make({ packet: \"copied-history\", root: \"explorations\", packet"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:896:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports unreadable names, invalid JSON, undecodable events, and digest or name mismatches as issues",
+      "currentTitle": "reports unreadable names, invalid JSON, undecodable events, and digest or name mismatches as issues",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 893,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const store = yield* PacketEventStore; const packetPath = yield* fs.makeTempDirectory(); const events = `${packetP"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:927:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses appends onto a missing stream, a broken stream, and a mismatched parent",
+      "currentTitle": "refuses appends onto a missing stream, a broken stream, and a mismatched parent",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 924,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const store = yield* PacketEventStore; const missingPath = yield* fs.makeTempDirectory(); const missingLocator = P"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-packet-core.test.ts:983:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "flags a moved sourceTip and an outdated projector version",
+      "currentTitle": "flags a moved sourceTip and an outdated projector version",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 980,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const events = yield* chainEvents(\"demo\", [ { body: { type: \"packet-created\", status: \"active\" }, at: \"2026-08-17T00:00:00.000Z\" }, ]); const derived = fol"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/goals-packet-core.test.ts:157:checkEffect@8#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "round-trips arbitrary timeline entries through encode/decode byte-stably",
+      "currentTitle": "round-trips arbitrary timeline entries through encode/decode byte-stably",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    }
+  ],
+  "fullPackageProof": "Passed grouped CLI proof for source 05440996f6: audit 778.0 seconds, docgen 29.9 seconds; package source unchanged.",
+  "counts": {
+    "open": 1834,
+    "fixed": 1649,
+    "exception": 12
+  }
+}

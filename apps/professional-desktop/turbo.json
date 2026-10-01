@@ -11,7 +11,7 @@
     },
     "build": {
       "inputs": ["$TURBO_EXTENDS$", ".env*"],
-      "env": ["$TURBO_EXTENDS$", "TAURI_*"]
+      "env": ["$TURBO_EXTENDS$", "TAURI_*", "VITE_*"]
     }
   }
 }

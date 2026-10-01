@@ -208,3 +208,13 @@ Source review cannot prove absence of races, finalizer failures, native-platform
 Root verified the sealed artifacts, source receipts and combined strict inventory validation. Full P1 completeness, Grok review and Benjamin’s acknowledgement remain required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+## Piped outcome detector follow-up
+
+The EV005 pipe-recognition repair exposed 1 existing failure-only
+expectation(s) that were absent from the historical detector inventory.
+Commit `13cad3e1fa` replaces them with yielded Effect.flip while preserving
+all surrounding native filesystem assertions. Before/after Node/Bun
+registrations match, with no failures or skips; full package audit/docgen
+passes. The captured findings are recorded as fixed resource-ledger rows.
+See [the proof](../../../research/cli-policy-and-outcome-proof.md).

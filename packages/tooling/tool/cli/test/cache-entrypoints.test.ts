@@ -11,6 +11,7 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -158,7 +159,7 @@ describe("source-bound census entrypoints", () => {
       expect(result.unresolved).toContain("Existing interpreter obligation.");
       expect(result.unresolved).toContain("Candidate file reads remain unobserved.");
       expect(result.nodes).toEqual(f.census.nodes);
-      expect(O.isNone(f.census.entrypointReview)).toBe(true);
+      f.census.entrypointReview.pipe(assertNone);
       expect(yield* f.fs.exists(f.path.join(f.root, "must-not-execute"))).toBe(false);
       const json = yield* encodeCacheCensusReportJson(result);
       const decoded = yield* decodeCacheCensusReportJson(json);

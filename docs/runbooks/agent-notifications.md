@@ -33,27 +33,50 @@ sequence-break worker or its evidence.
 - **ChatGPT Desktop / Codex:** the hook automatically offers **Open task** when
   `CODEX_INTERNAL_ORIGINATOR_OVERRIDE=Codex Desktop` and `CODEX_THREAD_ID` equals
   the hook's raw session ID. The exact `codex://threads/<UUID>` route opens that
-  task. A child CLI session with a different ID cannot inherit the parent task's
-  destination accidentally.
-- **Claude Desktop:** a launcher that knows the desktop's local session ID can
-  supply `BEEP_SEQUENCE_BREAK_OPEN_URI=claude://code/continue?session=local_<id>`.
-  The CLI session UUID alone is insufficient to infer the desktop session ID.
+  task.
+- **Claude Desktop:** the hook automatically offers **Open task** when the host
+  exports `CLAUDE_CODE_HOST_SESSION_ID=local_<id>` and `CLAUDE_CODE_SESSION_ID`
+  equals the hook's raw session ID. The exact
+  `claude://code/continue?session=local_<id>` route opens that session.
+- **Headless children:** a `claude -p` or `codex exec` child launched from one of
+  those desktop hosts inherits the host's IDs, but its own session ID differs.
+  It never claims the host as its own destination. Instead the notification
+  says "Headless child of a ChatGPT Desktop task" (or "… Claude Desktop
+  session") and offers **Open parent task**, which opens the launching task.
+  The child's permission prompt is not answerable there; the parent is where
+  the operator can see and stop the work. A Codex Desktop thread wins over a
+  Claude Desktop session when both are inherited. If the child also owns a
+  Ghostty terminal, the Ghostty surface wins over the parent route.
 - **T3 Code and Grok:** there is no automatic integration in this hook. T3's
   workspace activation does not guarantee the original task, and Grok needs its
   own event adapter. Agents already covered by the Claude/Codex hooks retain
   origin labels when hosted elsewhere.
 
-An explicit `BEEP_SEQUENCE_BREAK_OPEN_URI` also accepts `codex://threads/<UUID>`
-for Codex, where the hook also requires that UUID to equal the notifying session.
-Routes must match the agent; arbitrary URLs, extra query parameters,
+A launcher that already knows the session can also supply it explicitly:
+`BEEP_SEQUENCE_BREAK_OPEN_URI` accepts `claude://code/continue?session=local_<id>`
+for Claude Code and `codex://threads/<UUID>` for Codex.
+Self routes must match the agent; arbitrary URLs, extra query parameters,
 and “last session” destinations are rejected. This override is for a launcher
 that already knows the session, not a command to evaluate. An explicit app route
 takes precedence over Ghostty terminal notification delivery.
 
+Each wait keeps one desktop card. Reminder and urgent stages replace the
+previous card in place (`notify-send --replace-id`) instead of stacking another.
+After its last stage the worker keeps polling the wait bracket every
+`BEEP_SEQUENCE_BREAK_POLL_SECONDS` (default 15) for up to
+`BEEP_SEQUENCE_BREAK_CLOSE_WATCH_SECONDS` (default 3600). Once the decision
+lands, it closes its own card over the session bus (`CloseNotification` with the
+ID it received, nothing else). A foreground (`BEEP_SEQUENCE_BREAK_FOREGROUND=1`)
+worker skips this watch so the hook never waits on the decision. Between stages the same poll ends the wait early.
+A wait it can no longer attribute leaves the card in place, because the worker
+cannot prove the decision was made. Ghostty OSC notifications belong to the
+terminal and are not closed.
+
 The desktop action listener runs separately from the permission hook and reminder
-worker, and expires after one hour. Each wait has at most one live action listener:
-while its persistent notification remains actionable, later desktop reminder stages
-are damped. Phone escalation continues normally. Dismissing a notification never opens an app.
+worker, and expires after one hour. Each wait has at most one live action listener.
+A later stage stops it (needs `pkill`; without it the stage is damped) and starts a
+replacement listener on the same card, so a clickable card escalates in place.
+Phone escalation continues normally. Dismissing a notification never opens an app.
 The listener checks that the wait is still open and honors the hook-pulse disarm
 sentinel before opening a destination.
 It requires `notify-send`, `stdbuf`, and `xdg-open`; without the action helpers,

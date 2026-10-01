@@ -1,0 +1,19 @@
+{
+  "previous": "308146e24a3756b6dbee44f4791a303389f6a8806f6076d2988b71ad8b66ba68",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (turbo env hash isolation, fix/turbo-env-hash-isolation)",
+    "reason": "Accept the narrowed build env declarations: the twelve app env patterns move from the root build task to the oip-web and todox Next builds, and professional-desktop adds VITE_*; no command, dependency edge, cache flag, input, output or global configuration changed.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/turbo-env-hash-isolation-baseline-review.md",
+      "sha256": "26af09d2fee44b8a2c747086d2bf52ed47a2a882793d310d8b5c6d22fa515602"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}
