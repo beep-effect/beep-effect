@@ -18,16 +18,95 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as pulumi from "@pulumi/pulumi";
-import { Effect, MutableHashMap, pipe } from "effect";
+import { Deferred, Effect, MutableHashMap, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
 const decodeCiRunnersPulumiConfigValues = S.decodeEffect(CiRunnersPulumiConfigValues);
 const isCiRunnersPulumiConfigValues = S.is(CiRunnersPulumiConfigValues);
 const CiRunnersPulumiConfigValuesEquivalent = S.toEquivalence(CiRunnersPulumiConfigValues);
+
+const subnetSlots = ["a", "b", "c", "d", "e"];
+
+type StackProbe = {
+  readonly associationGate: Deferred.Deferred<void>;
+  readonly routedSubnetId: (slot: string) => Deferred.Deferred<string>;
+};
+
+// Builds the stack under Pulumi mocks. The association of `heldSlot` stays
+// unregistered until `associationGate` opens, so `observe` can watch which
+// exported subnet ids resolve before that slot is routed.
+const provisionCiRunnersStack = Effect.fnUntraced(function* (
+  heldSlot: string,
+  observe: (probe: StackProbe) => Effect.Effect<void>
+) {
+  const subnets = MutableHashMap.empty<string, unknown>();
+  const routeTableSubnets = MutableHashMap.empty<string, unknown>();
+  const routedSubnetIds = MutableHashMap.fromIterable(
+    A.map(subnetSlots, (slot) => [slot, Deferred.makeUnsafe<string>()] as const)
+  );
+  const associationGate = Deferred.makeUnsafe<void>();
+  const heldAssociationName = `ci-runners-public-${heldSlot}-rta`;
+  const runPromise = Effect.runPromiseWith(yield* Effect.context());
+  const probe: StackProbe = {
+    associationGate,
+    routedSubnetId: (slot) => O.getOrThrow(MutableHashMap.get(routedSubnetIds, slot)),
+  };
+
+  yield* Effect.acquireUseRelease(
+    Effect.tryPromise(() =>
+      pulumi.runtime.setMocks(
+        {
+          call: () => ({ accountId: "123456789012", partition: "aws", value: "ami-0123456789abcdef0" }),
+          newResource: (args) => {
+            if (args.type === "aws:ec2/subnet:Subnet") {
+              MutableHashMap.set(subnets, args.name, {
+                availabilityZone: args.inputs.availabilityZone,
+                cidrBlock: args.inputs.cidrBlock,
+                mapPublicIpOnLaunch: args.inputs.mapPublicIpOnLaunch,
+              });
+            }
+            if (args.type === "aws:ec2/routeTableAssociation:RouteTableAssociation") {
+              MutableHashMap.set(routeTableSubnets, args.name, args.inputs.subnetId);
+            }
+            const result = { id: `${args.name}-id`, state: args.inputs };
+            return args.name === heldAssociationName
+              ? runPromise(Deferred.await(associationGate).pipe(Effect.as(result)))
+              : result;
+          },
+        },
+        "beep-ci-runners",
+        "test"
+      )
+    ),
+    () =>
+      Effect.suspend(() => {
+        const stack = new CiRunnersStack(
+          "ci-runners",
+          makeCiRunnersStackArgsFromConfigValues({ amiId: "ami-0123456789abcdef0" })
+        );
+        A.forEach(
+          A.zip(subnetSlots, [
+            stack.publicSubnetAId,
+            stack.publicSubnetBId,
+            stack.publicSubnetCId,
+            stack.publicSubnetDId,
+            stack.publicSubnetEId,
+          ]),
+          ([slot, subnetId]) =>
+            subnetId.apply((id) => Deferred.doneUnsafe(probe.routedSubnetId(slot), Effect.succeed(id)))
+        );
+        return observe(probe);
+      }),
+    () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+  );
+
+  return { routeTableSubnets, subnets };
+});
 
 const decodeCiRunnersNetworkConfig = S.decodeEffect(CiRunnersNetworkConfig);
 const encodeUnknownCiRunnersNetworkConfig = S.encodeUnknownEffect(CiRunnersNetworkConfig);
@@ -144,43 +223,24 @@ describe("@beep/infra CiRunners", () => {
     ).toBe("10.88.80.0/20");
   });
 
+  // One stack build covers both properties: Pulumi mocks are process-global,
+  // so two concurrently running mock tests would steal each other's resources.
   it.effect(
-    "provisions one public subnet per slot on the shared public route table",
+    "provisions one routed public subnet per slot and withholds each id until its association exists",
     Effect.fnUntraced(function* () {
-      const subnets = MutableHashMap.empty<string, unknown>();
-      const routeTableSubnets = MutableHashMap.empty<string, unknown>();
+      const { routeTableSubnets, subnets } = yield* provisionCiRunnersStack(
+        "c",
+        Effect.fnUntraced(function* (probe) {
+          for (const slot of ["a", "b", "d", "e"]) {
+            // The exported id is the subnet id itself, not the association id.
+            expect(yield* Deferred.await(probe.routedSubnetId(slot))).toBe(`ci-runners-public-${slot}-id`);
+          }
+          // Slot C's subnet exists, but its association is still unregistered.
+          pipe(yield* Deferred.isDone(probe.routedSubnetId("c")), assertFalse);
 
-      yield* Effect.acquireUseRelease(
-        Effect.tryPromise(() =>
-          pulumi.runtime.setMocks(
-            {
-              call: () => ({ accountId: "123456789012", partition: "aws", value: "ami-0123456789abcdef0" }),
-              newResource: (args) => {
-                if (args.type === "aws:ec2/subnet:Subnet") {
-                  MutableHashMap.set(subnets, args.name, {
-                    availabilityZone: args.inputs.availabilityZone,
-                    cidrBlock: args.inputs.cidrBlock,
-                    mapPublicIpOnLaunch: args.inputs.mapPublicIpOnLaunch,
-                  });
-                }
-                if (args.type === "aws:ec2/routeTableAssociation:RouteTableAssociation") {
-                  MutableHashMap.set(routeTableSubnets, args.name, args.inputs.subnetId);
-                }
-                return { id: `${args.name}-id`, state: args.inputs };
-              },
-            },
-            "beep-ci-runners",
-            "test"
-          )
-        ),
-        () =>
-          Effect.sync(() => {
-            new CiRunnersStack(
-              "ci-runners",
-              makeCiRunnersStackArgsFromConfigValues({ amiId: "ami-0123456789abcdef0" })
-            );
-          }),
-        () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+          yield* Deferred.succeed(probe.associationGate, undefined);
+          expect(yield* Deferred.await(probe.routedSubnetId("c"))).toBe("ci-runners-public-c-id");
+        })
       );
 
       expect(MutableHashMap.size(subnets)).toBe(5);

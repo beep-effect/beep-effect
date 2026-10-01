@@ -1051,7 +1051,17 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   public readonly region: pulumi.Output<string>;
 
   /**
-   * Public subnet id in the first availability zone.
+   * Public subnet id in the first availability zone, resolved only once the
+   * subnet is routed to the internet gateway.
+   *
+   * **Example** (Hand the routed subnet to the runner controller)
+   *
+   * ```ts
+   * import type { CiRunnersStack } from "@beep/infra"
+   *
+   * const controllerSubnetIds = (stack: CiRunnersStack) => [stack.publicSubnetAId]
+   * console.log(controllerSubnetIds)
+   * ```
    *
    * @category resources
    * @since 0.0.0
@@ -1059,7 +1069,17 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   public readonly publicSubnetAId: pulumi.Output<string>;
 
   /**
-   * Public subnet id in the second availability zone.
+   * Public subnet id in the second availability zone, resolved only once the
+   * subnet is routed to the internet gateway.
+   *
+   * **Example** (Hand the routed subnet to the runner controller)
+   *
+   * ```ts
+   * import type { CiRunnersStack } from "@beep/infra"
+   *
+   * const controllerSubnetIds = (stack: CiRunnersStack) => [stack.publicSubnetBId]
+   * console.log(controllerSubnetIds)
+   * ```
    *
    * @category resources
    * @since 0.0.0
@@ -1067,7 +1087,17 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   public readonly publicSubnetBId: pulumi.Output<string>;
 
   /**
-   * Public subnet id in the third availability zone.
+   * Public subnet id in the third availability zone, resolved only once the
+   * subnet is routed to the internet gateway.
+   *
+   * **Example** (Hand the routed subnet to the runner controller)
+   *
+   * ```ts
+   * import type { CiRunnersStack } from "@beep/infra"
+   *
+   * const controllerSubnetIds = (stack: CiRunnersStack) => [stack.publicSubnetCId]
+   * console.log(controllerSubnetIds)
+   * ```
    *
    * @category resources
    * @since 0.0.0
@@ -1075,7 +1105,17 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   public readonly publicSubnetCId: pulumi.Output<string>;
 
   /**
-   * Public subnet id in the fourth availability zone.
+   * Public subnet id in the fourth availability zone, resolved only once the
+   * subnet is routed to the internet gateway.
+   *
+   * **Example** (Hand the routed subnet to the runner controller)
+   *
+   * ```ts
+   * import type { CiRunnersStack } from "@beep/infra"
+   *
+   * const controllerSubnetIds = (stack: CiRunnersStack) => [stack.publicSubnetDId]
+   * console.log(controllerSubnetIds)
+   * ```
    *
    * @category resources
    * @since 0.0.0
@@ -1083,7 +1123,17 @@ export class CiRunnersStack extends pulumi.ComponentResource {
   public readonly publicSubnetDId: pulumi.Output<string>;
 
   /**
-   * Public subnet id in the fifth availability zone.
+   * Public subnet id in the fifth availability zone, resolved only once the
+   * subnet is routed to the internet gateway.
+   *
+   * **Example** (Hand the routed subnet to the runner controller)
+   *
+   * ```ts
+   * import type { CiRunnersStack } from "@beep/infra"
+   *
+   * const controllerSubnetIds = (stack: CiRunnersStack) => [stack.publicSubnetEId]
+   * console.log(controllerSubnetIds)
+   * ```
    *
    * @category resources
    * @since 0.0.0
@@ -1208,7 +1258,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
       { parent: this }
     );
 
-    new aws.ec2.Route(
+    const publicDefaultRoute = new aws.ec2.Route(
       `${name}-public-default-route`,
       {
         destinationCidrBlock: "0.0.0.0/0",
@@ -1221,7 +1271,11 @@ export class CiRunnersStack extends pulumi.ComponentResource {
 
     // Resource names keep the per-slot `public-<slot>` spelling, so slots A and
     // B stay the same Pulumi resources while the fleet widens to five zones.
-    const makePublicSubnet = (slot: string, availabilityZone: string, cidrBlock: string): aws.ec2.Subnet => {
+    // The returned id resolves only after the subnet's route-table association
+    // and the default route exist: the controller receives it as a launch
+    // target, and a worker started in a subnet without that route has no
+    // egress and never registers.
+    const makePublicSubnet = (slot: string, availabilityZone: string, cidrBlock: string): pulumi.Output<string> => {
       const subnet = new aws.ec2.Subnet(
         `${name}-public-${slot}`,
         {
@@ -1235,7 +1289,7 @@ export class CiRunnersStack extends pulumi.ComponentResource {
         { parent: this }
       );
 
-      new aws.ec2.RouteTableAssociation(
+      const association = new aws.ec2.RouteTableAssociation(
         `${name}-public-${slot}-rta`,
         {
           region: args.network.region,
@@ -1245,14 +1299,14 @@ export class CiRunnersStack extends pulumi.ComponentResource {
         { parent: this }
       );
 
-      return subnet;
+      return pulumi.all([subnet.id, association.id, publicDefaultRoute.id]).apply(([subnetId]) => subnetId);
     };
 
-    const publicSubnetA = makePublicSubnet("a", args.network.availabilityZoneA, args.network.publicSubnetACidr);
-    const publicSubnetB = makePublicSubnet("b", args.network.availabilityZoneB, args.network.publicSubnetBCidr);
-    const publicSubnetC = makePublicSubnet("c", args.network.availabilityZoneC, args.network.publicSubnetCCidr);
-    const publicSubnetD = makePublicSubnet("d", args.network.availabilityZoneD, args.network.publicSubnetDCidr);
-    const publicSubnetE = makePublicSubnet("e", args.network.availabilityZoneE, args.network.publicSubnetECidr);
+    const publicSubnetAId = makePublicSubnet("a", args.network.availabilityZoneA, args.network.publicSubnetACidr);
+    const publicSubnetBId = makePublicSubnet("b", args.network.availabilityZoneB, args.network.publicSubnetBCidr);
+    const publicSubnetCId = makePublicSubnet("c", args.network.availabilityZoneC, args.network.publicSubnetCCidr);
+    const publicSubnetDId = makePublicSubnet("d", args.network.availabilityZoneD, args.network.publicSubnetDCidr);
+    const publicSubnetEId = makePublicSubnet("e", args.network.availabilityZoneE, args.network.publicSubnetECidr);
 
     // Worker SG: ZERO ingress rules — that single fact enforces both no-inbound
     // and no-east-west (SG-member traffic requires a receiver-side ingress
@@ -1516,11 +1570,11 @@ export class CiRunnersStack extends pulumi.ComponentResource {
     this.vpcId = vpc.id;
     this.vpcCidr = pulumi.output(args.network.vpcCidr);
     this.region = pulumi.output(args.network.region);
-    this.publicSubnetAId = publicSubnetA.id;
-    this.publicSubnetBId = publicSubnetB.id;
-    this.publicSubnetCId = publicSubnetC.id;
-    this.publicSubnetDId = publicSubnetD.id;
-    this.publicSubnetEId = publicSubnetE.id;
+    this.publicSubnetAId = publicSubnetAId;
+    this.publicSubnetBId = publicSubnetBId;
+    this.publicSubnetCId = publicSubnetCId;
+    this.publicSubnetDId = publicSubnetDId;
+    this.publicSubnetEId = publicSubnetEId;
     this.workerSecurityGroupId = workerSecurityGroup.id;
     this.launchTemplateId = launchTemplate.id;
     this.launchTemplateName = pulumi.output(ciRunnersLaunchTemplateName);

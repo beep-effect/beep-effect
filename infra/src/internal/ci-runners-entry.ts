@@ -57,7 +57,17 @@ export const vpcCidr = stack.vpcCidr;
 export const region = stack.region;
 
 /**
- * Public subnet id in the first availability zone.
+ * Public subnet id in the first availability zone, resolved only once the
+ * subnet is routed to the internet gateway.
+ *
+ * **Example** (Read the routed subnet id from the stack)
+ *
+ * ```ts
+ * import type { CiRunnersStack } from "@beep/infra"
+ *
+ * const exportedSubnetId = (stack: CiRunnersStack) => stack.publicSubnetAId
+ * console.log(exportedSubnetId)
+ * ```
  *
  * @category resources
  * @since 0.0.0
@@ -65,7 +75,17 @@ export const region = stack.region;
 export const publicSubnetAId = stack.publicSubnetAId;
 
 /**
- * Public subnet id in the second availability zone.
+ * Public subnet id in the second availability zone, resolved only once the
+ * subnet is routed to the internet gateway.
+ *
+ * **Example** (Read the routed subnet id from the stack)
+ *
+ * ```ts
+ * import type { CiRunnersStack } from "@beep/infra"
+ *
+ * const exportedSubnetId = (stack: CiRunnersStack) => stack.publicSubnetBId
+ * console.log(exportedSubnetId)
+ * ```
  *
  * @category resources
  * @since 0.0.0
@@ -73,7 +93,17 @@ export const publicSubnetAId = stack.publicSubnetAId;
 export const publicSubnetBId = stack.publicSubnetBId;
 
 /**
- * Public subnet id in the third availability zone.
+ * Public subnet id in the third availability zone, resolved only once the
+ * subnet is routed to the internet gateway.
+ *
+ * **Example** (Read the routed subnet id from the stack)
+ *
+ * ```ts
+ * import type { CiRunnersStack } from "@beep/infra"
+ *
+ * const exportedSubnetId = (stack: CiRunnersStack) => stack.publicSubnetCId
+ * console.log(exportedSubnetId)
+ * ```
  *
  * @category resources
  * @since 0.0.0
@@ -81,7 +111,17 @@ export const publicSubnetBId = stack.publicSubnetBId;
 export const publicSubnetCId = stack.publicSubnetCId;
 
 /**
- * Public subnet id in the fourth availability zone.
+ * Public subnet id in the fourth availability zone, resolved only once the
+ * subnet is routed to the internet gateway.
+ *
+ * **Example** (Read the routed subnet id from the stack)
+ *
+ * ```ts
+ * import type { CiRunnersStack } from "@beep/infra"
+ *
+ * const exportedSubnetId = (stack: CiRunnersStack) => stack.publicSubnetDId
+ * console.log(exportedSubnetId)
+ * ```
  *
  * @category resources
  * @since 0.0.0
@@ -89,7 +129,17 @@ export const publicSubnetCId = stack.publicSubnetCId;
 export const publicSubnetDId = stack.publicSubnetDId;
 
 /**
- * Public subnet id in the fifth availability zone.
+ * Public subnet id in the fifth availability zone, resolved only once the
+ * subnet is routed to the internet gateway.
+ *
+ * **Example** (Read the routed subnet id from the stack)
+ *
+ * ```ts
+ * import type { CiRunnersStack } from "@beep/infra"
+ *
+ * const exportedSubnetId = (stack: CiRunnersStack) => stack.publicSubnetEId
+ * console.log(exportedSubnetId)
+ * ```
  *
  * @category resources
  * @since 0.0.0
