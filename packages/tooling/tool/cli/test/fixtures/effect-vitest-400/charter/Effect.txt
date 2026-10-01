@@ -1,6 +1,6 @@
 // Exact declaration excerpts from packages/effect/src/Effect.ts at
-// @effect/vitest@4.0.0-rc.118 (MIT; see ../LICENSE).
-// Pinned full-file SHA-256: e3912ff630c990a3f8766b7b3f09ae3ff4c71573280b13dc332d14f88b9a4f7b
+// @effect/vitest@4.0.0 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: 1980c05497f8a8ff370c9ee24c073ab731d51e910bf9d8bd3abc36fa1c1dd7db
 
 // @effect-vitest-anchor Effect.timeoutOrElse 4640 4652
 export const timeoutOrElse: {

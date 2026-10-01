@@ -21,13 +21,13 @@
 # is a comment-only note key.
 
 # effect is pinned to a pkg.pr.new snapshot of Effect-TS/effect main (commit
-# df77fff939, nine commits after the 4.0.0-rc.118 tag). OSV cannot parse the URL
+# b5a2d4c1d6, two commits after the 4.0.0 tag). OSV cannot parse the URL
 # as a version, so it matches GHSA-38f7-945m-qr2g (fixed in 3.20.0), which only
 # affects the effect 3.x line. Scoped to that exact artifact; re-key it at every
 # snapshot bump and retire it if the catalog ever returns to a plain version.
 [[PackageOverrides]]
 name = "effect"
-version = "https://pkg.pr.new/Effect-TS/effect/effect@df77fff9396fe31de72d1947ecb5b74f8cee89e1"
+version = "https://pkg.pr.new/Effect-TS/effect/effect@b5a2d4c1d62c9620a68d72b7f20248c69ef7663b"
 ecosystem = "npm"
 ignore = true
 effectiveUntil = 2026-10-31T00:00:00Z
