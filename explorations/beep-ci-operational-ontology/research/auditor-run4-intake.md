@@ -934,10 +934,13 @@ root has one journal with 692 rows: 200 `v1` `admission-admitted` and 492 `v3` (
 `admission-ticket-evicted` (queued-submitter-death, 2026-09-28T22:09Z), 0
 `admission-lease-evicted`). The session and system temp roots are absent. The 09-12 lease
 evictions have rolled out of the 200-admission window. Under the 2026-10-01 admission-journal
-snapshot ruling, a digest-only snapshot is at `research/evidence/journal-snapshot-2026-10-01/`
-(695 rows copied at 2026-10-01T12:20Z; payload local and gitignored, manifest and digests
-committed). The run-4 pin reads it as organic Queue D input beside a re-census of the live
-journal.
+snapshot ruling and its PR #1386 addendum, a snapshot is at
+`research/evidence/journal-snapshot-2026-10-01/` (695 rows copied at 2026-10-01T12:20Z; raw
+payload local and gitignored; manifest, digests and the redacted projection
+`journal.redacted.ndjson` committed). The run-4 pin reads the redacted projection by path and
+sha256 as organic Queue D input beside a re-census of the live journal. A missing or mismatched
+projection (`research/scripts/redact_journal_snapshot.py --check`) fails Queue D closed; there
+is no fallback to the `run3b-fleet` pin.
 
 ### Queue E: CQ-019 / CQ-020 leftovers (Ruling 16, sitting-3 Ruling 4)
 

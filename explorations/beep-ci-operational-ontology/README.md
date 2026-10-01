@@ -88,11 +88,12 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 - 2026-10-01: Graduation audit (five lanes plus skeptic pass at main `04993ae26a`, 207
   commits past the 2026-09-12 anchor), then two DECISIONS entries: the admission-journal
-  snapshot ruling and the graduation sitting (Rulings 1–11). The digest-only
-  admission-journal snapshot at `research/evidence/journal-snapshot-2026-10-01/`
-  (MANIFEST.md and SHA256SUMS.txt committed, payload gitignored; 695 rows with 46
-  withdrawals and 1 ticket eviction) keeps the docket's Queue D organic evidence past the
-  journal's 200-admission retention trim. Time-to-certainty C3.3–C3.6, C4a, C4.1 (shadow
+  snapshot ruling and the graduation sitting (Rulings 1–11). The admission-journal
+  snapshot at `research/evidence/journal-snapshot-2026-10-01/` (MANIFEST.md and
+  SHA256SUMS.txt committed, payload gitignored, with a committed redacted projection;
+  695 rows with 46 withdrawals and 1 ticket eviction) keeps the docket's Queue D organic
+  evidence past the journal's 200-admission retention trim. Time-to-certainty C3.3–C3.6,
+  C4a, C4.1 (shadow
   proof-ledger writer, 2026-09-21), C5, D1, D2, A3 and the A1 close re-run are checked; C4.2
   waits on its ruling 80 and that packet is paused (2026-09-28). C4.1 satisfies the run-4
   gate for the issuance and custody legs, and the realization and copy legs wait for C4.2

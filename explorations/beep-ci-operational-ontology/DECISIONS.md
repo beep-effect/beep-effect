@@ -1602,3 +1602,29 @@ each staged by name:
   `research/OPPORTUNITIES.md`, `goals/time-to-certainty/**` and `apps/labs/ciops/**`. The
   evidence tag `evidence/beep-ci-ops/orun-2026-09-10T02-10-52Z-capture` on `a9035c364e` is
   a ref, not a file.
+
+**2026-10-01 addendum to the admission-journal snapshot ruling (PR #1386 review).** A
+Greptile review thread on PR #1386 (`MANIFEST.md`, "Snapshot payload is unavailable") found
+that the digest-only snapshot cannot feed the run-4 pin from a fresh clone or a detached
+worktree: the payload is gitignored, so Queue D's withdrawal and resubmission rows existed
+only on the capturing host. The snapshot ruling above stands as written. This addendum adds
+a committed redacted projection, `research/evidence/journal-snapshot-2026-10-01/journal.redacted.ndjson`
+(695 rows, the same per-`_tag` census), written and verified by the new stdlib script
+`research/scripts/redact_journal_snapshot.py` (`--write`, `--check`); its sha256
+(`c6795126554b…`) is appended to `SHA256SUMS.txt` beside the unchanged payload line. Custody
+follows the run-3b corpus precedent: `pid` and `procStart` are dropped, and each row carries
+`ownerRef = sha256(f"{pid}:{procStart}:{captureSalt.hex()}")[:12]` with `ownerRefVariant`
+`pid_pair` on all 695 rows, as `etl_run3b_fleet_corpus.py:395-398` labels any `pid` identity;
+the 200 released and ticket-evicted rows carry no `procStart`, written `<absent>` (the ETL's
+`owner_refs_without_start`). `checkoutRoot`, a host path, becomes
+`checkoutRef = sha256(checkoutRoot)[:12]`, which keeps equality joins and carries no label.
+Every other member is kept verbatim, including `originKey` (a 12-hex digest of the
+repository origin, the proof-lock basename, or empty on 255 rows), and an unknown member
+fails the script. The capture salt (32 random bytes, hex) lives in the gitignored
+`canonical/` directory beside the payload and is never committed or printed; where payload
+and salt are present, `--check` recomputes the projection byte for byte, and elsewhere it
+verifies only the committed projection's digest, structure and residue scan, and says so.
+Handoff: the run-4 pin (goal `ciops-ontology-pipeline` P1, W3) reads the projection by path
+and sha256 from any clone, and a missing or mismatched projection fails Queue D closed, with
+no silent fallback to the `run3b-fleet` pin. A re-render of the projection needs a new
+DECISIONS entry.

@@ -112,7 +112,12 @@ Carried from the brief's rabbit holes:
   fourth `AssuranceTier` member is a run-4 proposal, not a goal edit (graduation Ruling 10).
 - **CQ-009.** It reads through the `scope.md` and `orsd.md` §9 errata (deployed exclusion
   moved to the checkout at #929) until the run-4 pin re-scopes it to same-checkout exclusion
-  plus the legacy-origin drain with a new must-fail fixture (graduation Ruling 9).
+  plus the legacy-origin drain with a new must-fail fixture (graduation Ruling 9). Binding on
+  P2 (W5-W6), which may land before run 4: until P3's re-scope (W7), CQ-009 holds only under
+  its pre-#929 temporal scope and is not a certainty gate over post-#929 admission state. A
+  live-data CQ run before the run-4 pin evaluates CQ-009 on pre-#929 rows only or reports it
+  as temporally out of scope, never as a pass or a failure over post-#929 rows (graduation
+  Ruling 9; `scope.md` 2026-10-01 amendment).
 - **Seat-request clock coverage.** v3 `admission-enqueued` rows exist only from #1025
   (2026-09-09); earlier windows fall back to attempt start, and each report names its clock.
 - **Planner scope.** `planEpisode` orders existing lanes only. A new order literal or a
@@ -144,7 +149,9 @@ Carried from the brief's rabbit holes:
       tree.
 - [ ] The S7 projection is byte-deterministic (same input, byte-equal Turtle); differential
       replay passes on the frozen golden and reports first-choice agreement on the run-4
-      Stage C pin; `planEpisode` consumes `gate-order-handoff/v1` by path and sha256.
+      Stage C pin; `planEpisode` consumes `gate-order-handoff/v1` by path and sha256. P2's
+      live-projection certainty gate excludes CQ-009 over post-#929 rows until P3's
+      re-scope (graduation Ruling 9).
 - [ ] Auditor run 4 is ratified (gate PASSED, sittings scribed) or closed by a steward ruling
       that names why.
 - [ ] The final PR is driven to Yeet merge-ready with the status flip and closeout reflection

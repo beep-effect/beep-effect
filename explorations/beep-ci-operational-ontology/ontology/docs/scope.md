@@ -103,3 +103,8 @@ disposition is Ruling 9's: the run-4 pin re-scopes it to same-checkout exclusion
 legacy-origin drain, with a new must-fail fixture, and
 `../tests/fixtures/must-fail/cq009-two-grants.ttl` keeps its pre-#929 meaning under a
 temporal scope. Until that pin, `../tests/cq-009.sparql` and its fixture stay as written.
+Before the re-scope, CQ-009 holds only under its pre-#929 temporal scope: it is not a
+certainty gate over post-#929 admission state, and any live-data suite run before the run-4
+pin evaluates CQ-009 on pre-#929 data only or reports it as temporally out of scope, never as
+a pass or a failure over post-#929 rows (graduation Ruling 9; goal `ciops-ontology-pipeline`
+P2 runs under this rule).

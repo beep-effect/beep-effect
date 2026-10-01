@@ -18,7 +18,7 @@ pins this goal adds under new roots. No source is mined into this packet directl
 |--------|-------|-----------------|------------------------|-------|-------------|
 | run-3 corpora | `run3-fleet`, `run3b-fleet` pins | beep-effect | `explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/` | admission, attempts, verdicts | frozen; replayed tree-pinned (graduation Ruling 8) |
 | run-4 intake docket | Auditor run 4 intake | beep-effect | `explorations/beep-ci-operational-ontology/research/auditor-run4-intake.md` | Queues A–F | input to W7 |
-| admission-journal snapshot | 2026-10-01 digest-only snapshot | beep-effect | `explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-2026-10-01/MANIFEST.md` | Queue D withdrawal and eviction chains | input to W3 (payload gitignored) |
+| admission-journal snapshot | 2026-10-01 snapshot with a committed redacted projection | beep-effect | `explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-2026-10-01/MANIFEST.md`, `journal.redacted.ndjson` beside it | Queue D withdrawal and eviction chains | input to W3 by path and sha256 (raw payload gitignored; `research/scripts/redact_journal_snapshot.py --check` fails closed) |
 
 ## 2. Upstream repositories & licenses
 

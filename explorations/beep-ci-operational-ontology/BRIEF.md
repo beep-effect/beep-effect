@@ -129,10 +129,12 @@ flowchart LR
    run3b ETL mechanics with tree-pinned citation replay (graduation Ruling 8): each
    citation resolves against the manifest's recorded `corpus_tree`, and current-tree
    resolution is advisory. The 2026-10-01 admission-journal snapshot
-   (`research/evidence/journal-snapshot-2026-10-01/`, digest-only, payload gitignored) is a
-   Queue D input beside the live re-census at the pin. A second NEW sibling generator reads
-   the owning clone's `.beep/yeet/proof-ledger.ndjson` (`proofLedgerPathForCheckout`,
-   time-to-certainty ruling 71). It maps `originKey` to corpus-local tokens and applies
+   (`research/evidence/journal-snapshot-2026-10-01/`: raw payload gitignored, committed
+   redacted projection `journal.redacted.ndjson` read by path and sha256) is a Queue D input
+   beside the live re-census at the pin; a missing or mismatched projection fails Queue D
+   closed. A second NEW sibling generator reads the owning clone's
+   `.beep/yeet/proof-ledger.ndjson` (`proofLedgerPathForCheckout`, time-to-certainty
+   ruling 71). It maps `originKey` to corpus-local tokens and applies
    run-3 Ruling 11 custody surrogates and run-3 Ruling 22 residue scans. Rotate the run-3
    records byte-identically at the pin.
 3. **Projection on live data.** Extend differential replay from the 79-event golden to the
@@ -221,7 +223,9 @@ reads those surfaces as documents and never edits them.
   active origin-keyed grants may share an origin) flags legal post-#929 state.
   `scope.md` and `orsd.md` §9 carry the errata, and CQ-009 is re-scoped at the run-4 pin with
   a new must-fail fixture; `cq009-two-grants.ttl` keeps its pre-#929 meaning under a
-  temporal scope (graduation Ruling 9).
+  temporal scope (graduation Ruling 9). Until that re-scope CQ-009 is not a certainty gate
+  over post-#929 admission state: slice 3's live-data runs evaluate it on pre-#929 rows only
+  or report it as temporally out of scope, never as a pass or a failure (`scope.md` errata).
 - **Run-PR size.** A run PR is too large for Greptile to score (run-2 Ruling 8; Stage B
   Ruling 21 puts the blind spot past 500 files). Merge readiness for the run PR is checks,
   threads and GitHub mergeability.

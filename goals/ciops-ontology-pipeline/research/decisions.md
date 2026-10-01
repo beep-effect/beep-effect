@@ -10,9 +10,10 @@ The exploration this goal graduated from keeps its full ruling history:
 [`explorations/beep-ci-operational-ontology/DECISIONS.md`](../../../explorations/beep-ci-operational-ontology/DECISIONS.md).
 It ends with two 2026-10-01 entries that found this goal:
 
-- "2026-10-01 — admission-journal snapshot (one ruling, steward: Benjamin)": the digest-only
-  snapshot at
-  `explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-2026-10-01/`.
+- "2026-10-01 — admission-journal snapshot (one ruling, steward: Benjamin)": the snapshot at
+  `explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-2026-10-01/`,
+  digest-only as ruled; the PR #1386 review addendum at the end of that file adds a committed
+  redacted projection (`journal.redacted.ndjson`) that W3 reads by path and sha256.
 - "2026-10-01 — graduation sitting (11 rulings, steward: Benjamin)": Rulings 1–11. This
   packet's SPEC, PLAN and manifest cite them as "graduation Ruling n".
 

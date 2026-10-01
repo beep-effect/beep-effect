@@ -16,11 +16,28 @@ Source: the canonical admission root's `journal.ndjson`
 (`~/.beep/runtime/beep-admit-uid-<uid>/`, resolved the way the run-3b fleet-corpus ETL's
 `admission_sources()` resolves it). Copied byte-for-byte at 2026-10-01T12:20Z.
 
-Contents (payload gitignored by `.gitignore` rule `journal-snapshot-*/*/` — rows carry pids,
-process-start instants and origin keys; this repo is public. Manifest + digests are committed):
+Contents (raw payload gitignored by `.gitignore` rule `journal-snapshot-*/*/` — rows carry
+pids, process-start instants and host checkout paths; this repo is public. Manifest, digests and
+the redacted projection are committed):
 
-- `canonical/journal.ndjson` — 695 rows, 0 malformed (payload)
-- `SHA256SUMS.txt` — digest of the payload (committed; proves later bytes unchanged/evicted)
+- `canonical/journal.ndjson` — 695 rows, 0 malformed (raw payload; local-only)
+- `journal.redacted.ndjson` — 695 rows, the committed redacted projection (added after the
+  PR #1386 review), written at the snapshot root by
+  `research/scripts/redact_journal_snapshot.py --write`. Redaction rule (the run-3b corpus
+  custody precedent): `pid` and `procStart` are dropped, and each row carries
+  `ownerRef = sha256("<pid>:<procStart>:<captureSalt hex>")[:12]` with `ownerRefVariant`
+  `pid_pair` on all 695 rows (the ETL labels by identity member, and every row carries
+  `pid`). The 200 released and ticket-evicted rows carry no `procStart`, which is written
+  `<absent>` (the ETL's `owner_refs_without_start`), so their `ownerRef` cannot join a
+  started one. `checkoutRoot` becomes `checkoutRef = sha256(checkoutRoot)[:12]` (35
+  distinct; equality joins kept, no label). Every other member (`_tag`, `schemaVersion`,
+  `attemptId`, `nonce`, `originKey`, `kind`, `priority`, `weightTokens`, `branch`,
+  `memoryPeakBytes`, `reason`, every `*AtMillis`) is kept verbatim, and an unknown member
+  fails the script. One row per line in payload order, keys sorted.
+- `canonical/capture-salt.hex` — the capture salt (hex of 32 random bytes); gitignored with the
+  payload, local-only, never committed or printed
+- `SHA256SUMS.txt` — digests of the payload and the projection (committed; the payload line
+  proves later bytes unchanged/evicted, the projection line pins what Queue D reads)
 
 Census at snapshot (per `_tag`):
 
@@ -40,3 +57,10 @@ Use: the run-4 pin reads this snapshot as an organic input for Queue D (eviction
 withdrawal evidence) instead of the live journal; the live journal is also
 re-censused at the pin. Interim snapshot only — it is not a run4-fleet corpus pin and carries
 no generator digest.
+
+Handoff: the run-4 pin (goal `ciops-ontology-pipeline` P1, W3) reads `journal.redacted.ndjson`
+by path and by its `SHA256SUMS.txt` sha256 from any clone or detached worktree, after
+`research/scripts/redact_journal_snapshot.py --check` passes there. The raw payload stays
+local-only; its digest proves the projection's provenance, and where the payload and salt are
+present `--check` recomputes the projection byte for byte. A missing or mismatched projection
+fails Queue D closed: there is no silent fallback to the `run3b-fleet` pin.

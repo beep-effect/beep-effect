@@ -13,7 +13,7 @@ exploration's 2026-10-01 graduation sitting.
 | --- | --- | --- | --- |
 | P0 Inheritance and change events (W1); optional seat launcher (W2) | pending | Carry SOURCES forward and backfill the change-event ledger. W2 runs only if chosen. | `research/SOURCES.md` §4 refreshed against HEAD; every post-iv-870 lever under the admission criterion is a row; W2 landed or recorded as not chosen. |
 | P1 Stage C capture and proof-ledger capture (W3-W4) | pending | Pin `run4-fleet` and the owning-clone ledger through two new sibling generators. | Both pins committed with tree-pinned citation replay passing and residue scans zero; or the ledger census recorded and the pin lane stopped (graduation Ruling 1). |
-| P2 Projection on live data and planEpisode body (W5-W6) | pending | Replay the pin's admission chains and give the planner seam a body. | S7 §3.2/§6 amended first; agreement report printed beside 41-of-41; lab tests and `package-verify @beep/ciops` green. |
+| P2 Projection on live data and planEpisode body (W5-W6) | pending | Replay the pin's admission chains and give the planner seam a body. | S7 §3.2/§6 amended first; agreement report printed beside 41-of-41; lab tests and `package-verify @beep/ciops` green; CQ-009 excluded from the live-projection certainty gate over post-#929 rows until P3's re-scope (graduation Ruling 9). |
 | P3 Auditor run 4 (W7) | pending | One frozen run on the run-3 choreography. | Gate PASSED and sittings scribed, or a steward ruling closing the run with its reason. |
 | P4 KPI reading and verdict (W8-W9) | pending | Lab-side ETL to the v1.1 law, then the stated verdict and the S9 statement. | Verdict document beside `economics-close.json` M1 with the episode-definition mapping. |
 | P5 Yeet: PR to mergeable | pending | Drive each slice PR, and the final PR, to Yeet merge-ready. | Required checks green; zero unresolved review threads. |
@@ -46,7 +46,11 @@ exploration's 2026-10-01 graduation sitting.
       tree-pinned citation replay (graduation Ruling 8): citations resolve against the
       manifest's recorded `corpus_tree`, current-tree resolution is advisory, synthetic labels
       are retained, `corpus_tree`/`corpus_base` are recorded, residue is zero. Read the
-      2026-10-01 admission-journal snapshot as a Queue D input beside the live re-census.
+      committed redacted projection of the 2026-10-01 admission-journal snapshot
+      (`journal.redacted.ndjson`) by path and its `SHA256SUMS.txt` digest as a Queue D input
+      beside the live re-census, after `research/scripts/redact_journal_snapshot.py --check`
+      passes; a missing or mismatched projection fails Queue D closed (no fallback to the
+      `run3b-fleet` pin).
 - [ ] **W4 proof-ledger capture.** A NEW sibling generator that reads ledger contents from
       the owning clone (`proofLedgerPathForCheckout`, time-to-certainty ruling 71): facts and
       shadow rows, `originKey` mapped to corpus-local tokens, run and attempt ids kept as join
@@ -62,7 +66,10 @@ exploration's 2026-10-01 graduation sitting.
       then code.
 - [ ] **W5 live differential replay.** Replay the `run4-fleet` admission chains through
       `replayAdmissionJournal` and report first-choice agreement beside the frozen golden's
-      41-of-41; byte-determinism kept.
+      41-of-41; byte-determinism kept. Until W7 re-scopes CQ-009, it is not a certainty gate
+      over these post-#929 rows: evaluate it on pre-#929 rows only or report it as
+      temporally out of scope, never as a pass or a failure (graduation Ruling 9; SPEC
+      "CQ-009").
 - [ ] **W6 `planEpisode` body.** Read `gate-order-handoff/v1` by path and sha256, build the
       lane DAG in canonical insertion order with `Graph` from `effect`, fail with
       `CyclicPlanError` on cycles, and add 32 lane steps to the `ScheduleProposal` A-Box in
@@ -78,7 +85,8 @@ exploration's 2026-10-01 graduation sitting.
       scribe, run-3 rotation, one PR. Queues A–F from the docket, re-verified at the pin;
       Queue F adopts tree-pinned replay (graduation Ruling 8); a Queue-G intake row brings
       `OperationalChangeEvent` and `landedAt` to ratification (graduation Ruling 6); CQ-009
-      is re-scoped with a new must-fail fixture (graduation Ruling 9); a fourth
+      is re-scoped with a new must-fail fixture (graduation Ruling 9), which lifts W5's
+      CQ-009 exclusion over post-#929 rows; a fourth
       `AssuranceTier` member for merged preview is proposed (graduation Ruling 10).
 
 ### P4 — KPI reading and verdict
@@ -95,7 +103,8 @@ exploration's 2026-10-01 graduation sitting.
 ## Sequencing
 
 W1 precedes any KPI reading. W3 + W4 ship as one capture PR and are the first irreversible
-step. W5 + W6 ship as one projection PR and may land before run 4. W7 needs W3, W4 (and W2
+step. W5 + W6 ship as one projection PR and may land before run 4, with CQ-009 out of their
+certainty gate over post-#929 rows until W7's re-scope. W7 needs W3, W4 (and W2
 if chosen) and the graduation Ruling 1 gate. W8 → W9 is the verdict PR, which carries the
 status flip and the closeout reflection.
 
