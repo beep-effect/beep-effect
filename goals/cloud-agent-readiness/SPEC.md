@@ -58,7 +58,9 @@ Higher sources outrank lower sources when they conflict.
 ## Constraints
 
 - The setup script is idempotent, safe on a workstation, and never modifies a
-  tracked file; it writes only under `~/.cache/beep/` and `node_modules/`.
+  tracked file; it writes only under `~/.cache/beep/`, `node_modules/`, and
+  bun's own `~/.bun/bin` (only when the caller's bun already lives there;
+  never a mise shim or other toolchain-managed directory).
 - The pinned bun comes from the repo's own pins: version from `.bun-version`,
   archive digest from `.bun-linux-x64.sha256`. A digest mismatch is a hard
   failure.
@@ -80,7 +82,7 @@ Higher sources outrank lower sources when they conflict.
 | --- | --- | --- |
 | D1 | The pinned bun is provisioned from the GitHub release archive verified against `.bun-linux-x64.sha256`, with `npm install bun@<.bun-version>` as the fallback route. | Both routes were proven on 2026-10-01 (F3, F4); the installer host is denied (F2); the digest is already tracked for CI's baked-runner path. |
 | D2 | `pkg.pr.new` reachability is an environment precondition surfaced by preflight, not worked around in the repo. | The snapshot is 34 lockfile entries (F6); vendoring or mirroring is a dependency-policy change outside this packet. A loud, named failure beats a silent partial install (F6, F7). |
-| D3 | Hooks and docs key off `BEEP_AGENT_HOST=cloud`, set in the environment's variables; the setup script also exports it for the shell it bootstraps. Desktop-only effects (graft session-start, the desktop pulse notifier) no-op under it; pulse rows keep flowing if the writer already tolerates a new host kind, else the literal is added in the same PR. | Heuristics drift; an explicit variable is testable and documented. The evidence loop wants cloud rows, not silence. |
+| D3 | Hooks and docs key off `BEEP_AGENT_HOST=cloud`, set in the environment's variables; the setup script writes it into `~/.cache/beep/cloud-env.sh` only when invoked with `--host cloud`, never unconditionally. Desktop-only effects (graft session-start, the desktop pulse notifier) no-op under it; pulse rows keep flowing if the writer already tolerates a new host kind, else the literal is added in the same PR. | Heuristics drift; an explicit variable is testable and documented. The evidence loop wants cloud rows, not silence. |
 | D4 | A cloud session's end state is: proof commands run and quoted in the PR body, branch pushed, PR opened or updated through the GitHub API, `ready-for-heavy` requested in the PR body. The yeet `monitor --until-ready` loop, the `ready-for-heavy` label, and `sweep --retire` stay operator-side until yeet runs without `gh` and systemd. | `GH_TOKEN` is invalid in the container (F8) and there is no user bus (F9). Recording the handoff is cheaper and safer than a token mode designed under deadline. |
 | D5 | No secret enters a cloud container. Packets whose proof requires an `op://` env file or a live external credential are outside the cloud lane and the runbook says so. | F10; `AGENTS.md` 1Password law. |
 | D6 | Cloud credits are a fourth meter in the pool runbook (Opus, Cursor, Codex, cloud). The pool order itself is unchanged. | Spending is real and expiring; the runbook is where meters live. |

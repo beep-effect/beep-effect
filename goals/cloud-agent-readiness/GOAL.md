@@ -69,6 +69,7 @@ jq . goals/cloud-agent-readiness/ops/manifest.json
 git diff --check -- goals/cloud-agent-readiness scripts AGENTS.md docs .claude
 shellcheck scripts/cloud-session-setup.sh
 bash scripts/cloud-session-setup.sh --check
+bash scripts/cloud-session-setup.sh --host cloud
 ```
 
 Stop and report before changing public API, schema (beyond the one literal),
