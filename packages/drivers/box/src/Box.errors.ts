@@ -18,7 +18,6 @@ import type { BoxMethodName as BoxMethodNameType } from "./_generated/Box.models
 
 const $I = $BoxId.create("Box.errors");
 
-// Shared driver codec-statics idiom; drivers are independent and have no in-family home — future foundation capability candidate.
 const BoxErrorReasonBase = LiteralKit([
   "config",
   "request encoding",

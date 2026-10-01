@@ -63,8 +63,8 @@ export interface SemanticVersionSchema extends SemanticVersionSchemaBase {}
  * **Details**
  *
  * Each segment is a non-negative integer, and multi-digit segments cannot
- * begin with `0`. The schema also exposes `decodeUnknownOption` for callers
- * that prefer absence over a thrown parse error.
+ * begin with `0`. Callers that prefer absence over a thrown parse error use
+ * `S.decodeUnknownOption(SemanticVersion)`.
  *
  * **Gotchas**
  *

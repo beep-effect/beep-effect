@@ -14,8 +14,6 @@ import { DiscordHttpStatus } from "./Discord.models.ts";
 const $I = $DiscordId.create("Discord.errors");
 
 const DiscordErrorReasonBase = LiteralKit(["request", "transport", "response-status", "response-decoding"]);
-// Shared driver codec-statics idiom; drivers are independent and have no in-family home — future foundation capability candidate.
-// fallow-ignore-next-line code-duplication -- driver-local error-reason codec statics avoid cross-driver coupling
 /**
  * Literal vocabulary for recoverable failures at the Discord REST boundary.
  *
