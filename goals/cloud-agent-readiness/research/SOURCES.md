@@ -1,7 +1,8 @@
 # Cloud Agent Readiness — Sources & Provenance
 
-- **Source exploration:** none. This packet was authored directly on
-  2026-10-01 from a cloud-session probe; the primary ledger is
+- **Source exploration:** no `explorations/` packet precedes this one. It was
+  authored directly on 2026-10-01 from a cloud-session probe, consulting the
+  in-repo corpus in §1 and the external sources in §3; the primary ledger is
   [`2026-10-01-container-probe.md`](./2026-10-01-container-probe.md) in this
   directory.
 - **Provenance:** operator request (2026-10-01) to make the repo

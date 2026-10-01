@@ -9,10 +9,11 @@
 # incomplete install); 78 environment configuration error (a denied host),
 # with the host and its remedy on one line.
 #
-# Idempotent; never edits a tracked file. Binaries are installed into the
-# directory that already holds the caller's `bun` (so the caller's PATH needs no
-# change) or, when no bun exists, into ~/.cache/beep/bin, which the printed
-# env file adds to PATH. `--check` probes and reports without writing anything.
+# Idempotent; never edits a tracked file. Binaries land in ~/.bun/bin only when
+# the caller's `bun` already lives there (so the caller's PATH needs no change);
+# otherwise (no bun, or a mise-managed or relocated one) they land in
+# ~/.cache/beep/bin, which the printed env file adds to PATH. `--check` probes
+# and reports without writing anything.
 set -euo pipefail
 
 REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
@@ -52,10 +53,11 @@ if [ "$(command -v bun 2>/dev/null || true)" = "${HOME}/.bun/bin/bun" ]; then
 fi
 
 # Download URL -> file, verifying the archive digest. Returns 1 when the host
-# is unreachable or denied, 2 on a digest mismatch (a hard failure).
+# is unreachable, denied, or stalls (bounded so a hung transfer still reaches
+# the fallback route), 2 on a digest mismatch (a hard failure).
 fetch_verified() {
   local url="$1" out="$2" expected="$3" actual
-  curl -fsSL -o "$out" "$url" || return 1
+  curl -fsSL --connect-timeout 20 --max-time 300 -o "$out" "$url" || return 1
   actual="$(sha256sum "$out" | cut -d' ' -f1)"
   if [ "$actual" != "$expected" ]; then
     log "digest mismatch for ${url}: expected ${expected}, got ${actual}"
@@ -128,7 +130,10 @@ if [ "$have" != "$want" ]; then
   [ -e "${BIN_DIR}/bunx" ] || ln -s bun "${BIN_DIR}/bunx"
   hash -r
 fi
-case ":${PATH}:" in *":${BIN_DIR}:"*) ;; *) export PATH="${BIN_DIR}:${PATH}" ;; esac
+# Always put BIN_DIR first for the rest of this script: a stale bun directory
+# earlier on PATH would otherwise shadow the provisioned binary even when
+# BIN_DIR is already present further down. ORIG_PATH decides the handoff.
+export PATH="${BIN_DIR}:${PATH}"
 [ "$(bun --version)" = "$want" ] || { log "bun is still $(bun --version) after provisioning"; exit 1; }
 log "bun $(bun --version) (pinned ${want}) in ${BIN_DIR}"
 
@@ -189,8 +194,8 @@ done < <(bun -e 'const c=require("./package.json").catalog??{};for(const [k,v] o
 [ -z "$missing" ] || { log "incomplete install — snapshot packages missing:${missing}"; exit 1; }
 bun run beep --help >/dev/null 2>&1 || { log "bun run beep --help failed"; exit 1; }
 
-# 6. Environment handoff. Binaries already sit on the caller's PATH when a bun
-#    existed; otherwise the caller sources the env file printed below.
+# 6. Environment handoff. Binaries already sit on the caller's PATH when they
+#    went to ~/.bun/bin; otherwise the caller sources the env file printed below.
 #    BEEP_AGENT_HOST is written only when --host cloud was passed (D3).
 {
   # shellcheck disable=SC2016 # the literal $PATH is for the caller's shell to expand

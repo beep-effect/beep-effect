@@ -29,18 +29,22 @@ Phase ids here match `ops/manifest.json` `phases[]` exactly.
 3. Put the binary on `PATH` for the rest of the script and print the
    `export PATH=…` line the caller sources. When `~/.bun/bin/bun` exists and is
    busy (F5), rename the new binary over it (`mv`), never `cp`.
-4. Preflight `pkg.pr.new`: a `HEAD` request through the proxy; a `403` exits
-   `78` with the remedy line. `--check` stops here and reports every probe
+4. Preflight `pkg.pr.new`: a `GET` of one real snapshot URL from
+   `package.json` through the proxy (the site root is never probed); any
+   non-2xx/3xx status exits `78` with the remedy line. `--check` stops here and reports every probe
    (bun version, bun route, `pkg.pr.new`, `gh auth status`, user bus, `op`).
 5. `bun install --frozen-lockfile`, three attempts with the same backoff CI uses
    (`.github/actions/setup-monorepo-ci/action.yml`).
-6. Assert `node_modules/effect/package.json` exists and `bun run beep --help`
-   exits `0`; otherwise exit non-zero with the first missing package named
-   (never report success on a silent partial install, F6).
+6. Assert every catalog package pinned to `pkg.pr.new` in `package.json` is
+   present under `node_modules/` and `bun run beep --help` exits `0`;
+   otherwise exit non-zero naming the missing packages (never report success
+   on a silent partial install, F6).
 7. Write `BEEP_AGENT_HOST=cloud` into the env file only when `--host cloud`
-   was passed; never infer it. Binaries are installed into the directory that
-   already holds the caller's `bun`, so the caller's PATH needs no change; the
-   env file matters only when no bun existed or the host flag was passed.
+   was passed; never infer it. Binaries land in `~/.bun/bin` only when the
+   caller's `bun` already lives there (so the caller's PATH needs no change);
+   with no `bun`, or a mise-managed or otherwise relocated one, they land in
+   `~/.cache/beep/bin` and the caller sources the env file, which the script's
+   final line says.
 
 Optional extension, not acceptance: `--with-effect-ref` runs
 `scripts/setup-effect-ref.sh` with `BEEP_REFERENCES_ROOT=~/.cache/beep/references`
