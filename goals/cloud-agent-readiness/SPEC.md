@@ -48,7 +48,7 @@ Higher sources outrank lower sources when they conflict.
 - `.mcp.json`: unchanged unless a host-scoped enable/disable mechanism exists;
   otherwise the runbook records which servers are workstation-only.
 - `AGENTS.md`: one new section, "Cloud sessions".
-- `docs/runbooks/cloud-sessions.md` (new) and a cross-link from
+- A new `cloud-sessions.md` runbook under `docs/runbooks/` and a cross-link from
   `docs/README.md` and `docs/runbooks/agent-pools.md`.
 - `docs/ROADMAP.md`: one Lane 3 accelerator row for this packet.
 - `packages/tooling/library/ai-metrics`: only if a `cloud` host literal is the
@@ -111,7 +111,7 @@ Higher sources outrank lower sources when they conflict.
       skipped; without it, behavior is byte-identical to today.
 - [ ] `AGENTS.md` has a "Cloud sessions" section that states the host
       variable, the setup command, the can/cannot rubric (secrets, systemd,
-      `gh`, recorded QA, corpora), and the D4 end state; `docs/runbooks/cloud-sessions.md`
+      `gh`, recorded QA, corpora), and the D4 end state; the new `cloud-sessions.md` runbook under `docs/runbooks/`
       carries the operator checklist (environment setup script text, allowed
       domains, variables) and the closeout handoff; `docs/ROADMAP.md` carries
       the accelerator row.

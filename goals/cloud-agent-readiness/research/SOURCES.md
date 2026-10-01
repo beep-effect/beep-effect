@@ -52,7 +52,7 @@ section are extensions of the pool runbook, not a new prompt surface.
 | Yeet operator | `packages/tooling/tool/cli` (`beep yeet`), skill `yeet` | reference; closeout stays operator-side (D4) |
 | Goals doctor | `packages/tooling/tool/cli/src/commands/Goals/Doctor.ts` | packet hygiene gate |
 | Cloud session setup script | `scripts/cloud-session-setup.sh` | NET-NEW |
-| Cloud sessions runbook | `docs/runbooks/cloud-sessions.md` | NET-NEW |
+| Cloud sessions runbook | `cloud-sessions.md` under `docs/runbooks/` | NET-NEW |
 
 ## 5. Cross-links & provenance
 

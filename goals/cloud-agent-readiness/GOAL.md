@@ -28,7 +28,7 @@ Scope:
 
 - In: `scripts/cloud-session-setup.sh` (new), `.claude/settings.json`,
   `.claude/hooks/*`, `.claude/helpers/graft-hooks.cjs`, one `AGENTS.md`
-  section, `docs/runbooks/cloud-sessions.md` (new), cross-links in
+  section, a new `cloud-sessions.md` runbook under `docs/runbooks/`, cross-links in
   `docs/README.md` and `docs/runbooks/agent-pools.md`, one `docs/ROADMAP.md`
   row, `packages/tooling/library/ai-metrics` only for a `cloud` host literal,
   this packet.
