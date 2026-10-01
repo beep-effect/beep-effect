@@ -22,7 +22,6 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Result";
@@ -134,23 +133,17 @@ describe("Cache qualification writer", () => {
     }, provideScopedLayer(testLayer))
   );
 
-  it("preserves ledger revisions and tuples through schema serialization", () => {
-    const equivalent = S.toEquivalence(CacheQualificationStore);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(CacheQualificationStore),
-          (value) => {
-            const encoded = R.getOrThrow(encodeCacheQualificationStoreJsonResult(value));
-            const decoded = R.getOrThrow(decodeCacheQualificationStoreJsonResult(encoded));
-            expect(equivalent(value, decoded)).toBe(true);
-            return true;
-          },
-          fcRuns(20)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "preserves ledger revisions and tuples through schema serialization",
+    { value: CacheQualificationStore },
+    ({ value }) => {
+      const equivalent = S.toEquivalence(CacheQualificationStore);
+      const encoded = R.getOrThrow(encodeCacheQualificationStoreJsonResult(value));
+      const decoded = R.getOrThrow(decodeCacheQualificationStoreJsonResult(encoded));
+      assertTrue(equivalent(value, decoded));
+    },
+    { arbitrary: fcRuns(20) }
+  );
   it.effect(
     "persists a reviewed exclusion and rejects stale revisions without changing the ledger",
     Effect.fnUntraced(function* () {

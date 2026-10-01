@@ -2771,3 +2771,13 @@ findings to 70; all 139 tests across the eleven edited files passed. No inventor
 baseline was expanded. Running these gates before the long proof would have
 exposed the required migrations sooner. Remaining findings require semantic
 review and repair before qualification closeout.
+
+### 2026-10-01 — Operational test overrode deep-sweep timeout policy
+
+PR #1389's Property Laws job failed the operational acceptance test at 30 seconds.
+The test passed an explicit timeout even though the package inherits
+`packageTestTimeout`, which allows five minutes for deep property sweeps. Removing
+the override preserves the normal 30-second limit and uses the existing deep-sweep
+policy. The 400-run floor passes locally in 27.54 seconds including startup.
+A test-policy check for explicit timeouts on floor-scaled properties would catch
+this mismatch before hosted execution. No sample count or assertion was removed.

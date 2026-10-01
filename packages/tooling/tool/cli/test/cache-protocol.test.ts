@@ -7,9 +7,8 @@ import {
 import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Effect } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -216,21 +215,16 @@ describe("complete protocol execution boundary", () => {
   );
 });
 
-it.effect("rejects schema-generated replay identities that differ from the producer", () =>
-  Effect.gen(function* () {
-    const checked = yield* Arbitrary.checkEffect(
-      Arbitrary.schema(Sha256Hex),
-      (taskHash) =>
-        Effect.gen(function* () {
-          const result = yield* validate({
-            ...input,
-            runs: A.map(input.runs, (run) => (run.case === "replay" ? { ...run, taskHash } : run)),
-          });
-          expect(Result.isSuccess(result)).toBe(taskHash === input.runs[0].taskHash);
-          return true;
-        }),
-      fcRuns(100)
-    );
-    expect(checked._tag).toBe("Passed");
-  })
+it.effect.prop(
+  "rejects schema-generated replay identities that differ from the producer",
+  { taskHash: Sha256Hex },
+  ({ taskHash }) =>
+    Effect.gen(function* () {
+      const result = yield* validate({
+        ...input,
+        runs: A.map(input.runs, (run) => (run.case === "replay" ? { ...run, taskHash } : run)),
+      });
+      strictEqual(Result.isSuccess(result), taskHash === input.runs[0].taskHash);
+    }),
+  { arbitrary: fcRuns(100) }
 );

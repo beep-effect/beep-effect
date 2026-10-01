@@ -2,9 +2,8 @@ import { CacheSignedPilotReceipt, validateCacheSignedPilotReceipt } from "@beep/
 import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Effect } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -488,21 +487,16 @@ it.effect("distinguishes a canary-only observation from an actual issuer denial"
   })
 );
 
-it.effect("rejects schema-generated archive identities detached from transferred bytes", () =>
-  Effect.gen(function* () {
-    const checked = yield* Arbitrary.checkEffect(
-      Arbitrary.schema(Sha256Hex),
-      (archiveSha256) =>
-        Effect.gen(function* () {
-          const result = yield* validate({
-            ...input,
-            pairs: A.map(input.pairs, (pair) => ({ ...pair, archive: { ...pair.archive, archiveSha256 } })),
-          });
-          expect(Result.isSuccess(result)).toBe(archiveSha256 === input.pairs[0].archive.archiveSha256);
-          return true;
-        }),
-      fcRuns(100)
-    );
-    expect(checked._tag).toBe("Passed");
-  })
+it.effect.prop(
+  "rejects schema-generated archive identities detached from transferred bytes",
+  { archiveSha256: Sha256Hex },
+  ({ archiveSha256 }) =>
+    Effect.gen(function* () {
+      const result = yield* validate({
+        ...input,
+        pairs: A.map(input.pairs, (pair) => ({ ...pair, archive: { ...pair.archive, archiveSha256 } })),
+      });
+      strictEqual(Result.isSuccess(result), archiveSha256 === input.pairs[0].archive.archiveSha256);
+    }),
+  { arbitrary: fcRuns(100) }
 );
