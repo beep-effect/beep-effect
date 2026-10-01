@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "complete-protocol-validation-checkpoint/v1",
+  "authority": "implementation-controls-only",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.ts": "cfd98dba8be3614a6658c9c1b8708c252685797719b64871e3a1b989345ec2b0",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts": "c9a46e735ebd05115c6991544ee7d1101ac6f9a1dfadae096533f1532f529369",
+    "packages/tooling/tool/cli/src/commands/Cache/index.ts": "a8221bd1a6c1a9fb0adb1eaba515d944c166c2119ca55c560642b185606ca88c",
+    "packages/tooling/tool/cli/test/cache-protocol.test.ts": "731c24c61e26f8ef9a3b8e5959b365c59fbd165d00bdb2d08b68f4f40f4354d1"
+  },
+  "validationBoundary": ["owned worker output", "supervisor report decode"],
+  "requirements": [
+    "six distinct integrity cases",
+    "three distinct transport failures",
+    "nine distinct native summaries",
+    "ordered and attributed direct wire events",
+    "one successful writer upload",
+    "exact native-exchange and wire-event joins",
+    "matching transport failure status, task and truncated payload facts",
+    "no extra denied integrity reads; genuine producer miss preserved"
+  ],
+  "verification": {
+    "focusedTests": {
+      "files": 2,
+      "passed": 24,
+      "newCompleteValidatorTests": 6
+    },
+    "sourceTypeCheck": "passed",
+    "retainedNativeReports": {
+      "channels": ["stable", "canary"],
+      "priorReceiptHashesVerified": true,
+      "editedVariantsRejectedPerReport": 7,
+      "freshExecution": false
+    },
+    "packageVerify": {
+      "package": "@beep/repo-cli",
+      "exitCode": 0,
+      "auditSeconds": 627.0,
+      "docgenSeconds": 21.8
+    },
+    "freshNativeStable": "queued",
+    "freshNativeCanary": "queued"
+  },
+  "limitations": [
+    "Relationship checks alone confer no producer or qualification authority.",
+    "Complete authenticated bundle, trusted policy and operational promotion import remain incomplete.",
+    "Retained report validation does not renew source or runtime identity."
+  ]
+}

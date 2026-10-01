@@ -181,3 +181,15 @@ also passed nine native cases and 23 wire events. Its binary remains
 2.11.5-canary.2 with the previously recorded SHA-256; the version was checked
 outside the workspace to avoid local-version inference. Channel namespaces and
 receipts remain separate.
+
+### Complete worker and supervisor validation
+
+The [complete protocol checkpoint](./research/complete-protocol-validation.json)
+records one shared validator for all six integrity cases and three transport
+failures. Worker and supervisor both invoke it. It joins native exchanges to
+direct wire events, rejects duplicate or altered evidence, and preserves a
+genuine producer miss. The 24 focused tests and source type check pass. Both
+retained native reports pass revalidation after their saved hashes were checked;
+seven edited variants per report fail. Fresh stable/canary executions are queued,
+and full package verification passes: audit 627.0 seconds, docgen 21.8 seconds. This does not grant qualification or
+replace the remaining authenticated-bundle and operational-import work.

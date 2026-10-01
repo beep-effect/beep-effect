@@ -172,7 +172,7 @@ export {
   runCacheProtocolWorker,
 } from "./Cache.protocol.runner.ts";
 export { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
-export { validateCacheProtocolObservation } from "./Cache.protocol.ts";
+export { validateCacheProtocolExecution, validateCacheProtocolObservation } from "./Cache.protocol.ts";
 /**
  * Execute tasks with a runtime-owned identity.
  *

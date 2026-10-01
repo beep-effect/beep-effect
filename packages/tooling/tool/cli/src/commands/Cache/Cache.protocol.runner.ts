@@ -31,7 +31,7 @@ import {
   CacheProtocolRequest,
 } from "./Cache.protocol.runner.schemas.ts";
 import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
-import { validateCacheProtocolObservation } from "./Cache.protocol.ts";
+import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 
 const cases = LiteralKit([
@@ -334,39 +334,14 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
         artifact: { sha256: O.getOrThrow(event.digest), bytes: event.bytes },
       })),
     });
-    yield* validateCacheProtocolObservation(observation);
-    const upload = yield* A.findFirst(observation.exchanges, (event) => event.case === "producer").pipe(
-      Effect.fromOption(() => CacheCommandError.new("Protocol upload missing."))
-    );
-    for (const failure of failures) {
-      const reads = A.filter(events, (event) => event.scenario.id === failure.case && event.operation === "get");
-      const status = failure.case === "unavailable" ? 503 : failure.case === "throttled" ? 429 : 200;
-      if (
-        failure.taskHash !== upload.taskHash ||
-        reads.length === 0 ||
-        !A.every(
-          reads,
-          (event) =>
-            event.status === status &&
-            event.role === "reader" &&
-            O.contains(failure.taskHash)(event.artifact) &&
-            (failure.case === "truncated-body"
-              ? event.bytes === upload.artifact.bytes - 1 &&
-                event.tagPresent &&
-                O.isSome(event.digest) &&
-                !O.contains(upload.artifact.sha256)(event.digest)
-              : event.bytes === 0 && !event.tagPresent && O.isNone(event.digest))
-        )
-      )
-        return yield* CacheCommandError.new("Protocol read failure lacks corresponding direct wire evidence.");
-    }
     if (
-      A.filter(events, (event) => event.operation === "put").length !== 1 ||
       (yield* hashCacheExperimentExecutable(executable)) !== request.client.sha256 ||
       (yield* hashCacheExperimentExecutable(bun)) !== bunSha256
     )
       return yield* CacheCommandError.new("Protocol producer or executable identity changed during the run.");
-    return CacheProtocolExecution.make({ observation, failures, events, bunSha256 });
+    return yield* validateCacheProtocolExecution(
+      CacheProtocolExecution.make({ observation, failures, events, bunSha256 })
+    );
   },
   Effect.scoped,
   CacheCommandError.mapError("Isolated native protocol execution failed.")
@@ -462,8 +437,7 @@ export const runCacheProtocolExperiment = Effect.fn("CacheProtocol.experiment")(
           report.bunSha256 !== (yield* hashCacheExperimentExecutable(bun))
         )
           return yield* CacheCommandError.new("Protocol worker report differs from the supervised identities.");
-        yield* validateCacheProtocolObservation(report.observation);
-        return report;
+        return yield* validateCacheProtocolExecution(report);
       })
     )
   );
