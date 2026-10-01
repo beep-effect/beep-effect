@@ -515,7 +515,7 @@ export const documentIntakeMachine = setupEffect({
             return undefined;
           }
           const sequence = context.batchSequence + 1;
-          const intakeBatchId = batchIdFor(event.files);
+          const intakeBatchId = batchIdFor(event.files, sequence);
           const batch = enq.spawn("intakeBatch", {
             id: `intakeBatch-${sequence}`,
             input: { intakeBatchId, workspaceId: context.workspaceId, files: event.files },

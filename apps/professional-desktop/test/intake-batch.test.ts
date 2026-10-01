@@ -18,7 +18,7 @@ import type { IntakeResultEntry } from "@/intake/DocumentIntake.models";
 
 const startBatch = (client: DesktopIntakeClient["Service"], files: ReadonlyArray<File>) =>
   createEffectActor(intakeBatchMachine, {
-    input: { intakeBatchId: batchIdFor(files), workspaceId, files },
+    input: { intakeBatchId: batchIdFor(files, 1), workspaceId, files },
   }).pipe(Effect.provideService(DesktopIntakeClient, client));
 
 // `join` types its failure as `unknown`; waiting for the final snapshot keeps the error channel typed.
@@ -79,7 +79,7 @@ describe("intake batch machine", () => {
         gate.resolve(new Uint8Array([1, 2, 3]).buffer);
         const output = yield* settled(actor);
 
-        expect(output.intakeBatchId).toBe(batchIdFor(files));
+        expect(output.intakeBatchId).toBe(batchIdFor(files, 1));
         expect(A.map(output.entries, (entry) => entry.kind)).toEqual(["document", "failure", "failure", "failure"]);
         expect(
           A.flatMap(output.entries, (entry) =>
@@ -92,8 +92,8 @@ describe("intake batch machine", () => {
         ]);
         expect(yield* Queue.takeN(emitted, 4)).toEqual(output.entries);
         expect(yield* Ref.get(payloads)).toMatchObject([
-          { intakeBatchId: batchIdFor(files), originalFileName: "first.txt", workspaceId },
-          { intakeBatchId: batchIdFor(files), originalFileName: "rejected.txt", workspaceId },
+          { intakeBatchId: batchIdFor(files, 1), originalFileName: "first.txt", workspaceId },
+          { intakeBatchId: batchIdFor(files, 1), originalFileName: "rejected.txt", workspaceId },
         ]);
       })
     );
@@ -103,7 +103,7 @@ describe("intake batch machine", () => {
       Effect.fnUntraced(function* () {
         const actor = yield* startBatch(intakeClient({}), []);
         const output = yield* settled(actor);
-        expect(output).toEqual({ intakeBatchId: batchIdFor([]), entries: [] });
+        expect(output).toEqual({ intakeBatchId: batchIdFor([], 1), entries: [] });
       })
     );
 

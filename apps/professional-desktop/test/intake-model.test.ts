@@ -41,7 +41,7 @@ const surfaceEvents = {
   }),
   BATCH_SETTLED: fc.record({
     sequence: fc.constantFrom(1, 2, 3),
-    output: fc.constant({ intakeBatchId: batchIdFor([]), entries: [] }),
+    output: fc.constant({ intakeBatchId: batchIdFor([], 1), entries: [] }),
   }),
   BATCH_REQUESTED: fc.constant({ files: [] }),
 };

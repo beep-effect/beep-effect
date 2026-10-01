@@ -19,6 +19,7 @@ import * as A from "@beep/utils/Array";
 import * as N from "@beep/utils/Number";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -431,28 +432,45 @@ const IntakeFile = S.instanceOf(File).pipe(
 /**
  * Derive the intake batch identifier sent with every file of one drop.
  *
+ * **Details**
+ *
+ * The identifier starts with the batch's one-based `sequence` within the
+ * intake actor, so two drops of the same files never share an inbox folder
+ * (`projectInboxDocumentPath` keys the folder on this id). The file count and
+ * a slug of the first file name follow so a developer can read it.
+ *
  * **Example** (Derive a batch id)
  *
  * ```ts
  * import { batchIdFor } from "@/intake/DocumentIntake.models"
+ * import { pipe } from "effect/Function"
  *
- * console.log(batchIdFor([new File(["text"], "Brief.txt")]))
+ * const files = [new File(["text"], "Brief.txt")]
+ * console.log(batchIdFor(files, 1))
+ * console.log(pipe(files, batchIdFor(2)))
  * ```
  *
  * @param files - Files dropped or selected together.
- * @returns A batch identifier derived from the batch size and first file name.
+ * @param sequence - One-based ordinal of the batch within its intake actor.
+ * @returns A batch identifier unique per drop within one intake actor.
  * @category identifiers
  * @since 0.0.0
  */
-export const batchIdFor = (files: ReadonlyArray<File>): IntakeBatchId =>
-  IntakeBatchId.make(
-    `batch-${A.length(files)}-${A.head(files).pipe(
-      O.map((file) => file.name),
-      O.filter(Str.isNonEmpty),
-      O.getOrElse(() => "drop"),
-      slugVaultSegment
-    )}`
-  );
+export const batchIdFor: {
+  (sequence: number): (files: ReadonlyArray<File>) => IntakeBatchId;
+  (files: ReadonlyArray<File>, sequence: number): IntakeBatchId;
+} = dual(
+  2,
+  (files: ReadonlyArray<File>, sequence: number): IntakeBatchId =>
+    IntakeBatchId.make(
+      `batch-${sequence}-${A.length(files)}-${A.head(files).pipe(
+        O.map((file) => file.name),
+        O.filter(Str.isNonEmpty),
+        O.getOrElse(() => "drop"),
+        slugVaultSegment
+      )}`
+    )
+);
 
 /**
  * Name a file for reporting and payloads, substituting a label for an unnamed file.
@@ -501,7 +519,7 @@ const IntakeBatchSequence = S.Int.check(S.isGreaterThan(0)).pipe(
  *
  * const files = [new File(["text"], "Brief.txt")]
  * const input = IntakeBatchInput.make({
- *   intakeBatchId: batchIdFor(files),
+ *   intakeBatchId: batchIdFor(files, 1),
  *   workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
  *   files
  * })
@@ -534,7 +552,7 @@ export class IntakeBatchInput extends S.Class<IntakeBatchInput>($I`IntakeBatchIn
  *
  * const files = [new File(["text"], "Brief.txt")]
  * const context = IntakeBatchContext.make({
- *   intakeBatchId: batchIdFor(files),
+ *   intakeBatchId: batchIdFor(files, 1),
  *   workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
  *   files,
  *   cursor: 0,

@@ -89,14 +89,42 @@ describe("intake actor inspection", { concurrent: false }, () => {
   );
 
   it.effect(
-    "reports no session when the relay rejects the registration",
+    "attaches before the relay answers and releases the attachment when it rejects",
     Effect.fnUntraced(function* () {
       vi.stubEnv("VITE_STATELY_INSPECT", "1");
       relay.accept = false;
       const actor = yield* createEffectActor(toggle);
       assertNone(yield* inspectIntakeActor(actor));
       expect(createInspector).toHaveBeenCalledTimes(1);
-      expect(A.map(calls, (call) => call.method)).not.toContain("actor");
+      // The actor was registered while the registration was pending ...
+      expect(A.map(calls, (call) => call.method)).toContain("actor");
+      // ... and nothing is forwarded once the relay has rejected it.
+      const forwarded = A.length(A.filter(calls, (call) => call.method === "event"));
+      yield* send(actor, { type: "FLIP" });
+      yield* waitFor(actor, (snapshot) => snapshot.matches("on"));
+      expect(A.length(A.filter(calls, (call) => call.method === "event"))).toBe(forwarded);
+    })
+  );
+
+  it.effect(
+    "sends the session to the relay named by VITE_STATELY_INSPECT_URL",
+    Effect.fnUntraced(function* () {
+      vi.stubEnv("VITE_STATELY_INSPECT", "1");
+      vi.stubEnv("VITE_STATELY_INSPECT_URL", "ws://127.0.0.1:4000/");
+      const actor = yield* createEffectActor(toggle);
+      assertSome(yield* inspectIntakeActor(actor), "http://inspector.test/session");
+      expect(calls[0]?.method).toContain("ws://127.0.0.1:4000/");
+    })
+  );
+
+  it.effect(
+    "stays off instead of falling back to the hosted relay when the override is not a URL",
+    Effect.fnUntraced(function* () {
+      vi.stubEnv("VITE_STATELY_INSPECT", "1");
+      vi.stubEnv("VITE_STATELY_INSPECT_URL", "not a url");
+      const actor = yield* createEffectActor(toggle);
+      assertNone(yield* inspectIntakeActor(actor));
+      expect(createInspector).not.toHaveBeenCalled();
     })
   );
 });

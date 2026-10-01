@@ -142,14 +142,17 @@ attaches an actor for the lifetime of the current scope.
 
 Two things to know before enabling it:
 
-- The desktop waits for `inspector.ready` before attaching. When the relay rejects this
-  producer's registration, the rejection is logged redacted and no URL is reported, so an
-  "attached" log line always means a working session.
+- The desktop attaches the actor at once and then waits for `inspector.ready`, so transitions
+  made while the relay registration is pending still reach the timeline. When the relay rejects
+  this producer's registration, the attachment is released, the rejection is logged redacted and
+  no URL is reported, so an "attached" log line always means a working session.
 - The inspector forwards complete snapshots and events to the relay, which is the hosted Stately
-  relay unless `STATELY_INSPECT_URL` points elsewhere. For document intake that includes the
-  developer's own vault root path and manual path drafts; file bytes never enter events or context
-  because they travel as state input. Point `STATELY_INSPECT_URL` at a local relay when even your
-  own paths must stay on the machine.
+  relay unless you name another: `VITE_STATELY_INSPECT_URL` in the desktop app,
+  `STATELY_INSPECT_URL` outside the browser. For document intake that includes the developer's own
+  vault root path and manual path drafts; file bytes never enter events or context because they
+  travel as state input. Point the variable at a local relay when even your own paths must stay
+  on the machine; a value that is not a URL keeps inspection off and logs a warning rather than
+  falling back to the hosted relay.
 
 ## CLI
 

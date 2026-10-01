@@ -101,7 +101,7 @@ const submitFile = fromEffect({
  *
  * const files = [new File(["text"], "Brief.txt")]
  * const input = IntakeBatchInput.make({
- *   intakeBatchId: batchIdFor(files),
+ *   intakeBatchId: batchIdFor(files, 1),
  *   workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
  *   files
  * })
