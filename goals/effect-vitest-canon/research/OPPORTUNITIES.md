@@ -6244,3 +6244,9 @@ monitoring was unavailable because the systemd user manager was unreachable.
 The hosted Security job also found inherited `basic-ftp@5.3.1` advisory
 GHSA-c475-qrg2-pj4r, reporting 6.2.1 as fixed. This PR does not change bun.lock;
 track dependency remediation separately from test migration regressions.
+
+The inherited basic-ftp advisory is repaired through a 6.2.1 override after
+local get-uri download/error/cache compatibility checks. The v6 transfer-host
+restriction remains enabled. A dependency-chain check is necessary here:
+even current get-uri metadata still requests basic-ftp 5.x, so updating the
+parent alone would not remove this advisory. See `basic-ftp-security-repair.md`.
