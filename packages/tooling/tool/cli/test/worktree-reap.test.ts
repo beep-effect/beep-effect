@@ -11,7 +11,6 @@ import {
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
-import { NonEmptyTrimmedStr } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -495,7 +494,7 @@ describe("worktree reap", () => {
         yield* removal
           .remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("unauthorized"),
+              name: "unauthorized",
               targetPath: target,
               mainCheckout: repoRoot,
               branch: O.some("feat/unauthorized"),

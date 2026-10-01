@@ -88,6 +88,7 @@ const snapshot = (
     mergeable: true,
     mergeStateAcceptable: true,
     reviewDecisionAcceptable: true,
+    closeoutGatesPassed: true,
     greptileScore: O.none(),
   });
   const ready = criteria.prOpen && bound && criteria.requiredChecksGreen && threads;

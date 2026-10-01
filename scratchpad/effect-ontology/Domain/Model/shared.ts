@@ -15,6 +15,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
 
@@ -136,7 +137,7 @@ export type Attributes = typeof Attributes.Type;
  * @since 0.0.0
  */
 export const OptionalConfidence = S.OptionFromNullishOr(Confidence).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     $I.annoteSchema("OptionalConfidence", {
       description: "Optional confidence normalized from nullish input to an Effect Option.",
     })

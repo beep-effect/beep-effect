@@ -64,12 +64,12 @@ export interface LangExtractRemotePolicyShape {
  * **Example** (Mock service extract layer)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { LangExtractService } from "@beep/langextract/Service"
  * import { LangExtractDiagnostics, LangExtractRequest, LangExtractResult } from "@beep/langextract/Extraction"
  * import { ExtractionTarget } from "@beep/langextract/Target"
  * import { DocumentId } from "@beep/nlp/Core"
  * import { Contract } from "@beep/nlp/Handoff"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect, Layer } from "effect"
  * import * as Str from "effect/String"
  *
@@ -95,10 +95,10 @@ export interface LangExtractRemotePolicyShape {
  *         LangExtractResult.make({
  *           annotatedDocument,
  *           diagnostics: LangExtractDiagnostics.make({
- *             alignedCount: NonNegativeInt.make(0),
- *             candidateCount: NonNegativeInt.make(0),
- *             promptChars: NonNegativeInt.make(Str.length(request.text)),
- *             unalignedCount: NonNegativeInt.make(0)
+ *             alignedCount: S.Natural.make(0),
+ *             candidateCount: S.Natural.make(0),
+ *             promptChars: S.Natural.make(Str.length(request.text)),
+ *             unalignedCount: S.Natural.make(0)
  *           }),
  *           documentId: request.documentId,
  *           extractions: [],

@@ -11,7 +11,6 @@ import {
   OpenclawTelegramSendResult,
 } from "@beep/openclaw/Openclaw.models";
 import { coordinateOpenclawLiveAcceptance, probeOpenclawLocalModels } from "@beep/openclaw/OpenclawProbe.service";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -49,7 +48,7 @@ const validInput = OpenclawLiveAcceptanceInput.make({
   }),
   restoredReload: OpenclawSecretsReloaded.make({
     _tag: "Reloaded",
-    warningCount: NonNegativeInt.make(0),
+    warningCount: S.Natural.make(0),
   }),
   skillInventory: OpenclawSkillInventory.make({
     skills: [
@@ -126,7 +125,7 @@ describe("@beep/openclaw live acceptance probes", () => {
     "rejects each invalid acceptance component independently",
     {
       suffix: Arbitrary.schema(S.NonEmptyString),
-      warningCount: Arbitrary.schema(NonNegativeInt.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(100))),
+      warningCount: Arbitrary.schema(S.Natural.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(100))),
     },
     ({ suffix, warningCount }) => {
       expect(coordinateOpenclawLiveAcceptance(validInput)._tag).toBe("Passed");

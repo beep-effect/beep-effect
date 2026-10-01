@@ -8,16 +8,20 @@
 import * as HtmlModel from "@beep/html/Html.model";
 import { Text as HtmlText } from "@beep/html/Html.nodes";
 import { $MdId } from "@beep/identity/packages";
-import { PosInt } from "@beep/schema/Int";
 import { JsonObject } from "@beep/schema/Json";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as Arr from "@beep/utils/Array";
-import { SchemaGetter, Tuple } from "effect";
+import { Effect, SchemaGetter, Tuple } from "effect";
 import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { HtmlChildNode } from "@beep/html";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const $I = $MdId.create("Md.model");
 
@@ -838,7 +842,7 @@ export class A extends S.TaggedClass<A>($I`A`)(
     href: S.String.annotateKey({
       description: "Markdown link destination or URL.",
     }),
-    title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    title: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional link title rendered when present.",
     }),
   },
@@ -920,7 +924,7 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
     src: S.String.annotateKey({
       description: "Image source URL or path.",
     }),
-    title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    title: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional image title rendered when present.",
     }),
   },
@@ -2083,6 +2087,7 @@ export const OrderedListStart = S.Union([S.Literal(0), PosInt]).pipe(
  */
 export type OrderedListStart = typeof OrderedListStart.Type;
 
+const olStartDefault = PosInt.make(1);
 /**
  * Ordered list block.
  *
@@ -2104,7 +2109,10 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
     children: ListChildren.annotateKey({
       description: "List items rendered as an ordered list.",
     }),
-    start: OrderedListStart.pipe(SchemaUtils.withKeyDefaults(PosInt.make(1))).annotateKey({
+    start: OrderedListStart.pipe(
+      S.withConstructorDefault(Effect.succeed(olStartDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(olStartDefault))
+    ).annotateKey({
       description: "First ordinal used by the ordered list. Defaults to one.",
     }),
   },
@@ -2707,6 +2715,7 @@ export declare namespace TableRow {
   }
 }
 
+const tableAlignDefault = Arr.empty<TableAlignment>();
 /**
  * Markdown table block.
  *
@@ -2728,9 +2737,14 @@ export declare namespace TableRow {
 export class Table extends S.TaggedClass<Table>($I`Table`)(
   "table",
   {
-    align: S.Array(TableAlignment).pipe(SchemaUtils.withEmptyArrayDefaults<TableAlignment>()).annotateKey({
-      description: "Column alignment values in display order. Missing entries render as unaligned columns.",
-    }),
+    align: S.Array(TableAlignment)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(tableAlignDefault)),
+        S.withDecodingDefaultType(Effect.succeed(tableAlignDefault))
+      )
+      .annotateKey({
+        description: "Column alignment values in display order. Missing entries render as unaligned columns.",
+      }),
     headerRow: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Whether the first row renders as a table header. Defaults to false on construction and decode.",
     }),
@@ -3043,7 +3057,7 @@ export class Admonition extends S.TaggedClass<Admonition>($I`Admonition`)(
     kind: AdmonitionKind.annotateKey({
       description: "Admonition kind.",
     }),
-    title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    title: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional admonition title.",
     }),
     children: BlockChildren.annotateKey({
@@ -3132,10 +3146,10 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
     src: S.String.annotateKey({
       description: "Embed source URL or identifier.",
     }),
-    title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    title: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional embed title.",
     }),
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional embed description.",
     }),
   },
@@ -3444,7 +3458,7 @@ export declare namespace Block {
 export class Document extends S.TaggedClass<Document>($I`Document`)(
   "document",
   {
-    frontmatter: S.OptionFromOptionalKey(JsonObject).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    frontmatter: S.OptionFromOptionalKey(JsonObject).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional JSON-compatible document metadata rendered as deterministic frontmatter.",
     }),
     children: BlockChildren.annotateKey({

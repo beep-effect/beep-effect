@@ -6,7 +6,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
 import { AiToken, AiToolError } from "./_schemas.ts";
@@ -27,7 +26,7 @@ class TokenizeParameters extends S.Class<TokenizeParameters>($I`TokenizeParamete
 
 class TokenizeSuccess extends S.Class<TokenizeSuccess>($I`TokenizeSuccess`)(
   {
-    tokenCount: NonNegativeInt,
+    tokenCount: S.Natural,
     tokens: S.Array(AiToken),
   },
   $I.annote("TokenizeSuccess", {

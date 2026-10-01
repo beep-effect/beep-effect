@@ -5,9 +5,8 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -96,13 +95,22 @@ export const DEFAULT_BEEP_SECURE_HEADERS: ReadonlyArray<SecureHeader> = defaultB
 
 class SecureHeadersConfigValue extends S.Class<SecureHeadersConfigValue>($I`SecureHeadersConfigValue`)(
   {
-    source: S.String.pipe(SchemaUtils.withKeyDefaults(defaultHeaderSource)).annotateKey({
+    source: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultHeaderSource)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultHeaderSource))
+    ).annotateKey({
       description: "Next.js route source receiving the secure headers.",
     }),
-    headers: HeaderList.pipe(SchemaUtils.withKeyDefaults(defaultBeepSecureHeaders)).annotateKey({
+    headers: HeaderList.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultBeepSecureHeaders)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultBeepSecureHeaders))
+    ).annotateKey({
       description: "Replacement secure header list.",
     }),
-    additionalHeaders: HeaderList.pipe(SchemaUtils.withKeyDefaults(emptySecureHeaders)).annotateKey({
+    additionalHeaders: HeaderList.pipe(
+      S.withConstructorDefault(Effect.succeed(emptySecureHeaders)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(emptySecureHeaders))
+    ).annotateKey({
       description: "Additional secure headers merged with the repo default list.",
     }),
   },

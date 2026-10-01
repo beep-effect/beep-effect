@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationId } from "../CitationId/index.ts";
 import { HistorySignal } from "../HistorySignal/index.ts";
@@ -52,7 +52,7 @@ export class HistoryLink extends S.Class<HistoryLink>($I`HistoryLink`)(
     }),
     signal: HistorySignal.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "The disposition signal that led to this case; absent for the chain root, which has no inbound signal (#849).",

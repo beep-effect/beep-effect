@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { HashMap, Order } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "../../internal/PosInt.ts";
 import { Segment } from "../Segment/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/SegmentMap/SegmentMap.model");
@@ -61,8 +61,8 @@ export class SegmentMap extends S.Class<SegmentMap>($I`SegmentMap`)(
     SegmentMap.make({
       segments: [
         Segment.make({
-          cleanPos: NonNegativeInt.make(0),
-          origPos: NonNegativeInt.make(0),
+          cleanPos: S.Natural.make(0),
+          origPos: S.Natural.make(0),
           len: PosInt.make(length + 1),
         }),
       ],
@@ -104,8 +104,8 @@ export class SegmentMap extends S.Class<SegmentMap>($I`SegmentMap`)(
           segments = A.append(
             segments,
             Segment.make({
-              cleanPos: NonNegativeInt.make(segCleanStart),
-              origPos: NonNegativeInt.make(segOrigStart),
+              cleanPos: S.Natural.make(segCleanStart),
+              origPos: S.Natural.make(segOrigStart),
               len: PosInt.make(segLen),
             })
           );

@@ -6,7 +6,6 @@
  */
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema/Int";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 
@@ -76,7 +75,7 @@ export type IntakeBatchId = typeof IntakeBatchId.Type;
  */
 export class IntakeBatch extends S.Class<IntakeBatch>($I`IntakeBatch`)(
   {
-    fileCount: NonNegativeInt.annotateKey({
+    fileCount: S.Natural.annotateKey({
       description: "Number of files received in the batch.",
     }),
     id: IntakeBatchId.annotateKey({

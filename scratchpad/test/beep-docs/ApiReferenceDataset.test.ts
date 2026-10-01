@@ -1,4 +1,3 @@
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { BunServices } from "@effect/platform-bun";
 import { assert, it } from "@effect/vitest";
@@ -39,10 +38,10 @@ const reflectionFor = (name: string) =>
   });
 
 class Fixture extends S.Class<Fixture>("Fixture")({
-  tamperIndexDigest: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(false)),
-  httpClientBarrel: S.String.pipe(SchemaUtils.withConstantDefault<string>(".")),
-  packageManifestPath: S.String.pipe(SchemaUtils.withConstantDefault<string>("platform/manifest.json")),
-  collidingPackage: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(false)),
+  tamperIndexDigest: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed<boolean>(false))),
+  httpClientBarrel: S.String.pipe(S.withConstructorDefault(Effect.succeed<string>("."))),
+  packageManifestPath: S.String.pipe(S.withConstructorDefault(Effect.succeed<string>("platform/manifest.json"))),
+  collidingPackage: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed<boolean>(false))),
 }) {}
 
 const writeDataset = Effect.fnUntraced(function* (fixture: Fixture) {

@@ -42,7 +42,7 @@ import {
   restorationTransformationTesting as RT,
   withRestorationWriterClaim,
 } from "@beep/repo-cli/test/Corpus";
-import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -60,6 +60,8 @@ import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
 import type { PlatformError } from "effect";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeRestorationVerifyOptions = S.decodeEffect(RestorationVerifyOptions);
 const decodeUnknownCollectorManifestRecordResult = S.decodeUnknownResult(CollectorManifestRecord);
@@ -290,8 +292,8 @@ describe("corpus restoration evidence invariants", () => {
         yield* restoreRecycle(
           RestorationRecycleOptions.make({
             corpusRoot: recycleFixture.corpusRoot,
-            expectedMissingContentCount: NonNegativeInt.make(1),
-            expectedSurfaceCount: NonNegativeInt.make(3),
+            expectedMissingContentCount: S.Natural.make(1),
+            expectedSurfaceCount: S.Natural.make(3),
             maxTotalElapsedMillis: PosInt.make(30_000),
             maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
             runLabel: "synthetic-recycle-restoration",
@@ -573,7 +575,7 @@ const provenanceRecord = (input: {
     relativePath: input.relativePath,
     salvagedAt: "2026-06-11T15:00:00Z",
     sha256: Sha256Hex.make(input.sha256),
-    sizeBytes: NonNegativeInt.make(input.sizeBytes),
+    sizeBytes: S.Natural.make(input.sizeBytes),
     sourceLabel: input.sourceLabel,
     ...(input.copyMode === undefined ? {} : { copyMode: input.copyMode }),
     ...(input.dedupeOfPath === undefined ? {} : { dedupeOfPath: input.dedupeOfPath }),
@@ -1361,10 +1363,10 @@ const measurePreservationDenominators = Effect.fn("CorpusTest.measurePreservatio
   yield* visit(sourceRoot);
   const rootArchiveInfo = yield* fs.stat(rootArchive).pipe(Effect.orDie);
   return {
-    expectedRootArchiveBytes: NonNegativeInt.make(Number(rootArchiveInfo.size)),
-    expectedSourceDirectoryCount: NonNegativeInt.make(directoryCount),
-    expectedSourceFileCount: NonNegativeInt.make(fileCount),
-    expectedSourceTreeBytes: NonNegativeInt.make(sourceTreeBytes),
+    expectedRootArchiveBytes: S.Natural.make(Number(rootArchiveInfo.size)),
+    expectedSourceDirectoryCount: S.Natural.make(directoryCount),
+    expectedSourceFileCount: S.Natural.make(fileCount),
+    expectedSourceTreeBytes: S.Natural.make(sourceTreeBytes),
   };
 });
 
@@ -1417,7 +1419,7 @@ const writePresentCollectorManifest = Effect.fn("CorpusTest.writePresentCollecto
           records.push(
             CollectorManifestRecord.cases.copied.make({
               dst: `F:/salvage/${relativePath}`,
-              size: NonNegativeInt.make(Number(info.size)),
+              size: S.Natural.make(Number(info.size)),
               src: `C:/source/${relativePath}`,
               status: "copied",
             })
@@ -1449,23 +1451,23 @@ const restorationOptions = (
     absentRecycleTreePath: input.absentTree,
     capacityCeilingBytes: PosInt.make(input.capacityCeilingBytes),
     chunkSizeBytes: PosInt.make(1_024),
-    collectorDestinationPrefixSegments: NonNegativeInt.make(2),
+    collectorDestinationPrefixSegments: S.Natural.make(2),
     corpusRoot: input.corpusRoot,
     crashPoint: input.crashPoint ?? "none",
-    expectedCollectorCopiedCount: NonNegativeInt.make(1),
-    expectedCollectorErrorCount: NonNegativeInt.make(1),
-    expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
-    expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(1),
-    expectedCollectorResumedCount: NonNegativeInt.make(1),
-    expectedCollectorRowCount: NonNegativeInt.make(3),
-    expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(2),
-    expectedMissingRecyclePayloadCount: NonNegativeInt.make(1),
-    expectedMutatedDestinationCount: NonNegativeInt.make(1),
+    expectedCollectorCopiedCount: S.Natural.make(1),
+    expectedCollectorErrorCount: S.Natural.make(1),
+    expectedCollectorExcludedSecretCount: S.Natural.make(0),
+    expectedCollectorPresentSuccessfulRowCount: S.Natural.make(1),
+    expectedCollectorResumedCount: S.Natural.make(1),
+    expectedCollectorRowCount: S.Natural.make(3),
+    expectedCollectorUniqueSuccessfulDestinationCount: S.Natural.make(2),
+    expectedMissingRecyclePayloadCount: S.Natural.make(1),
+    expectedMutatedDestinationCount: S.Natural.make(1),
     expectedRootArchiveBytes: input.expectedRootArchiveBytes,
     expectedSourceDirectoryCount: input.expectedSourceDirectoryCount,
     expectedSourceFileCount: input.expectedSourceFileCount,
     expectedSourceTreeBytes: input.expectedSourceTreeBytes,
-    minimumFreeAfterBytes: NonNegativeInt.make(0),
+    minimumFreeAfterBytes: S.Natural.make(0),
     rootArchivePath: input.rootArchive,
     runLabel: "synthetic-restoration",
     sourceManifestPath: input.collectorManifest,
@@ -1491,13 +1493,13 @@ const makeRestorationFixture = Effect.fn("CorpusTest.makeRestorationFixture")(fu
   const collectorRows = [
     CollectorManifestRecord.cases.copied.make({
       dst: "F:\\salvage\\nested\\large.bin",
-      size: NonNegativeInt.make(largeBytes.length),
+      size: S.Natural.make(largeBytes.length),
       src: "C:\\source\\large.bin",
       status: "copied",
     }),
     CollectorManifestRecord.cases.resumed.make({
       dst: "F:\\salvage\\missing.bin",
-      size: NonNegativeInt.make(1),
+      size: S.Natural.make(1),
       src: "C:\\source\\missing.bin",
       status: "resumed",
     }),
@@ -1596,14 +1598,14 @@ describe("corpus restoration preservation", () => {
             capacityCeilingBytes: 64 * 1024 * 1024,
           }),
           chunkSizeBytes: PosInt.make(1024 * 1024),
-          expectedCollectorCopiedCount: NonNegativeInt.make(collectorRowCount),
-          expectedCollectorErrorCount: NonNegativeInt.make(0),
-          expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(collectorRowCount),
-          expectedCollectorResumedCount: NonNegativeInt.make(0),
-          expectedCollectorRowCount: NonNegativeInt.make(collectorRowCount),
-          expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(collectorRowCount),
-          expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
-          expectedMutatedDestinationCount: NonNegativeInt.make(0),
+          expectedCollectorCopiedCount: S.Natural.make(collectorRowCount),
+          expectedCollectorErrorCount: S.Natural.make(0),
+          expectedCollectorPresentSuccessfulRowCount: S.Natural.make(collectorRowCount),
+          expectedCollectorResumedCount: S.Natural.make(0),
+          expectedCollectorRowCount: S.Natural.make(collectorRowCount),
+          expectedCollectorUniqueSuccessfulDestinationCount: S.Natural.make(collectorRowCount),
+          expectedMissingRecyclePayloadCount: S.Natural.make(0),
+          expectedMutatedDestinationCount: S.Natural.make(0),
         });
         const summary = yield* preserveWithArchiveCopyMutation(options, partialPath, (racingFs) =>
           racingFs.rename(replacementPath, sourcePath)
@@ -1670,14 +1672,14 @@ describe("corpus restoration preservation", () => {
             capacityCeilingBytes: 64 * 1024 * 1024,
           }),
           chunkSizeBytes: PosInt.make(1024 * 1024),
-          expectedCollectorCopiedCount: NonNegativeInt.make(collectorRowCount),
-          expectedCollectorErrorCount: NonNegativeInt.make(0),
-          expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(collectorRowCount),
-          expectedCollectorResumedCount: NonNegativeInt.make(0),
-          expectedCollectorRowCount: NonNegativeInt.make(collectorRowCount),
-          expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(collectorRowCount),
-          expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
-          expectedMutatedDestinationCount: NonNegativeInt.make(0),
+          expectedCollectorCopiedCount: S.Natural.make(collectorRowCount),
+          expectedCollectorErrorCount: S.Natural.make(0),
+          expectedCollectorPresentSuccessfulRowCount: S.Natural.make(collectorRowCount),
+          expectedCollectorResumedCount: S.Natural.make(0),
+          expectedCollectorRowCount: S.Natural.make(collectorRowCount),
+          expectedCollectorUniqueSuccessfulDestinationCount: S.Natural.make(collectorRowCount),
+          expectedMissingRecyclePayloadCount: S.Natural.make(0),
+          expectedMutatedDestinationCount: S.Natural.make(0),
         });
         const error = yield* preserveWithArchiveCopyMutation(
           options,
@@ -1894,7 +1896,7 @@ describe("corpus restoration preservation", () => {
         expect(verified.passCount).toBe(summary.passCount);
         assertSome(
           O.map(resumedPass, (record) => (record.recordType === "archive-file-pass" ? record.resumedBytes : 0)),
-          NonNegativeInt.make(2)
+          S.Natural.make(2)
         );
         expect(provenance.trim().split("\n")).toHaveLength(2);
         expect(reports).toHaveLength(1);
@@ -1967,7 +1969,7 @@ describe("corpus restoration preservation", () => {
         const emptySeal = ArchiveLedgerRecord.cases["archive-manifest-seal"].make({
           ...seal.value,
           manifestSha256: Sha256Hex.make(bytesToHex(sha256(new Uint8Array()))),
-          recordCount: NonNegativeInt.make(0),
+          recordCount: S.Natural.make(0),
         });
         const encodedEmptySeal = yield* encodeArchiveLedgerRecordJson(emptySeal);
         expect(yield* RA.validateArchiveManifestSeal(archiveRoot, [encodedEmptySeal], [emptySeal])).toEqual(emptySeal);
@@ -2041,7 +2043,7 @@ describe("corpus restoration preservation", () => {
             ArchiveLedgerRecord.cases["archive-manifest-seal"].make({
               ...seal.value,
               manifestSha256,
-              recordCount: NonNegativeInt.make(unsealed.length),
+              recordCount: S.Natural.make(unsealed.length),
             })
           );
         });
@@ -2241,7 +2243,7 @@ describe("corpus restoration preservation", () => {
           restorationOptions({
             ...fixture,
             capacityCeilingBytes: 10 * 1024 * 1024,
-            expectedSourceFileCount: NonNegativeInt.make(fixture.expectedSourceFileCount + 1),
+            expectedSourceFileCount: S.Natural.make(fixture.expectedSourceFileCount + 1),
           })
         ).pipe(Effect.flip);
         const archiveRootExists = yield* fs.exists(path.join(fixture.corpusRoot, "raw", "synthetic-restoration"));
@@ -2459,7 +2461,7 @@ const makeMailRestorationFixture = Effect.fn("CorpusTest.makeMailRestorationFixt
   const collectorRow = yield* S.encodeEffect(collectorManifestJson)(
     CollectorManifestRecord.cases.copied.make({
       dst: "F:\\salvage\\$Recycle.Bin\\surface-a\\$Rstore.pst",
-      size: NonNegativeInt.make(mailBytes.length),
+      size: S.Natural.make(mailBytes.length),
       src: "C:\\source\\mail-store.pst",
       status: "copied",
     })
@@ -2474,19 +2476,19 @@ const makeMailRestorationFixture = Effect.fn("CorpusTest.makeMailRestorationFixt
     absentRecycleTreePath: absentTree,
     capacityCeilingBytes: PosInt.make(10 * 1024 * 1024),
     chunkSizeBytes: PosInt.make(4_096),
-    collectorDestinationPrefixSegments: NonNegativeInt.make(2),
+    collectorDestinationPrefixSegments: S.Natural.make(2),
     corpusRoot,
-    expectedCollectorCopiedCount: NonNegativeInt.make(1),
-    expectedCollectorErrorCount: NonNegativeInt.make(0),
-    expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
-    expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(1),
-    expectedCollectorResumedCount: NonNegativeInt.make(0),
-    expectedCollectorRowCount: NonNegativeInt.make(1),
-    expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(1),
-    expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
-    expectedMutatedDestinationCount: NonNegativeInt.make(0),
+    expectedCollectorCopiedCount: S.Natural.make(1),
+    expectedCollectorErrorCount: S.Natural.make(0),
+    expectedCollectorExcludedSecretCount: S.Natural.make(0),
+    expectedCollectorPresentSuccessfulRowCount: S.Natural.make(1),
+    expectedCollectorResumedCount: S.Natural.make(0),
+    expectedCollectorRowCount: S.Natural.make(1),
+    expectedCollectorUniqueSuccessfulDestinationCount: S.Natural.make(1),
+    expectedMissingRecyclePayloadCount: S.Natural.make(0),
+    expectedMutatedDestinationCount: S.Natural.make(0),
     ...denominators,
-    minimumFreeAfterBytes: NonNegativeInt.make(0),
+    minimumFreeAfterBytes: S.Natural.make(0),
     rootArchivePath: rootArchive,
     runLabel: "synthetic-mail-restoration",
     sourceManifestPath: collectorManifest,
@@ -2509,7 +2511,7 @@ const mailRestorationOptions = (
   RestorationMailOptions.make({
     bwrapPath: fixture.bwrapPath,
     corpusRoot: fixture.corpusRoot,
-    expectedStoreCount: NonNegativeInt.make(1),
+    expectedStoreCount: S.Natural.make(1),
     javaPath: fixture.tikaPath,
     maxAmplificationRatio: 10,
     maxElapsedMillis: PosInt.make(30_000),
@@ -2583,7 +2585,7 @@ const tamperRestartedMailSegment = (
         (record) =>
           TransformationLedgerRecord.cases["family-attempt-interrupted"].make({
             ...record,
-            retryOrdinal: NonNegativeInt.make(record.retryOrdinal + 1),
+            retryOrdinal: S.Natural.make(record.retryOrdinal + 1),
           })
       )
     ),
@@ -3073,19 +3075,19 @@ const makeRecycleRestorationFixture = Effect.fn("CorpusTest.makeRecycleRestorati
       absentRecycleTreePath: absentTree,
       capacityCeilingBytes: PosInt.make(10 * 1024 * 1024),
       chunkSizeBytes: PosInt.make(4_096),
-      collectorDestinationPrefixSegments: NonNegativeInt.make(2),
+      collectorDestinationPrefixSegments: S.Natural.make(2),
       corpusRoot,
-      expectedCollectorCopiedCount: NonNegativeInt.make(collectorRowCount),
-      expectedCollectorErrorCount: NonNegativeInt.make(0),
-      expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
-      expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(collectorRowCount),
-      expectedCollectorResumedCount: NonNegativeInt.make(0),
-      expectedCollectorRowCount: NonNegativeInt.make(collectorRowCount),
-      expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(collectorRowCount),
-      expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
-      expectedMutatedDestinationCount: NonNegativeInt.make(0),
+      expectedCollectorCopiedCount: S.Natural.make(collectorRowCount),
+      expectedCollectorErrorCount: S.Natural.make(0),
+      expectedCollectorExcludedSecretCount: S.Natural.make(0),
+      expectedCollectorPresentSuccessfulRowCount: S.Natural.make(collectorRowCount),
+      expectedCollectorResumedCount: S.Natural.make(0),
+      expectedCollectorRowCount: S.Natural.make(collectorRowCount),
+      expectedCollectorUniqueSuccessfulDestinationCount: S.Natural.make(collectorRowCount),
+      expectedMissingRecyclePayloadCount: S.Natural.make(0),
+      expectedMutatedDestinationCount: S.Natural.make(0),
       ...denominators,
-      minimumFreeAfterBytes: NonNegativeInt.make(0),
+      minimumFreeAfterBytes: S.Natural.make(0),
       rootArchivePath: rootArchive,
       runLabel: "synthetic-recycle-restoration",
       sourceManifestPath: collectorManifest,
@@ -3106,8 +3108,8 @@ describe("corpus restoration recycle", () => {
         const summary = yield* restoreRecycle(
           RestorationRecycleOptions.make({
             corpusRoot: fixture.corpusRoot,
-            expectedMissingContentCount: NonNegativeInt.make(1),
-            expectedSurfaceCount: NonNegativeInt.make(3),
+            expectedMissingContentCount: S.Natural.make(1),
+            expectedSurfaceCount: S.Natural.make(3),
             maxTotalElapsedMillis: PosInt.make(30_000),
             maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
             runLabel: "synthetic-recycle-restoration",
@@ -3247,8 +3249,8 @@ describe("corpus restoration recycle", () => {
         const error = yield* restoreRecycle(
           RestorationRecycleOptions.make({
             corpusRoot: fixture.corpusRoot,
-            expectedMissingContentCount: NonNegativeInt.make(1),
-            expectedSurfaceCount: NonNegativeInt.make(3),
+            expectedMissingContentCount: S.Natural.make(1),
+            expectedSurfaceCount: S.Natural.make(3),
             maxTotalElapsedMillis: PosInt.make(30_000),
             maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
             runLabel: "synthetic-recycle-restoration",
@@ -3285,8 +3287,8 @@ describe("corpus restoration recycle", () => {
         const error = yield* restoreRecycle(
           RestorationRecycleOptions.make({
             corpusRoot: fixture.corpusRoot,
-            expectedMissingContentCount: NonNegativeInt.make(1),
-            expectedSurfaceCount: NonNegativeInt.make(3),
+            expectedMissingContentCount: S.Natural.make(1),
+            expectedSurfaceCount: S.Natural.make(3),
             maxTotalElapsedMillis: PosInt.make(30_000),
             maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
             runLabel: "synthetic-recycle-restoration",
@@ -3392,19 +3394,19 @@ const makeLegacyWordRestorationFixture = Effect.fn("CorpusTest.makeLegacyWordRes
       absentRecycleTreePath: absentTree,
       capacityCeilingBytes: PosInt.make(10 * 1024 * 1024),
       chunkSizeBytes: PosInt.make(4_096),
-      collectorDestinationPrefixSegments: NonNegativeInt.make(2),
+      collectorDestinationPrefixSegments: S.Natural.make(2),
       corpusRoot,
-      expectedCollectorCopiedCount: NonNegativeInt.make(collectorRowCount),
-      expectedCollectorErrorCount: NonNegativeInt.make(0),
-      expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
-      expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(collectorRowCount),
-      expectedCollectorResumedCount: NonNegativeInt.make(0),
-      expectedCollectorRowCount: NonNegativeInt.make(collectorRowCount),
-      expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(collectorRowCount),
-      expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
-      expectedMutatedDestinationCount: NonNegativeInt.make(0),
+      expectedCollectorCopiedCount: S.Natural.make(collectorRowCount),
+      expectedCollectorErrorCount: S.Natural.make(0),
+      expectedCollectorExcludedSecretCount: S.Natural.make(0),
+      expectedCollectorPresentSuccessfulRowCount: S.Natural.make(collectorRowCount),
+      expectedCollectorResumedCount: S.Natural.make(0),
+      expectedCollectorRowCount: S.Natural.make(collectorRowCount),
+      expectedCollectorUniqueSuccessfulDestinationCount: S.Natural.make(collectorRowCount),
+      expectedMissingRecyclePayloadCount: S.Natural.make(0),
+      expectedMutatedDestinationCount: S.Natural.make(0),
       ...denominators,
-      minimumFreeAfterBytes: NonNegativeInt.make(0),
+      minimumFreeAfterBytes: S.Natural.make(0),
       rootArchivePath: rootArchive,
       runLabel: "synthetic-legacy-word-restoration",
       sourceManifestPath: collectorManifest,
@@ -3429,7 +3431,7 @@ const legacyWordRestorationOptions = (fixture: {
     converterPath: fixture.converterPath,
     corpusRoot: fixture.corpusRoot,
     expectedConverterVersion: "LibreOffice synthetic 1.0",
-    expectedOccurrenceCount: NonNegativeInt.make(3),
+    expectedOccurrenceCount: S.Natural.make(3),
     javaPath: fixture.tikaPath,
     maxElapsedMillis: PosInt.make(30_000),
     maxTotalElapsedMillis: PosInt.make(30_000),
@@ -3605,7 +3607,7 @@ describe("corpus restoration acceptance", { concurrent: false }, () => {
           ...acceptance,
           message: "Synthetic prior run remained unapproved.",
           recordType: "family-acceptance-failure",
-          unapprovedCount: NonNegativeInt.make(1),
+          unapprovedCount: S.Natural.make(1),
         });
         const encodedFailure = yield* encodeTransformationLedgerRecordJson(priorFailure);
         const priorRun = A.append(A.dropRight(lines, 1), encodedFailure);

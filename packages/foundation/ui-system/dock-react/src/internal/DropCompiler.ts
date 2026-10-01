@@ -15,12 +15,12 @@ import {
   TabsNode,
   TopLeftAnchoredBox,
 } from "@beep/dock";
-import { NonNegativeInt } from "@beep/schema";
 import { Match, MutableHashMap, Number as N, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { commandCounter } from "./AdapterState.ts";
 import { SectionPreview, TabInsertionPreview } from "./Gesture.models.ts";
 import type { AnchoredBox, DockGeometry, MovePanelCommand, Panel, SplitNode } from "@beep/dock";
@@ -250,7 +250,7 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
         const panels = TabsNode.panels(tabs.value);
         const count = A.length(panels);
         const rawIndex = stripInsertionIndex(state, group.value.groupId, panels, group.value.box, point.left);
-        const index = NonNegativeInt.make(Math.min(count, Math.max(0, rawIndex)));
+        const index = S.Natural.make(Math.min(count, Math.max(0, rawIndex)));
         return O.some(
           MovePanelCommandSchema.make({
             panelId: drag.panelId,
@@ -335,7 +335,7 @@ const tabInsertionPreview = (
   state: AdapterState,
   graph: DockAtomGraph,
   groupId: GroupId,
-  index: O.Option<NonNegativeInt>,
+  index: O.Option<number>,
   box: DockBox
 ): TabInsertionPreview => {
   const headerHeight = Math.min(32, box.height);

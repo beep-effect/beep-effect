@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Clock, Context, Effect, Layer, Match, MutableRef, pipe } from "effect";
 import * as OtlpSerialization from "effect/observability/OtlpSerialization";
@@ -99,11 +99,10 @@ export type OtlpPacketEncoding = typeof OtlpPacketEncoding.Type;
  * **Example** (Make packet with fields)
  *
  * ```ts import.meta.vitest name="Make packet with fields"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { OtlpPacket } from "@beep/observability/experimental/server"
  *
- * const zero = S.decodeUnknownSync(NonNegativeInt)(0)
+ * const zero = S.decodeUnknownSync(S.Natural)(0)
  * const packet = OtlpPacket.make({
  *   capturedAtMs: zero,
  *   contentType: "application/json",
@@ -122,9 +121,9 @@ export class OtlpPacket extends S.Class<OtlpPacket>($I`OtlpPacket`)(
   {
     kind: OtlpPacketKind,
     encoding: OtlpPacketEncoding,
-    capturedAtMs: NonNegativeInt,
+    capturedAtMs: S.Natural,
     contentType: S.String,
-    size: NonNegativeInt,
+    size: S.Natural,
     preview: S.String,
   },
   $I.annote("OtlpPacket", {

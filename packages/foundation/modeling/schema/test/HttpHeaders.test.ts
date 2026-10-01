@@ -329,6 +329,18 @@ describe("Secure header schemas", () => {
     })
   );
 
+  it.effect("fails header decoding when a configured report or allow-from URI is invalid", () =>
+    Effect.gen(function* () {
+      pipe(
+        yield* Effect.exit(decodeFrameGuardHeader(["allow-from", { uri: "not-a-url" }])),
+        Exit.isFailure,
+        assertTrue
+      );
+      pipe(yield* Effect.exit(decodeExpectCTHeader([true, { reportURI: "not-a-url" }])), Exit.isFailure, assertTrue);
+      pipe(yield* Effect.exit(decodeXSSProtectionHeader(["report", { uri: "not-a-url" }])), Exit.isFailure, assertTrue);
+    })
+  );
+
   it.effect("uses secure defaults for NoOpen, NoSniff, and permitted cross-domain policies", () =>
     Effect.gen(function* () {
       expectHeader(yield* decodeNoOpenHeader(undefined), "X-Download-Options", "noopen");

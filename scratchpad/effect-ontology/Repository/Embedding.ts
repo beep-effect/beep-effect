@@ -18,7 +18,7 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -35,6 +35,7 @@ import { SqlClient } from "effect/sql";
 import { formatPgVector, normalizeDrizzleError } from "../Utils/Sql.ts";
 import type { EmbeddingRow } from "./schema.ts";
 import { Embeddings, embeddings } from "./schema.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 // =============================================================================
 // Types
@@ -109,7 +110,7 @@ export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityRes
  * **Example** (Construct a hybrid-search hit)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { EmbeddingEntityType, HybridSearchResult } from "@effect-ontology/Repository/Embedding"
  *
@@ -117,8 +118,8 @@ export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityRes
  *   entityId: "ada_lovelace",
  *   entityType: EmbeddingEntityType.Enum.entity,
  *   rrfScore: UnitInterval.make(0.8),
- *   vectorRank: NonNegativeInt.make(1),
- *   textRank: NonNegativeInt.make(2)
+ *   vectorRank: S.Natural.make(1),
+ *   textRank: S.Natural.make(2)
  * })
  * console.log(hit.rrfScore) // 0.8
  * ```
@@ -132,14 +133,16 @@ export class HybridSearchResult extends S.Class<HybridSearchResult>($I`HybridSea
     entityId: S.NonEmptyString,
     entityType: EmbeddingEntityType,
     rrfScore: UnitInterval,
-    vectorRank: NonNegativeInt,
-    textRank: NonNegativeInt,
+    vectorRank: S.Natural,
+    textRank: S.Natural,
   },
   $I.annote("HybridSearchResult", {
     description: "Repository entity and its reciprocal-rank-fusion search scores.",
   })
 ) {}
 
+const similaritySearchOptionsLimitDefault = PosInt.make(20);
+const similaritySearchOptionsMinSimilarityDefault = UnitInterval.make(0.5);
 /**
  * Bounded result count and cosine-similarity threshold for vector search.
  *
@@ -158,8 +161,8 @@ export class HybridSearchResult extends S.Class<HybridSearchResult>($I`HybridSea
  */
 export class SimilaritySearchOptions extends S.Class<SimilaritySearchOptions>($I`SimilaritySearchOptions`)(
   {
-    limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-    minSimilarity: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.5))),
+    limit: PosInt.pipe(S.withConstructorDefault(Effect.succeed(similaritySearchOptionsLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(similaritySearchOptionsLimitDefault))),
+    minSimilarity: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(similaritySearchOptionsMinSimilarityDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(similaritySearchOptionsMinSimilarityDefault))),
   },
   $I.annote("SimilaritySearchOptions", {
     description: "Bounded result count and cosine-similarity threshold for vector search.",
@@ -175,6 +178,9 @@ export class SimilaritySearchOptions extends S.Class<SimilaritySearchOptions>($I
  */
 export type SimilaritySearchOptionsInput = (typeof SimilaritySearchOptions)["~type.make.in"];
 
+const hybridSearchOptionsLimitDefault = PosInt.make(20);
+const hybridSearchOptionsVectorWeightDefault = UnitInterval.make(0.6);
+const hybridSearchOptionsTextWeightDefault = UnitInterval.make(0.4);
 /**
  * Bounded result count and fusion weights for hybrid vector and text search.
  *
@@ -193,9 +199,9 @@ export type SimilaritySearchOptionsInput = (typeof SimilaritySearchOptions)["~ty
  */
 export class HybridSearchOptions extends S.Class<HybridSearchOptions>($I`HybridSearchOptions`)(
   {
-    limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-    vectorWeight: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.6))),
-    textWeight: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.4))),
+    limit: PosInt.pipe(S.withConstructorDefault(Effect.succeed(hybridSearchOptionsLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsLimitDefault))),
+    vectorWeight: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(hybridSearchOptionsVectorWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsVectorWeightDefault))),
+    textWeight: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(hybridSearchOptionsTextWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsTextWeightDefault))),
   },
   $I.annote("HybridSearchOptions", {
     description: "Bounded result count and fusion weights for hybrid vector and text search.",

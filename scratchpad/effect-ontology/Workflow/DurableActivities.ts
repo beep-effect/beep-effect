@@ -28,8 +28,6 @@ import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_USED, PROV_WAS_GENERATED_BY } from 
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { SchemaUtils } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Int";
-import { NonNegNum } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import {
@@ -142,16 +140,16 @@ const PROV_GENERATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}generatedAtTime`)
 export const ResolutionOutput = S.Struct({
   resolvedUri: GcsUri,
   /** Total entities before resolution */
-  entitiesTotal: NonNegativeInt,
+  entitiesTotal: S.Natural,
   /** Number of clusters formed (resolved entities) */
-  clustersFormed: NonNegativeInt,
+  clustersFormed: S.Natural,
   /** Total relations in merged graph */
-  relationsTotal: NonNegativeInt,
+  relationsTotal: S.Natural,
   /** Compression ratio: 1 - (clustersFormed / entitiesTotal) */
   compressionRatio: UnitInterval,
   /** Maps canonical entity ID to source document URIs */
   provenanceMap: S.Record(S.String, S.Array(S.String)),
-  durationMs: NonNegNum,
+  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
 }).pipe(
   $I.annoteSchema("ResolutionOutput", {
     description: "Resolved graph URI, cluster counts, compression ratio, and provenance map for entity resolution.",
@@ -175,15 +173,14 @@ export type ResolutionOutput = typeof ResolutionOutput.Type;
  * ```ts
  * import { ValidationOutput } from "@effect-ontology/Workflow/DurableActivities"
  * import { GcsUri } from "@effect-ontology/Identity"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
  * const output = ValidationOutput.make({
  *   validatedUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/graphs/validated.ttl"),
  *   conforms: true,
- *   violations: NonNegativeInt.make(0),
+ *   violations: S.Natural.make(0),
  *   reportUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/reports/shacl.json"),
- *   durationMs: NonNegativeInt.make(18)
+ *   durationMs: S.Natural.make(18)
  * })
  * console.log(output.conforms) // true
  * ```
@@ -225,8 +222,8 @@ export type ValidationOutput = typeof ValidationOutput.Type;
  */
 export const IngestionOutput = S.Struct({
   canonicalUri: GcsUri,
-  triplesIngested: NonNegativeInt,
-  durationMs: NonNegNum,
+  triplesIngested: S.Natural,
+  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
 }).pipe(
   $I.annoteSchema("IngestionOutput", {
     description: "Canonical graph URI, ingested triple count, and elapsed milliseconds for ingestion.",
@@ -266,12 +263,12 @@ export type IngestionOutput = typeof IngestionOutput.Type;
  */
 export const ClaimPersistenceOutput = S.Struct({
   /** Total claims persisted across all documents */
-  claimsPersisted: NonNegativeInt,
+  claimsPersisted: S.Natural,
   /** Number of documents processed */
-  documentsProcessed: NonNegativeInt,
+  documentsProcessed: S.Natural,
   /** Number of documents that failed claim persistence */
-  documentsFailed: NonNegativeInt,
-  durationMs: NonNegNum,
+  documentsFailed: S.Natural,
+  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
 }).pipe(
   $I.annoteSchema("ClaimPersistenceOutput", {
     description: "Persisted claim counts, document totals, failures, and elapsed milliseconds.",
@@ -293,15 +290,15 @@ export type ClaimPersistenceOutput = typeof ClaimPersistenceOutput.Type;
  * **Example** (Construct a cross-batch resolution output)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Duration } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import { CrossBatchResolutionOutput } from "@effect-ontology/Workflow/DurableActivities"
  *
  * const output = CrossBatchResolutionOutput.make({
- *   entitiesTotal: NonNegativeInt.make(10),
- *   matchedToExisting: NonNegativeInt.make(6),
- *   newCanonicals: NonNegativeInt.make(4),
- *   candidatesEvaluated: NonNegativeInt.make(12),
+ *   entitiesTotal: S.Natural.make(10),
+ *   matchedToExisting: S.Natural.make(6),
+ *   newCanonicals: S.Natural.make(4),
+ *   candidatesEvaluated: S.Natural.make(12),
  *   duration: Duration.millis(40)
  * })
  * console.log(output.matchedToExisting) // 6
@@ -312,10 +309,10 @@ export type ClaimPersistenceOutput = typeof ClaimPersistenceOutput.Type;
  */
 export class CrossBatchResolutionOutput extends S.Class<CrossBatchResolutionOutput>($I`CrossBatchResolutionOutput`)(
   {
-    entitiesTotal: NonNegativeInt,
-    matchedToExisting: NonNegativeInt,
-    newCanonicals: NonNegativeInt,
-    candidatesEvaluated: NonNegativeInt,
+    entitiesTotal: S.Natural,
+    matchedToExisting: S.Natural,
+    newCanonicals: S.Natural,
+    candidatesEvaluated: S.Natural,
     duration: S.DurationFromMillis,
   },
   $I.annote("CrossBatchResolutionOutput", {
@@ -393,7 +390,7 @@ const summarizeViolations = (violations: ReadonlyArray<ShaclValidationViolation>
   return A.map(A.fromIterable(grouped), ([severity, info]) =>
     ValidationActivityViolationSummary.make({
       severity,
-      count: NonNegativeInt.make(info.count),
+      count: S.Natural.make(info.count),
       sampleMessages: info.sampleMessages,
     })
   );
@@ -675,22 +672,22 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
 
       yield* Effect.logInfo("Resolution activity complete", {
         batchId: input.batchId,
-        entitiesTotal: NonNegativeInt.make(totalEntities),
-        clustersFormed: NonNegativeInt.make(resolutionGraph.stats.clusterCount),
-        relationsTotal: NonNegativeInt.make(totalRelations),
+        entitiesTotal: S.Natural.make(totalEntities),
+        clustersFormed: S.Natural.make(resolutionGraph.stats.clusterCount),
+        relationsTotal: S.Natural.make(totalRelations),
         compressionRatio: UnitInterval.make(compressionRatio),
         provenanceMapEntries: R.size(provenanceMap),
-        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
       });
 
       return {
         resolvedUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${resolutionPath}`),
-        entitiesTotal: NonNegativeInt.make(totalEntities),
-        clustersFormed: NonNegativeInt.make(resolutionGraph.stats.clusterCount),
-        relationsTotal: NonNegativeInt.make(totalRelations),
+        entitiesTotal: S.Natural.make(totalEntities),
+        clustersFormed: S.Natural.make(resolutionGraph.stats.clusterCount),
+        relationsTotal: S.Natural.make(totalRelations),
         compressionRatio: UnitInterval.make(compressionRatio),
         provenanceMap,
-        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -839,7 +836,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       yield* Effect.logInfo("Validation activity complete", {
         batchId: input.batchId,
         conforms: report.validation.conforms,
-        violations: NonNegativeInt.make(report.validation.violations.length),
+        violations: S.Natural.make(report.validation.violations.length),
         policyApplied: policy,
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       });
@@ -847,7 +844,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       return {
         validatedUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${validationGraphPath}`),
         conforms: report.validation.conforms,
-        violations: NonNegativeInt.make(report.validation.violations.length),
+        violations: S.Natural.make(report.validation.violations.length),
         violationSummary: P.isTruthy(report.validation.violations.length)
           ? summarizeViolations(report.validation.violations)
           : [],
@@ -1089,8 +1086,8 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
 
       return {
         canonicalUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${canonicalPath}`),
-        triplesIngested: NonNegativeInt.make(stats.tripleCount),
-        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+        triplesIngested: S.Natural.make(stats.tripleCount),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -1136,10 +1133,10 @@ export const ClaimPersistenceInput = S.Struct({
     S.Struct({
       documentId: S.String,
       sourceUri: S.String,
-      eventTime: S.DateTimeUtc.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-      headline: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+      eventTime: S.DateTimeUtc.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+      headline: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     })
-  ).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  ).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("ClaimPersistenceInput", {
     description: "Batch, ontology, document graph URIs, and namespace used to persist validated claims.",
@@ -1207,10 +1204,10 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
         });
         const end = yield* DateTime.now;
         return {
-          claimsPersisted: NonNegativeInt.make(0),
-          documentsProcessed: NonNegativeInt.make(0),
-          documentsFailed: NonNegativeInt.make(0),
-          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+          claimsPersisted: S.Natural.make(0),
+          documentsProcessed: S.Natural.make(0),
+          documentsFailed: S.Natural.make(0),
+          durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
         };
       }
 
@@ -1357,10 +1354,10 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
       });
 
       return {
-        claimsPersisted: NonNegativeInt.make(totalClaimsPersisted),
-        documentsProcessed: NonNegativeInt.make(documentsProcessed),
-        documentsFailed: NonNegativeInt.make(documentsFailed),
-        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+        claimsPersisted: S.Natural.make(totalClaimsPersisted),
+        documentsProcessed: S.Natural.make(documentsProcessed),
+        documentsFailed: S.Natural.make(documentsFailed),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -1422,10 +1419,10 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
         });
         const end = yield* DateTime.now;
         return {
-          entitiesTotal: NonNegativeInt.make(0),
-          matchedToExisting: NonNegativeInt.make(0),
-          newCanonicals: NonNegativeInt.make(0),
-          candidatesEvaluated: NonNegativeInt.make(0),
+          entitiesTotal: S.Natural.make(0),
+          matchedToExisting: S.Natural.make(0),
+          newCanonicals: S.Natural.make(0),
+          candidatesEvaluated: S.Natural.make(0),
           duration: DateTime.distance(start, end),
         };
       }
@@ -1481,10 +1478,10 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
       });
 
       return {
-        entitiesTotal: NonNegativeInt.make(result.stats.totalEntities),
-        matchedToExisting: NonNegativeInt.make(result.stats.matchedToExisting),
-        newCanonicals: NonNegativeInt.make(result.stats.createdNew),
-        candidatesEvaluated: NonNegativeInt.make(result.stats.candidatesEvaluated),
+        entitiesTotal: S.Natural.make(result.stats.totalEntities),
+        matchedToExisting: S.Natural.make(result.stats.matchedToExisting),
+        newCanonicals: S.Natural.make(result.stats.createdNew),
+        candidatesEvaluated: S.Natural.make(result.stats.candidatesEvaluated),
         duration: DateTime.distance(start, end),
       };
     }).pipe(Effect.mapError(preserveActivityError)),
@@ -1525,10 +1522,10 @@ export const InferenceInput = S.Struct({
   /** Reasoning profile to use (default: rdfs) */
   profile: S.Literals(["rdfs", "rdfs-subclass", "owl-sameas", "custom"]).pipe(
     S.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
+    S.withConstructorDefault(Effect.succeedNone)
   ),
   /** Whether inference is enabled (default: true) */
-  enabled: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  enabled: S.Boolean.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("InferenceInput", {
     description: "Batch, resolved graph URI, reasoning profile, and enablement flag for RDFS inference.",
@@ -1572,15 +1569,15 @@ export const InferenceOutput = S.Struct({
   /** URI of the enriched graph with inferences */
   enrichedGraphUri: GcsUri,
   /** Number of triples inferred */
-  inferredTripleCount: NonNegativeInt,
+  inferredTripleCount: S.Natural,
   /** Total triples after inference */
-  totalTripleCount: NonNegativeInt,
+  totalTripleCount: S.Natural,
   /** Number of provenance quads added */
-  provenanceQuadCount: NonNegativeInt,
+  provenanceQuadCount: S.Natural,
   /** Number of rules applied */
-  rulesApplied: NonNegativeInt,
+  rulesApplied: S.Natural,
   /** Duration in milliseconds */
-  durationMs: NonNegNum,
+  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
 }).pipe(
   $I.annoteSchema("InferenceOutput", {
     description: "Enriched graph URI, inferred triple counts, provenance quads, and elapsed milliseconds.",
@@ -1653,11 +1650,11 @@ export const makeInferenceActivity = (input: InferenceInput) =>
         const end = yield* DateTime.now;
         return {
           enrichedGraphUri: GcsUri.decodeUnknownSync(input.resolvedGraphUri),
-          inferredTripleCount: NonNegativeInt.make(0),
-          totalTripleCount: NonNegativeInt.make(0),
-          provenanceQuadCount: NonNegativeInt.make(0),
-          rulesApplied: NonNegativeInt.make(0),
-          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+          inferredTripleCount: S.Natural.make(0),
+          totalTripleCount: S.Natural.make(0),
+          provenanceQuadCount: S.Natural.make(0),
+          rulesApplied: S.Natural.make(0),
+          durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
         };
       }
 
@@ -1761,11 +1758,11 @@ export const makeInferenceActivity = (input: InferenceInput) =>
 
       return {
         enrichedGraphUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${enrichedPath}`),
-        inferredTripleCount: NonNegativeInt.make(delta.deltaCount),
-        totalTripleCount: NonNegativeInt.make(rdfStoreSize(enrichedStore)),
-        provenanceQuadCount: NonNegativeInt.make(provenanceQuadCount),
+        inferredTripleCount: S.Natural.make(delta.deltaCount),
+        totalTripleCount: S.Natural.make(rdfStoreSize(enrichedStore)),
+        provenanceQuadCount: S.Natural.make(provenanceQuadCount),
         rulesApplied: reasoningResult.rulesApplied,
-        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -1799,7 +1796,7 @@ export const ComputeEmbeddingsInput = S.Struct({
   /** URI of the ontology (e.g., "gs://bucket/ontologies/football/ontology.ttl") */
   ontologyUri: S.String,
   /** Embedding model to use */
-  model: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  model: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("ComputeEmbeddingsInput", {
     description: "Ontology URI and optional embedding model used to pre-compute class and property vectors.",
@@ -1845,13 +1842,13 @@ export const ComputeEmbeddingsOutput = S.Struct({
   /** Version hash of the ontology */
   version: S.String,
   /** Number of class embeddings */
-  classCount: NonNegativeInt,
+  classCount: S.Natural,
   /** Number of property embeddings */
-  propertyCount: NonNegativeInt,
+  propertyCount: S.Natural,
   /** Embedding dimension */
-  dimension: NonNegativeInt,
+  dimension: S.Natural,
   /** Duration in milliseconds */
-  durationMs: NonNegNum,
+  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
 }).pipe(
   $I.annoteSchema("ComputeEmbeddingsOutput", {
     description: "Stored embeddings URI, ontology version, class/property counts, vector dimension, and duration.",
@@ -1986,7 +1983,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
         ontologyUri,
         version: ContentHash.make(version),
         model: O.getOrElse(input.model, () => providerMetadata.modelId),
-        dimension: NonNegativeInt.make(dimension),
+        dimension: S.Natural.make(dimension),
         createdAt: start,
         classes: classEmbeddings,
         properties: propertyEmbeddings,
@@ -2010,10 +2007,10 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       return {
         embeddingsUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${embeddingsPath}`),
         version,
-        classCount: NonNegativeInt.make(classEmbeddings.length),
-        propertyCount: NonNegativeInt.make(propertyEmbeddings.length),
-        dimension: NonNegativeInt.make(dimension),
-        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+        classCount: S.Natural.make(classEmbeddings.length),
+        propertyCount: S.Natural.make(propertyEmbeddings.length),
+        dimension: S.Natural.make(dimension),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -2113,7 +2110,7 @@ export const LlmVerificationInput = S.Struct({
   /** Entity pairs with low confidence to verify */
   entityPairs: S.Array(EntityPair),
   /** Similarity threshold below which to verify (default: 0.7) */
-  verificationThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  verificationThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 }).pipe(
   $I.annoteSchema("LlmVerificationInput", {
     description: "Batch identity, uncertain entity pairs, and optional similarity threshold for LLM verification.",
@@ -2207,11 +2204,11 @@ export const LlmVerificationOutput = S.Struct({
   /** Pairs rejected as different entities */
   rejected: S.Array(VerifiedPair),
   /** Pairs skipped (above threshold) */
-  skipped: NonNegativeInt,
+  skipped: S.Natural,
   /** Total pairs processed */
-  totalProcessed: NonNegativeInt,
+  totalProcessed: S.Natural,
   /** Duration in milliseconds */
-  durationMs: NonNegNum,
+  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
 }).pipe(
   $I.annoteSchema("LlmVerificationOutput", {
     description: "Verified, rejected, and skipped pair counts produced by LLM entity verification.",
@@ -2236,7 +2233,7 @@ const EntityComparisonSchema = S.Struct({
   confidence: Confidence.annotate({
     description: "Confidence in the decision (0-1)",
   }),
-  reasoning: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
+  reasoning: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotate({
     description: "Brief explanation of the decision",
   }),
 }).annotate({
@@ -2250,7 +2247,7 @@ const EntityComparisonSchema = S.Struct({
 const BatchComparisonSchema = S.Struct({
   results: S.Array(
     S.Struct({
-      index: NonNegativeInt.annotate({
+      index: S.Natural.annotate({
         description: "Index of the pair in the input list (0-based)",
       }),
       sameEntity: S.Boolean.annotate({
@@ -2395,9 +2392,9 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
         return {
           verified: [],
           rejected: [],
-          skipped: NonNegativeInt.make(skippedCount),
-          totalProcessed: NonNegativeInt.make(0),
-          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+          skipped: S.Natural.make(skippedCount),
+          totalProcessed: S.Natural.make(0),
+          durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
         };
       }
 
@@ -2463,7 +2460,7 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
           const resultsMap = HashMap.fromIterable(result.value.results.map((r) => [r.index, r]));
 
           batch.forEach((pair, idx) => {
-            const llmResult = HashMap.get(resultsMap, NonNegativeInt.make(idx));
+            const llmResult = HashMap.get(resultsMap, S.Natural.make(idx));
             const verifiedPair: VerifiedPair = {
               entityA: pair.entityA,
               entityB: pair.entityB,
@@ -2501,9 +2498,9 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
       return {
         verified,
         rejected,
-        skipped: NonNegativeInt.make(skippedCount),
-        totalProcessed: NonNegativeInt.make(pairsToVerify.length),
-        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+        skipped: S.Natural.make(skippedCount),
+        totalProcessed: S.Natural.make(pairsToVerify.length),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -2540,12 +2537,12 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
  */
 export const PreprocessingOutput = S.Struct({
   enrichedManifestUri: GcsUri,
-  totalDocuments: NonNegativeInt,
-  classifiedCount: NonNegativeInt,
-  failedCount: NonNegativeInt,
-  totalEstimatedTokens: NonNegativeInt,
+  totalDocuments: S.Natural,
+  classifiedCount: S.Natural,
+  failedCount: S.Natural,
+  totalEstimatedTokens: S.Natural,
   averageComplexity: UnitInterval,
-  durationMs: NonNegNum,
+  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
 }).pipe(
   $I.annoteSchema("PreprocessingOutput", {
     description: "Enriched manifest URI, classification counts, token estimates, complexity, and duration.",
@@ -2732,7 +2729,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
             documentId: p.documentId,
             sourceUri: p.sourceUri,
             contentType: p.contentType,
-            sizeBytes: NonNegativeInt.make(p.sizeBytes),
+            sizeBytes: S.Natural.make(p.sizeBytes),
             preprocessedAt,
           });
           return O.match(overrideStrategy, {
@@ -2836,7 +2833,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
               documentId: p.documentId,
               sourceUri: p.sourceUri,
               contentType: p.contentType,
-              sizeBytes: NonNegativeInt.make(p.sizeBytes),
+              sizeBytes: S.Natural.make(p.sizeBytes),
               eventTime: O.none(),
               publishedAt: O.none(),
               ingestedAt: preprocessedAt,
@@ -2852,7 +2849,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
               suggestedChunkSize: chunkParameters.chunkSize,
               suggestedOverlap: chunkParameters.overlapSentences,
               priority,
-              estimatedExtractionCost: NonNegativeInt.make(tokens * 2),
+              estimatedExtractionCost: S.Natural.make(tokens * 2),
             });
           } else {
             // Use defaults for failed classifications
@@ -2861,7 +2858,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
               documentId: p.documentId,
               sourceUri: p.sourceUri,
               contentType: p.contentType,
-              sizeBytes: NonNegativeInt.make(p.sizeBytes),
+              sizeBytes: S.Natural.make(p.sizeBytes),
               preprocessedAt,
             });
           }
@@ -2876,9 +2873,9 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
       // 6. Compute stats
       const totalEstimatedTokens = documentMetadata.reduce((sum, d) => sum + d.estimatedTokens, 0);
       const avgComplexity = documentMetadata.reduce((sum, d) => sum + d.complexityScore, 0) / documentMetadata.length;
-      const typeDistribution: Record<string, NonNegativeInt> = {};
+      const typeDistribution: Record<string, number> = {};
       for (const d of documentMetadata) {
-        typeDistribution[d.documentType] = NonNegativeInt.make((typeDistribution[d.documentType] ?? 0) + 1);
+        typeDistribution[d.documentType] = S.Natural.make((typeDistribution[d.documentType] ?? 0) + 1);
       }
 
       // 7. Compute duration and create EnrichedManifest
@@ -2895,10 +2892,10 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         createdAt: manifest.createdAt,
         preprocessedAt,
         preprocessingStats: {
-          totalDocuments: NonNegativeInt.make(documentMetadata.length),
-          classifiedCount: NonNegativeInt.make(classifiedCount),
-          failedCount: NonNegativeInt.make(failedCount),
-          totalEstimatedTokens: NonNegativeInt.make(totalEstimatedTokens),
+          totalDocuments: S.Natural.make(documentMetadata.length),
+          classifiedCount: S.Natural.make(classifiedCount),
+          failedCount: S.Natural.make(failedCount),
+          totalEstimatedTokens: S.Natural.make(totalEstimatedTokens),
           preprocessingDurationMs: durationMs,
           averageComplexity: UnitInterval.make(avgComplexity),
           documentTypeDistribution: typeDistribution,
@@ -2922,12 +2919,12 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
 
       return {
         enrichedManifestUri: GcsUri.decodeUnknownSync(`gs://${bucket}/${enrichedManifestPath}`),
-        totalDocuments: NonNegativeInt.make(documentMetadata.length),
-        classifiedCount: NonNegativeInt.make(classifiedCount),
-        failedCount: NonNegativeInt.make(failedCount),
-        totalEstimatedTokens: NonNegativeInt.make(totalEstimatedTokens),
+        totalDocuments: S.Natural.make(documentMetadata.length),
+        classifiedCount: S.Natural.make(classifiedCount),
+        failedCount: S.Natural.make(failedCount),
+        totalEstimatedTokens: S.Natural.make(totalEstimatedTokens),
         averageComplexity: UnitInterval.make(avgComplexity),
-        durationMs: NonNegNum.make(durationMs),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(durationMs),
       };
     }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,

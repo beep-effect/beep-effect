@@ -9,7 +9,7 @@ import { $RdfId } from "@beep/identity/packages";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, R, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Match, Order, pipe, Result } from "effect";
+import { Effect, Match, Order, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -483,7 +483,7 @@ export class Literal extends S.Class<Literal>($I`Literal`)(
   {
     termType: S.tag("Literal"),
     value: S.String,
-    language: S.OptionFromOptionalKey(LanguageTag).pipe(SchemaUtils.withNoneDefault),
+    language: S.OptionFromOptionalKey(LanguageTag).pipe(S.withConstructorDefault(Effect.succeedNone)),
     datatype: NamedNode,
   },
   $I.annote("Literal", {
@@ -983,7 +983,7 @@ export const makeBlankNode = (value: string): BlankNode =>
  */
 export class MakeLiteralOptions extends S.Class<MakeLiteralOptions>($I`MakeLiteralOptions`)(
   {
-    language: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    language: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("MakeLiteralOptions", {
     description: "Optional language settings for makeLiteral.",
@@ -1066,7 +1066,7 @@ export const makeLiteral: {
 export class MakeQuadOptions extends S.Class<MakeQuadOptions>($I`MakeQuadOptions`)(
   {
     object: ObjectTerm,
-    graph: GraphTerm.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    graph: GraphTerm.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("MakeQuadOptions", {
     description: "Object and optional graph settings for makeQuad.",

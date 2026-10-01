@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
 import { GroupId, PanelId, RendererKey, SplitId, SplitRatio } from "./Dock.ids.ts";
@@ -217,10 +217,10 @@ export class PanelMovedEvent extends S.Class<PanelMovedEvent>($I`PanelMovedEvent
  * **Example** (Reorder panel by index)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { GroupId, PanelId, PanelReorderedEvent } from "@beep/dock"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const event = PanelReorderedEvent.make({ panelId: PanelId.make("panel-one"), groupId: GroupId.make("group-one"), index: NonNegativeInt.make(1) })
+ * const event = PanelReorderedEvent.make({ panelId: PanelId.make("panel-one"), groupId: GroupId.make("group-one"), index: S.Natural.make(1) })
  * console.log(event.kind)
  * ```
  *
@@ -228,7 +228,7 @@ export class PanelMovedEvent extends S.Class<PanelMovedEvent>($I`PanelMovedEvent
  * @since 0.0.0
  */
 export class PanelReorderedEvent extends S.Class<PanelReorderedEvent>($I`PanelReorderedEvent`)(
-  { kind: S.tag("panelReordered"), panelId: PanelId, groupId: GroupId, index: NonNegativeInt },
+  { kind: S.tag("panelReordered"), panelId: PanelId, groupId: GroupId, index: S.Natural },
   $I.annote("PanelReorderedEvent", { description: "A panel changed position within its existing tab group." })
 ) {}
 
@@ -376,10 +376,10 @@ export class WorkspaceClearedEvent extends S.Class<WorkspaceClearedEvent>($I`Wor
  * **Example** (Restore validated snapshot)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { WorkspaceRestoredEvent } from "@beep/dock"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const event = WorkspaceRestoredEvent.make({ sourceRevision: NonNegativeInt.make(3), installedRevision: NonNegativeInt.make(8) })
+ * const event = WorkspaceRestoredEvent.make({ sourceRevision: S.Natural.make(3), installedRevision: S.Natural.make(8) })
  * console.log(event.kind)
  * ```
  *
@@ -389,8 +389,8 @@ export class WorkspaceClearedEvent extends S.Class<WorkspaceClearedEvent>($I`Wor
 export class WorkspaceRestoredEvent extends S.Class<WorkspaceRestoredEvent>($I`WorkspaceRestoredEvent`)(
   {
     kind: S.tag("workspaceRestored"),
-    sourceRevision: NonNegativeInt,
-    installedRevision: NonNegativeInt,
+    sourceRevision: S.Natural,
+    installedRevision: S.Natural,
   },
   $I.annote("WorkspaceRestoredEvent", {
     description: "A fully decoded and validated snapshot replaced live content without rewinding live revision order.",

@@ -20,11 +20,11 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { DateTime } from "effect";
+import { DateTime, Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { PolicyRevision, SinkAudience, SinkClass } from "../ExecutionGrant/index.ts";
@@ -292,10 +292,10 @@ const decisionCommonFields = {
   runKey: ExecutionRunKey.annotateKey({
     description: "Governed run this decision belongs to.",
   }),
-  seq: NonNegativeInt.annotateKey({
+  seq: S.Natural.annotateKey({
     description: "Position in the run's chain; zero-based, dense.",
   }),
-  prevHash: DecisionRecordHash.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault).annotateKey({
+  prevHash: DecisionRecordHash.pipe(S.OptionFromNullOr, S.withConstructorDefault(Effect.succeedNone)).annotateKey({
     description: "Hash of the previous decision in this run; none only at seq zero.",
   }),
   hash: DecisionRecordHash.annotateKey({
@@ -467,10 +467,10 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K>
  * **Example** (Access decision content seq)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import type { ExecutionDecisionContent } from "@beep/epistemic-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const seq: ExecutionDecisionContent["seq"] = NonNegativeInt.make(0)
+ * const seq: ExecutionDecisionContent["seq"] = S.Natural.make(0)
  * console.log(seq)
  * ```
  *
@@ -511,7 +511,6 @@ const encodeDecisionContent = (content: ExecutionDecisionContent): Record<string
  * import * as O from "effect/Option"
  * import { DateTime } from "effect"
  * import { DecisionRecordHash, ExecutionRunKey, GrantOperationDigest, GrantSetDigest, PolicyRevision, SinkDestinationDigest } from "@beep/epistemic-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const record = sealExecutionDecision({
  *   audience: "external-network",
@@ -522,7 +521,7 @@ const encodeDecisionContent = (content: ExecutionDecisionContent): Record<string
  *   policyRevision: S.decodeUnknownSync(PolicyRevision)("1.0.0"),
  *   prevHash: O.none(),
  *   runKey: ExecutionRunKey.make("b".repeat(64)),
- *   seq: NonNegativeInt.make(0),
+ *   seq: S.Natural.make(0),
  *   sinkClass: "network-egress",
  *   verdict: "allowed"
  * })
@@ -552,7 +551,6 @@ export const sealExecutionDecision = (content: ExecutionDecisionContent): Execut
  * import * as O from "effect/Option"
  * import { DateTime } from "effect"
  * import { ExecutionRunKey, GrantOperationDigest, GrantSetDigest, PolicyRevision, SinkDestinationDigest } from "@beep/epistemic-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const record = sealExecutionDecision({
  *   audience: "external-network",
@@ -563,7 +561,7 @@ export const sealExecutionDecision = (content: ExecutionDecisionContent): Execut
  *   policyRevision: S.decodeUnknownSync(PolicyRevision)("1.0.0"),
  *   prevHash: O.none(),
  *   runKey: ExecutionRunKey.make("b".repeat(64)),
- *   seq: NonNegativeInt.make(0),
+ *   seq: S.Natural.make(0),
  *   sinkClass: "network-egress",
  *   verdict: "allowed"
  * })
@@ -602,7 +600,7 @@ const ChainVerificationTag = LiteralKit(["chain-intact", "chain-broken"]);
  */
 export const ChainVerification = ChainVerificationTag.toTaggedUnion("result")({
   "chain-intact": {},
-  "chain-broken": { atIndex: NonNegativeInt },
+  "chain-broken": { atIndex: S.Natural },
 }).pipe(
   $I.annoteSchema("ChainVerification", {
     description: "Chain verification result: intact, or broken at the first failing index.",
@@ -682,7 +680,7 @@ export const verifyExecutionDecisionChain: {
         prev !== previousHash ||
         !verifyExecutionDecisionHash(record)
       ) {
-        return ChainVerification.make({ result: "chain-broken", atIndex: NonNegativeInt.make(index) });
+        return ChainVerification.make({ result: "chain-broken", atIndex: S.Natural.make(index) });
       }
       previousHash = record.hash;
       index += 1;

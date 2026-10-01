@@ -6,7 +6,6 @@
  */
 
 import { $AiProviderCliId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Context, Effect, Layer, Match, Result, Stream, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -97,10 +96,16 @@ interface AiProviderCliShape {
  */
 class AiProviderCliPaths extends S.Class<AiProviderCliPaths>($I`AiProviderCliPaths`)(
   {
-    claudePath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("claude")).annotateKey({
+    claudePath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("claude")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("claude"))
+    ).annotateKey({
       description: "Executable command or path for Claude CLI auth probes.",
     }),
-    codexPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("codex")).annotateKey({
+    codexPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("codex")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("codex"))
+    ).annotateKey({
       description: "Executable command or path for Codex CLI auth probes.",
     }),
   },

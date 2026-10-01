@@ -11,7 +11,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Effect, MutableHashMap, MutableHashSet } from "effect";
 import * as A from "effect/Array";
@@ -25,6 +24,8 @@ import { combinedSimilarity, overlapRatio } from "../Utils/String.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/EntityResolution");
 
+const entityResolutionConfigMentionSimilarityThresholdDefault = UnitInterval.make(0.7);
+const entityResolutionConfigTypeOverlapRatioDefault = UnitInterval.make(0.5);
 /**
  * Mention similarity and type-overlap thresholds used by {@link resolveEntities}.
  *
@@ -46,9 +47,9 @@ const $I = $ScratchpadId.create("effect-ontology/Workflow/EntityResolution");
  */
 export class EntityResolutionConfig extends S.Class<EntityResolutionConfig>($I`EntityResolutionConfig`)(
   {
-    mentionSimilarityThreshold: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.7))),
-    requireTypeOverlap: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    typeOverlapRatio: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.5))),
+    mentionSimilarityThreshold: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(entityResolutionConfigMentionSimilarityThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigMentionSimilarityThresholdDefault))),
+    requireTypeOverlap: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+    typeOverlapRatio: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(entityResolutionConfigTypeOverlapRatioDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigTypeOverlapRatioDefault))),
   },
   $I.annote("EntityResolutionConfig", {
     description: "Mention similarity and type-overlap thresholds used by the legacy graph merge workflow.",

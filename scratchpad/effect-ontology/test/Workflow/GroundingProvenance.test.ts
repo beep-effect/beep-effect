@@ -1,7 +1,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI } from "@beep/rdf/Iri";
 import { ObjectRef } from "@beep/rdf/Prov";
-import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal } from "effect";
 import * as A from "effect/Array";
@@ -176,8 +175,8 @@ describe("grounding provenance", () => {
             confidence: Confidence.make(0.92),
             evidence: {
               text: "Ada",
-              startOffset: NonNegativeInt.make(4),
-              endOffset: NonNegativeInt.make(7),
+              startOffset: S.Natural.make(4),
+              endOffset: S.Natural.make(7),
             },
           }),
         ],

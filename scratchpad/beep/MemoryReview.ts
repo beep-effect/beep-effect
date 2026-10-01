@@ -9,7 +9,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -28,7 +27,7 @@ const awareInstant =
 const nullableText = (column: string, description: string) =>
   S.OptionFromNullOr(S.String)
     .annotateKey({ description })
-    .pipe(SchemaUtils.withNoneDefault, pg.text(), pg.columnName(column));
+    .pipe(S.withConstructorDefault(Effect.succeedNone), pg.text(), pg.columnName(column));
 
 const factIdText = (value: unknown): string => {
   if (P.isString(value)) return Str.trim(value);
@@ -192,9 +191,11 @@ export declare namespace MemoryReviewConflict {
   export type Encoded = S.Codec.Encoded<typeof MemoryReviewConflict>;
 }
 
+const isAwareInstantString = S.is(S.String.check(S.isPattern(awareInstant)));
+
 const requireAware = (now: DateTime.DateTime | string): Effect.Effect<DateTime.Utc, MemoryReviewRejected> => {
   if (P.isString(now)) {
-    if (!S.is(S.String.check(S.isPattern(awareInstant)))(now)) {
+    if (!isAwareInstantString(now)) {
       return Effect.fail(MemoryReviewRejected.make({ reason: "review conflict timestamp must be timezone-aware" }));
     }
     return DateTime.makeUnsafe(now).pipe(DateTime.toUtc, Effect.succeed);

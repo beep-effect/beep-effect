@@ -6,10 +6,8 @@
  */
 
 import { $FirecrawlId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
-import { isNonNegative, isPositive } from "@beep/schema/Number";
 import { URLStr } from "@beep/schema/URL";
-import { identity, SchemaTransformation } from "effect";
+import { Effect, identity, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -72,19 +70,19 @@ export const FirecrawlApiUrl = S.String.pipe(
  */
 export type FirecrawlApiUrl = typeof FirecrawlApiUrl.Type;
 
-const FirecrawlBackoffFactor = S.Finite.check(isPositive).pipe(
+const FirecrawlBackoffFactor = S.Finite.check(S.isGreaterThan(0)).pipe(
   $I.annoteSchema("FirecrawlBackoffFactor", {
     description: "Positive finite retry backoff multiplier accepted by the Firecrawl SDK client.",
   })
 );
 
-const FirecrawlRetryCount = S.Int.check(isNonNegative).pipe(
+const FirecrawlRetryCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("FirecrawlRetryCount", {
     description: "Non-negative integer retry count accepted by the Firecrawl SDK client.",
   })
 );
 
-const FirecrawlTimeoutMs = S.Int.check(isPositive).pipe(
+const FirecrawlTimeoutMs = S.Int.check(S.isGreaterThan(0)).pipe(
   $I.annoteSchema("FirecrawlTimeoutMs", {
     description: "Positive integer timeout in milliseconds accepted by the Firecrawl SDK client.",
   })
@@ -128,10 +126,13 @@ export const FIRECRAWL_API_URL = "https://api.firecrawl.dev";
 export class FirecrawlConfigInput extends S.Class<FirecrawlConfigInput>($I`FirecrawlConfigInput`)(
   {
     apiKey: S.optionalKey(S.String.pipe(S.RedactedFromValue)),
-    apiUrl: FirecrawlApiUrl.pipe(SchemaUtils.withKeyDefaults(FIRECRAWL_API_URL)),
-    backoffFactor: S.OptionFromOptionalKey(FirecrawlBackoffFactor).pipe(SchemaUtils.withNoneDefault),
-    maxRetries: S.OptionFromOptionalKey(FirecrawlRetryCount).pipe(SchemaUtils.withNoneDefault),
-    timeoutMs: S.OptionFromOptionalKey(FirecrawlTimeoutMs).pipe(SchemaUtils.withNoneDefault),
+    apiUrl: FirecrawlApiUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(FIRECRAWL_API_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(FIRECRAWL_API_URL))
+    ),
+    backoffFactor: S.OptionFromOptionalKey(FirecrawlBackoffFactor).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    maxRetries: S.OptionFromOptionalKey(FirecrawlRetryCount).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    timeoutMs: S.OptionFromOptionalKey(FirecrawlTimeoutMs).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("FirecrawlConfigInput", {
     description: "Runtime configuration accepted by the Firecrawl technical driver layer.",

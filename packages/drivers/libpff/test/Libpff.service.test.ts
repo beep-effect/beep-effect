@@ -14,7 +14,6 @@ import {
   PffexportEngineConfig,
   PffexportMessageRecord,
 } from "@beep/libpff";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -68,7 +67,7 @@ const source = Effect.fn("LibpffTest.source")(function* (ids: FixtureIds) {
     locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
     name: "mailbox.pst",
     relativePath,
-    sizeBytes: NonNegativeInt.make(4),
+    sizeBytes: S.Natural.make(4),
   });
 });
 
@@ -135,7 +134,7 @@ describe("@beep/libpff", () => {
       const errorWithoutContext = LibpffError.fromReason("timeout");
       const errorWithContext = LibpffError.fromReason("process", {
         cause: "pffexport failed",
-        exitCode: NonNegativeInt.make(2),
+        exitCode: S.Natural.make(2),
       });
 
       expect(yield* encodePffexportEngineConfig(config)).toStrictEqual({

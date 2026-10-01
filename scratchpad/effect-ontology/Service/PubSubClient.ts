@@ -11,7 +11,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import type { Topic } from "@google-cloud/pubsub";
 import { PubSub } from "@google-cloud/pubsub";
 import { Config, Context, DateTime, Duration, Effect, Layer, MutableHashMap, Schedule, Stream } from "effect";
@@ -30,7 +29,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/PubSubClient");
 const DeadLetterMessage = S.Struct({
   originalMessage: BackgroundJob,
   error: S.String,
-  attempts: NonNegativeInt,
+  attempts: S.Natural,
   failedAt: S.DateTimeUtcFromString,
 });
 const encodeUnknownDeadLetterMessageJson = S.encodeUnknownEffect(S.fromJsonString(DeadLetterMessage));
@@ -185,7 +184,7 @@ export interface PubSubClientMethods {
   readonly publishToDeadLetter: (
     originalMessage: BackgroundJob,
     error: string,
-    attempts: NonNegativeInt
+    attempts: number
   ) => Effect.Effect<PublishResult, PubSubError>;
 
   /**

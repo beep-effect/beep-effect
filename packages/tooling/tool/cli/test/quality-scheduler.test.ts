@@ -62,6 +62,7 @@ import {
   YeetAdmissionLease,
   YeetAdmissionTicket,
 } from "@beep/repo-cli/test/RepoRun";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   attemptJournalPath,
   decodeYeetAttemptJournalEvent,
@@ -70,7 +71,6 @@ import {
   YeetAttemptJournalEvent,
 } from "@beep/repo-cli/test/Yeet";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { UUID } from "@beep/schema/String";
 import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";

@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import * as OptionUtils from "@beep/utils/Option";
 import {
@@ -647,7 +647,7 @@ class TestTsgoPackageResultArtifact extends S.Class<TestTsgoPackageResultArtifac
     schemaVersion: TestTsgoPackageResultVersion,
     packageName: S.String,
     output: S.String,
-    exitCode: NonNegativeInt,
+    exitCode: S.Natural,
   },
   $I.annote("TestTsgoPackageResultArtifact", {
     description: "One package worker result consumed by the repo-wide tsgo test renderer.",
@@ -1744,7 +1744,7 @@ const writeTestTsgoPackageResult = Effect.fn("QualityScriptCommands.writeTestTsg
     schemaVersion: "test-tsgo-package-result/v1",
     packageName: result.group.packageName,
     output: result.output,
-    exitCode: NonNegativeInt.make(result.exitCode),
+    exitCode: S.Natural.make(result.exitCode),
   });
   const artifactText = yield* jsonStringifyPretty(artifact).pipe(
     QualityScriptCommandError.mapError(`Failed to encode ${result.group.packageName} test tsgo result.`)

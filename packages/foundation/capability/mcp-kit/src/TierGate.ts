@@ -22,7 +22,7 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Cause, Context, Data, DateTime, Effect, Exit } from "effect";
 import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
@@ -167,7 +167,7 @@ export class TierGateAuditRecord extends S.Class<TierGateAuditRecord>($I`TierGat
       description: "Whether the tool is annotated as destructive.",
     }),
     toolCallId: S.OptionFromNullOr(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Caller-supplied tool call identifier, when available.",
       })

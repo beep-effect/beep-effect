@@ -6,7 +6,8 @@
  */
 
 import { $BoxProvisioningId } from "@beep/identity";
-import { HttpsUrl, LiteralKit, SchemaUtils } from "@beep/schema";
+import { HttpsUrl, LiteralKit } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $BoxProvisioningId.create("BoxProvisioningObserved");
@@ -185,7 +186,7 @@ export class BoxDiscoveryPermissionBlocked extends S.TaggedClass<BoxDiscoveryPer
   {
     kind: BoxDiscoveryKind,
     status: S.Int.check(S.isBetween({ minimum: 400, maximum: 499 })),
-    code: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    code: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BoxDiscoveryPermissionBlocked", {
     description: "Read-only inventory result denied by Box permissions or application scopes.",
@@ -244,9 +245,9 @@ export type BoxDiscovery = typeof BoxDiscovery.Type;
 export class BoxObservedFolder extends S.Class<BoxObservedFolder>($I`BoxObservedFolder`)(
   {
     providerId: BoxProviderId,
-    parentProviderId: S.OptionFromOptionalKey(BoxProviderId).pipe(SchemaUtils.withNoneDefault),
+    parentProviderId: S.OptionFromOptionalKey(BoxProviderId).pipe(S.withConstructorDefault(Effect.succeedNone)),
     name: S.NonEmptyString,
-    etag: S.OptionFromOptionalKey(BoxProviderRevision).pipe(SchemaUtils.withNoneDefault),
+    etag: S.OptionFromOptionalKey(BoxProviderRevision).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BoxObservedFolder", {
     description: "Normalized folder identity, parent, exact name, and optional etag from Box.",
@@ -285,7 +286,7 @@ export class BoxObservedCollaboration extends S.Class<BoxObservedCollaboration>(
     folderProviderId: BoxProviderId,
     principalType: LiteralKit(["user", "group"]),
     principal: S.NonEmptyString,
-    principalProviderId: S.OptionFromOptionalKey(BoxProviderId).pipe(SchemaUtils.withNoneDefault),
+    principalProviderId: S.OptionFromOptionalKey(BoxProviderId).pipe(S.withConstructorDefault(Effect.succeedNone)),
     role: S.NonEmptyString,
   },
   $I.annote("BoxObservedCollaboration", {

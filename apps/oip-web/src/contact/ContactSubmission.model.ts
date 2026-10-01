@@ -6,7 +6,7 @@
  */
 
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TrimmedNonEmptyText } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, pipe, Result, SchemaTransformation } from "effect";
@@ -17,7 +17,8 @@ const $I = $OipWebId.create("contact/ContactSubmission.model");
 
 const contactEmailPattern =
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
-const TrimmedContactText = TrimmedNonEmptyText.check(
+const TrimmedText = S.String.pipe(S.decodeTo(S.NonEmptyString, SchemaTransformation.trim()));
+const TrimmedContactText = TrimmedText.check(
   S.isMinLength(1, { arbitraryConstraint: { patterns: [{ source: "^\\S(?:[\\s\\S]{0,80}\\S)?$", flags: "" }] } })
 ).pipe(
   $I.annoteSchema("TrimmedContactText", {
@@ -36,7 +37,7 @@ const ContactName = TrimmedContactText.pipe(
   })
 );
 
-const ContactEmail = TrimmedNonEmptyText.pipe(S.decode(SchemaTransformation.toLowerCase()))
+const ContactEmail = TrimmedText.pipe(S.decode(SchemaTransformation.toLowerCase()))
   .check(
     S.isMaxLength(254, {
       message: "Email must be 254 characters or fewer.",
@@ -151,7 +152,7 @@ export type ContactResponseMessage = typeof ContactResponseMessage.Type;
  * **Example** (Decoding form submission payload)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
  * import { decodeContactSubmission } from "@beep/oip-web/contact"
  *
@@ -159,7 +160,7 @@ export type ContactResponseMessage = typeof ContactResponseMessage.Type;
  *   email: "builder@example.com",
  *   message: "I would like to discuss a patent matter.",
  *   name: "Builder",
- *   submittedAt: NonNegativeInt.make(0)
+ *   submittedAt: S.Natural.make(0)
  * })
  *
  * Effect.runPromise(program).then((submission) => {
@@ -172,15 +173,15 @@ export type ContactResponseMessage = typeof ContactResponseMessage.Type;
  */
 export class ContactSubmission extends S.Class<ContactSubmission>($I`ContactSubmission`)(
   {
-    company: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
+    company: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
     email: ContactEmail,
     message: ContactMessage,
     name: ContactName,
-    phone: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
-    posture: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
-    submittedAt: NonNegativeInt,
-    technology: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
-    website: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
+    phone: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    posture: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    submittedAt: S.Natural,
+    technology: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    website: S.OptionFromOptionalKey(TrimmedContactText).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ContactSubmission", {
     description: "Browser-submitted OIP contact form payload.",
@@ -190,13 +191,13 @@ export class ContactSubmission extends S.Class<ContactSubmission>($I`ContactSubm
 }
 
 const ContactSubmissionFormSubmittedAtFromString = S.FiniteFromString.pipe(
-  S.decodeTo(NonNegativeInt),
+  S.decodeTo(S.Natural),
   $I.annoteSchema("ContactSubmissionFormSubmittedAtFromString", {
     description: "Form-submitted contact timestamp decoded from a numeric string.",
   })
 );
 
-const ContactSubmissionFormSubmittedAt = S.Union([NonNegativeInt, ContactSubmissionFormSubmittedAtFromString]).pipe(
+const ContactSubmissionFormSubmittedAt = S.Union([S.Natural, ContactSubmissionFormSubmittedAtFromString]).pipe(
   S.withDecodingDefault(Effect.succeed(0)),
   $I.annoteSchema("ContactSubmissionFormSubmittedAt", {
     description: "Form-submitted contact timestamp decoded from a number or numeric string.",
@@ -209,14 +210,14 @@ const ContactSubmissionFormSubmittedAt = S.Union([NonNegativeInt, ContactSubmiss
  * **Example** (Making normalized form payload)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ContactSubmissionFormPayload } from "@beep/oip-web/contact"
  *
  * const payload = ContactSubmissionFormPayload.make({
  *   email: "builder@example.com",
  *   message: "I would like to discuss a patent matter.",
  *   name: "Builder",
- *   submittedAt: NonNegativeInt.make(0)
+ *   submittedAt: S.Natural.make(0)
  * })
  *
  * console.log(payload.submittedAt)
@@ -275,7 +276,7 @@ const contactSubmissionPayloadFallback = (formData: FormData): ContactSubmission
     email: requiredFormTextValue(formData.get("email")),
     message: requiredFormTextValue(formData.get("message")),
     name: requiredFormTextValue(formData.get("name")),
-    submittedAt: NonNegativeInt.make(0),
+    submittedAt: S.Natural.make(0),
     ...O.getSomesStruct({
       company: formTextOption(formData.get("company")),
       phone: formTextOption(formData.get("phone")),
@@ -373,7 +374,7 @@ export class ContactSubmissionResponse extends S.Class<ContactSubmissionResponse
  * **Example** (Decoding unknown input payload)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
  * import { decodeContactSubmission } from "@beep/oip-web/contact"
  *
@@ -381,7 +382,7 @@ export class ContactSubmissionResponse extends S.Class<ContactSubmissionResponse
  *   email: "builder@example.com",
  *   message: "I would like to discuss a patent matter.",
  *   name: "Builder",
- *   submittedAt: NonNegativeInt.make(0)
+ *   submittedAt: S.Natural.make(0)
  * })
  *
  * Effect.runPromise(program)

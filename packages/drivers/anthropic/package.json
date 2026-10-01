@@ -65,7 +65,6 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
-    "@beep/schema": "workspace:^",
     "@effect/ai-anthropic": "catalog:",
     "effect": "catalog:"
   },

@@ -6,7 +6,6 @@
  */
 
 import { CachePolicyAuditReport, CacheQualificationStore } from "@beep/repo-configs/cache";
-import { NonNegativeInt } from "@beep/schema";
 import { A, Str, thunk0 } from "@beep/utils";
 import { Clock, Console, DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
@@ -112,7 +111,7 @@ const runInherited = (command: ReadonlyArray<string>, cwd: string): Effect.Effec
       catch: (cause) => CacheCommandError.new(`Unable to run ${A.join(command, " ")}.`, cause),
     });
     const ended = yield* Clock.currentTimeMillis;
-    return CacheWarmLane.make({ command, durationMs: NonNegativeInt.make(ended - started), exitCode });
+    return CacheWarmLane.make({ command, durationMs: S.Natural.make(ended - started), exitCode });
   }).pipe(
     Effect.filterOrFail(
       (lane) => lane.exitCode === 0,
@@ -362,10 +361,10 @@ const readRunFiles = Effect.fn("Cache.readRunFiles")(function* (runsDir: string)
 const parseLambdaLogs = Effect.fn("Cache.parseLambdaLogs")(function* (path: O.Option<string>) {
   if (O.isNone(path)) {
     return CacheLambdaSummary.make({
-      rows: NonNegativeInt.make(0),
-      reads: NonNegativeInt.make(0),
-      hits: NonNegativeInt.make(0),
-      puts: NonNegativeInt.make(0),
+      rows: S.Natural.make(0),
+      reads: S.Natural.make(0),
+      hits: S.Natural.make(0),
+      puts: S.Natural.make(0),
     });
   }
   const text = yield* Effect.tryPromise({
@@ -375,12 +374,12 @@ const parseLambdaLogs = Effect.fn("Cache.parseLambdaLogs")(function* (path: O.Op
   const lines = A.filter(A.map(Str.split(/\r?\n/)(text), Str.trim), (line) => !Str.isEmpty(line));
   const normalized = A.map(lines, Str.toUpperCase);
   return CacheLambdaSummary.make({
-    rows: NonNegativeInt.make(lines.length),
-    reads: NonNegativeInt.make(
+    rows: S.Natural.make(lines.length),
+    reads: S.Natural.make(
       A.filter(normalized, (line) => Str.includes("GET")(line) || Str.includes("READ")(line)).length
     ),
-    hits: NonNegativeInt.make(A.filter(normalized, Str.includes("HIT")).length),
-    puts: NonNegativeInt.make(
+    hits: S.Natural.make(A.filter(normalized, Str.includes("HIT")).length),
+    puts: S.Natural.make(
       A.filter(normalized, (line) => Str.includes("PUT")(line) || Str.includes("WRITE")(line)).length
     ),
   });
@@ -471,18 +470,18 @@ export const buildCacheDashboard = Effect.fn("Cache.buildCacheDashboard")(functi
   const lambda = yield* parseLambdaLogs(lambdaLogs);
   return CacheDashboardReport.make({
     generatedAt: DateTime.formatIso(yield* DateTime.now),
-    runFiles: NonNegativeInt.make(runs.length),
-    eligibleFirstTouches: NonNegativeInt.make(observations.length),
-    remoteHits: NonNegativeInt.make(remoteHits),
+    runFiles: S.Natural.make(runs.length),
+    eligibleFirstTouches: S.Natural.make(observations.length),
+    remoteHits: S.Natural.make(remoteHits),
     eligibleRemoteHitRate: observations.length === 0 ? 0 : remoteHits / observations.length,
-    excludedForcedOrDisabled: NonNegativeInt.make(aggregation.excludedForcedOrDisabled),
+    excludedForcedOrDisabled: S.Natural.make(aggregation.excludedForcedOrDisabled),
     correctnessViolations: A.sort(A.fromIterable(aggregation.correctnessViolations), Order.String),
     wallTimes: A.map(A.fromIterable(aggregation.durations), ([mode, values]) =>
       CacheWallTime.make({
         mode,
-        runs: NonNegativeInt.make(values.length),
-        p50Ms: NonNegativeInt.make(percentile(values, 0.5)),
-        p95Ms: NonNegativeInt.make(percentile(values, 0.95)),
+        runs: S.Natural.make(values.length),
+        p50Ms: S.Natural.make(percentile(values, 0.5)),
+        p95Ms: S.Natural.make(percentile(values, 0.95)),
       })
     ),
     lambda,
@@ -586,7 +585,7 @@ const cacheCensusCommand = Command.make(
         O.match(entrypointReview, {
           onNone: () => Effect.succeed(census),
           onSome: (request) =>
-            readCacheRequest(request, CacheEntrypointReviewRequest, NonNegativeInt.make(256 * 1024)).pipe(
+            readCacheRequest(request, CacheEntrypointReviewRequest, S.Natural.make(256 * 1024)).pipe(
               Effect.flatMap((review) => attachCacheEntrypointReview(process.cwd(), census, review))
             ),
         })
@@ -722,7 +721,7 @@ const cacheTransitionCommand = Command.make("transition", { request: requestFlag
 const readCacheRequest = Effect.fn("Cache.readRequest")(function* <Decoded, Encoded>(
   request: string,
   schema: S.Codec<Decoded, Encoded>,
-  maxBytes: NonNegativeInt = NonNegativeInt.make(64 * 1024)
+  maxBytes: number = S.Natural.make(64 * 1024)
 ) {
   const read = yield* readContainedFileBytesNoFollow(process.cwd(), request, maxBytes).pipe(
     CacheCommandError.mapError("Cannot read the bounded local experiment request.")

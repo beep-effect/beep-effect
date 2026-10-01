@@ -354,7 +354,8 @@ Core combinators may use named imports from the root `effect` module, for exampl
 - For `Effect<A, E, R>` results, do not restate the channels in tags. Use prose for
   non-obvious failure or environment semantics.
 - A `Fn` method takes its type from its `output` schema. When that output is
-  `EffectSchema<A, E, R>()` with a non-`never` `R`, the requirement channel
+  `S.declare((u): u is Effect.Effect<A, E, R> => Effect.isEffect(u))` with a
+  non-`never` `R`, the requirement channel
   travels with the method, so `Effect.runPromise(shape.method(x))` fails to
   typecheck even when the fixture implementation needs nothing. Either provide
   the requirements first — `Effect.runPromise(Effect.provide(shape.method(x), deps))`

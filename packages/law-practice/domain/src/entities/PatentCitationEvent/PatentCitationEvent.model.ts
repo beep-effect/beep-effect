@@ -6,9 +6,9 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import { SchemaUtils } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitingApplicationIdentity } from "../../values/CitingApplicationIdentity/index.ts";
 import { ObservationVersionRef } from "../../values/ObservationVersionRef/index.ts";
@@ -86,20 +86,20 @@ export class PatentCitationEvent extends ProductEntity.Entity<PatentCitationEven
       description: "Time the occurrence was observed, recorded for audit and never used to establish currency.",
     }).pipe(pg.bigint("number"), pg.columnName("observed_at")),
     possibleDuplicateOf: S.OptionFromNullOr(LawPractice.PatentCitationEventId)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Suspected duplicate of another event, recorded and never resolved; makes this event uncovered.",
       })
       .pipe(pg.integer(), pg.columnName("possible_duplicate_of")),
     quarantine: S.OptionFromNullOr(PatentCitationQuarantine)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Explicit quarantine marker layered beside the evidence, never rewriting it." })
       .pipe(pg.jsonb()),
     reference: PatentReference.annotateKey({
       description: "Parsed patent document reference this occurrence names.",
     }).pipe(pg.jsonb()),
     supersedes: S.OptionFromNullOr(ObservationVersionRef)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Declared reference to the exact prior observation version this observation replaces.",
       })

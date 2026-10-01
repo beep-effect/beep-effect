@@ -4,7 +4,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { NonNegativeInt } from "@beep/schema";
 import { thunkEffectVoid } from "@beep/utils";
 import { Effect, HashSet, Metric, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
@@ -12,6 +11,7 @@ import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import { constant } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { DockCommand } from "../Dock.commands.ts";
 import { DockCommandRejected, DockInvariantViolation } from "../Dock.errors.ts";
 import {
@@ -79,7 +79,7 @@ const changedCommandCount = Metric.counter("dockview_poc_state_changes_total", {
   incremental: true,
 });
 
-const nextRevision = (state: DockWorkspace) => NonNegativeInt.make(state.revision + 1);
+const nextRevision = (state: DockWorkspace) => S.Natural.make(state.revision + 1);
 
 const ensureRevisionAvailable = (state: DockWorkspace): Effect.Effect<void, DockInvariantViolation> =>
   Bool.match(N.isLessThan(state.revision, globalThis.Number.MAX_SAFE_INTEGER), {
@@ -101,7 +101,7 @@ const reject = (envelope: DockCommandEnvelope, reason: DockRejectionReason, mess
 const changed = Effect.fn("DockReducer.changed")(function* (
   previous: DockWorkspace,
   envelope: Pick<DockCommandEnvelope, "commandId" | "origin">,
-  build: (revision: NonNegativeInt) => readonly [state: DockWorkspace, event: DockEvent]
+  build: (revision: number) => readonly [state: DockWorkspace, event: DockEvent]
 ) {
   yield* ensureRevisionAvailable(previous);
   const [state, event] = build(nextRevision(previous));
@@ -119,7 +119,7 @@ const changed = Effect.fn("DockReducer.changed")(function* (
 const changedMany = Effect.fn("DockReducer.changedMany")(function* (
   previous: DockWorkspace,
   envelope: Pick<DockCommandEnvelope, "commandId" | "origin">,
-  build: (revision: NonNegativeInt) => readonly [state: DockWorkspace, events: A.NonEmptyReadonlyArray<DockEvent>]
+  build: (revision: number) => readonly [state: DockWorkspace, events: A.NonEmptyReadonlyArray<DockEvent>]
 ) {
   yield* ensureRevisionAvailable(previous);
   const [state, events] = build(nextRevision(previous));
@@ -881,7 +881,7 @@ const movePanelForest = Effect.fn("DockReducer.movePanelForest")(function* (
     );
     return yield* changed(state, envelope, (revision) => [
       DockWorkspace.withRevision(next, revision),
-      PanelReorderedEvent.make({ panelId: panel.id, groupId: source.groupId, index: NonNegativeInt.make(index) }),
+      PanelReorderedEvent.make({ panelId: panel.id, groupId: source.groupId, index: S.Natural.make(index) }),
     ]);
   }
   const removed = O.match(TabsNode.remove(source, panel.id), {

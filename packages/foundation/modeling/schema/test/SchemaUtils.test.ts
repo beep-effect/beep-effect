@@ -1,21 +1,17 @@
 import { fcRuns } from "@beep/fc-runs";
 import { $SchemaId } from "@beep/identity/packages";
-import * as Encoders from "@beep/schema/SchemaUtils/encoders";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { optional } from "@beep/schema/SchemaUtils/optional";
 import { optionalKeyWithDefault } from "@beep/schema/SchemaUtils/optionalKeyWithDefaults";
 import { pluck } from "@beep/schema/SchemaUtils/pluck";
-import { split } from "@beep/schema/SchemaUtils/split";
 import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
-import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { assertExitSuccess, assertNone, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const isNonEmptyString = S.is(S.NonEmptyString);
@@ -26,29 +22,6 @@ const encodeUnknownOptionalKeySettings = S.encodeUnknownEffect(OptionalKeySettin
 const OptionalPatch = S.Struct({ file: optional(S.String) });
 const decodeOptionalPatch = S.decodeUnknownEffect(OptionalPatch);
 const encodeOptionalPatch = S.encodeEffect(OptionalPatch);
-const EmptyArraySettings = S.Struct({
-  tags: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>()),
-});
-const decodeEmptyArraySettingsEffect = S.decodeEffect(EmptyArraySettings);
-const DataFirstEmptyArrayTags = SchemaUtils.withEmptyArrayDefaults(S.String.pipe(S.Array));
-const DataFirstEmptyArraySettings = S.Struct({ tags: DataFirstEmptyArrayTags });
-const decodeDataFirstEmptyArraySettingsEffect = S.decodeEffect(DataFirstEmptyArraySettings);
-const OptionalLabelNode = S.Struct({
-  label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-});
-const decodeOptionalLabelNodeEffect = S.decodeEffect(OptionalLabelNode);
-const NullableDirectionNode = S.Struct({
-  direction: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
-});
-const ConstantDefaultsNode = S.Struct({
-  version: S.Literal(1).pipe(SchemaUtils.withConstantDefault(1)),
-  format: S.Literals(["", "left", "center"]).pipe(SchemaUtils.withConstantDefault<"" | "left" | "center">("")),
-});
-const RequiredVersionNode = S.Struct({
-  version: S.Literal(1).pipe(SchemaUtils.withConstantDefault(1)),
-});
-const decodeRequiredVersionNodeEffect = S.decodeEffect(RequiredVersionNode);
-const decodeUnknownRequiredVersionNodeEffect = S.decodeUnknownEffect(RequiredVersionNode);
 
 describe("optionalKeyWithDefault", () => {
   it.effect(
@@ -91,141 +64,6 @@ describe("pluck", () => {
       }).pipe(pluck("column1"));
 
       expect(yield* S.encodeEffect(schema)(2)).toEqual({ column1: "2" });
-    })
-  );
-});
-
-describe("encoding adapters", () => {
-  const NumberFromString = S.FiniteFromString;
-  const Struct = S.Struct({ value: S.String });
-  const inputWithExcessProperty = { value: "ok", extra: true };
-  const creationOptions = { onExcessProperty: "error" } as const;
-  const applicationOptions = { onExcessProperty: "ignore" } as const;
-
-  it.effect(
-    "encodes through Effect and Promise adapters",
-    Effect.fnUntraced(function* () {
-      expect(yield* Encoders.encodeEffect(NumberFromString)(42)).toBe("42");
-      expect(yield* Encoders.encodeUnknownEffect(NumberFromString)(42)).toBe("42");
-      expect(yield* Effect.tryPromise(() => Encoders.encodePromise(NumberFromString)(42))).toBe("42");
-      expect(yield* Effect.tryPromise(() => Encoders.encodeUnknownPromise(NumberFromString)(42))).toBe("42");
-    })
-  );
-
-  it("encodes through Exit, Option, Result, and synchronous adapters", () => {
-    assertExitSuccess(Encoders.encodeExit(NumberFromString)(42), "42");
-    assertExitSuccess(Encoders.encodeUnknownExit(NumberFromString)(42), "42");
-    assertSome(Encoders.encodeOption(NumberFromString)(42), "42");
-    assertSome(Encoders.encodeUnknownOption(NumberFromString)(42), "42");
-    assertSuccess(Encoders.encodeResult(NumberFromString)(42), "42");
-    assertSuccess(Encoders.encodeUnknownResult(NumberFromString)(42), "42");
-    const encoded = Encoders.encodeResult(NumberFromString)(42);
-    pipe(encoded, Result.isSuccess, assertTrue);
-    if (Result.isSuccess(encoded)) {
-      expect(encoded.success).toBe("42");
-    }
-    const encodedUnknown = Encoders.encodeUnknownResult(NumberFromString)(42);
-    pipe(encodedUnknown, Result.isSuccess, assertTrue);
-    if (Result.isSuccess(encodedUnknown)) {
-      expect(encodedUnknown.success).toBe("42");
-    }
-  });
-
-  it.effect(
-    "forwards application options through Effect and Promise adapters",
-    Effect.fnUntraced(function* () {
-      expect(
-        yield* Encoders.encodeEffect(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)
-      ).toEqual({
-        value: "ok",
-      });
-      expect(
-        yield* Encoders.encodeUnknownEffect(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)
-      ).toEqual({ value: "ok" });
-      expect(
-        yield* Effect.tryPromise(() =>
-          Encoders.encodePromise(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)
-        )
-      ).toEqual({ value: "ok" });
-      expect(
-        yield* Effect.tryPromise(() =>
-          Encoders.encodeUnknownPromise(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)
-        )
-      ).toEqual({ value: "ok" });
-    })
-  );
-
-  it("forwards application options through synchronous adapters", () => {
-    assertExitSuccess(Encoders.encodeExit(Struct, creationOptions)(inputWithExcessProperty, applicationOptions), {
-      value: "ok",
-    });
-    assertExitSuccess(
-      Encoders.encodeUnknownExit(Struct, creationOptions)(inputWithExcessProperty, applicationOptions),
-      { value: "ok" }
-    );
-    assertSome(Encoders.encodeOption(Struct, creationOptions)(inputWithExcessProperty, applicationOptions), {
-      value: "ok",
-    });
-    assertSome(Encoders.encodeUnknownOption(Struct, creationOptions)(inputWithExcessProperty, applicationOptions), {
-      value: "ok",
-    });
-    assertSuccess(Encoders.encodeResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions), {
-      value: "ok",
-    });
-    assertSuccess(Encoders.encodeUnknownResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions), {
-      value: "ok",
-    });
-    const encoded = Encoders.encodeResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions);
-    pipe(encoded, Result.isSuccess, assertTrue);
-    if (Result.isSuccess(encoded)) {
-      expect(encoded.success).toEqual({
-        value: "ok",
-      });
-    }
-    const encodedUnknown = Encoders.encodeUnknownResult(Struct, creationOptions)(
-      inputWithExcessProperty,
-      applicationOptions
-    );
-    pipe(encodedUnknown, Result.isSuccess, assertTrue);
-    if (Result.isSuccess(encodedUnknown)) {
-      expect(encodedUnknown.success).toEqual({
-        value: "ok",
-      });
-    }
-  });
-
-  it("exports the encoding adapters from the SchemaUtils barrel", () => {
-    expect(SchemaUtils.encodeEffect).toBe(Encoders.encodeEffect);
-    expect(SchemaUtils.encodeResult).toBe(Encoders.encodeResult);
-  });
-});
-
-describe("split", () => {
-  it.effect(
-    "decodes delimited strings into readonly string arrays",
-    Effect.fnUntraced(function* () {
-      const schema = split(",");
-
-      expect(yield* S.decodeEffect(schema)("red,green,blue")).toEqual(["red", "green", "blue"]);
-    })
-  );
-
-  it.effect(
-    "encodes readonly string arrays back into delimited strings",
-    Effect.fnUntraced(function* () {
-      const schema = split(",");
-
-      expect(yield* S.encodeEffect(schema)(["red", "green", "blue"])).toBe("red,green,blue");
-    })
-  );
-
-  it.effect(
-    "preserves empty segments instead of normalizing them away",
-    Effect.fnUntraced(function* () {
-      const schema = split(",");
-
-      expect(yield* S.decodeEffect(schema)("red,,blue")).toEqual(["red", "", "blue"]);
-      expect(yield* S.encodeEffect(schema)(["red", "", "blue"])).toBe("red,,blue");
     })
   );
 });
@@ -310,61 +148,6 @@ describe("withStatics", () => {
     expect(TenantName.empty).toBe("");
     expect(TenantName.isTenantName("tenant")).toBe(true);
   });
-});
-
-describe("withEmptyArrayDefaults", () => {
-  it.effect(
-    "defaults missing array fields to an empty readonly array",
-    Effect.fnUntraced(function* () {
-      expect(A.isReadonlyArrayEmpty((yield* decodeEmptyArraySettingsEffect({})).tags)).toBe(true);
-    })
-  );
-
-  it.effect(
-    "supports the data-first call style",
-    Effect.fnUntraced(function* () {
-      expect(A.isReadonlyArrayEmpty((yield* decodeDataFirstEmptyArraySettingsEffect({ tags: undefined })).tags)).toBe(
-        true
-      );
-    })
-  );
-});
-
-describe("withNoneDefault", () => {
-  it("defaults an omitted optional-key Option field to None at construction time", () => {
-    pipe(OptionalLabelNode.make({}).label, assertNone);
-    assertSome(OptionalLabelNode.make({ label: O.some("x") }).label, "x");
-  });
-
-  it("defaults an omitted nullable Option field to None at construction time", () => {
-    pipe(NullableDirectionNode.make({}).direction, assertNone);
-  });
-
-  it.effect(
-    "leaves the decode contract intact (missing optional key still decodes to None)",
-    Effect.fnUntraced(function* () {
-      pipe((yield* decodeOptionalLabelNodeEffect({})).label, assertNone);
-      assertSome((yield* decodeOptionalLabelNodeEffect({ label: "x" })).label, "x");
-    })
-  );
-});
-
-describe("withConstantDefault", () => {
-  it("defaults an omitted field to the constant at construction time", () => {
-    const made = ConstantDefaultsNode.make({});
-
-    expect(made.version).toBe(1);
-    expect(made.format).toBe("");
-  });
-
-  it.effect(
-    "leaves the encoded contract required (the key is still mandatory on decode)",
-    Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.exit(decodeUnknownRequiredVersionNodeEffect({}));
-      pipe(failure1, Exit.hasFails, assertTrue);
-      expect((yield* decodeRequiredVersionNodeEffect({ version: 1 })).version).toBe(1);
-    })
-  );
 });
 
 describe("withCodecStatics", () => {

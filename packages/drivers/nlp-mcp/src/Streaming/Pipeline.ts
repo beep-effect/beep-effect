@@ -168,7 +168,10 @@ export class PipelineResult extends S.Class<PipelineResult>($I`PipelineResult`)(
  */
 export class PipelineProcessOptions extends S.Class<PipelineProcessOptions>($I`PipelineProcessOptions`)(
   {
-    maxLines: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(Number.MAX_SAFE_INTEGER)).annotateKey({
+    maxLines: PositiveInteger.pipe(
+      S.withConstructorDefault(Effect.succeed(Number.MAX_SAFE_INTEGER)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(Number.MAX_SAFE_INTEGER))
+    ).annotateKey({
       description: "Maximum number of raw lines to read before processing.",
     }),
     skipEmpty: SchemaUtils.BoolKeyDefaultFalse.annotateKey({

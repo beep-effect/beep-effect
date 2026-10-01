@@ -16,7 +16,6 @@ import { DefaultBM25Config } from "@beep/nlp/Core/Vectorization";
 import { Tokenization } from "@beep/nlp-processing/Core";
 import { IRI } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { WinkTokenizationError } from "@beep/wink/Wink.errors";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
@@ -48,6 +47,7 @@ import type { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import { ChunkingParams, ChunkingStrategy } from "../Domain/Schema/DocumentMetadata.ts";
 import { enhanceTextForSearch } from "../Utils/Text.ts";
 import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const SimilaritySearchResultOrder = Order.mapInput(
   Order.flip(Order.Number),
@@ -93,10 +93,10 @@ export class TokenizeResult extends S.Class<TokenizeResult>($I`TokenizeResult`)(
  * **Example** (Represent a ranked document)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { SimilarityResult } from "@effect-ontology/Service/Nlp"
  *
- * const result = SimilarityResult.make({ doc: "semantic graph", score: 0.9, index: NonNegativeInt.make(0) })
+ * const result = SimilarityResult.make({ doc: "semantic graph", score: 0.9, index: S.Natural.make(0) })
  * console.log(result.score) // 0.9
  * ```
  *
@@ -107,7 +107,7 @@ export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityRes
   {
     doc: S.String,
     score: S.Finite,
-    index: NonNegativeInt,
+    index: S.Natural,
   },
   $I.annote("SimilarityResult", {
     description: "Source document, finite similarity score, and stable input position for one ranked match.",
@@ -116,10 +116,10 @@ export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityRes
 
 class TextChunkModel extends S.Class<TextChunkModel>($I`TextChunkModel`)(
   {
-    index: NonNegativeInt,
+    index: S.Natural,
     text: S.String,
-    startOffset: NonNegativeInt,
-    endOffset: NonNegativeInt,
+    startOffset: S.Natural,
+    endOffset: S.Natural,
   },
   $I.annote("TextChunkModel", {
     description: "Zero-based source-aligned text chunk with non-negative UTF-16 offsets.",
@@ -141,14 +141,14 @@ const TextChunkDefinition = TextChunkModel.check(
  * **Example** (Represent a source-aligned chunk)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { TextChunk } from "@effect-ontology/Service/Nlp"
  *
  * const chunk = TextChunk.make({
- *   index: NonNegativeInt.make(0),
+ *   index: S.Natural.make(0),
  *   text: "Ada.",
- *   startOffset: NonNegativeInt.make(0),
- *   endOffset: NonNegativeInt.make(4)
+ *   startOffset: S.Natural.make(0),
+ *   endOffset: S.Natural.make(4)
  * })
  * console.log(chunk.endOffset - chunk.startOffset) // 4
  * ```
@@ -425,10 +425,10 @@ const makeOntologySearchResult = (
 
 const makeTextChunk = (index: number, text: string, startOffset: number, endOffset: number): TextChunk =>
   TextChunk.make({
-    index: NonNegativeInt.make(index),
+    index: S.Natural.make(index),
     text,
-    startOffset: NonNegativeInt.make(startOffset),
-    endOffset: NonNegativeInt.make(endOffset),
+    startOffset: S.Natural.make(startOffset),
+    endOffset: S.Natural.make(endOffset),
   });
 
 /**
@@ -704,7 +704,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
           const queryResult = yield* corpora.query({ corpusId: corpus.corpusId, query, topN: k });
           return A.map(queryResult.ranked, (result): SimilarityResult => {
             const index = Number.parseInt(result.id.slice(result.id.lastIndexOf("-") + 1), 10);
-            return SimilarityResult.make({ doc: docs[index], index: NonNegativeInt.make(index), score: result.score });
+            return SimilarityResult.make({ doc: docs[index], index: S.Natural.make(index), score: result.score });
           });
         }).pipe(Effect.ensuring(corpora.deleteCorpus(corpus.corpusId)));
       }),
@@ -740,7 +740,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
             const score = embedding.cosineSimilarity(queryVector, docVector);
             return SimilarityResult.make({
               doc,
-              index: NonNegativeInt.make(index),
+              index: S.Natural.make(index),
               score,
             });
           }),

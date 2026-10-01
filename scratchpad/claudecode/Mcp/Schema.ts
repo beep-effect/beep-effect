@@ -10,8 +10,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("claudecode/Mcp/Schema");
 
@@ -32,10 +33,10 @@ const $I = $ScratchpadId.create("claudecode/Mcp/Schema");
  */
 export class McpOAuth extends S.Class<McpOAuth>($I`McpOAuth`)(
   {
-    clientId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    callbackPort: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    authServerMetadataUrl: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    scopes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    clientId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    callbackPort: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    authServerMetadataUrl: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    scopes: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("McpOAuth", {
     description: "OAuth client metadata for a remote MCP transport.",
@@ -83,12 +84,12 @@ export declare namespace McpOAuth {
  */
 export class StdioMcpServer extends S.Class<StdioMcpServer>($I`StdioMcpServer`)(
   {
-    type: S.OptionFromOptionalKey(S.Literal("stdio")).pipe(SchemaUtils.withNoneDefault),
+    type: S.OptionFromOptionalKey(S.Literal("stdio")).pipe(S.withConstructorDefault(Effect.succeedNone)),
     command: S.String,
-    args: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    env: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
-    timeout: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    alwaysLoad: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    args: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    env: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    timeout: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    alwaysLoad: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("StdioMcpServer", {
     description: "Local child-process MCP transport.",
@@ -149,10 +150,10 @@ export type HttpMcpTransport = typeof HttpMcpTransport.Type;
 
 const remoteFields = {
   url: S.String,
-  headers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
-  headersHelper: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  timeout: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-  alwaysLoad: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+  headers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  headersHelper: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  timeout: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  alwaysLoad: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
 };
 
 /**
@@ -174,7 +175,7 @@ export class HttpMcpServer extends S.Class<HttpMcpServer>($I`HttpMcpServer`)(
   {
     type: HttpMcpTransport,
     ...remoteFields,
-    oauth: S.OptionFromOptionalKey(McpOAuth).pipe(SchemaUtils.withNoneDefault),
+    oauth: S.OptionFromOptionalKey(McpOAuth).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("HttpMcpServer", {
     description: "Remote streamable-HTTP MCP transport.",

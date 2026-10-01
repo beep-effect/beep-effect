@@ -1,4 +1,3 @@
-import { NonNegativeInt } from "@beep/schema/Int";
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect } from "effect";
 import * as A from "effect/Array";
@@ -20,7 +19,7 @@ describe("ExtractionTelemetry", () => {
     Effect.fnUntraced(function* () {
       const [, snapshot] = yield* captureExtractionTelemetry(
         Effect.gen(function* () {
-          yield* recordExtractionChunkCount(NonNegativeInt.make(3));
+          yield* recordExtractionChunkCount(S.Natural.make(3));
           yield* recordProviderAttempt;
           yield* recordProviderUsage({ inputTokens: 12, outputTokens: 4 });
         })
@@ -108,8 +107,8 @@ describe("ExtractionTelemetry", () => {
     Effect.fnUntraced(function* () {
       const snapshots = yield* Effect.all(
         [
-          captureExtractionTelemetry(recordExtractionChunkCount(NonNegativeInt.make(1))),
-          captureExtractionTelemetry(recordExtractionChunkCount(NonNegativeInt.make(5))),
+          captureExtractionTelemetry(recordExtractionChunkCount(S.Natural.make(1))),
+          captureExtractionTelemetry(recordExtractionChunkCount(S.Natural.make(5))),
         ],
         { concurrency: "unbounded" }
       );
@@ -123,10 +122,10 @@ describe("ExtractionTelemetry", () => {
     Effect.fnUntraced(function* () {
       yield* Effect.sync(() => {
         const metrics = ExtractionMetrics.make({
-          entityCount: NonNegativeInt.make(0),
-          relationCount: NonNegativeInt.make(0),
-          chunkCount: NonNegativeInt.make(1),
-          usage: ProviderTokenUsage.cases.Unavailable.make({ attemptCount: NonNegativeInt.make(1) }),
+          entityCount: S.Natural.make(0),
+          relationCount: S.Natural.make(0),
+          chunkCount: S.Natural.make(1),
+          usage: ProviderTokenUsage.cases.Unavailable.make({ attemptCount: S.Natural.make(1) }),
           duration: Duration.zero,
         });
 

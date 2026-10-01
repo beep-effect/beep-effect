@@ -95,9 +95,10 @@ export const toActFrameInsert = (frame: ActFrame): Result.Result<ActFrameInsert,
  * **Gotchas**
  *
  * Every set-valued field in the payload is stored as a JSON array and decoded
- * back into a `HashSet` here. It is `HashSet` from `@beep/schema` that makes
- * that work: `effect/Schema`'s own `HashSet` encodes to a tagged wrapper no
- * decoder accepts, so a field declared with it cannot survive a row trip.
+ * back into a `HashSet` here. The entity declares each one as
+ * `S.toCodecJson(S.HashSet(Item))`, and that is what makes it work: a bare
+ * `S.HashSet` encodes to a tagged wrapper no decoder accepts, so a field
+ * declared with it cannot survive a row trip.
  *
  * **Example** (Reject a row that records no reading)
  *

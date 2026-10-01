@@ -7,7 +7,7 @@ import * as Arbitrary from "effect/Arbitrary";
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
+import { SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { Effect, Number as N } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -104,6 +104,8 @@ export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedd
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(ElementEmbedding);
 }
 
+const ontologyEmbeddingsFieldsModelClassesDefault = A.empty<ElementEmbedding>();
+const ontologyEmbeddingsFieldsModelPropertiesDefault = A.empty<ElementEmbedding>();
 class OntologyEmbeddingsFieldsModel extends S.Class<OntologyEmbeddingsFieldsModel>($I`OntologyEmbeddingsFieldsModel`)(
   {
     ontologyUri: GcsUri.annotateKey({
@@ -115,7 +117,7 @@ class OntologyEmbeddingsFieldsModel extends S.Class<OntologyEmbeddingsFieldsMode
     model: S.NonEmptyString.annotateKey({
       description: "Embedding-model identifier used to compute every vector.",
     }),
-    dimension: NonNegativeInt.check(
+    dimension: S.Natural.check(
       S.isGreaterThan(0, {
         identifier: $I`EmbeddingDimensionPositiveCheck`,
         title: "Positive Embedding Dimension",
@@ -129,11 +131,11 @@ class OntologyEmbeddingsFieldsModel extends S.Class<OntologyEmbeddingsFieldsMode
       description: "UTC instant at which the artifact was computed.",
     }),
     classes: S.Array(ElementEmbedding).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
+      S.withConstructorDefault(Effect.succeed(ontologyEmbeddingsFieldsModelClassesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyEmbeddingsFieldsModelClassesDefault)),
       S.annotateKey({ description: "Embeddings for ontology class definitions." })
     ),
     properties: S.Array(ElementEmbedding).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
+      S.withConstructorDefault(Effect.succeed(ontologyEmbeddingsFieldsModelPropertiesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyEmbeddingsFieldsModelPropertiesDefault)),
       S.annotateKey({ description: "Embeddings for ontology property definitions." })
     ),
   },
@@ -279,7 +281,7 @@ export const OntologyEmbeddingsArbitrary = Arbitrary.schema(OntologyEmbeddingsFi
   Arbitrary.map((value) =>
     OntologyEmbeddingsFieldsModel.make({
       ...value,
-      dimension: NonNegativeInt.make(1),
+      dimension: S.Natural.make(1),
       classes: A.map(value.classes, (element) => ElementEmbedding.make({ ...element, embedding: [0] })),
       properties: A.map(value.properties, (element) => ElementEmbedding.make({ ...element, embedding: [0] })),
     })

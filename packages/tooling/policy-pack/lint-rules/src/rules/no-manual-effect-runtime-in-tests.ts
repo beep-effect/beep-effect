@@ -88,7 +88,6 @@ const LEGACY_BASELINE = HashMap.fromIterable<string, number>([
   ["packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts", 17],
   ["packages/foundation/modeling/schema/test/Fn.test.ts", 2],
   ["packages/foundation/modeling/schema/test/HttpHeaders.test.ts", 5],
-  ["packages/foundation/modeling/schema/test/Number.test.ts", 2],
   ["packages/foundation/modeling/schema/test/Sha256.test.ts", 3],
   ["packages/foundation/modeling/utils/test/Glob.test.ts", 1],
   ["packages/foundation/ui-system/editor/test/editor-nodes.test.ts", 1],

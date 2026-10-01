@@ -172,7 +172,8 @@ nonempty public reasons supplied by other gates, not just these five.
 None yields null, while Some(nonempty string) yields that string. This is not
 an optional-key codec: do not start omitting the encoded key or treating an
 empty string as absence. The local helper is a constructor default only
-(`schema/src/SchemaUtils/withConstructorDefaults.ts:49-54`); preserve the
+(the retired `withNoneDefault` helper, removed in PR 3b of effect-schema-parity;
+now `S.withConstructorDefault(Effect.succeedNone)`); preserve the
 existing decoder's missing-key behavior too. The exact v4 codec definition is
 `.repos/effect/packages/effect/src/Schema.ts:12829-12885`.
 

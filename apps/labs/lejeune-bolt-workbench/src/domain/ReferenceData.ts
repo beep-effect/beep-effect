@@ -6,7 +6,6 @@
  */
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
-import { PosInt } from "@beep/schema";
 import { HttpsUrl } from "@beep/schema/URL";
 import * as S from "effect/Schema";
 import {
@@ -19,6 +18,7 @@ import {
   SupplierOffer,
   Tool,
 } from "@/domain/Ontology";
+import { PosInt } from "./PosInt.ts";
 import type { NormalizedFixture } from "@/domain/Bundle";
 
 const $I = $LejeuneBoltWorkbenchId.create("domain/ReferenceData");

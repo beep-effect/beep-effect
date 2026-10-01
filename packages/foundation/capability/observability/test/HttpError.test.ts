@@ -1,7 +1,9 @@
 import { makeInternalServerError, makeNotFoundError, makeTooManyRequestsError } from "@beep/observability";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { ErrorReporter } from "effect";
+import * as O from "effect/Option";
 
 describe("HttpError", () => {
   it("builds a not-found error with reporter metadata", () => {
@@ -32,5 +34,19 @@ describe("HttpError", () => {
       status: 500,
       status_class: "5xx",
     });
+  });
+
+  it("passes an Option cause through unchanged", () => {
+    const upstream = new Error("upstream");
+    const error = makeNotFoundError("missing repo", O.some(upstream));
+
+    assertSome(error.cause, upstream);
+  });
+
+  it("wraps a raw cause in Some and a missing cause in None", () => {
+    const upstream = new Error("upstream");
+
+    assertSome(makeNotFoundError("missing repo", upstream).cause, upstream);
+    assertNone(makeNotFoundError("missing repo").cause);
   });
 });

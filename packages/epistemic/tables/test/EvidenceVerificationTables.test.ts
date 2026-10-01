@@ -10,7 +10,6 @@ import * as EvidenceVerification from "@beep/epistemic-tables/entities/EvidenceV
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
@@ -33,9 +32,9 @@ const encodeUnknownTextAnchorVerificationReceiptResult = S.encodeUnknownResult(T
 const digest = SourceTextDigest.make("sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7");
 const verifiedAnchor = TextAnchorVerificationReceipt.make({
   anchor: TextAnchor.make({
-    endChar: NonNegativeInt.make(16),
+    endChar: S.Natural.make(16),
     quote: "controlling fact",
-    startChar: NonNegativeInt.make(0),
+    startChar: S.Natural.make(0),
   }),
   source: SourceTextIdentity.make({
     extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),

@@ -6,7 +6,6 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("entities/LawPracticeEntity.fields");
@@ -102,7 +101,7 @@ export type LawPracticeText = typeof LawPracticeText.Type;
  * @category value-objects
  * @since 0.0.0
  */
-export const ClaimNumber = NonNegativeInt.check(
+export const ClaimNumber = S.Natural.check(
   S.isGreaterThan(0).annotate({
     message: "Expected a positive claim number",
     description: "A one-based patent claim number.",

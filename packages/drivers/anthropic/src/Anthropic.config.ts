@@ -7,8 +7,9 @@
  */
 
 import { $AnthropicId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 
 const $I = $AnthropicId.create("Anthropic.config");
 const AnthropicTokenPriceUsd = S.Finite.check(S.isGreaterThanOrEqualTo(0));
@@ -98,9 +99,11 @@ export const ANTHROPIC_DEFAULT_MODEL = "claude-opus-4-6" as const;
  * **Example** (Default max tokens option)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_DEFAULT_MAX_TOKENS, AnthropicLanguageModelOptions } from "@beep/anthropic"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = AnthropicLanguageModelOptions.make({
  *   maxTokens: PosInt.make(ANTHROPIC_DEFAULT_MAX_TOKENS),
@@ -220,6 +223,7 @@ export const ANTHROPIC_DEFAULT_APPROXIMATE_PRICE = AnthropicApproximatePrice.mak
   outputPerMillionTokensUsd: 75,
 });
 
+const anthropicLanguageModelOptionsMaxTokensDefault = PosInt.make(ANTHROPIC_DEFAULT_MAX_TOKENS);
 /**
  * Schema-backed options accepted by Anthropic language-model layer helpers.
  *
@@ -231,9 +235,11 @@ export const ANTHROPIC_DEFAULT_APPROXIMATE_PRICE = AnthropicApproximatePrice.mak
  * **Example** (Make language model options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelOptions } from "@beep/anthropic"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = AnthropicLanguageModelOptions.make({
  *   maxTokens: PosInt.make(1024),
@@ -251,10 +257,16 @@ export class AnthropicLanguageModelOptions extends S.Class<AnthropicLanguageMode
   $I`AnthropicLanguageModelOptions`
 )(
   {
-    maxTokens: SchemaUtils.withKeyDefaults(PosInt, PosInt.make(ANTHROPIC_DEFAULT_MAX_TOKENS)).annotateKey({
+    maxTokens: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(anthropicLanguageModelOptionsMaxTokensDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(anthropicLanguageModelOptionsMaxTokensDefault))
+    ).annotateKey({
       description: "Positive maximum output-token budget forwarded to Anthropic as `max_tokens`.",
     }),
-    model: SchemaUtils.withKeyDefaults(S.String, ANTHROPIC_DEFAULT_MODEL).annotateKey({
+    model: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(ANTHROPIC_DEFAULT_MODEL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ANTHROPIC_DEFAULT_MODEL))
+    ).annotateKey({
       description: "Anthropic model identifier used by the language-model layer.",
     }),
   },

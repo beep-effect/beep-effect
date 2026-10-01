@@ -72,7 +72,6 @@
     "@beep/dock": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/pretext": "workspace:^",
-    "@beep/schema": "workspace:^",
     "@effect/atom-react": "catalog:",
     "effect": "catalog:"
   },

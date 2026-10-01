@@ -157,9 +157,9 @@ the thesis closes.
   (`packages/foundation/modeling/schema/src/Sha256.ts`; the hashing function
   itself is module-private — new consumers go through the schemas or a new
   exported helper).
-- **Graph-as-data carrier exists**: `@beep/schema` Graph suite
-  (`packages/foundation/modeling/schema/src/Graph/`) — serializable topology
-  values, no protocol semantics yet.
+- **Graph-as-data carrier exists**: the `@beep/schema` Graph suite (retired in
+  the effect-schema-parity group E PR in favour of `Schema.Graph`) — serializable
+  topology values, no protocol semantics yet.
 - **@beep/identity is live and single-rooted**: composer + `$I.annote` +
   Vocab/Curie/PnLocal codecs all shipped; whole workspace authority-bound via
   one `$I.compose` (packages.ts:46); `bun run beep lint identity-registry`

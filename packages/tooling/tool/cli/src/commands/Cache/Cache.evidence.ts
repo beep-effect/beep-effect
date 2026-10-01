@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { Effect, Path } from "effect";
 import * as S from "effect/Schema";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
@@ -31,7 +31,7 @@ export const readCacheExperimentBytes = Effect.fn("CacheEvidence.readExperimentB
   relative: string,
   limit = 1024 * 1024
 ) {
-  const read = yield* readContainedFileBytesNoFollow(root, relative, NonNegativeInt.make(limit));
+  const read = yield* readContainedFileBytesNoFollow(root, relative, S.Natural.make(limit));
   return yield* read.contents.pipe(
     Effect.fromOption(() => CacheCommandError.new(`Required bounded experiment artifact is missing: ${relative}`))
   );
@@ -109,7 +109,7 @@ export const readCacheEvidenceBytes = Effect.fn("CacheEvidence.readBytes")(funct
   root: string,
   reference: CacheEvidenceReference
 ) {
-  const read = yield* readContainedFileBytesNoFollow(root, reference.path, NonNegativeInt.make(8 * 1024 * 1024));
+  const read = yield* readContainedFileBytesNoFollow(root, reference.path, S.Natural.make(8 * 1024 * 1024));
   const bytes = yield* read.contents.pipe(
     Effect.fromOption(() => CacheCommandError.new("Required qualification evidence is missing."))
   );

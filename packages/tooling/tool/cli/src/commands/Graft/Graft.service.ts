@@ -6,7 +6,6 @@
  */
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { Effect, Match } from "effect";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -402,13 +401,13 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
     }
     return GraftCacheSyncReport.make({
       plan: fresh,
-      copied: NonNegativeInt.make(copied),
-      removed: NonNegativeInt.make(removed),
-      skipped: NonNegativeInt.make(
+      copied: S.Natural.make(copied),
+      removed: S.Natural.make(removed),
+      skipped: S.Natural.make(
         A.length(A.filter(fresh.entries, (entry) => GraftCacheSyncAction.is["skip-missing-source"](entry.action)))
       ),
-      refused: NonNegativeInt.make(0),
-      bytes: NonNegativeInt.make(bytes),
+      refused: S.Natural.make(0),
+      bytes: S.Natural.make(bytes),
     });
   });
 

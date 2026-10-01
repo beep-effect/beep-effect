@@ -13,9 +13,7 @@ import { flow } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
 import { HttpStatusCode } from "@beep/schema/HttpStatus";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { Context, Duration, Effect, Layer, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -34,6 +32,7 @@ import {
 import type { ImageCandidate } from "../Domain/Model/Image.ts";
 import { ImageFetchResult } from "../Domain/Model/Image.ts";
 import { sha256Bytes as sha256BytesEffect } from "../Utils/Hash.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ImageFetcher");
 
@@ -95,6 +94,7 @@ const isRetryableImageError = (error: ImageError): boolean =>
 // Types
 // =============================================================================
 
+const imageFetchOptionsMaxSizeBytesDefault = PosInt.make(DEFAULT_MAX_SIZE_BYTES);
 /**
  * Options for image fetching
  *
@@ -112,10 +112,10 @@ const isRetryableImageError = (error: ImageError): boolean =>
  */
 export class ImageFetchOptions extends S.Class<ImageFetchOptions>($I`ImageFetchOptions`)(
   {
-    timeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT)),
-    maxSizeBytes: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(DEFAULT_MAX_SIZE_BYTES))),
-    allowedTypes: S.NonEmptyArray(S.NonEmptyString).pipe(SchemaUtils.withKeyDefaults(ALLOWED_CONTENT_TYPES)),
-    retry: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    timeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT)), S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT))),
+    maxSizeBytes: PosInt.pipe(S.withConstructorDefault(Effect.succeed(imageFetchOptionsMaxSizeBytesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(imageFetchOptionsMaxSizeBytesDefault))),
+    allowedTypes: S.NonEmptyArray(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(ALLOWED_CONTENT_TYPES)), S.withDecodingDefaultTypeKey(Effect.succeed(ALLOWED_CONTENT_TYPES))),
+    retry: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
   },
   $I.annote("ImageFetchOptions", {
     description: "Request timeout, byte ceiling, accepted media types, and retry policy for image fetching.",
@@ -384,8 +384,8 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           if (!Number.isNaN(size) && size > maxSizeBytes) {
             return yield* ImageTooLargeError.make({
               url: candidate.sourceUrl,
-              sizeBytes: NonNegativeInt.make(size),
-              maxBytes: NonNegativeInt.make(maxSizeBytes),
+              sizeBytes: S.Natural.make(size),
+              maxBytes: S.Natural.make(maxSizeBytes),
             });
           }
         }
@@ -399,8 +399,8 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
               return Effect.fail(
                 ImageTooLargeError.make({
                   url: candidate.sourceUrl,
-                  sizeBytes: NonNegativeInt.make(nextSize),
-                  maxBytes: NonNegativeInt.make(maxSizeBytes),
+                  sizeBytes: S.Natural.make(nextSize),
+                  maxBytes: S.Natural.make(maxSizeBytes),
                 })
               );
             }
@@ -428,8 +428,8 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
         if (bytes.length > maxSizeBytes) {
           return yield* ImageTooLargeError.make({
             url: candidate.sourceUrl,
-            sizeBytes: NonNegativeInt.make(bytes.length),
-            maxBytes: NonNegativeInt.make(maxSizeBytes),
+            sizeBytes: S.Natural.make(bytes.length),
+            maxBytes: S.Natural.make(maxSizeBytes),
           });
         }
 

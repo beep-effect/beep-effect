@@ -1,11 +1,12 @@
 import { CacheSyntheticRun } from "@beep/repo-cli/commands/Cache";
 import { equivalentCacheFixtureRuns, inspectCacheFixtureCapture } from "@beep/repo-cli/test/Cache";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const digest = Sha256Hex.make(Str.repeat(64)("a"));
@@ -19,7 +20,7 @@ const safe = CacheSyntheticRun.make({
   exitCode: 0,
   outputSha256: digest,
   logSha256: digest,
-  logBytes: NonNegativeInt.make(12),
+  logBytes: S.Natural.make(12),
   violations: [],
 });
 

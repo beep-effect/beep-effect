@@ -5949,3 +5949,38 @@ preserve fresh consoles and test-local process mock arrays. The baseline was
 not refreshed. The dispatch source was restored before completing the doctor
 fixture repair. A migration preflight that detects newly visible wrapper
 findings would have prevented this incomplete first pass.
+
+## 2026-09-29: The TestClock timeout recipe proved nothing for waits that must not return
+
+Property Laws job 109018379124 on PR #1322 (head c0f76d8ab2) failed
+`yeet-wave-rerun.test.ts` "job wait on a changed red set" with
+`Timed out waiting for proof job`; the same lane passed at 444f655971, which
+differed only in an unrelated nlp-processing test. The block ran on the live
+clock with one 60 ms timeout both for waits that must hand back a wave and
+for waits that must not. A slow runner spent the budget on the first poll's
+file reads. Slowing every file read to 80 ms reproduces it: the old block
+fails 6 of 6 with the hosted error, and the TestClock block passes 6 of 6.
+
+The first fix attempt reused the `waitTimesOut` helper from #1278, and a
+mutation probe showed it was vacuous. With a wave present, forking the wait
+and adjusting the clock past its timeout still reported `Timed out` in 5 of
+5 runs, because the timeout fired before the first poll finished reading the
+record and inbox. The four negative waits in `proof-job.test.ts` asserted
+nothing. The shared
+`packages/tooling/tool/cli/test/support/ProofJobWait.ts` helper now runs the
+waiter on a clock that reports its poll-interval sleep, reached only after a
+whole poll found no wave, and adjusts past the timeout only then; the same
+probe fails it 5 of 5. Running every must-time-out oracle once against a
+state that must wake it, before recording the flake as fixed, would have
+caught the empty assertion when #1278 landed.
+
+
+## Merge assertion-import diagnostics need a type-check backstop
+
+During the October 1 main integration, an unused-import diagnostic on the
+SchemaUtils assertion import was interpreted too broadly. Removing the complete
+helper subset left surviving codec tests without assertSome/assertNone. Focused
+Node tests reported ReferenceError; restoring those two imports produced 71
+passing Node/Bun tests and a clean schema test-type artifact. Merge review should
+check surviving symbol uses and run the actual package test-type task after
+import edits; a formatter pass alone did not catch the missing names.

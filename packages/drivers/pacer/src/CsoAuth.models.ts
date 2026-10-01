@@ -12,7 +12,7 @@
  */
 
 import { $PacerId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $PacerId.create("pacer/auth/CsoAuth.models");
@@ -43,9 +43,9 @@ export class CsoAuthRequest extends S.Class<CsoAuthRequest>($I`CsoAuthRequest`)(
   {
     loginId: S.String,
     password: S.String,
-    clientCode: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    otpCode: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    redactFlag: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    clientCode: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    otpCode: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    redactFlag: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CsoAuthRequest", {
     description: "PACER cso-auth login request body.",
@@ -78,7 +78,7 @@ export class CsoAuthResponse extends S.Class<CsoAuthResponse>($I`CsoAuthResponse
   {
     nextGenCSO: S.String,
     loginResult: S.String,
-    errorDescription: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    errorDescription: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CsoAuthResponse", {
     description: "PACER cso-auth login response body.",
@@ -127,9 +127,9 @@ export class CsoLogoutRequest extends S.Class<CsoLogoutRequest>($I`CsoLogoutRequ
  */
 export class CsoLogoutResponse extends S.Class<CsoLogoutResponse>($I`CsoLogoutResponse`)(
   {
-    loginResult: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    errorDescription: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    nextGenCSO: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    loginResult: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    errorDescription: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    nextGenCSO: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CsoLogoutResponse", {
     description: "PACER cso-logout response body.",

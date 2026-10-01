@@ -16,7 +16,6 @@ import {
 } from "@beep/lexical-schema";
 import * as MdModel from "@beep/md/Md.model";
 import { refineSafeDocument } from "@beep/md/Md.safe";
-import { PosInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -28,6 +27,8 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { TableCellHeaderState } from "@beep/lexical-schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeLexicalNodeResult = S.decodeResult(LexicalNode);
 const decodeSerializedEditorStateResult = S.decodeResult(SerializedEditorState);

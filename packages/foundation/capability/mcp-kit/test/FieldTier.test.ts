@@ -8,7 +8,6 @@ import {
   projectWithinBudget,
   toColumnarEnvelope,
 } from "@beep/mcp-kit";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
@@ -49,7 +48,7 @@ const mintFetchableHandle = (oversized: { readonly sizeBytes: number }): Fetchab
   FetchableHandle.make({
     handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
     expiresAt: "2026-07-01T01:00:00.000Z",
-    sizeBytes: NonNegativeInt.make(oversized.sizeBytes),
+    sizeBytes: S.Natural.make(oversized.sizeBytes),
     tier: "minimal",
   });
 
@@ -73,7 +72,7 @@ describe("field-tier projector", () => {
   });
 
   it("reduces a large documentBag-shaped fixture payload below a configured size budget", () => {
-    const budgetBytes = NonNegativeInt.make(500);
+    const budgetBytes = S.Natural.make(500);
     const fullSize = estimateJsonSize(largeDocumentBagPayload);
 
     assert.isAbove(fullSize, budgetBytes);
@@ -109,7 +108,7 @@ describe("field-tier projector", () => {
 
   it("never returns an oversized payload inline when even the minimal tier exceeds the budget", () => {
     const minimalProjectedSize = estimateJsonSize(projectFieldTier(largeDocumentBagPayload, "minimal", documentTiers));
-    const impossibleBudgetBytes = NonNegativeInt.make(1);
+    const impossibleBudgetBytes = S.Natural.make(1);
 
     assert.isAbove(minimalProjectedSize, impossibleBudgetBytes);
 
@@ -125,6 +124,15 @@ describe("field-tier projector", () => {
       assert.strictEqual(projected.handle.tier, "minimal");
     }
     assert.notProperty(projected, "value");
+  });
+
+  it("rejects a negative or fractional budget before projecting", () => {
+    assert.throws(() =>
+      projectWithinBudget(largeDocumentBagPayload, { tiers: documentTiers, budgetBytes: -1, mintFetchableHandle })
+    );
+    assert.throws(() =>
+      projectWithinBudget(largeDocumentBagPayload, { tiers: documentTiers, budgetBytes: 1.5, mintFetchableHandle })
+    );
   });
 
   it.effect.prop(

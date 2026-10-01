@@ -1,10 +1,10 @@
 import * as Rdf from "@beep/rdf/Rdf";
-import { NonNegativeInt } from "@beep/schema";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
 import { Duration, Effect, Layer, Match, Order } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { canonicalJson } from "@/corpus/Canonical";
 import { LabConfig } from "@/runtime/Config";
 import { ProjectionFailed } from "@/schema/Errors";
@@ -81,7 +81,7 @@ const canonicalRows = (rows: ReadonlyArray<Record<string, Rdf.Term>>) =>
 const makeRdfProjection = Effect.fn("RdfProjection.make")(function* () {
   const config = yield* LabConfig;
   const sparql = yield* SparqlQueryService;
-  const timeoutMs = NonNegativeInt.make(Duration.toMillis(config.projectionTimeout));
+  const timeoutMs = S.Natural.make(Duration.toMillis(config.projectionTimeout));
 
   return RdfProjection.of({
     rebuild: Effect.fn("RdfProjection.rebuild")((snapshot) =>
@@ -130,7 +130,7 @@ const makeRdfProjection = Effect.fn("RdfProjection.make")(function* () {
               const canonical = canonicalRows(rows);
               return Effect.succeed(
                 SparqlResultWitness.make({
-                  count: NonNegativeInt.make(A.length(canonical)),
+                  count: S.Natural.make(A.length(canonical)),
                   id: expectation.id,
                   rows: canonical,
                 })

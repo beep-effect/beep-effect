@@ -58,9 +58,11 @@ export const AnthropicLive: Layer.Layer<AnthropicClient.AnthropicClient, Config.
  * **Example** (Layer from model options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelOptions, makeAnthropicLanguageModelLayer } from "@beep/anthropic"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const layer = makeAnthropicLanguageModelLayer(
  *   AnthropicLanguageModelOptions.make({

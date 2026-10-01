@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { FederalRegisterComponentSpan } from "../ComponentSpan/index.ts";
@@ -26,23 +26,23 @@ const $I = $LawPracticeDomainId.create("values/FederalRegisterCitation/FederalRe
  * **Example** (Construct Federal Register citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { FederalRegisterCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = FederalRegisterCitation.make({
  *   text: "88 Fed. Reg. 12345",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(18),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(18),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(18),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(18),
  *   }),
  *   confidence: 1,
  *   matchedText: "88 Fed. Reg. 12345",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
- *   volume: NonNegativeInt.make(88),
- *   page: NonNegativeInt.make(12345),
+ *   patternsChecked: S.Natural.make(1),
+ *   volume: S.Natural.make(88),
+ *   page: S.Natural.make(12345),
  * })
  *
  * console.log(citation.type) // "federalRegister"
@@ -55,22 +55,22 @@ export class FederalRegisterCitation extends S.Class<FederalRegisterCitation>($I
   {
     ...CitationBase.fields,
     type: S.tag("federalRegister"),
-    volume: S.Union([NonNegativeInt, S.String]).annotateKey({
+    volume: S.Union([S.Natural, S.String]).annotateKey({
       description: "Federal Register volume.",
     }),
-    page: NonNegativeInt.annotateKey({
+    page: S.Natural.annotateKey({
       description: "Page number.",
     }),
-    year: NonNegativeInt.pipe(
+    year: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Publication year (if extracted).",
       })
     ),
     spans: FederalRegisterComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating the sub-parts of the citation within the source text.",
       })

@@ -14,20 +14,20 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2905 |
-| publicExports | 20526 |
-| openModules | 377 |
-| openExports | 3097 |
+| publicModules | 2873 |
+| publicExports | 20309 |
+| openModules | 372 |
+| openExports | 3072 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3335 |
+| exampleImportFindings | 3309 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
-| multiple-description-paragraphs | 434 |
+| multiple-description-paragraphs | 429 |
 | leading-blank | 0 |
 | trailing-blank | 1 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3334 |
+| no-root-package-import | 3308 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 230 | 2 | 204 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 216 | 6 | 118 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 263 | 1606 | 25 | 168 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 231 | 1389 | 20 | 143 |
 | 8 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 9 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 3 |
 | 10 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
@@ -613,7 +613,6 @@ Module findings:
 - `src/Color/Color.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/CryptoTxnHash/CryptoTxnHash.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/CryptoWalletAddress/CryptoWalletAddress.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/EffectSchema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/EthAmount/EthAmount.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/EthereumValidatorPublicKey/EthereumValidatorPublicKey.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/EvmAddress/EvmAddress.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -621,35 +620,29 @@ Module findings:
 - `src/Float32Array.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Float64Array.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Fn/Fn.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/JSONSchema/JSONSchema.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/JSONSchema/JSONSchema.shared.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/LiteralKit/LiteralKit.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/LocalDate/LocalDate.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Options.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Percentage.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/PromiseSchema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SafeObject/index.ts:1` (packageDocumentation) - 1 example import violation(s)
 - `src/SchemaUtils/pluck.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SchemaUtils/split.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/SchemaUtils/withConstructorDefaults.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Semver.ts:1` (packageDocumentation) - 1 example import violation(s)
 - `src/UnitInterval.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/ArrayBuffer.ts:99` `ArrayBuf` (const) - 2 example import violation(s)
 - `src/AtURI.ts:240` `AtUri` (const) - 1 example import violation(s)
 - `src/AtURI.ts:269` `AtUri` (type) - 1 example import violation(s)
 - `src/AtURI.ts:292` `AtUri` (namespace) - 1 example import violation(s)
-- `src/Bytes.ts:50` `Bytes` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.annotations.ts:138` `Annotation` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.annotations.ts:189` `makeAnnotationResult` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.collector.ts:43` `collectConformanceAnnotationsResult` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.invariant.schema.ts:231` `InvariantEnforcement` (const) - 1 example import violation(s)
-- `src/Conformance/Conformance.invariant.schema.ts:350` `InvariantDescriptor` (class) - 1 example import violation(s)
+- `src/Conformance/Conformance.invariant.schema.ts:354` `InvariantDescriptor` (class) - 1 example import violation(s)
 - `src/Conformance/Conformance.policy.schema.ts:80` `ConformancePolicy` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.profile.schema.ts:67` `ConformanceProfile` (class) - 1 example import violation(s)
-- `src/Conformance/Conformance.report.schema.ts:77` `ConformanceIssue` (const) - 1 example import violation(s)
-- `src/Conformance/Conformance.report.schema.ts:223` `ConformanceReport` (const) - 1 example import violation(s)
+- `src/Conformance/Conformance.report.schema.ts:84` `ConformanceIssue` (const) - 1 example import violation(s)
+- `src/Conformance/Conformance.report.schema.ts:234` `ConformanceReport` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.source.schema.ts:36` `GitObjectId` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.source.schema.ts:81` `SpecificationDate` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.source.schema.ts:233` `SpecificationRevision` (const) - 1 example import violation(s)
@@ -684,8 +677,6 @@ Export findings:
 - `src/Duration/Duration.schema.ts:50` `Schema` (type) - 1 example import violation(s)
 - `src/Duration/Duration.schema.ts:69` `Duration` (const) - 1 example import violation(s)
 - `src/Duration/Duration.schema.ts:88` `Duration` (type) - 1 example import violation(s)
-- `src/EffectSchema.ts:60` `isEffect` (const) - 1 example import violation(s)
-- `src/EffectSchema.ts:85` `EffectSchema` (const) - 1 example import violation(s)
 - `src/Email.ts:33` `EmailString` (const) - 1 example import violation(s)
 - `src/Email.ts:52` `EmailString` (type) - 2 example import violation(s)
 - `src/Email.ts:76` `Email` (const) - 1 example import violation(s)
@@ -703,17 +694,6 @@ Export findings:
 - `src/Fn/Fn.schema.ts:593` `Fn` (function) - 5 example import violation(s)
 - `src/Fn/Fn.schema.ts:476` `AnyFn` (const) - 1 example import violation(s)
 - `src/Fn/Fn.schema.ts:498` `AnyFn` (type) - 1 example import violation(s)
-- `src/Graph/Graph.edge.ts:228` `Edge` (const) - 1 example import violation(s)
-- `src/Graph/Graph.guards.ts:32` `isEdge` (const) - 1 example import violation(s)
-- `src/Graph/Graph.guards.ts:52` `isGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.rebuild.ts:83` `rebuildImmutableGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.rebuild.ts:146` `rebuildMutableGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:239` `toRawEdgeEncoded` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:265` `toRawGraphEncoded` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:312` `formatGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:387` `makeGraphEquivalence` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:463` `isImmutableGraphValue` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:483` `isMutableGraphValue` (const) - 1 example import violation(s)
 - `src/Http/Http.headers.shared.ts:275` `makeHeaderEncodeForbidden` (const) - 1 example import violation(s)
 - `src/HttpStatus/HttpStatus.shared.ts:26` `$I` (const) - 1 example import violation(s)
 - `src/Int64.ts:124` `Int64FromString` (const) - 1 example import violation(s)
@@ -731,12 +711,6 @@ Export findings:
 - `src/LocalDate/LocalDate.schema.ts:343` `fromDateTime` (const) - 1 example import violation(s)
 - `src/Markdown.ts:184` `MarkdownTextToHtml` (const) - 1 example import violation(s)
 - `src/Markdown.ts:222` `decodeMarkdownTextAs` (const) - 1 example import violation(s)
-- `src/MutableHashMap.ts:112` `MutableHashMapFromSelf` (interface) - 1 example import violation(s)
-- `src/MutableHashMap.ts:195` `MutableHashMapFromSelf` (const) - 1 example import violation(s)
-- `src/MutableHashMap.ts:169` `isMutableHashMap` (const) - 1 example import violation(s)
-- `src/MutableHashSet.ts:82` `MutableHashSetFromSelf` (interface) - 1 example import violation(s)
-- `src/MutableHashSet.ts:160` `MutableHashSetFromSelf` (const) - 1 example import violation(s)
-- `src/MutableHashSet.ts:134` `isMutableHashSet` (const) - 1 example import violation(s)
 - `src/NoSniff/NoSniff.schema.ts:153` `NoSniffHeader` (const) - 1 example import violation(s)
 - `src/NoSniff/NoSniff.schema.ts:255` `Header` (const) - 1 example import violation(s)
 - `src/Opaque.ts:52` `Defect` (const) - 2 example import violation(s)
@@ -750,23 +724,20 @@ Export findings:
 - `src/Port.ts:152` `PortFromString` (type) - 1 example import violation(s)
 - `src/Record/Record.schema.ts:31` `UnknownRecord` (const) - 1 example import violation(s)
 - `src/Record/Record.schema.ts:53` `UnknownRecord` (type) - 1 example import violation(s)
-- `src/RegExp.ts:108` `RegExpFromStr` (const) - 1 example import violation(s)
-- `src/RegExp.ts:138` `RegExpFromStr` (type) - 1 example import violation(s)
 - `src/SafeObject/SafeObject.schema.ts:40` `SafeObject` (const) - 1 example import violation(s)
 - `src/SafeObject/SafeObject.schema.ts:93` `SafeObjectFromObjectKeyword` (const) - 1 example import violation(s)
 - `src/SafeObject/SafeObject.schema.ts:40` `Schema` (const) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:92` `BlockedHostError` (class) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:278` `isBlockedRemoteHost` (const) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:323` `assertAllowedRemoteHost` (const) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:388` `assertAllowedRemoteUrl` (const) - 1 example import violation(s)
+- `src/SafeRemoteHost.ts:91` `BlockedHostError` (class) - 1 example import violation(s)
+- `src/SafeRemoteHost.ts:277` `isBlockedRemoteHost` (const) - 1 example import violation(s)
+- `src/SafeRemoteHost.ts:322` `assertAllowedRemoteHost` (const) - 1 example import violation(s)
+- `src/SafeRemoteHost.ts:387` `assertAllowedRemoteUrl` (const) - 1 example import violation(s)
 - `src/SchemaUtils/encoders.ts:59` `encodeEffect` (const) - 1 example import violation(s)
 - `src/SchemaUtils/encoders.ts:116` `encodeUnknownEffect` (const) - 1 example import violation(s)
 - `src/SchemaUtils/optional.ts:47` `optional` (const) - 1 example import violation(s)
 - `src/SchemaUtils/toEquivalence.ts:70` `toEquivalence` (const) - 1 example import violation(s)
 - `src/SchemaUtils/withCodecStatics.ts:420` `withCodecStatics` (const) - 1 example import violation(s)
-- `src/SchemaUtils/withKeyDefaults.ts:120` `withEmptyArrayDefaults` (function) - 1 example import violation(s)
-- `src/SecureHeaderError/SecureHeaderError.errors.ts:403` `SecureHeaderError` (type) - 1 example import violation(s)
-- `src/SecureHeaderError/SecureHeaderError.errors.ts:403` `Error` (type) - 1 example import violation(s)
+- `src/SecureHeaderError/SecureHeaderError.errors.ts:402` `SecureHeaderError` (type) - 1 example import violation(s)
+- `src/SecureHeaderError/SecureHeaderError.errors.ts:402` `Error` (type) - 1 example import violation(s)
 - `src/SecureHeaderOptions/SecureHeaderOptions.schema.ts:168` `createHeadersObject` (const) - 1 example import violation(s)
 - `src/SecureHeaderOptions/SecureHeaderOptions.schema.ts:200` `createSecureHeaders` (const) - 1 example import violation(s)
 - `src/SemanticVersion.ts:57` `SemanticVersionSchema` (interface) - 1 documentation section/link violation(s)
@@ -800,10 +771,9 @@ Export findings:
 - `src/Xml.ts:131` `decodeXmlTextAs` (const) - 1 example import violation(s)
 - `src/Yaml.ts:86` `YamlTextToUnknown` (const) - 1 example import violation(s)
 - `src/Yaml.ts:128` `decodeYamlTextAs` (const) - 1 example import violation(s)
-- `src/index.ts:226` `export * as HttpMethod from "./HttpMethod/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:262` `export * as JSONSchema from "./JSONSchema/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:362` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
-- `src/index.ts:407` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:196` `export * as HttpMethod from "./HttpMethod/index.ts";` (re-export) - 1 example import violation(s)
+- `src/index.ts:303` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:338` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
 
 ### @beep/pglite
 

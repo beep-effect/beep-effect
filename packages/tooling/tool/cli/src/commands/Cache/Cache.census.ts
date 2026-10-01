@@ -6,7 +6,7 @@
  */
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { FsUtils, readPackageJsonFile, resolveWorkspacePackages } from "@beep/repo-utils";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { Duration, Effect, FileSystem, Match, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -194,7 +194,7 @@ export const joinCacheCensusPlan = Effect.fn("CacheCensus.joinPlan")(function* (
           ...node.resolvedTaskDefinition,
           passThroughEnv: O.getOrElse(node.resolvedTaskDefinition.passThroughEnv, A.empty<string>),
         }),
-        inputCount: NonNegativeInt.make(A.length(sortedInputs)),
+        inputCount: S.Natural.make(A.length(sortedInputs)),
         inputsDigest,
       });
     }),

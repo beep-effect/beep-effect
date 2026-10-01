@@ -21,13 +21,13 @@ import {
   UpdateGroupCommand,
   UpdatePanelCommand,
 } from "@beep/dock";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import {
   envelope,
   groupOne,
@@ -241,7 +241,7 @@ describe("panel and group updates", () => {
               "reorder-source",
               MovePanelCommand.make({
                 panelId: panelOne.id,
-                target: TabPlacement.make({ groupId: groupOne, index: O.some(NonNegativeInt.make(1)) }),
+                target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(1)) }),
               })
             )
           )

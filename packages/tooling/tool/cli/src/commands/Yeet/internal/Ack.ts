@@ -30,14 +30,14 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
+import { LiteralKit } from "@beep/schema";
 import { DateTime, Effect, Match } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readContainedFileStringNoFollow, writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { UUID } from "../../../internal/schema/Uuid.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { yeetInboxAckPath } from "./Inbox.ts";
 import { ProofJobObservedVia } from "./ProofJob.ts";
@@ -307,8 +307,8 @@ export class YeetAckClearedResolution extends S.Class<YeetAckClearedResolution>(
     headSha: S.NonEmptyString,
     mergeable: S.NonEmptyString,
     mergeStateStatus: S.NullOr(S.String),
-    jobId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    unit: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    jobId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    unit: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetAckClearedResolution", {
     description:

@@ -15,8 +15,6 @@ import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, HashMap, Layer, MutableHashMap } from "effect";
 import * as A from "effect/Array";
@@ -34,6 +32,7 @@ import {
 import { tokenizeMentionForBlocking } from "../Utils/Text.ts";
 import { EmbeddingService } from "./Embedding.ts";
 import { Embedding } from "./EmbeddingProvider.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/CrossBatchEntityResolver");
 
@@ -65,7 +64,7 @@ export type CrossBatchResolutionError = AnyEmbeddingError | DrizzleError;
  * **Example** (Create an empty resolution result)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { CrossBatchResolutionResult, ResolutionStats } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
  * const result = CrossBatchResolutionResult.make({
@@ -73,10 +72,10 @@ export type CrossBatchResolutionError = AnyEmbeddingError | DrizzleError;
  *   newCanonicals: [],
  *   mergedEntities: [],
  *   stats: ResolutionStats.make({
- *     totalEntities: NonNegativeInt.make(0),
- *     matchedToExisting: NonNegativeInt.make(0),
- *     createdNew: NonNegativeInt.make(0),
- *     candidatesEvaluated: NonNegativeInt.make(0)
+ *     totalEntities: S.Natural.make(0),
+ *     matchedToExisting: S.Natural.make(0),
+ *     createdNew: S.Natural.make(0),
+ *     candidatesEvaluated: S.Natural.make(0)
  *   })
  * })
  * console.log(result.newCanonicals.length) // 0
@@ -145,14 +144,14 @@ export class MergedEntity extends S.Class<MergedEntity>($I`MergedEntity`)(
  * **Example** (Record resolution counts)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ResolutionStats } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
  * const stats = ResolutionStats.make({
- *   totalEntities: NonNegativeInt.make(2),
- *   matchedToExisting: NonNegativeInt.make(1),
- *   createdNew: NonNegativeInt.make(1),
- *   candidatesEvaluated: NonNegativeInt.make(4)
+ *   totalEntities: S.Natural.make(2),
+ *   matchedToExisting: S.Natural.make(1),
+ *   createdNew: S.Natural.make(1),
+ *   candidatesEvaluated: S.Natural.make(4)
  * })
  * console.log(stats.createdNew) // 1
  * ```
@@ -162,10 +161,10 @@ export class MergedEntity extends S.Class<MergedEntity>($I`MergedEntity`)(
  */
 export class ResolutionStats extends S.Class<ResolutionStats>($I`ResolutionStats`)(
   {
-    totalEntities: NonNegativeInt,
-    matchedToExisting: NonNegativeInt,
-    createdNew: NonNegativeInt,
-    candidatesEvaluated: NonNegativeInt,
+    totalEntities: S.Natural,
+    matchedToExisting: S.Natural,
+    createdNew: S.Natural,
+    candidatesEvaluated: S.Natural,
   },
   $I.annote("ResolutionStats", {
     description: "Non-negative counts describing one cross-batch resolution pass.",
@@ -185,6 +184,11 @@ class MatchedEntity extends S.Class<MatchedEntity>($I`MatchedEntity`)(
   })
 ) {}
 
+const crossBatchResolverConfigCandidateThresholdDefault = UnitInterval.make(0.6);
+const crossBatchResolverConfigResolutionThresholdDefault = UnitInterval.make(0.8);
+const crossBatchResolverConfigMaxCandidatesPerEntityDefault = PosInt.make(20);
+const crossBatchResolverConfigMaxBlockingCandidatesDefault = PosInt.make(100);
+const crossBatchResolverConfigCanonicalNamespaceDefault = IRI.make("https://example.org/entities/");
 /**
  * Configuration for cross-batch entity resolution
  *
@@ -203,23 +207,23 @@ class MatchedEntity extends S.Class<MatchedEntity>($I`MatchedEntity`)(
 export class CrossBatchResolverConfig extends S.Class<CrossBatchResolverConfig>($I`CrossBatchResolverConfig`)(
   {
     candidateThreshold: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.6)),
+      S.withConstructorDefault(Effect.succeed(crossBatchResolverConfigCandidateThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(crossBatchResolverConfigCandidateThresholdDefault)),
       S.annotateKey({ description: "Minimum similarity admitted by candidate retrieval." })
     ),
     resolutionThreshold: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.8)),
+      S.withConstructorDefault(Effect.succeed(crossBatchResolverConfigResolutionThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(crossBatchResolverConfigResolutionThresholdDefault)),
       S.annotateKey({ description: "Minimum similarity required to reuse a canonical entity." })
     ),
     maxCandidatesPerEntity: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(20)),
+      S.withConstructorDefault(Effect.succeed(crossBatchResolverConfigMaxCandidatesPerEntityDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(crossBatchResolverConfigMaxCandidatesPerEntityDefault)),
       S.annotateKey({ description: "Positive maximum number of ANN candidates per entity." })
     ),
     maxBlockingCandidates: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(100)),
+      S.withConstructorDefault(Effect.succeed(crossBatchResolverConfigMaxBlockingCandidatesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(crossBatchResolverConfigMaxBlockingCandidatesDefault)),
       S.annotateKey({ description: "Positive maximum number of token-blocking candidates." })
     ),
     canonicalNamespace: IRI.pipe(
-      SchemaUtils.withKeyDefaults(IRI.make("https://example.org/entities/")),
+      S.withConstructorDefault(Effect.succeed(crossBatchResolverConfigCanonicalNamespaceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(crossBatchResolverConfigCanonicalNamespaceDefault)),
       S.annotateKey({ description: "Namespace used for newly created canonical entity IRIs." })
     ),
   },
@@ -494,10 +498,10 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
             newCanonicals: [],
             mergedEntities: [],
             stats: {
-              totalEntities: NonNegativeInt.make(0),
-              matchedToExisting: NonNegativeInt.make(0),
-              createdNew: NonNegativeInt.make(0),
-              candidatesEvaluated: NonNegativeInt.make(0),
+              totalEntities: S.Natural.make(0),
+              matchedToExisting: S.Natural.make(0),
+              createdNew: S.Natural.make(0),
+              candidatesEvaluated: S.Natural.make(0),
             },
           };
         }
@@ -532,10 +536,10 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         );
 
         const stats: ResolutionStats = {
-          totalEntities: NonNegativeInt.make(entities.length),
-          matchedToExisting: NonNegativeInt.make(resolutionResult.matchedEntities.length),
-          createdNew: NonNegativeInt.make(finalResult.newCanonicals.length),
-          candidatesEvaluated: NonNegativeInt.make(resolutionResult.candidatesEvaluated),
+          totalEntities: S.Natural.make(entities.length),
+          matchedToExisting: S.Natural.make(resolutionResult.matchedEntities.length),
+          createdNew: S.Natural.make(finalResult.newCanonicals.length),
+          candidatesEvaluated: S.Natural.make(resolutionResult.candidatesEvaluated),
         };
 
         yield* Effect.logInfo("Cross-batch entity resolution complete", {

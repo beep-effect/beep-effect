@@ -5,9 +5,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MimeType, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex, URLStr } from "@beep/schema";
+import { LiteralKit, MimeType, Sha256Hex, URLStr } from "@beep/schema";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import { Effect } from "effect";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/Image");
 
@@ -123,17 +125,17 @@ export class ImageCandidate extends S.Class<ImageCandidate>($I`ImageCandidate`)(
       description: "Original URL from which the image can be fetched.",
     }),
     alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Alternative text recovered from the source." })
     ),
     caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Figure caption or nearby descriptive text." })
     ),
     role: ImageRole.annotateKey({
       description: "Semantic role the image plays in its source.",
     }),
-    order: NonNegativeInt.annotateKey({
+    order: S.Natural.annotateKey({
       description: "Zero-based image position in the source.",
     }),
     referrerUrl: URLStr.annotateKey({
@@ -187,22 +189,22 @@ export class ImageAsset extends S.Class<ImageAsset>($I`ImageAsset`)(
       description: "Strictly positive encoded size in bytes.",
     }),
     width: S.OptionFromOptionalKey(PosInt).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Pixel width when image metadata is available." })
     ),
     height: S.OptionFromOptionalKey(PosInt).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Pixel height when image metadata is available." })
     ),
     storagePath: S.NonEmptyString.annotateKey({
       description: "Repository or object-storage path containing the original bytes.",
     }),
     sourceUrl: S.OptionFromOptionalKey(URLStr).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Original fetch URL retained for provenance." })
     ),
     createdAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "UTC instant at which the asset was first stored." })
     ),
   },
@@ -259,22 +261,22 @@ export class ImageRef extends S.Class<ImageRef>($I`ImageRef`)(
       description: "Content digest of the referenced asset.",
     }),
     alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Context-specific alternative text." })
     ),
     caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Context-specific image caption." })
     ),
-    position: NonNegativeInt.annotateKey({
+    position: S.Natural.annotateKey({
       description: "Zero-based position within the owner content.",
     }),
     context: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Surrounding source text retained for prompt context." })
     ),
     role: S.OptionFromOptionalKey(ImageRole).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Context-specific image role when known." })
     ),
   },
@@ -286,6 +288,7 @@ export class ImageRef extends S.Class<ImageRef>($I`ImageRef`)(
   static readonly is = S.is(ImageRef);
 }
 
+const imageManifestImagesDefault = A.empty<ImageRef>();
 /**
  * Ordered image-reference manifest for one owner.
  *
@@ -321,7 +324,7 @@ export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
       description: "Identifier of the aggregate represented by the manifest.",
     }),
     images: S.Array(ImageRef).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ImageRef>(),
+      S.withConstructorDefault(Effect.succeed(imageManifestImagesDefault)), S.withDecodingDefaultType(Effect.succeed(imageManifestImagesDefault)),
       S.annotateKey({ description: "Image references in source order." })
     ),
     updatedAt: S.DateTimeUtcFromString.annotateKey({
@@ -397,23 +400,23 @@ export class ImageForPrompt extends S.Class<ImageForPrompt>($I`ImageForPrompt`)(
       description: "Image media type supplied to the multimodal model.",
     }),
     alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Alternative text supplied to the model." })
     ),
     caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Caption supplied to the model." })
     ),
     context: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Surrounding text supplied to the model." })
     ),
-    position: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
+    position: S.OptionFromOptionalKey(S.Natural).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Source-document position when available." })
     ),
     assetHash: S.OptionFromOptionalKey(Sha256Hex).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Source asset digest retained for traceability." })
     ),
   },

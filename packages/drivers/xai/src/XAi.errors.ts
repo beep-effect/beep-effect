@@ -7,7 +7,7 @@
 
 import { $XaiId } from "@beep/identity";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
-import { pipe, Result } from "effect";
+import { Effect, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as O from "effect/Option";
@@ -95,13 +95,13 @@ export type XAiErrorReason = typeof XAiErrorReason.Type;
 export class XAiError extends S.TaggedError<XAiError>($I`XAiError`)(
   "XAiError",
   {
-    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    endpoint: S.OptionFromOptionalKey(XAiEndpointId).pipe(SchemaUtils.withNoneDefault),
-    method: S.OptionFromOptionalKey(XAiHttpMethod).pipe(SchemaUtils.withNoneDefault),
-    methodName: S.OptionFromOptionalKey(XAiEndpointMethodName).pipe(SchemaUtils.withNoneDefault),
-    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    endpoint: S.OptionFromOptionalKey(XAiEndpointId).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    method: S.OptionFromOptionalKey(XAiHttpMethod).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    methodName: S.OptionFromOptionalKey(XAiEndpointMethodName).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     reason: XAiErrorReason,
-    status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+    status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annoteError<XAiError>("XAiError", {
     description: "Redacted technical failure raised by the xAI driver boundary.",
@@ -220,8 +220,8 @@ const causeFromUnknown = (cause: unknown): O.Option<string> =>
  */
 export class XAiErrorOptions extends S.Class<XAiErrorOptions>($I`XAiErrorOptions`)(
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
-    status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("XAiErrorOptions", {
     description: "Options for configuring XAiError instances, including optional redacted cause and status fields.",

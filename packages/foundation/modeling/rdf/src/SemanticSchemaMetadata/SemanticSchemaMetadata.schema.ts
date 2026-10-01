@@ -8,9 +8,9 @@
 import { $RdfId } from "@beep/identity/packages";
 import * as Conformance from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as Sha256 from "@beep/schema/Sha256";
 import { URLStr } from "@beep/schema/URL";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import type { Result } from "effect";
 import type * as AST from "effect/SchemaAST";
@@ -211,17 +211,19 @@ export type SemanticRepresentationKind = typeof SemanticRepresentationKind.Type;
 export class SemanticSchemaSpecification extends S.Class<SemanticSchemaSpecification>($I`SemanticSchemaSpecification`)(
   {
     name: S.NonEmptyString,
-    version: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    section: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    url: S.OptionFromOptionalKey(URLStr).pipe(SchemaUtils.withNoneDefault),
-    localRef: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    version: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    section: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    url: S.OptionFromOptionalKey(URLStr).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    localRef: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     disposition: SemanticSchemaSpecificationDisposition,
-    sourceId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    sourceRole: S.OptionFromOptionalKey(Conformance.SpecificationSourceRole).pipe(SchemaUtils.withNoneDefault),
-    revision: S.OptionFromOptionalKey(Conformance.Revision).pipe(SchemaUtils.withNoneDefault),
-    contentSha256: S.OptionFromOptionalKey(Sha256.Sha256Hex).pipe(SchemaUtils.withNoneDefault),
-    license: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    scope: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    sourceId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sourceRole: S.OptionFromOptionalKey(Conformance.SpecificationSourceRole).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    revision: S.OptionFromOptionalKey(Conformance.Revision).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    contentSha256: S.OptionFromOptionalKey(Sha256.Sha256Hex).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    license: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    scope: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SemanticSchemaSpecification", {
     description:
@@ -251,7 +253,7 @@ export class SemanticSchemaSpecification extends S.Class<SemanticSchemaSpecifica
 export class SemanticRepresentation extends S.Class<SemanticRepresentation>($I`SemanticRepresentation`)(
   {
     kind: SemanticRepresentationKind,
-    note: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    note: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SemanticRepresentation", {
     description: "Single representation note attached to semantic-web schemas.",
@@ -290,7 +292,7 @@ export class SemanticSchemaMetadata extends S.Class<SemanticSchemaMetadata>($I`S
     specifications: S.NonEmptyArray(SemanticSchemaSpecification),
     equivalenceBasis: S.NonEmptyString,
     canonicalIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         deprecated: true,
         description:
@@ -298,21 +300,29 @@ export class SemanticSchemaMetadata extends S.Class<SemanticSchemaMetadata>($I`S
       })
     ),
     preferredPrefix: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         deprecated: true,
         description:
           "Deprecated address field: composer-derived `curie` annotations own addressing (identity-iri-fold, 2026-08-01). Documentation payload fields remain canonical here.",
       })
     ),
-    aliases: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    canonicalizationRequired: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    representations: SemanticRepresentation.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    provenanceProfile: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    evidenceAnchoring: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    timeSemantics: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    implementationNotes: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    nonGoals: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    aliases: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    canonicalizationRequired: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    representations: SemanticRepresentation.pipe(
+      S.Array,
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    provenanceProfile: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    evidenceAnchoring: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    timeSemantics: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    implementationNotes: S.NonEmptyString.pipe(
+      S.Array,
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    nonGoals: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SemanticSchemaMetadata", {
     description: "Typed metadata payload stored in the semanticSchemaMetadata annotation key.",

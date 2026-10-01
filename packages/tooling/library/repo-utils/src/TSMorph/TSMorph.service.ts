@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Context, Effect, FileSystem, flow, Inspectable, Layer, MutableHashMap, Order, Path, pipe } from "effect";
 import { constant } from "effect/Function";
@@ -85,7 +84,7 @@ const DEFAULT_REFERENCE_POLICY = TsMorphReferencePolicy.Enum.workspaceOnly;
 const DEFAULT_TSCONFIG_FILE_NAME = "tsconfig.json";
 const utf8Encoder = new TextEncoder();
 
-const decodeNonNegativeInt = S.decodeUnknownEffect(NonNegativeInt);
+const decodeNonNegativeInt = S.decodeUnknownEffect(S.Natural);
 
 /**
  * Typed error retained for compatibility with older placeholder service wiring.

@@ -22,7 +22,7 @@ import {
   TransformationLedgerRecord,
 } from "@beep/repo-cli/commands/Corpus";
 import { restorationTransformationTesting as RT } from "@beep/repo-cli/test/Corpus";
-import { NonNegativeInt, PosInt, PosixPath, Sha256Hex } from "@beep/schema";
+import { PosixPath, Sha256Hex } from "@beep/schema";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
@@ -31,6 +31,8 @@ import { bytesToHex } from "@noble/hashes/utils.js";
 import { DateTime, Effect, FileSystem, Layer, MutableHashMap, MutableHashSet, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const encodeCollectorManifestRecordJson = S.encodeEffect(S.fromJsonString(CollectorManifestRecord));
 
@@ -63,7 +65,7 @@ const legacyOptions = RestorationLegacyWordOptions.make({
   converterPath: "soffice",
   corpusRoot: "/corpus",
   expectedConverterVersion: "LibreOffice test",
-  expectedOccurrenceCount: NonNegativeInt.make(0),
+  expectedOccurrenceCount: S.Natural.make(0),
   maxElapsedMillis: PosInt.make(100),
   maxTotalElapsedMillis: PosInt.make(100),
   maxTotalOutputBytes: PosInt.make(100),
@@ -79,15 +81,15 @@ const archivedFile = (objectId: string, sourceRelativePath: string, sizeBytes = 
     destinationRelativePath: `payload/tree/${sourceRelativePath}`,
     objectId,
     objectKind: "file",
-    postCopySource: { mtimeMillis: NonNegativeInt.make(1), sizeBytes: NonNegativeInt.make(sizeBytes) },
-    preCopySource: { mtimeMillis: NonNegativeInt.make(1), sizeBytes: NonNegativeInt.make(sizeBytes) },
+    postCopySource: { mtimeMillis: S.Natural.make(1), sizeBytes: S.Natural.make(sizeBytes) },
+    preCopySource: { mtimeMillis: S.Natural.make(1), sizeBytes: S.Natural.make(sizeBytes) },
     recordedAt: "2026-08-30T00:00:00.000Z",
     recordType: "archive-file-pass",
-    resumedBytes: NonNegativeInt.make(0),
+    resumedBytes: S.Natural.make(0),
     runId: "run-1",
     schemaVersion: "oppold-corpus-restoration/v1",
     sha256: sha(objectId),
-    sizeBytes: NonNegativeInt.make(sizeBytes),
+    sizeBytes: S.Natural.make(sizeBytes),
     sourceLabel: "tree",
     sourceRelativePath,
   });
@@ -113,7 +115,7 @@ const familyRunStart = (
 ) =>
   TransformationLedgerRecord.cases["family-run-start"].make({
     ...identity,
-    expectedCount: NonNegativeInt.make(expectedCount),
+    expectedCount: S.Natural.make(expectedCount),
     family,
     ...(family === "mail" ? { mailScope: "full" as const } : {}),
     maxTotalElapsedMillis: PosInt.make(maxTotalElapsedMillis),
@@ -127,10 +129,10 @@ const familyAttemptStart = (family: "legacy-word" | "mail" | "recycle", sourceId
     ...identity,
     attemptId: RT.familyAttemptId(family, sourceId, 0),
     family,
-    inputBytes: NonNegativeInt.make(3),
+    inputBytes: S.Natural.make(3),
     ...(family === "mail" ? { mailScope: "full" as const } : {}),
     recordType: "family-attempt-start",
-    retryOrdinal: NonNegativeInt.make(0),
+    retryOrdinal: S.Natural.make(0),
     sourceId,
     sourceSha256,
   });
@@ -144,19 +146,19 @@ const familySummary = (
 ) =>
   TransformationLedgerRecord.cases["family-run-summary"].make({
     ...identity,
-    elapsedMillis: NonNegativeInt.make(1),
-    exceptionCount: NonNegativeInt.make(exceptionCount),
+    elapsedMillis: S.Natural.make(1),
+    exceptionCount: S.Natural.make(exceptionCount),
     family,
-    inputBytes: NonNegativeInt.make(3),
+    inputBytes: S.Natural.make(3),
     ...(family === "mail" ? { mailScope: "full" as const } : {}),
     maxTotalElapsedMillis: PosInt.make(100),
     maxTotalOutputBytes: PosInt.make(100),
-    outputBytes: NonNegativeInt.make(3),
+    outputBytes: S.Natural.make(3),
     outputTreeSha256: sha(`output-${family}`),
-    passCount: NonNegativeInt.make(passCount),
+    passCount: S.Natural.make(passCount),
     recordType: "family-run-summary",
-    sourceCount: NonNegativeInt.make(sourceCount),
-    unapprovedCount: NonNegativeInt.make(unapprovedCount),
+    sourceCount: S.Natural.make(sourceCount),
+    unapprovedCount: S.Natural.make(unapprovedCount),
   });
 
 const testLayer = Layer.mergeAll(
@@ -420,8 +422,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "recycle-capacity-" });
       const options = RestorationRecycleOptions.make({
         corpusRoot: root,
-        expectedMissingContentCount: NonNegativeInt.make(0),
-        expectedSurfaceCount: NonNegativeInt.make(1),
+        expectedMissingContentCount: S.Natural.make(0),
+        expectedSurfaceCount: S.Natural.make(1),
         maxTotalElapsedMillis: PosInt.make(10_000),
         maxTotalOutputBytes: PosInt.make(100),
       });
@@ -567,7 +569,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       ).map(([joinClass, count, sourceObjectIds]) =>
         TransformationLedgerRecord.cases["recycle-join"].make({
           ...identity,
-          count: NonNegativeInt.make(count),
+          count: S.Natural.make(count),
           family: "recycle",
           joinClass,
           recordType: "recycle-join",
@@ -587,7 +589,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       yield* RT.appendRecycleJoins(grouped, RT.recycleSurfaceCounts(grouped), recycleContext, joins);
       expect(yield* fs.readFileString(recycleContext.ledgerPath)).toBe(ledger);
       (yield* RT.appendRecycleJoins(grouped, RT.recycleSurfaceCounts(grouped), recycleContext, [
-        { ...joins[0]!, count: NonNegativeInt.make(2) },
+        { ...joins[0]!, count: S.Natural.make(2) },
       ]).pipe(Effect.option)).pipe(assertNone);
     })
   );
@@ -612,12 +614,12 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const metadataRecord = ArchiveLedgerRecord.cases["archive-file-pass"].make({
         ...archivedFile("metadata", "$Recycle.Bin/S-1/$IABC", metadataBytes.length),
         sha256: metadataDigest,
-        sizeBytes: NonNegativeInt.make(metadataBytes.length),
+        sizeBytes: S.Natural.make(metadataBytes.length),
       });
       const contentRecord = ArchiveLedgerRecord.cases["archive-file-pass"].make({
         ...archivedFile("content", "$Recycle.Bin/S-1/$RABC", 7),
         sha256: contentDigest,
-        sizeBytes: NonNegativeInt.make(7),
+        sizeBytes: S.Natural.make(7),
       });
       const groups = RT.groupRecycleEntries(RT.recycleEntries(path, archiveRoot, [metadataRecord, contentRecord]));
       const pair = RT.sortedRecyclePairs(groups)[0];
@@ -726,8 +728,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         { inputBytes: 0, mappingCount: 0, outputBytes: 0 },
         RestorationRecycleOptions.make({
           corpusRoot: root,
-          expectedMissingContentCount: NonNegativeInt.make(0),
-          expectedSurfaceCount: NonNegativeInt.make(1),
+          expectedMissingContentCount: S.Natural.make(0),
+          expectedSurfaceCount: S.Natural.make(1),
           maxTotalElapsedMillis: PosInt.make(10_000),
           maxTotalOutputBytes: PosInt.make(1_000),
         }),
@@ -768,7 +770,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
 
       const oversized = {
         ...pair.metadata,
-        preservationRecord: { ...metadataRecord, sizeBytes: NonNegativeInt.make(65 * 1024) },
+        preservationRecord: { ...metadataRecord, sizeBytes: S.Natural.make(65 * 1024) },
       };
       (yield* RT.readRecycleMetadata(oversized).pipe(Effect.option)).pipe(assertNone);
       const directoryMetadata = {
@@ -831,7 +833,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
 
       const prematureJoin = TransformationLedgerRecord.cases["recycle-join"].make({
         ...identity,
-        count: NonNegativeInt.make(1),
+        count: S.Natural.make(1),
         family: "recycle",
         joinClass: "valid-pair",
         recordType: "recycle-join",
@@ -891,7 +893,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         message: "Password protected",
         objectId: processedMail,
         recordType: "mail-store-exception",
-        retainedOutputBytes: NonNegativeInt.make(0),
+        retainedOutputBytes: S.Natural.make(0),
         retainedOutputSha256: RT.emptyMailAttemptOutputDigest().sha256,
         sourceFamily: "pst",
       });
@@ -1011,23 +1013,23 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const corpusRoot = yield* fs.makeTempDirectoryScoped({ prefix: "transformation-acceptance-" });
       const digest = sha("acceptance");
       const record = RestorationAcceptanceRecord.make({
-        elapsedMillis: NonNegativeInt.make(1),
+        elapsedMillis: S.Natural.make(1),
         evidenceSha256: digest,
-        exceptionCount: NonNegativeInt.make(0),
-        expectedTerminalCount: NonNegativeInt.make(1),
+        exceptionCount: S.Natural.make(0),
+        expectedTerminalCount: S.Natural.make(1),
         family: "preservation",
-        inputBytes: NonNegativeInt.make(2),
-        outputBytes: NonNegativeInt.make(2),
+        inputBytes: S.Natural.make(2),
+        outputBytes: S.Natural.make(2),
         outputTreeSha256: digest,
-        passCount: NonNegativeInt.make(1),
+        passCount: S.Natural.make(1),
         preservationRunId: "preservation-1",
         preservationSealSha256: digest,
         recordedAt: "2026-08-30T00:00:00.000Z",
         runLabel: "run-1",
         schemaVersion: "oppold-corpus-restoration/v1",
-        sourceCount: NonNegativeInt.make(1),
+        sourceCount: S.Natural.make(1),
         status: "pass",
-        terminalCount: NonNegativeInt.make(1),
+        terminalCount: S.Natural.make(1),
         unapprovedCount: 0,
       });
       yield* RT.writeAcceptanceRecord(corpusRoot, "run-1", record);
@@ -1084,7 +1086,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
   it("validates resumable family and attempt checkpoint ordering", () => {
     const runStart = TransformationLedgerRecord.cases["family-run-start"].make({
       ...identity,
-      expectedCount: NonNegativeInt.make(1),
+      expectedCount: S.Natural.make(1),
       family: "legacy-word",
       maxTotalElapsedMillis: PosInt.make(100),
       maxTotalOutputBytes: PosInt.make(100),
@@ -1096,9 +1098,9 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       ...identity,
       attemptId,
       family: "legacy-word",
-      inputBytes: NonNegativeInt.make(2),
+      inputBytes: S.Natural.make(2),
       recordType: "family-attempt-start",
-      retryOrdinal: NonNegativeInt.make(0),
+      retryOrdinal: S.Natural.make(0),
       sourceId: sha("source"),
       sourceSha256: sha("source"),
     });
@@ -1108,10 +1110,10 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       disposition: "retained-for-retry",
       family: "legacy-word",
       recordType: "family-attempt-interrupted",
-      retainedOutputBytes: NonNegativeInt.make(0),
+      retainedOutputBytes: S.Natural.make(0),
       retainedOutputRelativePath: "proof/attempt",
       retainedOutputSha256: sha("empty"),
-      retryOrdinal: NonNegativeInt.make(0),
+      retryOrdinal: S.Natural.make(0),
       sourceId: sha("source"),
     });
     const terminal = TransformationLedgerRecord.cases["legacy-word-exception"].make({
@@ -1126,18 +1128,18 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
     });
     const summary = TransformationLedgerRecord.cases["family-run-summary"].make({
       ...identity,
-      elapsedMillis: NonNegativeInt.make(1),
-      exceptionCount: NonNegativeInt.make(1),
+      elapsedMillis: S.Natural.make(1),
+      exceptionCount: S.Natural.make(1),
       family: "legacy-word",
-      inputBytes: NonNegativeInt.make(2),
+      inputBytes: S.Natural.make(2),
       maxTotalElapsedMillis: PosInt.make(100),
       maxTotalOutputBytes: PosInt.make(100),
-      outputBytes: NonNegativeInt.make(0),
+      outputBytes: S.Natural.make(0),
       outputTreeSha256: sha("empty"),
-      passCount: NonNegativeInt.make(0),
+      passCount: S.Natural.make(0),
       recordType: "family-run-summary",
-      sourceCount: NonNegativeInt.make(1),
-      unapprovedCount: NonNegativeInt.make(0),
+      sourceCount: S.Natural.make(1),
+      unapprovedCount: S.Natural.make(0),
     });
 
     expect(RT.familyStartStateIsResumable([])).toBe(true);
@@ -1464,7 +1466,7 @@ else exit 92; fi
           converterPath: selectedConverter,
           corpusRoot: root,
           expectedConverterVersion: "unused",
-          expectedOccurrenceCount: NonNegativeInt.make(1),
+          expectedOccurrenceCount: S.Natural.make(1),
           javaPath: tikaPath,
           maxElapsedMillis: PosInt.make(10_000),
           maxTotalElapsedMillis: PosInt.make(10_000),
@@ -1523,7 +1525,7 @@ else exit 92; fi
     Effect.gen(function* () {
       const runStart = TransformationLedgerRecord.cases["family-run-start"].make({
         ...identity,
-        expectedCount: NonNegativeInt.make(0),
+        expectedCount: S.Natural.make(0),
         family: "legacy-word",
         maxTotalElapsedMillis: PosInt.make(100),
         maxTotalOutputBytes: PosInt.make(100),
@@ -1532,31 +1534,31 @@ else exit 92; fi
       });
       const summary = TransformationLedgerRecord.cases["family-run-summary"].make({
         ...identity,
-        elapsedMillis: NonNegativeInt.make(1),
-        exceptionCount: NonNegativeInt.make(0),
+        elapsedMillis: S.Natural.make(1),
+        exceptionCount: S.Natural.make(0),
         family: "legacy-word",
-        inputBytes: NonNegativeInt.make(0),
+        inputBytes: S.Natural.make(0),
         maxTotalElapsedMillis: PosInt.make(100),
         maxTotalOutputBytes: PosInt.make(100),
-        outputBytes: NonNegativeInt.make(0),
+        outputBytes: S.Natural.make(0),
         outputTreeSha256: sha("empty"),
-        passCount: NonNegativeInt.make(0),
+        passCount: S.Natural.make(0),
         recordType: "family-run-summary",
-        sourceCount: NonNegativeInt.make(0),
-        unapprovedCount: NonNegativeInt.make(0),
+        sourceCount: S.Natural.make(0),
+        unapprovedCount: S.Natural.make(0),
       });
       const acceptance = TransformationLedgerRecord.cases["family-acceptance-failure"].make({
         ...identity,
         evidenceSha256: sha("evidence"),
-        expectedCount: NonNegativeInt.make(0),
+        expectedCount: S.Natural.make(0),
         family: "legacy-word",
         maxTotalElapsedMillis: PosInt.make(100),
         maxTotalOutputBytes: PosInt.make(100),
         message: "rejected",
         outputTreeSha256: sha("empty"),
         recordType: "family-acceptance-failure",
-        terminalCount: NonNegativeInt.make(0),
-        unapprovedCount: NonNegativeInt.make(1),
+        terminalCount: S.Natural.make(0),
+        unapprovedCount: S.Natural.make(1),
       });
 
       (yield* RT.resumableFamilyStart(context, []).pipe(Effect.option)).pipe(O.isSome, assertTrue);
@@ -1594,20 +1596,20 @@ else exit 92; fi
 
       const preflight = ArchiveLedgerRecord.cases["archive-preflight"].make({
         approved: true,
-        approvedCeilingBytes: NonNegativeInt.make(10),
-        availableBytes: NonNegativeInt.make(10),
-        directoryCount: NonNegativeInt.make(0),
-        fileCount: NonNegativeInt.make(0),
-        minimumFreeAfterBytes: NonNegativeInt.make(0),
+        approvedCeilingBytes: S.Natural.make(10),
+        availableBytes: S.Natural.make(10),
+        directoryCount: S.Natural.make(0),
+        fileCount: S.Natural.make(0),
+        minimumFreeAfterBytes: S.Natural.make(0),
         recordedAt: "2026-08-30T00:00:00.000Z",
         recordType: "archive-preflight",
-        requiredBytes: NonNegativeInt.make(0),
+        requiredBytes: S.Natural.make(0),
         runId: "preservation-1",
         schemaVersion: "oppold-corpus-restoration/v1",
       });
       const seal = ArchiveLedgerRecord.cases["archive-manifest-seal"].make({
         manifestSha256: sha("manifest"),
-        recordCount: NonNegativeInt.make(1),
+        recordCount: S.Natural.make(1),
         recordedAt: "2026-08-30T00:00:00.125Z",
         recordType: "archive-manifest-seal",
         runId: "preservation-1",
@@ -1653,13 +1655,13 @@ else exit 92; fi
       const acceptance = TransformationLedgerRecord.cases["family-acceptance-pass"].make({
         ...identity,
         evidenceSha256: sha("evidence"),
-        expectedCount: NonNegativeInt.make(0),
+        expectedCount: S.Natural.make(0),
         family: "legacy-word",
         maxTotalElapsedMillis: PosInt.make(100),
         maxTotalOutputBytes: PosInt.make(100),
         outputTreeSha256: summary.outputTreeSha256,
         recordType: "family-acceptance-pass",
-        terminalCount: NonNegativeInt.make(0),
+        terminalCount: S.Natural.make(0),
         unapprovedCount: 0,
       });
       const encoded = yield* Effect.forEach([runStart, summary, acceptance], encodeTransformationLedgerRecordJson);
@@ -1773,7 +1775,7 @@ else exit 92; fi
       const terminal = TransformationLedgerRecord.cases["family-acceptance-failure"].make({
         ...identity,
         evidenceSha256: sha("terminal"),
-        expectedCount: NonNegativeInt.make(0),
+        expectedCount: S.Natural.make(0),
         family: "mail",
         mailScope: "full",
         maxTotalElapsedMillis: PosInt.make(100),
@@ -1781,8 +1783,8 @@ else exit 92; fi
         message: "terminal",
         outputTreeSha256: sha(""),
         recordType: "family-acceptance-failure",
-        terminalCount: NonNegativeInt.make(0),
-        unapprovedCount: NonNegativeInt.make(1),
+        terminalCount: S.Natural.make(0),
+        unapprovedCount: S.Natural.make(1),
       });
       yield* fs.writeFileString(terminalPath, `${yield* encodeTransformationLedgerRecordJson(terminal)}\n`);
       (yield* RT.appendAttachmentRepair(
@@ -1836,7 +1838,7 @@ else exit 92; fi
 
       const runStart = TransformationLedgerRecord.cases["family-run-start"].make({
         ...identity,
-        expectedCount: NonNegativeInt.make(1),
+        expectedCount: S.Natural.make(1),
         family: "legacy-word",
         maxTotalElapsedMillis: PosInt.make(100),
         maxTotalOutputBytes: PosInt.make(100),
@@ -1893,7 +1895,7 @@ else exit 92; fi
     Effect.gen(function* () {
       const options = RestorationMailOptions.make({
         corpusRoot: "/corpus",
-        expectedStoreCount: NonNegativeInt.make(0),
+        expectedStoreCount: S.Natural.make(0),
         maxAmplificationRatio: 1,
         maxElapsedMillis: PosInt.make(100),
         maxTotalElapsedMillis: PosInt.make(100),
@@ -1941,7 +1943,7 @@ else exit 92; fi
         digest: ContentDigest.make(`sha256:${sha("child")}`),
         id: artifactId,
         relativePath: PosixPath.make("messages/child.eml"),
-        sizeBytes: NonNegativeInt.make(5),
+        sizeBytes: S.Natural.make(5),
       });
       const result = ArchiveExportResult.make({
         children: [child],
@@ -1995,7 +1997,7 @@ else exit 92; fi
       };
       const options = RestorationMailOptions.make({
         corpusRoot: root,
-        expectedStoreCount: NonNegativeInt.make(1),
+        expectedStoreCount: S.Natural.make(1),
         maxAmplificationRatio: 100,
         maxElapsedMillis: PosInt.make(10_000),
         maxTotalElapsedMillis: PosInt.make(10_000),
@@ -2086,7 +2088,7 @@ else exit 92; fi
       };
       const options = RestorationMailOptions.make({
         corpusRoot: root,
-        expectedStoreCount: NonNegativeInt.make(1),
+        expectedStoreCount: S.Natural.make(1),
         maxAmplificationRatio: 1,
         maxElapsedMillis: PosInt.make(100),
         maxTotalElapsedMillis: PosInt.make(100),
@@ -2142,7 +2144,7 @@ else exit 92; fi
       yield* fs.makeDirectory(outputRoot, { recursive: true });
       const options = RestorationMailOptions.make({
         corpusRoot: root,
-        expectedStoreCount: NonNegativeInt.make(3),
+        expectedStoreCount: S.Natural.make(3),
         maxAmplificationRatio: 1,
         maxElapsedMillis: PosInt.make(100),
         maxTotalElapsedMillis: PosInt.make(100),
@@ -2185,10 +2187,10 @@ else exit 92; fi
         ...identity,
         attemptId: RT.familyAttemptId("mail", pst.objectId, 0),
         family: "mail",
-        inputBytes: NonNegativeInt.make(0),
+        inputBytes: S.Natural.make(0),
         mailScope: "full",
         recordType: "family-attempt-start",
-        retryOrdinal: NonNegativeInt.make(0),
+        retryOrdinal: S.Natural.make(0),
         sourceId: pst.objectId,
         sourceSha256: sha(pst.objectId),
       });
@@ -2263,7 +2265,7 @@ else exit 92; fi
 
       const options = RestorationMailOptions.make({
         corpusRoot: root,
-        expectedStoreCount: NonNegativeInt.make(0),
+        expectedStoreCount: S.Natural.make(0),
         maxAmplificationRatio: 1,
         maxElapsedMillis: PosInt.make(100),
         maxTotalElapsedMillis: PosInt.make(100),
@@ -2347,7 +2349,7 @@ else exit 92; fi
       const digest = sha("strict-output");
       const runStart = TransformationLedgerRecord.cases["family-run-start"].make({
         ...identity,
-        expectedCount: NonNegativeInt.make(0),
+        expectedCount: S.Natural.make(0),
         family: "legacy-word",
         maxTotalElapsedMillis: PosInt.make(100),
         maxTotalOutputBytes: PosInt.make(100),
@@ -2356,36 +2358,36 @@ else exit 92; fi
       });
       const summary = TransformationLedgerRecord.cases["family-run-summary"].make({
         ...identity,
-        elapsedMillis: NonNegativeInt.make(1),
-        exceptionCount: NonNegativeInt.make(0),
+        elapsedMillis: S.Natural.make(1),
+        exceptionCount: S.Natural.make(0),
         family: "legacy-word",
-        inputBytes: NonNegativeInt.make(0),
+        inputBytes: S.Natural.make(0),
         maxTotalElapsedMillis: PosInt.make(100),
         maxTotalOutputBytes: PosInt.make(100),
-        outputBytes: NonNegativeInt.make(3),
+        outputBytes: S.Natural.make(3),
         outputTreeSha256: digest,
-        passCount: NonNegativeInt.make(0),
+        passCount: S.Natural.make(0),
         recordType: "family-run-summary",
-        sourceCount: NonNegativeInt.make(0),
-        unapprovedCount: NonNegativeInt.make(0),
+        sourceCount: S.Natural.make(0),
+        unapprovedCount: S.Natural.make(0),
       });
       const acceptance = TransformationLedgerRecord.cases["family-acceptance-pass"].make({
         ...identity,
         evidenceSha256: sha("evidence"),
-        expectedCount: NonNegativeInt.make(0),
+        expectedCount: S.Natural.make(0),
         family: "legacy-word",
         maxTotalElapsedMillis: PosInt.make(100),
         maxTotalOutputBytes: PosInt.make(100),
         outputTreeSha256: digest,
         recordType: "family-acceptance-pass",
-        terminalCount: NonNegativeInt.make(0),
+        terminalCount: S.Natural.make(0),
         unapprovedCount: 0,
       });
       const failure = TransformationLedgerRecord.cases["family-acceptance-failure"].make({
         ...acceptance,
         message: "rejected",
         recordType: "family-acceptance-failure",
-        unapprovedCount: NonNegativeInt.make(1),
+        unapprovedCount: S.Natural.make(1),
       });
       const evidence = {
         acceptance,
@@ -2415,11 +2417,11 @@ else exit 92; fi
       expect(
         RT.familyEvidenceCeilingsMatch({
           ...evidence,
-          summary: { ...summary, elapsedMillis: NonNegativeInt.make(101) },
+          summary: { ...summary, elapsedMillis: S.Natural.make(101) },
         })
       ).toBe(false);
       expect(
-        RT.familyEvidenceCeilingsMatch({ ...evidence, summary: { ...summary, outputBytes: NonNegativeInt.make(101) } })
+        RT.familyEvidenceCeilingsMatch({ ...evidence, summary: { ...summary, outputBytes: S.Natural.make(101) } })
       ).toBe(false);
       expect(
         RT.familyEvidenceCeilingsMatch({
@@ -2444,13 +2446,13 @@ else exit 92; fi
       expect(
         RT.familyEvidenceTerminalsMatch({
           ...evidence,
-          acceptance: { ...acceptance, expectedCount: NonNegativeInt.make(1) },
+          acceptance: { ...acceptance, expectedCount: S.Natural.make(1) },
         })
       ).toBe(false);
       expect(
         RT.familyEvidenceTerminalsMatch({
           ...evidence,
-          acceptance: { ...acceptance, terminalCount: NonNegativeInt.make(1) },
+          acceptance: { ...acceptance, terminalCount: S.Natural.make(1) },
         })
       ).toBe(false);
 
@@ -2506,7 +2508,7 @@ else exit 92; fi
         message: "password",
         objectId: "mail-object",
         recordType: "mail-store-exception",
-        retainedOutputBytes: NonNegativeInt.make(0),
+        retainedOutputBytes: S.Natural.make(0),
         retainedOutputSha256: emptyAttempt.sha256,
         sourceFamily: "pst",
       });
@@ -2531,7 +2533,7 @@ else exit 92; fi
         mailScope: "full",
         recordType: "mail-child-pass",
         sha256: sha("child"),
-        sizeBytes: NonNegativeInt.make(5),
+        sizeBytes: S.Natural.make(5),
         sourceObjectId: "mail-object",
       });
       yield* RT.rehashMailChildren(mailContext, [child], []);
@@ -2552,10 +2554,10 @@ else exit 92; fi
         family: "mail",
         mailScope: "full",
         recordType: "family-attempt-interrupted",
-        retainedOutputBytes: NonNegativeInt.make(interruptedDigest.sizeBytes),
+        retainedOutputBytes: S.Natural.make(interruptedDigest.sizeBytes),
         retainedOutputRelativePath: "interrupted/attempt-1",
         retainedOutputSha256: interruptedDigest.sha256,
-        retryOrdinal: NonNegativeInt.make(0),
+        retryOrdinal: S.Natural.make(0),
         sourceId: "source-1",
       });
       yield* RT.rehashMailChildren(mailContext, [{ ...child, attemptId: interrupted.attemptId }], [interrupted]);
@@ -2635,19 +2637,19 @@ else exit 92; fi
     const runStart = familyRunStart("mail", 1);
     const pass = TransformationLedgerRecord.cases["mail-store-pass"].make({
       ...identity,
-      accountedChildCount: NonNegativeInt.make(1),
+      accountedChildCount: S.Natural.make(1),
       attemptId: start.attemptId,
-      childCount: NonNegativeInt.make(1),
-      elapsedMillis: NonNegativeInt.make(1),
+      childCount: S.Natural.make(1),
+      elapsedMillis: S.Natural.make(1),
       family: "mail",
-      inputBytes: NonNegativeInt.make(3),
+      inputBytes: S.Natural.make(3),
       mailScope: "full",
       objectId,
-      outputBytes: NonNegativeInt.make(3),
+      outputBytes: S.Natural.make(3),
       postProcessSha256: sha("mail-source"),
       recordType: "mail-store-pass",
       sha256: sha("mail-output"),
-      warningCount: NonNegativeInt.make(0),
+      warningCount: S.Natural.make(0),
     });
     const child = TransformationLedgerRecord.cases["mail-child-pass"].make({
       ...identity,
@@ -2658,7 +2660,7 @@ else exit 92; fi
       mailScope: "full",
       recordType: "mail-child-pass",
       sha256: sha("mail-child"),
-      sizeBytes: NonNegativeInt.make(3),
+      sizeBytes: S.Natural.make(3),
       sourceObjectId: objectId,
     });
     const summary = familySummary("mail", 1, 0, 1);
@@ -2670,7 +2672,7 @@ else exit 92; fi
     expect(RT.safeAttemptId("bad/name")).toBe(false);
     expect(RT.safeAttemptId("bad\\name")).toBe(false);
     expect(RT.mailPassReconciles(pass, [child], [])).toBe(true);
-    expect(RT.mailPassReconciles({ ...pass, childCount: NonNegativeInt.make(0) }, [child], [])).toBe(false);
+    expect(RT.mailPassReconciles({ ...pass, childCount: S.Natural.make(0) }, [child], [])).toBe(false);
     expect(RT.mailPassReconciles(pass, [{ ...child, childRelativePath: "duplicate" }, child], [])).toBe(false);
     expect(RT.mailTerminalCountsReconcile(summary, [pass], [])).toBe(true);
     expect(RT.mailTerminalIdentitiesReconcile([pass])).toBe(true);
@@ -2695,7 +2697,7 @@ else exit 92; fi
       message: "Password protected",
       objectId,
       recordType: "mail-store-exception",
-      retainedOutputBytes: NonNegativeInt.make(0),
+      retainedOutputBytes: S.Natural.make(0),
       retainedOutputSha256: sha(""),
       sourceFamily: "pst",
     });
@@ -2721,10 +2723,10 @@ else exit 92; fi
       family: "mail",
       mailScope: "full",
       recordType: "family-attempt-interrupted",
-      retainedOutputBytes: NonNegativeInt.make(0),
+      retainedOutputBytes: S.Natural.make(0),
       retainedOutputRelativePath: "attempts/interrupted.partial",
       retainedOutputSha256: sha(""),
-      retryOrdinal: NonNegativeInt.make(0),
+      retryOrdinal: S.Natural.make(0),
       sourceId: "interrupted-object",
     });
     expect(RT.mailOwnedEvidenceReconciles([], [exception], [], [], [warning])).toBe(true);
@@ -2767,7 +2769,7 @@ else exit 92; fi
         mailScope: "full",
         recordType: "mail-child-pass",
         sha256: childSha256,
-        sizeBytes: NonNegativeInt.make(3),
+        sizeBytes: S.Natural.make(3),
         sourceObjectId: "mail-object",
       });
     const copied = child(repair.derivedRelativePath, digest);
@@ -2803,7 +2805,7 @@ else exit 92; fi
     });
     const join = TransformationLedgerRecord.cases["recycle-join"].make({
       ...identity,
-      count: NonNegativeInt.make(1),
+      count: S.Natural.make(1),
       family: "recycle",
       joinClass: "valid-pair",
       recordType: "recycle-join",
@@ -2823,7 +2825,7 @@ else exit 92; fi
       RT.recycleSegmentReconciles(recycleSummary, [
         recycleRunStart,
         recycleStart,
-        { ...join, count: NonNegativeInt.make(2) },
+        { ...join, count: S.Natural.make(2) },
         mapping,
       ])
     ).toBe(false);
@@ -2890,7 +2892,7 @@ else exit 92; fi
         const collectorRow = yield* encodeCollectorManifestRecordJson(
           CollectorManifestRecord.cases.copied.make({
             dst: "F:\\salvage\\$Recycle.Bin\\surface-a\\$Rstore.pst",
-            size: NonNegativeInt.make(mailBytes.length),
+            size: S.Natural.make(mailBytes.length),
             src: "C:\\source\\mail-store.pst",
             status: "copied",
           })
@@ -2994,22 +2996,22 @@ printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
             absentRecycleTreePath: absentTree,
             capacityCeilingBytes: PosInt.make(10 * 1024 * 1024),
             chunkSizeBytes: PosInt.make(4_096),
-            collectorDestinationPrefixSegments: NonNegativeInt.make(2),
+            collectorDestinationPrefixSegments: S.Natural.make(2),
             corpusRoot,
-            expectedCollectorCopiedCount: NonNegativeInt.make(1),
-            expectedCollectorErrorCount: NonNegativeInt.make(0),
-            expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
-            expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(1),
-            expectedCollectorResumedCount: NonNegativeInt.make(0),
-            expectedCollectorRowCount: NonNegativeInt.make(1),
-            expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(1),
-            expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
-            expectedMutatedDestinationCount: NonNegativeInt.make(0),
-            expectedRootArchiveBytes: NonNegativeInt.make("verbatim-root-archive".length),
-            expectedSourceDirectoryCount: NonNegativeInt.make(3),
-            expectedSourceFileCount: NonNegativeInt.make(1),
-            expectedSourceTreeBytes: NonNegativeInt.make(mailBytes.length),
-            minimumFreeAfterBytes: NonNegativeInt.make(0),
+            expectedCollectorCopiedCount: S.Natural.make(1),
+            expectedCollectorErrorCount: S.Natural.make(0),
+            expectedCollectorExcludedSecretCount: S.Natural.make(0),
+            expectedCollectorPresentSuccessfulRowCount: S.Natural.make(1),
+            expectedCollectorResumedCount: S.Natural.make(0),
+            expectedCollectorRowCount: S.Natural.make(1),
+            expectedCollectorUniqueSuccessfulDestinationCount: S.Natural.make(1),
+            expectedMissingRecyclePayloadCount: S.Natural.make(0),
+            expectedMutatedDestinationCount: S.Natural.make(0),
+            expectedRootArchiveBytes: S.Natural.make("verbatim-root-archive".length),
+            expectedSourceDirectoryCount: S.Natural.make(3),
+            expectedSourceFileCount: S.Natural.make(1),
+            expectedSourceTreeBytes: S.Natural.make(mailBytes.length),
+            minimumFreeAfterBytes: S.Natural.make(0),
             rootArchivePath: rootArchive,
             runLabel: preservationRunLabel,
             sourceManifestPath: collectorManifest,
@@ -3019,7 +3021,7 @@ printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
           RestorationMailOptions.make({
             bwrapPath,
             corpusRoot,
-            expectedStoreCount: NonNegativeInt.make(expectedStoreCount),
+            expectedStoreCount: S.Natural.make(expectedStoreCount),
             javaPath: tikaPath,
             maxAmplificationRatio: 10,
             maxElapsedMillis: PosInt.make(30_000),
@@ -3034,8 +3036,8 @@ printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
         const recycleOptions = (recycleRunLabel: string, expectedSurfaceCount = 1, maxTotalOutputBytes = 1024 ** 3) =>
           RestorationRecycleOptions.make({
             corpusRoot,
-            expectedMissingContentCount: NonNegativeInt.make(0),
-            expectedSurfaceCount: NonNegativeInt.make(expectedSurfaceCount),
+            expectedMissingContentCount: S.Natural.make(0),
+            expectedSurfaceCount: S.Natural.make(expectedSurfaceCount),
             maxTotalElapsedMillis: PosInt.make(30_000),
             maxTotalOutputBytes: PosInt.make(maxTotalOutputBytes),
             runLabel: recycleRunLabel,
@@ -3046,7 +3048,7 @@ printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
             converterPath,
             corpusRoot,
             expectedConverterVersion: "LibreOffice synthetic 1.0",
-            expectedOccurrenceCount: NonNegativeInt.make(expectedOccurrenceCount),
+            expectedOccurrenceCount: S.Natural.make(expectedOccurrenceCount),
             maxElapsedMillis: PosInt.make(30_000),
             maxTotalElapsedMillis: PosInt.make(30_000),
             maxTotalOutputBytes: PosInt.make(maxTotalOutputBytes),

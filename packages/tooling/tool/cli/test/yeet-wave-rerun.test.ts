@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   appendYeetInboxRow,
   GreptileSummary,
@@ -49,7 +50,6 @@ import {
   yeetRedSetKeyGained,
   yeetWaveRedSetKey,
 } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -71,6 +71,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { waitTimesOut } from "./support/ProofJobWait.ts";
 import type {
   ProofJobLauncherShape,
   ProofJobWaitResult,
@@ -126,6 +127,7 @@ const snapshot = (root: string, checks: ReadonlyArray<YeetWatchCheck>, state: st
     mergeable: true,
     mergeStateAcceptable: true,
     reviewDecisionAcceptable: true,
+    closeoutGatesPassed: true,
     greptileScore: O.none(),
   });
   return YeetStatusSnapshot.make({
@@ -569,11 +571,14 @@ const gateLineOf = (result: ProofJobWaitResult, jobId: UUID) =>
     ? O.some(renderYeetPrWaveLine(result.wave, "job-wait", `bun run beep yeet job wait ${jobId}`))
     : O.none<string>();
 
-// The waits that must not return time out against the live clock, so this
-// block runs without the test services, as the proof-job wait tests do.
+// The block runs on the TestClock, so no wait races a loaded runner: a wait that
+// must return finds its wave on the first poll and never touches the clock, and
+// a wait that must not return is driven past its timeout only after one whole
+// poll found nothing to hand back.
 const quick = ProofJobWaitOptions.make({ timeoutMs: O.some(60), pollIntervalMs: 1 });
+const awaitReturn = ProofJobWaitOptions.make({ timeoutMs: O.none(), pollIntervalMs: 1 });
 
-it.layer(platform, { timeout: "30 seconds", excludeTestServices: true })("job wait on a changed red set", (it) => {
+it.layer(platform, { timeout: "30 seconds" })("job wait on a changed red set", (it) => {
   it.effect("hands a rerun that came back red on the same head back as a second wave, and the same red set never", () =>
     Effect.gen(function* () {
       const root = yield* checkout;
@@ -582,7 +587,7 @@ it.layer(platform, { timeout: "30 seconds", excludeTestServices: true })("job wa
       const bind = binder(launcher, jobId);
 
       strictEqual(yield* runUntilReady(root, [red(1)], "detached", bind), "closed");
-      const first = yield* launcher.wait(jobId, quick);
+      const first = yield* launcher.wait(jobId, awaitReturn);
       strictEqual(exitOf(first), 2);
       const [lint] = yield* checkFailedRows(root);
       if (lint === undefined) return yield* Effect.die("expected the Lint row");
@@ -590,7 +595,7 @@ it.layer(platform, { timeout: "30 seconds", excludeTestServices: true })("job wa
 
       // The same head's Lint failed again on a new run: no new row, a new wave.
       strictEqual(yield* runUntilReady(root, [red(2)], "detached", bind), "closed");
-      const second = yield* launcher.wait(jobId, quick);
+      const second = yield* launcher.wait(jobId, awaitReturn);
       strictEqual(exitOf(second), 2);
       // The same gate line: the same live row, handed back again.
       deepStrictEqual(gateLineOf(second, jobId), gateLineOf(first, jobId));
@@ -601,7 +606,7 @@ it.layer(platform, { timeout: "30 seconds", excludeTestServices: true })("job wa
 
       // Unchanged red set: the re-run waits past it.
       strictEqual(yield* runUntilReady(root, [red(2)], "detached", bind), "closed");
-      assertInclude((yield* Effect.flip(launcher.wait(jobId, quick))).message, "Timed out");
+      yield* waitTimesOut(launcher, jobId, quick);
       assertFalse((yield* readYeetAckState(root, lint.id)).acked);
     })
   );
@@ -615,15 +620,15 @@ it.layer(platform, { timeout: "30 seconds", excludeTestServices: true })("job wa
 
       // A rate-limited Vercel deployment: optional, a P1 row, never a wave.
       strictEqual(yield* runUntilReady(root, [red(1, "Vercel", false), green("Lint")], "detached", bind), "closed");
-      assertInclude((yield* Effect.flip(launcher.wait(jobId, quick))).message, "Timed out");
+      yield* waitTimesOut(launcher, jobId, quick);
 
       const comment = yield* commentRow(root, 45);
-      const woken = yield* launcher.wait(jobId, quick);
+      const woken = yield* launcher.wait(jobId, awaitReturn);
       strictEqual(exitOf(woken), 2);
       deepStrictEqual(woken.kind === "wave" ? A.map(woken.wave.entries, (entry) => entry.row.id) : [], [comment.id]);
 
       strictEqual(yield* runUntilReady(root, [red(1, "Vercel", false), red(1)], "detached", bind), "closed");
-      const required = yield* launcher.wait(jobId, quick);
+      const required = yield* launcher.wait(jobId, awaitReturn);
       strictEqual(exitOf(required), 2);
       deepStrictEqual(
         required.kind === "wave" ? A.map(required.wave.entries, (entry) => [entry.row.kind, entry.row.severity]) : [],

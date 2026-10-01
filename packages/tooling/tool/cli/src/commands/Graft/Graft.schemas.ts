@@ -5,8 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
-import { DurationUnit } from "@beep/schema/Duration";
+import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { pipe } from "effect";
 import * as A from "effect/Array";
@@ -14,6 +13,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "../../internal/schema/PosInt.ts";
 import { SystemdUnitPath } from "../../internal/systemd/index.ts";
 
 const $I = $RepoCliId.create("commands/Graft/Graft.schemas");
@@ -171,9 +171,9 @@ export class GraftCacheSyncPlan extends S.Class<GraftCacheSyncPlan>($I`GraftCach
  * **Example** (Construct an empty receipt)
  *
  * ```ts import.meta.vitest name="Construct an empty receipt"
+ * import * as S from "effect/Schema"
  * import { GraftCacheSyncPlan, GraftCacheSyncReport } from "@beep/repo-cli/commands/Graft"
- * import { NonNegativeInt } from "@beep/schema/Number"
- * const zero = NonNegativeInt.make(0)
+ * const zero = S.Natural.make(0)
  * const report = GraftCacheSyncReport.make({
  *   plan: GraftCacheSyncPlan.make({ source: "/clones/a", entries: [] }),
  *   copied: zero, removed: zero, skipped: zero, refused: zero, bytes: zero
@@ -187,11 +187,11 @@ export class GraftCacheSyncPlan extends S.Class<GraftCacheSyncPlan>($I`GraftCach
 export class GraftCacheSyncReport extends S.Class<GraftCacheSyncReport>($I`GraftCacheSyncReport`)(
   {
     plan: GraftCacheSyncPlan,
-    copied: NonNegativeInt,
-    removed: NonNegativeInt,
-    skipped: NonNegativeInt,
-    refused: NonNegativeInt,
-    bytes: NonNegativeInt,
+    copied: S.Natural,
+    removed: S.Natural,
+    skipped: S.Natural,
+    refused: S.Natural,
+    bytes: S.Natural,
   },
   $I.annote("GraftCacheSyncReport", {
     description: "Applied sync plan with copy, removal, skip, and refusal counts and exact bytes copied.",
@@ -284,12 +284,12 @@ export type GraftDeepRefreshOutcome = typeof GraftDeepRefreshOutcome.Type;
  * **Example** (Describe a 98% build)
  *
  * ```ts import.meta.vitest name="Describe a 98% build"
+ * import * as S from "effect/Schema"
  * import { GraftDeepCoverage } from "@beep/repo-cli/commands/Graft"
- * import { NonNegativeInt } from "@beep/schema/Number"
  * const coverage = GraftDeepCoverage.make({
- *   covered: NonNegativeInt.make(38_520),
- *   total: NonNegativeInt.make(39_115),
- *   failedFiles: NonNegativeInt.make(1),
+ *   covered: S.Natural.make(38_520),
+ *   total: S.Natural.make(39_115),
+ *   failedFiles: S.Natural.make(1),
  * })
  * console.log(coverage.covered) // 38520
  * ```
@@ -298,7 +298,7 @@ export type GraftDeepRefreshOutcome = typeof GraftDeepRefreshOutcome.Type;
  * @since 0.0.0
  */
 export class GraftDeepCoverage extends S.Class<GraftDeepCoverage>($I`GraftDeepCoverage`)(
-  { covered: NonNegativeInt, total: NonNegativeInt, failedFiles: NonNegativeInt },
+  { covered: S.Natural, total: S.Natural, failedFiles: S.Natural },
   $I.annote("GraftDeepCoverage", {
     description: "Symbol coverage and failed-summary counts parsed from a deep build's output.",
   })
@@ -407,9 +407,11 @@ export const parseDeepCoverage = (text: string): O.Option<GraftDeepCoverage> => 
  * **Example** (Configure a nightly run)
  *
  * ```ts import.meta.vitest name="Configure a nightly run"
+ * import * as S from "effect/Schema"
  * import { GraftDeepRefreshOptions } from "@beep/repo-cli/commands/Graft"
- * import { PosInt } from "@beep/schema/Int"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  * const options = GraftDeepRefreshOptions.make({
  *   owner: "/clones/beep-effect0",
  *   jobs: PosInt.make(16),
@@ -452,12 +454,12 @@ export class GraftDeepRefreshOptions extends S.Class<GraftDeepRefreshOptions>($I
  * **Example** (Record a rebuilt clone)
  *
  * ```ts import.meta.vitest name="Record a rebuilt clone"
+ * import * as S from "effect/Schema"
  * import { GraftDeepSiblingRebuild } from "@beep/repo-cli/commands/Graft"
- * import { NonNegativeInt } from "@beep/schema/Number"
  * const rebuilt = GraftDeepSiblingRebuild.make({
  *   root: "/clones/beep-effect2",
  *   exitCode: 0,
- *   seconds: NonNegativeInt.make(42),
+ *   seconds: S.Natural.make(42),
  * })
  * console.log(rebuilt.exitCode) // 0
  * ```
@@ -466,7 +468,7 @@ export class GraftDeepRefreshOptions extends S.Class<GraftDeepRefreshOptions>($I
  * @since 0.0.0
  */
 export class GraftDeepSiblingRebuild extends S.Class<GraftDeepSiblingRebuild>($I`GraftDeepSiblingRebuild`)(
-  { root: S.String, exitCode: S.Int, seconds: NonNegativeInt },
+  { root: S.String, exitCode: S.Int, seconds: S.Natural },
   $I.annote("GraftDeepSiblingRebuild", {
     description: "Exit status and wall time of one seeded clone's structural rebuild.",
   })
@@ -484,8 +486,10 @@ export class GraftDeepSiblingRebuild extends S.Class<GraftDeepSiblingRebuild>($I
  * **Example** (Describe an in-flight run)
  *
  * ```ts import.meta.vitest name="Describe an in-flight run"
+ * import * as S from "effect/Schema"
  * import { GraftDeepRefreshStatus } from "@beep/repo-cli/commands/Graft"
- * import { PosInt } from "@beep/schema/Int"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  * const status = GraftDeepRefreshStatus.make({
  *   schemaVersion: "beep-graft-deep-refresh/v1",
  *   owner: "/clones/beep-effect0",
@@ -663,8 +667,30 @@ export const GraftDeepCaptureSource = LiteralKit(["all", "merge", "stdout"]).pip
 export type GraftDeepCaptureSource = typeof GraftDeepCaptureSource.Type;
 
 // A duration the child-process runner accepts verbatim; constraining the field
-// to this shape is what keeps an unparseable bound out of a spawned step.
-const DurationExpression = S.TemplateLiteral([S.Finite, " ", DurationUnit]);
+// to this shape is what keeps an unparseable bound out of a spawned step. The
+// units are `Duration.Unit`, which upstream exports as a type only.
+const DurationExpression = S.TemplateLiteral([
+  S.Finite,
+  " ",
+  S.Literals([
+    "nano",
+    "nanos",
+    "micro",
+    "micros",
+    "milli",
+    "millis",
+    "second",
+    "seconds",
+    "minute",
+    "minutes",
+    "hour",
+    "hours",
+    "day",
+    "days",
+    "week",
+    "weeks",
+  ]),
+]);
 
 /**
  * One subprocess a refresh run needs, named by the phase that owns it.

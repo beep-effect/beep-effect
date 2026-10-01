@@ -27,7 +27,6 @@ import {
 } from "@beep/repo-cli/commands/Lint";
 import { formatJsonc } from "@beep/repo-cli/test/Artifacts";
 import { renderKnowledgeRefsCheckSection } from "@beep/repo-cli/test/Knowledge";
-import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -37,6 +36,7 @@ import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import type {
@@ -629,7 +629,7 @@ describe("knowledge refs check gate", () => {
       expect(A.length(knowledgeRefsLiveDebt(report))).toBe(2);
       assertSome(
         O.map(knowledgeRefsCheckFailure(report), (error) => error.liveDebtCount),
-        NonNegativeInt.make(2)
+        S.Natural.make(2)
       );
       const section = renderKnowledgeRefsCheckSection(report);
       expect(Str.startsWith("check: 2 live gated observation(s)")(section)).toBe(true);

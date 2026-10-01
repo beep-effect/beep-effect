@@ -12,7 +12,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
@@ -101,7 +100,7 @@ export declare namespace McpJsonFile {
  */
 export class ClaudeJsonProject extends S.Class<ClaudeJsonProject>($I`ClaudeJsonProject`)(
   {
-    mcpServers: S.OptionFromOptionalKey(S.Record(S.String, McpServerConfig)).pipe(SchemaUtils.withNoneDefault),
+    mcpServers: S.OptionFromOptionalKey(S.Record(S.String, McpServerConfig)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ClaudeJsonProject", {
     description: "Project-scoped MCP configuration inside Claude's user file.",
@@ -156,8 +155,8 @@ export declare namespace ClaudeJsonProject {
  */
 export class ClaudeJsonFile extends S.Class<ClaudeJsonFile>($I`ClaudeJsonFile`)(
   {
-    mcpServers: S.OptionFromOptionalKey(S.Record(S.String, McpServerConfig)).pipe(SchemaUtils.withNoneDefault),
-    projects: S.OptionFromOptionalKey(S.Record(S.String, ClaudeJsonProject)).pipe(SchemaUtils.withNoneDefault),
+    mcpServers: S.OptionFromOptionalKey(S.Record(S.String, McpServerConfig)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    projects: S.OptionFromOptionalKey(S.Record(S.String, ClaudeJsonProject)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ClaudeJsonFile", {
     description: "MCP-relevant portions of Claude's user configuration file.",
