@@ -1,5 +1,6 @@
 import { $SchemaId } from "@beep/identity/packages";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
+import { staticDescriptorInstaller } from "@beep/schema/SchemaUtils/internal/staticDescriptors";
 import { alwaysEquivalent } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
@@ -76,5 +77,47 @@ describe("withStatics", () => {
 
     expect(TenantName.empty).toBe("");
     expect(S.is(TenantName)("tenant")).toBe(true);
+  });
+
+  it("keeps an identical existing static and replaces a configurable one", () => {
+    const shared = (): string => "shared";
+    const target = { keep: shared, replace: "old" };
+    const attached = SchemaUtils.withStatics(target, () => ({ keep: shared, replace: "new" }));
+
+    expect(attached.keep).toBe(shared);
+    expect(attached.replace).toBe("new");
+  });
+
+  it("skips an identical existing static when no owner preserves it", () => {
+    const target = { same: 1 };
+    Reflect.defineProperty(target, "same", { value: 1, configurable: false, enumerable: true });
+
+    expect(staticDescriptorInstaller.install(target, { same: 1 }).same).toBe(1);
+  });
+
+  it("copies accessor statics as accessors", () => {
+    const attached = SchemaUtils.withStatics({}, () => ({
+      get computed(): number {
+        return 2;
+      },
+    }));
+
+    expect(attached.computed).toBe(2);
+    expect(Reflect.getOwnPropertyDescriptor(attached, "computed")?.get).toBeTypeOf("function");
+  });
+
+  it("rejects a conflicting non-configurable static", () => {
+    const target = {};
+    Reflect.defineProperty(target, "locked", { value: "old", configurable: false, enumerable: true });
+
+    expect(() => SchemaUtils.withStatics(target, () => ({ locked: "new" }))).toThrow(
+      "Cannot redefine non-configurable static 'locked'."
+    );
+  });
+
+  it("rejects a static on a non-extensible target", () => {
+    const target = Object.preventExtensions({});
+
+    expect(() => SchemaUtils.withStatics(target, () => ({ added: 1 }))).toThrow("Cannot define static 'added'.");
   });
 });
