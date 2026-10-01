@@ -12,7 +12,6 @@
 
 import { $PacerId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { O } from "@beep/utils";
 import { Effect, Layer, Number as N, pipe, Ref } from "effect";
 import * as A from "effect/Array";
@@ -35,6 +34,8 @@ import {
   reportInfoBody,
 } from "./Pacer.mock-data.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $PacerId.create("pacer/transport/Mock");
 
 type MockRequest = Parameters<Parameters<typeof HttpClient.make>[0]>[0];
@@ -43,8 +44,8 @@ const MockIntFromString = S.FiniteFromString.pipe(
   S.check(S.isInt()),
   SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
-const encodeJsonString = UnknownFromJsonString.encodeUnknownEffect;
-const decodeJsonString = UnknownFromJsonString.decodeUnknownEffect;
+const encodeJsonString = S.encodeUnknownEffect(UnknownJson);
+const decodeJsonString = S.decodeUnknownEffect(UnknownJson);
 const decodeLogoutRequestJson = S.decodeUnknownEffect(S.fromJsonString(CsoLogoutRequest));
 
 /**

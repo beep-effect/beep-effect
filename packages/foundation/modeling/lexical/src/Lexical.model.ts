@@ -18,7 +18,7 @@
 // cspell:word youtu
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
-import { Defect, LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, pipe, Result, SchemaGetter, SchemaTransformation, Struct } from "effect";
 import { dual } from "effect/Function";
@@ -3103,7 +3103,7 @@ export class LexicalDecodeError extends S.TaggedError<LexicalDecodeError>($I`Lex
   "LexicalDecodeError",
   {
     message: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
   },
   $I.annoteError<LexicalDecodeError>("LexicalDecodeError", {
     description: "Typed failure raised when a Lexical semantic or wire payload cannot be decoded.",

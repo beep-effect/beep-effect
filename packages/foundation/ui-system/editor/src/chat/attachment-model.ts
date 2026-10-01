@@ -19,7 +19,7 @@
  */
 
 import { $EditorId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { ImageMimeType, MimeType } from "@beep/schema/MimeType";
 import { dual, P } from "@beep/utils";
 import { flow, identity, Number as N, Result, SchemaTransformation } from "effect";
@@ -239,7 +239,9 @@ export class AttachmentPortFailed extends S.TaggedError<AttachmentPortFailed>($I
   "AttachmentPortFailed",
   {
     message: S.String.annotateKey({ description: "User-safe upload-port failure message." }),
-    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
+    cause: S.optionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).annotateKey({
       description: "Optional underlying defect retained for structured logs, never rendered directly.",
     }),
   },

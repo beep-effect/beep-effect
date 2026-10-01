@@ -6,14 +6,14 @@
  */
 
 import { $ExiftoolId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $ExiftoolId.create("Exiftool.errors");
-const ExiftoolDefect = Defect({ includeStack: true });
+const ExiftoolDefect = S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent));
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
 // fallow-ignore-next-line code-duplication -- shared driver boundary idiom; no in-family home, future foundation capability candidate
 const isExiftoolDefect = S.is(ExiftoolDefect);

@@ -7,20 +7,23 @@ import {
   WriteTagsRequest,
   WriteXmpPacketRequest,
 } from "@beep/exiftool";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { A, Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
+import { Effect, FileSystem, flow, Layer, Path, pipe, Result, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as S from "effect/Schema";
 
 const encoder = new TextEncoder();
 
 // TODO(effect-native-migration): model schema
-const exiftoolJson = UnknownFromJsonString.encodeUnknownSync([
+const exiftoolJson = flow(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown)),
+  Result.getOrThrow
+)([
   {
     SourceFile: "frame.png",
     "System:FileName": "frame.png",

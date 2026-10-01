@@ -6,17 +6,19 @@
  */
 "use client";
 
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { TooltipProvider } from "@beep/ui/components/ui/tooltip";
 import * as O from "@beep/utils/Option";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { Effect } from "effect";
+import { Effect, flow, Result } from "effect";
+import * as S from "effect/Schema";
 import { editorTheme } from "../../editor/themes/editor-theme.ts";
 import { nodes } from "./nodes.ts";
 import { Plugins } from "./plugins.tsx";
 import type { InitialConfigType } from "@lexical/react/LexicalComposer";
 import type { EditorState, SerializedEditorState } from "lexical";
+
+const encodeUnknownJsonSync = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const editorConfig: InitialConfigType = {
   namespace: "Editor",
@@ -63,7 +65,7 @@ export function Editor({
           // TODO(effect-native-migration): model schema
           ...O.getSomesStruct({
             editorState: O.map(O.fromUndefinedOr(editorSerializedState), (editorSerializedState) =>
-              UnknownFromJsonString.encodeUnknownSync(editorSerializedState)
+              encodeUnknownJsonSync(editorSerializedState)
             ),
           }),
         }}

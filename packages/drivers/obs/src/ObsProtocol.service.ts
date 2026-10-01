@@ -50,7 +50,6 @@ import {
   ObsRequestMessage,
   ObsUnknownEvent,
 } from "./ObsProtocol.models.ts";
-import type { UnknownRecord } from "@beep/schema";
 import type * as Scope from "effect/Scope";
 import type { ObsConfig, ObsConfigInputOptions } from "./Obs.models.ts";
 import type {
@@ -78,7 +77,10 @@ const OBS_WEBSOCKET_CONFIG_HINT =
 
 const webSocketUrl = (config: ObsConfig): string => `ws://${config.host}:${config.port}`;
 
-type PendingRequests = HashMap.HashMap<string, Deferred.Deferred<O.Option<UnknownRecord>, ObsError>>;
+type PendingRequests = HashMap.HashMap<
+  string,
+  Deferred.Deferred<O.Option<Readonly<Record<string, unknown>>>, ObsError>
+>;
 
 /**
  * Input for {@link computeObsAuthentication}.
@@ -246,8 +248,8 @@ export interface ObsProtocolShape {
    */
   readonly request: (
     requestType: ObsRequestType,
-    requestData?: UnknownRecord | undefined
-  ) => Effect.Effect<O.Option<UnknownRecord>, ObsError>;
+    requestData?: Readonly<Record<string, unknown>> | undefined
+  ) => Effect.Effect<O.Option<Readonly<Record<string, unknown>>>, ObsError>;
   /**
    * Subscribe to driver events ahead of triggering an action, so no event
    * can be missed between trigger and first stream pull.
@@ -361,7 +363,9 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
 
   const handleEvent = Effect.fn($I`handleEvent`)((envelope: ObsEventEnvelope) =>
     envelope.eventType === "RecordStateChanged"
-      ? ObsRecordStateChangedData.decodeEffect(O.getOrElse(envelope.eventData, (): UnknownRecord => ({}))).pipe(
+      ? ObsRecordStateChangedData.decodeEffect(
+          O.getOrElse(envelope.eventData, (): Readonly<Record<string, unknown>> => ({}))
+        ).pipe(
           Effect.matchEffect({
             onFailure: (cause) =>
               Effect.logWarning("Failed to decode RecordStateChanged event data; passing through unmodeled.").pipe(
@@ -382,7 +386,7 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
   );
 
   const responseToExit = (envelope: ObsRequestResponseEnvelope) =>
-    Effect.fnUntraced(function* (deferred: Deferred.Deferred<O.Option<UnknownRecord>, ObsError>) {
+    Effect.fnUntraced(function* (deferred: Deferred.Deferred<O.Option<Readonly<Record<string, unknown>>>, ObsError>) {
       if (envelope.requestStatus.result) {
         yield* Deferred.succeed(deferred, envelope.responseData);
         return;
@@ -474,10 +478,10 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
 
   const request = Effect.fn($I`request`)(function* (
     requestType: ObsRequestType,
-    requestData?: UnknownRecord | undefined
-  ): Effect.fn.Return<O.Option<UnknownRecord>, ObsError> {
+    requestData?: Readonly<Record<string, unknown>> | undefined
+  ): Effect.fn.Return<O.Option<Readonly<Record<string, unknown>>>, ObsError> {
     const requestId = yield* Ref.modify(nextRequestId, (current) => [`beep-obs-${current}`, current + 1] as const);
-    const deferred = yield* Deferred.make<O.Option<UnknownRecord>, ObsError>();
+    const deferred = yield* Deferred.make<O.Option<Readonly<Record<string, unknown>>>, ObsError>();
     yield* Ref.update(pending, (map) => HashMap.set(map, requestId, deferred));
     yield* sendMessage(
       ObsRequestMessage.make({

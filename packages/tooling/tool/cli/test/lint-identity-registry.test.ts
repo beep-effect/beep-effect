@@ -8,20 +8,20 @@ import {
 } from "@beep/repo-cli/commands/CreatePackage/internal/LabIdentitySegment";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import { Command } from "effect/cli";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,

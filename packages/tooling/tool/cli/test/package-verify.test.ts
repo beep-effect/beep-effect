@@ -18,7 +18,6 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import { loadYeetInboxView } from "@beep/repo-cli/test/Yeet";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
@@ -30,6 +29,7 @@ import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
@@ -38,7 +38,7 @@ const PlatformLayer = Layer.mergeAll(
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
   FsUtilsLive.pipe(Layer.provideMerge(FileSystemLayer))
 );
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const demoWorkspace = PackageVerifyWorkspace.make({
   name: "@beep/demo",

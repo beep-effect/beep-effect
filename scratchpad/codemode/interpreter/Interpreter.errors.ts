@@ -12,8 +12,7 @@
  */
 
 import { dual } from "effect/Function";
-import type { SafeObject } from "@beep/schema/SafeObject";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import type { SafeObject } from "../Codemode.values.ts";
 import { A, O, P, pipe, Str } from "@beep/utils";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
@@ -33,6 +32,7 @@ import {
 import { containsRuntimeReference } from "./Interpreter.references.ts";
 import { PosInt } from "../PosInt.ts";
 
+const encodeUnknownJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const isErrorConstructorName = S.is(ErrorConstructorName);
 
 const renderUnknown = (value: unknown, property?: "name" | "message"): string =>
@@ -110,7 +110,7 @@ export const normalizeError = (error: unknown): DiagnosticModel =>
             : P.isObject(value) && P.hasProperty(value, "message") && P.isString(value.message)
               ? value.message
               : pipe(
-                  UnknownFromJsonString.encodeUnknownResult(copyOut(value, "json")),
+                  encodeUnknownJsonResult(copyOut(value, "json")),
                   Result.getOrElse(() => renderUnknown(value))
                 );
         return DiagnosticModel.new("ExecutionFailure", `Uncaught: ${message}`);

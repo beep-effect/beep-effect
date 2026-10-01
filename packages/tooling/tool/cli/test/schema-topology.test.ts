@@ -1,13 +1,13 @@
 import { collectSchemaTopologyViolations } from "@beep/repo-cli/test/Lint";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, flow, Result } from "effect";
+import * as S from "effect/Schema";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 it.layer(NodeServices.layer, { timeout: "5 seconds" })("schema topology lint", (it) => {
   it.effect(

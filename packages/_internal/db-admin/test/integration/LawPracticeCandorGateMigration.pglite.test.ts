@@ -6,7 +6,6 @@ import { toCandorDispositionInsert } from "@beep/law-practice-tables/entities/Ca
 import { toIdsSubmissionFactInsert } from "@beep/law-practice-tables/entities/IdsSubmissionFact";
 import { toPatentCitationEventInsert } from "@beep/law-practice-tables/entities/PatentCitationEvent";
 import { makeDrizzle, migrate } from "@beep/postgres";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import {
   fcRuns,
@@ -24,6 +23,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlError from "effect/sql/SqlError";
+
+const encodeJsonEffect = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const decodeUnknownCandorDisposition = S.decodeUnknownEffect(CandorDisposition);
 const decodeUnknownIdsSubmissionFact = S.decodeUnknownEffect(IdsSubmissionFact);
@@ -296,7 +297,7 @@ if (!shouldRunPgliteIntegration) {
                   ? `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, candidate_window, $1::jsonb, content, fees, modeled_from, office_treatment, operative_date, statement, submission_kind, entity_type, id + $2::integer, public_id || $3::text FROM ${table} WHERE id = 1`
                   : `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, actor, $1::jsonb, discovery, grounding, observed_at, possible_duplicate_of, quarantine, reference, supersedes, entity_type, id + $2::integer, public_id || $3::text FROM ${table} WHERE id = 1`;
 
-            const conformantIdentity = yield* UnknownFromJsonString.encodeEffect({
+            const conformantIdentity = yield* encodeJsonEffect({
               applicationNumber: "102014000345678",
               kind: "WipoSt13",
               officeCode: "EP",
@@ -307,7 +308,7 @@ if (!shouldRunPgliteIntegration) {
             );
             expect(accepted).toEqual([{ officeCode: "EP" }]);
 
-            const encodedIdentity = yield* UnknownFromJsonString.encodeEffect(identity);
+            const encodedIdentity = yield* encodeJsonEffect(identity);
             const violation = yield* sql.unsafe(recordSql, [encodedIdentity, 200, "-st13-invalid"]).pipe(Effect.flip);
 
             expect(violation).toBeInstanceOf(SqlError.SqlError);

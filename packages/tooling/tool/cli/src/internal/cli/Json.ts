@@ -5,19 +5,20 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { P } from "@beep/utils";
 import { Context, Effect, Result } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
+import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
 import { noteProcessStreamWriteFailure, writeChunkOnce } from "./Stdout.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $RepoCliId.create("internal/cli/Json");
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
-const encodeJsonResult = UnknownFromJsonString.encodeUnknownResult;
+const encodeJson = S.encodeUnknownEffect(UnknownJson);
+const encodeJsonResult = S.encodeUnknownResult(UnknownJson);
 const COMMAND_JSON_STDOUT_CHUNK_SIZE_BYTES = 8 * 1024;
 const utf8Encoder = new TextEncoder();
 
@@ -153,7 +154,7 @@ export class CliJsonError extends S.TaggedError<CliJsonError>($I`CliJsonError`)(
   "CliJsonError",
   {
     message: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: OpaqueDefect,
   },
   $I.annoteError<CliJsonError>("CliJsonError", {
     description: "Failure raised when a repo-cli command cannot encode a JSON payload.",

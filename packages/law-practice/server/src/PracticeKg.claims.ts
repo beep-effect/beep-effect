@@ -23,9 +23,8 @@ import { PatentApplicationDocument } from "@beep/law-practice-domain/values/Pate
 import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
-import { Defect, Sha256HexFromBytes } from "@beep/schema";
+import { SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Effect, FileSystem, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -53,7 +52,7 @@ const decodeContentDigest = S.decodeUnknownEffect(ContentDigest);
 const decodeOperationId = S.decodeUnknownEffect(OperationId);
 const decodePosixPath = S.decodeUnknownEffect(PosixPath);
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
-const encodeUnknownJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 /**
  * One normalized patent document supplied directly to the claims batch.
@@ -216,7 +215,7 @@ export class PracticeKgClaimsSummary extends S.Class<PracticeKgClaimsSummary>($I
 export class PracticeKgClaimsError extends S.TaggedError<PracticeKgClaimsError>($I`PracticeKgClaimsError`)(
   "PracticeKgClaimsError",
   {
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
     message: S.NonEmptyString,
   },
   $I.annoteError<PracticeKgClaimsError>("PracticeKgClaimsError", {

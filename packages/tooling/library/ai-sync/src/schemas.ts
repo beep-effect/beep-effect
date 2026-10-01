@@ -6,7 +6,7 @@
  */
 
 import { $AiSyncId } from "@beep/identity/packages";
-import { SchemaUtils, UnknownRecord } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, flow, identity, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -227,7 +227,7 @@ export class AgentPluginManifestMetadata extends S.Class<AgentPluginManifestMeta
     name: S.String,
     version: S.String,
     description: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    metadata: UnknownRecord.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    metadata: S.Record(S.String, S.Unknown).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentPluginManifestMetadata", {
     description: "Plugin manifest metadata for documented plugin surfaces.",
