@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "cloud-agent-readiness",
+    "title": "Cloud Agent Readiness",
+    "status": "active",
+    "created": "2026-10-01",
+    "updated": "2026-10-01",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/cloud-agent-readiness",
+  "lifecycle": "active",
+  "mission": "Make a fresh hosted agent container able to install, prove, and publish from this repo without a workstation: pinned bun, reachable registries, host-aware hooks, and a documented publish handoff where gh, systemd, and 1Password do not exist.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "statusNote": "Opened 2026-10-01 at the operator's request after the first cloud probe session could not install dependencies (bun 1.3.14 vs pinned 1.4.2; bun.sh and pkg.pr.new denied by the environment's network policy). Accelerator: runs in parallel, takes no lane slot.",
+  "provenance": {
+    "request": "operator",
+    "captured": "2026-10-01",
+    "note": "Authored directly from a cloud-session probe (research/2026-10-01-container-probe.md); no source exploration. The operator's expiring cloud credits (2026-10-08) are the payback-before-horizon test."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor). Per D4 the cloud session pushes and opens the PR through the GitHub API; the yeet monitor and closeout run operator-side.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/runbooks/agent-pools.md",
+    ".github/actions/setup-monorepo-ci/action.yml",
+    "goals/cloud-agent-readiness/README.md",
+    "goals/cloud-agent-readiness/SPEC.md",
+    "goals/cloud-agent-readiness/PLAN.md",
+    "goals/cloud-agent-readiness/GOAL.md",
+    "goals/cloud-agent-readiness/research/SOURCES.md",
+    "goals/cloud-agent-readiness/research/2026-10-01-container-probe.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/2026-10-01-container-probe.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/cloud-agent-readiness/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete",
+      "exit": "Container probe recorded as research/2026-10-01-container-probe.md (F1-F14); decisions D1-D7 written into SPEC.md."
+    },
+    {
+      "id": "P1",
+      "name": "Toolchain bootstrap",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Harness host awareness",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Publish handoff",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Doctrine",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/cloud-agent-readiness/GOAL.md)\" -le 4000",
+    "jq . goals/cloud-agent-readiness/ops/manifest.json",
+    "rg -n \"cloud-agent-readiness|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/cloud-agent-readiness",
+    "git diff --check -- goals/cloud-agent-readiness",
+    "shellcheck scripts/cloud-session-setup.sh",
+    "bash scripts/cloud-session-setup.sh --check",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The environment cannot be configured to allow pkg.pr.new (D2): report with the preflight output; never vendor or mirror the snapshot.",
+    ".bun-linux-x64.sha256 does not match the release archive for the pinned version: report; never relax the digest check.",
+    "The hook guard would require guessing the host (D3): report instead.",
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
