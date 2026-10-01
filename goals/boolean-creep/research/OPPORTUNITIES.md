@@ -2059,3 +2059,16 @@ cited bounds. Parent falsification retained eight counterexamples, including a g
 at line 34 with its actual expression at line 33. Nearby token matches are diagnostic
 evidence only; require source-aware whole-claim dispositions and exact ranges before sealing
 a receipt. No provisional confirmation was treated as approval.
+
+R54 continuation on 2026-10-01 reached confirmed Cursor Opus exhaustion in
+three bounded workers: `ActionRequiredError: usage limit for Opus`, with the
+subscription reset reported as 2026-10-11. Their partial ledgers were retained.
+The originating Codex orchestrator advanced the approved fallback to
+`grok --model grok-4.7 --effort medium`; `grok models` confirmed the model on
+the existing grok.com login, and each new session recorded `grok-4.7` with
+`medium` effort. Separate author and read-only review workers continued the
+assigned scopes without onward delegation, purchases, overages, or added
+endpoints. R54 approval remains withheld; this route change grants no census,
+P3, ratification, implementation, or closeout credit. A route-aware handoff
+with saved claim coverage and actual model/effort metadata prevents quota
+exhaustion from discarding reviewed work or being mistaken for a campaign gate.
