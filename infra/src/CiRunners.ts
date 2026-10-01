@@ -1054,13 +1054,19 @@ export class CiRunnersStack extends pulumi.ComponentResource {
    * Public subnet id in the first availability zone, resolved only once the
    * subnet is routed to the internet gateway.
    *
-   * **Example** (Hand the routed subnet to the runner controller)
+   * **Example** (Read the routed subnet A id under Pulumi mocks)
    *
    * ```ts
-   * import type { CiRunnersStack } from "@beep/infra"
+   * import { CiRunnersStack } from "@beep/infra"
+   * import * as pulumi from "@pulumi/pulumi"
    *
-   * const controllerSubnetIds = (stack: CiRunnersStack) => [stack.publicSubnetAId]
-   * console.log(controllerSubnetIds)
+   * await pulumi.runtime.setMocks({
+   *   call: () => ({}),
+   *   newResource: ({ name, inputs }) => ({ id: `${name}-id`, state: inputs }),
+   * })
+   *
+   * const stack = new CiRunnersStack("ci-runners")
+   * stack.publicSubnetAId.apply((subnetId) => console.log(subnetId)) // "ci-runners-public-a-id"
    * ```
    *
    * @category resources
@@ -1072,13 +1078,19 @@ export class CiRunnersStack extends pulumi.ComponentResource {
    * Public subnet id in the second availability zone, resolved only once the
    * subnet is routed to the internet gateway.
    *
-   * **Example** (Hand the routed subnet to the runner controller)
+   * **Example** (Read the routed subnet B id under Pulumi mocks)
    *
    * ```ts
-   * import type { CiRunnersStack } from "@beep/infra"
+   * import { CiRunnersStack } from "@beep/infra"
+   * import * as pulumi from "@pulumi/pulumi"
    *
-   * const controllerSubnetIds = (stack: CiRunnersStack) => [stack.publicSubnetBId]
-   * console.log(controllerSubnetIds)
+   * await pulumi.runtime.setMocks({
+   *   call: () => ({}),
+   *   newResource: ({ name, inputs }) => ({ id: `${name}-id`, state: inputs }),
+   * })
+   *
+   * const stack = new CiRunnersStack("ci-runners")
+   * stack.publicSubnetBId.apply((subnetId) => console.log(subnetId)) // "ci-runners-public-b-id"
    * ```
    *
    * @category resources
@@ -1090,13 +1102,19 @@ export class CiRunnersStack extends pulumi.ComponentResource {
    * Public subnet id in the third availability zone, resolved only once the
    * subnet is routed to the internet gateway.
    *
-   * **Example** (Hand the routed subnet to the runner controller)
+   * **Example** (Read the routed subnet C id under Pulumi mocks)
    *
    * ```ts
-   * import type { CiRunnersStack } from "@beep/infra"
+   * import { CiRunnersStack } from "@beep/infra"
+   * import * as pulumi from "@pulumi/pulumi"
    *
-   * const controllerSubnetIds = (stack: CiRunnersStack) => [stack.publicSubnetCId]
-   * console.log(controllerSubnetIds)
+   * await pulumi.runtime.setMocks({
+   *   call: () => ({}),
+   *   newResource: ({ name, inputs }) => ({ id: `${name}-id`, state: inputs }),
+   * })
+   *
+   * const stack = new CiRunnersStack("ci-runners")
+   * stack.publicSubnetCId.apply((subnetId) => console.log(subnetId)) // "ci-runners-public-c-id"
    * ```
    *
    * @category resources
@@ -1108,13 +1126,19 @@ export class CiRunnersStack extends pulumi.ComponentResource {
    * Public subnet id in the fourth availability zone, resolved only once the
    * subnet is routed to the internet gateway.
    *
-   * **Example** (Hand the routed subnet to the runner controller)
+   * **Example** (Read the routed subnet D id under Pulumi mocks)
    *
    * ```ts
-   * import type { CiRunnersStack } from "@beep/infra"
+   * import { CiRunnersStack } from "@beep/infra"
+   * import * as pulumi from "@pulumi/pulumi"
    *
-   * const controllerSubnetIds = (stack: CiRunnersStack) => [stack.publicSubnetDId]
-   * console.log(controllerSubnetIds)
+   * await pulumi.runtime.setMocks({
+   *   call: () => ({}),
+   *   newResource: ({ name, inputs }) => ({ id: `${name}-id`, state: inputs }),
+   * })
+   *
+   * const stack = new CiRunnersStack("ci-runners")
+   * stack.publicSubnetDId.apply((subnetId) => console.log(subnetId)) // "ci-runners-public-d-id"
    * ```
    *
    * @category resources
@@ -1126,13 +1150,19 @@ export class CiRunnersStack extends pulumi.ComponentResource {
    * Public subnet id in the fifth availability zone, resolved only once the
    * subnet is routed to the internet gateway.
    *
-   * **Example** (Hand the routed subnet to the runner controller)
+   * **Example** (Read the routed subnet E id under Pulumi mocks)
    *
    * ```ts
-   * import type { CiRunnersStack } from "@beep/infra"
+   * import { CiRunnersStack } from "@beep/infra"
+   * import * as pulumi from "@pulumi/pulumi"
    *
-   * const controllerSubnetIds = (stack: CiRunnersStack) => [stack.publicSubnetEId]
-   * console.log(controllerSubnetIds)
+   * await pulumi.runtime.setMocks({
+   *   call: () => ({}),
+   *   newResource: ({ name, inputs }) => ({ id: `${name}-id`, state: inputs }),
+   * })
+   *
+   * const stack = new CiRunnersStack("ci-runners")
+   * stack.publicSubnetEId.apply((subnetId) => console.log(subnetId)) // "ci-runners-public-e-id"
    * ```
    *
    * @category resources
