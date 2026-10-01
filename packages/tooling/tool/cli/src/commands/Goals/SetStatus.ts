@@ -58,7 +58,7 @@ import type { GoalPacketMigration } from "./Migration.ts";
 import type { PacketStage } from "./PacketCore/PacketCore.schemas.ts";
 import type { PacketTransitionPlan } from "./PacketCore/PacketTransitionWriter.ts";
 
-const STATUS_DOMAIN = A.join(GoalStatus.Options, " | ");
+const STATUS_DOMAIN = A.join(GoalStatus.literals, " | ");
 
 const applyMigrationPlan = Effect.fn("Goals.applyMigrationPlan")(function* (
   record: GoalPacketRecord,

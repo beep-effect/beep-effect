@@ -252,7 +252,7 @@ const createPrototype = (): ChalkPrototype => {
     },
   });
 
-  for (const styleName of StyleName.Options) {
+  for (const styleName of StyleName.literals) {
     Object.defineProperty(prototype, styleName, {
       get(this: ChalkFunction) {
         const { isEmpty, state, styler } = getBuilderMeta(this);
@@ -268,7 +268,7 @@ const createPrototype = (): ChalkPrototype => {
     });
   }
 
-  for (const modelName of ColorModelName.Options) {
+  for (const modelName of ColorModelName.literals) {
     Object.defineProperty(prototype, modelName, {
       get(this: ChalkFunction) {
         const level = getBuilderMeta(this).state.level;

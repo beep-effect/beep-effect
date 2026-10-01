@@ -442,7 +442,7 @@ export const ProcessManagerCommand = LiteralKit(["systemd"]).pipe(
  * ```ts
  * import { ProcessSessionRootRule } from "@beep/repo-cli/test/RepoRun"
  *
- * console.log(ProcessSessionRootRule.Options) // [ 'session-command', 'chain-top' ]
+ * console.log(ProcessSessionRootRule.literals) // [ 'session-command', 'chain-top' ]
  * ```
  *
  * @category models

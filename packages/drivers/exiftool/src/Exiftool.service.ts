@@ -37,7 +37,7 @@ const validateReadTagsRequest = S.decodeUnknownEffect(S.toType(ReadTagsRequest))
 const validateWriteTagsRequest = S.decodeUnknownEffect(S.toType(WriteTagsRequest));
 const validateWriteXmpPacketRequest = S.decodeUnknownEffect(S.toType(WriteXmpPacketRequest));
 const decodeWritableExtension = S.decodeUnknownOption(ExiftoolWritableExtension);
-const writableExtensionsText = A.join(ExiftoolWritableExtension.Options, ", ");
+const writableExtensionsText = A.join(ExiftoolWritableExtension.literals, ", ");
 type ExiftoolConfigInputOptions = (typeof ExiftoolConfigInput)["~type.make.in"];
 
 /**

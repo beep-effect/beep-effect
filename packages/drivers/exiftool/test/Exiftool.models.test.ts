@@ -264,7 +264,7 @@ describe("@beep/exiftool models", () => {
     expect(source).toContain("TagTable => 'Image::ExifTool::UserDefined::beepQA',");
     expect(source).toContain("1;  # end");
 
-    for (const tagName of BeepQaTagName.Options) {
+    for (const tagName of BeepQaTagName.literals) {
       expect(source).toContain(`    ${tagName} => { },`);
     }
   });

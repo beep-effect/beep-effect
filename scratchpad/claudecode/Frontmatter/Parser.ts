@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { YamlTextToUnknown } from "@beep/schema";
 import { thunk0 } from "@beep/utils";
 import { Effect, FileSystem } from "effect";
+import * as Yaml from "effect/encoding/Yaml";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -141,7 +141,7 @@ const splitFrontmatter = (source: string): O.Option<SplitFrontmatter> => {
   );
 };
 
-const decodeYamlText = S.decodeUnknownEffect(YamlTextToUnknown);
+const decodeYamlText = (yaml: string): Effect.Effect<unknown, unknown> => Effect.try(() => Yaml.parse(yaml));
 
 const decodeYaml: {
   (path: string, yaml: string): Effect.Effect<unknown, FrontmatterParseError>;

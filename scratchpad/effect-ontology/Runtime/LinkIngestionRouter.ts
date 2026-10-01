@@ -34,7 +34,7 @@ const CreateBatchFromLinksBody = S.Struct({
   targetNamespace: S.optionalKey(S.String),
 }).pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
 
-const NonTerminalBatchStage = BatchStage.pick(BatchStage.omitOptions(["Complete", "Failed"]));
+const NonTerminalBatchStage = BatchStage.pick(["Pending", "Preprocessing", "Extracting", "Resolving", "Validating", "Ingesting"]);
 
 class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError>($I`BatchNotTerminalError`)(
   "BatchNotTerminalError",

@@ -497,8 +497,8 @@ export const RequiredMetrics: HashMap.HashMap<CanaryStage, ReadonlyArray<Require
   RequiredMetricEntries
 );
 
-const DocumentParseOutcome = LiteralKit(["parsed", ...DegradedKind.Options]);
-const DocumentExtractionOutcome = LiteralKit(["extracted", ...DegradedKind.Options]);
+const DocumentParseOutcome = LiteralKit(["parsed", ...DegradedKind.literals]);
+const DocumentExtractionOutcome = LiteralKit(["extracted", ...DegradedKind.literals]);
 const DocumentClaimCounts = S.Struct({
   entity: S.Natural,
   relation: S.Natural,

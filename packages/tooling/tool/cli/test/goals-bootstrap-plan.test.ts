@@ -491,7 +491,7 @@ describe("goals plan validation mapping", () => {
   ];
 
   it("maps every blocking doctor finding kind to at least one validation requirement", () => {
-    for (const kind of GoalDoctorFindingKind.Options) {
+    for (const kind of GoalDoctorFindingKind.literals) {
       const requirements = validationRequirementsForGoalDoctorFinding(kind);
       if (A.contains(BLOCKING_KINDS, kind)) {
         expect(A.isReadonlyArrayNonEmpty(requirements)).toBe(true);

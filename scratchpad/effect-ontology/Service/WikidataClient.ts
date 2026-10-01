@@ -112,7 +112,7 @@ export class WikidataRateLimitError extends S.TaggedError<WikidataRateLimitError
  * ```ts
  * import { WikidataMatchType } from "@effect-ontology/Service/WikidataClient"
  *
- * console.log(WikidataMatchType.Options)
+ * console.log(WikidataMatchType.literals)
  * ```
  *
  * @category schemas
@@ -202,7 +202,7 @@ export type WikidataCandidate = typeof WikidataCandidate.Type;
  * ```ts
  * import { WikidataEntityType } from "@effect-ontology/Service/WikidataClient"
  *
- * console.log(WikidataEntityType.Options)
+ * console.log(WikidataEntityType.literals)
  * ```
  *
  * @category schemas

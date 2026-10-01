@@ -460,7 +460,7 @@ export const DateSetterArity = {
  *
  * **Gotchas**
  *
- * Setter names are included via {@link DateSetterName}.Options, so this kit is
+ * Setter names are included via {@link DateSetterName}.literals, so this kit is
  * not getters-only. Dispatch that mutates time must consult {@link DateSetterArity}.
  *
  * **Example** (Admit a getter and a setter)
@@ -501,7 +501,7 @@ export const dateMethods = LiteralKit([
   "getUTCSeconds",
   "getUTCMilliseconds",
   "getTimezoneOffset",
-  ...DateSetterName.Options,
+  ...DateSetterName.literals,
 ]).pipe(
   $I.annoteSchema("dateMethods", {
     description: "Finite Date.prototype method names, including mutating setters.",

@@ -636,7 +636,7 @@ export const loadYeetInboxRowIds = Effect.fn("Yeet.loadYeetInboxRowIds")(functio
  * ```ts
  * import { YeetPrWaveReturn } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetPrWaveReturn.Options) // ["job-wait", "attached-monitor"]
+ * console.log(YeetPrWaveReturn.literals) // ["job-wait", "attached-monitor"]
  * ```
  *
  * @category models

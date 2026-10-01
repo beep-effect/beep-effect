@@ -35,8 +35,8 @@ const decodeTurboCachePlanEffect = S.decodeEffect(TurboCachePlan);
 const decodeTurboCachePlanJson = S.decodeEffect(S.fromJsonString(TurboCachePlan));
 const encodeTurboCachePlanJson = S.encodeEffect(S.fromJsonString(TurboCachePlan));
 
-const REMOTE_READ_MODE = TurboCacheMode.Enum.LocalWriteRemoteRead;
-const LOCAL_ONLY_ARG = `--cache=${TurboCacheMode.Enum.LocalOnly}`;
+const REMOTE_READ_MODE = TurboCacheMode.Enum["local:rw,remote:r"];
+const LOCAL_ONLY_ARG = `--cache=${TurboCacheMode.Enum["local:rw"]}`;
 const REMOTE_READ_ARG = `--cache=${REMOTE_READ_MODE}`;
 
 const environmentWith = (token: TurboCacheValueSource, cache: string): TurboCacheEnvironment =>
@@ -141,7 +141,7 @@ describe("turbo cache plan resolution", () => {
 
 describe("turbo cache control arguments", () => {
   it("limits secret-session references to Turbo's endpoint, token, and team", () => {
-    expect(TurboCacheSecretEnvName.Options).toEqual(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"]);
+    expect(TurboCacheSecretEnvName.literals).toEqual(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"]);
   });
 
   it.each(["--filter=@beep/schema", "--concurrency=3", "--summarize", "check", "--cache-dir=.turbo"])(
@@ -207,13 +207,13 @@ describe("run-time local-only degradation", () => {
 describe("turboCachePullRequestPosture", () => {
   it("names every Turbo cache env name, scrubs the credentials, and pins local-only", () => {
     expect(A.sort(R.keys(turboCachePullRequestPosture), Str.Order)).toEqual(
-      A.sort(TurboCacheEnvName.Options, Str.Order)
+      A.sort(TurboCacheEnvName.literals, Str.Order)
     );
-    A.forEach(TurboCacheSecretEnvName.Options, (name) => {
+    A.forEach(TurboCacheSecretEnvName.literals, (name) => {
       expect(turboCachePullRequestPosture).toHaveProperty(name);
       expect(turboCachePullRequestPosture[name]).toBeUndefined();
     });
-    expect(turboCachePullRequestPosture.TURBO_CACHE).toBe(TurboCacheMode.Enum.LocalOnly);
+    expect(turboCachePullRequestPosture.TURBO_CACHE).toBe(TurboCacheMode.Enum["local:rw"]);
   });
 });
 

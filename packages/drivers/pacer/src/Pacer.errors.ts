@@ -13,9 +13,9 @@
 
 import { $PacerId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import * as HttpStatus from "@beep/schema/HttpStatus";
 import { O } from "@beep/utils";
 import { Match } from "effect";
+import * as HttpStatus from "effect/http/HttpStatus";
 import * as S from "effect/Schema";
 
 const $I = $PacerId.create("pacer/Pacer.errors");
@@ -213,11 +213,11 @@ export class PacerPclError extends S.TaggedError<PacerPclError>($I`PacerPclError
   static readonly fromStatus = (status: number, description?: string): PacerPclError =>
     PacerPclError.make({
       reason: Match.value(status).pipe(
-        Match.when(HttpStatus.BadRequest.literal, () => PacerPclErrorReason.Enum["bad-request"]),
-        Match.when(HttpStatus.Unauthorized.literal, () => PacerPclErrorReason.Enum.unauthorized),
-        Match.when(HttpStatus.NotFound.literal, () => PacerPclErrorReason.Enum["not-found"]),
-        Match.when(HttpStatus.NotAcceptable.literal, () => PacerPclErrorReason.Enum["invalid-parameter"]),
-        Match.when(HttpStatus.TooManyRequests.literal, () => PacerPclErrorReason.Enum["too-many-requests"]),
+        Match.when(HttpStatus.fromLiteral("BadRequest"), () => PacerPclErrorReason.Enum["bad-request"]),
+        Match.when(HttpStatus.fromLiteral("Unauthorized"), () => PacerPclErrorReason.Enum.unauthorized),
+        Match.when(HttpStatus.fromLiteral("NotFound"), () => PacerPclErrorReason.Enum["not-found"]),
+        Match.when(HttpStatus.fromLiteral("NotAcceptable"), () => PacerPclErrorReason.Enum["invalid-parameter"]),
+        Match.when(HttpStatus.fromLiteral("TooManyRequests"), () => PacerPclErrorReason.Enum["too-many-requests"]),
         Match.orElse(() => PacerPclErrorReason.Enum["server-error"])
       ),
       status: S.Natural.make(status),

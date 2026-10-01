@@ -130,7 +130,7 @@ describe("package-local law project", { concurrent: false }, () => {
         const report = yield* scanLawsPackage(scope);
         expect(report.projectSourceFileCount).toBe(2);
         expect(A.map(report.findings, (finding) => finding.law)).toEqual(
-          LawsPackageLaw.omitOptions(["package-test-imports"])
+          LawsPackageLaw.pick(["terse-effect", "native-runtime", "frozen-grant-set", "effect-fn"]).literals
         );
       }, providePlatform)
     );

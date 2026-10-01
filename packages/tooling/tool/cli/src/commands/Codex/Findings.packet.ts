@@ -110,7 +110,7 @@ const captureSourceCopy: Record<
  */
 const presentSeverities = (counts: CodexSeverityCounts): ReadonlyArray<readonly [string, number]> =>
   A.map(
-    A.filter(CodexFindingSeverity.Options, (severity) => (counts[severity] ?? 0) > 0),
+    A.filter(CodexFindingSeverity.literals, (severity) => (counts[severity] ?? 0) > 0),
     (severity) => [severity, counts[severity] ?? 0] as const
   );
 

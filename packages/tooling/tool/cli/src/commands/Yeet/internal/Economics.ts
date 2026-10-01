@@ -116,7 +116,7 @@ const WRAPPER_LANE_PREFIXES = [
 // case-sensitively for comparability, the receipt proxy lowercased.
 const LOCK_BOUNCE_SENTENCE = "Another Yeet full proof";
 
-const EconomicsComparableMode = LiteralKit(YeetRunMode.pickOptions(["verify", "repair", "publish"])).pipe(
+const EconomicsComparableMode = LiteralKit(YeetRunMode.pick(["verify", "repair", "publish"]).literals).pipe(
   $I.annoteSchema("EconomicsComparableMode", {
     description: "Yeet run modes whose red-to-green episodes are comparable to the A1 article baseline.",
   })
@@ -141,7 +141,7 @@ const EconomicsReceiptProxyClass = LiteralKit([
 // own clock when it sweeps an unfinished start, so their `recordedAt` is the
 // sweep, not the moment the attempt died.
 const EconomicsReconcilerStampedReason = LiteralKit(
-  YeetAttemptTerminationReason.pickOptions(["legacy-unowned-start", "owner-dead", "stale-unverifiable-owner"])
+  YeetAttemptTerminationReason.pick(["legacy-unowned-start", "owner-dead", "stale-unverifiable-owner"]).literals
 ).pipe(
   $I.annoteSchema("EconomicsReconcilerStampedReason", {
     description:

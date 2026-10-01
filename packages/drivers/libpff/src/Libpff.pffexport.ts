@@ -210,7 +210,7 @@ export type PffexportFormat = typeof PffexportFormat.Type;
  * ```ts
  * import { PffexportExistingExportPolicy } from "@beep/libpff"
  *
- * console.log(PffexportExistingExportPolicy.Options.includes("replace")) // true
+ * console.log(PffexportExistingExportPolicy.literals.includes("replace")) // true
  * ```
  *
  * @category schemas

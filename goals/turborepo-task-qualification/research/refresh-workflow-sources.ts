@@ -1,15 +1,16 @@
 // Preserve complete parsed source documents; never execute workflow expressions or steps.
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { decodeYamlTextAs } from "@beep/schema/Yaml";
 import { NodeCrypto } from "@effect/platform-node";
 import { Console, Effect, Order } from "effect";
 import * as A from "effect/Array";
+import * as Yaml from "effect/encoding/Yaml";
 import * as S from "effect/Schema";
 
 // Boundary schemas retain every YAML field. The version-pinning resolver's
 // smaller internal model intentionally omits commands and cannot serve here.
 const Document = S.Record(S.String, S.Unknown);
+const decodeDocument = S.decodeUnknownEffect(Document);
 const Report = S.Struct({
   schemaVersion: S.Literal("cache-workflow-source-snapshot/v1"),
   authority: S.String,
@@ -29,7 +30,7 @@ const files = await Effect.runPromise(
       return {
         path,
         sha256: yield* S.decodeEffect(Sha256HexFromBytes)(bytes),
-        document: yield* decodeYamlTextAs(Document)(text),
+        document: yield* decodeDocument(yield* Effect.try(() => Yaml.parse(text))),
       };
     })
   ).pipe(Effect.provide(NodeCrypto.layer))

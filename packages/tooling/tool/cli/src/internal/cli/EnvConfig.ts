@@ -683,7 +683,7 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
     ...(unresolvedApi ? { TURBO_API: undefined } : {}),
     ...(unresolvedToken ? { TURBO_TOKEN: undefined } : {}),
     ...(unresolvedTeam ? { TURBO_TEAM: undefined } : {}),
-    ...(unresolvedApi || unresolvedToken || unresolvedTeam ? { TURBO_CACHE: TurboCacheMode.Enum.LocalOnly } : {}),
+    ...(unresolvedApi || unresolvedToken || unresolvedTeam ? { TURBO_CACHE: TurboCacheMode.Enum["local:rw"] } : {}),
   };
 });
 
@@ -770,7 +770,7 @@ export const readTurboCacheEnvironment = (
  */
 export const readTurboCacheEnvironmentSync = (): TurboCacheEnvironment =>
   readTurboCacheEnvironment(
-    R.fromIterableWith([...TurboCacheEnvName.Options, ...TURBO_CACHE_DIR_ENV_NAMES], (name) => [
+    R.fromIterableWith([...TurboCacheEnvName.literals, ...TURBO_CACHE_DIR_ENV_NAMES], (name) => [
       name,
       O.getOrUndefined(configStringOptionSync(name)),
     ])

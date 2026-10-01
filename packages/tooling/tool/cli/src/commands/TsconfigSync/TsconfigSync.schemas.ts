@@ -298,7 +298,6 @@ const repoCliSourceOnlyTestKitAliases = [
 const schemaPackageName = "@beep/schema" as const;
 const schemaSourceOnlyTestKitAliases = [
   ["@beep/schema/test/Markdown", "src/internal/test/Markdown.test-kit.ts"],
-  ["@beep/schema/test/Yaml", "src/internal/test/Yaml.test-kit.ts"],
 ] as const satisfies ReadonlyArray<SourceOnlyTestKitAlias>;
 const mcpKitPackageName = "@beep/mcp-kit" as const;
 const mcpKitSourceOnlyTestKitAliases = [

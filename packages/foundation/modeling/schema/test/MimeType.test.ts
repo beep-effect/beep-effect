@@ -53,21 +53,21 @@ describe("MimeType kinds", () => {
   });
 
   it("keeps representative category members on the exported schema kits", () => {
-    expect(MimeType.kinds.Application.Options).toContain("application/json");
-    expect(TextMimeType.Options).toContain("text/html");
-    expect(ImageMimeType.Options).toContain("image/png");
-    expect(AudioMimeType.Options).toContain("audio/mpeg");
+    expect(MimeType.kinds.Application.literals).toContain("application/json");
+    expect(TextMimeType.literals).toContain("text/html");
+    expect(ImageMimeType.literals).toContain("image/png");
+    expect(AudioMimeType.literals).toContain("audio/mpeg");
   });
 
   it("keeps the category kits aligned with the generated IANA media type data", () => {
-    expect(MimeType.Options).toEqual(MimeTypesData.OfficialMimeTypeDataTypeValues);
-    expect(MimeType.kinds.Application.Options).toEqual(
+    expect(MimeType.literals).toEqual(MimeTypesData.OfficialMimeTypeDataTypeValues);
+    expect(MimeType.kinds.Application.literals).toEqual(
       Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.application)
     );
-    expect(MimeType.kinds.Video.Options).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.video));
-    expect(MimeType.kinds.Text.Options).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.text));
-    expect(MimeType.kinds.Image.Options).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.image));
-    expect(MimeType.kinds.Audio.Options).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.audio));
-    expect(MimeType.kinds.Misc.Options).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.misc));
+    expect(MimeType.kinds.Video.literals).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.video));
+    expect(MimeType.kinds.Text.literals).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.text));
+    expect(MimeType.kinds.Image.literals).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.image));
+    expect(MimeType.kinds.Audio.literals).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.audio));
+    expect(MimeType.kinds.Misc.literals).toEqual(Struct.keys(MimeTypesData.OfficialMimeTypeDataByTopLevel.misc));
   });
 });

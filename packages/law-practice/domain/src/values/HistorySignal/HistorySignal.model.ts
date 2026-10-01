@@ -26,7 +26,7 @@ const $I = $LawPracticeDomainId.create("values/HistorySignal/HistorySignal.model
  *
  * Backed by a {@link LiteralKit} so callers get the schema plus derived
  * helpers: `HistorySignal.Enum` for typed literal access, `HistorySignal.is`
- * for per-literal guards, and `HistorySignal.Options` for the full literal
+ * for per-literal guards, and `HistorySignal.literals` for the full literal
  * list.
  *
  * **Example** (Decode Enum and guards)
