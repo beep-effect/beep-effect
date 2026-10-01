@@ -585,6 +585,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
         "    return statics;",
         "  })",
         ");",
+        "export const SpreadConst = S.String.pipe(",
+        "  SchemaUtils.withStatics((schema) => {",
+        "    const base = { guard: S.is(schema) } as const;",
+        "    return { ...base };",
+        "  })",
+        ");",
         "const Other = S.Number;",
         "export const Foreign = S.String.pipe(SchemaUtils.withStatics(() => ({ is: S.is(Other as S.Top) })));",
       ]);
@@ -595,9 +601,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
         "SFV4-codec-static Asserted::asserted@<hash>",
         "SFV4-codec-static Asserted::outer@<hash>",
         "SFV4-codec-static Bound.statics::is@<hash>",
+        "SFV4-codec-static SpreadConst.base::guard@<hash>",
       ]);
       expect(A.map(entries, (entry) => entry.reason)).toEqual(
-        A.map(["cast", "nonNull", "satisfied", "asserted", "outer", "is"], facadeReason)
+        A.map(["cast", "nonNull", "satisfied", "asserted", "outer", "is", "guard"], facadeReason)
       );
     })
   );
