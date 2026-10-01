@@ -3,7 +3,6 @@
  *
  * @since 0.1.0
  */
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -13,6 +12,7 @@ import * as Str from "effect/String";
 import * as HookContext from "../../../../claudecode/Hook/Context.ts";
 import * as PreToolUse from "../../../../claudecode/Hook/Events/PreToolUse.ts";
 import * as Testing from "../../../../claudecode/Testing.ts";
+import { flow, Result } from "effect";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -23,7 +23,7 @@ interface InputOverrides {
   readonly tool_name?: string;
 }
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const makeInputJson = (overrides?: InputOverrides): string =>
   encodeJson({

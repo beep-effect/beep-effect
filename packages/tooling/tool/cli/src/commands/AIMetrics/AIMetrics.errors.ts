@@ -18,10 +18,10 @@ import {
   AiMetricsScorecardError,
   AiMetricsSourceDiscoveryError,
 } from "@beep/repo-ai-metrics";
-import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Effect, Runtime } from "effect";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/AIMetrics/AIMetrics.errors");
 
@@ -47,7 +47,7 @@ export class AiMetricsCommandError extends S.TaggedError<AiMetricsCommandError>(
   "AiMetricsCommandError",
   {
     message: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: OpaqueDefect,
   },
   $I.annoteError<AiMetricsCommandError>("AiMetricsCommandError", {
     description: "User-facing failure raised by the AI metrics CLI command suite.",

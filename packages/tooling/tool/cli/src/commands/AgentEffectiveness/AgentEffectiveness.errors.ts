@@ -6,8 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.errors");
 
@@ -37,7 +37,7 @@ export class AgentEffectivenessEvalScorerError extends S.TaggedError<AgentEffect
     file: S.optionalKey(S.String),
     command: S.optionalKey(S.String),
     exitCode: S.optionalKey(S.Finite),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<AgentEffectivenessEvalScorerError>("AgentEffectivenessEvalScorerError", {
     description: "Operational scorer failure; law and completion findings stay in score reports instead.",

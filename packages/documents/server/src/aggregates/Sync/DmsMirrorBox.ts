@@ -31,7 +31,6 @@ import {
   DmsRemoteItem,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
 import { getSomesStruct } from "@beep/utils/Option";
 import {
   Clock,
@@ -203,7 +202,7 @@ const BoxStreamPosition = S.Union([S.String, S.Finite]).pipe(
 const decodeItemName = S.decodeUnknownEffect(S.NonEmptyString);
 const decodeRemoteItemId = S.decodeUnknownEffect(RemoteItemId);
 const decodeStreamPosition = S.decodeUnknownEffect(BoxStreamPosition);
-const decodeUnknownRecord = S.decodeUnknownEffect(UnknownRecord);
+const decodeUnknownRecord = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
 const encodeBoxEvent = S.encodeUnknownEffect(BoxEventModel);
 const nonEmptyStringOption = S.decodeUnknownOption(S.NonEmptyString);
 const remoteItemIdOption = S.decodeUnknownOption(RemoteItemId);

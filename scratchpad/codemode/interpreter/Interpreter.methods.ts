@@ -10,11 +10,10 @@
  * @since 0.0.0
  */
 
-import { LiteralKit, SafeObject } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { dual } from "effect/Function";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R } from "@beep/utils";
-import { Effect } from "effect";
+import { Effect, flow, Result } from "effect";
 import * as S from "effect/Schema";
 import {
   type ArrayMethod,
@@ -37,6 +36,7 @@ import {
   CodeModeSet,
   type CodeModeURLSearchParams,
   isCodeModeValue,
+  SafeObject,
 } from "../Codemode.values.ts";
 import { dateSetterArgumentCount, invokeDateMethod, invokeDateStatic } from "../stdlib/StdLib.date.ts";
 import { invokeMathMethod } from "../stdlib/StdLib.math.ts";
@@ -74,7 +74,7 @@ import {
   typeofValue,
 } from "./Interpreter.references.ts";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 /**
  * Capability used to invoke guest functions and settle guest promises.

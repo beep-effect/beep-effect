@@ -5,7 +5,6 @@
  *
  * @since 0.1.0
  */
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -35,7 +34,7 @@ const envelope = {
   permission_mode: "default",
 } as const;
 
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 // ---------------------------------------------------------------------------
 // PostToolUse

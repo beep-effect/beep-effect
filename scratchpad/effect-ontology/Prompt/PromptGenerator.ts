@@ -7,8 +7,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { pipe, Result, Effect } from "effect";
+import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import { flow } from "effect/Function";
@@ -33,7 +32,7 @@ const $I = $ScratchpadId.create("effect-ontology/Prompt/PromptGenerator");
 const optionText = (fallback: string): ((value: O.Option<string>) => string) => O.getOrElse(() => fallback);
 
 const renderUnknownJson: (value: unknown) => string = flow(
-  UnknownFromJsonString.encodeUnknownResult,
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown)),
   Result.getOrElse(() => "null")
 );
 

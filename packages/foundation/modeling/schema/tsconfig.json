@@ -18,9 +18,6 @@
       "path": "../../primitive/data/tsconfig.json"
     },
     {
-      "path": "../../primitive/types/tsconfig.json"
-    },
-    {
       "path": "../../../tooling/test-kit/fc-runs/tsconfig.json"
     },
     {

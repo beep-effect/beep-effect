@@ -33,7 +33,7 @@ import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/C
 import { profilePhase } from "@beep/observability/PhaseProfiler";
 import { makeLayer as makePgliteLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
-import { OpaqueUnknown } from "@beep/schema/Opaque";
+import { SchemaUtils } from "@beep/schema";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import * as A from "effect/Array";
@@ -128,7 +128,7 @@ const ViteFileSystemPrefix = "/@fs/";
 export class IncompatiblePgliteDataDir extends S.TaggedError<IncompatiblePgliteDataDir>($I`IncompatiblePgliteDataDir`)(
   "IncompatiblePgliteDataDir",
   {
-    cause: OpaqueUnknown.annotateKey({
+    cause: S.Unknown.pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)).annotateKey({
       description: "Failure raised while probing the existing PGlite data directory.",
     }),
     dataDir: S.String.annotateKey({ description: "PGlite data directory that failed the compatibility probe." }),

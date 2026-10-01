@@ -16,7 +16,6 @@ import type * as Crypto from "effect/Crypto";
  * @since 0.0.0
  */
 
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Cause, Effect, Ref } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -32,6 +31,8 @@ import { sha256Sync } from "../Utils/Hash.ts";
 import { makeCachedPromptFromStructured } from "./PromptCache.ts";
 import type { RetryPolicyInput } from "./Retry.ts";
 import { RetryPolicy, retryEffect } from "./Retry.ts";
+
+const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 /**
  * Options for generateObjectWithRetry
@@ -124,7 +125,7 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
   const retryPolicy = yield* RetryPolicy.decodeEffect({ ...retryPolicyInput, serviceName });
 
   const attemptCount = yield* Ref.make(0);
-  const schemaJson = yield* schema.pipe(S.toJsonSchemaDocument, UnknownFromJsonString.encodeUnknownEffect);
+  const schemaJson = yield* schema.pipe(S.toJsonSchemaDocument, encodeUnknownJsonEffect);
   const schemaHash = yield* sha256Sync(schemaJson);
 
   const attempt = recordProviderAttempt.pipe(
