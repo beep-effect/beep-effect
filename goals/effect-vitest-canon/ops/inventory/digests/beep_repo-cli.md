@@ -500,3 +500,12 @@ The schema parity codemod native integration adds one reviewed EV010 exception.
 The ledger now contains 3,498 rows: 1,985 fixed, fourteen exceptions and 1,499
 open. See research/cli-schema-parity-native-proof.md for compiler provenance
 and Node/Bun verification; historical rows and the baseline remain intact.
+
+
+## Goals doctor fixture ownership
+
+Four historical runtime findings close with source commit `6be36921fe`.
+Six Node/Bun tests preserve twelve assertions; full CLI audit (781.7 seconds)
+and docgen (22.9 seconds) pass. The ledger contains 3,498 rows: 1,989 fixed,
+fourteen exceptions and 1,495 open. Native platform judgment remains open.
+See research/cli-doctor-runtime-resource-proof.md.

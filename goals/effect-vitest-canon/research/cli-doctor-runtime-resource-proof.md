@@ -14,7 +14,8 @@ and Bun (3.43 seconds). Actual test-type diagnostics are empty with exit code
 zero. The root ratchet reports 1,218 files, 2,857 findings, zero introduced and
 2,175 resolved; no baseline refresh was used.
 
-Full CLI package verification is running. Four historical runtime findings
-remain open until that proof is collected. The native platform provenance row
-also remains open for its independent resource judgment. No hosted readiness
-or broader goal completion is claimed.
+Full CLI package verification passes: audit took 781.7 seconds and docgen
+22.9 seconds. The saved command log contains both successful terminal step
+results. Four historical runtime findings close against the source commit
+above. The native platform provenance row remains open for its independent
+resource judgment. No hosted readiness or broader goal completion is claimed.
