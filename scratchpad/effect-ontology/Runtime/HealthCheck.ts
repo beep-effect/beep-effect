@@ -32,7 +32,7 @@ const healthError: "error" = "error";
  * ```ts
  * import { HealthStatus } from "@effect-ontology/Runtime/HealthCheck"
  *
- * console.log(HealthStatus.Options)
+ * console.log(HealthStatus.literals)
  * ```
  *
  * @category schemas
@@ -69,7 +69,7 @@ export type HealthStatus = typeof HealthStatus.Type;
  * ```ts
  * import { HealthCheckStatus } from "@effect-ontology/Runtime/HealthCheck"
  *
- * console.log(HealthCheckStatus.Options)
+ * console.log(HealthCheckStatus.literals)
  * ```
  *
  * @category schemas

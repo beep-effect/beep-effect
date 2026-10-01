@@ -7,7 +7,7 @@
 
 import { $WinkId } from "@beep/identity";
 import { BagOfWords, DefaultBM25Config, DocumentVector, TermFrequency } from "@beep/nlp/Core/Vectorization";
-import { Defect } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Chunk, Context, Effect, Inspectable, Layer, pipe, Ref } from "effect";
 import * as Bool from "effect/Boolean";
@@ -159,7 +159,9 @@ const observeVectorizer = (operation: string) =>
 export class VectorizerError extends S.TaggedError<VectorizerError>($I`VectorizerError`)(
   "VectorizerError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
     message: S.String,
     operation: S.String,
   },

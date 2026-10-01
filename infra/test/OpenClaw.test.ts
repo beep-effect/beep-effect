@@ -29,7 +29,6 @@ import {
   renderOpenClawUnit,
 } from "@beep/infra";
 import { OpenclawSecretReference, OpenclawSha256Hex } from "@beep/openclaw";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
@@ -44,6 +43,8 @@ import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+
+const decodeJsonResult = S.decodeResult(S.fromJsonString(S.Unknown));
 
 const decodeOpenClawHostedProviderConfigResult = S.decodeResult(OpenClawHostedProviderConfig);
 const encodeUnknownOpenClawBackupConfig = S.encodeUnknownEffect(OpenClawBackupConfig);
@@ -134,7 +135,7 @@ const runCrypto = <A, E>(effect: Effect.Effect<A, E, Crypto.Crypto>) =>
 const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
 const defaultGeneration = runCrypto(makeOpenClawGeneration(defaultArgs));
 const parseDocument = (json: string): { readonly [key: string]: unknown } =>
-  O.getOrThrow(pipe(Result.getOrThrow(UnknownFromJsonString.decodeResult(json)), O.liftPredicate(P.isObject)));
+  O.getOrThrow(pipe(Result.getOrThrow(decodeJsonResult(json)), O.liftPredicate(P.isObject)));
 
 /**
  * Unwrap a rendered `/bin/bash --noprofile --norc -p -c '<body>'` command back into the body the

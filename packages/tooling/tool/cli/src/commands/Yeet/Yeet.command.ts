@@ -359,7 +359,7 @@ const inboxUnackedFlag = Flag.Boolean("unacked").pipe(
 
 const inboxSeverityFlagChoices: ReadonlyArray<readonly ["all" | YeetInboxSeverity, "all" | YeetInboxSeverity]> = [
   ["all", "all"],
-  ...A.map(YeetInboxSeverity.Options, (tier) => [tier, tier] as const),
+  ...A.map(YeetInboxSeverity.literals, (tier) => [tier, tier] as const),
 ];
 
 const inboxSeverityFlag = Flag.ChoiceWithValue("severity", inboxSeverityFlagChoices).pipe(

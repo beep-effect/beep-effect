@@ -13,6 +13,7 @@ import {
   ContextSurfaceKind,
   HarnessEditRef,
   HarnessEditRefKind,
+  HarnessHash,
   HarnessLedgerDelta,
   HarnessLedgerRow,
   HarnessLedgerRowId,
@@ -50,7 +51,9 @@ const WindowSessions = S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(1));
  * @category models
  * @since 0.0.0
  */
-export const HarnessLedgerAdmission = LiteralKit(LedgerDisposition.omitOptions(["proposed"])).pipe(
+export const HarnessLedgerAdmission = LiteralKit(
+  LedgerDisposition.pick(["accepted", "rejected", "deferred", "waived", "tombstoned"]).literals
+).pipe(
   $I.annoteSchema("HarnessLedgerAdmission", {
     description: "Human admission outcome recorded by a disposition row.",
   })
@@ -72,13 +75,13 @@ export type HarnessLedgerAdmission = typeof HarnessLedgerAdmission.Type;
  * ```ts
  * import { PrunableSurfaceKind } from "@beep/repo-cli/commands/HarnessLedger"
  *
- * console.log(PrunableSurfaceKind.Options) // ["skill", "hook", "mcp-server"]
+ * console.log(PrunableSurfaceKind.literals) // ["skill", "hook", "mcp-server"]
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const PrunableSurfaceKind = LiteralKit(ContextSurfaceKind.pickOptions(["skill", "hook", "mcp-server"])).pipe(
+export const PrunableSurfaceKind = LiteralKit(ContextSurfaceKind.pick(["skill", "hook", "mcp-server"]).literals).pipe(
   $I.annoteSchema("PrunableSurfaceKind", {
     description: "Pruning surface kinds; hook rows remain decodable, but enumeration waits for execution telemetry.",
   })
@@ -235,7 +238,7 @@ export const parseHarnessEditSpec = Effect.fn("HarnessLedger.parseHarnessEditSpe
  */
 export const parseHarnessSurfaceSpec = Effect.fn("HarnessLedger.parseHarnessSurfaceSpec")(function* (spec: string) {
   const invalid = HarnessLedgerInputError.new(
-    `--touched "${spec}" is not <kind>:<name> with kind one of ${ContextSurfaceKind.Options.join(" | ")}.`
+    `--touched "${spec}" is not <kind>:<name> with kind one of ${ContextSurfaceKind.literals.join(" | ")}.`
   );
   const [kind, name] = yield* Effect.fromOption(splitPrefixed(spec)).pipe(Effect.mapError(() => invalid));
   return yield* decodeSurfaceRef({ kind, name }).pipe(Effect.mapError(() => invalid));
@@ -456,24 +459,40 @@ export class PruneProposal extends S.Class<PruneProposal>($I`PruneProposal`)(
 ) {}
 
 /**
- * Observed hook-pulse window: the last N distinct sessions by newest event,
- * the surface ids they touched, and decode tallies.
+ * Observed hook-pulse window: the last N distinct sessions by newest event
+ * that ran under the current harness hash, the surface ids they touched, and
+ * the sessions skipped to find them.
+ *
+ * **Details**
+ *
+ * A session is in the window only when it carries at least one `SessionStart`
+ * harness-hash stamp and every stamp it carries equals `harnessHash`. A
+ * session restarted across a harness edit carries two stamps and counts in
+ * `sessionsSkippedOutOfRegime`; a session with no stamp at all (written before
+ * the stamp existed, or by a writer that refused to stamp) counts in
+ * `sessionsSkippedUnstamped`. Both counts cover the skipped sessions newer
+ * than the window's oldest session, or every skipped session when the window
+ * is not full.
  *
  * **Example** (Describing an empty window)
  *
  * ```ts
  * import { ObservedSessionWindow } from "@beep/repo-cli/commands/HarnessLedger"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as HashSet from "effect/HashSet"
  * import * as O from "effect/Option"
  *
  * const window = ObservedSessionWindow.make({
+ *   harnessHash: Sha256Hex.make("a".repeat(64)),
  *   sessionsObserved: 0,
+ *   sessionsSkippedOutOfRegime: 0,
+ *   sessionsSkippedUnstamped: 2,
  *   windowEnd: O.none(),
  *   touched: HashSet.empty(),
- *   shardsRead: 0,
+ *   shardsRead: 2,
  *   undecodableLines: 0
  * })
- * console.log(window.sessionsObserved) // 0
+ * console.log(window.sessionsSkippedUnstamped) // 2
  * ```
  *
  * @category models
@@ -481,14 +500,18 @@ export class PruneProposal extends S.Class<PruneProposal>($I`PruneProposal`)(
  */
 export class ObservedSessionWindow extends S.Class<ObservedSessionWindow>($I`ObservedSessionWindow`)(
   {
+    harnessHash: HarnessHash,
     sessionsObserved: S.Finite,
+    sessionsSkippedOutOfRegime: S.Finite,
+    sessionsSkippedUnstamped: S.Finite,
     windowEnd: S.OptionFromOptionalKey(S.DateTimeUtcFromString),
     touched: S.HashSet(S.String),
     shardsRead: S.Finite,
     undecodableLines: S.Finite,
   },
   $I.annote("ObservedSessionWindow", {
-    description: "Last N hook-pulse sessions, the surface ids they touched, and shard decode tallies.",
+    description:
+      "Last N hook-pulse sessions under the current harness hash, their touched surface ids, skip counts, and shard decode tallies.",
   })
 ) {}
 
@@ -497,10 +520,19 @@ export class ObservedSessionWindow extends S.Class<ObservedSessionWindow>($I`Obs
  *
  * **Details**
  *
- * `undecodableLines` counts hook-pulse lines that did not decode as
- * `HookPulseV1`; they are skipped, not fatal. `alreadyProposed` counts
- * zero-touch surfaces skipped because an open `proposed` chain already targets
- * them.
+ * `sessionsObserved` counts only sessions under `harnessHash`, the current
+ * harness hash; the two skip counts say how many newer sessions ran under
+ * another regime or carry no stamp. `undecodableLines` counts hook-pulse lines
+ * that did not decode as `HookPulseV1`; they are skipped, not fatal.
+ * `windowFull` is true when `sessionsObserved` reached `windowSessions`;
+ * `--write` appends only then, and a partial window's proposals are shown but
+ * never written. `alreadyProposed` counts zero-touch surfaces skipped because
+ * an open `proposed` chain already targets them, under any harness.
+ * `decidedUnderHarness` counts those skipped because a chain targeting them
+ * ends in a human decision (`accepted`, `rejected`, `deferred`, `waived`)
+ * recorded under the current harness hash; a decision under an older harness
+ * has expired and does not block, and a tombstone never blocks. `written` is
+ * true only when `--write` appended the proposal rows.
  *
  * **Example** (Checking a dry run)
  *
@@ -516,16 +548,23 @@ export class ObservedSessionWindow extends S.Class<ObservedSessionWindow>($I`Obs
 export class HarnessLedgerPruneReport extends S.Class<HarnessLedgerPruneReport>($I`HarnessLedgerPruneReport`)(
   {
     windowSessions: WindowSessions,
+    harnessHash: HarnessHash,
     sessionsObserved: S.Finite,
+    windowFull: S.Boolean,
+    sessionsSkippedOutOfRegime: S.Finite,
+    sessionsSkippedUnstamped: S.Finite,
     windowEnd: S.OptionFromOptionalKey(S.DateTimeUtcFromString),
     shardsRead: S.Finite,
     undecodableLines: S.Finite,
     candidates: S.Finite,
     touchedCandidates: S.Finite,
     alreadyProposed: S.Finite,
+    decidedUnderHarness: S.Finite,
     proposals: S.Array(PruneProposal),
+    written: S.Boolean,
   },
   $I.annote("HarnessLedgerPruneReport", {
-    description: "Session window, decode tallies, and the zero-touch proposals of one pruning scan.",
+    description:
+      "Current-harness session window, skip and decode tallies, the zero-touch proposals of one pruning scan, and whether they were appended.",
   })
 ) {}

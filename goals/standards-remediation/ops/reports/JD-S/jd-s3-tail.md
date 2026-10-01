@@ -125,7 +125,7 @@ the same convention already used by the pre-existing (untouched)
 `src/Glob/Glob.schema.ts`,
 `src/Graph/{Graph.edge,Graph.encoded,Graph.primitives,Graph.rebuild,Graph.shared,Graph.transforms}.ts`,
 `src/Http/Http.headers.shared.ts`, `src/HttpMethod/HttpMethod.schema.ts`,
-`src/HttpProtocol/HttpProtocol.schema.ts`, `src/Json.ts`, `src/Jsonc.ts`,
+`src/HttpProtocol/HttpProtocol.schema.ts`, the since-retired Json concept module, `src/Jsonc.ts`,
 `src/Jsonl.ts`, `src/LiteralKit/LiteralKit.schema.ts`,
 `src/LocalDate/LocalDate.schema.ts`, the `Logs` module (retired 2026-09-29),
 `src/MappedLiteralKit/MappedLiteralKit.schema.ts`, `src/Markdown.ts`,

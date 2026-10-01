@@ -12,7 +12,7 @@
  */
 
 import { $DuckdbId } from "@beep/identity/packages";
-import { JsonObject, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $DuckdbId.create("DuckDb.models");
@@ -116,7 +116,7 @@ export class DuckDbParquetExport extends S.Class<DuckDbParquetExport>($I`DuckDbP
  * @category schemas
  * @since 0.0.0
  */
-export const DuckDbRow = JsonObject.pipe(
+export const DuckDbRow = S.JsonObject.pipe(
   $I.annoteSchema("DuckDbRow", {
     description: "JSON-compatible row returned from DuckDB queries.",
   }),

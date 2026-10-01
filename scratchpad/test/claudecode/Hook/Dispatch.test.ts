@@ -3,7 +3,6 @@
  *
  * @since 0.1.0
  */
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -14,6 +13,10 @@ import * as PreToolUse from "../../../claudecode/Hook/Events/PreToolUse.ts";
 import * as SessionStart from "../../../claudecode/Hook/Events/SessionStart.ts";
 import { type DispatchMap, runDispatchProgram } from "../../../claudecode/Hook/Runner.ts";
 import * as Testing from "../../../claudecode/Testing.ts";
+import * as S from "effect/Schema";
+import { flow, Result } from "effect";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 // ---------------------------------------------------------------------------
 // Helpers: run dispatch against a mock stdin layer (mirrors Testing.runHookWithMockStdin)
@@ -33,8 +36,8 @@ const provideBuiltLayer =
       Layer.buildWithScope(scope)(layer).pipe(Effect.flatMap((context) => Effect.provide(self, context)))
     );
 
-const decodeJson = UnknownFromJsonString.decodeUnknownEffect;
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const decodeJson = S.decodeUnknownEffect(UnknownJson);
+const encodeJson = flow(S.encodeUnknownResult(UnknownJson), Result.getOrThrow);
 
 const runDispatchWithMockStdin = (
   hooks: DispatchMap<never, never>,

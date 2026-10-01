@@ -18,8 +18,9 @@ import {
 } from "@beep/repo-ai-metrics";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Config, Console, DateTime, Effect } from "effect";
+import { Config, Console, DateTime, Effect, Match } from "effect";
 import { Command, Flag } from "effect/cli";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { jsonFlag } from "../../internal/cli/Flags.ts";
@@ -130,12 +131,12 @@ const buildHypothesis = Effect.fn("HarnessLedger.buildHypothesis")(function* (
 export const harnessLedgerProposeCommand = Command.make(
   "propose",
   {
-    mechanism: Flag.Literals("mechanism", MechanismClass.Options).pipe(
-      Flag.withDescription(`Mechanism class: ${A.join(MechanismClass.Options, " | ")}`)
+    mechanism: Flag.Literals("mechanism", MechanismClass.literals).pipe(
+      Flag.withDescription(`Mechanism class: ${A.join(MechanismClass.literals, " | ")}`)
     ),
     edit: Flag.String("edit").pipe(Flag.withDescription("Edit reference: commit:<sha> | diff:<sha256> | pending")),
     hypothesis: Flag.String("hypothesis").pipe(Flag.withDescription("Falsifiable behavioral claim"), Flag.optional),
-    expectedSurface: Flag.Literals("expected-surface", ContextSurfaceKind.Options).pipe(
+    expectedSurface: Flag.Literals("expected-surface", ContextSurfaceKind.literals).pipe(
       Flag.withDescription("Surface kind the claim expects to move"),
       Flag.optional
     ),
@@ -219,8 +220,8 @@ export const harnessLedgerDispositionCommand = Command.make(
   "disposition",
   {
     row: Flag.String("row").pipe(Flag.withDescription("Row id to supersede (must be the latest row of its chain)")),
-    to: Flag.Literals("to", HarnessLedgerAdmission.Options).pipe(
-      Flag.withDescription(`Disposition: ${A.join(HarnessLedgerAdmission.Options, " | ")}`)
+    to: Flag.Literals("to", HarnessLedgerAdmission.literals).pipe(
+      Flag.withDescription(`Disposition: ${A.join(HarnessLedgerAdmission.literals, " | ")}`)
     ),
     evidence: Flag.String("evidence").pipe(Flag.withDescription("Evidence for the disposition (required)")),
     score: Flag.Finite("score").pipe(Flag.withDescription("Measured score delta (with --cost)"), Flag.optional),
@@ -329,7 +330,7 @@ export const harnessLedgerListCommand = Command.make(
         "Only rows whose harness surfaces changed, or whose model/effort differs from an explicit --model/--reasoning-effort; omitted components are not compared"
       )
     ),
-    disposition: Flag.Literals("disposition", LedgerDisposition.Options).pipe(
+    disposition: Flag.Literals("disposition", LedgerDisposition.literals).pipe(
       Flag.withDescription("Only chains whose latest row has this disposition"),
       Flag.optional
     ),
@@ -405,38 +406,95 @@ const resolveHookPulseDir = Effect.gen(function* () {
   Effect.catchTag("ConfigError", () => HarnessLedgerInputError.new("Failed to read the state-home environment."))
 );
 
-const pruneLines = (report: HarnessLedgerPruneReport): ReadonlyArray<string> => [
-  `window: last ${report.windowSessions} sessions; observed ${report.sessionsObserved} ending ${O.match(
-    report.windowEnd,
-    {
-      onNone: () => "-",
-      onSome: DateTime.formatIso,
-    }
-  )}`,
-  `shards read: ${report.shardsRead}; undecodable lines skipped: ${report.undecodableLines}`,
-  `candidates: ${report.candidates}; touched: ${report.touchedCandidates}; already proposed: ${report.alreadyProposed}`,
-  ...A.match(report.proposals, {
-    onEmpty: () => ["No pruning proposals."],
-    onNonEmpty: (proposals) =>
-      A.map(
-        proposals,
-        (proposal) =>
-          `${proposal.row.rowId}\t${proposal.candidate.kind}:${proposal.candidate.name}\t${proposal.row.mechanismClass}\t${O.getOrElse(proposal.row.dispositionEvidence, () => "-")}`
-      ),
-  }),
-  "dry run: nothing written (--write is refused until sessions are scoped by harness hash).",
-];
+const windowCount = (report: HarnessLedgerPruneReport): string =>
+  `${report.sessionsObserved} of ${report.windowSessions} sessions under the current harness hash`;
+
+// The last line says honestly whether anything was written, and why not.
+const outcomeLine = (report: HarnessLedgerPruneReport, write: boolean): string =>
+  Match.value({
+    written: report.written,
+    write,
+    full: report.windowFull,
+    empty: A.isReadonlyArrayEmpty(report.proposals),
+  }).pipe(
+    Match.when(
+      { written: true },
+      () => `written: appended ${A.length(report.proposals)} proposed rows to harness-ledger/rows.`
+    ),
+    Match.when({ write: true, full: false }, () => `nothing written: window not full (${windowCount(report)}).`),
+    Match.when({ empty: true }, () => "nothing written: no fresh proposals."),
+    Match.when(
+      { full: false },
+      () => `dry run: nothing written; partial window (${windowCount(report)}), so --write would append nothing.`
+    ),
+    Match.orElse(() => "dry run: nothing written (pass --write to append these proposals).")
+  );
 
 /**
- * `bun run beep harness-ledger prune-proposals` — propose retiring skills,
- * and MCP servers with zero observed touches in the last N sessions.
+ * Render a pruning report for the terminal: the window, skip and decode
+ * tallies, candidate counts, one tab-separated line per proposal, and a last
+ * line saying whether rows were appended.
+ *
+ * **Example** (Rendering a dry run)
+ *
+ * ```ts
+ * import { harnessLedgerPruneReportLines } from "@beep/repo-cli/commands/HarnessLedger"
+ *
+ * // Data-last: bind `write` first, then map reports to lines.
+ * const renderDryRun = harnessLedgerPruneReportLines(false)
+ * console.log(typeof renderDryRun) // "function"
+ * ```
+ *
+ * @param report - The report `pruneProposals` returned.
+ * @param write - Whether `--write` was requested; a partial window is then named as the reason nothing was written.
+ * @returns The output lines, in print order.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const harnessLedgerPruneReportLines: {
+  (write: boolean): (report: HarnessLedgerPruneReport) => ReadonlyArray<string>;
+  (report: HarnessLedgerPruneReport, write: boolean): ReadonlyArray<string>;
+} = dual(
+  2,
+  (report: HarnessLedgerPruneReport, write: boolean): ReadonlyArray<string> => [
+    `window: last ${report.windowSessions} sessions under harness hash ${Str.slice(0, 12)(report.harnessHash)}; observed ${
+      report.sessionsObserved
+    }${report.windowFull ? "" : " (partial window)"} ending ${O.match(report.windowEnd, {
+      onNone: () => "-",
+      onSome: DateTime.formatIso,
+    })}`,
+    `sessions skipped: ${report.sessionsSkippedOutOfRegime} under another or mixed harness; ${report.sessionsSkippedUnstamped} without a SessionStart harness stamp`,
+    `shards read: ${report.shardsRead}; undecodable lines skipped: ${report.undecodableLines}`,
+    `candidates: ${report.candidates}; touched: ${report.touchedCandidates}; already proposed: ${report.alreadyProposed}; decided under this harness: ${report.decidedUnderHarness}`,
+    ...A.match(report.proposals, {
+      onEmpty: () => ["No pruning proposals."],
+      onNonEmpty: (proposals) =>
+        A.map(
+          proposals,
+          (proposal) =>
+            `${proposal.row.rowId}\t${proposal.candidate.kind}:${proposal.candidate.name}\t${proposal.row.mechanismClass}\t${O.getOrElse(proposal.row.dispositionEvidence, () => "-")}`
+        ),
+    }),
+    outcomeLine(report, write),
+  ]
+);
+
+/**
+ * `bun run beep harness-ledger prune-proposals` — propose retiring skills
+ * and MCP servers with zero observed touches in the last N sessions under the
+ * current harness hash.
  *
  * **Details**
  *
- * D9 restricts the window to sessions under the current harness hash. That
- * restriction is deferred until hook-pulse stamps the harness hash at
- * SessionStart; today the read-only window spans the last N sessions regardless
- * of regime. Writes fail until that filter exists.
+ * D9 restricts the window to sessions under the current harness hash: hook-pulse
+ * stamps that hash on `SessionStart`, and only sessions whose stamps all equal
+ * the hash captured now count. Sessions under another or mixed harness, and
+ * unstamped sessions, are skipped and counted. Without `--write` nothing is
+ * written; with it, fresh `proposed` rows are appended under the ledger write
+ * fence, but only once the window is full (N sessions observed): a partial
+ * window is shown and nothing is written. A surface is not proposed again while
+ * an open proposal targets it or a decision on it stands under the current
+ * harness hash.
  *
  * **Example** (Log command name)
  *
@@ -454,7 +512,7 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
   {
     window: Flag.Int("window").pipe(
       Flag.withDefault(30),
-      Flag.withDescription("Number of most recent hook-pulse sessions to observe")
+      Flag.withDescription("Number of most recent hook-pulse sessions under the current harness hash to observe")
     ),
     stateDir: Flag.String("state-dir").pipe(
       Flag.withDescription(
@@ -464,7 +522,7 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
     ),
     write: Flag.Boolean("write").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Request append (blocked until current-harness session filtering exists)")
+      Flag.withDescription("Append the fresh proposals as `proposed` ledger rows (default: dry run)")
     ),
     model: modelFlag,
     reasoningEffort: reasoningEffortFlag,
@@ -497,7 +555,7 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
         );
         return yield* printCommandJson(encoded);
       }
-      return yield* printLines(pruneLines(report));
+      return yield* printLines(harnessLedgerPruneReportLines(report, input.write));
     }).pipe(
       Effect.catchTags({
         HarnessLedgerBusyError: reportFailure("prune-proposals"),
@@ -509,7 +567,7 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Propose retiring zero-touch skills and MCP servers over the last N sessions (current-harness-hash window deferred until hook-pulse stamps it at SessionStart)"
+    "Propose retiring zero-touch skills and MCP servers over the last N sessions under the current harness hash"
   ),
   Command.provide(HarnessLedgerServiceLive)
 );

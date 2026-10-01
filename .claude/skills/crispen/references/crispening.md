@@ -21,8 +21,7 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 | `S.withConstructorDefault(Effect.succeed(v))` + `S.withDecodingDefaultTypeKey(Effect.succeed(v))` | upstream pair; bind a constructed `v` to one const first | double-wiring a default for **both** make and missing-key decode | `ScanState.ts` |
 | `S.withConstructorDefault(Effect.succeed(empty))` + `S.withDecodingDefaultType(Effect.succeed(empty))` | upstream pair over one `const empty = A.empty<T>()` | repeated `[]` default wiring on array fields | `Md.model.ts` |
 | `SchemaUtils.BoolKeyDefaultFalse` / `BoolKeyDefaultTrue` | annotated boolean field defaulting make + missing key | `O.getOrElse(O.fromUndefinedOr(...), thunkFalse)` plumbing | `Md.model.ts:1101,1468` |
-| `SchemaUtils.withEncodeDefault` | `dual` decode-only default, keeps encode strict | a decode fallback that must NOT leak into the encoded shape | `SchemaUtils/withEncodeDefault.ts:40` |
-| `SchemaUtils.optionalKeyWithDefault` | `dual` optional key + default | v4 replacement for `S.optionalWith(s, { exact, default })` | `SchemaUtils/optionalKeyWithDefaults.ts:29` |
+| `S.withDecodingDefaultTypeKey(Effect.succeed(v))` | upstream decode-only default for a missing key; encode stays strict | a decode fallback that must NOT leak into the encoded shape; the v4 form of `S.optionalWith(s, { exact, default })` | `effect/Schema` |
 
 > `S.withConstructorDefault` alone is **constructor-only**, so the encoded/wire
 > contract stays unchanged. Add `S.withDecodingDefaultTypeKey` (same value) when a

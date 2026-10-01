@@ -2,7 +2,6 @@ import { lintCommand } from "@beep/repo-cli";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -12,13 +11,14 @@ import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Path, pipe } from "effect";
 import { Command } from "effect/cli";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const FIXTURE_PATH = "packages/tooling/tool/cli/test/roadmap-refs.fixture.md";
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,

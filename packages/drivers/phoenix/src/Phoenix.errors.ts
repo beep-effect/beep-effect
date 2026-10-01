@@ -6,7 +6,7 @@
  */
 
 import { $PhoenixId } from "@beep/identity";
-import { Defect, LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Result } from "effect";
@@ -122,7 +122,9 @@ export type PhoenixErrorReason = typeof PhoenixErrorReason.Type;
  */
 export class PhoenixErrorOptions extends S.Class<PhoenixErrorOptions>($I`PhoenixErrorOptions`)(
   {
-    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
+    cause: S.optionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).annotateKey({
       description: "Optional failure cause converted to a redacted diagnostic label.",
     }),
   },

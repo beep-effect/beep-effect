@@ -22,13 +22,12 @@ import {
   turboCachePlanArgs,
 } from "@beep/repo-cli/test/SharedInternals";
 import { FsUtilsLive, findRepoRoot, resolveWorkspacePackages } from "@beep/repo-utils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, HashMap, Layer, Order, Path, pipe, Sink, Stream } from "effect";
+import { Effect, FileSystem, flow, HashMap, Layer, Order, Path, pipe, Result, Sink, Stream } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -42,7 +41,7 @@ import { parseDocument } from "yaml";
 
 const REPO_ROOT = "/repo";
 const encoder = new TextEncoder();
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {
   const previous = Bun.env[name];

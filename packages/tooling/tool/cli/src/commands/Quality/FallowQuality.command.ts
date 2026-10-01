@@ -8,7 +8,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { Fn } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { Argument, Command, Flag } from "effect/cli";
@@ -48,7 +47,7 @@ import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnv
 
 const $I = $RepoCliId.create("commands/Quality/FallowQuality");
 
-const fallowFeatureValues: ReadonlyArray<FallowFeature> = FallowFeatureFamily.Options;
+const fallowFeatureValues: ReadonlyArray<FallowFeature> = FallowFeatureFamily.literals;
 const isFallowFeature = S.is(FallowFeatureFamily);
 
 const commonEnvelopeKeys = [
@@ -82,7 +81,7 @@ const fallbackSourceRef = "standards/fallow.pilot.inventory.jsonc";
 // maximum while still surfacing that the lane has saturated findings.
 const maxFindingsPerCount = 10_000;
 
-const decodeJsonText = UnknownFromJsonString.decodeUnknownEffect;
+const decodeJsonText = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const encodeFallowEnvelopeJson = S.encodeUnknownEffect(S.fromJsonString(FallowReportEnvelope));
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));

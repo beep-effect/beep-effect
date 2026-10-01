@@ -66,7 +66,7 @@ source topology. Utility namespaces such as `SchemaUtils` may expose helper
 leaves when direct helper imports are the intended API.
 
 Public package subpaths are explicit. `SchemaUtils` helper leaves such as
-`@beep/schema/SchemaUtils/pluck` remain intentional public imports, but concept
+`@beep/schema/SchemaUtils/collectAnnotationsAt` remain intentional public imports, but concept
 role files such as `@beep/schema/Color/Color.hex` are private source
 topology.
 
@@ -76,7 +76,7 @@ canonical public subpaths:
 ```ts
 import * as Color from "@beep/schema/Color"
 import * as Csv from "@beep/schema/Csv"
-import * as HttpStatus from "@beep/schema/HttpStatus"
+import * as HttpHeaders from "@beep/schema/HttpHeaders"
 ```
 
 Do not create broad suite aggregators such as `@beep/schema/Blockchain`,
@@ -90,7 +90,7 @@ helpers live in their own leaf modules such as `@beep/schema/CsvParser` and are
 not re-exported from `@beep/schema/Csv`.
 
 Package-local tests may use source-only test seams such as
-`@beep/schema/test/Markdown` and `@beep/schema/test/Yaml`. Parser internals
+`@beep/schema/test/Markdown`. Parser internals
 under `src/internal/` are not public package subpaths, and the test seam
 implementations live under `src/internal/test`.
 

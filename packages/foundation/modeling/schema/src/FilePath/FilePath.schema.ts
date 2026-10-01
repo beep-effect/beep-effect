@@ -6,6 +6,7 @@
  */
 import { Str, thunkTrue } from "@beep/utils";
 import { Match } from "effect";
+import * as F from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
@@ -31,7 +32,7 @@ const SupportedPathFamilyKit = LiteralKit([
  * ```ts
  * import { SupportedPathFamily } from "@beep/schema/FilePath"
  *
- * console.log(SupportedPathFamily.Options.includes("posixAbsolute"))
+ * console.log(SupportedPathFamily.literals.includes("posixAbsolute"))
  * ```
  *
  * @category validation
@@ -71,12 +72,12 @@ const isHasNullByte = HasNullByte.is;
 const isHasLeafSegment = HasLeafSegment.is;
 
 const classifyPathFamily = Match.type<string>().pipe(
-  Match.when(Str.startsWith("\\\\"), SupportedPathFamilyKit.thunk.windowsUnc),
-  Match.when(isWindowsDrivePrefix, SupportedPathFamilyKit.thunk.windowsDrive),
-  Match.whenAnd(isUsesPosixSeparator, Str.startsWith("/"), SupportedPathFamilyKit.thunk.posixAbsolute),
-  Match.when(isUsesPosixSeparator, SupportedPathFamilyKit.thunk.posixRelative),
-  Match.when(isUsesWindowsSeparator, SupportedPathFamilyKit.thunk.windowsRelative),
-  Match.orElse(SupportedPathFamilyKit.thunk.posixRelative)
+  Match.when(Str.startsWith("\\\\"), F.constant(SupportedPathFamilyKit.Enum.windowsUnc)),
+  Match.when(isWindowsDrivePrefix, F.constant(SupportedPathFamilyKit.Enum.windowsDrive)),
+  Match.whenAnd(isUsesPosixSeparator, Str.startsWith("/"), F.constant(SupportedPathFamilyKit.Enum.posixAbsolute)),
+  Match.when(isUsesPosixSeparator, F.constant(SupportedPathFamilyKit.Enum.posixRelative)),
+  Match.when(isUsesWindowsSeparator, F.constant(SupportedPathFamilyKit.Enum.windowsRelative)),
+  Match.orElse(F.constant(SupportedPathFamilyKit.Enum.posixRelative))
 );
 
 const matchesSupportedPathFamily = (value: string): boolean =>

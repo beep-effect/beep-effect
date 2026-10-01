@@ -21,7 +21,7 @@ const $I = $FileProcessingId.create("Strategy");
  * ```ts import.meta.vitest name="Check process option included"
  * import { FileProcessingOperationKind } from "@beep/file-processing/Strategy"
  *
- * FileProcessingOperationKind.Options.includes("process") // => true
+ * FileProcessingOperationKind.literals.includes("process") // => true
  * ```
  *
  * @category schemas
@@ -58,7 +58,7 @@ export type FileProcessingOperationKind = typeof FileProcessingOperationKind.Typ
  * ```ts import.meta.vitest name="Check tika option included"
  * import { FileProcessingEngineFamily } from "@beep/file-processing/Strategy"
  *
- * FileProcessingEngineFamily.Options.includes("tika") // => true
+ * FileProcessingEngineFamily.literals.includes("tika") // => true
  * ```
  *
  * @category schemas
@@ -95,7 +95,7 @@ export type FileProcessingEngineFamily = typeof FileProcessingEngineFamily.Type;
  * ```ts import.meta.vitest name="Check pdf-text-layer option"
  * import { FileFormatFamily } from "@beep/file-processing/Strategy"
  *
- * FileFormatFamily.Options.includes("pdf-text-layer") // => true
+ * FileFormatFamily.literals.includes("pdf-text-layer") // => true
  * ```
  *
  * @category schemas
@@ -167,7 +167,7 @@ export type FileFormatFamily = typeof FileFormatFamily.Type;
  * ```ts import.meta.vitest name="Check export-children option"
  * import { FileProcessingCapability } from "@beep/file-processing/Strategy"
  *
- * FileProcessingCapability.Options.includes("export-children") // => true
+ * FileProcessingCapability.literals.includes("export-children") // => true
  * ```
  *
  * @category schemas
@@ -209,7 +209,7 @@ export type FileProcessingCapability = typeof FileProcessingCapability.Type;
  * ```ts import.meta.vitest name="Check deferred disposition option"
  * import { FileProcessingSupportDisposition } from "@beep/file-processing/Strategy"
  *
- * FileProcessingSupportDisposition.Options.includes("deferred") // => true
+ * FileProcessingSupportDisposition.literals.includes("deferred") // => true
  * ```
  *
  * @category schemas
@@ -246,7 +246,7 @@ export type FileProcessingSupportDisposition = typeof FileProcessingSupportDispo
  * ```ts import.meta.vitest name="Check skip reason option"
  * import { FileProcessingSkipReason } from "@beep/file-processing/Strategy"
  *
- * FileProcessingSkipReason.Options.includes("operation-not-required") // => true
+ * FileProcessingSkipReason.literals.includes("operation-not-required") // => true
  * ```
  *
  * @category schemas

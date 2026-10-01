@@ -13,7 +13,7 @@ import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Str } from "@beep/utils";
 import { Effect, FileSystem, identity, Order, Path, pipe } from "effect";
 import * as Bool from "effect/Boolean";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -21,7 +21,7 @@ import * as S from "effect/Schema";
 import {
   NetworkUnavailableError,
   VersionCategoryReport,
-  VersionCategoryStatusThunk,
+  VersionCategoryStatusEnum,
   VersionDriftItem,
   VersionSyncError,
 } from "../../VersionSync.schemas.ts";
@@ -555,8 +555,8 @@ export const buildBunReport: (state: BunVersionState) => VersionCategoryReport =
 
   return VersionCategoryReport.cases.bun.make({
     status: Bool.match(hasDrift || hasInternalMismatch, {
-      onTrue: VersionCategoryStatusThunk.drift,
-      onFalse: VersionCategoryStatusThunk.ok,
+      onTrue: constant(VersionCategoryStatusEnum.drift),
+      onFalse: constant(VersionCategoryStatusEnum.ok),
     }),
     items,
     latest: state.latest,

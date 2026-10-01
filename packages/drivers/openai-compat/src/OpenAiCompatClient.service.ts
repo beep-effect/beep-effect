@@ -6,7 +6,6 @@
  */
 
 import { $OpenaiCompatId } from "@beep/identity";
-import { decodeJsonString } from "@beep/schema/Json";
 import { A, Str } from "@beep/utils";
 import { Context, Effect, flow, Layer, Match, pipe, Stream } from "effect";
 import * as AiError from "effect/ai/AiError";
@@ -287,7 +286,7 @@ const mapSseError =
     );
 
 const parseSseData: (data: string) => Effect.Effect<OpenAiCompatChatCompletionChunk, AiError.AiError> = flow(
-  decodeJsonString,
+  S.decodeUnknownEffect(S.fromJsonString(S.Unknown)),
   Effect.flatMap(decodeChatCompletionChunk),
   Effect.mapError(mapSchemaError("streamChatCompletion"))
 );

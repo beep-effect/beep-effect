@@ -6,11 +6,13 @@
  */
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { LiteralKit, UnknownRecord } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
+
+const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $WorkspaceDomainId.create("entities/Turn/Turn.values");
 

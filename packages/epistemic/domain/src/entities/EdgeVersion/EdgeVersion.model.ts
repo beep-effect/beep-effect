@@ -35,7 +35,6 @@ import {
   LogicalEdgeKey,
 } from "@beep/epistemic-domain/values";
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as S from "effect/Schema";
@@ -114,9 +113,11 @@ export class EdgeVersion extends ProductEntity.Entity<EdgeVersion>()(Epistemic.E
         description: "Exclusive transaction-time upper bound; absent while the row is the current record.",
       })
       .pipe(pg.bigint("number"), pg.columnName("expired_at")),
-    fact: UnknownRecord.annotateKey({
-      description: "Immutable payload asserted by this edge version.",
-    }).pipe(pg.jsonb()),
+    fact: S.Record(S.String, S.Unknown)
+      .annotateKey({
+        description: "Immutable payload asserted by this edge version.",
+      })
+      .pipe(pg.jsonb()),
     logicalKey: LogicalEdgeKey.annotateKey({
       description: "Digest of the logical edge identity every version of this edge shares.",
     }).pipe(pg.text(), pg.columnName("logical_key")),

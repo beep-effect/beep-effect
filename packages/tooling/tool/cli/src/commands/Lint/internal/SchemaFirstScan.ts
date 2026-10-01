@@ -7,7 +7,7 @@
 
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A } from "@beep/utils";
-import { Effect, HashMap, HashSet, Path, pipe } from "effect";
+import { Effect, HashMap, HashSet, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
@@ -306,6 +306,7 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
   const project = yield* makeSchemaFirstProject();
 
   const entries = A.empty<SchemaFirstInventoryEntry>();
+  const scannedFiles = A.empty<string>();
   const parityEntries = A.empty<SchemaFirstInventoryEntry>();
 
   for (const sourceFile of project.getSourceFiles()) {
@@ -313,6 +314,7 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
     const owner = ownerResolver(sourceFile.getFilePath());
     appendArbitraryEntries(entries, sourceFile, filePath, owner);
     if (isSchemaFirstExcludedFile(filePath)) continue;
+    A.appendInPlace(scannedFiles, filePath);
     A.appendAllInPlace(
       parityEntries,
       yield* SchemaFirstDetectors.parityEntriesFromSourceFile(sourceFile, filePath, owner)
@@ -338,6 +340,7 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
       backlog: toSchemaFirstBacklog(parityEntries),
     }),
     parityEntries,
+    scannedFiles: A.sort(scannedFiles, Order.String),
   };
 });
 
@@ -500,7 +503,7 @@ const schemaFirstLintHasFailures = (
  * @since 0.0.0
  */
 export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (options: SchemaFirstLintOptions) {
-  const { document: liveDocument, parityEntries } = yield* scanSchemaFirstInventory();
+  const { document: liveDocument, parityEntries, scannedFiles } = yield* scanSchemaFirstInventory();
   const literalKitConstAssertionViolations = yield* collectLiteralKitConstAssertionViolations();
   const existingDocument = yield* readSchemaFirstInventoryDocument();
   const parity = diffSchemaFirstParity(
@@ -537,6 +540,9 @@ export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (opt
   }
 
   yield* SchemaFirstRender.logSchemaFirstSummary(summary);
+  if (options.reportScannedFiles) {
+    yield* SchemaFirstRender.logScannedFiles(scannedFiles);
+  }
   yield* SchemaFirstRender.logMissingEntries(findings.missingEntries);
   yield* SchemaFirstRender.logStaleEntries(findings.staleEntries);
   yield* SchemaFirstRender.logEnforcedCandidates(findings.enforcedCandidates);

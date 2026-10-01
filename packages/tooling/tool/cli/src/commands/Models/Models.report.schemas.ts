@@ -129,7 +129,7 @@ export const DriftKindIs = DriftKindKit.is;
  * @category models
  * @since 0.0.0
  */
-export const DriftKindOptions = DriftKindKit.Options;
+export const DriftKindOptions = DriftKindKit.literals;
 
 const CatalogDiffScopeKit = LiteralKit(["full", "suppressed-offline"]);
 
@@ -202,7 +202,7 @@ export const CatalogDiffScopeIs = CatalogDiffScopeKit.is;
  * @category models
  * @since 0.0.0
  */
-export const CatalogDiffScopeOptions = CatalogDiffScopeKit.Options;
+export const CatalogDiffScopeOptions = CatalogDiffScopeKit.literals;
 
 /**
  * One locator whose file value does not match the manifest.

@@ -9,7 +9,6 @@
  *
  * @since 0.1.0
  */
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -34,6 +33,7 @@ import {
   StdioMcpServer,
   WsMcpServer,
 } from "../../../claudecode/Mcp/Schema.ts";
+import { flow, Result } from "effect";
 
 const provideBuiltLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -47,7 +47,7 @@ const decodeHttp = S.decodeUnknownEffect(HttpMcpServer);
 const decodeFile = S.decodeUnknownEffect(McpJsonFile);
 const encodeServer = S.encodeEffect(McpServerConfig);
 const encodeHttp = S.encodeEffect(HttpMcpServer);
-const toJsonString = UnknownFromJsonString.encodeUnknownSync;
+const toJsonString = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 // ---------------------------------------------------------------------------
 // Test layer builder

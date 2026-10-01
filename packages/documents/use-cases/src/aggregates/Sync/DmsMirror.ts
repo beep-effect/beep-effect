@@ -7,7 +7,7 @@
 
 import { DmsProvider, RemoteItemId, SyncItemKind } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, UnknownRecord } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import type { DmsMirrorUnavailable } from "./Sync.errors.ts";
@@ -132,7 +132,7 @@ export class DmsRemoteEvent extends S.Class<DmsRemoteEvent>($I`DmsRemoteEvent`)(
     parentRemoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider identifier of the item's parent folder; none when the event omits it.",
     }),
-    payload: UnknownRecord.annotateKey({
+    payload: S.Record(S.String, S.Unknown).annotateKey({
       description: "Provider event snapshot preserved verbatim for conflict review.",
     }),
     remoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({

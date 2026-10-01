@@ -13,6 +13,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
+import * as F from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -200,7 +201,7 @@ export type HookPulseSchemaVersion = typeof HookPulseSchemaVersion.Type;
  *
  * const isClaudeCode = HookPulseAgentKind.is["claude-code"]
  *
- * console.log(HookPulseAgentKind.Options) // ["claude-code", "codex-cli"]
+ * console.log(HookPulseAgentKind.literals) // ["claude-code", "codex-cli"]
  * console.log(isClaudeCode(HookPulseAgentKind.Enum["claude-code"])) // true
  * console.log(isClaudeCode(HookPulseAgentKind.Enum["codex-cli"])) // false
  * ```
@@ -240,6 +241,8 @@ export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
  * including auto-approved ones, so counting it as waiting measures execution
  * rather than blocking. `PermissionRequest` is the event that actually starts a
  * human wait, and that distinction is the whole point of the instrument.
+ * `SessionStart` is never a wait either: it exists so the row can carry the
+ * harness hash the session started under (goals/harness-evidence-ledger, D9).
  *
  * **Example** (Separate the human-wait marker from the execution marker)
  *
@@ -250,7 +253,7 @@ export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
  *
  * console.log(startsHumanWait(HookPulseEvent.Enum.PermissionRequest)) // true
  * console.log(startsHumanWait(HookPulseEvent.Enum.PreToolUse)) // false
- * console.log(HookPulseEvent.Options.length) // 9
+ * console.log(HookPulseEvent.literals.length) // 10
  * ```
  *
  * @see {@link HookPulseWaitReason} for the attribution derived from these events.
@@ -267,6 +270,7 @@ export const HookPulseEvent = LiteralKit([
   "Stop",
   "SessionEnd",
   "PermissionDenied",
+  "SessionStart",
 ]).pipe(
   $I.annoteSchema("HookPulseEvent", {
     description: "Hook lifecycle events retained by the hook-pulse ledger.",
@@ -352,7 +356,7 @@ export type HookPulseInstrumentClass = typeof HookPulseInstrumentClass.Type;
  * const isObserved = HookPulseEvidenceTier.is.observed
  *
  * // Strongest first: a record clamps down this ladder, never up it.
- * console.log(HookPulseEvidenceTier.Options) // ["observed", "derived", "heuristic", "unknown"]
+ * console.log(HookPulseEvidenceTier.literals) // ["observed", "derived", "heuristic", "unknown"]
  * console.log(isObserved(HookPulseEvidenceTier.Enum.observed)) // true
  * console.log(isObserved(HookPulseEvidenceTier.Enum.derived)) // false
  * ```
@@ -705,6 +709,11 @@ class HookPulseRawEventInput extends S.Class<HookPulseRawEventInput>($I`HookPuls
     // be turned back into the `tool_input` it came from; decode prefers it over
     // re-deriving, the same passthrough `privateReference` gives a 64-hex id.
     surface: S.OptionFromOptionalKey(Sha256Hex),
+    // The harness hash the writer computed from the repo's agent-facing config at
+    // SessionStart. Unlike `surface` there is nothing to re-derive it from: the
+    // codec has no repo root to walk, so decode passes the stamp through (owned by
+    // SessionStart, dropped on every other event) and absence stays absence.
+    harnessHash: S.OptionFromOptionalKey(Sha256Hex),
   },
   $I.annote("HookPulseRawEventInput", {
     description: "Raw hook payload paired with the ambient stamps supplied by its writer.",
@@ -856,11 +865,11 @@ const hookPulseContextSurfaceKey = (event: HookPulseRawEvent, repoRoot: string):
 
 const derivePermissionWaitReason = (toolName: O.Option<string>): HookPulseWaitReason =>
   O.match(toolName, {
-    onNone: HookPulseWaitReason.thunk.unknown,
+    onNone: F.constant(HookPulseWaitReason.Enum.unknown),
     onSome: (name) =>
       Bool.match(Eq.equals(name, "ExitPlanMode"), {
-        onFalse: HookPulseWaitReason.thunk["tool-permission"],
-        onTrue: HookPulseWaitReason.thunk["plan-approval"],
+        onFalse: F.constant(HookPulseWaitReason.Enum["tool-permission"]),
+        onTrue: F.constant(HookPulseWaitReason.Enum["plan-approval"]),
       }),
   });
 
@@ -870,29 +879,30 @@ const deriveWaitReason = (
   notificationType: O.Option<string>
 ): HookPulseWaitReason =>
   HookPulseEvent.$match(hookEvent, {
-    PreToolUse: HookPulseWaitReason.thunk.none,
+    PreToolUse: F.constant(HookPulseWaitReason.Enum.none),
     PermissionRequest: () => derivePermissionWaitReason(toolName),
-    PostToolUse: HookPulseWaitReason.thunk.none,
+    PostToolUse: F.constant(HookPulseWaitReason.Enum.none),
     // A bracket *end*, not a human wait: the harness emits either PostToolUse or
     // PostToolUseFailure for a tool call, never both.
-    PostToolUseFailure: HookPulseWaitReason.thunk.none,
+    PostToolUseFailure: F.constant(HookPulseWaitReason.Enum.none),
     Notification: () =>
       Bool.match(O.exists(notificationType, HookPulseNotificationType.is.idle_prompt), {
-        onFalse: HookPulseWaitReason.thunk.unknown,
-        onTrue: HookPulseWaitReason.thunk["idle-input"],
+        onFalse: F.constant(HookPulseWaitReason.Enum.unknown),
+        onTrue: F.constant(HookPulseWaitReason.Enum["idle-input"]),
       }),
-    UserPromptSubmit: HookPulseWaitReason.thunk.none,
-    Stop: HookPulseWaitReason.thunk.none,
-    SessionEnd: HookPulseWaitReason.thunk.none,
-    PermissionDenied: HookPulseWaitReason.thunk.none,
+    UserPromptSubmit: F.constant(HookPulseWaitReason.Enum.none),
+    Stop: F.constant(HookPulseWaitReason.Enum.none),
+    SessionEnd: F.constant(HookPulseWaitReason.Enum.none),
+    PermissionDenied: F.constant(HookPulseWaitReason.Enum.none),
+    SessionStart: F.constant(HookPulseWaitReason.Enum.none),
   });
 
 const clampDerivedEvidenceTier = (evidenceTier: HookPulseEvidenceTier): HookPulseEvidenceTier =>
   HookPulseEvidenceTier.$match(evidenceTier, {
-    observed: HookPulseEvidenceTier.thunk.derived,
-    derived: HookPulseEvidenceTier.thunk.derived,
-    heuristic: HookPulseEvidenceTier.thunk.heuristic,
-    unknown: HookPulseEvidenceTier.thunk.unknown,
+    observed: F.constant(HookPulseEvidenceTier.Enum.derived),
+    derived: F.constant(HookPulseEvidenceTier.Enum.derived),
+    heuristic: F.constant(HookPulseEvidenceTier.Enum.heuristic),
+    unknown: F.constant(HookPulseEvidenceTier.Enum.unknown),
   });
 
 const isHookPulseNotificationType = S.is(HookPulseNotificationType);
@@ -992,7 +1002,13 @@ const hookPulsePrivateReferences = Effect.fnUntraced(function* (input: {
 // `tool_name` but no `tool_use_id`, while `PreToolUse` and `PostToolUse` carry
 // both — so binding them to an event would reject legitimate future rows, and
 // rejecting rows costs real telemetry.
-const HookPulseEventOwnedField = LiteralKit(["notificationType", "sessionEndReason", "isInterrupt", "surface"]).pipe(
+const HookPulseEventOwnedField = LiteralKit([
+  "notificationType",
+  "sessionEndReason",
+  "isInterrupt",
+  "surface",
+  "harnessHash",
+]).pipe(
   $I.annoteSchema("HookPulseEventOwnedField", {
     description: "Canonical hook-pulse fields whose meaning is owned by exactly one hook event.",
   })
@@ -1000,12 +1016,15 @@ const HookPulseEventOwnedField = LiteralKit(["notificationType", "sessionEndReas
 type HookPulseEventOwnedField = typeof HookPulseEventOwnedField.Type;
 
 const hookPulseEventOwningField = HookPulseEventOwnedField.$match({
-  notificationType: HookPulseEvent.thunk.Notification,
-  sessionEndReason: HookPulseEvent.thunk.SessionEnd,
-  isInterrupt: HookPulseEvent.thunk.PostToolUseFailure,
+  notificationType: F.constant(HookPulseEvent.Enum.Notification),
+  sessionEndReason: F.constant(HookPulseEvent.Enum.SessionEnd),
+  isInterrupt: F.constant(HookPulseEvent.Enum.PostToolUseFailure),
   // A surface counts as touched only once its tool call succeeded, so the
   // completion event owns it; PreToolUse would count denied and failed calls.
-  surface: HookPulseEvent.thunk.PostToolUse,
+  surface: F.constant(HookPulseEvent.Enum.PostToolUse),
+  // The harness a session runs under is decided when it starts; a mid-session
+  // stamp would describe a regime the session did not start in.
+  harnessHash: F.constant(HookPulseEvent.Enum.SessionStart),
 });
 
 const doesHookPulseEventOwnField = (field: HookPulseEventOwnedField, hookEvent: HookPulseEvent): boolean =>
@@ -1075,8 +1094,8 @@ const hookPulseSurfaceReference = (input: HookPulseRawEventInput) =>
  * row is never rewritten. Two invariants make the schema its own oracle against
  * the shell writer. The event-owned field invariant rejects `notificationType`
  * outside `Notification`, `sessionEndReason` outside `SessionEnd`,
- * `isInterrupt` outside `PostToolUseFailure`, and `surface` outside
- * `PostToolUse`. The wait-reason invariant
+ * `isInterrupt` outside `PostToolUseFailure`, `surface` outside
+ * `PostToolUse`, and `harnessHash` outside `SessionStart`. The wait-reason invariant
  * recomputes `waitReason` from `hookEvent`, `toolName`, and `notificationType`
  * and rejects a row that disagrees, which is what catches a jq derivation that
  * has drifted away from this contract.
@@ -1153,13 +1172,17 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     // hook, AGENTS.md, an MCP server) the tool call touched. Only the digest is
     // representable; the skill name or file path it came from never is.
     surface: S.OptionFromOptionalKey(Sha256Hex),
+    // SHA-256 of the harness regime the session started under (see
+    // `deriveHarnessHash`), stamped by the writer on SessionStart only. Rows
+    // written before the stamp existed simply lack it.
+    harnessHash: S.OptionFromOptionalKey(Sha256Hex),
   }).check(
     S.makeFilterGroup(
       [
         S.makeFilter(
           (input) =>
             A.getSomes(
-              A.map(HookPulseEventOwnedField.Options, (field) =>
+              A.map(HookPulseEventOwnedField.literals, (field) =>
                 O.match(hookPulseEventOwnedFieldValue(input, field), {
                   onNone: O.none,
                   onSome: () =>
@@ -1241,16 +1264,17 @@ export const HookPulseV1Arbitrary = Arbitrary.schema(S.Struct(HookPulseV1.fields
       sessionEndReason: filterHookPulseEventOwnedField("sessionEndReason", value.hookEvent, value.sessionEndReason),
       isInterrupt: filterHookPulseEventOwnedField("isInterrupt", value.hookEvent, value.isInterrupt),
       surface: filterHookPulseEventOwnedField("surface", value.hookEvent, value.surface),
+      harnessHash: filterHookPulseEventOwnedField("harnessHash", value.hookEvent, value.harnessHash),
       waitReason: deriveWaitReason(value.hookEvent, value.toolName, notificationType),
     });
   })
 );
 
-// Deliberately without `isInterrupt` or `surface`, and the omission is a dating argument
+// Deliberately without `isInterrupt`, `surface`, or `harnessHash`, and the omission is a dating argument
 // rather than an oversight. "Legacy" here means exactly one thing: a row written
 // before private identifiers were pseudonymized. `isInterrupt` and its only
 // owning event `PostToolUseFailure` were both added *after* that change (and
-// `surface` later still), so no
+// `surface` and `harnessHash` later still), so no
 // row can be legacy-shaped and carry the field — declaring it would model a
 // combination that cannot exist and would give a future reader the false
 // impression that some legacy corpus distinguishes an interrupt from an error.
@@ -1365,6 +1389,10 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
  * `.patterns/`. Encoding cannot invert that digest, so it rides back as the
  * input's `surface` stamp and decoding passes a stamp through unchanged.
  *
+ * On `SessionStart`, the input's `harnessHash` stamp passes through unchanged
+ * and is dropped on every other event. Nothing re-derives it: the harness hash
+ * is a digest of files under a repo root the codec never sees.
+ *
  * **Gotchas**
  *
  * An `observed` raw event yields a `derived` row. That clamp is the weakest-link
@@ -1469,6 +1497,11 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                 input.event.is_interrupt
               ),
               surface,
+              harnessHash: filterHookPulseEventOwnedField(
+                HookPulseEventOwnedField.Enum.harnessHash,
+                input.event.hook_event_name,
+                input.harnessHash
+              ),
             }),
           }))
         ),
@@ -1539,6 +1572,11 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                         HookPulseEventOwnedField.Enum.surface,
                         input.hookEvent,
                         O.map(O.fromUndefinedOr(input.surface), Sha256Hex.make)
+                      ),
+                      harnessHash: filterHookPulseEventOwnedField(
+                        HookPulseEventOwnedField.Enum.harnessHash,
+                        input.hookEvent,
+                        O.map(O.fromUndefinedOr(input.harnessHash), Sha256Hex.make)
                       ),
                     })
                   ),

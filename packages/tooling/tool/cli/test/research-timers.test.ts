@@ -123,7 +123,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       const { fs, path, home, touch } = yield* fixture();
       const shim = path.join(home, ".local", "share", "mise", "shims", "bun");
       const standalone = path.join(home, ".bun", "bin", "bun");
-      expect(SystemdBunCandidate.Options).toEqual([".local/share/mise/shims/bun", ".bun/bin/bun"]);
+      expect(SystemdBunCandidate.literals).toEqual([".local/share/mise/shims/bun", ".bun/bin/bun"]);
       // Neither candidate: the running executable is the fallback.
       expect(yield* resolveSystemdBunPath(home)).toBe(process.execPath);
       yield* Effect.forEach([shim, standalone], touch);

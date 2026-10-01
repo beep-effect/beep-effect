@@ -502,6 +502,10 @@ export class SchemaFirstLintOptions extends S.Class<SchemaFirstLintOptions>($I`S
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),
+    reportScannedFiles: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
     admitParityBacklog: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
@@ -1086,7 +1090,7 @@ export class EffectVitestReplacement extends S.Class<EffectVitestReplacement>($I
 ) {}
 
 const EffectVitestFindingLensRule = S.Union([
-  S.Struct({ lens: LiteralKit(EffectVitestLens.pickOptions(["detector", "resource"])), ruleId: EffectVitestRuleId }),
+  S.Struct({ lens: LiteralKit(EffectVitestLens.pick(["detector", "resource"]).literals), ruleId: EffectVitestRuleId }),
   S.Struct({ lens: S.Literal("resource"), ruleId: EffectVitestLensRuleId.check(S.isStartingWith("L-RES-")) }),
   S.Struct({ lens: S.Literal("flake"), ruleId: EffectVitestLensRuleId.check(S.isStartingWith("L-FLAKE-")) }),
   S.Struct({ lens: S.Literal("property"), ruleId: EffectVitestLensRuleId.check(S.isStartingWith("L-PROP-")) }),
@@ -1328,7 +1332,7 @@ const EffectVitestPrimitiveGraphFields = S.Struct({
         document.tag === `${document.package}@${document.version}` &&
         !A.isReadonlyArrayEmpty(document.entries) &&
         A.length(A.dedupe(ids)) === A.length(ids) &&
-        A.every(EffectVitestRuleId.Options, (ruleId) => A.contains(replacements, ruleId))
+        A.every(EffectVitestRuleId.literals, (ruleId) => A.contains(replacements, ruleId))
       );
     },
     {

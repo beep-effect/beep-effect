@@ -54,7 +54,7 @@ class JsonParseError extends S.TaggedError<JsonParseError>($I`JsonParseError`)(
 ) {}
 
 const parseJson = (raw: string) =>
-  S.decodeUnknownEffect(S.UnknownFromJsonString)(raw).pipe(
+  S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(raw).pipe(
     Effect.mapError((cause) => new JsonParseError({ message: cause.message, input: raw }))
   )
 ```
@@ -99,6 +99,7 @@ const isStringValue = P.isString(value)
 import { LiteralKit } from "@beep/schema"
 import { $PackageNameId } from "@beep/identity/packages"
 import { Match, pipe } from "effect"
+import * as F from "effect/Function"
 import * as A from "effect/Array"
 import * as P from "effect/Predicate"
 import * as S from "effect/Schema"
@@ -146,8 +147,8 @@ const splitNonEmpty =
     pipe(Str.split(separator)(value), A.filter(Str.isNonEmpty))
 
 const classifyTopicKind = Match.type<string>().pipe(
-  Match.when(isContainsScopeSeparator, TopicKind.thunk.scoped),
-  Match.orElse(TopicKind.thunk.plain)
+  Match.when(isContainsScopeSeparator, F.constant(TopicKind.Enum.scoped)),
+  Match.orElse(F.constant(TopicKind.Enum.plain))
 )
 
 export const TopicName = S.NonEmptyString.check(
@@ -336,7 +337,7 @@ export const fetchProfile = Effect.fn("Profile.fetch")(function* (userId: string
 
 // Internal hot-path flow: untraced.
 const parseSmallPayload = Effect.fnUntraced(function* (raw: string) {
-  return yield* S.decodeUnknownEffect(S.UnknownFromJsonString)(raw)
+  return yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(raw)
 })
 
 // Zero-arg reusable values can stay as effects instead of immediate Effect.fn() invocation.

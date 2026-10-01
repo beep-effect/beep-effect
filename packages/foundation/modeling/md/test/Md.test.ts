@@ -75,7 +75,6 @@ import {
   refineSafeDocument,
   SafeDocument,
 } from "@beep/md/Md.safe";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -87,7 +86,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { micromark } from "micromark";
 import type { EffectRenderAdapter, PureRenderAdapter, RenderError } from "@beep/md/Md.render";
-import type { JsonObject } from "@beep/schema";
 
 const decodeBlock = S.decodeEffect(Block);
 const decodeCodeFenceLanguage = S.decodeEffect(CodeFenceLanguage);
@@ -119,13 +117,13 @@ const FootnoteIdentifierArbitrary = Arbitrary.schema(FootnoteIdentifier);
 const SafeDocumentArbitrary = Arbitrary.schema(SafeDocument);
 
 const markdownHtmlDoc = (): Document => Md.make([Md.h1("Hello"), Md.p("World")]);
-const encodeJsonResult = UnknownFromJsonString.encodeUnknownResult;
+const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const decodeDocumentJsonResult = S.decodeUnknownResult(S.fromJsonString(Document));
 
-const isJsonObject = (value: S.Json): value is JsonObject =>
+const isJsonObject = (value: S.Json): value is S.JsonObject =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-const normalizeJsonBoundaryObject = (value: JsonObject): JsonObject =>
+const normalizeJsonBoundaryObject = (value: S.JsonObject): S.JsonObject =>
   Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeJsonBoundaryValue(item)] as const));
 
 const normalizeJsonBoundaryValue = (value: S.Json): S.Json => {

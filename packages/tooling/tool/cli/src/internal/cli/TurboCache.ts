@@ -45,19 +45,13 @@ const $I = $RepoCliId.create("internal/cli/TurboCache");
  * ```ts
  * import { TurboCacheMode } from "@beep/repo-cli/test/SharedInternals"
  *
- * console.log(TurboCacheMode.Enum.LocalWriteRemoteRead)
+ * console.log(TurboCacheMode.Enum["local:rw,remote:r"])
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const TurboCacheMode = LiteralKit({
-  literals: ["local:rw", "local:rw,remote:r"],
-  enumMapping: [
-    ["local:rw", "LocalOnly"],
-    ["local:rw,remote:r", "LocalWriteRemoteRead"],
-  ],
-}).pipe(
+export const TurboCacheMode = LiteralKit(["local:rw", "local:rw,remote:r"]).pipe(
   $I.annoteSchema("TurboCacheMode", {
     description: "Cache postures the repo CLI is willing to hand to Turbo.",
   })
@@ -79,7 +73,7 @@ export type TurboCacheMode = typeof TurboCacheMode.Type;
  * ```ts
  * import { TurboCacheEnvName } from "@beep/repo-cli/test/SharedInternals"
  *
- * console.log(TurboCacheEnvName.Options.length)
+ * console.log(TurboCacheEnvName.literals.length)
  * ```
  *
  * @category models
@@ -177,7 +171,7 @@ export const turboCachePullRequestPosture = {
   TURBO_API: undefined,
   TURBO_TOKEN: undefined,
   TURBO_TEAM: undefined,
-  TURBO_CACHE: TurboCacheMode.Enum.LocalOnly,
+  TURBO_CACHE: TurboCacheMode.Enum["local:rw"],
 } satisfies Readonly<Record<TurboCacheEnvName, string | undefined>>;
 
 /**
@@ -193,13 +187,15 @@ export const turboCachePullRequestPosture = {
  * ```ts
  * import { TurboCacheSecretEnvName } from "@beep/repo-cli/test/SharedInternals"
  *
- * console.log(TurboCacheSecretEnvName.Options)
+ * console.log(TurboCacheSecretEnvName.literals)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const TurboCacheSecretEnvName = LiteralKit(TurboCacheEnvName.omitOptions(["TURBO_CACHE"])).pipe(
+export const TurboCacheSecretEnvName = LiteralKit(
+  TurboCacheEnvName.pick(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"]).literals
+).pipe(
   $I.annoteSchema("TurboCacheSecretEnvName", {
     description: "Turbo credential environment variables whose references a secret session may resolve.",
   })
@@ -350,7 +346,7 @@ export class TurboCacheEnvironment extends S.Class<TurboCacheEnvironment>($I`Tur
  * ```ts
  * import { TurboCachePlanTag } from "@beep/repo-cli/test/SharedInternals"
  *
- * console.log(TurboCachePlanTag.Options.length)
+ * console.log(TurboCachePlanTag.literals.length)
  * ```
  *
  * @category models
@@ -438,7 +434,7 @@ export class LocalOnlyTurboCache extends S.Class<LocalOnlyTurboCache>($I`LocalOn
  * import { RemoteReadTurboCache, TurboCacheMode } from "@beep/repo-cli/test/SharedInternals"
  *
  * const plan = RemoteReadTurboCache.make({
- *   mode: TurboCacheMode.Enum.LocalWriteRemoteRead,
+ *   mode: TurboCacheMode.Enum["local:rw,remote:r"],
  *   requiresSecretSession: true
  * })
  * console.log(plan.mode)
@@ -688,11 +684,11 @@ const missingTurboCacheEnvNames = (environment: TurboCacheEnvironment): Readonly
     TURBO_CACHE: isConfigured(environment.cache),
   } satisfies Record<TurboCacheEnvName, boolean>;
 
-  return A.filter(TurboCacheEnvName.Options, (name) => !configured[name]);
+  return A.filter(TurboCacheEnvName.literals, (name) => !configured[name]);
 };
 
 const requestedTurboCacheMode = (environment: TurboCacheEnvironment): O.Option<TurboCacheMode> =>
-  pipe(O.fromUndefinedOr(environment.cache), O.map(Str.trim), O.filter(TurboCacheMode.is.LocalWriteRemoteRead));
+  pipe(O.fromUndefinedOr(environment.cache), O.map(Str.trim), O.filter(TurboCacheMode.is["local:rw,remote:r"]));
 
 /**
  * Resolve the cache plan for one Turbo invocation.
@@ -800,7 +796,7 @@ export const turboCachePlanArgs = (plan: TurboCachePlan): ReadonlyArray<string> 
   Match.value(plan).pipe(
     Match.discriminator("_tag")("caller-controlled", ({ cacheDir }) => cacheDirArgs(cacheDir)),
     Match.discriminator("_tag")("local-only", ({ cacheDir }) => [
-      `${CACHE_ARG_PREFIX}${TurboCacheMode.Enum.LocalOnly}`,
+      `${CACHE_ARG_PREFIX}${TurboCacheMode.Enum["local:rw"]}`,
       ...cacheDirArgs(cacheDir),
     ]),
     Match.discriminator("_tag")("remote-read", ({ mode, cacheDir }) => [
@@ -861,7 +857,7 @@ export const turboCachePlanNeedsSecretSession = (plan: TurboCachePlan): boolean 
  * @since 0.0.0
  */
 export const localOnlyTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
-  A.map(args, (arg) => (isRemoteTurboCacheArg(arg) ? `${CACHE_ARG_PREFIX}${TurboCacheMode.Enum.LocalOnly}` : arg));
+  A.map(args, (arg) => (isRemoteTurboCacheArg(arg) ? `${CACHE_ARG_PREFIX}${TurboCacheMode.Enum["local:rw"]}` : arg));
 
 /**
  * Whether arguments already carry a remote cache posture.

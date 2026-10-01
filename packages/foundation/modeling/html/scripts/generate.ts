@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 import { $HtmlId } from "@beep/identity";
-import { Defect, LiteralKit } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 /**
  * Code generator for the exhaustive HTML AST.
  *
@@ -56,7 +55,7 @@ const $I = $HtmlId.create("scripts/generate");
 class HtmlGenerationError extends S.TaggedError<HtmlGenerationError>($I`HtmlGenerationError`)(
   "HtmlGenerationError",
   {
-    cause: Defect({ includeStack: true }).pipe(S.optionalKey),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent), S.optionalKey),
     message: S.String,
   },
   $I.annoteError<HtmlGenerationError>("HtmlGenerationError", {
@@ -66,7 +65,7 @@ class HtmlGenerationError extends S.TaggedError<HtmlGenerationError>($I`HtmlGene
 
 const isHtmlGenerationError = S.is(HtmlGenerationError);
 
-const encodeJsonResult = UnknownFromJsonString.encodeUnknownResult;
+const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const encodeJson = (value: unknown): string =>
   pipe(
     encodeJsonResult(value),

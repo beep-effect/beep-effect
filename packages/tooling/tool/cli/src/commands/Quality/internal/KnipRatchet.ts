@@ -294,7 +294,7 @@ const normalizeRawReport = (report: KnipRawReport): ReadonlyArray<KnipFinding> =
     report.issues,
     A.flatMap((issue) =>
       pipe(
-        KnipFindingKind.Options,
+        KnipFindingKind.literals,
         A.flatMap((kind) => normalizeIssueKind(issue, kind))
       )
     ),

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
@@ -82,7 +81,7 @@ export class UsageRecord extends ProductEntity.Entity<UsageRecord>()(Epistemic.U
     ),
     inputTokens: S.Natural.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("input_tokens")),
     latencyMillis: S.Natural.pipe(S.OptionFromNullOr, pg.integer(), pg.columnName("latency_millis")),
-    metadata: UnknownRecord.pipe(pg.jsonb()),
+    metadata: S.Record(S.String, S.Unknown).pipe(pg.jsonb()),
     model: UsageModelName.annotateKey({ description: "Provider model name recorded for usage attribution." }).pipe(
       pg.text()
     ),

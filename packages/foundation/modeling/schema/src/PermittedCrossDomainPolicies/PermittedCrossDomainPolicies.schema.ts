@@ -68,7 +68,7 @@ export const PermittedCrossDomainPoliciesValue = PermittedCrossDomainPoliciesVal
 export type PermittedCrossDomainPoliciesValue = typeof PermittedCrossDomainPoliciesValue.Type;
 const isPermittedCrossDomainPoliciesValue = S.is(PermittedCrossDomainPoliciesValue);
 
-const PermittedCrossDomainPoliciesOptionBase = LiteralKit([false, ...PermittedCrossDomainPoliciesValueBase.Options]);
+const PermittedCrossDomainPoliciesOptionBase = LiteralKit([false, ...PermittedCrossDomainPoliciesValueBase.literals]);
 
 /**
  * Schema for enabled or disabled cross-domain policy options.

@@ -15,7 +15,7 @@ const $I = $RepoCliId.create("commands/Laws/LawsPackage.model");
  * **Example** (List package laws)
  * ```ts
  * import { LawsPackageLaw } from "@beep/repo-cli/commands/Laws/LawsPackage.model"
- * console.log(LawsPackageLaw.Options)
+ * console.log(LawsPackageLaw.literals)
  * ```
  *
  * @category schemas
@@ -41,7 +41,7 @@ export type LawsPackageLaw = typeof LawsPackageLaw.Type;
  * **Example** (Select a package overlay)
  * ```ts
  * import { LawsPackageScope, LawsPackageLaw } from "@beep/repo-cli/commands/Laws/LawsPackage.model"
- * console.log(LawsPackageScope.make({ packageDir: "packages/demo", repoRoot: "/repo", overlayPath: "packages/demo/tsconfig.test.json", laws: LawsPackageLaw.Options }).packageDir)
+ * console.log(LawsPackageScope.make({ packageDir: "packages/demo", repoRoot: "/repo", overlayPath: "packages/demo/tsconfig.test.json", laws: LawsPackageLaw.literals }).packageDir)
  * ```
  *
  * @category models

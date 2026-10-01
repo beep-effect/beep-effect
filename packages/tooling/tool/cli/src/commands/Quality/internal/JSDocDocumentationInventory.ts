@@ -83,7 +83,7 @@ const JSDocDocumentationRuleCode = LiteralKit([
 
 type JSDocDocumentationRuleCode = typeof JSDocDocumentationRuleCode.Type;
 
-const newDocumentationRuleCodes = JSDocDocumentationRuleCode.pickOptions([
+const newDocumentationRuleCodes = JSDocDocumentationRuleCode.pick([
   "undescribed-see",
   "multiple-description-paragraphs",
   "leading-blank",
@@ -99,7 +99,7 @@ const newDocumentationRuleCodes = JSDocDocumentationRuleCode.pickOptions([
   "loose-ts-fence",
   "forbidden-remarks",
   "no-root-package-import",
-]);
+]).literals;
 
 /**
  * One JSDoc documentation finding produced by an inventory rule.

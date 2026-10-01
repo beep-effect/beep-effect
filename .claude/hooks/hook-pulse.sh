@@ -219,17 +219,19 @@ payload="$(cat)"
 # layer earlier. Only the salted preimage is unsafe in a shell value; the raw
 # identifiers themselves are ordinary strings. The `cwd` fallback lives here
 # rather than in the main program so that exactly one expression decides what
-# gets hashed.
+# gets hashed. The fourth field is the raw event name, read only to gate the
+# SessionStart harness walk below; it is never hashed or written from here.
 identifier_program='
 def as_string: if type == "string" then . else null end;
 def as_present: as_string | if . == "" then null else . end;
 def nul: [0] | implode;
 ((.session_id | as_present) // ""), nul,
 ((.cwd | as_string) // $fallbackCwd), nul,
-((.transcript_path | as_present) // ""), nul
+((.transcript_path | as_present) // ""), nul,
+((.hook_event_name | as_present) // ""), nul
 '
 
-# The trailing `nul` is what makes the third read succeed rather than hit EOF,
+# The trailing `nul` is what makes the last read succeed rather than hit EOF,
 # and clobbering to `""` on a failed read is a safety property, not tidiness: a
 # `read` that reaches EOF before its delimiter still assigns the partial data it
 # consumed. So a jq build that could not emit the separator would otherwise leave
@@ -241,10 +243,12 @@ def nul: [0] | implode;
 raw_session_id=""
 raw_cwd=""
 raw_transcript_path=""
+raw_hook_event=""
 {
   IFS= read -r -d '' raw_session_id || raw_session_id=""
   IFS= read -r -d '' raw_cwd || raw_cwd=""
   IFS= read -r -d '' raw_transcript_path || raw_transcript_path=""
+  IFS= read -r -d '' raw_hook_event || raw_hook_event=""
 } < <(jq -j --arg fallbackCwd "${PWD}" "${identifier_program}" <<<"${payload}" 2>/dev/null)
 
 session_id_hash="$(sha256_private_identifier "${raw_session_id}")" || exit 0
@@ -260,30 +264,37 @@ transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || 
 # can never false-negative, since a PostToolUse payload always carries the
 # quoted event name. The raw skill name or path lives only in these locals and
 # the jq pass; the row receives the digest or nothing.
+# The repo root is the nearest ancestor of `cwd` holding BOTH `AGENTS.md` and
+# `.git`: `AGENTS.md` alone would stop at a nested app's own guide
+# (`apps/*/AGENTS.md`) and misfile every root surface. Only an absolute `cwd`
+# enters the walk (a relative one yields no surface in the jq program and the
+# codec alike), and the loop stops once a strip makes no progress, so a segment
+# without `/` can never spin forever. It sets `found_repo_root` (empty when
+# nothing matches) instead of printing, so callers pay no subshell for it.
+find_repo_root() {
+  found_repo_root=""
+  local probe next_probe
+  case "$1" in
+    /*) probe="$1" ;;
+    *) probe="" ;;
+  esac
+  while [ -n "${probe}" ] && [ "${probe}" != "/" ]; do
+    if [ -e "${probe}/AGENTS.md" ] && [ -e "${probe}/.git" ]; then
+      found_repo_root="${probe}"
+      return 0
+    fi
+    next_probe="${probe%/*}"
+    [ "${next_probe}" = "${probe}" ] && return 0
+    probe="${next_probe}"
+  done
+}
+
 surface_hash=""
 case "${payload}" in
   *'"PostToolUse"'*)
-    # The repo root is the nearest ancestor of `cwd` holding BOTH `AGENTS.md`
-    # and `.git`: `AGENTS.md` alone would stop at a nested app's own guide
-    # (`apps/*/AGENTS.md`) and misfile every root surface. No match falls back to
-    # `cwd`, which is also the TypeScript codec's default. Only an absolute
-    # `cwd` enters the walk (a relative one yields no surface in the jq program
-    # and the codec alike), and the loop stops once a strip makes no progress,
-    # so a segment without `/` can never spin forever.
-    repo_root="${raw_cwd}"
-    case "${raw_cwd}" in
-      /*) probe="${raw_cwd}" ;;
-      *) probe="" ;;
-    esac
-    while [ -n "${probe}" ] && [ "${probe}" != "/" ]; do
-      if [ -e "${probe}/AGENTS.md" ] && [ -e "${probe}/.git" ]; then
-        repo_root="${probe}"
-        break
-      fi
-      next_probe="${probe%/*}"
-      [ "${next_probe}" = "${probe}" ] && break
-      probe="${next_probe}"
-    done
+    # No match falls back to `cwd`, which is also the TypeScript codec's default.
+    find_repo_root "${raw_cwd}"
+    repo_root="${found_repo_root:-${raw_cwd}}"
 
     # Every branch yields a string, never `empty` (see the `capture()` note in the
     # header). `segments` is a lexical fold: `..` pops, `.` and `""` vanish.
@@ -353,6 +364,230 @@ def file_tools: [ "Read", "Edit", "Write", "MultiEdit", "NotebookEdit" ];
     ;;
 esac
 
+# Harness hash (goals/harness-evidence-ledger, D9): which harness regime this
+# session started under, so `harness-ledger prune-proposals` can count only
+# sessions under the current one. It is a MIRROR of `makeAiMetricsConfigSnapshot`
+# (`config-snapshot.ts`) followed by `deriveHarnessHash` (`harness-ledger.ts`),
+# and the writer conformance test compares the two over fixture roots. Only
+# `SessionStart` owns the stamp, so every other event skips this block before
+# spawning anything. The gate is the exact event name from the identifier pass,
+# not a substring of the payload: a PreToolUse editing `settings.json` can carry
+# the text "SessionStart" in its tool input, and must not pay for a repo walk.
+#
+# Parity beats coverage. A missing stamp only keeps a session out of the
+# window; a wrong one silently corrupts evidence. So every case the shell
+# cannot prove it hashes exactly as TypeScript does drops the stamp, never the
+# row: no repo root, a missing tool (GNU `find -printf` included), any `find`
+# error (unreadable directory, symlink loop), a path outside printable ASCII
+# or holding a backslash (sort order and `sha256sum` escaping stop matching
+# JS), 1000 or more collected files (the `maxFiles` budget), more than 8 MiB of
+# included bytes (`maxTotalBytes`), and an awk that fails the decoder
+# self-tests. Files over 512 KiB are skipped, exactly as TypeScript skips them. Depth is mirrored by `-maxdepth 8`
+# (TypeScript collects a file at depth 8 but never reads a directory there),
+# and `-L` mirrors `stat`, which follows symlinks such as `CLAUDE.md`.
+#
+# The walk: repo-root `AGENTS.md`/`CLAUDE.md` at any depth (the TypeScript root
+# walk recurses with an agent-doc filter), plus every file under `.codex`,
+# `.claude`, `.ai`, and `.aiassistant`. Excluded directory names are pruned by
+# name, and a directory holding `.git` (a nested checkout such as
+# `.claude/worktrees/*`) drops out with everything beneath it. `find` cannot
+# prune on "has a .git child", so it reports each `.git` and awk drops the
+# files under those roots afterwards.
+#
+# THE NUL TRAP again: the per-scope preimage joins `path<NUL>hash` lines, so
+# the lines carry `\001` as a stand-in and `tr` swaps in the NUL inside the pipe.
+# Paths are printable ASCII by then, so `\001` cannot collide with one.
+harness_config_hash() (
+  cd -- "$1" 2>/dev/null || exit 1
+  for tool in find sort awk tr od sha256sum; do
+    command -v "${tool}" >/dev/null 2>&1 || exit 1
+  done
+  export LC_ALL=C
+  tab="$(printf '\t')"
+
+  # `readFileString` decodes with `TextDecoder`, so TypeScript hashes the UTF-8
+  # re-encoding of the decoded text, not the raw bytes. For valid UTF-8 without
+  # a byte-order mark those are identical; `utf8_program` names every file for
+  # which they may not be (invalid UTF-8 in the WHATWG sense, a NUL, or a
+  # leading BOM), and `transcode_program` reproduces the decoder for those:
+  # a leading BOM is dropped and each maximal invalid subpart becomes U+FFFD,
+  # the WHATWG "UTF-8 decode" algorithm step for step. Both are written with
+  # octal escapes and decimal bytes so any POSIX awk parses them, and both must
+  # pass the self-tests below before this machine's awk is trusted with them.
+  utf8_program='
+FNR == 1 && /^\357\273\277/ { print FILENAME }
+!/^([\001-\177]|[\302-\337][\200-\277]|\340[\240-\277][\200-\277]|[\341-\354\356\357][\200-\277][\200-\277]|\355[\200-\237][\200-\277]|\360[\220-\277][\200-\277][\200-\277]|[\361-\363][\200-\277][\200-\277][\200-\277]|\364[\200-\217][\200-\277][\200-\277])*$/ { print FILENAME }
+'
+  transcode_program='
+{ for (f = 1; f <= NF; f++) byte[++n] = $f + 0 }
+END {
+  i = (n >= 3 && byte[1] == 239 && byte[2] == 187 && byte[3] == 191) ? 4 : 1
+  need = 0; lower = 128; upper = 191
+  while (i <= n) {
+    b = byte[i]
+    if (need == 0) {
+      if (b < 128) { printf "%c", b; i++; continue }
+      if (b >= 194 && b <= 223) need = 1
+      else if (b >= 224 && b <= 239) { need = 2; if (b == 224) lower = 160; if (b == 237) upper = 159 }
+      else if (b >= 240 && b <= 244) { need = 3; if (b == 240) lower = 144; if (b == 244) upper = 143 }
+      else { printf "%c%c%c", 239, 191, 189; i++; continue }
+      lead = i; seen = 0; i++; continue
+    }
+    if (b < lower || b > upper) {
+      need = 0; lower = 128; upper = 191
+      printf "%c%c%c", 239, 191, 189
+      continue
+    }
+    lower = 128; upper = 191; seen++; i++
+    if (seen == need) { for (j = lead; j < i; j++) printf "%c", byte[j]; need = 0 }
+  }
+  if (need != 0) printf "%c%c%c", 239, 191, 189
+}
+'
+  # Self-tests. The validator must pass a clean multi-byte line and flag each of
+  # eight defects (stray continuation, overlong, surrogate, past U+10FFFF,
+  # truncated at EOF, NUL, leading BOM, invalid lead). The transcoder must hash
+  # one input exercising every branch to the digest `TextDecoder` +
+  # `TextEncoder` + SHA-256 produce for it under both Node and Bun.
+  clean="$(awk "${utf8_program}" <(printf 'ok \303\251 \342\234\223 \360\237\230\200\n') 2>/dev/null)" || exit 1
+  [ -z "${clean}" ] || exit 1
+  flagged_fixtures="$(
+    awk "${utf8_program}" \
+      <(printf '\200\n') \
+      <(printf '\300\257\n') \
+      <(printf '\355\240\200\n') \
+      <(printf '\364\220\200\200\n') \
+      <(printf 'x\303') \
+      <(printf 'a\000b\n') \
+      <(printf '\357\273\277x\n') \
+      <(printf '\377\n') 2>/dev/null | sort -u | awk 'END { print NR }'
+  )" || exit 1
+  [ "${flagged_fixtures}" = "8" ] || exit 1
+  transcoded_fixture="$(
+    printf '\357\273\277a\200\300\257\355\240\200\364\220\200\200\342\202b\360\237\230\200\000\377\n\340\200\303' |
+      od -An -v -tu1 | awk "${transcode_program}" | sha256sum
+  )" || exit 1
+  [ "${transcoded_fixture%% *}" = "933e428115e320ec7b4232feee1cf28d403bf5e203227082c5b7a5b516259186" ] || exit 1
+
+  excluded=(
+    -name .beep -o -name .cache -o -name .git -o -name .idea -o -name .next -o -name .repos
+    -o -name .turbo -o -name .venv -o -name build -o -name coverage -o -name dist -o -name ide
+    -o -name logs -o -name node_modules -o -name outputs -o -name projects -o -name shell-snapshots
+    -o -name statsig -o -name target -o -name todos
+  )
+  config_roots=()
+  for config_root in .codex .claude .ai .aiassistant; do
+    [ -e "${config_root}" ] && config_roots+=("${config_root}")
+  done
+
+  # One record per NUL-terminated line: `RG`/`CG` name a directory holding
+  # `.git` in the root/config walk, `RF`/`CF` a collected file with its size.
+  # Newlines inside names become `\001` so they fail the printable check.
+  collect_program='
+/[^ -~\t]/ || index($0, "\\") { bad = 1; next }
+$1 == "RG" && NF == 2 { rg[$2] = 1; next }
+$1 == "CG" && NF == 2 { cg[$2] = 1; next }
+($1 == "RF" || $1 == "CF") && NF == 3 { n++; kind[n] = $1; size[n] = $2; path[n] = $3; next }
+{ bad = 1 }
+END {
+  if (bad) exit 1
+  kept = 0
+  for (i = 1; i <= n; i++) {
+    k = split(path[i], seg, "/")
+    prefix = seg[1]
+    nested = 0
+    for (j = 2; j < k; j++) {
+      prefix = prefix "/" seg[j]
+      if ((kind[i] == "RF" && (prefix in rg)) || (kind[i] == "CF" && (prefix in cg))) { nested = 1; break }
+    }
+    if (nested) continue
+    kept++
+    rel = path[i]
+    sub(/^\.\//, "", rel)
+    print rel "\t" size[i]
+  }
+  if (kept >= 1000) exit 1
+}
+'
+  collected="$(
+    {
+      find -L . -mindepth 1 -maxdepth 8 \
+        -name .git ! -type l -printf 'RG\t%h\0' -prune -o \
+        \( "${excluded[@]}" \) -prune -o \
+        -type f \( -name AGENTS.md -o -name CLAUDE.md \) -printf 'RF\t%s\t%p\0' &&
+        if [ "${#config_roots[@]}" -gt 0 ]; then
+          find -L "${config_roots[@]}" -maxdepth 8 \
+            -name .git ! -type l -printf 'CG\t%h\0' -prune -o \
+            \( "${excluded[@]}" \) -prune -o \
+            -type f -printf 'CF\t%s\t%p\0'
+        fi
+    } 2>/dev/null | tr '\n\000' '\001\n' | awk -F "${tab}" "${collect_program}"
+  )" || exit 1
+
+  # Sorted and deduplicated by path (the two walks overlap under `.claude`),
+  # oversize files skipped, and the byte budget enforced over what remains.
+  included="$(
+    printf '%s\n' "${collected}" | sort -t "${tab}" -k1,1 -u | awk -F "${tab}" '
+NF == 2 && $2 <= 524288 { total += $2; print $1 }
+END { if (total > 8388608) exit 1 }
+'
+  )" || exit 1
+  [ -n "${included}" ] || exit 1
+  mapfile -t files <<<"${included}"
+  files=("${files[@]/#/./}")
+
+  digests="$(sha256sum -- "${files[@]}" 2>/dev/null)" || exit 1
+  # Files whose raw bytes are not what TypeScript hashes get the transcoded
+  # digest instead, keyed by path; the scope program prefers it.
+  overrides=""
+  needs_transcode="$(awk "${utf8_program}" "${files[@]}" 2>/dev/null | sort -u)" || exit 1
+  if [ -n "${needs_transcode}" ]; then
+    mapfile -t transcode_files <<<"${needs_transcode}"
+    for file in "${transcode_files[@]}"; do
+      digest="$(od -An -v -tu1 -- "${file}" | awk "${transcode_program}" | sha256sum)" || exit 1
+      overrides+="${digest%% *}  ${file}"$'\n'
+    done
+  fi
+  scope_program='
+NR == FNR { if (length($0) > 66) override[substr($0, 67)] = substr($0, 1, 64); next }
+{
+  hash = substr($0, 1, 64)
+  name = substr($0, 67)
+  if (name in override) hash = override[name]
+  if (hash !~ /^[0-9a-f]+$/ || length(hash) != 64 || substr($0, 65, 2) != "  ") exit 1
+  rel = name
+  sub(/^\.\//, "", rel)
+  session = (rel == ".claude/settings.json" || rel == ".claude/settings.local.json" || rel == ".codex/config.toml" || rel == "AGENTS.md" || rel == "CLAUDE.md")
+  if (session == want) print rel "\001" hash
+}
+'
+  session_body="$(awk -v want=1 "${scope_program}" <(printf '%s\n' "${overrides}") <(printf '%s\n' "${digests}"))" || exit 1
+  baseline_body="$(awk -v want=0 "${scope_program}" <(printf '%s\n' "${overrides}") <(printf '%s\n' "${digests}"))" || exit 1
+  session_hash="$(printf 'ai-metrics-config-session-v1\n%s' "${session_body}" | tr '\001' '\000' | sha256sum)" || exit 1
+  baseline_hash="$(printf 'ai-metrics-config-baseline-v1\n%s' "${baseline_body}" | tr '\001' '\000' | sha256sum)" || exit 1
+  session_hash="${session_hash%% *}"
+  baseline_hash="${baseline_hash%% *}"
+  harness_hash="$(printf 'harness-hash-v1\n%s\n%s' "${session_hash}" "${baseline_hash}" | sha256sum)" || exit 1
+  harness_hash="${harness_hash%% *}"
+  for digest in "${session_hash}" "${baseline_hash}" "${harness_hash}"; do
+    case "${digest}" in
+      "" | *[!0-9a-f]*) exit 1 ;;
+    esac
+    [ "${#digest}" -eq 64 ] || exit 1
+  done
+  printf '%s' "${harness_hash}"
+)
+
+harness_hash=""
+if [ "${raw_hook_event}" = "SessionStart" ]; then
+  # Unlike `surface`, no fallback to `cwd`: a stamp over the wrong root would be
+  # a wrong stamp, and no stamp is the safe failure.
+  find_repo_root "${raw_cwd}"
+  if [ -n "${found_repo_root}" ]; then
+    harness_hash="$(harness_config_hash "${found_repo_root}")" || harness_hash=""
+  fi
+fi
+
 jq_program='
 def as_string: if type == "string" then . else null end;
 def as_present: as_string | if . == "" then null else . end;
@@ -383,7 +618,7 @@ def put($key; v): ([v][0]) as $value | if $value == null then . else . + { ($key
 # schema `Options`, so the duplication is checked rather than merely intended.
 def hook_events: [ "PreToolUse", "PermissionRequest", "PostToolUse", "PostToolUseFailure",
                    "Notification", "UserPromptSubmit", "Stop", "SessionEnd",
-                   "PermissionDenied" ];
+                   "PermissionDenied", "SessionStart" ];
 def notification_types: [ "permission_prompt", "idle_prompt" ];
 
 # The three private identifiers arrive pre-hashed and shape-verified, so nothing
@@ -403,6 +638,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
 | (.prompt_id | as_present) as $promptId
 | ($transcriptPathHash | as_present) as $transcriptPath
 | ($surfaceHash | as_present) as $surface
+| ($harnessHash | as_present) as $harness
 | (.permission_mode | as_present) as $permissionMode
 | (.notification_type | as_present) as $notificationTypeRaw
 | (.duration_ms | as_non_negative) as $durationMs
@@ -447,6 +683,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      | put("sessionEndReason"; (if $hookEvent == "SessionEnd" then $reason else null end))
      | put("isInterrupt"; (if $hookEvent == "PostToolUseFailure" then $isInterrupt else null end))
      | put("surface"; (if $hookEvent == "PostToolUse" then $surface else null end))
+     | put("harnessHash"; (if $hookEvent == "SessionStart" then $harness else null end))
     ) as $row
     # No filename sanitizer here any more, and none is needed: `$sessionId` is a
     # digest the shell already proved matches `^[0-9a-f]{64}$`, which contains no
@@ -468,6 +705,7 @@ output="$(
     --arg cwdHash "${cwd_hash}" \
     --arg transcriptPathHash "${transcript_path_hash}" \
     --arg surfaceHash "${surface_hash}" \
+    --arg harnessHash "${harness_hash}" \
     "${jq_program}" <<<"${payload}" 2>/dev/null
 )" || exit 0
 

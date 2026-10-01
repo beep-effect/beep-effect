@@ -17,7 +17,7 @@ const isExecutionLedgerError = S.is(ExecutionLedgerError);
 describe("ExecutionLedger", () => {
   describe("ExecutionLedgerOperation", () => {
     it("is the closed five-operation domain", () => {
-      expect(ExecutionLedgerOperation.Options).toEqual([
+      expect(ExecutionLedgerOperation.literals).toEqual([
         "appendDecision",
         "appendOutcome",
         "readDecisions",

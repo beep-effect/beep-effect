@@ -578,12 +578,12 @@ describe("knowledge refs listing", () => {
   );
 
   it("derives the quiet set from the remediation table and keeps it disjoint from the gated set", () => {
-    const noRemediation = A.filter(KnowledgeRefClassification.Options, (classification) =>
+    const noRemediation = A.filter(KnowledgeRefClassification.literals, (classification) =>
       Str.startsWith("None;")(knowledgeRefRemediation(classification, KnowledgeRefMissing.make({})))
     );
-    expect(A.sort(noRemediation, Str.Order)).toEqual(A.sort(KnowledgeRefQuietClassification.Options, Str.Order));
+    expect(A.sort(noRemediation, Str.Order)).toEqual(A.sort(KnowledgeRefQuietClassification.literals, Str.Order));
     expect(
-      A.filter(KnowledgeRefQuietClassification.Options, (classification) =>
+      A.filter(KnowledgeRefQuietClassification.literals, (classification) =>
         HashSet.has(KNOWLEDGE_REFS_GATED_CLASSIFICATIONS, classification)
       )
     ).toEqual([]);
@@ -1139,7 +1139,7 @@ const generatedDocuments = Effect.fnUntraced(function* (finding: EffectVitestFin
   const inventory = yield* encodeEffectVitestInventoryDocument(
     EffectVitestInventoryDocument.make({
       schemaVersion: "effect-vitest-inventory/v1",
-      effectVitestVersion: "4.0.0-rc.118",
+      effectVitestVersion: "4.0.0",
       scope: [],
       findings: [finding],
     })

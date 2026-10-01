@@ -204,7 +204,7 @@ export type TerminalOutcome = typeof TerminalOutcome.Type;
  * ```ts
  * import { EvidenceTier } from "@beep/repo-ai-metrics"
  *
- * console.log(EvidenceTier.Options)
+ * console.log(EvidenceTier.literals)
  * // ["observed", "derived", "reconstructed", "heuristic", "unknown"]
  * ```
  *

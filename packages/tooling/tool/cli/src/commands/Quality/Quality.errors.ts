@@ -5,13 +5,13 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { commandErrorFields, messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Quality/Quality.errors");
 
@@ -44,7 +44,7 @@ export class ChangesetGraphError extends S.TaggedError<ChangesetGraphError>($I`C
   {
     message: S.String,
     file: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<ChangesetGraphError>("ChangesetGraphError", {
     description: "Failure raised while validating changeset package references.",
@@ -95,7 +95,7 @@ export class ChangesetStatusError extends S.TaggedError<ChangesetStatusError>($I
   {
     message: S.String,
     file: S.optionalKey(S.String),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<ChangesetStatusError>("ChangesetStatusError", {
     description: "Failure raised while running the path-aware changeset status wrapper.",

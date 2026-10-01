@@ -6,8 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SafeObject as SafeObjectSchema, SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, pipe, R, Str, Struct, thunkNull } from "@beep/utils";
 import { Cause, Clock, DateTime, Effect, Exit, flow, HashMap, HashSet, Order, Ref, Result, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -26,13 +25,16 @@ import {
   CodeModeURL,
   CodeModeURLSearchParams,
   isCodeModeValue,
+  SafeObject as SafeObjectSchema,
 } from "./Codemode.values.ts";
 import { PosInt } from "./PosInt.ts";
+
+const encodeUnknownJsonSync = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-runtime");
 const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 
-export type { SafeObject } from "@beep/schema/SafeObject";
+export type { SafeObject } from "./Codemode.values.ts";
 
 /**
  * Services required to obtain Toolkit handlers and run their streams.
@@ -1024,7 +1026,7 @@ export const toolExpression = (path: string): string =>
   `tools${pipe(
     Str.split(path, "."),
     A.map((segment) =>
-      identifierSegment(segment) ? `.${segment}` : `[${UnknownFromJsonString.encodeUnknownSync(segment)}]`
+      identifierSegment(segment) ? `.${segment}` : `[${encodeUnknownJsonSync(segment)}]`
     ),
     A.join("")
   )}`;

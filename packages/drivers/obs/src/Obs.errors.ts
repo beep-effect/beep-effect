@@ -6,14 +6,14 @@
  */
 
 import { $ObsId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $ObsId.create("Obs.errors");
-const ObsDefect = Defect({ includeStack: true });
+const ObsDefect = S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent));
 const isObsDefect = S.is(ObsDefect);
 
 /**

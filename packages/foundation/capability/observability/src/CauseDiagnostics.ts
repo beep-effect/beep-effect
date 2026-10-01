@@ -28,7 +28,7 @@ import { $ObservabilityId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Cause, Exit, flow, Match, Number as N, pipe, Struct } from "effect";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { decodeNonNegativeInt } from "./internal/decode.ts";
@@ -390,12 +390,12 @@ const classifyReasonCounts = flow(
             pipe(counts.defectCount, O.liftPredicate(N.isGreaterThan(0)), O.as(CauseClassification.Enum.defect))
           ),
           O.firstSomeOf,
-          O.orElseSome(CauseClassification.thunk.failure)
+          O.orElseSome(constant(CauseClassification.Enum.failure))
         )
       )
     )
   ),
-  O.getOrElse(CauseClassification.thunk.empty)
+  O.getOrElse(constant(CauseClassification.Enum.empty))
 );
 
 /**

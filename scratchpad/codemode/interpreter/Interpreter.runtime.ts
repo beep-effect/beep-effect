@@ -12,8 +12,6 @@
  */
 
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { type SafeObject, SafeObject as SafeObjectSchema } from "@beep/schema/SafeObject";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, thunkFalse } from "@beep/utils";
 import {
   Cause,
@@ -27,8 +25,7 @@ import {
   MutableHashSet,
   MutableRef,
   Random,
-  Result,
-} from "effect";
+  Result, flow } from "effect";
 import * as S from "effect/Schema";
 import {
   arrayMethods,
@@ -62,6 +59,8 @@ import {
   CodeModeURLSearchParams,
   isCodeModeValue,
   makeEmptySafeObject,
+  type SafeObject,
+  SafeObject as SafeObjectSchema,
 } from "../Codemode.values.ts";
 import {
   AppliedBinaryOperator,
@@ -188,7 +187,7 @@ const isUrlSearchParamsMethod = S.is(UrlSearchParamsMethod);
 const isUrlStatic = S.is(UrlStatic);
 
 const MAX_ARRAY_LENGTH = 4_294_967_295;
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const StatementNodeType = LiteralKit([
   "ExpressionStatement",
@@ -546,7 +545,7 @@ export class Interpreter<R> {
     for (const [name, value] of globals) {
       MutableHashMap.set(globalScope, name, Binding.new(false, value));
     }
-    for (const name of ErrorConstructorName.Options) {
+    for (const name of ErrorConstructorName.literals) {
       MutableHashMap.set(globalScope, name, Binding.new(false, ErrorConstructorReference.new(name)));
     }
   }

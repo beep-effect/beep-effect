@@ -6,7 +6,7 @@
  */
 
 import { $TailscaleId } from "@beep/identity";
-import { Defect, LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $TailscaleId.create("Tailscale.errors");
@@ -70,7 +70,7 @@ export class TailscaleCommandSpawnError extends S.TaggedError<TailscaleCommandSp
   "TailscaleCommandSpawnError",
   {
     ...commandContextFields,
-    cause: Defect({ includeStack: true }).annotateKey({
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)).annotateKey({
       description: "Underlying platform failure raised while spawning Tailscale.",
     }),
   },
@@ -109,7 +109,7 @@ export class TailscaleCommandOutputError extends S.TaggedError<TailscaleCommandO
   "TailscaleCommandOutputError",
   {
     ...commandContextFields,
-    cause: Defect({ includeStack: true }).annotateKey({
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)).annotateKey({
       description: "Underlying stream failure raised while collecting process output.",
     }),
   },
@@ -196,7 +196,7 @@ export class TailscaleCommandTimeoutError extends S.TaggedError<TailscaleCommand
     timeoutMs: NonNegativeInteger.annotateKey({
       description: "Timeout duration in milliseconds.",
     }),
-    cause: Defect({ includeStack: true }).annotateKey({
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)).annotateKey({
       description: "Timeout defect emitted by Effect.",
     }),
   },
@@ -285,7 +285,7 @@ export type TailscaleCommandError = typeof TailscaleCommandError.Type;
 export class TailscaleStatusParseError extends S.TaggedError<TailscaleStatusParseError>($I`TailscaleStatusParseError`)(
   "TailscaleStatusParseError",
   {
-    cause: Defect({ includeStack: true }).annotateKey({
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)).annotateKey({
       description: "Schema decoding failure retained for structured diagnostics.",
     }),
   },

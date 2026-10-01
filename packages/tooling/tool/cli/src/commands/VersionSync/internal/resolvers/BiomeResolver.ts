@@ -18,9 +18,9 @@ import * as S from "effect/Schema";
 import {
   VersionCategoryReport,
   VersionCategoryStatusEnum,
-  VersionCategoryStatusThunk,
   VersionDriftItem,
   VersionSyncError,
+  versionCategoryStatusFromDrift,
 } from "../../VersionSync.schemas.ts";
 import { updateJsoncSchemaUrl } from "../updaters/JsoncSchemaUpdater.ts";
 import { resolveInstalledToolVersion } from "./RootCatalog.ts";
@@ -186,10 +186,7 @@ export const buildBiomeReport: (state: BiomeSchemaState) => VersionCategoryRepor
   }
 
   return VersionCategoryReport.cases.biome.make({
-    status: A.match(items, {
-      onEmpty: VersionCategoryStatusThunk.ok,
-      onNonEmpty: VersionCategoryStatusThunk.drift,
-    }),
+    status: versionCategoryStatusFromDrift(items),
     items,
     latest: O.some(expectedVersion),
     error: O.none(),

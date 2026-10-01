@@ -589,14 +589,8 @@
   "@beep/schema/HttpHeaders": [
     "./packages/foundation/modeling/schema/src/HttpHeaders/index.ts"
   ],
-  "@beep/schema/HttpMethod": [
-    "./packages/foundation/modeling/schema/src/HttpMethod/index.ts"
-  ],
   "@beep/schema/HttpProtocol": [
     "./packages/foundation/modeling/schema/src/HttpProtocol/index.ts"
-  ],
-  "@beep/schema/HttpStatus": [
-    "./packages/foundation/modeling/schema/src/HttpStatus/index.ts"
   ],
   "@beep/schema/NoOpen": [
     "./packages/foundation/modeling/schema/src/NoOpen/index.ts"
@@ -650,9 +644,6 @@
   "@beep/schema/MappedLiteralKit": [
     "./packages/foundation/modeling/schema/src/MappedLiteralKit/index.ts"
   ],
-  "@beep/schema/Record": [
-    "./packages/foundation/modeling/schema/src/Record/index.ts"
-  ],
   "@beep/acp/agent": ["./packages/drivers/acp/src/AcpAgent.service.ts"],
   "@beep/acp/client": ["./packages/drivers/acp/src/AcpClient.service.ts"],
   "@beep/acp/errors": ["./packages/drivers/acp/src/Acp.errors.ts"],
@@ -705,9 +696,7 @@
     "./packages/foundation/modeling/schema/src/Float64Array.ts"
   ],
   "@beep/schema/Html": ["./packages/foundation/modeling/schema/src/Html.ts"],
-  "@beep/schema/Json": ["./packages/foundation/modeling/schema/src/Json.ts"],
   "@beep/schema/Jsonc": ["./packages/foundation/modeling/schema/src/Jsonc.ts"],
-  "@beep/schema/Jsonl": ["./packages/foundation/modeling/schema/src/Jsonl.ts"],
   "@beep/schema/LocalDate": [
     "./packages/foundation/modeling/schema/src/LocalDate/index.ts"
   ],
@@ -717,17 +706,11 @@
   "@beep/schema/MimeType": [
     "./packages/foundation/modeling/schema/src/MimeType.ts"
   ],
-  "@beep/schema/Options": [
-    "./packages/foundation/modeling/schema/src/Options.ts"
-  ],
   "@beep/schema/Percentage": [
     "./packages/foundation/modeling/schema/src/Percentage.ts"
   ],
   "@beep/schema/PosixPath": [
     "./packages/foundation/modeling/schema/src/PosixPath.ts"
-  ],
-  "@beep/schema/Primitive": [
-    "./packages/foundation/modeling/schema/src/Primitive.ts"
   ],
   "@beep/schema/SchemaUtils": [
     "./packages/foundation/modeling/schema/src/SchemaUtils/index.ts"
@@ -745,23 +728,12 @@
     "./packages/foundation/modeling/schema/src/Sha256.ts"
   ],
   "@beep/schema/Slug": ["./packages/foundation/modeling/schema/src/Slug.ts"],
-  "@beep/schema/Toml": ["./packages/foundation/modeling/schema/src/Toml.ts"],
-  "@beep/schema/Transformations": [
-    "./packages/foundation/modeling/schema/src/Transformations.ts"
-  ],
   "@beep/schema/URL": ["./packages/foundation/modeling/schema/src/URL.ts"],
-  "@beep/schema/Unknown": [
-    "./packages/foundation/modeling/schema/src/Unknown.ts"
-  ],
   "@beep/schema/Xml": ["./packages/foundation/modeling/schema/src/Xml.ts"],
-  "@beep/schema/Yaml": ["./packages/foundation/modeling/schema/src/Yaml.ts"],
   "@beep/ai-sync": ["./packages/tooling/library/ai-sync/src/index.ts"],
   "@beep/ai-sync/*": ["./packages/tooling/library/ai-sync/src/*"],
   "@beep/schema/test/Markdown": [
     "./packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts"
-  ],
-  "@beep/schema/test/Yaml": [
-    "./packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"
   ],
   "@beep/nlp/Algebra": [
     "./packages/foundation/modeling/nlp/src/Algebra/index.ts"
@@ -1227,9 +1199,6 @@
   ],
   "@beep/agents-client/Chat.layer": [
     "./packages/agents/client/src/Chat.layer.ts"
-  ],
-  "@beep/schema/SafeObject": [
-    "./packages/foundation/modeling/schema/src/SafeObject/index.ts"
   ],
   "@beep/epistemic-domain/entities/ClaimDisposition": [
     "./packages/epistemic/domain/src/entities/ClaimDisposition/index.ts"
@@ -1828,9 +1797,6 @@
   ],
   "@beep/schema/FileDiff": [
     "./packages/foundation/modeling/schema/src/FileDiff.schema.ts"
-  ],
-  "@beep/schema/Opaque": [
-    "./packages/foundation/modeling/schema/src/Opaque.ts"
   ],
   "@beep/schema/SafeRemoteHost": [
     "./packages/foundation/modeling/schema/src/SafeRemoteHost.ts"

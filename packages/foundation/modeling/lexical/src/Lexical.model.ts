@@ -18,7 +18,7 @@
 // cspell:word youtu
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
-import { Defect, LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, pipe, Result, SchemaGetter, SchemaTransformation, Struct } from "effect";
 import { dual } from "effect/Function";
@@ -158,13 +158,13 @@ export const TextFormatBits = TextFormatBitMapping.From.Enum;
  * ```ts import.meta.vitest name="Use the lexical model"
  * import { TextFormatBit } from "@beep/lexical-schema/Lexical.model"
  *
- * TextFormatBit.Options[0] // => 1
+ * TextFormatBit.literals[0] // => 1
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const TextFormatBit = LiteralKit(TextFormatBitMapping.To.Options).pipe(
+export const TextFormatBit = LiteralKit(A.map(TextFormatBitMapping.Pairs, ([, bit]) => bit)).pipe(
   $I.annoteSchema("TextFormatBit", {
     description: "One Lexical TextFormatType bit value.",
   })
@@ -201,7 +201,7 @@ export type TextFormatBit = typeof TextFormatBit.Type;
  * @category constants
  * @since 0.0.0
  */
-export const TEXT_FORMAT_MASK_ALL = A.reduce(TextFormatBit.Options, 0, (mask, bit) => mask | bit);
+export const TEXT_FORMAT_MASK_ALL = A.reduce(TextFormatBit.literals, 0, (mask, bit) => mask | bit);
 
 const TextFormatMaskBase = S.Natural.check(
   S.isLessThanOrEqualTo(TEXT_FORMAT_MASK_ALL, {
@@ -326,13 +326,13 @@ export const TextDetailBits = TextDetailBitMapping.From.Enum;
  * ```ts import.meta.vitest name="Use the lexical model"
  * import { TextDetailBit } from "@beep/lexical-schema/Lexical.model"
  *
- * TextDetailBit.Options[0] // => 1
+ * TextDetailBit.literals[0] // => 1
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const TextDetailBit = LiteralKit(TextDetailBitMapping.To.Options).pipe(
+export const TextDetailBit = LiteralKit(A.map(TextDetailBitMapping.Pairs, ([, bit]) => bit)).pipe(
   $I.annoteSchema("TextDetailBit", {
     description: "One Lexical TextDetailType bit value.",
   })
@@ -369,7 +369,7 @@ export type TextDetailBit = typeof TextDetailBit.Type;
  * @category constants
  * @since 0.0.0
  */
-export const TEXT_DETAIL_MASK_ALL = A.reduce(TextDetailBit.Options, 0, (mask, bit) => mask | bit);
+export const TEXT_DETAIL_MASK_ALL = A.reduce(TextDetailBit.literals, 0, (mask, bit) => mask | bit);
 
 const TextDetailMaskBase = S.Natural.check(
   S.isLessThanOrEqualTo(TEXT_DETAIL_MASK_ALL, {
@@ -470,7 +470,7 @@ export type LexicalIndentDepth = typeof LexicalIndentDepth.Type;
  * ```ts import.meta.vitest name="Use the lexical model"
  * import { TableCellHeaderState } from "@beep/lexical-schema/Lexical.model"
  *
- * TableCellHeaderState.Options // => [0, 1, 2, 3]
+ * TableCellHeaderState.literals // => [0, 1, 2, 3]
  * ```
  *
  * @category models
@@ -3103,7 +3103,7 @@ export class LexicalDecodeError extends S.TaggedError<LexicalDecodeError>($I`Lex
   "LexicalDecodeError",
   {
     message: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
   },
   $I.annoteError<LexicalDecodeError>("LexicalDecodeError", {
     description: "Typed failure raised when a Lexical semantic or wire payload cannot be decoded.",

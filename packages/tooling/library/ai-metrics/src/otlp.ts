@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { SpanKind, SpanStatusCode, TraceFlags } from "@opentelemetry/api";
@@ -101,7 +101,7 @@ const isAiMetricsOtlpAttributeKey = S.is(AiMetricsOtlpAttributeKey);
  * @category constants
  * @since 0.0.0
  */
-export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = AiMetricsOtlpAttributeKey.Options;
+export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = AiMetricsOtlpAttributeKey.literals;
 
 const OpenInferenceSpanKind = LiteralKit(["AGENT", "CHAIN", "LLM", "TOOL"]);
 const OtlpTraceId = S.String.check(S.isPattern(/^[0-9a-f]{32}$/u)).pipe(
@@ -170,7 +170,7 @@ export type AiMetricsOtlpAttributeValue = typeof AiMetricsOtlpAttributeValue.Typ
 export class AiMetricsOtlpExportError extends S.TaggedError<AiMetricsOtlpExportError>($I`AiMetricsOtlpExportError`)(
   "AiMetricsOtlpExportError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsOtlpExportError>("AiMetricsOtlpExportError", {
