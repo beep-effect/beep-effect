@@ -10,6 +10,7 @@ import {
   collectYeetMonitorFailedJobs,
   detectYeetMonitorFlakeClass,
   emptyYeetMonitorRerunBudget,
+  isolateYeetMonitorJobLogFailure,
   planYeetMonitorReruns,
   RepoRunContext,
   renderYeetMonitorJobDecision,
@@ -24,8 +25,10 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, HashSet, Layer, Sink, Stream } from "effect";
+import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
+import { Effect, HashMap, HashSet, Layer, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -79,6 +82,48 @@ const ts2306TornReadLog = ghLog("Build", "Run bun run beep ci lane build", [
   "##[error]command (/opt/actions-runner/_work/beep-effect/beep-effect/packages/ontology/config) /home/ec2-user/.bun/bin/bun run build exited (2)",
   "Failed:    @beep/ontology-config#build",
 ]);
+
+// The per-job logs endpoint (`gh api --allow-escape-sequences
+// repos/{owner}/{repo}/actions/jobs/<id>/logs`) serves the whole job: a BOM on
+// the first line, `<timestamp> <line>` with no job/step prefix, colour escapes
+// intact, and every step. The install step's retry chatter would read as a
+// `ci-timeout` if the failing step were not isolated.
+const endpointLog = (failingStepLines: ReadonlyArray<string>): string =>
+  A.join(
+    A.map(
+      [
+        "Current runner version: '2.330.0'",
+        "##[group]Run bun install --frozen-lockfile",
+        "bun install --frozen-lockfile",
+        "##[endgroup]",
+        "registry request timed out after 5 seconds, retrying",
+        "##[group]Run bun run check",
+        "bun run check",
+        "##[endgroup]",
+        ...failingStepLines,
+        "##[error]Process completed with exit code 1.",
+        "Post job cleanup.",
+        "Cleaning up orphan processes",
+      ],
+      (line, index) => `${index === 0 ? "\uFEFF" : ""}2026-10-01T12:00:${`${index}`.padStart(2, "0")}.1234567Z ${line}`
+    ),
+    "\n"
+  );
+
+const ts2589EndpointLog = endpointLog([
+  "\u001B[31m@beep/box:build: error TS2589: Type instantiation is excessively deep and possibly infinite.\u001B[0m",
+  "\u001B[1mFailed:    @beep/box#build\u001B[0m",
+]);
+
+const genuineEndpointLog = endpointLog([
+  "\u001B[31m@beep/ui:check: src/Panel.tsx(3,5): error TS2322: Type 'string' is not assignable to type 'number'.\u001B[0m",
+  "Failed:    @beep/ui#check",
+]);
+
+const ghRunInProgress = {
+  exitCode: 1,
+  output: "run 7 is still in progress; logs will be available when it is complete",
+};
 
 const failedJob = (
   databaseId: number,
@@ -436,8 +481,9 @@ interface MonitorGhScript {
 }
 
 // Routes the merge loop's gh reads: `run list` for the branch, `run view 7
-// --json jobs` for the one candidate run, `--log-failed` for a red job's log,
-// and `run rerun` for an executed rerun. Anything else — notably a job fetch
+// --json jobs` for the one candidate run, `--log-failed` for a red job's log
+// (the per-job endpoint fallback never has one), and `run rerun` for an
+// executed rerun. Anything else — notably a job fetch
 // for a run the selection should have excluded — dies the test.
 const monitorSpawnerLayer = (script: MonitorGhScript) =>
   Layer.mergeAll(
@@ -454,6 +500,11 @@ const monitorSpawnerLayer = (script: MonitorGhScript) =>
         }
         if (Str.includes("--log-failed")(line)) {
           return Effect.succeed(stubHandle(script.jobLog.exitCode, script.jobLog.output));
+        }
+        if (Str.includes("actions/jobs/991/logs")(line)) {
+          // The per-job endpoint answers like a log that has not materialized,
+          // so a refused primary read keeps its pending/conservative reading.
+          return Effect.succeed(stubHandle(1, "gh: Not Found (HTTP 404)"));
         }
         if (Str.includes("run rerun")(line)) {
           const rerun = script.rerun ?? { exitCode: 0, output: "" };
@@ -493,6 +544,52 @@ const runJobsJson = (
       ],
     })),
   });
+
+describe("isolateYeetMonitorJobLogFailure", () => {
+  it("cuts the failing step out of a whole-job log and strips escapes, timestamps and markers", () => {
+    deepStrictEqual(
+      isolateYeetMonitorJobLogFailure(ts2589EndpointLog),
+      A.join(
+        [
+          "Run bun run check",
+          "bun run check",
+          "",
+          "@beep/box:build: error TS2589: Type instantiation is excessively deep and possibly infinite.",
+          "Failed:    @beep/box#build",
+          "Process completed with exit code 1.",
+        ],
+        "\n"
+      )
+    );
+  });
+
+  it("keeps the whole normalized log when no step carries an error marker", () => {
+    deepStrictEqual(
+      isolateYeetMonitorJobLogFailure(
+        "\uFEFF2026-10-01T12:00:00.1Z \u001B[33mwarn\u001B[0m\n2026-10-01T12:00:01.1Z done"
+      ),
+      "warn\ndone"
+    );
+  });
+
+  it("runs to the end of the log when no step follows the failing one", () => {
+    deepStrictEqual(
+      isolateYeetMonitorJobLogFailure(
+        "2026-10-01T12:00:00.1Z ##[group]Run bun test\n2026-10-01T12:00:01.1Z ##[error]boom\n2026-10-01T12:00:02.1Z tail"
+      ),
+      "Run bun test\nboom\ntail"
+    );
+  });
+
+  it("starts at the top of the log when the error precedes every step marker", () => {
+    deepStrictEqual(
+      isolateYeetMonitorJobLogFailure(
+        "2026-10-01T12:00:00.1Z ##[error]The job was not acquired by Runner\n2026-10-01T12:00:01.1Z ##[group]Run later"
+      ),
+      "The job was not acquired by Runner"
+    );
+  });
+});
 
 // The mid-run selection: an in-progress run's completed red job is collected
 // and classified while its sibling still runs; a green completed run and an
@@ -583,6 +680,138 @@ describe("collectYeetMonitorFailedJobs", () => {
         })
       )
     )
+  );
+});
+
+type ScriptedGhAnswer = { readonly exitCode: number; readonly output: string } | "spawn-fails";
+
+interface JobLogFallbackScenario {
+  readonly endpoint: ScriptedGhAnswer | "unreachable";
+  readonly name: string;
+  readonly primary: ScriptedGhAnswer;
+}
+
+// One red job per fallback scenario inside one in-progress run, keyed by job
+// id, so the whole primary-then-endpoint matrix shares a single spawner layer.
+// "unreachable" dies the test if the endpoint is asked after a primary success.
+// Listed in id order, which is the order the run reports its jobs in.
+const jobLogFallbackScenarioList: ReadonlyArray<readonly [number, JobLogFallbackScenario]> = [
+  [981, { name: "Mid-run TS2589", primary: ghRunInProgress, endpoint: { exitCode: 0, output: ts2589EndpointLog } }],
+  [982, { name: "Mid-run genuine", primary: ghRunInProgress, endpoint: { exitCode: 0, output: genuineEndpointLog } }],
+  [
+    983,
+    {
+      name: "Mid-run oversized",
+      primary: ghRunInProgress,
+      endpoint: {
+        exitCode: 0,
+        output: endpointLog([Str.repeat(600 * 1024)("x"), "Error: Test timed out in 30000ms."]),
+      },
+    },
+  ],
+  [
+    984,
+    {
+      name: "Mid-run escape refusal",
+      primary: ghRunInProgress,
+      endpoint: {
+        exitCode: 1,
+        output: "the response contains terminal escape sequences; pass --allow-escape-sequences to output it anyway",
+      },
+    },
+  ],
+  [985, { name: "Mid-run no gh", primary: "spawn-fails", endpoint: "spawn-fails" }],
+  [986, { name: "Primary read", primary: { exitCode: 0, output: genuineTypeErrorLog }, endpoint: "unreachable" }],
+];
+
+const jobLogFallbackScenarios = HashMap.fromIterable(jobLogFallbackScenarioList);
+
+const scriptedGhAnswer = (answer: ScriptedGhAnswer) =>
+  answer === "spawn-fails"
+    ? Effect.fail(
+        PlatformError.systemError({
+          _tag: "NotFound",
+          module: "ChildProcess",
+          method: "spawn",
+          description: "gh is not installed",
+        })
+      )
+    : Effect.succeed(stubHandle(answer.exitCode, answer.output));
+
+const JOB_LOG_REQUEST_PATTERN = /(?:--job |actions\/jobs\/)(\d+)/u;
+
+const jobLogFallbackSpawnerLayer = Layer.mergeAll(
+  BunCrypto.layer,
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) {
+        return Effect.die("the merge loop never spawns a piped command");
+      }
+      const line = A.join([command.command, ...command.args], " ");
+      if (Str.includes("run list")(line)) {
+        return Effect.succeed(
+          stubHandle(0, runListJson([{ conclusion: null, databaseId: 7, headSha: "abc123", status: "in_progress" }]))
+        );
+      }
+      if (Str.includes("run view 7")(line)) {
+        return Effect.succeed(
+          stubHandle(
+            0,
+            runJobsJson(
+              A.map(jobLogFallbackScenarioList, ([databaseId, scenario]) => ({
+                conclusion: "failure",
+                databaseId,
+                name: scenario.name,
+                status: "completed",
+              }))
+            )
+          )
+        );
+      }
+      const scenario = pipe(
+        O.fromNullishOr(JOB_LOG_REQUEST_PATTERN.exec(line)?.[1]),
+        O.flatMap((id) => HashMap.get(jobLogFallbackScenarios, Number(id)))
+      );
+      if (O.isNone(scenario)) {
+        return Effect.die(`unexpected gh invocation: ${line}`);
+      }
+      if (Str.includes("--log-failed")(line)) {
+        return scriptedGhAnswer(scenario.value.primary);
+      }
+      return scenario.value.endpoint === "unreachable"
+        ? Effect.die(`the primary log read should have sufficed: ${line}`)
+        : scriptedGhAnswer(scenario.value.endpoint);
+    })
+  )
+);
+
+// `gh run view --log-failed` refuses while the parent run is in progress, so
+// each red job's classification must come from the per-job endpoint instead.
+it.layer(jobLogFallbackSpawnerLayer, { timeout: "30 seconds" })("per-job log endpoint fallback", (it) => {
+  it.effect("classifies mid-run red jobs through the endpoint and keeps a primary success unchanged", () =>
+    Effect.gen(function* () {
+      const jobs = yield* collectYeetMonitorFailedJobs(monitorContext, "abc123");
+
+      assertSome(jobs[0]!.flakeClass, "ts2589-no-location");
+      assertNone(jobs[1]!.flakeClass);
+      deepStrictEqual(
+        A.map(jobs, (job) => [job.databaseId, O.getOrNull(job.flakeClass), job.logPending]),
+        [
+          [981, "ts2589-no-location", false],
+          [982, null, false],
+          [983, null, false],
+          [984, null, true],
+          [985, null, true],
+          [986, null, false],
+        ]
+      );
+      const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
+      deepStrictEqual(
+        A.map(plan.decisions, (decision) => decision.status),
+        ["awaiting-run", "needs-code-fix", "needs-code-fix", "awaiting-log", "awaiting-log", "needs-code-fix"]
+      );
+    })
   );
 });
 
