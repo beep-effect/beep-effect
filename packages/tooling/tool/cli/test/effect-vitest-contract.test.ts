@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { fcRuns } from "@beep/fc-runs";
 import {
   applyEffectVitestPrimitiveGraph,
   countEffectVitestSourceLines,
@@ -36,6 +37,7 @@ import * as S from "effect/Schema";
 import { Project } from "ts-morph";
 
 const encodeInventoryJson = S.encodeEffect(S.fromJsonString(EffectVitestInventoryDocument));
+const encodeCensusJson = S.encodeEffect(S.fromJsonString(S.Array(EffectVitestCensusRow)));
 const decodeCensusJson = S.decodeUnknownEffect(S.fromJsonString(S.Array(EffectVitestCensusRow)));
 const isEffectVitestFinding = S.is(EffectVitestFinding);
 const isEffectVitestPackageTiming = S.is(EffectVitestPackageTiming);
@@ -83,6 +85,19 @@ const finding = (line: number, evidence: string, ordinal = 1): EffectVitestFindi
     reason: O.none(),
     fixSha: O.none(),
   });
+
+it.effect.prop(
+  "preserves every census row through its persisted JSON codec",
+  { rows: S.Array(EffectVitestCensusRow) },
+  ({ rows }) =>
+    Effect.gen(function* () {
+      const encoded = yield* encodeCensusJson(rows);
+      const decoded = yield* decodeCensusJson(encoded);
+      deepStrictEqual(decoded, rows);
+      deepStrictEqual(yield* encodeCensusJson(decoded), encoded);
+    }),
+  { arbitrary: fcRuns(25) }
+);
 
 it("keeps symbol absence and literal ordinal suffixes distinct in canonical keys", () => {
   const base = finding(4, "Fx.runSync(program)");

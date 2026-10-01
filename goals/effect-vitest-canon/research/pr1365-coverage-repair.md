@@ -56,3 +56,10 @@ The first integrated CLI quick check used stale generated ai-metrics declaration
 and reported missing HarnessHash exports. Building the updated dependency
 restored the exports; the subsequent CLI lint and check passed. No source repair
 was needed for those diagnostics.
+
+The expanded scanner contract crossed the schema-first codec assertion threshold.
+A schema-derived property now verifies that arrays of census rows retain all
+fields and ordering through the persisted JSON codec, with stable re-encoding.
+The focused persistence regression remains in place. Concurrent full-package
+verification also exposed a transient lint-worker source fixture to Knip; the
+quality rerun must occur after that fixture's scoped cleanup.

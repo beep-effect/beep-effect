@@ -6068,3 +6068,19 @@ pool changes; these observations do not prove a controller fault. A sanitized
 status surface for queue age, available capacity and controller health would
 help distinguish ordinary Spot/capacity delay from a provisioning failure.
 The documented pool limits and queued jobs were left intact.
+
+### Concurrent package proof exposes transient source fixtures to Knip
+
+While verifying PR #1365 after main integration, `yeet publish --start-pr-early`
+ran Knip beside full CLI package verification. Knip reported an untracked
+`packages/tooling/tool/cli/src/lint-worker-fixture-*/index.ts`. The fixture belongs
+to `lint-workers.test.ts`, which deliberately creates a scoped directory beneath
+CLI source so the worker sees it as a project source file. The fixture is valid
+within that test but visible to concurrent repository-wide scans. Prevent this
+by isolating the worker fixture's project, or declaring scan-versus-source-write
+exclusion in scheduling. Do not add the random path to the Knip baseline.
+
+The same merge initially exposed stale generated ai-metrics declarations during
+the CLI quick check (`HarnessHash` missing). Rebuilding the changed dependency
+cleared the errors. Package verification could detect and refresh stale
+referenced declarations before presenting dependent-source diagnostics.
