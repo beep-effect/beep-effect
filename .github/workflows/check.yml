@@ -152,6 +152,14 @@ jobs:
             runner: ubuntu-24.04
             timeout_minutes: 30
             uses_turbo: "false"
+          # Strict @shadcn/lint design-system lane (.oxlintrc.shadcn.json,
+          # docs/runbooks/design-system-lint.md). Visible and non-required
+          # until a branch-ruleset action promotes it.
+          - id: shadcn-lint
+            name: Shadcn Lint
+            runner: ubuntu-24.04
+            timeout_minutes: 20
+            uses_turbo: "false"
           - id: codegen
             name: Codegen Drift
             runner: ubuntu-24.04
@@ -292,6 +300,9 @@ jobs:
           case "${{ matrix.id }}" in
             codegen|ecosystem)
               run_lane ci lane "${{ matrix.id }}"
+              ;;
+            shadcn-lint)
+              run_lane ci lane shadcn-lint
               ;;
             repo-sanity)
               if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then

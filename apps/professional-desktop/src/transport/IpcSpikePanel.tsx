@@ -123,23 +123,9 @@ export function IpcSpikePanel(): JSX.Element {
   const runSpike = useAtomSet(runSpikeAtom);
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        right: 12,
-        bottom: 12,
-        zIndex: 9999,
-        width: 360,
-        padding: 12,
-        background: "rgba(0,0,0,0.85)",
-        color: "#e6e6e6",
-        borderRadius: 8,
-        fontFamily: "monospace",
-        fontSize: 12,
-      }}
-    >
+    <div className="fixed right-3 bottom-3 z-9999 w-90 rounded-md bg-black/85 p-3 font-mono text-xs leading-normal text-white/90">
       <strong>IPC transport spike</strong>
-      <div style={{ display: "flex", gap: 8, margin: "8px 0" }}>
+      <div className="my-2 flex gap-2">
         <button type="button" onClick={() => runSpike(void 0)}>
           Send over IPC
         </button>
@@ -147,7 +133,7 @@ export function IpcSpikePanel(): JSX.Element {
           Cancel
         </button>
       </div>
-      <div style={{ maxHeight: 180, overflow: "auto" }}>
+      <div className="max-h-45 overflow-auto">
         {A.map(lines, (line, index) => (
           <div key={`${index}-${line}`}>{line}</div>
         ))}

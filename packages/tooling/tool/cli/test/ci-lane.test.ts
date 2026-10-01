@@ -303,7 +303,7 @@ describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(26);
+    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(27);
   });
 
   it("covers every runnable lane id", () => {
@@ -332,6 +332,15 @@ describe("CI lane descriptors", () => {
     const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "ecosystem"));
     expect(descriptor.contextName).toBe("Ecosystem Contracts");
     expect(descriptor.required).toBe(false);
+  });
+
+  it("keeps the Shadcn Lint context visible, CLI-runnable, and non-required", () => {
+    const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "shadcn-lint"));
+    expect(descriptor.contextName).toBe("Shadcn Lint");
+    expect(descriptor.required).toBe(false);
+    expect(descriptor.laneClass).toBe("cli-runnable");
+    expect(descriptor.replay).toBe("exact");
+    expect(descriptor.flags).toEqual([]);
   });
 
   it("keeps the JSDoc ratchet visible but non-required", () => {
@@ -1079,6 +1088,18 @@ describe("ciLaneStepsForTesting", () => {
       ["run", "--cwd", "packages/ecosystem/effect-drizzle", "beep:type-test"],
       ["run", "--cwd", "packages/ecosystem/effect-drizzle", "beep:bundle-probe"],
     ]);
+  });
+
+  it("runs the strict design-system lint through the uncached lint:shadcn root task", () => {
+    const steps = ciLaneStepsForTesting(REPO_ROOT, "shadcn-lint", prShapeOptions);
+    expect(A.map(steps, (step) => ({ label: step.label, command: step.command, args: [...step.args] }))).toEqual([
+      {
+        label: "ci:shadcn-lint",
+        command: "bunx",
+        args: ["turbo", "run", "lint:shadcn", ...expectedTurboCacheArgs(["--summarize"]), "--summarize"],
+      },
+    ]);
+    expect(firstOf(steps).env).toBeUndefined();
   });
 
   it("matches coverage baseline regeneration concurrency", () => {

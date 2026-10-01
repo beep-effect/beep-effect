@@ -80,7 +80,7 @@ export function BackToTop() {
   return (
     <button
       aria-label="Back to top"
-      className={`group fixed bottom-6 right-6 z-40 inline-flex size-11 items-center justify-center rounded-full border border-[color-mix(in_oklab,var(--oip-gold)_55%,transparent)] bg-[color-mix(in_oklab,var(--oip-soil)_72%,black)] text-[var(--oip-gold)] shadow-lg backdrop-blur-sm transition-all duration-300 ease-out hover:border-[var(--oip-gold)] hover:bg-[var(--oip-gold)] hover:text-[var(--oip-soil)] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--oip-gold)] ${
+      className={`group fixed bottom-6 right-6 z-40 inline-flex size-11 items-center justify-center rounded-full border border-oip-gold/55 bg-oip-soil-deep text-oip-gold shadow-lg backdrop-blur-sm transition-all duration-300 ease-out hover:border-oip-gold hover:bg-oip-gold hover:text-oip-soil focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-oip-gold ${
         visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0"
       }`}
       hidden={!visible}

@@ -29,6 +29,7 @@ import { EffectDateTimePicker } from "@beep/ui/components/effect-date-time-picke
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@beep/ui/components/empty";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@beep/ui/components/field";
 import { Skeleton } from "@beep/ui/components/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@beep/ui/components/tabs";
 import { Textarea } from "@beep/ui/components/textarea";
 import { ArrowClockwiseIcon } from "@phosphor-icons/react/ArrowClockwise";
 import { ArrowsLeftRightIcon } from "@phosphor-icons/react/ArrowsLeftRight";
@@ -45,6 +46,7 @@ import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { EvidenceSourcePanel } from "./EvidenceSourcePanel.tsx";
 import type { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
@@ -76,6 +78,7 @@ export const ContradictionTriageTab = ContradictionTriageTabBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(ContradictionTriageTabBase)
 );
+const isContradictionTriageTab = S.is(ContradictionTriageTab);
 
 /**
  * Narrow-layout pane selected by the contradiction-triage host.
@@ -420,13 +423,13 @@ function QueueRow({
   return (
     <Button
       aria-pressed={selected}
-      className="h-auto w-full justify-start whitespace-normal px-3 py-3 text-left"
+      className="h-auto w-full justify-start whitespace-normal text-left"
       data-testid="contradiction-candidate-row"
       onClick={() => onCandidateSelect(candidate.id)}
       type="button"
       variant={selected ? "secondary" : "ghost"}
     >
-      <span className="grid min-w-0 flex-1 gap-1.5">
+      <span className="grid min-w-0 flex-1 gap-1.5 py-3">
         <span className="flex min-w-0 items-start justify-between gap-2">
           <span
             className="line-clamp-2 min-w-0 text-sm font-medium"
@@ -496,7 +499,7 @@ function QueueSuccess({
       ) : null}
       {A.match(page.items, {
         onEmpty: () => (
-          <Empty className="border-0" data-testid="contradiction-queue-empty">
+          <Empty data-testid="contradiction-queue-empty">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <CheckCircleIcon aria-hidden="true" />
@@ -584,11 +587,11 @@ function QueuePane({
 
   return (
     <Card className="h-full min-h-0" data-testid="contradiction-queue-pane">
-      <CardHeader className="border-b">
+      <CardHeader bordered>
         <CardTitle>Candidate queue</CardTitle>
         <CardDescription>Persisted candidates ordered for human review.</CardDescription>
       </CardHeader>
-      <CardContent className="flex min-h-0 flex-1 flex-col p-0">{body}</CardContent>
+      <div className="flex min-h-0 flex-1 flex-col">{body}</div>
     </Card>
   );
 }
@@ -649,7 +652,7 @@ function BeliefCard({ beliefView, label, onEvidenceSelect, selectedSource, side 
 
   return (
     <Card className="min-w-0" data-testid={`contradiction-belief-${side}`} size="sm">
-      <CardHeader className="border-b">
+      <CardHeader bordered>
         <div className="flex items-center justify-between gap-2">
           <CardTitle>{label}</CardTitle>
           <Badge variant="outline">No preferred side</Badge>
@@ -658,52 +661,54 @@ function BeliefCard({ beliefView, label, onEvidenceSelect, selectedSource, side 
           {belief.relation} · logical version {belief.version}
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4">
-        <section className="grid gap-2" aria-label={`${label} persisted fact`}>
-          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Persisted fact</h3>
-          <pre
-            className="whitespace-pre-wrap wrap-anywhere rounded-lg bg-muted p-3 text-xs leading-relaxed"
-            data-testid="contradiction-belief-fact"
-          >
-            {formatFact(belief.fact)}
-          </pre>
-        </section>
-        <dl className="grid gap-x-3 gap-y-2 text-xs sm:grid-cols-2">
-          <div className="min-w-0">
-            <dt className="text-muted-foreground">Logical key</dt>
-            <dd className="truncate font-mono" title={belief.logicalKey}>
-              {shortDigest(belief.logicalKey)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Row version</dt>
-            <dd>{belief.rowVersion}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Valid from</dt>
-            <dd>{formatDateTime(belief.validFrom)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Valid to</dt>
-            <dd>{formatOptionalDateTime(belief.validTo)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Known from</dt>
-            <dd>{formatDateTime(belief.recordedAt)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Known to</dt>
-            <dd>{formatOptionalDateTime(belief.expiredAt)}</dd>
-          </div>
-        </dl>
-        <section className="grid gap-2" aria-label={`${label} evidence`}>
-          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Evidence</h3>
-          <EvidenceList
-            evidence={beliefView.evidence}
-            onEvidenceSelect={onEvidenceSelect}
-            selectedSource={selectedSource}
-          />
-        </section>
+      <CardContent>
+        <div className="grid gap-4">
+          <section className="grid gap-2" aria-label={`${label} persisted fact`}>
+            <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Persisted fact</h3>
+            <pre
+              className="whitespace-pre-wrap wrap-anywhere rounded-lg bg-muted p-3 text-xs leading-relaxed"
+              data-testid="contradiction-belief-fact"
+            >
+              {formatFact(belief.fact)}
+            </pre>
+          </section>
+          <dl className="grid gap-x-3 gap-y-2 text-xs sm:grid-cols-2">
+            <div className="min-w-0">
+              <dt className="text-muted-foreground">Logical key</dt>
+              <dd className="truncate font-mono" title={belief.logicalKey}>
+                {shortDigest(belief.logicalKey)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Row version</dt>
+              <dd>{belief.rowVersion}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Valid from</dt>
+              <dd>{formatDateTime(belief.validFrom)}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Valid to</dt>
+              <dd>{formatOptionalDateTime(belief.validTo)}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Known from</dt>
+              <dd>{formatDateTime(belief.recordedAt)}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Known to</dt>
+              <dd>{formatOptionalDateTime(belief.expiredAt)}</dd>
+            </div>
+          </dl>
+          <section className="grid gap-2" aria-label={`${label} evidence`}>
+            <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Evidence</h3>
+            <EvidenceList
+              evidence={beliefView.evidence}
+              onEvidenceSelect={onEvidenceSelect}
+              selectedSource={selectedSource}
+            />
+          </section>
+        </div>
       </CardContent>
     </Card>
   );
@@ -732,7 +737,7 @@ function ProposalCard({
 
   return (
     <Card data-applied={applied} data-testid="contradiction-proposal" size="sm">
-      <CardHeader className="border-b">
+      <CardHeader bordered>
         <div className="flex min-w-0 items-center justify-between gap-2">
           <CardTitle>Persisted replacement</CardTitle>
           <Badge
@@ -744,63 +749,65 @@ function ProposalCard({
         </div>
         <CardDescription>{proposal.rationale}</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-3">
-        <pre
-          className="whitespace-pre-wrap wrap-anywhere rounded-lg bg-muted p-3 text-xs leading-relaxed"
-          data-testid="contradiction-proposal-fact"
-        >
-          {formatFact(proposal.fact)}
-        </pre>
-        <dl className="grid gap-x-3 gap-y-2 text-xs sm:grid-cols-2">
-          <div className="min-w-0">
-            <dt className="text-muted-foreground">Proposal id</dt>
-            <dd className="truncate font-mono" title={proposal.proposalId}>
-              {shortDigest(proposal.proposalId)}
-            </dd>
-          </div>
-          <div className="min-w-0">
-            <dt className="text-muted-foreground">Replaces belief</dt>
-            <dd
-              className="truncate"
-              data-testid="contradiction-proposal-target"
-              title={proposal.losingBelief.logicalKey}
-            >
-              {proposalTargetLabel(proposal)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Valid from</dt>
-            <dd>{formatDateTime(proposal.validFrom)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Valid to</dt>
-            <dd>{formatOptionalDateTime(proposal.validTo)}</dd>
-          </div>
-        </dl>
-        {O.match(resolution, {
-          onNone: () => (
-            <Button
-              aria-pressed={selected}
-              data-testid="contradiction-supersede-request"
-              disabled={disabled}
-              onClick={() => onSupersedeRequested(proposal)}
-              type="button"
-              variant={selected ? "secondary" : "default"}
-            >
-              <ScalesIcon aria-hidden="true" data-icon="inline-start" />
-              Review this proposal
-            </Button>
-          ),
-          onSome: (disposition) => (
-            <p
-              className="flex items-center gap-2 text-xs text-muted-foreground"
-              data-testid="contradiction-proposal-resolved"
-            >
-              <CheckCircleIcon aria-hidden="true" className="shrink-0" />
-              Candidate {disposition.decision.status} — review actions are closed for this candidate.
-            </p>
-          ),
-        })}
+      <CardContent>
+        <div className="grid gap-3">
+          <pre
+            className="whitespace-pre-wrap wrap-anywhere rounded-lg bg-muted p-3 text-xs leading-relaxed"
+            data-testid="contradiction-proposal-fact"
+          >
+            {formatFact(proposal.fact)}
+          </pre>
+          <dl className="grid gap-x-3 gap-y-2 text-xs sm:grid-cols-2">
+            <div className="min-w-0">
+              <dt className="text-muted-foreground">Proposal id</dt>
+              <dd className="truncate font-mono" title={proposal.proposalId}>
+                {shortDigest(proposal.proposalId)}
+              </dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-muted-foreground">Replaces belief</dt>
+              <dd
+                className="truncate"
+                data-testid="contradiction-proposal-target"
+                title={proposal.losingBelief.logicalKey}
+              >
+                {proposalTargetLabel(proposal)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Valid from</dt>
+              <dd>{formatDateTime(proposal.validFrom)}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Valid to</dt>
+              <dd>{formatOptionalDateTime(proposal.validTo)}</dd>
+            </div>
+          </dl>
+          {O.match(resolution, {
+            onNone: () => (
+              <Button
+                aria-pressed={selected}
+                data-testid="contradiction-supersede-request"
+                disabled={disabled}
+                onClick={() => onSupersedeRequested(proposal)}
+                type="button"
+                variant={selected ? "secondary" : "default"}
+              >
+                <ScalesIcon aria-hidden="true" data-icon="inline-start" />
+                Review this proposal
+              </Button>
+            ),
+            onSome: (disposition) => (
+              <p
+                className="flex items-center gap-2 text-xs text-muted-foreground"
+                data-testid="contradiction-proposal-resolved"
+              >
+                <CheckCircleIcon aria-hidden="true" className="shrink-0" />
+                Candidate {disposition.decision.status} — review actions are closed for this candidate.
+              </p>
+            ),
+          })}
+        </div>
       </CardContent>
     </Card>
   );
@@ -1000,7 +1007,7 @@ function ComparisonPane({
   selectedSource,
 }: ComparisonPaneProps): JSX.Element {
   const body = O.isNone(selectedCandidateId) ? (
-    <Empty className="border-0" data-testid="contradiction-detail-empty">
+    <Empty data-testid="contradiction-detail-empty">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <ArrowsLeftRightIcon aria-hidden="true" />
@@ -1042,7 +1049,7 @@ function ComparisonPane({
 
   return (
     <Card className="h-full min-h-0" data-testid="contradiction-comparison-pane">
-      <CardContent className="min-h-0 flex-1 overflow-y-auto p-0">{body}</CardContent>
+      <div className="min-h-0 flex-1 overflow-y-auto">{body}</div>
     </Card>
   );
 }
@@ -1050,8 +1057,8 @@ function ComparisonPane({
 function SourcePane({ onSourcePageChange, onSourceRetry, selectedSource, sourceResult }: SourcePaneProps): JSX.Element {
   const body = O.isNone(selectedSource) ? (
     <Card className="h-full min-h-0">
-      <CardContent className="flex min-h-0 flex-1 flex-col justify-center p-0">
-        <Empty className="border-0" data-testid="contradiction-source-empty">
+      <div className="flex min-h-0 flex-1 flex-col justify-center">
+        <Empty data-testid="contradiction-source-empty">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <FileSearchIcon aria-hidden="true" />
@@ -1062,7 +1069,7 @@ function SourcePane({ onSourcePageChange, onSourceRetry, selectedSource, sourceR
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
-      </CardContent>
+      </div>
     </Card>
   ) : (
     AsyncResult.matchWithError(sourceResult, {
@@ -1207,63 +1214,65 @@ function TriageToolbar({
 }: TriageToolbarProps): JSX.Element {
   return (
     <Card size="sm">
-      <CardContent className="flex flex-wrap items-end gap-3">
-        <Field className="min-w-64 flex-1" orientation="vertical">
-          <FieldLabel id="contradiction-disposition-filter-label">Disposition</FieldLabel>
-          <div
-            aria-labelledby="contradiction-disposition-filter-label"
-            className="flex flex-wrap gap-1"
-            data-testid="contradiction-disposition-filter"
-            role="group"
-          >
-            <Button
-              aria-pressed={query.disposition === "all"}
-              onClick={() => onDispositionChange("all")}
-              size="sm"
-              type="button"
-              variant={query.disposition === "all" ? "secondary" : "outline"}
+      <CardContent>
+        <div className="flex flex-wrap items-end gap-3">
+          <Field className="min-w-64 flex-1" orientation="vertical">
+            <FieldLabel id="contradiction-disposition-filter-label">Disposition</FieldLabel>
+            <div
+              aria-labelledby="contradiction-disposition-filter-label"
+              className="flex flex-wrap gap-1"
+              data-testid="contradiction-disposition-filter"
+              role="group"
             >
-              All
-            </Button>
-            <Button
-              aria-pressed={query.disposition === "open"}
-              onClick={() => onDispositionChange("open")}
-              size="sm"
-              type="button"
-              variant={query.disposition === "open" ? "secondary" : "outline"}
-            >
-              Open
-            </Button>
-            <Button
-              aria-pressed={query.disposition === "rejected"}
-              onClick={() => onDispositionChange("rejected")}
-              size="sm"
-              type="button"
-              variant={query.disposition === "rejected" ? "secondary" : "outline"}
-            >
-              Rejected
-            </Button>
-            <Button
-              aria-pressed={query.disposition === "superseded"}
-              onClick={() => onDispositionChange("superseded")}
-              size="sm"
-              type="button"
-              variant={query.disposition === "superseded" ? "secondary" : "outline"}
-            >
-              Superseded
-            </Button>
+              <Button
+                aria-pressed={query.disposition === "all"}
+                onClick={() => onDispositionChange("all")}
+                size="sm"
+                type="button"
+                variant={query.disposition === "all" ? "secondary" : "outline"}
+              >
+                All
+              </Button>
+              <Button
+                aria-pressed={query.disposition === "open"}
+                onClick={() => onDispositionChange("open")}
+                size="sm"
+                type="button"
+                variant={query.disposition === "open" ? "secondary" : "outline"}
+              >
+                Open
+              </Button>
+              <Button
+                aria-pressed={query.disposition === "rejected"}
+                onClick={() => onDispositionChange("rejected")}
+                size="sm"
+                type="button"
+                variant={query.disposition === "rejected" ? "secondary" : "outline"}
+              >
+                Rejected
+              </Button>
+              <Button
+                aria-pressed={query.disposition === "superseded"}
+                onClick={() => onDispositionChange("superseded")}
+                size="sm"
+                type="button"
+                variant={query.disposition === "superseded" ? "secondary" : "outline"}
+              >
+                Superseded
+              </Button>
+            </div>
+          </Field>
+          <div className="min-w-56 flex-1" data-testid="contradiction-valid-at">
+            <EffectDateTimePicker label="Valid at" onValueChange={onValidAtChange} value={query.validAt} />
           </div>
-        </Field>
-        <div className="min-w-56 flex-1" data-testid="contradiction-valid-at">
-          <EffectDateTimePicker label="Valid at" onValueChange={onValidAtChange} value={query.validAt} />
+          <div className="min-w-56 flex-1" data-testid="contradiction-known-at">
+            <EffectDateTimePicker label="Known at" onValueChange={onKnownAtChange} value={query.knownAt} />
+          </div>
+          <Button data-testid="contradiction-reset-now" onClick={onResetNow} type="button" variant="outline">
+            <ClockCounterClockwiseIcon aria-hidden="true" data-icon="inline-start" />
+            Reset now
+          </Button>
         </div>
-        <div className="min-w-56 flex-1" data-testid="contradiction-known-at">
-          <EffectDateTimePicker label="Known at" onValueChange={onKnownAtChange} value={query.knownAt} />
-        </div>
-        <Button data-testid="contradiction-reset-now" onClick={onResetNow} type="button" variant="outline">
-          <ClockCounterClockwiseIcon aria-hidden="true" data-icon="inline-start" />
-          Reset now
-        </Button>
       </CardContent>
     </Card>
   );
@@ -1276,49 +1285,33 @@ interface NarrowTriageTabsProps {
 
 function NarrowTriageTabs({ activeTab, onActiveTabChange }: NarrowTriageTabsProps): JSX.Element {
   return (
-    <div
-      aria-label="Contradiction triage panes"
-      className="grid w-full grid-cols-3 gap-1 rounded-lg bg-muted p-[3px] @6xl/triage:hidden"
+    <Tabs
+      className="@6xl/triage:hidden"
       data-testid="contradiction-narrow-layout"
-      role="group"
+      onValueChange={(value) => {
+        if (isContradictionTriageTab(value)) onActiveTabChange(value);
+      }}
+      value={activeTab}
     >
-      <Button
-        aria-pressed={activeTab === "queue"}
-        className="aria-pressed:bg-background aria-pressed:shadow-sm"
-        data-testid="contradiction-tab-queue"
-        onClick={() => onActiveTabChange("queue")}
-        size="sm"
-        type="button"
-        variant="ghost"
-      >
-        <FileSearchIcon aria-hidden="true" />
-        Queue
-      </Button>
-      <Button
-        aria-pressed={activeTab === "comparison"}
-        className="aria-pressed:bg-background aria-pressed:shadow-sm"
-        data-testid="contradiction-tab-comparison"
-        onClick={() => onActiveTabChange("comparison")}
-        size="sm"
-        type="button"
-        variant="ghost"
-      >
-        <ArrowsLeftRightIcon aria-hidden="true" />
-        Compare
-      </Button>
-      <Button
-        aria-pressed={activeTab === "source"}
-        className="aria-pressed:bg-background aria-pressed:shadow-sm"
-        data-testid="contradiction-tab-source"
-        onClick={() => onActiveTabChange("source")}
-        size="sm"
-        type="button"
-        variant="ghost"
-      >
-        <BookOpenTextIcon aria-hidden="true" />
-        Source
-      </Button>
-    </div>
+      <TabsList aria-label="Contradiction triage panes" className="grid w-full grid-cols-3">
+        <TabsTrigger aria-controls="contradiction-pane-queue" data-testid="contradiction-tab-queue" value="queue">
+          <FileSearchIcon aria-hidden="true" />
+          Queue
+        </TabsTrigger>
+        <TabsTrigger
+          aria-controls="contradiction-pane-comparison"
+          data-testid="contradiction-tab-comparison"
+          value="comparison"
+        >
+          <ArrowsLeftRightIcon aria-hidden="true" />
+          Compare
+        </TabsTrigger>
+        <TabsTrigger aria-controls="contradiction-pane-source" data-testid="contradiction-tab-source" value="source">
+          <BookOpenTextIcon aria-hidden="true" />
+          Source
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
   );
 }
 
@@ -1332,13 +1325,14 @@ interface TriagePanesProps {
 function TriagePanes({ activeTab, comparisonPane, queuePane, sourcePane }: TriagePanesProps): JSX.Element {
   return (
     <div
-      className="min-h-0 flex-1 @6xl/triage:grid @6xl/triage:grid-cols-[minmax(15rem,0.8fr)_minmax(34rem,2fr)_minmax(19rem,1fr)] @6xl/triage:gap-3"
+      className="min-h-0 flex-1 @6xl/triage:grid @6xl/triage:grid-cols-triage @6xl/triage:gap-3"
       data-testid="contradiction-wide-layout"
     >
       <div
         aria-label="Candidate queue"
         className="h-full min-h-0 @max-6xl/triage:data-[active=false]:hidden"
         data-active={activeTab === "queue"}
+        id="contradiction-pane-queue"
         role="region"
       >
         {queuePane}
@@ -1347,6 +1341,7 @@ function TriagePanes({ activeTab, comparisonPane, queuePane, sourcePane }: Triag
         aria-label="Belief comparison"
         className="@container/compare h-full min-h-0 @max-6xl/triage:data-[active=false]:hidden"
         data-active={activeTab === "comparison"}
+        id="contradiction-pane-comparison"
         role="region"
       >
         {comparisonPane}
@@ -1355,6 +1350,7 @@ function TriagePanes({ activeTab, comparisonPane, queuePane, sourcePane }: Triag
         aria-label="Verified source"
         className="h-full min-h-0 @max-6xl/triage:data-[active=false]:hidden"
         data-active={activeTab === "source"}
+        id="contradiction-pane-source"
         role="region"
       >
         {sourcePane}

@@ -211,6 +211,7 @@ export const CI_LANE_ID_VALUES = [
   "sast",
   "secrets",
   "security",
+  "shadcn-lint",
   "storybook",
   "test-integration",
   "test-unit",
@@ -501,6 +502,18 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [],
+  }),
+  // The design-system lint context lands non-required; promotion is a later
+  // branch-ruleset action after it establishes a stable green history.
+  CiLaneDescriptor.make({
+    id: "shadcn-lint",
+    contextName: "Shadcn Lint",
+    required: false,
+    laneClass: "cli-runnable",
+    replay: "exact",
+    flags: [],
+    notes:
+      "Runs the strict @shadcn/lint policy (.oxlintrc.shadcn.json) over apps and packages; see docs/runbooks/design-system-lint.md.",
   }),
   CiLaneDescriptor.make({
     id: "jsdoc-ratchet",
@@ -1600,6 +1613,9 @@ export const ciLaneStepsForTesting: {
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
+      // Strict @shadcn/lint over apps and packages through the uncached root task, so the
+      // hosted job, the pre-push lane and the lint-policy battery share one command.
+      "shadcn-lint": () => [rootTaskStep(repoRoot, "ci:shadcn-lint", "lint:shadcn")],
       // Quality-lane audit D13: one positively-filtered build, the browser test
       // run, then the static-artifact proof storybook.yml uploads. No
       // --affected on the execution argv: the affected shape is answered once
@@ -2316,6 +2332,7 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "check",
   "codegen",
   "knip",
+  "shadcn-lint",
   "jsdoc-ratchet",
   "secrets",
   "sast",
@@ -2447,6 +2464,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     sast: A.empty<string>,
     secrets: A.empty<string>,
     security: A.empty<string>,
+    "shadcn-lint": A.empty<string>,
     // The affected shape drives the Turbo dry-run probe, not the execution
     // argv (see the storybook lane body).
     storybook: () => turboShapeFlags,

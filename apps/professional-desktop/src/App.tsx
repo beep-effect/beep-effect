@@ -156,7 +156,7 @@ const DesktopSessionNotice = ({ label }: { readonly label: string }): JSX.Elemen
   >
     {/* Env-var tokens have no break opportunities; let them wrap inside a
         narrow pane instead of clipping at its edge. */}
-    <div className="min-w-0 max-w-md break-words [overflow-wrap:anywhere]">
+    <div className="min-w-0 max-w-md wrap-anywhere">
       <p>{label} needs the desktop shell or an authenticated desktop HTTP session.</p>
       <p className="mt-2 text-xs">
         This browser session is chat-only. Launch the sidecar with BEEP_DESKTOP_RPC_SESSION_TOKEN and start Vite with
@@ -744,7 +744,7 @@ const OntologyMenu = ({
         Ontology
         {/* Launcher affordance: this entry opens a panel menu, unlike the
             plain page buttons beside it (QA finding R1-08). */}
-        <span aria-hidden className="ml-1 text-[10px] opacity-70">
+        <span aria-hidden className="ml-1 text-3xs opacity-70">
           ▾
         </span>
       </Button>

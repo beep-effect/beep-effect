@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $UiId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { ContentEditable as LexicalContentEditable } from "@lexical/react/LexicalContentEditable";
 import * as S from "effect/Schema";
 import type { JSX } from "react";
@@ -22,26 +23,53 @@ const $I = $UiId.create("components/editor/content-editable");
  * Consumers passing a custom `className` should pass a `placeholderClassName`
  * whose padding matches, for the same reason.
  */
-const DEFAULT_EDITABLE_CLASS_NAME =
-  "ContentEditable__root relative block min-h-72 min-h-full overflow-auto px-8 py-4 focus:outline-none";
+const DEFAULT_EDITABLE_CLASS_NAME = "relative block min-h-72 min-h-full overflow-auto px-8 py-4 focus:outline-none";
 
 const DEFAULT_PLACEHOLDER_CLASS_NAME =
   "text-muted-foreground pointer-events-none absolute top-0 left-0 overflow-hidden px-8 py-4 text-ellipsis select-none";
 
+/**
+ * The compact surface a single message composer uses: one comfortable line that grows to
+ * a capped height. Editable and placeholder share `px-3 py-2.5` for the same cursor
+ * alignment reason as the document surface.
+ */
+const COMPACT_EDITABLE_CLASS_NAME =
+  "relative block max-h-60 min-h-10 overflow-auto px-3 py-2.5 text-sm leading-6 focus:outline-none";
+
+const COMPACT_PLACEHOLDER_CLASS_NAME =
+  "text-muted-foreground pointer-events-none absolute top-0 left-0 px-3 py-2.5 text-sm leading-6 select-none";
+
+const ContentEditableVariant = LiteralKit(["document", "compact"]).pipe(
+  $I.annoteSchema("ContentEditableVariant", {
+    description: "Surface sizes for the Lexical content-editable: a full document page or a compact composer line.",
+  })
+);
+
+type ContentEditableVariant = typeof ContentEditableVariant.Type;
+
 class Props extends S.Class<Props>($I`Props`)({
   placeholder: S.String,
   ariaLabel: S.optionalKey(S.String),
+  variant: S.optionalKey(ContentEditableVariant),
   className: S.optionalKey(S.String),
   placeholderClassName: S.optionalKey(S.String),
 }) {
   declare readonly placeholder: string;
   declare readonly ariaLabel?: string;
+  declare readonly variant?: ContentEditableVariant;
   declare readonly className?: string;
   declare readonly placeholderClassName?: string;
 }
 
 /**
  * Lexical content-editable surface with a padding-aligned placeholder.
+ *
+ * **Details**
+ *
+ * `variant` picks the surface: `"document"` (the default) is a full editor page with
+ * generous padding; `"compact"` is a single composer line (`text-sm`, `px-3 py-2.5`) that
+ * grows to a capped height. A `className` or `placeholderClassName`, when passed, still
+ * replaces the variant's classes outright.
  *
  * **Gotchas**
  *
@@ -70,16 +98,41 @@ class Props extends S.Class<Props>($I`Props`)({
  * }
  * ```
  *
+ * **Example** (Compact composer surface)
+ *
+ * ```tsx
+ * import { ContentEditable } from "@beep/ui/components/editor/editor-ui/content-editable"
+ *
+ * export function ComposerSurface() {
+ *   return <ContentEditable variant="compact" ariaLabel="Message composer" placeholder="Message" />
+ * }
+ * ```
+ *
  * @category components
  * @since 0.0.0
  */
-export function ContentEditable({ ariaLabel, placeholder, className, placeholderClassName }: Props): JSX.Element {
+export function ContentEditable({
+  ariaLabel,
+  placeholder,
+  variant = "document",
+  className,
+  placeholderClassName,
+}: Props): JSX.Element {
   return (
     <LexicalContentEditable
-      className={className ?? DEFAULT_EDITABLE_CLASS_NAME}
+      className={className ?? (variant === "compact" ? COMPACT_EDITABLE_CLASS_NAME : DEFAULT_EDITABLE_CLASS_NAME)}
       aria-label={ariaLabel}
       aria-placeholder={placeholder}
-      placeholder={<div className={placeholderClassName ?? DEFAULT_PLACEHOLDER_CLASS_NAME}>{placeholder}</div>}
+      placeholder={
+        <div
+          className={
+            placeholderClassName ??
+            (variant === "compact" ? COMPACT_PLACEHOLDER_CLASS_NAME : DEFAULT_PLACEHOLDER_CLASS_NAME)
+          }
+        >
+          {placeholder}
+        </div>
+      }
     />
   );
 }

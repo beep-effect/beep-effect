@@ -10,7 +10,7 @@ import { A } from "@beep/utils";
 import * as P from "effect/Predicate";
 import { useEffect, useRef } from "react";
 import { cn } from "../lib/index.ts";
-import type { HTMLAttributes } from "react";
+import type { CSSProperties, HTMLAttributes } from "react";
 
 /**
  * Live waveform props type.
@@ -537,9 +537,9 @@ export const LiveWaveform = ({
 
   return (
     <div
-      className={cn("relative h-full w-full", className)}
+      className={cn("relative h-(--waveform-height) w-full", className)}
       ref={containerRef}
-      style={{ height: heightStyle }}
+      style={{ "--waveform-height": heightStyle ?? "100%" } as CSSProperties}
       aria-label={waveformAriaLabel(active, processing)}
       role="img"
       {...props}

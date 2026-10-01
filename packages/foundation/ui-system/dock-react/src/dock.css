@@ -1,0 +1,167 @@
+/* Functional stylesheet for the @beep/dock-react adapter.
+
+   The adapter stays Tailwind-free and theme-free: every rule here is layout
+   mechanics (positioning, flex flow, pointer affordances) keyed by the data
+   attributes and ARIA roles the adapter emits. Geometry is dynamic, so the
+   adapter writes it as CSS custom properties on each element's style and the
+   rules below read them back:
+
+     --dock-left / --dock-top / --dock-width / --dock-height  box in px
+     --dock-z          floating stack order
+     --dock-transform  drag-ghost follow-cursor transform
+     --dock-max-width  drag-ghost ellipsis cap
+
+   Hosts import this file once (`@import "@beep/dock-react/dock.css";`) and
+   hang every visual (colors, borders, radii, type) off the same hooks in their
+   own stylesheet. Selectors use child combinators from [data-dock-root] so a
+   panel's own content never inherits dock mechanics. */
+
+[data-dock-root] {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Kernel-geometry boxes: docked and floating groups, floating panes, sashes,
+   and the drop previews. */
+[data-dock-root] > section[data-group-id],
+[data-dock-root] > [data-floating-pane],
+[data-dock-root] > [data-floating-pane] > section[data-group-id],
+[data-dock-root] > [data-sash-id],
+[data-dock-root] > [data-drop-caret],
+[data-dock-root] > [data-drop-indicator] {
+  position: absolute;
+  left: var(--dock-left);
+  top: var(--dock-top);
+  width: var(--dock-width);
+  height: var(--dock-height);
+}
+
+[data-dock-root] > section[data-group-id],
+[data-dock-root] > [data-floating-pane] > section[data-group-id] {
+  display: flex;
+  flex-direction: column;
+}
+
+[data-dock-root] > section[data-group-id][data-header-position="bottom"],
+[data-dock-root] > [data-floating-pane] > section[data-group-id][data-header-position="bottom"] {
+  flex-direction: column-reverse;
+}
+
+section[data-group-id] > [data-content-host] {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Tab strip: tabs keep their intrinsic width and own their pointer stream
+   (the drag compiler captures it on press). */
+section[data-group-id] > [data-dock-tab-strip] {
+  display: flex;
+  min-width: 0;
+}
+
+[data-dock-tab-strip] > [role="tab"] {
+  flex: 0 0 auto;
+  touch-action: none;
+}
+
+[data-dock-tab-strip] > [data-dock-overflow-root] {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+[data-dock-overflow-root] > [data-dock-overflow] {
+  width: 32px;
+}
+
+[data-dock-overflow-root] > [role="menu"] {
+  position: absolute;
+  inset-inline-end: 0;
+  z-index: 2;
+}
+
+[data-dock-tab-strip] > [data-dock-actions] {
+  margin-inline-start: auto;
+  display: inline-flex;
+  gap: 2px;
+}
+
+[data-dock-icon] {
+  display: block;
+}
+
+/* Sashes resize along their split axis. */
+[data-dock-root] > [data-sash-id] {
+  touch-action: none;
+  user-select: none;
+}
+
+[data-dock-root] > [data-sash-id][data-axis="horizontal"] {
+  cursor: col-resize;
+}
+
+[data-dock-root] > [data-sash-id][data-axis="vertical"] {
+  cursor: row-resize;
+}
+
+/* Floating panes stack by workspace order; the pane is taller than the
+   kernel's anchored box by the drag header, which the adapter folds into
+   --dock-height. */
+[data-dock-root] > [data-floating-pane] {
+  z-index: var(--dock-z);
+}
+
+[data-floating-pane] > [data-floating-header] {
+  height: 32px;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+[data-floating-pane] > [data-floating-resize] {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+/* Drop previews persist while their kind stays active, so transitions tween
+   the bounds: the section overlay flies between groups/quadrants and the
+   caret slides along the strip instead of teleporting. */
+[data-dock-root] > [data-drop-caret] {
+  pointer-events: none;
+  transition:
+    left 0.12s ease-out,
+    top 0.12s ease-out,
+    height 0.12s ease-out;
+}
+
+[data-dock-root] > [data-drop-indicator] {
+  pointer-events: none;
+  transition:
+    left 0.15s ease-out,
+    top 0.15s ease-out,
+    width 0.15s ease-out,
+    height 0.15s ease-out;
+}
+
+/* Follow-cursor after-image for a promoted tab drag; translate3d keeps
+   per-move updates off layout. */
+[data-dock-root] > [data-drag-ghost] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: var(--dock-transform);
+  max-width: var(--dock-max-width);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: transform;
+  opacity: 0.85;
+  z-index: 1000;
+}

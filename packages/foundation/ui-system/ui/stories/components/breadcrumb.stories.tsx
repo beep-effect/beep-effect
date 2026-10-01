@@ -162,9 +162,11 @@ export const WithIcon: Story = {
     <Breadcrumb {...args}>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="#home" className="inline-flex items-center gap-1.5">
-            <HouseIcon className="size-4" />
-            Home
+          <BreadcrumbLink href="#home">
+            <span className="inline-flex items-center gap-1.5">
+              <HouseIcon className="size-4" />
+              Home
+            </span>
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />

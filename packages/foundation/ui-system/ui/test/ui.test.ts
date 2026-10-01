@@ -1,6 +1,6 @@
 import { it } from "@beep/test-runner";
 import { VERSION } from "@beep/ui";
-import { ChartContainer, ChartTooltipContent } from "@beep/ui/components/chart";
+import { ChartContainer, ChartTooltipContent, chartColorProperties } from "@beep/ui/components/chart";
 import { Input } from "@beep/ui/components/input";
 import { Textarea } from "@beep/ui/components/textarea";
 import { cn } from "@beep/ui/lib/utils";
@@ -38,6 +38,26 @@ describe("@beep/ui", () => {
     const markup = renderChartTooltip(() => 0);
     expect(markup).toContain(">0</div>");
     expect(markup).not.toContain("Desktop");
+  });
+
+  it("maps chart series colors to container custom properties, pairing theme colors with light-dark()", () => {
+    expect(
+      chartColorProperties({
+        revenue: { label: "Revenue", color: "var(--chart-1)" },
+        expenses: { label: "Expenses", theme: { light: "var(--chart-2)", dark: "var(--chart-3)" } },
+        "bad key;": { label: "Skipped", color: "var(--chart-4)" },
+        unlabeled: { label: "No color" },
+      })
+    ).toEqual([
+      ["--color-revenue", "var(--chart-1)"],
+      ["--color-expenses", "light-dark(var(--chart-2), var(--chart-3))"],
+    ]);
+  });
+
+  it("renders the chart container without a runtime <style> element", () => {
+    const markup = renderChartTooltip();
+    expect(markup).not.toContain("<style");
+    expect(markup).toContain('data-slot="chart"');
   });
 
   it("exports the package version constant", () => {

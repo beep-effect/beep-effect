@@ -198,13 +198,13 @@ export const WithHeaderAndFooter: Story = {
     <Item {...args} className="w-full max-w-md flex-col items-stretch">
       <ItemHeader>
         <ItemTitle>Deployment</ItemTitle>
-        <ItemDescription className="line-clamp-1">2m ago</ItemDescription>
+        <ItemDescription>2m ago</ItemDescription>
       </ItemHeader>
       <ItemContent>
         <ItemDescription>Build succeeded and was promoted to production.</ItemDescription>
       </ItemContent>
       <ItemFooter>
-        <ItemDescription className="line-clamp-1">main · a1b2c3d</ItemDescription>
+        <ItemDescription>main · a1b2c3d</ItemDescription>
         <Button variant="ghost" size="sm">
           View logs
         </Button>
@@ -241,46 +241,48 @@ export const AsButton: Story = {
 /** A realistic `ItemGroup` list of rows divided by `ItemSeparator`, exposed as `role="list"`. */
 export const Group: Story = {
   render: () => (
-    <ItemGroup className="w-full max-w-md rounded-md border">
-      <Item>
-        <ItemMedia variant="icon">A</ItemMedia>
-        <ItemContent>
-          <ItemTitle>Avery Diaz</ItemTitle>
-          <ItemDescription>avery@beep.dev</ItemDescription>
-        </ItemContent>
-        <ItemActions>
-          <Button variant="ghost" size="sm">
-            Message
-          </Button>
-        </ItemActions>
-      </Item>
-      <ItemSeparator />
-      <Item>
-        <ItemMedia variant="icon">B</ItemMedia>
-        <ItemContent>
-          <ItemTitle>Blake Nguyen</ItemTitle>
-          <ItemDescription>blake@beep.dev</ItemDescription>
-        </ItemContent>
-        <ItemActions>
-          <Button variant="ghost" size="sm">
-            Message
-          </Button>
-        </ItemActions>
-      </Item>
-      <ItemSeparator />
-      <Item>
-        <ItemMedia variant="icon">C</ItemMedia>
-        <ItemContent>
-          <ItemTitle>Casey Romero</ItemTitle>
-          <ItemDescription>casey@beep.dev</ItemDescription>
-        </ItemContent>
-        <ItemActions>
-          <Button variant="ghost" size="sm">
-            Message
-          </Button>
-        </ItemActions>
-      </Item>
-    </ItemGroup>
+    <div className="w-full max-w-md rounded-md border">
+      <ItemGroup>
+        <Item>
+          <ItemMedia variant="icon">A</ItemMedia>
+          <ItemContent>
+            <ItemTitle>Avery Diaz</ItemTitle>
+            <ItemDescription>avery@beep.dev</ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <Button variant="ghost" size="sm">
+              Message
+            </Button>
+          </ItemActions>
+        </Item>
+        <ItemSeparator />
+        <Item>
+          <ItemMedia variant="icon">B</ItemMedia>
+          <ItemContent>
+            <ItemTitle>Blake Nguyen</ItemTitle>
+            <ItemDescription>blake@beep.dev</ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <Button variant="ghost" size="sm">
+              Message
+            </Button>
+          </ItemActions>
+        </Item>
+        <ItemSeparator />
+        <Item>
+          <ItemMedia variant="icon">C</ItemMedia>
+          <ItemContent>
+            <ItemTitle>Casey Romero</ItemTitle>
+            <ItemDescription>casey@beep.dev</ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <Button variant="ghost" size="sm">
+              Message
+            </Button>
+          </ItemActions>
+        </Item>
+      </ItemGroup>
+    </div>
   ),
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);

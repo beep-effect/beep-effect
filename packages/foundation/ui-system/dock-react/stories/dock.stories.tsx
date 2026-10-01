@@ -30,14 +30,14 @@ const textPanel = (id: string, title: string, body: string): Panel =>
   Panel.make({ id: PanelId.make(id), title, view: TextPanelView.make({ text: body }) });
 
 const NotesPanel = (props: DockPanelProps) => (
-  <article className="dock-story-notes">
+  <article data-dock-story-notes="">
     <h2>Schema-first dock workspace</h2>
     <p>
       Drag tabs between groups, drop on edges to split, Float / Maximize from the strip, drag the floating pane by its
       header, resize with the sashes — Escape cancels any gesture. Every layout mutation is a kernel command; the DOM is
       a projection of the workspace schema.
     </p>
-    <p className="dock-story-notes-meta">panel {props.api.id}</p>
+    <p data-dock-story-notes-meta="">panel {props.api.id}</p>
   </article>
 );
 
@@ -46,7 +46,7 @@ const components: Readonly<Record<string, DockRenderer>> = { notes: NotesPanel }
 // Pin the story host to fixed dimensions so play geometry never depends on
 // the test viewport; throws when the story markup is missing its host.
 const pinHost = (canvasElement: HTMLElement, width: string, height?: string): HTMLElement => {
-  const host = canvasElement.querySelector<HTMLElement>(".dock-story");
+  const host = canvasElement.querySelector<HTMLElement>("[data-dock-story]");
   if (host === null) throw new Error("Missing dock story host");
   host.style.width = width;
   if (height !== undefined) host.style.height = height;
@@ -192,7 +192,7 @@ const graphs = {
 };
 
 const StoryWatermark = () => (
-  <div className="dock-story-notes">
+  <div data-dock-story-notes="">
     <h2>Empty workspace</h2>
     <p>No groups are docked. Hosts supply this watermark via `watermarkComponent`.</p>
   </div>
@@ -211,7 +211,7 @@ const DockStory = (props: {
   readonly watermark?: React.FunctionComponent | undefined;
   readonly tab?: React.FunctionComponent<DockTabProps> | undefined;
 }) => (
-  <div className="dock-story">
+  <div data-dock-story="">
     <DockviewReact
       graph={props.graph}
       components={components}

@@ -322,7 +322,7 @@ export function Graph3DSpike(): JSX.Element {
   useAtomMount(clearStressReportBindingAtom);
 
   return (
-    <div className="relative h-screen w-full bg-[#111111] text-[#9ee2e2]">
+    <div className="dark relative h-screen w-full bg-background text-foreground">
       <div ref={setContainer} className="absolute inset-0" data-testid="graph3d-spike-container" />
       <div className="pointer-events-none absolute left-3 top-3 rounded-md bg-black/60 p-3 font-mono text-xs leading-5">
         <div>graph3d spike — {preset.label}</div>
@@ -353,7 +353,7 @@ export function Graph3DSpike(): JSX.Element {
         })}
         {O.match(error, {
           onNone: thunkNull,
-          onSome: (message) => <div className="text-red-400">error: {message}</div>,
+          onSome: (message) => <div className="text-destructive">error: {message}</div>,
         })}
       </div>
       <div className="absolute bottom-3 left-3 flex gap-2">
@@ -361,7 +361,7 @@ export function Graph3DSpike(): JSX.Element {
           <button
             key={candidate.label}
             type="button"
-            className={`rounded border px-2 py-1 text-xs ${StressPreset.equivalence(candidate, preset) ? "border-cyan-400 text-cyan-300" : "border-slate-600 text-slate-300"}`}
+            className={`rounded border px-2 py-1 text-xs ${StressPreset.equivalence(candidate, preset) ? "border-ring text-primary" : "border-border text-muted-foreground"}`}
             onClick={() => selectPreset(candidate)}
           >
             {candidate.label}
@@ -369,7 +369,7 @@ export function Graph3DSpike(): JSX.Element {
         ))}
         <button
           type="button"
-          className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-300"
+          className="rounded border border-border px-2 py-1 text-xs text-muted-foreground"
           onClick={() => runStress(void 0)}
         >
           run stress pass

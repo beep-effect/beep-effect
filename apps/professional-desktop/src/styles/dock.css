@@ -1,7 +1,13 @@
+/* The adapter's functional stylesheet: positioning, flex flow and pointer
+   affordances keyed by its data attributes, with geometry read from the
+   --dock-* custom properties the adapter writes. Everything below is chrome. */
+@import "@beep/dock-react/dock.css";
+
 /* Dock workspace chrome, scoped under the shell's `.desktop-dock` stage.
-   The adapter emits functional inline styles only (boxes, flex direction);
-   every visual below hangs off its data attributes and ARIA roles, and every
-   color comes from the app's theme tokens so light/dark both hold. */
+   The adapter writes geometry as --dock-* custom properties consumed by its
+   own stylesheet (imported above); every visual below hangs off its data
+   attributes and ARIA roles, and every color comes from the app's theme
+   tokens so light/dark both hold. */
 
 .desktop-dock {
   position: relative;

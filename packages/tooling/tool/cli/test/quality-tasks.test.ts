@@ -960,6 +960,7 @@ describe("quality task adapter", () => {
       "quality:lint-policy",
       "quality:check",
       "quality:knip",
+      "quality:shadcn-lint",
       "quality:jsdoc-ratchet",
       "quality:docgen",
       "quality:doctest",
@@ -985,6 +986,13 @@ describe("quality task adapter", () => {
       "--summarize",
     ]);
     expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(expectedTurboArgs("knip:check", ["--summarize"]));
+    expect(qualityLaneArgs(lanes, "quality:shadcn-lint")).toEqual(["run", "beep", "ci", "lane", "shadcn-lint"]);
+    expect(
+      O.map(
+        A.findFirst(lanes, (lane) => lane.id === "quality:shadcn-lint"),
+        (lane) => lane.wave
+      )
+    ).toEqual(O.some("preflight"));
     expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
     // The repo-wide tsgo extras ride inside `quality:check` (root `bun run check`
     // keeps them under `--affected`), so no lane runs `test-tsgo` or `tsgo-smoke` again.
@@ -1089,6 +1097,7 @@ describe("quality task adapter", () => {
     expect(qualityLaneArgs(lanes, "quality:desktop-ipc")).toEqual(hostedArgs("desktop-ipc"));
     expect(qualityLaneArgs(lanes, "quality:docgen")).toEqual(hostedArgs("docgen"));
     expect(qualityLaneArgs(lanes, "quality:storybook")).toEqual(hostedArgs("storybook"));
+    expect(qualityLaneArgs(lanes, "quality:shadcn-lint")).toEqual(hostedArgs("shadcn-lint"));
 
     expect(qualityLaneArgs(lanes, "quality:check")).toEqual([
       "run",
@@ -3460,6 +3469,7 @@ describe("quality task adapter", () => {
       "lint:jsdoc-module-tags",
       "goals:doctor",
       "lint:oxlint",
+      "lint:shadcn",
       "lint:typos",
       "jsdoc:inventory:check",
     ]);
@@ -3563,6 +3573,7 @@ describe("quality task adapter", () => {
         "lint:native-runtime:roots",
         "lint:jsdoc:root",
         "jsdoc:inventory:check",
+        "lint:shadcn",
         "lint:effect-vitest",
         "quality:test-tsgo",
         "ci:jsdoc-ratchet:ratchet",

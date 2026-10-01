@@ -785,6 +785,23 @@
         "!**/node_modules/**"
       ]
     },
+    "//#lint:shadcn": {
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        ".oxlintrc.shadcn.json",
+        "**/components.json",
+        "package.json",
+        "bun.lock",
+        "tsconfig.json",
+        "tsconfig.base.json",
+        "{apps,packages}/**/package.json",
+        "{apps,packages}/**/tsconfig.json",
+        "apps/**/*.{ts,tsx,jsx,js,css}",
+        "packages/**/*.{ts,tsx,jsx,js,css}",
+        "!**/node_modules/**"
+      ]
+    },
     "//#lint:allowlist": {
       "cache": true,
       "outputs": [],

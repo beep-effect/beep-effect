@@ -117,12 +117,11 @@ export const ActionStyle = LiteralKit(["primary", "danger", "default"]).pipe(
  */
 export type ActionStyle = typeof ActionStyle.Type;
 
-const defaultActionStyleClassName =
-  "bg-zinc-200/50 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300";
+const defaultActionStyleClassName = "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground";
 
 const actionStyleClassName = ActionStyle.$match({
-  primary: () => "bg-sky-500/10 text-blue-600 hover:bg-sky-500/20 dark:text-blue-400 dark:hover:bg-sky-500/20",
-  danger: () => "bg-red-500/10 text-red-600 hover:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20",
+  primary: () => "bg-info/10 text-info-text hover:bg-info/20",
+  danger: () => "bg-destructive/10 text-destructive hover:bg-destructive/20",
   default: () => defaultActionStyleClassName,
 });
 
@@ -263,7 +262,7 @@ export function NotificationCard({
     <div
       className={cn(
         "group relative w-full rounded-2xl transition-all",
-        isUnread ? "bg-zinc-100 dark:bg-zinc-800/70" : "bg-zinc-50 dark:bg-zinc-800/30",
+        isUnread ? "bg-muted" : "bg-muted/50",
         className
       )}
     >
@@ -273,21 +272,16 @@ export function NotificationCard({
             <div className="flex items-center gap-2">
               <h3
                 className={cn(
-                  "text-[15px] font-semibold leading-tight",
-                  isUnread ? "text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-500"
+                  "text-sm-plus font-semibold leading-tight",
+                  isUnread ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {title}
               </h3>
-              {isUnread && <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-sky-500" />}
+              {isUnread && <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-info" />}
             </div>
 
-            <p
-              className={cn(
-                "mb-0 text-[13px]",
-                isUnread ? "text-zinc-600 dark:text-zinc-400" : "text-zinc-400 dark:text-zinc-600"
-              )}
-            >
+            <p className={cn("mb-0 text-xs-plus", isUnread ? "text-muted-foreground" : "text-muted-foreground/70")}>
               {body}
             </p>
           </div>
@@ -298,8 +292,7 @@ export function NotificationCard({
               onClick={() => onMarkAsRead(id)}
               className={cn(
                 "rounded-lg p-1.5 transition-colors",
-                "text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600",
-                "dark:text-zinc-500 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
+                "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
               aria-label="Mark as read"
             >
@@ -350,9 +343,7 @@ export function NotificationCard({
             </div>
           )}
 
-          {createdAt && (
-            <span className="inline-block text-[11px] text-zinc-400 dark:text-zinc-600">{formatDate(createdAt)}</span>
-          )}
+          {createdAt && <span className="inline-block text-2xs text-muted-foreground/70">{formatDate(createdAt)}</span>}
         </div>
       </div>
     </div>

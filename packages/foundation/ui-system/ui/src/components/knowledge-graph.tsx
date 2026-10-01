@@ -14,6 +14,7 @@ import * as O from "effect/Option";
 import { Atom } from "effect/reactivity";
 import { forwardRef, useEffect, useId, useImperativeHandle, useRef } from "react";
 import { cn } from "../lib/index.ts";
+import type { CSSProperties } from "react";
 
 // ============================================================================
 // Types
@@ -398,10 +399,7 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
         .selectAll<SVGLineElement, GraphLink>(".link")
         .data(linksCopy)
         .join("line")
-        .attr("class", "link")
-        .attr("stroke", "#6b7280")
-        .attr("stroke-opacity", 0.5)
-        .attr("stroke-width", 2);
+        .attr("class", "link stroke-muted-foreground/50 stroke-2");
 
       // Create link labels
       const linkLabel = showLinkLabels
@@ -409,10 +407,7 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
             .selectAll<SVGTextElement, GraphLink>(".link-label")
             .data(A.filter(linksCopy, (l) => l.label !== undefined && l.label.length > 0))
             .join("text")
-            .attr("class", "link-label")
-            .attr("text-anchor", "middle")
-            .attr("font-size", "10px")
-            .attr("fill", "#9ca3af")
+            .attr("class", "link-label fill-muted-foreground text-3xs text-anchor-middle")
             .text((d: GraphLink) => d.label ?? "")
         : null;
 
@@ -447,19 +442,13 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
         .append("circle")
         .attr("r", (d: GraphNode) => d.size ?? 20)
         .attr("fill", (d: GraphNode) => colorScale(d.type, d.color))
-        .attr("stroke", "#27272a")
-        .attr("stroke-width", 2);
+        .attr("class", "stroke-background stroke-2");
 
       // Add labels
       nodeGroup
         .append("text")
-        .attr("class", "node-label")
-        .attr("text-anchor", "middle")
+        .attr("class", "node-label fill-white text-2xs font-medium text-anchor-middle pointer-events-none")
         .attr("dy", ".35em")
-        .attr("font-size", "11px")
-        .attr("font-weight", "500")
-        .attr("fill", "#ffffff")
-        .attr("pointer-events", "none")
         .text((d: GraphNode) => (d.label.length > 12 ? `${Str.substring(0, 10)(d.label)}...` : d.label));
 
       // Add event handlers
@@ -508,16 +497,21 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
     }, [nodes, links, onNodeClick, onNodeHover, showLinkLabels, centerNodeId, setGraphState]);
 
     return (
-      <div className={cn("relative h-full w-full min-h-[400px]", className)}>
+      <div className={cn("relative h-full w-full min-h-100", className)}>
         <div ref={containerRef} className="h-full w-full">
-          <svg ref={svgRef} width="100%" height="100%" className="bg-zinc-50 dark:bg-zinc-900 rounded-xl" />
+          <svg ref={svgRef} width="100%" height="100%" className="bg-card rounded-xl" />
         </div>
 
         {/* Tooltip */}
         {graphState.tooltip.visible && (
           <div
-            className="pointer-events-none absolute z-10 px-3 py-2 text-sm rounded-lg bg-zinc-800 text-zinc-100 shadow-lg border border-zinc-700"
-            style={{ left: graphState.tooltip.x, top: graphState.tooltip.y }}
+            className="pointer-events-none absolute top-(--tooltip-y) left-(--tooltip-x) z-10 px-3 py-2 text-sm rounded-lg bg-popover text-popover-foreground shadow-lg border"
+            style={
+              {
+                "--tooltip-x": `${graphState.tooltip.x}px`,
+                "--tooltip-y": `${graphState.tooltip.y}px`,
+              } as CSSProperties
+            }
           >
             {graphState.tooltip.content}
           </div>
@@ -525,12 +519,15 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
 
         {/* Legend */}
         {showLegend && graphState.legendItems.length > 0 && (
-          <div className="absolute top-4 right-4 z-10 p-3 rounded-lg bg-zinc-800/90 backdrop-blur-sm border border-zinc-700">
+          <div className="absolute top-4 right-4 z-10 p-3 rounded-lg bg-popover/90 backdrop-blur-sm border">
             <div className="max-h-48 space-y-1.5 overflow-y-auto">
               {A.map(graphState.legendItems, (item) => (
                 <div key={item.type} className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                  <span className="text-xs text-zinc-300">{item.type}</span>
+                  <div
+                    className="h-3 w-3 rounded-full flex-shrink-0 bg-(--legend-color)"
+                    style={{ "--legend-color": item.color } as CSSProperties}
+                  />
+                  <span className="text-xs text-muted-foreground">{item.type}</span>
                 </div>
               ))}
             </div>

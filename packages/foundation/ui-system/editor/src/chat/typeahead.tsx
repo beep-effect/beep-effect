@@ -45,7 +45,7 @@ import {
 import { MentionOptions } from "./config.ts";
 import type { MenuRenderFn } from "@lexical/react/LexicalTypeaheadMenuPlugin";
 import type { LexicalEditor } from "lexical";
-import type { ReactNode, RefObject } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 import type { MentionOption, MentionSource, SlashItem } from "./config.ts";
 
 const $I = $EditorId.create("chat/typeahead");
@@ -302,6 +302,11 @@ const caretViewportRect = (
   return anchorRect.top !== 0 || anchorRect.bottom !== 0 ? anchorRect : undefined;
 };
 
+// The menu's fixed coordinates ride in CSS custom properties consumed by the
+// `left-(--typeahead-left)` / `top-(--typeahead-top)` / `bottom-(--typeahead-bottom)`
+// classes. An omitted edge leaves its property unset, so that inset resolves to `auto`.
+const cssPx = (value: number | undefined): string | undefined => (value === undefined ? undefined : `${value}px`);
+
 /**
  * Renders the open typeahead as a `listbox` portal pinned to the viewport at
  * the caret: below the caret line when there is room, flipped above it
@@ -342,8 +347,14 @@ function TypeaheadMenuList<TOption extends MenuOption>({
   return createPortal(
     <div
       {...typeaheadMenuMarker(editor)}
-      style={menuPosition}
-      className="bg-popover text-popover-foreground fixed z-50 max-h-72 w-64 overflow-auto rounded-md border p-1 shadow-md"
+      style={
+        {
+          "--typeahead-left": cssPx(menuPosition.left),
+          "--typeahead-top": cssPx(menuPosition.top),
+          "--typeahead-bottom": cssPx(menuPosition.bottom),
+        } as CSSProperties
+      }
+      className="bg-popover text-popover-foreground fixed top-(--typeahead-top) bottom-(--typeahead-bottom) left-(--typeahead-left) z-50 max-h-72 w-64 overflow-auto rounded-md border p-1 shadow-md"
     >
       {A.map(options, (option, index) => (
         <div
@@ -392,6 +403,11 @@ function MentionLookupNotice({
   if (caret === undefined) {
     return null;
   }
+  const noticePosition = typeaheadMenuPosition({
+    caret,
+    viewportHeight: window.innerHeight,
+    viewportWidth: window.innerWidth,
+  });
   return (
     <>
       {createPortal(
@@ -407,12 +423,14 @@ function MentionLookupNotice({
       )}
       {createPortal(
         <div
-          style={typeaheadMenuPosition({
-            caret,
-            viewportHeight: window.innerHeight,
-            viewportWidth: window.innerWidth,
-          })}
-          className="bg-popover text-muted-foreground fixed z-50 w-64 rounded-md border p-2 text-sm shadow-md"
+          style={
+            {
+              "--typeahead-left": cssPx(noticePosition.left),
+              "--typeahead-top": cssPx(noticePosition.top),
+              "--typeahead-bottom": cssPx(noticePosition.bottom),
+            } as CSSProperties
+          }
+          className="bg-popover text-muted-foreground fixed top-(--typeahead-top) bottom-(--typeahead-bottom) left-(--typeahead-left) z-50 w-64 rounded-md border p-2 text-sm shadow-md"
           role="status"
         >
           {message}

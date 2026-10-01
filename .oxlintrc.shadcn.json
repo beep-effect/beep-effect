@@ -1,0 +1,83 @@
+{
+  // Design-system lint lane: @shadcn/lint over every Tailwind surface (apps + UI packages).
+  // Runs as `bun run lint:shadcn` and the hosted "Shadcn Lint" context. Every rule is an
+  // error; there are no contracts and no allow-lists. Components own their appearance,
+  // pages own layout, and every color/value comes from the theme in
+  // packages/foundation/ui-system/ui/src/styles/globals.css (or an app theme that imports
+  // it). Policy and fix recipes: docs/runbooks/design-system-lint.md.
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "plugins": [],
+  "categories": {
+    "correctness": "off",
+    "suspicious": "off",
+    "perf": "off",
+    "style": "off",
+    "pedantic": "off",
+    "restriction": "off",
+    "nursery": "off"
+  },
+  "jsPlugins": ["@shadcn/lint"],
+  "settings": {
+    "shadcn": {
+      "ui": "@beep/ui/components",
+      "note": "Design-system policy and fix recipes: docs/runbooks/design-system-lint.md."
+    }
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/build/**",
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/.turbo/**",
+    "**/coverage/**",
+    "**/generated/**",
+    "**/_generated/**",
+    "**/*.gen.*",
+    "**/src-tauri/**",
+    ".repos/**",
+    ".codex/**",
+    ".claude/**"
+  ],
+  "rules": {
+    "shadcn/no-restyle": ["error", { "allow": ["layout"] }],
+    "shadcn/no-raw-colors": "error",
+    "shadcn/no-arbitrary-values": "error",
+    "shadcn/no-inline-styles": "error",
+    "shadcn/require-static-classes": "error",
+    "shadcn/no-unknown-classes": "error"
+  },
+  "overrides": [
+    {
+      // Every string literal on a UI surface is a class site: lookup tables, variant maps,
+      // and theme objects in .ts files hide raw colors the JSX-only scan cannot see.
+      "files": [
+        "**/*.tsx",
+        "**/*.jsx",
+        "apps/**/*.ts",
+        "packages/foundation/ui-system/**/*.ts",
+        "packages/*/ui/**/*.ts"
+      ],
+      "rules": {
+        "shadcn/no-raw-colors": ["error", { "scanAllStrings": true }],
+        "shadcn/no-arbitrary-values": ["error", { "scanAllStrings": true }]
+      }
+    },
+    {
+      // MUI theme overrides: CSS property names in `transitions.create([...])` are not classes.
+      "files": ["packages/foundation/ui-system/ui/src/themes/**/*.ts"],
+      "rules": {
+        "shadcn/no-raw-colors": "error",
+        "shadcn/no-arbitrary-values": "error"
+      }
+    },
+    {
+      // The design-system components style themselves and call their own variant factories.
+      // Token and inline-style rules still apply inside them.
+      "files": ["packages/foundation/ui-system/ui/src/components/**"],
+      "rules": {
+        "shadcn/no-restyle": "off",
+        "shadcn/require-static-classes": "off"
+      }
+    }
+  ]
+}

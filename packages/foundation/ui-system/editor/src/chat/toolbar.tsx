@@ -16,10 +16,8 @@
 
 import { $EditorId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Button } from "@beep/ui/components/button";
 import { Separator } from "@beep/ui/components/separator";
 import { Toggle } from "@beep/ui/components/toggle";
-import { cn } from "@beep/ui/lib/utils";
 import { useAtomValue } from "@effect/atom-react";
 import { $createCodeNode, $isCodeNode } from "@lexical/code";
 import {
@@ -272,23 +270,15 @@ interface ToolbarButtonProps {
   readonly onClick: () => void;
 }
 
-// One-shot / block actions (lists, quote, code block). Canonical ghost
-// icon button; when the block is active we mirror the toggle's pressed
-// styling so the active state reads identically across the bar.
+// One-shot / block actions (lists, quote, code block). These render the same
+// canonical `Toggle` as the text marks, with `pressed` driven by the active
+// block type, so the active state reads identically across the bar and Base UI
+// reports it through `aria-pressed`.
 function ToolbarButton({ active = false, label, onClick, children }: ToolbarButtonProps): JSX.Element {
   return (
-    <Button
-      variant="ghost"
-      size="icon-sm"
-      aria-label={label}
-      aria-pressed={active}
-      title={label}
-      className={cn(active && "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground")}
-      onMouseDown={preventBlur}
-      onClick={onClick}
-    >
+    <ToolbarToggle pressed={active} label={label} onClick={onClick}>
       {children}
-    </Button>
+    </ToolbarToggle>
   );
 }
 

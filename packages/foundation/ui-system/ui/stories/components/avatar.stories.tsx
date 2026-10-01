@@ -103,15 +103,15 @@ export const BrokenImage: Story = {
 };
 
 /**
- * The root shape is fully `className`-driven: swap `rounded-full` for `rounded-lg`
- * (or any radius) to render a squared avatar.
+ * `shape="rounded"` swaps the default circle for a `rounded-lg` square; the fallback
+ * follows the root's shape.
  */
 export const Rounded: Story = {
-  args: { className: "rounded-lg" },
+  args: { shape: "rounded" },
   render: (args) => (
     <Avatar {...args}>
       <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-      <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+      <AvatarFallback>CN</AvatarFallback>
     </Avatar>
   ),
   play: ({ canvasElement }) => {
@@ -122,20 +122,20 @@ export const Rounded: Story = {
 };
 
 /**
- * The default `size-10` can be overridden via `className`; here a small, default, and
- * large avatar sit side by side to show the spectrum.
+ * `size` picks `sm` (`size-8`), `default` (`size-10`), or `lg` (`size-14`), and the
+ * fallback text scales with it; here the three sit side by side to show the spectrum.
  */
 export const Sizes: Story = {
   render: () => (
     <div className="flex items-center gap-4">
-      <Avatar className="size-8">
-        <AvatarFallback className="text-xs">SM</AvatarFallback>
+      <Avatar size="sm">
+        <AvatarFallback>SM</AvatarFallback>
       </Avatar>
       <Avatar>
         <AvatarFallback>MD</AvatarFallback>
       </Avatar>
-      <Avatar className="size-14">
-        <AvatarFallback className="text-base">LG</AvatarFallback>
+      <Avatar size="lg">
+        <AvatarFallback>LG</AvatarFallback>
       </Avatar>
     </div>
   ),

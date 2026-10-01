@@ -184,7 +184,8 @@ export function OntologyDocumentRegion(): JSX.Element {
       <div className="flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2">
         <Input
           aria-label="Ontology file path"
-          className="h-8 min-w-[180px] max-w-[460px] flex-1 font-mono text-xs"
+          font="mono"
+          className="h-8 min-w-45 max-w-115 flex-1"
           value={pathInput}
           onChange={(event) => setPathInput(valueFromEvent(event))}
         />

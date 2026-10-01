@@ -108,7 +108,7 @@ const defaultChartChildren = (
 const meta = {
   args: {
     children: defaultChartChildren,
-    className: "min-h-[200px] w-full max-w-xl",
+    className: "min-h-50 w-full max-w-xl",
     config: chartConfig,
     style: { height: 324, width: 576 },
   },

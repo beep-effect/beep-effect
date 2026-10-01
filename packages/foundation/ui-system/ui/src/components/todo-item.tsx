@@ -11,19 +11,20 @@ import { ArrowRightIcon, CalendarIcon, CheckIcon, InfoIcon, WarningCircleIcon } 
 import { DateTime } from "effect";
 import { formatShortDate, toUtcDateTime } from "../lib/date-time.ts";
 import { cn } from "../lib/index.ts";
+import type { CSSProperties } from "react";
 
 type TodoPriority = "high" | "medium" | "low" | "none";
 
 const dueDateToneClassName = (isToday: boolean, isOverdue: boolean): string => {
   if (isToday) {
-    return "bg-green-500/10 text-green-600 dark:text-green-400";
+    return "bg-success/10 text-success-text";
   }
 
   if (isOverdue) {
-    return "bg-red-500/10 text-red-600 dark:text-red-400";
+    return "bg-destructive/10 text-destructive";
   }
 
-  return "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400";
+  return "bg-muted text-muted-foreground";
 };
 
 interface TodoLabel {
@@ -62,24 +63,24 @@ interface TodoItemProps {
 
 const priorityConfig = {
   high: {
-    textColor: "text-red-500 dark:text-red-400",
-    bgColor: "bg-red-500/10 dark:bg-red-400/10",
-    borderColor: "border-red-500",
+    textColor: "text-destructive",
+    bgColor: "bg-destructive/10",
+    borderColor: "border-destructive",
   },
   medium: {
-    textColor: "text-yellow-600 dark:text-yellow-400",
-    bgColor: "bg-yellow-500/10 dark:bg-yellow-400/10",
-    borderColor: "border-yellow-500",
+    textColor: "text-warning-text",
+    bgColor: "bg-warning/10",
+    borderColor: "border-warning",
   },
   low: {
-    textColor: "text-blue-500 dark:text-blue-400",
-    bgColor: "bg-sky-500/10 dark:bg-sky-400/10",
-    borderColor: "border-blue-500",
+    textColor: "text-info-text",
+    bgColor: "bg-info/10",
+    borderColor: "border-info",
   },
   none: {
-    textColor: "text-zinc-500 dark:text-zinc-500",
-    bgColor: "bg-zinc-500/10 dark:bg-zinc-500/10",
-    borderColor: "border-zinc-400 dark:border-zinc-500",
+    textColor: "text-muted-foreground",
+    bgColor: "bg-muted-foreground/10",
+    borderColor: "border-muted-foreground",
   },
 } as const;
 
@@ -154,7 +155,7 @@ export function TodoItem({
     <div
       className={cn(
         "group pointer-events-auto mb-0 w-full cursor-pointer rounded-lg p-4 pl-5 text-left transition-all",
-        isSelected ? "bg-sky-500/5 ring-2 ring-blue-500" : "hover:bg-zinc-100 dark:hover:bg-zinc-800/70",
+        isSelected ? "bg-info/5 ring-2 ring-info" : "hover:bg-muted",
         completed && "opacity-50",
         className
       )}
@@ -170,7 +171,7 @@ export function TodoItem({
           className={cn(
             "mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all",
             completed
-              ? "border-zinc-400 bg-zinc-400 dark:border-zinc-500 dark:bg-zinc-500"
+              ? "border-muted-foreground bg-muted-foreground"
               : `${priorityStyle.borderColor} border-dashed bg-transparent`
           )}
           aria-label={completed ? "Mark as incomplete" : "Mark as complete"}
@@ -181,14 +182,11 @@ export function TodoItem({
         <div className="min-w-0 flex-1">
           <div>
             <h4
-              className={cn(
-                "text-base font-medium text-zinc-900 dark:text-zinc-100",
-                completed && "line-through text-zinc-500 dark:text-zinc-500"
-              )}
+              className={cn("text-base font-medium text-foreground", completed && "line-through text-muted-foreground")}
             >
               {title}
             </h4>
-            {hasDescription && <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">{description}</p>}
+            {hasDescription && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
           </div>
 
           {hasMetadata && (
@@ -207,8 +205,13 @@ export function TodoItem({
 
               {project !== undefined && (
                 <span
-                  className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-                  style={project.color !== undefined && project.color.length > 0 ? { color: project.color } : undefined}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs",
+                    project.color !== undefined && project.color.length > 0
+                      ? "text-(--chip-color)"
+                      : "text-muted-foreground"
+                  )}
+                  style={{ "--chip-color": project.color } as CSSProperties}
                 >
                   <InfoIcon size={12} />
                   {project.name}
@@ -218,8 +221,13 @@ export function TodoItem({
               {A.map(labels, (label) => (
                 <span
                   key={label.id}
-                  className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-                  style={label.color !== undefined && label.color.length > 0 ? { color: label.color } : undefined}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs",
+                    label.color !== undefined && label.color.length > 0
+                      ? "text-(--chip-color)"
+                      : "text-muted-foreground"
+                  )}
+                  style={{ "--chip-color": label.color } as CSSProperties}
                 >
                   <InfoIcon size={12} />
                   {label.name}
@@ -240,7 +248,7 @@ export function TodoItem({
               )}
 
               {subtasks.length > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                   <CheckIcon size={12} />
                   {completedSubtasks}/{subtasks.length} subtasks
                 </span>

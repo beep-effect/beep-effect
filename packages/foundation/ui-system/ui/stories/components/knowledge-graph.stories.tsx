@@ -79,7 +79,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="h-[480px] w-full max-w-3xl">
+      <div className="h-120 w-full max-w-3xl">
         <Story />
       </div>
     ),

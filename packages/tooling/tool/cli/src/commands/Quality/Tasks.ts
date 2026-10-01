@@ -2959,6 +2959,7 @@ const policyStateTasks = [
   "lint:jsdoc-module-tags",
   "goals:doctor",
   "lint:oxlint",
+  "lint:shadcn",
   "lint:typos",
   "jsdoc:inventory:check",
 ];

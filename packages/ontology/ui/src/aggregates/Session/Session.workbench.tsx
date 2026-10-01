@@ -36,7 +36,7 @@ export function OntologyWorkbench(): JSX.Element {
     <TooltipProvider>
       <div className="flex h-full min-h-0 w-full flex-col bg-background text-foreground">
         <OntologyDocumentRegion />
-        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[260px_minmax(320px,1fr)] lg:overflow-hidden xl:grid-cols-[300px_minmax(360px,1fr)_340px]">
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-workbench-lg lg:overflow-hidden xl:grid-cols-workbench-xl">
           <OntologyExplorerRegion />
           <main className="flex min-h-0 flex-col">
             <OntologyGraphRegion />

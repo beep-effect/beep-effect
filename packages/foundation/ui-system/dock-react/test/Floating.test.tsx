@@ -82,7 +82,9 @@ const mount = Effect.fn("FloatingTest.mount")(function* (floating = true, twoDoc
   resize(screen.getByTestId("dockview-react"), { width: 800, height: 500 });
   if (P.isTruthy(floating)) {
     yield* Effect.promise(() =>
-      waitFor(() => expect(query(`[data-floating-pane='${floating1Id}']`).style.width).toBe("240px"))
+      waitFor(() =>
+        expect(query(`[data-floating-pane='${floating1Id}']`).style.getPropertyValue("--dock-width")).toBe("240px")
+      )
     );
   }
   return graph;
@@ -106,13 +108,15 @@ describe("floating dock adapter", { concurrent: false }, () => {
       const second = query(`[data-floating-pane='${floating2Id}']`);
       // The pane is chrome around the anchored content box: 32px taller for
       // the drag header, so the kernel geometry inside stays undistorted.
-      expect([first.style.left, first.style.top, first.style.width, first.style.height]).toEqual([
-        "40px",
-        "50px",
-        "240px",
-        "192px",
-      ]);
-      expect(Number(first.style.zIndex)).toBeLessThan(Number(second.style.zIndex));
+      expect([
+        first.style.getPropertyValue("--dock-left"),
+        first.style.getPropertyValue("--dock-top"),
+        first.style.getPropertyValue("--dock-width"),
+        first.style.getPropertyValue("--dock-height"),
+      ]).toEqual(["40px", "50px", "240px", "192px"]);
+      expect(Number(first.style.getPropertyValue("--dock-z"))).toBeLessThan(
+        Number(second.style.getPropertyValue("--dock-z"))
+      );
       expect(screen.getByTestId("panel-floating-panel-one").closest("[data-floating-pane]")).toBe(first);
 
       const input = screen.getByTestId(`input-${dockedPanel.id}`);
@@ -140,7 +144,10 @@ describe("floating dock adapter", { concurrent: false }, () => {
       const pane = query(`[data-floating-pane='${floating2Id}']`);
       pointer(header, "pointerDown", 340, 90);
       pointer(header, "pointerMove", 390, 120);
-      expect([pane.style.left, pane.style.top]).toEqual(["370px", "110px"]);
+      expect([pane.style.getPropertyValue("--dock-left"), pane.style.getPropertyValue("--dock-top")]).toEqual([
+        "370px",
+        "110px",
+      ]);
       pointer(header, "pointerUp", 390, 120);
       yield* graph.awaitIdle;
       expect(graph.registry.get(graph.workspaceAtom).floating.at(-1)?.anchoredBox).toEqual(anchored(370, 110));
@@ -150,7 +157,7 @@ describe("floating dock adapter", { concurrent: false }, () => {
       fireEvent.keyDown(document, { key: "Escape" });
       yield* graph.awaitIdle;
       expect(graph.registry.get(graph.workspaceAtom).revision).toBe(revision);
-      expect(query(`[data-floating-pane='${floating2Id}']`).style.left).toBe("370px");
+      expect(query(`[data-floating-pane='${floating2Id}']`).style.getPropertyValue("--dock-left")).toBe("370px");
     })
   );
 
@@ -163,11 +170,14 @@ describe("floating dock adapter", { concurrent: false }, () => {
       const revision = graph.registry.get(graph.workspaceAtom).revision;
       pointer(header, "pointerDown", 340, 90);
       pointer(header, "pointerMove", 390, 120);
-      expect([pane.style.left, pane.style.top]).toEqual(["370px", "110px"]);
+      expect([pane.style.getPropertyValue("--dock-left"), pane.style.getPropertyValue("--dock-top")]).toEqual([
+        "370px",
+        "110px",
+      ]);
       fireEvent.pointerCancel(header, { pointerId: 11 });
       yield* graph.awaitIdle;
       expect(graph.registry.get(graph.workspaceAtom).revision).toBe(revision);
-      expect(query(`[data-floating-pane='${floating2Id}']`).style.left).toBe("320px");
+      expect(query(`[data-floating-pane='${floating2Id}']`).style.getPropertyValue("--dock-left")).toBe("320px");
     })
   );
 

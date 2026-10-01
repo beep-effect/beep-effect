@@ -807,6 +807,7 @@ describe("yeet planner", () => {
       "fallow:audit",
       "fallow:dead-code",
       "fallow:health",
+      "quality:shadcn-lint",
       "quality:security",
       "quality:secrets",
       "quality:commitlint",

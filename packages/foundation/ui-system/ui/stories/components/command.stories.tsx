@@ -66,44 +66,46 @@ const onSelectSpy = fn();
  */
 export const Default: Story = {
   render: (args) => (
-    <Command {...args} className="rounded-lg border shadow-md md:min-w-[450px]">
-      <CommandInput placeholder="Type a command or search..." aria-label="Command" />
-      <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Suggestions">
-          <CommandItem>
-            <CalendarIcon />
-            <span>Calendar</span>
-          </CommandItem>
-          <CommandItem>
-            <SmileyIcon />
-            <span>Search Emoji</span>
-          </CommandItem>
-          <CommandItem disabled>
-            <CalculatorIcon />
-            <span>Calculator</span>
-          </CommandItem>
-        </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="Settings">
-          <CommandItem>
-            <UserIcon />
-            <span>Profile</span>
-            <CommandShortcut>⌘P</CommandShortcut>
-          </CommandItem>
-          <CommandItem>
-            <CreditCardIcon />
-            <span>Billing</span>
-            <CommandShortcut>⌘B</CommandShortcut>
-          </CommandItem>
-          <CommandItem>
-            <GearIcon />
-            <span>Settings</span>
-            <CommandShortcut>⌘S</CommandShortcut>
-          </CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </Command>
+    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+      <Command {...args}>
+        <CommandInput placeholder="Type a command or search..." aria-label="Command" />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Suggestions">
+            <CommandItem>
+              <CalendarIcon />
+              <span>Calendar</span>
+            </CommandItem>
+            <CommandItem>
+              <SmileyIcon />
+              <span>Search Emoji</span>
+            </CommandItem>
+            <CommandItem disabled>
+              <CalculatorIcon />
+              <span>Calculator</span>
+            </CommandItem>
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Settings">
+            <CommandItem>
+              <UserIcon />
+              <span>Profile</span>
+              <CommandShortcut>⌘P</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <CreditCardIcon />
+              <span>Billing</span>
+              <CommandShortcut>⌘B</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <GearIcon />
+              <span>Settings</span>
+              <CommandShortcut>⌘S</CommandShortcut>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </div>
   ),
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -121,26 +123,28 @@ export const Default: Story = {
  */
 export const Filtering: Story = {
   render: (args) => (
-    <Command {...args} className="rounded-lg border shadow-md md:min-w-[450px]">
-      <CommandInput placeholder="Type a command or search..." aria-label="Command" />
-      <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Suggestions">
-          <CommandItem>
-            <CalendarIcon />
-            <span>Calendar</span>
-          </CommandItem>
-          <CommandItem>
-            <SmileyIcon />
-            <span>Search Emoji</span>
-          </CommandItem>
-          <CommandItem>
-            <CalculatorIcon />
-            <span>Calculator</span>
-          </CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </Command>
+    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+      <Command {...args}>
+        <CommandInput placeholder="Type a command or search..." aria-label="Command" />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Suggestions">
+            <CommandItem>
+              <CalendarIcon />
+              <span>Calendar</span>
+            </CommandItem>
+            <CommandItem>
+              <SmileyIcon />
+              <span>Search Emoji</span>
+            </CommandItem>
+            <CommandItem>
+              <CalculatorIcon />
+              <span>Calculator</span>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </div>
   ),
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -159,22 +163,24 @@ export const Filtering: Story = {
  */
 export const EmptyState: Story = {
   render: (args) => (
-    <Command {...args} className="rounded-lg border shadow-md md:min-w-[450px]">
-      <CommandInput placeholder="Type a command or search..." aria-label="Command" />
-      <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Suggestions">
-          <CommandItem>
-            <CalendarIcon />
-            <span>Calendar</span>
-          </CommandItem>
-          <CommandItem>
-            <SmileyIcon />
-            <span>Search Emoji</span>
-          </CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </Command>
+    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+      <Command {...args}>
+        <CommandInput placeholder="Type a command or search..." aria-label="Command" />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Suggestions">
+            <CommandItem>
+              <CalendarIcon />
+              <span>Calendar</span>
+            </CommandItem>
+            <CommandItem>
+              <SmileyIcon />
+              <span>Search Emoji</span>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </div>
   ),
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -192,22 +198,24 @@ export const EmptyState: Story = {
  */
 export const Selecting: Story = {
   render: () => (
-    <Command className="rounded-lg border shadow-md md:min-w-[450px]">
-      <CommandInput placeholder="Type a command or search..." aria-label="Command" />
-      <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Suggestions">
-          <CommandItem value="Calendar" onSelect={onSelectSpy}>
-            <CalendarIcon />
-            <span>Calendar</span>
-          </CommandItem>
-          <CommandItem value="Search Emoji" onSelect={onSelectSpy}>
-            <SmileyIcon />
-            <span>Search Emoji</span>
-          </CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </Command>
+    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+      <Command>
+        <CommandInput placeholder="Type a command or search..." aria-label="Command" />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Suggestions">
+            <CommandItem value="Calendar" onSelect={onSelectSpy}>
+              <CalendarIcon />
+              <span>Calendar</span>
+            </CommandItem>
+            <CommandItem value="Search Emoji" onSelect={onSelectSpy}>
+              <SmileyIcon />
+              <span>Search Emoji</span>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </div>
   ),
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -225,22 +233,24 @@ export const Selecting: Story = {
  */
 export const DisabledItem: Story = {
   render: () => (
-    <Command className="rounded-lg border shadow-md md:min-w-[450px]">
-      <CommandInput placeholder="Type a command or search..." aria-label="Command" />
-      <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Suggestions">
-          <CommandItem disabled value="Calculator" onSelect={onSelectSpy}>
-            <CalculatorIcon />
-            <span>Calculator</span>
-          </CommandItem>
-          <CommandItem value="Calendar">
-            <CalendarIcon />
-            <span>Calendar</span>
-          </CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </Command>
+    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+      <Command>
+        <CommandInput placeholder="Type a command or search..." aria-label="Command" />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Suggestions">
+            <CommandItem disabled value="Calculator" onSelect={onSelectSpy}>
+              <CalculatorIcon />
+              <span>Calculator</span>
+            </CommandItem>
+            <CommandItem value="Calendar">
+              <CalendarIcon />
+              <span>Calendar</span>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </div>
   ),
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -257,26 +267,28 @@ export const DisabledItem: Story = {
 export const WithLoop: Story = {
   args: { loop: true },
   render: (args) => (
-    <Command {...args} className="rounded-lg border shadow-md md:min-w-[450px]">
-      <CommandInput placeholder="Search actions..." aria-label="Command" />
-      <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Actions">
-          <CommandItem>
-            <UserIcon />
-            <span>Profile</span>
-          </CommandItem>
-          <CommandItem>
-            <CreditCardIcon />
-            <span>Billing</span>
-          </CommandItem>
-          <CommandItem>
-            <GearIcon />
-            <span>Settings</span>
-          </CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </Command>
+    <div className="overflow-hidden rounded-xl border shadow-md md:min-w-112.5">
+      <Command {...args}>
+        <CommandInput placeholder="Search actions..." aria-label="Command" />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Actions">
+            <CommandItem>
+              <UserIcon />
+              <span>Profile</span>
+            </CommandItem>
+            <CommandItem>
+              <CreditCardIcon />
+              <span>Billing</span>
+            </CommandItem>
+            <CommandItem>
+              <GearIcon />
+              <span>Settings</span>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </div>
   ),
 };
 

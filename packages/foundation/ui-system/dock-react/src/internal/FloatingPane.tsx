@@ -16,16 +16,18 @@ import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { makeOperation } from "./AdapterState.ts";
-import { boxStyle, freshFloatingSplitId, positionOf, pressStartsOnButton, topLeftBox } from "./DropCompiler.ts";
+import { freshFloatingSplitId, positionOf, pressStartsOnButton, px, topLeftBox } from "./DropCompiler.ts";
 import { GroupPane } from "./GroupPane.tsx";
 import { DockIcon } from "./Icons.tsx";
 import type { AnchoredBox, DockNode } from "@beep/dock";
+import type React from "react";
 import type { DockviewReactProps } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
 import type { FloatingGesture } from "./Gesture.models.ts";
 
 // Chrome around the kernel's anchored content box: the pane is taller than
 // the stored box by the drag-header, and can never shrink below readable.
+// The header's own 32px height lives in src/dock.css; keep the two in step.
 const FLOATING_HEADER_HEIGHT = 32;
 const FLOATING_MIN_WIDTH = 240;
 const FLOATING_MIN_HEIGHT = 160;
@@ -150,7 +152,15 @@ export const FloatingPane = (
   return (
     <div
       data-floating-pane={groupId}
-      style={{ ...boxStyle(member.box), height: member.box.height + FLOATING_HEADER_HEIGHT, zIndex: props.index + 1 }}
+      style={
+        {
+          "--dock-left": px(member.box.left),
+          "--dock-top": px(member.box.top),
+          "--dock-width": px(member.box.width),
+          "--dock-height": px(member.box.height + FLOATING_HEADER_HEIGHT),
+          "--dock-z": `${props.index + 1}`,
+        } as React.CSSProperties
+      }
       onPointerDown={() =>
         submit(
           makeOperation(
@@ -162,11 +172,7 @@ export const FloatingPane = (
         )
       }
     >
-      <div
-        ref={gestureRef("move")}
-        data-floating-header={groupId}
-        style={{ height: FLOATING_HEADER_HEIGHT, cursor: "move", touchAction: "none", userSelect: "none" }}
-      >
+      <div ref={gestureRef("move")} data-floating-header={groupId}>
         <span aria-hidden data-floating-grip="">
           ⣿
         </span>
@@ -223,20 +229,7 @@ export const FloatingPane = (
           })}
         />
       ))}
-      <div
-        ref={gestureRef("resize")}
-        data-floating-resize={groupId}
-        style={{
-          position: "absolute",
-          right: 0,
-          bottom: 0,
-          width: 16,
-          height: 16,
-          cursor: "nwse-resize",
-          touchAction: "none",
-          userSelect: "none",
-        }}
-      />
+      <div ref={gestureRef("resize")} data-floating-resize={groupId} />
     </div>
   );
 };

@@ -9,7 +9,7 @@
 import { CheckIcon, SpinnerGapIcon } from "@phosphor-icons/react";
 import { Match } from "effect";
 import { cn } from "../lib/index.ts";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 /**
  * Visual progress state for a calendar event action.
@@ -107,8 +107,8 @@ export function CalendarEventCard({
   const finalOpacity = status === "completed" ? 0.5 : opacity;
 
   const buttonColorClasses = {
-    primary: "bg-sky-500 text-white hover:bg-sky-600",
-    danger: "bg-red-500 text-white hover:bg-red-600",
+    primary: "bg-info text-white hover:bg-info/90",
+    danger: "bg-destructive text-white hover:bg-destructive/90",
   } as const;
   const actionContent = Match.value(status).pipe(
     Match.when("loading", () => (
@@ -129,35 +129,22 @@ export function CalendarEventCard({
   return (
     <div
       className={cn(
-        "relative flex gap-2 rounded-lg p-3 pl-5 pr-2 transition-colors",
+        "relative flex gap-2 rounded-lg p-3 pl-5 pr-2 opacity-(--event-opacity) transition-colors",
         hasAction ? "items-end" : "items-start",
-        isDotted && "border-2 border-dashed",
+        // The event color is content, not theme: it rides in `--event-color` and the
+        // opacity modifiers reproduce the old hex alpha suffixes (80 / 10 / 20).
+        isDotted ? "border-2 border-dashed border-(--event-color)/50 bg-(--event-color)/6" : "bg-(--event-color)/12.5",
         className
       )}
-      style={{
-        ...(isDotted
-          ? {
-              borderColor: `${eventColor}80`,
-              backgroundColor: `${eventColor}10`,
-            }
-          : {
-              backgroundColor: `${eventColor}20`,
-            }),
-        opacity: finalOpacity,
-      }}
+      style={{ "--event-color": eventColor, "--event-opacity": finalOpacity } as CSSProperties}
     >
       <div className="absolute left-1 top-0 flex h-full items-center">
-        <div className="h-[80%] w-1 flex-shrink-0 rounded-full" style={{ backgroundColor: eventColor }} />
+        <div className="h-4/5 w-1 flex-shrink-0 rounded-full bg-(--event-color)" />
       </div>
 
       <div className="min-w-0 flex-1">
         {hasLabel && (
-          <div
-            className={cn(
-              "mb-1 text-xs font-medium",
-              isDotted ? "text-blue-600 dark:text-blue-400" : "text-zinc-600 dark:text-zinc-500"
-            )}
-          >
+          <div className={cn("mb-1 text-xs font-medium", isDotted ? "text-info-text" : "text-muted-foreground")}>
             {label}
           </div>
         )}
@@ -203,7 +190,7 @@ interface EventTitleProps {
  * @since 0.0.0
  */
 export function EventTitle({ children, className }: EventTitleProps) {
-  return <h3 className={cn("font-medium text-zinc-900 dark:text-zinc-100", className)}>{children}</h3>;
+  return <h3 className={cn("font-medium text-foreground", className)}>{children}</h3>;
 }
 
 interface EventTimeProps {
@@ -232,7 +219,7 @@ export function EventTime({ startTime, endTime, className }: EventTimeProps) {
   const hasEndTime = endTime !== undefined && endTime.length > 0;
 
   return (
-    <p className={cn("text-sm text-zinc-600 dark:text-zinc-400", className)}>
+    <p className={cn("text-sm text-muted-foreground", className)}>
       {startTime}
       {hasEndTime ? ` - ${endTime}` : ""}
     </p>
@@ -261,5 +248,5 @@ interface EventLocationProps {
  * @since 0.0.0
  */
 export function EventLocation({ children, className }: EventLocationProps) {
-  return <p className={cn("text-xs text-zinc-500 dark:text-zinc-500", className)}>{children}</p>;
+  return <p className={cn("text-xs text-muted-foreground", className)}>{children}</p>;
 }

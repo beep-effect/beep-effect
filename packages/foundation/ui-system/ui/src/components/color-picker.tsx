@@ -158,7 +158,10 @@ const ColorPickerInner: React.FC<ColorPickerProps> = ({
                 aria-label="Choose color"
                 className="p-1"
               >
-                <span className="size-5 rounded-sm border" style={{ backgroundColor: color }} />
+                <span
+                  className="size-5 rounded-sm border bg-(--swatch-color)"
+                  style={{ "--swatch-color": color } as React.CSSProperties}
+                />
               </Button>
             }
           />

@@ -68,7 +68,7 @@ export const Default: Story = {
   render: (args) => (
     <Dialog {...args}>
       <DialogTrigger render={<Button variant="outline">Open dialog</Button>} />
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle>Edit profile</DialogTitle>
           <DialogDescription>Make changes to your profile here. Click save when you are done.</DialogDescription>
@@ -103,7 +103,7 @@ export const DefaultOpen: Story = {
   render: (args) => (
     <Dialog {...args}>
       <DialogTrigger render={<Button variant="outline">Open dialog</Button>} />
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle>Welcome aboard</DialogTitle>
           <DialogDescription>This dialog opened automatically when the story mounted.</DialogDescription>
@@ -127,7 +127,7 @@ export const Closing: Story = {
   render: (args) => (
     <Dialog {...args}>
       <DialogTrigger render={<Button variant="outline">Open dialog</Button>} />
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle>Session expiring</DialogTitle>
           <DialogDescription>Your session will end soon. Close this notice to continue.</DialogDescription>
@@ -159,7 +159,7 @@ export const Destructive: Story = {
   render: (args) => (
     <Dialog {...args}>
       <DialogTrigger render={<Button variant="destructive">Delete account</Button>} />
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle>Are you absolutely sure?</DialogTitle>
           <DialogDescription>
@@ -192,7 +192,7 @@ export const WithoutCloseButton: Story = {
   render: (args) => (
     <Dialog {...args}>
       <DialogTrigger render={<Button variant="outline">Open dialog</Button>} />
-      <DialogContent className="sm:max-w-[425px]" showCloseButton={false}>
+      <DialogContent className="sm:max-w-106.25" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Accept the terms</DialogTitle>
           <DialogDescription>You must choose an action below; there is no corner close button.</DialogDescription>
@@ -215,7 +215,7 @@ export const NonDismissible: Story = {
   render: (args) => (
     <Dialog {...args}>
       <DialogTrigger render={<Button variant="outline">Open dialog</Button>} />
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle>Action required</DialogTitle>
           <DialogDescription>Clicking outside will not close this dialog; use the footer button.</DialogDescription>
