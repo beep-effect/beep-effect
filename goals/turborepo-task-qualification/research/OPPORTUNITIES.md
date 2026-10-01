@@ -2820,3 +2820,16 @@ other owners' scheduler leases were preserved. The repair hoists schema ASTs
 and generated worker codecs without changing policy or adding suppressions.
 Running the applicable root compiler gate before freezing native source bindings
 would have prevented this extra frozen-binding refresh.
+
+### Generated alias drift exposed by root publication proof
+
+The root `lint:tsgo-rules` lane rejected the committed snapshot because
+`vitest.aliases.generated.json` omitted `@beep/dock-react/dock.css`, present in
+canonical `tsconfig.json` paths. Both files match merged main `f05e1a698d`;
+this is inherited generator/projection drift, not an introduced Cache change.
+The exact three-line projection repair passes `bun run beep quality tsgo-rules`.
+A pre-native root alias parity check would have prevented approval preparation
+against a source requiring another input-affecting repair. The queued native
+run was deliberately stopped before execution; its approvals and receipts remain
+historical and require renewal against the repaired committed source. No policy
+waiver or alias-detector baseline change was used.
