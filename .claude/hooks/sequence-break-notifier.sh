@@ -442,16 +442,28 @@ open_label="Open task"
 [ "${open_relation}" != "parent" ] || open_label="Open parent task"
 local_origin="$(desktop_origin)"
 
+# Joins the clone/worktree label, a destination suffix, and the stage text.
+origin_body() {
+  local suffix="${1}" stage_text="${2}"
+  if [ -n "${local_origin}${suffix}" ]; then
+    printf '%s%s\n%s' "${local_origin}" "${suffix}" "${stage_text}"
+  else
+    printf '%s' "${stage_text}"
+  fi
+}
+
 # A bounded background listener owns the notification action. Its stdout is
 # private to this pipe, never the permission hook. Receipt of the notification
 # ID proves the send; closing/dismissing never opens an app. Reminder delivery
 # does not wait on this listener. No session URL is written to the ledger.
 deliver_action_notification() {
-  local stage="${1}" measured_age="${2}" urgency="${3}" title="${4}" body="${5}"
+  local stage="${1}" measured_age="${2}" urgency="${3}" title="${4}" body="${5}" replace_id="${6:-}"
+  local replace=()
+  [ -z "${replace_id}" ] || replace=(--replace-id="${replace_id}")
   (
     XDG_RUNTIME_DIR="${runtime_dir}" DBUS_SESSION_BUS_ADDRESS="${bus_address}" \
       timeout 3600s stdbuf -oL notify-send --app-name="beep agent" --urgency="${urgency}" --expire-time=0 \
-      --print-id --action="default=${open_label}" "${title}" "${body}" 7>/dev/null |
+      --print-id "${replace[@]}" --action="default=${open_label}" "${title}" "${body}" 7>/dev/null |
       {
         local notification_id action
         if ! IFS= read -r notification_id; then
@@ -471,6 +483,40 @@ deliver_action_notification() {
       }
   ) </dev/null >/dev/null 2>&1 &
   action_listener_pid=$!
+}
+
+action_listener_alive() {
+  [ -n "${action_listener_pid}" ] && kill -0 "${action_listener_pid}" 2>/dev/null
+}
+
+# The listener learns the card ID asynchronously. Give a live listener up to
+# three seconds to hand it over, so a fast resolution or escalation does not
+# miss the card it must close or replace.
+action_notification_id() {
+  local tries=0 notification_id=""
+  [ -n "${action_id_file}" ] || return 0
+  while :; do
+    if [ -s "${action_id_file}" ]; then
+      notification_id="$(head -c 32 "${action_id_file}" 2>/dev/null)" || notification_id=""
+      break
+    fi
+    action_listener_alive || break
+    [ "${tries}" -lt 30 ] || break
+    sleep 0.1 || break
+    tries=$((tries + 1))
+  done
+  case "${notification_id}" in "" | *[!0-9]*) return 0 ;; esac
+  printf '%s' "${notification_id}"
+}
+
+# Stops the live listener chain: its timeout forwards TERM to notify-send, and
+# the reader exits before it can open anything. The card itself stays up.
+stop_action_listener() {
+  action_listener_alive || return 0
+  pkill -TERM -P "${action_listener_pid}" 2>/dev/null || true
+  kill -TERM "${action_listener_pid}" 2>/dev/null || true
+  wait "${action_listener_pid}" 2>/dev/null || true
+  action_listener_pid=""
 }
 
 deliver_desktop() {
@@ -493,34 +539,38 @@ deliver_desktop() {
     plan-approval) title="${title} plan is awaiting approval" ;;
     tool-permission) title="${title} needs permission" ;;
   esac
-  body="${local_origin}"
-  # A child's own Ghostty surface is a closer destination than its parent task.
-  if [ "${open_relation}" = "parent" ] && [ "${origin_terminal}" = "ghostty" ] && [ -t 7 ]; then
-    open_uri=""
-  fi
+  local stage_text osc_body
+  stage_text="$(notification_body "${stage}" "${measured_age}")"
   case "${open_relation}:${open_uri}" in
-    self:codex:*) body="${body} · ChatGPT Desktop" ;;
-    self:claude:*) body="${body} · Claude Desktop" ;;
-    parent:codex:*) body="${body} · Headless child of a ChatGPT Desktop task" ;;
-    parent:claude:*) body="${body} · Headless child of a Claude Desktop session" ;;
-    *) [ "${origin_terminal}" != "ghostty" ] || body="${body} · Ghostty" ;;
+    self:codex:*) body="$(origin_body " · ChatGPT Desktop" "${stage_text}")" ;;
+    self:claude:*) body="$(origin_body " · Claude Desktop" "${stage_text}")" ;;
+    parent:codex:*) body="$(origin_body " · Headless child of a ChatGPT Desktop task" "${stage_text}")" ;;
+    parent:claude:*) body="$(origin_body " · Headless child of a Claude Desktop session" "${stage_text}")" ;;
+    *) body="" ;;
   esac
-  [ -z "${body}" ] || body="${body}
-"
-  body="${body}$(notification_body "${stage}" "${measured_age}")"
 
   # Ghostty binds its native OSC notification to the emitting surface, including
   # the tab/split click action. FD 7 was opened before the hook detached. Never
   # write terminal escapes to hook stdout or reopen a potentially recycled PTY.
-  if [ -z "${open_uri}" ] && [ "${origin_terminal}" = "ghostty" ] && [ -t 7 ]; then
-    local osc_body
+  # A child's own Ghostty surface is a closer destination than its parent task;
+  # the parent route stays the fallback until the terminal accepts the bytes.
+  if [ "${origin_terminal}" = "ghostty" ] && [ -t 7 ] &&
+    { [ -z "${open_uri}" ] || [ "${open_relation}" = "parent" ]; }; then
     # Ghostty uses the body as its notification ID. Distinguish simultaneous
     # sessions in the same checkout so one cannot replace the other's action.
-    osc_body="$(jq -nr --arg body "${body} [${session_id:0:12}]" '$body | gsub("[\u0000-\u001f\u007f-\u009f;]"; " ")')"
+    osc_body="$(origin_body " · Ghostty" "${stage_text}")"
+    osc_body="$(jq -nr --arg body "${osc_body} [${session_id:0:12}]" '$body | gsub("[\u0000-\u001f\u007f-\u009f;]"; " ")')"
     if [ ! -e "${disarm_sentinel}" ] &&
       timeout 2s bash -c 'printf "\\033]777;notify;%s;%s\\033\\\\" "$1" "$2" >&7' bash "${title}" "${osc_body}"; then
       append_delivery desktop "${stage}" sent "" "${measured_age}"
       return 0
+    fi
+  fi
+  if [ -z "${body}" ]; then
+    if [ "${origin_terminal}" = "ghostty" ]; then
+      body="$(origin_body " · Ghostty" "${stage_text}")"
+    else
+      body="$(origin_body "" "${stage_text}")"
     fi
   fi
   command -v notify-send >/dev/null 2>&1 || {
@@ -556,16 +606,24 @@ deliver_desktop() {
     return 0
   fi
   if [ -n "${open_uri}" ] && command -v xdg-open >/dev/null 2>&1 && command -v stdbuf >/dev/null 2>&1; then
-    # The existing persistent notification remains actionable. Damping later
-    # desktop stages keeps at most one listener per wait; ntfy still escalates.
-    if [ -n "${action_listener_pid}" ] && kill -0 "${action_listener_pid}" 2>/dev/null; then
-      append_delivery desktop "${stage}" skipped storm-damped "${measured_age}"
-      return 0
+    # A later stage escalates the same card: stop the live listener, then
+    # replace its card with a fresh listener, so each wait keeps exactly one
+    # actionable card and one listener. Without pkill the card stays as is.
+    local replace_id=""
+    if action_listener_alive; then
+      if ! command -v pkill >/dev/null 2>&1; then
+        append_delivery desktop "${stage}" skipped storm-damped "${measured_age}"
+        return 0
+      fi
+      replace_id="$(action_notification_id)"
+      stop_action_listener
     fi
     if [ -z "${action_id_file}" ]; then
       action_id_file="$(mktemp "${damping_dir}/${damping_key}.notification.XXXXXX")" || action_id_file=""
+    else
+      : >"${action_id_file}" 2>/dev/null || true
     fi
-    deliver_action_notification "${stage}" "${measured_age}" "${urgency}" "${title}" "${body}"
+    deliver_action_notification "${stage}" "${measured_age}" "${urgency}" "${title}" "${body}" "${replace_id}"
     return 0
   fi
   [ -z "${desktop_notification_id}" ] || replace=(--replace-id="${desktop_notification_id}")
@@ -702,9 +760,7 @@ deliver_ntfy() {
 # close anything else.
 close_desktop() {
   local notification_id="${desktop_notification_id}"
-  if [ -z "${notification_id}" ] && [ -n "${action_id_file}" ] && [ -s "${action_id_file}" ]; then
-    notification_id="$(head -c 32 "${action_id_file}" 2>/dev/null)" || notification_id=""
-  fi
+  [ -n "${notification_id}" ] || notification_id="$(action_notification_id)"
   case "${notification_id}" in "" | *[!0-9]*) return 0 ;; esac
   [ -n "${bus_address}" ] || return 0
   command -v gdbus >/dev/null 2>&1 || return 0

@@ -66,15 +66,17 @@ After its last stage the worker keeps polling the wait bracket every
 `BEEP_SEQUENCE_BREAK_POLL_SECONDS` (default 15) for up to
 `BEEP_SEQUENCE_BREAK_CLOSE_WATCH_SECONDS` (default 3600). Once the decision
 lands, it closes its own card over the session bus (`CloseNotification` with the
-ID it received, nothing else). Between stages the same poll ends the wait early.
+ID it received, nothing else). A foreground (`BEEP_SEQUENCE_BREAK_FOREGROUND=1`)
+worker skips this watch so the hook never waits on the decision. Between stages the same poll ends the wait early.
 A wait it can no longer attribute leaves the card in place, because the worker
 cannot prove the decision was made. Ghostty OSC notifications belong to the
 terminal and are not closed.
 
 The desktop action listener runs separately from the permission hook and reminder
-worker, and expires after one hour. Each wait has at most one live action listener:
-while its persistent notification remains actionable, later desktop reminder stages
-are damped. Phone escalation continues normally. Dismissing a notification never opens an app.
+worker, and expires after one hour. Each wait has at most one live action listener.
+A later stage stops it (needs `pkill`; without it the stage is damped) and starts a
+replacement listener on the same card, so a clickable card escalates in place.
+Phone escalation continues normally. Dismissing a notification never opens an app.
 The listener checks that the wait is still open and honors the hook-pulse disarm
 sentinel before opening a destination.
 It requires `notify-send`, `stdbuf`, and `xdg-open`; without the action helpers,

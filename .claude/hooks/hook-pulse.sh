@@ -805,7 +805,10 @@ if [ "${notifier_rev}" != "log-only-0" ]; then
         "${notification_relation}"
       )
       if [ "${BEEP_SEQUENCE_BREAK_FOREGROUND:-0}" = "1" ]; then
-        "${notifier_path}" "${notifier_args[@]}" </dev/null >/dev/null 2>&1 || true
+        # The foreground (diagnostic) worker never lingers to close its card;
+        # only a detached worker may outlive the hook.
+        BEEP_SEQUENCE_BREAK_CLOSE_WATCH_SECONDS=0 \
+          "${notifier_path}" "${notifier_args[@]}" </dev/null >/dev/null 2>&1 || true
       else
         setsid -f -- "${notifier_path}" "${notifier_args[@]}" </dev/null >/dev/null 2>&1 || true
       fi
