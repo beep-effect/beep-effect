@@ -19,8 +19,6 @@ import {
   OpenAiCompatUsage,
   OpenAiCompatUserChatMessage,
 } from "@beep/openai-compat";
-import { PosInt } from "@beep/schema/Int";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -40,6 +38,8 @@ import * as S from "effect/Schema";
 import type * as LanguageModel from "effect/ai/LanguageModel";
 import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const ClientOptionsArbitrary = Arbitrary.schema(OpenAiCompatClientOptions);
 const LanguageModelConfigArbitrary = Arbitrary.schema(OpenAiCompatLanguageModelConfig);
@@ -64,7 +64,7 @@ const decodeResponse = S.decodeUnknownResult(OpenAiCompatChatCompletionResponse)
 const encodeChunk = S.encodeResult(OpenAiCompatChatCompletionChunk);
 const decodeChunk = S.decodeUnknownResult(OpenAiCompatChatCompletionChunk);
 
-const nonNegativeInt = NonNegativeInt.make;
+const nonNegativeInt = S.Natural.make;
 const userMessage = (content = ""): OpenAiCompatUserChatMessage =>
   OpenAiCompatUserChatMessage.make({ content, role: "user" });
 

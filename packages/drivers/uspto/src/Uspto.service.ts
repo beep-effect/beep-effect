@@ -6,7 +6,7 @@
  */
 
 import { $UsptoId } from "@beep/identity";
-import { assertAllowedRemoteUrl, NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
+import { assertAllowedRemoteUrl, URLStr } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Context, Effect, Layer, Match, Redacted } from "effect";
@@ -94,9 +94,13 @@ class MetadataEnvelopeWrapper extends S.Class<MetadataEnvelopeWrapper>($I`Metada
   })
 ) {}
 
+const metadataEnvelopePatentFileWrapperDataBagDefault = A.empty();
 class MetadataEnvelope extends S.Class<MetadataEnvelope>($I`MetadataEnvelope`)(
   {
-    patentFileWrapperDataBag: S.Array(MetadataEnvelopeWrapper).pipe(SchemaUtils.withEmptyArrayDefaults()),
+    patentFileWrapperDataBag: S.Array(MetadataEnvelopeWrapper).pipe(
+      S.withConstructorDefault(Effect.succeed(metadataEnvelopePatentFileWrapperDataBagDefault)),
+      S.withDecodingDefaultType(Effect.succeed(metadataEnvelopePatentFileWrapperDataBagDefault))
+    ),
   },
   $I.annote("MetadataEnvelope", {
     description: "USPTO file-wrapper response envelope containing application metadata records.",
@@ -105,19 +109,31 @@ class MetadataEnvelope extends S.Class<MetadataEnvelope>($I`MetadataEnvelope`)(
   static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(this));
 }
 
+const continuityEnvelopeWrapperChildContinuityBagDefault = A.empty();
+const continuityEnvelopeWrapperParentContinuityBagDefault = A.empty();
 class ContinuityEnvelopeWrapper extends S.Class<ContinuityEnvelopeWrapper>($I`ContinuityEnvelopeWrapper`)(
   {
-    childContinuityBag: S.Array(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withEmptyArrayDefaults()),
-    parentContinuityBag: S.Array(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withEmptyArrayDefaults()),
+    childContinuityBag: S.Array(S.Record(S.String, S.Unknown)).pipe(
+      S.withConstructorDefault(Effect.succeed(continuityEnvelopeWrapperChildContinuityBagDefault)),
+      S.withDecodingDefaultType(Effect.succeed(continuityEnvelopeWrapperChildContinuityBagDefault))
+    ),
+    parentContinuityBag: S.Array(S.Record(S.String, S.Unknown)).pipe(
+      S.withConstructorDefault(Effect.succeed(continuityEnvelopeWrapperParentContinuityBagDefault)),
+      S.withDecodingDefaultType(Effect.succeed(continuityEnvelopeWrapperParentContinuityBagDefault))
+    ),
   },
   $I.annote("ContinuityEnvelopeWrapper", {
     description: "USPTO continuity row carried inside a continuity response envelope.",
   })
 ) {}
 
+const continuityEnvelopePatentFileWrapperDataBagDefault = A.empty();
 class ContinuityEnvelope extends S.Class<ContinuityEnvelope>($I`ContinuityEnvelope`)(
   {
-    patentFileWrapperDataBag: S.Array(ContinuityEnvelopeWrapper).pipe(SchemaUtils.withEmptyArrayDefaults()),
+    patentFileWrapperDataBag: S.Array(ContinuityEnvelopeWrapper).pipe(
+      S.withConstructorDefault(Effect.succeed(continuityEnvelopePatentFileWrapperDataBagDefault)),
+      S.withDecodingDefaultType(Effect.succeed(continuityEnvelopePatentFileWrapperDataBagDefault))
+    ),
   },
   $I.annote("ContinuityEnvelope", {
     description: "USPTO continuity response envelope containing parent and child continuity records.",
@@ -126,9 +142,13 @@ class ContinuityEnvelope extends S.Class<ContinuityEnvelope>($I`ContinuityEnvelo
   static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(this));
 }
 
+const documentsEnvelopeDocumentBagDefault = A.empty();
 class DocumentsEnvelope extends S.Class<DocumentsEnvelope>($I`DocumentsEnvelope`)(
   {
-    documentBag: S.Array(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withEmptyArrayDefaults()),
+    documentBag: S.Array(S.Record(S.String, S.Unknown)).pipe(
+      S.withConstructorDefault(Effect.succeed(documentsEnvelopeDocumentBagDefault)),
+      S.withDecodingDefaultType(Effect.succeed(documentsEnvelopeDocumentBagDefault))
+    ),
   },
   $I.annote("DocumentsEnvelope", {
     description: "USPTO file-wrapper response envelope containing document records.",
@@ -244,9 +264,9 @@ const resolveConfig = (input: UsptoConfigInput): ResolvedUsptoConfig => ({
 
 const statusError = (status: number): UsptoError =>
   Match.value(status).pipe(
-    Match.when(404, () => UsptoError.fromReason("not-found", { status: NonNegativeInt.make(status) })),
-    Match.when(429, () => UsptoError.fromReason("rate-limited", { status: NonNegativeInt.make(status) })),
-    Match.orElse(() => UsptoError.fromReason("response-status", { status: NonNegativeInt.make(status) }))
+    Match.when(404, () => UsptoError.fromReason("not-found", { status: S.Natural.make(status) })),
+    Match.when(429, () => UsptoError.fromReason("rate-limited", { status: S.Natural.make(status) })),
+    Match.orElse(() => UsptoError.fromReason("response-status", { status: S.Natural.make(status) }))
   );
 
 const makeService = (client: HttpClient.HttpClient, config: ResolvedUsptoConfig): UsptoShape => {

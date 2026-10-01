@@ -6,7 +6,6 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import * as S from "effect/Schema";
 import type { Sha256Hex as Sha256HexType } from "@beep/schema/Sha256";
@@ -233,7 +232,7 @@ export type HybridLogicalClock = typeof HybridLogicalClock.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const VectorClock = S.Record(S.NonEmptyString, NonNegativeInt).pipe(
+export const VectorClock = S.Record(S.NonEmptyString, S.Natural).pipe(
   S.brand("VectorClock"),
   $I.annoteSchema("VectorClock", {
     description: "Vector clock map used to reason about distributed entity updates.",

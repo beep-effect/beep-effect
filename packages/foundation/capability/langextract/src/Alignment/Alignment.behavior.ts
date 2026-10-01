@@ -7,12 +7,12 @@
 
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema/Int";
 import * as O from "@beep/utils/Option";
 import { Match, MutableHashSet, Number as Num } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual, flow, identity, pipe } from "effect/Function";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { MAX_FUZZY_QUERY_LENGTH, MAX_FUZZY_SOURCE_LENGTH, MAX_MINIMAL_FOLD_TRANSITIONS } from "./Alignment.config.ts";
 import type { ExtractionCandidate } from "@beep/langextract/Extraction";
@@ -21,7 +21,7 @@ import type { AlignedMatch, AlignedStatus, AlignmentSource, MatchedText, ScoredM
 const lower = Str.toLowerCase;
 
 const alignedMatch = (status: AlignedStatus, [start, text]: MatchedText): AlignedMatch => [status, start, text];
-const matchedText = (start: number, text: string): MatchedText => [NonNegativeInt.make(start), text];
+const matchedText = (start: number, text: string): MatchedText => [S.Natural.make(start), text];
 const candidateFields = (candidate: ExtractionCandidate) => ({
   attributes: candidate.attributes,
   confidence: candidate.confidence,
@@ -61,10 +61,10 @@ const findUniqueMatch = (
  * **Example** (Span from a matched slice)
  *
  * ```ts import.meta.vitest name="Span from a matched slice"
+ * import * as S from "effect/Schema"
  * import { spanFromMatch } from "@beep/langextract/Alignment"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * spanFromMatch([NonNegativeInt.make(4), "Lovelace"]).end // => 12
+ * spanFromMatch([S.Natural.make(4), "Lovelace"]).end // => 12
  * ```
  *
  * @category mapping
@@ -72,7 +72,7 @@ const findUniqueMatch = (
  */
 export const spanFromMatch = ([start, text]: MatchedText): Contract.Span =>
   Contract.Span.make({
-    end: NonNegativeInt.make(Num.sum(start, Str.length(text))),
+    end: S.Natural.make(Num.sum(start, Str.length(text))),
     start,
   });
 
@@ -431,7 +431,7 @@ const findFuzzy = (sourceText: string, query: string, threshold: UnitInterval): 
         }),
         ({ end, start }): ScoredMatch => {
           const candidate = Str.slice(start, end)(sourceText);
-          return [NonNegativeInt.make(start), candidate, similarity(candidate, query)];
+          return [S.Natural.make(start), candidate, similarity(candidate, query)];
         }
       )
     ),

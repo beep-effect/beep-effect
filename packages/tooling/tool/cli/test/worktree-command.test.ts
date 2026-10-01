@@ -43,9 +43,7 @@ import {
   processTableWithLineage,
   procProcessTable,
 } from "@beep/repo-cli/test/RepoRun";
-import { NonEmptyTrimmedStr, PosInt } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, P, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -57,6 +55,8 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { WorktreeUpstreamState, WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -86,10 +86,10 @@ const collectRemovalReceiptLines = Effect.fn("WorktreeCommandTest.collectRemoval
 
 const residueManifest = (patchPath: O.Option<string>, untrackedFiles: ReadonlyArray<string>) =>
   WorktreeResidueManifest.make({
-    name: NonEmptyTrimmedStr.make("feature-x"),
+    name: "feature-x",
     branch: O.some("feat/feature-x"),
     head: GitObjectId.make("1ed08f66df016a18c6d7d56bd97aa778912cb37b"),
-    archivedAt: ISOStr.make(NonEmptyTrimmedStr.make("2026-09-02T12:34:56.000Z")),
+    archivedAt: "2026-09-02T12:34:56.000Z",
     archiveRef: "refs/archive/worktrees/feature-x/20260902-123456",
     repositoryHash: WorktreeRepositoryHash.make("0123456789ab"),
     patchPath,
@@ -846,7 +846,7 @@ describe("worktree git operations", () => {
         const error = yield* service
           .remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("different"),
+              name: "different",
               targetPath,
               mainCheckout: context.mainCheckout,
               branch: O.some(defaultWorktreeBranch("registered")),
@@ -877,7 +877,7 @@ describe("worktree git operations", () => {
         const error = yield* service
           .remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("repointed"),
+              name: "repointed",
               targetPath,
               mainCheckout: context.mainCheckout,
               branch: O.some(defaultWorktreeBranch("repointed")),
@@ -910,7 +910,7 @@ describe("worktree git operations", () => {
         const error = yield* service
           .remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("foreign-git"),
+              name: "foreign-git",
               targetPath,
               mainCheckout: context.mainCheckout,
               branch: O.some(defaultWorktreeBranch("foreign-git")),
@@ -1006,7 +1006,7 @@ describe("worktree git operations", () => {
         const error = yield* removalService
           .remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("delete-demo"),
+              name: "delete-demo",
               targetPath,
               mainCheckout: context.mainCheckout,
               branch: O.some(defaultWorktreeBranch("delete-demo")),
@@ -1041,7 +1041,7 @@ describe("worktree git operations", () => {
         const error = yield* service
           .remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("bystander"),
+              name: "bystander",
               targetPath,
               mainCheckout: context.mainCheckout,
               branch: O.some("main"),
@@ -1110,7 +1110,7 @@ describe("worktree git operations", () => {
         const path = yield* Path.Path;
         const removalService = yield* WorktreeRemovalService;
         const context = yield* resolveWorktreeContext(repoRoot);
-        const name = NonEmptyTrimmedStr.make("contained-residue");
+        const name = "contained-residue";
         const targetPath = yield* addWorktree(context, name, defaultWorktreeBranch(name));
         const nestedResidueRoot = path.join(targetPath, "residue");
         const configuredRoots = [
@@ -1164,7 +1164,7 @@ describe("worktree git operations", () => {
         const path = yield* Path.Path;
         const removalService = yield* WorktreeRemovalService;
         const context = yield* resolveWorktreeContext(repoRoot);
-        const name = NonEmptyTrimmedStr.make("submodule-demo");
+        const name = "submodule-demo";
         const targetPath = yield* addWorktree(context, name, defaultWorktreeBranch(name));
         const submoduleSource = path.join(path.dirname(repoRoot), "submodule-source");
         const submoduleRelativePath = path.join("vendor", "local");
@@ -1224,7 +1224,7 @@ describe("worktree git operations", () => {
         const path = yield* Path.Path;
         const removalService = yield* WorktreeRemovalService;
         const context = yield* resolveWorktreeContext(repoRoot);
-        const name = NonEmptyTrimmedStr.make("space lane");
+        const name = "space lane";
         const targetPath = path.join(context.worktreesRoot, name);
         const residueBase = path.join(context.worktreesRoot, "space-residue");
 
@@ -1273,7 +1273,7 @@ describe("worktree git operations", () => {
           const removalService = yield* WorktreeRemovalService;
           const firstContext = yield* resolveWorktreeContext(firstRepoRoot);
           const secondContext = yield* resolveWorktreeContext(secondRepoRoot);
-          const name = NonEmptyTrimmedStr.make("collision-demo");
+          const name = "collision-demo";
           const firstTarget = yield* addWorktree(firstContext, name, defaultWorktreeBranch(name));
           const secondTarget = yield* addWorktree(secondContext, name, defaultWorktreeBranch(name));
           const residueBase = path.join(path.dirname(firstRepoRoot), "shared-residue");
@@ -1353,7 +1353,7 @@ describe("worktree git operations", () => {
         const receipt = yield* removalService
           .remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("archive-demo"),
+              name: "archive-demo",
               targetPath,
               mainCheckout: context.mainCheckout,
               branch: O.some(defaultWorktreeBranch("archive-demo")),
@@ -1388,7 +1388,7 @@ describe("worktree git operations", () => {
         const cleanReceipt = yield* removalService
           .remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("clean-demo"),
+              name: "clean-demo",
               targetPath: cleanPath,
               mainCheckout: context.mainCheckout,
               branch: O.some(defaultWorktreeBranch("clean-demo")),
@@ -1421,7 +1421,7 @@ describe("worktree git operations", () => {
           removalService
             .remove(
               WorktreeRemovalRequest.make({
-                name: NonEmptyTrimmedStr.make(name),
+                name,
                 targetPath,
                 mainCheckout: context.mainCheckout,
                 branch: O.some(defaultWorktreeBranch(name)),
@@ -1566,7 +1566,7 @@ describe("worktree git operations", () => {
           expect(yield* Ref.get(probeCalls)).toBe(0);
           return yield* removalService.remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("squash-merged-lane"),
+              name: "squash-merged-lane",
               targetPath,
               mainCheckout: context.mainCheckout,
               branch: O.some(branch),
@@ -1618,7 +1618,7 @@ describe("worktree git operations", () => {
         const remove = removalService
           .remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("held-demo"),
+              name: "held-demo",
               targetPath,
               mainCheckout: context.mainCheckout,
               branch: O.some(branch),
@@ -1694,7 +1694,7 @@ describe("worktree git operations", () => {
             removalService
               .remove(
                 WorktreeRemovalRequest.make({
-                  name: NonEmptyTrimmedStr.make("session-demo"),
+                  name: "session-demo",
                   targetPath,
                   mainCheckout: context.mainCheckout,
                   branch: O.some(branch),
@@ -1760,7 +1760,7 @@ describe("worktree git operations", () => {
                   stderr: "ignore",
                 });
                 const request = WorktreeRemovalRequest.make({
-                  name: NonEmptyTrimmedStr.make("marker-priority"),
+                  name: "marker-priority",
                   targetPath,
                   mainCheckout: context.mainCheckout,
                   branch: O.some(branch),
@@ -1790,9 +1790,7 @@ describe("worktree git operations", () => {
                       WorktreeRemovalRequest.make({
                         ...request,
                         exemptInvoker: WorktreeInvokerExemption.make({
-                          sessionMarker: O.some(
-                            WorktreeSessionMarker.make({ name: NonEmptyTrimmedStr.make("CLAUDE_PID"), pid: 1 })
-                          ),
+                          sessionMarker: O.some(WorktreeSessionMarker.make({ name: "CLAUDE_PID", pid: 1 })),
                         }),
                       })
                     )
@@ -1827,7 +1825,7 @@ describe("worktree git operations", () => {
         const context = yield* resolveWorktreeContext(repoRoot);
         const legacyRequest = (name: string, targetPath: string, expectedHead: O.Option<GitObjectId>) =>
           WorktreeRemovalRequest.make({
-            name: NonEmptyTrimmedStr.make(name),
+            name,
             targetPath,
             mainCheckout: context.mainCheckout,
             branch: O.some(defaultWorktreeBranch(name)),
@@ -1869,7 +1867,7 @@ describe("worktree git operations", () => {
         const outcome = removalService
           .remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("fence-demo"),
+              name: "fence-demo",
               targetPath,
               mainCheckout: context.mainCheckout,
               branch: O.some(defaultWorktreeBranch("fence-demo")),
@@ -1921,7 +1919,7 @@ describe("worktree git operations", () => {
         const outcome = removalService
           .remove(
             WorktreeRemovalRequest.make({
-              name: NonEmptyTrimmedStr.make("sticky-demo"),
+              name: "sticky-demo",
               targetPath,
               mainCheckout: context.mainCheckout,
               branch: O.some(branch),

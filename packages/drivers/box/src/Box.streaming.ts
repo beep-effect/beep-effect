@@ -8,7 +8,7 @@
 import { Buffer } from "node:buffer";
 import * as dns from "node:dns";
 import { $BoxId } from "@beep/identity";
-import { assertAllowedRemoteUrl, BlockedHostError, HttpsUrl, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { assertAllowedRemoteUrl, BlockedHostError, HttpsUrl, SchemaUtils } from "@beep/schema";
 import * as NodeStream from "@effect/platform-node-shared/NodeStream";
 import { Effect, Exit, Result, Stream } from "effect";
 import * as A from "effect/Array";
@@ -107,12 +107,12 @@ export type BoxByteStream = Stream.Stream<Uint8Array, BoxError, never>;
  * **Example** (Make part accumulator)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { BoxPartAccumulator } from "@beep/box"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const accumulator = BoxPartAccumulator.make({
  *   fileHash: "sha1-empty",
- *   fileSize: NonNegativeInt.make(0),
+ *   fileSize: S.Natural.make(0),
  *   lastIndex: -1,
  *   parts: [],
  *   uploadPartUrl: "https://upload.box.com/session"
@@ -126,7 +126,7 @@ export type BoxByteStream = Stream.Stream<Uint8Array, BoxError, never>;
 export class BoxPartAccumulator extends S.Class<BoxPartAccumulator>($I`BoxPartAccumulator`)(
   {
     fileHash: S.Unknown,
-    fileSize: NonNegativeInt,
+    fileSize: S.Natural,
     lastIndex: LastPartIndex,
     parts: M.UploadPart.pipe(S.Array),
     uploadPartUrl: S.String,
@@ -484,14 +484,14 @@ export class BoxUploadFilePartPayload extends S.Class<BoxUploadFilePartPayload>(
  * **Example** (Chunked upload reducer payload)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { BoxPartAccumulator } from "@beep/box"
- * import { NonNegativeInt } from "@beep/schema"
  * import type { BoxChunkedUploadReducerPayload } from "@beep/box"
  *
  * const payload = {
  *   acc: BoxPartAccumulator.make({
  *     fileHash: "sha1-empty",
- *     fileSize: NonNegativeInt.make(2),
+ *     fileSize: S.Natural.make(2),
  *     lastIndex: -1,
  *     parts: [],
  *     uploadPartUrl: "https://upload.box.com/session"
@@ -522,13 +522,13 @@ export class BoxChunkedUploadReducerPayload extends S.Class<BoxChunkedUploadRedu
  * **Example** (Upload big file payload)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import type { BoxUploadBigFilePayload } from "@beep/box"
  *
  * const payload = {
  *   file: new Uint8Array([104, 105]),
  *   fileName: "large-document.txt",
- *   fileSize: NonNegativeInt.make(2),
+ *   fileSize: S.Natural.make(2),
  *   parentFolderId: "0"
  * } satisfies BoxUploadBigFilePayload
  * console.log(`${payload.fileName}:${payload.fileSize}`)
@@ -541,7 +541,7 @@ export class BoxUploadBigFilePayload extends S.Class<BoxUploadBigFilePayload>($I
   {
     file: BoxByteInputValue,
     fileName: S.String,
-    fileSize: NonNegativeInt,
+    fileSize: S.Natural,
     parentFolderId: S.String,
   },
   $I.annote("BoxUploadBigFilePayload", {

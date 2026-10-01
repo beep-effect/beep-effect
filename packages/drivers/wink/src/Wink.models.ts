@@ -9,7 +9,7 @@ import { $WinkId } from "@beep/identity";
 import { MarkRange } from "@beep/nlp/Core/Pattern";
 import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Chunk, Match, pipe, Result } from "effect";
+import { Chunk, Effect, Match, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -128,7 +128,7 @@ export type EntityGroupName = typeof EntityGroupName.Type;
  */
 export class CustomEntityExample extends S.Class<CustomEntityExample>($I`CustomEntityExample`)(
   {
-    mark: S.OptionFromOptionalKey(MarkRange).pipe(SchemaUtils.withNoneDefault),
+    mark: S.OptionFromOptionalKey(MarkRange).pipe(S.withConstructorDefault(Effect.succeedNone)),
     name: S.NonEmptyString,
     patterns: S.NonEmptyArray(S.NonEmptyString),
   },

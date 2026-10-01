@@ -13,8 +13,7 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
+import { SchemaUtils } from "@beep/schema";
 import { Context, Equal, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -31,8 +30,10 @@ import { normalizeDrizzleError } from "../Utils/Sql.ts";
 import { canonicalConflictPair, detectConflictKind } from "./Conflict.ts";
 import type { ClaimInsertRow, ClaimRow, CorrectionInsertRow, CorrectionRow } from "./schema.ts";
 import { Claims, Corrections, claims, conflicts, correctionClaims, corrections } from "./schema.ts";
+import { UUID } from "../Domain/Identity.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
-const ClaimCountDatabaseRow = S.Struct({ count: NonNegativeInt }).pipe(
+const ClaimCountDatabaseRow = S.Struct({ count: S.Natural }).pipe(
   $I.annoteSchema("ClaimCountDatabaseRow", {
     description: "Claim count projection decoded at the Drizzle database boundary.",
   })
@@ -40,11 +41,13 @@ const ClaimCountDatabaseRow = S.Struct({ count: NonNegativeInt }).pipe(
 
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 
+const ClaimSelectRows = Claims.select.pipe(S.Array, S.mutable);
 const decodeClaimRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(Claims.select.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(ClaimSelectRows)(rows));
 
+const CorrectionSelectRows = Corrections.select.pipe(S.Array, S.mutable);
 const decodeCorrectionRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(Corrections.select.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(CorrectionSelectRows)(rows));
 
 const ClaimCountRows = S.Tuple([ClaimCountDatabaseRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
@@ -105,7 +108,7 @@ export class ClaimFilter extends S.Class<ClaimFilter>($I`ClaimFilter`)(
     rank: S.optionalKey(S.Literals(["preferred", "normal", "deprecated"])),
     includeDeprecated: S.optionalKey(S.Boolean),
     limit: S.optionalKey(PosInt),
-    offset: S.optionalKey(NonNegativeInt),
+    offset: S.optionalKey(S.Natural),
   },
   $I.annote("ClaimFilter", {
     description: "Ontology-scoped persisted-claim filters with bounded pagination fields.",
@@ -173,15 +176,16 @@ export class CorrectionChainEntry extends S.Class<CorrectionChainEntry>($I`Corre
   {
     correction: Corrections.select,
     originalClaimId: UUID,
-    newClaimId: S.OptionFromNullishOr(UUID).pipe(SchemaUtils.withNoneDefault),
+    newClaimId: S.OptionFromNullishOr(UUID).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CorrectionChainEntry", {
     description: "Correction metadata joined to its original and optional replacement persisted claim identifiers.",
   })
 ) {}
 
+const CorrectionChainEntryRows = CorrectionChainEntry.pipe(S.Array, S.mutable);
 const decodeCorrectionChainEntries = (rows: unknown) =>
-  S.decodeUnknownEffect(CorrectionChainEntry.pipe(S.Array, S.mutable))(rows).pipe(
+  S.decodeUnknownEffect(CorrectionChainEntryRows)(rows).pipe(
     Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
   );
 

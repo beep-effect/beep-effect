@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LogLevel } from "@beep/schema";
+import * as LogLevel from "effect/LogLevel";
 import * as S from "effect/Schema";
 
 const $I = $ObservabilityId.create("server/Config");
@@ -41,7 +41,7 @@ export class ServerObservabilityConfig extends S.Class<ServerObservabilityConfig
     serviceName: S.String,
     serviceVersion: S.String,
     environment: S.String,
-    minLogLevel: LogLevel,
+    minLogLevel: S.Literals(LogLevel.values),
     otlpBaseUrl: S.String,
     otlpEnabled: S.Boolean,
     otlpResourceAttributes: S.Record(S.String, S.String),

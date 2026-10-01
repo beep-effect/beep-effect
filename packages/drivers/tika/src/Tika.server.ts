@@ -12,7 +12,6 @@
 import { ExtractionResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
-import { NonNegativeInt } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Config, Effect, flow, Order, pipe, Stream } from "effect";
 import * as HttpClient from "effect/http/HttpClient";
@@ -216,7 +215,7 @@ export const makeTikaServerFileProcessingEngine = Effect.fn("Tika.makeTikaServer
       .pipe(Effect.mapError(() => makeTikaError("transport", { cause: "tika server request failed" })));
 
     if (response.status < 200 || response.status >= 300) {
-      return yield* makeTikaError("response-status", { statusCode: NonNegativeInt.make(response.status) });
+      return yield* makeTikaError("response-status", { statusCode: S.Natural.make(response.status) });
     }
 
     return yield* readBoundedBody(

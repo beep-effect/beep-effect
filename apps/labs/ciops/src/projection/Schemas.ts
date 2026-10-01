@@ -6,11 +6,11 @@
  */
 
 import { $CiopsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { UUID } from "@beep/schema/String";
 import { Effect, HashMap, HashSet } from "effect";
 import * as S from "effect/Schema";
+import { PosInt } from "./PosInt.ts";
 
 const $I = $CiopsId.create("projection/Schemas");
 
@@ -121,8 +121,10 @@ export type ScheduleScope = typeof ScheduleScope.Type;
  * **Example** (Construct ratified work weights)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { AdmissionTokenWeights } from "@/projection/Schemas"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const weights = AdmissionTokenWeights.make({
  *   fullProof: PosInt.make(3),
@@ -154,8 +156,10 @@ export class AdmissionTokenWeights extends S.Class<AdmissionTokenWeights>($I`Adm
  * **Example** (Construct an admission policy)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@/projection/Schemas"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const policy = AdmissionPolicyParams.make({
  *   capacityMaxTokens: PosInt.make(10),
@@ -202,8 +206,10 @@ export class AdmissionPolicyParams extends S.Class<AdmissionPolicyParams>($I`Adm
  * **Example** (Construct a pending request)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PendingRequest } from "@/projection/Schemas"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const request = PendingRequest.make({
  *   nonce: "request-1",
@@ -211,7 +217,7 @@ export class AdmissionPolicyParams extends S.Class<AdmissionPolicyParams>($I`Adm
  *   priority: "verify",
  *   weightTokens: PosInt.make(3),
  *   originKey: "origin-a",
- *   enqueuedAtMillis: NonNegativeInt.make(1000)
+ *   enqueuedAtMillis: S.Natural.make(1000)
  * })
  * console.log(request.nonce) // "request-1"
  * ```
@@ -226,7 +232,7 @@ export class PendingRequest extends S.Class<PendingRequest>($I`PendingRequest`)(
     priority: AdmissionPriority,
     weightTokens: PosInt,
     originKey: S.String,
-    enqueuedAtMillis: NonNegativeInt,
+    enqueuedAtMillis: S.Natural,
   },
   $I.annote("PendingRequest", {
     description: "Minimal pending-ticket view needed to reproduce scheduler admission order.",
@@ -245,15 +251,15 @@ export class PendingRequest extends S.Class<PendingRequest>($I`PendingRequest`)(
  * **Example** (Construct an empty token ledger)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { TokenLedgerState } from "@/projection/Schemas"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as HashMap from "effect/HashMap"
  * import * as HashSet from "effect/HashSet"
  *
  * const ledger = TokenLedgerState.make({
  *   activeGrants: HashMap.empty(),
  *   activeReviewFixNonces: HashSet.empty(),
- *   activeTokenTotal: NonNegativeInt.make(0)
+ *   activeTokenTotal: S.Natural.make(0)
  * })
  * console.log(ledger.activeTokenTotal) // 0
  * ```
@@ -265,7 +271,7 @@ export class TokenLedgerState extends S.Class<TokenLedgerState>($I`TokenLedgerSt
   {
     activeGrants: S.HashMap(S.String, PosInt),
     activeReviewFixNonces: S.HashSet(S.String),
-    activeTokenTotal: NonNegativeInt,
+    activeTokenTotal: S.Natural,
   },
   $I.annote("TokenLedgerState", {
     description: "Active admission charges reconstructed by nonce from journal deltas.",
@@ -278,8 +284,10 @@ export class TokenLedgerState extends S.Class<TokenLedgerState>($I`TokenLedgerSt
  * **Example** (Construct an admission step)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PendingRequest, ScheduleStep } from "@/projection/Schemas"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const request = PendingRequest.make({
  *   nonce: "request-1",
@@ -287,14 +295,14 @@ export class TokenLedgerState extends S.Class<TokenLedgerState>($I`TokenLedgerSt
  *   priority: "verify",
  *   weightTokens: PosInt.make(1),
  *   originKey: "",
- *   enqueuedAtMillis: NonNegativeInt.make(1000)
+ *   enqueuedAtMillis: S.Natural.make(1000)
  * })
  * const step = ScheduleStep.make({
- *   stepIndex: NonNegativeInt.make(0),
+ *   stepIndex: S.Natural.make(0),
  *   scheduledUnitRef: request.nonce,
  *   scope: "admission",
  *   request,
- *   activeTokenTotalAfter: NonNegativeInt.make(1)
+ *   activeTokenTotalAfter: S.Natural.make(1)
  * })
  * console.log(step.scope) // "admission"
  * ```
@@ -304,11 +312,11 @@ export class TokenLedgerState extends S.Class<TokenLedgerState>($I`TokenLedgerSt
  */
 export class ScheduleStep extends S.Class<ScheduleStep>($I`ScheduleStep`)(
   {
-    stepIndex: NonNegativeInt,
+    stepIndex: S.Natural,
     scheduledUnitRef: S.NonEmptyString,
     scope: ScheduleScope,
     request: PendingRequest,
-    activeTokenTotalAfter: NonNegativeInt,
+    activeTokenTotalAfter: S.Natural,
   },
   $I.annote("ScheduleStep", {
     description: "One capacity-safe admission action prescribed by a v1 schedule proposal.",
@@ -321,13 +329,13 @@ export class ScheduleStep extends S.Class<ScheduleStep>($I`ScheduleStep`)(
  * **Example** (Construct an empty proposal)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ScheduleProposal } from "@/projection/Schemas"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const proposal = ScheduleProposal.make({
  *   episodeId: "verification-1",
  *   proposalId: "schedule-policy-prefix-1000",
- *   projectionInstantMillis: NonNegativeInt.make(1000),
+ *   projectionInstantMillis: S.Natural.make(1000),
  *   steps: [],
  *   deferredTail: [],
  *   policyDigest: "policy",
@@ -343,7 +351,7 @@ export class ScheduleProposal extends S.Class<ScheduleProposal>($I`SchedulePropo
   {
     episodeId: S.NonEmptyString,
     proposalId: S.NonEmptyString,
-    projectionInstantMillis: NonNegativeInt,
+    projectionInstantMillis: S.Natural,
     steps: S.Array(ScheduleStep),
     deferredTail: S.Array(PendingRequest),
     policyDigest: S.NonEmptyString,
@@ -367,10 +375,12 @@ export class ScheduleProposal extends S.Class<ScheduleProposal>($I`SchedulePropo
  * **Example** (Construct projection input)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { AdmissionPolicyParams, AdmissionTokenWeights, ProjectionInput, TokenLedgerState } from "@/projection/Schemas"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
  * import * as HashMap from "effect/HashMap"
  * import * as HashSet from "effect/HashSet"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const input = ProjectionInput.make({
  *   episodeId: "verification-1",
@@ -394,9 +404,9 @@ export class ScheduleProposal extends S.Class<ScheduleProposal>($I`SchedulePropo
  *   ledger: TokenLedgerState.make({
  *     activeGrants: HashMap.empty(),
  *     activeReviewFixNonces: HashSet.empty(),
- *     activeTokenTotal: NonNegativeInt.make(0)
+ *     activeTokenTotal: S.Natural.make(0)
  *   }),
- *   projectionInstantMillis: NonNegativeInt.make(1000),
+ *   projectionInstantMillis: S.Natural.make(1000),
  *   policyDigest: "policy",
  *   journalPrefixDigest: "prefix"
  * })
@@ -412,7 +422,7 @@ export class ProjectionInput extends S.Class<ProjectionInput>($I`ProjectionInput
     policy: AdmissionPolicyParams,
     pending: S.Array(PendingRequest),
     ledger: TokenLedgerState,
-    projectionInstantMillis: NonNegativeInt,
+    projectionInstantMillis: S.Natural,
     policyDigest: S.NonEmptyString,
     journalPrefixDigest: S.NonEmptyString,
   },
@@ -449,16 +459,18 @@ export class TurtleDocument extends S.Class<TurtleDocument>($I`TurtleDocument`)(
  * **Example** (Describe a replay mismatch)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ProjectionMismatch } from "@/projection/Schemas"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const mismatch = ProjectionMismatch.make({
- *   eventIndex: NonNegativeInt.make(4),
- *   admittedAtMillis: NonNegativeInt.make(1000),
+ *   eventIndex: S.Natural.make(4),
+ *   admittedAtMillis: S.Natural.make(1000),
  *   expectedNonce: "actual",
  *   projectedNonce: "projected",
- *   pendingCount: NonNegativeInt.make(2),
- *   activeTokenTotal: NonNegativeInt.make(3),
+ *   pendingCount: S.Natural.make(2),
+ *   activeTokenTotal: S.Natural.make(3),
  *   requestWeightTokens: PosInt.make(5),
  *   wouldBeActiveTokenTotal: PosInt.make(8),
  *   capacityMaxTokens: PosInt.make(10),
@@ -472,12 +484,12 @@ export class TurtleDocument extends S.Class<TurtleDocument>($I`TurtleDocument`)(
  */
 export class ProjectionMismatch extends S.Class<ProjectionMismatch>($I`ProjectionMismatch`)(
   {
-    eventIndex: NonNegativeInt,
-    admittedAtMillis: NonNegativeInt,
+    eventIndex: S.Natural,
+    admittedAtMillis: S.Natural,
     expectedNonce: S.NonEmptyString,
     projectedNonce: S.String,
-    pendingCount: NonNegativeInt,
-    activeTokenTotal: NonNegativeInt,
+    pendingCount: S.Natural,
+    activeTokenTotal: S.Natural,
     requestWeightTokens: PosInt,
     wouldBeActiveTokenTotal: PosInt,
     capacityMaxTokens: PosInt,
@@ -593,9 +605,11 @@ export class ReplayMismatchError extends S.TaggedError<ReplayMismatchError>($I`R
  * **Example** (Construct a redacted admitted event)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { AdmissionJournalAdmitted } from "@/projection/Schemas"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
  * import * as O from "effect/Option"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const event = AdmissionJournalAdmitted.make({
  *   schemaVersion: "yeet-admission-journal/v1",
@@ -606,8 +620,8 @@ export class ReplayMismatchError extends S.TaggedError<ReplayMismatchError>($I`R
  *   weightTokens: PosInt.make(3),
  *   priority: "verify",
  *   originKey: "origin-a",
- *   enqueuedAtMillis: NonNegativeInt.make(1000),
- *   admittedAtMillis: NonNegativeInt.make(2000)
+ *   enqueuedAtMillis: S.Natural.make(1000),
+ *   admittedAtMillis: S.Natural.make(2000)
  * })
  * console.log(event._tag) // "admission-admitted"
  * ```
@@ -620,14 +634,14 @@ export class AdmissionJournalAdmitted extends S.Class<AdmissionJournalAdmitted>(
     schemaVersion: S.Literal("yeet-admission-journal/v1"),
     _tag: S.tag("admission-admitted"),
     nonce: S.NonEmptyString,
-    pid: S.OptionFromOptionalKey(NonNegativeInt),
+    pid: S.OptionFromOptionalKey(S.Natural),
     procStart: S.OptionFromOptionalKey(S.String),
     kind: AdmissionWorkKind,
     weightTokens: PosInt,
     priority: AdmissionPriority,
     originKey: S.String,
-    enqueuedAtMillis: NonNegativeInt,
-    admittedAtMillis: NonNegativeInt,
+    enqueuedAtMillis: S.Natural,
+    admittedAtMillis: S.Natural,
   },
   $I.annote("AdmissionJournalAdmitted", {
     description: "Journal transition recording one pending request becoming an active grant.",
@@ -645,9 +659,9 @@ class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>($I`Admi
     schemaVersion: S.Literal("yeet-admission-journal/v1"),
     _tag: S.tag("admission-released"),
     nonce: S.NonEmptyString,
-    pid: S.OptionFromOptionalKey(NonNegativeInt),
-    releasedAtMillis: NonNegativeInt,
-    memoryPeakBytes: S.OptionFromOptionalKey(NonNegativeInt),
+    pid: S.OptionFromOptionalKey(S.Natural),
+    releasedAtMillis: S.Natural,
+    memoryPeakBytes: S.OptionFromOptionalKey(S.Natural),
   },
   $I.annote("AdmissionJournalReleased", {
     description: "Journal transition releasing the active token charge identified by nonce.",
@@ -679,8 +693,8 @@ class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseEvicted>
     schemaVersion: S.Literal("yeet-admission-journal/v2"),
     _tag: S.tag("admission-lease-evicted"),
     nonce: S.NonEmptyString,
-    pid: S.OptionFromOptionalKey(NonNegativeInt),
-    evictedAtMillis: NonNegativeInt,
+    pid: S.OptionFromOptionalKey(S.Natural),
+    evictedAtMillis: S.Natural,
     reason: AdmissionLeaseEvictionReason,
   },
   $I.annote("AdmissionJournalLeaseEvicted", {
@@ -694,8 +708,8 @@ class AdmissionJournalTicketEvicted extends S.Class<AdmissionJournalTicketEvicte
     schemaVersion: S.Literal("yeet-admission-journal/v2"),
     _tag: S.tag("admission-ticket-evicted"),
     nonce: S.NonEmptyString,
-    pid: S.OptionFromOptionalKey(NonNegativeInt),
-    evictedAtMillis: NonNegativeInt,
+    pid: S.OptionFromOptionalKey(S.Natural),
+    evictedAtMillis: S.Natural,
     reason: AdmissionTicketEvictionReason,
   },
   $I.annote("AdmissionJournalTicketEvicted", {
@@ -710,7 +724,10 @@ class AdmissionJournalV3Identity extends S.Class<AdmissionJournalV3Identity>($I`
     schemaVersion: S.Literal("yeet-admission-journal/v3"),
     nonce: S.String,
     pid: S.Finite,
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    attemptId: S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }), S.isUUID()).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     checkoutRoot: S.String,
     branch: S.String,
   },
@@ -864,7 +881,7 @@ export class PlanEpisodeInput extends S.Class<PlanEpisodeInput>($I`PlanEpisodeIn
 export const emptyTokenLedger = TokenLedgerState.make({
   activeGrants: HashMap.empty(),
   activeReviewFixNonces: HashSet.empty(),
-  activeTokenTotal: NonNegativeInt.make(0),
+  activeTokenTotal: S.Natural.make(0),
 });
 
 /**

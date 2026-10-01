@@ -6,10 +6,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Glob } from "@beep/schema/Glob";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { Tuple } from "effect";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/cli/RegistrationGeometry");
@@ -226,7 +226,7 @@ export class RegistrationTarget extends S.Class<RegistrationTarget>($I`Registrat
     packageName: S.NonEmptyString,
     packagePath: PosixPath,
     private: S.Boolean,
-    lab: S.OptionFromOptionalKey(LabTargetFacts).pipe(SchemaUtils.withNoneDefault),
+    lab: S.OptionFromOptionalKey(LabTargetFacts).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("RegistrationTarget", {
     description: "Resolved workspace identity used to instantiate registration geometry.",

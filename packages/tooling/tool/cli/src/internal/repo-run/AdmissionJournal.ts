@@ -15,7 +15,6 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
 import { Clock, Console, Context, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -29,6 +28,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import { UUID } from "../schema/Uuid.ts";
 import { publishJournalTextAtomically } from "./JournalFile.ts";
 import {
   isProcessPidAlive,
@@ -221,7 +221,7 @@ export class AdmissionJournalAdmitted extends S.Class<AdmissionJournalAdmitted>(
     originKey: S.String,
     enqueuedAtMillis: S.Finite,
     admittedAtMillis: S.Finite,
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AdmissionJournalAdmitted", {
     description: "Durable transition recorded when a queued ticket becomes an active admission lease.",
@@ -250,7 +250,7 @@ export class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>(
     pid: S.Finite,
     releasedAtMillis: S.Finite,
     memoryPeakBytes: S.optionalKey(S.Finite),
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AdmissionJournalReleased", {
     description: "Durable transition recorded when an active admission lease is released.",
@@ -317,7 +317,7 @@ export class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseE
     _tag: S.Literal("admission-lease-evicted"),
     nonce: S.String,
     pid: S.Finite,
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     evictedAtMillis: S.Finite,
     reason: AdmissionLeaseEvictionReason,
   },
@@ -385,7 +385,7 @@ export class AdmissionJournalTicketEvicted extends S.Class<AdmissionJournalTicke
     _tag: S.Literal("admission-ticket-evicted"),
     nonce: S.String,
     pid: S.Finite,
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     evictedAtMillis: S.Finite,
     reason: AdmissionTicketEvictionReason,
   },

@@ -40,9 +40,11 @@ const SourceDiscoverySha256 = S.toEncoded(Sha256Hex).pipe(
     description: "Canonical lowercase SHA-256 digest stored in source discovery metadata.",
   })
 );
-const OptionalSourceString = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);
-const OptionalSourceNatural = S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault);
-const OptionalSourceEpochMillis = S.OptionFromOptionalKey(SourceDiscoveryEpochMillis).pipe(SchemaUtils.withNoneDefault);
+const OptionalSourceString = S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone));
+const OptionalSourceNatural = S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone));
+const OptionalSourceEpochMillis = S.OptionFromOptionalKey(SourceDiscoveryEpochMillis).pipe(
+  S.withConstructorDefault(Effect.succeedNone)
+);
 
 /**
  * P1 source discovery availability status.
@@ -109,7 +111,10 @@ export class AiMetricsSourceDiscoveryInput extends S.Class<AiMetricsSourceDiscov
     hashSalt: OptionalSourceString,
     homeDir: S.String,
     includeAll: SchemaUtils.BoolKeyDefaultFalse,
-    maxFiles: S.Natural.pipe(SchemaUtils.withKeyDefaults(DEFAULT_MAX_FILES)),
+    maxFiles: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_FILES)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_MAX_FILES))
+    ),
     maxFileBytes: OptionalSourceNatural,
     openClawUnitPath: OptionalSourceString,
     repoRoot: S.String,
@@ -151,18 +156,24 @@ export class AiMetricsDiscoveredTranscriptFile extends S.Class<AiMetricsDiscover
   $I`AiMetricsDiscoveredTranscriptFile`
 )(
   {
-    agentNicknameHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(SchemaUtils.withNoneDefault),
-    agentRoleHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(SchemaUtils.withNoneDefault),
-    forkedFromIdHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(SchemaUtils.withNoneDefault),
+    agentNicknameHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    agentRoleHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    forkedFromIdHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(S.withConstructorDefault(Effect.succeedNone)),
     modifiedAtMillis: S.Natural,
-    parentSessionIdHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(SchemaUtils.withNoneDefault),
-    parentThreadIdHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(SchemaUtils.withNoneDefault),
-    sessionIdHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(SchemaUtils.withNoneDefault),
+    parentSessionIdHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    parentThreadIdHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    sessionIdHash: S.OptionFromOptionalKey(SourceDiscoverySha256).pipe(S.withConstructorDefault(Effect.succeedNone)),
     sizeBytes: S.Natural,
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: SourceDiscoverySha256,
     sourceRole: AiMetricsSourceRole,
-    threadSpawn: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    threadSpawn: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AiMetricsDiscoveredTranscriptFile", {
     description: "Discovered local source file with private identifiers represented by salted hashes.",
@@ -192,15 +203,26 @@ export class AiMetricsDiscoveredTranscriptFile extends S.Class<AiMetricsDiscover
  */
 export class AiMetricsDiscoveredSource extends S.Class<AiMetricsDiscoveredSource>($I`AiMetricsDiscoveredSource`)(
   {
-    candidateFileCount: S.Natural.pipe(SchemaUtils.withKeyDefaults(0)),
+    candidateFileCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ),
     fileCount: S.Natural,
     files: S.Array(AiMetricsDiscoveredTranscriptFile),
-    includedFileCount: S.Natural.pipe(SchemaUtils.withKeyDefaults(0)),
+    includedFileCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ),
     limitedByMaxFiles: SchemaUtils.BoolKeyDefaultFalse,
-    message: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    newestModifiedAtMillis: S.OptionFromOptionalKey(SourceDiscoveryEpochMillis).pipe(SchemaUtils.withNoneDefault),
+    message: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    newestModifiedAtMillis: S.OptionFromOptionalKey(SourceDiscoveryEpochMillis).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     rootPathHash: SourceDiscoverySha256,
-    sizeExcludedFileCount: S.Natural.pipe(SchemaUtils.withKeyDefaults(0)),
+    sizeExcludedFileCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ),
     sourceKind: AiMetricsTranscriptSource,
     status: AiMetricsSourceStatus,
   },
@@ -244,9 +266,11 @@ export class AiMetricsSourceDiscoveryResult extends S.Class<AiMetricsSourceDisco
     homeDirHash: SourceDiscoverySha256,
     includeAll: S.Boolean,
     maxFiles: S.Natural,
-    maxFileBytes: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+    maxFileBytes: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
     repoRootHash: SourceDiscoverySha256,
-    sinceEpochMillis: S.OptionFromOptionalKey(SourceDiscoveryEpochMillis).pipe(SchemaUtils.withNoneDefault),
+    sinceEpochMillis: S.OptionFromOptionalKey(SourceDiscoveryEpochMillis).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     sources: S.Array(AiMetricsDiscoveredSource),
     target: AiMetricsDeployTarget,
   },

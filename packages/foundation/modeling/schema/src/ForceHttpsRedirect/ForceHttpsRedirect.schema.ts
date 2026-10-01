@@ -38,7 +38,10 @@ const defaultMaxAge = 60 * 60 * 24 * 365 * 2;
  */
 export class ForceHttpsRedirectConfig extends S.Class<ForceHttpsRedirectConfig>($I`ForceHttpsRedirectConfig`)(
   {
-    maxAge: S.optionalKey(internal.HeaderMaxAgeSeconds).pipe(SchemaUtils.withKeyDefaults(defaultMaxAge)),
+    maxAge: S.optionalKey(internal.HeaderMaxAgeSeconds).pipe(
+      S.withConstructorDefault(Effect.succeed(defaultMaxAge)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultMaxAge))
+    ),
     includeSubDomains: SchemaUtils.BoolKeyDefaultFalse,
     preload: SchemaUtils.BoolKeyDefaultFalse,
   },
@@ -152,7 +155,7 @@ export class ForceHttpsRedirectResponseHeader extends S.Class<ForceHttpsRedirect
 )(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromUndefinedOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ForceHttpsRedirectResponseHeader", {
     description: "The `Strict-Transport-Security` response header.",

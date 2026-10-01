@@ -6,10 +6,9 @@
  */
 
 import { $VeniceAiId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { HttpStatus } from "@beep/schema/HttpStatus";
 import { decodeJsonString } from "@beep/schema/Json";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { URLStr } from "@beep/schema/URL";
 import { A, O, Str } from "@beep/utils";
 import { Config, Context, Effect, flow, Layer, pipe, Result, SchemaGetter, Stream } from "effect";
@@ -356,23 +355,23 @@ export class VeniceAIRequestOptions extends S.Class<VeniceAIRequestOptions>($I`V
       description: "Explicit Accept header override; defaults from the operation descriptor when omitted.",
     }),
     body: S.OptionFromOptionalKey(VeniceAIUnknownPayload).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional JSON request body for operations that accept application/json." })
     ),
     formData: S.OptionFromOptionalKey(VeniceAIFormData).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional multipart body for operations that accept multipart/form-data." })
     ),
     headers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Additional request headers merged after driver base headers." })
     ),
     path: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "OpenAPI path parameter values keyed by parameter name." })
     ),
     query: S.OptionFromOptionalKey(VeniceAIEncodedQuery).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "URL query parameters keyed by parameter name." })
     ),
   },
@@ -381,6 +380,7 @@ export class VeniceAIRequestOptions extends S.Class<VeniceAIRequestOptions>($I`V
   })
 ) {}
 
+const veniceAIConfigInputHeadersDefault = R.empty();
 /**
  * Runtime configuration accepted by {@link VeniceAI.makeLayer}.
  *
@@ -406,15 +406,17 @@ export class VeniceAIRequestOptions extends S.Class<VeniceAIRequestOptions>($I`V
 export class VeniceAIConfigInput extends S.Class<VeniceAIConfigInput>($I`VeniceAIConfigInput`)(
   {
     apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional Venice API key; the live layer reads AI_VENICE_API_KEY when omitted." })
     ),
     baseUrl: VeniceAIBaseUrl.pipe(
-      SchemaUtils.withKeyDefaults(defaultVeniceAIBaseUrl),
+      S.withConstructorDefault(Effect.succeed(defaultVeniceAIBaseUrl)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultVeniceAIBaseUrl)),
       S.annotateKey({ description: "Venice API base URL normalized without trailing slash separators." })
     ),
     headers: S.Record(S.String, S.String).pipe(
-      SchemaUtils.withKeyDefaults(R.empty()),
+      S.withConstructorDefault(Effect.succeed(veniceAIConfigInputHeadersDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(veniceAIConfigInputHeadersDefault)),
       S.annotateKey({ description: "Base headers applied to every Venice API request." })
     ),
   },
@@ -485,7 +487,7 @@ export class VeniceAIJsonResponse extends S.TaggedClass<VeniceAIJsonResponse>($I
   {
     body: VeniceAIUnknownPayload.annotateKey({ description: "Decoded JSON response body." }),
     contentType: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Response Content-Type header when present." })
     ),
     headers: S.Record(S.String, S.String).annotateKey({ description: "Response headers keyed by header name." }),
@@ -522,7 +524,7 @@ export class VeniceAITextResponse extends S.TaggedClass<VeniceAITextResponse>($I
   "Text",
   {
     contentType: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Response Content-Type header when present." })
     ),
     headers: S.Record(S.String, S.String).annotateKey({ description: "Response headers keyed by header name." }),
@@ -561,7 +563,7 @@ export class VeniceAIBinaryResponse extends S.TaggedClass<VeniceAIBinaryResponse
   {
     bytes: VeniceAIBytes.annotateKey({ description: "Decoded binary response bytes." }),
     contentType: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Response Content-Type header when present." })
     ),
     headers: S.Record(S.String, S.String).annotateKey({ description: "Response headers keyed by header name." }),
@@ -617,14 +619,14 @@ export type VeniceAIResponse = typeof VeniceAIResponse.Type;
  * **Example** (Make streaming SSE event)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Number"
+ * import * as S from "effect/Schema"
  * import { VeniceAIServerSentEvent } from "@beep/venice-ai"
  * import * as O from "effect/Option"
  *
  * const event = VeniceAIServerSentEvent.make({
  *   data: O.some({ delta: "hello" }),
  *   done: false,
- *   index: NonNegativeInt.make(0)
+ *   index: S.Natural.make(0)
  * })
  *
  * console.log(event)
@@ -636,11 +638,11 @@ export type VeniceAIResponse = typeof VeniceAIResponse.Type;
 export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I`VeniceAIServerSentEvent`)(
   {
     data: S.OptionFromOptionalKey(VeniceAIUnknownPayload).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Decoded SSE payload when the event carries data." })
     ),
     done: S.Boolean.annotateKey({ description: "Whether this SSE event is the terminal [DONE] marker." }),
-    index: NonNegativeInt.annotateKey({ description: "Zero-based stream event index." }),
+    index: S.Natural.annotateKey({ description: "Zero-based stream event index." }),
   },
   $I.annote("VeniceAIServerSentEvent", {
     description: "Parsed server-sent event emitted by Venice streaming endpoints.",
@@ -675,24 +677,24 @@ export class VeniceAIError extends S.TaggedError<VeniceAIError>($I`VeniceAIError
   "VeniceAIError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Sanitized technical cause label when one was available." })
     ),
     method: S.OptionFromOptionalKey(VeniceAIHttpMethod).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "HTTP method associated with the failure when known." })
     ),
     operation: S.OptionFromOptionalKey(VeniceAIOperationId).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Venice operation associated with the failure when known." })
     ),
     path: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Request path associated with the failure when known." })
     ),
     reason: VeniceAIErrorReason.annotateKey({ description: "Redacted technical failure reason." }),
     status: S.OptionFromOptionalKey(VeniceAIHttpStatus).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "HTTP response status code associated with the failure when known." })
     ),
   },
@@ -809,11 +811,11 @@ type VeniceAIErrorOptionsInput = {
 class VeniceAIErrorOptions extends S.Class<VeniceAIErrorOptions>($I`VeniceAIErrorOptions`)(
   {
     cause: S.OptionFromOptionalKey(VeniceAIUnknownPayload).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Original native or third-party cause when one was available." })
     ),
     status: S.OptionFromOptionalKey(HttpStatus).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "HTTP response status code associated with the failure when one was available." })
     ),
   },
@@ -1884,11 +1886,11 @@ const parseSseData = (
   index: number
 ): Effect.Effect<VeniceAIServerSentEvent, VeniceAIError> =>
   data === "[DONE]"
-    ? Effect.succeed(VeniceAIServerSentEvent.make({ done: true, index: NonNegativeInt.make(index) }))
+    ? Effect.succeed(VeniceAIServerSentEvent.make({ done: true, index: S.Natural.make(index) }))
     : pipe(
         decodeSseJson(data),
         Effect.map((decoded) =>
-          VeniceAIServerSentEvent.make({ data: O.some(decoded), done: false, index: NonNegativeInt.make(index) })
+          VeniceAIServerSentEvent.make({ data: O.some(decoded), done: false, index: S.Natural.make(index) })
         ),
         Effect.mapError((cause) => VeniceAIError.fromDescriptor(descriptor, "sse decoding", { cause }))
       );

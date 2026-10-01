@@ -534,22 +534,24 @@ export const verifySalvage = Effect.fn("Corpus.verifySalvage")(function* (
  * **Example** (Build a preservation program)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { preserveRestorationArchive, RestorationPreserveOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
  * import { Effect } from "effect"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = preserveRestorationArchive(RestorationPreserveOptions.make({
  *   absentRecycleTreePath: "/archive/absent",
  *   capacityCeilingBytes: PosInt.make(8),
  *   corpusRoot: "/archive/corpus",
- *   expectedCollectorRowCount: NonNegativeInt.make(1),
- *   expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
- *   expectedMutatedDestinationCount: NonNegativeInt.make(0),
- *   expectedRootArchiveBytes: NonNegativeInt.make(4),
- *   expectedSourceDirectoryCount: NonNegativeInt.make(1),
- *   expectedSourceFileCount: NonNegativeInt.make(1),
- *   expectedSourceTreeBytes: NonNegativeInt.make(4),
- *   minimumFreeAfterBytes: NonNegativeInt.make(0),
+ *   expectedCollectorRowCount: S.Natural.make(1),
+ *   expectedMissingRecyclePayloadCount: S.Natural.make(0),
+ *   expectedMutatedDestinationCount: S.Natural.make(0),
+ *   expectedRootArchiveBytes: S.Natural.make(4),
+ *   expectedSourceDirectoryCount: S.Natural.make(1),
+ *   expectedSourceFileCount: S.Natural.make(1),
+ *   expectedSourceTreeBytes: S.Natural.make(4),
+ *   minimumFreeAfterBytes: S.Natural.make(0),
  *   rootArchivePath: "/source/archive.zip",
  *   sourceManifestPath: "/source/manifest.jsonl",
  *   sourceRoot: "/source/tree"
@@ -604,13 +606,15 @@ export const reconcileRestorationAcceptance = Effect.fn("Corpus.reconcileRestora
  * **Example** (Build a full mail restoration program)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { restoreMail, RestorationMailOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
  * import { Effect } from "effect"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = restoreMail(RestorationMailOptions.make({
  *   corpusRoot: "/archive/corpus",
- *   expectedStoreCount: NonNegativeInt.make(1),
+ *   expectedStoreCount: S.Natural.make(1),
  *   maxAmplificationRatio: 4,
  *   maxElapsedMillis: PosInt.make(60_000),
  *   maxTotalElapsedMillis: PosInt.make(60_000),
@@ -642,15 +646,17 @@ export const restoreMail = Effect.fn("Corpus.restoreMail")(function* (
  * **Example** (Build legacy-Word restoration)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { restoreLegacyWord, RestorationLegacyWordOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
  * import { Effect } from "effect"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = restoreLegacyWord(RestorationLegacyWordOptions.make({
  *   converterPath: "/usr/bin/soffice",
  *   corpusRoot: "/archive/corpus",
  *   expectedConverterVersion: "LibreOffice 26.2.5.2",
- *   expectedOccurrenceCount: NonNegativeInt.make(1),
+ *   expectedOccurrenceCount: S.Natural.make(1),
  *   maxElapsedMillis: PosInt.make(60_000),
  *   maxTotalElapsedMillis: PosInt.make(60_000),
  *   maxTotalOutputBytes: PosInt.make(1_073_741_824),
@@ -680,14 +686,16 @@ export const restoreLegacyWord = Effect.fn("Corpus.restoreLegacyWord")(function*
  * **Example** (Build recycle restoration)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { restoreRecycle, RestorationRecycleOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
  * import { Effect } from "effect"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = restoreRecycle(RestorationRecycleOptions.make({
  *   corpusRoot: "/archive/corpus",
- *   expectedMissingContentCount: NonNegativeInt.make(0),
- *   expectedSurfaceCount: NonNegativeInt.make(1),
+ *   expectedMissingContentCount: S.Natural.make(0),
+ *   expectedSurfaceCount: S.Natural.make(1),
  *   maxTotalElapsedMillis: PosInt.make(60_000),
  *   maxTotalOutputBytes: PosInt.make(1_073_741_824),
  *   runLabel: "restoration-1"

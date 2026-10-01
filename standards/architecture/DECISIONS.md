@@ -880,8 +880,7 @@ Decision:
 
 `@beep/schema` uses namespace-first concept modules as the canonical topology
 for reusable schema concepts. Public concept subpaths are flat, for example
-`@beep/schema/Duration`, `@beep/schema/Glob`, `@beep/schema/Color`, and
-`@beep/schema/HttpStatus`. Consumers import those modules as namespaces and use
+`@beep/schema/Glob`, `@beep/schema/Color`, and `@beep/schema/HttpStatus`. Consumers import those modules as namespaces and use
 concise role members such as `Schema`, `Input`, `FromInput`, `Object`, and
 `Unit`.
 
@@ -1439,6 +1438,17 @@ reports a `toEquivalence` key reached from the annotations argument of any
 Schema class factory call, including through a referenced annotation record.
 Intentional divergences enter `standards/schema-first.inventory.jsonc` through
 `bun run beep lint schema-first --write` with a justification.
+
+Amended 2026-09-29: the `SFV4-tagged-error-equivalence` rule is retired by
+the `effect-schema-parity` P4 gate cut (the F26 correction in that
+exploration's "First gate cut" ruling, 2026-09-14). The derived-equivalence
+decision above stands; only the lint is gone. The always-equal field recipe
+moves to the upstream form,
+`S.Defect(options).pipe(S.overrideToEquivalence(() => () => true))` or the
+same override on `S.Unknown`, because `Defect` and `OpaqueUnknown` from
+`@beep/schema` retire with the Opaque concept under
+"2026-09-29: Upstream-First Foundation/Modeling"; the schema-first rule
+`SFV4-opaque-wrapper` tracks their remaining uses.
 
 Rationale:
 
@@ -2007,6 +2017,77 @@ counted. The lab is that contact for package shape and tests. It does not
 settle promotion-record lint, a real cross-slice workflow diagnostic, the
 published deprecation windows, span names in a live trace, or a new
 contributor walking the drawing.
+
+## 2026-09-29: Upstream-First Foundation/Modeling
+
+- **Status:** Active
+
+Decision:
+
+`foundation/modeling` packages defer to upstream Effect facet by facet. A
+concept retires unless the consumer lines that read its uncovered members
+outnumber the lines that use its covered facets, construction included.
+Retiring deletes its implementation, exports, and tests and moves every
+consumer to the upstream API in the same PR, with no alias left behind (no
+deprecation shim, re-export alias, or compat module). Otherwise the concept is
+ADAPT: its covered facets are deleted the same way, in the PR that migrates
+their consumers, and the rest stays. A new concept is not added where upstream
+already covers its intent.
+
+- Intent is judged per facet on the consumed surface: the schema value and
+  each member or static consumers read. A facet is covered when public
+  upstream API covers what consumers use it for, checked against the installed
+  `effect` declarations (`dist/*.d.ts`); an `@internal` symbol never counts.
+  The upstream API may live outside `effect/Schema` or be an inline
+  composition at the consumer, such as `S.String.check(S.isPattern(...))`.
+- A RETIRE with more than 100 audited consumers runs a facet census before its
+  PR opens; the census and any flip to ADAPT are logged in the owning goal
+  packet's decision log before the PR opens.
+- Persisted and externally served encodings stay byte-identical, using an
+  upstream variant or a consumer-local composition of upstream codecs. Only
+  in-memory shapes may change, and consumers accept the behavior changes that
+  come with them. A boundary whose upstream default differs and whose bytes no
+  such codec reproduces is a separate migration goal. A field of a promoted
+  `shared/use-cases` contract is the exception: its name, decoded type
+  (brands included), accepted values, bytes and meaning all stay unchanged,
+  and any change to them is a `V2` migration outside the retirement PR.
+
+The operational rules are in `11-evolution-and-deprecation.md`, section
+"Upstream-first retirement in `foundation/modeling`".
+`goals/effect-schema-parity` applies them to `@beep/schema`, and each of its
+PRs cites this entry by heading.
+
+Rationale:
+
+The 2026-07-08 PGlite decision declined a repo wrapper that duplicated an
+upstream client. Modeling concepts follow the same reasoning: a local concept
+that shadows an upstream one is a second owner for one capability, and it has
+to be re-audited on every Effect snapshot bump. The 2026-09-02 entry removes
+a symbol without a window when it has never shipped in a release and has zero
+remaining consumers. `foundation/modeling` packages are private and have never
+shipped, and deleting a concept in the PR that migrates its consumers meets
+the zero-consumer half inside one change.
+
+Intent is judged per facet because the first `@beep/schema` audit judged it on
+the schema alone and ruled LiteralKit RETIRE. `S.Literals` does cover the
+kit's schema, but a consumer census found its uncovered keyed members (`.Enum`
+1,172 lines, `.is` 603, `$match` 243, `toTaggedUnion` 36) at 2,054 lines
+against 2,048 for its covered facets (construction 1,521, `.Options` 395,
+`.thunk` 65, `.pickOptions`/`.omitOptions` 52, `.HashSet` 15). LiteralKit is
+therefore ADAPT: it keeps `Enum`, `is`, `$match`, `toTaggedUnion` and
+`LiteralToKey`, and loses `Options`, `pickOptions`, `omitOptions`, `HashSet`,
+`thunk`, `enumMapping` and the `M` type parameter
+(`explorations/effect-schema-parity/DECISIONS.md`,
+"LiteralKit reopened at decompose: ADAPT, not RETIRE", 2026-09-15). Byte
+identity keeps data migrations out of retirement PRs.
+
+Rejected: a rule in the `@beep/schema` README only (the other
+`foundation/modeling` packages would keep hand-rolling); aliases or
+deprecation windows for in-repo consumers (a kept alias is a second owner
+under another name, and the 2026-09-02 entry found that release-counted
+windows never elapse here); judging intent on the schema facet alone (it
+would retire LiteralKit, whose uncovered keyed members carry 2,054 consumer
+lines against 2,048 for its covered facets, construction included).
 
 ## Known Unknowns
 

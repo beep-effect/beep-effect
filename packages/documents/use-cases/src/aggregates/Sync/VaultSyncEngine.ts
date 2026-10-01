@@ -7,7 +7,7 @@
 
 import { DmsProvider } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context, Effect } from "effect";
@@ -64,7 +64,7 @@ const $I = $DocumentsUseCasesId.create("aggregates/Sync/VaultSyncEngine");
  */
 export class VaultSyncStatus extends S.Class<VaultSyncStatus>($I`VaultSyncStatus`)(
   {
-    conflictItems: NonNegativeInt.annotateKey({
+    conflictItems: S.Natural.annotateKey({
       description: "Number of tracked items in the conflict reconciliation state.",
     }),
     connected: S.Boolean.annotateKey({
@@ -74,39 +74,41 @@ export class VaultSyncStatus extends S.Class<VaultSyncStatus>($I`VaultSyncStatus
     // sidecar that predates the field must still produce a decodable status
     // (missing key -> none), not an unavailable panel.
     disconnectReason: S.OptionFromNullOr(DmsMirrorDisconnectReason)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), SchemaUtils.withNoneDefault)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Why the provider is disconnected; none while the mirror probe reports connected.",
       }),
-    currentItems: NonNegativeInt.annotateKey({
+    currentItems: S.Natural.annotateKey({
       description: "Number of tracked items in the current reconciliation state.",
     }),
-    cursorPosition: S.OptionFromNullOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Opaque remote-event stream position; none before the cursor bootstraps.",
-    }),
-    errorItems: NonNegativeInt.annotateKey({
+    cursorPosition: S.OptionFromNullOr(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Opaque remote-event stream position; none before the cursor bootstraps.",
+      }),
+    errorItems: S.Natural.annotateKey({
       description: "Number of tracked items in the error reconciliation state.",
     }),
-    failedOperations: NonNegativeInt.annotateKey({
+    failedOperations: S.Natural.annotateKey({
       description: "Number of outbox operations in the failed status.",
     }),
-    openConflicts: NonNegativeInt.annotateKey({
+    openConflicts: S.Natural.annotateKey({
       description: "Number of drift records awaiting review.",
     }),
-    pendingItems: NonNegativeInt.annotateKey({
+    pendingItems: S.Natural.annotateKey({
       description: "Number of tracked items in the pending reconciliation state.",
     }),
     // Same older-sidecar tolerance as disconnectReason: a status that predates
     // the field must decode (missing key -> none), not go unavailable.
     probedAt: S.OptionFromNullOr(S.DateTimeUtcFromString)
-      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), SchemaUtils.withNoneDefault)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "When the mirror probe last actually asked the provider; none when no probe has contacted it.",
       }),
     provider: DmsProvider.annotateKey({
       description: "DMS provider the status describes.",
     }),
-    queuedOperations: NonNegativeInt.annotateKey({
+    queuedOperations: S.Natural.annotateKey({
       description: "Number of outbox operations in the queued status.",
     }),
   },

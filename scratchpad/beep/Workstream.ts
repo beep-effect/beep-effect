@@ -22,7 +22,6 @@
 import type { ExtraConfigColumn } from "drizzle-orm/pg-core";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as Utils from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -335,25 +334,25 @@ export declare namespace WorkstreamCreate {
 }
 
 const patchTitle = S.OptionFromOptionalKey(S.String.check(S.isMinLength(1), S.isMaxLength(256))).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   pg.text(),
   pg.columnName("title"),
 );
 
 const patchObjective = S.OptionFromOptionalKey(S.String.check(S.isMinLength(1), S.isMaxLength(2048))).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   pg.text(),
   pg.columnName("objective"),
 );
 
 const patchStatus = S.OptionFromOptionalKey(WorkstreamStatus).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   pg.text(),
   pg.columnName("status"),
 );
 
 const patchSummary = S.OptionFromOptionalKey(S.String.check(S.isMaxLength(4000))).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   pg.text(),
   pg.columnName("current_state_summary"),
 );
@@ -361,7 +360,7 @@ const patchSummary = S.OptionFromOptionalKey(S.String.check(S.isMaxLength(4000))
 const patchNextReviewAt = UtcTimestamp.pipe(
   S.OptionFromNullOr,
   S.OptionFromOptionalKey,
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   pg.timestamp({ mode: "string", withTimezone: true }),
   pg.columnName("next_review_at"),
 );
@@ -943,7 +942,7 @@ export declare namespace ContinuationCheckpoint {
 
 const optionalBoundedPatchText = (column: string, maxLength: number) =>
   S.OptionFromOptionalKey(S.String.check(S.isMaxLength(maxLength))).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     pg.text(),
     pg.columnName(column),
   );

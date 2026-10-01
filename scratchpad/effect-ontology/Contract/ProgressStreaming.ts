@@ -13,19 +13,62 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils as SchemaDefaults } from "@beep/schema";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { UUID } from "@beep/schema/String";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Duration, pipe } from "effect";
+import { DateTime, Duration, Effect, pipe } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ExtractionRunId } from "../Domain/Identity.ts";
+import { ExtractionRunId, UUID } from "../Domain/Identity.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Contract/ProgressStreaming");
+
+/**
+ * Trimmed, non-empty datetime string that `DateTime.make` parses, kept verbatim on the wire.
+ *
+ * **Example** (Check a progress timestamp)
+ *
+ * ```ts
+ * import { IsoDateTimeString } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(IsoDateTimeString)("2026-09-29T12:34:56.789Z")) // true
+ * console.log(S.is(IsoDateTimeString)("not a date")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const IsoDateTimeString = S.Trim.check(
+  S.isNonEmpty({ message: "String must not be empty" }),
+  S.makeFilter((value: string) => O.isSome(DateTime.make(value)), {
+    identifier: $I`IsoDateTimeStringCheck`,
+    title: "ISO DateTime String",
+    description: "Accepts any string DateTime.make parses; generation stays inside a constructive ISO 8601 UTC shape.",
+    arbitraryConstraint: {
+      patterns: [
+        {
+          source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}Z$",
+          flags: "",
+        },
+      ],
+    },
+  })
+).pipe(
+  $I.annoteSchema("IsoDateTimeString", {
+    description: "Trimmed, non-empty datetime string that DateTime.make parses, kept verbatim.",
+  })
+);
+
+/**
+ * Runtime type decoded by {@link IsoDateTimeString}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type IsoDateTimeString = typeof IsoDateTimeString.Type;
 
 // =============================================================================
 // Progress Event Tags (Discriminated Union)
@@ -162,7 +205,7 @@ const BaseProgressEvent = S.Struct({
   ),
 
   /** Server timestamp at which the event was created. */
-  timestamp: ISOStr.pipe(
+  timestamp: IsoDateTimeString.pipe(
     $I.annoteKey("BaseProgressEvent.timestamp", {
       description: "Server timestamp at which the event was created.",
     })
@@ -236,7 +279,7 @@ export class ExtractionStartedEvent extends S.TaggedClass<ExtractionStartedEvent
       /** Optional source media type or application-defined content category. */
       contentType: S.String.pipe(
         S.OptionFromOptionalKey,
-        SchemaUtils.withNoneDefault,
+        S.withConstructorDefault(Effect.succeedNone),
         $I.annoteKey("ExtractionStartedEvent.textMetadata.contentType", {
           description: "Optional source media type or application-defined content category.",
         })
@@ -338,14 +381,14 @@ export class ChunkingProgressEvent extends S.TaggedClass<ChunkingProgressEvent>(
     ...BaseProgressEvent.fields,
 
     /** Number of chunks fully produced when the event was emitted. */
-    chunksCompleted: NonNegativeInt.pipe(
+    chunksCompleted: S.Natural.pipe(
       $I.annoteKey("ChunkingProgressEvent.chunksCompleted", {
         description: "Number of chunks fully produced when the event was emitted.",
       })
     ),
 
     /** Estimated number of chunks currently being assembled. */
-    chunksProcessing: NonNegativeInt.pipe(
+    chunksProcessing: S.Natural.pipe(
       $I.annoteKey("ChunkingProgressEvent.chunksProcessing", {
         description: "Estimated number of chunks currently being assembled.",
       })
@@ -446,7 +489,7 @@ export class ChunkProcessingStartedEvent extends S.TaggedClass<ChunkProcessingSt
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk entering pipeline processing. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("ChunkProcessingStartedEvent.chunkIndex", {
         description: "Zero-based index of the chunk entering pipeline processing.",
       })
@@ -502,7 +545,7 @@ export class MentionExtractionProgressEvent extends S.TaggedClass<MentionExtract
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing mention extraction. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("MentionExtractionProgressEvent.chunkIndex", {
         description: "Zero-based index of the chunk undergoing mention extraction.",
       })
@@ -516,7 +559,7 @@ export class MentionExtractionProgressEvent extends S.TaggedClass<MentionExtract
     ),
 
     /** Number of mentions detected in the active chunk so far. */
-    mentionCount: NonNegativeInt.pipe(
+    mentionCount: S.Natural.pipe(
       $I.annoteKey("MentionExtractionProgressEvent.mentionCount", {
         description: "Number of mentions detected in the active chunk so far.",
       })
@@ -557,7 +600,7 @@ export class EntityExtractionProgressEvent extends S.TaggedClass<EntityExtractio
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing entity extraction. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("EntityExtractionProgressEvent.chunkIndex", {
         description: "Zero-based index of the chunk undergoing entity extraction.",
       })
@@ -571,7 +614,7 @@ export class EntityExtractionProgressEvent extends S.TaggedClass<EntityExtractio
     ),
 
     /** Number of entities extracted from the active chunk so far. */
-    entityCount: NonNegativeInt.pipe(
+    entityCount: S.Natural.pipe(
       $I.annoteKey("EntityExtractionProgressEvent.entityCount", {
         description: "Number of entities extracted from the active chunk so far.",
       })
@@ -617,7 +660,7 @@ export class EntityFoundEvent extends S.TaggedClass<EntityFoundEvent>($I`EntityF
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk in which the entity was found. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("EntityFoundEvent.chunkIndex", {
         description: "Zero-based index of the chunk in which the entity was found.",
       })
@@ -650,7 +693,7 @@ export class EntityFoundEvent extends S.TaggedClass<EntityFoundEvent>($I`EntityF
     /** Optional confidence assigned to this sampled entity extraction. */
     confidence: Confidence.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("EntityFoundEvent.confidence", {
         description: "Optional confidence assigned to this sampled entity extraction.",
       })
@@ -691,7 +734,7 @@ export class RelationExtractionProgressEvent extends S.TaggedClass<RelationExtra
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing relation extraction. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("RelationExtractionProgressEvent.chunkIndex", {
         description: "Zero-based index of the chunk undergoing relation extraction.",
       })
@@ -705,14 +748,14 @@ export class RelationExtractionProgressEvent extends S.TaggedClass<RelationExtra
     ),
 
     /** Number of relations extracted from the active chunk so far. */
-    relationCount: NonNegativeInt.pipe(
+    relationCount: S.Natural.pipe(
       $I.annoteKey("RelationExtractionProgressEvent.relationCount", {
         description: "Number of relations extracted from the active chunk so far.",
       })
     ),
 
     /** Number of extracted entities available as relation endpoints. */
-    entityCount: NonNegativeInt.pipe(
+    entityCount: S.Natural.pipe(
       $I.annoteKey("RelationExtractionProgressEvent.entityCount", {
         description: "Number of extracted entities available as relation endpoints.",
       })
@@ -752,7 +795,7 @@ export class RelationFoundEvent extends S.TaggedClass<RelationFoundEvent>($I`Rel
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk in which the relation was found. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("RelationFoundEvent.chunkIndex", {
         description: "Zero-based index of the chunk in which the relation was found.",
       })
@@ -792,7 +835,7 @@ export class RelationFoundEvent extends S.TaggedClass<RelationFoundEvent>($I`Rel
     /** Optional confidence assigned to this sampled relation extraction. */
     confidence: Confidence.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("RelationFoundEvent.confidence", {
         description: "Optional confidence assigned to this sampled relation extraction.",
       })
@@ -832,21 +875,21 @@ export class GroundingProgressEvent extends S.TaggedClass<GroundingProgressEvent
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing grounding verification. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("GroundingProgressEvent.chunkIndex", {
         description: "Zero-based index of the chunk undergoing grounding verification.",
       })
     ),
 
     /** Number of candidate relations checked by the grounding stage. */
-    verifiedRelations: NonNegativeInt.pipe(
+    verifiedRelations: S.Natural.pipe(
       $I.annoteKey("GroundingProgressEvent.verifiedRelations", {
         description: "Number of candidate relations checked by the grounding stage.",
       })
     ),
 
     /** Number of verified relations meeting the grounding threshold. */
-    groundedRelations: NonNegativeInt.pipe(
+    groundedRelations: S.Natural.pipe(
       $I.annoteKey("GroundingProgressEvent.groundedRelations", {
         description: "Number of verified relations meeting the grounding threshold.",
       })
@@ -894,21 +937,21 @@ export class ChunkProcessingCompleteEvent extends S.TaggedClass<ChunkProcessingC
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk that completed processing. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("ChunkProcessingCompleteEvent.chunkIndex", {
         description: "Zero-based index of the chunk that completed processing.",
       })
     ),
 
     /** Number of entities extracted from the completed chunk. */
-    entityCount: NonNegativeInt.pipe(
+    entityCount: S.Natural.pipe(
       $I.annoteKey("ChunkProcessingCompleteEvent.entityCount", {
         description: "Number of entities extracted from the completed chunk.",
       })
     ),
 
     /** Number of relations extracted from the completed chunk. */
-    relationCount: NonNegativeInt.pipe(
+    relationCount: S.Natural.pipe(
       $I.annoteKey("ChunkProcessingCompleteEvent.relationCount", {
         description: "Number of relations extracted from the completed chunk.",
       })
@@ -946,7 +989,7 @@ export class ChunkProcessingCompleteEvent extends S.TaggedClass<ChunkProcessingC
         description: "Ordered collection of recoverable diagnostics produced while processing one chunk.",
       }),
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ChunkProcessingCompleteEvent.errors", {
         description: "Optional ordered diagnostics from recoverable chunk-processing failures.",
       })
@@ -986,21 +1029,21 @@ export class ExtractionCompleteEvent extends S.TaggedClass<ExtractionCompleteEve
     ...BaseProgressEvent.fields,
 
     /** Total number of entities in the merged knowledge graph. */
-    totalEntities: NonNegativeInt.pipe(
+    totalEntities: S.Natural.pipe(
       $I.annoteKey("ExtractionCompleteEvent.totalEntities", {
         description: "Total number of entities in the merged knowledge graph.",
       })
     ),
 
     /** Total number of relations in the merged knowledge graph. */
-    totalRelations: NonNegativeInt.pipe(
+    totalRelations: S.Natural.pipe(
       $I.annoteKey("ExtractionCompleteEvent.totalRelations", {
         description: "Total number of relations in the merged knowledge graph.",
       })
     ),
 
     /** Number of distinct ontology classes represented by final entities. */
-    uniqueEntityTypes: NonNegativeInt.pipe(
+    uniqueEntityTypes: S.Natural.pipe(
       $I.annoteKey("ExtractionCompleteEvent.uniqueEntityTypes", {
         description: "Number of distinct ontology classes represented by final entities.",
       })
@@ -1014,14 +1057,14 @@ export class ExtractionCompleteEvent extends S.TaggedClass<ExtractionCompleteEve
     ),
 
     /** Number of chunks that completed every extraction phase. */
-    successfulChunks: NonNegativeInt.pipe(
+    successfulChunks: S.Natural.pipe(
       $I.annoteKey("ExtractionCompleteEvent.successfulChunks", {
         description: "Number of chunks that completed every extraction phase.",
       })
     ),
 
     /** Number of chunks omitted because of recoverable failures. */
-    failedChunks: NonNegativeInt.pipe(
+    failedChunks: S.Natural.pipe(
       $I.annoteKey("ExtractionCompleteEvent.failedChunks", {
         description: "Number of chunks omitted because of recoverable failures.",
       })
@@ -1060,7 +1103,7 @@ export const ExtractionFailedRetryStrategy = pipe(
     /** Optional initial or fixed retry delay in milliseconds. */
     delayMs: PosInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionFailedEvent.retryStrategy.delayMs", {
         description: "Optional initial or fixed retry delay in milliseconds.",
       })
@@ -1068,7 +1111,7 @@ export const ExtractionFailedRetryStrategy = pipe(
     /** Optional upper bound on client retry attempts. */
     maxAttempts: PosInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionFailedEvent.retryStrategy.maxAttempts", {
         description: "Optional upper bound on client retry attempts.",
       })
@@ -1182,21 +1225,21 @@ export class ExtractionFailedEvent extends S.TaggedClass<ExtractionFailedEvent>(
     ),
 
     /** Optional retry policy for a recoverable extraction failure. */
-    retryStrategy: ExtractionFailedRetryStrategy.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    retryStrategy: ExtractionFailedRetryStrategy.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
     /** Optional usable counts accumulated before the terminal failure. */
     partialResults: S.Struct({
-      entityCount: NonNegativeInt.pipe(
+      entityCount: S.Natural.pipe(
         $I.annoteKey("ExtractionFailedEvent.partialResults.entityCount", {
           description: "Number of entities retained before extraction failed.",
         })
       ),
-      relationCount: NonNegativeInt.pipe(
+      relationCount: S.Natural.pipe(
         $I.annoteKey("ExtractionFailedEvent.partialResults.relationCount", {
           description: "Number of relations retained before extraction failed.",
         })
       ),
-      processedChunks: NonNegativeInt.pipe(
+      processedChunks: S.Natural.pipe(
         $I.annoteKey("ExtractionFailedEvent.partialResults.processedChunks", {
           description: "Number of chunks completed before extraction failed.",
         })
@@ -1206,16 +1249,16 @@ export class ExtractionFailedEvent extends S.TaggedClass<ExtractionFailedEvent>(
         description: "Usable extraction counts accumulated before a terminal failure.",
       }),
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionFailedEvent.partialResults", {
         description: "Optional usable counts accumulated before the terminal failure.",
       })
     ),
 
     /** Optional zero-based checkpoint from which a resumable extraction may continue. */
-    lastSuccessfulChunkIndex: NonNegativeInt.pipe(
+    lastSuccessfulChunkIndex: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionFailedEvent.lastSuccessfulChunkIndex", {
         description: "Optional zero-based checkpoint from which a resumable extraction may continue.",
       })
@@ -1263,19 +1306,19 @@ export class ExtractionCancelledEvent extends S.TaggedClass<ExtractionCancelledE
     /** Optional usable counts accumulated before cancellation. */
     partialResults: S.Struct({
       /** Number of entities retained before cancellation. */
-      entityCount: NonNegativeInt.pipe(
+      entityCount: S.Natural.pipe(
         $I.annoteKey("ExtractionCancelledEvent.partialResults.entityCount", {
           description: "Number of entities retained before cancellation.",
         })
       ),
       /** Number of relations retained before cancellation. */
-      relationCount: NonNegativeInt.pipe(
+      relationCount: S.Natural.pipe(
         $I.annoteKey("ExtractionCancelledEvent.partialResults.relationCount", {
           description: "Number of relations retained before cancellation.",
         })
       ),
       /** Number of chunks completed before cancellation. */
-      processedChunks: NonNegativeInt.pipe(
+      processedChunks: S.Natural.pipe(
         $I.annoteKey("ExtractionCancelledEvent.partialResults.processedChunks", {
           description: "Number of chunks completed before cancellation.",
         })
@@ -1285,16 +1328,16 @@ export class ExtractionCancelledEvent extends S.TaggedClass<ExtractionCancelledE
         description: "Usable extraction counts accumulated before client cancellation.",
       }),
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionCancelledEvent.partialResults", {
         description: "Optional usable counts accumulated before cancellation.",
       })
     ),
 
     /** Optional zero-based index of the last chunk processed before cancellation. */
-    lastProcessedChunkIndex: NonNegativeInt.pipe(
+    lastProcessedChunkIndex: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ExtractionCancelledEvent.lastProcessedChunkIndex", {
         description: "Optional zero-based index of the last chunk processed before cancellation.",
       })
@@ -1398,7 +1441,7 @@ export class RecoverableErrorEvent extends S.TaggedClass<RecoverableErrorEvent>(
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk affected by the recoverable failure. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("RecoverableErrorEvent.chunkIndex", {
         description: "Zero-based index of the chunk affected by the recoverable failure.",
       })
@@ -1489,19 +1532,19 @@ export class FatalErrorEvent extends S.TaggedClass<FatalErrorEvent>($I`FatalErro
     /** Optional usable counts accumulated before the fatal failure. */
     partialResults: S.Struct({
       /** Number of entities retained before the fatal failure. */
-      entityCount: NonNegativeInt.pipe(
+      entityCount: S.Natural.pipe(
         $I.annoteKey("FatalErrorEvent.partialResults.entityCount", {
           description: "Number of entities retained before the fatal failure.",
         })
       ),
       /** Number of relations retained before the fatal failure. */
-      relationCount: NonNegativeInt.pipe(
+      relationCount: S.Natural.pipe(
         $I.annoteKey("FatalErrorEvent.partialResults.relationCount", {
           description: "Number of relations retained before the fatal failure.",
         })
       ),
       /** Number of chunks completed before the fatal failure. */
-      processedChunks: NonNegativeInt.pipe(
+      processedChunks: S.Natural.pipe(
         $I.annoteKey("FatalErrorEvent.partialResults.processedChunks", {
           description: "Number of chunks completed before the fatal failure.",
         })
@@ -1511,7 +1554,7 @@ export class FatalErrorEvent extends S.TaggedClass<FatalErrorEvent>($I`FatalErro
         description: "Usable extraction counts accumulated before a fatal systemic failure.",
       }),
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FatalErrorEvent.partialResults", {
         description: "Optional usable counts accumulated before the fatal failure.",
       })
@@ -1520,7 +1563,7 @@ export class FatalErrorEvent extends S.TaggedClass<FatalErrorEvent>($I`FatalErro
     /** Optional server-recommended delay in milliseconds before retrying. */
     retryAfterMs: PosInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FatalErrorEvent.retryAfterMs", {
         description: "Optional server-recommended delay in milliseconds before retrying.",
       })
@@ -1642,14 +1685,14 @@ export class StageProgressEvent extends S.TaggedClass<StageProgressEvent>($I`Sta
     ),
 
     /** Number of stage work items completed so far. */
-    itemsProcessed: NonNegativeInt.pipe(
+    itemsProcessed: S.Natural.pipe(
       $I.annoteKey("StageProgressEvent.itemsProcessed", {
         description: "Number of stage work items completed so far.",
       })
     ),
 
     /** Total number of work items expected by the stage. */
-    itemsTotal: NonNegativeInt.pipe(
+    itemsTotal: S.Natural.pipe(
       $I.annoteKey("StageProgressEvent.itemsTotal", {
         description: "Total number of work items expected by the stage.",
       })
@@ -1695,14 +1738,14 @@ export class StageCompletedEvent extends S.TaggedClass<StageCompletedEvent>($I`S
     ),
 
     /** Elapsed stage duration in milliseconds. */
-    durationMs: NonNegativeInt.pipe(
+    durationMs: S.Natural.pipe(
       $I.annoteKey("StageCompletedEvent.durationMs", {
         description: "Elapsed stage duration in milliseconds.",
       })
     ),
 
     /** Number of work items completed by the stage. */
-    itemCount: NonNegativeInt.pipe(
+    itemCount: S.Natural.pipe(
       $I.annoteKey("StageCompletedEvent.itemCount", {
         description: "Number of work items completed by the stage.",
       })
@@ -1740,7 +1783,7 @@ export class RateLimitedEvent extends S.TaggedClass<RateLimitedEvent>($I`RateLim
     ...BaseProgressEvent.fields,
 
     /** Server-imposed delay in milliseconds before work may continue. */
-    waitMs: NonNegativeInt.pipe(
+    waitMs: S.Natural.pipe(
       $I.annoteKey("RateLimitedEvent.waitMs", {
         description: "Server-imposed delay in milliseconds before work may continue.",
       })
@@ -1869,6 +1912,10 @@ export const BackpressureStrategy = LiteralKit(["drop_oldest", "drop_newest", "b
  */
 export type BackpressureStrategy = typeof BackpressureStrategy.Type;
 
+const backpressureConfigMaxQueueSizeDefault = PosInt.make(1000);
+const backpressureConfigWarningThresholdDefault = UnitInterval.make(0.8);
+const backpressureConfigBlockTimeoutDefault = Duration.seconds(5);
+const backpressureConfigDetailedEventSampleRateDefault = UnitInterval.make(0.1);
 /**
  * Configuration that bounds the server event queue and selects an overflow
  * strategy when a client consumes progress more slowly than it is produced.
@@ -1902,11 +1949,11 @@ export type BackpressureStrategy = typeof BackpressureStrategy.Type;
  */
 export class BackpressureConfig extends S.Class<BackpressureConfig>($I`BackpressureConfig`)(
   {
-    maxQueueSize: PosInt.pipe(SchemaDefaults.withKeyDefaults(PosInt.make(1000))),
-    warningThreshold: UnitInterval.pipe(SchemaDefaults.withKeyDefaults(UnitInterval.make(0.8))),
-    strategy: BackpressureStrategy.pipe(SchemaDefaults.withKeyDefaults(BackpressureStrategy.Enum.drop_oldest)),
-    blockTimeout: S.Duration.pipe(SchemaDefaults.withKeyDefaults(Duration.seconds(5))),
-    detailedEventSampleRate: UnitInterval.pipe(SchemaDefaults.withKeyDefaults(UnitInterval.make(0.1))),
+    maxQueueSize: PosInt.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigMaxQueueSizeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigMaxQueueSizeDefault))),
+    warningThreshold: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigWarningThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigWarningThresholdDefault))),
+    strategy: BackpressureStrategy.pipe(S.withConstructorDefault(Effect.succeed(BackpressureStrategy.Enum.drop_oldest)), S.withDecodingDefaultTypeKey(Effect.succeed(BackpressureStrategy.Enum.drop_oldest))),
+    blockTimeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigBlockTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigBlockTimeoutDefault))),
+    detailedEventSampleRate: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigDetailedEventSampleRateDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigDetailedEventSampleRateDefault))),
   },
   $I.annote("BackpressureConfig", {
     description: "Capacity, warning, overflow, blocking, and sampling policy for progress-event queues.",
@@ -1973,7 +2020,7 @@ export class CancellationRequest extends S.Class<CancellationRequest>($I`Cancell
     /** Optional human-readable reason supplied by the client. */
     reason: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CancellationRequest.reason", {
         description: "Optional human-readable reason supplied by the client.",
       })
@@ -1982,7 +2029,7 @@ export class CancellationRequest extends S.Class<CancellationRequest>($I`Cancell
     /** Optional request to persist usable partial results before termination. */
     savePartialResults: S.Boolean.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CancellationRequest.savePartialResults", {
         description: "Optional request to persist usable partial results before termination.",
       })
@@ -2035,14 +2082,14 @@ export class CancellationResponse extends S.Class<CancellationResponse>($I`Cance
     /** Optional explanation when the server rejects cancellation. */
     rejectionReason: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("CancellationResponse.rejectionReason", {
         description: "Optional explanation when the server rejects cancellation.",
       })
     ),
 
     /** Server timestamp at which the response was created. */
-    timestamp: ISOStr.pipe(
+    timestamp: IsoDateTimeString.pipe(
       $I.annoteKey("CancellationResponse.timestamp", {
         description: "Server timestamp at which the response was created.",
       })
@@ -2310,7 +2357,7 @@ export class ProgressMessage extends S.TaggedClass<ProgressMessage>($I`ProgressM
     ),
 
     /** Server timestamp at which the transport envelope was created. */
-    createdAt: ISOStr.pipe(
+    createdAt: IsoDateTimeString.pipe(
       $I.annoteKey("ProgressMessage.createdAt", {
         description: "Server timestamp at which the transport envelope was created.",
       })
@@ -2444,7 +2491,7 @@ export class StartExtractionRequest extends S.TaggedClass<StartExtractionRequest
     /** Optional existing run identifier used to resume an extraction. */
     runId: ExtractionRunId.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("StartExtractionRequest.runId", {
         description: "Optional existing run identifier used to resume an extraction.",
       })
@@ -2512,14 +2559,14 @@ export class StartExtractionResponse extends S.TaggedClass<StartExtractionRespon
         description: "Structured rejection returned when an extraction request is not accepted.",
       }),
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("StartExtractionResponse.error", {
         description: "Optional structured error present when the request is rejected.",
       })
     ),
 
     /** Server timestamp at which the response was created. */
-    timestamp: ISOStr.pipe(
+    timestamp: IsoDateTimeString.pipe(
       $I.annoteKey("StartExtractionResponse.timestamp", {
         description: "Server timestamp at which the response was created.",
       })
@@ -2569,7 +2616,7 @@ export class AckMessage extends S.TaggedClass<AckMessage>($I`AckMessage`)(
     ),
 
     /** Client timestamp at which event receipt was acknowledged. */
-    timestamp: ISOStr.pipe(
+    timestamp: IsoDateTimeString.pipe(
       $I.annoteKey("AckMessage.timestamp", {
         description: "Client timestamp at which event receipt was acknowledged.",
       })

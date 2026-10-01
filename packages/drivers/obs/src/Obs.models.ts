@@ -6,7 +6,7 @@
  */
 
 import { $ObsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $ObsId.create("Obs.models");
@@ -158,44 +158,50 @@ export type ObsWebSocketPort = typeof ObsWebSocketPort.Type;
 export class ObsConfigInput extends S.Class<ObsConfigInput>($I`ObsConfigInput`)(
   {
     connectTimeoutMillis: PositiveMilliseconds.pipe(
-      SchemaUtils.withKeyDefaults(5000),
+      S.withConstructorDefault(Effect.succeed(5000)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(5000)),
       $I.annoteKey("ObsConfigInput.connectTimeoutMillis", {
         description: "Timeout in milliseconds for the obs-websocket connect handshake.",
       })
     ),
     eventSubscriptions: S.Int.pipe(
-      SchemaUtils.withKeyDefaults(79),
+      S.withConstructorDefault(Effect.succeed(79)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(79)),
       $I.annoteKey("ObsConfigInput.eventSubscriptions", {
         description: "EventSubscription bitmask sent in Identify (default 79: General|Config|Scenes|Inputs|Outputs).",
       })
     ),
     forceKillAfterMillis: PositiveMilliseconds.pipe(
-      SchemaUtils.withKeyDefaults(2000),
+      S.withConstructorDefault(Effect.succeed(2000)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2000)),
       $I.annoteKey("ObsConfigInput.forceKillAfterMillis", {
         description: "Timeout in milliseconds before an interrupted spawned process is force-killed.",
       })
     ),
     host: S.String.pipe(
-      SchemaUtils.withKeyDefaults("127.0.0.1"),
+      S.withConstructorDefault(Effect.succeed("127.0.0.1")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("127.0.0.1")),
       $I.annoteKey("ObsConfigInput.host", {
         description: "Host the obs-websocket server listens on.",
       })
     ),
     obsBinaryPath: S.String.pipe(
-      SchemaUtils.withKeyDefaults("obs"),
+      S.withConstructorDefault(Effect.succeed("obs")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("obs")),
       $I.annoteKey("ObsConfigInput.obsBinaryPath", {
         description: "Executable path or command name used to spawn OBS Studio.",
       })
     ),
     password: S.OptionFromOptionalKey(S.String.pipe(S.Redacted)).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsConfigInput.password", {
         description:
           "obs-websocket password, when the server requires authentication (caller reads OBS_WEBSOCKET_PASSWORD).",
       })
     ),
     port: ObsWebSocketPort.pipe(
-      SchemaUtils.withKeyDefaults(4455),
+      S.withConstructorDefault(Effect.succeed(4455)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(4455)),
       $I.annoteKey("ObsConfigInput.port", {
         description: "Port the obs-websocket server listens on.",
       })
@@ -361,19 +367,22 @@ export class EnsureRunningResult extends S.Class<EnsureRunningResult>($I`EnsureR
 export class EnsureQaSceneRequest extends S.Class<EnsureQaSceneRequest>($I`EnsureQaSceneRequest`)(
   {
     inputKind: S.String.pipe(
-      SchemaUtils.withKeyDefaults("pipewire-screen-capture-source"),
+      S.withConstructorDefault(Effect.succeed("pipewire-screen-capture-source")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("pipewire-screen-capture-source")),
       $I.annoteKey("EnsureQaSceneRequest.inputKind", {
         description: "OBS input kind used for the capture source (Wayland PipeWire portal capture by default).",
       })
     ),
     inputName: S.String.pipe(
-      SchemaUtils.withKeyDefaults("beep-qa-capture"),
+      S.withConstructorDefault(Effect.succeed("beep-qa-capture")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("beep-qa-capture")),
       $I.annoteKey("EnsureQaSceneRequest.inputName", {
         description: "Name of the capture input provisioned inside the QA scene.",
       })
     ),
     sceneName: S.String.pipe(
-      SchemaUtils.withKeyDefaults("beep-qa"),
+      S.withConstructorDefault(Effect.succeed("beep-qa")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("beep-qa")),
       $I.annoteKey("EnsureQaSceneRequest.sceneName", {
         description: "Name of the QA scene to provision.",
       })
@@ -425,7 +434,7 @@ export class EnsureQaSceneResult extends S.Class<EnsureQaSceneResult>($I`EnsureQ
       })
     ),
     restoreToken: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("EnsureQaSceneResult.restoreToken", {
         description: "PipeWire portal RestoreToken read back from the input settings, when present.",
       })
@@ -469,7 +478,8 @@ export class StartRecordingRequest extends S.Class<StartRecordingRequest>($I`Sta
       })
     ),
     waitForActiveTimeoutMillis: PositiveMilliseconds.pipe(
-      SchemaUtils.withKeyDefaults(10_000),
+      S.withConstructorDefault(Effect.succeed(10_000)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(10_000)),
       $I.annoteKey("StartRecordingRequest.waitForActiveTimeoutMillis", {
         description: "Timeout in milliseconds waiting for the RecordStateChanged STARTED event.",
       })
@@ -533,7 +543,8 @@ export class StartRecordingResult extends S.Class<StartRecordingResult>($I`Start
 export class StopRecordingRequest extends S.Class<StopRecordingRequest>($I`StopRecordingRequest`)(
   {
     waitForStoppedTimeoutMillis: PositiveMilliseconds.pipe(
-      SchemaUtils.withKeyDefaults(10_000),
+      S.withConstructorDefault(Effect.succeed(10_000)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(10_000)),
       $I.annoteKey("StopRecordingRequest.waitForStoppedTimeoutMillis", {
         description: "Timeout in milliseconds waiting for the RecordStateChanged STOPPED event.",
       })

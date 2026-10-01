@@ -15,11 +15,12 @@
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import { segmentInlineRuns } from "@beep/md/Md.behavior";
 import * as Md from "@beep/md/Md.model";
-import { MappedLiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, dual, N, O, P, Str } from "@beep/utils";
 import { Effect, flow, Match, pipe } from "effect";
 import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import { nodeToPlainText } from "./Lexical.behavior.ts";
 import {
   ArtifactRefId,

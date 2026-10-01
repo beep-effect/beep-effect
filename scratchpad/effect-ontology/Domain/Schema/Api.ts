@@ -11,10 +11,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { HttpsUrl, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { HttpsUrl, LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { RunConfig } from "../Model/ExtractionRun.ts";
 import { BackgroundJobId } from "./JobSchema.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Api");
 
@@ -103,7 +104,7 @@ export class SubmitJobRequest extends S.Class<SubmitJobRequest>($I`SubmitJobRequ
       description: "The single validated source from which extraction reads content.",
     }),
     config: S.OptionFromOptionalKey(RunConfig).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional run-configuration override; absence delegates policy to the server.",
       })
@@ -235,16 +236,16 @@ export type JobErrorType = typeof JobErrorType.Type;
  */
 export class JobProgress extends S.Class<JobProgress>($I`JobProgress`)(
   {
-    chunksTotal: NonNegativeInt.annotateKey({
+    chunksTotal: S.Natural.annotateKey({
       description: "Total chunks planned for the job.",
     }),
-    chunksProcessed: NonNegativeInt.annotateKey({
+    chunksProcessed: S.Natural.annotateKey({
       description: "Chunks whose extraction work has completed.",
     }),
-    entitiesExtracted: NonNegativeInt.annotateKey({
+    entitiesExtracted: S.Natural.annotateKey({
       description: "Entities extracted so far.",
     }),
-    relationsExtracted: NonNegativeInt.annotateKey({
+    relationsExtracted: S.Natural.annotateKey({
       description: "Relations extracted so far.",
     }),
   },

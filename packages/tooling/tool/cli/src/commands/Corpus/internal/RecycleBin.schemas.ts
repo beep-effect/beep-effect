@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
@@ -70,7 +70,7 @@ export class RecycleBinOriginal extends S.Class<RecycleBinOriginal>($I`RecycleBi
     deletedAtIso: S.NonEmptyString,
     originalName: S.NonEmptyString,
     originalPath: S.NonEmptyString,
-    originalSizeBytes: NonNegativeInt,
+    originalSizeBytes: S.Natural,
     version: RecycleBinFormatVersion,
   },
   $I.annote("RecycleBinOriginal", {

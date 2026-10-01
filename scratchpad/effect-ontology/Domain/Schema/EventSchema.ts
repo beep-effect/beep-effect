@@ -14,8 +14,8 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NamedNode } from "@beep/rdf";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Tuple } from "effect";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Tuple, Effect } from "effect";
 import * as S from "effect/Schema";
 import type * as Event from "effect/eventlog/Event";
 import * as EventGroup from "effect/eventlog/EventGroup";
@@ -30,7 +30,7 @@ const ClaimCorrectedPayloadDefinition = S.Struct({
   originalClaimId: ClaimId,
   newClaimId: ClaimId,
   correctionId: S.NonEmptyString,
-  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   timestamp: S.DateTimeUtcFromString,
 });
 const ClaimCorrectedPayload = ClaimCorrectedPayloadDefinition.pipe(
@@ -42,9 +42,9 @@ const ClaimCorrectedPayload = ClaimCorrectedPayloadDefinition.pipe(
 const ClaimDeprecatedPayloadDefinition = S.Struct({
   ontologyId: OntologyName,
   claimId: ClaimId,
-  reason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-  negativeExampleId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  reason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  negativeExampleId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   timestamp: S.DateTimeUtcFromString,
 });
 const ClaimDeprecatedPayload = ClaimDeprecatedPayloadDefinition.pipe(
@@ -58,7 +58,7 @@ const AliasAddedPayloadDefinition = S.Struct({
   canonicalEntity: NamedNode,
   aliasMention: S.NonEmptyString,
   aliasId: S.NonEmptyString,
-  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   timestamp: S.DateTimeUtcFromString,
 });
 const AliasAddedPayload = AliasAddedPayloadDefinition.pipe(
@@ -70,7 +70,7 @@ const AliasAddedPayload = AliasAddedPayloadDefinition.pipe(
 const ClaimPromotedPayloadDefinition = S.Struct({
   ontologyId: OntologyName,
   claimId: ClaimId,
-  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   timestamp: S.DateTimeUtcFromString,
 });
 const ClaimPromotedPayload = ClaimPromotedPayloadDefinition.pipe(
@@ -83,8 +83,8 @@ const EntityLinkedPayloadDefinition = S.Struct({
   ontologyId: OntologyName,
   canonicalEntity: NamedNode,
   wikidataQid: S.NonEmptyString,
-  reconciliationScore: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
-  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  reconciliationScore: S.OptionFromOptionalKey(Confidence).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   timestamp: S.DateTimeUtcFromString,
 });
 const EntityLinkedPayload = EntityLinkedPayloadDefinition.pipe(
@@ -155,10 +155,10 @@ const ExtractionOutcome = LiteralKit(["success", "partial", "failed"]).annotate(
 const ExtractionCompletedPayloadDefinition = S.Struct({
   batchId: BatchId,
   ontologyId: OntologyName,
-  entityCount: NonNegativeInt,
-  relationCount: NonNegativeInt,
-  tripleCount: NonNegativeInt,
-  outputUri: S.OptionFromOptionalKey(GcsUri).pipe(SchemaUtils.withNoneDefault),
+  entityCount: S.Natural,
+  relationCount: S.Natural,
+  tripleCount: S.Natural,
+  outputUri: S.OptionFromOptionalKey(GcsUri).pipe(S.withConstructorDefault(Effect.succeedNone)),
   status: ExtractionOutcome,
   timestamp: S.DateTimeUtcFromString,
 });
@@ -172,9 +172,9 @@ const ValidationFailedPayloadDefinition = S.Struct({
   batchId: BatchId,
   validationId: S.NonEmptyString,
   ontologyId: OntologyName,
-  errorCount: NonNegativeInt,
-  warningCount: NonNegativeInt,
-  reportUri: S.OptionFromOptionalKey(GcsUri).pipe(SchemaUtils.withNoneDefault),
+  errorCount: S.Natural,
+  warningCount: S.Natural,
+  reportUri: S.OptionFromOptionalKey(GcsUri).pipe(S.withConstructorDefault(Effect.succeedNone)),
   timestamp: S.DateTimeUtcFromString,
 });
 const ValidationFailedPayload = ValidationFailedPayloadDefinition.pipe(

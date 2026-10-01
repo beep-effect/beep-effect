@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 
@@ -25,21 +25,21 @@ const $I = $LawPracticeDomainId.create("values/CanonCitation/CanonCitation.model
  * **Example** (Make CanonCitation instance)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CanonCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = CanonCitation.make({
  *   text: "Code of Judicial Conduct Canon 7(B)(1)",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "Code of Judicial Conduct Canon 7(B)(1)",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  *   canon: "7",
  * })
  *
@@ -58,14 +58,14 @@ export class CanonCitation extends S.Class<CanonCitation>($I`CanonCitation`)(
     }),
     subsection: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Subsection chain, e.g. "(B)(1)", "(A)".',
       })
     ),
     ruleSet: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Rule set when stated explicitly, e.g. "Code of Judicial Conduct".',
       })

@@ -7,6 +7,7 @@
 import { $GovinfoId } from "@beep/identity";
 import { Defect, SchemaUtils } from "@beep/schema";
 import { HttpStatus2XX, HttpStatus4XX, HttpStatus5XX } from "@beep/schema/HttpStatus";
+import { Effect } from "effect";
 import { HttpApiSchema } from "effect/http-api";
 import * as S from "effect/Schema";
 import { SearchBody } from "../..//values/index.ts";
@@ -114,7 +115,7 @@ export class Success extends SearchResponse.extend<Success>($I`Success`)(
 export class FailureBadRequest extends S.TaggedError<FailureBadRequest>($I`FailureBadRequest`)(
   "FailureBadRequest",
   {
-    cause: S.OptionFromOptionalKey(Defect()).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect()).pipe(S.withConstructorDefault(Effect.succeedNone)),
     status: S.tag(HttpStatus4XX.From.Enum.BadRequest),
   },
   $I.annoteError<FailureBadRequest>("FailureBadRequest", {
@@ -144,7 +145,7 @@ export class FailureBadRequest extends S.TaggedError<FailureBadRequest>($I`Failu
 export class FailureNotFound extends S.TaggedError<FailureNotFound>($I`FailureNotFound`)(
   "FailureNotFound",
   {
-    cause: S.OptionFromOptionalKey(Defect()).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect()).pipe(S.withConstructorDefault(Effect.succeedNone)),
     status: S.tag(HttpStatus4XX.From.Enum.NotFound),
   },
   $I.annoteError<FailureNotFound>("FailureNotFound", {
@@ -176,7 +177,7 @@ export class FailureInternalServerError extends S.TaggedError<FailureInternalSer
 )(
   "FailureInternalServerError",
   {
-    cause: S.OptionFromOptionalKey(Defect()).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect()).pipe(S.withConstructorDefault(Effect.succeedNone)),
     status: S.tag(HttpStatus5XX.From.Enum.InternalServerError),
   },
   $I.annoteError<FailureInternalServerError>("FailureInternalServerError", {

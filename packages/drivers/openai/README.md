@@ -19,8 +19,10 @@ import {
   OpenAiEmbeddingModelOptions,
   OpenAiLive
 } from "@beep/openai"
-import { PosInt } from "@beep/schema"
 import { Layer } from "effect"
+import * as S from "effect/Schema"
+
+const PosInt = S.Int.check(S.isGreaterThan(0))
 
 const embeddingLayer = makeOpenAiEmbeddingModelLayer(
   OpenAiEmbeddingModelOptions.make({ dimensions: PosInt.make(1536) })

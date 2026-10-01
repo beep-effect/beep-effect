@@ -1,6 +1,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { yeetCommand } from "@beep/repo-cli/commands/Yeet";
 import { acquireJournalFileLock, MemoryStats, releaseJournalFileLock } from "@beep/repo-cli/test/RepoRun";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import * as Job from "@beep/repo-cli/test/Yeet";
 import {
   attemptJournalPathForCheckout,
@@ -9,7 +10,6 @@ import {
   YeetInboxRowJson,
   yeetProofJobRowId,
 } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -19,9 +19,7 @@ import {
   ConfigProvider,
   Context,
   Deferred,
-  Duration,
   Effect,
-  Fiber,
   FileSystem,
   HashSet,
   Layer,
@@ -39,6 +37,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { waitTimesOut } from "./support/ProofJobWait.ts";
 
 const $I = $RepoCliId.create("test/proof-job.test");
 const stamp = "2026-09-15T00:00:00.000Z";
@@ -173,24 +172,6 @@ const commentRow = Effect.fnUntraced(function* (root: string, prNumber: number, 
   });
   yield* Job.appendYeetInboxRow(root, row);
   return row;
-});
-
-// A wait that must not return is driven to its timeout on the TestClock: the timeout
-// timer registers the moment the wait starts, so one adjust just past its own timeoutMs
-// fails the wait deterministically however long the poll ticks take on a loaded runner. A wait that
-// must return finds its row on the first poll tick and never touches the clock.
-const waitTimesOut = Effect.fnUntraced(function* (
-  launcher: Job.ProofJobLauncherShape,
-  jobId: UUID,
-  options: Job.ProofJobWaitOptions
-) {
-  const timeoutMs = yield* O.match(options.timeoutMs, {
-    onNone: () => Effect.die("waitTimesOut needs a bounded timeoutMs: an unbounded wait never times out"),
-    onSome: Effect.succeed,
-  });
-  const waiter = yield* Effect.forkChild(launcher.wait(jobId, options), { startImmediately: true });
-  yield* TestClock.adjust(Duration.millis(timeoutMs + 1));
-  expect((yield* Fiber.join(waiter).pipe(Effect.flip)).message).toContain("Timed out");
 });
 
 describe("proof job schemas", () => {
@@ -982,6 +963,24 @@ describe("job wait wave return", () => {
         ]);
         expect((yield* readYeetAckState(root, comment.id)).acked).toBe(false);
         yield* waitTimesOut(launcher, job.jobId, quick);
+      })
+    )
+  );
+  // The negative oracle must be able to fail: a wait that hands back a wave fails
+  // waitTimesOut. The fork-and-adjust form it replaced timed this wait out and passed.
+  it.effect("fails waitTimesOut when the wait hands back a wave instead of timing out", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const launcher = yield* ProofJobLauncher.make(root);
+        const job = yield* launcher.submit(submission(root));
+        yield* launcher.bindPullRequest(job.jobId, 7);
+        const quick = Job.ProofJobWaitOptions.make({ timeoutMs: O.some(1_000), pollIntervalMs: 1 });
+        yield* waveRow(root, 7, "Lint");
+        const defect = yield* waitTimesOut(launcher, job.jobId, quick).pipe(
+          Effect.as("waitTimesOut passed"),
+          Effect.catchDefect(Effect.succeed)
+        );
+        expect(defect).toBe("the wait returned wave where it had to time out");
       })
     )
   );

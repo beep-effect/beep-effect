@@ -6,7 +6,6 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { HashSet as StoredHashSet } from "@beep/schema/HashSet";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { HashSet } from "effect";
 import * as S from "effect/Schema";
@@ -18,7 +17,7 @@ const $I = $LawPracticeDomainId.create("values/LegalOppositionCandidateInput/Leg
 const isRelatorPair = (relators: HashSet.HashSet<LawPractice.LegalPositionRelatorId>): boolean =>
   HashSet.size(relators) === 2;
 
-const OpposedRelators = StoredHashSet(LawPractice.LegalPositionRelatorId).check(
+const OpposedRelators = LawPractice.LegalPositionRelatorId.pipe(S.HashSet, S.toCodecJson).check(
   S.makeFilter(isRelatorPair, {
     identifier: $I`OpposedRelatorsCheck`,
     arbitraryConstraint: { minSize: 2, maxSize: 2 },

@@ -22,8 +22,8 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { MutableHashMapFromSelf } from "@beep/schema";
-import { HashSet, MutableHashMap } from "effect";
+import { HashSet, MutableHashMap, SchemaTransformation } from "effect";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -37,10 +37,29 @@ const NonNegativeCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   })
 );
 
-const TermNumberMap = MutableHashMapFromSelf({
-  key: S.String,
-  value: S.Finite,
-});
+const TermNumberEntry = S.Tuple([S.String, S.Finite]);
+const isTermNumberEntry = S.is(TermNumberEntry);
+
+const isTermNumberMap = (value: unknown): value is MutableHashMap.MutableHashMap<string, number> =>
+  MutableHashMap.isMutableHashMap(value) && A.every(A.fromIterable(value), isTermNumberEntry);
+
+// In-memory carrier. Every entry must be a string term and a finite number;
+// the codec link to an entry array is what arbitrary and JSON derivation read.
+const TermNumberMap = S.declare(isTermNumberMap, {
+  expected: "MutableHashMap<string, finite number>",
+  toCodec: () =>
+    S.link<MutableHashMap.MutableHashMap<string, number>>()(
+      S.Array(TermNumberEntry),
+      SchemaTransformation.transform({
+        decode: MutableHashMap.fromIterable,
+        encode: A.fromIterable,
+      })
+    ),
+}).pipe(
+  $I.annoteSchema("TermNumberMap", {
+    description: "Mutable term-to-number map carried in memory by NLP aggregation monoids.",
+  })
+);
 
 type TermNumberMap = typeof TermNumberMap.Type;
 type TokenHashSet = HashSet.HashSet<string>;

@@ -711,16 +711,16 @@ package-local tests use source-only `@beep/repo-cli/test/<Group>` aliases rather
 than package exports.
 
 `@beep/schema` uses namespace-first schema concept modules. Reusable schema
-concepts publish flat public subpaths such as `@beep/schema/Duration`,
-`@beep/schema/Glob`, `@beep/schema/Color`, and `@beep/schema/HttpStatus`.
+concepts publish flat public subpaths such as `@beep/schema/Glob`,
+`@beep/schema/Color`, and `@beep/schema/HttpStatus`.
 Consumers import the concept namespace and use concise role members:
 
 ```ts
-import * as Duration from "@beep/schema/Duration"
+import * as Color from "@beep/schema/Color"
 import * as Glob from "@beep/schema/Glob"
 
-Duration.Input
-Duration.FromInput
+Color.HexColor
+Color.HexToRgb
 Glob.Schema
 ```
 
@@ -730,10 +730,15 @@ namespaces. Concept role files live under `src/<Concept>/` and use small,
 reviewable role suffixes:
 
 ```txt
-src/Duration/
-  Duration.schema.ts
-  Duration.input.ts
-  Duration.transforms.ts
+src/Color/
+  Color.adjust.ts
+  Color.hex.ts
+  Color.oklch.ts
+  Color.rgb.ts
+  Color.scale.ts
+  Color.shared.ts
+  Color.transforms.ts
+  Color.ts
   index.ts
 ```
 
@@ -761,7 +766,7 @@ such as parser, formatter, SQL projection, or color-conversion roles.
 
 Inside a concept namespace, concise role names are canonical: `Schema`,
 `Input`, `FromInput`, `Object`, and `Unit`. Legacy full names such as
-`DurationInput` and `DurationFromInput` may remain as aliases during migration.
+`Glob.Glob` may remain as aliases of `Glob.Schema` during migration.
 Prefer promoted source concepts over per-symbol modules: `HttpStatus` is one
 concept module even though it exports many status literal schemas.
 Package-local tests may use source-only test seams such as
@@ -770,6 +775,16 @@ under `src/internal/` are not public package subpaths. `bun run beep lint
 schema-topology` enforces the retired lowercase topology, retired suite
 aggregators, private role-file exports, promoted concept folder exports,
 private parser seams, and generated root alias drift.
+
+`foundation/modeling` is upstream-first. Where upstream covers a
+`foundation/modeling` concept's intent, its covered facets retire in the same
+PR that migrates their consumers, with no alias; the whole concept retires
+unless the lines reading its uncovered members outnumber the lines using its
+covered facets (ADAPT, per the facet census). A new concept is not added where
+upstream already covers it (`standards/architecture/DECISIONS.md`
+"Upstream-First Foundation/Modeling").
+Named internal literal domains use `LiteralKit`; anonymous inline unions never
+referenced by name use `S.Literals`.
 
 Script-only pseudo-packages are not canonical. If an artifact matters enough to
 name in the architecture, it should have a real family/kind contract and a real

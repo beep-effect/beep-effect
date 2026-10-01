@@ -11,8 +11,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Schema/MentionFactory");
 
@@ -47,7 +47,7 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
       description:
         "Human-readable entity name found in text; use the complete canonical form rather than an abbreviation.",
     }),
-    context: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+    context: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Brief source context used to disambiguate the mention.",
     }),
   },

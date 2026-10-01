@@ -16,11 +16,11 @@ import { Html } from "@beep/html";
 import { HtmlConformanceIssue } from "@beep/html/Html.conformance";
 import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html/Html.policy";
 import { $MdId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "@beep/utils/Array";
 import { Number as N, Result, Struct } from "effect";
+import * as Effect from "effect/Effect";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -32,7 +32,6 @@ import {
   UserContentLinkUrlPolicySpec,
 } from "./Md.escape.ts";
 import { Block, Document, FootnoteIdentifier, Inline } from "./Md.model.ts";
-import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 import type { FootnoteIdentifier as FootnoteIdentifierValue, ListItemChild } from "./Md.model.ts";
 
@@ -199,6 +198,7 @@ export const UrlNodeTag = LiteralKit(["a", "img", "embed"]).pipe(
  */
 export type UrlNodeTag = typeof UrlNodeTag.Type;
 
+const urlSafetyViolationPathDefault = A.empty();
 /**
  * A URL-bearing Markdown node whose destination is outside its user-content
  * allow list.
@@ -223,7 +223,11 @@ export type UrlNodeTag = typeof UrlNodeTag.Type;
 export class UrlSafetyViolation extends S.TaggedClass<UrlSafetyViolation>($I`UrlSafetyViolation`)(
   "UnsafeUrl",
   {
-    path: DocumentSafetyPathSegment.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults),
+    path: DocumentSafetyPathSegment.pipe(
+      S.Array,
+      S.withConstructorDefault(Effect.succeed(urlSafetyViolationPathDefault)),
+      S.withDecodingDefaultType(Effect.succeed(urlSafetyViolationPathDefault))
+    ),
     nodeTag: UrlNodeTag,
     destination: S.String,
     destinationKind: DestinationKind,
@@ -334,12 +338,12 @@ export class HtmlProjectionSafetyViolation extends S.TaggedError<HtmlProjectionS
  * **Example** (Construct a complexity violation)
  *
  * ```ts import.meta.vitest name="Construct a complexity violation"
+ * import * as S from "effect/Schema"
  * import { DocumentComplexitySafetyViolation, MAX_SAFE_DOCUMENT_NODES } from "@beep/md/Md.safe"
- * import { NonNegativeInt } from "@beep/schema/Int"
  *
  * const issue = DocumentComplexitySafetyViolation.make({
- *   maxNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES),
- *   observedNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES + 1),
+ *   maxNodes: S.Natural.make(MAX_SAFE_DOCUMENT_NODES),
+ *   observedNodes: S.Natural.make(MAX_SAFE_DOCUMENT_NODES + 1),
  * })
  * issue._tag // => "DocumentComplexity"
  * ```
@@ -352,8 +356,8 @@ export class DocumentComplexitySafetyViolation extends S.TaggedError<DocumentCom
 )(
   "DocumentComplexity",
   {
-    maxNodes: NonNegativeInt,
-    observedNodes: NonNegativeInt,
+    maxNodes: S.Natural,
+    observedNodes: S.Natural,
   },
   $I.annoteError<DocumentComplexitySafetyViolation>("DocumentComplexitySafetyViolation", {
     description: "A Markdown AST whose bounded node count exceeds the user-content safety budget.",
@@ -450,8 +454,8 @@ const documentComplexitySafetyIssues = (document: Document): ReadonlyArray<Docum
   return observedNodes > MAX_SAFE_DOCUMENT_NODES
     ? [
         DocumentComplexitySafetyViolation.make({
-          maxNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES),
-          observedNodes: NonNegativeInt.make(observedNodes),
+          maxNodes: S.Natural.make(MAX_SAFE_DOCUMENT_NODES),
+          observedNodes: S.Natural.make(observedNodes),
         }),
       ]
     : A.emptyReadonly();

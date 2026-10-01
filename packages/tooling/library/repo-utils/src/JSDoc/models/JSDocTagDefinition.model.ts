@@ -7,7 +7,6 @@
 
 import { Fibered } from "@beep/identity/Fibered";
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { ArrayOfStrings } from "@beep/schema";
 import { compileAssertion } from "@beep/utils/Schema";
 import { Effect, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
@@ -74,7 +73,7 @@ export class JSDocTagDefinition extends S.Class<JSDocTagDefinition>($I`JSDocTagD
       description: "Canonical tag name without '@' prefix. Used as discriminant.",
     }),
     /** Alternative names that resolve to this tag without the at-sign prefix. */
-    synonyms: ArrayOfStrings.annotateKey({
+    synonyms: S.Array(S.String).annotateKey({
       description: "Alternative names that resolve to this tag (without '@' prefix)",
     }),
     /** Human-readable description of what this tag does */
@@ -106,7 +105,7 @@ export class JSDocTagDefinition extends S.Class<JSDocTagDefinition>($I`JSDocTagD
       description: "Structured parameter info",
     }),
     /** Tags that are semantically related */
-    relatedTags: ArrayOfStrings.annotateKey({
+    relatedTags: S.Array(S.String).annotateKey({
       description: "Tags that are semantically related",
     }),
     /** Whether this tag is deprecated in favor of another approach */

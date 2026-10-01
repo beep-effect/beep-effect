@@ -15,7 +15,6 @@ import {
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
 import { makeDataset, serializeQuad } from "@beep/rdf/Rdf";
-import { NonNegativeInt } from "@beep/schema";
 import { CanonicalizationService, FingerprintDatasetRequest } from "@beep/semantic-web/services/canonicalization";
 import { A, O } from "@beep/utils";
 import { Config, Context, Effect, FileSystem, Layer, Path, pipe, Semaphore } from "effect";
@@ -150,7 +149,7 @@ const ensureBatchBudget = (operations: ReadonlyArray<ChangeOperation>) => {
     ? Effect.fail(
         OntologyBudgetRefusal.make({
           kind: "changeOperations",
-          actual: NonNegativeInt.make(actual),
+          actual: S.Natural.make(actual),
           limit: ontologyToolBudgets.maxChangeOperations,
           guidance: "Split the proposed changes into smaller CAS-guarded batches.",
           recoverable: true,
@@ -164,7 +163,7 @@ const ensureReasonerDriftCap = (operations: ReadonlyArray<ChangeOperation>) => {
   return actual > ontologyToolBudgets.reasonerDriftCap
     ? Effect.fail(
         OntologyReasonerDriftRefusal.make({
-          actual: NonNegativeInt.make(actual),
+          actual: S.Natural.make(actual),
           cap: ontologyToolBudgets.reasonerDriftCap,
           guidance: "Submit a smaller change batch so incremental reasoning stays within the fixed drift cap.",
           recoverable: true,
@@ -269,7 +268,7 @@ const inferForTool = Effect.fn("Ontology.Tools.inferForTool")(function* (session
   );
   return result.drifted
     ? yield* OntologyReasonerDriftRefusal.make({
-        actual: NonNegativeInt.make(A.length(session.changeLog)),
+        actual: S.Natural.make(A.length(session.changeLog)),
         cap: ontologyToolBudgets.reasonerDriftCap,
         guidance: "Refetch and submit a smaller mutation window before requesting inferred results.",
         recoverable: true,
@@ -450,7 +449,7 @@ const makeOntologyToolService = Effect.gen(function* () {
               path: request.path,
               sessionId: opened.session.id,
               fingerprint: opened.fingerprint,
-              quadCount: NonNegativeInt.make(A.length(opened.session.baseDataset.quads)),
+              quadCount: S.Natural.make(A.length(opened.session.baseDataset.quads)),
               prefixes: opened.session.prefixes,
             })
           )
@@ -481,7 +480,7 @@ const makeOntologyToolService = Effect.gen(function* () {
             return OntologySearchResponse.make({
               fingerprint: opened.fingerprint,
               results,
-              resultCount: NonNegativeInt.make(A.length(results)),
+              resultCount: S.Natural.make(A.length(results)),
               truncated: A.length(matches) > A.length(results),
             });
           })

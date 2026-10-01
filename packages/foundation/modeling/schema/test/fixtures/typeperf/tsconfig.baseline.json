@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../tsconfig.json",
+  "files": ["baseline.ts"],
+  "include": [],
+  "references": [
+    {
+      "path": "../../../../identity/tsconfig.json"
+    },
+    {
+      "path": "../../../../utils/tsconfig.json"
+    },
+    {
+      "path": "../../../../../primitive/data/tsconfig.json"
+    },
+    {
+      "path": "../../../../../primitive/types/tsconfig.json"
+    },
+    {
+      "path": "../../../../../../tooling/test-kit/fc-runs/tsconfig.json"
+    },
+    {
+      "path": "../../../../../../tooling/test-kit/test-runner/tsconfig.json"
+    }
+  ],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "rootDir": "../../.."
+  }
+}

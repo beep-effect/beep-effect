@@ -22,7 +22,9 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -386,6 +388,18 @@ export const Lemma: TypedTextConstructor<"Lemma"> = makeTyped("Lemma");
 // Kind Relations (Partial Order Structure)
 // =============================================================================
 
+const kindContainmentCharacterDefault = A.empty();
+const kindContainmentChunkDefault = TextKind.pickOptions(["Token"]);
+const kindContainmentDependencyDefault = A.empty();
+const kindContainmentDocumentDefault = TextKind.pickOptions(["Paragraph", "Sentence"]);
+const kindContainmentEmbeddingDefault = A.empty();
+const kindContainmentEntityDefault = A.empty();
+const kindContainmentLemmaDefault = A.empty();
+const kindContainmentParagraphDefault = TextKind.pickOptions(["Sentence"]);
+const kindContainmentPOSDefault = A.empty();
+const kindContainmentRelationDefault = A.empty();
+const kindContainmentSentenceDefault = TextKind.pickOptions(["Token", "Chunk", "Dependency", "Entity", "Relation"]);
+const kindContainmentTokenDefault = TextKind.pickOptions(["Character", "POS", "Lemma"]);
 /**
  * Structural containment hierarchy for valid parent-child kind relationships.
  *
@@ -408,29 +422,77 @@ export const Lemma: TypedTextConstructor<"Lemma"> = makeTyped("Lemma");
  */
 export class KindContainment extends S.Class<KindContainment>($I`KindContainment`)(
   {
-    Character: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Chunk: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Token"]))),
-    Dependency: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
+    Character: TextKind.pipe(
+      S.Array,
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(kindContainmentCharacterDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentCharacterDefault))
+    ),
+    Chunk: TextKind.pipe(
+      S.Array,
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(kindContainmentChunkDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentChunkDefault))
+    ),
+    Dependency: TextKind.pipe(
+      S.Array,
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(kindContainmentDependencyDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentDependencyDefault))
+    ),
     Document: TextKind.pipe(
       S.Array,
       S.optionalKey,
-      SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Paragraph", "Sentence"]))
+      S.withConstructorDefault(Effect.succeed(kindContainmentDocumentDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentDocumentDefault))
     ),
-    Embedding: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Entity: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Lemma: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Paragraph: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Sentence"]))),
-    POS: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Relation: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
+    Embedding: TextKind.pipe(
+      S.Array,
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(kindContainmentEmbeddingDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentEmbeddingDefault))
+    ),
+    Entity: TextKind.pipe(
+      S.Array,
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(kindContainmentEntityDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentEntityDefault))
+    ),
+    Lemma: TextKind.pipe(
+      S.Array,
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(kindContainmentLemmaDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentLemmaDefault))
+    ),
+    Paragraph: TextKind.pipe(
+      S.Array,
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(kindContainmentParagraphDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentParagraphDefault))
+    ),
+    POS: TextKind.pipe(
+      S.Array,
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(kindContainmentPOSDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentPOSDefault))
+    ),
+    Relation: TextKind.pipe(
+      S.Array,
+      S.optionalKey,
+      S.withConstructorDefault(Effect.succeed(kindContainmentRelationDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentRelationDefault))
+    ),
     Sentence: TextKind.pipe(
       S.Array,
       S.optionalKey,
-      SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Token", "Chunk", "Dependency", "Entity", "Relation"]))
+      S.withConstructorDefault(Effect.succeed(kindContainmentSentenceDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentSentenceDefault))
     ),
     Token: TextKind.pipe(
       S.Array,
       S.optionalKey,
-      SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Character", "POS", "Lemma"]))
+      S.withConstructorDefault(Effect.succeed(kindContainmentTokenDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(kindContainmentTokenDefault))
     ),
   },
   $I.annote("KindContainment", {

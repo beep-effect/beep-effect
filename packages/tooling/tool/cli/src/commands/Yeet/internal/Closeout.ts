@@ -59,6 +59,7 @@ export {
 } from "./closeout/Closeout.schemas.ts";
 export {
   closeoutGateStatesForTesting,
+  closeoutIssueFromReviewThread,
   closeoutReviewAdvisories,
   closeoutReviewThreadTriage,
   greptileIssueLimitExceededForTesting,

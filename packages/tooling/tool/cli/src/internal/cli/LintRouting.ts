@@ -13,6 +13,7 @@ const LINT_POLICY_SUBCOMMANDS = subcommands(
   "circular",
   "deprecated-apis",
   "ecosystem-polarity",
+  "effect-schema-inventory",
   "effect-vitest",
   "goal-packets",
   "identity-registry",
@@ -28,6 +29,7 @@ const LINT_POLICY_SUBCOMMANDS = subcommands(
   "roadmap-refs",
   "schema-catalog",
   "schema-first",
+  "schema-parity-codemod",
   "schema-topology",
   "tooling-schema-first",
   "tsconfig-overlay"

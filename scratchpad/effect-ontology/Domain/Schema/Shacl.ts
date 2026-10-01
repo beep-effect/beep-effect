@@ -10,9 +10,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { ShaclValidationResult, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { Duration } from "effect";
+import { Duration, Effect } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
@@ -44,10 +44,10 @@ class ShaclValidationReportFields extends S.Class<ShaclValidationReportFields>($
     validatedAt: S.DateTimeUtcFromString.annotateKey({
       description: "UTC instant at which validation completed.",
     }),
-    dataGraphTripleCount: NonNegativeInt.annotateKey({
+    dataGraphTripleCount: S.Natural.annotateKey({
       description: "Number of triples in the validated data graph.",
     }),
-    shapesGraphTripleCount: NonNegativeInt.annotateKey({
+    shapesGraphTripleCount: S.Natural.annotateKey({
       description: "Number of triples in the shapes graph used for validation.",
     }),
     durationMs: ValidationDurationMs.annotateKey({
@@ -123,19 +123,19 @@ export type ShaclValidationReport = typeof ShaclValidationReport.Type;
 class ValidationPolicyFields extends S.Class<ValidationPolicyFields>($I`ValidationPolicyFields`)(
   {
     failOnViolation: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({
         description: "Whether Violation-level results fail the workflow when logOnly is false.",
       })
     ),
     failOnWarning: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether Warning-level results fail the workflow when logOnly is false.",
       })
     ),
     logOnly: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether all validation results are logged without failing the workflow.",
       })

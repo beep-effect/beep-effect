@@ -139,15 +139,15 @@ const serializeProposal = (proposal: ScheduleProposal): TurtleDocument => {
  * **Example** (Emit an empty proposal)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { emitScheduleAbox } from "@/projection/Turtle"
  * import { ScheduleProposal } from "@/projection/Schemas"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const proposal = ScheduleProposal.make({
  *   episodeId: "verification-1",
  *   proposalId: "schedule-policy-prefix-1000",
- *   projectionInstantMillis: NonNegativeInt.make(1000),
+ *   projectionInstantMillis: S.Natural.make(1000),
  *   steps: [],
  *   deferredTail: [],
  *   policyDigest: "policy",

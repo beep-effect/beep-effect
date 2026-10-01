@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { Effect, FileSystem, Match, Ref } from "effect";
 import * as A from "effect/Array";
 import * as F from "effect/Function";
@@ -32,7 +32,7 @@ const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const utf8 = new TextDecoder();
 /** Per-artifact ceiling: 16 MiB. */
-const MAX_ARTIFACT_BYTES = NonNegativeInt.make(16777216);
+const MAX_ARTIFACT_BYTES = S.Natural.make(16777216);
 /** Whole-bundle ceiling across every file read: 64 MiB. */
 const MAX_BUNDLE_BYTES = 67108864;
 

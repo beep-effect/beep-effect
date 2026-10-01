@@ -7,11 +7,11 @@
 
 import { $FileProcessingId } from "@beep/identity";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { identity } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import { PosInt } from "../internal/PosInt.ts";
 import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $FileProcessingId.create("SourceText");
@@ -130,16 +130,16 @@ export class ResolvedSourceText extends S.Class<ResolvedSourceText>($I`ResolvedS
 
 class SourceTextPageStruct extends S.Class<SourceTextPageStruct>($I`SourceTextPageStruct`)(
   {
-    endOffset: NonNegativeInt,
+    endOffset: S.Natural,
     hasNextPage: S.Boolean,
     hasPreviousPage: S.Boolean,
     identity: SourceTextIdentity,
     pageCount: PosInt,
-    pageIndex: NonNegativeInt,
+    pageIndex: S.Natural,
     pageSizeCodeUnits: S.Literal(SOURCE_TEXT_PAGE_CODE_UNITS),
-    startOffset: NonNegativeInt,
+    startOffset: S.Natural,
     text: S.String,
-    totalCodeUnits: NonNegativeInt,
+    totalCodeUnits: S.Natural,
   },
   $I.annote("SourceTextPageStruct", {
     description: "Structural base for a bounded canonical source-text page.",
@@ -219,8 +219,8 @@ export class SourceTextPage extends S.Class<SourceTextPage>($I`SourceTextPage`)(
         S.Struct({
           identity: SourceTextIdentity,
           pageCount: S.Int.check(S.isBetween({ minimum: 1, maximum: 32 })),
-          pageIndex: NonNegativeInt.check(S.isLessThanOrEqualTo(10_000)),
-          startOffset: NonNegativeInt.check(S.isLessThanOrEqualTo(10_000)),
+          pageIndex: S.Natural.check(S.isLessThanOrEqualTo(10_000)),
+          startOffset: S.Natural.check(S.isLessThanOrEqualTo(10_000)),
           text: S.String.check(S.isMaxLength(256)),
         }),
         SchemaTransformation.transform({
@@ -230,9 +230,9 @@ export class SourceTextPage extends S.Class<SourceTextPage>($I`SourceTextPage`)(
             return SourceTextPage.make({
               ...value,
               pageCount: PosInt.make(value.pageCount),
-              pageIndex: NonNegativeInt.make(pageIndex),
-              endOffset: NonNegativeInt.make(endOffset),
-              totalCodeUnits: NonNegativeInt.make(endOffset),
+              pageIndex: S.Natural.make(pageIndex),
+              endOffset: S.Natural.make(endOffset),
+              totalCodeUnits: S.Natural.make(endOffset),
               pageSizeCodeUnits: SOURCE_TEXT_PAGE_CODE_UNITS,
               hasNextPage: pageIndex + 1 < value.pageCount,
               hasPreviousPage: pageIndex > 0,

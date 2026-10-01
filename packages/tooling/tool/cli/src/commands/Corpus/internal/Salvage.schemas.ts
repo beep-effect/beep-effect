@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
@@ -120,7 +120,7 @@ export class CorpusProvenanceRecord extends S.Class<CorpusProvenanceRecord>($I`C
     relativePath: S.NonEmptyString,
     salvagedAt: S.NonEmptyString,
     sha256: Sha256Hex,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     sourceLabel: S.NonEmptyString,
   },
   $I.annote("CorpusProvenanceRecord", {
@@ -164,8 +164,9 @@ export const decodeCorpusProvenanceRecordJson = JsonStringCodec(CorpusProvenance
  * **Example** (Encode provenance record JSON)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusProvenanceRecord, encodeCorpusProvenanceRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const record = CorpusProvenanceRecord.make({
@@ -177,7 +178,7 @@ export const decodeCorpusProvenanceRecordJson = JsonStringCodec(CorpusProvenance
  *   relativePath: "a.txt",
  *   salvagedAt: "2026-06-11T15:00:00Z",
  *   sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
- *   sizeBytes: NonNegativeInt.make(0),
+ *   sizeBytes: S.Natural.make(0),
  *   sourceLabel: "source-a"
  * })
  *
@@ -222,15 +223,15 @@ export class CorpusSalvageSourceSpec extends S.Class<CorpusSalvageSourceSpec>($I
  * **Example** (Build salvage origin file)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusSalvageOriginFile } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const origin = CorpusSalvageOriginFile.make({
  *   mtimeEpoch: 1700000000,
  *   mtimeIso: "2023-11-14T22:13:20Z",
  *   originPath: "/tmp/source-a/a.txt",
  *   relativePath: "a.txt",
- *   sizeBytes: NonNegativeInt.make(5),
+ *   sizeBytes: S.Natural.make(5),
  *   sourceLabel: "source-a"
  * })
  * console.log(origin.relativePath)
@@ -245,7 +246,7 @@ export class CorpusSalvageOriginFile extends S.Class<CorpusSalvageOriginFile>($I
     mtimeIso: S.NonEmptyString,
     originPath: S.NonEmptyString,
     relativePath: S.NonEmptyString,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     sourceLabel: S.NonEmptyString,
   },
   $I.annote("CorpusSalvageOriginFile", {
@@ -289,15 +290,15 @@ export class CorpusSalvageOptions extends S.Class<CorpusSalvageOptions>($I`Corpu
  * **Example** (Build salvage summary counts)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusSalvageSummary } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = CorpusSalvageSummary.make({
- *   bytesChecked: NonNegativeInt.make(11),
- *   matched: NonNegativeInt.make(1),
- *   mismatched: NonNegativeInt.make(0),
- *   missing: NonNegativeInt.make(0),
- *   recordsChecked: NonNegativeInt.make(1)
+ *   bytesChecked: S.Natural.make(11),
+ *   matched: S.Natural.make(1),
+ *   mismatched: S.Natural.make(0),
+ *   missing: S.Natural.make(0),
+ *   recordsChecked: S.Natural.make(1)
  * })
  * console.log(summary.matched) // 1
  * ```
@@ -307,11 +308,11 @@ export class CorpusSalvageOptions extends S.Class<CorpusSalvageOptions>($I`Corpu
  */
 export class CorpusSalvageSummary extends S.Class<CorpusSalvageSummary>($I`CorpusSalvageSummary`)(
   {
-    bytesChecked: NonNegativeInt,
-    matched: NonNegativeInt,
-    mismatched: NonNegativeInt,
-    missing: NonNegativeInt,
-    recordsChecked: NonNegativeInt,
+    bytesChecked: S.Natural,
+    matched: S.Natural,
+    mismatched: S.Natural,
+    missing: S.Natural,
+    recordsChecked: S.Natural,
   },
   $I.annote("CorpusSalvageSummary", {
     description: "Summary counts returned by corpus salvage verification.",
@@ -324,16 +325,16 @@ export class CorpusSalvageSummary extends S.Class<CorpusSalvageSummary>($I`Corpu
  * **Example** (Encode salvage summary JSON)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusSalvageSummary, encodeCorpusSalvageSummaryJson } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const summary = CorpusSalvageSummary.make({
- *   bytesChecked: NonNegativeInt.make(0),
- *   matched: NonNegativeInt.make(0),
- *   mismatched: NonNegativeInt.make(0),
- *   missing: NonNegativeInt.make(0),
- *   recordsChecked: NonNegativeInt.make(0)
+ *   bytesChecked: S.Natural.make(0),
+ *   matched: S.Natural.make(0),
+ *   mismatched: S.Natural.make(0),
+ *   missing: S.Natural.make(0),
+ *   recordsChecked: S.Natural.make(0)
  * })
  *
  * Effect.runPromise(encodeCorpusSalvageSummaryJson(summary)).then((json) => console.log(json.includes("\"matched\":0"))) // true

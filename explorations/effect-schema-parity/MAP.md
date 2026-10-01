@@ -39,14 +39,14 @@ Disposition key: REUSE (call it), EXTEND (add a field or rule to it), MOVE
 
 | Component | Disposition | Capability cited |
 | --- | --- | --- |
-| Inventory generator + verifier | MOVE | `explorations/effect-schema-parity/research/tools/schema-inventory.ts`, `verify-schema-inventory.ts`; contract `research/inventory/README.md` (`schema-inventory/v1`, identity `(module, symbol, kind)`, `@internal` rows kept and flagged). Candidate home: `packages/tooling/tool/cli/src/commands/Lint/` beside `EffectVitest.ts`, exposed as a `--write` / `--check` subcommand. |
+| Inventory generator + verifier | MOVED (goal P1, 2026-09-29) | Delivered as `bun run beep lint effect-schema-inventory --write` / `--check` in `packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts`, beside `EffectVitest.ts`. The research generator, verifier and module list were deleted in P1. The `schema-inventory/v1` contract (identity `(module, symbol, kind)`, `@internal` rows kept and flagged) now lives in `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/README.md`. |
 | Fixture directory per RC | NET-NEW dir, REUSE layout | `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/*.jsonl` following `test/fixtures/effect-vitest-rc118/` (per-RC directory, LICENSE carried; that sibling has no pin file, so the schema fixture records the full `inventoryPin` sha in the `INDEX.md` pin line and every row, D4 2026-09-28). That fixture is vendored, not generated; the generator is what is new here (research §(e) confirms no automated fixture generator exists). |
 | Pin manifest and sha check | EXTEND | `verifyEffectVitestPin` (`commands/Lint/internal/EffectVitestScan.ts:65`) compares installed version only; the parity pin adds upstream sha and a row digest so hosted CI proves provenance without `.repos/effect`. |
 | JSONL persistence | REUSE | `internal/artifacts/index.ts` adapters; store shape `EffectVitestStore.ts:63` (read) and `:99` (write, generated header). |
 | Local `--check` input | REUSE | `.repos/effect` symlink provisioned by `scripts/setup-effect-ref.sh` (present in the main clone, absent in this worktree; the command must fail loud, never pass empty, when it is missing). |
 | Tests | REUSE pattern | `packages/tooling/tool/cli/test/effect-vitest-primitives.test.ts`; repo-cli tests run on Node and Bun. |
 | Knowledge-refs gate | REUSE | `commands/Knowledge/Knowledge.refs.ts`; fixture paths written home-relative so the gate admits them. |
-| Agent prompt templates | NET-NEW | Prompt text templated from inventory rows for the P2–P5 Codex lanes; a script in the goal packet, not a package. |
+| Agent prompt templates | DELIVERED (goal P1, 2026-09-29) | `bun run beep lint effect-schema-inventory --prompt <module>` writes a lane prompt to `goals/effect-schema-parity/ops/prompts/<slug>.md`, inlining each row's full declaration and JSDoc at the pin plus local graft context; local `--check` re-renders every committed prompt. It is a repo-cli mode, not a goal-packet script. |
 
 ### P2 — LiteralKit trim (ADAPT)
 

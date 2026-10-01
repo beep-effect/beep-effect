@@ -442,16 +442,28 @@ export class OpenClawExpectedIdentity extends S.Class<OpenClawExpectedIdentity>(
  */
 export class OpenClawWorkstationPaths extends S.Class<OpenClawWorkstationPaths>($I`OpenClawWorkstationPaths`)(
   {
-    configRoot: OpenclawAbsolutePath.pipe(SchemaUtils.withKeyDefaults(defaultConfigRoot)).annotateKey({
+    configRoot: OpenclawAbsolutePath.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultConfigRoot)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultConfigRoot))
+    ).annotateKey({
       description: "Root-owned directory holding every content-addressed generation and the `current` pointer.",
     }),
-    nodeBinDir: OpenclawAbsolutePath.pipe(SchemaUtils.withKeyDefaults(defaultNodeBinDir)).annotateKey({
+    nodeBinDir: OpenclawAbsolutePath.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultNodeBinDir)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultNodeBinDir))
+    ).annotateKey({
       description: "Directory containing the pinned Node binaries prepended to the unit's hermetic PATH.",
     }),
-    stateDir: OpenclawAbsolutePath.pipe(SchemaUtils.withKeyDefaults(defaultStateDir)).annotateKey({
+    stateDir: OpenclawAbsolutePath.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultStateDir)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultStateDir))
+    ).annotateKey({
       description: "OpenClaw state root snapshotted before every generation switch.",
     }),
-    unitName: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultUnitName)).annotateKey({
+    unitName: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultUnitName)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultUnitName))
+    ).annotateKey({
       description: "Name of the stack-owned `systemd --user` unit.",
     }),
   },
@@ -534,6 +546,7 @@ export class OpenClawLocalProviderConfig extends S.Class<OpenClawLocalProviderCo
   })
 ) {}
 
+const openClawDeploymentConfigGatewayAuthTokenRefDefault = OpenclawSecretReference.make(defaultGatewayAuthTokenRef);
 /**
  * Deployment inputs the stack turns into an OpenClaw deployment intent.
  *
@@ -573,47 +586,72 @@ export class OpenClawLocalProviderConfig extends S.Class<OpenClawLocalProviderCo
  */
 export class OpenClawDeploymentConfig extends S.Class<OpenClawDeploymentConfig>($I`OpenClawDeploymentConfig`)(
   {
-    agentId: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultAgentId)).annotateKey({
+    agentId: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultAgentId)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultAgentId))
+    ).annotateKey({
       description: "Slug identifying the agent in config and state paths.",
     }),
-    agentName: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultAgentName)).annotateKey({
+    agentName: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultAgentName)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultAgentName))
+    ).annotateKey({
       description: "Human-readable agent display name.",
     }),
     gatewayAuthTokenRef: OpenclawSecretReference.pipe(
-      SchemaUtils.withKeyDefaults(OpenclawSecretReference.make(defaultGatewayAuthTokenRef))
+      S.withConstructorDefault(Effect.succeed(openClawDeploymentConfigGatewayAuthTokenRefDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(openClawDeploymentConfigGatewayAuthTokenRefDefault))
     ).annotateKey({
       description: "op:// reference resolved at runtime into the gateway auth token.",
     }),
-    gatewayPort: OpenclawGatewayPort.pipe(SchemaUtils.withKeyDefaults(defaultGatewayPort)).annotateKey({
+    gatewayPort: OpenclawGatewayPort.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultGatewayPort)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultGatewayPort))
+    ).annotateKey({
       description: "Loopback TCP port the gateway listens on.",
     }),
     hostedProvider: OpenClawHostedProviderConfig,
     localProvider: OpenClawLocalProviderConfig,
-    logFilePath: OpenclawAbsolutePath.pipe(SchemaUtils.withKeyDefaults(defaultLogFilePath)).annotateKey({
+    logFilePath: OpenclawAbsolutePath.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultLogFilePath)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultLogFilePath))
+    ).annotateKey({
       description: "Absolute path of the gateway log file.",
     }),
     openclawVersion: OpenclawTargetVersion.pipe(
-      SchemaUtils.withKeyDefaults(OPENCLAW_COMPATIBILITY_SET.openclawVersion)
+      S.withConstructorDefault(Effect.succeed(OPENCLAW_COMPATIBILITY_SET.openclawVersion)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(OPENCLAW_COMPATIBILITY_SET.openclawVersion))
     ).annotateKey({
       description: "Pinned OpenClaw version staged into each generation.",
     }),
-    resolverCommandPath: OpenclawAbsolutePath.pipe(SchemaUtils.withKeyDefaults(defaultResolverCommandPath)).annotateKey(
-      {
-        description: "Absolute path of the exec-provider secret resolver command.",
-      }
-    ),
+    resolverCommandPath: OpenclawAbsolutePath.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultResolverCommandPath)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultResolverCommandPath))
+    ).annotateKey({
+      description: "Absolute path of the exec-provider secret resolver command.",
+    }),
     resolverOpBinaryPath: OpenclawAbsolutePath.pipe(
-      SchemaUtils.withKeyDefaults(defaultResolverOpBinaryPath)
+      S.withConstructorDefault(Effect.succeed(defaultResolverOpBinaryPath)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultResolverOpBinaryPath))
     ).annotateKey({
       description: "Absolute path of the pinned 1Password CLI binary.",
     }),
-    resolverTrustedDir: OpenclawAbsolutePath.pipe(SchemaUtils.withKeyDefaults(defaultResolverTrustedDir)).annotateKey({
+    resolverTrustedDir: OpenclawAbsolutePath.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultResolverTrustedDir)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultResolverTrustedDir))
+    ).annotateKey({
       description: "Directory OpenClaw trusts to contain the resolver command.",
     }),
     telegramBotTokenRef: OpenclawSecretReference,
-    telegramDefaultTo: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    telegramDmPolicy: S.Literals(["pairing", "disabled", "open"]).pipe(SchemaUtils.withKeyDefaults("pairing")),
-    telegramGroupPolicy: S.Literals(["open", "disabled"]).pipe(SchemaUtils.withKeyDefaults("disabled")),
+    telegramDefaultTo: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    telegramDmPolicy: S.Literals(["pairing", "disabled", "open"]).pipe(
+      S.withConstructorDefault(Effect.succeed("pairing" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("pairing" as const))
+    ),
+    telegramGroupPolicy: S.Literals(["open", "disabled"]).pipe(
+      S.withConstructorDefault(Effect.succeed("disabled" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("disabled" as const))
+    ),
   },
   $I.annote("OpenClawDeploymentConfig", {
     description: "Deployment inputs the OpenClaw stack renders into a deployment intent.",
@@ -790,19 +828,28 @@ export const makeOpenClawDeploymentIntent: {
  */
 export class OpenClawBackupConfig extends S.Class<OpenClawBackupConfig>($I`OpenClawBackupConfig`)(
   {
-    agentSocketPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    agentSocketPath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Local SSH agent socket exported as `SSH_AUTH_SOCK` while shipping, when declared.",
     }),
-    host: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultBackupSshHost)).annotateKey({
+    host: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultBackupSshHost)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultBackupSshHost))
+    ).annotateKey({
       description: "Tailnet host receiving encrypted snapshot archives.",
     }),
     passphraseSecretRef: S.NonEmptyString.annotateKey({
       description: "op:// reference for the symmetric archive passphrase; the material never enters Pulumi state.",
     }),
-    remoteDir: OpenclawAbsolutePath.pipe(SchemaUtils.withKeyDefaults(defaultBackupRemoteDir)).annotateKey({
+    remoteDir: OpenclawAbsolutePath.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultBackupRemoteDir)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultBackupRemoteDir))
+    ).annotateKey({
       description: "Absolute remote directory receiving encrypted snapshot archives.",
     }),
-    user: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultBackupSshUser)).annotateKey({
+    user: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultBackupSshUser)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultBackupSshUser))
+    ).annotateKey({
       description: "Remote login used to ship encrypted snapshot archives.",
     }),
   },
@@ -2362,9 +2409,11 @@ export const renderOpenClawBackupShipScript = ({ backup, generation }: OpenClawB
  */
 export class OpenClawStackArgs extends S.Class<OpenClawStackArgs>($I`OpenClawStackArgs`)(
   {
-    backup: S.OptionFromOptionalKey(OpenClawBackupConfig).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Backup shipping inputs; absent when snapshots stay on the workstation.",
-    }),
+    backup: S.OptionFromOptionalKey(OpenClawBackupConfig)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Backup shipping inputs; absent when snapshots stay on the workstation.",
+      }),
     deployment: OpenClawDeploymentConfig.annotateKey({
       description: "Deployment inputs rendered into the OpenClaw deployment intent.",
     }),

@@ -6,9 +6,9 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 import { AiCorpusRankedDocument, AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/QueryCorpus");
@@ -47,10 +47,10 @@ class QueryCorpusSuccess extends S.Class<QueryCorpusSuccess>($I`QueryCorpusSucce
     ranked: S.Array(AiCorpusRankedDocument).annotateKey({
       description: "Ranked documents returned from the corpus query.",
     }),
-    returned: NonNegativeInt.annotateKey({
+    returned: S.Natural.annotateKey({
       description: "Number of ranked documents returned in this response.",
     }),
-    totalDocuments: NonNegativeInt.annotateKey({
+    totalDocuments: S.Natural.annotateKey({
       description: "Total number of learned documents available in the corpus.",
     }),
   },

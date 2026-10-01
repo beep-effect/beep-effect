@@ -7,7 +7,7 @@
 
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Defect, LiteralKit, Sha256Hex } from "@beep/schema";
 import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -86,7 +86,7 @@ export class TelemetryV2ArtifactReceipt extends S.Class<TelemetryV2ArtifactRecei
     artifactKind: TelemetryV2ArtifactKind,
     artifactDigest: Sha256Hex,
     relativePath: S.NonEmptyString,
-    byteCount: NonNegativeInt,
+    byteCount: S.Natural,
   },
   $I.annote("TelemetryV2ArtifactReceipt", {
     description: "Hash-only receipt for one atomically committed telemetry-v2 artifact.",
@@ -313,7 +313,7 @@ const makeTelemetryV2Store = Effect.fnUntraced(function* (dataRoot: AiMetricsAbs
       artifactKind: kind,
       artifactDigest,
       relativePath,
-      byteCount: NonNegativeInt.make(bytes.byteLength),
+      byteCount: S.Natural.make(bytes.byteLength),
     });
   });
 

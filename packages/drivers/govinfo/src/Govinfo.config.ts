@@ -6,7 +6,8 @@
  */
 
 import { $GovinfoId } from "@beep/identity";
-import { SchemaUtils, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $GovinfoId.create("Govinfo.config");
@@ -107,6 +108,7 @@ export const GOVINFO_RATE_LIMIT_WINDOW = "1 hour";
  */
 export const GOVINFO_CACHE_TTL = "5 minutes";
 
+const govinfoConfigInputApiUrlDefault = URLStr.make(GOVINFO_API_URL);
 /**
  * Runtime configuration accepted by {@link Govinfo.makeLayer}.
  *
@@ -128,12 +130,15 @@ export const GOVINFO_CACHE_TTL = "5 minutes";
 export class GovinfoConfigInput extends S.Class<GovinfoConfigInput>($I`GovinfoConfigInput`)(
   {
     apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional redacted api.data.gov API key used for keyed GovInfo requests.",
       })
     ),
-    apiUrl: URLStr.pipe(SchemaUtils.withKeyDefaults(URLStr.make(GOVINFO_API_URL))).annotateKey({
+    apiUrl: URLStr.pipe(
+      S.withConstructorDefault(Effect.succeed(govinfoConfigInputApiUrlDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(govinfoConfigInputApiUrlDefault))
+    ).annotateKey({
       description: "Base URL for GovInfo REST API requests.",
     }),
   },

@@ -36,7 +36,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { Console, DateTime, Duration, Effect, HashSet, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -757,6 +756,7 @@ export class YeetExpectedContextInput extends S.Class<YeetExpectedContextInput>(
   })
 ) {}
 
+const yeetExpectedContextCensusGatedDefault = A.empty<string>();
 /**
  * How the expected contexts line up against the reported checks.
  *
@@ -793,7 +793,10 @@ export class YeetExpectedContextCensus extends S.Class<YeetExpectedContextCensus
     unmatched: S.Array(S.String),
     pending: S.Array(S.String),
     missing: S.Array(S.String),
-    gated: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    gated: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetExpectedContextCensusGatedDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetExpectedContextCensusGatedDefault))
+    ),
   },
   $I.annote("YeetExpectedContextCensus", {
     description:
@@ -876,6 +879,7 @@ const fallbackCensus = (checks: ReadonlyArray<YeetSettleCheck>): YeetExpectedCon
   });
 };
 
+const yeetSettleInputFamiliesDefault = A.empty<YeetGatedContextFamily>();
 /**
  * Everything one poll hands the settle rule.
  *
@@ -905,14 +909,20 @@ const fallbackCensus = (checks: ReadonlyArray<YeetSettleCheck>): YeetExpectedCon
  */
 export class YeetSettleInput extends S.Class<YeetSettleInput>($I`YeetSettleInput`)(
   {
-    expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     checks: S.Array(YeetSettleCheck),
     closeoutBound: S.Boolean,
     waitedMs: S.Finite,
     timeoutMs: S.Finite,
-    families: S.Array(YeetGatedContextFamily).pipe(SchemaUtils.withKeyDefaults(A.empty<YeetGatedContextFamily>())),
-    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    baseConflict: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    families: S.Array(YeetGatedContextFamily).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetSettleInputFamiliesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetSettleInputFamiliesDefault))
+    ),
+    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    baseConflict: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
   },
   $I.annote("YeetSettleInput", {
     description:
@@ -955,7 +965,7 @@ export class YeetSettleInput extends S.Class<YeetSettleInput>($I`YeetSettleInput
 export class YeetSettleVerdict extends S.Class<YeetSettleVerdict>($I`YeetSettleVerdict`)(
   {
     settled: S.Boolean,
-    reason: YeetSettleReason.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    reason: YeetSettleReason.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     census: YeetExpectedContextCensus,
     waitedMs: S.Finite,
     timeoutMs: S.Finite,
@@ -963,7 +973,7 @@ export class YeetSettleVerdict extends S.Class<YeetSettleVerdict>($I`YeetSettleV
       S.withDecodingDefaultKey(Effect.succeed(true)),
       S.withConstructorDefault(Effect.succeed(true))
     ),
-    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetSettleVerdict", {
     description:

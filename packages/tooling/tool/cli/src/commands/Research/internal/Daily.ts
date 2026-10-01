@@ -143,16 +143,16 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
  * **Example** (Daily pipeline with options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
  * import { dailyImpl } from "@beep/repo-cli/commands/Research/internal/Daily"
  * import { ResearchDailyOptions } from "@beep/repo-cli/commands/Research"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const program = dailyImpl(
  *   ResearchDailyOptions.make({
  *     browser: "all",
  *     commit: false,
- *     sinceDays: NonNegativeInt.make(7),
+ *     sinceDays: S.Natural.make(7),
  *     vaultRoot: "/repo/.research"
  *   })
  * )

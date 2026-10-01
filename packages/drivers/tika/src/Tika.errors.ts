@@ -6,8 +6,9 @@
  */
 
 import { $TikaId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -66,10 +67,10 @@ export type TikaErrorReason = typeof TikaErrorReason.Type;
  * **Example** (Make options with status)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { TikaErrorOptions } from "@beep/tika"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const options = TikaErrorOptions.make({ statusCode: NonNegativeInt.make(503) })
+ * const options = TikaErrorOptions.make({ statusCode: S.Natural.make(503) })
  * console.log(options.statusCode)
  * ```
  *
@@ -81,7 +82,7 @@ export class TikaErrorOptions extends S.Class<TikaErrorOptions>($I`TikaErrorOpti
     cause: S.optionalKey(S.String).annotateKey({
       description: "Sanitized technical cause string when one is safe to retain.",
     }),
-    statusCode: S.optionalKey(NonNegativeInt).annotateKey({
+    statusCode: S.optionalKey(S.Natural).annotateKey({
       description: "HTTP or process status code associated with the Tika failure when one was available.",
     }),
   },
@@ -109,7 +110,7 @@ export class TikaError extends S.TaggedError<TikaError>($I`TikaError`)(
   "TikaError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Sanitized technical cause string when one is safe to retain.",
       })
@@ -117,8 +118,8 @@ export class TikaError extends S.TaggedError<TikaError>($I`TikaError`)(
     reason: TikaErrorReason.annotateKey({
       description: "Redacted technical error reason.",
     }),
-    statusCode: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
+    statusCode: S.OptionFromOptionalKey(S.Natural).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "HTTP or process status code associated with the Tika failure when one was available.",
       })

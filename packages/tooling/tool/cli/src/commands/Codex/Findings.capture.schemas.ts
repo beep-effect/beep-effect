@@ -14,9 +14,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Codex/Findings.capture.schemas");
@@ -517,7 +517,10 @@ export class CodexCaptureFinding extends S.Class<CodexCaptureFinding>($I`CodexCa
  */
 export class CodexCaptureMeta extends S.Class<CodexCaptureMeta>($I`CodexCaptureMeta`)(
   {
-    source: CodexCaptureSource.pipe(SchemaUtils.withKeyDefaults("cloud-csv")),
+    source: CodexCaptureSource.pipe(
+      S.withConstructorDefault(Effect.succeed("cloud-csv" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("cloud-csv" as const))
+    ),
     capturedAt: CaptureDate.pipe(
       $I.annoteKey("CodexCaptureMeta.capturedAt", {
         description: "Calendar date the capture ran, used to derive the packet slug.",

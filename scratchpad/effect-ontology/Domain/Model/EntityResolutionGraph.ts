@@ -5,13 +5,14 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { DirectedGraph, NodeIndex, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 
 import * as S from "effect/Schema";
 import { Entity } from "./Entity.ts";
 import { EREdge, ERNode, ResolutionMethod } from "./EntityResolution.ts";
 import { EntityId } from "./shared.ts";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolutionGraph");
 
@@ -147,6 +148,7 @@ export class EntityCluster extends S.Class<EntityCluster>($I`EntityCluster`)(
   })
 ) {}
 
+const clusteringResultClustersDefault = A.empty<EntityCluster>();
 /**
  * Clustering output together with the embeddings used to derive it.
  *
@@ -165,7 +167,7 @@ export class EntityCluster extends S.Class<EntityCluster>($I`EntityCluster`)(
 export class ClusteringResult extends S.Class<ClusteringResult>($I`ClusteringResult`)(
   {
     clusters: S.Array(EntityCluster).pipe(
-      SchemaUtils.withEmptyArrayDefaults<EntityCluster>(),
+      S.withConstructorDefault(Effect.succeed(clusteringResultClustersDefault)), S.withDecodingDefaultType(Effect.succeed(clusteringResultClustersDefault)),
       S.annotateKey({ description: "Entity clusters produced by the resolver." })
     ),
     embeddingMap: S.HashMap(EntityId, S.NonEmptyArray(S.Finite)).annotateKey({
@@ -200,16 +202,16 @@ export class ClusteringResult extends S.Class<ClusteringResult>($I`ClusteringRes
  */
 export class EntityResolutionStats extends S.Class<EntityResolutionStats>($I`EntityResolutionStats`)(
   {
-    mentionCount: NonNegativeInt.annotateKey({
+    mentionCount: S.Natural.annotateKey({
       description: "Number of immutable mention nodes.",
     }),
-    resolvedCount: NonNegativeInt.annotateKey({
+    resolvedCount: S.Natural.annotateKey({
       description: "Number of canonical resolved-entity nodes.",
     }),
-    relationCount: NonNegativeInt.annotateKey({
+    relationCount: S.Natural.annotateKey({
       description: "Number of canonical relation edges.",
     }),
-    clusterCount: NonNegativeInt.annotateKey({
+    clusterCount: S.Natural.annotateKey({
       description: "Number of clusters produced by resolution.",
     }),
   },
@@ -218,7 +220,7 @@ export class EntityResolutionStats extends S.Class<EntityResolutionStats>($I`Ent
   })
 ) {}
 
-const ResolutionGraph = DirectedGraph({ node: ERNode, edge: EREdge }).pipe(
+const ResolutionGraph = S.toCodecJson(S.Graph("directed", ERNode, EREdge)).pipe(
   $I.annoteSchema("ResolutionGraph", {
     description: "Immutable directed graph of entity-resolution nodes and edges.",
   })
@@ -229,8 +231,8 @@ const ResolutionGraph = DirectedGraph({ node: ERNode, edge: EREdge }).pipe(
  *
  * **Details**
  *
- * * The graph uses the repository's schema-backed Effect `DirectedGraph`
- * codec. Indexes are serialized records rather than mutable JavaScript maps,
+ * * The graph uses Effect's `Schema.Graph` JSON codec (`S.toCodecJson`).
+ * Indexes are serialized records rather than mutable JavaScript maps,
  * preserving deterministic transport behavior.
  *
  * **Example** (Use EntityResolutionGraph)
@@ -267,7 +269,7 @@ export class EntityResolutionGraph extends S.Class<EntityResolutionGraph>($I`Ent
     graph: ResolutionGraph.annotateKey({
       description: "Immutable two-tier mention-to-canonical graph.",
     }),
-    entityIndex: S.Record(EntityId, NodeIndex).annotateKey({
+    entityIndex: S.Record(EntityId, S.Natural).annotateKey({
       description: "Lookup from entity identifier to graph node index.",
     }),
     canonicalMap: S.Record(EntityId, EntityId).annotateKey({

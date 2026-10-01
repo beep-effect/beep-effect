@@ -59,7 +59,7 @@ query; both names stay exported, zero behavior change.
 
 ## Trap hit and self-caught: `Graph.shared.ts`/`Graph.rebuild.ts` are not barrel-exported
 
-`packages/foundation/modeling/schema/src/Graph/index.ts` only re-exports
+The barrel of the retired `Graph` concept (removed in the effect-schema-parity group E PR) only re-exported
 `Graph.edge.ts`, `Graph.encoded.ts`, `Graph.from-self.ts`, `Graph.guards.ts`,
 `Graph.primitives.ts`, and `Graph.transforms.ts` — **not**
 `Graph.shared.ts` or `Graph.rebuild.ts` (both marked `@internal`, 18 findings
@@ -127,7 +127,7 @@ the same convention already used by the pre-existing (untouched)
 `src/Http/Http.headers.shared.ts`, `src/HttpMethod/HttpMethod.schema.ts`,
 `src/HttpProtocol/HttpProtocol.schema.ts`, `src/Json.ts`, `src/Jsonc.ts`,
 `src/Jsonl.ts`, `src/LiteralKit/LiteralKit.schema.ts`,
-`src/LocalDate/LocalDate.schema.ts`, `src/Logs.ts`,
+`src/LocalDate/LocalDate.schema.ts`, the `Logs` module (retired 2026-09-29),
 `src/MappedLiteralKit/MappedLiteralKit.schema.ts`, `src/Markdown.ts`,
 `src/MutableHashMap.ts`, `src/MutableHashSet.ts`,
 `src/NoOpen/NoOpen.schema.ts`,

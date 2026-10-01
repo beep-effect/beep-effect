@@ -13,7 +13,7 @@ import {
   CacheReviewDecision,
   CacheTaskConfiguration,
 } from "@beep/repo-configs/cache";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
@@ -65,9 +65,9 @@ export type CacheRunMode = typeof CacheRunMode.Type;
 export class CacheWallTime extends S.Class<CacheWallTime>($I`CacheWallTime`)(
   {
     mode: CacheRunMode,
-    runs: NonNegativeInt,
-    p50Ms: NonNegativeInt,
-    p95Ms: NonNegativeInt,
+    runs: S.Natural,
+    p50Ms: S.Natural,
+    p95Ms: S.Natural,
   },
   $I.annote("CacheWallTime", { description: "Turbo run wall-clock percentiles grouped by cache posture." })
 ) {}
@@ -89,10 +89,10 @@ export class CacheWallTime extends S.Class<CacheWallTime>($I`CacheWallTime`)(
  */
 export class CacheLambdaSummary extends S.Class<CacheLambdaSummary>($I`CacheLambdaSummary`)(
   {
-    rows: NonNegativeInt,
-    reads: NonNegativeInt,
-    hits: NonNegativeInt,
-    puts: NonNegativeInt,
+    rows: S.Natural,
+    reads: S.Natural,
+    hits: S.Natural,
+    puts: S.Natural,
   },
   $I.annote("CacheLambdaSummary", { description: "Aggregate remote-cache access counts without secret data." })
 ) {}
@@ -115,11 +115,11 @@ export class CacheDashboardReport extends S.Class<CacheDashboardReport>($I`Cache
   {
     schema: S.tag("cache-dashboard/v1"),
     generatedAt: S.String,
-    runFiles: NonNegativeInt,
-    eligibleFirstTouches: NonNegativeInt,
-    remoteHits: NonNegativeInt,
+    runFiles: S.Natural,
+    eligibleFirstTouches: S.Natural,
+    remoteHits: S.Natural,
     eligibleRemoteHitRate: S.Finite,
-    excludedForcedOrDisabled: NonNegativeInt,
+    excludedForcedOrDisabled: S.Natural,
     correctnessViolations: S.Array(S.String),
     wallTimes: S.Array(CacheWallTime),
     lambda: CacheLambdaSummary,
@@ -147,7 +147,7 @@ export class CacheDashboardReport extends S.Class<CacheDashboardReport>($I`Cache
 export class CacheWarmLane extends S.Class<CacheWarmLane>($I`CacheWarmLane`)(
   {
     command: S.Array(S.String),
-    durationMs: NonNegativeInt,
+    durationMs: S.Natural,
     exitCode: S.Int,
   },
   $I.annote("CacheWarmLane", { description: "One cache-warm subprocess receipt." })
@@ -308,7 +308,7 @@ export class CacheCensusNode extends S.Class<CacheCensusNode>($I`CacheCensusNode
     commandDigest: Sha256Hex,
     dependencies: S.Array(S.String),
     configuration: CacheTaskConfiguration,
-    inputCount: NonNegativeInt,
+    inputCount: S.Natural,
     inputsDigest: Sha256Hex,
   },
   $I.annote("CacheCensusNode", {
@@ -367,7 +367,10 @@ export class CacheCensusReport extends S.Class<CacheCensusReport>($I`CacheCensus
     nodes: S.Array(CacheCensusNode),
     sources: S.Array(CacheCensusSource),
     entrypointSources: S.Array(S.String),
-    entrypointReview: CacheCensusEntrypointReview.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    entrypointReview: CacheCensusEntrypointReview.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     unresolved: S.Array(S.String),
   },
   $I.annote("CacheCensusReport", {
@@ -501,9 +504,9 @@ export class CacheDependencyTree extends S.Class<CacheDependencyTree>($I`CacheDe
   {
     format: S.Literal("canonical-gnu-tar/v1"),
     sha256: Sha256Hex,
-    regularFiles: NonNegativeInt.check(S.isLessThanOrEqualTo(400000)),
-    entries: NonNegativeInt.check(S.isLessThanOrEqualTo(600000)),
-    bytes: NonNegativeInt.check(S.isLessThanOrEqualTo(16 * 1024 * 1024 * 1024)),
+    regularFiles: S.Natural.check(S.isLessThanOrEqualTo(400000)),
+    entries: S.Natural.check(S.isLessThanOrEqualTo(600000)),
+    bytes: S.Natural.check(S.isLessThanOrEqualTo(16 * 1024 * 1024 * 1024)),
     links: S.Array(CacheDependencyLink).check(S.isMaxLength(4096)),
   },
   $I.annote("CacheDependencyTree", {
@@ -724,7 +727,7 @@ export class CacheBaselineRequest extends S.Class<CacheBaselineRequest>($I`Cache
  * @since 0.0.0
  */
 export class CacheTransitionRequest extends S.Class<CacheTransitionRequest>($I`CacheTransitionRequest`)(
-  { expectedRevision: NonNegativeInt, entry: CacheQualificationEntry },
+  { expectedRevision: S.Natural, entry: CacheQualificationEntry },
   $I.annote("CacheTransitionRequest", { description: "One reviewed transition and its optimistic revision guard." })
 ) {}
 

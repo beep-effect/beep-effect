@@ -7,7 +7,7 @@
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { LiteralKit, NonNegativeInt, PosInt, PosixPath, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, PosixPath, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { HttpsUrl } from "@beep/schema/URL";
 import { Effect, identity, Number as N, Order } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -30,6 +30,7 @@ import {
   SupplierOffer,
   Tool,
 } from "./Ontology";
+import { PosInt } from "./PosInt.ts";
 import { buildReferenceData } from "./ReferenceData";
 
 const $I = $LejeuneBoltWorkbenchId.create("domain/Bundle");
@@ -317,9 +318,9 @@ const canonicalExtractedField = (
 ): ExtractedField =>
   ExtractedField.make({
     anchor: TextAnchor.make({
-      endChar: NonNegativeInt.make(endChar),
+      endChar: S.Natural.make(endChar),
       quote,
-      startChar: NonNegativeInt.make(startChar),
+      startChar: S.Natural.make(startChar),
     }),
     name,
     sourceDocumentId,
@@ -938,9 +939,9 @@ const canonicalRuleSource = (contract: CanonicalRuleSourceContract): RuleSource 
     accessedOn: contract.accessedOn,
     evidence: contract.evidence,
     evidenceAnchor: TextAnchor.make({
-      endChar: NonNegativeInt.make(Str.length(contract.evidence)),
+      endChar: S.Natural.make(Str.length(contract.evidence)),
       quote: contract.evidence,
-      startChar: NonNegativeInt.make(0),
+      startChar: S.Natural.make(0),
     }),
     id: contract.id,
     researchPath: contract.researchPath,
@@ -1276,7 +1277,9 @@ export class RetentionAuthorization extends S.Class<RetentionAuthorization>($I`R
 const MutableRetentionMetadataFields = S.Struct({
   disposition: S.Literal("delete-or-promote"),
   dispositionDate: IsoDate,
-  retentionAuthorization: S.OptionFromOptionalKey(RetentionAuthorization).pipe(SchemaUtils.withNoneDefault),
+  retentionAuthorization: S.OptionFromOptionalKey(RetentionAuthorization).pipe(
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
   schemaVersion: S.tag("lejeune-retention-metadata/v1"),
 });
 

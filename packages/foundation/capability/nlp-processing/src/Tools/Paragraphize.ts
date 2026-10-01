@@ -6,7 +6,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
 import { AiToolError } from "./_schemas.ts";
@@ -27,7 +26,7 @@ class ParagraphizeParameters extends S.Class<ParagraphizeParameters>($I`Paragrap
 
 class ParagraphizeSuccess extends S.Class<ParagraphizeSuccess>($I`ParagraphizeSuccess`)(
   {
-    count: NonNegativeInt,
+    count: S.Natural,
     paragraphs: S.Array(S.String),
   },
   $I.annote("ParagraphizeSuccess", {

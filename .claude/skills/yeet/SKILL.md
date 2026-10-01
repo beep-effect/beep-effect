@@ -699,11 +699,17 @@ last, and whether that speaker was a bot. No rule reads comment prose.
 rows: `review-follow-ups` is blocked while the count is non-zero and emits one
 `pr-review` quality issue per thread, so `yeet closeout` exits non-zero;
 `review-advisories` always passes and only reports a number. `merge-ready`'s
-`threads-resolved` criterion is unresolved **plus** follow-ups, and the
-`next command` it prints is `bun run beep yeet reply` only when live threads are
-the *only* thing holding the PR — every other merge-ready criterion holding. A
-red pipeline or a stale closeout keeps the command on that instead, because
-answering reviewers would not make the branch mergeable.
+`threads-resolved` criterion is unresolved **plus** follow-ups, plus closeout
+issues a thread raised, and the `next command` it prints is
+`bun run beep yeet reply` only when live threads are the *only* thing holding
+the PR — every other merge-ready criterion holding, an unmet closeout gate
+aside. A red pipeline or a stale closeout keeps the command on that instead,
+because answering reviewers would not make the branch mergeable. Closeout's
+non-thread gates — the Greptile score and issue count its
+`--require-greptile-*` flags asked for — block the separate
+`closeout-gates-passed` criterion, last in protocol order; when it is the
+blocker, `next` names the unmet gate (`Expected Greptile score 5/5; found
+unknown`) instead of pointing at threads that do not exist.
 
 ### Review bodies and advisories
 

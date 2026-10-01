@@ -8,7 +8,7 @@
 import { $PandocAstId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $PandocAstId.create("Pandoc.report");
@@ -260,7 +260,7 @@ export class PandocMappingIssue extends S.Class<PandocMappingIssue>($I`PandocMap
     }),
     severity: PandocMappingSeverity.annotateKey({
       description: "Issue severity.",
-    }).pipe(SchemaUtils.withConstantDefault<PandocMappingSeverity>("unsupported")),
+    }).pipe(S.withConstructorDefault(Effect.succeed<PandocMappingSeverity>("unsupported"))),
   },
   $I.annote("PandocMappingIssue", {
     description: "A single compatibility issue found while mapping between Pandoc and Md.",

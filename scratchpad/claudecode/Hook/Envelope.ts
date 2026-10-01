@@ -12,8 +12,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("claudecode/Hook/Envelope");
 
@@ -154,11 +155,11 @@ export const envelopeFields = {
   transcript_path: S.String,
   cwd: S.String,
   hook_event_name: S.String,
-  permission_mode: S.OptionFromOptionalKey(HookPermissionMode).pipe(SchemaUtils.withNoneDefault),
-  prompt_id: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  effort: S.OptionFromOptionalKey(HookEffort).pipe(SchemaUtils.withNoneDefault),
-  agent_id: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  agent_type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  permission_mode: S.OptionFromOptionalKey(HookPermissionMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  prompt_id: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  effort: S.OptionFromOptionalKey(HookEffort).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  agent_id: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  agent_type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
 } as const;
 
 // ---------------------------------------------------------------------------

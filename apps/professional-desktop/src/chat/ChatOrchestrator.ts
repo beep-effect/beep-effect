@@ -105,9 +105,9 @@ const terminalNoteDocument = (text: string): Document.Type =>
 
 const decodeDerivedThreadTitle = S.decodeUnknownOption(DerivedThreadTitle);
 const isChatActionError = S.is(ChatActionError);
-const decodeDerivedThreadTitleLine = (line: string): O.Option<string> => decodeDerivedThreadTitle(line);
+const decodeDerivedThreadTitleLine = (line: string): O.Option<DerivedThreadTitle> => decodeDerivedThreadTitle(line);
 
-const deriveThreadTitle = (document: Document.Type): O.Option<string> =>
+const deriveThreadTitle = (document: Document.Type): O.Option<DerivedThreadTitle> =>
   pipe(documentToPlainText(document), Str.split("\n"), A.map(decodeDerivedThreadTitleLine), A.getSomes, A.head);
 
 const turnHasUserMessage = (turn: Thread.TimelineTurn): boolean => A.some(turn.items, isUserMessageItem);

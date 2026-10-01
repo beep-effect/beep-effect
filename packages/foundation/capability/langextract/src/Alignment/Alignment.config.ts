@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { UnitInterval } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema/Int";
+import * as S from "effect/Schema";
 
 /**
  * Default similarity threshold applied when an alignment source resolves no
@@ -110,4 +110,4 @@ export const MAX_MINIMAL_FOLD_TRANSITIONS = 1_000_000;
  * @category constants
  * @since 0.0.0
  */
-export const DEFAULT_MAX_EXTRACTIONS = NonNegativeInt.make(256);
+export const DEFAULT_MAX_EXTRACTIONS = S.Natural.make(256);

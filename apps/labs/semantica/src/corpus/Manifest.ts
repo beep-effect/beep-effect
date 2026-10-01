@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { Equal, HashSet, Number as N, Order, Tuple } from "effect";
 import * as A from "effect/Array";
@@ -80,7 +80,7 @@ const CorpusManifestRowFields = S.Struct({
   id: CorpusPaperId,
   relativePath: S.NonEmptyString,
   sha256: Sha256Hex,
-  bytes: NonNegativeInt,
+  bytes: S.Natural,
 });
 
 const CorpusManifestRowRelativePathCheck = S.makeFilter(
@@ -102,15 +102,16 @@ const CorpusManifestRowDefinition = CorpusManifestRowFields.check(CorpusManifest
  * **Example** (Create a manifest row)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusManifestRow, CorpusPaperId } from "@/corpus/Manifest"
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema"
  *
  * const id = CorpusPaperId.make("057e356e94f8")
  * const row = CorpusManifestRow.make({
  *   id,
  *   relativePath: `${id}.pdf`,
  *   sha256: Sha256Hex.make("0".repeat(64)),
- *   bytes: NonNegativeInt.make(12)
+ *   bytes: S.Natural.make(12)
  * })
  * console.log(row.id) // "057e356e94f8"
  * ```
@@ -128,7 +129,7 @@ export class CorpusManifestRow extends S.Class<CorpusManifestRow>($I`CorpusManif
 const CorpusManifestSelectionFields = S.Struct({
   rule: S.tag("first-25-by-id"),
   take: S.tag(25),
-  onDisk: NonNegativeInt,
+  onDisk: S.Natural,
 });
 
 const CorpusManifestSelectionDefinition = CorpusManifestSelectionFields.check(
@@ -151,13 +152,13 @@ const CorpusManifestSelectionDefinition = CorpusManifestSelectionFields.check(
  * **Example** (Record the 76-paper source census)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusManifestSelection } from "@/corpus/Manifest"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const selection = CorpusManifestSelection.make({
  *   rule: "first-25-by-id",
  *   take: 25,
- *   onDisk: NonNegativeInt.make(76)
+ *   onDisk: S.Natural.make(76)
  * })
  * console.log(selection.take) // 25
  * ```
@@ -281,8 +282,8 @@ class ManifestBytesMismatch extends S.Class<ManifestBytesMismatch>($I`ManifestBy
     kind: S.tag("bytes-mismatch"),
     id: CorpusPaperId,
     relativePath: S.NonEmptyString,
-    expectedBytes: NonNegativeInt,
-    actualBytes: NonNegativeInt,
+    expectedBytes: S.Natural,
+    actualBytes: S.Natural,
   },
   $I.annote("ManifestBytesMismatch", {
     description: "Manifest row whose selected PDF has a different byte length.",

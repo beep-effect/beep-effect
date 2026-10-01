@@ -5,15 +5,29 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { Effect, Number as N } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "../internal/PosInt.ts";
 import { SourceTextResolverError } from "./SourceText.errors.ts";
 import { SOURCE_TEXT_PAGE_CODE_UNITS, SourceTextPage } from "./SourceText.schema.ts";
 import type { ResolvedSourceText } from "./SourceText.schema.ts";
+
+const decodeNatural = S.decodeEffect(S.Natural);
+
+const requireNatural = (value: number, subject: string): Effect.Effect<number, SourceTextResolverError> =>
+  decodeNatural(value).pipe(
+    Effect.mapError((cause) =>
+      SourceTextResolverError.new(
+        "page-out-of-range",
+        `Source-text ${subject} ${value} is not a non-negative integer.`,
+        cause
+      )
+    )
+  );
 
 const isHighSurrogate = N.between({ minimum: 0xd800, maximum: 0xdbff });
 const isLowSurrogate = N.between({ minimum: 0xdc00, maximum: 0xdfff });
@@ -47,7 +61,7 @@ const sourceTextPageBounds = (text: string): ReadonlyArray<SourceTextPageBound> 
 
 const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function* (
   source: ResolvedSourceText,
-  pageIndex: NonNegativeInt,
+  pageIndex: number,
   pageBounds: ReadonlyArray<SourceTextPageBound>
 ): Effect.fn.Return<SourceTextPage, SourceTextResolverError> {
   const totalCodeUnits = Str.length(source.text);
@@ -62,16 +76,16 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
   );
 
   return SourceTextPage.make({
-    endOffset: NonNegativeInt.make(endOffset),
+    endOffset: S.Natural.make(endOffset),
     hasNextPage: pageIndex + 1 < pageCount,
     hasPreviousPage: pageIndex > 0,
     identity: source.identity,
     pageCount: PosInt.make(pageCount),
     pageIndex,
     pageSizeCodeUnits: SOURCE_TEXT_PAGE_CODE_UNITS,
-    startOffset: NonNegativeInt.make(startOffset),
+    startOffset: S.Natural.make(startOffset),
     text: Str.slice(startOffset, endOffset)(source.text),
-    totalCodeUnits: NonNegativeInt.make(totalCodeUnits),
+    totalCodeUnits: S.Natural.make(totalCodeUnits),
   });
 });
 
@@ -80,20 +94,19 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
  *
  * **Gotchas**
  *
- * Empty sources have one empty page at index zero. A page index outside the
- * computed page count fails through {@link SourceTextResolverError}; text is
- * never truncated or fuzzy-relocated.
+ * Empty sources have one empty page at index zero. A negative or fractional
+ * page index, or one outside the computed page count, fails through
+ * {@link SourceTextResolverError}; text is never truncated or fuzzy-relocated.
  *
  * **Example** (Load first page)
  *
  * ```ts import.meta.vitest name="Load first page"
  * import type { ResolvedSourceText } from "@beep/file-processing/SourceText"
  * import { pageSourceText } from "@beep/file-processing/SourceText"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const loadFirstPage = (source: ResolvedSourceText) =>
- *   Effect.runPromise(pageSourceText(source, NonNegativeInt.make(0)))
+ *   Effect.runPromise(pageSourceText(source, 0))
  *
  * typeof loadFirstPage // => "function"
  * ```
@@ -106,9 +119,10 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
  */
 export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
   source: ResolvedSourceText,
-  pageIndex: NonNegativeInt
+  pageIndex: number
 ): Effect.fn.Return<SourceTextPage, SourceTextResolverError> {
-  return yield* sourceTextPageFromBounds(source, pageIndex, sourceTextPageBounds(source.text));
+  const index = yield* requireNatural(pageIndex, "page");
+  return yield* sourceTextPageFromBounds(source, index, sourceTextPageBounds(source.text));
 });
 
 /**
@@ -120,6 +134,7 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  * This is the authoritative way to open an anchor's first page. Nominal
  * division by {@link SOURCE_TEXT_PAGE_CODE_UNITS} is insufficient because an
  * earlier page boundary can move backward to avoid splitting a surrogate pair.
+ * A negative or fractional offset fails through {@link SourceTextResolverError}.
  *
  * **Example** (Load page for offset)
  *
@@ -128,12 +143,11 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  *   pageSourceTextContainingOffset
  * } from "@beep/file-processing/SourceText"
  * import type { ResolvedSourceText } from "@beep/file-processing/SourceText"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const loadPageContaining = (source: ResolvedSourceText, offset: number) =>
  *   Effect.runPromise(
- *     pageSourceTextContainingOffset(source, NonNegativeInt.make(offset))
+ *     pageSourceTextContainingOffset(source, offset)
  *   )
  *
  * typeof loadPageContaining // => "function"
@@ -147,12 +161,14 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  */
 export const pageSourceTextContainingOffset = Effect.fn("SourceText.pageSourceTextContainingOffset")(function* (
   source: ResolvedSourceText,
-  offset: NonNegativeInt
+  offset: number
 ): Effect.fn.Return<SourceTextPage, SourceTextResolverError> {
+  const codeUnitOffset = yield* requireNatural(offset, "offset");
   const pageBounds = sourceTextPageBounds(source.text);
   const pageIndex = yield* A.findFirstIndex(
     pageBounds,
-    ([startOffset, endOffset]) => N.isLessThanOrEqualTo(startOffset, offset) && N.isLessThan(offset, endOffset)
+    ([startOffset, endOffset]) =>
+      N.isLessThanOrEqualTo(startOffset, codeUnitOffset) && N.isLessThan(codeUnitOffset, endOffset)
   ).pipe(
     O.match({
       onNone: () =>
@@ -162,7 +178,7 @@ export const pageSourceTextContainingOffset = Effect.fn("SourceText.pageSourceTe
             `Source-text offset ${offset} is outside the canonical source.`
           )
         ),
-      onSome: (index) => Effect.succeed(NonNegativeInt.make(index)),
+      onSome: (index) => Effect.succeed(S.Natural.make(index)),
     })
   );
   return yield* sourceTextPageFromBounds(source, pageIndex, pageBounds);

@@ -12,10 +12,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 import { HooksSection } from "./HooksSection.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("claudecode/Settings/Schema");
 
@@ -254,12 +255,12 @@ const WorktreeBgIsolation = LiteralKit(["worktree", "none"]).pipe(
  */
 export class PermissionsConfig extends S.Class<PermissionsConfig>($I`PermissionsConfig`)(
   {
-    allow: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    ask: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    deny: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    additionalDirectories: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    defaultMode: S.OptionFromOptionalKey(PermissionMode).pipe(SchemaUtils.withNoneDefault),
-    disableBypassPermissionsMode: S.OptionFromOptionalKey(S.Literal("disable")).pipe(SchemaUtils.withNoneDefault),
+    allow: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    ask: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    deny: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    additionalDirectories: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    defaultMode: S.OptionFromOptionalKey(PermissionMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableBypassPermissionsMode: S.OptionFromOptionalKey(S.Literal("disable")).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PermissionsConfig", {
     description: "Tool-use permissions from a Claude Code settings file.",
@@ -325,12 +326,12 @@ export declare namespace PermissionsConfig {
  */
 export class SandboxFilesystemConfig extends S.Class<SandboxFilesystemConfig>($I`SandboxFilesystemConfig`)(
   {
-    allowWrite: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    denyWrite: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    denyRead: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    allowRead: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    allowManagedReadPathsOnly: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    allowWrite: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    denyWrite: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    denyRead: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowRead: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowManagedReadPathsOnly: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SandboxFilesystemConfig", {
     description: "Filesystem restrictions for Claude Code's command sandbox.",
@@ -373,8 +374,8 @@ export declare namespace SandboxFilesystemConfig {
 
 class SandboxTlsTerminateConfig extends S.Class<SandboxTlsTerminateConfig>($I`SandboxTlsTerminateConfig`)(
   {
-    caCertPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    caKeyPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    caCertPath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    caKeyPath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SandboxTlsTerminateConfig", {
     description: "TLS termination certificate configuration for the sandbox proxy.",
@@ -402,16 +403,16 @@ class SandboxTlsTerminateConfig extends S.Class<SandboxTlsTerminateConfig>($I`Sa
  */
 export class SandboxNetworkConfig extends S.Class<SandboxNetworkConfig>($I`SandboxNetworkConfig`)(
   {
-    allowUnixSockets: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    allowAllUnixSockets: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    allowLocalBinding: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    allowMachLookup: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    allowedDomains: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    deniedDomains: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    allowManagedDomainsOnly: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    httpProxyPort: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    socksProxyPort: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    tlsTerminate: S.OptionFromOptionalKey(SandboxTlsTerminateConfig).pipe(SchemaUtils.withNoneDefault),
+    allowUnixSockets: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowAllUnixSockets: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowLocalBinding: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowMachLookup: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowedDomains: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    deniedDomains: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowManagedDomainsOnly: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    httpProxyPort: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    socksProxyPort: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    tlsTerminate: S.OptionFromOptionalKey(SandboxTlsTerminateConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SandboxNetworkConfig", {
     description: "Network restrictions for Claude Code's command sandbox.",
@@ -470,7 +471,7 @@ class SandboxCredentialEnvVar extends S.Class<SandboxCredentialEnvVar>($I`Sandbo
         description: "Protection applied to a credential environment variable.",
       })
     ),
-    injectHosts: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
+    injectHosts: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SandboxCredentialEnvVar", {
     description: "Credential environment variable protected inside the sandbox.",
@@ -479,9 +480,9 @@ class SandboxCredentialEnvVar extends S.Class<SandboxCredentialEnvVar>($I`Sandbo
 
 class SandboxCredentialsConfig extends S.Class<SandboxCredentialsConfig>($I`SandboxCredentialsConfig`)(
   {
-    files: S.OptionFromOptionalKey(SandboxCredentialFile.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    envVars: S.OptionFromOptionalKey(SandboxCredentialEnvVar.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    allowPlaintextInject: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    files: S.OptionFromOptionalKey(SandboxCredentialFile.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    envVars: S.OptionFromOptionalKey(SandboxCredentialEnvVar.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowPlaintextInject: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SandboxCredentialsConfig", {
     description: "Credential protections enforced for sandboxed commands.",
@@ -507,19 +508,19 @@ class SandboxCredentialsConfig extends S.Class<SandboxCredentialsConfig>($I`Sand
  */
 export class SandboxConfig extends S.Class<SandboxConfig>($I`SandboxConfig`)(
   {
-    enabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    failIfUnavailable: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    autoAllowBashIfSandboxed: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    excludedCommands: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    allowUnsandboxedCommands: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    filesystem: S.OptionFromOptionalKey(SandboxFilesystemConfig).pipe(SchemaUtils.withNoneDefault),
-    credentials: S.OptionFromOptionalKey(SandboxCredentialsConfig).pipe(SchemaUtils.withNoneDefault),
-    network: S.OptionFromOptionalKey(SandboxNetworkConfig).pipe(SchemaUtils.withNoneDefault),
-    enableWeakerNestedSandbox: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    enableWeakerNetworkIsolation: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    allowAppleEvents: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    bwrapPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    socatPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    enabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    failIfUnavailable: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autoAllowBashIfSandboxed: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    excludedCommands: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowUnsandboxedCommands: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    filesystem: S.OptionFromOptionalKey(SandboxFilesystemConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    credentials: S.OptionFromOptionalKey(SandboxCredentialsConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    network: S.OptionFromOptionalKey(SandboxNetworkConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    enableWeakerNestedSandbox: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    enableWeakerNetworkIsolation: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowAppleEvents: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    bwrapPath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    socatPath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SandboxConfig", {
     description: "Command-sandbox policy from Claude Code settings.",
@@ -586,9 +587,9 @@ export class StatusLineConfig extends S.Class<StatusLineConfig>($I`StatusLineCon
   {
     type: S.tag("command"),
     command: S.String,
-    padding: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    refreshInterval: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    hideVimModeIndicator: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    padding: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    refreshInterval: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hideVimModeIndicator: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("StatusLineConfig", {
     description: "Custom command used to render Claude Code's status line.",
@@ -642,10 +643,10 @@ class FileSuggestionConfig extends S.Class<FileSuggestionConfig>($I`FileSuggesti
 
 class FooterLinkRegex extends S.Class<FooterLinkRegex>($I`FooterLinkRegex`)(
   {
-    type: S.OptionFromOptionalKey(S.Literal("regex")).pipe(SchemaUtils.withNoneDefault),
+    type: S.OptionFromOptionalKey(S.Literal("regex")).pipe(S.withConstructorDefault(Effect.succeedNone)),
     pattern: S.String,
     url: S.String,
-    label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    label: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("FooterLinkRegex", {
     description: "Regex-driven footer badge and URL template.",
@@ -655,7 +656,7 @@ class FooterLinkRegex extends S.Class<FooterLinkRegex>($I`FooterLinkRegex`)(
 class SpinnerTipsConfig extends S.Class<SpinnerTipsConfig>($I`SpinnerTipsConfig`)(
   {
     tips: S.String.pipe(S.Array),
-    excludeDefault: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    excludeDefault: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SpinnerTipsConfig", {
     description: "Custom tips displayed while Claude Code is working.",
@@ -671,7 +672,7 @@ class SpinnerVerbsConfig extends S.Class<SpinnerVerbsConfig>($I`SpinnerVerbsConf
           description: "How custom spinner verbs combine with defaults.",
         })
       )
-    ).pipe(SchemaUtils.withNoneDefault),
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SpinnerVerbsConfig", {
     description: "Custom action verbs displayed during a turn.",
@@ -683,9 +684,9 @@ class SshConfig extends S.Class<SshConfig>($I`SshConfig`)(
     id: S.String,
     name: S.String,
     sshHost: S.String,
-    sshPort: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    sshIdentityFile: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    startDirectory: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    sshPort: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sshIdentityFile: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    startDirectory: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SshConfig", {
     description: "Managed SSH connection offered by Claude Desktop.",
@@ -714,9 +715,9 @@ class SshConfig extends S.Class<SshConfig>($I`SshConfig`)(
  */
 export class VoiceConfig extends S.Class<VoiceConfig>($I`VoiceConfig`)(
   {
-    enabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    mode: S.OptionFromOptionalKey(VoiceMode).pipe(SchemaUtils.withNoneDefault),
-    autoSubmit: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    enabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    mode: S.OptionFromOptionalKey(VoiceMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autoSubmit: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("VoiceConfig", {
     description: "Voice-dictation behavior persisted by Claude Code.",
@@ -912,9 +913,9 @@ export class GithubSourceSpec extends S.Class<GithubSourceSpec>($I`GithubSourceS
   {
     source: S.tag("github"),
     repo: S.String,
-    ref: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    skipLfs: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    ref: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    skipLfs: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("GithubSourceSpec", {
     description: "Marketplace loaded from a GitHub repository.",
@@ -978,9 +979,9 @@ export class GitSourceSpec extends S.Class<GitSourceSpec>($I`GitSourceSpec`)(
   {
     source: S.tag("git"),
     url: S.String,
-    ref: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    skipLfs: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    ref: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    skipLfs: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("GitSourceSpec", {
     description: "Marketplace loaded from a Git repository.",
@@ -1221,7 +1222,7 @@ export type MarketplaceSourceSpecEncoded = typeof MarketplaceSourceSpec.Encoded;
 export class Marketplace extends S.Class<Marketplace>($I`Marketplace`)(
   {
     source: MarketplaceSourceSpec,
-    autoUpdate: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    autoUpdate: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Marketplace", {
     description: "A marketplace registered through Claude Code settings.",
@@ -1267,8 +1268,8 @@ class PolicyGithubSourceSpec extends S.Class<PolicyGithubSourceSpec>($I`PolicyGi
   {
     source: S.tag("github"),
     repo: S.String,
-    ref: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ref: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PolicyGithubSourceSpec", {
     description: "GitHub source matched by marketplace policy.",
@@ -1279,8 +1280,8 @@ class PolicyGitSourceSpec extends S.Class<PolicyGitSourceSpec>($I`PolicyGitSourc
   {
     source: S.tag("git"),
     url: S.String,
-    ref: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ref: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PolicyGitSourceSpec", {
     description: "Git source matched by marketplace policy.",
@@ -1291,7 +1292,7 @@ class PolicyUrlSourceSpec extends S.Class<PolicyUrlSourceSpec>($I`PolicyUrlSourc
   {
     source: S.tag("url"),
     url: S.String,
-    headers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
+    headers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PolicyUrlSourceSpec", {
     description: "URL source matched by marketplace policy.",
@@ -1404,9 +1405,9 @@ export type MarketplacePolicySourceSpecEncoded = typeof MarketplacePolicySourceS
  */
 export class AttributionConfig extends S.Class<AttributionConfig>($I`AttributionConfig`)(
   {
-    commit: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    pr: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    sessionUrl: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    commit: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    pr: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sessionUrl: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AttributionConfig", {
     description: "Attribution appended to commits and pull requests.",
@@ -1449,11 +1450,11 @@ export declare namespace AttributionConfig {
 
 class AutoModeConfig extends S.Class<AutoModeConfig>($I`AutoModeConfig`)(
   {
-    allow: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    soft_deny: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    hard_deny: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    environment: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    classifyAllShell: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    allow: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    soft_deny: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hard_deny: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    environment: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    classifyAllShell: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AutoModeConfig", {
     description: "Custom classifier rules used by auto permission mode.",
@@ -1487,7 +1488,7 @@ const PluginConfigValue = S.Union([S.String, S.Finite, S.Boolean, S.String.pipe(
  */
 export class PluginOptionsConfig extends S.Class<PluginOptionsConfig>($I`PluginOptionsConfig`)(
   {
-    options: S.OptionFromOptionalKey(S.Record(S.String, PluginConfigValue)).pipe(SchemaUtils.withNoneDefault),
+    options: S.OptionFromOptionalKey(S.Record(S.String, PluginConfigValue)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PluginOptionsConfig", {
     description: "Non-sensitive options collected for a Claude Code plugin.",
@@ -1549,10 +1550,10 @@ export declare namespace PluginOptionsConfig {
  */
 export class WorktreeConfig extends S.Class<WorktreeConfig>($I`WorktreeConfig`)(
   {
-    baseRef: S.OptionFromOptionalKey(WorktreeBaseRef).pipe(SchemaUtils.withNoneDefault),
-    symlinkDirectories: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    sparsePaths: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    bgIsolation: S.OptionFromOptionalKey(WorktreeBgIsolation).pipe(SchemaUtils.withNoneDefault),
+    baseRef: S.OptionFromOptionalKey(WorktreeBaseRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    symlinkDirectories: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sparsePaths: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    bgIsolation: S.OptionFromOptionalKey(WorktreeBgIsolation).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("WorktreeConfig", {
     description: "Configuration used by Claude Code worktree sessions.",
@@ -1614,8 +1615,8 @@ export declare namespace WorktreeConfig {
 export class PolicyHelperConfig extends S.Class<PolicyHelperConfig>($I`PolicyHelperConfig`)(
   {
     path: S.String,
-    timeoutMs: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    refreshIntervalMs: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    timeoutMs: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    refreshIntervalMs: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PolicyHelperConfig", {
     description: "Managed executable that computes Claude Code policy.",
@@ -1748,145 +1749,145 @@ const AllowedChannelPlugin = S.Struct({
  */
 export class SettingsFile extends S.Class<SettingsFile>($I`SettingsFile`)(
   {
-    raw: S.OptionFromOptionalKey(SettingsRaw).pipe(SchemaUtils.withNoneDefault),
-    $schema: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    advisorModel: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    agent: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    agentPushNotifEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    allowAllClaudeAiMcps: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    raw: S.OptionFromOptionalKey(SettingsRaw).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    $schema: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    advisorModel: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    agent: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    agentPushNotifEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowAllClaudeAiMcps: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
     allowedChannelPlugins: S.OptionFromOptionalKey(AllowedChannelPlugin.pipe(S.Array)).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    allowedHttpHookUrls: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    allowedMcpServers: S.OptionFromOptionalKey(McpServerPolicyMatcher.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    allowManagedHooksOnly: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    allowManagedMcpServersOnly: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    allowManagedPermissionRulesOnly: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    alwaysThinkingEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    apiKeyHelper: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    askUserQuestionTimeout: S.OptionFromOptionalKey(AskUserQuestionTimeout).pipe(SchemaUtils.withNoneDefault),
-    attribution: S.OptionFromOptionalKey(AttributionConfig).pipe(SchemaUtils.withNoneDefault),
-    autoCompactEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    autoMemoryDirectory: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autoMemoryEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    autoMode: S.OptionFromOptionalKey(AutoModeConfig).pipe(SchemaUtils.withNoneDefault),
-    autoScrollEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    autoUpdatesChannel: S.OptionFromOptionalKey(AutoUpdatesChannel).pipe(SchemaUtils.withNoneDefault),
-    availableModels: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    awaySummaryEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    awsAuthRefresh: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    awsCredentialExport: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    axScreenReader: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    allowedHttpHookUrls: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowedMcpServers: S.OptionFromOptionalKey(McpServerPolicyMatcher.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowManagedHooksOnly: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowManagedMcpServersOnly: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowManagedPermissionRulesOnly: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    alwaysThinkingEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    apiKeyHelper: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    askUserQuestionTimeout: S.OptionFromOptionalKey(AskUserQuestionTimeout).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    attribution: S.OptionFromOptionalKey(AttributionConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autoCompactEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autoMemoryDirectory: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autoMemoryEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autoMode: S.OptionFromOptionalKey(AutoModeConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autoScrollEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autoUpdatesChannel: S.OptionFromOptionalKey(AutoUpdatesChannel).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    availableModels: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    awaySummaryEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    awsAuthRefresh: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    awsCredentialExport: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    axScreenReader: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
     blockedMarketplaces: S.OptionFromOptionalKey(MarketplacePolicySourceSpec.pipe(S.Array)).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    browserExternalPageTools: S.OptionFromOptionalKey(S.Literal("disabled")).pipe(SchemaUtils.withNoneDefault),
-    channelsEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    claudeMd: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    claudeMdExcludes: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    cleanupPeriodDays: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    companyAnnouncements: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    defaultShell: S.OptionFromOptionalKey(DefaultShell).pipe(SchemaUtils.withNoneDefault),
-    deniedMcpServers: S.OptionFromOptionalKey(McpServerPolicyMatcher.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    disableAgentView: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    disableAllHooks: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    disableArtifact: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    disableAutoMode: S.OptionFromOptionalKey(S.Literal("disable")).pipe(SchemaUtils.withNoneDefault),
-    disableBrowserExternalNavigation: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    disableBundledSkills: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    disableClaudeAiConnectors: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    disableDeepLinkRegistration: S.OptionFromOptionalKey(S.Literal("disable")).pipe(SchemaUtils.withNoneDefault),
-    disabledMcpjsonServers: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    disableMobileSimulatorTools: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    disableRemoteControl: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    disableSideloadFlags: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    disableSkillShellExecution: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    disableWorkflows: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    editorMode: S.OptionFromOptionalKey(EditorMode).pipe(SchemaUtils.withNoneDefault),
-    effortLevel: S.OptionFromOptionalKey(EffortLevel).pipe(SchemaUtils.withNoneDefault),
-    emojiCompletionEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    enableAllProjectMcpServers: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    enableArtifact: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    enabledMcpjsonServers: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    enabledPlugins: S.OptionFromOptionalKey(S.Record(S.String, S.Boolean)).pipe(SchemaUtils.withNoneDefault),
-    enforceAvailableModels: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    env: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
-    extraKnownMarketplaces: S.OptionFromOptionalKey(S.Record(S.String, Marketplace)).pipe(SchemaUtils.withNoneDefault),
-    fallbackModel: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    fastMode: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    fastModePerSessionOptIn: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    feedbackSurveyRate: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    fileCheckpointingEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    fileSuggestion: S.OptionFromOptionalKey(FileSuggestionConfig).pipe(SchemaUtils.withNoneDefault),
-    footerLinksRegexes: S.OptionFromOptionalKey(FooterLinkRegex.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    forceLoginMethod: S.OptionFromOptionalKey(ForceLoginMethod).pipe(SchemaUtils.withNoneDefault),
-    forceLoginGatewayUrl: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    forceLoginOrgUUID: S.OptionFromOptionalKey(ForceLoginOrganization).pipe(SchemaUtils.withNoneDefault),
-    forceRemoteSettingsRefresh: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    gcpAuthRefresh: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hooks: S.OptionFromOptionalKey(HooksSection).pipe(SchemaUtils.withNoneDefault),
-    httpHookAllowedEnvVars: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    includeGitInstructions: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    inputNeededNotifEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    language: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    minimumVersion: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    model: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    modelOverrides: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
-    otelHeadersHelper: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    outputStyle: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    parentSettingsBehavior: S.OptionFromOptionalKey(ParentSettingsBehavior).pipe(SchemaUtils.withNoneDefault),
-    permissions: S.OptionFromOptionalKey(PermissionsConfig).pipe(SchemaUtils.withNoneDefault),
-    plansDirectory: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    pluginConfigs: S.OptionFromOptionalKey(S.Record(S.String, PluginOptionsConfig)).pipe(SchemaUtils.withNoneDefault),
-    pluginSuggestionMarketplaces: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    pluginTrustMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    policyHelper: S.OptionFromOptionalKey(PolicyHelperConfig).pipe(SchemaUtils.withNoneDefault),
-    preferredNotifChannel: S.OptionFromOptionalKey(NotificationChannel).pipe(SchemaUtils.withNoneDefault),
-    prefersReducedMotion: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    processWrapper: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    prUrlTemplate: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    remoteControlAtStartup: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    requiredMaximumVersion: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    requiredMinimumVersion: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    respectGitignore: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    respondToBashCommands: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    sandbox: S.OptionFromOptionalKey(SandboxConfig).pipe(SchemaUtils.withNoneDefault),
-    showClearContextOnPlanAccept: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    showThinkingSummaries: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    showTurnDuration: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    skillListingBudgetFraction: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    skillListingMaxDescChars: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    skillOverrides: S.OptionFromOptionalKey(S.Record(S.String, SkillVisibility)).pipe(SchemaUtils.withNoneDefault),
-    skipDangerousModePermissionPrompt: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    skipWebFetchPreflight: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    spinnerTipsEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    spinnerTipsOverride: S.OptionFromOptionalKey(SpinnerTipsConfig).pipe(SchemaUtils.withNoneDefault),
-    spinnerVerbs: S.OptionFromOptionalKey(SpinnerVerbsConfig).pipe(SchemaUtils.withNoneDefault),
-    sshConfigs: S.OptionFromOptionalKey(SshConfig.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
-    statusLine: S.OptionFromOptionalKey(StatusLineConfig).pipe(SchemaUtils.withNoneDefault),
+    browserExternalPageTools: S.OptionFromOptionalKey(S.Literal("disabled")).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    channelsEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    claudeMd: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    claudeMdExcludes: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    cleanupPeriodDays: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    companyAnnouncements: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    defaultShell: S.OptionFromOptionalKey(DefaultShell).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    deniedMcpServers: S.OptionFromOptionalKey(McpServerPolicyMatcher.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableAgentView: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableAllHooks: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableArtifact: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableAutoMode: S.OptionFromOptionalKey(S.Literal("disable")).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableBrowserExternalNavigation: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableBundledSkills: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableClaudeAiConnectors: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableDeepLinkRegistration: S.OptionFromOptionalKey(S.Literal("disable")).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disabledMcpjsonServers: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableMobileSimulatorTools: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableRemoteControl: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableSideloadFlags: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableSkillShellExecution: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableWorkflows: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    editorMode: S.OptionFromOptionalKey(EditorMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    effortLevel: S.OptionFromOptionalKey(EffortLevel).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    emojiCompletionEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    enableAllProjectMcpServers: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    enableArtifact: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    enabledMcpjsonServers: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    enabledPlugins: S.OptionFromOptionalKey(S.Record(S.String, S.Boolean)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    enforceAvailableModels: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    env: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    extraKnownMarketplaces: S.OptionFromOptionalKey(S.Record(S.String, Marketplace)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    fallbackModel: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    fastMode: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    fastModePerSessionOptIn: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    feedbackSurveyRate: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    fileCheckpointingEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    fileSuggestion: S.OptionFromOptionalKey(FileSuggestionConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    footerLinksRegexes: S.OptionFromOptionalKey(FooterLinkRegex.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    forceLoginMethod: S.OptionFromOptionalKey(ForceLoginMethod).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    forceLoginGatewayUrl: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    forceLoginOrgUUID: S.OptionFromOptionalKey(ForceLoginOrganization).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    forceRemoteSettingsRefresh: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    gcpAuthRefresh: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hooks: S.OptionFromOptionalKey(HooksSection).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    httpHookAllowedEnvVars: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    includeGitInstructions: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    inputNeededNotifEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    language: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    minimumVersion: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    model: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    modelOverrides: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    otelHeadersHelper: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    outputStyle: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    parentSettingsBehavior: S.OptionFromOptionalKey(ParentSettingsBehavior).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    permissions: S.OptionFromOptionalKey(PermissionsConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    plansDirectory: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    pluginConfigs: S.OptionFromOptionalKey(S.Record(S.String, PluginOptionsConfig)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    pluginSuggestionMarketplaces: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    pluginTrustMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    policyHelper: S.OptionFromOptionalKey(PolicyHelperConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    preferredNotifChannel: S.OptionFromOptionalKey(NotificationChannel).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    prefersReducedMotion: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    processWrapper: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    prUrlTemplate: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    remoteControlAtStartup: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    requiredMaximumVersion: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    requiredMinimumVersion: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    respectGitignore: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    respondToBashCommands: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sandbox: S.OptionFromOptionalKey(SandboxConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    showClearContextOnPlanAccept: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    showThinkingSummaries: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    showTurnDuration: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    skillListingBudgetFraction: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    skillListingMaxDescChars: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    skillOverrides: S.OptionFromOptionalKey(S.Record(S.String, SkillVisibility)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    skipDangerousModePermissionPrompt: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    skipWebFetchPreflight: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    spinnerTipsEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    spinnerTipsOverride: S.OptionFromOptionalKey(SpinnerTipsConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    spinnerVerbs: S.OptionFromOptionalKey(SpinnerVerbsConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sshConfigs: S.OptionFromOptionalKey(SshConfig.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    statusLine: S.OptionFromOptionalKey(StatusLineConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
     strictKnownMarketplaces: S.OptionFromOptionalKey(MarketplacePolicySourceSpec.pipe(S.Array)).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     strictPluginOnlyCustomization: S.OptionFromOptionalKey(StrictPluginOnlyCustomization).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    syntaxHighlightingDisabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    teammateMode: S.OptionFromOptionalKey(TeammateMode).pipe(SchemaUtils.withNoneDefault),
-    terminalProgressBarEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    theme: S.OptionFromOptionalKey(Theme).pipe(SchemaUtils.withNoneDefault),
-    tui: S.OptionFromOptionalKey(TuiMode).pipe(SchemaUtils.withNoneDefault),
-    ultracode: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    useAutoModeDuringPlan: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    verbose: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    viewMode: S.OptionFromOptionalKey(ViewMode).pipe(SchemaUtils.withNoneDefault),
+    syntaxHighlightingDisabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    teammateMode: S.OptionFromOptionalKey(TeammateMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalProgressBarEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    theme: S.OptionFromOptionalKey(Theme).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    tui: S.OptionFromOptionalKey(TuiMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    ultracode: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    useAutoModeDuringPlan: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    verbose: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    viewMode: S.OptionFromOptionalKey(ViewMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
     vimInsertModeRemaps: S.OptionFromOptionalKey(S.Record(S.String, S.Literal("<Esc>"))).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    voice: S.OptionFromOptionalKey(VoiceConfig).pipe(SchemaUtils.withNoneDefault),
-    wheelScrollAccelerationEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    workflowKeywordTriggerEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    worktree: S.OptionFromOptionalKey(WorktreeConfig).pipe(SchemaUtils.withNoneDefault),
-    wslInheritsWindowsSettings: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    voice: S.OptionFromOptionalKey(VoiceConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    wheelScrollAccelerationEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    workflowKeywordTriggerEnabled: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    worktree: S.OptionFromOptionalKey(WorktreeConfig).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    wslInheritsWindowsSettings: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SettingsFile", {
     description: "Claude Code 2.1.220 settings with Option-backed absent keys.",

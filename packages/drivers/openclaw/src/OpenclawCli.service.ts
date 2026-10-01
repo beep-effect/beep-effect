@@ -13,7 +13,6 @@
  */
 
 import { $OpenclawId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Context, Duration, Effect, flow, Layer, pipe } from "effect";
 import * as A from "effect/Array";
@@ -69,6 +68,8 @@ const $I = $OpenclawId.create("OpenclawCli.service");
  */
 const agentTurnTimeoutGrace = Duration.seconds(15);
 
+const openclawGatewayPluginsWireErrorsDefault = A.empty();
+const openclawGatewayPluginsWireLoadedDefault = A.empty();
 /**
  * Tolerant projection of the plugin section in the gateway health document.
  *
@@ -77,18 +78,29 @@ const agentTurnTimeoutGrace = Duration.seconds(15);
  */
 class OpenclawGatewayPluginsWire extends S.Class<OpenclawGatewayPluginsWire>($I`OpenclawGatewayPluginsWire`)(
   {
-    errors: S.Array(S.Unknown).pipe(SchemaUtils.withKeyDefaults([])).annotateKey({
-      description: "Plugin error entries reported by the gateway.",
-    }),
-    loaded: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults([])).annotateKey({
-      description: "Names of plugins the gateway reports as loaded.",
-    }),
+    errors: S.Array(S.Unknown)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawGatewayPluginsWireErrorsDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawGatewayPluginsWireErrorsDefault))
+      )
+      .annotateKey({
+        description: "Plugin error entries reported by the gateway.",
+      }),
+    loaded: S.Array(S.String)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawGatewayPluginsWireLoadedDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawGatewayPluginsWireLoadedDefault))
+      )
+      .annotateKey({
+        description: "Names of plugins the gateway reports as loaded.",
+      }),
   },
   $I.annote("OpenclawGatewayPluginsWire", {
     description: "Tolerant wire projection of the health document plugin section.",
   })
 ) {}
 
+const openclawGatewayHealthWireChannelsDefault = R.empty();
 /**
  * Tolerant wire projection of `openclaw gateway call health --json` stdout.
  *
@@ -97,15 +109,22 @@ class OpenclawGatewayPluginsWire extends S.Class<OpenclawGatewayPluginsWire>($I`
  */
 class OpenclawGatewayHealthWire extends S.Class<OpenclawGatewayHealthWire>($I`OpenclawGatewayHealthWire`)(
   {
-    channels: S.Record(S.String, OpenclawChannelHealth).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "Per-channel health sections keyed by channel name.",
-    }),
+    channels: S.Record(S.String, OpenclawChannelHealth)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawGatewayHealthWireChannelsDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawGatewayHealthWireChannelsDefault))
+      )
+      .annotateKey({
+        description: "Per-channel health sections keyed by channel name.",
+      }),
     ok: S.Boolean.annotateKey({
       description: "Top-level gateway health verdict.",
     }),
-    plugins: S.OptionFromOptionalKey(OpenclawGatewayPluginsWire).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Plugin section of the health document, when present.",
-    }),
+    plugins: S.OptionFromOptionalKey(OpenclawGatewayPluginsWire)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Plugin section of the health document, when present.",
+      }),
   },
   $I.annote("OpenclawGatewayHealthWire", {
     description: "Tolerant wire projection of the authenticated health call stdout.",
@@ -120,10 +139,10 @@ class OpenclawGatewayHealthWire extends S.Class<OpenclawGatewayHealthWire>($I`Op
  */
 class OpenclawChannelProbeWire extends S.Class<OpenclawChannelProbeWire>($I`OpenclawChannelProbeWire`)(
   {
-    error: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    error: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Credential probe error text, when the probe failed.",
     }),
-    ok: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    ok: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Credential probe verdict, when a probe ran.",
     }),
   },
@@ -142,15 +161,18 @@ class OpenclawChannelAccountEnvelopeWire extends S.Class<OpenclawChannelAccountE
   $I`OpenclawChannelAccountEnvelopeWire`
 )(
   {
-    probe: S.OptionFromOptionalKey(OpenclawChannelProbeWire).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Nested probe section of the account entry, when present.",
-    }),
+    probe: S.OptionFromOptionalKey(OpenclawChannelProbeWire)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Nested probe section of the account entry, when present.",
+      }),
   },
   $I.annote("OpenclawChannelAccountEnvelopeWire", {
     description: "Wire envelope for the nested probe section of an account entry.",
   })
 ) {}
 
+const openclawChannelsStatusWireChannelAccountsDefault = R.empty();
 /**
  * Tolerant wire projection of `openclaw channels status --json` stdout.
  *
@@ -159,9 +181,14 @@ class OpenclawChannelAccountEnvelopeWire extends S.Class<OpenclawChannelAccountE
  */
 class OpenclawChannelsStatusWire extends S.Class<OpenclawChannelsStatusWire>($I`OpenclawChannelsStatusWire`)(
   {
-    channelAccounts: S.Record(S.String, S.Array(S.Unknown)).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "Per-channel arrays of account entries keyed by channel name.",
-    }),
+    channelAccounts: S.Record(S.String, S.Array(S.Unknown))
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawChannelsStatusWireChannelAccountsDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawChannelsStatusWireChannelAccountsDefault))
+      )
+      .annotateKey({
+        description: "Per-channel arrays of account entries keyed by channel name.",
+      }),
   },
   $I.annote("OpenclawChannelsStatusWire", {
     description: "Tolerant wire projection of the channels status document.",
@@ -176,10 +203,10 @@ class OpenclawChannelsStatusWire extends S.Class<OpenclawChannelsStatusWire>($I`
  */
 class OpenclawAgentIdentityWire extends S.Class<OpenclawAgentIdentityWire>($I`OpenclawAgentIdentityWire`)(
   {
-    model: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    model: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Model that served the turn, when reported.",
     }),
-    provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    provider: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider that served the turn, when reported.",
     }),
   },
@@ -196,13 +223,15 @@ class OpenclawAgentIdentityWire extends S.Class<OpenclawAgentIdentityWire>($I`Op
  */
 class OpenclawAgentMetaWire extends S.Class<OpenclawAgentMetaWire>($I`OpenclawAgentMetaWire`)(
   {
-    aborted: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    aborted: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Whether the run aborted before completing.",
     }),
-    agentMeta: S.OptionFromOptionalKey(OpenclawAgentIdentityWire).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Provider/model identity of the serving agent, when reported.",
-    }),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    agentMeta: S.OptionFromOptionalKey(OpenclawAgentIdentityWire)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Provider/model identity of the serving agent, when reported.",
+      }),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Stop reason reported for the run, when present.",
     }),
   },
@@ -219,7 +248,7 @@ class OpenclawAgentMetaWire extends S.Class<OpenclawAgentMetaWire>($I`OpenclawAg
  */
 class OpenclawAgentPayloadWire extends S.Class<OpenclawAgentPayloadWire>($I`OpenclawAgentPayloadWire`)(
   {
-    text: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    text: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Response payload text, when present.",
     }),
   },
@@ -228,6 +257,7 @@ class OpenclawAgentPayloadWire extends S.Class<OpenclawAgentPayloadWire>($I`Open
   })
 ) {}
 
+const openclawAgentResultWirePayloadsDefault = A.empty();
 /**
  * Tolerant wire projection of the agent turn result section.
  *
@@ -236,12 +266,19 @@ class OpenclawAgentPayloadWire extends S.Class<OpenclawAgentPayloadWire>($I`Open
  */
 class OpenclawAgentResultWire extends S.Class<OpenclawAgentResultWire>($I`OpenclawAgentResultWire`)(
   {
-    meta: S.OptionFromOptionalKey(OpenclawAgentMetaWire).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Run metadata of the turn result, when present.",
-    }),
-    payloads: S.Array(OpenclawAgentPayloadWire).pipe(SchemaUtils.withKeyDefaults([])).annotateKey({
-      description: "Response payloads emitted by the turn.",
-    }),
+    meta: S.OptionFromOptionalKey(OpenclawAgentMetaWire)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Run metadata of the turn result, when present.",
+      }),
+    payloads: S.Array(OpenclawAgentPayloadWire)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(openclawAgentResultWirePayloadsDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(openclawAgentResultWirePayloadsDefault))
+      )
+      .annotateKey({
+        description: "Response payloads emitted by the turn.",
+      }),
   },
   $I.annote("OpenclawAgentResultWire", {
     description: "Tolerant wire projection of the agent turn `result` section.",
@@ -256,10 +293,12 @@ class OpenclawAgentResultWire extends S.Class<OpenclawAgentResultWire>($I`Opencl
  */
 class OpenclawAgentTurnWire extends S.Class<OpenclawAgentTurnWire>($I`OpenclawAgentTurnWire`)(
   {
-    result: S.OptionFromOptionalKey(OpenclawAgentResultWire).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Turn result section, when present.",
-    }),
-    runId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    result: S.OptionFromOptionalKey(OpenclawAgentResultWire)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Turn result section, when present.",
+      }),
+    runId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Gateway run identifier, when reported.",
     }),
     status: S.NonEmptyString.annotateKey({
@@ -340,7 +379,7 @@ const projectGatewayHealth = (wire: OpenclawGatewayHealthWire): OpenclawGatewayH
   OpenclawGatewayHealth.make({
     channels: wire.channels,
     ok: wire.ok,
-    pluginErrorCount: NonNegativeInt.make(
+    pluginErrorCount: S.Natural.make(
       pipe(
         wire.plugins,
         O.map((plugins) => A.length(plugins.errors)),

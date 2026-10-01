@@ -7,8 +7,8 @@
 
 "use client";
 import { $OipWebId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { Effect } from "effect";
 import * as P from "effect/Predicate";
 import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
@@ -55,8 +55,14 @@ class HeroClipMedia extends S.Class<HeroClipMedia>($I`HeroClipMedia`)(
 
 class HeroVideoState extends S.Class<HeroVideoState>($I`HeroVideoState`)(
   {
-    element: S.NullOr(DOMHtmlVideoElement).pipe(SchemaUtils.withKeyDefaults(null)),
-    playing: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    element: S.NullOr(DOMHtmlVideoElement).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(null))
+    ),
+    playing: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
   },
   $I.annote("HeroVideoState", {
     description: "The state of a single rotating hero background clip.",

@@ -7,7 +7,6 @@
 
 import { ANTHROPIC_DEFAULT_APPROXIMATE_PRICE } from "@beep/anthropic";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as N from "effect/Number";
@@ -91,15 +90,15 @@ class ApproximateModelPrice extends S.Class<ApproximateModelPrice>($I`Approximat
  * **Example** (Compute cost for fixture usage)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { approximateCostUsdMicros } from "@/chat/UsagePricing"
  * import { ProviderUsageMetadata } from "@beep/agents-use-cases/public"
- * import { NonNegativeInt } from "@beep/schema/Number";
  * import * as O from "effect/Option"
  *
  * const cost = approximateCostUsdMicros(ProviderUsageMetadata.make({
- *   inputTokens: NonNegativeInt.make(1),
+ *   inputTokens: S.Natural.make(1),
  *   model: "fixture",
- *   outputTokens: NonNegativeInt.make(1),
+ *   outputTokens: S.Natural.make(1),
  *   provider: "fixture",
  *   stopReason: O.none()
  * }))
@@ -109,9 +108,9 @@ class ApproximateModelPrice extends S.Class<ApproximateModelPrice>($I`Approximat
  * @category combinators
  * @since 0.0.0
  */
-export const approximateCostUsdMicros = (usage: ProviderUsageMetadata): O.Option<NonNegativeInt> =>
+export const approximateCostUsdMicros = (usage: ProviderUsageMetadata): O.Option<number> =>
   O.map(ApproximateModelPrice.forUsage(usage), (price) =>
-    NonNegativeInt.make(
+    S.Natural.make(
       N.round(
         N.sum(
           N.multiply(usage.inputTokens, price.inputPerMillionTokensUsd),

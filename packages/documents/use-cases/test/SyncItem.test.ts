@@ -9,7 +9,6 @@ import {
   SyncItemRepositoryNotFound,
   SyncItemSeed,
 } from "@beep/documents-use-cases/entities/SyncItem/server";
-import { NonNegativeInt } from "@beep/schema";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
@@ -34,7 +33,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, 
 
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const localRelPath = VaultRelPath.make("matters/client-default/complaint.pdf");
-const localGeneration = NonNegativeInt.make(1);
+const localGeneration = S.Natural.make(1);
 const remoteId9001 = RemoteItemId.make("9001");
 const decodeSyncItemEffect = S.decodeUnknownEffect(DomainSyncItem.SyncItem);
 const decodeSyncItemRow = (input: unknown) => decodeSyncItemEffect(input).pipe(Effect.orDie);

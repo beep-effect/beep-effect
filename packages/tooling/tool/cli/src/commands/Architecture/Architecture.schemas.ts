@@ -9,6 +9,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as AST from "effect/SchemaAST";
@@ -838,6 +839,8 @@ export class CanonicalSliceOperationPlan extends S.Class<CanonicalSliceOperation
   }
 }
 
+const operationPlanCheckResultOperationStatusesDefault = A.empty<ArchitectureOperationCheck>();
+const operationPlanCheckResultDifferingPathsDefault = A.empty<string>();
 /**
  * Result of validating a canonical operation plan against a checkout.
  *
@@ -863,10 +866,14 @@ export class OperationPlanCheckResult extends S.Class<OperationPlanCheckResult>(
   {
     idempotent: S.Boolean,
     operationStatuses: S.Array(ArchitectureOperationCheck).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ArchitectureOperationCheck>()
+      S.withConstructorDefault(Effect.succeed(operationPlanCheckResultOperationStatusesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(operationPlanCheckResultOperationStatusesDefault))
     ),
     missingPaths: S.Array(S.String),
-    differingPaths: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    differingPaths: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(operationPlanCheckResultDifferingPathsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(operationPlanCheckResultDifferingPathsDefault))
+    ),
     unexpectedPaths: S.Array(S.String),
   },
   $I.annote("OperationPlanCheckResult", {

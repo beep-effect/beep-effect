@@ -4,7 +4,13 @@ This repo uses both upstream `effect/Schema` and local helpers from
 `@beep/schema`.
 
 Reach for existing local building blocks before inventing new schemas or custom
-filters.
+filters. Upstream comes first: check upstream `effect/Schema` before a
+`@beep/schema` concept, and do not add a local concept upstream already covers.
+Where upstream covers a `foundation/modeling` concept's intent, its covered
+facets retire in the same PR that migrates their consumers, with no alias; the
+whole concept retires unless the lines reading its uncovered members outnumber
+the lines using its covered facets (ADAPT, per the facet census in
+`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 
 ## Import Baseline
 
@@ -29,22 +35,20 @@ annotation metadata.
 
 ## Prefer `LiteralKit` for Internal Literal Domains
 
-Use `LiteralKit` when the literal set needs more than just a one-off union.
-Do not add `as const` to inline array literals passed directly to
-`LiteralKit(...)`; its const type parameters preserve the literal tuple.
+Use `LiteralKit` for a named literal domain. An anonymous inline union never
+referenced by name uses `S.Literals`. Do not add `as const` to inline array
+literals passed directly to `LiteralKit(...)`; its const type parameters
+preserve the literal tuple.
 
 What it gives you:
 
 - schema value
-- `.Options`
 - `.Enum`
 - `.is`
-- `.thunk`
-- `.pickOptions(...)`
-- `.omitOptions(...)`
 - `$match`
-- `.mapMembers(...)` for tagged-union assembly
 - `.toTaggedUnion(...)` for direct literal-to-member tagged unions
+- the inherited `S.Literals` members: `.literals`, `.pick(...)`, and
+  `.mapMembers(...)` for tagged-union assembly
 
 Good fits:
 
@@ -85,9 +89,6 @@ Check `packages/common/schema/src/` before writing a custom primitive.
 
 Examples worth reusing:
 
-- `TrimmedNonEmptyText`
-- `CommaSeparatedList`
-- `NormalizedBooleanString`
 - `FilePath`
 - `PosixPath`
 - `Email`
@@ -96,6 +97,16 @@ Examples worth reusing:
 
 If the domain already exists there, reuse it or extend it instead of cloning the
 logic locally.
+
+Common text shapes come from upstream compositions, not `@beep/schema`:
+
+- trimmed non-empty text:
+  `S.String.pipe(S.decodeTo(S.NonEmptyString, SchemaTransformation.trim()))`, or
+  `S.Trim.check(S.isNonEmpty())` when the decoded side must also be trimmed
+- delimited lists: `SchemaGetter.split({ separator: "," })` inside `S.decodeTo`
+  (an empty string decodes to `[]`)
+- configuration flags: `Config.Boolean("FLAG")` from `effect/Config`
+- log levels: `S.Literals(LogLevel.values)` from `effect/LogLevel`
 
 ## Prefer Shared Transform Helpers Before Manual Wrappers
 
@@ -153,7 +164,8 @@ Use `@beep/schema` when:
 
 - Do not rebuild boolean, path, or email normalization from scratch if
   `@beep/schema` already provides it.
-- Do not use `S.Literals(...)` where `LiteralKit(...)` is expected for reuse.
+- Do not use `S.Literals(...)` for a literal domain referenced by name; keep
+  it for anonymous inline unions.
 - Do not define schema helpers without annotation metadata when they are shared
   across files or modules.
 - Do not create plain TS types beside a reusable schema primitive unless the

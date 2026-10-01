@@ -40,8 +40,9 @@ const $I = $ScratchpadId.create("effect-ontology/Service/LinkIngestionService");
 
 const normalizeQueryError = normalizeDrizzleError("execute");
 
+const IngestedLinkSelectRows = IngestedLinks.select.pipe(S.Array, S.mutable);
 const decodeIngestedLinkRows = (rows: unknown) =>
-  S.decodeUnknownEffect(IngestedLinks.select.pipe(S.Array, S.mutable))(rows).pipe(
+  S.decodeUnknownEffect(IngestedLinkSelectRows)(rows).pipe(
     Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
   );
 

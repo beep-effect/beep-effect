@@ -7,7 +7,7 @@
 
 import { FileProcessingEngineFamily } from "@beep/file-processing/Strategy";
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Files/internal/Process.schemas");
@@ -92,11 +92,11 @@ export class ProcessFilesOptions extends S.Class<ProcessFilesOptions>($I`Process
  */
 export class ProcessFilesSummary extends S.Class<ProcessFilesSummary>($I`ProcessFilesSummary`)(
   {
-    failedCount: NonNegativeInt,
-    skippedCount: NonNegativeInt,
-    sourceCount: NonNegativeInt,
-    succeededCount: NonNegativeInt,
-    textArtifactCount: NonNegativeInt,
+    failedCount: S.Natural,
+    skippedCount: S.Natural,
+    sourceCount: S.Natural,
+    succeededCount: S.Natural,
+    textArtifactCount: S.Natural,
   },
   $I.annote("ProcessFilesSummary", {
     description: "Summary counts returned by files process.",

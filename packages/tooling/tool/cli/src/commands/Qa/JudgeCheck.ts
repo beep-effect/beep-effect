@@ -229,7 +229,6 @@ const citedArtifactVerdictToCrossCheckImpl = (
  *   CitedArtifactExistsVerdict
  * } from "@beep/repo-cli/commands/Qa/CitedArtifactExistsGate"
  * import { citedArtifactVerdictToCrossCheck } from "@beep/repo-cli/commands/Qa/JudgeCheck"
- * import { ISOStr } from "@beep/schema/Timestamp"
  *
  * const verdict = CitedArtifactExistsVerdict.cases.denied.make({
  *   audit: {
@@ -239,7 +238,7 @@ const citedArtifactVerdictToCrossCheckImpl = (
  *     }),
  *     evaluator: "qa",
  *     gateId: CitedArtifactExistsGate.id,
- *     occurredAt: ISOStr.make("2026-08-24T00:00:00.000Z"),
+ *     occurredAt: "2026-08-24T00:00:00.000Z",
  *     outcome: "denied",
  *     reason: "The citation is missing."
  *   }

@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Duration, Effect, FileSystem, MutableHashMap, Order, Path, pipe, Random, Schedule } from "effect";
@@ -203,9 +203,11 @@ export class AiMetricsSourceInstance extends S.Class<AiMetricsSourceInstance>($I
 export class AiMetricsIdentityRegistry extends S.Class<AiMetricsIdentityRegistry>($I`AiMetricsIdentityRegistry`)(
   {
     generatedAtEpochMillis: S.Finite,
-    hashSaltNamespaceId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    hashSaltNamespaceId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     hashSaltStatus: AiMetricsHashSaltStatus,
-    registryVersion: S.Literal(identityRegistryVersion).pipe(SchemaUtils.withConstantDefault(identityRegistryVersion)),
+    registryVersion: S.Literal(identityRegistryVersion).pipe(
+      S.withConstructorDefault(Effect.succeed(identityRegistryVersion))
+    ),
     roots: S.Array(AiMetricsCanonicalRoot),
     sourceInstances: S.Array(AiMetricsSourceInstance),
   },
@@ -246,6 +248,7 @@ export class AiMetricsCanonicalRootInput extends S.Class<AiMetricsCanonicalRootI
   })
 ) {}
 
+const aiMetricsIdentityRegistryUpsertInputSourceKindsDefault = A.empty<AiMetricsTranscriptSource>();
 /**
  * Input for merging one root and its source instances into the persisted registry.
  *
@@ -276,7 +279,8 @@ export class AiMetricsIdentityRegistryUpsertInput extends S.Class<AiMetricsIdent
     homeDir: S.String,
     rootPath: S.String,
     sourceKinds: S.Array(AiMetricsTranscriptSource).pipe(
-      SchemaUtils.withEmptyArrayDefaults<AiMetricsTranscriptSource>()
+      S.withConstructorDefault(Effect.succeed(aiMetricsIdentityRegistryUpsertInputSourceKindsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(aiMetricsIdentityRegistryUpsertInputSourceKindsDefault))
     ),
   },
   $I.annote("AiMetricsIdentityRegistryUpsertInput", {

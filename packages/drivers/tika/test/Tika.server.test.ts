@@ -1,4 +1,4 @@
-import { PosInt, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import {
@@ -23,6 +23,8 @@ import * as TestClock from "effect/testing/TestClock";
 import { fixtureText, makeExtractOperationFixture, tikaRmetaResponse, tikaVersionResponse } from "./fixtures.ts";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 import type { TikaFixtureFormat } from "./fixtures.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeTikaServerEngineConfigResult = S.decodeResult(TikaServerEngineConfig);
 

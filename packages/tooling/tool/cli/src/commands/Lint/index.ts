@@ -12,12 +12,61 @@
  */
 export * from "./EcosystemPolarity.ts";
 /**
+ * Schema inventory fixture models and codecs.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./EffectSchemaInventory.schemas.ts";
+/**
+ * Pinned Effect schema inventory command and fixture utilities.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./EffectSchemaInventory.ts";
+/**
  * Effect Vitest canon detector utilities.
  *
  * @category cli-commands
  * @since 0.0.0
  */
 export * from "./EffectVitest.ts";
+/**
+ * Schema-parity codemod data model and rule contract.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./internal/SchemaParityCodemod.schemas.ts";
+/**
+ * Schema-parity codemod text-edit rendering.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./internal/SchemaParityCodemodEdits.ts";
+/**
+ * Schema-parity codemod engine, rule registry, service and layer.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./internal/SchemaParityCodemodEngine.ts";
+/**
+ * Schema-parity codemod import inspection.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./internal/SchemaParityCodemodImports.ts";
+/**
+ * The `literal-kit-facets` codemod rule.
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export * from "./internal/SchemaParityCodemodLiteralKitRule.ts";
 /**
  * Judge-rubric lens drift lint utilities.
  *
@@ -75,10 +124,16 @@ export {
   makeEffectVitestFindingKey,
   makeSchemaFirstEntryKey,
   SchemaCrispeningPolicyPath,
+  SchemaFirstBacklogRow,
   SchemaFirstInventoryDocument,
   SchemaFirstInventoryPath,
   SchemaFirstLintOptions,
   SchemaFirstLintSummary,
+  SchemaFirstOccurrenceAnchor,
+  SchemaFirstParityFindings,
+  SchemaFirstParityRuleId,
+  SchemaFirstParityRuleSummary,
+  schemaFirstBacklogRowKeys,
   schemaFirstEntryOrder,
   sortSchemaFirstEntries,
 } from "./Lint.schemas.ts";
@@ -124,6 +179,7 @@ export {
  * @since 0.0.0
  */
 export {
+  diffSchemaFirstParity,
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
   isSchemaCrispeningPolicyExempt,
@@ -140,8 +196,17 @@ export {
   SchemaFirstInventoryEntry,
   SchemaFirstSourceFileGlobs,
   schemaCrispeningFamilyForFile,
+  schemaFirstParityEntriesFromSourceFile,
   sourceTextHasSchemaArbitraryPropertyCoverage,
+  toSchemaFirstBacklog,
 } from "./SchemaFirst.ts";
+/**
+ * Schema-parity codemod command.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./SchemaParityCodemod.ts";
 /**
  * Schema topology lint utilities.
  *

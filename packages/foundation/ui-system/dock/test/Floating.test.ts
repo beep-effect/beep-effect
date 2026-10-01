@@ -34,7 +34,6 @@ import {
   UpdateGroupCommand,
 } from "@beep/dock";
 import { fcRuns } from "@beep/fc-runs";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
@@ -133,7 +132,7 @@ describe("floating dock topology", () => {
               "reorder",
               MovePanelCommand.make({
                 panelId: panelOne.id,
-                target: TabPlacement.make({ groupId: groupOne, index: O.some(NonNegativeInt.make(1)) }),
+                target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(1)) }),
               })
             )
           )

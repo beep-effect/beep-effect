@@ -11,7 +11,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -66,13 +65,13 @@ export class ArticleMetadata extends S.Class<ArticleMetadata>($I`ArticleMetadata
  * **Example** (Record inserted claims)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { PersistenceResult } from "@effect-ontology/Service/ClaimPersistence"
  *
  * const result = PersistenceResult.make({
  *   articleId: "article-ada",
- *   claimsInserted: NonNegativeInt.make(3),
- *   claimsTotal: NonNegativeInt.make(3)
+ *   claimsInserted: S.Natural.make(3),
+ *   claimsTotal: S.Natural.make(3)
  * })
  * console.log(result.claimsInserted) // 3
  * ```
@@ -83,8 +82,8 @@ export class ArticleMetadata extends S.Class<ArticleMetadata>($I`ArticleMetadata
 export class PersistenceResult extends S.Class<PersistenceResult>($I`PersistenceResult`)(
   {
     articleId: S.NonEmptyString,
-    claimsInserted: NonNegativeInt,
-    claimsTotal: NonNegativeInt,
+    claimsInserted: S.Natural,
+    claimsTotal: S.Natural,
   },
   $I.annote("PersistenceResult", {
     description: "Article identifier and non-negative claim persistence counts.",

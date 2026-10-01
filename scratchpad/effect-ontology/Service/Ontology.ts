@@ -31,7 +31,6 @@ import {
   SKOS_SCOPE_NOTE as SKOS_SCOPENOTE,
 } from "@beep/rdf/Vocab/Skos";
 import { FilePath } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { Chunk, Clock, Context, Crypto, Duration, Effect, HashMap, HashSet, Inspectable, Layer, MutableHashMap, MutableHashSet, Ref } from "effect";
 import * as Hex from "effect/encoding/Hex";
 import * as A from "effect/Array";
@@ -60,6 +59,7 @@ const decodeUnknownClassDefinition = S.decodeUnknownEffect(ClassDefinition);
 const decodeUnknownOntologyContext = S.decodeUnknownEffect(OntologyContext);
 const decodeUnknownPropertyDefinition = S.decodeUnknownEffect(PropertyDefinition);
 import { StorageService } from "./Storage.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Ontology");
 const RDFS_DOMAIN = makeNamedNode(`${RDFS_NAMESPACE}domain`);

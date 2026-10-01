@@ -6,9 +6,10 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import { Number as Num, Order } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Effect, Number as Num, Order } from "effect";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 
 const $I = $RepoAiMetricsId.create("circuit-breaker");
 
@@ -196,7 +197,7 @@ class CircuitBreakerTripped extends S.Class<CircuitBreakerTripped>($I`CircuitBre
   {
     status: S.tag("tripped"),
     exitCode: PosInt,
-    retryAfterEpochMs: NonNegativeInt,
+    retryAfterEpochMs: S.Natural,
   },
   $I.annote("CircuitBreakerTripped", {
     description: "A failed external probe atomically opened the machine-wide breaker.",
@@ -206,7 +207,7 @@ class CircuitBreakerTripped extends S.Class<CircuitBreakerTripped>($I`CircuitBre
 class CircuitBreakerRetrySkipped extends S.Class<CircuitBreakerRetrySkipped>($I`CircuitBreakerRetrySkipped`)(
   {
     status: S.tag("retry-skipped"),
-    retryAfterEpochMs: NonNegativeInt,
+    retryAfterEpochMs: S.Natural,
   },
   $I.annote("CircuitBreakerRetrySkipped", {
     description: "An identical retry was skipped while the machine-wide breaker remained open.",
@@ -306,7 +307,7 @@ export class CircuitBreakerEventV1 extends S.Class<CircuitBreakerEventV1>($I`Cir
     probe: CircuitBreakerProbe,
     caller: CircuitBreakerCaller,
     breakerRev: S.NonEmptyString,
-    evidenceTier: S.Literal("derived").pipe(SchemaUtils.withConstantDefault("derived")),
+    evidenceTier: S.Literal("derived").pipe(S.withConstructorDefault(Effect.succeed("derived"))),
     outcome: CircuitBreakerOutcome,
   },
   $I.annote("CircuitBreakerEventV1", {
@@ -353,8 +354,8 @@ export class CircuitBreakerOpenStateV1 extends S.Class<CircuitBreakerOpenStateV1
     schemaVersion: CircuitBreakerOpenStateSchemaVersion,
     probe: CircuitBreakerProbe,
     breakerRev: S.NonEmptyString,
-    trippedEpochMs: NonNegativeInt,
-    retryAfterEpochMs: NonNegativeInt,
+    trippedEpochMs: S.Natural,
+    retryAfterEpochMs: S.Natural,
     exitCode: PosInt,
   }).check(
     S.makeFilter((input) => isGreaterThanOrEqualToNumber(input.retryAfterEpochMs, input.trippedEpochMs), {

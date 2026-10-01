@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Effect, MutableHashMap, MutableHashSet, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -304,7 +303,7 @@ export class CoverageScopeOwner extends S.Class<CoverageScopeOwner>($I`CoverageS
     hasCoverage: S.Boolean,
     packageName: S.String,
     packagePath: S.String,
-    workspaceDependencies: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
+    workspaceDependencies: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([]))),
   },
   $I.annote("CoverageScopeOwner", {
     description:
@@ -407,7 +406,7 @@ class CoverageSelectedScope extends S.TaggedClass<CoverageSelectedScope>($I`Cove
   "selected",
   {
     packageNames: S.Array(S.String),
-    dependentPackageNames: S.Array(S.String).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<string>>([])),
+    dependentPackageNames: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([]))),
   },
   $I.annote("CoverageSelectedScope", {
     description:
@@ -974,9 +973,12 @@ export type CoverageSelfJudgeExclusion = typeof CoverageSelfJudgeExclusion.Type;
 export class CoverageSelfJudgeScope extends S.Class<CoverageSelfJudgeScope>($I`CoverageSelfJudgeScope`)(
   {
     packageExclusions: S.Record(S.String, CoverageSelfJudgeExclusion).pipe(
-      SchemaUtils.withConstantDefault<Record<string, CoverageSelfJudgeExclusion>>({})
+      S.withConstructorDefault(Effect.succeed<Record<string, CoverageSelfJudgeExclusion>>({}))
     ),
-    globalExclusion: CoverageSelfJudgeExclusion.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    globalExclusion: CoverageSelfJudgeExclusion.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("CoverageSelfJudgeScope", {
     description: "Packages whose coverage rows a change set could have moved, keyed by the witness that says so.",

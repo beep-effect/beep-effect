@@ -18,7 +18,6 @@ import {
   VersionsResponse,
 } from "@beep/ecfr";
 import { $EcfrId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
@@ -170,14 +169,11 @@ describe("@beep/ecfr", () => {
       apiUrl: ECFR_API_URL,
     });
     expect(encode(EcfrErrorOptions, EcfrErrorOptions.make({}))).toEqual({});
-    expect(encode(EcfrErrorOptions, EcfrErrorOptions.make({ status: O.some(NonNegativeInt.make(503)) }))).toEqual({
+    expect(encode(EcfrErrorOptions, EcfrErrorOptions.make({ status: O.some(S.Natural.make(503)) }))).toEqual({
       status: 503,
     });
     expect(
-      encode(
-        EcfrError,
-        EcfrError.of("response status", EcfrErrorOptions.make({ status: O.some(NonNegativeInt.make(503)) }))
-      )
+      encode(EcfrError, EcfrError.of("response status", EcfrErrorOptions.make({ status: O.some(S.Natural.make(503)) })))
     ).toEqual({
       _tag: "EcfrError",
       reason: "response status",
@@ -276,9 +272,9 @@ describe("@beep/ecfr", () => {
         const search = EcfrSearchParams.make({
           agencySlugs: O.some(["example-agency", "second-agency"]),
           order: O.some("relevance"),
-          page: O.some(NonNegativeInt.make(3)),
+          page: O.some(S.Natural.make(3)),
           paginateBy: O.some("results"),
-          perPage: O.some(NonNegativeInt.make(25)),
+          perPage: O.some(S.Natural.make(25)),
           query: O.some("clean water"),
         });
         yield* ecfr.searchResults(search);
@@ -328,7 +324,7 @@ describe("@beep/ecfr", () => {
         yield* ecfr.listVersions(
           EcfrVersionsParams.make({
             issueDateGte: O.some("2026-01-01"),
-            page: O.some(NonNegativeInt.make(2)),
+            page: O.some(S.Natural.make(2)),
             part: O.some("1"),
             title: "1",
           })
@@ -359,7 +355,7 @@ describe("@beep/ecfr", () => {
         const ecfr = yield* Ecfr;
 
         const results = yield* ecfr
-          .searchResultsAll(EcfrSearchParams.make({ query: O.some("water"), perPage: O.some(NonNegativeInt.make(1)) }))
+          .searchResultsAll(EcfrSearchParams.make({ query: O.some("water"), perPage: O.some(S.Natural.make(1)) }))
           .pipe(Stream.runCollect);
         const captures = yield* testHttp.captures;
 

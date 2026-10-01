@@ -13,7 +13,6 @@ import { DegradedEmbedding, EmbeddingBatch, EmbeddingVector } from "@/schema/Pro
 import { ProviderCacheEntry, ProviderCacheKey } from "@/schema/ProviderCache";
 import { ActiveEmbeddingIdentity, Embedder } from "@/services/Embedder";
 import { ProviderCache } from "@/services/ProviderCache";
-import type { PosInt } from "@beep/schema";
 import type { EmbeddingInput } from "@/schema/Projection";
 
 const decodeEmbeddingVectorType = S.decodeEffect(S.toType(EmbeddingVector));
@@ -326,7 +325,7 @@ export const ActiveEmbeddingIdentityLive = (identity: ModelIdentity) =>
  * @since 0.0.0
  */
 export const OpenAiEmbeddingIdentity = (options: {
-  readonly dimension: PosInt;
+  readonly dimension: number;
   readonly model: string;
   readonly revision: string;
 }): ModelIdentity =>

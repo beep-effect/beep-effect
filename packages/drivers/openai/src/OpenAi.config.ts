@@ -7,8 +7,9 @@
  */
 
 import { $OpenaiId } from "@beep/identity/packages";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import type { OpenAiEmbeddingModel, OpenAiLanguageModel } from "@effect/ai-openai";
 
 const $I = $OpenaiId.create("OpenAi.config");
@@ -137,7 +138,10 @@ export const OPENAI_DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small" satisfies
  */
 export class OpenAiLanguageModelOptions extends S.Class<OpenAiLanguageModelOptions>($I`OpenAiLanguageModelOptions`)(
   {
-    model: SchemaUtils.withKeyDefaults(S.NonEmptyString, OPENAI_DEFAULT_MODEL).annotateKey({
+    model: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(OPENAI_DEFAULT_MODEL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(OPENAI_DEFAULT_MODEL))
+    ).annotateKey({
       description: "OpenAI Responses API model identifier used by the language-model Layer.",
     }),
   },
@@ -157,9 +161,11 @@ export class OpenAiLanguageModelOptions extends S.Class<OpenAiLanguageModelOptio
  * **Example** (Create embedding-model options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { strictEqual } from "node:assert"
  * import { OpenAiEmbeddingModelOptions } from "@beep/openai"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = OpenAiEmbeddingModelOptions.make({ dimensions: PosInt.make(1536) })
  *
@@ -175,7 +181,10 @@ export class OpenAiEmbeddingModelOptions extends S.Class<OpenAiEmbeddingModelOpt
     dimensions: PosInt.annotateKey({
       description: "Positive embedding vector size provided as `EmbeddingModel.Dimensions`.",
     }),
-    model: SchemaUtils.withKeyDefaults(S.NonEmptyString, OPENAI_DEFAULT_EMBEDDING_MODEL).annotateKey({
+    model: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(OPENAI_DEFAULT_EMBEDDING_MODEL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(OPENAI_DEFAULT_EMBEDDING_MODEL))
+    ).annotateKey({
       description: "OpenAI embeddings API model identifier used by the embedding-model Layer.",
     }),
   },

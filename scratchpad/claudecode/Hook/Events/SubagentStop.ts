@@ -8,7 +8,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -16,12 +15,15 @@ import { envelopeFields } from "../Envelope.ts";
 import * as Matcher from "../Matcher.ts";
 import type { HookDefinition } from "../Runner.ts";
 import { BackgroundTask, SessionCron } from "./Stop.ts";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("claudecode/Hook/Events/SubagentStop");
 // ---------------------------------------------------------------------------
 // Input
 // ---------------------------------------------------------------------------
 
+const inputBackgroundTasksDefault = A.empty<BackgroundTask>();
+const inputSessionCronsDefault = A.empty<SessionCron>();
 /**
  * Stdin payload for a SubagentStop hook, including the subagent's
  * transcript path and last assistant message.
@@ -60,8 +62,8 @@ export class Input extends S.Class<Input>($I`SubagentStopInput`)(
     agent_type: S.String,
     agent_transcript_path: S.String,
     last_assistant_message: S.String,
-    background_tasks: BackgroundTask.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<BackgroundTask>()),
-    session_crons: SessionCron.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<SessionCron>()),
+    background_tasks: BackgroundTask.pipe(S.Array, S.withConstructorDefault(Effect.succeed(inputBackgroundTasksDefault)), S.withDecodingDefaultType(Effect.succeed(inputBackgroundTasksDefault))),
+    session_crons: SessionCron.pipe(S.Array, S.withConstructorDefault(Effect.succeed(inputSessionCronsDefault)), S.withDecodingDefaultType(Effect.succeed(inputSessionCronsDefault))),
   },
   $I.annote("SubagentStopInput", {
     description: "Input for the SubagentStop hook event.",
@@ -97,7 +99,7 @@ export class Input extends S.Class<Input>($I`SubagentStopInput`)(
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SubagentStopHookSpecificOutput`)(
   {
     hookEventName: S.Literal("SubagentStop"),
-    additionalContext: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    additionalContext: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SubagentStopHookSpecificOutput", {
     description: "SubagentStop-specific response returned to Claude Code.",
@@ -125,14 +127,14 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SubagentS
  */
 export class Output extends S.Class<Output>($I`SubagentStopOutput`)(
   {
-    decision: S.OptionFromOptionalKey(S.Literal("block")).pipe(SchemaUtils.withNoneDefault),
-    reason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(SchemaUtils.withNoneDefault),
+    decision: S.OptionFromOptionalKey(S.Literal("block")).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    reason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SubagentStopOutput", {
     description: "Output returned by a SubagentStop hook handler.",

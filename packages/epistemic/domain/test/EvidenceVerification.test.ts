@@ -8,7 +8,6 @@ import {
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
@@ -31,9 +30,9 @@ const textDigest = SourceTextDigest.make("sha256:ed7002b439e9ac845f22357d822bac1
 
 const verifiedAnchor = TextAnchorVerificationReceipt.make({
   anchor: TextAnchor.make({
-    endChar: NonNegativeInt.make(16),
+    endChar: S.Natural.make(16),
     quote: "controlling fact",
-    startChar: NonNegativeInt.make(0),
+    startChar: S.Natural.make(0),
   }),
   source: SourceTextIdentity.make({
     extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),

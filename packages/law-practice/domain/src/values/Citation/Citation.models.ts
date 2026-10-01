@@ -13,9 +13,9 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
 // Tier-C citation subtypes participating in the Citation union.
 import { AnnotationCitation } from "../AnnotationCitation/index.ts";
@@ -56,6 +56,7 @@ import { TreatyCitation } from "../TreatyCitation/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
 
+const parentheticalCitationsDefault = A.empty<Citation.Type>();
 /**
  * Child citations nested within an explanatory {@link Parenthetical} (#851).
  *
@@ -66,7 +67,8 @@ const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
  * same reason (mirrors the `AdditionalPincites` pattern in `PinciteInfo`).
  */
 const ParentheticalCitations = S.Array(S.suspend((): S.Codec<Citation.Type, Citation.Encoded> => Citation)).pipe(
-  SchemaUtils.withEmptyArrayDefaults<Citation.Type>(),
+  S.withConstructorDefault(Effect.succeed(parentheticalCitationsDefault)),
+  S.withDecodingDefaultType(Effect.succeed(parentheticalCitationsDefault)),
   S.annotateKey({
     description:
       "Child citations nested within this explanatory parenthetical (#851); each carries its own CitationId, may be any citation type, and may itself carry parentheticals (recursive).",
@@ -111,7 +113,7 @@ export class Parenthetical extends S.Class<Parenthetical>($I`Parenthetical`)(
     }),
     span: Span.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Position of full parenthetical block including delimiters.",
       })
@@ -189,6 +191,9 @@ export declare namespace Parenthetical {
   }
 }
 
+const fullCaseCitationParentheticalsDefault = A.empty<Parenthetical>();
+const fullCaseCitationSubsequentHistoryEntriesDefault = A.empty<SubsequentHistoryEntry>();
+const fullCaseCitationJusticesDefault = A.empty<string>();
 /**
  * A parsed full case citation (type: `case`).
  *
@@ -205,22 +210,22 @@ export declare namespace Parenthetical {
  * **Example** (Making a full case citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { FullCaseCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = FullCaseCitation.make({
  *   text: "410 U.S. 113",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(12),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(12),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(12),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(12),
  *   }),
  *   confidence: 1,
  *   matchedText: "410 U.S. 113",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
- *   volume: NonNegativeInt.make(410),
+ *   patternsChecked: S.Natural.make(1),
+ *   volume: S.Natural.make(410),
  *   reporter: "U.S.",
  * })
  *
@@ -233,36 +238,36 @@ export declare namespace Parenthetical {
 export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`FullCaseCitation`)(
   {
     type: S.tag("case"),
-    volume: S.Union([NonNegativeInt, S.String]).annotateKey({
+    volume: S.Union([S.Natural, S.String]).annotateKey({
       description: "Reporter volume number (numeric, or a string for non-numeric volumes).",
     }),
     reporter: S.String.annotateKey({
       description: "Reporter abbreviation.",
     }),
-    page: NonNegativeInt.pipe(
+    page: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Page number — optional for blank page placeholder citations (e.g., "___" or "---").',
       })
     ),
-    pincite: NonNegativeInt.pipe(
+    pincite: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Specific page reference within the cited authority.",
       })
     ),
     pinciteInfo: PinciteInfo.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Structured pincite information (page, range, footnote).",
       })
     ),
     court: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Court string as captured from the citation parenthetical.",
       })
@@ -275,28 +280,28 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     normalizedCourt: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Normalized court string: spaces collapsed, trailing period ensured.",
       })
     ),
-    year: NonNegativeInt.pipe(
+    year: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Year of decision as captured from the citation parenthetical.",
       })
     ),
     normalizedReporter: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Normalized reporter abbreviation from reporters-db (e.g., "F.2d" vs "F. 2d").',
       })
     ),
     groupId: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           'Group identifier for parallel citations (same case in multiple reporters), populated by Phase 8 (Parallel Linking). Format: ${volume}-${reporter}-${page} (e.g., "410-U.S.-113"); all citations in the same parallel group share it.',
@@ -304,7 +309,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     parallelGroup: ParallelGroup.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Parallel-citation group (#850): all members (incl. self) by stable id, in document order. Survives consumer filter/sort/map.",
@@ -312,26 +317,28 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     parallelCitations: S.Array(
       S.Struct({
-        volume: S.Union([NonNegativeInt, S.String]),
+        volume: S.Union([S.Natural, S.String]),
         reporter: S.String,
-        page: NonNegativeInt,
+        page: S.Natural,
       })
     ).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Parallel citations for the same case in different reporters.",
       })
     ),
     parentheticals: S.Array(Parenthetical).pipe(
-      SchemaUtils.withEmptyArrayDefaults<Parenthetical>(),
+      S.withConstructorDefault(Effect.succeed(fullCaseCitationParentheticalsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(fullCaseCitationParentheticalsDefault)),
       S.annotateKey({
         description:
           "Explanatory parentheticals following the citation. Only populated when explanatory content is found (not court/year/disposition).",
       })
     ),
     subsequentHistoryEntries: S.Array(SubsequentHistoryEntry).pipe(
-      SchemaUtils.withEmptyArrayDefaults<SubsequentHistoryEntry>(),
+      S.withConstructorDefault(Effect.succeed(fullCaseCitationSubsequentHistoryEntriesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(fullCaseCitationSubsequentHistoryEntriesDefault)),
       S.annotateKey({
         description:
           "Subsequent history entries attached to this citation. Populated on every chain link that received a history clause from the scanner — not just the chain's root (#619). Each entry describes a procedural event (affirmed, reversed, etc.).",
@@ -339,19 +346,19 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     historyChain: HistoryChain.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Ordered subsequent-history chain (root → latest), shared by every member of the chain (#849). Built in the structuring pass; references members by stable id.",
       })
     ),
     subsequentHistoryOf: S.Struct({
-      index: NonNegativeInt,
-      priorId: CitationId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+      index: S.Natural,
+      priorId: CitationId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
       signal: HistorySignal,
     }).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Back-pointer indicating this citation is a subsequent history citation. `index` is the parent's position in the results array returned by extractCitations() — it becomes invalid if the array is filtered or reordered.",
@@ -360,13 +367,13 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     date: S.Struct({
       iso: S.String,
       parsed: S.Struct({
-        year: NonNegativeInt,
-        month: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-        day: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-      }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+        year: S.Natural,
+        month: S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+        day: S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+      }).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     }).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Date information in multiple formats. iso: ISO 8601 (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ); parsed: structured date components.",
@@ -374,15 +381,15 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     possibleInterpretations: S.Array(
       S.Struct({
-        volume: S.Union([NonNegativeInt, S.String]),
+        volume: S.Union([S.Natural, S.String]),
         reporter: S.String,
-        page: NonNegativeInt,
+        page: S.Natural,
         confidence: S.Finite,
         reason: S.String,
       })
     ).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Alternative interpretations for ambiguous citations. Used when reporter abbreviation matches multiple reporters or format is unclear.",
@@ -390,7 +397,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     fullSpan: Span.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Full span covering citation from case name through closing parenthetical, populated by Phase 6 (Full Span extraction).",
@@ -398,14 +405,14 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     caseName: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Extracted case name (party names around "v."), populated by Phase 6 (Full Span extraction).',
       })
     ),
     plaintiff: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           'Plaintiff party name (text before "v." or procedural prefix), populated by Phase 7 (Party Name extraction).',
@@ -413,14 +420,14 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     defendant: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Defendant party name (text after "v."), populated by Phase 7 (Party Name extraction).',
       })
     ),
     plaintiffNormalized: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Normalized plaintiff name for matching (lowercase, stripped of noise), populated by Phase 7 (Party Name extraction).",
@@ -428,7 +435,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     defendantNormalized: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Normalized defendant name for matching (lowercase, stripped of noise), populated by Phase 7 (Party Name extraction).",
@@ -436,15 +443,15 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     proceduralPrefix: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           'Procedural prefix for non-adversarial cases (e.g. "In re" from "In re Smith"), populated by Phase 7 (Party Name extraction).',
       })
     ),
-    nominativeVolume: NonNegativeInt.pipe(
+    nominativeVolume: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Nominative (historical) reporter volume for early SCOTUS citations. Present only when the citation includes a nominative parenthetical, e.g., `67 U.S. (2 Black) 635` → 2.",
@@ -452,7 +459,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     nominativeReporter: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           'Nominative (historical) reporter abbreviation for early SCOTUS citations. Present only when the citation includes a nominative parenthetical, e.g., `67 U.S. (2 Black) 635` → "Black".',
@@ -466,14 +473,15 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     disposition: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           'Disposition or procedural status from parenthetical, populated by Phase 6 (Complex Parentheticals). E.g., "en banc", "per curiam", "dissent", "concurrence", "mixed", "plurality opinion", "mem.".',
       })
     ),
     justices: S.Array(S.String).pipe(
-      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.withConstructorDefault(Effect.succeed(fullCaseCitationJusticesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(fullCaseCitationJusticesDefault)),
       S.annotateKey({
         description:
           'Surname(s) of justice(s) attributed to the parenthetical disposition, populated for justice-attribution parens (#235) like `(Brennan, J., dissenting)` → ["Brennan"].',
@@ -481,7 +489,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     scope: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Scope qualifier from a justice-attribution parenthetical (#235): in_judgment, in_part, or from_denial.",
@@ -489,7 +497,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     adminParenthetical: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           'Administrative parenthetical from a bankruptcy adversary caption (#241). Content is the parenthetical text without the surrounding parens — e.g., "In re Hintze".',
@@ -497,7 +505,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     inferredCourt: CourtInference.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Court level/jurisdiction inferred from reporter series. Always populated independently of the parenthetical `court` field, via a curated static lookup table.",
@@ -505,7 +513,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     spans: CaseComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Precise text positions for each parsed component of this citation.",
       })
@@ -526,22 +534,22 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
    * **Example** (Format a Bluebook citation)
    *
    * ```ts
+   * import * as S from "effect/Schema"
    * import { FullCaseCitation, Span } from "@beep/law-practice-domain"
-   * import { NonNegativeInt } from "@beep/schema"
    *
    * const citation = FullCaseCitation.make({
    *   text: "410 U.S. 113",
    *   span: Span.make({
-   *     cleanStart: NonNegativeInt.make(0),
-   *     cleanEnd: NonNegativeInt.make(12),
-   *     originalStart: NonNegativeInt.make(0),
-   *     originalEnd: NonNegativeInt.make(12),
+   *     cleanStart: S.Natural.make(0),
+   *     cleanEnd: S.Natural.make(12),
+   *     originalStart: S.Natural.make(0),
+   *     originalEnd: S.Natural.make(12),
    *   }),
    *   confidence: 1,
    *   matchedText: "410 U.S. 113",
    *   processTimeMs: 0,
-   *   patternsChecked: NonNegativeInt.make(1),
-   *   volume: NonNegativeInt.make(410),
+   *   patternsChecked: S.Natural.make(1),
+   *   volume: S.Natural.make(410),
    *   reporter: "U.S.",
    * })
    *
@@ -628,9 +636,9 @@ export declare namespace FullCaseCitation {
     readonly date: O.Option<{
       readonly iso: string;
       readonly parsed: O.Option<{
-        readonly year: NonNegativeInt;
-        readonly month: O.Option<NonNegativeInt>;
-        readonly day: O.Option<NonNegativeInt>;
+        readonly year: number;
+        readonly month: O.Option<number>;
+        readonly day: O.Option<number>;
       }>;
     }>;
     readonly defendant: O.Option<string>;
@@ -643,28 +651,28 @@ export declare namespace FullCaseCitation {
     readonly inferredCourt: O.Option<CourtInference>;
     readonly justices: ReadonlyArray<string>;
     readonly nominativeReporter: O.Option<string>;
-    readonly nominativeVolume: O.Option<NonNegativeInt>;
+    readonly nominativeVolume: O.Option<number>;
     readonly normalizedCourt: O.Option<string>;
     readonly normalizedReporter: O.Option<string>;
-    readonly page: O.Option<NonNegativeInt>;
+    readonly page: O.Option<number>;
     readonly parallelCitations: O.Option<
       ReadonlyArray<{
-        readonly volume: NonNegativeInt | string;
+        readonly volume: number | string;
         readonly reporter: string;
-        readonly page: NonNegativeInt;
+        readonly page: number;
       }>
     >;
     readonly parallelGroup: O.Option<ParallelGroup>;
     readonly parentheticals: ReadonlyArray<Parenthetical.Type>;
-    readonly pincite: O.Option<NonNegativeInt>;
+    readonly pincite: O.Option<number>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
     readonly plaintiff: O.Option<string>;
     readonly plaintiffNormalized: O.Option<string>;
     readonly possibleInterpretations: O.Option<
       ReadonlyArray<{
-        readonly volume: NonNegativeInt | string;
+        readonly volume: number | string;
         readonly reporter: string;
-        readonly page: NonNegativeInt;
+        readonly page: number;
         readonly confidence: number;
         readonly reason: string;
       }>
@@ -675,14 +683,14 @@ export declare namespace FullCaseCitation {
     readonly spans: O.Option<CaseComponentSpan>;
     readonly subsequentHistoryEntries: ReadonlyArray<SubsequentHistoryEntry>;
     readonly subsequentHistoryOf: O.Option<{
-      readonly index: NonNegativeInt;
+      readonly index: number;
       readonly priorId: O.Option<CitationId>;
       readonly signal: HistorySignal;
     }>;
     readonly type: "case";
     readonly unpublished: boolean;
-    readonly volume: NonNegativeInt | string;
-    readonly year: O.Option<NonNegativeInt>;
+    readonly volume: number | string;
+    readonly year: O.Option<number>;
   }
 
   /**
@@ -766,21 +774,21 @@ export declare namespace FullCaseCitation {
  * **Example** (Making an Id citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { IdCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = IdCitation.make({
  *   text: "Id. at 460",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "Id. at 460",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  * })
  *
  * console.log(citation.type) // "id"
@@ -792,16 +800,16 @@ export declare namespace FullCaseCitation {
 export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
   {
     type: S.tag("id"),
-    pincite: NonNegativeInt.pipe(
+    pincite: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Specific page reference within the cited authority.",
       })
     ),
     pinciteInfo: PinciteInfo.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Structured pincite information (page, range, footnote, star-pagination).",
       })
@@ -812,9 +820,9 @@ export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
           "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
-    pinciteInheritedFrom: NonNegativeInt.pipe(
+    pinciteInheritedFrom: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Array index of the citation from which `pincite` was inherited, indexing into the same array this citation appears in. Set only when `pinciteInherited` is true; records the immediate predecessor.",
@@ -822,7 +830,7 @@ export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
     ),
     pinciteInheritedFromId: CitationId.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Stable id of the `pinciteInheritedFrom` citation (#860). Survives consumer filter/sort/map (keys on identity, not array position).",
@@ -830,7 +838,7 @@ export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
     ),
     sectionPincite: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Section-style pincite locator captured from `Id. § 1983(c)` forms (#847) — the text after §/§§. Its presence marks the `Id.` as statute-family for antecedent selection; undefined for page/paragraph/bare `Id.` forms.",
@@ -838,7 +846,7 @@ export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
     ),
     parenthetical: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Trailing parenthetical content (text between the parens, excluding the parens themselves) captured from `Id. at N (...)` forms. Unclassified — consumers can post-classify if needed (#303).",
@@ -846,7 +854,7 @@ export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
     ),
     parentheticalNode: Parenthetical.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Structured form of `parenthetical` (#869) — same content, classified `type` and a `span`, plus any nested child citations in `citations`.",
@@ -854,7 +862,7 @@ export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
     ),
     caseName: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Case name inherited from the antecedent (full citation that the `Id.` resolves to). Populated by the resolver when `resolve: true` and the antecedent is a `case`-type citation.",
@@ -862,42 +870,42 @@ export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
     ),
     plaintiff: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Inherited plaintiff name from antecedent (resolver-populated).",
       })
     ),
     defendant: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Inherited defendant name from antecedent (resolver-populated).",
       })
     ),
     plaintiffNormalized: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Inherited normalized plaintiff name from antecedent.",
       })
     ),
     defendantNormalized: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Inherited normalized defendant name from antecedent.",
       })
     ),
     proceduralPrefix: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Inherited procedural prefix (`In re`, `Estate of`, etc.) from antecedent.",
       })
     ),
     spans: IdComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component-level spans (currently just `pincite`; extend when needed).",
       })
@@ -954,10 +962,10 @@ export declare namespace IdCitation {
     readonly defendantNormalized: O.Option<string>;
     readonly parenthetical: O.Option<string>;
     readonly parentheticalNode: O.Option<Parenthetical.Type>;
-    readonly pincite: O.Option<NonNegativeInt>;
+    readonly pincite: O.Option<number>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
     readonly pinciteInherited: boolean;
-    readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
+    readonly pinciteInheritedFrom: O.Option<number>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly plaintiff: O.Option<string>;
     readonly plaintiffNormalized: O.Option<string>;
@@ -1006,21 +1014,21 @@ export declare namespace IdCitation {
  * **Example** (Making a supra citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { SupraCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = SupraCitation.make({
  *   text: "Smith, supra, at 460",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(20),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(20),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(20),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(20),
  *   }),
  *   confidence: 1,
  *   matchedText: "Smith, supra, at 460",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  * })
  *
  * console.log(citation.type) // "supra"
@@ -1034,21 +1042,21 @@ export class SupraCitation extends CitationBase.extend<SupraCitation>($I`SupraCi
     type: S.tag("supra"),
     partyName: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Party name extracted from citation text (undefined for standalone supra references).",
       })
     ),
-    pincite: NonNegativeInt.pipe(
+    pincite: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Specific page reference.",
       })
     ),
     pinciteInfo: PinciteInfo.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Structured pincite information (page, range, footnote, star-pagination).",
       })
@@ -1059,9 +1067,9 @@ export class SupraCitation extends CitationBase.extend<SupraCitation>($I`SupraCi
           "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
-    pinciteInheritedFrom: NonNegativeInt.pipe(
+    pinciteInheritedFrom: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Array index of the citation from which `pincite` was inherited, indexing into the same array this citation appears in. Set only when `pinciteInherited` is true; records the immediate predecessor.",
@@ -1069,7 +1077,7 @@ export class SupraCitation extends CitationBase.extend<SupraCitation>($I`SupraCi
     ),
     pinciteInheritedFromId: CitationId.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Stable id of the `pinciteInheritedFrom` citation (#860). Survives consumer filter/sort/map (keys on identity, not array position).",
@@ -1077,7 +1085,7 @@ export class SupraCitation extends CitationBase.extend<SupraCitation>($I`SupraCi
     ),
     parenthetical: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Trailing parenthetical content (text between the parens, excluding the parens themselves). See IdCitation.parenthetical for common shapes and rationale (#303).",
@@ -1085,7 +1093,7 @@ export class SupraCitation extends CitationBase.extend<SupraCitation>($I`SupraCi
     ),
     parentheticalNode: Parenthetical.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Structured form of `parenthetical` (#869) — same content, classified `type` and a `span`, plus any nested child citations in `citations`.",
@@ -1093,7 +1101,7 @@ export class SupraCitation extends CitationBase.extend<SupraCitation>($I`SupraCi
     ),
     spans: SupraComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component-level spans (currently just `pincite`; extend when needed).",
       })
@@ -1148,10 +1156,10 @@ export declare namespace SupraCitation {
     readonly parenthetical: O.Option<string>;
     readonly parentheticalNode: O.Option<Parenthetical.Type>;
     readonly partyName: O.Option<string>;
-    readonly pincite: O.Option<NonNegativeInt>;
+    readonly pincite: O.Option<number>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
     readonly pinciteInherited: boolean;
-    readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
+    readonly pinciteInheritedFrom: O.Option<number>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly spans: O.Option<SupraComponentSpan>;
     readonly type: "supra";
@@ -1191,22 +1199,22 @@ export declare namespace SupraCitation {
  * **Example** (Making a short-form case citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ShortFormCaseCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = ShortFormCaseCitation.make({
  *   text: "500 F.2d at 125",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(15),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(15),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(15),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(15),
  *   }),
  *   confidence: 1,
  *   matchedText: "500 F.2d at 125",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
- *   volume: NonNegativeInt.make(500),
+ *   patternsChecked: S.Natural.make(1),
+ *   volume: S.Natural.make(500),
  *   reporter: "F.2d",
  * })
  *
@@ -1219,29 +1227,29 @@ export declare namespace SupraCitation {
 export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCitation>($I`ShortFormCaseCitation`)(
   {
     type: S.tag("shortFormCase"),
-    volume: S.Union([NonNegativeInt, S.String]).annotateKey({
+    volume: S.Union([S.Natural, S.String]).annotateKey({
       description: "Reporter volume number (numeric, or a string for non-numeric volumes).",
     }),
     reporter: S.String.annotateKey({
       description: "Reporter abbreviation.",
     }),
-    page: NonNegativeInt.pipe(
+    page: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Page number of the referenced reporter citation.",
       })
     ),
-    pincite: NonNegativeInt.pipe(
+    pincite: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Specific page reference within the cited authority.",
       })
     ),
     pinciteInfo: PinciteInfo.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Structured pincite information (page, range, footnote, star-pagination).",
       })
@@ -1252,9 +1260,9 @@ export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCita
           "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
-    pinciteInheritedFrom: NonNegativeInt.pipe(
+    pinciteInheritedFrom: S.Natural.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Array index of the citation from which `pincite` was inherited, indexing into the same array this citation appears in. Set only when `pinciteInherited` is true; records the immediate predecessor.",
@@ -1262,7 +1270,7 @@ export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCita
     ),
     pinciteInheritedFromId: CitationId.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Stable id of the `pinciteInheritedFrom` citation (#860). Survives consumer filter/sort/map (keys on identity, not array position).",
@@ -1270,7 +1278,7 @@ export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCita
     ),
     inferredCaseName: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Case name inferred from prose preceding this short-form when no full citation in citations[] matched its vol+reporter. Populated by the resolver fallback. Consumers: prefer `caseName ?? inferredCaseName ?? partyName`.",
@@ -1278,35 +1286,35 @@ export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCita
     ),
     inferredPlaintiff: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Plaintiff side of the inferred case name.",
       })
     ),
     inferredDefendant: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Defendant side of the inferred case name.",
       })
     ),
     inferredCaseNameSpan: Span.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Span in original text where the inferred case name was found.",
       })
     ),
     spans: ShortFormCaseComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component-level spans (currently just `pincite`; extend when needed).",
       })
     ),
     partyName: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Back-reference party name when the short-form includes one (Bluebook form: `Smith, 500 F.2d at 125`). Undefined when the short-form is bare `500 F.2d at 125`. Used by the resolver to disambiguate when multiple full citations share the same vol+reporter (#216).",
@@ -1314,7 +1322,7 @@ export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCita
     ),
     partyNameNormalized: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Normalized party name for resolver matching (lowercased, whitespace collapsed). Mirrors defendantNormalized/plaintiffNormalized on FullCaseCitation.",
@@ -1322,14 +1330,14 @@ export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCita
     ),
     groupId: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Parallel-reporter grouping shared group key (#884). Mirrors FullCaseCitation.groupId.",
       })
     ),
     parallelGroup: ParallelGroup.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Parallel-reporter group (#884): all members (incl. self) by id, in document order. Mirrors FullCaseCitation.parallelGroup.",
@@ -1337,20 +1345,20 @@ export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCita
     ),
     parallelCitations: S.Array(
       S.Struct({
-        volume: S.Union([NonNegativeInt, S.String]),
+        volume: S.Union([S.Natural, S.String]),
         reporter: S.String,
-        page: NonNegativeInt,
+        page: S.Natural,
       })
     ).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Legacy flat copy of the parallel run on the primary short-form citation (#884).",
       })
     ),
     parenthetical: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Trailing parenthetical content (text between the parens, excluding the parens themselves). See IdCitation.parenthetical for common shapes and rationale (#303).",
@@ -1358,7 +1366,7 @@ export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCita
     ),
     parentheticalNode: Parenthetical.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "Structured form of `parenthetical` (#869) — same content, classified `type` and a `span`, plus any nested child citations in `citations`.",
@@ -1416,12 +1424,12 @@ export declare namespace ShortFormCaseCitation {
     readonly inferredCaseNameSpan: O.Option<Span>;
     readonly inferredDefendant: O.Option<string>;
     readonly inferredPlaintiff: O.Option<string>;
-    readonly page: O.Option<NonNegativeInt>;
+    readonly page: O.Option<number>;
     readonly parallelCitations: O.Option<
       ReadonlyArray<{
-        readonly volume: NonNegativeInt | string;
+        readonly volume: number | string;
         readonly reporter: string;
-        readonly page: NonNegativeInt;
+        readonly page: number;
       }>
     >;
     readonly parallelGroup: O.Option<ParallelGroup>;
@@ -1429,15 +1437,15 @@ export declare namespace ShortFormCaseCitation {
     readonly parentheticalNode: O.Option<Parenthetical.Type>;
     readonly partyName: O.Option<string>;
     readonly partyNameNormalized: O.Option<string>;
-    readonly pincite: O.Option<NonNegativeInt>;
+    readonly pincite: O.Option<number>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
     readonly pinciteInherited: boolean;
-    readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
+    readonly pinciteInheritedFrom: O.Option<number>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly reporter: string;
     readonly spans: O.Option<ShortFormCaseComponentSpan>;
     readonly type: "shortFormCase";
-    readonly volume: NonNegativeInt | string;
+    readonly volume: number | string;
   }
 
   /**

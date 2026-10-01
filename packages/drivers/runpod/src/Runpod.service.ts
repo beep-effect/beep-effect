@@ -111,6 +111,8 @@ export const RunpodQueryValue = S.Union([RunpodQueryScalar, RunpodQueryScalarArr
  */
 export type RunpodQueryValue = typeof RunpodQueryValue.Type;
 
+const runpodRawRequestHeadersDefault = R.empty();
+const runpodRawRequestQueryDefault = R.empty();
 /**
  * Raw Runpod HTTP request escape hatch for endpoints ahead of the checked-in OpenAPI document.
  *
@@ -131,12 +133,21 @@ export type RunpodQueryValue = typeof RunpodQueryValue.Type;
  */
 export class RunpodRawRequest extends S.Class<RunpodRawRequest>($I`RunpodRawRequest`)(
   {
-    authenticated: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    body: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault),
-    headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())),
+    authenticated: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    body: S.OptionFromOptionalKey(S.Unknown).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    headers: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(runpodRawRequestHeadersDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(runpodRawRequestHeadersDefault))
+    ),
     method: G.RunpodHttpMethod,
     path: RunpodRawPath,
-    query: S.Record(S.String, RunpodQueryValue).pipe(SchemaUtils.withKeyDefaults(R.empty())),
+    query: S.Record(S.String, RunpodQueryValue).pipe(
+      S.withConstructorDefault(Effect.succeed(runpodRawRequestQueryDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(runpodRawRequestQueryDefault))
+    ),
   },
   $I.annote("RunpodRawRequest", {
     description: "Raw Runpod HTTP request escape hatch for endpoints ahead of the checked-in OpenAPI document.",

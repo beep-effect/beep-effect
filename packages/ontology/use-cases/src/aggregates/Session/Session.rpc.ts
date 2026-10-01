@@ -7,7 +7,6 @@
 
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { ChangeOperation, Session, SessionChangeDelta, SessionId } from "@beep/ontology-domain/aggregates/Session";
-import { SchemaUtils } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
@@ -258,7 +257,7 @@ class OpenOntologyDocumentPayload extends S.Class<OpenOntologyDocumentPayload>($
   {
     sessionId: SessionId,
     path: OntologyFilePath,
-    baseIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    baseIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("OpenOntologyDocumentPayload", {
     description: "Wire payload for opening an ontology document from the desktop sidecar.",
