@@ -135,8 +135,8 @@ Groups and upstream targets are in `explorations/effect-schema-parity/MAP.md`
 | 3b | C SchemaUtils defaults codemod (`withNoneDefault` 281 files / 1,897 occurrences, `withKeyDefaults` 110 / 427, `withConstantDefault` 26 / 85, `withEmptyArrayDefaults` 20 / 38) to `S.withConstructorDefault` plus `S.withDecodingDefaultTypeKey`, or `S.withDecodingDefaultType` for `withEmptyArrayDefaults` | P2 codemod engine landed; one-facet census for `withNoneDefault` and `withKeyDefaults` (over 100 consumers) |
 | 4 | D time and duration (Timestamp, DateTimeUtcFromValid, Duration, Timezone) | boundary table rows filled for every concept in the group |
 | 5 | E binary and collections (ArrayBuffer, Bytes, ArrayOf, HashSet, MutableHashMap, MutableHashSet, Graph, RegExp) | boundary table rows filled for every concept in the group |
-| 6 | F text and misc (String, CommonTextSchemas, case brands, URL, BigDecimal, Logs, StatusCauseError, FileInfo, JSONSchema; SchemaUtils zero-consumer DELETEs: the ten `encode*` facades, `split`, `classStatics` with its allowlist entry `standards/effect-laws.allowlist.jsonc:45-52` and generated snapshot) | none |
-| 7 | G Role B (HttpMethod, HttpStatus, MimeType, Jsonl, Toml, Yaml) | none; losses recorded in the PR |
+| 6 | F text and misc (String, CommonTextSchemas, case brands, URL (ruled ADAPT by the operator 2026-10-01, kept), BigDecimal, Logs, StatusCauseError, FileInfo, JSONSchema; SchemaUtils zero-consumer DELETEs: the ten `encode*` facades, `split`, `classStatics` with its allowlist entry `standards/effect-laws.allowlist.jsonc:45-52` and generated snapshot) | none |
+| 7 | G Role B (HttpMethod, HttpStatus, MimeType (ruled KEEP by the operator 2026-10-01, kept), Jsonl, Toml, Yaml) | none; losses recorded in the PR |
 
 - Each PR: closure-sized with `graft callers --depth all` plus a type check;
   cites the P0 entry; regenerates the tracked generated baselines; runs

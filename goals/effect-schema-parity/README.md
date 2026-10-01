@@ -36,9 +36,9 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 Closed. All six phases shipped through thirteen train PRs plus the P5 close
-(2026-10-01). Two operator rulings remain open and are recorded in the
-`SPEC.md` exception ledger: URL (`URLStr`, `HttpsUrl`: ADAPT or RETIRE) and
-MimeType (KEEP or a migration goal). Standing behaviour after close: every
+(2026-10-01). The operator ruled the last two deferrals the same day: URL
+(`URLStr`, `HttpsUrl`) is ADAPT and MimeType is KEEP (`SPEC.md` goal-time
+rows 2026-10-01); no ruling remains open. Standing behaviour after close: every
 Effect pin change regenerates the inventory in the bump PR and works the
 parity lane (`bun run beep lint schema-first`) to zero.
 

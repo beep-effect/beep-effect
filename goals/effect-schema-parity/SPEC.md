@@ -276,7 +276,9 @@ Goal-time additions (append dated rows):
 | 2026-10-01 | The F15 detector is `SFV4-codec-static`: a reference that resolves to `SchemaUtils.withCodecStatics`, or a `withStatics` property whose initializer is an `effect/Schema` codec function over the schema. Class-body statics (`static readonly is = S.is(Self)`) are not flagged. Baseline: zero occurrences. | The SPEC names the two combinators; class statics are a different idiom with its own tradeoffs (identity on `S.Class`) and no census behind them. Measured on the P5 base: 364 occurrences in 176 files (229 `withCodecStatics`, 135 facades), all removed in the same PR. |
 | 2026-10-01 | F13 hand-fixes: nine of the ten sites now derive from their schemas (`S.is(BoxActionApplied)`, `S.is(BoxBlockedAction)`, `S.is(S.Finite)`, `Md.Inline.guards.a`, `S.is(BinaryFileExtension)`, `S.is(CurrencyCode)`, `S.is(FileExtension)`, `S.is(YeetReviewThreadRow)`); the VeniceAI `HttpStatus` guard left with group G; the `Rdf.ts` `MakeQuadOptions` discriminant stays, as the P4 note allowed (a cheap check over an already validated union). | Closes the P4 carry-over without a detector. |
 | 2026-10-01 | P5 performance: single-checker instantiations (`--singleThreaded`, compiler `7.0.2+effect-tsgo.0.45.0`) fall on all three baseline packages against the live merge base `a69b1956ee` (final P5 head `67ba9397d3`, clean tree): `@beep/schema` 460,260 → 446,382 (−13,878), `@beep/repo-cli` 4,206,806 → 4,202,582 (−4,224), `@beep/law-practice-domain` 830,007 → 799,552 (−30,455). An earlier P5 measurement against `90517df719` read the same direction. Advisory default (four-checker) runs: 860,752 → 833,368, 8,555,584 → 8,542,137, 1,198,648 → 1,162,833. Check time (advisory): 628 → 594 ms, 11,545 → 10,390 ms, 1,149 → 1,121 ms. `standards/check-census.regression-baseline.jsonc` is re-measured on the clean final tree. | The P5 done-signal ("no instantiation increase on the three baseline packages and the check-time band reported"). The committed baseline had been stale since P5a (friction ledger 2026-10-01): `@beep/repo-cli` measured +13,516 over its row at `e324f01e1e` and +13,387 at the P5 base `90517df719`. The gate is therefore judged against a fresh base measurement, not the old row; transcripts are in `research/2026-10-01-p5-check-census.md`. |
-| 2026-10-01 | The packet closes `completed-retained` with two operator rulings open: URL (row 2026-09-29, ADAPT or RETIRE) and MimeType (row 2026-09-29, KEEP or a migration goal). Both stay in the exception ledger below until ruled. | Every other RETIRE, Role B and ADAPT row is done or ruled; the two deferrals are boundary questions the Wire shape ruling sends to the operator, not work this packet can finish. Rejected: holding the packet `active` for rulings with no lane work behind them. |
+| 2026-10-01 | URL is ADAPT (operator ruling, 2026-10-01; resolves the 2026-09-29 deferral). `URLStr` and `HttpsUrl` stay in `@beep/schema` as string-wire validators (`Codec<string, string>`, identity encode); `URL.ts` and its consumers are unchanged. | Upstream `S.URL` / `S.URLFromString` is `Codec<URL, string>` with a canonicalizing, non-identity encode, so it is a different concept, not a duplicate; keeping the validator changes no persisted or served byte and keeps one named building block. Rejected: RETIRE to consumer-local string-wire schemas (the same validator copied across 17 files); RETIRE onto upstream `S.URL` (changes encodings, so it would need a migration goal). |
+| 2026-10-01 | MimeType is KEEP (operator ruling, 2026-10-01; resolves the 2026-09-29 deferral). It is reclassified from Role B to a KEEP concept; `MimeType.ts` and its consumers are unchanged. | Upstream `effect/http/Mime` is a lookup over mime-db's standard table (274 of the 2,321 accepted media types), not a schema over the same accepted set, so there is no parity target; persisted `mediaType` values and the KEEP FileTypeChecker union depend on the full set. Rejected: a migration goal narrowing stored values; leaving the row open. |
+| 2026-10-01 | The packet closes completed with no open operator rulings. With the two rulings above, the audit totals read 49 RETIRE retired, URL ADAPT, 5 Role B retired and MimeType added to the KEEP set; every other RETIRE, Role B and ADAPT row is done or ruled. | The rulings remove the only items the acceptance list left open. |
 
 ## Acceptance Criteria
 
@@ -292,11 +294,11 @@ Goal-time additions (append dated rows):
 - [x] LiteralKit and MappedLiteralKit trimmed per the P2 row; no retired facet
       name remains; statics survive every derivation; a before/after number
       is attached.
-- [ ] The 50 RETIRE concepts and 6 Role B concepts are deleted with consumers
+- [x] The 50 RETIRE concepts and 6 Role B concepts are deleted with consumers
       migrated, or flipped to ADAPT through the facet census with a logged
       ruling; the 77 KEEP concepts are untouched.
-      Unmet at close: URL and MimeType wait on operator rulings (exception
-      ledger; goal-time rows 2026-09-29); every other row is done or ruled.
+      URL ruled ADAPT and MimeType ruled KEEP by the operator (goal-time rows
+      2026-10-01); every other row is deleted with its consumers.
 - [x] SchemaUtils (ADAPT concept, 39 exports per
       `explorations/effect-schema-parity/research/2026-09-28-schemautils-census.md`):
       32 DELETE (20 zero-consumer in P3 C/F; 4 defaults via PR 3b; 8 with the
@@ -354,5 +356,4 @@ Goal-time additions (append dated rows):
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| URL concept not retired | `packages/foundation/modeling/schema/src/URL.ts` (`URLStr`, `HttpsUrl`) and its consumers | operator | Upstream `S.URL` / `S.URLFromString` re-encode a canonical `href`, which changes persisted and served bytes (row 2026-09-29) | Operator rules ADAPT or RETIRE; a follow-up PR applies the ruling |
-| MimeType concept not retired | `packages/foundation/modeling/schema/src/MimeType.ts` and its consumers | operator | The upstream `effect/http/Mime` lookup rejects 2,047 stored-valid media types (row 2026-09-29) | Operator rules KEEP or opens a migration goal |
+| None | N/A | N/A | N/A | N/A |
