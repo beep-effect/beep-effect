@@ -13,6 +13,7 @@ CACHE="${HOME}/.cache/beep"
 TOOLS="${CACHE}/tools/bin"
 GITLEAKS_VERSION="${GITLEAKS_VERSION:-8.30.1}"   # CI pin: .github/workflows/check.yml
 TYPOS_VERSION="${TYPOS_VERSION:-1.44.0}"         # CI pin: .github/workflows/heavy.yml
+SHELLCHECK_VERSION="${SHELLCHECK_VERSION:-0.10.0}" # SPEC verification matrix
 CHECK_ONLY=false
 [ "${1:-}" = "--check" ] && CHECK_ONLY=true
 
@@ -65,6 +66,12 @@ if ! command -v typos >/dev/null 2>&1 && ! $CHECK_ONLY; then
     || fail78 "github.com (typos)" "allow github.com release downloads"
   tar -xzf "${CACHE}/typos.tar.gz" -C "$TOOLS" ./typos 2>/dev/null || tar -xzf "${CACHE}/typos.tar.gz" -C "$TOOLS"
 fi
+if ! command -v shellcheck >/dev/null 2>&1 && ! $CHECK_ONLY; then
+  curl -fsSL -o "${CACHE}/shellcheck.tar.xz" \
+    "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" \
+    || fail78 "github.com (shellcheck)" "allow github.com release downloads"
+  tar -xJf "${CACHE}/shellcheck.tar.xz" -C "${CACHE}" && cp "${CACHE}/shellcheck-v${SHELLCHECK_VERSION}/shellcheck" "$TOOLS/"
+fi
 log "gitleaks $(gitleaks version 2>/dev/null || echo missing); typos $(typos --version 2>/dev/null || echo missing)"
 
 # 3. Preflight the Effect snapshot registry (D2). A 403 is a network-policy denial.
@@ -90,4 +97,5 @@ done
 [ -f node_modules/effect/package.json ] || { log "node_modules/effect is missing after install — the pkg.pr.new packages did not resolve"; exit 1; }
 bun run beep --help >/dev/null 2>&1 || { log "bun run beep --help failed"; exit 1; }
 log "ready: bun $(bun --version), effect $(python3 -c 'import json;print(json.load(open("node_modules/effect/package.json"))["version"])' 2>/dev/null || echo '?')"
+# shellcheck disable=SC2016 # the literal $PATH is for the caller's shell to expand
 printf 'export PATH="%s:%s:$PATH"\nexport BEEP_AGENT_HOST=cloud\n' "${CACHE}/bun/current" "$TOOLS"
