@@ -1,0 +1,51 @@
+{
+  "sourceFixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:103:runSync@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:151:runSync@6#1",
+    "EV007:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:104:checkEffect@8#1"
+  ],
+  "lineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:103:runSync@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "round-trips arbitrary goal slugs through the schema codec",
+      "currentTitle": "round-trips arbitrary goal slugs through the schema codec",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:151:runSync@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "property: schema-generated inputs compile deterministic schema-valid plans",
+      "currentTitle": "property: schema-generated inputs compile deterministic schema-valid plans",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:104:checkEffect@8#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "round-trips arbitrary goal slugs through the schema codec",
+      "currentTitle": "round-trips arbitrary goal slugs through the schema codec",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    }
+  ],
+  "counts": {
+    "open": 1584,
+    "fixed": 1899,
+    "exception": 12
+  },
+  "addedCurrentRows": 0,
+  "fullPackageProof": "passed: audit 702.1s, docgen 20.0s; package source unchanged",
+  "renamedIndexRuntime": "left open; current refreshed-projection case still opens a runtime"
+}

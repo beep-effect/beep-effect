@@ -1,0 +1,346 @@
+{
+  "sourceFixSha": "d3677d2270cccc173ba2fc4b9e94441be7a7c1a3",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:174:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:322:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:368:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:385:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:440:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:486:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:543:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:96:runPromise@2#1",
+    "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:111:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:125:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:138:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:151:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:167:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:181:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:192:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:209:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:228:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:251:runPromise@6#1"
+  ],
+  "lineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:111:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "blocks a reflectionRequired completed goal with no reflection artifact",
+      "currentTitle": "blocks a reflectionRequired completed goal with no reflection artifact",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 113,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const exit = yield* runReflectionLintFixture(); expectReportedFailure(exit); }) ).pipe(provideScopedLayer(testLayer)) )"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:125:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "passes when a schema-valid reflection artifact is present",
+      "currentTitle": "passes when a schema-valid reflection artifact is present",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 127,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( expectReflectionLintSuccess({ reflection: { body: VALID_REFLECTION, file: \"2026-06-09-claude.md\" }, }) ).pipe(provideScopedLayer(testLayer)) )"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:138:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "accepts CRLF-delimited reflection frontmatter",
+      "currentTitle": "accepts CRLF-delimited reflection frontmatter",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 140,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( expectReflectionLintSuccess({ reflection: { body: VALID_REFLECTION_CRLF, file: \"2026-06-09-claude.md\" }, }) ).pipe(provideScopedLayer(testLayer)) )"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:151:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "blocks when a reflection artifact has invalid frontmatter",
+      "currentTitle": "blocks when a reflection artifact has invalid frontmatter",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 153,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const exit = yield* runReflectionLintFixture({ reflection: { body: \"# no frontmatter here\\n\", file: \"2026-06-09-claude.md\" }, });"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:167:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "blocks completed goals when reflectionRequired is absent and no reflection artifact exists",
+      "currentTitle": "blocks completed goals when reflectionRequired is absent and no reflection artifact exists",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 169,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const exit = yield* runReflectionLintFixture({}); expectReportedFailure(exit); }) ).pipe(provideScopedLayer(testLayer)) )"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:181:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "treats an explicit reflectionRequired opt-out as a non-blocking advisory",
+      "currentTitle": "treats an explicit reflectionRequired opt-out as a non-blocking advisory",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 183,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory(expectReflectionLintSuccess({ reflectionRequired: false })).pipe( provideScopedLayer(testLayer) ) )"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:192:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "passes when a completed goal without reflectionRequired has a valid reflection",
+      "currentTitle": "passes when a completed goal without reflectionRequired has a valid reflection",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 194,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( expectReflectionLintSuccess({ reflectionRequired: false, reflection: { body: VALID_REFLECTION, file: \"2026-06-09-claude.md\" }, }) ).pipe(provideScopedLayer"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:209:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "blocks an active goal whose reflection file has no frontmatter block",
+      "currentTitle": "blocks an active goal whose reflection file has no frontmatter block",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 211,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeActiveGoal(\"in-flight\"); yield* writeReflection(\"in-flight\", \"2026-08-17-claude.md\", \"# no frontmatter here\\n\"); cons"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:228:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "blocks an active goal whose present frontmatter does not decode",
+      "currentTitle": "blocks an active goal whose present frontmatter does not decode",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 230,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeActiveGoal(\"in-flight\"); yield* writeReflection( \"in-flight\", \"2026-08-17-claude.md\", Str.replace( \"explanation: Beca"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/reflection-lint.test.ts:251:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "does not apply the closeout-presence gate to active goals",
+      "currentTitle": "does not apply the closeout-presence gate to active goals",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 253,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeActiveGoal(\"in-flight\"); yield* writeReflection(\"in-flight\", \"2026-08-17-claude.md\", VALID_REFLECTION); yield* writeA"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:174:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects %j at the slug grammar",
+      "currentTitle": "rejects %j at the slug grammar",
+      "beforeRegistrations": [
+        "it.each([\"Uppercase-Slug\", \"slug/with/separators\", \"../escape\", \"spaced slug\", \"_template\"])"
+      ],
+      "afterRegistrations": [
+        "it.effect.each([\"Uppercase-Slug\", \"slug/with/separators\", \"../escape\", \"spaced slug\", \"_template\"])"
+      ],
+      "beforeMatches": [
+        {
+          "line": 187,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const outcome = yield* Effect.exit(decodeUnknownGoalSlug(candidate)); expect(outcome._tag).toBe(\"Failure\"); }) )"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:322:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "plans exactly one generated manifest plus report rows, never writing the README",
+      "currentTitle": "plans exactly one generated manifest plus report rows, never writing the README",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 338,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectFile(\"goals/_template/README.md\", \"# <Goal Title>\\n\"); yield* writeProjectFile(\"goals/_template/SPEC.md\", \"# <"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:368:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "fails closed with packet-not-found for a missing packet",
+      "currentTitle": "fails closed with packet-not-found for a missing packet",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 384,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectFile(\"goals/_template/README.md\", \"# <Goal Title>\\n\"); const snapshot = yield* readPacketSnapshot(\"missing-goa"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:385:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "fails closed with manifest-unparseable for a corrupt manifest",
+      "currentTitle": "fails closed with manifest-unparseable for a corrupt manifest",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 401,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectFile(\"goals/_template/README.md\", \"# <Goal Title>\\n\"); yield* writeProjectFile(\"goals/broken/ops/manifest.json"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:440:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "accepts an absent or matching local projection and rejects drift",
+      "currentTitle": "accepts an absent or matching local projection and refreshes a stale copy in place",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 456,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.makeDirectory(\"goals\", { recursive: true }); assertExitSuccess(yield* Effect.e"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:486:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses without --plan, rejects a provides/requires self-cycle, and prints a JSON plan on the happy path",
+      "currentTitle": "refuses without --plan, rejects a provides/requires self-cycle, and prints a JSON plan on the happy path",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 579,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const missingPlan = yield* Effect.exit( runGoalsCommand([\"bootstrap\", \"--slug\", \"x-goal\", \"--title\", \"X\", \"--mission\", \"Y.\"]) );"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:543:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses without --plan, prints a JSON plan for a fixture packet, and gates on packet-not-found",
+      "currentTitle": "refuses without --plan, prints a JSON plan for a fixture packet, and gates on packet-not-found",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 636,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectFile(\"goals/_template/README.md\", \"# <Goal Title>\\n\"); yield* writeProjectFile(\"goals/_template/ops/manifest.j"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:96:runPromise@2#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "beforeRegistrations": [],
+      "afterRegistrations": [],
+      "beforeMatches": [
+        {
+          "line": 103,
+          "evidence": "Effect.runPromise(effect.pipe(provideScopedLayer(NodeServices.layer)))"
+        }
+      ],
+      "afterMatches": []
+    }
+  ],
+  "addedCurrentRows": 0,
+  "counts": {
+    "open": 1566,
+    "fixed": 1917,
+    "exception": 12
+  },
+  "fullPackageProof": "passed: audit 664.5s, docgen 20.7s; package source unchanged",
+  "preservedOpen": "native-platform findings and remaining bootstrap direct checkEffect finding",
+  "retainedHistorical": [
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts:152:checkEffect@8#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "property: schema-generated inputs compile deterministic schema-valid plans",
+      "currentTitle": "property: schema-generated inputs compile deterministic schema-valid plans",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 165,
+          "evidence": "Arbitrary.checkEffect( Arbitrary.all([Arbitrary.schema(BootstrapInput)]), ([input]) => Effect.gen(function* () { const first = yield* compileMaterializationPlan(input, []); const second = yield* compi"
+        }
+      ],
+      "afterMatches": [
+        {
+          "line": 156,
+          "evidence": "Arbitrary.checkEffect( Arbitrary.all([Arbitrary.schema(BootstrapInput)]), ([input]) => Effect.gen(function* () { const first = yield* compileMaterializationPlan(input, []); const second = yield* compi"
+        }
+      ]
+    }
+  ]
+}

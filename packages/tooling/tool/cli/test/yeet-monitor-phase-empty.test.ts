@@ -10,6 +10,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -65,7 +66,7 @@ describe("yeet monitor phase with no planned steps", () => {
       expect(yield* Ref.get(recorder)).toStrictEqual(A.empty());
       // No status snapshot was read, so the verdict must omit mergeReady rather
       // than assert an unobserved answer.
-      expect((yield* Ref.get(extras)).mergeReady).toStrictEqual(O.none());
+      assertNone((yield* Ref.get(extras)).mergeReady);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 });

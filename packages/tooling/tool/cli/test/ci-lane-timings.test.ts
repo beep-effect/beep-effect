@@ -34,7 +34,16 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { assertFalse, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import {
+  assertDefined,
+  assertExitSuccess,
+  assertFalse,
+  assertNone,
+  assertSome,
+  assertTrue,
+  deepStrictEqual,
+  strictEqual,
+} from "@effect/vitest/utils";
 import { DateTime, Effect, Exit, Fiber, Layer, pipe, Sink, Stream } from "effect";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
@@ -387,12 +396,12 @@ describe("ci lane timings attempt filter", () => {
     Effect.gen(function* () {
       const exits = yield* Effect.forEach([0, 101], (limit) => Effect.exit(collectCiLaneTimings(".", limit)));
 
-      expect(A.every(exits, Exit.isFailure)).toBe(true);
+      pipe(exits, A.every(Exit.isFailure), assertTrue);
     }).pipe(provideScopedLayer(laneTimingsSpawnerLayer))
   );
 
   it("reports job-level pickup latency on the first attempt", () => {
-    expect(attemptOnePickupSeconds(job())).toStrictEqual(O.some(30));
+    assertSome(attemptOnePickupSeconds(job()), 30);
   });
 
   it("refuses pickup latency for any later attempt", () => {
@@ -401,8 +410,8 @@ describe("ci lane timings attempt filter", () => {
     // outage that read 18-21 minutes while real pickup was 19-67 seconds.
     const redispatched = job({ run_attempt: 2, started_at: "2026-08-06T12:18:00Z" });
 
-    expect(attemptOnePickupSeconds(redispatched)).toStrictEqual(O.none());
-    expect(ciLaneTimingRow(redispatched).pickupSeconds).toStrictEqual(O.none());
+    assertNone(attemptOnePickupSeconds(redispatched));
+    assertNone(ciLaneTimingRow(redispatched).pickupSeconds);
   });
 
   it("keeps the filter out of the aggregate's reach", () => {
@@ -415,13 +424,13 @@ describe("ci lane timings attempt filter", () => {
 
     expect(report.jobCount).toBe(2);
     expect(report.attemptOneJobCount).toBe(1);
-    expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.some(30));
+    assertSome(report.medianAttemptOnePickupSeconds, 30);
   });
 
   it("reports no pickup median for an empty recent-run population", () => {
     const report = ciLaneTimingsReport([]);
 
-    expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.none());
+    assertNone(report.medianAttemptOnePickupSeconds);
     expect(renderCiLaneTimingsSummary(report)).toContain(
       "- median attempt-1 pickup: no attempt-1 job carried both timestamps"
     );
@@ -439,7 +448,7 @@ describe("ci lane timings attempt filter", () => {
       ciLaneTimingRow(job({ id: 992, started_at: "2026-08-06T12:01:39Z" })),
     ]);
 
-    expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.some(50));
+    assertSome(report.medianAttemptOnePickupSeconds, 50);
   });
 
   it.effect("rejects a jobs payload that omits run_attempt", () =>
@@ -502,7 +511,7 @@ describe("ci lane timings gh api retry", () => {
       const exit = yield* collectWithRetries(scripted.spawner);
 
       assertTrue(Exit.isSuccess(exit));
-      expect(Exit.isSuccess(exit) ? exit.value.jobCount : -1).toBe(2);
+      assertExitSuccess(exit.pipe(Exit.map((report) => report.jobCount)), 2);
       expect(scripted.state.spawned).toBe(4 + 3);
     })
   );
@@ -513,7 +522,11 @@ describe("ci lane timings gh api retry", () => {
       const exit = yield* collectWithRetries(scripted.spawner);
 
       assertTrue(Exit.isFailure(exit));
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("returned a truncated response");
+      {
+        const exitFailed = Exit.isFailure(exit);
+        assertTrue(exitFailed);
+        expect(exit.cause.toString()).toContain("returned a truncated response");
+      }
       expect(scripted.state.spawned).toBe(1);
     })
   );
@@ -524,7 +537,11 @@ describe("ci lane timings gh api retry", () => {
       const exit = yield* collectWithRetries(scripted.spawner);
 
       assertTrue(Exit.isFailure(exit));
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("exited 1: gh: Not Found (HTTP 404)");
+      {
+        const exitFailed = Exit.isFailure(exit);
+        assertTrue(exitFailed);
+        expect(exit.cause.toString()).toContain("exited 1: gh: Not Found (HTTP 404)");
+      }
       expect(scripted.state.spawned).toBe(1);
     })
   );
@@ -537,7 +554,11 @@ describe("ci lane timings gh api retry", () => {
       const exit = yield* collectWithRetries(scripted.spawner);
 
       assertTrue(Exit.isFailure(exit));
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("(HTTP 422)");
+      {
+        const exitFailed = Exit.isFailure(exit);
+        assertTrue(exitFailed);
+        expect(exit.cause.toString()).toContain("(HTTP 422)");
+      }
       expect(scripted.state.spawned).toBe(1);
     })
   );
@@ -580,7 +601,11 @@ describe("ci lane timings gh api retry", () => {
       const exit = yield* collectWithRetries(scripted.spawner);
 
       assertTrue(Exit.isFailure(exit));
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("returned a truncated response");
+      {
+        const exitFailed = Exit.isFailure(exit);
+        assertTrue(exitFailed);
+        expect(exit.cause.toString()).toContain("returned a truncated response");
+      }
       expect(scripted.state.spawned).toBe(1);
     })
   );
@@ -603,7 +628,11 @@ describe("ci lane timings jobs pagination", () => {
       const exit = yield* collectWithRetries(stalledSpawner);
 
       assertTrue(Exit.isFailure(exit));
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("ended after 1 of 2 jobs");
+      {
+        const exitFailed = Exit.isFailure(exit);
+        assertTrue(exitFailed);
+        expect(exit.cause.toString()).toContain("ended after 1 of 2 jobs");
+      }
     })
   );
 });
@@ -612,15 +641,15 @@ describe("ci lane timings derivations", () => {
   it("refuses a negative span rather than clamping a garbled record to zero", () => {
     // Job payloads with a `created_at` postdating their own `completed_at` were
     // observed live. Missing data must not read as a fast job.
-    expect(ciTimestampSpanSeconds("2026-08-06T12:10:00Z", "2026-08-06T12:00:00Z")).toStrictEqual(O.none());
-    expect(ciTimestampSpanSeconds(null, "2026-08-06T12:00:00Z")).toStrictEqual(O.none());
+    assertNone(ciTimestampSpanSeconds("2026-08-06T12:10:00Z", "2026-08-06T12:00:00Z"));
+    assertNone(ciTimestampSpanSeconds(null, "2026-08-06T12:00:00Z"));
   });
 
   it("sums setup and install seconds from the step timings", () => {
     const row = ciLaneTimingRow(job());
 
-    expect(row.setupSeconds).toStrictEqual(O.some(5));
-    expect(row.installSeconds).toStrictEqual(O.some(60));
+    assertSome(row.setupSeconds, 5);
+    assertSome(row.installSeconds, 60);
   });
 
   it("classifies runner pools from labels and refuses to guess", () => {
@@ -680,7 +709,7 @@ describe("ci lane timings derivations", () => {
 
     expect(report.managedJobCount).toBe(2);
     expect(report.managedInfraFailureCount).toBe(1);
-    expect(report.managedInfraSuccessRate).toStrictEqual(O.some(0.5));
+    assertSome(report.managedInfraSuccessRate, 0.5);
   });
 
   it("reports no rate rather than zero when no managed job was collected", () => {
@@ -688,7 +717,7 @@ describe("ci lane timings derivations", () => {
     // catastrophic fleet failure.
     const report = ciLaneTimingsReport([ciLaneTimingRow(job({ labels: ["ubuntu-latest"] }))]);
 
-    expect(report.managedInfraSuccessRate).toStrictEqual(O.none());
+    assertNone(report.managedInfraSuccessRate);
     expect(renderCiLaneTimingsSummary(report)).toContain("no managed-runner jobs collected");
   });
 
@@ -696,11 +725,22 @@ describe("ci lane timings derivations", () => {
     // No Actions API reports peak RSS, so `None` is the honest value.
     const rows = [ciLaneTimingRow(job())];
 
-    expect(rows[0]?.peakRssBytes).toStrictEqual(O.none());
-    expect(withCiLanePeakRss(rows, { "Test Unit": 25_000_000_000 })[0]?.peakRssBytes).toStrictEqual(
-      O.some(25_000_000_000)
-    );
-    expect(withCiLanePeakRss(rows, { Coverage: 1 })[0]?.peakRssBytes).toStrictEqual(O.none());
+    {
+      const optionUnderTest = rows[0]?.peakRssBytes;
+      assertDefined(optionUnderTest);
+      assertNone(optionUnderTest);
+    }
+    {
+      const optionUnderTest = withCiLanePeakRss(rows, { "Test Unit": 25_000_000_000 })[0]?.peakRssBytes;
+      const expectedOptionValue = 25_000_000_000;
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
+    {
+      const optionUnderTest = withCiLanePeakRss(rows, { Coverage: 1 })[0]?.peakRssBytes;
+      assertDefined(optionUnderTest);
+      assertNone(optionUnderTest);
+    }
   });
 });
 
@@ -780,9 +820,9 @@ describe("ci lane timing admission window", () => {
 
       expect(report.contextCount).toBe(18);
       expect(laneStat(report, "Check").n).toBe(1);
-      expect(laneStat(report, "Check").p95Seconds).toStrictEqual(O.some(10));
+      assertSome(laneStat(report, "Check").p95Seconds, 10);
       expect(laneStat(report, "Lint").n).toBe(1);
-      expect(laneStat(report, "Lint").p95Seconds).toStrictEqual(O.some(600));
+      assertSome(laneStat(report, "Lint").p95Seconds, 600);
       expect(laneStat(report, "Test Unit").n).toBe(0);
       expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(1);
       expect(attributionStat(report, "Docgen").failures).toBe(1);
@@ -791,7 +831,7 @@ describe("ci lane timing admission window", () => {
       expect(attributionStat(report, "Knip").laterAttempts).toBe(1);
       expect(attributionStat(report, "Knip").laterSuccesses).toBe(1);
       expect(report.pickup.n).toBe(4);
-      expect(report.pickup.p95Seconds).toStrictEqual(O.some(420));
+      assertSome(report.pickup.p95Seconds, 420);
       expect(report.pickup.breached).toBe(true);
 
       const markdown = renderCiLaneTimingWindowMarkdown(report);
@@ -886,7 +926,7 @@ describe("ci lane timing admission window", () => {
       ]);
 
       expect(laneStat(report, "Lint").n).toBe(1);
-      expect(laneStat(report, "Lint").p95Seconds).toStrictEqual(O.some(780));
+      assertSome(laneStat(report, "Lint").p95Seconds, 780);
       expect(attributionStat(report, "Lint").laterAttempts).toBe(1);
       expect(attributionStat(report, "Lint").laterSuccesses).toBe(1);
       const attemptTwoRows = A.filter(report.rows, (row) => row.runAttempt === 2);
@@ -1031,7 +1071,7 @@ describe("ci lane timing admission window", () => {
       ]);
 
       expect(laneStat(report, "Test Unit").n).toBe(1);
-      expect(laneStat(report, "Test Unit").p95Seconds).toStrictEqual(O.some(780));
+      assertSome(laneStat(report, "Test Unit").p95Seconds, 780);
       expect(laneStat(report, "Test Unit").state).toBe("Pass");
     })
   );
@@ -1098,9 +1138,9 @@ describe("ci lane timing admission window", () => {
       });
       const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, runs);
 
-      expect(laneStat(report, "Check").p50Seconds).toStrictEqual(O.some(20));
-      expect(laneStat(report, "Check").p95Seconds).toStrictEqual(O.some(30));
-      expect(laneStat(report, "Check").maxSeconds).toStrictEqual(O.some(30));
+      assertSome(laneStat(report, "Check").p50Seconds, 20);
+      assertSome(laneStat(report, "Check").p95Seconds, 30);
+      assertSome(laneStat(report, "Check").maxSeconds, 30);
     })
   );
 
@@ -1109,9 +1149,13 @@ describe("ci lane timing admission window", () => {
       const exit = yield* Effect.exit(buildCiLaneTimingWindowReport(A.append(REQUIRED_CONTEXTS, "Extra Context"), []));
 
       assertTrue(Exit.isFailure(exit));
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
-        "must expose a ratified required-context count (16 or 17 or 18); observed 19"
-      );
+      {
+        const exitFailed = Exit.isFailure(exit);
+        assertTrue(exitFailed);
+        expect(exit.cause.toString()).toContain(
+          "must expose a ratified required-context count (16 or 17 or 18); observed 19"
+        );
+      }
     })
   );
 
@@ -1122,7 +1166,10 @@ describe("ci lane timing admission window", () => {
 
       expect(report.runCount).toBe(1);
       expect(report.contextCount).toBe(18);
-      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(48600030));
+      assertSome(
+        O.map(report.rulesetVersion, (version) => version.version_id),
+        48600030
+      );
       const population = "ruleset 10240248 version 48600030 effective 2026-09-03T17:12:53.589Z";
       expect(renderCiLaneTimingWindowSummary(report)).toContain(population);
       expect(renderCiLaneTimingWindowMarkdown(report)).toContain(population);
@@ -1163,17 +1210,16 @@ describe("ci lane timing admission window", () => {
         }),
         true
       );
-      strictEqual(report.contextCount, 17);
-      deepStrictEqual(
+      expect(report.contextCount).toBe(17);
+      assertSome(
         O.map(report.rulesetVersion, (version) => version.version_id),
-        O.some(49479116)
+        49479116
       );
-      assertTrue(A.some(commands, Str.endsWith("/history/49479116")));
-      assertTrue(A.some(commands, Str.includes("/actions/")));
-      assertTrue(
-        Str.includes(
-          "- required contexts: 17 (expected 17; ruleset 10240248 version 49479116 effective 2026-09-12T01:46:53.354Z)"
-        )(renderCiLaneTimingWindowMarkdown(report))
+      expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(true);
+      expect(A.some(commands, Str.includes("/actions/"))).toBe(true);
+      const markdown = renderCiLaneTimingWindowMarkdown(report);
+      expect(markdown).toContain(
+        "- required contexts: 17 (expected 17; ruleset 10240248 version 49479116 effective 2026-09-12T01:46:53.354Z)"
       );
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
   });
@@ -1227,9 +1273,13 @@ describe("ci lane timing admission window", () => {
         )
       );
 
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
-        "version 49479116 must expose exactly 17 required contexts; observed 18"
-      );
+      {
+        const exitFailed = Exit.isFailure(exit);
+        assertTrue(exitFailed);
+        expect(exit.cause.toString()).toContain(
+          "version 49479116 must expose exactly 17 required contexts; observed 18"
+        );
+      }
     }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
   });
 
@@ -1252,9 +1302,13 @@ describe("ci lane timing admission window", () => {
           })
         )
       );
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
-        "Ruleset 10240248 version 50000000 is not a ratified admission population."
-      );
+      {
+        const exitFailed = Exit.isFailure(exit);
+        assertTrue(exitFailed);
+        expect(exit.cause.toString()).toContain(
+          "Ruleset 10240248 version 50000000 is not a ratified admission population."
+        );
+      }
       expect(A.some(commands, Str.includes("/actions/"))).toBe(false);
     }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
   });
@@ -1290,7 +1344,10 @@ describe("ci lane timing admission window", () => {
         })
       );
       expect(report.contextCount).toBe(18);
-      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(48600030));
+      assertSome(
+        O.map(report.rulesetVersion, (version) => version.version_id),
+        48600030
+      );
       expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(false);
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
   });
@@ -1311,7 +1368,10 @@ describe("ci lane timing admission window", () => {
       const report = yield* collectCiLaneTimingWindow(".", windowOptions({ headSha: O.some("included") }));
 
       expect(report.contextCount).toBe(18);
-      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(48600030));
+      assertSome(
+        O.map(report.rulesetVersion, (version) => version.version_id),
+        48600030
+      );
       const historyCommands = A.filter(commands, Str.includes("/history?"));
       expect(historyCommands).toHaveLength(2);
       expect(A.some(historyCommands, Str.includes("per_page=100&page=2"))).toBe(true);
@@ -1330,9 +1390,13 @@ describe("ci lane timing admission window", () => {
           })
         )
       );
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
-        "Ruleset 10240248 has no history version strictly before 2026-08-26T04:16:24.765Z."
-      );
+      {
+        const exitFailed = Exit.isFailure(exit);
+        assertTrue(exitFailed);
+        expect(exit.cause.toString()).toContain(
+          "Ruleset 10240248 has no history version strictly before 2026-08-26T04:16:24.765Z."
+        );
+      }
       expect(commands).toHaveLength(1);
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
   });
@@ -1363,7 +1427,11 @@ describe("ci lane timing admission window", () => {
       );
 
       assertTrue(Exit.isFailure(exit));
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("--since must be earlier than --until");
+      {
+        const exitFailed = Exit.isFailure(exit);
+        assertTrue(exitFailed);
+        expect(exit.cause.toString()).toContain("--since must be earlier than --until");
+      }
       expect(commands).toStrictEqual([]);
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
   });
@@ -1378,9 +1446,11 @@ describe("ci lane timing admission window", () => {
       const exit = yield* Effect.exit(collectCiLaneTimingWindow(".", windowOptions({ event: "pull_request" })));
 
       assertTrue(Exit.isFailure(exit));
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
-        "pull_request workflow-runs pagination ended after 0 of 1 runs"
-      );
+      {
+        const exitFailed = Exit.isFailure(exit);
+        assertTrue(exitFailed);
+        expect(exit.cause.toString()).toContain("pull_request workflow-runs pagination ended after 0 of 1 runs");
+      }
     }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
   });
 
@@ -1407,12 +1477,16 @@ describe("ci lane timing admission window", () => {
 
       assertTrue(Exit.isFailure(formatsExit));
       assertTrue(Exit.isFailure(boundsExit));
-      expect(Exit.isFailure(formatsExit) ? formatsExit.cause.toString() : "").toContain(
-        "Choose only one of --tsv or --markdown"
-      );
-      expect(Exit.isFailure(boundsExit) ? boundsExit.cause.toString() : "").toContain(
-        "--since must be earlier than --until"
-      );
+      {
+        const exitFailed = Exit.isFailure(formatsExit);
+        assertTrue(exitFailed);
+        expect(formatsExit.cause.toString()).toContain("Choose only one of --tsv or --markdown");
+      }
+      {
+        const exitFailed = Exit.isFailure(boundsExit);
+        assertTrue(exitFailed);
+        expect(boundsExit.cause.toString()).toContain("--since must be earlier than --until");
+      }
     }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner),
       provideScopedLayer(laneTimingsCommandLayer)

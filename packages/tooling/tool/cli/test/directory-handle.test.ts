@@ -8,6 +8,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
 
@@ -48,13 +49,13 @@ describe("DirectoryHandle", () => {
 
       const bound = yield* openDirectoryHandle(real);
       const expected = directoryIdentity(yield* fs.stat(real));
-      expect(O.isSome(bound)).toBe(true);
-      expect(O.isSome(expected)).toBe(true);
+      bound.pipe(O.isSome, assertTrue);
+      expected.pipe(O.isSome, assertTrue);
       expect(sameDirectoryIdentity(O.getOrThrow(bound).identity, O.getOrThrow(expected))).toBe(true);
 
-      expect(O.isNone(yield* openDirectoryHandle(link))).toBe(true);
-      expect(O.isNone(yield* openDirectoryHandle(file))).toBe(true);
-      expect(O.isNone(yield* openDirectoryHandle(path.join(root, "missing")))).toBe(true);
+      (yield* openDirectoryHandle(link)).pipe(assertNone);
+      (yield* openDirectoryHandle(file)).pipe(assertNone);
+      (yield* openDirectoryHandle(path.join(root, "missing"))).pipe(assertNone);
     }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer))
   );
 
@@ -94,7 +95,7 @@ describe("DirectoryHandle", () => {
       expect(yield* removeThroughDirectoryHandle(handle, victim)).toBe("identity-changed");
       expect(yield* fs.readDirectory(moved)).toEqual([]);
       expect(yield* fs.exists(path.join(bystander, "keep.txt"))).toBe(true);
-      expect(O.isSome(yield* fs.readLink(victim).pipe(Effect.option))).toBe(true);
+      (yield* fs.readLink(victim).pipe(Effect.option)).pipe(O.isSome, assertTrue);
     }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer))
   );
 
