@@ -120,4 +120,6 @@ separate a better skill from noise at this model strength. A further rerun on
 this corpus would spend quota to learn the same thing. What a next loop needs,
 in order: a corpus with headroom (harder tasks or more validation items),
 rollouts isolated from the corpus, and a gate margin at least as wide as the
-measured spread. Those belong to a new packet, not this one.
+measured spread. Those belong to a new packet, not this one. They are
+recorded in the parked exploration
+[`skillopt-corpus-headroom`](../../../../explorations/skillopt-corpus-headroom/README.md).
