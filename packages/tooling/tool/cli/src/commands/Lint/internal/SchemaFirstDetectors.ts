@@ -1671,9 +1671,56 @@ const isParameterOperand =
     return Node.isIdentifier(value) && HashSet.has(parameters, value.getText());
   };
 
-// An expression that only runs a schema codec on the function's own parameters, optionally
-// unwrapped: `decode(u)`, `S.asserts(schema, u)`, `Result.getOrThrow(decode(u))`,
+// One forwarding form, tested against a call whose callee is already unwrapped.
+type ForwardingForm = (
+  context: FacadeContext,
+  parameters: HashSet.HashSet<string>,
+  call: CallExpression,
+  callee: Node
+) => boolean;
+
+// `decode(u)`: a codec applied to the function's own parameters.
+const forwardsCodecCall: ForwardingForm = (context, parameters, call, callee) =>
+  isCodecReference(context)(callee) &&
+  A.isReadonlyArrayNonEmpty(call.getArguments()) &&
+  A.every(call.getArguments(), isParameterOperand(parameters));
+
+// `S.asserts(schema, u)`: the binary assertion forwarding the parameters after the schema.
+const forwardsAssertion: ForwardingForm = (context, parameters, call) => {
+  const rest = A.drop(call.getArguments(), 1);
+  return (
+    O.exists(codecCallName(context.schemaNames)(call), (name) => Str.Equivalence(name, "asserts")) &&
+    O.exists(A.head(call.getArguments()), isSchemaOperand(context.bindings)) &&
+    A.isReadonlyArrayNonEmpty(rest) &&
+    A.every(rest, isParameterOperand(parameters))
+  );
+};
+
+// `Result.getOrThrow(decode(u))`: an unwrapper around a forwarding call.
+const forwardsUnwrapped: ForwardingForm = (context, parameters, call, callee) =>
+  isUnwrapperReference(callee) && O.exists(A.head(call.getArguments()), isForwardingExpression(context, parameters));
+
 // `pipe(u, S.decodeUnknownResult(schema), Result.getOrThrow)`.
+const forwardsPipe: ForwardingForm = (context, parameters, call, callee) => {
+  const args = call.getArguments();
+  return (
+    Node.isIdentifier(callee) &&
+    Str.Equivalence(callee.getText(), "pipe") &&
+    O.exists(A.get(args, 0), isParameterOperand(parameters)) &&
+    O.exists(A.get(args, 1), isCodecReference(context)) &&
+    A.every(A.drop(args, 2), isUnwrapperReference)
+  );
+};
+
+const FORWARDING_FORMS: ReadonlyArray<ForwardingForm> = [
+  forwardsCodecCall,
+  forwardsAssertion,
+  forwardsUnwrapped,
+  forwardsPipe,
+];
+
+// An expression that only runs a schema codec on the function's own parameters, in one of the
+// forwarding forms above.
 const isForwardingExpression =
   (context: FacadeContext, parameters: HashSet.HashSet<string>) =>
   (node: Node): boolean => {
@@ -1682,29 +1729,7 @@ const isForwardingExpression =
       return false;
     }
     const callee = unwrapParentheses(value.getExpression());
-    const args = value.getArguments();
-    const isParameter = isParameterOperand(parameters);
-    if (isCodecReference(context)(callee) && A.isReadonlyArrayNonEmpty(args) && A.every(args, isParameter)) {
-      return true;
-    }
-    if (
-      O.exists(codecCallName(context.schemaNames)(value), (name) => Str.Equivalence(name, "asserts")) &&
-      O.exists(A.head(args), isSchemaOperand(context.bindings)) &&
-      A.isReadonlyArrayNonEmpty(A.drop(args, 1)) &&
-      A.every(A.drop(args, 1), isParameter)
-    ) {
-      return true;
-    }
-    if (isUnwrapperReference(callee)) {
-      return O.exists(A.head(args), isForwardingExpression(context, parameters));
-    }
-    return (
-      Node.isIdentifier(callee) &&
-      Str.Equivalence(callee.getText(), "pipe") &&
-      O.exists(A.get(args, 0), isParameter) &&
-      O.exists(A.get(args, 1), isCodecReference(context)) &&
-      A.every(A.drop(args, 2), isUnwrapperReference)
-    );
+    return A.some(FORWARDING_FORMS, (form) => form(context, parameters, value, callee));
   };
 
 // A function that only forwards its own parameters into a schema codec.
@@ -1742,31 +1767,38 @@ const isCodecFacadeValue =
     );
   };
 
+// The value a statics member exposes: an initializer, the shorthand's local binding, or a getter's
+// returned expression. Methods are judged as functions instead.
+const staticsMemberValue = (member: Node): O.Option<readonly [name: string, value: Node]> => {
+  if (Node.isPropertyAssignment(member)) {
+    return O.map(O.fromUndefinedOr(member.getInitializer()), (value) => [member.getName(), value] as const);
+  }
+  if (Node.isShorthandPropertyAssignment(member)) {
+    return pipe(
+      O.fromUndefinedOr(member.getProject().getTypeChecker().getShorthandAssignmentValueSymbol(member)),
+      O.flatMap((symbol) => A.head(symbol.getDeclarations())),
+      O.filter(Node.isVariableDeclaration),
+      O.flatMap((declaration) => O.fromUndefinedOr(declaration.getInitializer())),
+      O.map((value) => [member.getName(), value] as const)
+    );
+  }
+  return Node.isGetAccessorDeclaration(member)
+    ? O.map(onlyReturned(member), (value) => [member.getName(), value] as const)
+    : O.none();
+};
+
 // The name of a statics member that is a codec facade; none for a domain helper.
 const codecFacadeName =
   (context: FacadeContext) =>
   (member: Node): O.Option<string> => {
-    if (Node.isPropertyAssignment(member)) {
-      return O.exists(O.fromUndefinedOr(member.getInitializer()), isCodecFacadeValue(context))
-        ? O.some(member.getName())
-        : O.none();
+    if (Node.isMethodDeclaration(member)) {
+      return isForwardingFunction(context)(member) ? O.some(member.getName()) : O.none();
     }
-    if (Node.isShorthandPropertyAssignment(member)) {
-      return pipe(
-        O.fromUndefinedOr(member.getProject().getTypeChecker().getShorthandAssignmentValueSymbol(member)),
-        O.flatMap((symbol) => A.head(symbol.getDeclarations())),
-        O.filter(Node.isVariableDeclaration),
-        O.flatMap((declaration) => O.fromUndefinedOr(declaration.getInitializer())),
-        O.filter(isCodecFacadeValue(context)),
-        O.map(() => member.getName())
-      );
-    }
-    if (Node.isGetAccessorDeclaration(member)) {
-      return O.exists(onlyReturned(member), isCodecFacadeValue(context)) ? O.some(member.getName()) : O.none();
-    }
-    return Node.isMethodDeclaration(member) && isForwardingFunction(context)(member)
-      ? O.some(member.getName())
-      : O.none();
+    return pipe(
+      staticsMemberValue(member),
+      O.filter(([, value]) => isCodecFacadeValue(context)(value)),
+      O.map(([name]) => name)
+    );
   };
 
 const codecFacadeCandidates = (sourceFile: SourceFile): ReadonlyArray<ParityCandidate> => {

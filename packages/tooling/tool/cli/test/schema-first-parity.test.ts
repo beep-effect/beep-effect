@@ -511,6 +511,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-codec-static", (it
           "    get label() {",
           '      return "holder";',
           "    },",
+          "    set label(_value: string) {},",
           "  }))",
           ");",
           "const makeStatics = () => <Schema extends S.Top>(schema: Schema) => ({ is: S.is(schema) });",
