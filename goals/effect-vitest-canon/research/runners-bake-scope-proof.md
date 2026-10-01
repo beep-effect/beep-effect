@@ -1,7 +1,7 @@
 # Runner bake fixture and property migration
 
-Applied after main merge `65fb90dbb0`; full package proof and a source commit
-remain pending, so campaign findings are not yet closed.
+Committed in `719865d60c` after main merge `65fb90dbb0`. Matching campaign
+findings are reconciled to that source commit after full package verification.
 
 Static platform providers move into 12 public instrumented layer registrations.
 Console-only providers yield to the runner's test console. Seven dynamic
@@ -27,4 +27,5 @@ Full package verification passes: audit 760.8 seconds and docgen 25.0 seconds.
 
 Final applied root test types and the detector ratchet pass with zero new
 findings. Full package proof passes: audit 760.8 seconds and docgen 25.0
-seconds. Campaign reconciliation will bind fixes to the source commit.
+seconds. Campaign fixes reference source commit `719865d60c`; retained native subjects
+and shorter helper lifetimes carry explicit exception reasons.

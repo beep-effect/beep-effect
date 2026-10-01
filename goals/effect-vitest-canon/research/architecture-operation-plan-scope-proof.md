@@ -1,7 +1,7 @@
 # Architecture operation-plan fixture qualification
 
-The candidate is applied after merging main at `65fb90dbb0`. Campaign rows
-remain open until the new full package proof and source commit exist.
+The migration is committed in `719865d60c`, after merging main at
+`65fb90dbb0`. Matching campaign findings are reconciled to that source commit.
 
 The candidate removes the local provider clone and 28 provider invocations,
 using 14 public instrumented runner layer registrations. It preserves native
@@ -22,7 +22,7 @@ An injected failure immediately after allocation proves cleanup independently
 of successful test bodies. The control observes the intended failure and
 asserts the allocated root is absent after scope closure. It passes on Node
 (4.48 seconds) and Bun (2.76 seconds). Private hashes and logs bind these results
-to the candidate; none substitutes for the forthcoming applied package proof.
+to the candidate; the applied package proof is recorded below.
 
 The final combined applied architecture/runner suite passes 42 tests on Node
 (6.38 seconds) and Bun (3.78 seconds). Root test types and full package proof
@@ -30,4 +30,5 @@ are tracked separately; baseline reconciliation preserves historical rows.
 
 Final applied root test types and the detector ratchet pass with zero new
 findings. Full package proof passes: audit 760.8 seconds and docgen 25.0
-seconds. Campaign reconciliation will bind fixes to the source commit.
+seconds. Campaign fixes reference source commit `719865d60c`; retained native subjects
+and shorter helper lifetimes carry explicit exception reasons.
