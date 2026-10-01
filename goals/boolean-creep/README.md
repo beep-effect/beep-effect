@@ -1,5 +1,23 @@
 ## Current source refresh, 2026-10-01
 
+PR #1339 now contains main `90517df719fa1eb1a24c00b6ba8bdad2d26d8b8f`
+at campaign source `2d38ac6827c599248f7fd643feaf75e2a0fe406b`.
+R49's independently approved inputs and runtime became historical before any
+census stage materialized. R50 recomputed 3,152 corpus files across 27 lanes
+with 82 exclusions and independently adjudicated all 76 inventory-anchor
+conflicts. Its approved patch updates 72 rows, leaves four unchanged, and
+preserves 725 total records: 108 qualified, 617 disqualified and zero applied.
+The exact pre-change projection is retained at
+`history/inventory/2026-10-01-pre-r50-anchor-drift.jsonl`.
+
+The next gate is a complete R50 input rebuild and independent review bound to
+the packet commit, followed by a fresh exact-source check before runtime or
+provider execution. These anchor repairs confer no census, dry-round, P3 or
+implementation credit. Publish coherent fixes immediately and allow hosted
+checks to run while the private campaign gates continue.
+
+## Historical R49 source refresh, 2026-10-01
+
 Main advanced again to `e324f01e1e1fefaab1a40144dc66544826798fe1` and was
 merged in `c47a403805e1cf9a56bd54c1ec1388b5503374c4`. R49 recomputes the
 current corpus after the LiteralKit keyed-API migration. Two surviving

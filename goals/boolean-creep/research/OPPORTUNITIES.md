@@ -1963,3 +1963,13 @@ two disqualified PropertyDescriptor owners. R49 preparation caught their old
 line numbers only after a full source refresh. A packet validator that compares
 stored symbol names with Graft spans after each main merge would distinguish a
 simple re-anchor from a removed owner before rebuilding every prompt.
+
+## 2026-10-01: main drift invalidated reviewed admission preparation
+
+R49 reached independent input and runtime approval, including two complete
+105-case verifier runs, but main advanced before any census stage materialized.
+The fresh source partition then exposed 76 inventory-anchor conflicts and
+required 72 reviewed row edits. A source-refresh step that binds owners to
+symbols or syntax nodes before preparing the runtime would have isolated this
+line drift earlier and avoided reviewing a launch package that could not be
+used. The R49 artifacts remain historical; no provider call was spent.
