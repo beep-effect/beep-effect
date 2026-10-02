@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-nested-script-review/v1",
   "authority": "Static local manifest references only. No shell execution, runtime semantic closure, or qualification.",
-  "censusSha256": "f858c8f12c74d776365b6639bdf120c40edb746385984a94b50ab77b87f39802",
+  "censusSha256": "16537697c031a06dc1c39a00d8eec9171bd660c702fffe890c69ed1bec66dd7d",
   "recipeSha256": "0e23296456a584dad3528b277c755a3dc6030716d06af71e35d617004ca7eea0",
   "rootCount": 1984,
   "definitionCount": 3364,

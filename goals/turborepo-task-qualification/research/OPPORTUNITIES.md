@@ -2968,3 +2968,22 @@ The serialized canonical full deprecated-API scan passed with all 29 shards.
 Both cold package scans, all 72 focused lint tests and the package lint/type
 checks pass. The repair changes only shard boundaries and their test fixture;
 full Yeet and final-head hosted verification remain required.
+
+
+### 2026-10-02 — Final proof identity and runner recovery
+
+- Work: close PR #1389 after the lint-shard repair. Full publication passed
+  at `466ecff`, including the cold merged preview; 55 aggregate lanes passed.
+- Evidence: the aggregate verdict retains pre-commit `fe8ea6109d` in both
+  identity fields. All 39 lane records bind actual `466ecff` and its exact
+  tree; publication and hosted closeout agree. Preserve the original records.
+- Prevention: distinguish invocation context from tested commit explicitly in
+  the aggregate verdict, and validate that relationship during closeout.
+- Hosted Lint and Docgen lost runner communication. The existing bounded
+  recovery reran only the failed jobs (attempts 2 and 3); both passed. No
+  source change or duplicate manual retry was needed.
+- Main subsequently added test isolation in #1402; the clean integration
+  requires final-head proof. A focused test command was initially issued at
+  repo root, where Turbo interpreted file arguments as task names and refused
+  them. Retained that failure and reran from the owning CLI package. Use an
+  explicit package working directory for focused test commands.

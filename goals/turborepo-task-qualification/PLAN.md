@@ -2,13 +2,13 @@
 
 ## Status
 
-Status: `active`
-Lifecycle: `active`
+Status: `completed-retained`
+Lifecycle: `completed-retained`
 
 ## Current acceptance checkpoint: 2026-10-02
 
 PR #1389 contains the source repairs and public adoption handoff at
-`fe8ea6109d953dcef41ba536428cf2c054b75a7d`. Older checkpoints below retain
+`466ecffcf940001714e62a565ef409076922b8af`. Older checkpoints below retain
 their original identities and are historical; their statements that no tuple
 qualified no longer describe the current retained evidence.
 
@@ -32,18 +32,24 @@ hash validation passed. Ordinary-profile rows remain 1,980 unassessed and four
 excluded; 1,259 existing cached computations remain legacy settings. The named
 private pilot does not activate ordinary or broad task-family reuse.
 
-The policy package full audit/docgen passed and its package source is unchanged
-since that proof. CLI full audit/docgen passed before the latest main test-only
-integration; all 15 post-integration cheap gates passed. The current full Yeet run passed unit, integration, property, coverage,
-documentation, Fallow and Nix checks, but its merged-preview lint-policy step
-exhausted the deprecated-API worker's 8 GiB heap. The unchanged cached retry passed, but a cold combined shard reproduced the
-heap failure. Separate cold CLI and docgen scans pass with the same 8 GiB cap;
-the shard list now separates those packages. Final aggregate proof remains
-required. Hosted coverage is on a bounded automatic
-retry after runner communication loss; the other hosted code checks passed. The latest two process-double review
-comments were answered and resolved with explicit native-evidence boundaries.
-Final-head strict merge readiness, reflection/lifecycle publication and merge
-remain required. This checkpoint is not a completion declaration.
+Full local publication at `466ecff` passed all 55 aggregate lanes, including
+primary pre-push and merged-preview CI parity. Each full CLI unit run passed
+5,262 tests in 269 files. The cold merged-preview deprecated-API scan passed
+after separating CLI and docgen shards at the same 8 GiB limit; no rule or
+threshold was weakened. Coverage, integration, property, documentation,
+Fallow and Nix passed. All 16 required and 23 optional hosted checks passed.
+Strict monitoring exited 0 with `merge-ready: yes`; review closeout found zero
+actionable issues and zero unresolved threads. The
+[quality receipt](research/quality-closeout-466ec.json) preserves exact evidence
+identities, including the aggregate verdict's pre-commit context.
+
+Main's test-isolation/inventory commit `9447997c4d` was integrated cleanly as
+`5679426061`. The checked adoption bundle was rebuilt from that merged tree;
+its population and reviewed command coverage are unchanged. This same-PR
+closeout includes the acceptance audit, reflection and completed-retained
+lifecycle. The final publication must pass its own local, hosted and strict
+review/readiness gates before the already-authorized merge. The active Codex
+goal closes only after merge verification and lane retirement.
 
 ## Phases
 
@@ -53,9 +59,9 @@ remain required. This checkpoint is not a completion declaration.
 | P1 Policy and discovery | complete | Implement pure policy/projection in repo-configs and discovery, transition checks and drift reporting in Cache. | Fixtures prove lifecycle legality, deterministic projection and pilot-only enforcement. |
 | P2 Local pilot and shadow | complete | Exercise one synthetic fixture and @beep/identity#lint in one named profile; record reads, writes, logs and semantic perturbations. | Fresh comparisons and shadow evidence are attributable; legacy settings remain visibly unassessed. |
 | P3 Signed replay integration | complete | Consume conformance/trust receipts and run the full isolated signed-replay protocol for the real pilot. | A real pilot qualifies with the required comparisons and shadow sample; unsupported profiles remain excluded. |
-| P4 Verify and hand off | in-progress | Run package gates, command/fixture tests and the qualification replay suite; hand the population and policy API to adoption. | Acceptance and negative cases pass with versioned receipts and no unexplained divergence. |
-| P5 Yeet: PR to mergeable | in-progress | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
-| P6 Close | in-progress | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
+| P4 Verify and hand off | complete | Run package gates, command/fixture tests and the qualification replay suite; hand the population and policy API to adoption. | Acceptance and negative cases pass with versioned receipts and no unexplained divergence. |
+| P5 Yeet: PR to mergeable | complete | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
+| P6 Close | complete | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
 
 ## Historical checkpoints
 

@@ -3,13 +3,13 @@
   "initiative": {
     "id": "turborepo-task-qualification",
     "title": "Turborepo task qualification",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-08",
     "updated": "2026-10-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-task-qualification",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Make cache reuse an enforced, evidence-backed contract for each quality computation, reuse layer, environment profile and epoch.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -475,7 +475,8 @@
     "research/current-signed-qualification.json",
     "research/adoption-handoff.md",
     "research/adoption/manifest.json",
-    "research/acceptance-2026-10-02.md"
+    "research/acceptance-2026-10-02.md",
+    "research/quality-closeout-466ec.json"
   ],
   "agentLaunchers": [
     {
@@ -510,17 +511,17 @@
     {
       "id": "P4",
       "name": "Verify and hand off",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -531,7 +532,7 @@
     "git diff --check -- goals/turborepo-task-qualification",
     "bun run beep lint reflection-artifacts",
     "bun run beep quality package-verify @beep/repo-cli",
-    "bun run beep quality package-verify @beep/ai-sync"
+    "bun run beep quality package-verify @beep/repo-configs"
   ],
   "stopConditions": [
     "Semantic divergence, failed invalidation, sensitive output, or unauthorized read/write/tenant crossing stops affected reuse.",
@@ -539,5 +540,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "PR #1389 contains the signed qualification mechanism and public adoption handoff at fe8ea6109d. Native stable/canary evidence at frozen 93a19425da qualified the named private-loopback identity lint tuple: 103 accepted fragments, ledger revision 8, zero audit blockers. The adoption bundle covers 145 workspaces, 1984 executable and 1514 graph-only nodes; ordinary entries remain 1980 unassessed and four excluded. Final local proof remains incomplete after a merged-preview deprecated-API heap exhaustion; its cached retry passed, but a cold combined shard reproduced the failure. Independent cold CLI and docgen scans pass at the same limit; the shard list now separates those packages. Hosted coverage is retrying runner communication loss. Final-head merge readiness and completed-retained lifecycle remain required; earlier receipts retain their original source identities."
+  "statusNote": "PR #1389 supplies the qualification mechanism, authenticated native pilot, checked adoption handoff and same-PR closeout. Frozen 93a19425da qualified the named private-loopback tuple with 103 accepted fragments and ledger revision 8. Full local publication and strict hosted readiness passed at 466ecff (55 aggregate lanes; 16 required and 23 optional checks; zero unresolved threads). Main 9447997c4d was integrated as 5679426061 and the adoption bundle rebuilt. The final publication must pass its own exact-head gates before authorized merge and retirement; retained native and quality receipts keep their original identities."
 }
