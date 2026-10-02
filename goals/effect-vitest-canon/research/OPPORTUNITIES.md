@@ -6441,3 +6441,7 @@ its native executable ownership and environment restoration were unchanged.
 The exception was restored after semantic review. Baseline refreshes should
 report disposition changes explicitly so they can be reconciled with the
 historical ledger before publication.
+
+### Focused Vitest selection under a property floor
+
+While validating the four-suite CLI backlog batch, setting `BEEP_FC_NUM_RUNS=400` selected only the property-bearing cache-entrypoints suite: 9 tests passed, while the other three suites were excluded. At repository root the same filtered command selected zero tests and exited 1. `vitest.shared.ts` intentionally switches the include list to a content-based property census when a floor is active. Retain separate ordinary-suite and property-sweep receipts, and make focused proof tooling report selected files and omitted requested files before accepting a multi-suite result. The 9-test result proves the property-bearing suite only; ordinary combined proof remains required.
