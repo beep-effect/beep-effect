@@ -2078,7 +2078,7 @@
       "symbol": "runPromise",
       "occurrence": "v2:ed1567f8b25ed21ba656ee45796954325341a9c6278b886d157e96ee883f2702",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboQueryAffectedOutput(`\u2022 turbo 2.9.16 { \"data\": { \"affectedTasks\": { \"items\": [ { \"name\": \"lint\", \"package\": { \"name\": \"",
+      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboQueryAffectedOutput(`• turbo 2.9.16 { \"data\": { \"affectedTasks\": { \"items\": [ { \"name\": \"lint\", \"package\": { \"name\": \"",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -2099,7 +2099,7 @@
       "symbol": "runPromise",
       "occurrence": "v2:a2c6ab9830ec73683938f7a2e386352a6e449feb8bed7bc085debfdf49b5a427",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboDryRunOutput(`\u2022 turbo 2.9.16 { \"packages\": [\"@beep/demo\", \"@beep/other\"], \"tasks\": [ { \"task\": \"lint\", \"package\": \"@be",
+      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboDryRunOutput(`• turbo 2.9.16 { \"packages\": [\"@beep/demo\", \"@beep/other\"], \"tasks\": [ { \"task\": \"lint\", \"package\": \"@be",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -8337,321 +8337,6 @@
       "occurrence": "v2:1f9d3aafe14423a60b4b4364dcef5bc52f4680977a84e4fe00d6dd939273f101",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(CommandTestLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:149:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 149,
-      "endLine": 149,
-      "symbol": "providePlatform",
-      "occurrence": "v2:aad07e6d90cdc223856d839cbf2b66a770ab6b29dfc0e391a9ef45ee964748f2",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:164:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 164,
-      "endLine": 164,
-      "symbol": "providePlatform",
-      "occurrence": "v2:921c41aed070ead45ad56e79d01a004939ac8475e81f25a51ca4d4a3a0928d89",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:216:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 216,
-      "endLine": 216,
-      "symbol": "providePlatform",
-      "occurrence": "v2:c2365d10945c811d155c0fd742de996e290d22c1d7039c3691eeef852e018f0a",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:225:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 225,
-      "endLine": 225,
-      "symbol": "providePlatform",
-      "occurrence": "v2:53789bbe58e3296eca3a7d1847e173070c3e09287cc852a1e40a92ca63736ee3",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:262:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 262,
-      "endLine": 262,
-      "symbol": "providePlatform",
-      "occurrence": "v2:4d31282a195d960bea86fcd06700c588653fd4177d67a914e7e212d2469cc211",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:274:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 274,
-      "endLine": 274,
-      "symbol": "providePlatform",
-      "occurrence": "v2:1459ed2f120b1f9326aca4d643c4c150f8e0ef3b7de6927eb174862156b64598",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:290:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 290,
-      "endLine": 290,
-      "symbol": "providePlatform",
-      "occurrence": "v2:285e2412f3063f1ced562583c93b479b11c2e6689011a06cbb2aca9251d7b4cb",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:297:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 297,
-      "endLine": 297,
-      "symbol": "providePlatform",
-      "occurrence": "v2:07b542d19c6838f39bbb0e21a269f1f57cca318407a5e78c35b8185d11d6ac1d",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:312:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 312,
-      "endLine": 312,
-      "symbol": "providePlatform",
-      "occurrence": "v2:d926d0e7f52454a00ebecf4b3fa3f426ef09d6ed06669e7d7083f94ae3af7269",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:320:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 320,
-      "endLine": 320,
-      "symbol": "providePlatform",
-      "occurrence": "v2:e797a74845efe60d209b0a88634475bceff240d58d2d6200063ca08560bc296d",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:365:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 365,
-      "endLine": 365,
-      "symbol": "providePlatform",
-      "occurrence": "v2:40f2ae651870ef0a1a2fcff2e61e4c394db3f5edca2bcc5011d314a8a235f561",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:389:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 389,
-      "endLine": 389,
-      "symbol": "providePlatform",
-      "occurrence": "v2:e848822ec4ac89225de6d8c6c04b40f0935de5ba57a2022e8cac7fc1a8b0b263",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:397:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 397,
-      "endLine": 397,
-      "symbol": "providePlatform",
-      "occurrence": "v2:65820b3263ca87420131068bb1876881d352fc02da6e3946e5a21fa9b866aaf3",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:421:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 421,
-      "endLine": 421,
-      "symbol": "providePlatform",
-      "occurrence": "v2:59a62114736e0d00249d4c578867f8e20ea26b892784e8dce95407f964627ae1",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-workers.test.ts:453:providePlatform@9#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 453,
-      "endLine": 453,
-      "symbol": "providePlatform",
-      "occurrence": "v2:07c671bd1905b2aba80a1d1f2638a468027541aacb4a844d9203222daf9c0529",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -15270,7 +14955,7 @@
       "symbol": "withTempCwd",
       "occurrence": "v2:9e078d6dc82ffce1ef6a236bc5741e37734afe19001da861a621e6742323a97c",
       "class": "resource-wrapper",
-      "evidence": "withTempCwd( Effect.fnUntraced(function* (cwd) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; // The cited artifact really exists \u2014 one round up. Containment, not // existen",
+      "evidence": "withTempCwd( Effect.fnUntraced(function* (cwd) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; // The cited artifact really exists — one round up. Containment, not // existen",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -16401,7 +16086,7 @@
       "symbol": "inTempRepo",
       "occurrence": "v2:634ee90944fd287dd36b906e3c86ab44efc25edc3c1c888c1c6a0a96f5d69a99",
       "class": "resource-wrapper",
-      "evidence": "inTempRepo((root) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; // A directory squatting on the receipt path: it exists, but reading it // as a file fails \u2014 the ack must surviv",
+      "evidence": "inTempRepo((root) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; // A directory squatting on the receipt path: it exists, but reading it // as a file fails — the ack must surviv",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -24253,7 +23938,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -24297,7 +23982,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -30096,13 +29781,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/lint-workers.test.ts:8:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/lint-workers.test.ts:7:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 8,
-      "endLine": 8,
+      "line": 7,
+      "endLine": 7,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -30114,7 +29799,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native filesystem and child-process services are the tested boundary: real Bun CLI children read representative on-disk compiler projects; Memory cannot supply child-visible files. Scoped acquisition and positive/negative cleanup controls preserve ownership. See goals/effect-vitest-canon/research/cli-lint-workers-package-proof.json."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/match-person-model-store.test.ts:5:@effect/platform-node@0#1",
@@ -32811,13 +32497,13 @@
       "status": "open"
     },
     {
-      "id": "EV011:packages/tooling/tool/cli/test/lint-workers.test.ts:17:vitest-import@0#1",
+      "id": "EV011:packages/tooling/tool/cli/test/lint-workers.test.ts:16:vitest-import@0#1",
       "lens": "detector",
       "ruleId": "EV011",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 17,
-      "endLine": 17,
+      "line": 16,
+      "endLine": 16,
       "symbol": "vitest-import",
       "occurrence": "v2:4edb49754a5407dfdaee5918ee8c043d097d2eae413ba7ed6307ac9c06b7a01d",
       "class": "plain-vitest-with-effect",
@@ -33070,13 +32756,13 @@
       "status": "open"
     },
     {
-      "id": "EV012:packages/tooling/tool/cli/test/lint-workers.test.ts:24:vi.mock@0#1",
+      "id": "EV012:packages/tooling/tool/cli/test/lint-workers.test.ts:23:vi.mock@0#1",
       "lens": "resource",
       "ruleId": "EV012",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 24,
-      "endLine": 29,
+      "line": 23,
+      "endLine": 28,
       "symbol": "vi.mock",
       "occurrence": "v2:ce22c322e48af625c0bf281f8a089ed69e050aebfb58f6ea3910e876339a04f1",
       "class": "unproven-module-mock-review",
@@ -33088,7 +32774,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The retained hoisted mock controls the plain findRepoRoot module function used by command dispatch; it is not a Context.Service replaceable with Layer.mock. Selection resets and real-child cases preserve both boundaries. See goals/effect-vitest-canon/research/cli-lint-workers-package-proof.json."
     },
     {
       "id": "EV013:packages/tooling/tool/cli/test/quality-scheduler.test.ts:1112:retry-loop@12#1",
@@ -35493,7 +35180,7 @@
       "symbol": "it.layer",
       "occurrence": "v2:334f551ed498057e65213c9225e42be24ab1e015bb5ae47b3371c5da131b6dbb",
       "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer( OnePasswordCli.makeLayerFromRunner((_command, args) => Effect.succeed( OnePasswordCliProcessResult.make({ exitCode: 0, stderr: \"\", stdout: Str.concat( \"\u00e9\ud83d\udd10\", O.getOrElse(A.get(args, 1), () =",
+      "evidence": "it.layer( OnePasswordCli.makeLayerFromRunner((_command, args) => Effect.succeed( OnePasswordCliProcessResult.make({ exitCode: 0, stderr: \"\", stdout: Str.concat( \"é🔐\", O.getOrElse(A.get(args, 1), () =",
       "replacement": {
         "primitive": "it.layer.option.timeout",
         "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."

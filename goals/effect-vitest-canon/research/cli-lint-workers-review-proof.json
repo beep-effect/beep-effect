@@ -1,0 +1,26 @@
+{
+  "source": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+  "sourceSha256": "702801285e66891423d4c279261111ac035d0ea9d89685f25ea86df8cffe9683",
+  "pr": 1402,
+  "reviewThread": "PRRT_kwDOPbO_N86oXN6K",
+  "regression": "Tracked intentionally invalid JSDoc and deprecated API fixtures require nonzero real worker exits and exact diagnostics.",
+  "diagnostics": ["jsdoc/require-jsdoc", "@typescript-eslint/no-deprecated"],
+  "runtimes": {
+    "Node": {
+      "passed": 19,
+      "failed": 0
+    },
+    "Bun": {
+      "passed": 19,
+      "failed": 0
+    }
+  },
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "exitCode": 0,
+    "auditSeconds": 601.3,
+    "docgenSeconds": 20.9
+  },
+  "hostedProof": false,
+  "sourceFixSha": "a9ffa3dc7c"
+}
