@@ -110,6 +110,7 @@ const config = {
     "apps/todox/package.json",
     "packages/drivers/box-provisioning/package.json",
     "packages/drivers/freshbooks/package.json",
+    "packages/drivers/xstate/package.json",
   ],
   customTypes: {
     catalog: {
