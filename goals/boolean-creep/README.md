@@ -1,4 +1,32 @@
-## Current continuation: R54, 2026-10-01
+Lifecycle: `reference`
+
+## Partial closeout: 2026-10-02
+
+The operator explicitly replaced the full eradication objective with a partial
+closeout on 2026-10-02. This packet is retained as reference; execution has ended.
+The original acceptance criteria were not achieved and are preserved below as
+historical requirements, not obligations to continue this closed campaign.
+
+The published inventory retains 723 records: 108 qualified, 615 disqualified,
+and zero applied. Historical inventory reconciliation, designs and review
+receipts remain useful reference material. They do not establish current-source
+admission, two complete dry census rounds, replacement independent zero-finding
+campaign review, Gate 2 ratification, implementation, or final exact-main proof.
+Those gates remain unmet. No synthetic audit commit receives campaign credit.
+
+The operator intentionally deleted `~/.cache/beep/boolean-creep` under disk
+pressure reported at 96% usage. Private R54 proposals, runtime experiments,
+unpublished review receipts and build outputs in that directory are unavailable.
+Earlier statements that those artifacts remain preserved are superseded. Do not
+recreate approvals from reported hashes or count deleted evidence as a live gate.
+Tracked packet history and published commits remain the durable record.
+
+PR #1405 carries this reference closeout. The original campaign merge boundary
+is retired with the original objective; a documentation-only partial closeout
+may land after its own review and hosted checks. Any future implementation must
+start with explicit new authority and fresh source-bound evidence.
+
+## Historical continuation before partial closeout: R54, 2026-10-01
 
 PR #1388 merged externally at `ed09a085f35c617c352de43152330d52b908f5b5`
 before the campaign gates passed. Benjamin approved continuing all remaining work
@@ -197,7 +225,7 @@ R38 is complete and wet. The dry streak remains zero. See
 current-source dry rounds, replacement independent P3 review, Benjamin's
 ratification merge, implementation, and final exact-main closure remain required.
 
-Lifecycle: `active`
+Historical lifecycle before partial closeout: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

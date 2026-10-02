@@ -2119,3 +2119,16 @@ semantic review. Preserving a campaign merge hold beyond ordinary CI readiness
 would prevent premature landing from interrupting evidence preparation. The
 operator's delegated judgment permits one new successor for the remaining
 work; no census, review, implementation or closeout requirement was waived.
+
+## 2026-10-02 — Disk pressure and intentional private-evidence deletion
+
+The operator deleted `~/.cache/beep/boolean-creep` after reporting disk usage at
+96%. Repeated source/dependency snapshots, proposal generations and compilation
+targets accumulated gigabytes. Private artifact reads subsequently failed with
+`FileNotFoundError`; the directory is intentionally not restored. Earlier
+preservation claims are historical and superseded. Published work remains, but
+missing private receipts grant no current authority. The operator subsequently
+ended execution through an explicit partial closeout. Future campaigns should
+retain compact durable receipts, share immutable source inputs, bound scratch
+storage before allocation and remove disposable build outputs after recording
+results. Cache reconstruction is not part of this closeout.
