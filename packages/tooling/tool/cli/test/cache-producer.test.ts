@@ -5,21 +5,25 @@ import {
   CacheProducerEnvelope,
 } from "@beep/repo-cli/commands/Cache";
 import {
+  CacheRuntimeFileGuards,
   hashCacheProducerContract,
   initializeCacheProducerIssuer,
+  inspectCacheProducerDirectory,
   makeCacheProducerIssuer,
   openCacheProducerIssuer,
   openCacheProducerVerifier,
   revokeCacheProducerIssuer,
+  validateCacheProducerApproval,
 } from "@beep/repo-cli/test/Cache";
 import { CacheTaskContract } from "@beep/repo-configs/cache";
 import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { expect, it } from "@effect/vitest";
+import { expect, it, vi } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -63,6 +67,47 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
         );
       }),
     { arbitrary: fcRuns(20) }
+  );
+
+  it.effect("validates ordinary approval against its direct configuration and toolchain pins", () =>
+    Effect.gen(function* () {
+      const current = yield* setup();
+      const contract = CacheTaskContract.make({
+        ...current.contract,
+        key: { ...current.contract.key, profile: "ordinary-profile" },
+        signedExecution: O.none(),
+      });
+      const binding = CacheProducerBinding.make({
+        ...current.binding,
+        key: contract.key,
+        policyDigest: yield* hashCacheProducerContract(contract),
+        configurationDigest: contract.pins.configuration,
+        toolchainDigest: contract.pins.toolchain,
+      });
+      yield* validateCacheProducerApproval(CacheProducerApproval.make({ contract, binding }));
+    })
+  );
+  it.effect("fails closed when platform key import, signing or verification rejects", () =>
+    Effect.gen(function* () {
+      const { binding, issuer, receipt, envelope } = yield* setup();
+      const imported = vi.spyOn(globalThis.crypto.subtle, "importKey").mockRejectedValueOnce(new Error("unavailable"));
+      const importError = yield* makeCacheProducerIssuer(binding).pipe(
+        Effect.flip,
+        Effect.ensuring(Effect.sync(() => imported.mockRestore()))
+      );
+      expect(importError.message).toContain("Cannot initialize producer authentication");
+      const signing = vi.spyOn(globalThis.crypto.subtle, "sign").mockRejectedValueOnce(new Error("unavailable"));
+      const signError = yield* issuer
+        .issue(receipt)
+        .pipe(Effect.flip, Effect.ensuring(Effect.sync(() => signing.mockRestore())));
+      expect(signError.message).toContain("Producer authentication failed");
+      const verifying = vi.spyOn(globalThis.crypto.subtle, "verify").mockRejectedValueOnce(new Error("unavailable"));
+      const verifyError = yield* issuer
+        .verify(envelope, receipt)
+        .pipe(Effect.flip, Effect.ensuring(Effect.sync(() => verifying.mockRestore())));
+      expect(verifyError.message).toContain("Cannot verify producer authentication");
+      expect(yield* issuer.verify(envelope, receipt)).toEqual(receipt);
+    })
   );
 
   it.effect("rejects legacy receipts and missing measured projection identities", () =>
@@ -224,6 +269,60 @@ const persistentSetup = Effect.fn("ProducerTest.persistentSetup")(function* () {
 it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 seconds" })(
   "persistent producer issuer",
   (it) => {
+    it.effect("rejects relative stores before creating any issuer material", () =>
+      Effect.gen(function* () {
+        const { binding, contract } = yield* setup();
+        const error = yield* initializeCacheProducerIssuer("relative-issuer", binding, contract).pipe(Effect.flip);
+        expect(error.message).toContain("Producer store path must be absolute");
+      })
+    );
+    it.effect("fails closed when private store inspection fails after canonical resolution", () =>
+      Effect.gen(function* () {
+        const { fs, path, directory } = yield* persistentSetup();
+        const error = yield* inspectCacheProducerDirectory(directory).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            stat: () => fs.stat(path.join(directory, "missing-directory")),
+          }),
+          Effect.flip
+        );
+        expect(error.message).toContain("Cannot inspect producer store");
+      })
+    );
+    it.effect("rejects material disappearing or shortening after private metadata inspection", () =>
+      Effect.gen(function* () {
+        const { directory, binding } = yield* persistentSetup();
+        const read = CacheRuntimeFileGuards.readContainedFileBytesNoFollow;
+        for (const contents of [O.none<Uint8Array>(), O.some(new Uint8Array(1))]) {
+          const missing = vi
+            .spyOn(CacheRuntimeFileGuards, "readContainedFileBytesNoFollow")
+            .mockImplementation((...args) => read(...args).pipe(Effect.map((result) => ({ ...result, contents }))));
+          const error = yield* openCacheProducerIssuer(directory, binding).pipe(
+            Effect.flip,
+            Effect.ensuring(Effect.sync(() => missing.mockRestore()))
+          );
+          expect(error.message).toContain("Producer material is unavailable");
+        }
+        yield* openCacheProducerIssuer(directory, binding);
+      })
+    );
+    it.effect("rejects approval disappearing after private metadata inspection", () =>
+      Effect.gen(function* () {
+        const { directory } = yield* persistentSetup();
+        const read = CacheRuntimeFileGuards.readContainedFileBytesNoFollow;
+        const missing = vi
+          .spyOn(CacheRuntimeFileGuards, "readContainedFileBytesNoFollow")
+          .mockImplementation((...args) =>
+            read(...args).pipe(Effect.map((result) => ({ ...result, contents: O.none() })))
+          );
+        const error = yield* openCacheProducerVerifier(directory).pipe(
+          Effect.flip,
+          Effect.ensuring(Effect.sync(() => missing.mockRestore()))
+        );
+        expect(error.message).toContain("Producer approval is unavailable");
+        yield* openCacheProducerVerifier(directory);
+      })
+    );
     it.effect("reopens the same issuer and refuses accidental reprovisioning", () =>
       Effect.gen(function* () {
         const { directory, binding, receipt, envelope, contract } = yield* persistentSetup();

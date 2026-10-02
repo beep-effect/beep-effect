@@ -43632,6 +43632,50 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. The owning closed-issuer suite is explicitly concurrent:false. Every test creates a new issuer and envelope from its current Clock, and the expiry test advances 25 hours to reject that envelope. No issuer or test fiber survives into another test. All 25 producer tests pass. Re-review if the suite becomes concurrent or begins sharing issuer instances or absolute timestamps."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:15:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-signed-runner.test.ts",
+      "line": 15,
+      "endLine": 15,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:3979a7ff75193389220ecf0dc6571697ec9b901ad59fdb1ea873151254956f3d",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import { NodeCrypto, NodeFileSystem, NodePath } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. Signed supervisor tests require real scoped files for containment, mount-root resolution, issuer byte mutation and bounded report reads. NodeFileSystem, NodePath and NodeCrypto are explicit it.layer providers. Admission and subprocess execution are controlled doubles; the native process service fails closed. These tests establish supervisor behavior, not native sandbox qualification."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-protocol-runner.test.ts:6:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-protocol-runner.test.ts",
+      "line": 6,
+      "endLine": 6,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:3979a7ff75193389220ecf0dc6571697ec9b901ad59fdb1ea873151254956f3d",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import { NodeCrypto, NodeFileSystem, NodePath } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. Protocol worker tests use real scoped filesystem roots and the real local HTTP fixture to check bounded capture traversal, native-summary selection and output containment. Filesystem, path, crypto and HTTP services are explicit it.layer providers with real-clock services for socket progress. Native process execution is controlled and fails closed if the seam is bypassed; this is not native protocol qualification."
     }
   ]
 }

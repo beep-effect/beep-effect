@@ -351,7 +351,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
           const observeSandbox = Effect.fn("PilotOrchestrationTest.observeSandbox")(function* () {
             expect(command.command).toBe("/usr/bin/bwrap");
             expect(command.options.extendEnv).toBe(false);
-            expect(args).toContain(command.options.env?.TURBO_API ? "--unshare-user" : "--unshare-all");
+            expect(args).toContain(command.options.env?.TURBO_API !== undefined ? "--unshare-user" : "--unshare-all");
             const invocation = A.drop(args, O.getOrThrow(A.findFirstIndex(args, Equal.equals("--"))) + 1);
             const mounted = (guest: string): string =>
               O.getOrThrow(O.flatMap(A.findFirstIndex(args, Equal.equals(guest)), (index) => A.get(args, index - 1)));
@@ -384,11 +384,12 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
               ? yield* fs.readFileString(mounted(`${guest}/biome.identity.jsonc`))
               : "absent";
             const profileKey = `BIOME_CONFIG_PATH=${yield* hash(path.join(guest, "biome.identity.jsonc"))}`;
-            const isSignedInvocation = () => command.options.env?.TURBO_API || Str.startsWith("signed-")(label);
+            const isSignedInvocation = () =>
+              command.options.env?.TURBO_API !== undefined || Str.startsWith("signed-")(label);
             const cacheObservation = (hit: boolean) => ({
               status: hit ? "HIT" : "MISS",
-              local: hit && !command.options.env?.TURBO_API,
-              remote: fault === "remote-hit" || (hit && !!command.options.env?.TURBO_API),
+              local: hit && command.options.env?.TURBO_API === undefined,
+              remote: fault === "remote-hit" || (hit && command.options.env?.TURBO_API !== undefined),
             });
             const forwardedEnvironment = (id: string) => (profile && observeProfile && id === task ? [profileKey] : []);
             const nativeTask = (id: string, taskHash: string, hit = false, code = 0) => ({
@@ -461,15 +462,17 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                   let hit = reuse && (yield* fs.exists(path.join(directory, cacheFile)));
                   const readRemote = Effect.fn("PilotOrchestrationTest.readRemote")(function* () {
                     const remoteUrl = env.TURBO_API;
-                    const remoteConfig = remoteUrl
-                      ? yield* fs
-                          .readFileString(path.join(directory, "run/config.json"))
-                          .pipe(Effect.flatMap(decodeRemoteConfig))
-                      : undefined;
-                    const endpoint = remoteConfig
-                      ? `${remoteUrl}/v8/artifacts/${taskHash}?teamId=${remoteConfig.teamId}`
-                      : undefined;
-                    if (endpoint && !Str.startsWith("capture-")(label)) {
+                    const remoteConfig =
+                      remoteUrl !== undefined
+                        ? yield* fs
+                            .readFileString(path.join(directory, "run/config.json"))
+                            .pipe(Effect.flatMap(decodeRemoteConfig))
+                        : undefined;
+                    const endpoint =
+                      remoteConfig !== undefined
+                        ? `${remoteUrl}/v8/artifacts/${taskHash}?teamId=${remoteConfig.teamId}`
+                        : undefined;
+                    if (endpoint !== undefined && !Str.startsWith("capture-")(label)) {
                       const response = yield* http.get(endpoint, {
                         headers: { authorization: `Bearer ${env.TURBO_TOKEN}` },
                       });
@@ -549,7 +552,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                     });
                     const log = yield* capturedLog();
                     const uploadRemote = Effect.fn("PilotOrchestrationTest.uploadRemote")(function* () {
-                      if (endpoint && !hit && exitCode === 0 && !Str.startsWith("capture-")(label)) {
+                      if (endpoint !== undefined && !hit && exitCode === 0 && !Str.startsWith("capture-")(label)) {
                         const body = NodeBuffer.Buffer.from(log);
                         const tar = NodeBuffer.Buffer.alloc(512 + Math.ceil(body.length / 512) * 512 + 1024);
                         new Header({

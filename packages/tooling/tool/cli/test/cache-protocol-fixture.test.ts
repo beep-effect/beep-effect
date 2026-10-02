@@ -5,7 +5,7 @@ import {
   makeCacheProtocolFixture,
 } from "@beep/repo-cli/commands/Cache";
 import { NodeCrypto } from "@effect/platform-node";
-import { expect, it } from "@effect/vitest";
+import { expect, it, vi } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, notDeepStrictEqual } from "@effect/vitest/utils";
 import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
@@ -39,7 +39,7 @@ const put = (url: string, body = bytes, capability = writer, signature = tag) =>
     HttpClient.execute
   );
 
-it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20 seconds" })(
+it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20 seconds", excludeTestServices: true })(
   "native protocol fixture server",
   (it) => {
     it.effect("returns supervisor copies without mutating stored bytes or adding wire events", () =>
@@ -124,6 +124,51 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
           expect((yield* get(endpoint(fixture.url, hash))).status).toBe(400);
         expect((yield* put(endpoint(fixture.url), bytes, writer, "")).status).toBe(400);
         expect((yield* get(endpoint(fixture.url))).status).toBe(404);
+      })
+    );
+
+    it.effect("rejects transport-level body read failures without installing partial artifacts", () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeCacheProtocolFixture(credentials);
+        const read = vi
+          .spyOn(Request.prototype, "arrayBuffer")
+          .mockRejectedValueOnce(new Error("request body read failed"));
+        yield* Effect.gen(function* () {
+          const response = yield* put(endpoint(fixture.url));
+          expect(response.status).toBe(400);
+          yield* response.arrayBuffer;
+          expect(A.map(yield* fixture.events, (event) => event.status)).toEqual([400]);
+          (yield* fixture.artifactBytes(artifactHash).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+        }).pipe(Effect.ensuring(Effect.sync(() => read.mockRestore())));
+      })
+    );
+
+    it.effect("rejects absent selectors, unknown routes and unsupported artifact methods", () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeCacheProtocolFixture(credentials);
+        expect((yield* get(`${fixture.url}/v8/artifacts/${artifactHash}`)).status).toBe(403);
+        expect((yield* get(`${fixture.url}/unknown?teamId=${credentials.namespace}`)).status).toBe(404);
+        const response = yield* HttpClient.post(endpoint(fixture.url), {
+          headers: { authorization: `Bearer ${reader}` },
+        });
+        expect(response.status).toBe(405);
+        expect(A.map(yield* fixture.events, (event) => event.operation)).toEqual(["rejected", "rejected", "rejected"]);
+      })
+    );
+    it.effect("changes both signature prefixes and handles empty corrupt artifacts without altering storage", () =>
+      Effect.gen(function* () {
+        for (const signature of ["Afixture", "Bfixture"]) {
+          const fixture = yield* makeCacheProtocolFixture(credentials);
+          yield* put(endpoint(fixture.url), new Uint8Array(), writer, signature);
+          yield* fixture.setScenario(CacheFixtureScenario.make({ id: "invalid", fault: "invalid-tag" }));
+          const invalid = yield* get(endpoint(fixture.url));
+          notDeepStrictEqual(Headers.get(invalid.headers, "x-artifact-tag"), O.some(signature));
+          yield* invalid.arrayBuffer;
+          yield* fixture.setScenario(CacheFixtureScenario.make({ id: "empty-corrupt", fault: "corrupt-body" }));
+          const empty = yield* get(endpoint(fixture.url));
+          expect((yield* empty.arrayBuffer).byteLength).toBe(0);
+          expect(yield* fixture.artifactBytes(artifactHash)).toEqual(new Uint8Array());
+        }
       })
     );
 

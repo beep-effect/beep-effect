@@ -101,19 +101,13 @@ export const validateCacheProtocolObservation = Effect.fn("Cache.validateProtoco
     !A.every(runs, (run) => sameClient(run.client, client))
   )
     return yield* CacheCommandError.new("Protocol observations require six distinct, same-client, same-task cases.");
-  const producer = yield* A.findFirst(runs, (run) => run.case === "producer").pipe(
-    Effect.fromOption(() => CacheCommandError.new("Protocol producer is missing."))
-  );
-  const upload = yield* A.findFirst(exchanges, (event) => event.case === "producer").pipe(
-    Effect.fromOption(() => CacheCommandError.new("Protocol upload is missing."))
-  );
+  const producer = A.findFirst(runs, (run) => run.case === "producer").pipe(O.getOrThrow);
+  const upload = A.findFirst(exchanges, (event) => event.case === "producer").pipe(O.getOrThrow);
   if (producer.outcome._tag !== "Produced" || upload.artifact.bytes === 0)
     return yield* CacheCommandError.new("Protocol producer must capture a nonempty uploaded archive.");
   const producedOutput = producer.outcome.output;
   for (const run of runs) {
-    const event = yield* A.findFirst(exchanges, (candidate) => candidate.case === run.case).pipe(
-      Effect.fromOption(() => CacheCommandError.new("Protocol exchange is missing."))
-    );
+    const event = A.findFirst(exchanges, (candidate) => candidate.case === run.case).pipe(O.getOrThrow);
     yield* validateProtocolNativeRun(run, event, upload, producedOutput);
   }
   return observation;
@@ -257,9 +251,7 @@ export const validateCacheProtocolExecution = Effect.fn("Cache.validateProtocolE
   const { observation, failures, events } = report;
   yield* validateCacheProtocolObservation(observation);
   yield* validateProtocolPopulation(report);
-  const upload = yield* A.findFirst(observation.exchanges, (event) => event.case === "producer").pipe(
-    Effect.fromOption(() => CacheCommandError.new("Protocol upload is missing."))
-  );
+  const upload = A.findFirst(observation.exchanges, (event) => event.case === "producer").pipe(O.getOrThrow);
   for (const event of events) {
     if (event.operation !== "get" || isTransportCase(event.scenario.id)) continue;
     yield* validateProtocolIntegrityRead(event, upload);

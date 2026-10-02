@@ -95,3 +95,4 @@ export {
 } from "../commands/Cache/Cache.workflow.ts";
 export * as CacheRuntimeFileGuards from "../internal/cli/FsGuards.ts";
 export * as CacheRuntimeProcess from "../internal/process/StepExec.ts";
+export * as CacheRuntimeAdmission from "../internal/repo-run/QualityScheduler.ts";

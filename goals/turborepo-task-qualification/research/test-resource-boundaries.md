@@ -61,3 +61,53 @@ absolute-time assumptions, or shared issuer state changes.
 The reviewed inventory contains six additional anchored rows for these specific
 provider, property and clock observations. The explicit layers remove the live
 and outer-scope findings; those findings are not covered by exceptions.
+
+### Signed supervisor adapter tests
+
+`cache-signed-runner.test.ts` uses explicit NodeFileSystem, NodePath and
+NodeCrypto layers with scoped temporary files. Real path resolution, file
+containment, issuer mutation and bounded report reads are the tested boundary.
+The scheduler and captured-process functions are controlled doubles; the native
+process service fails closed if accidentally reached. Each negative asserts its
+specific refusal. These tests do not replace native sandbox or issuer approval
+evidence. EV010 is a reviewed filesystem-provenance exception for this file.
+
+### Protocol worker and supervisor tests
+
+`cache-protocol-runner.test.ts` uses real scoped directories and the local HTTP
+fixture with explicit filesystem, path, crypto and HTTP layers. Real-clock test
+services let socket exchanges and deadlines progress. The process double writes
+native-shaped summaries and outputs while the real worker validates capture
+bounds, credential exclusion, exact summary selection and output containment.
+The separate supervisor cases in `cache-signed-runner.test.ts` verify report
+binding and sandbox command construction. Neither suite claims native Turbo
+execution. EV010 for the protocol worker is a reviewed filesystem boundary.
+
+### Protocol fixture transport failures
+
+The fixture server suite uses real clocks for live HTTP progress and socket
+release. Its body-read negative temporarily rejects the native Request reader;
+an Effect finalizer restores that method even if an assertion fails. The test
+requires an HTTP 400, a sanitized rejection event, and no installed artifact.
+The existing real oversized-upload test still proves the independent size bound.
+This controlled transport error establishes handler behavior, not native client
+qualification. No additional inventory exception is required.
+
+### Supervised workflow issuance
+
+The workflow tests retain real temporary Git repositories, source hashing and
+private issuer storage. Explicit FsUtils and deterministic MemoryStats providers
+complete the service context alongside the existing platform layers. Toolchain
+and linked-tool observations, admission, and signed/protocol runner results are
+controlled at their existing module boundaries. A scoped realPath mapping admits
+the temporary checkout for the issuance tests; the separate location test still
+checks that the actual loaded supervisor rejects another checkout.
+
+The success case authenticates the returned bundle with the real verifier and
+checks four tool observations: initial approval plus checks before execution,
+after the signed pilot and after the protocol phase. Drift cases fail before
+issuance and check which runners were allowed to execute. A schema-derived
+property binds every generated source digest to the workflow identity. These
+fixtures prove supervisor coordination; the frozen native receipts retain sole
+authority for real sandbox and client execution. No additional provider exception
+is needed.

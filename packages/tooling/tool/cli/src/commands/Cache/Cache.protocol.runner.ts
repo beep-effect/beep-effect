@@ -85,7 +85,7 @@ const verifyPrivateNetwork = Effect.gen(function* () {
   );
   if (
     interfaces.length !== 1 ||
-    !A.every(interfaces, (line) => Str.trim(O.getOrElse(A.head(Str.split(line, ":")), () => "")) === "lo")
+    !A.every(interfaces, (line) => A.head(Str.split(line, ":")).pipe(O.getOrThrow, Str.trim) === "lo")
   )
     return yield* CacheCommandError.new("Protocol worker requires a private loopback-only network namespace.");
 });

@@ -2898,3 +2898,35 @@ Oxlint check then caught an inline schema compiler in the fixture; it was
 hoisted, and node imports were normalized. Fallow identified four newly complex
 fixture functions. Refactor their process, capture and remote-transport concerns
 before publication; do not refresh coverage floors or complexity baselines.
+
+### Strict test policy and new-file coverage attribution
+
+At `77811ec365`, hosted Lint Policy rejected optional-string conditions in the
+signed orchestration fixture. The earlier ordinary test typecheck did not run
+the stricter `quality test-tsgo` contract. Explicit boolean conditions now pass
+that named command. Run that gate when adding test fixtures. Hosted Coverage
+Regression also distinguishes new-file uncovered units from existing per-file
+floors: passing the focused floor checks did not establish the whole ratchet.
+Preserve its nine-file report and cover adapter and rejection paths; do not
+record lower baselines to hide the missing tests.
+
+### Protocol body-read test boundary
+
+A body-limit negative initially supplied Effect's `MaxBodySize` service, but
+the Bun request reader returned HTTP 200 because that reader delegates to the
+native Request body API. The corrected test rejects that reader in a scoped
+double, restores it in a finalizer, and verifies HTTP 400, a rejection event,
+and absence of stored bytes. The independent real oversized-upload test stays
+in place. Inspect the actual platform adapter before assuming a shared service
+controls it. Live HTTP fixture suites use real clocks for progress and cleanup.
+
+### Random test-server port collision
+
+The signed validator's five-file dependent run passed 106 tests but its signed
+orchestration case failed after `EADDRINUSE` on loopback port 39022. The shared
+Bun test shim maps requested port zero to a random port in 30000–49999 before
+calling Node's `listen`; it does not reserve that port. Inspection found no
+remaining listener after the failure. This is test-server setup evidence, not a
+signed-validation mismatch. Retain the failed log and retry the same suite; a
+future shim repair should use OS-assigned ports while preserving Bun's synchronous
+server-address contract and shutdown lifecycle.

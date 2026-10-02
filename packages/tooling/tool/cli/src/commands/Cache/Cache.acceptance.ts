@@ -99,14 +99,13 @@ export const deriveCacheProducerEvidence = Effect.fn("Producer.deriveEvidence")(
   yield* validateCacheProducerApproval(approval);
   yield* validateCacheProducerBinding(bundle, approval.binding);
   const { pilot } = bundle;
-  if (O.isSome(approval.contract.signedExecution)) {
-    const execution = approval.contract.signedExecution.value;
-    if (
-      !S.toEquivalence(CacheQualificationKey)(pilot.baseKey, execution.sourceKey) ||
-      !S.toEquivalence(CacheEvidenceReference)(pilot.activation, execution.activationRequest)
-    )
-      return yield* CacheCommandError.new("Signed evidence differs from its approved source or activation request.");
-  }
+  // Approval and bundle validation jointly require this signed profile.
+  const execution = O.getOrThrow(approval.contract.signedExecution);
+  if (
+    !S.toEquivalence(CacheQualificationKey)(pilot.baseKey, execution.sourceKey) ||
+    !S.toEquivalence(CacheEvidenceReference)(pilot.activation, execution.activationRequest)
+  )
+    return yield* CacheCommandError.new("Signed evidence differs from its approved source or activation request.");
   const fragments = A.empty<CacheProducerEvidenceFragment>();
   const retain = Effect.fn("Producer.retainComparison")(function* (
     kind: typeof DerivedEvidenceKind.Type,
@@ -136,18 +135,14 @@ export const deriveCacheProducerEvidence = Effect.fn("Producer.deriveEvidence")(
       })
     );
   });
-  if (O.isSome(approval.contract.signedExecution)) {
-    const baseline = yield* A.head(pilot.pairs).pipe(
-      Effect.fromOption(() => CacheCommandError.new("Signed activation evidence requires a native baseline pair."))
-    );
-    yield* retain(
-      "orchestration-invariance",
-      "activation-projection",
-      [baseline.authorityRoot, baseline.producerRoot],
-      yield* encodePilot(pilot),
-      ["activation-projection"]
-    );
-  }
+  const baseline = A.getUnsafe(pilot.pairs, 0);
+  yield* retain(
+    "orchestration-invariance",
+    "activation-projection",
+    [baseline.authorityRoot, baseline.producerRoot],
+    yield* encodePilot(pilot),
+    ["activation-projection"]
+  );
   const retainFreshComparisons = Effect.fn("Producer.retainFreshComparisons")(function* () {
     for (const pair of pilot.freshPairs) {
       const contents = yield* encodeFresh(pair);

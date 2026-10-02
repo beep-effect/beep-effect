@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "cache-adoption-bundle/v1",
+  "sourceCheckpoint": "70e20c48d564b1057a9ccd19dc4926e2e22459a2",
+  "counts": {
+    "workspaces": 145,
+    "graphNodes": 3498,
+    "executable": 1984,
+    "graphOnly": 1514,
+    "definitions": 3364,
+    "nestedSteps": {
+      "terminal-command": 1981,
+      "uninterpreted-shell": 21,
+      "local-script": 2170
+    },
+    "semanticFamilies": 16,
+    "baseProfileStates": {
+      "unassessed": 1980,
+      "excluded": 4
+    },
+    "legacyCacheEnabled": 1259
+  },
+  "recipes": [
+    {
+      "path": "goals/turborepo-task-qualification/research/refresh-nested-commands.py",
+      "sha256": "0e23296456a584dad3528b277c755a3dc6030716d06af71e35d617004ca7eea0"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/refresh-command-boundaries.py",
+      "sha256": "7ffa7e50e6c494a4665333b480428d3fa418543a83db14e64c8f550b12ee0493"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/refresh-adoption-handoff.py",
+      "sha256": "2238629d18cddc96aae6c77972c68bdacd9cf1078146764d61829da5dde796cf"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "goals/turborepo-task-qualification/research/adoption/census.json",
+      "sha256": "0c3b7409982e0e12dcc4cab2d4686476c55b13fdd4c6e5c884b56fe0054857e3"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/adoption/nested-commands.json",
+      "sha256": "d99acc62d8403148ef3dea0d9381ba8d037b72960268c9c6787cbe855e45fcb9"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/adoption/command-boundaries.json",
+      "sha256": "2472be8a98272a57c1c5211c6e40cbb194328a982d3474650e3419289b91cec6"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/adoption/population.json",
+      "sha256": "6bf4c65ac28db3a7d12ba5af12b11d0630eca4336d1948f965bd319157d3dc86"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/adoption/semantic-boundary-profiles.json",
+      "sha256": "4e504a0d6bd12627648be4498a1a76bd5707b3672c20236b7b50fe6b56879ef7"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/adoption/shell-boundary-review.json",
+      "sha256": "41db88c9e15fb9fc847740207c33c375ced712cde409ba2a4f7c2677ada73510"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/adoption/dynamic-dispatch-review.json",
+      "sha256": "84b5cb3f2782d16c4dfb71a52424676f4dcc75aac18ba2870dd55c4731126eeb"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/adoption/terminal-boundary-review.json",
+      "sha256": "bdd6799846a9d5b2921f7e63b8ca17e38e09fe92530d07a08fe3981b0c54cc46"
+    }
+  ],
+  "checked": [
+    "Current census source bindings",
+    "Exact reviewed command inventory",
+    "Complete semantic family coverage",
+    "Every shell and special terminal site",
+    "Current dynamic and terminal source bindings",
+    "Graph-only separation",
+    "Observed-profile ledger join",
+    "Unmodified native receipt authority"
+  ]
+}

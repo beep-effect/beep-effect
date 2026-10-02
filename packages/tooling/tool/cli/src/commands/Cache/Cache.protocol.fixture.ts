@@ -57,7 +57,10 @@ const readFaultBody = (stored: StoredArtifact, fault: CacheFixtureScenario["faul
   const body = new Uint8Array(
     fault === "truncated-body" ? stored.body.subarray(0, Math.max(0, stored.body.byteLength - 1)) : stored.body
   );
-  if (fault === "corrupt-body" && body.byteLength > 0) body[0] = (body[0] ?? 0) ^ 1;
+  if (fault === "corrupt-body" && body.byteLength > 0) {
+    const view = new DataView(body.buffer, body.byteOffset, body.byteLength);
+    view.setUint8(0, view.getUint8(0) ^ 1);
+  }
   return body;
 };
 
@@ -187,7 +190,7 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
   ) {
     // Avoid introducing additional URL normalization at this boundary.
     const parts = Str.split(request.url, "?");
-    const pathname = O.getOrElse(A.head(parts), () => "");
+    const pathname = A.head(parts).pipe(O.getOrThrow);
     if (!validFixtureSelectors(parts, credentials.namespace)) return yield* reply(403, "rejected");
     if (pathname === "/v8/artifacts/status" && request.method === "GET")
       return yield* reply(200, "status", O.none(), new TextEncoder().encode('{"status":"enabled"}'));

@@ -1,4 +1,11 @@
-import { CacheSignedPilotReceipt, validateCacheSignedPilotReceipt } from "@beep/repo-cli/commands/Cache";
+import {
+  CacheSignedPilotFreshPair,
+  CacheSignedPilotPair,
+  CacheSignedPilotReceipt,
+  validateCacheSignedPilotFreshPair,
+  validateCacheSignedPilotPair,
+  validateCacheSignedPilotReceipt,
+} from "@beep/repo-cli/commands/Cache";
 import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -24,6 +31,112 @@ const validate = (value: unknown) =>
   );
 
 describe("signed real-pilot receipt relationships", () => {
+  it.effect("rejects blocked fresh controls and blocked normal authority at their public boundaries", () =>
+    Effect.gen(function* () {
+      const receipt = yield* S.decodeUnknownEffect(CacheSignedPilotReceipt)(input);
+      const blocked = { _tag: "Blocked", failedDependencies: [{ ...task, exitCode: 1 }] };
+      const fresh = A.getUnsafe(input.freshPairs, 0);
+      for (const role of ["left", "right"]) {
+        const pair = yield* S.decodeUnknownEffect(CacheSignedPilotFreshPair)({
+          ...fresh,
+          [role]: { ...fresh.left, outcome: blocked },
+        });
+        const error = yield* validateCacheSignedPilotFreshPair(pair, receipt.key).pipe(Effect.flip);
+        expect(error.message).toContain("must execute");
+      }
+      const original = A.getUnsafe(input.pairs, 0);
+      const pair = yield* S.decodeUnknownEffect(CacheSignedPilotPair)({
+        ...original,
+        authoritative: { ...original.authoritative, outcome: blocked },
+      });
+      const error = yield* validateCacheSignedPilotPair(pair, receipt.key, receipt.client).pipe(Effect.flip);
+      expect(error.message).toContain("authority did not execute");
+    })
+  );
+  it.effect("requires runtime linkage and consistent baseline and fresh input identities", () =>
+    Effect.gen(function* () {
+      const receipt = yield* S.decodeUnknownEffect(CacheSignedPilotReceipt)(input);
+      const missingLinker = CacheSignedPilotReceipt.make({ ...receipt, runtimeLinker: O.none() });
+      const missingError = yield* validateCacheSignedPilotReceipt(missingLinker).pipe(Effect.flip);
+      expect(missingError.message).toContain("runtime linkage evidence is missing");
+      const wrongClient = CacheSignedPilotPair.make({
+        ...A.getUnsafe(receipt.pairs, 0),
+        client: { ...receipt.client, version: "99.0.0" },
+      });
+      const clientError = yield* validateCacheSignedPilotPair(wrongClient, receipt.key, receipt.client).pipe(
+        Effect.flip
+      );
+      expect(clientError.message).toContain("client differs");
+      const changed = { ...task, inputsDigest: digest("e") };
+      for (const patch of [
+        { runtimeLinker: undefined },
+        {
+          pairs: A.map(input.pairs, (pair, n) =>
+            n === 0
+              ? {
+                  ...pair,
+                  producer: { ...pair.producer, outcome: { ...pair.producer.outcome, selected: changed } },
+                }
+              : pair
+          ),
+        },
+        {
+          freshPairs: A.map(input.freshPairs, (pair) => ({
+            ...pair,
+            left: { ...pair.left, outcome: { ...pair.left.outcome, selected: changed } },
+          })),
+        },
+        {
+          freshPairs: A.map(input.freshPairs, (pair) => ({
+            ...pair,
+            left: { ...pair.left, outcome: { _tag: "Blocked", failedDependencies: [{ ...task, exitCode: 1 }] } },
+          })),
+        },
+      ])
+        (yield* validate({ ...input, ...patch })).pipe(Result.isFailure, assertTrue);
+    })
+  );
+  it.effect("requires artifact-specific misses and uploads even when the wire counts match", () =>
+    Effect.gen(function* () {
+      for (const operation of ["get", "put"]) {
+        const pairs = A.map(input.pairs, (pair) => ({
+          ...pair,
+          events: A.map(pair.events, (event) =>
+            event.operation === operation && event.role === "writer"
+              ? { ...event, artifact: "0123456789abcdee" }
+              : event
+          ),
+        }));
+        (yield* validate({ ...input, pairs })).pipe(Result.isFailure, assertTrue);
+      }
+      for (const operation of ["get", "put"]) {
+        const mutations = A.map(input.mutations, (mutation) => ({
+          ...mutation,
+          comparison: {
+            ...mutation.comparison,
+            events: A.map(mutation.comparison.events, (event) =>
+              event.operation === operation && event.artifact === mutation.seed.outcome.selected.taskHash
+                ? { ...event, artifact: "0123456789abcdee" }
+                : event
+            ),
+          },
+        }));
+        (yield* validate({ ...input, mutations })).pipe(Result.isFailure, assertTrue);
+      }
+      const mutations = A.map(input.mutations, (mutation) => ({
+        ...mutation,
+        comparison: {
+          ...mutation.comparison,
+          events: A.map(mutation.comparison.events, (event) =>
+            event.operation === "put" && event.artifact === mutation.seed.outcome.selected.taskHash
+              ? { ...event, bytes: 0 }
+              : event
+          ),
+        },
+      }));
+      (yield* validate({ ...input, mutations })).pipe(Result.isFailure, assertTrue);
+    })
+  );
   it.effect("requires four independent native capture refusals with exact case diagnostics", () =>
     Effect.gen(function* () {
       for (const captureControls of [

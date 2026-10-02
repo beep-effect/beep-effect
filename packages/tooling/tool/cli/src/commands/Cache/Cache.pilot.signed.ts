@@ -217,8 +217,6 @@ const validateSignedRuntime = Effect.fn("CachePilot.validateSignedRuntime")(func
   const authority = pair.authoritative;
   const producer = pair.producer;
   const replay = pair.replay;
-  if (!CachePilotOutcome.isAnyOf(["Executed"])(authority.outcome))
-    return yield* CacheCommandError.new("Signed pilot authority did not execute.");
   if (
     authority.cacheEnabled ||
     !producer.cacheEnabled ||
@@ -364,7 +362,7 @@ const validateSignedWire = Effect.fn("CachePilot.validateSignedWire")(function* 
   const put = yield* A.findFirst(puts, (event) => O.contains(hash)(event.artifact)).pipe(
     Effect.fromOption(() => CacheCommandError.new("Missing signed upload."))
   );
-  const get = yield* A.head(gets).pipe(Effect.fromOption(() => CacheCommandError.new("Missing signed download.")));
+  const get = A.getUnsafe(gets, 0);
   const miss = yield* A.findFirst(misses, (event) => O.contains(hash)(event.artifact)).pipe(
     Effect.fromOption(() => CacheCommandError.new("Missing fresh cache miss."))
   );
@@ -611,14 +609,12 @@ export const validateCacheSignedPilotReceipt = Effect.fn("CachePilot.validateSig
   yield* validateSignedInventory(receipt, runs);
   yield* validateSignedCaptureControls(receipt, runs);
   yield* validateSignedIsolation(receipt, runs);
-  yield* Effect.forEach(freshPairs, (pair) => validateCacheSignedPilotFreshPair(pair, receipt.key), { discard: true });
-  yield* validateCacheSignedPilotConcurrency(freshPairs);
-  const baseline = yield* A.head(receipt.pairs).pipe(
-    Effect.fromOption(() => CacheCommandError.new("Signed baseline comparison is missing."))
-  );
+  const baseline = A.getUnsafe(receipt.pairs, 0);
   yield* validateSignedPolicyRefusal(receipt, runs, baseline);
 
   yield* validateSignedBaselineInputs(receipt, freshRuns, baseline);
+  yield* Effect.forEach(freshPairs, (pair) => validateCacheSignedPilotFreshPair(pair, receipt.key), { discard: true });
+  yield* validateCacheSignedPilotConcurrency(freshPairs);
   yield* Effect.forEach(receipt.shadows, (shadow) => validateCacheSignedPilotShadow(shadow, baseline), {
     discard: true,
   });

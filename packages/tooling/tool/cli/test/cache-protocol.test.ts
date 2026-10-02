@@ -43,6 +43,28 @@ describe("native protocol observation boundary", () => {
     })
   );
 
+  it.effect("rejects missing cases, empty uploads and a producer that did not produce", () =>
+    Effect.gen(function* () {
+      for (const value of [
+        { ...input, runs: A.filter(input.runs, (run) => run.case !== "producer") },
+        { ...input, exchanges: A.filter(input.exchanges, (event) => event.case !== "producer") },
+        {
+          ...input,
+          exchanges: A.map(input.exchanges, (event) =>
+            event.case === "producer" ? { ...event, artifact: { ...event.artifact, bytes: 0 } } : event
+          ),
+        },
+        {
+          ...input,
+          runs: A.map(input.runs, (run) =>
+            run.case === "producer" ? { ...run, outcome: { _tag: "Rejected", exitCode: 42, restoredOutputs: 0 } } : run
+          ),
+        },
+      ])
+        (yield* validate(value)).pipe(Result.isFailure, assertTrue);
+    })
+  );
+
   it.effect("rejects a denied upload, a reader upload and mismatched artifact bytes", () =>
     Effect.gen(function* () {
       for (const patch of [{ status: 403 }, { role: "reader" }, { artifact: { ...artifact, bytes: 189 } }]) {

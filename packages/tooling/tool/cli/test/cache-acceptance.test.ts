@@ -9,6 +9,7 @@ import {
   CacheProducerImportRequest,
   CacheProducerObservation,
   CacheProducerTrustLocations,
+  CacheRuntimeFileGuards,
   deriveCacheProducerEvidence,
   hashCacheProducerContract,
   initializeCacheProducerIssuer,
@@ -21,6 +22,7 @@ import {
 } from "@beep/repo-cli/test/Cache";
 import {
   CacheActivationProjection,
+  CacheClientPin,
   CacheEvidenceReference,
   CacheSignedExecutionProfile,
   CacheTaskContract,
@@ -29,7 +31,7 @@ import {
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { expect, it } from "@effect/vitest";
+import { expect, it, vi } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -57,7 +59,7 @@ const setup = Effect.gen(function* () {
 it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("producer evidence projections", (it) => {
   it.effect("rejects signed approval with an omitted profile or activation even after rehashing policy", () =>
     Effect.gen(function* () {
-      const { approval } = yield* setup;
+      const { bundle, approval } = yield* setup;
       for (const patch of [{ signedExecution: O.none() }, { activation: O.none() }]) {
         const contract = CacheTaskContract.make({ ...approval.contract, ...patch });
         const binding = CacheProducerBinding.make({
@@ -68,6 +70,11 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("producer evidence project
           Effect.flip
         );
         expect(failure.message).toBe("Signed producer approval requires a reviewed execution profile and activation.");
+        const projectionFailure = yield* deriveCacheProducerEvidence(
+          bundle,
+          CacheProducerApproval.make({ binding, contract })
+        ).pipe(Effect.flip);
+        expect(projectionFailure.message).toBe(failure.message);
       }
     })
   );
@@ -357,6 +364,64 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("producer evidence project
   );
 });
 
+const checkStoreBounds = Effect.fn("AcceptanceTest.checkStoreBounds")(function* (
+  directory: string,
+  reference: CacheProducerAcceptanceReference,
+  request: CacheProducerImportRequest,
+  trust: CacheProducerTrustLocations
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const file = path.join(directory, `${reference.sha256}.json`);
+  const original = yield* fs.readFileString(file);
+  for (const contents of ["", Str.repeat(8 * 1024 * 1024 + 1)("x")]) {
+    yield* fs.writeFileString(file, contents);
+    const error = yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.flip);
+    expect(error.message).toContain("bounded private single-link file");
+  }
+  yield* fs.writeFileString(file, original);
+  const oversized = CacheProducerImportRequest.make({
+    observations: {
+      ...request.observations,
+      stable: CacheProducerObservation.make({
+        ...request.observations.stable,
+        observation: CacheProducerBundle.make({
+          ...request.observations.stable.observation,
+          pilot: CacheSignedPilotReceipt.make({
+            ...request.observations.stable.observation.pilot,
+            client: CacheClientPin.make({
+              ...request.observations.stable.observation.pilot.client,
+              version: `2.11.4-${Str.repeat(8 * 1024 * 1024)("x")}`,
+            }),
+          }),
+        }),
+      }),
+    },
+  });
+  expect((yield* persistCacheProducerAcceptance(directory, oversized, trust).pipe(Effect.flip)).message).toContain(
+    "request exceeds"
+  );
+  const read = CacheRuntimeFileGuards.readContainedFileBytesNoFollow;
+  const missing = vi
+    .spyOn(CacheRuntimeFileGuards, "readContainedFileBytesNoFollow")
+    .mockImplementation((...args) => read(...args).pipe(Effect.map((result) => ({ ...result, contents: O.none() }))));
+  const missingError = yield* readCacheProducerAcceptance(directory, reference, trust).pipe(
+    Effect.flip,
+    Effect.ensuring(Effect.sync(() => missing.mockRestore()))
+  );
+  expect(missingError.message).toContain("record is missing");
+  const failedLink = persistCacheProducerAcceptance(directory, request, trust).pipe(
+    Effect.provideService(FileSystem.FileSystem, {
+      ...fs,
+      link: (_source, destination) => fs.link(path.join(directory, "absent-source"), destination),
+    }),
+    Effect.result
+  );
+  (yield* failedLink).pipe(Result.isFailure, assertTrue);
+  expect(yield* fs.readFileString(file)).toBe(original);
+  expect(yield* fs.readDirectory(directory)).toEqual([`${reference.sha256}.json`]);
+});
+
 it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { concurrent: false, timeout: "30 seconds" })(
   "authenticated import preview",
   (it) => {
@@ -399,6 +464,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { concurrent: fal
         const reference = yield* persistCacheProducerAcceptance(directory, request, trust);
         expect(yield* persistCacheProducerAcceptance(directory, request, trust)).toEqual(reference);
         expect((yield* readCacheProducerAcceptance(directory, reference, trust)).contract).toEqual(contract);
+        yield* checkStoreBounds(directory, reference, request, trust);
         const file = path.join(directory, `${reference.sha256}.json`);
         const original = yield* fs.readFileString(file);
         expect(yield* fs.readDirectory(directory)).toEqual([`${reference.sha256}.json`]);
