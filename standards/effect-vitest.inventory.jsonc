@@ -8473,174 +8473,6 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:118:run@4#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
-      "line": 118,
-      "endLine": 118,
-      "symbol": "run",
-      "occurrence": "v2:847a8b42a34300766be42374a7cf7a5a4afb263bba111964aea4e032c29bf091",
-      "class": "unresolved-layer-provide",
-      "evidence": "run",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:144:run@4#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
-      "line": 144,
-      "endLine": 144,
-      "symbol": "run",
-      "occurrence": "v2:e9c419cc3e3535b0063951a9eb2aefdd4ac83c11a5257f1678e049dd68f3d4a6",
-      "class": "unresolved-layer-provide",
-      "evidence": "run",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:183:run@4#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
-      "line": 183,
-      "endLine": 183,
-      "symbol": "run",
-      "occurrence": "v2:2e9c9f3a457472a40ae0f3d10040af1f8d742249b7abe05a7d13b6163c794add",
-      "class": "unresolved-layer-provide",
-      "evidence": "run",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:215:run@4#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
-      "line": 215,
-      "endLine": 215,
-      "symbol": "run",
-      "occurrence": "v2:19010111f0a70f164384da7710ebc8dcbe2ea1eb85fd338616aa7948564631c4",
-      "class": "unresolved-layer-provide",
-      "evidence": "run",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:247:run@4#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
-      "line": 247,
-      "endLine": 247,
-      "symbol": "run",
-      "occurrence": "v2:970200f218b5f471a56d5bcced8eddd1ec038e0b149935d77ffc6a8838f2ec3a",
-      "class": "unresolved-layer-provide",
-      "evidence": "run",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:280:run@4#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
-      "line": 280,
-      "endLine": 280,
-      "symbol": "run",
-      "occurrence": "v2:4db4ddb0293d9baeeb311e9b4406a1a1c68af9ea024ec9177c6499c1683eb2b6",
-      "class": "unresolved-layer-provide",
-      "evidence": "run",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:67:run@4#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
-      "line": 67,
-      "endLine": 67,
-      "symbol": "run",
-      "occurrence": "v2:cdbfa8579fc60500680e6513c8e476f609393d88cf14b75b1c32e85d30269186",
-      "class": "unresolved-layer-provide",
-      "evidence": "run",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:90:run@4#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
-      "line": 90,
-      "endLine": 90,
-      "symbol": "run",
-      "occurrence": "v2:3a6936ccf6d484a5685cf1ffb3f2fe13b913c91efb87a49830f4670e18357c62",
-      "class": "unresolved-layer-provide",
-      "evidence": "run",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/tooling/tool/cli/test/person-match-portability.test.ts:194:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -23543,27 +23375,6 @@
       "status": "open"
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:71:checkEffect@18#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
-      "line": 71,
-      "endLine": 83,
-      "symbol": "checkEffect",
-      "occurrence": "v2:b7ff188c421f3f5301dd3922ce4d583c90249548ae641cb9ff1e64994d27f886",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.all([scriptsArbitrary]), ([scripts]) => { const actual = Result.getOrThrow(decodeAppResult(scripts)); const expected = policy.expected(\"app\", actual, noEvidence); expe",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV007:packages/tooling/tool/cli/test/package-scripts.schemas.test.ts:59:checkEffect@8#1",
       "lens": "detector",
       "ruleId": "EV007",
@@ -29969,7 +29780,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "FsUtilsLive uses SharedGlob native filesystem traversal through Bun/Node; replacing NodeServices with MemoryFileSystem alone would change workspace discovery semantics. The scoped layer and native workspace behavior are qualified in goals/effect-vitest-canon/research/cli-package-scripts-policy-proof.json. A Memory-backed Glob would require a separate implementation."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/package-verify.test.ts:25:@effect/platform-node/NodeFileSystem@0#1",
