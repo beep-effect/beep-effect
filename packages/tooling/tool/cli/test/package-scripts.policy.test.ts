@@ -6,12 +6,11 @@ import {
   scriptsBlockFromRecord,
 } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, jsonStringifyPretty } from "@beep/repo-utils";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -35,7 +34,6 @@ const codecs = {
   tool: codecFor("tool"),
 };
 const decodeManifest = S.decodeEffect(S.fromJsonString(S.Struct({ scripts: S.Record(S.String, S.String) })));
-const scriptsArbitrary = Arbitrary.schema(ScriptsRecord);
 const decodeAppResult = S.decodeResult(scriptsBlockFromRecord("app"));
 const noEvidence = DerivationEvidence.make({
   doctestOwners: HashSet.empty(),
@@ -60,35 +58,29 @@ const base = {
   "beep:custom": "owned extra",
   dev: "owned dev",
 };
-const run = provideScopedLayer(platform);
 
 describe("package scripts policy", () => {
-  it.effect("repairs schema-derived records idempotently while preserving free tiers", () =>
-    run(
-      Effect.gen(function* () {
-        const policy = yield* PackageScriptsPolicy.make("/repo");
-        expect(
-          (yield* Arbitrary.checkEffect(
-            Arbitrary.all([scriptsArbitrary]),
-            ([scripts]) => {
-              const actual = Result.getOrThrow(decodeAppResult(scripts));
-              const expected = policy.expected("app", actual, noEvidence);
-              expect(expected.extras).toEqual(actual.extras);
-              for (const [key, value] of actual.impls) assertSome(HashMap.get(expected.impls, key), value);
-              expect(policy.diff(expected, policy.expected("app", expected, noEvidence))).toEqual([]);
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect.prop(
+      "repairs schema-derived records idempotently while preserving free tiers",
+      { scripts: ScriptsRecord },
+      ({ scripts }) =>
+        Effect.gen(function* () {
+          const policy = yield* PackageScriptsPolicy.make("/repo");
+          const actual = Result.getOrThrow(decodeAppResult(scripts));
+          const expected = policy.expected("app", actual, noEvidence);
+          expect(expected.extras).toEqual(actual.extras);
+          for (const [key, value] of actual.impls) assertSome(HashMap.get(expected.impls, key), value);
+          expect(policy.diff(expected, policy.expected("app", expected, noEvidence))).toEqual([]);
+        }),
+      { arbitrary: fcRuns(100) }
+    );
+  });
 
-              return true;
-            },
-            { runs: 100 }
-          ))._tag
-        ).toBe("Passed");
-      })
-    )
-  );
-
-  it.effect("retains app and infra docgen, optional parallel tasks, implementation values and extras", () =>
-    run(
-      Effect.gen(function* () {
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "retains app and infra docgen, optional parallel tasks, implementation values and extras",
+      Effect.fnUntraced(function* () {
         const policy = yield* PackageScriptsPolicy.make("/repo");
         for (const kind of ["app", "infra", "library"] as const) {
           const codec = O.getOrThrow(R.get(codecs, kind));
@@ -112,11 +104,12 @@ describe("package scripts policy", () => {
           expect(policy.diff(expected, policy.expected(kind, expected, noEvidence))).toEqual([]);
         }
       })
-    )
-  );
-  it.effect("reports literal negative drift and stamps missing implementations only", () =>
-    run(
-      Effect.gen(function* () {
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "reports literal negative drift and stamps missing implementations only",
+      Effect.fnUntraced(function* () {
         const policy = yield* PackageScriptsPolicy.make("/repo");
         const actual = yield* O.getOrThrow(R.get(codecs, "lab")).decode({
           ...base,
@@ -138,11 +131,12 @@ describe("package scripts policy", () => {
         expect(record["lint:jsdoc"]).toBeUndefined();
         expect(record["beep:check"]).toBe("tsgo -p tsconfig.check.json");
       })
-    )
-  );
-  it.effect("writes idempotently, ignores non-workspaces and fixture markers, preserves exempt bytes", () =>
-    run(
-      Effect.gen(function* () {
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "writes idempotently, ignores non-workspaces and fixture markers, preserves exempt bytes",
+      Effect.fnUntraced(function* () {
         const root = yield* fixture({
           "package.json": { name: "root", workspaces: ["packages/*", "apps/*", "infra", "scratchpad"] },
           "packages/a/package.json": { name: "@beep/a", scripts: base },
@@ -177,11 +171,12 @@ describe("package scripts policy", () => {
         expect(yield* fs.readFileString(`${root}/scratchpad/package.json`)).toBe(before);
         expect(yield* fs.readFileString(`${root}/infra/lambda/x/package.json`)).toContain("out of domain");
       })
-    )
-  );
-  it.effect("reports bypass conflicts, unowned marked sources and deleted generator scripts", () =>
-    run(
-      Effect.gen(function* () {
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "reports bypass conflicts, unowned marked sources and deleted generator scripts",
+      Effect.fnUntraced(function* () {
         const root = yield* fixture({
           "package.json": { name: "root", workspaces: ["apps/*", "packages/drivers/*"] },
           "apps/storybook/package.json": { name: "@beep/storybook", scripts: {} },
@@ -209,11 +204,12 @@ describe("package scripts policy", () => {
         expect(storybook).not.toContain('"doctest":');
         expect(storybook).not.toContain('"beep:doctest":');
       })
-    )
-  );
-  it.effect("seeds the docgen tool implementation from its direct script and preserves it on repeat writes", () =>
-    run(
-      Effect.gen(function* () {
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "seeds the docgen tool implementation from its direct script and preserves it on repeat writes",
+      Effect.fnUntraced(function* () {
         const root = yield* fixture({
           "package.json": { name: "root", workspaces: ["packages/tooling/tool/*"] },
           "packages/tooling/tool/docgen/package.json": {
@@ -241,11 +237,12 @@ describe("package scripts policy", () => {
           expect(expected["beep:docgen"]).toBe("bunx --bun --no-install docgen");
         }
       })
-    )
-  );
-  it.effect("recognizes gov-legal-mcp as a generator independently of script presence", () =>
-    run(
-      Effect.gen(function* () {
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "recognizes gov-legal-mcp as a generator independently of script presence",
+      Effect.fnUntraced(function* () {
         const root = yield* fixture({
           "package.json": { name: "root", workspaces: ["packages/drivers/*"] },
           "packages/drivers/gov-legal-mcp/package.json": {
@@ -274,11 +271,12 @@ describe("package scripts policy", () => {
           { _tag: "missing-task", name: "codegen" },
         ]);
       })
-    )
-  );
-  it.effect("declares inputs independently of source contents with fresh dependency closure discovery", () =>
-    run(
-      Effect.gen(function* () {
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "declares inputs independently of source contents with fresh dependency closure discovery",
+      Effect.fnUntraced(function* () {
         const files: Record<string, unknown> = {
           "package.json": { name: "root", workspaces: ["packages/*"] },
           "packages/cli/package.json": { name: "@beep/repo-cli", dependencies: { "@beep/helper": "workspace:*" } },
@@ -332,6 +330,6 @@ describe("package scripts policy", () => {
         expect(expanded.inputs).toContain("packages/unrelated/src/**");
         expect(expanded.inputs).not.toEqual(first.inputs);
       })
-    )
-  );
+    );
+  });
 });

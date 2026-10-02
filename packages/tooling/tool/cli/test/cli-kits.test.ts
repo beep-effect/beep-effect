@@ -26,9 +26,10 @@ import {
   variadicStrings,
 } from "@beep/repo-cli/test/Cli";
 import { it } from "@beep/test-runner";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Data, Effect, HashSet } from "effect";
+import { Data, Effect, FileSystem, HashSet, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -39,6 +40,8 @@ const toError = (cause: unknown) => new Error(String(cause));
 class InvalidPathSegment extends Data.TaggedError("InvalidPathSegment")<{
   readonly message: string;
 }> {}
+
+class FsGuardTestError extends Data.TaggedError("FsGuardTestError")<{ readonly message: string }> {}
 
 describe("internal/cli/FailureRendering", () => {
   it("stays quiet by default so causes do not leak transcript paths", () => {
@@ -165,6 +168,32 @@ describe("internal/cli/Flags coercions", () => {
 });
 
 describe("internal/cli/FsGuards", () => {
+  it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seconds" })((it) => {
+    it.effect("reports missing directory and rename paths through their typed error adapters", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const missing = path.join(root, "missing");
+        const directoryErrors = {
+          onStatError: (_cause: unknown, entry: string) => new FsGuardTestError({ message: `stat: ${entry}` }),
+          onNotDirectory: (entry: string) => new FsGuardTestError({ message: `not directory: ${entry}` }),
+          onRealPathError: (_cause: unknown, entry: string) => new FsGuardTestError({ message: `real path: ${entry}` }),
+        };
+        const directory = yield* validateDirectory(root, directoryErrors);
+        expect(directory.canonicalDir).toBe(root);
+
+        const directoryError = yield* validateDirectory(missing, directoryErrors).pipe(Effect.flip);
+        expect(directoryError.message).toBe(`stat: ${missing}`);
+
+        const renameError = yield* renameOrFail(missing, path.join(root, "renamed"), {
+          onError: (_cause, source) => new FsGuardTestError({ message: `rename: ${source}` }),
+        }).pipe(Effect.flip);
+        expect(renameError.message).toBe(`rename: ${missing}`);
+      })
+    );
+  });
+
   it("bytesEqual works data-first and data-last", () => {
     expect(bytesEqual(new Uint8Array([1, 2]), new Uint8Array([1, 2]))).toBe(true);
     expect(bytesEqual(new Uint8Array([1]), new Uint8Array([2]))).toBe(false);

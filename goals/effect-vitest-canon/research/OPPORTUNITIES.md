@@ -6491,3 +6491,39 @@ join validate this reconciliation.
 ### Executed lint profiles lacked tracked negative controls (PR #1402 review)
 
 The isolated JSDoc and deprecated-API worker cases used a valid fixture and checked exit 0. A dropped ESLint profile could pass those cases without applying either rule. Greptile identified this on `lint-workers.test.ts` after publication. The suite now runs each real worker on an intentionally invalid source file in the same scoped repository fixture and requires both a nonzero exit and its expected rule diagnostic. Focused Node and Bun runs pass 19/19 each; the updated package audit passed (601.3 seconds; docgen 20.9 seconds); hosted checks must complete before closure. Keeping positive and negative profile controls together would have surfaced configuration drift before review.
+
+### Package-scripts property and scoped registration qualification
+
+The private eight-case `it.layer` candidate preserved test names and assertions but passed
+an `Effect.gen` value to `it.effect`; the first focused Node run failed all eight with
+`TypeError: self is not a function`. Converting each body to `Effect.fnUntraced` restored
+Node and Bun 8/8 before full package verification. A candidate runtime smoke test before
+copying a mechanical rewrite into the lane would have caught the registration shape.
+The suite's first native property also hard-coded 100 runs, bypassing the configured
+floor and seed; the repository's `fcRuns(100)` route was qualified separately.
+
+### Coverage function count varied across local and hosted runs (PR #1404)
+
+The exact-head hosted Heavy / Coverage Regression job measured `FsGuards.ts`
+function coverage at 70.17%, below its 71.42% floor, while the earlier full
+local coverage run measured 71.92%. The difference was one covered function
+out of 57; package verification alone did not establish the coverage gate.
+A first focused filesystem guard test exercised missing-directory and
+missing-file error adapters. Full repo-cli package verification passed, and
+the full affected coverage command measured 42/57 functions (73.68%) with
+zero regressions across 136 packages. After merging current main, the goal's
+detector identified a redundant scope wrapper and a new platform-resource
+review row in that test. The test now uses the approved MemoryFileSystem
+layer and exercises missing-directory and rename failures without a whole-body
+scope wrapper; the detector reports zero introduced findings. Its full
+repo-cli package verification passed, and the full affected coverage command
+measured 43/57 functions (75.43%) with zero regressions across 136 packages.
+A deterministic guard-specific coverage assertion and detector pass before
+the expensive proof would have exposed these issues earlier.
+
+The next hosted Heavy / Check job found four `effect(globalErrorInEffectFailure)`
+diagnostics in the new guard test's error adapters. Package verification did
+not run the repository-wide `quality:test-tsgo` gate. Replacing the callbacks'
+plain `Error` values with a tagged test error made that named gate pass, as
+well as the focused 26-test suite. Running `quality:test-tsgo` before the
+costly full proof would have caught this source issue locally.
