@@ -89,6 +89,7 @@
     "@beep/workspace-domain": "workspace:^",
     "@beep/workspace-server": "workspace:^",
     "@beep/workspace-use-cases": "workspace:^",
+    "@beep/xstate": "workspace:^",
     "@effect/atom-react": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@effect/platform-bun": "catalog:",
@@ -96,9 +97,11 @@
     "@lexical/react": "catalog:",
     "@tauri-apps/api": "catalog:",
     "@tauri-apps/plugin-opener": "catalog:",
+    "@xstate/effect": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "xstate": "catalog:"
   },
   "devDependencies": {
     "@beep/test-runner": "workspace:^",
@@ -106,6 +109,7 @@
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",
     "@electric-sql/pglite-legacy-046": "npm:@electric-sql/pglite@0.4.6",
+    "@statelyai/sdk": "catalog:",
     "@tauri-apps/cli": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/jest-dom": "catalog:",
@@ -114,7 +118,9 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "@xstate/test": "catalog:",
     "decode-named-character-reference": "catalog:",
+    "fast-check": "catalog:",
     "jsdom": "catalog:",
     "lexical": "catalog:",
     "react-grab": "catalog:",

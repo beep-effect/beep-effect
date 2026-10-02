@@ -15,9 +15,11 @@ import * as P from "@beep/utils/Predicate";
 import { useAtomValue } from "@effect/atom-react";
 import { Fragment } from "react";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
-import { documentIntakeSurfaceAtoms, IntakeResultEntry, VaultSelectionState } from "./Intake.atoms.ts";
+import { DocumentIntakeVaultStatus, IntakeResultEntry, VaultSelectionState } from "./DocumentIntake.models.ts";
+import { documentIntakeSurfaceAtoms } from "./Intake.atoms.ts";
 import type { JSX, ReactNode } from "react";
-import type { DocumentIntakeSurface, VaultSelectionState as VaultSelectionStateType } from "./Intake.atoms.ts";
+import type { VaultSelectionState as VaultSelectionStateType } from "./DocumentIntake.models.ts";
+import type { DocumentIntakeSurface } from "./Intake.atoms.ts";
 
 const intakeResultKey = (entry: IntakeResultEntry, index: number): string =>
   IntakeResultEntry.match(entry, {
@@ -267,6 +269,29 @@ const IntakeFileControls = ({
     </>
   ) : null;
 
+// A failed vault configuration read used to leave intake silently inert. The
+// intake actor retries it on a backoff; this notice says so and offers an
+// immediate retry.
+const IntakeVaultUnavailableNotice = ({
+  onRetry,
+  visible,
+}: {
+  readonly onRetry: () => void;
+  readonly visible: boolean;
+}): JSX.Element | null =>
+  visible ? (
+    <div
+      className="absolute bottom-4 left-4 z-40 flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm shadow-sm"
+      role="status"
+      data-testid="intake-vault-unavailable"
+    >
+      <span className="text-muted-foreground">Workspace vault status is unavailable. Retrying…</span>
+      <Button type="button" variant="ghost" size="sm" onClick={onRetry} data-testid="intake-vault-retry">
+        Retry now
+      </Button>
+    </div>
+  ) : null;
+
 const IntakeWorkspaceSurface = ({
   children,
   surface,
@@ -294,7 +319,14 @@ const IntakeWorkspaceSurface = ({
   >
     {children}
     <IntakeDraggingOverlay visible={surface.state.isDragging} />
-    <IntakeFileControls actions={surface.actions} configured={surface.configured} />
+    <IntakeFileControls
+      actions={surface.actions}
+      configured={DocumentIntakeVaultStatus.is.configured(surface.vaultStatus)}
+    />
+    <IntakeVaultUnavailableNotice
+      onRetry={surface.actions.retryVaultConfig}
+      visible={DocumentIntakeVaultStatus.is.unavailable(surface.vaultStatus)}
+    />
     <IntakeBusyBadge activeBatches={surface.state.activeBatches} />
     <IntakeResultsPanel results={surface.state.results} onClear={surface.actions.clearResults} />
   </div>
@@ -359,7 +391,7 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
 export function VaultOnboardingGate({ children }: { readonly children: ReactNode }): JSX.Element {
   const surface = useAtomValue(documentIntakeSurfaceAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
 
-  if (surface.needsOnboarding) {
+  if (DocumentIntakeVaultStatus.is["needs-onboarding"](surface.vaultStatus)) {
     return <VaultOnboarding actions={surface.actions} selection={surface.state.vaultSelection} />;
   }
 

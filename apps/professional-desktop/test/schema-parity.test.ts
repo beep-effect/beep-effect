@@ -18,7 +18,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { DerivedThreadTitle } from "@/chat/DerivedThreadTitle";
-import { DroppedDocumentInput, intakeDroppedFilePayload } from "@/intake/Intake.atoms";
+import { DroppedDocumentInput, intakeDroppedFilePayload } from "@/intake/DocumentIntake.models";
 import { ProfessionalDesktopMigrationOptions } from "@/runtime/Migrations";
 import { SidecarTransport } from "@/transport/SidecarTransport";
 import { InboundEvent, InboundFrame, SidecarClosedPayload } from "@/transport/TauriIpcSocket";
