@@ -11,6 +11,7 @@
   },
   "packetPath": "goals/schema-utils-selective-codec-statics",
   "lifecycle": "active",
+  "statusNote": "2026-10-02 roadmap re-eval: P4 (Yeet to mergeable) is the next action; Lane 3 queue item 2, no gate.",
   "mission": "Replace broad SchemaUtils codec-static bundles with safe, selected, hoisted statics and migrate all existing usages to the minimal required set.",
   "executionCapable": true,
   "reflectionRequired": true,
