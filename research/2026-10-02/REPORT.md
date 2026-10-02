@@ -1,6 +1,6 @@
 # Nightly research packet — 2026-10-02
 
-Window: `2026-09-30T08:19:00-05:00` → `2026-10-02T08:16:00-05:00` (~48h). Friday — **no** Sunday weekly consolidation / tombstone reaper. Prior successful: research/2026-09-30 PR #1358 merged. Closed-unmerged this cycle: research/2026-10-01 PR #1391 (claims copied into `LEDGER_PATCH/excluded-packets/2026-10-01.jsonl`). Blinded front-half; no clone / no PR / no CloudAgent.
+Window: `2026-09-30T08:19:00-05:00` → `2026-10-02T08:16:00-05:00` (~48h). Friday — **no** Sunday weekly consolidation / tombstone reaper. Prior successful: research/2026-09-30 PR #1358 merged. Closed-unmerged this cycle: research/2026-10-01 PR #1391 (claims copied into `research/ledger/excluded-packets/2026-10-01.jsonl`). Writer stage blinded at written_at (no clone / no PR / no CloudAgent). Publisher opened PR #1403.
 
 ## Delta-first
 
@@ -40,4 +40,4 @@ Biggest settled event: **Effect 4.0.0 stable LTS** after `#8577`. Local-first: Z
 Spec Final still ≠ SDK ship (`#3306` blocked; SEP-3004 closed-unmerged; SEP-2640 go/py/ts OPEN). Literature accelerating: **APEX cross-skill approval laundering** (74% ASR) + **PACE provenance enforcement** + **MCRI skill evaluation** + Sep 30 **Pretext/ActionGuard** scanner/auth cluster. X unavailable.
 
 ## Counts
-25 claims (15 window_new / 10 refute|hold_update); law8 / effect8 / agents9. Novelty exclusion_collision_pct **40.0%** of window_new (6/15; gate ≤40%). RUN **partial** (X client-not-enrolled). LEDGER_PATCH includes excluded-packets/2026-10-01 (25 claims from closed PR #1391).
+25 claims (15 window_new / 10 refute|hold_update); law8 / effect8 / agents9. Canonical novelty exclusion_collision_pct **62.5%** (15/24 unique claim URLs ∩ `research/ledger/excluded-packets/2026-10-01.jsonl`; over the ≤40% gate). Window-new URL collisions **40.0%** (6/15): SB574, effect@4.0.0, #8577, shared Zero package URL, Pretext, ActionGuard. The Clio press URL is not in the excluded packet. RUN **partial** (X client-not-enrolled). Excluded packet holds 25 claims from closed PR #1391.

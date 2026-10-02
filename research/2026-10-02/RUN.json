@@ -28,18 +28,28 @@
   },
   "novelty": {
     "window_new": 15,
-    "exclusion_url_collisions": 6,
-    "exclusion_collision_pct": 40.0,
-    "unique_claim_urls": 25,
+    "exclusion_url_collisions": 15,
+    "exclusion_collision_pct": 62.5,
+    "unique_claim_urls": 24,
     "collision_urls": [
-      "https://www.clio.com/about/press/clio-acquires-learned-hand-judiciary-ai/",
       "https://www.gov.ca.gov/2026/09/30/californias-nation-leading-ai-framework-just-got-stronger-governor-newsom-signs-more-first-in-the-nation-worker-protections-and-more/",
+      "https://data.uspto.gov/support/faq",
+      "https://www.harvey.ai/blog/harvey-everlaw-evidence-ediscovery",
+      "https://imanage.com/resources/resource-center/news/imanage-thomson-reuters-atrategic-partnership-governed-ai-legal-workflows/",
+      "https://www.patlytics.ai/blog/patlytics-mcp-patent-intelligence-now-available-in-claude-and-chatgpt",
       "https://www.npmjs.com/package/effect/v/4.0.0",
       "https://github.com/Effect-TS/effect/pull/8577",
+      "https://www.npmjs.com/package/@rocicorp/zero",
+      "https://www.npmjs.com/package/jazz-tools/v/2.0.0-alpha.58",
+      "https://github.com/drizzle-team/drizzle-orm/issues/6162",
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3306",
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3004",
+      "https://github.com/modelcontextprotocol/go-sdk/pull/1238",
       "https://arxiv.org/abs/2609.39607",
       "https://arxiv.org/abs/2609.39450"
     ],
-    "note": "Gate ≤40% of NEW (window_new) claims vs exclusion digest. Collisions are intentional absorbs of closed-unmerged #1391 headlines (Clio, SB574, effect@4.0.0/#8577, Pretext/ActionGuard) that never landed on main. Fresh deltas (Zero canary.22, Evolu 8.15.1, H&K Oct1, APEX/PACE/MCRI/process-eval, iManage Oct GA) keep novelty at the gate. Refute HOLDs re-cite standing URLs by design and are excluded from the NEW collision numerator."
+    "window_new_collision_pct": 40.0,
+    "note": "Canonical gate matches research/2026-09-30: distinct claim URLs that also appear in research/ledger/excluded-packets/2026-10-01.jsonl, divided by unique_claim_urls. 15/24 = 62.5%, over the ≤40% gate. Nine URLs are standing HOLD re-cites; six are window_new absorbs of closed-unmerged #1391 (CA.gov SB574, effect@4.0.0, Effect#8577, the shared @rocicorp/zero package URL, Pretext 2609.39607, ActionGuard 2609.39450). The Clio press URL is absent from the excluded packet (prior claims used LawNext and PR Newswire). window_new_collision_pct is 6/15 = 40.0. Two Zero claims share one URL, so unique_claim_urls is 24."
   },
   "quotaPools": {
     "search": "web+github-mcp+arxiv+npm",
@@ -97,6 +107,10 @@
     "opened_pr": false,
     "called_cloud_agent": false,
     "wrote_goals_or_inbox": false
+  },
+  "publisher_stage": {
+    "opened_pr": 1403,
+    "note": "blinding and quotaPools.publisher are the writer stage, frozen at written_at (no PR yet). Publisher applied research/ledger/stamp.json and research/ledger/WATCHLIST.md and opened PR #1403."
   },
   "written_at": "2026-10-02T08:45:00-05:00"
 }

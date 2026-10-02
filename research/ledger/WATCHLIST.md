@@ -10,7 +10,7 @@ Routine-proposed. Human admits. Add-with-evidence only.
 
 | id | term | why | evidence | action |
 | --- | --- | --- | --- | --- |
-| w-schema-binary | Effect SchemaBinary / cluster wire | SchemaBinary shipped in rc.113+; tip now rc.118 — watch cluster consumers | effect@4.0.0-rc.118 | keep |
+| w-schema-binary | Effect SchemaBinary / cluster wire | SchemaBinary shipped in rc.113+; tip now effect@4.0.0 stable — watch cluster consumers | effect@4.0.0 | keep |
 | w-drizzle-taggederror | drizzle Schema.TaggedErrorClass | #6162 still OPEN; more urgent post-4.0.0 (reconfirmed Oct 2) | drizzle-orm#6162 | keep |
 | w-uspto-odp-auth | USPTO ODP profile + API key | four fields still mandatory (reconfirmed Oct 2 via patent.dev) | patent.dev; data.uspto.gov/support | keep |
 | w-skills-over-mcp | Agent Plugins vs SEP-2640 | **SEP-2640 MERGED Final on main** 2026-09-13; Tier-1 SDKs still OPEN | mcp#2640 merged; sdk PRs OPEN | keep |
