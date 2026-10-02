@@ -6445,3 +6445,37 @@ historical ledger before publication.
 ### Focused Vitest selection under a property floor
 
 While validating the four-suite CLI backlog batch, setting `BEEP_FC_NUM_RUNS=400` selected only the property-bearing cache-entrypoints suite: 9 tests passed, while the other three suites were excluded. At repository root the same filtered command selected zero tests and exited 1. `vitest.shared.ts` intentionally switches the include list to a content-based property census when a floor is active. Retain separate ordinary-suite and property-sweep receipts, and make focused proof tooling report selected files and omitted requested files before accepting a multi-suite result. The 9-test result proves the property-bearing suite only; ordinary combined proof remains required.
+
+
+### Scheduler drift inspector patch outlived its coverage workaround
+
+The existing L-OBS-04 finding identified a module-level inspector prototype patch
+that survived absent or rejected coverage collection and filtered ranges from all
+scripts. The workaround originated in #998. On the current installed runtime,
+two isolated copies of the migrated scheduler suite passed all ten cases both
+with and without the patch, with identical nonempty QualityScheduler coverage
+(681 lines, 695 statements, 218 functions, 220 branches). The source now removes
+the patch instead of changing coverage responses. Full package verification passed
+(audit 630.2 seconds; docgen 25.0 seconds), followed by the complete CLI Node/V8
+coverage run: 5,086 tests passed, zero failed or pending, including all five
+scheduler cases. The coverage report contains 57,565 source lines; no coverage
+baseline or threshold was changed. Hosted publication gates remain separate.
+
+The first private probes produced empty coverage because the external source was
+excluded; these were rejected as evidence. Explicit source selection and a
+nonempty source-row assertion prevented a false green. A focused regression
+probe and an expiration review would have prevented the global workaround from
+remaining indefinitely. No coverage baseline or threshold was changed.
+
+
+### Scheduler ledger occurrence lineage (PR #1401 review)
+
+The scheduler migration retained historical EV002 ledger identities for two memory-reading
+cases, while the source-base inventory recorded their later merged BunCrypto/FileSystem
+wrappers. Review found that joining by occurrence left those two removed baseline findings
+unmatched. Append the two exact source-base occurrences with source fix
+`dc82928e396aa40656569837035ff07288a3293d`, preserving the historical rows. The proof
+receipt distinguishes eight current baseline fixes from two historical lineage records.
+An exact occurrence join between removed baseline findings and fixed ledger rows would
+have caught this before publication. Strict ledger validation and an eight-occurrence
+join validate this reconciliation.
