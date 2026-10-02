@@ -8,10 +8,17 @@ At that initial handoff, the merge commit and the prior published commit
 `5509f037aa2bdf8fe03cb0930a7f7a79dd1823ac`. This historical tree equality
 is recorded in `data/r54-continuation-2026-10-01.json`.
 
-The successor now includes main `9e136082a1212b2906cb29c8bd92656b55bf07bb`.
-PR #1398 supplied the generated Vitest alias repair; its merge changed only
-`vitest.aliases.generated.json`. Current R54 evidence must bind this successor
-source identity before admission.
+The successor includes main `6cbe90d5c1a990c26084e7ca97d760d746106bc5`.
+The prior main `9e136082a1212b2906cb29c8bd92656b55bf07bb` included PR #1398's
+generated Vitest alias repair. PR #1387 subsequently rewrote desktop document
+intake. Of 379 direct owner-source files, 378 retain identical bytes and
+`Intake.atoms.ts` changed; `intake-vault-status` requires current-source semantic
+revalidation. The separate citation-referent set retains 1,736 of 1,748 files
+byte-identically, with three changed files and nine exact paths absent. This
+source-identity check is recorded in
+`data/r54-main-6cbe90d-source-continuity.json`; it does not establish semantic
+coverage. Prior R54 review bindings remain historical. Current R54 evidence must
+bind the successor source before application or admission.
 Source cited by qualified owners changed after the original `ec71f01a` binding,
 including `ContradictionTriageView.tsx` and `speech-input.tsx`. The earlier review
 cannot establish current-source coverage. R54 corrections remain private and
