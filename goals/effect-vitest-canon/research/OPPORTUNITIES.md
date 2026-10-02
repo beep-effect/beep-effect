@@ -6113,3 +6113,335 @@ unknown. Reattaching the existing branch restored closeout without changing
 content. Better checkout-operation attribution and a pre-closeout branch check
 would shorten diagnosis. This is not attributed to another task or reported as
 a reproduced product defect.
+
+## 2026-10-01: Apply private drafts through the authoritative test-type gate
+
+Five prepared migrations passed runtime checks and private virtual type checks,
+but applying them in the follow-up worktree exposed three root Effect diagnostics:
+`strictEffectProvide`, `effectFnOpportunity`, and `nodeBuiltinImport`. Replaced
+the concrete ConfigProvider layer with a direct service, used `Effect.fn` for the
+fake process spawner, and adopted `NodeHttpServer.layerTest` for the metrics sink.
+The authoritative `bun run beep quality test-tsgo` then passed. Private draft
+qualification should invoke that gate before being described as type-complete.
+
+A fresh-worktree package check also reported missing dependency declarations
+(`TS6305`). Building the CLI dependency graph cleared those errors; package
+quick verification then passed. A dependency-build preflight would avoid treating
+fresh-checkout setup failures as source regressions.
+
+## 2026-10-01: Native child readiness and stale lens findings
+
+Reviewing the five-suite lens ledger exposed an open file-descriptor/flock
+readiness gap: spawn completion does not guarantee the child's shell has opened
+its descriptor or obtained its lock. The fixture now prints an acknowledgement
+after that operation, and the test awaits that marker with a bounded live-clock
+timeout before running the reaper. Deliberate child scopes remain unchanged.
+
+The same review found two stale or misleading metrics records. Live-clock
+polling had already been repaired in #1323; it uses a finite retry schedule and
+`TestClock.withLive`. Another test title promised explicit ingest-run selection
+although the invocation supplies no run identifier and the command has no such
+flag. Renamed the case to its actual protobuf/span export assertion rather than
+claiming unsupported selection behavior.
+
+## 2026-10-01: Heavy verification lost runner communication
+
+PR #1365 head `1710f6d3cf` lost three distinct self-hosted runners during
+coverage, docgen, and type verification. Their job annotations report
+"The self-hosted runner lost communication with the server"; each verification
+step remained in progress, and job-log downloads returned 404. These are
+interrupted proofs, not passing checks or demonstrated source failures. GitHub
+refused a same-head job retry with "The workflow run containing this job is
+already running" while another lane remained active. Persisting runner-side
+logs independently and recording host termination reasons would distinguish
+capacity interruptions, network loss, and process failure without guessing.
+
+### Private qualification dependency isolation
+
+While qualifying the step-capture migration, a scratch directory linked to a
+sibling worktree's dependencies loaded a different Vitest instance than the
+launcher. The suite failed before registration with `Cannot read properties of
+undefined (reading 'config')`; this is not a failing test assertion. Qualification
+fixtures should resolve their runner, shared config, and dependency link from one
+checkout. A dedicated directory with the active checkout's dependency link is
+being used for the retry.
+
+### Nested-child readiness budget exceeds the test budget
+
+The nested admission test in `step-capture-lifecycle.test.ts` permits 2,000
+readiness polls at 10ms, followed by up to 300 death polls, while the enclosing
+test specifies 15 seconds. Under contention the outer timeout can interrupt the
+readiness loop before its own assertion explains the failure. The canonical
+runner migration preserves these existing bounds. A focused hardening change
+should use a readiness acknowledgement or allocate explicit readiness, cleanup
+and outer budgets, preserving the actual child-group cleanup assertions.
+
+### Worktree fixture ownership begins after setup
+
+`worktree-command.test.ts` creates its scratch directory and initializes two Git
+repositories inside the acquisition side of acquireUseRelease. A failure in
+initialization or the first push happens before its cleanup is registered. Its
+release also ignores removal failure. Use the existing scoped temporary-directory
+primitive at allocation time, retain independent nested fixture contexts, and
+verify cleanup both after success and after an injected initialization failure.
+
+### Package quick checks after dependency API removal
+
+After PR #1365 merged the codec-statics retirement from main, a direct
+`beep quality package-verify @beep/repo-cli --quick` reported 1,003 type errors.
+Generated Schema declarations still referenced removed `SelectedCodecStatics`.
+Rebuilding Schema reduced the errors to 90; rebuilding repo-utils and
+repo-configs narrowed them to HarnessLedger's stale ai-metrics declarations.
+The quick lane should identify stale referenced declaration outputs or explain
+its dependency-build prerequisite before presenting a cascade as source errors.
+Do not refresh lint baselines or alter production types to suppress this signal.
+
+### Scoped temporary directories with deliberate early removal
+
+Private qualification of `architecture-operation-plan.test.ts` exposed an
+important migration constraint: replacing its unscoped allocator directly with
+`makeTempDirectoryScoped` caused 11 failures on each runtime. Existing tests
+remove their roots early, and the platform finalizer then reported `NotFound`.
+Register cleanup at allocation with `acquireRelease`, use forceful removal to
+accept already-absent roots, and keep other release failures visible. Add an
+immediate setup-failure control rather than treating the successful test body
+as proof that the root lifetime is safe. This pattern should be checked when
+reviewing other temporary-directory migrations with explicit early removal.
+
+### Inbox Memory qualification must exercise Bun's native writer path
+
+A private inbox-view trial passed all 19 cases on Node but failed eight on Bun
+with `ENOENT ... posix_spawn 'flock'`. The append path writes an active-index
+input through FileSystem, then starts a native flock/sh process with repoRoot
+as cwd. A Memory-only root does not exist for that process. Keep append and
+symlink cases native; qualify only the three read-only view fixtures for Memory.
+Node-only green evidence would have missed this boundary. A future test helper
+could declare native subprocess requirements so platform promotion reviews do
+not have to discover them from a runtime-specific failure.
+
+### Persisted Option assertions can pass without examining state
+
+While qualifying `yeet-remediation.test.ts` for L-PROP-04, injecting absent
+persisted state let both original conditional head/update checks pass. Explicit
+presence assertions make the same two cases fail. Consider a targeted review
+of assertions nested under `Option.isSome` without a preceding presence check;
+a syntax-only detector should report candidates rather than assume intent.
+The private control receipts are summarized in `yeet-remediation-scope-proof.md`.
+
+### PR 1390 closeout: stale summaries and GitHub error attribution
+
+Review comments identified a five-suite digest and reconciliation receipt that
+still described rows as open after the ledger closed them. Recompute aggregate
+receipts from ledger dispositions whenever a follow-up closes rows, retaining
+an explicitly named historical snapshot instead of treating old totals as live.
+
+Separately, `yeet monitor --until-ready` reported no open PR while direct
+GraphQL requests returned a quota error and REST confirmed PR 1390 open at the
+expected head. Preserve and classify the upstream lookup error rather than
+turning transport or quota failures into an absent-PR conclusion. Detached
+monitoring was unavailable because the systemd user manager was unreachable.
+
+The hosted Security job also found inherited `basic-ftp@5.3.1` advisory
+GHSA-c475-qrg2-pj4r, reporting 6.2.1 as fixed. The initial migration head
+left bun.lock unchanged; follow-up e3999b4b8c repairs the inherited dependency
+in this PR with the override and lockfile update described below. Hosted
+Security passed on that repair head.
+
+The inherited basic-ftp advisory is repaired through a 6.2.1 override after
+local get-uri download/error/cache compatibility checks. The v6 transfer-host
+restriction remains enabled. A dependency-chain check is necessary here:
+even current get-uri metadata still requests basic-ftp 5.x, so updating the
+parent alone would not remove this advisory. See `basic-ftp-security-repair.md`.
+
+
+### CI trace isolation after CLI runner migration
+
+PR 1390 jobs 110449355268 and 110449355276 failed command-output assertions
+when CI enabled runner lifecycle tracing. Shared TestConsole layers captured
+the runner start event before the test callback. Focused local runs without
+CI did not exercise this behavior. Give command-output assertions a fresh
+TestConsole inside the callback through the existing provideServiceEffect
+pattern; retain runner tracing and exact output assertions. Future migration
+qualification should include CI=true in both runtimes. The repaired four-file
+selection passes all 80 tests on Node and Bun with CI=true, and root test
+typechecking passes. The Effect Vitest ratchet reports zero introductions.
+
+Fallow also caught cognitive complexity in the preservation scenario's
+short-circuit payload assertions. Match the expected discriminant and payload
+fields together with toMatchObject, retaining all value checks without redundant
+branches. Fallow audit now passes. Schema inventory regeneration reset two
+fixture-codec exception dispositions after their source lines moved; preserve
+the reviewed reasons and update only those line references.
+
+
+### Repeatable dependency compatibility and moving-base proof
+
+PR 1390 review comment 4157512624 identified that the basic-ftp compatibility
+check was retained only in a private fixture. Promote the bounded loopback
+fixture into the CLI unit suite so future installed dependency changes exercise
+the actual Box SDK dependency chain. Preserve download content, mtime, missing
+file, cached-file, and parser assertions; a corrupted-payload negative control
+proves the child failure reaches the test verdict.
+
+The full CLI package run on a44bf66445 passed 253 test files and failed only
+yeet-pr-wave-notifier's byte-equality comparison with origin/main after that
+ref advanced. The notifier changed upstream while the proof ran. Merge main
+and rerun the proof; do not weaken the assertion or classify this as a migrated
+test regression. Future proofs should capture their comparison base once, or
+report a moving-base mismatch explicitly rather than as an unexplained failure.
+
+## Generated infrastructure SDK prerequisite after script-suppressed install
+
+The full PR #1390 publication proof on fc0919af93 failed in infra docgen:
+`@pulumi/gharunners/index.ts` reported TS1205, TS1294 and TS4114. The installed
+local SDK had no `bin/index.d.ts`; the compiler therefore consumed generated
+source under the stricter example compiler options. Its existing root
+postinstall runs `infra:prepare-gha-runners`, but the earlier script-suppressed
+dependency installation omitted that prerequisite. Running the existing
+preparation command restored the compiled SDK. This is an installation-state
+failure, not evidence that example strictness should be weakened. Add an
+explicit installed-SDK readiness check to proof preflight, with the existing
+preparation command as its remediation. Scoped infra docgen passed after preparation; full publication proof must still be rerun.
+
+## Memory qualification must prove the selected service
+
+While preparing watch-mode migration, wrapping snapshot fixtures in Memory
+passed all 50 tests, but the scripted command helper internally provided the
+native platform layer. The nested provider shadowed Memory. Make the helper
+platform explicit, and qualify with a service-sensitive control: the fixture
+root exists through FileSystem and does not exist through node:fs. Both controls
+pass on Node and Bun; restoring native fails both. A green run and an imported
+Memory layer alone are insufficient evidence of Memory execution. Preserve this
+check in the filesystem conformance review procedure.
+
+
+## Explicit child environment differs between Node compatibility and Bun
+
+CI runner security qualification with synthetic BEEP_CI_SECRET_ values found
+that filtering those keys from explicit child env passes Bun but fails Node.
+The Node compatibility spawn/spawnSync adapters in vitest.setup.ts merge
+process.env back into supplied env. Explicit blank values repair the fixture
+and both runtime suites pass. Restoring its original ambient spread fails.
+Add adapter conformance cases for omitted env, explicit empty env and explicit
+partial env; align the compatibility behavior with measured Bun semantics.
+This is a remaining parity gap, not evidence that omission is equivalent to
+clearing a variable. No real secret values were used in the controls.
+
+
+## QA round-pipeline negative tests can accept setup defects
+
+While migrating `packages/tooling/tool/cli/test/qa-round-pipeline.test.ts`, an injected filesystem assertion defect was absorbed by tests that assert only `Exit.isFailure`. Native-provider mutation produced 21 failures and eight passes. Evidence: private qualification `qa-round-service-negative.log`; candidate review remains open. Assert the expected typed failure or error payload, and prove that an unrelated setup defect cannot satisfy the intended rejection test. Preserve the existing success and failure scenarios.
+
+
+## Interrupted applied package proof
+
+The first full CLI package proof for this batch ended with exit 130 and
+`All fibers interrupted without error`. It did not establish a verdict.
+Preserve interrupted evidence separately from source failures and resubmit the
+proof against stable inputs. A durable package-proof job would prevent session
+interruption from discarding an otherwise useful verification run.
+
+## Applied batch proof and detector lifetime review, 2026-10-01
+
+The eight applied CLI migrations pass full repo-cli package verification (audit 676.6s, docgen 24.4s) and all 218 focused cases on Node 22.22.3 and Bun 1.4.2. Removal failures, Some presence guards, callback-local consoles and QA error specificity now have applied supporting proof. The spawn environment parity repair still requires tracked integration and its own applied proof.
+
+Detector review: the first applied ratchet reports 71 new EV003 call-site candidates after public-layer migration. Their retained acquireUseRelease brackets own fresh inner roots; shared services belong to public layers and cleanup errors remain visible. Explicit baseline reasons preserve these deliberate shorter lifetimes. The reviewed ratchet reports introduced=0. This refresh also removes stale prior rows and is not evidence that every removed baseline row was repaired by this batch.
+
+Pinned-document friction: current primitives graph pins immutable @effect/vitest 4.0.0 at 67ba4e46a11ccda0b6761578bfd22c04ae00167d, while older goal and charter prose still cites rc.113. Installed index, utils, internal runner and README match the current tag byte for byte. Reconcile historical prose and current-source statements at packet closeout; version strings alone are insufficient API evidence.
+
+## Spawn regression runtime-route qualification, 2026-10-01
+
+The first ordinary generated package-script run of bun-spawn-env-parity passes the Bun wrapper but fails the named-node wrapper; the nested report is scoped and the exit-only assertion reports no specific setup failure. Direct Node 24 invocation of the same applied fixture passes all 20 cases. Attribution is pending executable-route investigation under bunx --bun; retain the startup runtime identity check rather than crediting two runs of one runtime. Improve nested reporter failure context and prove the actual Node route before promoting this regression. Root configuration and wrapper/fixture typechecks pass.
+
+Runtime-route attribution confirmed: bunx --bun injects a temporary node executable that is a symlink to Bun. Its NODE and npm_node_execpath values also select that shim. A named-node subprocess is therefore insufficient Node conformance evidence inside that package script. Keep the startup identity check, resolve a real Node executable by verified runtime identity, and include bounded nested reporter errors in wrapper diagnostics. This is an introduced regression-harness route issue, separate from the reproduced production shim environment bug.
+
+Applied runtime-route repair: the generated package test now passes both verified runtime wrappers, each checking twenty child cases (3.12s); applied wrapper/fixture types and root configuration types pass. PATH identity probing rejects Bun-backed node shims, and bounded schema-decoded reporter failures survive scoped cleanup. The root adapter now forwards explicit child environments in both spawn forms. Full package and hosted proof remain pending.
+
+## Spawn conformance resolver complexity, 2026-10-01
+
+The early-pushed checkpoint passes the applied regression and typechecks, but full Yeet preflight stops at Fallow audit and health. Both identify hostNodeExecutable in bun-spawn-env-parity.test.ts: cognitive complexity9 exceeds8; cyclomatic7. This is introduced harness complexity. Preserve runtime identity and failure controls while simplifying platform selection; do not relax thresholds or suppress the finding. Current package proof continues on unchanged checkpoint inputs. A focused complexity review before early publication would have caught this earlier.
+
+## Applied proof selectors and hook budgets, 2026-10-01
+
+The first applied five-file command with BEEP_FC_NUM_RUNS=400 selected only the fourteen-case cache-census file under canonical property-lane config. Preserve that result as the floor-specific receipt; run the complete focused bundle separately under the ordinary selector. A private include override can conceal this selection distinction. Also, eight new EV014 candidates identify omitted explicit layer-hook budgets in the cache/inbox candidates. All eight now use the charter30-second hook budget without changing body deadlines, global config or property floors. Applied Fallow audit and health pass after the resolver refinement; full package/hosted proof remains pending.
+
+Private lint-workers qualification cannot execute its source-placement cases while another proof owns stable repo inputs: those cases create temporary TypeScript fixtures under the owning CLI/src for real child tooling. Preserve that native source-resolution subject and schedule its qualification at a safe checkpoint rather than claiming a skipped subset proves the suite.
+
+## 2026-10-01: Typed lint project coverage for nested runtime fixtures
+
+The early publication of source commit `233ab74154327fce48d7f0ab424103b6a355882a` passed the owning CLI package audit/docgen and all fifteen cheap gates, then full `lint:deprecated-apis` rejected `test/fixtures/bun-spawn-env/spawn-env.test.ts` and its Vitest config: “was not found by the project service.” The focused fixture type proof did not establish ESLint project discovery. Preserve the reported failure and four later unexecuted lanes. A fixture-local typed project, checked by the actual ESLint route before publication, would have prevented this mismatch. Repair is in progress; no lint rule or global timeout waiver is authorized.
+
+Repair outcome: a fixture-local `tsconfig.json` extends the CLI test project, explicitly includes the two fixture roots and clears the inherited fixture exclusion. Targeted deprecated-API ESLint reproduces exit 1 before and exits 0 after; resolved config contains exactly those two roots and their narrow diagnostics are zero. Config-only CLI package verification passes lint 4.6 seconds/check 7.3 seconds. Root config checking passes. The new full publication proof remains required.
+
+## 2026-10-01: Dependency cohort changed during publication
+
+Fresh main added the dependency catalog update (`a448474b15`) and basic-ftp security repair (`e442f4f61a`). The lane had already pushed its fixture project repair, but continued full proof would describe the older Vitest cohort. The owning publication process was deliberately stopped with exit 130, then main merged cleanly and frozen installation passed. Applied selection passes 72 tests on both Node 22 and Bun under Vitest 5.0.3, while immutable Effect Vitest API hashes remain unchanged. Preserve the interrupted receipt and require full verification on the updated head. Checking base/dependency freshness before launching a long proof reduces avoidable repeated work; no historical timing or pass is reassigned to the new cohort.
+
+### 2026-10-01 — Merge-preview baseline conflict after a green local proof
+
+The current-cohort publish completed all 32 local proof lanes, including coverage, then stopped at the merge-preview gate because main conflicted in `standards/effect-vitest.inventory.jsonc`. The failed publish is not a merged-preview or hosted closeout pass. The merge preserved both branches' exception reasons and regenerated the baseline against the merged source; the authoritative finding ledger was not replaced. A generator-aware baseline reconciliation at the merge boundary would prevent manually inspecting thousands of conflict lines.
+
+### 2026-10-01 — Spawn environment oracle missed selective inheritance
+
+The bounded Grok review identified that the two-marker regression could miss a parent merge that removed only those markers. A third synthetic parent marker now checks omission inheritance and replacement for every explicit environment scenario, including override and undefined entries. The selective-merge control passed all 20 original Node cases and failed 16 strengthened cases; the old full merge failed eight original and 16 strengthened cases. Both runtime fixtures and wrappers passed privately. The stronger regression is now applied; ordinary package and hosted proof remain pending. Tests observe only synthetic markers and emit no environment values.
+
+### Reflection command routing ambiguity
+
+During the nine-suite proof closeout, `bun run beep lint reflection` selected the broad ten-step policy lane instead of the intended artifact gate. The owned run was interrupted with exit 130; `bun run beep lint reflection-artifacts` then passed with zero blocking or advisory findings. Rejecting unknown lint subjects, or printing a correction before selecting the default lane, would prevent unintended heavy work.
+
+### Bun external validation configuration diagnostic
+
+The private strict ledger decoder validated 4,579 rows with zero invalid rows or duplicate IDs and exited 0, then Bun printed `Internal error: directory mismatch` for the root tsconfig override. Keep this runtime diagnostic separate from the successful schema result. A cache-local tsconfig with explicit root aliases would avoid the override boundary; the reproducible engine diagnostic can inform a later Bun issue.
+
+### 2026-10-01 — Hosted repair and proof-scope correction
+
+PR #1390 exposed a deterministic service-key diagnostic in the Corpus test and inherited
+Vitest alias drift. Commit `736f6f7b0c` added the dock CSS TypeScript path without
+regenerating its Vitest alias. The repair names the Corpus service by its canonical
+test path and restores the missing alias. The canonical `lint:tsgo-rules` check passes;
+full `@beep/repo-cli` verification passes audit in 629.9 seconds and docgen in 19.9 seconds.
+
+The 2,287-case runtime reports cover the property sweep plus selected suites. Public
+proof prose and 193 ledger reasons now state that scope; identities, statuses, evidence,
+and fix SHAs are preserved. Future focused configurations must replace `include` after
+merging. An attempted `beep lint tsgo-rules` invocation forwarded an extra Turbo task
+and ended red; the generated root script invokes `beep quality tsgo-rules` correctly.
+
+The publication stopped at integration dependency build with `@beep/ui` TS2589 after
+26 passing lanes; six later lanes were skipped. UI source, root manifest, and lockfile
+match the merged base. An isolated installed TypeScript build with normal declaration
+emission passes. Keep both receipts: the integration failure still needs full-lane
+verification and its execution-context cause remains unproven.
+
+### Qualified migration formatting gate
+
+The cache, image and process attachment candidates passed private runtime qualification but failed the first applied package audit on Biome import ordering and formatting. The package lint reported four errors across the three files. Targeted `bunx biome check --write` repaired them; the subsequent full package audit passed in 590.3 seconds and docgen in 19.2 seconds. Run the installed formatter against private candidates before application to avoid repeating a full audit for formatting alone.
+
+### Migration detector membership preflight
+
+Early publication of the three-suite batch reached hosted checks before the local detector gate reported ten introduced findings. One was a missed canonical `expect` import; nine represented retained CWD restoration wrappers and a shorter child-process scope. The import was corrected, the nine occurrences received evidence-backed exceptions, and the canonical baseline refresh and default ratchet passed with 2,069 findings and zero introduced findings. Run the detector membership check before publication and persist decoded findings through the schema encoder rather than serializing internal Option values.
+
+### Pin the comparison base for an admitted proof
+
+The reviewed migration publication passed all ten coverage shards, then failed
+its final ratchet because `origin/main` advanced while the proof was running.
+The tested head did not contain the new `@beep/xstate` package or the updated
+professional-desktop intake code, but the comparison required their newer floors
+and a coverage summary for the absent package. The failed publication recorded
+`quality:coverage` as its first red; the earlier base-freshness receipt was green.
+
+Merging current main reconciles this attempt. The operator should pin the base
+commit for the entire proof, record it in each lane receipt, and check base
+freshness again before publication. A shared ref update should not silently
+change the comparison contract midway through a proof.
+
+The merge also changed a retained `withPartitionShim` occurrence fingerprint.
+Refreshing the detector baseline reopened its reviewed exception even though
+its native executable ownership and environment restoration were unchanged.
+The exception was restored after semantic review. Baseline refreshes should
+report disposition changes explicitly so they can be reconciled with the
+historical ledger before publication.
+
+### Focused Vitest selection under a property floor
+
+While validating the four-suite CLI backlog batch, setting `BEEP_FC_NUM_RUNS=400` selected only the property-bearing cache-entrypoints suite: 9 tests passed, while the other three suites were excluded. At repository root the same filtered command selected zero tests and exited 1. `vitest.shared.ts` intentionally switches the include list to a content-based property census when a floor is active. Retain separate ordinary-suite and property-sweep receipts, and make focused proof tooling report selected files and omitted requested files before accepting a multi-suite result. The 9-test result proves the property-bearing suite only; ordinary combined proof remains required.

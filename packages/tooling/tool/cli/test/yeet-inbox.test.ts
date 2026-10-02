@@ -27,12 +27,12 @@ import {
   yeetReviewThreadRowId,
   yeetSiblingCollisionRowId,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it, layer } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -67,17 +67,8 @@ const row = Effect.fnUntraced(function* (subject: YeetFailureCapsule, severity: 
 
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
-const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requirements>(
-  use: (root: string) => Effect.Effect<Value, Failure, Requirements>
-) {
-  const fs = yield* FileSystem.FileSystem;
-  return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>
-    Effect.ignore(fs.remove(root, { recursive: true }))
-  );
-});
-
 describe("yeetInboxRowId", () => {
-  layer(BunCrypto.layer)((it) => {
+  it.layer(BunCrypto.layer, { timeout: "30 seconds" })((it) => {
     it.effect("is deterministic over the same failure and doubles as a safe filename", () =>
       Effect.gen(function* () {
         const first = yield* yeetInboxRowId(capsule());
@@ -222,7 +213,7 @@ describe("yeetInboxRowId", () => {
   });
 });
 
-describe("yeetInboxPaths", () => {
+it.layer(NodePath.layer, { timeout: "30 seconds" })("yeetInboxPaths", (it) => {
   it.effect("resolves the inbox layout under the checkout", () =>
     Effect.gen(function* () {
       const paths = yield* yeetInboxPaths("/repo");
@@ -231,7 +222,7 @@ describe("yeetInboxPaths", () => {
       expect(paths.activePath).toBe("/repo/.beep/inbox/active.ndjson");
       expect(paths.failuresPath).toBe("/repo/.beep/inbox/failures.ndjson");
       expect(paths.acksDir).toBe("/repo/.beep/inbox/acks");
-    }).pipe(provideScopedLayer(NodePath.layer))
+    })
   );
 
   it.effect("resolves a row's ack receipt under the acks directory", () =>
@@ -239,11 +230,11 @@ describe("yeetInboxPaths", () => {
       const ackPath = yield* yeetInboxAckPath("/repo", "coverage-abc123");
 
       expect(ackPath).toBe("/repo/.beep/inbox/acks/coverage-abc123");
-    }).pipe(provideScopedLayer(NodePath.layer))
+    })
   );
 });
 
-describe("renderYeetInboxRowLine", () => {
+it.layer(BunCrypto.layer, { timeout: "30 seconds" })("renderYeetInboxRowLine", (it) => {
   it.effect("renders one single-line JSON document that round-trips through the codec", () =>
     Effect.gen(function* () {
       const subject = yield* row(capsule());
@@ -254,7 +245,7 @@ describe("renderYeetInboxRowLine", () => {
       expect(decoded.kind).toBe("check-failed");
       expect(decoded.schemaVersion).toBe(YEET_INBOX_SCHEMA_VERSION);
       expect(decoded.capsule).toStrictEqual(subject.capsule);
-    }).pipe(provideScopedLayer(BunCrypto.layer))
+    })
   );
 
   it("rejects garbage instead of decaying to a partial row", () => {
@@ -263,214 +254,211 @@ describe("renderYeetInboxRowLine", () => {
   });
 });
 
-describe("appendYeetInboxRow", () => {
-  it.live("creates the inbox on first use and appends whole decodable lines", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const first = yield* row(capsule());
-        const second = yield* row(capsule({ lane: "Check / Lint" }));
+it.layer(PlatformLayer, { timeout: "30 seconds" })("appendYeetInboxRow", (it) => {
+  it.effect("creates the inbox on first use and appends whole decodable lines", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const first = yield* row(capsule());
+      const second = yield* row(capsule({ lane: "Check / Lint" }));
 
-        yield* appendYeetInboxRow(root, first);
-        yield* appendYeetInboxRow(root, second);
+      yield* appendYeetInboxRow(root, first);
+      yield* appendYeetInboxRow(root, second);
 
-        const paths = yield* yeetInboxPaths(root);
-        const text = yield* fs.readFileString(paths.failuresPath);
-        const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
-        expect(A.length(lines)).toBe(2);
+      const paths = yield* yeetInboxPaths(root);
+      const text = yield* fs.readFileString(paths.failuresPath);
+      const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
+      expect(A.length(lines)).toBe(2);
 
-        const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
-        expect(
-          A.getSomes(
-            A.map(decoded, (entry) => (entry.kind === "check-failed" ? O.some(entry.capsule.lane) : O.none<string>()))
-          )
-        ).toEqual(["Check / Coverage", "Check / Lint"]);
+      const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
+      expect(
+        A.getSomes(
+          A.map(decoded, (entry) => (entry.kind === "check-failed" ? O.some(entry.capsule.lane) : O.none<string>()))
+        )
+      ).toEqual(["Check / Coverage", "Check / Lint"]);
 
-        const activeText = yield* fs.readFileString(paths.activePath);
-        const activeRows = yield* Effect.forEach(A.filter(Str.split(activeText, "\n"), Str.isNonEmpty), (line) =>
-          YeetInboxRowJson.decode(line)
-        );
-        expect(A.map(activeRows, (entry) => entry.id)).toEqual(expect.arrayContaining([first.id, second.id]));
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
+      const activeText = yield* fs.readFileString(paths.activePath);
+      const activeRows = yield* Effect.forEach(A.filter(Str.split(activeText, "\n"), Str.isNonEmpty), (line) =>
+        YeetInboxRowJson.decode(line)
+      );
+      expect(A.map(activeRows, (entry) => entry.id)).toEqual(expect.arrayContaining([first.id, second.id]));
+    })
   );
 
-  it.live("appends a row once and reports a duplicate without rewriting it", () =>
-    inTempRepo((root) =>
+  it.effect("appends a row once and reports a duplicate without rewriting it", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const subject = yield* row(capsule());
+      expect(yield* appendYeetInboxRowOnce(root, subject)).toBe(true);
+      const paths = yield* yeetInboxPaths(root);
+      const historyBefore = yield* fs.readFileString(paths.failuresPath).pipe(Effect.option);
+      const activeBefore = yield* fs.readFileString(paths.activePath).pipe(Effect.option);
+      historyBefore.pipe(O.isSome, assertTrue);
+      activeBefore.pipe(O.isSome, assertTrue);
+      expect(yield* appendYeetInboxRowOnce(root, subject)).toBe(false);
+      assertSome(yield* fs.readFileString(paths.failuresPath).pipe(Effect.option), O.getOrThrow(historyBefore));
+      assertSome(yield* fs.readFileString(paths.activePath).pipe(Effect.option), O.getOrThrow(activeBefore));
+    })
+  );
+
+  it.layer(
+    FileSystem.layerNoop({
+      exists: (path) =>
+        Effect.fail(
+          PlatformError.systemError({
+            _tag: "PermissionDenied",
+            module: "InboxTest",
+            method: "exists",
+            pathOrDescriptor: path,
+          })
+        ),
+    }),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("falls back to history when active-index version inspection fails", () =>
       Effect.gen(function* () {
         const subject = yield* row(capsule());
-        expect(yield* appendYeetInboxRowOnce(root, subject)).toBe(true);
-        expect(yield* appendYeetInboxRowOnce(root, subject)).toBe(false);
+        const failure = yield* Effect.flip(appendYeetInboxRowOnce("/repo", subject));
+        expect(failure._tag).toBe("YeetCommandError");
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
+  });
 
-  it.effect("falls back to history when active-index version inspection fails", () =>
+  it.effect("fails closed and cleans temporary state when the active index is symlinked", () =>
     Effect.gen(function* () {
-      const subject = yield* row(capsule());
-      const failure = yield* Effect.flip(appendYeetInboxRowOnce("/repo", subject));
-      expect(failure._tag).toBe("YeetCommandError");
-    }).pipe(
-      provideScopedLayer(
-        Layer.mergeAll(
-          BunCrypto.layer,
-          NodePath.layer,
-          FileSystem.layerNoop({
-            exists: (path) =>
-              Effect.fail(
-                PlatformError.systemError({
-                  _tag: "PermissionDenied",
-                  module: "InboxTest",
-                  method: "exists",
-                  pathOrDescriptor: path,
-                })
-              ),
-          })
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const paths = yield* yeetInboxPaths(root);
+      yield* fs.makeDirectory(paths.dir, { recursive: true });
+      yield* fs.writeFileString(paths.failuresPath, "");
+      yield* fs.symlink(paths.failuresPath, paths.activePath);
+
+      const failure = yield* Effect.flip(appendYeetInboxRow(root, yield* row(capsule())));
+
+      expect(failure.message).toContain("Failed to update the active inbox index");
+      const names = yield* fs.readDirectory(paths.dir);
+      expect(A.some(names, Str.startsWith(".active-row-"))).toBe(false);
+      expect(A.some(names, Str.startsWith(".active-index-"))).toBe(false);
+    })
+  );
+
+  it.effect("keeps every unresolved P0 while bounding lower-severity history", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const paths = yield* yeetInboxPaths(root);
+      yield* fs.makeDirectory(paths.dir, { recursive: true });
+      const protectedP0 = yield* row(capsule({ lane: "Check / Protected P0" }));
+      const historicalP1 = yield* Effect.all(
+        A.makeBy(3_000, (index) => row(capsule({ lane: `Check / Historical ${index}` }), "P1"))
+      );
+      const historical = [protectedP0, ...historicalP1];
+      const lines = yield* Effect.forEach(historical, renderYeetInboxRowLine);
+      yield* fs.writeFileString(paths.failuresPath, `${A.join(lines, "\n")}\n`);
+      yield* fs.writeFileString(paths.activePath, `${lines.at(-1) ?? ""}\n`);
+
+      const current = yield* row(capsule({ lane: "Check / Current" }));
+      yield* appendYeetInboxRow(root, current);
+
+      const activeText = yield* fs.readFileString(paths.activePath);
+      const activeLines = A.filter(Str.split(activeText, "\n"), Str.isNonEmpty);
+      expect(activeLines).toHaveLength(2_048);
+      expect(A.some(activeLines, Str.includes(current.id))).toBe(true);
+      expect(A.some(activeLines, Str.includes(protectedP0.id))).toBe(true);
+    })
+  );
+
+  it.effect("appends after another writer wins the missing-inbox create race", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const first = yield* row(capsule());
+      const second = yield* row(capsule({ lane: "Check / Lint" }));
+      const firstLine = yield* renderYeetInboxRowLine(first);
+      const paths = yield* yeetInboxPaths(root);
+      let raceInjected = false;
+      const racingFileSystem = FileSystem.FileSystem.of({
+        ...fs,
+        writeFileString: Effect.fn("FileSystem.FileSystem.writeFileString")((target, contents, options) => {
+          if (!raceInjected && Eq.equals(target, paths.failuresPath) && options?.flag === "ax") {
+            raceInjected = true;
+            return Effect.gen(function* () {
+              yield* fs.writeFileString(target, `${firstLine}\n`, { flag: "ax" });
+              return yield* fs.writeFileString(target, contents, options);
+            });
+          }
+          return fs.writeFileString(target, contents, options);
+        }),
+      });
+
+      yield* appendYeetInboxRow(root, second).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+
+      expect(raceInjected).toBe(true);
+      const text = yield* fs.readFileString(paths.failuresPath);
+      const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
+      expect(A.length(lines)).toBe(2);
+
+      const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
+      expect(
+        A.getSomes(
+          A.map(decoded, (entry) => (entry.kind === "check-failed" ? O.some(entry.capsule.lane) : O.none<string>()))
         )
-      )
-    )
+      ).toEqual(["Check / Coverage", "Check / Lint"]);
+    })
   );
 
-  it.live("fails closed and cleans temporary state when the active index is symlinked", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const paths = yield* yeetInboxPaths(root);
-        yield* fs.makeDirectory(paths.dir, { recursive: true });
-        yield* fs.writeFileString(paths.failuresPath, "");
-        yield* fs.symlink(paths.failuresPath, paths.activePath);
+  it.effect("fails with a typed error when the inbox location is unusable", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      // A file squatting on the inbox directory path makes mkdir fail.
+      yield* fs.makeDirectory(`${root}/.beep`, { recursive: true });
+      yield* fs.writeFileString(`${root}/.beep/inbox`, "squatter");
 
-        const failure = yield* Effect.flip(appendYeetInboxRow(root, yield* row(capsule())));
-
-        expect(failure.message).toContain("Failed to update the active inbox index");
-        const names = yield* fs.readDirectory(paths.dir);
-        expect(A.some(names, Str.startsWith(".active-row-"))).toBe(false);
-        expect(A.some(names, Str.startsWith(".active-index-"))).toBe(false);
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
+      const failure = yield* Effect.flip(appendYeetInboxRow(root, yield* row(capsule())));
+      expect(failure.message).toContain("inbox");
+    })
   );
 
-  it.live("keeps every unresolved P0 while bounding lower-severity history", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const paths = yield* yeetInboxPaths(root);
-        yield* fs.makeDirectory(paths.dir, { recursive: true });
-        const protectedP0 = yield* row(capsule({ lane: "Check / Protected P0" }));
-        const historicalP1 = yield* Effect.all(
-          A.makeBy(3_000, (index) => row(capsule({ lane: `Check / Historical ${index}` }), "P1"))
-        );
-        const historical = [protectedP0, ...historicalP1];
-        const lines = yield* Effect.forEach(historical, renderYeetInboxRowLine);
-        yield* fs.writeFileString(paths.failuresPath, `${A.join(lines, "\n")}\n`);
-        yield* fs.writeFileString(paths.activePath, `${lines.at(-1) ?? ""}\n`);
+  it.effect("rejects a symlinked failures file without appending to its destination", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const repoRoot = `${root}/repo`;
+      const outsideRoot = `${root}/outside`;
+      yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
+      yield* fs.makeDirectory(outsideRoot);
+      const outsideFailures = `${outsideRoot}/failures.ndjson`;
+      const sentinel = "outside target must stay unchanged\n";
+      yield* fs.writeFileString(outsideFailures, sentinel);
+      const paths = yield* yeetInboxPaths(repoRoot);
+      yield* fs.symlink(outsideFailures, paths.failuresPath);
 
-        const current = yield* row(capsule({ lane: "Check / Current" }));
-        yield* appendYeetInboxRow(root, current);
+      const failure = yield* appendYeetInboxRow(repoRoot, yield* row(capsule())).pipe(Effect.flip);
 
-        const activeText = yield* fs.readFileString(paths.activePath);
-        const activeLines = A.filter(Str.split(activeText, "\n"), Str.isNonEmpty);
-        expect(activeLines).toHaveLength(2_048);
-        expect(A.some(activeLines, Str.includes(current.id))).toBe(true);
-        expect(A.some(activeLines, Str.includes(protectedP0.id))).toBe(true);
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
+      expect(failure._tag).toBe("YeetCommandError");
+      expect(yield* fs.readFileString(outsideFailures)).toBe(sentinel);
+    })
   );
 
-  it.live("appends after another writer wins the missing-inbox create race", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const first = yield* row(capsule());
-        const second = yield* row(capsule({ lane: "Check / Lint" }));
-        const firstLine = yield* renderYeetInboxRowLine(first);
-        const paths = yield* yeetInboxPaths(root);
-        let raceInjected = false;
-        const racingFileSystem = FileSystem.FileSystem.of({
-          ...fs,
-          writeFileString: Effect.fn("FileSystem.FileSystem.writeFileString")((target, contents, options) => {
-            if (!raceInjected && Eq.equals(target, paths.failuresPath) && options?.flag === "ax") {
-              raceInjected = true;
-              return Effect.gen(function* () {
-                yield* fs.writeFileString(target, `${firstLine}\n`, { flag: "ax" });
-                return yield* fs.writeFileString(target, contents, options);
-              });
-            }
-            return fs.writeFileString(target, contents, options);
-          }),
-        });
+  it.effect("rejects a symlinked inbox parent without appending through it", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const repoRoot = `${root}/repo`;
+      const outsideInbox = `${root}/outside-inbox`;
+      yield* fs.makeDirectory(`${repoRoot}/.beep`, { recursive: true });
+      yield* fs.makeDirectory(outsideInbox);
+      const outsideFailures = `${outsideInbox}/failures.ndjson`;
+      const sentinel = "outside parent must stay unchanged\n";
+      yield* fs.writeFileString(outsideFailures, sentinel);
+      yield* fs.symlink(outsideInbox, `${repoRoot}/.beep/inbox`);
 
-        yield* appendYeetInboxRow(root, second).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+      const failure = yield* appendYeetInboxRow(repoRoot, yield* row(capsule())).pipe(Effect.flip);
 
-        expect(raceInjected).toBe(true);
-        const text = yield* fs.readFileString(paths.failuresPath);
-        const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
-        expect(A.length(lines)).toBe(2);
-
-        const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
-        expect(
-          A.getSomes(
-            A.map(decoded, (entry) => (entry.kind === "check-failed" ? O.some(entry.capsule.lane) : O.none<string>()))
-          )
-        ).toEqual(["Check / Coverage", "Check / Lint"]);
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
-
-  it.live("fails with a typed error when the inbox location is unusable", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        // A file squatting on the inbox directory path makes mkdir fail.
-        yield* fs.makeDirectory(`${root}/.beep`, { recursive: true });
-        yield* fs.writeFileString(`${root}/.beep/inbox`, "squatter");
-
-        const failure = yield* Effect.flip(appendYeetInboxRow(root, yield* row(capsule())));
-        expect(failure.message).toContain("inbox");
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
-
-  it.live("rejects a symlinked failures file without appending to its destination", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const repoRoot = `${root}/repo`;
-        const outsideRoot = `${root}/outside`;
-        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
-        yield* fs.makeDirectory(outsideRoot);
-        const outsideFailures = `${outsideRoot}/failures.ndjson`;
-        const sentinel = "outside target must stay unchanged\n";
-        yield* fs.writeFileString(outsideFailures, sentinel);
-        const paths = yield* yeetInboxPaths(repoRoot);
-        yield* fs.symlink(outsideFailures, paths.failuresPath);
-
-        const failure = yield* appendYeetInboxRow(repoRoot, yield* row(capsule())).pipe(Effect.flip);
-
-        expect(failure._tag).toBe("YeetCommandError");
-        expect(yield* fs.readFileString(outsideFailures)).toBe(sentinel);
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
-
-  it.live("rejects a symlinked inbox parent without appending through it", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const repoRoot = `${root}/repo`;
-        const outsideInbox = `${root}/outside-inbox`;
-        yield* fs.makeDirectory(`${repoRoot}/.beep`, { recursive: true });
-        yield* fs.makeDirectory(outsideInbox);
-        const outsideFailures = `${outsideInbox}/failures.ndjson`;
-        const sentinel = "outside parent must stay unchanged\n";
-        yield* fs.writeFileString(outsideFailures, sentinel);
-        yield* fs.symlink(outsideInbox, `${repoRoot}/.beep/inbox`);
-
-        const failure = yield* appendYeetInboxRow(repoRoot, yield* row(capsule())).pipe(Effect.flip);
-
-        expect(failure._tag).toBe("YeetCommandError");
-        expect(yield* fs.readFileString(outsideFailures)).toBe(sentinel);
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
+      expect(failure._tag).toBe("YeetCommandError");
+      expect(yield* fs.readFileString(outsideFailures)).toBe(sentinel);
+    })
   );
 });

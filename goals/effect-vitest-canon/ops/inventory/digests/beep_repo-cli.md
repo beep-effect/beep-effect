@@ -518,3 +518,30 @@ seconds) and docgen (22.4 seconds). Node/Bun tests and isolation probes pass;
 all 26 assertion trees and eight test names/options remain intact. The ledger
 contains 3,498 rows: 1,997 fixed, fourteen exceptions and 1,487 open.
 See research/cli-dispatch-resource-proof.md.
+
+## 2026-10-01: Evaluation, metrics, corpus, and tmpfs runner migration
+
+The initial source migration `f669aba9c7` moved five suites to instrumented
+runners, public platform layers, per-test console state, and scoped fixtures.
+Its 116 tests passed on Node and Bun, root test types passed, and full CLI
+verification passed (audit 674.4 seconds, docgen 25.5 seconds).
+
+The current ledger includes subsequent repairs and Memory promotion: all 233
+detector records for these five files are reconciled, with 222 fixed and eleven
+exceptions. Of the five EV010 records, agent command is fixed by Memory
+promotion in `f969fc59ee`; eval scorer, metrics, corpus and tmpfs retain native
+integration exceptions. No native-provenance record remains open.
+
+Four human-lens findings are fixed: metrics L-RES-03 (`f669aba9c7`), metrics
+L-PROP-04 and tmpfs L-FLAKE-02 (`65755fc9bd`), and metrics L-FLAKE-01
+(`4203a309f1`, the earlier polling repair). The other sixteen human-lens records
+remain open pending individual closeout. This is not goal-wide acceptance.
+
+The readiness/title repair in `65755fc9bd` passed 75 affected tests on both
+runtimes, root test types, the ratchet, and full CLI verification (audit 651.8
+seconds, docgen 23.2 seconds). Agent command's subsequent eleven-case Memory
+promotion passed Node/Bun, root test types, and full package verification
+(audit 869.5 seconds, docgen 45.5 seconds). The reconciliation receipt preserves
+the initial snapshot separately and derives current counts and row dispositions
+from the ledger. See `research/cli-next-five-ledger-reconciliation.json`,
+`research/cli-next-five-native-review.md`, and the individual proof receipts.

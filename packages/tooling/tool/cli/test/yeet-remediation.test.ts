@@ -23,11 +23,12 @@ import {
   yeetInboxPaths,
   yeetInboxRowId,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
@@ -180,7 +181,7 @@ describe("renderYeetDispatchLine", () => {
     });
   });
 
-  layer(BunCrypto.layer)((it) => {
+  it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect("announces each decision distinctly", () =>
       Effect.gen(function* () {
         const started = renderYeetDispatchLine(
@@ -213,6 +214,7 @@ describe("renderYeetDispatchStateWarning", () => {
   });
 });
 
+const MemoryLayer = Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 // A crypto service that refuses to hash, standing in for a platform whose
@@ -234,7 +236,7 @@ const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requiremen
 ) {
   const fs = yield* FileSystem.FileSystem;
   return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>
-    Effect.ignore(fs.remove(root, { recursive: true }))
+    fs.remove(root, { recursive: true }).pipe(Effect.orDie)
   );
 });
 
@@ -268,224 +270,268 @@ const readInboxRows = Effect.fn("readInboxRows")(function* (root: string) {
 });
 
 describe("loadYeetRemediationWave", () => {
-  it.live("reads back what was persisted and refuses everything else", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("reads back what was persisted and refuses everything else", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          (yield* loadYeetRemediationWave(root)).pipe(assertNone);
 
-        const statePath = yield* yeetDispatchStatePath(root);
-        yield* fs.makeDirectory(`${root}/.beep/inbox`, { recursive: true });
-        yield* fs.writeFileString(statePath, "garbage");
-        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
+          const statePath = yield* yeetDispatchStatePath(root);
+          yield* fs.makeDirectory(`${root}/.beep/inbox`, { recursive: true });
+          yield* fs.writeFileString(statePath, "garbage");
+          (yield* loadYeetRemediationWave(root)).pipe(assertNone);
 
-        const json = yield* YeetRemediationWaveJson.encode(wave());
-        yield* fs.writeFileString(statePath, `${json}\n`);
-        const loaded = yield* loadYeetRemediationWave(root);
-        loaded.pipe(O.isSome, assertTrue);
-        if (O.isSome(loaded)) {
-          expect(loaded.value.schemaVersion).toBe(YEET_DISPATCH_SCHEMA_VERSION);
-          expect(loaded.value).toStrictEqual(wave());
-        }
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          const json = yield* YeetRemediationWaveJson.encode(wave());
+          yield* fs.writeFileString(statePath, `${json}\n`);
+          const loaded = yield* loadYeetRemediationWave(root);
+          loaded.pipe(O.isSome, assertTrue);
+          if (O.isSome(loaded)) {
+            expect(loaded.value.schemaVersion).toBe(YEET_DISPATCH_SCHEMA_VERSION);
+            expect(loaded.value).toStrictEqual(wave());
+          }
+        })
+      )
+    );
+  });
 });
 
 describe("supersedeYeetDispatchState", () => {
   // A push that lands before any red superseded nothing worth announcing:
   // the empty wave rolls forward silently.
-  it.live("stays silent when the superseded wave held no capsules", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const statePath = yield* yeetDispatchStatePath(root);
-        yield* fs.makeDirectory(`${root}/.beep/inbox`, { recursive: true });
-        const empty = wave({ capsuleIds: [], sessionStartedAt: null });
-        yield* fs.writeFileString(statePath, `${yield* YeetRemediationWaveJson.encode(empty)}\n`);
+  it.layer(Layer.mergeAll(TestConsole.layer, MemoryLayer), { excludeTestServices: true, timeout: "10 seconds" })(
+    (it) => {
+      it.effect("stays silent when the superseded wave held no capsules", () =>
+        inTempRepo((root) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const statePath = yield* yeetDispatchStatePath(root);
+            yield* fs.makeDirectory(`${root}/.beep/inbox`, { recursive: true });
+            const empty = wave({ capsuleIds: [], sessionStartedAt: null });
+            yield* fs.writeFileString(statePath, `${yield* YeetRemediationWaveJson.encode(empty)}\n`);
 
-        yield* supersedeYeetDispatchState(root, "bbb222", 751, LATER);
+            yield* supersedeYeetDispatchState(root, "bbb222", 751, LATER);
 
-        const persisted = yield* loadYeetRemediationWave(root);
-        if (O.isSome(persisted)) {
-          expect(persisted.value.headSha).toBe("bbb222");
-        }
-        expect(A.length(yield* TestConsole.errorLines)).toBe(0);
-      })
-    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+            const persisted = yield* loadYeetRemediationWave(root);
+            persisted.pipe(O.isSome, assertTrue);
+            if (O.isSome(persisted)) {
+              expect(persisted.value.headSha).toBe("bbb222");
+            }
+            expect(A.length(yield* TestConsole.errorLines)).toBe(0);
+          })
+        )
+      );
+    }
   );
 
-  it.live("announces when an in-flight wave is superseded", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const statePath = yield* yeetDispatchStatePath(root);
-        yield* fs.makeDirectory(`${root}/.beep/inbox`, { recursive: true });
-        yield* fs.writeFileString(statePath, `${yield* YeetRemediationWaveJson.encode(wave())}\n`);
+  it.layer(Layer.mergeAll(TestConsole.layer, MemoryLayer), { excludeTestServices: true, timeout: "10 seconds" })(
+    (it) => {
+      it.effect("announces when an in-flight wave is superseded", () =>
+        inTempRepo((root) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const statePath = yield* yeetDispatchStatePath(root);
+            yield* fs.makeDirectory(`${root}/.beep/inbox`, { recursive: true });
+            yield* fs.writeFileString(statePath, `${yield* YeetRemediationWaveJson.encode(wave())}\n`);
 
-        yield* supersedeYeetDispatchState(root, "bbb222", 751, LATER);
+            yield* supersedeYeetDispatchState(root, "bbb222", 751, LATER);
 
-        const errors = A.map(yield* TestConsole.errorLines, String);
-        expect(A.some(errors, (line) => Str.includes("1-capsule wave for aaa111 is superseded")(line))).toBe(true);
-      })
-    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+            const errors = A.map(yield* TestConsole.errorLines, String);
+            expect(A.some(errors, (line) => Str.includes("1-capsule wave for aaa111 is superseded")(line))).toBe(true);
+          })
+        )
+      );
+    }
   );
 
-  it.live("rejects a symlinked dispatch file without replacing its destination", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const repoRoot = `${root}/repo`;
-        const outsideRoot = `${root}/outside`;
-        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
-        yield* fs.makeDirectory(outsideRoot);
-        const outsideDispatch = `${outsideRoot}/dispatch.json`;
-        const sentinel = "outside target must stay unchanged\n";
-        yield* fs.writeFileString(outsideDispatch, sentinel);
-        yield* fs.symlink(outsideDispatch, yield* yeetDispatchStatePath(repoRoot));
+  it.layer(Layer.mergeAll(TestConsole.layer, PlatformLayer), { excludeTestServices: true, timeout: "10 seconds" })(
+    (it) => {
+      it.effect("rejects a symlinked dispatch file without replacing its destination", () =>
+        inTempRepo((root) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const repoRoot = `${root}/repo`;
+            const outsideRoot = `${root}/outside`;
+            yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
+            yield* fs.makeDirectory(outsideRoot);
+            const outsideDispatch = `${outsideRoot}/dispatch.json`;
+            const sentinel = "outside target must stay unchanged\n";
+            yield* fs.writeFileString(outsideDispatch, sentinel);
+            yield* fs.symlink(outsideDispatch, yield* yeetDispatchStatePath(repoRoot));
 
-        yield* supersedeYeetDispatchState(repoRoot, "bbb222", 751, LATER);
+            yield* supersedeYeetDispatchState(repoRoot, "bbb222", 751, LATER);
 
-        expect(yield* fs.readFileString(outsideDispatch)).toBe(sentinel);
-        const errors = A.map(yield* TestConsole.errorLines, String);
-        expect(A.some(errors, (line) => Str.includes("could not persist the remediation wave record")(line))).toBe(
-          true
-        );
-      })
-    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+            expect(yield* fs.readFileString(outsideDispatch)).toBe(sentinel);
+            const errors = A.map(yield* TestConsole.errorLines, String);
+            expect(A.some(errors, (line) => Str.includes("could not persist the remediation wave record")(line))).toBe(
+              true
+            );
+          })
+        )
+      );
+    }
   );
 
-  it.live("rejects a symlinked dispatch parent without writing through it", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const repoRoot = `${root}/repo`;
-        const outsideInbox = `${root}/outside-inbox`;
-        yield* fs.makeDirectory(`${repoRoot}/.beep`, { recursive: true });
-        yield* fs.makeDirectory(outsideInbox);
-        const outsideDispatch = `${outsideInbox}/dispatch.json`;
-        const sentinel = "outside parent must stay unchanged\n";
-        yield* fs.writeFileString(outsideDispatch, sentinel);
-        yield* fs.symlink(outsideInbox, `${repoRoot}/.beep/inbox`);
+  it.layer(Layer.mergeAll(TestConsole.layer, PlatformLayer), { excludeTestServices: true, timeout: "10 seconds" })(
+    (it) => {
+      it.effect("rejects a symlinked dispatch parent without writing through it", () =>
+        inTempRepo((root) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const repoRoot = `${root}/repo`;
+            const outsideInbox = `${root}/outside-inbox`;
+            yield* fs.makeDirectory(`${repoRoot}/.beep`, { recursive: true });
+            yield* fs.makeDirectory(outsideInbox);
+            const outsideDispatch = `${outsideInbox}/dispatch.json`;
+            const sentinel = "outside parent must stay unchanged\n";
+            yield* fs.writeFileString(outsideDispatch, sentinel);
+            yield* fs.symlink(outsideInbox, `${repoRoot}/.beep/inbox`);
 
-        yield* supersedeYeetDispatchState(repoRoot, "bbb222", 751, LATER);
+            yield* supersedeYeetDispatchState(repoRoot, "bbb222", 751, LATER);
 
-        expect(yield* fs.readFileString(outsideDispatch)).toBe(sentinel);
-        const errors = A.map(yield* TestConsole.errorLines, String);
-        expect(A.some(errors, (line) => Str.includes("could not persist the remediation wave record")(line))).toBe(
-          true
-        );
-      })
-    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+            expect(yield* fs.readFileString(outsideDispatch)).toBe(sentinel);
+            const errors = A.map(yield* TestConsole.errorLines, String);
+            expect(A.some(errors, (line) => Str.includes("could not persist the remediation wave record")(line))).toBe(
+              true
+            );
+          })
+        )
+      );
+    }
   );
 });
 
 describe("dispatchYeetCheckFailure", () => {
-  it.live("records an optional failed check as P1", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const optionalCheck = YeetWatchCheck.make({ ...failingCheck, required: false });
-        yield* dispatchYeetCheckFailure(root, snapshotWithFailure(optionalCheck), optionalCheck, AT);
+  it.layer(Layer.mergeAll(TestConsole.layer, PlatformLayer), { excludeTestServices: true, timeout: "10 seconds" })(
+    (it) => {
+      it.effect("records an optional failed check as P1", () =>
+        inTempRepo((root) =>
+          Effect.gen(function* () {
+            const optionalCheck = YeetWatchCheck.make({ ...failingCheck, required: false });
+            yield* dispatchYeetCheckFailure(root, snapshotWithFailure(optionalCheck), optionalCheck, AT);
 
-        const entry = yield* decodeUnknownYeetCheckFailedRow((yield* readInboxRows(root))[0]);
-        expect(entry.severity).toBe("P1");
-      })
-    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+            const entry = yield* decodeUnknownYeetCheckFailedRow((yield* readInboxRows(root))[0]);
+            expect(entry.severity).toBe("P1");
+          })
+        )
+      );
+    }
   );
 
-  it.live("derives the capsule from the failing check's own record", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
+  it.layer(Layer.mergeAll(TestConsole.layer, PlatformLayer), { excludeTestServices: true, timeout: "10 seconds" })(
+    (it) => {
+      it.effect("derives the capsule from the failing check's own record", () =>
+        inTempRepo((root) =>
+          Effect.gen(function* () {
+            yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
 
-        const rows = yield* readInboxRows(root);
-        expect(A.length(rows)).toBe(1);
-        const entry = yield* decodeUnknownYeetCheckFailedRow(rows[0]);
-        expect(entry.checkout).toBe(root);
-        expect(entry.capsule.lane).toBe("Check / Coverage");
-        expect(entry.capsule.link).toBe("https://github.com/beep/beep/actions/runs/1/job/2");
-        expect(entry.capsule.workflow).toBe("Check");
-        // The raw signal survives: CANCELLED steers repair toward a rerun.
-        expect(entry.capsule.bucket).toBe("cancel");
-        expect(entry.capsule.state).toBe("CANCELLED");
+            const rows = yield* readInboxRows(root);
+            expect(A.length(rows)).toBe(1);
+            const entry = yield* decodeUnknownYeetCheckFailedRow(rows[0]);
+            expect(entry.checkout).toBe(root);
+            expect(entry.capsule.lane).toBe("Check / Coverage");
+            expect(entry.capsule.link).toBe("https://github.com/beep/beep/actions/runs/1/job/2");
+            expect(entry.capsule.workflow).toBe("Check");
+            // The raw signal survives: CANCELLED steers repair toward a rerun.
+            expect(entry.capsule.bucket).toBe("cancel");
+            expect(entry.capsule.state).toBe("CANCELLED");
 
-        const persisted = yield* loadYeetRemediationWave(root);
-        persisted.pipe(O.isSome, assertTrue);
-        const errors = A.map(yield* TestConsole.errorLines, String);
-        expect(A.some(errors, (line) => Str.includes("repair session opened")(line))).toBe(true);
-      })
-    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+            const persisted = yield* loadYeetRemediationWave(root);
+            persisted.pipe(O.isSome, assertTrue);
+            const errors = A.map(yield* TestConsole.errorLines, String);
+            expect(A.some(errors, (line) => Str.includes("repair session opened")(line))).toBe(true);
+          })
+        )
+      );
+    }
   );
 
-  it.live("skips every write on a duplicate observation", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
-        yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, LATER);
+  it.layer(Layer.mergeAll(TestConsole.layer, PlatformLayer), { excludeTestServices: true, timeout: "10 seconds" })(
+    (it) => {
+      it.effect("skips every write on a duplicate observation", () =>
+        inTempRepo((root) =>
+          Effect.gen(function* () {
+            yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
+            yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, LATER);
 
-        const rows = yield* readInboxRows(root);
-        expect(A.length(rows)).toBe(1);
-        const persisted = yield* loadYeetRemediationWave(root);
-        if (O.isSome(persisted)) {
-          expect(persisted.value.updatedAt).toBe(AT);
-        }
-      })
-    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+            const rows = yield* readInboxRows(root);
+            expect(A.length(rows)).toBe(1);
+            const persisted = yield* loadYeetRemediationWave(root);
+            persisted.pipe(O.isSome, assertTrue);
+            if (O.isSome(persisted)) {
+              expect(persisted.value.updatedAt).toBe(AT);
+            }
+          })
+        )
+      );
+    }
   );
 
   // The wave must never claim a capsule the inbox does not hold: a failed
   // append skips the persist so the next observation retries the delivery.
-  it.live("does not record the wave when the inbox append fails", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.makeDirectory(`${root}/.beep`, { recursive: true });
-        yield* fs.writeFileString(`${root}/.beep/inbox`, "squatter");
+  it.layer(Layer.mergeAll(TestConsole.layer, PlatformLayer), { excludeTestServices: true, timeout: "10 seconds" })(
+    (it) => {
+      it.effect("does not record the wave when the inbox append fails", () =>
+        inTempRepo((root) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.makeDirectory(`${root}/.beep`, { recursive: true });
+            yield* fs.writeFileString(`${root}/.beep/inbox`, "squatter");
 
-        yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
+            yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
 
-        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
-        const errors = A.map(yield* TestConsole.errorLines, String);
-        expect(A.some(errors, (line) => Str.includes("failed to deliver capsule")(line))).toBe(true);
-        expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
-      })
-    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+            (yield* loadYeetRemediationWave(root)).pipe(assertNone);
+            const errors = A.map(yield* TestConsole.errorLines, String);
+            expect(A.some(errors, (line) => Str.includes("failed to deliver capsule")(line))).toBe(true);
+            expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
+          })
+        )
+      );
+    }
   );
 
   // The row id is the dedup identity, so a capsule without one is never queued:
   // a hashing refusal must leave the inbox untouched and say so.
-  it.live("queues nothing when the row id cannot be derived", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT).pipe(
-          Effect.provideService(Crypto.Crypto, failingCrypto)
-        );
+  it.layer(Layer.mergeAll(TestConsole.layer, PlatformLayer), { excludeTestServices: true, timeout: "10 seconds" })(
+    (it) => {
+      it.effect("queues nothing when the row id cannot be derived", () =>
+        inTempRepo((root) =>
+          Effect.gen(function* () {
+            yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT).pipe(
+              Effect.provideService(Crypto.Crypto, failingCrypto)
+            );
 
-        expect(A.length(yield* readInboxRows(root))).toBe(0);
-        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
-        const errors = A.map(yield* TestConsole.errorLines, String);
-        expect(A.some(errors, (line) => Str.includes("failed to derive inbox row id")(line))).toBe(true);
-        expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
-      })
-    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+            expect(A.length(yield* readInboxRows(root))).toBe(0);
+            (yield* loadYeetRemediationWave(root)).pipe(assertNone);
+            const errors = A.map(yield* TestConsole.errorLines, String);
+            expect(A.some(errors, (line) => Str.includes("failed to derive inbox row id")(line))).toBe(true);
+            expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
+          })
+        )
+      );
+    }
   );
 
-  it.live("delivers the capsule and warns when only the wave record cannot be written", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const statePath = yield* yeetDispatchStatePath(root);
-        // A directory squatting on dispatch.json fails the state write only.
-        yield* fs.makeDirectory(statePath, { recursive: true });
+  it.layer(Layer.mergeAll(TestConsole.layer, PlatformLayer), { excludeTestServices: true, timeout: "10 seconds" })(
+    (it) => {
+      it.effect("delivers the capsule and warns when only the wave record cannot be written", () =>
+        inTempRepo((root) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const statePath = yield* yeetDispatchStatePath(root);
+            // A directory squatting on dispatch.json fails the state write only.
+            yield* fs.makeDirectory(statePath, { recursive: true });
 
-        yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
+            yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
 
-        expect(A.length(yield* readInboxRows(root))).toBe(1);
-        const errors = A.map(yield* TestConsole.errorLines, String);
-        expect(A.some(errors, (line) => Str.includes("could not persist the remediation wave record")(line))).toBe(
-          true
-        );
-      })
-    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+            expect(A.length(yield* readInboxRows(root))).toBe(1);
+            const errors = A.map(yield* TestConsole.errorLines, String);
+            expect(A.some(errors, (line) => Str.includes("could not persist the remediation wave record")(line))).toBe(
+              true
+            );
+          })
+        )
+      );
+    }
   );
 });

@@ -11,9 +11,8 @@ import {
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -23,6 +22,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { expect } from "vitest";
 
 const removalLayer = WorktreeRemovalServiceLive.pipe(Layer.provide(NodeServices.layer));
 const testLayer = Layer.merge(NodeServices.layer, removalLayer);
@@ -53,48 +53,33 @@ const addWorktree = Effect.fn("WorktreeReapTest.addWorktree")(function* (
   return target;
 });
 
-const withScratchRepo = <Value, Failure, Requirements>(
-  use: (fixture: {
-    readonly mainHead: string;
-    readonly repoRoot: string;
-    readonly tempRoot: string;
-    readonly worktreesRoot: string;
-  }) => Effect.Effect<Value, Failure, Requirements>
-) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const tempRoot = yield* fs.makeTempDirectory({ prefix: "worktree-reap-test-" });
-      const repoRoot = path.join(tempRoot, "repo");
-      const originRoot = path.join(tempRoot, "origin.git");
-      const worktreesRoot = path.join(tempRoot, "repo-worktrees");
-      yield* Effect.forEach(
-        [repoRoot, originRoot, worktreesRoot],
-        Effect.fn("WorktreeReapTest.makeFixtureDirectory")(function* (directory) {
-          yield* fs.makeDirectory(directory, { recursive: true });
-        }),
-        { discard: true }
-      );
-      yield* runCommand("git", ["init", "--quiet", "--bare"], originRoot);
-      yield* runCommand("git", ["init", "--quiet", "-b", "main"], repoRoot);
-      yield* runCommand("git", ["config", "user.email", "worktree-reap@example.invalid"], repoRoot);
-      yield* runCommand("git", ["config", "user.name", "Worktree Reap Test"], repoRoot);
-      yield* runCommand("git", ["config", "commit.gpgsign", "false"], repoRoot);
-      yield* fs.writeFileString(path.join(repoRoot, "README.md"), "# fixture\n");
-      yield* runCommand("git", ["add", "README.md"], repoRoot);
-      yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repoRoot);
-      yield* runCommand("git", ["remote", "add", "origin", originRoot], repoRoot);
-      yield* runCommand("git", ["push", "--quiet", "--set-upstream", "origin", "main"], repoRoot);
-      const mainHead = Str.trim(yield* runCommand("git", ["rev-parse", "HEAD"], repoRoot));
-      return { mainHead, repoRoot, tempRoot, worktreesRoot };
+const makeScratchRepo = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "worktree-reap-test-" });
+  const repoRoot = path.join(tempRoot, "repo");
+  const originRoot = path.join(tempRoot, "origin.git");
+  const worktreesRoot = path.join(tempRoot, "repo-worktrees");
+  yield* Effect.forEach(
+    [repoRoot, originRoot, worktreesRoot],
+    Effect.fn("WorktreeReapTest.makeFixtureDirectory")(function* (directory) {
+      yield* fs.makeDirectory(directory, { recursive: true });
     }),
-    use,
-    Effect.fn("WorktreeReapTest.removeFixture")(function* ({ tempRoot }) {
-      const fs = yield* FileSystem.FileSystem;
-      yield* fs.remove(tempRoot, { force: true, recursive: true });
-    })
-  ).pipe(provideScopedLayer(testLayer));
+    { discard: true }
+  );
+  yield* runCommand("git", ["init", "--quiet", "--bare"], originRoot);
+  yield* runCommand("git", ["init", "--quiet", "-b", "main"], repoRoot);
+  yield* runCommand("git", ["config", "user.email", "worktree-reap@example.invalid"], repoRoot);
+  yield* runCommand("git", ["config", "user.name", "Worktree Reap Test"], repoRoot);
+  yield* runCommand("git", ["config", "commit.gpgsign", "false"], repoRoot);
+  yield* fs.writeFileString(path.join(repoRoot, "README.md"), "# fixture\n");
+  yield* runCommand("git", ["add", "README.md"], repoRoot);
+  yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repoRoot);
+  yield* runCommand("git", ["remote", "add", "origin", originRoot], repoRoot);
+  yield* runCommand("git", ["push", "--quiet", "--set-upstream", "origin", "main"], repoRoot);
+  const mainHead = Str.trim(yield* runCommand("git", ["rev-parse", "HEAD"], repoRoot));
+  return { mainHead, repoRoot, tempRoot, worktreesRoot };
+});
 
 const candidateAt = (report: WorktreeReapReport, candidatePath: string) =>
   O.getOrThrow(A.findFirst(report.candidates, (candidate) => Str.Equivalence(candidate.path, candidatePath)));
@@ -124,141 +109,137 @@ const ghStubRunner = (mergedHead: string, answers: GhAnswers, onDu?: () => Probe
 
 type ProbeStub = { readonly exitCode: number; readonly output: string; readonly truncated: boolean };
 
-describe("worktree reap", () => {
+it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
   it.effect("classifies registered worktrees and measures bytes only for clean, idle merged PRs", () =>
-    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const merged = yield* addWorktree(repoRoot, worktreesRoot, "merged");
-        const dirty = yield* addWorktree(repoRoot, worktreesRoot, "dirty");
-        const open = yield* addWorktree(repoRoot, worktreesRoot, "open");
-        const revival = yield* addWorktree(repoRoot, worktreesRoot, "revival");
-        const noPr = yield* addWorktree(repoRoot, worktreesRoot, "no-pr");
-        const young = yield* addWorktree(repoRoot, worktreesRoot, "young");
-        const locked = yield* addWorktree(repoRoot, worktreesRoot, "locked");
-        const reused = yield* addWorktree(repoRoot, worktreesRoot, "reused");
-        yield* runCommand("git", ["worktree", "lock", locked], repoRoot);
-        yield* fs.writeFileString(path.join(dirty, "dirty.txt"), "unsaved\n");
-        // Advance the reused branch past its historically merged head: the merged PR's
-        // headRefOid stays at mainHead while this checkout's HEAD moves beyond it.
-        yield* fs.writeFileString(path.join(reused, "advance.txt"), "post-merge work\n");
-        yield* runCommand("git", ["add", "advance.txt"], reused);
-        yield* runCommand("git", ["commit", "--quiet", "-m", "advance past merged head"], reused);
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const merged = yield* addWorktree(repoRoot, worktreesRoot, "merged");
+      const dirty = yield* addWorktree(repoRoot, worktreesRoot, "dirty");
+      const open = yield* addWorktree(repoRoot, worktreesRoot, "open");
+      const revival = yield* addWorktree(repoRoot, worktreesRoot, "revival");
+      const noPr = yield* addWorktree(repoRoot, worktreesRoot, "no-pr");
+      const young = yield* addWorktree(repoRoot, worktreesRoot, "young");
+      const locked = yield* addWorktree(repoRoot, worktreesRoot, "locked");
+      const reused = yield* addWorktree(repoRoot, worktreesRoot, "reused");
+      yield* runCommand("git", ["worktree", "lock", locked], repoRoot);
+      yield* fs.writeFileString(path.join(dirty, "dirty.txt"), "unsaved\n");
+      // Advance the reused branch past its historically merged head: the merged PR's
+      // headRefOid stays at mainHead while this checkout's HEAD moves beyond it.
+      yield* fs.writeFileString(path.join(reused, "advance.txt"), "post-merge work\n");
+      yield* runCommand("git", ["add", "advance.txt"], reused);
+      yield* runCommand("git", ["commit", "--quiet", "-m", "advance past merged head"], reused);
 
-        const nowMillis = FIXTURE_NOW_MILLIS;
-        const youngHead = Str.trim(
-          yield* runCommand("git", ["rev-parse", "--path-format=absolute", "--git-path", "HEAD"], young)
-        );
-        yield* runCommand("touch", ["-d", `@${nowMillis / 1_000}`, youngHead], repoRoot);
+      const nowMillis = FIXTURE_NOW_MILLIS;
+      const youngHead = Str.trim(
+        yield* runCommand("git", ["rev-parse", "--path-format=absolute", "--git-path", "HEAD"], young)
+      );
+      yield* runCommand("touch", ["-d", `@${nowMillis / 1_000}`, youngHead], repoRoot);
 
-        let duCalls = 0;
-        const runner = ghStubRunner(
-          mainHead,
-          {
-            [merged]: { open: undefined, merged: 101 },
-            [dirty]: { open: undefined, merged: 102 },
-            [young]: { open: undefined, merged: 103 },
-            [open]: { open: 104, merged: undefined },
-            [revival]: { open: 105, merged: 106 },
-            [reused]: { open: undefined, merged: 107 },
-          },
-          () => {
-            duCalls += 1;
-            return undefined;
-          }
-        );
+      let duCalls = 0;
+      const runner = ghStubRunner(
+        mainHead,
+        {
+          [merged]: { open: undefined, merged: 101 },
+          [dirty]: { open: undefined, merged: 102 },
+          [young]: { open: undefined, merged: 103 },
+          [open]: { open: 104, merged: undefined },
+          [revival]: { open: 105, merged: 106 },
+          [reused]: { open: undefined, merged: 107 },
+        },
+        () => {
+          duCalls += 1;
+          return undefined;
+        }
+      );
 
-        // No injected liveness prober: the eligible candidate exercises the real
-        // same-uid /proc scan, which must classify a quiet fixture dir as dormant.
-        const report = yield* runWorktreeReap({ nowMillis, runCommand: runner, startFrom: repoRoot });
+      // No injected liveness prober: the eligible candidate exercises the real
+      // same-uid /proc scan, which must classify a quiet fixture dir as dormant.
+      const report = yield* runWorktreeReap({ nowMillis, runCommand: runner, startFrom: repoRoot });
 
-        expect(report.applied).toBe(false);
-        expect(report.schemaVersion).toBe("worktree-reap/v1");
-        expect(report.candidates).toHaveLength(8);
-        expect(candidateAt(report, merged)).toMatchObject({ reapClass: "merged-pr", retired: false });
-        candidateAt(report, merged).skipReason.pipe(assertNone);
-        candidateAt(report, merged).bytes.pipe(O.isSome, assertTrue);
-        expect(candidateAt(report, dirty).reapClass).toBe("merged-pr");
-        expect(O.getOrThrow(candidateAt(report, dirty).skipReason)).toBe("dirty-tree");
-        expect(candidateAt(report, open).reapClass).toBe("open-pr");
-        expect(O.getOrThrow(candidateAt(report, open).skipReason)).toBe("open-pr");
-        expect(candidateAt(report, revival).reapClass).toBe("open-pr");
-        expect(O.getOrThrow(candidateAt(report, revival).skipReason)).toBe("open-pr");
-        expect(O.getOrThrow(candidateAt(report, revival).prNumber)).toBe(105);
-        expect(candidateAt(report, noPr).reapClass).toBe("no-pr");
-        expect(O.getOrThrow(candidateAt(report, noPr).skipReason)).toBe("no-pr");
-        expect(O.getOrThrow(candidateAt(report, young).skipReason)).toBe("too-young");
-        expect(O.getOrThrow(candidateAt(report, locked).skipReason)).toBe("locked");
-        expect(candidateAt(report, reused).reapClass).toBe("merged-pr");
-        expect(O.getOrThrow(candidateAt(report, reused).skipReason)).toBe("reused-branch");
-        expect(O.getOrThrow(candidateAt(report, reused).prNumber)).toBe(107);
-        expect(candidateAt(report, reused).retired).toBe(false);
-        expect(duCalls).toBe(1);
-      })
-    )
+      expect(report.applied).toBe(false);
+      expect(report.schemaVersion).toBe("worktree-reap/v1");
+      expect(report.candidates).toHaveLength(8);
+      expect(candidateAt(report, merged)).toMatchObject({ reapClass: "merged-pr", retired: false });
+      candidateAt(report, merged).skipReason.pipe(assertNone);
+      candidateAt(report, merged).bytes.pipe(O.isSome, assertTrue);
+      expect(candidateAt(report, dirty).reapClass).toBe("merged-pr");
+      expect(O.getOrThrow(candidateAt(report, dirty).skipReason)).toBe("dirty-tree");
+      expect(candidateAt(report, open).reapClass).toBe("open-pr");
+      expect(O.getOrThrow(candidateAt(report, open).skipReason)).toBe("open-pr");
+      expect(candidateAt(report, revival).reapClass).toBe("open-pr");
+      expect(O.getOrThrow(candidateAt(report, revival).skipReason)).toBe("open-pr");
+      expect(O.getOrThrow(candidateAt(report, revival).prNumber)).toBe(105);
+      expect(candidateAt(report, noPr).reapClass).toBe("no-pr");
+      expect(O.getOrThrow(candidateAt(report, noPr).skipReason)).toBe("no-pr");
+      expect(O.getOrThrow(candidateAt(report, young).skipReason)).toBe("too-young");
+      expect(O.getOrThrow(candidateAt(report, locked).skipReason)).toBe("locked");
+      expect(candidateAt(report, reused).reapClass).toBe("merged-pr");
+      expect(O.getOrThrow(candidateAt(report, reused).skipReason)).toBe("reused-branch");
+      expect(O.getOrThrow(candidateAt(report, reused).prNumber)).toBe(107);
+      expect(candidateAt(report, reused).retired).toBe(false);
+      expect(duCalls).toBe(1);
+    })
   );
 
   it.effect("fails closed on GitHub errors and missing worktree directories", () =>
-    withScratchRepo(({ repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const ghFailure = yield* addWorktree(repoRoot, worktreesRoot, "gh-failure");
-        const missing = yield* addWorktree(repoRoot, worktreesRoot, "missing");
-        yield* fs.remove(missing, { force: true, recursive: true });
-        const runner = Effect.fn("WorktreeReapTest.failureRunner")(function* (
-          command: string,
-          args: ReadonlyArray<string>,
-          cwd: string
-        ) {
-          if (Str.Equivalence(command, "gh")) {
-            return { exitCode: 1, output: "fixture gh failure", truncated: false };
-          }
-          return yield* runRepoCommandCapture(command, args, cwd);
-        });
-        const report = yield* runWorktreeReap({ runCommand: runner, startFrom: repoRoot });
+    Effect.gen(function* () {
+      const { repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const fs = yield* FileSystem.FileSystem;
+      const ghFailure = yield* addWorktree(repoRoot, worktreesRoot, "gh-failure");
+      const missing = yield* addWorktree(repoRoot, worktreesRoot, "missing");
+      yield* fs.remove(missing, { force: true, recursive: true });
+      const runner = Effect.fn("WorktreeReapTest.failureRunner")(function* (
+        command: string,
+        args: ReadonlyArray<string>,
+        cwd: string
+      ) {
+        if (Str.Equivalence(command, "gh")) {
+          return { exitCode: 1, output: "fixture gh failure", truncated: false };
+        }
+        return yield* runRepoCommandCapture(command, args, cwd);
+      });
+      const report = yield* runWorktreeReap({ runCommand: runner, startFrom: repoRoot });
 
-        expect(candidateAt(report, ghFailure).reapClass).toBe("unknown");
-        expect(O.getOrThrow(candidateAt(report, ghFailure).skipReason)).toBe("gh-probe-failed");
-        expect(O.getOrThrow(candidateAt(report, missing).skipReason)).toBe("missing-directory");
-        expect(report.reclaimableBytes).toBe(0);
-      })
-    )
+      expect(candidateAt(report, ghFailure).reapClass).toBe("unknown");
+      expect(O.getOrThrow(candidateAt(report, ghFailure).skipReason)).toBe("gh-probe-failed");
+      expect(O.getOrThrow(candidateAt(report, missing).skipReason)).toBe("missing-directory");
+      expect(report.reclaimableBytes).toBe(0);
+    })
   );
 
   it.effect("excludes both the main checkout and the invoking linked worktree", () =>
-    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const invoking = yield* addWorktree(repoRoot, worktreesRoot, "invoking");
-        const peer = yield* addWorktree(repoRoot, worktreesRoot, "peer");
-        const runner = ghStubRunner(mainHead, { [peer]: { open: undefined, merged: undefined } });
-        const report = yield* runWorktreeReap({ runCommand: runner, startFrom: invoking });
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const invoking = yield* addWorktree(repoRoot, worktreesRoot, "invoking");
+      const peer = yield* addWorktree(repoRoot, worktreesRoot, "peer");
+      const runner = ghStubRunner(mainHead, { [peer]: { open: undefined, merged: undefined } });
+      const report = yield* runWorktreeReap({ runCommand: runner, startFrom: invoking });
 
-        expect(report.mainCheckout).toBe(repoRoot);
-        expect(report.invokingWorktree).toBe(invoking);
-        expect(report.candidates).toHaveLength(1);
-        expect(report.candidates[0]?.path).toBe(peer);
-      })
-    )
+      expect(report.mainCheckout).toBe(repoRoot);
+      expect(report.invokingWorktree).toBe(invoking);
+      expect(report.candidates).toHaveLength(1);
+      expect(report.candidates[0]?.path).toBe(peer);
+    })
   );
 
   it.effect("skips a live worktree without measuring its size", () =>
-    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const occupied = yield* addWorktree(repoRoot, worktreesRoot, "occupied");
-        const runner = ghStubRunner(mainHead, { [occupied]: { open: undefined, merged: 401 } });
-        const report = yield* runWorktreeReap({
-          nowMillis: FIXTURE_NOW_MILLIS,
-          probeLiveness: verdictProber("live"),
-          runCommand: runner,
-          startFrom: repoRoot,
-        });
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const occupied = yield* addWorktree(repoRoot, worktreesRoot, "occupied");
+      const runner = ghStubRunner(mainHead, { [occupied]: { open: undefined, merged: 401 } });
+      const report = yield* runWorktreeReap({
+        nowMillis: FIXTURE_NOW_MILLIS,
+        probeLiveness: verdictProber("live"),
+        runCommand: runner,
+        startFrom: repoRoot,
+      });
 
-        expect(candidateAt(report, occupied).reapClass).toBe("merged-pr");
-        expect(O.getOrThrow(candidateAt(report, occupied).skipReason)).toBe("live-session");
-        candidateAt(report, occupied).bytes.pipe(assertNone);
-      })
-    )
+      expect(candidateAt(report, occupied).reapClass).toBe("merged-pr");
+      expect(O.getOrThrow(candidateAt(report, occupied).skipReason)).toBe("live-session");
+      candidateAt(report, occupied).bytes.pipe(assertNone);
+    })
   );
 
   it.effect("probes real same-uid liveness: the invoking cwd is live, a fresh temp dir is dormant", () =>
@@ -266,254 +247,245 @@ describe("worktree reap", () => {
       const fs = yield* FileSystem.FileSystem;
       const live = yield* probeWorktreeLiveness({ targetPath: process.cwd(), idleHours: O.some(400) });
       expect(live.status).toBe("live");
-      const temp = yield* fs.makeTempDirectory({ prefix: "worktree-reap-liveness-" });
+      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "worktree-reap-liveness-" });
       const dormant = yield* probeWorktreeLiveness({ targetPath: temp, idleHours: O.some(400) });
       expect(dormant.status).toBe("dormant");
-      yield* fs.remove(temp, { force: true, recursive: true });
-    }).pipe(provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect("skips a candidate whose liveness verdict is unknown", () =>
-    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const merged = yield* addWorktree(repoRoot, worktreesRoot, "unknown-liveness");
-        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 402 } });
-        const report = yield* runWorktreeReap({
-          nowMillis: FIXTURE_NOW_MILLIS,
-          probeLiveness: verdictProber("unknown"),
-          runCommand: runner,
-          startFrom: repoRoot,
-        });
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const merged = yield* addWorktree(repoRoot, worktreesRoot, "unknown-liveness");
+      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 402 } });
+      const report = yield* runWorktreeReap({
+        nowMillis: FIXTURE_NOW_MILLIS,
+        probeLiveness: verdictProber("unknown"),
+        runCommand: runner,
+        startFrom: repoRoot,
+      });
 
-        expect(O.getOrThrow(candidateAt(report, merged).skipReason)).toBe("liveness-unknown");
-        expect(candidateAt(report, merged).retired).toBe(false);
-      })
-    )
+      expect(O.getOrThrow(candidateAt(report, merged).skipReason)).toBe("liveness-unknown");
+      expect(candidateAt(report, merged).retired).toBe(false);
+    })
   );
 
   it.effect("revalidates and archive-retires only a merged candidate, then deletes its branch", () =>
-    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const merged = yield* addWorktree(repoRoot, worktreesRoot, "apply-merged");
-        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 201 } });
-        const report = yield* runWorktreeReap({
-          apply: true,
-          nowMillis: FIXTURE_NOW_MILLIS,
-          probeLiveness: verdictProber("dormant"),
-          runCommand: runner,
-          startFrom: repoRoot,
-        });
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const fs = yield* FileSystem.FileSystem;
+      const merged = yield* addWorktree(repoRoot, worktreesRoot, "apply-merged");
+      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 201 } });
+      const report = yield* runWorktreeReap({
+        apply: true,
+        nowMillis: FIXTURE_NOW_MILLIS,
+        probeLiveness: verdictProber("dormant"),
+        runCommand: runner,
+        startFrom: repoRoot,
+      });
 
-        const candidate = candidateAt(report, merged);
-        expect(candidate.retired).toBe(true);
-        candidate.skipReason.pipe(assertNone);
-        expect(report.retiredCount).toBe(1);
-        expect(report.reclaimedBytes).toBeGreaterThan(0);
-        expect(yield* fs.exists(merged)).toBe(false);
-        const branch = yield* runRepoCommandCapture(
-          "git",
-          ["show-ref", "--verify", "--quiet", "refs/heads/feat/apply-merged"],
-          repoRoot
-        );
-        expect(branch.exitCode).not.toBe(0);
-      })
-    )
+      const candidate = candidateAt(report, merged);
+      expect(candidate.retired).toBe(true);
+      candidate.skipReason.pipe(assertNone);
+      expect(report.retiredCount).toBe(1);
+      expect(report.reclaimedBytes).toBeGreaterThan(0);
+      expect(yield* fs.exists(merged)).toBe(false);
+      const branch = yield* runRepoCommandCapture(
+        "git",
+        ["show-ref", "--verify", "--quiet", "refs/heads/feat/apply-merged"],
+        repoRoot
+      );
+      expect(branch.exitCode).not.toBe(0);
+    })
   );
 
   it.effect("keeps a candidate eligible and retires it when only the size probe fails", () =>
-    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const merged = yield* addWorktree(repoRoot, worktreesRoot, "unmeasured");
-        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 501 } }, () => ({
-          exitCode: 1,
-          output: "fixture du failure",
-          truncated: false,
-        }));
-        const report = yield* runWorktreeReap({
-          apply: true,
-          nowMillis: FIXTURE_NOW_MILLIS,
-          probeLiveness: verdictProber("dormant"),
-          runCommand: runner,
-          startFrom: repoRoot,
-        });
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const fs = yield* FileSystem.FileSystem;
+      const merged = yield* addWorktree(repoRoot, worktreesRoot, "unmeasured");
+      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 501 } }, () => ({
+        exitCode: 1,
+        output: "fixture du failure",
+        truncated: false,
+      }));
+      const report = yield* runWorktreeReap({
+        apply: true,
+        nowMillis: FIXTURE_NOW_MILLIS,
+        probeLiveness: verdictProber("dormant"),
+        runCommand: runner,
+        startFrom: repoRoot,
+      });
 
-        const candidate = candidateAt(report, merged);
-        expect(candidate.retired).toBe(true);
-        candidate.skipReason.pipe(assertNone);
-        candidate.bytes.pipe(assertNone);
-        expect(report.reclaimedBytes).toBe(0);
-        expect(A.some(report.warnings, Str.includes("size-probe-failed"))).toBe(true);
-        expect(yield* fs.exists(merged)).toBe(false);
-      })
-    )
+      const candidate = candidateAt(report, merged);
+      expect(candidate.retired).toBe(true);
+      candidate.skipReason.pipe(assertNone);
+      candidate.bytes.pipe(assertNone);
+      expect(report.reclaimedBytes).toBe(0);
+      expect(A.some(report.warnings, Str.includes("size-probe-failed"))).toBe(true);
+      expect(yield* fs.exists(merged)).toBe(false);
+    })
   );
 
   it.effect("reports the rechecked classification when eligibility changes before retirement", () =>
-    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const merged = yield* addWorktree(repoRoot, worktreesRoot, "reclassified");
-        let openCalls = 0;
-        const runner = Effect.fn("WorktreeReapTest.reclassifyRunner")(function* (
-          command: string,
-          args: ReadonlyArray<string>,
-          cwd: string
-        ) {
-          if (!Str.Equivalence(command, "gh")) {
-            return yield* runRepoCommandCapture(command, args, cwd);
-          }
-          if (A.contains(args, "merged")) {
-            return ghResult(301, mainHead);
-          }
-          openCalls += 1;
-          return ghResult(openCalls > 1 ? 305 : undefined, mainHead);
-        });
-        const report = yield* runWorktreeReap({
-          apply: true,
-          nowMillis: FIXTURE_NOW_MILLIS,
-          probeLiveness: verdictProber("dormant"),
-          runCommand: runner,
-          startFrom: repoRoot,
-        });
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const fs = yield* FileSystem.FileSystem;
+      const merged = yield* addWorktree(repoRoot, worktreesRoot, "reclassified");
+      let openCalls = 0;
+      const runner = Effect.fn("WorktreeReapTest.reclassifyRunner")(function* (
+        command: string,
+        args: ReadonlyArray<string>,
+        cwd: string
+      ) {
+        if (!Str.Equivalence(command, "gh")) {
+          return yield* runRepoCommandCapture(command, args, cwd);
+        }
+        if (A.contains(args, "merged")) {
+          return ghResult(301, mainHead);
+        }
+        openCalls += 1;
+        return ghResult(openCalls > 1 ? 305 : undefined, mainHead);
+      });
+      const report = yield* runWorktreeReap({
+        apply: true,
+        nowMillis: FIXTURE_NOW_MILLIS,
+        probeLiveness: verdictProber("dormant"),
+        runCommand: runner,
+        startFrom: repoRoot,
+      });
 
-        const candidate = candidateAt(report, merged);
-        expect(candidate.retired).toBe(false);
-        expect(candidate.reapClass).toBe("open-pr");
-        expect(O.getOrThrow(candidate.skipReason)).toBe("open-pr");
-        expect(O.getOrThrow(candidate.prNumber)).toBe(305);
-        candidate.bytes.pipe(O.isSome, assertTrue);
-        expect(A.some(report.warnings, Str.includes("eligibility changed before retirement"))).toBe(true);
-        expect(yield* fs.exists(merged)).toBe(true);
-      })
-    )
+      const candidate = candidateAt(report, merged);
+      expect(candidate.retired).toBe(false);
+      expect(candidate.reapClass).toBe("open-pr");
+      expect(O.getOrThrow(candidate.skipReason)).toBe("open-pr");
+      expect(O.getOrThrow(candidate.prNumber)).toBe(305);
+      candidate.bytes.pipe(O.isSome, assertTrue);
+      expect(A.some(report.warnings, Str.includes("eligibility changed before retirement"))).toBe(true);
+      expect(yield* fs.exists(merged)).toBe(true);
+    })
   );
 
   it.effect("reports a retirement whose checkout was removed before cleanup failed", () =>
-    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const merged = yield* addWorktree(repoRoot, worktreesRoot, "half-retired");
-        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 601 } });
-        const report = yield* runWorktreeReap({
-          apply: true,
-          nowMillis: FIXTURE_NOW_MILLIS,
-          probeLiveness: verdictProber("dormant"),
-          runCommand: runner,
-          startFrom: repoRoot,
-        }).pipe(
-          Effect.provideService(WorktreeRemovalService, {
-            hasUnpushedCommits: Effect.fnUntraced(function* () {
-              return false;
-            }),
-            remove: Effect.fnUntraced(function* (request) {
-              yield* fs.remove(request.targetPath, { force: true, recursive: true }).pipe(Effect.ignore);
-              return yield* WorktreeCommandError.make({ message: "fixture cleanup failure" });
-            }),
-          })
-        );
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const fs = yield* FileSystem.FileSystem;
+      const merged = yield* addWorktree(repoRoot, worktreesRoot, "half-retired");
+      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 601 } });
+      const report = yield* runWorktreeReap({
+        apply: true,
+        nowMillis: FIXTURE_NOW_MILLIS,
+        probeLiveness: verdictProber("dormant"),
+        runCommand: runner,
+        startFrom: repoRoot,
+      }).pipe(
+        Effect.provideService(WorktreeRemovalService, {
+          hasUnpushedCommits: Effect.fnUntraced(function* () {
+            return false;
+          }),
+          remove: Effect.fnUntraced(function* (request) {
+            yield* fs.remove(request.targetPath, { force: true, recursive: true }).pipe(Effect.ignore);
+            return yield* WorktreeCommandError.make({ message: "fixture cleanup failure" });
+          }),
+        })
+      );
 
-        const candidate = candidateAt(report, merged);
-        expect(candidate.retired).toBe(true);
-        candidate.skipReason.pipe(assertNone);
-        expect(A.some(report.warnings, Str.includes("retirement-cleanup-failed"))).toBe(true);
-        expect(yield* fs.exists(merged)).toBe(false);
-      })
-    )
+      const candidate = candidateAt(report, merged);
+      expect(candidate.retired).toBe(true);
+      candidate.skipReason.pipe(assertNone);
+      expect(A.some(report.warnings, Str.includes("retirement-cleanup-failed"))).toBe(true);
+      expect(yield* fs.exists(merged)).toBe(false);
+    })
   );
 
   it.effect("fails closed when retirement fails with the checkout still present", () =>
-    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const merged = yield* addWorktree(repoRoot, worktreesRoot, "unremovable");
-        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 602 } });
-        const report = yield* runWorktreeReap({
-          apply: true,
-          nowMillis: FIXTURE_NOW_MILLIS,
-          probeLiveness: verdictProber("dormant"),
-          runCommand: runner,
-          startFrom: repoRoot,
-        }).pipe(
-          Effect.provideService(WorktreeRemovalService, {
-            hasUnpushedCommits: Effect.fnUntraced(function* () {
-              return false;
-            }),
-            remove: Effect.fnUntraced(function* () {
-              return yield* WorktreeCommandError.make({ message: "fixture removal refusal" });
-            }),
-          })
-        );
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const fs = yield* FileSystem.FileSystem;
+      const merged = yield* addWorktree(repoRoot, worktreesRoot, "unremovable");
+      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 602 } });
+      const report = yield* runWorktreeReap({
+        apply: true,
+        nowMillis: FIXTURE_NOW_MILLIS,
+        probeLiveness: verdictProber("dormant"),
+        runCommand: runner,
+        startFrom: repoRoot,
+      }).pipe(
+        Effect.provideService(WorktreeRemovalService, {
+          hasUnpushedCommits: Effect.fnUntraced(function* () {
+            return false;
+          }),
+          remove: Effect.fnUntraced(function* () {
+            return yield* WorktreeCommandError.make({ message: "fixture removal refusal" });
+          }),
+        })
+      );
 
-        const candidate = candidateAt(report, merged);
-        expect(candidate.retired).toBe(false);
-        expect(O.getOrThrow(candidate.skipReason)).toBe("retirement-failed");
-        expect(A.some(report.warnings, Str.includes("retirement-failed"))).toBe(true);
-        expect(yield* fs.exists(merged)).toBe(true);
-      })
-    )
+      const candidate = candidateAt(report, merged);
+      expect(candidate.retired).toBe(false);
+      expect(O.getOrThrow(candidate.skipReason)).toBe("retirement-failed");
+      expect(A.some(report.warnings, Str.includes("retirement-failed"))).toBe(true);
+      expect(yield* fs.exists(merged)).toBe(true);
+    })
   );
 
   it.effect("pins the merged PR's authorized HEAD on the removal request", () =>
-    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const merged = yield* addWorktree(repoRoot, worktreesRoot, "pinned");
-        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 701 } });
-        let captured = O.none<string>();
-        const report = yield* runWorktreeReap({
-          apply: true,
-          nowMillis: FIXTURE_NOW_MILLIS,
-          probeLiveness: verdictProber("dormant"),
-          runCommand: runner,
-          startFrom: repoRoot,
-        }).pipe(
-          Effect.provideService(WorktreeRemovalService, {
-            hasUnpushedCommits: Effect.fnUntraced(function* () {
-              return false;
-            }),
-            remove: Effect.fnUntraced(function* (request) {
-              captured = request.expectedHead;
-              return yield* WorktreeCommandError.make({ message: "fixture: refuse after capturing the pin" });
-            }),
-          })
-        );
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const merged = yield* addWorktree(repoRoot, worktreesRoot, "pinned");
+      const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 701 } });
+      let captured = O.none<string>();
+      const report = yield* runWorktreeReap({
+        apply: true,
+        nowMillis: FIXTURE_NOW_MILLIS,
+        probeLiveness: verdictProber("dormant"),
+        runCommand: runner,
+        startFrom: repoRoot,
+      }).pipe(
+        Effect.provideService(WorktreeRemovalService, {
+          hasUnpushedCommits: Effect.fnUntraced(function* () {
+            return false;
+          }),
+          remove: Effect.fnUntraced(function* (request) {
+            captured = request.expectedHead;
+            return yield* WorktreeCommandError.make({ message: "fixture: refuse after capturing the pin" });
+          }),
+        })
+      );
 
-        expect(O.getOrThrow(captured)).toBe(mainHead);
-        expect(O.getOrThrow(candidateAt(report, merged).skipReason)).toBe("retirement-failed");
-      })
-    )
+      expect(O.getOrThrow(captured)).toBe(mainHead);
+      expect(O.getOrThrow(candidateAt(report, merged).skipReason)).toBe("retirement-failed");
+    })
   );
 
   it.effect("removal service refuses when the checkout HEAD is not the authorized object id", () =>
-    withScratchRepo(({ repoRoot, worktreesRoot }) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const target = yield* addWorktree(repoRoot, worktreesRoot, "unauthorized");
-        const removal = yield* WorktreeRemovalService;
-        yield* removal
-          .remove(
-            WorktreeRemovalRequest.make({
-              name: "unauthorized",
-              targetPath: target,
-              mainCheckout: repoRoot,
-              branch: O.some("feat/unauthorized"),
-              archive: true,
-              deleteBranch: true,
-              expectedHead: O.some("a".repeat(40)),
-            })
-          )
-          .pipe(Effect.flip);
+    Effect.gen(function* () {
+      const { repoRoot, worktreesRoot } = yield* makeScratchRepo;
+      const fs = yield* FileSystem.FileSystem;
+      const target = yield* addWorktree(repoRoot, worktreesRoot, "unauthorized");
+      const removal = yield* WorktreeRemovalService;
+      yield* removal
+        .remove(
+          WorktreeRemovalRequest.make({
+            name: "unauthorized",
+            targetPath: target,
+            mainCheckout: repoRoot,
+            branch: O.some("feat/unauthorized"),
+            archive: true,
+            deleteBranch: true,
+            expectedHead: O.some("a".repeat(40)),
+          })
+        )
+        .pipe(Effect.flip);
 
-        expect(yield* fs.exists(target)).toBe(true);
-        const branch = yield* runRepoCommandCapture(
-          "git",
-          ["show-ref", "--verify", "--quiet", "refs/heads/feat/unauthorized"],
-          repoRoot
-        );
-        expect(branch.exitCode).toBe(0);
-      })
-    )
+      expect(yield* fs.exists(target)).toBe(true);
+      const branch = yield* runRepoCommandCapture(
+        "git",
+        ["show-ref", "--verify", "--quiet", "refs/heads/feat/unauthorized"],
+        repoRoot
+      );
+      expect(branch.exitCode).toBe(0);
+    })
   );
 
   it.effect("round-trips worktree-reap/v1 reports through the JSON codec", () =>

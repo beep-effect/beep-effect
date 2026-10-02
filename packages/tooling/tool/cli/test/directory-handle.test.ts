@@ -5,12 +5,12 @@ import {
   sameDirectoryIdentity,
   unlinkBoundFile,
 } from "@beep/repo-cli/test/RepoRun";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
+import { expect } from "vitest";
 
 // A stale tree with a file, a nested file, and a link that points OUT of the tree
 // at a live directory: the removal must delete the link, never what it points at.
@@ -34,7 +34,7 @@ const seedBystander = Effect.fnUntraced(function* (root: string) {
   return bystander;
 });
 
-describe("DirectoryHandle", () => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("DirectoryHandle", (it) => {
   it.effect("binds a real directory to its inode and refuses links, files, and missing paths", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -56,7 +56,7 @@ describe("DirectoryHandle", () => {
       (yield* openDirectoryHandle(link)).pipe(assertNone);
       (yield* openDirectoryHandle(file)).pipe(assertNone);
       (yield* openDirectoryHandle(path.join(root, "missing"))).pipe(assertNone);
-    }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect("removes a bound tree in place without following the links inside it", () =>
@@ -72,7 +72,7 @@ describe("DirectoryHandle", () => {
 
       expect(yield* fs.exists(victim)).toBe(false);
       expect(yield* fs.exists(path.join(bystander, "keep.txt"))).toBe(true);
-    }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect("keeps deleting through the descriptor after the path was swapped for a link to a bystander", () =>
@@ -96,7 +96,7 @@ describe("DirectoryHandle", () => {
       expect(yield* fs.readDirectory(moved)).toEqual([]);
       expect(yield* fs.exists(path.join(bystander, "keep.txt"))).toBe(true);
       (yield* fs.readLink(victim).pipe(Effect.option)).pipe(O.isSome, assertTrue);
-    }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect("leaves a directory renamed into the path after emptying untouched", () =>
@@ -117,7 +117,7 @@ describe("DirectoryHandle", () => {
       expect(yield* removeThroughDirectoryHandle(handle, victim)).toBe("identity-changed");
       expect(yield* fs.readDirectory(moved)).toEqual([]);
       expect(yield* fs.exists(victim)).toBe(true);
-    }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect("unlinks a bound file only while it is still the assessed inode", () =>
@@ -166,6 +166,6 @@ describe("DirectoryHandle", () => {
       );
       expect(forbidden).toBe("removal-failed");
       expect(yield* fs.exists(pinned)).toBe(true);
-    }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer))
+    })
   );
 });

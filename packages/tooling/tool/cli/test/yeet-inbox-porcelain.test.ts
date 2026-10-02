@@ -32,13 +32,15 @@ import {
   yeetInboxRowId,
   yeetPrMergeReadyRowId,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -87,6 +89,7 @@ const noResolutionFlags = {
   wontfix: false,
 };
 
+const MemoryLayer = Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requirements>(
@@ -94,7 +97,7 @@ const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requiremen
 ) {
   const fs = yield* FileSystem.FileSystem;
   return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>
-    Effect.ignore(fs.remove(root, { recursive: true }))
+    fs.remove(root, { recursive: true }).pipe(Effect.orDie)
   );
 });
 
@@ -106,7 +109,7 @@ describe("filterYeetInboxEntries", () => {
     return { acked, p0, p1 };
   });
 
-  layer(BunCrypto.layer)((it) => {
+  it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect("keeps everything under the identity filter", () =>
       Effect.gen(function* () {
         const { acked, p0, p1 } = yield* fixtures;
@@ -136,7 +139,7 @@ describe("filterYeetInboxEntries", () => {
 });
 
 describe("renderYeetInboxEntryLine", () => {
-  layer(BunCrypto.layer)((it) => {
+  it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect("phrases an unacked live row with its coordinates", () =>
       Effect.gen(function* () {
         const line = renderYeetInboxEntryLine(entry(yield* row(capsule())));
@@ -171,7 +174,7 @@ describe("renderYeetInboxEntryLine", () => {
 });
 
 describe("renderYeetInboxView", () => {
-  layer(BunCrypto.layer)((it) => {
+  it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect("summarizes counts in the header and lists one line per entry", () =>
       Effect.gen(function* () {
         const view = YeetInboxView.make({
@@ -207,7 +210,7 @@ describe("renderYeetInboxListOutput", () => {
     });
   });
 
-  layer(BunCrypto.layer)((it) => {
+  it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect("renders the filtered operator text", () =>
       Effect.gen(function* () {
         const output = yield* renderYeetInboxListOutput(yield* view(), { json: false, severity: "all", unacked: true });
@@ -341,131 +344,147 @@ describe("parseYeetAckResolution", () => {
 });
 
 describe("ackYeetInboxRow", () => {
-  it.live("writes a decodable receipt for a known row", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const subject = yield* row(capsule());
-        yield* appendYeetInboxRow(root, subject);
+  it.layer(PlatformLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("writes a decodable receipt for a known row", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const subject = yield* row(capsule());
+          yield* appendYeetInboxRow(root, subject);
 
-        const report = yield* ackYeetInboxRow(root, subject.id, YeetAckFixResolution.make({ sha: "2817f28" }), AT);
+          const report = yield* ackYeetInboxRow(root, subject.id, YeetAckFixResolution.make({ sha: "2817f28" }), AT);
 
-        expect(report.replacedPrior).toBe(false);
-        expect(report.receipt.id).toBe(subject.id);
-        const state = yield* readYeetAckState(root, subject.id);
-        expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f28" }));
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(report.replacedPrior).toBe(false);
+          expect(report.receipt.id).toBe(subject.id);
+          const state = yield* readYeetAckState(root, subject.id);
+          expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f28" }));
+        })
+      )
+    );
+  });
 
-  it.live("refuses an id the inbox does not contain", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const failure = yield* Effect.flip(
-          ackYeetInboxRow(root, "missing-row", YeetAckFixResolution.make({ sha: "2817f28" }), AT)
-        );
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("refuses an id the inbox does not contain", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const failure = yield* Effect.flip(
+            ackYeetInboxRow(root, "missing-row", YeetAckFixResolution.make({ sha: "2817f28" }), AT)
+          );
 
-        expect(failure.message).toContain('No inbox row with id "missing-row"');
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(failure.message).toContain('No inbox row with id "missing-row"');
+        })
+      )
+    );
+  });
 
-  it.live("reports when a re-ack replaced a prior receipt", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const subject = yield* row(capsule());
-        yield* appendYeetInboxRow(root, subject);
-        yield* writeYeetAckReceipt(
-          root,
-          YeetAckReceipt.make({
-            ackedAt: AT,
-            id: subject.id,
-            resolution: YeetAckWontfixResolution.make({ reason: "premature" }),
-          })
-        );
+  it.layer(PlatformLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("reports when a re-ack replaced a prior receipt", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const subject = yield* row(capsule());
+          yield* appendYeetInboxRow(root, subject);
+          yield* writeYeetAckReceipt(
+            root,
+            YeetAckReceipt.make({
+              ackedAt: AT,
+              id: subject.id,
+              resolution: YeetAckWontfixResolution.make({ reason: "premature" }),
+            })
+          );
 
-        const report = yield* ackYeetInboxRow(root, subject.id, YeetAckFixResolution.make({ sha: "2817f28" }), AT);
+          const report = yield* ackYeetInboxRow(root, subject.id, YeetAckFixResolution.make({ sha: "2817f28" }), AT);
 
-        expect(report.replacedPrior).toBe(true);
-        const state = yield* readYeetAckState(root, subject.id);
-        expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f28" }));
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(report.replacedPrior).toBe(true);
+          const state = yield* readYeetAckState(root, subject.id);
+          expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f28" }));
+        })
+      )
+    );
+  });
 
-  it.live("re-arms a row after an attributed waiver expires", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const subject = yield* row(capsule());
-        yield* appendYeetInboxRow(root, subject);
-        yield* writeYeetAckReceipt(
-          root,
-          YeetAckReceipt.make({
-            ackedAt: "2000-01-01T00:00:00Z",
-            id: subject.id,
-            resolution: YeetAckWaiveResolution.make({
-              actor: "operator",
-              expiresAt: "2000-01-01T01:00:00Z",
-              reason: "temporary outage",
-              shard: "Coverage",
-            }),
-          })
-        );
+  it.layer(PlatformLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("re-arms a row after an attributed waiver expires", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const subject = yield* row(capsule());
+          yield* appendYeetInboxRow(root, subject);
+          yield* writeYeetAckReceipt(
+            root,
+            YeetAckReceipt.make({
+              ackedAt: "2000-01-01T00:00:00Z",
+              id: subject.id,
+              resolution: YeetAckWaiveResolution.make({
+                actor: "operator",
+                expiresAt: "2000-01-01T01:00:00Z",
+                reason: "temporary outage",
+                shard: "Coverage",
+              }),
+            })
+          );
 
-        // Updating the bounded active index for unrelated evidence must not
-        // discard a waived row that will become actionable again.
-        yield* appendYeetInboxRow(root, yield* row(capsule({ lane: "Check / Lint" }), "P1"));
+          // Updating the bounded active index for unrelated evidence must not
+          // discard a waived row that will become actionable again.
+          yield* appendYeetInboxRow(root, yield* row(capsule({ lane: "Check / Lint" }), "P1"));
 
-        const state = yield* readYeetAckState(root, subject.id);
-        expect(state.acked).toBe(false);
-        expect(state.receipt?.resolution.kind).toBe("waive");
-        const view = yield* loadYeetInboxView(root);
-        expect(A.some(view.entries, (candidate) => candidate.row.id === subject.id && !candidate.ack.acked)).toBe(true);
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          const state = yield* readYeetAckState(root, subject.id);
+          expect(state.acked).toBe(false);
+          expect(state.receipt?.resolution.kind).toBe("waive");
+          const view = yield* loadYeetInboxView(root);
+          expect(A.some(view.entries, (candidate) => candidate.row.id === subject.id && !candidate.ack.acked)).toBe(
+            true
+          );
+        })
+      )
+    );
+  });
 });
 
 describe("appendYeetInboxRowFromText", () => {
-  it.live("appends a valid row document to the inbox", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const subject = yield* row(capsule());
-        const text = yield* YeetInboxRowJson.encode(subject);
+  it.layer(PlatformLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("appends a valid row document to the inbox", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const subject = yield* row(capsule());
+          const text = yield* YeetInboxRowJson.encode(subject);
 
-        const appended = yield* appendYeetInboxRowFromText(root, `${text}\n`);
+          const appended = yield* appendYeetInboxRowFromText(root, `${text}\n`);
 
-        expect(appended.id).toBe(subject.id);
-        const view = yield* loadYeetInboxView(root);
-        expect(A.map(view.entries, (candidate) => candidate.row.id)).toStrictEqual([subject.id]);
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(appended.id).toBe(subject.id);
+          const view = yield* loadYeetInboxView(root);
+          expect(A.map(view.entries, (candidate) => candidate.row.id)).toStrictEqual([subject.id]);
+        })
+      )
+    );
+  });
 
-  it.live("refuses a row whose id breaks the deterministic contract", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const forgedSource = yield* row(capsule());
-        const forged = YeetCheckFailedRow.make({ ...forgedSource, id: "forged-id" });
-        const text = yield* YeetInboxRowJson.encode(forged);
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("refuses a row whose id breaks the deterministic contract", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const forgedSource = yield* row(capsule());
+          const forged = YeetCheckFailedRow.make({ ...forgedSource, id: "forged-id" });
+          const text = yield* YeetInboxRowJson.encode(forged);
 
-        const failure = yield* Effect.flip(appendYeetInboxRowFromText(root, text));
+          const failure = yield* Effect.flip(appendYeetInboxRowFromText(root, text));
 
-        expect(failure.message).toContain("does not match the deterministic id");
-        const view = yield* loadYeetInboxView(root);
-        expect(view.entries).toStrictEqual([]);
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(failure.message).toContain("does not match the deterministic id");
+          const view = yield* loadYeetInboxView(root);
+          expect(view.entries).toStrictEqual([]);
+        })
+      )
+    );
+  });
 
-  it.live("refuses garbage instead of appending it", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const failure = yield* Effect.flip(appendYeetInboxRowFromText(root, "not json"));
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("refuses garbage instead of appending it", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const failure = yield* Effect.flip(appendYeetInboxRowFromText(root, "not json"));
 
-        expect(failure.message).toContain("Failed to decode the inbox row document");
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(failure.message).toContain("Failed to decode the inbox row document");
+        })
+      )
+    );
+  });
 });
 
 // The runners resolve the checkout through findRepoRoot from process.cwd, so
@@ -477,18 +496,20 @@ const inTempCheckout = Effect.fn("inTempCheckout")(function* <Value, Failure, Re
 ) {
   const fs = yield* FileSystem.FileSystem;
   const originalCwd = process.cwd;
-  const enter = Effect.gen(function* () {
-    const made = yield* fs.makeTempDirectory();
-    yield* fs.writeFileString(`${made}/bun.lock`, "");
-    yield* Effect.sync(() => {
-      process.cwd = () => made;
-    });
-    return made;
-  });
-  return yield* Effect.acquireUseRelease(enter, use, (root) =>
-    Effect.sync(() => {
-      process.cwd = originalCwd;
-    }).pipe(Effect.andThen(Effect.ignore(fs.remove(root, { recursive: true }))))
+  return yield* Effect.acquireUseRelease(
+    fs.makeTempDirectory(),
+    (root) =>
+      Effect.gen(function* () {
+        yield* fs.writeFileString(`${root}/bun.lock`, "");
+        yield* Effect.sync(() => {
+          process.cwd = () => root;
+        });
+        return yield* use(root);
+      }),
+    (root) =>
+      Effect.sync(() => {
+        process.cwd = originalCwd;
+      }).pipe(Effect.andThen(fs.remove(root, { recursive: true }).pipe(Effect.orDie)))
   );
 });
 
@@ -500,68 +521,78 @@ const providedStdin = (text: string) =>
   Effect.provideService(CommandStdinSource, { interactive: () => false, text: () => Promise.resolve(text) });
 
 describe("yeet inbox runners", () => {
-  it.live("list prints the resolved checkout's inbox as text and as decodable JSON", () =>
-    inTempCheckout((root) =>
-      Effect.gen(function* () {
-        yield* appendYeetInboxRow(root, yield* row(capsule()));
+  it.layer(RunnerLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("list prints the resolved checkout's inbox as text and as decodable JSON", () =>
+      inTempCheckout((root) =>
+        Effect.gen(function* () {
+          yield* appendYeetInboxRow(root, yield* row(capsule()));
 
-        yield* runYeetInboxList({ json: false, severity: "all", unacked: false });
-        yield* runYeetInboxList({ json: true, severity: "all", unacked: true });
+          yield* runYeetInboxList({ json: false, severity: "all", unacked: false });
+          yield* runYeetInboxList({ json: true, severity: "all", unacked: true });
 
-        // The text listing is one multi-line log entry; the JSON document is
-        // the second entry.
-        const lines = A.map(yield* TestConsole.logLines, String);
-        expect(A.length(lines)).toBe(2);
-        expect(O.getOrElse(A.head(lines), () => "")).toContain("[yeet] inbox: 1 row(s), 1 unacked, 0 skipped line(s)");
-        const decoded = yield* YeetInboxViewJson.decode(O.getOrElse(A.last(lines), () => ""));
-        expect(A.length(decoded.entries)).toBe(1);
-      })
-    ).pipe(provideScopedLayer(RunnerLayer))
-  );
+          // The text listing is one multi-line log entry; the JSON document is
+          // the second entry.
+          const lines = A.map(yield* TestConsole.logLines, String);
+          expect(A.length(lines)).toBe(2);
+          expect(O.getOrElse(A.head(lines), () => "")).toContain(
+            "[yeet] inbox: 1 row(s), 1 unacked, 0 skipped line(s)"
+          );
+          const decoded = yield* YeetInboxViewJson.decode(O.getOrElse(A.last(lines), () => ""));
+          expect(A.length(decoded.entries)).toBe(1);
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+      )
+    );
+  });
 
-  it.live("ack writes the receipt from the resolved checkout and reports a replacement on re-ack", () =>
-    inTempCheckout((root) =>
-      Effect.gen(function* () {
-        const subject = yield* row(capsule());
-        yield* appendYeetInboxRow(root, subject);
+  it.layer(RunnerLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("ack writes the receipt from the resolved checkout and reports a replacement on re-ack", () =>
+      inTempCheckout((root) =>
+        Effect.gen(function* () {
+          const subject = yield* row(capsule());
+          yield* appendYeetInboxRow(root, subject);
 
-        yield* runYeetInboxAck({ ...noResolutionFlags, fixSha: "2817f28", id: subject.id });
-        const state = yield* readYeetAckState(root, subject.id);
-        expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f28" }));
+          yield* runYeetInboxAck({ ...noResolutionFlags, fixSha: "2817f28", id: subject.id });
+          const state = yield* readYeetAckState(root, subject.id);
+          expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f28" }));
 
-        yield* runYeetInboxAck({ ...noResolutionFlags, id: subject.id, reason: "actually flaky", wontfix: true });
+          yield* runYeetInboxAck({ ...noResolutionFlags, id: subject.id, reason: "actually flaky", wontfix: true });
 
-        const lines = A.map(yield* TestConsole.logLines, String);
-        expect(A.some(lines, (line) => Str.includes("acked")(line))).toBe(true);
-        expect(A.some(lines, (line) => Str.includes("replaced an existing receipt")(line))).toBe(true);
-      })
-    ).pipe(provideScopedLayer(RunnerLayer))
-  );
+          const lines = A.map(yield* TestConsole.logLines, String);
+          expect(A.some(lines, (line) => Str.includes("acked")(line))).toBe(true);
+          expect(A.some(lines, (line) => Str.includes("replaced an existing receipt")(line))).toBe(true);
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+      )
+    );
+  });
 
-  it.live("append reads the row document from stdin and appends it to the resolved checkout", () =>
-    inTempCheckout((root) =>
-      Effect.gen(function* () {
-        const subject = yield* row(capsule());
-        const text = yield* YeetInboxRowJson.encode(subject);
-        yield* runYeetInboxAppend({ fromStdin: true }).pipe(providedStdin(`${text}\n`));
+  it.layer(RunnerLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("append reads the row document from stdin and appends it to the resolved checkout", () =>
+      inTempCheckout((root) =>
+        Effect.gen(function* () {
+          const subject = yield* row(capsule());
+          const text = yield* YeetInboxRowJson.encode(subject);
+          yield* runYeetInboxAppend({ fromStdin: true }).pipe(providedStdin(`${text}\n`));
 
-        const view = yield* loadYeetInboxView(root);
-        expect(A.map(view.entries, (candidate) => candidate.row.id)).toStrictEqual([subject.id]);
-        const lines = A.map(yield* TestConsole.logLines, String);
-        expect(A.some(lines, (line) => Str.includes("appended")(line))).toBe(true);
-      })
-    ).pipe(provideScopedLayer(RunnerLayer))
-  );
+          const view = yield* loadYeetInboxView(root);
+          expect(A.map(view.entries, (candidate) => candidate.row.id)).toStrictEqual([subject.id]);
+          const lines = A.map(yield* TestConsole.logLines, String);
+          expect(A.some(lines, (line) => Str.includes("appended")(line))).toBe(true);
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+      )
+    );
+  });
 
-  it.live("append refuses to run without --from-stdin before touching the checkout", () =>
-    inTempCheckout(() =>
-      Effect.gen(function* () {
-        const failure = yield* Effect.flip(runYeetInboxAppend({ fromStdin: false }));
+  it.layer(RunnerLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("append refuses to run without --from-stdin before touching the checkout", () =>
+      inTempCheckout(() =>
+        Effect.gen(function* () {
+          const failure = yield* Effect.flip(runYeetInboxAppend({ fromStdin: false }));
 
-        expect(failure.message).toBe("yeet inbox append requires --from-stdin.");
-      })
-    ).pipe(provideScopedLayer(RunnerLayer))
-  );
+          expect(failure.message).toBe("yeet inbox append requires --from-stdin.");
+        })
+      )
+    );
+  });
 });
 
 describe("observed acknowledgment of merge-ready rows (ruling 46)", () => {
@@ -584,33 +615,37 @@ describe("observed acknowledgment of merge-ready rows (ruling 46)", () => {
       ts: AT,
     });
   });
-  it.live("accepts --observed for a merge-ready row and records the inbox-ack route", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const subject = yield* mergeReadyRow();
-        yield* appendYeetInboxRow(root, subject);
-        const report = yield* ackYeetInboxRow(
-          root,
-          subject.id,
-          YeetAckObservedResolution.make({ via: "inbox-ack" }),
-          AT
-        );
-        expect(report.receipt.id).toBe(subject.id);
-        const state = yield* readYeetAckState(root, subject.id);
-        expect(state.receipt?.resolution).toStrictEqual(YeetAckObservedResolution.make({ via: "inbox-ack" }));
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
-  it.live("still refuses --observed for a check-failed row", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const subject = yield* row(capsule());
-        yield* appendYeetInboxRow(root, subject);
-        const failure = yield* Effect.flip(
-          ackYeetInboxRow(root, subject.id, YeetAckObservedResolution.make({ via: "inbox-ack" }), AT)
-        );
-        expect(failure.message).toBe("--observed applies only to proof-job-finished and pr-merge-ready rows.");
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+  it.layer(PlatformLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("accepts --observed for a merge-ready row and records the inbox-ack route", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const subject = yield* mergeReadyRow();
+          yield* appendYeetInboxRow(root, subject);
+          const report = yield* ackYeetInboxRow(
+            root,
+            subject.id,
+            YeetAckObservedResolution.make({ via: "inbox-ack" }),
+            AT
+          );
+          expect(report.receipt.id).toBe(subject.id);
+          const state = yield* readYeetAckState(root, subject.id);
+          expect(state.receipt?.resolution).toStrictEqual(YeetAckObservedResolution.make({ via: "inbox-ack" }));
+        })
+      )
+    );
+  });
+  it.layer(PlatformLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("still refuses --observed for a check-failed row", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const subject = yield* row(capsule());
+          yield* appendYeetInboxRow(root, subject);
+          const failure = yield* Effect.flip(
+            ackYeetInboxRow(root, subject.id, YeetAckObservedResolution.make({ via: "inbox-ack" }), AT)
+          );
+          expect(failure.message).toBe("--observed applies only to proof-job-finished and pr-merge-ready rows.");
+        })
+      )
+    );
+  });
 });
