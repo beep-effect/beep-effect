@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/tsgo-045-effect-idiom-sweep",
   "lifecycle": "superseded",
+  "supersededNote": "Superseded by the single-PR tsgo ratchet (plan locked 2026-09-22; landed as PR #1367, 2026-10-01 chore(deps): bump @effect/tsgo to 0.47.2 and enforce its new rules); no successor packet, the sweep's D1-D13 decisions carry forward there.",
   "mission": "Bump @effect/tsgo to 0.45.0 with every rule at error, widen the directive gate to two declared exemptions, retire the redundant TaggedError equivalence hook, and restore idiomatic Match combinators repo-wide.",
   "executionCapable": true,
   "reflectionRequired": true,

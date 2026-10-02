@@ -10,6 +10,8 @@
   },
   "packetPath": "goals/legal-document-intake",
   "lifecycle": "active",
+  "blockedBy": ["goals/practice-kg-mcp"],
+  "statusNote": "2026-10-02 roadmap re-eval: P4 waits for the practice-kg-mcp P8 handoff (its P4-lite executes intake P4's outcome, decision D6); the Box test tenant is still unprovisioned. Queued in Lane 1, not stalled.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
