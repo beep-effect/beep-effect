@@ -5,7 +5,7 @@
   "lastAttemptedRun": "2026-10-02T08:16:00-05:00",
   "lastAttemptedStatus": "partial",
   "lastAttemptedPacket": "research/2026-10-02",
-  "lastAttemptedPr": null,
+  "lastAttemptedPr": 1403,
   "note": "Draft until human merge of research/2026-10-02 nightly packet (Friday ~48h window after closed-unmerged #1391; no weekly consolidation). Never auto-merge. Partial: X client-not-enrolled. Do NOT set lastSuccessful* until human merges. Prior successful #1358 merged 2026-10-01.",
   "excludedUnmergedPackets": [
     {
