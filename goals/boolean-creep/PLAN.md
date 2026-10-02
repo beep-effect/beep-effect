@@ -28,6 +28,11 @@ candidate, complete audit and independently bound zero-finding receipt before
 applying corrections. Synthetic audit commits remain unpublished and grant no
 campaign credit. The former current section is preserved verbatim in
 `history/2026-10-01-pre-r54-continuation-review-followup.md.txt`.
+Its claim that product source was unchanged from `ec71f01a` is superseded
+and must not guide a current review. The merge-tree equality concerns only
+the two historical commits above; it does not establish continuity from
+`ec71f01a`. Keep that binding historical and obtain a new independently bound
+receipt for the exact successor candidate rather than retargeting an old receipt.
 
 The live inventory has 723 records: 108 qualified, 615 disqualified and zero
 applied. R53 withdrew two D1 rows from the prior 725 / 108 / 617 projection:
