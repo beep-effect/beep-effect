@@ -432,6 +432,7 @@ it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
           tool_input: {},
         });
         expect(result.exitCode).toBe(0);
+        expect(result.stderr).toBe("");
         const output = yield* decodeObject(result.stdout);
         expect(output).toMatchObject({
           hookSpecificOutput: { additionalContext: expect.stringContaining("Good news, not incident work:") },
