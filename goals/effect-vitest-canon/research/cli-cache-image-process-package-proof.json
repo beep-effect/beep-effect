@@ -13,7 +13,7 @@
   "ledgerCounts": {
     "fixed": 24,
     "exception": 5,
-    "preserve": 12
+    "preserve": 9
   },
   "scope": "Full @beep/repo-cli package audit and docgen for three applied suites; whole-goal acceptance and hosted proof remain pending.",
   "canonicalExpectCorrection": {
