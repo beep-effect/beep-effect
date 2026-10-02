@@ -219,6 +219,9 @@
     "@effect/vitest",
     "@effect/language-service",
     "babel-plugin-annotate-pure-calls",
+    // statelyai is the Stately CLI (`bunx statelyai scan|open`, see
+    // docs/runbooks/xstate-effect-statecharts.md): invoked as a binary, never imported.
+    "statelyai",
     "babel-plugin-transform-next-use-client",
     "@babel/plugin-transform-export-namespace-from",
     "@babel/plugin-transform-modules-commonjs",

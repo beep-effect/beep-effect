@@ -43,6 +43,10 @@
         "IJ_MCP_SERVER_PROJECT_PATH": "${PWD}"
       }
     },
+    "stately": {
+      "type": "http",
+      "url": "https://mcp.stately.ai/mcp"
+    },
     "phoenix-docs": {
       "type": "http",
       "url": "https://arizeai-433a7140.mintlify.app/mcp"

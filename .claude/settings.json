@@ -93,7 +93,7 @@
     ],
     "defaultMode": "default"
   },
-  "enabledMcpjsonServers": ["phoenix-docs"],
+  "enabledMcpjsonServers": ["phoenix-docs", "stately"],
   "disabledMcpjsonServers": [
     "chrome-devtools",
     "phoenix",

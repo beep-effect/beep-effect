@@ -6420,3 +6420,24 @@ The cache, image and process attachment candidates passed private runtime qualif
 ### Migration detector membership preflight
 
 Early publication of the three-suite batch reached hosted checks before the local detector gate reported ten introduced findings. One was a missed canonical `expect` import; nine represented retained CWD restoration wrappers and a shorter child-process scope. The import was corrected, the nine occurrences received evidence-backed exceptions, and the canonical baseline refresh and default ratchet passed with 2,069 findings and zero introduced findings. Run the detector membership check before publication and persist decoded findings through the schema encoder rather than serializing internal Option values.
+
+### Pin the comparison base for an admitted proof
+
+The reviewed migration publication passed all ten coverage shards, then failed
+its final ratchet because `origin/main` advanced while the proof was running.
+The tested head did not contain the new `@beep/xstate` package or the updated
+professional-desktop intake code, but the comparison required their newer floors
+and a coverage summary for the absent package. The failed publication recorded
+`quality:coverage` as its first red; the earlier base-freshness receipt was green.
+
+Merging current main reconciles this attempt. The operator should pin the base
+commit for the entire proof, record it in each lane receipt, and check base
+freshness again before publication. A shared ref update should not silently
+change the comparison contract midway through a proof.
+
+The merge also changed a retained `withPartitionShim` occurrence fingerprint.
+Refreshing the detector baseline reopened its reviewed exception even though
+its native executable ownership and environment restoration were unchanged.
+The exception was restored after semantic review. Baseline refreshes should
+report disposition changes explicitly so they can be reconciled with the
+historical ledger before publication.

@@ -972,6 +972,20 @@
       "enforcementScope": "declared-dependency-consistency"
     },
     {
+      "ruleId": "@beep/xstate",
+      "generatedRuleFrom": "@beep/xstate",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/drivers/xstate/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
       "ruleId": "@beep/agents-client",
       "generatedRuleFrom": "@beep/agents-client",
       "sourceClass": "manifest-derived",

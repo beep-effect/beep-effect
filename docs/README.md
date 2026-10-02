@@ -19,7 +19,8 @@ drift](runbooks/graft-local-recovery.md). Timer units, their refresh, and the ag
 Which TypeScript compiler runs where, why `typescript@6` and `@typescript/native` coexist, and
 how to wire the Effect compiler into WebStorm: [TypeScript toolchain](runbooks/typescript-toolchain.md).
 The strict `@shadcn/lint` policy for Tailwind classes and style props, its fix recipes, and how a
-new UI workspace joins it: [design-system lint](runbooks/design-system-lint.md).
+new UI workspace joins it: [design-system lint](runbooks/design-system-lint.md). Statecharts with
+XState v6 and `@xstate/effect`, their tests, inspector, CLI, and MCP: [statecharts](runbooks/xstate-effect-statecharts.md).
 
 ## Rules
 

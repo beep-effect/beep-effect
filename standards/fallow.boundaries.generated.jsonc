@@ -862,6 +862,12 @@
         "patterns": [
           "packages/drivers/xai/src/**"
         ]
+      },
+      {
+        "name": "@beep/xstate",
+        "patterns": [
+          "packages/drivers/xstate/src/**"
+        ]
       }
     ],
     "rules": [
@@ -3146,7 +3152,8 @@
           "@beep/utils",
           "@beep/workspace-domain",
           "@beep/workspace-server",
-          "@beep/workspace-use-cases"
+          "@beep/workspace-use-cases",
+          "@beep/xstate"
         ],
         "allowTypeOnly": [
           "@beep/agents-client",
@@ -3195,7 +3202,8 @@
           "@beep/utils",
           "@beep/workspace-domain",
           "@beep/workspace-server",
-          "@beep/workspace-use-cases"
+          "@beep/workspace-use-cases",
+          "@beep/xstate"
         ]
       },
       {
@@ -4074,6 +4082,19 @@
           "@beep/test-utils",
           "@beep/utils",
           "@beep/xai"
+        ]
+      },
+      {
+        "from": "@beep/xstate",
+        "allow": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/xstate"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/xstate"
         ]
       }
     ]
