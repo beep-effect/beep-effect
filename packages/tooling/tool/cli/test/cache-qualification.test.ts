@@ -16,11 +16,11 @@ import {
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Result";
@@ -82,24 +82,21 @@ const encodeCacheQualificationStoreJsonResult = S.encodeResult(S.fromJsonString(
 
 const decodeCacheQualificationStoreJsonResult = S.decodeResult(S.fromJsonString(CacheQualificationStore));
 
-describe("Cache qualification writer", () => {
-  it("preserves ledger revisions and tuples through schema serialization", () => {
-    const equivalent = S.toEquivalence(CacheQualificationStore);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(CacheQualificationStore),
-          (value) => {
-            const encoded = R.getOrThrow(encodeCacheQualificationStoreJsonResult(value));
-            const decoded = R.getOrThrow(decodeCacheQualificationStoreJsonResult(encoded));
-            expect(equivalent(value, decoded)).toBe(true);
-            return true;
-          },
-          fcRuns(20)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+const equivalent = S.toEquivalence(CacheQualificationStore);
+
+it.layer(testLayer, { timeout: "30 seconds" })("Cache qualification writer", (it) => {
+  it.effect.prop(
+    "preserves ledger revisions and tuples through schema serialization",
+    [CacheQualificationStore],
+    ([value]) =>
+      Effect.sync(() => {
+        const encoded = R.getOrThrow(encodeCacheQualificationStoreJsonResult(value));
+        const decoded = R.getOrThrow(decodeCacheQualificationStoreJsonResult(encoded));
+        expect(equivalent(value, decoded)).toBe(true);
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
   it.effect(
     "persists a reviewed exclusion and rejects stale revisions without changing the ledger",
     Effect.fnUntraced(function* () {
@@ -117,7 +114,7 @@ describe("Cache qualification writer", () => {
       expect(yield* cache.transition(root, request).pipe(Effect.isFailure)).toBe(true);
       expect(yield* fs.readFileString(target)).toBe(before);
       expect(yield* fs.exists(path.join(root, ".beep/cache/qualification.writer"))).toBe(false);
-    }, provideScopedLayer(testLayer))
+    })
   );
 
   it.effect(
@@ -132,7 +129,7 @@ describe("Cache qualification writer", () => {
       expect(A.length(A.filter(results, R.isSuccess))).toBe(1);
       expect(A.length(A.filter(results, R.isFailure))).toBe(1);
       expect((yield* cache.inspect(root)).revision).toBe(1);
-    }, provideScopedLayer(testLayer))
+    })
   );
 
   it.effect(
@@ -156,7 +153,7 @@ describe("Cache qualification writer", () => {
       yield* fs.writeFileString(path.join(root, "review.md"), "changed review");
       expect(yield* cache.transition(root, request).pipe(Effect.isFailure)).toBe(true);
       expect((yield* cache.inspect(root)).revision).toBe(0);
-    }, provideScopedLayer(testLayer))
+    })
   );
 
   it.effect(
@@ -173,7 +170,7 @@ describe("Cache qualification writer", () => {
       expect(yield* cache.transition(root, request).pipe(Effect.isFailure)).toBe(true);
       expect(yield* fs.exists(path.join(root, ".beep/cache/qualification.writer"))).toBe(true);
       expect((yield* cache.inspect(root)).entries).toEqual([]);
-    }, provideScopedLayer(testLayer))
+    })
   );
 
   it.effect(
@@ -193,12 +190,12 @@ describe("Cache qualification writer", () => {
       });
       yield* fs.writeFileString(target, yield* encodeCacheQualificationStoreJson(duplicate));
       expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
-    }, provideScopedLayer(testLayer))
+    })
   );
 });
 
 // These are original-byte and safety-boundary tests, not passing qualification receipts.
-describe("bounded qualification evidence", () => {
+it.layer(testLayer, { timeout: "30 seconds" })("bounded qualification evidence", (it) => {
   it.effect(
     "preserves original bytes and rejects overflow, symlinks and an invalid byte limit",
     Effect.fnUntraced(function* () {
@@ -225,7 +222,7 @@ describe("bounded qualification evidence", () => {
       const fractional = yield* readContainedFileBytesNoFollow(root, "bytes.bin", 1.5).pipe(Effect.flip);
       expect(negative.message).toBe("Maximum byte length must be a non-negative integer.");
       expect(fractional.message).toBe("Maximum byte length must be a non-negative integer.");
-    }, provideScopedLayer(testLayer))
+    })
   );
 
   it.effect(
@@ -238,6 +235,6 @@ describe("bounded qualification evidence", () => {
       expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
       yield* fs.writeFile(target, new Uint8Array(8 * 1024 * 1024 + 1));
       expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
-    }, provideScopedLayer(testLayer))
+    })
   );
 });

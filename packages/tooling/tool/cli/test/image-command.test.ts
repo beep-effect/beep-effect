@@ -4,9 +4,9 @@ import { ImageCommandError } from "@beep/repo-cli/commands/Image";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
+import { Cause, Console, Effect, Exit, FileSystem, Order, Path, pipe } from "effect";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
@@ -16,36 +16,28 @@ import * as TestConsole from "effect/testing/TestConsole";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const testLayer = NodeServices.layer;
 const runImageCommand = Command.runWith(imageCommand, { version: "0.0.0" });
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(ExtractFramesManifest));
 const CLI_ENTRYPOINT = new URL("../src/bin.ts", import.meta.url).pathname;
 
 const firstFailure = <E>(cause: Cause.Cause<E>): O.Option<E> => Cause.findErrorOption(cause);
 
-const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tmpDir = yield* fs.makeTempDirectory();
+const withTempDirectory = Effect.fn("ImageTest.withTempDirectory")(function* <A, E, R>(
+  use: (tmpDir: string) => Effect.Effect<A, E, R>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const tmpDir = yield* fs.makeTempDirectoryScoped();
+  return yield* Effect.acquireUseRelease(
+    Effect.sync(() => {
       const previousCwd = process.cwd();
-
       process.chdir(tmpDir);
-
-      return { fs, previousCwd, tmpDir } as const;
+      return previousCwd;
     }),
-    ({ tmpDir }) => use(tmpDir),
-    ({ fs, previousCwd, tmpDir }) =>
-      Effect.gen(function* () {
-        process.chdir(previousCwd);
-        yield* fs.remove(tmpDir, { recursive: true, force: true });
-      })
-  ).pipe(provideScopedLayer(testLayer));
+    () => use(tmpDir).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    (previousCwd) => Effect.sync(() => process.chdir(previousCwd))
+  );
+});
 
 const withPathPrefix = <A, E, R>(pathPrefix: string, use: Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -157,269 +149,262 @@ const runCliCommand = (
     })
   );
 
-describe("image command", { concurrent: false }, () => {
-  it("extracts frames, writes the default manifest, and prints a non-TTY summary", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const binDir = path.join(tmpDir, "bin");
-          const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
-          const videoPath = path.join(tmpDir, "clip.mp4");
-          const outDir = path.join(tmpDir, "frames");
+it.layer(testLayer, { timeout: "30 seconds", concurrent: false })("image command", (it) => {
+  it.effect("extracts frames, writes the default manifest, and prints a non-TTY summary", () =>
+    withTempDirectory((tmpDir) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const binDir = path.join(tmpDir, "bin");
+        const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
+        const videoPath = path.join(tmpDir, "clip.mp4");
+        const outDir = path.join(tmpDir, "frames");
 
-          yield* fs.writeFileString(videoPath, "video");
-          yield* writeFfprobeShim(binDir);
-          yield* writeExtractFramesFfmpegShim(binDir, argsPath);
-          yield* withPathPrefix(
+        yield* fs.writeFileString(videoPath, "video");
+        yield* writeFfprobeShim(binDir);
+        yield* writeExtractFramesFfmpegShim(binDir, argsPath);
+        yield* withPathPrefix(
+          binDir,
+          runImageCommand(["extract-frames", "--video", videoPath, "--out-dir", outDir, "--fps", "1"])
+        );
+
+        expect(yield* sortedDirectoryEntries(outDir)).toEqual([
+          "clip_frame_00000.png",
+          "clip_frame_00001.png",
+          "extract-frames-manifest.json",
+        ]);
+        const manifest = yield* decodeManifest(
+          yield* fs.readFileString(path.join(outDir, "extract-frames-manifest.json"))
+        );
+        expect(manifest.summary.frameCount).toBe(2);
+        expect(manifest.options.fps).toBe(1);
+        expect(manifest.options.prefix).toBe("clip_frame");
+        expect(pipe(yield* fs.readFileString(argsPath), (value) => Str.includes("fps=1")(value))).toBe(true);
+        expect(yield* TestConsole.logLines).toEqual([
+          `image extract-frames: wrote 2 frame(s) to ${outDir}. manifest: ${path.join(outDir, "extract-frames-manifest.json")}`,
+        ]);
+        expect(process.exitCode ?? 0).toBe(0);
+      })
+    )
+  );
+
+  it.effect("fails instead of overwriting existing frame outputs without --overwrite", () =>
+    withTempDirectory((tmpDir) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const binDir = path.join(tmpDir, "bin");
+        const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
+        const videoPath = path.join(tmpDir, "clip.mp4");
+        const outDir = path.join(tmpDir, "frames");
+
+        yield* fs.makeDirectory(outDir, { recursive: true });
+        yield* fs.writeFileString(videoPath, "video");
+        yield* fs.writeFileString(path.join(outDir, "clip_frame_00000.png"), "existing");
+        yield* writeFfprobeShim(binDir);
+        yield* writeExtractFramesFfmpegShim(binDir, argsPath);
+        const exit = yield* Effect.exit(
+          withPathPrefix(
             binDir,
             runImageCommand(["extract-frames", "--video", videoPath, "--out-dir", outDir, "--fps", "1"])
-          );
+          )
+        );
 
-          expect(yield* sortedDirectoryEntries(outDir)).toEqual([
-            "clip_frame_00000.png",
-            "clip_frame_00001.png",
-            "extract-frames-manifest.json",
-          ]);
-          const manifest = yield* decodeManifest(
-            yield* fs.readFileString(path.join(outDir, "extract-frames-manifest.json"))
-          );
-          expect(manifest.summary.frameCount).toBe(2);
-          expect(manifest.options.fps).toBe(1);
-          expect(manifest.options.prefix).toBe("clip_frame");
-          expect(pipe(yield* fs.readFileString(argsPath), (value) => Str.includes("fps=1")(value))).toBe(true);
-          expect(yield* TestConsole.logLines).toEqual([
-            `image extract-frames: wrote 2 frame(s) to ${outDir}. manifest: ${path.join(outDir, "extract-frames-manifest.json")}`,
-          ]);
-          expect(process.exitCode ?? 0).toBe(0);
-        })
-      )
-    ));
-
-  it("fails instead of overwriting existing frame outputs without --overwrite", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const binDir = path.join(tmpDir, "bin");
-          const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
-          const videoPath = path.join(tmpDir, "clip.mp4");
-          const outDir = path.join(tmpDir, "frames");
-
-          yield* fs.makeDirectory(outDir, { recursive: true });
-          yield* fs.writeFileString(videoPath, "video");
-          yield* fs.writeFileString(path.join(outDir, "clip_frame_00000.png"), "existing");
-          yield* writeFfprobeShim(binDir);
-          yield* writeExtractFramesFfmpegShim(binDir, argsPath);
-          const exit = yield* Effect.exit(
-            withPathPrefix(
-              binDir,
-              runImageCommand(["extract-frames", "--video", videoPath, "--out-dir", outDir, "--fps", "1"])
-            )
-          );
-
-          expect(yield* fs.readFileString(path.join(outDir, "clip_frame_00000.png"))).toBe("existing");
-          expect(yield* TestConsole.errorLines).toEqual([]);
-          expect(process.exitCode ?? 0).toBe(0);
-          assertTrue(Exit.isFailure(exit));
-          if (Exit.isFailure(exit)) {
-            const failure = firstFailure(exit.cause);
-            failure.pipe(O.isSome, assertTrue);
-            if (O.isSome(failure)) {
-              expect(failure.value).toBeInstanceOf(FFmpegError);
-              expect(failure.value.message).toBe(
-                `Refusing to overwrite existing frame output: "${path.join(outDir, "clip_frame_00000.png")}"`
-              );
-            }
+        expect(yield* fs.readFileString(path.join(outDir, "clip_frame_00000.png"))).toBe("existing");
+        expect(yield* TestConsole.errorLines).toEqual([]);
+        expect(process.exitCode ?? 0).toBe(0);
+        assertTrue(Exit.isFailure(exit));
+        if (Exit.isFailure(exit)) {
+          const failure = firstFailure(exit.cause);
+          failure.pipe(O.isSome, assertTrue);
+          if (O.isSome(failure)) {
+            expect(failure.value).toBeInstanceOf(FFmpegError);
+            expect(failure.value.message).toBe(
+              `Refusing to overwrite existing frame output: "${path.join(outDir, "clip_frame_00000.png")}"`
+            );
           }
-        })
-      )
-    ));
+        }
+      })
+    )
+  );
 
-  it("extracts frames for every direct video into sibling stem folders", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const binDir = path.join(tmpDir, "bin");
-          const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
-          const videoDir = path.join(tmpDir, "videos");
+  it.effect("extracts frames for every direct video into sibling stem folders", () =>
+    withTempDirectory((tmpDir) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const binDir = path.join(tmpDir, "bin");
+        const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
+        const videoDir = path.join(tmpDir, "videos");
 
-          yield* fs.makeDirectory(videoDir, { recursive: true });
-          yield* fs.writeFileString(path.join(videoDir, "clip.mp4"), "video");
-          yield* fs.writeFileString(path.join(videoDir, "trailer.mov"), "video");
-          yield* fs.writeFileString(path.join(videoDir, "notes.txt"), "not video");
-          yield* writeFfprobeShim(binDir);
-          yield* writeExtractFramesFfmpegShim(binDir, argsPath);
-          yield* withPathPrefix(binDir, runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]));
+        yield* fs.makeDirectory(videoDir, { recursive: true });
+        yield* fs.writeFileString(path.join(videoDir, "clip.mp4"), "video");
+        yield* fs.writeFileString(path.join(videoDir, "trailer.mov"), "video");
+        yield* fs.writeFileString(path.join(videoDir, "notes.txt"), "not video");
+        yield* writeFfprobeShim(binDir);
+        yield* writeExtractFramesFfmpegShim(binDir, argsPath);
+        yield* withPathPrefix(binDir, runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]));
 
-          expect(yield* sortedDirectoryEntries(path.join(videoDir, "clip"))).toEqual([
-            "clip_frame_00000.png",
-            "clip_frame_00001.png",
-            "extract-frames-manifest.json",
-          ]);
-          expect(yield* sortedDirectoryEntries(path.join(videoDir, "trailer"))).toEqual([
-            "extract-frames-manifest.json",
-            "trailer_frame_00000.png",
-            "trailer_frame_00001.png",
-          ]);
-          const clipManifest = yield* decodeManifest(
-            yield* fs.readFileString(path.join(videoDir, "clip", "extract-frames-manifest.json"))
-          );
-          expect(clipManifest.options.prefix).toBe("clip_frame");
-          expect(clipManifest.summary.frameCount).toBe(2);
-          expect(yield* TestConsole.logLines).toEqual([
-            `image extract-frames-dir: clip.mp4: wrote 2 frame(s) to ${path.join(videoDir, "clip")}. manifest: ${path.join(videoDir, "clip", "extract-frames-manifest.json")}`,
-            `image extract-frames-dir: trailer.mov: wrote 2 frame(s) to ${path.join(videoDir, "trailer")}. manifest: ${path.join(videoDir, "trailer", "extract-frames-manifest.json")}`,
-            "image extract-frames-dir: processed 2 video(s); succeeded 2; failed 0.",
-          ]);
-        })
-      )
-    ));
+        expect(yield* sortedDirectoryEntries(path.join(videoDir, "clip"))).toEqual([
+          "clip_frame_00000.png",
+          "clip_frame_00001.png",
+          "extract-frames-manifest.json",
+        ]);
+        expect(yield* sortedDirectoryEntries(path.join(videoDir, "trailer"))).toEqual([
+          "extract-frames-manifest.json",
+          "trailer_frame_00000.png",
+          "trailer_frame_00001.png",
+        ]);
+        const clipManifest = yield* decodeManifest(
+          yield* fs.readFileString(path.join(videoDir, "clip", "extract-frames-manifest.json"))
+        );
+        expect(clipManifest.options.prefix).toBe("clip_frame");
+        expect(clipManifest.summary.frameCount).toBe(2);
+        expect(yield* TestConsole.logLines).toEqual([
+          `image extract-frames-dir: clip.mp4: wrote 2 frame(s) to ${path.join(videoDir, "clip")}. manifest: ${path.join(videoDir, "clip", "extract-frames-manifest.json")}`,
+          `image extract-frames-dir: trailer.mov: wrote 2 frame(s) to ${path.join(videoDir, "trailer")}. manifest: ${path.join(videoDir, "trailer", "extract-frames-manifest.json")}`,
+          "image extract-frames-dir: processed 2 video(s); succeeded 2; failed 0.",
+        ]);
+      })
+    )
+  );
 
-  it("fails extract-frames-dir when no direct videos are found", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoDir = path.join(tmpDir, "videos");
+  it.effect("fails extract-frames-dir when no direct videos are found", () =>
+    withTempDirectory((tmpDir) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const videoDir = path.join(tmpDir, "videos");
 
-          yield* fs.makeDirectory(videoDir, { recursive: true });
-          yield* fs.writeFileString(path.join(videoDir, "notes.txt"), "not video");
-          const exit = yield* Effect.exit(runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]));
+        yield* fs.makeDirectory(videoDir, { recursive: true });
+        yield* fs.writeFileString(path.join(videoDir, "notes.txt"), "not video");
+        const exit = yield* Effect.exit(runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]));
 
-          assertTrue(Exit.isFailure(exit));
-          if (Exit.isFailure(exit)) {
-            const failure = firstFailure(exit.cause);
-            failure.pipe(O.isSome, assertTrue);
-            if (O.isSome(failure)) {
-              expect(failure.value).toBeInstanceOf(ImageCommandError);
-              expect(failure.value.message).toBe("image extract-frames-dir: no direct video files found.");
-            }
+        assertTrue(Exit.isFailure(exit));
+        if (Exit.isFailure(exit)) {
+          const failure = firstFailure(exit.cause);
+          failure.pipe(O.isSome, assertTrue);
+          if (O.isSome(failure)) {
+            expect(failure.value).toBeInstanceOf(ImageCommandError);
+            expect(failure.value.message).toBe("image extract-frames-dir: no direct video files found.");
           }
-        })
-      )
-    ));
+        }
+      })
+    )
+  );
 
-  it("preflights same-stem videos before extracting frames", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const binDir = path.join(tmpDir, "bin");
-          const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
-          const videoDir = path.join(tmpDir, "videos");
+  it.effect("preflights same-stem videos before extracting frames", () =>
+    withTempDirectory((tmpDir) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const binDir = path.join(tmpDir, "bin");
+        const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
+        const videoDir = path.join(tmpDir, "videos");
 
-          yield* fs.makeDirectory(videoDir, { recursive: true });
-          yield* fs.writeFileString(path.join(videoDir, "clip.mp4"), "video");
-          yield* fs.writeFileString(path.join(videoDir, "clip.mov"), "video");
-          yield* writeFfprobeShim(binDir);
-          yield* writeExtractFramesFfmpegShim(binDir, argsPath);
-          const exit = yield* Effect.exit(
-            withPathPrefix(binDir, runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]))
-          );
+        yield* fs.makeDirectory(videoDir, { recursive: true });
+        yield* fs.writeFileString(path.join(videoDir, "clip.mp4"), "video");
+        yield* fs.writeFileString(path.join(videoDir, "clip.mov"), "video");
+        yield* writeFfprobeShim(binDir);
+        yield* writeExtractFramesFfmpegShim(binDir, argsPath);
+        const exit = yield* Effect.exit(
+          withPathPrefix(binDir, runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]))
+        );
 
-          assertTrue(Exit.isFailure(exit));
-          expect(yield* fs.exists(argsPath)).toBe(false);
-          if (Exit.isFailure(exit)) {
-            const failure = firstFailure(exit.cause);
-            failure.pipe(O.isSome, assertTrue);
-            if (O.isSome(failure)) {
-              expect(failure.value).toBeInstanceOf(ImageCommandError);
-              expect(failure.value.message).toBe(
-                `image extract-frames-dir: multiple videos would write to "${path.join(videoDir, "clip")}".`
-              );
-            }
+        assertTrue(Exit.isFailure(exit));
+        expect(yield* fs.exists(argsPath)).toBe(false);
+        if (Exit.isFailure(exit)) {
+          const failure = firstFailure(exit.cause);
+          failure.pipe(O.isSome, assertTrue);
+          if (O.isSome(failure)) {
+            expect(failure.value).toBeInstanceOf(ImageCommandError);
+            expect(failure.value.message).toBe(
+              `image extract-frames-dir: multiple videos would write to "${path.join(videoDir, "clip")}".`
+            );
           }
-        })
-      )
-    ));
+        }
+      })
+    )
+  );
 
-  it("continues through per-video failures and exits nonzero after the summary", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const binDir = path.join(tmpDir, "bin");
-          const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
-          const videoDir = path.join(tmpDir, "videos");
-          const badPath = path.join(videoDir, "bad.mp4");
+  it.effect("continues through per-video failures and exits nonzero after the summary", () =>
+    withTempDirectory((tmpDir) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const binDir = path.join(tmpDir, "bin");
+        const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
+        const videoDir = path.join(tmpDir, "videos");
+        const badPath = path.join(videoDir, "bad.mp4");
 
-          yield* fs.makeDirectory(videoDir, { recursive: true });
-          yield* fs.writeFileString(badPath, "video");
-          yield* fs.writeFileString(path.join(videoDir, "good.mp4"), "video");
-          yield* writeFfprobeShim(binDir);
-          yield* writeConditionalExtractFramesFfmpegShim(binDir, argsPath, badPath);
-          const exit = yield* Effect.exit(
-            withPathPrefix(binDir, runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]))
-          );
+        yield* fs.makeDirectory(videoDir, { recursive: true });
+        yield* fs.writeFileString(badPath, "video");
+        yield* fs.writeFileString(path.join(videoDir, "good.mp4"), "video");
+        yield* writeFfprobeShim(binDir);
+        yield* writeConditionalExtractFramesFfmpegShim(binDir, argsPath, badPath);
+        const exit = yield* Effect.exit(
+          withPathPrefix(binDir, runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]))
+        );
 
-          expect(yield* sortedDirectoryEntries(path.join(videoDir, "good"))).toEqual([
-            "extract-frames-manifest.json",
-            "good_frame_00000.png",
-            "good_frame_00001.png",
-          ]);
-          expect(yield* TestConsole.errorLines).toEqual([
-            `image extract-frames-dir: bad.mp4: failed: ffmpeg could not extract frames for "${badPath}".`,
-          ]);
-          expect(yield* TestConsole.logLines).toEqual([
-            `image extract-frames-dir: good.mp4: wrote 2 frame(s) to ${path.join(videoDir, "good")}. manifest: ${path.join(videoDir, "good", "extract-frames-manifest.json")}`,
-            "image extract-frames-dir: processed 2 video(s); succeeded 1; failed 1.",
-          ]);
-          assertTrue(Exit.isFailure(exit));
-          if (Exit.isFailure(exit)) {
-            const failure = firstFailure(exit.cause);
-            failure.pipe(O.isSome, assertTrue);
-            if (O.isSome(failure)) {
-              expect(failure.value).toBeInstanceOf(ImageCommandError);
-              expect(failure.value.message).toBe("image extract-frames-dir: 1 video(s) failed.");
-            }
+        expect(yield* sortedDirectoryEntries(path.join(videoDir, "good"))).toEqual([
+          "extract-frames-manifest.json",
+          "good_frame_00000.png",
+          "good_frame_00001.png",
+        ]);
+        expect(yield* TestConsole.errorLines).toEqual([
+          `image extract-frames-dir: bad.mp4: failed: ffmpeg could not extract frames for "${badPath}".`,
+        ]);
+        expect(yield* TestConsole.logLines).toEqual([
+          `image extract-frames-dir: good.mp4: wrote 2 frame(s) to ${path.join(videoDir, "good")}. manifest: ${path.join(videoDir, "good", "extract-frames-manifest.json")}`,
+          "image extract-frames-dir: processed 2 video(s); succeeded 1; failed 1.",
+        ]);
+        assertTrue(Exit.isFailure(exit));
+        if (Exit.isFailure(exit)) {
+          const failure = firstFailure(exit.cause);
+          failure.pipe(O.isSome, assertTrue);
+          if (O.isSome(failure)) {
+            expect(failure.value).toBeInstanceOf(ImageCommandError);
+            expect(failure.value.message).toBe("image extract-frames-dir: 1 video(s) failed.");
           }
-        })
-      )
-    ));
+        }
+      })
+    )
+  );
 
-  it("exits nonzero through the real BunRuntime entrypoint when extract-frames fails", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const binDir = path.join(tmpDir, "bin");
-          const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
-          const videoPath = path.join(tmpDir, "clip.mp4");
-          const outDir = path.join(tmpDir, "frames");
+  it.effect("exits nonzero through the real BunRuntime entrypoint when extract-frames fails", () =>
+    withTempDirectory((tmpDir) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const binDir = path.join(tmpDir, "bin");
+        const argsPath = path.join(tmpDir, "ffmpeg-args.txt");
+        const videoPath = path.join(tmpDir, "clip.mp4");
+        const outDir = path.join(tmpDir, "frames");
 
-          yield* fs.makeDirectory(outDir, { recursive: true });
-          yield* fs.writeFileString(videoPath, "video");
-          yield* fs.writeFileString(path.join(outDir, "clip_frame_00000.png"), "existing");
-          yield* writeFfprobeShim(binDir);
-          yield* writeExtractFramesFfmpegShim(binDir, argsPath);
+        yield* fs.makeDirectory(outDir, { recursive: true });
+        yield* fs.writeFileString(videoPath, "video");
+        yield* fs.writeFileString(path.join(outDir, "clip_frame_00000.png"), "existing");
+        yield* writeFfprobeShim(binDir);
+        yield* writeExtractFramesFfmpegShim(binDir, argsPath);
 
-          const result = yield* runCliCommand(
-            tmpDir,
-            binDir,
-            "image",
-            "extract-frames",
-            "--video",
-            videoPath,
-            "--out-dir",
-            outDir,
-            "--fps",
-            "1"
-          );
+        const result = yield* runCliCommand(
+          tmpDir,
+          binDir,
+          "image",
+          "extract-frames",
+          "--video",
+          videoPath,
+          "--out-dir",
+          outDir,
+          "--fps",
+          "1"
+        );
 
-          expect(result.exitCode).toBe(1);
-          expect(result.output).toContain(
-            `Refusing to overwrite existing frame output: "${path.join(outDir, "clip_frame_00000.png")}"`
-          );
-        })
-      )
-    ));
+        expect(result.exitCode).toBe(1);
+        expect(result.output).toContain(
+          `Refusing to overwrite existing frame output: "${path.join(outDir, "clip_frame_00000.png")}"`
+        );
+      })
+    )
+  );
 });

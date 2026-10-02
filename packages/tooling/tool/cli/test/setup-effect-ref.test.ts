@@ -1,14 +1,15 @@
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
 import { Config, Effect, FileSystem, Path, Stream } from "effect";
 import { ChildProcess } from "effect/process";
+import { expect } from "vitest";
 
 const writeExecutable = Effect.fn("SetupEffectRefTest.writeExecutable")(function* (filePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.writeFileString(filePath, content);
   yield* fs.chmod(filePath, 0o755);
 });
-layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it) => {
   for (const useDefault of [false, true]) {
     it.effect(`provisions reference links idempotently with the ${useDefault ? "default" : "relative"} root`, () =>
       Effect.gen(function* () {

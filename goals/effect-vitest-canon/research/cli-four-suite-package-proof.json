@@ -1,0 +1,59 @@
+{
+  "package": "@beep/repo-cli",
+  "command": "bun run beep quality package-verify @beep/repo-cli",
+  "exitCode": 0,
+  "auditSeconds": 661.5,
+  "docgenSeconds": 21.0,
+  "sourceCommit": "0f8ccb043cada521b18ba8d2a238cd9e807079f3",
+  "files": {
+    "cache-entrypoints.test.ts": "f3ce865126ee117d402738b96c4ee4704a835b8a3c0d5b8d97aa6aac77d46c4e",
+    "docgen-stall-watchdog.test.ts": "c4c9e07dd48598f09effb6f2348517b489c618fd8bcb7408f84d8e481dc13fd3",
+    "match-person-model-store.test.ts": "78c17ca72f1981204fd039cd124c25adbf9a90712bd3e722c20f8130244383b9",
+    "yeet-fallow-self-heal.test.ts": "7b4109549cc2cb445a1c94de0e24c7b1df41770fd77828324a8c52ed19dd8cfc"
+  },
+  "ledgerCounts": {
+    "fixed": 37,
+    "exception": 9,
+    "preserveHistoricalNone": 14
+  },
+  "strictLedgerValidation": {
+    "rows": 4588,
+    "exitCode": 0,
+    "onExcessProperty": "error"
+  },
+  "focusedProofs": {
+    "four-canonical-import-node": {
+      "passed": 34,
+      "total": 34,
+      "success": true
+    },
+    "four-canonical-import-bun": {
+      "passed": 34,
+      "total": 34,
+      "success": true
+    },
+    "four-canonical-property-node": {
+      "passed": 9,
+      "total": 9,
+      "success": true
+    },
+    "four-canonical-property-bun": {
+      "passed": 9,
+      "total": 9,
+      "success": true
+    }
+  },
+  "propertyConfiguration": {
+    "numRuns": 400,
+    "seed": 20260708,
+    "scope": "cache-entrypoints.test.ts on Node and Bun"
+  },
+  "baseline": {
+    "before": 2067,
+    "after": 2026,
+    "introduced": 0,
+    "resolved": 0,
+    "scope": "All baseline changes confined to these four suites"
+  },
+  "scope": "Applied four-suite package proof and ledger reconciliation, including canonical describe/expect imports. Whole-goal acceptance and hosted exact-head proof remain pending."
+}

@@ -21,13 +21,13 @@ import {
   sweepReportPath,
   sweepStepBlockers,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, FileSystem, Layer, pipe, Ref, Sink, Stream } from "effect";
+import { Effect, Exit, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -461,26 +461,40 @@ const stubHandle = (stub: CommandStub) =>
   });
 
 /**
- * A spawner that answers by command-line prefix; anything unlisted succeeds
- * silently, which is exactly how the mutating steps of a clean sweep behave.
+ * Probe overrides retain their ordered prefix matching. Successful mutations
+ * have an explicit complete command line; every unlisted command fails visibly.
  */
+const allowedMutationCommands = [
+  "git fetch --prune origin",
+  "git merge --ff-only refs/remotes/origin/main",
+  "git fetch origin main:main",
+  "git branch -d feat/merge-loop",
+  "git branch -D feat/merge-loop",
+  "git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop",
+  "git switch main",
+  "bun install",
+];
+
 const stubSpawnerLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
   Layer.effect(
     ChildProcessSpawner.ChildProcessSpawner,
     Effect.succeed(
       ChildProcessSpawner.make((command) =>
-        ChildProcess.isStandardCommand(command)
-          ? Effect.succeed(
-              stubHandle(
-                pipe(
-                  A.findFirst(stubs, ([prefix]) =>
-                    Str.startsWith(prefix)(A.join([command.command, ...command.args], " "))
-                  ),
-                  O.match({ onNone: () => ok(""), onSome: ([, stub]) => stub })
-                )
-              )
-            )
-          : Effect.die("the sweep never spawns a piped command")
+        Effect.gen(function* () {
+          if (!ChildProcess.isStandardCommand(command))
+            return yield* Effect.die("the sweep never spawns a piped command");
+          const line = A.join([command.command, ...command.args], " ");
+          const mutation =
+            (command.command === "git" &&
+              A.contains(["fetch", "merge", "branch", "push", "switch"], command.args[0])) ||
+            command.command === "bun";
+          if (mutation && !A.contains(allowedMutationCommands, line))
+            return yield* Effect.die(`Unexpected sweep mutation: ${line}`);
+          const stub = A.findFirst(stubs, ([prefix]) => Str.startsWith(prefix)(line));
+          if (O.isNone(stub) && !A.contains(allowedMutationCommands, line))
+            return yield* Effect.die(`Unexpected sweep command: ${line}`);
+          return stubHandle(O.match(stub, { onNone: () => ok(""), onSome: ([, stub]) => stub }));
+        })
       )
     )
   );
@@ -526,17 +540,13 @@ const sweepContext = (root: string): RepoRunContext =>
     turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
   });
 
-const withTempDirectory = Effect.fn("withTempDirectory")(function* <Value, Failure, Requirements>(
-  use: (root: string) => Effect.Effect<Value, Failure, Requirements>
-) {
-  const fs = yield* FileSystem.FileSystem;
-  return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>
-    Effect.ignore(fs.remove(root, { recursive: true }))
-  );
-});
+const makeTempDirectory = FileSystem.FileSystem.use((fs) => fs.makeTempDirectory());
+const removeTempDirectory = Effect.fn("removeTempDirectory")((root: string) =>
+  FileSystem.FileSystem.use((fs) => fs.remove(root, { recursive: true }))
+);
 
 const sweepTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
-  Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs));
+  Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs));
 
 // The same clone as `mergedSweepStubs`, parked on `head` instead of main; the
 // sweeping worktree is the one holding that branch.
@@ -607,174 +617,235 @@ describe("executeSweep", () => {
       );
     }
   );
-  it.effect("writes a sweep-report.json that decodes back through SweepReportJson", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const context = sweepContext(root);
-        const report = yield* executeSweep(context);
-        expect(A.map(report.steps, (step) => step.id)).toEqual([...SweepStepId.literals]);
-        expect(A.map(report.steps, (step) => step.outcome.status)).toEqual(
-          A.map(report.steps, (step) => (step.id === "tmpfs-worktrees" ? "skipped" : "executed"))
-        );
+  it.layer(sweepTestLayer(mergedSweepStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("writes a sweep-report.json that decodes back through SweepReportJson", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const context = sweepContext(root);
+            const { report, spawned } = yield* recordedSweep(root);
+            expect(spawned).toContain("git fetch --prune origin");
+            expect(spawned).toContain("git merge --ff-only refs/remotes/origin/main");
+            expect(spawned).toContain("git branch -D feat/merge-loop");
+            expect(spawned).toContain(
+              "git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop"
+            );
+            expect(spawned).toContain("bun install");
+            expect(spawned).not.toContain("git branch -d feat/merge-loop");
+            expect(spawned).not.toContain("git switch main");
+            expect(A.map(report.steps, (step) => step.id)).toEqual([...SweepStepId.literals]);
+            expect(A.map(report.steps, (step) => step.outcome.status)).toEqual(
+              A.map(report.steps, (step) => (step.id === "tmpfs-worktrees" ? "skipped" : "executed"))
+            );
 
-        const fs = yield* FileSystem.FileSystem;
-        const written = yield* fs.readFileString(yield* sweepReportPath(context));
-        expect(yield* SweepReportJson.decode(written)).toEqual(report);
-      })
-    ).pipe(provideScopedLayer(sweepTestLayer(mergedSweepStubs)))
-  );
-
-  it.effect("reads a truncated worktree list as unknown, not as an empty worktree set", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const state = yield* observeSweepGitState(sweepContext(root));
-        expect(state.worktreeProbeUnreliable).toBe(true);
-        expect(state.branchCheckedOutElsewhere).toBe(true);
-        expect(state.mainCheckedOutElsewhere).toBe(true);
-        expect(blockerText(state, "delete-local-branch")).toEqual([
-          "git worktree list --porcelain succeeded without truncation",
-        ]);
-      })
-    ).pipe(provideScopedLayer(sweepTestLayer(truncatedWorktreeStubs)))
-  );
-
-  it.effect("keeps the observed pull request head branch for the identity check", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const state = yield* observeSweepGitState(sweepContext(root));
-        assertSome(state.pullRequestHeadBranch, "feat/merge-loop");
-        expect(blockerText(state, "delete-local-branch")).toEqual([]);
-      })
-    ).pipe(provideScopedLayer(sweepTestLayer(mergedSweepStubs)))
-  );
-
-  it.effect("reads a failed status probe as unknown, not as a clean worktree", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const state = yield* observeSweepGitState(sweepContext(root));
-        expect(state.statusProbeUnreliable).toBe(true);
-        expect(state.worktreeDirty).toBe(true);
-        expect(blockerText(state, "lockfile-install")).toContain("git status --porcelain succeeded without truncation");
-      })
-    ).pipe(provideScopedLayer(sweepTestLayer([["git status --porcelain", nonzero(128)], ...mergedSweepStubs])))
-  );
-
-  it.effect("reads a failed worktree list as held branches, not as a free clone", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const state = yield* observeSweepGitState(sweepContext(root));
-        expect(state.worktreeProbeUnreliable).toBe(true);
-        expect(state.branchCheckedOutElsewhere).toBe(true);
-        expect(state.mainCheckedOutElsewhere).toBe(true);
-        expect(blockerText(state, "delete-local-branch")).toEqual([
-          "git worktree list --porcelain succeeded without truncation",
-        ]);
-      })
-    ).pipe(provideScopedLayer(sweepTestLayer([["git worktree list --porcelain", nonzero(128)], ...mergedSweepStubs])))
-  );
-
-  it.effect("hands a generic remote rejection to the operator with its own words, never a stale lease", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const report = yield* executeSweep(sweepContext(root));
-        const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
-        expect(remoteStep.outcome.status).toBe("needs-operator");
-        if (remoteStep.outcome.status === "needs-operator") {
-          expect(remoteStep.outcome.reason).not.toContain("moved after planning");
-          expect(remoteStep.outcome.reason).toContain("custom hook said no");
-          expect(remoteStep.outcome.operatorCommand).toContain("--force-with-lease");
-        }
-      })
-    ).pipe(
-      provideScopedLayer(
-        sweepTestLayer([
-          [
-            "git push origin --force-with-lease",
-            { exitCode: 1, output: " ! [remote rejected] refs/heads/feat/merge-loop (custom hook said no)" },
-          ],
-          ...mergedSweepStubs,
-        ])
+            const fs = yield* FileSystem.FileSystem;
+            const written = yield* fs.readFileString(yield* sweepReportPath(context));
+            expect(yield* SweepReportJson.decode(written)).toEqual(report);
+          }),
+        removeTempDirectory
       )
-    )
-  );
+    );
+  });
 
-  it.effect("hands an unrefreshed main to the operator as unreconciled, never as unchanged", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const report = yield* executeSweep(sweepContext(root));
-        const step = O.getOrThrow(A.findFirst(report.steps, (reported) => reported.id === "lockfile-install"));
-        expect(step.outcome.status).toBe("needs-operator");
-        if (step.outcome.status === "needs-operator") {
-          expect(step.outcome.reason).toContain("was not refreshed");
-          expect(step.outcome.reason).not.toContain("did not move");
-          expect(step.outcome.operatorCommand).toBe("bun run beep yeet sweep");
-        }
-      })
-    ).pipe(
-      provideScopedLayer(
-        sweepTestLayer([
-          ["git rev-parse --verify --quiet refs/remotes/origin/main", ok("9999aaaa8888bbbb")],
-          ...mergedSweepStubs,
-        ])
+  it.layer(sweepTestLayer(truncatedWorktreeStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("reads a truncated worktree list as unknown, not as an empty worktree set", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const state = yield* observeSweepGitState(sweepContext(root));
+            expect(state.worktreeProbeUnreliable).toBe(true);
+            expect(state.branchCheckedOutElsewhere).toBe(true);
+            expect(state.mainCheckedOutElsewhere).toBe(true);
+            expect(blockerText(state, "delete-local-branch")).toEqual([
+              "git worktree list --porcelain succeeded without truncation",
+            ]);
+          }),
+        removeTempDirectory
       )
-    )
-  );
+    );
+  });
 
-  it.effect("skips the install when the post-refresh update window shows bun.lock unchanged", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const report = yield* executeSweep(sweepContext(root));
-        const step = O.getOrThrow(A.findFirst(report.steps, (reported) => reported.id === "lockfile-install"));
-        expect(step.outcome.status).toBe("skipped");
-        expect(step.outcome.status === "skipped" ? step.outcome.reason : "").toContain("did not move");
-      })
-    ).pipe(
-      provideScopedLayer(sweepTestLayer([[`git diff --name-only ${mainTipBeforeUpdate}`, ok("")], ...mergedSweepStubs]))
-    )
-  );
-
-  it.effect("classifies a rejected lease as moved-after-planning, not as a plain failure", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const report = yield* executeSweep(sweepContext(root));
-        const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
-        expect(remoteStep.outcome.status).toBe("skipped");
-        expect(remoteStep.outcome.status === "skipped" ? remoteStep.outcome.reason : "").toContain(
-          "moved after planning"
-        );
-      })
-    ).pipe(
-      provideScopedLayer(
-        sweepTestLayer([
-          [
-            "git push origin --force-with-lease",
-            { exitCode: 1, output: " ! [rejected] refs/heads/feat/merge-loop (stale info)" },
-          ],
-          ...mergedSweepStubs,
-        ])
+  it.layer(sweepTestLayer(mergedSweepStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("keeps the observed pull request head branch for the identity check", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const state = yield* observeSweepGitState(sweepContext(root));
+            assertSome(state.pullRequestHeadBranch, "feat/merge-loop");
+            expect(blockerText(state, "delete-local-branch")).toEqual([]);
+          }),
+        removeTempDirectory
       )
-    )
+    );
+  });
+
+  it.layer(sweepTestLayer([["git status --porcelain", nonzero(128)], ...mergedSweepStubs]), { timeout: "30 seconds" })(
+    (it) => {
+      it.effect("reads a failed status probe as unknown, not as a clean worktree", () =>
+        Effect.acquireUseRelease(
+          makeTempDirectory,
+          (root) =>
+            Effect.gen(function* () {
+              const state = yield* observeSweepGitState(sweepContext(root));
+              expect(state.statusProbeUnreliable).toBe(true);
+              expect(state.worktreeDirty).toBe(true);
+              expect(blockerText(state, "lockfile-install")).toContain(
+                "git status --porcelain succeeded without truncation"
+              );
+            }),
+          removeTempDirectory
+        )
+      );
+    }
   );
 
-  it.effect("skips remote deletion when the live remote tip moved since planning", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const report = yield* executeSweep(sweepContext(root));
-        const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
-        expect(remoteStep.outcome.status).toBe("skipped");
-        expect(remoteStep.outcome.status === "skipped" ? remoteStep.outcome.reason : "").toContain(
-          "moved since planning"
-        );
-      })
-    ).pipe(
-      provideScopedLayer(
-        sweepTestLayer([
-          ["git ls-remote origin refs/heads/feat/merge-loop", ok("ffff9999eeee8888\trefs/heads/feat/merge-loop")],
-          ...mergedSweepStubs,
-        ])
+  it.layer(sweepTestLayer([["git worktree list --porcelain", nonzero(128)], ...mergedSweepStubs]), {
+    timeout: "30 seconds",
+  })((it) => {
+    it.effect("reads a failed worktree list as held branches, not as a free clone", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const state = yield* observeSweepGitState(sweepContext(root));
+            expect(state.worktreeProbeUnreliable).toBe(true);
+            expect(state.branchCheckedOutElsewhere).toBe(true);
+            expect(state.mainCheckedOutElsewhere).toBe(true);
+            expect(blockerText(state, "delete-local-branch")).toEqual([
+              "git worktree list --porcelain succeeded without truncation",
+            ]);
+          }),
+        removeTempDirectory
       )
-    )
-  );
+    );
+  });
+
+  it.layer(
+    sweepTestLayer([
+      [
+        "git push origin --force-with-lease",
+        { exitCode: 1, output: " ! [remote rejected] refs/heads/feat/merge-loop (custom hook said no)" },
+      ],
+      ...mergedSweepStubs,
+    ]),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("hands a generic remote rejection to the operator with its own words, never a stale lease", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const report = yield* executeSweep(sweepContext(root));
+            const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
+            expect(remoteStep.outcome.status).toBe("needs-operator");
+            if (remoteStep.outcome.status === "needs-operator") {
+              expect(remoteStep.outcome.reason).not.toContain("moved after planning");
+              expect(remoteStep.outcome.reason).toContain("custom hook said no");
+              expect(remoteStep.outcome.operatorCommand).toContain("--force-with-lease");
+            }
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(
+    sweepTestLayer([
+      ["git rev-parse --verify --quiet refs/remotes/origin/main", ok("9999aaaa8888bbbb")],
+      ...mergedSweepStubs,
+    ]),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("hands an unrefreshed main to the operator as unreconciled, never as unchanged", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const report = yield* executeSweep(sweepContext(root));
+            const step = O.getOrThrow(A.findFirst(report.steps, (reported) => reported.id === "lockfile-install"));
+            expect(step.outcome.status).toBe("needs-operator");
+            if (step.outcome.status === "needs-operator") {
+              expect(step.outcome.reason).toContain("was not refreshed");
+              expect(step.outcome.reason).not.toContain("did not move");
+              expect(step.outcome.operatorCommand).toBe("bun run beep yeet sweep");
+            }
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(sweepTestLayer([[`git diff --name-only ${mainTipBeforeUpdate}`, ok("")], ...mergedSweepStubs]), {
+    timeout: "30 seconds",
+  })((it) => {
+    it.effect("skips the install when the post-refresh update window shows bun.lock unchanged", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const report = yield* executeSweep(sweepContext(root));
+            const step = O.getOrThrow(A.findFirst(report.steps, (reported) => reported.id === "lockfile-install"));
+            expect(step.outcome.status).toBe("skipped");
+            expect(step.outcome.status === "skipped" ? step.outcome.reason : "").toContain("did not move");
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(
+    sweepTestLayer([
+      [
+        "git push origin --force-with-lease",
+        { exitCode: 1, output: " ! [rejected] refs/heads/feat/merge-loop (stale info)" },
+      ],
+      ...mergedSweepStubs,
+    ]),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("classifies a rejected lease as moved-after-planning, not as a plain failure", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const report = yield* executeSweep(sweepContext(root));
+            const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
+            expect(remoteStep.outcome.status).toBe("skipped");
+            expect(remoteStep.outcome.status === "skipped" ? remoteStep.outcome.reason : "").toContain(
+              "moved after planning"
+            );
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(
+    sweepTestLayer([
+      ["git ls-remote origin refs/heads/feat/merge-loop", ok("ffff9999eeee8888\trefs/heads/feat/merge-loop")],
+      ...mergedSweepStubs,
+    ]),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("skips remote deletion when the live remote tip moved since planning", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const report = yield* executeSweep(sweepContext(root));
+            const remoteStep = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-remote-branch"));
+            expect(remoteStep.outcome.status).toBe("skipped");
+            expect(remoteStep.outcome.status === "skipped" ? remoteStep.outcome.reason : "").toContain(
+              "moved since planning"
+            );
+          }),
+        removeTempDirectory
+      )
+    );
+  });
 
   // The live-checkout rail at execution: each block runs the sweep against a
   // clone parked on the branch its layer's stubs describe.
@@ -843,46 +914,50 @@ describe("executeSweep", () => {
 });
 
 describe("deletion revalidation", () => {
-  it.effect("refuses a local deletion when the branch tip moved since planning", () =>
-    Effect.gen(function* () {
-      const drifted = stateWith({ localTip: O.some("cccc3333dddd4444") });
-      const refusal = yield* revalidateLocalDeletion("/repo", drifted);
-      refusal.pipe(O.isSome, assertTrue);
-      expect(O.getOrElse(refusal, () => "")).toContain("moved since planning");
+  it.layer(sweepTestLayer(mergedSweepStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("refuses a local deletion when the branch tip moved since planning", () =>
+      Effect.gen(function* () {
+        const drifted = stateWith({ localTip: O.some("cccc3333dddd4444") });
+        const refusal = yield* revalidateLocalDeletion("/repo", drifted);
+        refusal.pipe(O.isSome, assertTrue);
+        expect(O.getOrElse(refusal, () => "")).toContain("moved since planning");
 
-      const unchanged = yield* revalidateLocalDeletion("/repo", mergedState);
-      assertNone(unchanged);
-    }).pipe(provideScopedLayer(sweepTestLayer(mergedSweepStubs)))
-  );
+        const unchanged = yield* revalidateLocalDeletion("/repo", mergedState);
+        assertNone(unchanged);
+      })
+    );
+  });
 
-  it.effect("refuses a remote deletion when ls-remote cannot be read", () =>
-    Effect.gen(function* () {
-      const refusal = yield* revalidateRemoteDeletion("/repo", mergedState);
-      expect(O.getOrElse(refusal, () => "")).toContain("could not re-verify");
-    }).pipe(
-      provideScopedLayer(
-        sweepTestLayer([["git ls-remote origin refs/heads/feat/merge-loop", nonzero(128)], ...mergedSweepStubs])
-      )
-    )
-  );
+  it.layer(sweepTestLayer([["git ls-remote origin refs/heads/feat/merge-loop", nonzero(128)], ...mergedSweepStubs]), {
+    timeout: "30 seconds",
+  })((it) => {
+    it.effect("refuses a remote deletion when ls-remote cannot be read", () =>
+      Effect.gen(function* () {
+        const refusal = yield* revalidateRemoteDeletion("/repo", mergedState);
+        expect(O.getOrElse(refusal, () => "")).toContain("could not re-verify");
+      })
+    );
+  });
 
-  it.effect("treats an already-deleted remote ref as nothing to delete", () =>
-    Effect.gen(function* () {
-      const refusal = yield* revalidateRemoteDeletion("/repo", mergedState);
-      expect(O.getOrElse(refusal, () => "")).toContain("no longer exists");
-    }).pipe(
-      provideScopedLayer(
-        sweepTestLayer([["git ls-remote origin refs/heads/feat/merge-loop", ok("")], ...mergedSweepStubs])
-      )
-    )
-  );
+  it.layer(sweepTestLayer([["git ls-remote origin refs/heads/feat/merge-loop", ok("")], ...mergedSweepStubs]), {
+    timeout: "30 seconds",
+  })((it) => {
+    it.effect("treats an already-deleted remote ref as nothing to delete", () =>
+      Effect.gen(function* () {
+        const refusal = yield* revalidateRemoteDeletion("/repo", mergedState);
+        expect(O.getOrElse(refusal, () => "")).toContain("no longer exists");
+      })
+    );
+  });
 
-  it.effect("allows the remote deletion when the live tip still matches the plan", () =>
-    Effect.gen(function* () {
-      const allowed = yield* revalidateRemoteDeletion("/repo", mergedState);
-      assertNone(allowed);
-    }).pipe(provideScopedLayer(sweepTestLayer(mergedSweepStubs)))
-  );
+  it.layer(sweepTestLayer(mergedSweepStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("allows the remote deletion when the live tip still matches the plan", () =>
+      Effect.gen(function* () {
+        const allowed = yield* revalidateRemoteDeletion("/repo", mergedState);
+        assertNone(allowed);
+      })
+    );
+  });
 });
 
 describe("MergeOutcome", () => {

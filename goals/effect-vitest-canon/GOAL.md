@@ -1,3 +1,7 @@
+> Current work: Effect / Effect Vitest 4.0.0, Vitest 5.0.3, GPT-6.1-Sol medium.
+> Preserve older cohort receipts and D1–D14; see
+> history/2026-10-01-current-source-cohort.md.
+
 > Current operator instruction: remediate the existing legitimate inventory now;
 > inventory newer main changes after that backlog is exhausted. P2 is authorized
 > on this basis. See PLAN.md for the execution order and preserved proof limits.
