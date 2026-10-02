@@ -2072,3 +2072,13 @@ endpoints. R54 approval remains withheld; this route change grants no census,
 P3, ratification, implementation, or closeout credit. A route-aware handoff
 with saved claim coverage and actual model/effort metadata prevents quota
 exhaustion from discarding reviewed work or being mistaken for a campaign gate.
+
+Codex audit-checkout preparation exposed a worktree-management mismatch.
+`create_worktree` placed the checkout under the app-managed worktree root,
+while this repository requires sibling worktrees. `archive_worktree` then
+refused with `This worktree is protected by a pinned task or workspace.`
+The unused managed checkout was retained unchanged. A detached audit checkout
+was created in the required sibling root at the same published source. A
+configurable destination and cleanup for an unused checkout created by the
+calling task would prevent this friction. Neither checkout grants campaign
+credit, and no synthetic commit was pushed.
