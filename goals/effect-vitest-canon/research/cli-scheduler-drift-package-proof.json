@@ -45,10 +45,12 @@
   "hostedProof": false,
   "sourceCommit": "dc82928e396aa40656569837035ff07288a3293d",
   "ledgerDispositions": {
-    "fixedDetector": 8,
+    "fixedDetector": 10,
     "fixedObservability": 1,
     "nativeFilesystemException": 1,
-    "preservedHistoricalNone": 3
+    "preservedHistoricalNone": 3,
+    "fixedCurrentBaselineOccurrences": 8,
+    "additionalHistoricalLineageRows": 2
   },
   "packageVerification": {
     "command": "bun run beep quality package-verify @beep/repo-cli",
@@ -62,5 +64,23 @@
     "semanticControls": "Both runtimes reject the procfs value mutation and disabled collision injection.",
     "lifecycleControls": "Both runtimes verify five acquire/release pairs and removal of all three native temporary roots.",
     "inspectorComparison": "Two isolated suite copies pass 10 cases with and without the patch; nonempty QualityScheduler coverage summaries are identical."
+  },
+  "ledgerLineage": {
+    "baseCommit": "06a5c19cd54f13e5bdc3dcfa75c15d3da6ab43bf",
+    "note": "Ten fixed detector ledger rows represent eight removed baseline occurrences and two preserved historical versions; the historical rows are not additional independent fixes.",
+    "mappings": [
+      {
+        "historicalId": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:99:provideScopedLayer@12#1",
+        "historicalOccurrence": "v2:bea8ff660a244232c1abef272e2d2cc0bf2213bf2bfbd17acc3698536b2dc12e",
+        "currentBaselineId": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:100:provideScopedLayer@12#1",
+        "currentBaselineOccurrence": "v2:a06814bff315cffd5bbe1cc09bed2b516691bab3bf4c9f23c5e64ed678e3a8b3"
+      },
+      {
+        "historicalId": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:110:provideScopedLayer@12#1",
+        "historicalOccurrence": "v2:ca10c3f1bf11286bf70db166080c1bf9f954abcb425f85fd6f51ebd9e8faa388",
+        "currentBaselineId": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:111:provideScopedLayer@12#1",
+        "currentBaselineOccurrence": "v2:04a8018e09bddbfe0a88b824bbe22f459ffe80a56e079fa369dcd91d0c049169"
+      }
+    ]
   }
 }

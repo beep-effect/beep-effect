@@ -6466,3 +6466,16 @@ excluded; these were rejected as evidence. Explicit source selection and a
 nonempty source-row assertion prevented a false green. A focused regression
 probe and an expiration review would have prevented the global workaround from
 remaining indefinitely. No coverage baseline or threshold was changed.
+
+
+### Scheduler ledger occurrence lineage (PR #1401 review)
+
+The scheduler migration retained historical EV002 ledger identities for two memory-reading
+cases, while the source-base inventory recorded their later merged BunCrypto/FileSystem
+wrappers. Review found that joining by occurrence left those two removed baseline findings
+unmatched. Append the two exact source-base occurrences with source fix
+`dc82928e396aa40656569837035ff07288a3293d`, preserving the historical rows. The proof
+receipt distinguishes eight current baseline fixes from two historical lineage records.
+An exact occurrence join between removed baseline findings and fixed ledger rows would
+have caught this before publication. Strict ledger validation and an eight-occurrence
+join validate this reconciliation.
