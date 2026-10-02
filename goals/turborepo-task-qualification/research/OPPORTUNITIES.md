@@ -2852,3 +2852,49 @@ The isolated package check initially lacked dependency declaration outputs
 (`TS6305`); building its dependency graph made lint and check pass without a
 source workaround. Run the test compiler gate before full publication and
 build dependency declarations before package verification in a fresh worktree.
+
+### Signed supervisor hides the child failure
+
+The full signed stable workflow at `93a19425da` exited with
+`Signed pilot supervisor failed or exceeded its capture bound`. The supervisor
+captures bounded streams but discards the child diagnostic while cleaning its
+scoped directory. No observation or accepted evidence was produced. An admitted,
+private diagnostic run preserves bounded output with the same namespace and
+mount restrictions; it has no issuing or promotion authority. The first diagnostic
+attempt was stopped because its wrapper lacked quality admission, then relaunched
+through the canonical admission service. A safe structured failure code and local
+bounded diagnostic receipt would avoid duplicating the failed worker invocation.
+
+### Activation fixture formatting changed the fresh lint verdict
+
+The admitted native diagnostic at `93a19425da` showed both isolated identity lint
+runs exit 1 while all dependency lints passed. Direct Biome output identified one
+formatter error in the overlaid `turbo.json`. The preparation recipe had serialized
+the cache-enabled control with expanded arrays, changing more bytes than the
+reviewed boolean flip. Regenerate from the formatted source by changing only the
+selected cache boolean, verify the semantic delta and formatting, and renew every
+hash-bound activation, contract, request and issuer approval. The qualification
+validator correctly rejected the failed fresh computation; its checks remain intact.
+
+### Native protocol selector diagnosis
+
+The full approved formatted-control run reached protocol supervision, then exited without
+issuing an observation. Bounded admitted diagnostics identified an unscoped native request: the
+prepared protocol namespace lacked the `team_` prefix, so Turbo omitted `teamId`; strict fixture
+routing rejected it. The producer and replay hashes matched, but replay was a miss and the
+fallback guard exited 42. A diagnostic with a team-prefixed namespace produced a real remote
+replay and all seven required rejections. This diagnostic is not signed acceptance. Prevent this
+setup failure by validating native selector compatibility before the expensive full matrix.
+Temporary tracing was removed; retain the full-run requirement and provision fresh approval for
+corrected protocol bindings.
+### Signed orchestration coverage and fixture complexity
+
+Hosted Coverage Regression failed at `93a19425da` despite all 5,194 CLI tests
+passing. The missing coverage was the signed orchestrator's process-boundary
+success path and capture rejection edges. New focused tests cover those paths
+without replacing the separately authenticated native matrix. The six-file
+coverage run passed 54 tests and exceeded the affected per-file floors. A root
+Oxlint check then caught an inline schema compiler in the fixture; it was
+hoisted, and node imports were normalized. Fallow identified four newly complex
+fixture functions. Refactor their process, capture and remote-transport concerns
+before publication; do not refresh coverage floors or complexity baselines.

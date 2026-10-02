@@ -3311,3 +3311,29 @@ branch had no modified or removed baseline rows. Installation from the merged
 frozen lockfile passed. Current package/quality proof must now include main's
 new CI modules and dependency changes. Earlier successful proof remains retained
 with its exact pre-merge source boundary; no stale-base override was used.
+
+### Authenticated native qualification — 2026-10-02
+
+The [current signed qualification receipt](research/current-signed-qualification.json)
+records both full native v9 workflows at `93a19425da`: exact stable and canary
+clients, three fresh pairs, three remote pairs, ten shadows, seven seeded
+mutations, four capture controls, four non-execution controls, missing-child
+refusal and the native protocol matrix per channel. Independently configured
+issuer trust accepted 103 evidence fragments with zero blockers; the immutable
+acceptance was persisted and independently reread.
+
+A separate operational checkout at that same revision ran the production Cache
+baseline and lifecycle commands with the actual filesystem, census, toolchain
+and accepted evidence. Revisions 6, 7 and 8 advanced the named private-loopback
+signed identity lint tuple through candidate, shadow and qualified. A subsequent
+production audit completed with zero blocking findings. The ordinary source
+profile remains excluded; the public baseline and ledger were not replaced by
+the private signed-profile operational context. This is a bounded real
+qualification, not broad cache activation or hosted proof reuse.
+
+Coverage repairs passed 54 focused tests and the affected per-file floors.
+The expanded process-boundary fixture remains separate from native authority.
+Root lint found an inline schema compiler, which was hoisted; Fallow identified
+fixture complexity, which is being reduced without threshold changes. Final
+package/Yeet/hosted verification, adoption handoff, reflection and lifecycle
+closeout remain incomplete.

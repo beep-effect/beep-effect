@@ -65,6 +65,22 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("bounded signed pilot arch
       );
     })
   );
+  it.effect("rejects empty or oversized compressed inputs before decompression", () =>
+    Effect.gen(function* () {
+      for (const archive of [Buffer.alloc(0), Buffer.alloc(1024 * 1024 + 1)]) {
+        const failure = yield* inspectCacheSignedPilotArchive(archive, []).pipe(Effect.flip);
+        expect(failure.message).toBe("Signed pilot archive exceeds its compressed bound.");
+      }
+    })
+  );
+  it.effect("reports malformed base-256 header numbers as typed failures", () =>
+    Effect.gen(function* () {
+      const bytes = makeTar();
+      bytes[124] = 0x81;
+      const failure = yield* inspect(bytes).pipe(Effect.flip);
+      expect(failure.message).toBe("Signed pilot archive header is invalid.");
+    })
+  );
   it.effect("rejects credentials in both task text and header metadata", () =>
     Effect.gen(function* () {
       const secret = Redacted.make("synthetic-archive-credential");

@@ -224,13 +224,15 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("cache qualification command dispatch", () => {
   it.layer(testLayer, { timeout: "30 seconds" })((it) => {
-    it.effect("rejects malformed acceptance requests without emitting a reference or promoting a tuple", () =>
+    it.effect("rejects malformed native and acceptance requests without output or qualification mutation", () =>
       Effect.gen(function* () {
         const f = yield* fixture();
         const request = f.path.join(f.root, "invalid-acceptance.json");
         const output = f.path.join(f.root, "acceptance-reference.json");
         yield* f.fs.writeFileString(request, "{}");
-        expect(yield* f.run(["accept", "--request", request, "--output", output]).pipe(Effect.isFailure)).toBe(true);
+        for (const command of ["accept", "pilot-signed", "protocol-run", "protocol-review"]) {
+          expect(yield* f.run([command, "--request", request, "--output", output]).pipe(Effect.isFailure)).toBe(true);
+        }
         expect(yield* f.fs.exists(output)).toBe(false);
         expect(f.calls).toEqual([]);
         expect(yield* errorText).toContain("Cannot decode the pinned local experiment request.");
