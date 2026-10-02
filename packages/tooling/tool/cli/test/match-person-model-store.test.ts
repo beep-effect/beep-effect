@@ -3,13 +3,13 @@ import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { Data, Effect, FileSystem, Layer, Match, Path, Ref, Tuple } from "effect";
 import * as Hex from "effect/encoding/Hex";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect } from "vitest";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));

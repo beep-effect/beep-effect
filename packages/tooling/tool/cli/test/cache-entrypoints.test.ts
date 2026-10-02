@@ -13,12 +13,12 @@ import { fcRuns } from "@beep/test-utils";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as NodePath from "@effect/platform-node/NodePath";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { describe, expect } from "vitest";
 
 const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const memoryLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, NodeCrypto.layer);

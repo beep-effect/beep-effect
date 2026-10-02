@@ -13,6 +13,7 @@ import {
 import { it } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
@@ -20,7 +21,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect } from "vitest";
 
 const TestLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, TestConsole.layer);
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
