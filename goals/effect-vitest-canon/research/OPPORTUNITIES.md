@@ -6541,5 +6541,16 @@ processes before the full proof would avoid this diagnostic cycle.
 The detector then surfaced three `EV006` Option assertions that were previously
 outside its Effect-aware test boundary. The positive case now uses `assertSome`;
 the two negative cases compare the parsed payload and retain their inequality
-checks. The default detector reports zero introduced findings and four resolved
-findings. Full package proof and ledger reconciliation remain pending.
+checks. The initial detector scan reported zero introduced findings and four resolved
+findings. Full package verification later passed, and the inventory baseline
+was reconciled to zero introduced and zero resolved.
+
+### Schema-first exception keyed by source line (2026-10-02)
+
+The full `bun run beep yeet verify` stopped at `lint:schema-first` after this
+test migration moved an existing fixed-fixture codec exception from line 28 to
+line 30. The live advisory and inventory each had 107 entries, but the
+line-sensitive key appeared once as missing and once as stale. Updating only
+the existing exception line restored the named lint gate. A stable occurrence
+key or a reviewable location-update command would prevent a source-only
+line move from consuming a full cheap-gates run.
