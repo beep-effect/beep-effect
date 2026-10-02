@@ -6527,3 +6527,19 @@ not run the repository-wide `quality:test-tsgo` gate. Replacing the callbacks'
 plain `Error` values with a tagged test error made that named gate pass, as
 well as the focused 26-test suite. Running `quality:test-tsgo` before the
 costly full proof would have caught this source issue locally.
+
+### Native hook fixture migration exposed the test clock (2026-10-02)
+
+Moving the Yeet inbox hook adapter's nine tests from a custom `Effect.runPromise`
+wrapper to `it.effect` made its 1.1-second stamp comparison hang under the
+instrumented test clock. Both focused Node and Bun runs failed the watchdog in
+that single test while the other eight passed. The shell hook reads real wall
+time, so the wait now uses the pinned `TestClock.withLive` API; both runtimes
+pass 9/9. A migration check that identifies real-time waits beside spawned
+processes before the full proof would avoid this diagnostic cycle.
+
+The detector then surfaced three `EV006` Option assertions that were previously
+outside its Effect-aware test boundary. The positive case now uses `assertSome`;
+the two negative cases compare the parsed payload and retain their inequality
+checks. The default detector reports zero introduced findings and four resolved
+findings. Full package proof and ledger reconciliation remain pending.
