@@ -4,7 +4,6 @@ import { rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
 import { readTurboCacheEnvironment } from "@beep/repo-cli/test/SharedInternals";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { beforeEach, describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -41,7 +40,6 @@ vi.mock("../src/internal/cli/EnvConfig.ts", (importOriginal) =>
   }))
 );
 const platform = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(Layer.provideMerge(NodeServices.layer));
-const providePlatform = provideScopedLayer(platform);
 const runCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const run = (args: ReadonlyArray<string>, env: Record<string, string> = {}) =>
   runCommand(args).pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)));
@@ -75,94 +73,98 @@ const prefix = "packages/tooling/tool/cli";
 beforeEach(() => execution.mockReset().mockImplementation(() => Effect.succeed(0)));
 
 describe("thin lint workers", { concurrent: false }, () => {
-  it.effect(
-    "checks declared fingerprint inputs independently of formatting and source contents",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "fingerprint-gate-" });
-      yield* fs.makeDirectory(`${root}/packages/cli/src`, { recursive: true });
-      yield* fs.makeDirectory(`${root}/packages/helper/src`, { recursive: true });
-      yield* fs.makeDirectory(`${root}/standards`);
-      yield* fs.writeFileString(`${root}/package.json`, '{"name":"fixture","workspaces":["packages/*"]}');
-      yield* fs.writeFileString(`${root}/packages/cli/package.json`, '{"name":"@beep/repo-cli"}');
-      yield* fs.writeFileString(`${root}/packages/helper/package.json`, '{"name":"@beep/helper"}');
-      const turboFile = `${root}/turbo.json`;
-      const turboBefore =
-        '{\n  "tasks": {\n    "//#lint:policy-fingerprint": {\n      "cache": true,\n      "outputs": [],\n      "inputs": []\n    },\n    "untouched": { "inputs": ["keep/**"] }\n  }\n}\n';
-      yield* fs.writeFileString(turboFile, turboBefore);
-      selection.root = root;
-      try {
-        expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
-        yield* run(["policy-fingerprint", "--write"]);
-        const file = `${root}/standards/policy-tools.fingerprint.json`;
-        const declaration = yield* fs.readFileString(file);
-        expect(declaration).toContain("standards/lint-policy.sweeps.jsonc");
-        const turbo = yield* fs.readFileString(turboFile);
-        expect(turbo).toContain('"untouched": { "inputs": ["keep/**"] }');
-        expect(Str.replace(/"inputs": \[[\s\S]*?\]/, '"inputs": []')(turbo)).toBe(turboBefore);
-        yield* run(["policy-fingerprint", "--write"]);
-        expect(yield* fs.readFileString(file)).toBe(declaration);
-        expect(yield* fs.readFileString(turboFile)).toBe(turbo);
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "checks declared fingerprint inputs independently of formatting and source contents",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "fingerprint-gate-" });
+        yield* fs.makeDirectory(`${root}/packages/cli/src`, { recursive: true });
+        yield* fs.makeDirectory(`${root}/packages/helper/src`, { recursive: true });
+        yield* fs.makeDirectory(`${root}/standards`);
+        yield* fs.writeFileString(`${root}/package.json`, '{"name":"fixture","workspaces":["packages/*"]}');
+        yield* fs.writeFileString(`${root}/packages/cli/package.json`, '{"name":"@beep/repo-cli"}');
+        yield* fs.writeFileString(`${root}/packages/helper/package.json`, '{"name":"@beep/helper"}');
+        const turboFile = `${root}/turbo.json`;
+        const turboBefore =
+          '{\n  "tasks": {\n    "//#lint:policy-fingerprint": {\n      "cache": true,\n      "outputs": [],\n      "inputs": []\n    },\n    "untouched": { "inputs": ["keep/**"] }\n  }\n}\n';
         yield* fs.writeFileString(turboFile, turboBefore);
-        const turboDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
-        assertTrue(Exit.isFailure(turboDrift));
-        if (Exit.isFailure(turboDrift)) {
-          const message = Cause.pretty(turboDrift.cause);
-          expect(message).toContain('turbo.json tasks["//#lint:policy-fingerprint"].inputs');
-          expect(message).not.toContain("Policy fingerprint drift: standards/policy-tools.fingerprint.json");
-        }
-        yield* run(["policy-fingerprint", "--write"]);
-        yield* fs.writeFileString(file, `  ${declaration}  `);
-        yield* fs.writeFileString(`${root}/packages/cli/src/index.ts`, "changed source");
-        yield* fs.writeFileString(`${root}/eslint.config.mjs`, "changed config");
-        yield* run(["policy-fingerprint", "--check"]);
-        yield* fs.writeFileString(
-          `${root}/packages/cli/package.json`,
-          '{"name":"@beep/repo-cli","dependencies":{"@beep/helper":"workspace:*"}}'
-        );
-        expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
-        yield* run(["policy-fingerprint", "--write"]);
-        yield* run(["policy-fingerprint", "--check"]);
-        yield* fs.writeFileString(file, "invalid json");
-        const fileDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
-        assertTrue(Exit.isFailure(fileDrift));
-        if (Exit.isFailure(fileDrift)) {
-          const message = Cause.pretty(fileDrift.cause);
-          expect(message).toContain("Policy fingerprint drift: standards/policy-tools.fingerprint.json;");
-          expect(message).not.toContain('turbo.json tasks["//#lint:policy-fingerprint"].inputs');
-        }
-        yield* fs.writeFileString(turboFile, "invalid json");
-        expect(yield* run(["policy-fingerprint", "--write"]).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* fs.readFileString(file)).toBe("invalid json");
-        const bothDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
-        assertTrue(Exit.isFailure(bothDrift));
-        if (Exit.isFailure(bothDrift)) {
-          expect(Cause.pretty(bothDrift.cause)).toContain(
-            'Policy fingerprint drift: standards/policy-tools.fingerprint.json; turbo.json tasks["//#lint:policy-fingerprint"].inputs;'
+        selection.root = root;
+        try {
+          expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
+          yield* run(["policy-fingerprint", "--write"]);
+          const file = `${root}/standards/policy-tools.fingerprint.json`;
+          const declaration = yield* fs.readFileString(file);
+          expect(declaration).toContain("standards/lint-policy.sweeps.jsonc");
+          const turbo = yield* fs.readFileString(turboFile);
+          expect(turbo).toContain('"untouched": { "inputs": ["keep/**"] }');
+          expect(Str.replace(/"inputs": \[[\s\S]*?\]/, '"inputs": []')(turbo)).toBe(turboBefore);
+          yield* run(["policy-fingerprint", "--write"]);
+          expect(yield* fs.readFileString(file)).toBe(declaration);
+          expect(yield* fs.readFileString(turboFile)).toBe(turbo);
+          yield* fs.writeFileString(turboFile, turboBefore);
+          const turboDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
+          assertTrue(Exit.isFailure(turboDrift));
+          if (Exit.isFailure(turboDrift)) {
+            const message = Cause.pretty(turboDrift.cause);
+            expect(message).toContain('turbo.json tasks["//#lint:policy-fingerprint"].inputs');
+            expect(message).not.toContain("Policy fingerprint drift: standards/policy-tools.fingerprint.json");
+          }
+          yield* run(["policy-fingerprint", "--write"]);
+          yield* fs.writeFileString(file, `  ${declaration}  `);
+          yield* fs.writeFileString(`${root}/packages/cli/src/index.ts`, "changed source");
+          yield* fs.writeFileString(`${root}/eslint.config.mjs`, "changed config");
+          yield* run(["policy-fingerprint", "--check"]);
+          yield* fs.writeFileString(
+            `${root}/packages/cli/package.json`,
+            '{"name":"@beep/repo-cli","dependencies":{"@beep/helper":"workspace:*"}}'
           );
+          expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
+          yield* run(["policy-fingerprint", "--write"]);
+          yield* run(["policy-fingerprint", "--check"]);
+          yield* fs.writeFileString(file, "invalid json");
+          const fileDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
+          assertTrue(Exit.isFailure(fileDrift));
+          if (Exit.isFailure(fileDrift)) {
+            const message = Cause.pretty(fileDrift.cause);
+            expect(message).toContain("Policy fingerprint drift: standards/policy-tools.fingerprint.json;");
+            expect(message).not.toContain('turbo.json tasks["//#lint:policy-fingerprint"].inputs');
+          }
+          yield* fs.writeFileString(turboFile, "invalid json");
+          expect(yield* run(["policy-fingerprint", "--write"]).pipe(Effect.isFailure)).toBe(true);
+          expect(yield* fs.readFileString(file)).toBe("invalid json");
+          const bothDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
+          assertTrue(Exit.isFailure(bothDrift));
+          if (Exit.isFailure(bothDrift)) {
+            expect(Cause.pretty(bothDrift.cause)).toContain(
+              'Policy fingerprint drift: standards/policy-tools.fingerprint.json; turbo.json tasks["//#lint:policy-fingerprint"].inputs;'
+            );
+          }
+          yield* fs.remove(turboFile);
+          expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
+        } finally {
+          selection.root = "";
         }
-        yield* fs.remove(turboFile);
-        expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
-      } finally {
-        selection.root = "";
-      }
-    }, providePlatform)
-  );
-  it.effect(
-    "runs package deprecated APIs from the root without a cache and with the default heap cap",
-    Effect.fnUntraced(function* () {
-      const root = yield* findRepoRoot();
-      yield* run(["deprecated-apis", "--package", "."]);
-      expect(execution).toHaveBeenCalledExactlyOnceWith({
-        command: `${root}/node_modules/.bin/eslint`,
-        args: ["--config", `${root}/eslint.config.mjs`, prefix],
-        cwd: root,
-        env: { BEEP_ESLINT_PROFILE: "deprecated-apis", NODE_OPTIONS: "--max-old-space-size=8192" },
-        extendEnv: true,
-        stdio: "inherit",
-      });
-    }, providePlatform)
-  );
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "runs package deprecated APIs from the root without a cache and with the default heap cap",
+      Effect.fnUntraced(function* () {
+        const root = yield* findRepoRoot();
+        yield* run(["deprecated-apis", "--package", "."]);
+        expect(execution).toHaveBeenCalledExactlyOnceWith({
+          command: `${root}/node_modules/.bin/eslint`,
+          args: ["--config", `${root}/eslint.config.mjs`, prefix],
+          cwd: root,
+          env: { BEEP_ESLINT_PROFILE: "deprecated-apis", NODE_OPTIONS: "--max-old-space-size=8192" },
+          extendEnv: true,
+          stdio: "inherit",
+        });
+      })
+    );
+  });
   it.layer(platform, { timeout: "10 seconds" })((it) => {
     it.effect(
       "runs the standalone deprecated API command through the policy Turbo step",
@@ -195,35 +197,39 @@ describe("thin lint workers", { concurrent: false }, () => {
       })
     );
   });
-  it.effect(
-    "runs the full standalone deprecated API command through the shard program",
-    Effect.fnUntraced(function* () {
-      yield* runShardCommand(["deprecated-apis", "--full"], {});
-      expect(execution.mock.calls[0]?.[0]).toMatchObject({
-        command: "./node_modules/.bin/eslint",
-        args: [
-          "--cache",
-          "--cache-location",
-          "node_modules/.cache/eslint-deprecated-apis/.eslintcache-apps__architecture-lab-proof",
-          "--cache-strategy",
-          "content",
-          "--config",
-          "eslint.config.mjs",
-          "apps/architecture-lab-proof",
-        ],
-        env: { BEEP_ESLINT_PROFILE: "deprecated-apis", NODE_OPTIONS: "--max-old-space-size=8192" },
-      });
-    }, providePlatform)
-  );
-  it.effect(
-    "runs the hosted standalone deprecated API command through the shard program",
-    Effect.fnUntraced(function* () {
-      yield* runShardCommand(["deprecated-apis", "--base", "refs/heads/caller-base"], { CI: "true" });
-      expect(execution.mock.calls[0]?.[0].command).toBe("./node_modules/.bin/eslint");
-      expect(execution.mock.calls[0]?.[0].env?.BEEP_ESLINT_PROFILE).toBe("deprecated-apis");
-      expect(execution.mock.calls[0]?.[0].args).not.toContain("--affected");
-    }, providePlatform)
-  );
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "runs the full standalone deprecated API command through the shard program",
+      Effect.fnUntraced(function* () {
+        yield* runShardCommand(["deprecated-apis", "--full"], {});
+        expect(execution.mock.calls[0]?.[0]).toMatchObject({
+          command: "./node_modules/.bin/eslint",
+          args: [
+            "--cache",
+            "--cache-location",
+            "node_modules/.cache/eslint-deprecated-apis/.eslintcache-apps__architecture-lab-proof",
+            "--cache-strategy",
+            "content",
+            "--config",
+            "eslint.config.mjs",
+            "apps/architecture-lab-proof",
+          ],
+          env: { BEEP_ESLINT_PROFILE: "deprecated-apis", NODE_OPTIONS: "--max-old-space-size=8192" },
+        });
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "runs the hosted standalone deprecated API command through the shard program",
+      Effect.fnUntraced(function* () {
+        yield* runShardCommand(["deprecated-apis", "--base", "refs/heads/caller-base"], { CI: "true" });
+        expect(execution.mock.calls[0]?.[0].command).toBe("./node_modules/.bin/eslint");
+        expect(execution.mock.calls[0]?.[0].env?.BEEP_ESLINT_PROFILE).toBe("deprecated-apis");
+        expect(execution.mock.calls[0]?.[0].args).not.toContain("--affected");
+      })
+    );
+  });
   it.layer(platform, { timeout: "10 seconds" })((it) => {
     it.effect(
       "runs full and hosted standalone deprecated sweeps through unfiltered Turbo",
@@ -253,149 +259,169 @@ describe("thin lint workers", { concurrent: false }, () => {
       })
     );
   });
-  it.effect(
-    "fails the standalone deprecated sweep before execution on malformed configuration",
-    Effect.fnUntraced(function* () {
-      const error = yield* runSweepCommand(["deprecated-apis", "--full"], "{}").pipe(Effect.flip);
-      expect(error).toMatchObject({ _tag: "QualityTaskConfigurationError" });
-      expect(execution).not.toHaveBeenCalled();
-    }, providePlatform)
-  );
-  it.effect(
-    "passes the standalone caller base only to its affected Turbo child",
-    Effect.fnUntraced(function* () {
-      const ambientBase = yield* Config.option(Config.String("TURBO_SCM_BASE"));
-      // The command reads CI through the test's empty provider, so this is the local affected path.
-      yield* run(["deprecated-apis", "--base", "refs/heads/caller-base"]);
-      const invocation = execution.mock.calls[0]?.[0];
-      expect(invocation?.args).toContain("--affected");
-      expect(invocation?.env?.TURBO_SCM_BASE).toBe("refs/heads/caller-base");
-      expect(yield* Config.option(Config.String("TURBO_SCM_BASE"))).toEqual(ambientBase);
-    }, providePlatform)
-  );
-  it.effect(
-    "tolerates unmatched deprecated API targets only for lab packages",
-    Effect.fnUntraced(function* () {
-      const root = yield* findRepoRoot();
-      yield* run(["deprecated-apis", "--package", `${root}/apps/labs/ciops`]);
-      expect(execution.mock.calls[0]?.[0].args).toEqual([
-        "--config",
-        `${root}/eslint.config.mjs`,
-        "--no-error-on-unmatched-pattern",
-        "apps/labs/ciops",
-      ]);
-      execution.mockClear();
-      yield* run(["deprecated-apis", "--package", `${root}/apps/labsx/member`]);
-      expect(execution.mock.calls[0]?.[0].args).not.toContain("--no-error-on-unmatched-pattern");
-    }, providePlatform)
-  );
-  it.effect(
-    "retains an explicit heap cap and other Node options",
-    Effect.fnUntraced(function* () {
-      yield* run(["deprecated-apis", "--package", "."], { NODE_OPTIONS: "--trace-warnings --max-old-space-size=2048" });
-      expect(execution.mock.calls[0]?.[0].env?.NODE_OPTIONS).toBe("--trace-warnings --max-old-space-size=2048");
-    }, providePlatform)
-  );
-  it.effect(
-    "runs package docs with zero warnings and appends a missing heap cap",
-    Effect.fnUntraced(function* () {
-      const root = yield* findRepoRoot();
-      yield* run(["jsdoc", "--package", "."], { NODE_OPTIONS: "--trace-warnings" });
-      expect(execution).toHaveBeenCalledExactlyOnceWith({
-        command: `${root}/node_modules/.bin/eslint`,
-        args: ["--config", `${root}/eslint.config.mjs`, "--max-warnings=0", "--no-warn-ignored", prefix],
-        cwd: root,
-        env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--trace-warnings --max-old-space-size=8192" },
-        extendEnv: true,
-        stdio: "inherit",
-      });
-    }, providePlatform)
-  );
-  it.effect(
-    "rejects missing or ambiguous jsdoc scope before spawning",
-    Effect.fnUntraced(function* () {
-      expect(yield* run(["jsdoc"]).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* run(["jsdoc", "--package", ".", "--root-only"]).pipe(Effect.isFailure)).toBe(true);
-      expect(execution).not.toHaveBeenCalled();
-    }, providePlatform)
-  );
-  it.effect(
-    "selects root docs outside workspace directories and labs, and skips an empty selection",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const fixtureRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lint-workers-" });
-      yield* fs.writeFileString(
-        `${fixtureRoot}/package.json`,
-        yield* jsonStringifyPretty({
-          name: "fixture",
-          workspaces: ["packages/*", "apps/*"],
-        })
-      );
-      for (const dir of ["packages/member", "packages/unowned", "apps/labs/orphan", "infra"]) {
-        yield* fs.makeDirectory(`${fixtureRoot}/${dir}`, { recursive: true });
-        yield* fs.writeFileString(`${fixtureRoot}/${dir}/example.ts`, "export {};\n");
-      }
-      yield* fs.writeFileString(`${fixtureRoot}/packages/member/package.json`, '{"name":"member"}');
-      selection.root = fixtureRoot;
-      try {
-        yield* run(["jsdoc", "--root-only"]);
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "fails the standalone deprecated sweep before execution on malformed configuration",
+      Effect.fnUntraced(function* () {
+        const error = yield* runSweepCommand(["deprecated-apis", "--full"], "{}").pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "QualityTaskConfigurationError" });
+        expect(execution).not.toHaveBeenCalled();
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "passes the standalone caller base only to its affected Turbo child",
+      Effect.fnUntraced(function* () {
+        const ambientBase = yield* Config.option(Config.String("TURBO_SCM_BASE"));
+        // The command reads CI through the test's empty provider, so this is the local affected path.
+        yield* run(["deprecated-apis", "--base", "refs/heads/caller-base"]);
+        const invocation = execution.mock.calls[0]?.[0];
+        expect(invocation?.args).toContain("--affected");
+        expect(invocation?.env?.TURBO_SCM_BASE).toBe("refs/heads/caller-base");
+        expect(yield* Config.option(Config.String("TURBO_SCM_BASE"))).toEqual(ambientBase);
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "tolerates unmatched deprecated API targets only for lab packages",
+      Effect.fnUntraced(function* () {
+        const root = yield* findRepoRoot();
+        yield* run(["deprecated-apis", "--package", `${root}/apps/labs/ciops`]);
+        expect(execution.mock.calls[0]?.[0].args).toEqual([
+          "--config",
+          `${root}/eslint.config.mjs`,
+          "--no-error-on-unmatched-pattern",
+          "apps/labs/ciops",
+        ]);
+        execution.mockClear();
+        yield* run(["deprecated-apis", "--package", `${root}/apps/labsx/member`]);
+        expect(execution.mock.calls[0]?.[0].args).not.toContain("--no-error-on-unmatched-pattern");
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "retains an explicit heap cap and other Node options",
+      Effect.fnUntraced(function* () {
+        yield* run(["deprecated-apis", "--package", "."], {
+          NODE_OPTIONS: "--trace-warnings --max-old-space-size=2048",
+        });
+        expect(execution.mock.calls[0]?.[0].env?.NODE_OPTIONS).toBe("--trace-warnings --max-old-space-size=2048");
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "runs package docs with zero warnings and appends a missing heap cap",
+      Effect.fnUntraced(function* () {
+        const root = yield* findRepoRoot();
+        yield* run(["jsdoc", "--package", "."], { NODE_OPTIONS: "--trace-warnings" });
         expect(execution).toHaveBeenCalledExactlyOnceWith({
-          command: `${fixtureRoot}/node_modules/.bin/eslint`,
-          args: [
-            "--config",
-            `${fixtureRoot}/eslint.config.mjs`,
-            "--max-warnings=0",
-            "--no-warn-ignored",
-            "infra/example.ts",
-            "packages/unowned/example.ts",
-          ],
-          cwd: fixtureRoot,
-          env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--max-old-space-size=8192" },
+          command: `${root}/node_modules/.bin/eslint`,
+          args: ["--config", `${root}/eslint.config.mjs`, "--max-warnings=0", "--no-warn-ignored", prefix],
+          cwd: root,
+          env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--trace-warnings --max-old-space-size=8192" },
           extendEnv: true,
           stdio: "inherit",
         });
-        execution.mockClear();
-        yield* fs.remove(`${fixtureRoot}/infra/example.ts`);
-        yield* fs.remove(`${fixtureRoot}/packages/unowned/example.ts`);
-        yield* run(["jsdoc", "--root-only"]);
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "rejects missing or ambiguous jsdoc scope before spawning",
+      Effect.fnUntraced(function* () {
+        expect(yield* run(["jsdoc"]).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* run(["jsdoc", "--package", ".", "--root-only"]).pipe(Effect.isFailure)).toBe(true);
         expect(execution).not.toHaveBeenCalled();
-      } finally {
-        selection.root = "";
-      }
-    }, providePlatform)
-  );
-  it.effect(
-    "runs laws in process and propagates findings without subprocesses",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "lint-laws-worker-" });
-      yield* fs.makeDirectory(`${root}/packages/fixture/src`, { recursive: true });
-      yield* fs.writeFileString(`${root}/packages/fixture/package.json`, '{"name":"@beep/fixture"}');
-      yield* fs.writeFileString(`${root}/packages/fixture/tsconfig.test.json`, '{"include":["src","test"]}');
-      yield* fs.writeFileString(`${root}/packages/fixture/src/index.ts`, "export const value = 1;");
-      selection.root = root;
-      try {
-        yield* run(["laws", "--package", `${root}/packages/fixture`]);
-        expect(execution).not.toHaveBeenCalled();
-        yield* fs.makeDirectory(`${root}/packages/failing/src`, { recursive: true });
-        yield* fs.writeFileString(`${root}/packages/failing/package.json`, '{"name":"@beep/failing"}');
-        yield* fs.writeFileString(`${root}/packages/failing/tsconfig.test.json`, '{"include":["src"]}');
-        yield* fs.writeFileString(`${root}/packages/failing/src/index.ts`, "export const value = new Set();");
-        expect(yield* run(["laws", "--package", `${root}/packages/failing`]).pipe(Effect.isFailure)).toBe(true);
-        expect(execution).not.toHaveBeenCalled();
-      } finally {
-        selection.root = "";
-      }
-    }, providePlatform)
-  );
-  it.effect(
-    "propagates eslint worker failures",
-    Effect.fnUntraced(function* () {
-      execution.mockImplementation(() => Effect.succeed(7));
-      expect(yield* run(["deprecated-apis", "--package", "."]).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* run(["jsdoc", "--package", "."]).pipe(Effect.isFailure)).toBe(true);
-    }, providePlatform)
-  );
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "selects root docs outside workspace directories and labs, and skips an empty selection",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const fixtureRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lint-workers-" });
+        yield* fs.writeFileString(
+          `${fixtureRoot}/package.json`,
+          yield* jsonStringifyPretty({
+            name: "fixture",
+            workspaces: ["packages/*", "apps/*"],
+          })
+        );
+        for (const dir of ["packages/member", "packages/unowned", "apps/labs/orphan", "infra"]) {
+          yield* fs.makeDirectory(`${fixtureRoot}/${dir}`, { recursive: true });
+          yield* fs.writeFileString(`${fixtureRoot}/${dir}/example.ts`, "export {};\n");
+        }
+        yield* fs.writeFileString(`${fixtureRoot}/packages/member/package.json`, '{"name":"member"}');
+        selection.root = fixtureRoot;
+        try {
+          yield* run(["jsdoc", "--root-only"]);
+          expect(execution).toHaveBeenCalledExactlyOnceWith({
+            command: `${fixtureRoot}/node_modules/.bin/eslint`,
+            args: [
+              "--config",
+              `${fixtureRoot}/eslint.config.mjs`,
+              "--max-warnings=0",
+              "--no-warn-ignored",
+              "infra/example.ts",
+              "packages/unowned/example.ts",
+            ],
+            cwd: fixtureRoot,
+            env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--max-old-space-size=8192" },
+            extendEnv: true,
+            stdio: "inherit",
+          });
+          execution.mockClear();
+          yield* fs.remove(`${fixtureRoot}/infra/example.ts`);
+          yield* fs.remove(`${fixtureRoot}/packages/unowned/example.ts`);
+          yield* run(["jsdoc", "--root-only"]);
+          expect(execution).not.toHaveBeenCalled();
+        } finally {
+          selection.root = "";
+        }
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "runs laws in process and propagates findings without subprocesses",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "lint-laws-worker-" });
+        yield* fs.makeDirectory(`${root}/packages/fixture/src`, { recursive: true });
+        yield* fs.writeFileString(`${root}/packages/fixture/package.json`, '{"name":"@beep/fixture"}');
+        yield* fs.writeFileString(`${root}/packages/fixture/tsconfig.test.json`, '{"include":["src","test"]}');
+        yield* fs.writeFileString(`${root}/packages/fixture/src/index.ts`, "export const value = 1;");
+        selection.root = root;
+        try {
+          yield* run(["laws", "--package", `${root}/packages/fixture`]);
+          expect(execution).not.toHaveBeenCalled();
+          yield* fs.makeDirectory(`${root}/packages/failing/src`, { recursive: true });
+          yield* fs.writeFileString(`${root}/packages/failing/package.json`, '{"name":"@beep/failing"}');
+          yield* fs.writeFileString(`${root}/packages/failing/tsconfig.test.json`, '{"include":["src"]}');
+          yield* fs.writeFileString(`${root}/packages/failing/src/index.ts`, "export const value = new Set();");
+          expect(yield* run(["laws", "--package", `${root}/packages/failing`]).pipe(Effect.isFailure)).toBe(true);
+          expect(execution).not.toHaveBeenCalled();
+        } finally {
+          selection.root = "";
+        }
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "propagates eslint worker failures",
+      Effect.fnUntraced(function* () {
+        execution.mockImplementation(() => Effect.succeed(7));
+        expect(yield* run(["deprecated-apis", "--package", "."]).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* run(["jsdoc", "--package", "."]).pipe(Effect.isFailure)).toBe(true);
+      })
+    );
+  });
 });
 
 // These tests spawn the CLI (ts-morph, eslint) for real; under coverage instrumentation on a
@@ -406,52 +432,93 @@ describe("thin lint workers", { concurrent: false }, () => {
 const EXECUTED_WORKER_TIMEOUT_MILLIS = 300_000;
 
 describe("executed lint workers", { concurrent: false }, () => {
-  it.effect(
-    "executes deprecated APIs on the ciops lab package",
-    Effect.fnUntraced(function* () {
-      const root = yield* findRepoRoot();
-      const result = yield* StepExec.runCaptured({
-        command: "bun",
-        args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", "deprecated-apis", "--package", "."],
-        cwd: `${root}/apps/labs/ciops`,
-        env: R.filter(process.env, (_, key) => !Str.startsWith("VITEST")(key)),
-        extendEnv: false,
-      });
-      expect(result.exitCode, result.output).toBe(0);
-    }, providePlatform),
-    EXECUTED_WORKER_TIMEOUT_MILLIS
-  );
-  for (const worker of ["laws", "jsdoc", "deprecated-apis"]) {
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect(
-      `executes ${worker} against a fixture package surface`,
+      "executes deprecated APIs on the ciops lab package",
       Effect.fnUntraced(function* () {
         const root = yield* findRepoRoot();
-        const fs = yield* FileSystem.FileSystem;
-        // A source in the CLI project is inspected by both ESLint profiles.
-        const fixture = yield* fs.makeTempDirectoryScoped({
-          directory: `${root}/${prefix}/src`,
-          prefix: "lint-worker-fixture-",
-        });
-        yield* fs.writeFileString(`${fixture}/index.ts`, "export {};\n");
-        if (worker === "laws") yield* fs.writeFileString(`${fixture}/tsconfig.test.json`, '{"include":["index.ts"]}');
-        const { exitCode, output } = yield* StepExec.runCaptured({
+        const result = yield* StepExec.runCaptured({
           command: "bun",
-          args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", worker, "--package", "."],
-          cwd: fixture,
-          env: R.filter(
-            process.env,
-            (_, key) => !A.contains(["VITEST", "VITEST_MODE", "VITEST_POOL_ID", "VITEST_WORKER_ID"], key)
-          ),
+          args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", "deprecated-apis", "--package", "."],
+          cwd: `${root}/apps/labs/ciops`,
+          env: R.filter(process.env, (_, key) => !Str.startsWith("VITEST")(key)),
           extendEnv: false,
         });
-        expect(exitCode, output).toBe(0);
-        if (worker === "laws") {
-          expect(output).not.toContain("skipping four laws");
-          expect(output).toContain("project_source_files=1");
-          expect(output).toContain("package-test-imports");
-        }
-      }, providePlatform),
+        expect(result.exitCode, result.output).toBe(0);
+      }),
       EXECUTED_WORKER_TIMEOUT_MILLIS
     );
+  });
+  for (const worker of ["laws", "jsdoc", "deprecated-apis"]) {
+    it.layer(platform, { timeout: "30 seconds" })((it) => {
+      it.effect(
+        `executes ${worker} against a fixture package surface`,
+        Effect.fnUntraced(function* () {
+          const root = yield* findRepoRoot();
+          const fs = yield* FileSystem.FileSystem;
+          // Preserve real ESLint profiles and their import.meta-relative root while keeping
+          // generated source outside the production CLI project inspected by concurrent proofs.
+          const fixtureRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lint-worker-fixture-" });
+          const fixture = `${fixtureRoot}/packages/tooling/tool/fixture`;
+          const configPackage = "packages/tooling/policy-pack/repo-configs";
+          yield* fs.makeDirectory(`${fixture}/src`, { recursive: true });
+          yield* fs.makeDirectory(`${fixtureRoot}/${configPackage}`, { recursive: true });
+          // Copy the current source tree so new local profile dependencies are included too.
+          yield* fs.copy(`${root}/${configPackage}/src`, `${fixtureRoot}/${configPackage}/src`);
+          yield* fs.symlink(`${root}/node_modules`, `${fixtureRoot}/node_modules`);
+          yield* fs.writeFileString(`${fixtureRoot}/bun.lock`, "");
+          yield* fs.writeFileString(
+            `${fixtureRoot}/package.json`,
+            '{"private":true,"type":"module","workspaces":["packages/tooling/*/*"]}'
+          );
+          yield* fs.writeFileString(
+            `${fixtureRoot}/tsconfig.json`,
+            '{"files":[],"references":[{"path":"./packages/tooling/tool/fixture"}]}'
+          );
+          const config = yield* fs.readFileString(`${root}/eslint.config.mjs`);
+          yield* fs.writeFileString(
+            `${fixtureRoot}/eslint.config.mjs`,
+            pipe(
+              config,
+              Str.replace(
+                '"@beep/repo-configs/eslint/DeprecatedApisESLintConfig"',
+                `"./${configPackage}/src/eslint/DeprecatedApisESLintConfig.ts"`
+              ),
+              Str.replace(
+                '"@beep/repo-configs/eslint/DocsESLintConfig"',
+                `"./${configPackage}/src/eslint/DocsESLintConfig.ts"`
+              )
+            )
+          );
+          yield* fs.writeFileString(`${fixture}/package.json`, '{"name":"@beep/lint-worker-fixture","type":"module"}');
+          yield* fs.writeFileString(
+            `${fixture}/tsconfig.json`,
+            '{"compilerOptions":{"target":"ESNext","module":"NodeNext","moduleResolution":"NodeNext","strict":true},"include":["src"]}'
+          );
+          yield* fs.writeFileString(`${fixture}/tsconfig.test.json`, '{"extends":"./tsconfig.json","include":["src"]}');
+          yield* fs.writeFileString(
+            `${fixture}/src/index.ts`,
+            "/**\n * Isolated lint fixture.\n *\n * @packageDocumentation\n */\nexport {};\n"
+          );
+          const { exitCode, output } = yield* StepExec.runCaptured({
+            command: "bun",
+            args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", worker, "--package", "."],
+            cwd: fixture,
+            env: R.filter(
+              process.env,
+              (_, key) => !A.contains(["VITEST", "VITEST_MODE", "VITEST_POOL_ID", "VITEST_WORKER_ID"], key)
+            ),
+            extendEnv: false,
+          });
+          expect(exitCode, output).toBe(0);
+          if (worker === "laws") {
+            expect(output).not.toContain("skipping four laws");
+            expect(output).toContain("project_source_files=1");
+            expect(output).toContain("package-test-imports");
+          }
+        }),
+        EXECUTED_WORKER_TIMEOUT_MILLIS
+      );
+    });
   }
 });
