@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "qualification-signed-matrix-development/v1",
+  "authority": "development-observation-only",
+  "workflowBaseRevision": "324371d6cb",
+  "workflowSource": "working tree; exact source digests retained privately",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "client": {
+    "version": "2.11.4",
+    "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+    "namespace": "team_qualification_signed_matrix_stable_v3"
+  },
+  "channel": "stable",
+  "receiptSha256": "75d5a71d8715d88d87fadd0ea6db2066c63aaa2813b794aa93ed8bf59ab37d5c",
+  "receiptBytes": 122576,
+  "receiptRetention": "~/.cache/beep/turbo-qualification/evidence/signed-matrix-v3/signed-matrix-stable.json",
+  "freshPairs": 3,
+  "baselineRemotePairs": 3,
+  "shadowDecisions": 10,
+  "shadowCases": [
+    "baseline",
+    "source-comment",
+    "added-source",
+    "readme",
+    "declared-env",
+    "declared-env-empty",
+    "orchestration-env",
+    "locale",
+    "timezone",
+    "absolute-root"
+  ],
+  "sourceTypecheck": "passed",
+  "focusedTests": {
+    "files": 6,
+    "tests": 75,
+    "result": "passed"
+  },
+  "packageVerification": {
+    "result": "passed",
+    "package": "@beep/repo-cli",
+    "auditSeconds": 619.7,
+    "docgenSeconds": 20.2
+  },
+  "limitations": [
+    "Older frozen pilot profile; not final current-profile qualification.",
+    "No accepted policy importer or qualified transition.",
+    "No actual persistent issuer file supplied to this development control.",
+    "Signed mutation, concurrency, capture and non-execution controls remain incomplete."
+  ]
+}

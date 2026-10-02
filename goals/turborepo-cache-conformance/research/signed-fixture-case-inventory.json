@@ -1,0 +1,271 @@
+{
+  "schemaVersion": "cache-conformance-case-inventory/v1",
+  "authority": "planning-only",
+  "sourcePlanSha256": "20ab0c9fdf030c3941be72dc780ee2cc48fb7432e7edbfbc86366846abc35b8b",
+  "sourcePlan": "explorations/turborepo-quality-cache/research/conformance-corpus-plan.json",
+  "backend": "isolated-local-synthetic-fixture",
+  "stableClient": "2.11.4",
+  "canaryClient": "2.11.5-canary.2",
+  "cases": [
+    {
+      "id": "RC-001",
+      "class": "generated",
+      "operation": "status",
+      "assertion": "authenticated status response matches schema and content type",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-002",
+      "class": "generated",
+      "operation": "put-head-get",
+      "assertion": "zero-byte artifact round-trips exactly",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-003",
+      "class": "generated",
+      "operation": "put-head-get",
+      "assertion": "small binary artifact round-trips exactly",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-004",
+      "class": "generated",
+      "operation": "put",
+      "assertion": "Content-Length and octet-stream requirements are enforced or correctly accepted",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-005",
+      "class": "generated",
+      "operation": "metadata",
+      "assertion": "duration round-trips; absent duration becomes zero; malformed duration is attributable",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-006",
+      "class": "generated",
+      "operation": "metadata",
+      "assertion": "tag, SHA, and dirty-hash preservation are scored separately",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-007",
+      "class": "generated-optional",
+      "operation": "batch-query",
+      "assertion": "absence is optional; an implemented route matches the documented map",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-008",
+      "class": "generated-optional",
+      "operation": "events",
+      "assertion": "absence is optional; an implemented route accepts the documented event shape",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-009",
+      "class": "semantic",
+      "operation": "client-status",
+      "assertion": "documented response status and actual client acceptance are separate verdicts",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-010",
+      "class": "semantic",
+      "operation": "miss",
+      "assertion": "genuine 404 is distinguishable from every fail-soft error class",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "Producer artifact GET returns 404; fault comparison remains pending."
+    },
+    {
+      "id": "RC-011",
+      "class": "security",
+      "operation": "auth",
+      "assertion": "missing, malformed, unknown, read, and write bearer cases follow the policy matrix",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "Unknown bearer and reader/writer happy-path cases observed; malformed/missing cases remain."
+    },
+    {
+      "id": "RC-012",
+      "class": "security",
+      "operation": "write-boundary",
+      "assertion": "read bearer cannot PUT and reader execution role cannot write storage",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "Reader PUT denied and protected file access denied inside isolated processes."
+    },
+    {
+      "id": "RC-013",
+      "class": "security",
+      "operation": "direct-invoke",
+      "assertion": "writer cannot be invoked outside the authorized gateway path",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-014",
+      "class": "security",
+      "operation": "tenant-binding",
+      "assertion": "a valid bearer cannot select or retrieve another namespace",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "Different team selector denied using the reader bearer."
+    },
+    {
+      "id": "RC-015",
+      "class": "security",
+      "operation": "tenant-normalization",
+      "assertion": "empty, conflicting, traversal-like, encoded, and oversized selectors fail closed",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-016",
+      "class": "security",
+      "operation": "artifact-hash",
+      "assertion": "invalid, traversal-like, encoded, empty, and oversized hashes fail closed",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-017",
+      "class": "integrity",
+      "operation": "signed-cycle",
+      "assertion": "valid Turbo HMAC tag is preserved and accepted by the producing client epoch",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "Native signed producer/replay observed on both exact clients."
+    },
+    {
+      "id": "RC-018",
+      "class": "integrity",
+      "operation": "missing-tag",
+      "assertion": "signed client rejects a response with no tag and direct receipt identifies the cause",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "Missing tag restores no output; native fallback is deliberately denied."
+    },
+    {
+      "id": "RC-019",
+      "class": "integrity",
+      "operation": "tampered-tag",
+      "assertion": "signed client rejects a modified tag without materializing outputs",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "Invalid tag restores no output."
+    },
+    {
+      "id": "RC-020",
+      "class": "integrity",
+      "operation": "tampered-body",
+      "assertion": "signed client rejects modified bytes without materializing outputs",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "One modified archive byte restores no output."
+    },
+    {
+      "id": "RC-021",
+      "class": "integrity",
+      "operation": "wrong-team",
+      "assertion": "tag produced for another team identity is rejected",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-022",
+      "class": "integrity",
+      "operation": "epoch-rotation",
+      "assertion": "old and new namespace epochs do not silently cross-restore or downgrade to unsigned",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "Wrong signing key restores no output; namespace epoch rotation remains."
+    },
+    {
+      "id": "RC-023",
+      "class": "fault",
+      "operation": "read",
+      "assertion": "401, 403, 429, 5xx, timeout, reset, and truncated body have distinct direct receipts",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "Owned fixture emits distinct 429 and 503 events on both pinned native clients; incomplete artifact bytes retain the opaque tag and restore no output. Native fallback deliberately exits 42. HTTP authorization denials are tested separately. Timeout, connection reset and interrupted HTTP framing remain pending; no full-case verdict."
+    },
+    {
+      "id": "RC-024",
+      "class": "fault",
+      "operation": "write",
+      "assertion": "failed and ambiguous writes do not produce a success receipt or corrupt a prior object",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-025",
+      "class": "concurrency",
+      "operation": "same-hash-write",
+      "assertion": "concurrent identical and conflicting writes have a defined atomic result",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-026",
+      "class": "concurrency",
+      "operation": "read-during-write",
+      "assertion": "readers observe either the prior complete artifact or the new complete artifact",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-027",
+      "class": "capacity",
+      "operation": "payload-envelope",
+      "assertion": "p50, p95, p99, and twice observed p99 sizes complete within declared bounds",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-028",
+      "class": "capacity",
+      "operation": "concurrency-envelope",
+      "assertion": "observed peak and 1.5 times peak preserve correctness and bounded latency",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-029",
+      "class": "lifecycle",
+      "operation": "retention",
+      "assertion": "expiry and namespace cleanup affect only the intended epoch and remain observable",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    },
+    {
+      "id": "RC-030",
+      "class": "privacy",
+      "operation": "logs",
+      "assertion": "synthetic bearer, signature key, artifact content, and sensitive paths are absent from logs and traces",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "All fixture files/streams scanned for synthetic credentials; full sensitive-path/content sentinel case remains."
+    },
+    {
+      "id": "RC-031",
+      "class": "telemetry",
+      "operation": "correlation",
+      "assertion": "client run, task hash, backend request, object operation, and result class correlate without secret or unbounded-cardinality fields",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "Native summaries, task hashes, event ids and archive digests correlated locally."
+    },
+    {
+      "id": "RC-032",
+      "class": "rollback",
+      "operation": "cutback",
+      "assertion": "incumbent endpoint and epoch can be restored from a rehearsed receipt without mixed writes",
+      "verdict": "pending-owned-runner",
+      "observedSubset": "No runtime subset credited."
+    }
+  ],
+  "limits": [
+    "No case is promoted to an accepted corpus verdict by this inventory.",
+    "Local fixture observations do not score named backend topologies or production trust."
+  ]
+}

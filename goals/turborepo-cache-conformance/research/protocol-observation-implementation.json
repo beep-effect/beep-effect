@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "cache-protocol-implementation-checkpoint/v1",
+  "date": "2026-09-29",
+  "baseRevision": "5cd64a97b78451f8b9e325a22f4a5ce5d4a52c69",
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.schemas.ts",
+      "sha256": "a71c6215160c94b440d2113778269405ba366d21c88b4311629e351ec33b88b0"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.ts",
+      "sha256": "0a2e07f407b4e92dc92755fc12d0e4e9f33ed66a65e3a74bbb6bdbc032401160"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "1c1e33076d11d7df549421646f7b681dfbdeb9d35bef1acf9920e110b9aad8f1"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "sha256": "4fac5a079f4f30ba34b00e70bf63fd2183e0866a3423234ccf5a88501221862b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-protocol.test.ts",
+      "sha256": "c3c029098cc674808dc85b36c5533979614e39472e6a79f702800c506e83d4c4"
+    },
+    {
+      "path": ".changeset/cache-protocol-observation-review.md",
+      "sha256": "a6fd1b3e3bf8d0b70e3cfcf33c57f94b672ac1ef655b903326ac3793f0bce1cd"
+    }
+  ],
+  "verification": {
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "exitCode": 0,
+    "auditSeconds": 776.6,
+    "docgenSeconds": 20.2,
+    "logSha256": "d857bf978ae091b51392013e84728ba24131779b360cecb9e37a2e38354b7bda",
+    "focusedTests": 6,
+    "focusedLogSha256": "d99ac6891343bb0cb46c7a89391e79698168880d417f434658cbcfdb886d6d3d"
+  },
+  "authority": "Synthetic native protocol observation validation only.",
+  "retention": "qualification-signed-implementation/verified-observation-review",
+  "integration": "Verified in isolated implementation worktree; not yet integrated or published to PR #1327."
+}

@@ -4,15 +4,20 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
+import { CacheClientPin, CacheQualificationKey, CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
+import { O } from "@beep/utils";
+import { Crypto, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
+import * as Hex from "effect/encoding/Hex";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
@@ -33,9 +38,18 @@ import {
 } from "./Cache.evidence.ts";
 import { CacheSyntheticCheck, CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
 import { inspectCacheFixtureCapture } from "./Cache.experiment.ts";
-import { fingerprintCacheComputation } from "./Cache.fingerprint.ts";
+import {
+  fingerprintCacheComputation,
+  projectCacheSignedActivation,
+  projectCacheSignedRoot,
+} from "./Cache.fingerprint.ts";
 import { collectCacheRuntimeLinker, inspectCacheLinkedFile, parseCacheLinkerOutput } from "./Cache.linker.ts";
-import { extractCachePilotLog } from "./Cache.pilot.capture.ts";
+import {
+  cacheSignedCaptureDiagnostic,
+  extractCachePilotLog,
+  extractCacheSignedPilotLog,
+  inspectCacheSignedPilotArchive,
+} from "./Cache.pilot.capture.ts";
 import {
   CachePilotLogInput,
   CachePilotMutation,
@@ -45,8 +59,32 @@ import {
   CachePilotRun,
   CachePilotShadow,
   CachePilotTask,
+  CacheSignedPilotLogInput,
 } from "./Cache.pilot.schemas.ts";
+import {
+  CacheSignedPilotCaptureControl,
+  CacheSignedPilotFreshPair,
+  CacheSignedPilotMutation,
+  CacheSignedPilotNonExecution,
+  CacheSignedPilotPair,
+  CacheSignedPilotPolicyRefusal,
+  CacheSignedPilotProtection,
+  CacheSignedPilotReceipt,
+  CacheSignedPilotRun,
+  CacheSignedPilotShadow,
+  CacheSignedPilotTask,
+} from "./Cache.pilot.signed.schemas.ts";
+import {
+  validateCacheSignedPilotConcurrency,
+  validateCacheSignedPilotFreshPair,
+  validateCacheSignedPilotMutation,
+  validateCacheSignedPilotPair,
+  validateCacheSignedPilotShadow,
+} from "./Cache.pilot.signed.ts";
 import { renderCacheIdentityLintProfile, verifyCacheIdentityLintProfile } from "./Cache.profile.ts";
+import { CacheFixtureCredentials, CacheFixtureScenario } from "./Cache.protocol.fixture.schemas.ts";
+import { makeCacheProtocolFixture } from "./Cache.protocol.fixture.ts";
+import { assertCachePrivateNetwork } from "./Cache.protocol.runner.ts";
 import {
   CacheActivationPreview,
   CacheActivationRequest,
@@ -60,12 +98,29 @@ import {
   CacheToolchainSnapshot,
 } from "./Cache.schemas.ts";
 import { CacheQualificationService } from "./Cache.service.ts";
-import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
 import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
 import type { CachePilotRequest } from "./Cache.pilot.schemas.ts";
 
+const CachePilotRunType = S.toType(CachePilotRun);
+
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot");
+const decodeSignedPilotRun = S.decodeUnknownEffect(S.toType(CacheSignedPilotRun));
+const PilotMode = LiteralKit(["local", "signed"]);
+const PilotCapability = S.Redacted(S.NonEmptyString);
+class PilotTransport extends S.Class<PilotTransport>($I`PilotTransport`)(
+  {
+    endpoint: S.NonEmptyString,
+    namespace: S.NonEmptyString,
+    bearer: PilotCapability,
+    signing: PilotCapability,
+    secrets: S.Array(PilotCapability),
+  },
+  $I.annote("PilotTransport", {
+    description: "Supervisor-owned ephemeral transport for one signed execution; never decoded from a public request.",
+  })
+) {}
+
 const identityDirectory = "packages/foundation/modeling/identity";
 const typesDirectory = "packages/foundation/primitive/types";
 const identityTask = "@beep/identity#lint";
@@ -97,7 +152,13 @@ const NativeTask = S.Struct({
     configured: S.Array(S.String),
     passthrough: S.Array(S.String).pipe(S.OptionFromNullOr),
   }),
-  execution: S.OptionFromOptionalKey(S.Struct({ exitCode: S.OptionFromOptionalKey(S.Int) })),
+  execution: S.OptionFromOptionalKey(
+    S.Struct({
+      exitCode: S.OptionFromOptionalKey(S.Int),
+      startTime: S.OptionFromOptionalKey(S.Natural),
+      endTime: S.OptionFromOptionalKey(S.Natural),
+    })
+  ),
 });
 const NativeSummary = S.Struct({ tasks: S.Array(NativeTask) });
 class PilotFile extends S.Class<PilotFile>($I`PilotFile`)(
@@ -125,7 +186,7 @@ class PilotRoot extends S.Class<PilotRoot>($I`PilotRoot`)(
 ) {}
 class PilotShadowScenario extends S.Class<PilotShadowScenario>($I`PilotShadowScenario`)(
   {
-    id: S.NonEmptyString,
+    id: CacheSignedPilotShadow.fields.case,
     sourceChange: LiteralKit(["none", "source-comment", "added-source", "readme"]),
     env: S.Record(S.String, S.String),
     guest: S.NonEmptyString,
@@ -284,20 +345,35 @@ const decodeNonEmptyArrayJson = S.decodeUnknownEffect(S.NonEmptyArray(S.Json));
 const decodeNonEmptyString = S.decodeUnknownEffect(S.NonEmptyString);
 
 const runPilot = Effect.fn("CachePilot.run")(
-  function* (root: string, request: CachePilotRequest) {
-    if (process.platform !== "linux" || process.arch !== "x64")
-      return yield* CacheCommandError.new("The real pilot sandbox requires Linux x64.");
+  function* (
+    root: string,
+    request: CachePilotRequest,
+    mode: typeof PilotMode.Type = "local",
+    protectedIssuerMaterial: O.Option<string> = O.none()
+  ) {
+    const verifyPilotEnvironment = Effect.fn("CachePilot.verifyPilotEnvironment")(function* () {
+      if (process.platform !== "linux" || process.arch !== "x64")
+        return yield* CacheCommandError.new("The real pilot sandbox requires Linux x64.");
+      if (mode === "signed") yield* assertCachePrivateNetwork;
+    });
+    yield* verifyPilotEnvironment();
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const cache = yield* CacheQualificationService;
-    const preview = yield* readCacheEvidenceBytes(root, request.activation).pipe(
-      Effect.flatMap(decodeText),
-      Effect.flatMap(JsonStringCodec(CacheActivationPreview).decode)
-    );
-    const activationRequest = CacheActivationRequest.make({ computation: identityTask, ...preview.activation });
-    const current = yield* cache.activation(root, activationRequest);
-    if (!S.toEquivalence(CacheActivationPreview)(current, preview))
-      return yield* CacheCommandError.new("The pilot activation preview is stale.");
+    const resolveReviewedActivation = Effect.fn("CachePilot.resolveReviewedActivation")(function* () {
+      const preview = yield* readCacheEvidenceBytes(root, request.activation).pipe(
+        Effect.flatMap(decodeText),
+        Effect.flatMap(JsonStringCodec(CacheActivationPreview).decode)
+      );
+      const activationRequest = CacheActivationRequest.make({ computation: identityTask, ...preview.activation });
+      const current = yield* cache.activation(root, activationRequest);
+      if (!S.toEquivalence(CacheActivationPreview)(current, preview))
+        return yield* CacheCommandError.new("The pilot activation preview is stale.");
+      if (mode === "signed" && request.selection !== "full")
+        return yield* CacheCommandError.new("Signed comparisons require full selection.");
+      return Tuple.make(current, activationRequest);
+    });
+    const [current, activationRequest] = yield* resolveReviewedActivation();
     const dependencies = yield* readCacheEvidenceBytes(root, request.dependencies).pipe(
       Effect.flatMap(decodeText),
       Effect.flatMap(JsonStringCodec(CacheDependencyMaterialization).decode)
@@ -331,6 +407,18 @@ const runPilot = Effect.fn("CachePilot.run")(
     const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(Effect.flatMap(decodeGitObjectId));
     const commonGit = yield* captureHost(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
     const sourceRoots = yield* Effect.forEach(request.worktrees, (source) => fs.realPath(source), { concurrency: 1 });
+    const verifySourceIssuerExclusion = Effect.fn("CachePilot.verifySourceIssuerExclusion")(function* () {
+      if (O.isSome(protectedIssuerMaterial)) {
+        const issuer = path.resolve(protectedIssuerMaterial.value);
+        if (
+          A.some([...sourceRoots, commonGit, dependencies.directory, "/usr"], (mount) =>
+            isResolvedPathWithinRoot(path, { root: mount, candidate: issuer })
+          )
+        )
+          return yield* CacheCommandError.new("Issuer material must remain outside every signed pilot input mount.");
+      }
+    });
+    yield* verifySourceIssuerExclusion();
     const sourceRootA = O.getOrThrow(A.get(sourceRoots, 0));
     const sourceRootB = O.getOrThrow(A.get(sourceRoots, 1));
     if (sourceRootA === sourceRootB)
@@ -514,22 +602,38 @@ const runPilot = Effect.fn("CachePilot.run")(
       for (const parent of A.reverse(parents)) mounts.push("--remount-ro", parent);
       return mounts;
     });
-    const invoke = Effect.fn("CachePilot.invoke")(function* (
+    const prepareInvocation = Effect.fn("CachePilot.prepareInvocation")(function* (
       fixture: PilotRoot,
-      guest: string,
-      args: ReadonlyArray<string>,
-      env: Readonly<Record<string, string>> = {}
+      transport: O.Option<PilotTransport>
     ) {
-      if (needsProfile && env.BIOME_CONFIG_PATH !== undefined)
-        return yield* CacheCommandError.new("Pilot scenario cannot override the governed lint profile.");
       for (const name of ["run", "identity-log", "types-log", "cache"])
         yield* fs.makeDirectory(path.join(fixture.directory, name), { recursive: true });
       for (const relative of R.keys(fixture.additionalPackages))
         yield* fs.makeDirectory(path.join(fixture.directory, "dependency-logs", relative), { recursive: true });
+      if (O.isSome(transport)) {
+        yield* writeContainedFileString(
+          fixture.directory,
+          "run/config.json",
+          yield* JsonStringCodec(S.Struct({ teamId: S.String })).encode({ teamId: transport.value.namespace })
+        );
+      }
+    });
+    const invoke = Effect.fn("CachePilot.invoke")(function* (
+      fixture: PilotRoot,
+      guest: string,
+      args: ReadonlyArray<string>,
+      env: Readonly<Record<string, string>> = {},
+      transport: O.Option<PilotTransport> = O.none()
+    ) {
+      if (needsProfile && env.BIOME_CONFIG_PATH !== undefined)
+        return yield* CacheCommandError.new("Pilot scenario cannot override the governed lint profile.");
+      yield* prepareInvocation(fixture, transport);
       return yield* runCapturedStreams({
         command: "/usr/bin/bwrap",
         args: [
-          "--unshare-all",
+          ...(O.isSome(transport)
+            ? ["--unshare-user", "--unshare-pid", "--unshare-ipc", "--unshare-uts"]
+            : ["--unshare-all"]),
           "--die-with-parent",
           "--new-session",
           "--ro-bind",
@@ -593,6 +697,13 @@ const runPilot = Effect.fn("CachePilot.run")(
           GIT_CONFIG_NOSYSTEM: "1",
           GIT_OPTIONAL_LOCKS: "0",
           ...env,
+          ...(O.isSome(transport)
+            ? {
+                TURBO_API: transport.value.endpoint,
+                TURBO_TOKEN: Redacted.value(transport.value.bearer),
+                TURBO_REMOTE_CACHE_SIGNATURE_KEY: Redacted.value(transport.value.signing),
+              }
+            : {}),
           ...(needsProfile ? { BIOME_CONFIG_PATH: path.join(guest, "biome.identity.jsonc") } : {}),
           BEEP_CACHE_TOOLCHAIN_DIGEST: runtimeIdentity.toolchainDigest,
         },
@@ -653,6 +764,21 @@ const runPilot = Effect.fn("CachePilot.run")(
     });
     yield* verifySandboxVersions();
     yield* Effect.logInfo(`Pilot ${request.channel}: installed runtime and exact client checks passed.`);
+    const validateNativePlanRuntime = Effect.fn("CachePilot.validateNativePlanRuntime")(function* (
+      plan: typeof NativeSummary.Type,
+      expectedProfile: string
+    ) {
+      if (
+        !A.some(
+          plan.tasks,
+          (task) =>
+            task.taskId === identityTask &&
+            A.contains(task.environmentVariables.configured, runtimeKeyObservation) &&
+            (!needsProfile || O.exists(task.environmentVariables.passthrough, A.contains(expectedProfile)))
+        )
+      )
+        return yield* CacheCommandError.new("The native pilot plan omitted the verified runtime key.");
+    });
     const verifyNativePlans = Effect.fn("CachePilot.verifyNativePlans")(function* () {
       const expectedProfile = yield* profileObservation("/fixture");
       yield* Effect.forEach(
@@ -671,16 +797,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           if (dry.exitCode !== 0 || dry.truncated)
             return yield* CacheCommandError.new("Pilot dry-run setup failed or exceeded its capture bound.");
           const plan = yield* JsonStringCodec(NativeSummary).decode(dry.stdout);
-          if (
-            !A.some(
-              plan.tasks,
-              (task) =>
-                task.taskId === identityTask &&
-                A.contains(task.environmentVariables.configured, runtimeKeyObservation) &&
-                (!needsProfile || O.exists(task.environmentVariables.passthrough, A.contains(expectedProfile)))
-            )
-          )
-            return yield* CacheCommandError.new("The native pilot plan omitted the verified runtime key.");
+          yield* validateNativePlanRuntime(plan, expectedProfile);
           const joined = yield* joinCacheCensusPlan(census.workspaces, plan);
           if (
             !S.toEquivalence(S.Array(S.String))(
@@ -784,13 +901,29 @@ const runPilot = Effect.fn("CachePilot.run")(
       )
         return yield* CacheCommandError.new(`Native pilot run ${id} omitted the verified lint profile.`);
     });
-    const execute = Effect.fn("CachePilot.execute")(function* (
+    const verifySignedCapture = Effect.fn("CachePilot.verifySignedCapture")(function* (
+      transport: O.Option<PilotTransport>,
+      captured: Effect.Success<ReturnType<typeof invoke>>,
+      bytes: Uint8Array
+    ) {
+      if (O.isSome(transport)) {
+        const text = yield* decodeText(bytes);
+        if (
+          A.some(transport.value.secrets, (secret) =>
+            A.some([captured.stdout, captured.stderr, text], (value) => Str.includes(Redacted.value(secret))(value))
+          )
+        )
+          return yield* CacheCommandError.new("Signed pilot capture contains synthetic credential material.");
+      }
+    });
+    const executeNative = Effect.fn("CachePilot.executeNative")(function* (
       fixture: PilotRoot,
       id: string,
       enabled: boolean,
       reuse: boolean,
       guest = "/fixture",
-      env: Readonly<Record<string, string>> = {}
+      env: Readonly<Record<string, string>> = {},
+      transport: O.Option<PilotTransport> = O.none()
     ) {
       const expectedProfile = yield* profileObservation(guest);
       yield* prepareExecution(fixture, enabled);
@@ -808,7 +941,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           "lint",
           "--filter=@beep/identity",
           "--no-daemon",
-          `--cache=${reuse ? "local:rw" : "local:"}`,
+          `--cache=${O.isSome(transport) ? "remote:rw" : reuse ? "local:rw" : "local:"}`,
           "--cache-dir=/cache",
           "--env-mode=strict",
           "--summarize",
@@ -818,13 +951,15 @@ const runPilot = Effect.fn("CachePilot.run")(
           "--ui=stream",
           "--concurrency=1",
         ],
-        env
+        env,
+        transport
       );
       if (captured.truncated) return yield* CacheCommandError.new("Pilot process capture exceeded its bound.");
       const names = yield* fs.readDirectory(path.join(fixture.directory, "run/runs"));
       if (names.length !== 1)
         return yield* CacheCommandError.new("Pilot did not produce exactly one native run summary.");
       const bytes = yield* readBytes(fixture.directory, `run/runs/${O.getOrThrow(A.head(names))}`);
+      yield* verifySignedCapture(transport, captured, bytes);
       const summary = yield* decodeText(bytes).pipe(Effect.flatMap(JsonStringCodec(NativeSummary).decode));
       const dependencies = yield* Effect.forEach(
         A.filter(summary.tasks, (task) => task.taskId !== identityTask),
@@ -842,44 +977,65 @@ const runPilot = Effect.fn("CachePilot.run")(
       const sourceTreeUnchanged = S.toEquivalence(S.Array(Sha256Hex))(beforeTrees, afterTrees);
       if (!sourceTreeUnchanged)
         return yield* CacheCommandError.new("Read-only pilot package source changed during execution.");
-      const outcome = yield* O.match(A.head(selected), {
-        onNone: Effect.fn("CachePilot.blocked")(function* () {
+      const outcome = yield* A.match(selected, {
+        onEmpty: Effect.fn("CachePilot.blocked")(function* () {
           const failed = A.filter(dependencies, (task) => task.exitCode !== 0);
           if (captured.exitCode === 0 || !A.isArrayNonEmpty(failed))
             return yield* CacheCommandError.new("Selected task was omitted without an observed failed dependency.");
           return CachePilotOutcome.cases.Blocked.make({ failedDependencies: failed });
         }),
-        onSome: Effect.fn("CachePilot.executed")(function* (task: typeof NativeTask.Type) {
+        onNonEmpty: Effect.fn("CachePilot.executed")(function* ([task]: A.NonEmptyReadonlyArray<
+          typeof NativeTask.Type
+        >) {
           yield* verifyExecutionEnvironment(fixture, id, task, expectedProfile);
-          const observation = yield* taskObservation(task);
+          const observation = yield* O.match(transport, {
+            onNone: () => taskObservation(task),
+            onSome: Effect.fn("CachePilot.observeSignedTask")(function* () {
+              const exitCode = yield* task.execution.pipe(
+                O.flatMap((execution) => execution.exitCode),
+                Effect.fromOption(() => CacheCommandError.new("Signed selected task omitted its exit verdict."))
+              );
+              if (task.cache.local || (task.cache.status === "HIT") !== task.cache.remote)
+                return yield* CacheCommandError.new("Signed selected task lacks exclusive remote origin evidence.");
+              return CacheSignedPilotTask.make({
+                computation: task.taskId,
+                taskHash: task.hash,
+                origin: task.cache.status === "HIT" ? "remote-hit" : "fresh",
+                exitCode,
+                inputsDigest: yield* inputDigest(task.inputs),
+              });
+            }),
+          });
           if (task.command !== "bun run beep:lint" || (captured.exitCode === 0) !== (observation.exitCode === 0))
             return yield* CacheCommandError.new("Selected pilot command or verdict disagrees with its graph.");
-          const text = yield* extractCachePilotLog(
-            CachePilotLogInput.make({
-              computation: identityTask,
-              taskHash: task.hash,
-              origin: observation.origin,
-              cacheEnabled: enabled,
-              stdout: captured.stdout,
-              stderr: captured.stderr,
-              truncated: captured.truncated,
-            })
-          );
+          const capture = {
+            computation: identityTask,
+            taskHash: task.hash,
+            origin: observation.origin,
+            cacheEnabled: enabled,
+            stdout: captured.stdout,
+            stderr: captured.stderr,
+            truncated: captured.truncated,
+          };
+          const text = yield* O.isSome(transport)
+            ? S.decodeUnknownEffect(CacheSignedPilotLogInput)(capture).pipe(Effect.flatMap(extractCacheSignedPilotLog))
+            : S.decodeUnknownEffect(CachePilotLogInput)(capture).pipe(Effect.flatMap(extractCachePilotLog));
           if (
             A.isReadonlyArrayNonEmpty(inspectCacheFixtureCapture(text, false)) ||
             Str.includes("qualification-canary")(text)
           )
             return yield* CacheCommandError.new("Selected pilot capture exposed an unsafe canary or absolute path.");
           const replayLogMatches = yield* verifyReplayLog(fixture, text, enabled);
-          return CachePilotOutcome.cases.Executed.make({
+          return {
+            _tag: "Executed",
             selected: observation,
             logSha256: yield* hashText(text),
             logBytes: S.Natural.make(new TextEncoder().encode(text).byteLength),
             replayLogMatches,
-          });
+          };
         }),
       });
-      return CachePilotRun.make({
+      const observed = {
         nativeRuntimeKeyObserved: A.some(selected, (task) =>
           A.contains(task.environmentVariables.configured, runtimeKeyObservation)
         ),
@@ -888,11 +1044,850 @@ const runPilot = Effect.fn("CachePilot.run")(
         cacheEnabled: enabled,
         graphExitCode: captured.exitCode,
         outcome,
+        ...O.getSomesStruct({
+          selectedTaskInterval: A.head(selected).pipe(
+            O.flatMap((task) => task.execution),
+            O.flatMap((execution) => O.all({ startTime: execution.startTime, endTime: execution.endTime }))
+          ),
+        }),
         dependencies,
         summarySha256: yield* hashBytes(bytes),
         sourceTreeUnchanged,
+      };
+      return yield* O.isSome(transport)
+        ? S.decodeUnknownEffect(CacheSignedPilotRun)(observed)
+        : S.decodeUnknownEffect(CachePilotRun)(observed);
+    });
+    const execute = Effect.fn("CachePilot.execute")(function* (
+      fixture: PilotRoot,
+      id: string,
+      enabled: boolean,
+      reuse: boolean,
+      guest = "/fixture",
+      env: Readonly<Record<string, string>> = {}
+    ) {
+      return yield* executeNative(fixture, id, enabled, reuse, guest, env).pipe(
+        Effect.flatMap(S.decodeUnknownEffect(CachePilotRunType))
+      );
+    });
+    const verifyFinalIntegrity = Effect.fn("CachePilot.verifyFinalIntegrity")(function* () {
+      yield* verifyTools();
+      if (
+        !S.toEquivalence(CacheRuntimeLinkerSnapshot)(
+          runtimeLinker,
+          yield* collectCacheRuntimeLinker(root, runtimeExecutables)
+        )
+      )
+        return yield* CacheCommandError.new("Pilot startup libraries changed during execution.");
+      if (!S.toEquivalence(CacheActivationPreview)(yield* cache.activation(root, activationRequest), current))
+        return yield* CacheCommandError.new("Pilot source configuration drifted during execution.");
+      for (const source of sourceRoots)
+        if (
+          (yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "" ||
+          (yield* captureHost(source, ["rev-parse", "HEAD"])) !== revision
+        )
+          return yield* CacheCommandError.new("Read-only pilot worktree changed during execution.");
+      yield* verifyCacheDependencies(root, dependencies);
+    });
+
+    const applyShadowSource = Effect.fn("CachePilot.applyShadowSource")(function* (
+      fixture: PilotRoot,
+      scenario: PilotShadowScenario
+    ) {
+      if (scenario.sourceChange === "source-comment") {
+        const original = yield* readBytes(fixture.identity, "src/index.ts").pipe(Effect.flatMap(decodeText));
+        yield* writeContainedFileString(
+          fixture.identity,
+          "src/index.ts",
+          `${original}\n// Qualification shadow input.\n`
+        );
+      } else if (scenario.sourceChange === "added-source") {
+        yield* writeContainedFileString(
+          fixture.identity,
+          "src/qualification-shadow.ts",
+          'export const qualificationShadow = "fixture";\n'
+        );
+      } else if (scenario.sourceChange === "readme") {
+        const original = yield* readBytes(fixture.identity, "README.md").pipe(Effect.flatMap(decodeText));
+        yield* writeContainedFileString(fixture.identity, "README.md", `${original}\nQualification shadow input.\n`);
+      }
+    });
+    const unchanged = PilotShadowScenario.make({
+      id: "baseline",
+      sourceChange: "none",
+      env: {},
+      guest: "/fixture",
+      expectedInputHash: "stable",
+    });
+    const scenarios = [
+      unchanged,
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "source-comment",
+        sourceChange: "source-comment",
+        expectedInputHash: "changed",
+      }),
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "added-source",
+        sourceChange: "added-source",
+        expectedInputHash: "changed",
+      }),
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "readme",
+        sourceChange: "readme",
+        expectedInputHash: "changed",
+      }),
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "declared-env",
+        env: { BEEP_ESLINT_PROFILE: "qualification" },
+        expectedInputHash: "changed",
+      }),
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "declared-env-empty",
+        env: { BEEP_ESLINT_PROFILE: "" },
+        expectedInputHash: "changed",
+      }),
+      PilotShadowScenario.make({
+        ...unchanged,
+        id: "orchestration-env",
+        env: { BEEP_AGENT_SESSION_ID: "qualification-canary-metadata" },
+      }),
+      PilotShadowScenario.make({ ...unchanged, id: "locale", env: { LANG: "C.UTF-8", LC_ALL: "C.UTF-8" } }),
+      PilotShadowScenario.make({ ...unchanged, id: "timezone", env: { TZ: "Pacific/Honolulu" } }),
+      PilotShadowScenario.make({ ...unchanged, id: "absolute-root", guest: "/fixture-other" }),
+    ];
+    const mutationIds = LiteralKit([
+      "root-task-config",
+      "child-task-config",
+      "missing-child-config",
+      "root-lint-config",
+      "lockfile",
+      "package-manager",
+      "generated-alias",
+      "dependency-source",
+    ]);
+    class PilotMutationChange extends S.Class<PilotMutationChange>($I`PilotMutationChange`)(
+      {
+        fixture: PilotRoot,
+        changedPath: CachePilotMutation.fields.changedPath,
+        beforeSha256: Sha256Hex,
+        afterSha256: CachePilotMutation.fields.afterSha256,
+      },
+      $I.annote("PilotMutationChange", {
+        description: "Owned fixture mutation and exact changed configuration evidence.",
+      })
+    ) {}
+    const sameMutationDigest = S.toEquivalence(CachePilotMutation.fields.afterSha256);
+    const prepareMutationBaseline = Effect.fn("CachePilot.prepareMutationBaseline")(function* (
+      fixture: PilotRoot,
+      id: typeof mutationIds.Type
+    ) {
+      if (id === "root-lint-config")
+        yield* writeContainedFileString(fixture.identity, "src/index.ts", "export const = ;\n");
+      if (id === "dependency-source") {
+        yield* writeContainedFileString(
+          fixture.identity,
+          "src/qualification-dependency.ts",
+          'import { qualificationDependency } from "../../../primitive/types/src/index.ts";\n\nexport const qualificationValue = qualificationDependency;\n'
+        );
+        const dependencySource = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
+        yield* writeContainedFileString(
+          fixture.types,
+          "src/index.ts",
+          `${dependencySource}\n/** @deprecated qualification dependency control */\nexport const qualificationDependency = 1;\n`
+        );
+      }
+    });
+    const applyMutationControl = Effect.fn("CachePilot.applyMutationControl")(function* (
+      fixture: PilotRoot,
+      id: typeof mutationIds.Type,
+      rootConfiguration: string
+    ) {
+      let changedFixture = fixture;
+      let changedPath = "turbo.json";
+      let original = rootConfiguration;
+      let changedText = original;
+      const changeChildConfiguration = Effect.fn("CachePilot.changeChildConfiguration")(function* () {
+        changedPath = `${identityDirectory}/turbo.json`;
+        original = fixture.after;
+        if (id === "missing-child-config") changedFixture = PilotRoot.make({ ...fixture, omitChild: true });
+        else {
+          const change = Effect.fn("CachePilot.changeChild")(function* (text: string) {
+            const config = yield* decodeJsoncTextAs(S.JsonObject)(text);
+            const tasks = yield* decodeJsonObject(config.tasks);
+            const lint = yield* decodeJsonObject(tasks.lint);
+            const declared = yield* decodeArrayString(lint.env);
+            const encoded = yield* JsonStringCodec(S.JsonObject).encode(
+              R.set(
+                config,
+                "tasks",
+                R.set(tasks, "lint", R.set(lint, "env", A.append(declared, "QUALIFICATION_CHILD_INPUT")))
+              )
+            );
+            yield* writeContainedFileString(fixture.identity, "turbo.json", encoded);
+            const formatted = yield* invoke(fixture, "/fixture", [
+              "/bin/sh",
+              "-c",
+              `exec /tools/biome format --stdin-file-path=/fixture/${identityDirectory}/turbo.json < /fixture/${identityDirectory}/turbo.json`,
+            ]);
+            if (formatted.exitCode !== 0 || formatted.truncated)
+              return yield* CacheCommandError.new("Cannot format the child-config control with pinned Biome.");
+            return formatted.stdout;
+          });
+          changedText = yield* change(fixture.after);
+          changedFixture = PilotRoot.make({ ...fixture, before: yield* change(fixture.before), after: changedText });
+        }
+      });
+      const changeRootMetadata = Effect.fn("CachePilot.changeRootMetadata")(function* () {
+        changedPath = mutationIds.$match({
+          "root-lint-config": () => "biome.jsonc",
+          lockfile: () => "bun.lock",
+          "package-manager": () => "package.json",
+          "generated-alias": () => "tsconfig.json",
+          "root-task-config": () => "tsconfig.json",
+          "child-task-config": () => "tsconfig.json",
+          "missing-child-config": () => "tsconfig.json",
+          "dependency-source": () => "tsconfig.json",
+        })(id);
+        original = yield* readBytes(fixture.source, changedPath).pipe(Effect.flatMap(decodeText));
+        const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
+        if (id === "root-lint-config") {
+          const files = yield* decodeJsonObject(config.files);
+          const includes = yield* decodeArrayString(files.includes);
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(
+            R.set(config, "files", R.set(files, "includes", A.append(includes, "!**/src/index.ts")))
+          );
+        } else if (id === "lockfile") {
+          const packages = yield* decodeJsonObject(config.packages);
+          const dependency = yield* decodeNonEmptyArrayJson(packages.effect);
+          const descriptor = yield* decodeNonEmptyString(dependency[0]);
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(
+            R.set(
+              config,
+              "packages",
+              R.set(packages, "effect", [`${descriptor}-qualification`, ...A.drop(dependency, 1)])
+            )
+          );
+        } else if (id === "package-manager") {
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(R.set(config, "packageManager", "bun@1.4.1"));
+        } else {
+          const options = yield* decodeJsonObject(config.compilerOptions);
+          const aliases = yield* decodeJsonObject(options.paths);
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(
+            R.set(
+              config,
+              "compilerOptions",
+              R.set(
+                options,
+                "paths",
+                R.set(aliases, "@beep/qualification-alias", [`./${identityDirectory}/src/index.ts`])
+              )
+            )
+          );
+        }
+      });
+      const applyMutation = Effect.fn("CachePilot.applyMutation")(function* () {
+        if (id === "root-task-config") {
+          const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
+          const global = yield* decodeJsonObject(config.global);
+          const declared = yield* decodeArrayString(global.env);
+          changedText = yield* JsonStringCodec(S.JsonObject).encode(
+            R.set(config, "global", R.set(global, "env", A.append(declared, "QUALIFICATION_CONFIG_INPUT")))
+          );
+        } else if (id === "child-task-config" || id === "missing-child-config") {
+          yield* changeChildConfiguration();
+        } else if (id === "dependency-source") {
+          changedPath = `${typesDirectory}/src/index.ts`;
+          original = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
+          changedText = Str.replace("/** @deprecated qualification dependency control */\n", "")(original);
+          yield* writeContainedFileString(fixture.types, "src/index.ts", changedText);
+        } else {
+          yield* changeRootMetadata();
+        }
+      });
+      yield* applyMutation();
+      if (
+        !A.contains(mutationIds.pick(["child-task-config", "missing-child-config", "dependency-source"]).literals, id)
+      )
+        changedFixture = yield* overlayRootFile(fixture, changedPath, changedText);
+      if (needsProfile && id === "root-lint-config")
+        changedFixture = yield* overlayRootFile(
+          changedFixture,
+          "biome.identity.jsonc",
+          yield* renderCacheIdentityLintProfile(changedText)
+        );
+      return PilotMutationChange.make({
+        fixture: changedFixture,
+        changedPath,
+        beforeSha256: yield* hashText(original),
+        afterSha256: id === "missing-child-config" ? O.none() : O.some(yield* hashText(changedText)),
       });
     });
+    const prepareNonExecution = Effect.fn("CachePilot.prepareNonExecution")(function* (
+      reason: CachePilotNonExecution["reason"],
+      rootConfiguration: O.Option<string>
+    ) {
+      let fixture = yield* prepare(sourceRoots[0], "root-a", `non-execution-${reason}`);
+      if (O.isSome(rootConfiguration)) fixture = yield* overlayRootFile(fixture, "turbo.json", rootConfiguration.value);
+      if (reason === "missing-root-config")
+        fixture = PilotRoot.make({ ...fixture, omitted: ["turbo.json", "turbo.jsonc"] });
+      else if (reason === "malformed-root-config") fixture = yield* overlayRootFile(fixture, "turbo.json", '{"tasks":');
+      else if (reason === "malformed-child-config")
+        yield* writeContainedFileString(fixture.identity, "turbo.json", '{"tasks":');
+      else {
+        const manifest = yield* readBytes(fixture.identity, "package.json").pipe(
+          Effect.flatMap(decodeText),
+          Effect.flatMap(decodeJsoncTextAs(S.JsonObject))
+        );
+        const scripts = yield* decodeJsonObject(manifest.scripts);
+        yield* writeContainedFileString(
+          fixture.identity,
+          "package.json",
+          yield* JsonStringCodec(S.JsonObject).encode(R.set(manifest, "scripts", R.remove(scripts, "lint")))
+        );
+      }
+      return fixture;
+    });
+    const observeSelectedExecution = Effect.fn("CachePilot.observeSelectedExecution")(function* (
+      fixture: PilotRoot,
+      names: ReadonlyArray<string>
+    ) {
+      if (names.length !== 1) return false;
+      const native = yield* readBytes(fixture.directory, `run/runs/${O.getOrThrow(A.head(names))}`).pipe(
+        Effect.flatMap(decodeText),
+        Effect.flatMap(JsonStringCodec(NativeSummary).decode)
+      );
+      return A.some(
+        native.tasks,
+        (task) =>
+          task.taskId === identityTask &&
+          task.command !== "<NONEXISTENT>" &&
+          Str.trim(task.command) !== "" &&
+          O.isSome(task.execution)
+      );
+    });
+    const executeNonExecutionControl = Effect.fn("CachePilot.executeNonExecutionControl")(function* (
+      reason: CachePilotNonExecution["reason"],
+      rootConfiguration: O.Option<string>
+    ) {
+      const fixture = yield* prepareNonExecution(reason, rootConfiguration);
+      const captured = yield* invoke(fixture, "/fixture", [
+        "/tools/turbo",
+        "run",
+        "lint",
+        "--filter=@beep/identity",
+        "--no-daemon",
+        "--cache=local:",
+        "--env-mode=strict",
+        "--summarize",
+        "--output-logs=full",
+        "--log-order=grouped",
+        "--log-prefix=task",
+        "--ui=stream",
+      ]);
+      if (captured.truncated)
+        return yield* CacheCommandError.new("A native non-execution control exceeded its capture bound.");
+      const summaryDirectory = path.join(fixture.directory, "run/runs");
+      const names = (yield* fs.exists(summaryDirectory)) ? yield* fs.readDirectory(summaryDirectory) : [];
+      const summaryPresent = names.length === 1;
+      const selectedExecutionObserved = yield* observeSelectedExecution(fixture, names);
+      const expectedDiagnostic = matchesNonExecutionDiagnostic(reason, captured.stderr);
+      const observation = CacheSignedPilotNonExecution.make({
+        id: reason,
+        reason,
+        isolationRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(fixture.directory)}`),
+        exitCode: captured.exitCode,
+        stdoutSha256: yield* hashText(captured.stdout),
+        stderrSha256: yield* hashText(captured.stderr),
+        summarySha256: summaryPresent
+          ? O.some(
+              yield* readBytes(fixture.directory, `run/runs/${O.getOrThrow(A.head(names))}`).pipe(
+                Effect.flatMap(hashBytes)
+              )
+            )
+          : O.none(),
+        selectedExecutionObserved,
+        diagnostic: reason !== "absent-script" && expectedDiagnostic ? O.some(reason) : O.none(),
+      });
+      if (!observation.passed) {
+        if (mode === "signed")
+          return yield* CacheCommandError.new(
+            "Signed native refusal or absent-script evidence differs from its expected case."
+          );
+        const diagnostics = `.beep/cache/pilot-observations/${path.basename(experiment)}/${reason}`;
+        yield* writeContainedFileString(root, `${diagnostics}/stdout.txt`, captured.stdout);
+        yield* writeContainedFileString(root, `${diagnostics}/stderr.txt`, captured.stderr);
+        yield* Effect.logWarning(`Native control mismatch; bounded private diagnostics: ${diagnostics}`);
+      }
+      return observation;
+    });
+    const collectNonExecutionControls = Effect.fn("CachePilot.collectNonExecutionControls")(function* (
+      rootConfiguration: O.Option<string> = O.none()
+    ) {
+      const results = A.empty<CacheSignedPilotNonExecution>();
+      for (const reason of CachePilotNonExecution.fields.reason.literals) {
+        const observation = yield* executeNonExecutionControl(reason, rootConfiguration);
+        results.push(observation);
+        if (!observation.passed) break;
+      }
+      return results;
+    });
+    const observeMissingChildRefusal = Effect.fn("CachePilot.observeMissingChildRefusal")(function* (
+      signedConfig: string
+    ) {
+      const fixture = yield* prepare(sourceRootB, "root-b", "policy-refusal-missing-child").pipe(
+        Effect.flatMap((root) => overlayRootFile(root, "turbo.json", signedConfig))
+      );
+      yield* fs.remove(path.join(fixture.identity, "turbo.json"));
+      const captured = yield* invoke(fixture, "/fixture", [
+        "/tools/turbo",
+        "run",
+        "lint",
+        "--filter=@beep/identity",
+        "--no-daemon",
+        "--cache=local:",
+        "--env-mode=strict",
+        "--dry=json",
+      ]);
+      if (captured.exitCode !== 0 || captured.truncated)
+        return yield* CacheCommandError.new("Missing-child refusal requires a complete native dry plan.");
+      const plan = yield* JsonStringCodec(NativeSummary).decode(captured.stdout);
+      const task = yield* A.findFirst(plan.tasks, (task) => task.taskId === identityTask).pipe(
+        Effect.fromOption(() => CacheCommandError.new("Missing-child refusal omitted its selected dry-plan task."))
+      );
+      const node = yield* joinCacheCensusPlan(census.workspaces, plan).pipe(
+        Effect.flatMap((nodes) =>
+          A.findFirst(nodes, (node) => node.id === identityTask).pipe(
+            Effect.fromOption(() =>
+              CacheCommandError.new("Missing-child refusal omitted its resolved task configuration.")
+            )
+          )
+        )
+      );
+      const guardRejected = yield* validateNativePlanRuntime(plan, yield* profileObservation("/fixture")).pipe(
+        Effect.match({
+          onFailure: (error) => error.message === "The native pilot plan omitted the verified runtime key.",
+          onSuccess: () => false,
+        })
+      );
+      const summaries = path.join(fixture.directory, "run/runs");
+      return yield* S.decodeUnknownEffect(CacheSignedPilotPolicyRefusal)({
+        reason: "missing-child-config",
+        removedPath: `${identityDirectory}/turbo.json`,
+        isolationRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(fixture.directory)}`),
+        computation: task.taskId,
+        taskHash: task.hash,
+        inputsDigest: node.inputsDigest,
+        configuration: node.configuration,
+        dryPlanSha256: yield* hashText(captured.stdout),
+        planExitCode: captured.exitCode,
+        nativeRuntimeKeyObserved: A.contains(task.environmentVariables.configured, runtimeKeyObservation),
+        nativeExecutionObserved: A.some(plan.tasks, (task) => O.isSome(task.execution)),
+        executionSummaries: (yield* fs.exists(summaries)) ? (yield* fs.readDirectory(summaries)).length : 0,
+        selectedLogFiles: (yield* fs.readDirectory(path.join(fixture.directory, "identity-log"))).length,
+        guardRejected,
+      });
+    });
+    if (mode === "signed") {
+      const crypto = yield* Crypto.Crypto;
+      const freshCapability = crypto.randomBytes(32).pipe(Effect.map(Hex.encode), Effect.map(Redacted.make));
+      const rootBefore = yield* readBytes(root, "turbo.json").pipe(Effect.flatMap(decodeText));
+      const signedConfig = yield* projectCacheSignedRoot(rootBefore);
+      const signedIdentity = yield* projectCacheSignedActivation(
+        current.source.key,
+        census,
+        current.source.toolchain,
+        current.activation,
+        before,
+        after,
+        rootBefore,
+        signedConfig
+      );
+      const signedRootConfiguration = yield* hashText(signedConfig);
+      const captureControls = yield* Effect.forEach(
+        CacheSignedPilotCaptureControl.fields.case.literals,
+        Effect.fn("CachePilot.captureControl")(function* (control) {
+          const marker = Hex.encode(yield* crypto.randomBytes(32));
+          const probe = CacheSignedPilotCaptureControl.fields.case.$match({
+            "credential-output": () => `process.stdout.write("${marker}\\n");`,
+            "terminal-control": () => 'process.stdout.write("probe\\rhidden\\n");',
+            "oversized-log": () => 'process.stdout.write("x".repeat(65537) + "\\n");',
+            "undeclared-output": () =>
+              'await Bun.write(".turbo/undeclared.txt", "probe"); process.stdout.write("ok\\n");',
+          })(control);
+          const root = yield* prepare(sourceRootA, "root-a", `capture-${control}`).pipe(
+            Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+          );
+          const manifest = yield* readBytes(root.identity, "package.json").pipe(
+            Effect.flatMap(decodeText),
+            Effect.flatMap(decodeJsoncTextAs(S.JsonObject))
+          );
+          const scripts = yield* decodeJsonObject(manifest.scripts);
+          yield* writeContainedFileString(root.identity, "capture-probe.ts", probe);
+          yield* writeContainedFileString(
+            root.identity,
+            "package.json",
+            yield* JsonStringCodec(S.JsonObject).encode(
+              R.set(manifest, "scripts", R.set(scripts, "beep:lint", "bun capture-probe.ts"))
+            )
+          );
+          const namespace = `team_capture_${request.channel}_${control}`;
+          const writer = yield* freshCapability;
+          const reader = yield* freshCapability;
+          const signing = yield* freshCapability;
+          const remote = yield* makeCacheProtocolFixture(CacheFixtureCredentials.make({ namespace, writer, reader }));
+          const transport = PilotTransport.make({
+            endpoint: remote.url,
+            namespace,
+            bearer: writer,
+            signing,
+            secrets: [writer, reader, signing, Redacted.make(marker)],
+          });
+          const outcome = yield* executeNative(
+            root,
+            `capture-${control}`,
+            true,
+            true,
+            "/fixture",
+            {},
+            O.some(transport)
+          ).pipe(Effect.result);
+          if (Result.isSuccess(outcome) || outcome.failure.message !== cacheSignedCaptureDiagnostic(control))
+            return yield* CacheCommandError.new(
+              `Native capture control ${control} did not reach its expected rejection.`
+            );
+          const names = yield* fs.readDirectory(path.join(root.directory, "run/runs"));
+          if (names.length !== 1)
+            return yield* CacheCommandError.new("Native capture control lacks one execution summary.");
+          const bytes = yield* readBytes(root.directory, `run/runs/${O.getOrThrow(A.head(names))}`);
+          const summary = yield* decodeText(bytes).pipe(Effect.flatMap(JsonStringCodec(NativeSummary).decode));
+          const selected = A.filter(summary.tasks, (task) => task.taskId === identityTask);
+          const task = yield* A.head(selected).pipe(
+            Effect.fromOption(() => CacheCommandError.new("Native capture control did not execute the selected task."))
+          );
+          if (
+            selected.length !== 1 ||
+            task.command !== "bun run beep:lint" ||
+            task.cache.status === "HIT" ||
+            !O.contains(0)(O.flatMap(task.execution, (execution) => execution.exitCode))
+          )
+            return yield* CacheCommandError.new(
+              "Native capture control requires a successful fresh selected execution."
+            );
+          return CacheSignedPilotCaptureControl.make({
+            case: control,
+            isolationRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(root.directory)}`),
+            summarySha256: yield* hashBytes(bytes),
+            probeSha256: yield* hashText(probe),
+            taskHash: task.hash,
+            selectedExitCode: 0,
+            origin: "fresh",
+            diagnostic: cacheSignedCaptureDiagnostic(control),
+          });
+        }),
+        { concurrency: 1 }
+      );
+      const freshPairs = yield* Effect.forEach(
+        A.range(0, 2),
+        Effect.fn("CachePilot.signedFreshPair")(function* (pair) {
+          const leftRoot = yield* prepare(sourceRootA, "root-a", `signed-fresh-${pair}-left`).pipe(
+            Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+          );
+          const rightRoot = yield* prepare(sourceRootB, "root-b", `signed-fresh-${pair}-right`).pipe(
+            Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+          );
+          // Each new root starts without a cache; native observations must still prove fresh execution.
+          for (const fixture of [leftRoot, rightRoot])
+            if (yield* fs.exists(path.join(fixture.directory, "cache")))
+              return yield* CacheCommandError.new("Signed fresh comparison requires a new isolated cache directory.");
+          const [left, right] = yield* Effect.all(
+            [
+              execute(leftRoot, `signed-fresh-${pair}-left`, true, true),
+              execute(rightRoot, `signed-fresh-${pair}-right`, true, true),
+            ],
+            { concurrency: 2 }
+          );
+          const result = CacheSignedPilotFreshPair.make({
+            id: pair,
+            leftRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(leftRoot.directory)}`),
+            rightRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(rightRoot.directory)}`),
+            left,
+            right,
+          });
+          yield* validateCacheSignedPilotFreshPair(result, current.source.key);
+          return result;
+        }),
+        { concurrency: 1 }
+      );
+      yield* validateCacheSignedPilotConcurrency(freshPairs);
+      const mutations = A.empty<CacheSignedPilotMutation>();
+      class SignedMutationSeed extends S.Class<SignedMutationSeed>($I`SignedMutationSeed`)(
+        { seed: CacheSignedPilotRun, change: PilotMutationChange },
+        $I.annote("SignedMutationSeed", { description: "Owned seed execution and matching changed fixture inputs." })
+      ) {}
+      const validateSignedProducerAuthority = Effect.fn("CachePilot.validateSignedProducerAuthority")(function* (
+        authoritative: CachePilotRun,
+        producer: CacheSignedPilotRun,
+        mutationEvidence: O.Option<SignedMutationSeed>
+      ) {
+        if (
+          !CachePilotOutcome.isAnyOf(["Executed"])(authoritative.outcome) ||
+          authoritative.graphExitCode !== 0 ||
+          producer.graphExitCode !== 0 ||
+          authoritative.outcome.selected.origin !== "fresh" ||
+          producer.outcome.selected.origin !== "fresh" ||
+          authoritative.outcome.logSha256 !== producer.outcome.logSha256 ||
+          authoritative.outcome.logBytes !== producer.outcome.logBytes ||
+          O.exists(
+            mutationEvidence,
+            (evidence) => evidence.seed.outcome.selected.taskHash === producer.outcome.selected.taskHash
+          )
+        )
+          return yield* CacheCommandError.new(
+            "Signed producer diverged from fresh authority or failed seeded invalidation."
+          );
+      });
+      const validateSignedProtectionProbe = Effect.fn("CachePilot.validateSignedProtectionProbe")(function* (
+        protectionProbe: Effect.Success<ReturnType<typeof invoke>>
+      ) {
+        if (protectionProbe.exitCode !== 0 || protectionProbe.truncated || Str.trim(protectionProbe.stderr) !== "")
+          return yield* CacheCommandError.new("Signed pilot reader protection probe failed.");
+      });
+      const runSignedPair = Effect.fn("CachePilot.signedPair")(function* (
+        pair: number,
+        scenario: PilotShadowScenario,
+        mutationCase: O.Option<CacheSignedPilotMutation["case"]> = O.none()
+      ) {
+        const env = O.isSome(mutationCase)
+          ? { ...scenario.env, QUALIFICATION_CONFIG_INPUT: "changed", QUALIFICATION_CHILD_INPUT: "changed" }
+          : scenario.env;
+        const namespace = `team_${request.channel}_${yield* hashText(`${request.client.namespace}:${pair}`)}`;
+        const client = CacheClientPin.make({ ...request.client, namespace });
+        const writer = yield* freshCapability;
+        const reader = yield* freshCapability;
+        const signing = yield* freshCapability;
+        const issuerCanary = yield* freshCapability;
+        const secrets = [writer, reader, signing, issuerCanary];
+        let fresh = yield* prepare(sourceRootA, "root-a", `signed-${pair}-authority`).pipe(
+          Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+        );
+        let producerRoot = yield* prepare(sourceRootA, "root-a", `signed-${pair}-producer`).pipe(
+          Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+        );
+        let readerRoot = yield* prepare(sourceRootB, "root-b", `signed-${pair}-reader`).pipe(
+          Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
+        );
+        yield* Effect.forEach([fresh, producerRoot, readerRoot], (fixture) => applyShadowSource(fixture, scenario), {
+          concurrency: 1,
+          discard: true,
+        });
+        const fixture = yield* makeCacheProtocolFixture(CacheFixtureCredentials.make({ namespace, writer, reader }));
+        const transport = PilotTransport.make({
+          endpoint: fixture.url,
+          namespace,
+          bearer: writer,
+          signing,
+          secrets,
+        });
+        const executeSignedProducer = Effect.fn("CachePilot.executeSignedProducer")(function* (
+          root: PilotRoot,
+          id: string
+        ) {
+          return yield* executeNative(root, id, true, true, scenario.guest, env, O.some(transport)).pipe(
+            Effect.flatMap(decodeSignedPilotRun)
+          );
+        });
+        const mutationEvidence = yield* O.match(mutationCase, {
+          onNone: () => Effect.succeedNone,
+          onSome: Effect.fn("CachePilot.seedSignedMutation")(function* (id) {
+            yield* Effect.forEach([fresh, producerRoot, readerRoot], (root) => prepareMutationBaseline(root, id), {
+              concurrency: 1,
+              discard: true,
+            });
+            yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-seed`, fault: "none" }));
+            const seed = yield* executeSignedProducer(producerRoot, `signed-${pair}-seed`);
+            const expectedExit = A.contains(mutationIds.pick(["root-lint-config", "dependency-source"]).literals, id)
+              ? 1
+              : 0;
+            if (
+              seed.graphExitCode !== expectedExit ||
+              seed.outcome.selected.exitCode !== expectedExit ||
+              seed.outcome.selected.origin !== "fresh"
+            )
+              return yield* CacheCommandError.new(
+                "Signed mutation seed disagrees with its case-derived fresh verdict."
+              );
+            const [freshChange, producerChange, readerChange] = yield* Effect.all(
+              [
+                applyMutationControl(fresh, id, signedConfig),
+                applyMutationControl(producerRoot, id, signedConfig),
+                applyMutationControl(readerRoot, id, signedConfig),
+              ],
+              { concurrency: 1 }
+            );
+            if (
+              !A.every(
+                [freshChange, readerChange],
+                (change) =>
+                  change.changedPath === producerChange.changedPath &&
+                  change.beforeSha256 === producerChange.beforeSha256 &&
+                  sameMutationDigest(change.afterSha256, producerChange.afterSha256)
+              )
+            )
+              return yield* CacheCommandError.new("Signed mutation roots received different configuration changes.");
+            fresh = freshChange.fixture;
+            producerRoot = producerChange.fixture;
+            readerRoot = readerChange.fixture;
+            return O.some(SignedMutationSeed.make({ seed, change: producerChange }));
+          }),
+        });
+        const authoritative = yield* execute(fresh, `signed-${pair}-authority`, false, false, scenario.guest, env);
+        yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-producer`, fault: "none" }));
+        const producer = yield* executeSignedProducer(producerRoot, `signed-${pair}-producer`);
+        yield* validateSignedProducerAuthority(authoritative, producer, mutationEvidence);
+        const protectedKeyPath = path.join(experiment, `protected-${pair}.key`);
+        const archive = yield* fixture
+          .artifactBytes(producer.outcome.selected.taskHash)
+          .pipe(Effect.flatMap((bytes) => inspectCacheSignedPilotArchive(bytes, secrets)));
+        if (archive.logSha256 !== producer.outcome.logSha256 || archive.logBytes !== producer.outcome.logBytes)
+          return yield* CacheCommandError.new("Signed uploaded archive differs from its verified producer log.");
+        const protectedRecordPath = path.join(experiment, `protected-${pair}.json`);
+        const protectedRecord = yield* JsonStringCodec(CacheSignedPilotRun).encode(producer);
+        yield* writeContainedFileString(experiment, `protected-${pair}.key`, Redacted.value(issuerCanary));
+        yield* writeContainedFileString(experiment, `protected-${pair}.json`, protectedRecord);
+        yield* fs.chmod(protectedKeyPath, 0o600);
+        yield* fs.chmod(protectedRecordPath, 0o600);
+        yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-reader`, fault: "none" }));
+        const replay = yield* executeNative(
+          readerRoot,
+          `signed-${pair}-reader`,
+          true,
+          true,
+          "/fixture",
+          env,
+          O.some(PilotTransport.make({ ...transport, bearer: reader }))
+        ).pipe(Effect.flatMap(decodeSignedPilotRun));
+        const protectedPaths = yield* S.String.pipe(S.Array, JsonStringCodec).encode([
+          protectedKeyPath,
+          protectedRecordPath,
+        ]);
+        const forbiddenDigests = yield* S.String.pipe(S.Array, JsonStringCodec).encode([
+          yield* writer.pipe(Redacted.value, hashText),
+          yield* issuerCanary.pipe(Redacted.value, hashText),
+        ]);
+        const issuerProbe = yield* S.String.pipe(S.OptionFromNullOr, JsonStringCodec).encode(protectedIssuerMaterial);
+        const probeScript = `const fs=require("node:fs");const crypto=require("node:crypto");
+const paths=${protectedPaths};const forbidden=${forbiddenDigests};const issuer=${issuerProbe};
+const denied=(file,flags)=>{try{const fd=fs.openSync(file,flags);fs.closeSync(fd);return false;}catch(error){if(error.code==="ENOENT"||error.code==="EACCES"||error.code==="EPERM"||error.code==="EROFS")return true;throw error;}};
+const values=Object.values(process.env);try{for(const item of fs.readFileSync("/proc/1/environ","utf8").split("\\0")){const at=item.indexOf("=");if(at>=0)values.push(item.slice(at+1));}}catch(error){if(error.code!=="ENOENT"&&error.code!=="EACCES"&&error.code!=="EPERM")throw error;}
+const hidden=values.every(value=>!forbidden.includes(crypto.createHash("sha256").update(value).digest("hex")));
+console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(file=>denied(file,"r")),writesDenied:paths.every(file=>denied(file,"r+")),writerEnvironmentHidden:hidden,issuerMaterialDenied:issuer===null?undefined:denied(issuer,"r")&&denied(issuer,"r+")}));`;
+        const protectionProbe = yield* invoke(
+          readerRoot,
+          "/fixture",
+          ["/tools/bun", "-e", probeScript],
+          env,
+          O.some(PilotTransport.make({ ...transport, bearer: reader }))
+        );
+        yield* validateSignedProtectionProbe(protectionProbe);
+        const protectionResult = yield* JsonStringCodec(S.JsonObject).decode(protectionProbe.stdout);
+        const protectedBytesUnchanged =
+          (yield* readBytes(experiment, `protected-${pair}.key`, 1024).pipe(Effect.flatMap(decodeText))) ===
+            Redacted.value(issuerCanary) &&
+          (yield* readBytes(experiment, `protected-${pair}.json`, 256 * 1024).pipe(Effect.flatMap(decodeText))) ===
+            protectedRecord;
+        const protection = yield* S.decodeUnknownEffect(CacheSignedPilotProtection)({
+          ...protectionResult,
+          mechanism: "nested-reader-denial/v1",
+          protectedBytesUnchanged,
+        });
+        const events = yield* fixture.events;
+        const comparison = CacheSignedPilotPair.make({
+          id: S.Natural.make(pair),
+          client,
+          authorityRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(fresh.directory)}`),
+          producerRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(producerRoot.directory)}`),
+          replayRoot: yield* hashText(`beep/cache-pilot-isolation/v1\0${yield* fs.realPath(readerRoot.directory)}`),
+          authoritative,
+          producer,
+          replay,
+          events,
+          protection,
+          archive,
+        });
+        if (O.isSome(mutationCase) && O.isSome(mutationEvidence)) {
+          const evidence = mutationEvidence.value;
+          const afterSha256 = yield* evidence.change.afterSha256.pipe(
+            Effect.fromOption(() =>
+              CacheCommandError.new("Signed replay mutation unexpectedly removed its configuration.")
+            )
+          );
+          const mutation = CacheSignedPilotMutation.make({
+            case: mutationCase.value,
+            changedPath: evidence.change.changedPath,
+            beforeSha256: evidence.change.beforeSha256,
+            afterSha256,
+            seed: evidence.seed,
+            comparison,
+          });
+          mutations.push(yield* validateCacheSignedPilotMutation(mutation, current.source.key, request.client));
+        } else yield* validateCacheSignedPilotPair(comparison, current.source.key, request.client);
+        return comparison;
+      }, Effect.scoped);
+      const pairs = yield* Effect.forEach(A.range(0, 2), (pair) => runSignedPair(pair, unchanged), { concurrency: 1 });
+      const baselinePair = O.getOrThrow(A.head(pairs));
+      const shadows = yield* Effect.forEach(
+        scenarios,
+        Effect.fn("CachePilot.signedShadow")(function* (scenario, index) {
+          const comparison = yield* runSignedPair(index + 3, scenario);
+          const shadow = CacheSignedPilotShadow.make({ case: scenario.id, comparison });
+          return yield* validateCacheSignedPilotShadow(shadow, baselinePair);
+        }),
+        { concurrency: 1 }
+      );
+      yield* Effect.forEach(
+        CacheSignedPilotMutation.fields.case.literals,
+        (id, index) => runSignedPair(index + 13, unchanged, O.some(id)),
+        { concurrency: 1, discard: true }
+      );
+      const nonExecutions = yield* collectNonExecutionControls(O.some(signedConfig));
+      const policyRefusal = yield* observeMissingChildRefusal(signedConfig);
+      yield* verifyFinalIntegrity();
+      return CacheSignedPilotReceipt.make({
+        key: CacheQualificationKey.make({
+          ...current.source.key,
+          profile: `${current.source.key.profile}-private-loopback-signed-v1`,
+        }),
+        baseKey: current.source.key,
+        sourceRevision: revision,
+        channel: request.channel,
+        client: request.client,
+        runtimeKeyDigest: runtimeIdentity.toolchainDigest,
+        runtimeLinker: O.some(runtimeLinker),
+        bun: current.source.toolchain.bun,
+        biome: current.source.toolchain.biome,
+        node: current.source.toolchain.node,
+        installedDependencies: dependencies.tree,
+        activation: request.activation,
+        configurationDigest: current.source.configurationDigest,
+        toolchainDigest: current.source.toolchainDigest,
+        activatedConfigurationDigest: current.target.configurationDigest,
+        signedConfigurationDigest: signedIdentity.configurationDigest,
+        signedRootConfiguration,
+        policyRefusal,
+        captureControls,
+        nonExecutions,
+        mutations,
+        shadows,
+        freshPairs,
+        pairs,
+      });
+    }
+
     const runs: Array<CachePilotRun> = [];
     const checks: Array<CacheSyntheticCheck> = [];
     const shadowDecisions: Array<CachePilotShadow> = [];
@@ -973,82 +1968,12 @@ const runPilot = Effect.fn("CachePilot.run")(
       });
       yield* runInitialComparisons();
       const baseline = O.getOrThrow(A.get(runs, 0));
-      const applyShadowSource = Effect.fn("CachePilot.applyShadowSource")(function* (
-        fixture: PilotRoot,
-        scenario: PilotShadowScenario
-      ) {
-        if (scenario.sourceChange === "source-comment") {
-          const original = yield* readBytes(fixture.identity, "src/index.ts").pipe(Effect.flatMap(decodeText));
-          yield* writeContainedFileString(
-            fixture.identity,
-            "src/index.ts",
-            `${original}\n// Qualification shadow input.\n`
-          );
-        } else if (scenario.sourceChange === "added-source") {
-          yield* writeContainedFileString(
-            fixture.identity,
-            "src/qualification-shadow.ts",
-            'export const qualificationShadow = "fixture";\n'
-          );
-        } else if (scenario.sourceChange === "readme") {
-          const original = yield* readBytes(fixture.identity, "README.md").pipe(Effect.flatMap(decodeText));
-          yield* writeContainedFileString(fixture.identity, "README.md", `${original}\nQualification shadow input.\n`);
-        }
-      });
       const equivalentShadowReplay = (authoritative: CachePilotRun, produced: CachePilotRun, replayed: CachePilotRun) =>
         compare(authoritative, produced, false) &&
         compare(produced, replayed, true) &&
         CachePilotOutcome.isAnyOf(["Executed"])(replayed.outcome) &&
         replayed.outcome.selected.origin === "local-hit";
       const runShadowComparisons = Effect.fn("CachePilot.runShadowComparisons")(function* () {
-        const unchanged = PilotShadowScenario.make({
-          id: "baseline",
-          sourceChange: "none",
-          env: {},
-          guest: "/fixture",
-          expectedInputHash: "stable",
-        });
-        const scenarios = [
-          unchanged,
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "source-comment",
-            sourceChange: "source-comment",
-            expectedInputHash: "changed",
-          }),
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "added-source",
-            sourceChange: "added-source",
-            expectedInputHash: "changed",
-          }),
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "readme",
-            sourceChange: "readme",
-            expectedInputHash: "changed",
-          }),
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "declared-env",
-            env: { BEEP_ESLINT_PROFILE: "qualification" },
-            expectedInputHash: "changed",
-          }),
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "declared-env-empty",
-            env: { BEEP_ESLINT_PROFILE: "" },
-            expectedInputHash: "changed",
-          }),
-          PilotShadowScenario.make({
-            ...unchanged,
-            id: "orchestration-env",
-            env: { BEEP_AGENT_SESSION_ID: "qualification-canary-metadata" },
-          }),
-          PilotShadowScenario.make({ ...unchanged, id: "locale", env: { LANG: "C.UTF-8", LC_ALL: "C.UTF-8" } }),
-          PilotShadowScenario.make({ ...unchanged, id: "timezone", env: { TZ: "Pacific/Honolulu" } }),
-          PilotShadowScenario.make({ ...unchanged, id: "absolute-root", guest: "/fixture-other" }),
-        ];
         for (const scenario of scenarios) {
           const writer = yield* prepare(sourceRootA, "root-a", `shadow-${scenario.id}-a`);
           const reader = yield* prepare(sourceRootB, "root-b", `shadow-${scenario.id}-b`);
@@ -1118,16 +2043,6 @@ const runPilot = Effect.fn("CachePilot.run")(
       });
       yield* runFailedSourceControl();
     }
-    const mutationIds = LiteralKit([
-      "root-task-config",
-      "child-task-config",
-      "missing-child-config",
-      "root-lint-config",
-      "lockfile",
-      "package-manager",
-      "generated-alias",
-      "dependency-source",
-    ]);
     const validMutationReplay = (
       seeded: CachePilotRun,
       changed: CachePilotRun,
@@ -1152,136 +2067,15 @@ const runPilot = Effect.fn("CachePilot.run")(
         )
           ? 1
           : 0;
-        if (id === "root-lint-config")
-          yield* writeContainedFileString(fixture.identity, "src/index.ts", "export const = ;\n");
-        if (id === "dependency-source") {
-          yield* writeContainedFileString(
-            fixture.identity,
-            "src/qualification-dependency.ts",
-            'import { qualificationDependency } from "../../../primitive/types/src/index.ts";\n\nexport const qualificationValue = qualificationDependency;\n'
-          );
-          const dependencySource = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
-          yield* writeContainedFileString(
-            fixture.types,
-            "src/index.ts",
-            `${dependencySource}\n/** @deprecated qualification dependency control */\nexport const qualificationDependency = 1;\n`
-          );
-        }
+        yield* prepareMutationBaseline(fixture, id);
         const env = { QUALIFICATION_CONFIG_INPUT: "changed", QUALIFICATION_CHILD_INPUT: "changed" };
         const seeded = yield* execute(fixture, `${id}-baseline`, true, true, "/fixture", env);
-        let changedFixture = fixture;
-        let changedPath = "turbo.json";
-        let original = yield* readBytes(fixture.source, changedPath).pipe(Effect.flatMap(decodeText));
-        let changedText = original;
-        const changeChildConfiguration = Effect.fn("CachePilot.changeChildConfiguration")(function* () {
-          changedPath = `${identityDirectory}/turbo.json`;
-          original = fixture.after;
-          if (id === "missing-child-config") changedFixture = PilotRoot.make({ ...fixture, omitChild: true });
-          else {
-            const change = Effect.fn("CachePilot.changeChild")(function* (text: string) {
-              const config = yield* decodeJsoncTextAs(S.JsonObject)(text);
-              const tasks = yield* decodeJsonObject(config.tasks);
-              const lint = yield* decodeJsonObject(tasks.lint);
-              const declared = yield* decodeArrayString(lint.env);
-              const encoded = yield* JsonStringCodec(S.JsonObject).encode(
-                R.set(
-                  config,
-                  "tasks",
-                  R.set(tasks, "lint", R.set(lint, "env", A.append(declared, "QUALIFICATION_CHILD_INPUT")))
-                )
-              );
-              yield* writeContainedFileString(fixture.identity, "turbo.json", encoded);
-              const formatted = yield* invoke(fixture, "/fixture", [
-                "/bin/sh",
-                "-c",
-                `exec /tools/biome format --stdin-file-path=/fixture/${identityDirectory}/turbo.json < /fixture/${identityDirectory}/turbo.json`,
-              ]);
-              if (formatted.exitCode !== 0 || formatted.truncated)
-                return yield* CacheCommandError.new("Cannot format the child-config control with pinned Biome.");
-              return formatted.stdout;
-            });
-            changedText = yield* change(fixture.after);
-            changedFixture = PilotRoot.make({ ...fixture, before: yield* change(fixture.before), after: changedText });
-          }
-        });
-        const changeRootMetadata = Effect.fn("CachePilot.changeRootMetadata")(function* () {
-          changedPath = mutationIds.$match({
-            "root-lint-config": () => "biome.jsonc",
-            lockfile: () => "bun.lock",
-            "package-manager": () => "package.json",
-            "generated-alias": () => "tsconfig.json",
-            "root-task-config": () => "tsconfig.json",
-            "child-task-config": () => "tsconfig.json",
-            "missing-child-config": () => "tsconfig.json",
-            "dependency-source": () => "tsconfig.json",
-          })(id);
-          original = yield* readBytes(fixture.source, changedPath).pipe(Effect.flatMap(decodeText));
-          const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
-          if (id === "root-lint-config") {
-            const files = yield* decodeJsonObject(config.files);
-            const includes = yield* decodeArrayString(files.includes);
-            changedText = yield* JsonStringCodec(S.JsonObject).encode(
-              R.set(config, "files", R.set(files, "includes", A.append(includes, "!**/src/index.ts")))
-            );
-          } else if (id === "lockfile") {
-            const packages = yield* decodeJsonObject(config.packages);
-            const dependency = yield* decodeNonEmptyArrayJson(packages.effect);
-            const descriptor = yield* decodeNonEmptyString(dependency[0]);
-            changedText = yield* JsonStringCodec(S.JsonObject).encode(
-              R.set(
-                config,
-                "packages",
-                R.set(packages, "effect", [`${descriptor}-qualification`, ...A.drop(dependency, 1)])
-              )
-            );
-          } else if (id === "package-manager") {
-            changedText = yield* JsonStringCodec(S.JsonObject).encode(R.set(config, "packageManager", "bun@1.4.1"));
-          } else {
-            const options = yield* decodeJsonObject(config.compilerOptions);
-            const aliases = yield* decodeJsonObject(options.paths);
-            changedText = yield* JsonStringCodec(S.JsonObject).encode(
-              R.set(
-                config,
-                "compilerOptions",
-                R.set(
-                  options,
-                  "paths",
-                  R.set(aliases, "@beep/qualification-alias", [`./${identityDirectory}/src/index.ts`])
-                )
-              )
-            );
-          }
-        });
-        const applyMutation = Effect.fn("CachePilot.applyMutation")(function* () {
-          if (id === "root-task-config") {
-            const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
-            const global = yield* decodeJsonObject(config.global);
-            const declared = yield* decodeArrayString(global.env);
-            changedText = yield* JsonStringCodec(S.JsonObject).encode(
-              R.set(config, "global", R.set(global, "env", A.append(declared, "QUALIFICATION_CONFIG_INPUT")))
-            );
-          } else if (id === "child-task-config" || id === "missing-child-config") {
-            yield* changeChildConfiguration();
-          } else if (id === "dependency-source") {
-            changedPath = `${typesDirectory}/src/index.ts`;
-            original = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
-            changedText = Str.replace("/** @deprecated qualification dependency control */\n", "")(original);
-            yield* writeContainedFileString(fixture.types, "src/index.ts", changedText);
-          } else {
-            yield* changeRootMetadata();
-          }
-        });
-        yield* applyMutation();
-        if (
-          !A.contains(mutationIds.pick(["child-task-config", "missing-child-config", "dependency-source"]).literals, id)
-        )
-          changedFixture = yield* overlayRootFile(fixture, changedPath, changedText);
-        if (needsProfile && id === "root-lint-config")
-          changedFixture = yield* overlayRootFile(
-            changedFixture,
-            "biome.identity.jsonc",
-            yield* renderCacheIdentityLintProfile(changedText)
-          );
+        const mutation = yield* applyMutationControl(
+          fixture,
+          id,
+          yield* readBytes(fixture.source, "turbo.json").pipe(Effect.flatMap(decodeText))
+        );
+        const changedFixture = mutation.fixture;
         const changed = yield* execute(changedFixture, `${id}-changed`, true, true, "/fixture", env);
         const replayed = yield* execute(changedFixture, `${id}-replay`, true, true, "/fixture", env);
         runs.push(seeded, changed, replayed);
@@ -1289,9 +2083,9 @@ const runPilot = Effect.fn("CachePilot.run")(
         mutations.push(
           CachePilotMutation.make({
             id,
-            changedPath,
-            beforeSha256: yield* hashText(original),
-            afterSha256: id === "missing-child-config" ? O.none() : O.some(yield* hashText(changedText)),
+            changedPath: mutation.changedPath,
+            beforeSha256: mutation.beforeSha256,
+            afterSha256: mutation.afterSha256,
             baseline: seeded.id,
             changed: changed.id,
             replay: replayed.id,
@@ -1308,125 +2102,23 @@ const runPilot = Effect.fn("CachePilot.run")(
       }
     });
     yield* runMutationControls();
-    // These controls disable reuse and remain independent of a failed replay comparison.
-    const prepareNonExecution = Effect.fn("CachePilot.prepareNonExecution")(function* (
-      reason: CachePilotNonExecution["reason"]
-    ) {
-      let fixture = yield* prepare(sourceRoots[0], "root-a", `non-execution-${reason}`);
-      if (reason === "missing-root-config")
-        fixture = PilotRoot.make({ ...fixture, omitted: ["turbo.json", "turbo.jsonc"] });
-      else if (reason === "malformed-root-config") fixture = yield* overlayRootFile(fixture, "turbo.json", '{"tasks":');
-      else if (reason === "malformed-child-config")
-        yield* writeContainedFileString(fixture.identity, "turbo.json", '{"tasks":');
-      else {
-        const manifest = yield* readBytes(fixture.identity, "package.json").pipe(
-          Effect.flatMap(decodeText),
-          Effect.flatMap(decodeJsoncTextAs(S.JsonObject))
-        );
-        const scripts = yield* decodeJsonObject(manifest.scripts);
-        yield* writeContainedFileString(
-          fixture.identity,
-          "package.json",
-          yield* JsonStringCodec(S.JsonObject).encode(R.set(manifest, "scripts", R.remove(scripts, "lint")))
-        );
-      }
-      return fixture;
-    });
-    const observeSelectedExecution = Effect.fn("CachePilot.observeSelectedExecution")(function* (
-      fixture: PilotRoot,
-      names: ReadonlyArray<string>
-    ) {
-      if (names.length !== 1) return false;
-      const native = yield* readBytes(fixture.directory, `run/runs/${O.getOrThrow(A.head(names))}`).pipe(
-        Effect.flatMap(decodeText),
-        Effect.flatMap(JsonStringCodec(NativeSummary).decode)
+    for (const observation of yield* collectNonExecutionControls()) {
+      nonExecutions.push(
+        CachePilotNonExecution.make({
+          id: observation.id,
+          reason: observation.reason,
+          exitCode: observation.exitCode,
+          stdoutSha256: observation.stdoutSha256,
+          stderrSha256: observation.stderrSha256,
+          summaryPresent: O.isSome(observation.summarySha256),
+          selectedExecutionObserved: observation.selectedExecutionObserved,
+          passed: observation.passed,
+        })
       );
-      return A.some(
-        native.tasks,
-        (task) =>
-          task.taskId === identityTask &&
-          task.command !== "<NONEXISTENT>" &&
-          Str.trim(task.command) !== "" &&
-          O.isSome(task.execution)
+      checks.push(
+        CacheSyntheticCheck.make({ name: `non-execution-${observation.reason}`, passed: observation.passed })
       );
-    });
-    const runNonExecutionControls = Effect.fn("CachePilot.runNonExecutionControls")(function* () {
-      const runNonExecutionControl = Effect.fn("CachePilot.runNonExecutionControl")(function* (
-        reason: CachePilotNonExecution["reason"]
-      ) {
-        const fixture = yield* prepareNonExecution(reason);
-        const captured = yield* invoke(fixture, "/fixture", [
-          "/tools/turbo",
-          "run",
-          "lint",
-          "--filter=@beep/identity",
-          "--no-daemon",
-          "--cache=local:",
-          "--env-mode=strict",
-          "--summarize",
-          "--output-logs=full",
-          "--log-order=grouped",
-          "--log-prefix=task",
-          "--ui=stream",
-        ]);
-        if (captured.truncated)
-          return yield* CacheCommandError.new("A native non-execution control exceeded its capture bound.");
-        const summaryDirectory = path.join(fixture.directory, "run/runs");
-        const names = (yield* fs.exists(summaryDirectory)) ? yield* fs.readDirectory(summaryDirectory) : [];
-        const summaryPresent = names.length === 1;
-        const selectedExecutionObserved = yield* observeSelectedExecution(fixture, names);
-        const expectedDiagnostic = matchesNonExecutionDiagnostic(reason, captured.stderr);
-        const passed =
-          !selectedExecutionObserved &&
-          (reason === "absent-script"
-            ? captured.exitCode === 0 && summaryPresent
-            : captured.exitCode !== 0 && !summaryPresent && expectedDiagnostic);
-        nonExecutions.push(
-          CachePilotNonExecution.make({
-            id: reason,
-            reason,
-            exitCode: captured.exitCode,
-            stdoutSha256: yield* hashText(captured.stdout),
-            stderrSha256: yield* hashText(captured.stderr),
-            summaryPresent,
-            selectedExecutionObserved,
-            passed,
-          })
-        );
-        checks.push(CacheSyntheticCheck.make({ name: `non-execution-${reason}`, passed }));
-        if (!passed) {
-          const diagnostics = `.beep/cache/pilot-observations/${path.basename(experiment)}/${reason}`;
-          yield* writeContainedFileString(root, `${diagnostics}/stdout.txt`, captured.stdout);
-          yield* writeContainedFileString(root, `${diagnostics}/stderr.txt`, captured.stderr);
-          yield* Effect.logWarning(`Native control mismatch; bounded private diagnostics: ${diagnostics}`);
-          return false;
-        }
-        return true;
-      });
-      for (const reason of CachePilotNonExecution.fields.reason.literals) {
-        if (!(yield* runNonExecutionControl(reason))) break;
-      }
-    });
-    yield* runNonExecutionControls();
-    const verifyFinalIntegrity = Effect.fn("CachePilot.verifyFinalIntegrity")(function* () {
-      yield* verifyTools();
-      if (
-        !S.toEquivalence(CacheRuntimeLinkerSnapshot)(
-          runtimeLinker,
-          yield* collectCacheRuntimeLinker(root, runtimeExecutables)
-        )
-      )
-        return yield* CacheCommandError.new("Pilot startup libraries changed during execution.");
-      if (!S.toEquivalence(CacheActivationPreview)(yield* cache.activation(root, activationRequest), current))
-        return yield* CacheCommandError.new("Pilot source configuration drifted during execution.");
-      for (const source of sourceRoots)
-        if (
-          (yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "" ||
-          (yield* captureHost(source, ["rev-parse", "HEAD"])) !== revision
-        )
-          return yield* CacheCommandError.new("Read-only pilot worktree changed during execution.");
-      yield* verifyCacheDependencies(root, dependencies);
-    });
+    }
     yield* verifyFinalIntegrity();
     yield* Effect.logInfo(
       `Pilot ${request.channel}: completed ${runs.length} observations and ${checks.length} checks.`
@@ -1483,7 +2175,14 @@ const runPilot = Effect.fn("CachePilot.run")(
  * @category testing
  * @since 0.0.0
  */
-export const runCachePilotForTesting = runPilot;
+export const runCachePilotForTesting = Effect.fn("CachePilot.runLocalForTesting")(function* (
+  root: string,
+  request: CachePilotRequest
+) {
+  return yield* runPilot(root, request).pipe(
+    Effect.filterOrFail(S.is(CachePilotReceipt), () => CacheCommandError.new("Expected an offline pilot receipt."))
+  );
+});
 
 /**
  * Execute admitted real-pilot comparisons in disposable overlays of read-only worktrees.
@@ -1519,6 +2218,35 @@ export const runCachePilotExperiment = Effect.fn("Cache.runPilotExperiment")(fun
       command: "bun run beep cache pilot",
     }),
     noAdmissionOriginGate,
-    runPilot(root, request)
+    runCachePilotForTesting(root, request)
   );
 }, CacheCommandError.mapError("Real pilot admission or execution failed."));
+
+/**
+ * Execute signed real-pilot pairs inside a supervisor-owned private network.
+ *
+ * **Details**
+ * Derives a distinct private-loopback profile from the reviewed base activation
+ * and requires clean registered
+ * source roots. The caller owns admission and the outer namespace. Returned
+ * observations do not establish protected-producer or qualification authority.
+ *
+ * **Example** (Reference the signed worker)
+ * ```ts
+ * import { runCacheSignedPilotWorker } from "@beep/repo-cli/commands/Cache"
+ * console.assert(typeof runCacheSignedPilotWorker === "function")
+ * ```
+ *
+ * @internal
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const runCacheSignedPilotWorker = Effect.fn("CachePilot.runSignedWorker")(function* (
+  root: string,
+  request: CachePilotRequest,
+  protectedIssuerMaterial: O.Option<string> = O.none()
+) {
+  return yield* runPilot(root, request, "signed", protectedIssuerMaterial).pipe(
+    Effect.filterOrFail(S.is(CacheSignedPilotReceipt), () => CacheCommandError.new("Expected a signed pilot receipt."))
+  );
+});

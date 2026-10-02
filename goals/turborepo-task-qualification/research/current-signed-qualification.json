@@ -1,0 +1,84 @@
+{
+  "authority": "Sanitized receipt of authenticated native evidence and production operational qualification; raw signed observations and trust stores remain private.",
+  "sourceRevision": "93a19425da0f28d262cfb4b5e9190f137fbbaf58",
+  "key": {
+    "computation": "@beep/identity#lint",
+    "layer": "turbo-task-result",
+    "profile": "local-linux-x64-bun1.4.2-private-loopback-signed-v1",
+    "epoch": "qualification-v2"
+  },
+  "status": "qualified",
+  "ledgerRevision": 8,
+  "acceptance": {
+    "schemaVersion": "cache-producer-acceptance-reference/v1",
+    "sha256": "5b6b9470cb65d5150ce41401d083ca30809c720f9955ede9225a99e17a3ae440"
+  },
+  "acceptedFragments": 103,
+  "acceptanceBlockers": 0,
+  "auditBlockingFindings": 0,
+  "legacyUnassessedCachedComputations": 1259,
+  "channels": {
+    "stable": {
+      "observationSha256": "dc2100bb3bd187d9c2f86fd093681e6122b0069cf4ccb77278f2f939d7d1dc6c",
+      "client": {
+        "version": "2.11.6",
+        "sha256": "120f6fe6df30f9f757652b1c86420234d1bf728b24a30c336e5f7482bf42116c",
+        "namespace": "qualification-93a1-formatted-stable-v9"
+      },
+      "sourceRevision": "93a19425da0f28d262cfb4b5e9190f137fbbaf58",
+      "counts": {
+        "freshPairs": 3,
+        "pairs": 3,
+        "shadows": 10,
+        "mutations": 7,
+        "captureControls": 4,
+        "nonExecutions": 4
+      },
+      "missingChildPolicyRefusal": "missing-child-config",
+      "protocolRoots": 9,
+      "protocolFailureControls": 3,
+      "runtimeToolchainSha256": "520cbc03ec51565965812b88eaaa7adf3fc603ed693d6206b5fe6cf77bd2f6a4"
+    },
+    "canary": {
+      "observationSha256": "859c2df104cfc67bec386cce2b7e123014564697e6c0c6883c3310c8c998d615",
+      "client": {
+        "version": "2.11.5-canary.5",
+        "sha256": "7b3e1fbe63880e72bbd87075686ef8ab64a39c3c7c3677d90b177f6f82f899cb",
+        "namespace": "qualification-93a1-formatted-canary-v9"
+      },
+      "sourceRevision": "93a19425da0f28d262cfb4b5e9190f137fbbaf58",
+      "counts": {
+        "freshPairs": 3,
+        "pairs": 3,
+        "shadows": 10,
+        "mutations": 7,
+        "captureControls": 4,
+        "nonExecutions": 4
+      },
+      "missingChildPolicyRefusal": "missing-child-config",
+      "protocolRoots": 9,
+      "protocolFailureControls": 3,
+      "runtimeToolchainSha256": "979a55a286ce7e15f27e4f8997531ce3b057816e02254e30d8e0a085103174e8"
+    }
+  },
+  "operationalArtifacts": {
+    "baseline-request.json": "abad44d25b1b3638430af8d34f2ec2dbf24acc2d810b45cdc17c2638adcc72bc",
+    "candidate-request.json": "eb6c8cfbfd29ef1c3972acebb49afbdb1e12c71cc7daf669578aedf19e3e3d5f",
+    "shadow-request.json": "f6ffcf3722a615d57ad2d1ec6528e8fdc68800257128cd160b651934c8944489",
+    "qualified-request.json": "a3ff8ef77cb1eae3b46ad33c7de98472c787f7fc0cdbc9f35b53ac1701d902b0",
+    "acceptance-reference.json": "d3dee7b7dcce9a8baa1c6a907ab81ddf3dc92788d6c263b264c31472817ca7cc",
+    "operational-baseline.log": "92bade2e54c979f4efac946aaea6bd3992c98dff38ea13cc0e659c530bd9d8dc",
+    "operational-candidate.log": "5438e2e4e4859efcea482d167ced25655c68ecaeea0f5328a56a0eda99c4bd31",
+    "operational-shadow.log": "8f881867fa4bb6080a1d60600e647caef91fcdcfc14cc1dded023aa2fe8a4c53",
+    "operational-qualified.log": "9741a8690bbced432d8eacc5d2579ce9b983feec82c69ee24807af6953aee6a4",
+    "operational-audit.log": "3a2f4c97361d5af02d2a5775d3271ab718735253afe26283c4375e2d2dc27f73",
+    "standards/cache-qualification.json": "9cee64b2cdad638487c8d5580f68a402aae8a521b1791b821956c4bd5ce600fa",
+    "standards/cache-qualification-baseline.json": "9a7195df291e6a57cc49c65b039f1c345877a005a20dcdd61a96075e77ae8a6e"
+  },
+  "limits": [
+    "Qualification is restricted to the named private-loopback signed execution profile.",
+    "The ordinary source profile remains excluded and source cache activation is unchanged.",
+    "No broad task-family activation, backend deployment or hosted proof substitution is authorized.",
+    "Final-head package, Yeet, hosted checks, review and lifecycle closeout remain required."
+  ]
+}

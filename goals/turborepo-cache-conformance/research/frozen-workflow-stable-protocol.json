@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "owned-frozen-protocol-checkpoint/v1",
+  "authority": "synthetic-native-observation-only",
+  "qualificationGranted": false,
+  "workflowRevision": "3865e09ba3c54c455a4b0eb3da0a181a3be9ec8e",
+  "channel": "stable",
+  "client": {
+    "version": "2.11.5",
+    "sha256": "479733d3000c9393afb0c421d003cd26417bdb9e0ff525cf1445a7e1f29bb8bc",
+    "namespace": "team_qualification_frozen_workflow_stable_3865"
+  },
+  "rawSha256": "41252938f2d49a5e5e8fd8c0afd6960f101044887201553b7738e86594c06308",
+  "nativeCases": [
+    {
+      "case": "producer",
+      "outcome": "Produced"
+    },
+    {
+      "case": "replay",
+      "outcome": "Replayed"
+    },
+    {
+      "case": "missing-tag",
+      "outcome": "Rejected"
+    },
+    {
+      "case": "invalid-tag",
+      "outcome": "Rejected"
+    },
+    {
+      "case": "corrupt-body",
+      "outcome": "Rejected"
+    },
+    {
+      "case": "wrong-key",
+      "outcome": "Rejected"
+    }
+  ],
+  "transportFailures": [
+    {
+      "case": "truncated-body",
+      "exitCode": 42,
+      "restoredOutputs": 0
+    },
+    {
+      "case": "unavailable",
+      "exitCode": 42,
+      "restoredOutputs": 0
+    },
+    {
+      "case": "throttled",
+      "exitCode": 42,
+      "restoredOutputs": 0
+    }
+  ],
+  "wireEventCount": 23,
+  "bunSha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+  "exitCode": 0,
+  "namespaceControl": "An initial non-team namespace failed at replay. The same binary passed after correcting only the namespace to a team_ identifier. Failed execution is not accepted evidence.",
+  "limits": [
+    "Synthetic fixture observation only; no signed operational import or real pilot qualification.",
+    "The complete real pilot matrix must be reconciled with final source, runtime and client identities."
+  ]
+}

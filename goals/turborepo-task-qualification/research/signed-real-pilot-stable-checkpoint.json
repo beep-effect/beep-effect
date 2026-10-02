@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "qualification-signed-real-checkpoint/v1",
+  "status": "partial-observation",
+  "qualificationGranted": false,
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "channel": "stable",
+  "key": {
+    "computation": "@beep/identity#lint",
+    "layer": "turbo-task-result",
+    "profile": "local-linux-x64-bun1.4.2-private-loopback-signed-v1",
+    "epoch": "qualification-v2"
+  },
+  "baseKey": {
+    "computation": "@beep/identity#lint",
+    "layer": "turbo-task-result",
+    "profile": "local-linux-x64-bun1.4.2",
+    "epoch": "qualification-v2"
+  },
+  "authority": "signed-pilot-observation-only",
+  "receiptSha256": "8a4aab9d81bc8c574d11ca3d65db732d87ca2870e236f612d76cafba89c9d35a",
+  "receiptBytes": 59563,
+  "pairs": [
+    {
+      "id": 0,
+      "authorityExit": 0,
+      "producerExit": 0,
+      "replayExit": 0,
+      "producerOrigin": "fresh",
+      "replayOrigin": "remote-hit",
+      "matchingLogs": true,
+      "events": 7
+    },
+    {
+      "id": 1,
+      "authorityExit": 0,
+      "producerExit": 0,
+      "replayExit": 0,
+      "producerOrigin": "fresh",
+      "replayOrigin": "remote-hit",
+      "matchingLogs": true,
+      "events": 7
+    },
+    {
+      "id": 2,
+      "authorityExit": 0,
+      "producerExit": 0,
+      "replayExit": 0,
+      "producerOrigin": "fresh",
+      "replayOrigin": "remote-hit",
+      "matchingLogs": true,
+      "events": 7
+    }
+  ],
+  "limits": [
+    "Private supervisor harness; public command pending.",
+    "Protected producer and accepted evidence importer remain incomplete.",
+    "No promotion or qualification authority."
+  ]
+}

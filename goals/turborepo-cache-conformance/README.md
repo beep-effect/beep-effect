@@ -2,11 +2,11 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
 Source: [ops/manifest.json](./ops/manifest.json).
-Authored but not started. Launch begins P0; see [PLAN.md](./PLAN.md) for resume
-conditions and milestone dependencies.
+Active for the early handoff consumed by task qualification. See
+[PLAN.md](./PLAN.md) for current evidence and remaining milestone gates.
 
 ## Mission
 
@@ -30,15 +30,17 @@ Deliver a reusable exact-version Remote Cache conformance corpus and a bounded, 
 
 ## Current phase
 
-P0 Pins, corpus and budget plan, not started.
+P0 Pins, corpus and budget plan, in progress.
 
 Refresh exact source/client/backend pins and compile the existing 32-case corpus plan into an executable local fixture design.
 
 ## Latest evidence
 
-[Graduation receipt](./history/graduation-2026-09-08.md) records approval and
-packet creation only. Implementation tests, deployment and observation have
-not started.
+The [owned protocol runner](./research/owned-protocol-runner.json) and expanded
+[stable](./research/owned-fixture-expanded-stable.json) and
+[canary](./research/owned-fixture-expanded-canary.json) fixture reports record
+local runtime controls. They do not establish accepted qualification imports,
+backend deployment or the broader topology comparison.
 
 ## Notes
 

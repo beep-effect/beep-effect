@@ -44,6 +44,7 @@ export {
   CacheQualificationPins,
   CacheQualificationState,
   CacheReuseLayer,
+  CacheSignedExecutionProfile,
   CacheTaskConfiguration,
   CacheTaskContract,
   cachePromotionFailures,

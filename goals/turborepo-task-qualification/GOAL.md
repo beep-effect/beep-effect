@@ -12,11 +12,11 @@ Read AGENTS.md, then:
 - explorations/turborepo-quality-cache/MAP.md
 
 The user approved the brief, first slice and four-goal map on 2026-09-08.
-Launching this packet starts scoped implementation without repeating shape
-approval. It is paused until launch. Inspect current state and use
-`bun run beep goals set-status turborepo-task-qualification active` to begin P0.
-
-First action: Refresh the executable census and define the qualification policy shared by the pilot, conformance runner and adoption audit.
+Implementation and retained pilot acceptance are recorded in PLAN and the
+current acceptance audit. Inspect those records and the manifest before acting;
+do not restart completed phases or relabel historical evidence. During final
+publication, preserve the full acceptance contract and verify the actual PR
+head before merge. Broad adoption remains a separate goal.
 
 In: repo-configs cache policy; Cache qualification commands and tests; a scoped Quality policy gate; pilot fixtures and computation configuration.
 Out: broad task-family activation, backend deployment, production credentials, and changes to Yeet proof ownership.

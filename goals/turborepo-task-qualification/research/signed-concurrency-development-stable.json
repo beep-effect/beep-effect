@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "qualification-signed-concurrency-development/v1",
+  "authority": "development-observation-only",
+  "workflowBaseRevision": "68cdd2d324",
+  "workflowSource": "working tree; exact changed-source snapshot retained privately",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "client": {
+    "version": "2.11.4",
+    "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+    "namespace": "team_qualification_signed_concurrency_stable_v4"
+  },
+  "channel": "stable",
+  "receiptSha256": "aa9fd0ea3008fb4cd941c6372363265240f961e36ca9bf76d34cd8dc5ff4ff31",
+  "receiptBytes": 125956,
+  "receiptRetention": "~/.cache/beep/turbo-qualification/evidence/signed-concurrency-v4/stable.json",
+  "freshPairs": 3,
+  "baselineRemotePairs": 3,
+  "shadowDecisions": 10,
+  "nativeSelectedTaskOverlapMs": [
+    498,
+    539,
+    378
+  ],
+  "sourceTypecheck": "passed",
+  "focusedTests": {
+    "files": 4,
+    "tests": 52,
+    "result": "passed"
+  },
+  "packageVerification": {
+    "result": "passed",
+    "package": "@beep/repo-cli",
+    "auditSeconds": 660.6,
+    "docgenSeconds": 19.2
+  },
+  "limitations": [
+    "Older frozen profile; not final current-profile qualification.",
+    "Actual persistent issuer file was not supplied to this development control.",
+    "Signed seeded mutations, policy refusals, non-execution and capture controls remain incomplete.",
+    "Accepted policy import and qualified transitions remain closed."
+  ]
+}

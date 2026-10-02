@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "owned-producer-workflow-checkpoint/v1",
+  "authority": "component-verification-only",
+  "qualificationGranted": false,
+  "sourceRevision": "57305f9d4699a7009ee2c8377233718c230da4a3",
+  "implementation": {
+    "declaredSources": "Bounded Git tracked and nonignored untracked package, script and root configuration inventory; exact NUL-delimited paths, contained bytes, mode and relative alias identity.",
+    "runtime": "Installed root dependency tree, toolchain and six host inspection tools are bound.",
+    "issuance": "Pre-existing approval-bound issuer; live workflow revision and implementation digest checked before and after the owned signed pilot; no arbitrary payload argument.",
+    "promotion": "Authenticated observation only; operational qualification remains closed."
+  },
+  "verification": {
+    "focusedTests": {
+      "status": "passed",
+      "tests": 27,
+      "files": 3
+    },
+    "sourceCheck": {
+      "status": "passed",
+      "note": "Removed an unused Array import after Git parser consolidation."
+    },
+    "fullPackage": {
+      "status": "passed",
+      "command": "bun run beep quality package-verify @beep/repo-cli",
+      "auditSeconds": 712.7,
+      "docgenSeconds": 24.8,
+      "exitCode": 0
+    },
+    "nativeStable": {
+      "exitCode": 0,
+      "closedSupervisedIssuance": "passed",
+      "wrongWorkflowRevision": "rejected-at-live-identity-gate",
+      "wrongWorkflowImplementation": "rejected-at-live-identity-gate",
+      "revokedIssuer": "rejected",
+      "policyApproval": "Synthetic fixture digest; no accepted policy authority.",
+      "sourceSnapshot": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+          "sha256": "4eaf24dc92c83a4e50419774904f7c51280a02a2373bec89314ff4d67f56f40c"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+          "sha256": "7725b6f6127bdd14fd6da1ac462d26d3c051fe560def1e02f026c269bdb40d7c"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
+          "sha256": "5ccf8a6afe37c7d36080b16578cdff60d244cada1e695916f6046947c4477bc2"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
+          "sha256": "2c908b2fe30e4d80a755985c3dc91c542c31bb9150c0a128c0227362f26b4c25"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+          "sha256": "961d4b744a120d86d6b5be4eccc0c7da39f8bfec4eb805ecdf69811af1eff0fa"
+        }
+      ],
+      "subsequentChange": "Reused existing gitPathListFromNulOutput and removed unused imports. Focused tests and source check passed afterward; native control predates that consolidation.",
+      "rawSha256": "7660fb4a70da4c7d85b638e5dd1ae890b7aa210d82042cdf24c01c5747a73df2",
+      "workflowRevision": "57305f9d4699a7009ee2c8377233718c230da4a3",
+      "workflowImplementation": "44da69196188c39ad2cf8d43179592e9640a7b274abcdc643b2cbbe550f3c927"
+    },
+    "packetChecks": {
+      "goalsDoctor": "passed; zero blocking findings, six unrelated advisories",
+      "exploreCheck": "passed; no stream-integrity or fleet-graph findings",
+      "gitDiffCheck": "passed"
+    },
+    "afterPackageProof": "Pre-commit formatting and JSDoc spacing cleanup followed the recorded package pass. Synthetic artifact ID variables and compact runtime SHA-256 field names were clarified after secret-scan false positives. Final integrated-source proof remains required.",
+    "mainIntegration": {
+      "revision": "3cc02d12bfe9ca5abd566f88d3b3597c067ba221",
+      "sourceCheck": "passed",
+      "focusedTests": 74,
+      "testFiles": 7,
+      "packageAuditSeconds": 709.0,
+      "packageDocgenSeconds": 24.0,
+      "exitCode": 0,
+      "scope": "Integrated implementation before the subsequent frozen-profile changes."
+    }
+  },
+  "currentSourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+      "sha256": "472190433cf6f9d06ea219747e575112fb409bd865199c2ca87905af8f2c6e34"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+      "sha256": "7725b6f6127bdd14fd6da1ac462d26d3c051fe560def1e02f026c269bdb40d7c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
+      "sha256": "5ccf8a6afe37c7d36080b16578cdff60d244cada1e695916f6046947c4477bc2"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+      "sha256": "3e2615b08bb081f97fe82b9a05f13020b52b6b678a68f781a8da460cce6bb65c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-workflow.test.ts",
+      "sha256": "34cf3c1554344374eb5ae0b636eec7ccab4044575306c8308a6df2c2c117fb6f"
+    }
+  ],
+  "remaining": [
+    "Close ignored executable inputs and workspace-local dependency resolution in an eligible frozen execution profile.",
+    "Provision accepted policy and workflow approvals outside reader authority.",
+    "Integrate accepted operational import with adversarial controls.",
+    "Complete current-profile signed comparison, perturbation, concurrency, portability and shadow acceptance matrix."
+  ]
+}

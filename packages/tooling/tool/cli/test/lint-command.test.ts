@@ -43,7 +43,8 @@ const deprecatedApiLintShards = [
   "packages/tooling/library",
   "packages/tooling/policy-pack",
   "packages/tooling/test-kit",
-  "packages/tooling/tool",
+  "packages/tooling/tool/cli",
+  "packages/tooling/tool/docgen",
   "packages/workspace",
 ];
 
@@ -185,9 +186,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
     );
     const cacheLocations = A.getSomes(A.map(invocationLines, (line) => argumentAfter(line, "--cache-location")));
 
-    expect(logLines).toContain("[lint:deprecated-apis] running 28 shards with concurrency 4");
-    expect(invocationLines).toHaveLength(28);
-    expect(A.dedupe(cacheLocations)).toHaveLength(28);
+    expect(logLines).toContain("[lint:deprecated-apis] running 29 shards with concurrency 4");
+    expect(invocationLines).toHaveLength(29);
+    expect(A.dedupe(cacheLocations)).toHaveLength(29);
     expect(A.every(invocationLines, (line) => Str.includes("--cache-strategy content")(line))).toBe(true);
     expect(A.every(cacheLocations, Str.startsWith("node_modules/.cache/eslint-deprecated-apis/.eslintcache-"))).toBe(
       true
@@ -216,7 +217,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
     );
 
     expect(logLines).toContain("[lint:deprecated-apis] skipping missing shard: apps/labs");
-    expect(invocationLines).toHaveLength(27);
+    expect(invocationLines).toHaveLength(28);
     expect(logLines).toContain("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
   });
 

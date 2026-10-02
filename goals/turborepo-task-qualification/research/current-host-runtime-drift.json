@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "cache-host-runtime-drift/v1",
+  "authority": "invalidation-observation-only",
+  "trigger": "Real signed-pilot worker rejected its saved activation preview as stale.",
+  "changedStartupLibraries": [
+    {
+      "path": "/usr/lib/ld-linux-x86-64.so.2",
+      "beforeSha256": "68a643913f9499e5a4986b793c202da085e7583714357c244a70727c57bbdb24",
+      "afterSha256": "2db4c1e54273a52f75e7124fcfd6fe0d2d8bd7fc87f29780a75ab544b41bd53d"
+    },
+    {
+      "path": "/usr/lib/libc.so.6",
+      "beforeSha256": "4c8eb6d2e4c3459f5100e44330067db455b7cb873742d8d8f820ee5d6a142080",
+      "afterSha256": "911cf3db7875760dc893b464ae89bddd4f697a377c710ffc13b84f67cbe1237b"
+    },
+    {
+      "path": "/usr/lib/libdl.so.2",
+      "beforeSha256": "cf65c453e73cfd35cf921e711dddce154337a0489910b9c1ce7af5e8848fd9f9",
+      "afterSha256": "94cabe181bfa201c05239cad5b1dcf906bc7a41b3842a111be73d3f9caa51095"
+    },
+    {
+      "path": "/usr/lib/libm.so.6",
+      "beforeSha256": "6262820f17cd34cd327e5dbb2eefa8a740875c47c6a6f8a02fa6f1ae79152797",
+      "afterSha256": "b42c5cc9e920e2df2038d06dce1124432e874fbe692c7275c866f9c19137b7a7"
+    },
+    {
+      "path": "/usr/lib/libpthread.so.0",
+      "beforeSha256": "5ca53e25eb4f671bf0e13fe696a05c83cab7c0b3395d520e1d1388f54b023129",
+      "afterSha256": "c5e91ebc3e32dfbd404b1718c4e3ff677e2c73509606caa18bcb91a42562b68b"
+    }
+  ],
+  "oldToolchainDigest": "1234ef548a50067d760c16a8945aafe31611775323c8e1c19eb2613bb4ee70d3",
+  "newToolchainDigest": "200c3c9d70740c2bec28815130e9764c34f3c625255ef5e39b9cad5ff8e47807",
+  "configurationDigestUnchanged": true,
+  "toolExecutablePinsUnchanged": true,
+  "previousActivationSha256": "b057063ac5f56aefea3273185b6fbd460955ac0fe2a79fcbef164a53ad768c0c",
+  "currentActivationSha256": "a4498e3543e9c376f33e08187f2a621b7a5054fcf784976a5c71565630bfac23",
+  "historicalReceiptsRewritten": false,
+  "qualificationGranted": false,
+  "requiredAction": "Bind new experiments to the current activation and runtime digests; do not combine historical observations as same-runtime proof."
+}

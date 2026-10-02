@@ -3,13 +3,13 @@
   "initiative": {
     "id": "turborepo-task-qualification",
     "title": "Turborepo task qualification",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-08",
-    "updated": "2026-09-28",
+    "updated": "2026-10-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-task-qualification",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Make cache reuse an enforced, evidence-backed contract for each quality computation, reuse layer, environment profile and epoch.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -453,7 +453,30 @@
     "research/current-patched-io-attachment.json",
     "research/current-patched-ring-review.json",
     "research/current-proof-monitor-attribution.json",
-    "research/current-patched-shadow-stable.json"
+    "research/current-patched-shadow-stable.json",
+    "research/current-patched-shadow-canary.json",
+    "research/current-obligation-reconciliation.md",
+    "research/signed-real-pilot-stable-checkpoint.json",
+    "research/signed-real-pilot-canary-checkpoint.json",
+    "research/owned-signed-pilot-runner.json",
+    "research/reader-protection-stable.json",
+    "research/reader-protection-canary.json",
+    "research/current-host-runtime-drift.json",
+    "research/signed-matrix-development-stable.json",
+    "research/signed-concurrency-development-stable.json",
+    "research/signed-mutations-development-stable.json",
+    "research/acceptance-development-census.json",
+    "research/signed-archive-development-stable.json",
+    "research/protocol-roots-development.json",
+    "research/signed-capture-development-stable.json",
+    "research/acceptance-command-review.json",
+    "research/signed-profile-binding-review.json",
+    "research/signed-activation-evidence-review.json",
+    "research/current-signed-qualification.json",
+    "research/adoption-handoff.md",
+    "research/adoption/manifest.json",
+    "research/acceptance-2026-10-02.md",
+    "research/quality-closeout-466ec.json"
   ],
   "agentLaunchers": [
     {
@@ -468,37 +491,37 @@
     {
       "id": "P0",
       "name": "Refresh and contract",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Policy and discovery",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Local pilot and shadow",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Signed replay integration",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Verify and hand off",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -509,7 +532,7 @@
     "git diff --check -- goals/turborepo-task-qualification",
     "bun run beep lint reflection-artifacts",
     "bun run beep quality package-verify @beep/repo-cli",
-    "bun run beep quality package-verify @beep/ai-sync"
+    "bun run beep quality package-verify @beep/repo-configs"
   ],
   "stopConditions": [
     "Semantic divergence, failed invalidation, sensitive output, or unauthorized read/write/tenant crossing stops affected reuse.",
@@ -517,5 +540,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "PR #1324 merged; PR #1327 carries runtime repairs and current evidence. Canonical attachment accepts 1025 sources, 90 reviews and 6 artifacts with 22 unresolved obligations. Stable 2.11.4 and exact canary 2.11.5-canary.2 each pass three local fresh/fresh pairs and twelve replay controls at frozen revision 7f53b4a840. Both clients pass seven current source-invalidation cases. Cross-root preflight found a differing toolchain digest; full snapshots attribute it to differing installed-dependency content; native-addon path metadata differs. Stable and exact canary cross-root replay pass when the identical installed dependency tree is mounted read-only at the second root. Independent-installation portability is unproven. Signed sibling receipts, semantic closure and shadow acceptance remain pending; no tuple is qualified. Stable isolated concurrency control passes with 659 ms native target overlap; canary passes with 692 ms native target overlap. Shared-writer collision proof remains separate. Stable and canary synthetic-token capture controls pass with native passthrough presence confirmed; cache archives contain only the 53-byte task log and no synthetic token or home/checkout path. Stable and exact canary configuration controls each pass all nine expected outcomes, including profile rejection before native execution and orchestration hash stability. Bounded native I/O review at 7f53b4a840 attributes 439 repository read paths and 21 scalar writes; dependency bytes match before/after. Undecoded ring operations and complete semantic closure remain explicit gaps. Latest input-control attachment at 37c597297b binds 1,025 sources, 96 reviews and six artifacts with 23 unresolved obligations; no tuple is qualified. Patched-profile attachment at f80ee33672 accepts 1,025 sources, 107 reviews and six artifacts with 24 unresolved obligations; no prior binding changed. Stable task overlap remains unproven; no tuple is qualified. Patched-profile stable and exact-canary Git exclusion controls each pass nine cases at b410da2b6d; dependency identity is unchanged. These receipts postdate the 107-review canonical attachment. Patched-profile cross-root local replay passes for both clients with an identical read-only dependency tree; independent-installation portability remains unproven. Patched-profile direct native-I/O observation at b410da2b6d passes bounded scalar-read/write and Git-routing reviews: 439 repository paths, 21 writes, unchanged dependency identity. Five ring submissions remain undecoded; semantic closure is not established. Latest patched control attachment at 1a9914e0cf binds 1,025 sources, 112 reviews and six artifacts, with 25 unresolved obligations; all prior bindings are unchanged. Separate patched-profile ring observation decoded all 12 entries across five submissions as EPOLL_CTL, with matching task streams and dependency identity. Earlier traces are not retroactively decoded; semantic closure remains open. Patched stable pinned-native full matrix passes 67 observations, 40 checks and ten shadow decisions at b410da2b6d; report relationships independently checked. Exact canary refresh is running. Signed remote evidence and semantic closure remain open; no tuple is qualified."
+  "statusNote": "PR #1389 supplies the qualification mechanism, authenticated native pilot, checked adoption handoff and same-PR closeout. Frozen 93a19425da qualified the named private-loopback tuple with 103 accepted fragments and ledger revision 8. Full local publication and strict hosted readiness passed at 466ecff (55 aggregate lanes; 16 required and 23 optional checks; zero unresolved threads). Main 9447997c4d was integrated as 5679426061 and the adoption bundle rebuilt. The final publication must pass its own exact-head gates before authorized merge and retirement; retained native and quality receipts keep their original identities."
 }

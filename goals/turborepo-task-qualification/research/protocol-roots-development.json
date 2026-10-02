@@ -1,0 +1,39 @@
+{
+  "authority": "Native isolated protocol observations only; not real-task qualification.",
+  "receipts": [
+    {
+      "channel": "stable",
+      "client": {
+        "version": "2.11.5",
+        "sha256": "479733d3000c9393afb0c421d003cd26417bdb9e0ff525cf1445a7e1f29bb8bc",
+        "namespace": "team_qualification_protocol_roots_stable_v2"
+      },
+      "schemaVersion": "cache-protocol-execution/v2",
+      "sha256": "95b354d6d8bdc8b6aeac2ce146765a887084f745bb98b4cebe3f3da06c319d96",
+      "cases": 9,
+      "isolatedRoots": 9,
+      "wireEvents": 23,
+      "nativeExitCode": 0
+    },
+    {
+      "channel": "canary",
+      "client": {
+        "version": "2.11.5-canary.2",
+        "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+        "namespace": "team_qualification_protocol_roots_canary_v2"
+      },
+      "schemaVersion": "cache-protocol-execution/v2",
+      "sha256": "d270e5bfc206e576f801d144094cdb52290bec8a0f763d7f75b48400d1ea3f85",
+      "cases": 9,
+      "isolatedRoots": 9,
+      "wireEvents": 23,
+      "nativeExitCode": 0
+    }
+  ],
+  "sourceBindingsMatched": 4,
+  "verification": "Source typecheck and focused tests passed. Full package audit hit an unchanged worktree test timeout; isolated file rerun passed all 36 tests. Full final package gate remains required.",
+  "limits": [
+    "No tuple is qualified.",
+    "These protocol observations do not replace complete protected producer issuance or operational acceptance."
+  ]
+}

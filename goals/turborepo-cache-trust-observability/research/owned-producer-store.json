@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "owned-producer-store-checkpoint/v1",
+  "authority": "component-verification-only",
+  "storage": {
+    "directoryMode": "0700",
+    "materialMode": "0600",
+    "materialBytes": 64,
+    "exclusiveProvisioning": true,
+    "trustedHostOperator": true,
+    "readerMountExclusion": "caller obligation; actual store integration pending"
+  },
+  "typecheck": "passed",
+  "issuerTests": {
+    "runtime": "Node",
+    "passed": 13
+  },
+  "restartProbe": {
+    "runtime": "Bun",
+    "separateProcesses": 4,
+    "input": "real stable signed-pilot v2 receipt",
+    "binding": "synthetic test workflow and policy identities; not approved production authority",
+    "results": {
+      "issue": "passed",
+      "verifyAfterRestart": "passed",
+      "revoke": "passed",
+      "rejectAfterRestart": "passed"
+    },
+    "temporaryMaterialRemoved": true
+  },
+  "negativeCases": [
+    "reprovision existing directory",
+    "revoked live issue and verify",
+    "open revoked store",
+    "missing material without recreation",
+    "replaced material invalidates old instance and old envelope",
+    "permissive directory",
+    "permissive key file",
+    "symbolic link key",
+    "hard link key",
+    "dangling revocation marker",
+    "zero-length, truncated and oversized material"
+  ],
+  "fullPackage": "passed",
+  "qualificationGranted": false,
+  "remaining": [
+    "Independently approved workflow binding and protected supervisor integration.",
+    "Operational importer and full qualification evidence matrix.",
+    "Actual persistent material exclusion from the nested reader mounts."
+  ],
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
+      "sha256": "62788e860b2797278c7c83533ba1f74ad5e668e798f4a800bb1c03abd5fb28cc"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+      "sha256": "630a2a56cda1906e4732c259bc25511e660aa79656cc924cbede3f90cb40d471"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-producer.test.ts",
+      "sha256": "441714767e1634ef127f2799909d83f313701e5a171c1b63c446bf172024e374"
+    }
+  ],
+  "focusedTests": {
+    "runtime": "Bun",
+    "passed": 37,
+    "files": 4
+  },
+  "packageAuditSeconds": 672.6,
+  "packageDocgenSeconds": 19.6
+}

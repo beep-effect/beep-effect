@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "cache-owned-protocol-runner-observation/v1",
+  "authority": "synthetic-native-observation-only",
+  "command": "bun run beep cache protocol-run --request <channel-request.json> --output <channel-report.json>",
+  "runs": [
+    {
+      "channel": "stable",
+      "client": {
+        "version": "2.11.4",
+        "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+        "namespace": "team_owned_runner_stable"
+      },
+      "cases": 9,
+      "wireEvents": 23,
+      "reportSha256": "48e322434af2253642f13da3fb3edcdc8f9ffd8722bab4865ed79e23631c351e",
+      "exitCode": 0
+    },
+    {
+      "channel": "canary",
+      "client": {
+        "version": "2.11.5-canary.2",
+        "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+        "namespace": "team_owned_runner_canary"
+      },
+      "cases": 9,
+      "wireEvents": 23,
+      "reportSha256": "13c1e04322bfb1ab6449b7e0e29336958b266e4b4e1ef1dd6a3883febacdb788",
+      "exitCode": 0
+    }
+  ],
+  "negativeRequests": [
+    {
+      "case": "wrong-binary",
+      "exitCode": 1,
+      "reportAbsent": true,
+      "temporaryRootsRemoved": true
+    },
+    {
+      "case": "wrong-version",
+      "exitCode": 1,
+      "reportAbsent": true,
+      "temporaryRootsRemoved": true
+    },
+    {
+      "case": "wrong-channel",
+      "exitCode": 1,
+      "reportAbsent": true,
+      "temporaryRootsRemoved": true
+    }
+  ],
+  "unconfinedWorkerRejected": true,
+  "temporaryRootsRemoved": true,
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.schemas.ts",
+      "sha256": "92f92e77baed0d64485d0097640d66c8418cfdae674abbab950b2fc710db97ea"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts",
+      "sha256": "377bf7922c61563e0fe346d6343110e5d363c2953fcc7ed811a1582399e56812"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.schemas.ts",
+      "sha256": "c8e99b3cb444f2dba6443ca62a11f028517add338debf49cedc787881b4bf3a1"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts",
+      "sha256": "71ac6b13d5a6c9e41ef6772e11bdba6dd2cd6889a910f1541a71c031611093aa"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.schemas.ts",
+      "sha256": "a71c6215160c94b440d2113778269405ba366d21c88b4311629e351ec33b88b0"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.ts",
+      "sha256": "0a2e07f407b4e92dc92755fc12d0e4e9f33ed66a65e3a74bbb6bdbc032401160"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "fb9766ba78bb12251b9b5c6f6ff644b6c5a325d30b9491f86963ac83a4b5894d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "sha256": "e67a160fe9ecea25a57a7155fd12cfb4d229c5e65fc3bd90b07aaaf78ccc068c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-protocol-fixture.test.ts",
+      "sha256": "415766907fa0493ad13a98b65fdd39cfd634ec9d9024bb28fffc2843a659a743"
+    }
+  ],
+  "retention": {
+    "reference": "owned-cli-protocol-runner",
+    "files": 20,
+    "bytes": 143455,
+    "manifestSha256": "07585417260cf96f1dfde6590198fb73f4f29a9b5450f4acd6234af3916ad3d4"
+  },
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "exitCode": 0,
+    "auditSeconds": 653.4,
+    "docgenSeconds": 20.0,
+    "logSha256": "cdab68543013cfdb7482f09a1603735749f7349d3262c6f04de6b544d1a55531"
+  },
+  "limits": [
+    "Synthetic computation only; one signed pair per client, no real-pilot qualification.",
+    "The owned worker checks raw native summaries before scope cleanup; this independent report review checks retained relationships, not deleted raw summaries.",
+    "Editable reports carry no protected producer authority and cannot promote a tuple.",
+    "Full corpus, timeout/reset/ambiguous-write cases and real-pilot network profile remain incomplete."
+  ]
+}

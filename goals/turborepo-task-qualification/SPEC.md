@@ -133,17 +133,22 @@ secret failure through desktop sign-in.
 
 ## Acceptance criteria
 
-- [ ] Executable census is reproducible and covers actual CI/Quality/Yeet commands; missing scripts never count as executions or qualifications.
-- [ ] Pure policy and operational transitions enforce the tuple/lifecycle, require evidence for promotion, and detect root/child config drift.
-- [ ] The synthetic fixture proves success and mandatory failures, including invalidation and output/log comparison.
-- [ ] At least one real pilot completes the full comparison/shadow matrix in its named profile with zero unexplained divergence and direct signed-remote evidence.
-- [ ] Legacy entries remain honestly classified; confirmed unsafe entries are attributed and suspended, and no whole-family cache policy changes are hidden in the pilot.
-- [ ] Adoption receives the population, policy API, decomposition leads, evidence references and invalidation rules.
-- [ ] Relevant package/protocol checks pass; failures are attributed and no
+- [x] Executable census is reproducible and covers actual CI/Quality/Yeet commands; missing scripts never count as executions or qualifications.
+- [x] Pure policy and operational transitions enforce the tuple/lifecycle, require evidence for promotion, and detect root/child config drift.
+- [x] The synthetic fixture proves success and mandatory failures, including invalidation and output/log comparison.
+- [x] At least one real pilot completes the full comparison/shadow matrix in its named profile with zero unexplained divergence and direct signed-remote evidence.
+- [x] Legacy entries remain honestly classified; confirmed unsafe entries are attributed and suspended, and no whole-family cache policy changes are hidden in the pilot.
+- [x] Adoption receives the population, policy API, decomposition leads, evidence references and invalidation rules.
+- [x] Relevant package/protocol checks pass; failures are attributed and no
   introduced regression remains.
-- [ ] The final implementation PR reaches Yeet `merge-ready: yes`, with
+- [x] The final implementation PR reaches Yeet `merge-ready: yes`, with
   required checks and reviews handled.
-- [ ] Final evidence, reflection and lifecycle closeout land in that same PR.
+- [x] Final evidence, reflection and lifecycle closeout land in that same PR.
+
+The [acceptance audit](research/acceptance-2026-10-02.md) binds these criteria
+to the retained native evidence and verified implementation checkpoint. This
+same-PR closeout must pass final-head publication and strict readiness before
+merge; prior-head green does not waive those gates.
 
 Packet creation satisfies no implementation criterion. A partial or blocked
 result remains active/paused with receipts, not completed-retained.

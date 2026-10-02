@@ -1,0 +1,179 @@
+{
+  "authority": "Semantic boundary classification for current nested inventory; no additional qualification or external execution claimed.",
+  "revision": "77811ec365934c2ada0f8f2f78348edd7a0ff468",
+  "profiles": [
+    {
+      "id": "application-build",
+      "fileInputs": "source, assets, framework configuration, package/lock and imported build code",
+      "environmentInputs": "explicit command env plus framework/build-time env",
+      "networkTimeRandom": "framework and plugin dependent network, clocks and randomness",
+      "writesAndOutputs": "framework output tree, generated assets and caches",
+      "logsAndVerdict": "build diagnostics and generated output; local build verdict",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "compiled-output-rewrite",
+      "fileInputs": "existing dist tree, Babel/plugin configuration and installed plugin closure",
+      "environmentInputs": "inherited process and plugin env",
+      "networkTimeRandom": "plugin-dependent external/runtime effects",
+      "writesAndOutputs": "rewrites dist and source maps",
+      "logsAndVerdict": "rewriter diagnostics; requires preceding output identity",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "compiler",
+      "fileInputs": "selected tsconfig, extends/references, source/declarations, resolution and installed compiler",
+      "environmentInputs": "compiler/plugin process environment",
+      "networkTimeRandom": "compiler/plugin-dependent effects; do not infer purity from noEmit",
+      "writesAndOutputs": "effective emit, incremental and build-info outputs",
+      "logsAndVerdict": "compiler diagnostics and exit status",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "coverage",
+      "fileInputs": "test/config/source/dependency closure and coverage configuration/baseline",
+      "environmentInputs": "test runner and selected suite env",
+      "networkTimeRandom": "suite-dependent network, time, randomness and services",
+      "writesAndOutputs": "test scratch data, coverage trees and aggregation reports",
+      "logsAndVerdict": "test verdict plus coverage floor interpretation",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "docgen",
+      "fileInputs": "source examples, package selection, configuration, compiler/rendering dependencies",
+      "environmentInputs": "renderer/compiler/example process environment",
+      "networkTimeRandom": "example and renderer dependent runtime/external effects",
+      "writesAndOutputs": "generated docs, source edits and comparison staging",
+      "logsAndVerdict": "docgen diagnostics; selected examples retain their execution authority",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "doctest",
+      "fileInputs": "documentation examples, marked sources, config, dependency closure",
+      "environmentInputs": "BEEP_VITEST_DOCTEST and selected example env",
+      "networkTimeRandom": "example-dependent network/time/random/services",
+      "writesAndOutputs": "test runtime scratch and reports",
+      "logsAndVerdict": "example execution verdict; empty selection is not an execution",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "external-tool",
+      "fileInputs": "resolved executable, selected configuration and input files",
+      "environmentInputs": "tool-specific inherited environment",
+      "networkTimeRandom": "package resolution or tool-dependent external/runtime effects",
+      "writesAndOutputs": "tool-specific caches, reports or mutations",
+      "logsAndVerdict": "tool exit/status and diagnostics; external verdicts require fresh observation",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "file-entrypoint",
+      "fileInputs": "owning cwd, entrypoint/import graph, argv and referenced files",
+      "environmentInputs": "script and transitive subprocess environment",
+      "networkTimeRandom": "script-dependent network/time/random; inspect selected entrypoint",
+      "writesAndOutputs": "script-specific generated modules, scratch and reports",
+      "logsAndVerdict": "script-specific stdout/stderr and composed verdict",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "integration-test",
+      "fileInputs": "suite/config/source/dependency and service-state inputs",
+      "environmentInputs": "service endpoints, credentials and test env",
+      "networkTimeRandom": "external state, service lifecycle, clocks and randomness",
+      "writesAndOutputs": "service/database mutations, test scratch and cleanup",
+      "logsAndVerdict": "integration verdict and sensitive capture boundary",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "python-tool",
+      "fileInputs": "Python/project/lock identities and selected source/config",
+      "environmentInputs": "Python and uv environment/materialization settings",
+      "networkTimeRandom": "installation/cache access and suite-dependent runtime effects",
+      "writesAndOutputs": "environment/cache materialization; pytest scratch or check-mode diagnostics",
+      "logsAndVerdict": "pytest/ruff verdict; frozen lock and no-python-downloads are limited controls",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "repository-dispatch",
+      "fileInputs": "argv/cwd, Git/workspace selection, handler/import graph and downstream inputs",
+      "environmentInputs": "handler and subprocess environments; base/head and lane options",
+      "networkTimeRandom": "selected dispatch may read network, time, randomness and external verdicts",
+      "writesAndOutputs": "reports/proof records/configuration writes according to mode",
+      "logsAndVerdict": "handler combines child results; planner output is not execution",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "service",
+      "fileInputs": "application/config/source and mutable runtime state",
+      "environmentInputs": "ports, endpoint and service environment",
+      "networkTimeRandom": "persistent process, network, clocks and request-dependent state",
+      "writesAndOutputs": "service state, logs and lifecycle cleanup",
+      "logsAndVerdict": "readiness and live behavior; not a finite cached task result",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "shell-expression",
+      "fileInputs": "full shell text, cwd, substitutions, globs and nested inputs",
+      "environmentInputs": "shell expansion and forwarded environment",
+      "networkTimeRandom": "nested command-dependent network/time/random/services",
+      "writesAndOutputs": "redirection, nested writes and cleanup",
+      "logsAndVerdict": "shell exit composition and stream redirection; explicit exceptions retained",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "source-check",
+      "fileInputs": "selected source/config/ignore closure and cross-workspace/installed reads",
+      "environmentInputs": "tool and configuration-selection environment",
+      "networkTimeRandom": "tool/plugin-dependent effects until bounded by real pilot evidence",
+      "writesAndOutputs": "diagnostics and possible tool caches; no source-fix flag",
+      "logsAndVerdict": "selected checks and capture; success is not proof of complete inputs",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "source-fix",
+      "fileInputs": "same selection/config/ignore closure as source checks",
+      "environmentInputs": "tool and configuration-selection environment",
+      "networkTimeRandom": "tool/plugin-dependent effects",
+      "writesAndOutputs": "explicit source mutation and possible caches",
+      "logsAndVerdict": "changed source plus diagnostics; separate from read-only pilot",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    },
+    {
+      "id": "test",
+      "fileInputs": "suite/config/source/dependency closure and selection rules",
+      "environmentInputs": "runner and selected suite environments",
+      "networkTimeRandom": "suite-dependent network/time/random/services",
+      "writesAndOutputs": "test scratch, fixtures, snapshots or service mutations",
+      "logsAndVerdict": "suite verdict and capture; passWithNoTests does not prove execution",
+      "toolchainAndPlatform": "Resolved executable and installed dependency bytes, runtime/linker, platform and filesystem behavior participate; cohort-specific pins required.",
+      "authority": "descriptive boundary classification; conditional effects require cohort review before reuse"
+    }
+  ],
+  "coverage": {
+    "families": 16,
+    "executableRoots": 1984,
+    "stepSites": 2002,
+    "commands": 117
+  },
+  "composition": "Every executable root inherits all reachable family profiles from the resolved local alias graph; full terminal text and unsupported shell text remain in the boundary inventory. Graph-only nodes carry no execution classification.",
+  "reviewedCommandInventorySha256": "58bcdd9abea8f693200e42120b9ad264acb6bd8c1fb35966605b56a597e95d69",
+  "commandSpecificReviews": [
+    "shell-boundary-review.json",
+    "dynamic-dispatch-review.json",
+    "terminal-boundary-review.json"
+  ]
+}

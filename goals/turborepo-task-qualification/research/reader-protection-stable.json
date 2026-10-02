@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "signed-pilot-reader-protection-checkpoint/v1",
+  "authority": "observation-only",
+  "channel": "stable",
+  "receiptVersion": "cache-pilot-signed/v2",
+  "receiptSha256": "76607cfdbb0f32fa5f07460e616737b20903219e69a0049363985c7a90cc0e5b",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "pairs": [
+    {
+      "id": 0,
+      "protection": {
+        "mechanism": "nested-reader-denial/v1",
+        "protectedFiles": 2,
+        "readsDenied": true,
+        "writesDenied": true,
+        "writerEnvironmentHidden": true,
+        "protectedBytesUnchanged": true
+      }
+    },
+    {
+      "id": 1,
+      "protection": {
+        "mechanism": "nested-reader-denial/v1",
+        "protectedFiles": 2,
+        "readsDenied": true,
+        "writesDenied": true,
+        "writerEnvironmentHidden": true,
+        "protectedBytesUnchanged": true
+      }
+    },
+    {
+      "id": 2,
+      "protection": {
+        "mechanism": "nested-reader-denial/v1",
+        "protectedFiles": 2,
+        "readsDenied": true,
+        "writesDenied": true,
+        "writerEnvironmentHidden": true,
+        "protectedBytesUnchanged": true
+      }
+    }
+  ],
+  "nativeExitCode": 0,
+  "qualificationGranted": false,
+  "limits": [
+    "The protected key is a synthetic issuer canary, not a persistent approved issuer.",
+    "Workflow approval, persistent key lifecycle and operational import remain incomplete."
+  ]
+}

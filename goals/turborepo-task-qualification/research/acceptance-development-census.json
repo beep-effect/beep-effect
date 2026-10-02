@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "cache-development-census-checkpoint/v1",
+  "authority": "Inventory only; no task execution or qualification authority.",
+  "revision": "10a1ad3c78be6801a75362d35ea40f72c5822d96",
+  "workingTree": "Dirty acceptance implementation; revision alone does not identify the source snapshot.",
+  "turboVersion": "2.11.5",
+  "reproduce": "bun run beep cache census --output .beep/qualification-acceptance/current-census.json",
+  "reportSha256": "7fa6b471817fcbeac2620801c5bbbbce63da80be2311834a273961d7292183ac",
+  "population": {
+    "workspaces": 144,
+    "taskNodes": 3473,
+    "commandBearingNodes": 1970,
+    "graphOnlyNodes": 1503,
+    "cacheEnabledCommandBearingNodes": 1251,
+    "rootScripts": 106,
+    "sourceBindings": 323,
+    "entrypointSources": 162
+  },
+  "unresolved": [
+    "Classify nested workspace and root command semantics.",
+    "Review dynamic Cache/CI/Quality/Yeet entrypoint branches and their external verdicts."
+  ],
+  "limits": [
+    "Command-bearing nodes identify executable scripts, not observed executions.",
+    "This inventory does not replace reviewed semantic entrypoint attachments.",
+    "Final source/profile reconciliation and a census refresh after the next main merge remain required.",
+    "No tuple is qualified."
+  ]
+}

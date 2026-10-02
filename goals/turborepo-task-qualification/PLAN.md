@@ -2,25 +2,102 @@
 
 ## Status
 
-Status: `active`
-Lifecycle: `active`
+Status: `completed-retained`
+Lifecycle: `completed-retained`
 
-Launched with `bun run beep goals set-status turborepo-task-qualification active`.
-P0 refresh is recorded in [census-refresh.json](./research/census-refresh.json).
-The user approved the program scope on 2026-09-08; no repeated shape approval
-is needed.
+## Current acceptance checkpoint: 2026-10-02
+
+PR #1389 contains the source repairs and public adoption handoff at
+`466ecffcf940001714e62a565ef409076922b8af`. Older checkpoints below retain
+their original identities and are historical; their statements that no tuple
+qualified no longer describe the current retained evidence.
+
+The signed native stable and exact-canary matrix qualified
+`@beep/identity#lint` for `turbo-task-result`, profile
+`local-linux-x64-bun1.4.2-private-loopback-signed-v1`, epoch
+`qualification-v2`, at frozen source
+`93a19425da0f28d262cfb4b5e9190f137fbbaf58`. Authenticated acceptance retained
+103 fragments with zero blockers. The operational ledger reached revision 8
+and its audit reported zero blocking findings. Both channels provide three
+fresh/fresh pairs, three signed remote pairs, ten shadow scenarios, seven
+mutations, four capture controls, four non-execution controls, the missing-child
+refusal and nine native protocol roots. Source, request, ledger and observation
+hashes were rechecked against the public signed qualification receipt.
+
+The public adoption bundle contains 145 workspaces, 3,498 graph nodes,
+1,984 executable computations and 1,514 graph-only nodes. It includes all 16
+semantic families, every retained shell and special terminal site, and bounded
+Cache/CI/Quality/Yeet dispatch interpretation. Fixed-input rebuild and manifest
+hash validation passed. Ordinary-profile rows remain 1,980 unassessed and four
+excluded; 1,259 existing cached computations remain legacy settings. The named
+private pilot does not activate ordinary or broad task-family reuse.
+
+Full local publication at `466ecff` passed all 55 aggregate lanes, including
+primary pre-push and merged-preview CI parity. Each full CLI unit run passed
+5,262 tests in 269 files. The cold merged-preview deprecated-API scan passed
+after separating CLI and docgen shards at the same 8 GiB limit; no rule or
+threshold was weakened. Coverage, integration, property, documentation,
+Fallow and Nix passed. All 16 required and 23 optional hosted checks passed.
+Strict monitoring exited 0 with `merge-ready: yes`; review closeout found zero
+actionable issues and zero unresolved threads. The
+[quality receipt](research/quality-closeout-466ec.json) preserves exact evidence
+identities, including the aggregate verdict's pre-commit context.
+
+Main's test-isolation/inventory commit `9447997c4d` was integrated cleanly as
+`5679426061`. The checked adoption bundle was rebuilt from that merged tree;
+its population and reviewed command coverage are unchanged. This same-PR
+closeout includes the acceptance audit, reflection and completed-retained
+lifecycle. The final publication must pass its own local, hosted and strict
+review/readiness gates before the already-authorized merge. The active Codex
+goal closes only after merge verification and lane retirement.
 
 ## Phases
 
 | Phase | Status | Work | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Refresh and contract | in-progress | Refresh checkout, tools, scripts and source ownership. Specify the versioned qualification tuple and evidence requirements. | Reconstructable census and reviewed contract; no phantom executable nodes. |
-| P1 Policy and discovery | in-progress | Implement pure policy/projection in repo-configs and discovery, transition checks and drift reporting in Cache. | Fixtures prove lifecycle legality, deterministic projection and pilot-only enforcement. |
-| P2 Local pilot and shadow | in-progress | Exercise one synthetic fixture and @beep/identity#lint in one named profile; record reads, writes, logs and semantic perturbations. | Fresh comparisons and shadow evidence are attributable; legacy settings remain visibly unassessed. |
-| P3 Signed replay integration | pending | Consume conformance/trust receipts and run the full isolated signed-replay protocol for the real pilot. | A real pilot qualifies with the required comparisons and shadow sample; unsupported profiles remain excluded. |
-| P4 Verify and hand off | pending | Run package gates, command/fixture tests and the qualification replay suite; hand the population and policy API to adoption. | Acceptance and negative cases pass with versioned receipts and no unexplained divergence. |
-| P5 Yeet: PR to mergeable | pending | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
-| P6 Close | pending | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
+| P0 Refresh and contract | complete | Refresh checkout, tools, scripts and source ownership. Specify the versioned qualification tuple and evidence requirements. | Reconstructable census and reviewed contract; no phantom executable nodes. |
+| P1 Policy and discovery | complete | Implement pure policy/projection in repo-configs and discovery, transition checks and drift reporting in Cache. | Fixtures prove lifecycle legality, deterministic projection and pilot-only enforcement. |
+| P2 Local pilot and shadow | complete | Exercise one synthetic fixture and @beep/identity#lint in one named profile; record reads, writes, logs and semantic perturbations. | Fresh comparisons and shadow evidence are attributable; legacy settings remain visibly unassessed. |
+| P3 Signed replay integration | complete | Consume conformance/trust receipts and run the full isolated signed-replay protocol for the real pilot. | A real pilot qualifies with the required comparisons and shadow sample; unsupported profiles remain excluded. |
+| P4 Verify and hand off | complete | Run package gates, command/fixture tests and the qualification replay suite; hand the population and policy API to adoption. | Acceptance and negative cases pass with versioned receipts and no unexplained divergence. |
+| P5 Yeet: PR to mergeable | complete | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
+| P6 Close | complete | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
+
+## Historical checkpoints
+
+The following entries preserve the evidence and remaining work at their dated
+revisions. Use the current acceptance checkpoint above for present status.
+
+### Resumed recovery and review repairs: 2026-10-01
+
+The lifetime patch is already integrated, confirmed by a successful reverse-apply
+check. Both its retained primary log and the resumed Effect/Vitest scan report
+zero introduced findings. The reviewed occurrence exceptions remain bounded;
+no detector baseline refresh is used.
+
+Current PR #1389 is open at `3a640c01ced4e73c6bf017392c808e2f984c5951`.
+Three newly observed review findings are repaired locally: the signed supervisor
+rejects issuer material inside any canonical input mount, the nested worker
+rejects mounted source locations, pure re-export barrels retain their module
+fileoverview checks, and qualified audit no longer repeats evidence verification.
+The issuer-location and pure-barrel regressions pass. All 129 tests across signed
+pilot, orchestration, operational acceptance and docgen pass; source and package
+test typechecking pass. The inherited hosted scheduler readiness failure has a
+focused passing repair using bounded queue observation instead of a fixed sleep.
+
+The signed comparison validator is decomposed into runtime, outcome and wire
+checks with diagnostics preserved. Fallow remains red: the resumed health scan
+reports 22 findings, including complexity in the extracted wire check. This is
+an intermediate structural repair, not a passing Fallow proof. Full CLI package
+verification passed against the captured, unchanged source snapshot: audit
+681.8 seconds and docgen 24.9 seconds. Native v9 execution,
+real qualification, semantic closure, adoption and final same-PR closeout remain
+incomplete. Frozen native bindings must be refreshed after source repairs land.
+
+Launched with `bun run beep goals set-status turborepo-task-qualification active`.
+P0 refresh is recorded in [census-refresh.json](./research/census-refresh.json).
+The user approved the program scope on 2026-09-08; no repeated shape approval
+is needed.
 
 ## Local evidence checkpoint: 2026-09-25
 
@@ -2777,3 +2854,537 @@ reports preserve exact bindings; disposable fixture roots were scoped and
 removed. This pinned-native local matrix does not prove signed transport or
 ordinary-entrypoint semantic closure. Exact canary remains a separate run; no
 tuple is promoted. The receipt postdates the 112-review census attachment.
+
+### Remaining-work integration boundary
+
+Continue the remainder of qualification in PR #1327 where feasible, batching
+publication to reduce hosted CI and AWS costs. The operator delegated remaining
+material choices and authorized merging this PR through the ChatGPT Chrome
+extension after full goal acceptance and merge-ready proof. This supersedes
+the earlier unresolved launch decision for necessary sibling prerequisites.
+Conformance retains ownership of protocol fixtures; trust retains ownership of
+receipt contracts. Implement their required early handoffs in this integration
+branch with a single writer, preserving separate packet attribution. Prefer
+zero-incremental-cloud-cost local signed fixtures for the qualification boundary.
+Production activation and whole-program backend comparison are not qualification
+completion requirements and remain under their owning packets. No missing
+runtime receipt may be replaced with a source-only claim.
+
+### Patched dependency profile: canary full local shadow matrix
+
+The [canary matrix review](research/current-patched-shadow-canary.json) records
+67 observations, 40 passing checks, ten shadow decisions, eight mutation
+controls and four non-execution cases at `b410da2b6d`. Exact client
+2.11.5-canary.2 uses its own namespace. Separate report relationship review
+passes, including fresh dependency execution and expected hash changes.
+Both patched local matrices are now renewed; signed replay, protected producer
+evidence and complete semantic closure remain open. No tuple is promoted.
+
+### Signed pilot capture boundary — 2026-09-29
+
+The grouped-output parser now shares its bounded implementation between distinct
+local and signed input models. Local inputs still reject remote origins; signed
+inputs reject local origins. Disabled hits, fallback progress, wrong hashes and
+unsafe captures reject. All 27 pilot/parser and existing orchestration tests pass;
+scoped package lint/check and 1,956 docgen examples pass. This is a prerequisite
+for signed execution, not remote-origin proof. The real-pilot signed runner,
+protected receipts and importer remain incomplete.
+
+## Signed real-pilot implementation checkpoint: 2026-09-29
+
+The shared real-pilot runner now has a distinct signed observation mode with
+three independent authority/producer/reader pairs. It requires a private
+network namespace, per-pair reader/writer capabilities, native remote hits,
+matching task/input/log identities and matching fixture upload/download bytes.
+Its receipt derives a distinct signed profile and preserves the reviewed base
+key; it grants no protected-producer or qualification authority.
+
+The implementation snapshot passed the CLI package audit (661.6 seconds) and
+docgen (20.4 seconds). Native startup then exposed an introduced configuration
+placement error under Turbo's globalConfiguration flag. The corrected overlay
+passes typechecking, 29 pilot/orchestration tests and package quick verification
+(lint 4.4 seconds; check 8.6 seconds). The full audit predates that narrow fix.
+The stable native comparison is running; no completed signed real-pilot receipt
+is claimed at this checkpoint. Public supervision, accepted trust/conformance
+contracts, protected-producer validation and the final qualification decision
+remain outstanding. This continues the single final-PR consolidation.
+
+Both native clients subsequently completed: stable and canary each passed three
+independent signed real-pilot pairs. Each pair has zero graph exits, fresh
+local authority and producer, native remote-hit replay, matching log identity
+and a matching signed fixture PUT/GET. Compact checkpoints:
+[signed stable](./research/signed-real-pilot-stable-checkpoint.json) and
+[signed canary](./research/signed-real-pilot-canary-checkpoint.json). Receipt
+relationships were also checked separately after worker completion. Four tiny
+startup controls passed across both Turbo configuration dialects, with and
+without a signing key. Goals doctor reported no new blocking findings.
+
+These are partial observation receipts from the private supervisor harness.
+They do not supply protected-producer authority or an accepted importer, and
+they do not qualify the pilot. Public supervision and the remaining acceptance
+gates are the next implementation work; no new PR was published here.
+
+## Public signed-pilot command checkpoint: 2026-09-29
+
+Added `cache pilot-signed --request <request.json> --output <receipt.json>`.
+The request separates the frozen `sourceRoot` from the running CLI checkout and
+contains the existing exact pilot request. The admitted supervisor supplies the
+private network, read-only source/tool/dependency/Git mounts, scoped writable
+supervisor storage and the source experiment directory. It delegates computation
+and evidence checks to the existing real-pilot worker. The source checkout's
+remaining `.beep` state is read-only in this command.
+
+Typechecking passed. The public stable-client command passed all three signed
+pairs with this smaller writable boundary. The canary command, wrong-client-pin
+rejection and full package verification are pending at this checkpoint. The
+command returns observation-only receipts; protected workflow receipt import
+and qualification remain incomplete.
+
+The public canary command also passed three signed pairs. Both command receipts
+are retained; the supervisor snapshot passed full CLI audit (704.5 seconds) and
+docgen (20.8 seconds). See
+[owned signed pilot runner](./research/owned-signed-pilot-runner.json).
+
+Added relational validation at the supervisor return boundary and a parent-side
+binary-pin check. The validator rejects duplicate pair/namespace/run/summary
+identities, invalid runtime/source/root/dependency evidence, false hits,
+divergent logs/inputs, missing upload/download/miss events, unsigned or mismatched
+bytes, and invalid event order. Both native receipts pass it. All 34 focused
+tests and typechecking pass. A wrong-pin public command now rejects with the
+specific binary-pin mismatch and no receipt. A fresh full package proof is
+running for this later snapshot. Protected-producer and trusted live-contract
+binding remain separate unmet requirements; no qualified transition is enabled.
+
+## Reader protection integration: 2026-09-29
+
+The relational-validator snapshot passed full CLI audit (666.4 seconds) and
+docgen (19.5 seconds). The next implementation adds protection checks through
+exactly the same sandbox invocation used by the signed reader. A protected
+producer record and synthetic issuer-key canary exist before replay; afterward
+the reader boundary must deny file reads/writes and hide writer/issuer values
+from its environment and visible init process. Bounded parent reads verify that
+both protected files stayed unchanged.
+
+This changes signed observations to `cache-pilot-signed/v2` with required
+per-pair protection evidence. Retained v1 reports remain historical; they do not
+implicitly acquire this new evidence. Typechecking and 35 focused tests pass.
+The new native stable run and full package verification are in progress. The
+issuer canary is not a durable approved receipt issuer, and qualification remains
+disabled pending protected issuance and trusted operational import.
+
+Both public native v2 runs subsequently passed: three stable and three canary
+pairs include same-boundary file denial, credential-visibility and protected-byte
+checks. Retained checkpoints:
+[stable protection](./research/reader-protection-stable.json) and
+[canary protection](./research/reader-protection-canary.json). Full package
+verification for this snapshot remains running. These results establish the
+reader boundary around the synthetic protected material; approved durable
+issuance and trusted import remain outstanding.
+
+## Signed matrix expansion: 2026-10-01
+
+Signed observations now require three enabled-configuration fresh/fresh pairs,
+three baseline remote pairs and ten independent signed shadow comparisons.
+The validator checks distinct root/run/summary identities, same-input fresh
+execution, exact output and replay logs, direct wire evidence, reader protection
+and scenario-derived hash expectations. Fresh controls use empty independent
+local cache directories and must report native fresh origins.
+
+The native stable development run passed all 45 executions on the older frozen
+pilot profile. Source typechecking and 75 tests across six files pass. See the
+[development checkpoint](./research/signed-matrix-development-stable.json).
+Full package verification passed: audit 619.7 seconds and docgen 20.2 seconds. This does not refresh
+the final profile, accept producer authority or qualify a tuple. Signed mutation,
+non-execution, capture and actual task-overlap controls, accepted policy import
+and final-source reconciliation remain required.
+
+## Signed native concurrency: 2026-10-01
+
+Signed v4 observations retain selected-task native start/end timestamps and run
+the three independent fresh pairs concurrently within each pair. Missing or
+nonpositive intervals fail; at least one pair must have a strictly positive
+intersection. Parent-process overlap and touching endpoints cannot count.
+
+The stable development run passed all existing remote/shadow comparisons and
+measured 498 ms, 539 ms and 378 ms of selected-task overlap. Typechecking and
+52 focused tests pass; full CLI audit passed in 660.6 seconds and docgen in
+19.2 seconds. The [checkpoint](./research/signed-concurrency-development-stable.json)
+retains receipt identity and scope. The native run remains on the older frozen
+profile and does not qualify a tuple. Seeded invalidation, refusal/capture
+controls, accepted import and current-profile reconciliation remain open.
+
+## Signed seeded-mutation checkpoint: 2026-10-01
+
+Signed v5 completes all seven seeded invalidation controls at frozen b410da2b6d
+with stable Turbo 2.11.4, while preserving three fresh pairs, three baseline
+remote pairs and ten shadow decisions. Failed seeds are not uploaded; each
+changed producer differs from its seed before signed replay. Exact workflow
+source and native receipt are retained privately. Typechecking, 78 focused
+tests and full CLI verification pass (audit 719.3s, docgen 34.6s).
+See [the development receipt](./research/signed-mutations-development-stable.json).
+Missing-child refusal and four non-execution controls are being validated in
+a separate snapshot. Capture controls, current-profile reconciliation, semantic
+closure and accepted operational import remain open; no tuple is qualified.
+
+## Authenticated import preparation: 2026-10-01
+
+The acceptance worktree now authenticates complete stable and canary bundles
+against separately loaded private approvals containing the same reviewed full
+task contract. Derived comparison evidence retains missing policy obligations;
+the preview writes no ledger entry. Source typechecking and 32 focused tests
+pass, including rejection of stable evidence reused in the canary slot. Full
+CLI package verification is running; this is not an accepted qualification.
+
+The [development census checkpoint](./research/acceptance-development-census.json)
+records the current dirty acceptance worktree's dry-plan population and exact
+report digest. Command-bearing nodes are not observed executions. Semantic
+review, final main/profile reconciliation, capture adversaries and durable
+operational acceptance remain required. No tuple is qualified.
+
+## Native refusal and archive results: 2026-10-01
+
+Stable v6 and v7 runs terminated successfully, with retained source bindings
+matching all seven and twelve source files respectively. v7 contains three
+fresh pairs, three baseline remote pairs, ten shadows, seven seeded mutations,
+four non-execution controls and the missing-child policy refusal. All twenty
+signed comparisons include bounded archive inspection. The
+[archive checkpoint](./research/signed-archive-development-stable.json)
+retains the report identity. These are older frozen Turbo 2.11.4 development
+observations; complete capture adversaries and current-profile proof remain
+required. Protocol v2 now records nine native scenario roots; its pinned
+stable and canary runs are in progress. No tuple is qualified.
+
+## Protocol root binding: native results
+
+Protocol execution v2 passed on pinned stable and exact-canary clients. Each
+receipt contains all nine cases, nine distinct measured roots and 23 wire
+events; retained source bindings match. See
+[the protocol checkpoint](./research/protocol-roots-development.json).
+The primary package audit had one unchanged worktree-test timeout among
+5,087 tests; all 36 tests in that file passed in isolation. This attribution
+does not waive the final full package gate. No tuple is qualified.
+
+### Signed capture and operational acceptance development
+
+The stable v8 development matrix passed all four native unsafe-capture controls,
+three fresh pairs, three signed pairs, ten shadows and seven mutations. All 27
+source bindings matched before retention. See
+[the bounded receipt](./research/signed-capture-development-stable.json).
+This uses the older frozen source/profile and does not qualify a current tuple.
+
+The integrated operational acceptance path authenticates both channel reports
+against independent private approvals, retains immutable private evidence and
+revalidates it during audit and promotion. The new `cache accept` command emits
+a reference without promoting a tuple. Command tests and final package proof
+remain required; actual protected workflow issuance, semantic closure and
+current-profile qualification are still open.
+
+Actual CLI acceptance development proof now passes with disposable independent
+stable/canary issuers: a complete request larger than 64 KiB is accepted, the
+private record reauthenticates, revocation prevents a later acceptance, and the
+prior reference stays unchanged. The proof found and repairs the generic
+64 KiB request limit by aligning `accept` with the private store's 8 MiB bound.
+The fix and regression test are isolated in the capture worktree while the
+primary package proof runs. Source checking and the new regression pass; full
+package proof and baseline-checked integration remain pending. This synthetic
+command test supplies no real-task qualification authority.
+
+### Operational profile binding repair
+
+[The source-bound profile review](./research/signed-profile-binding-review.json)
+identifies the next implementation seam: the authenticated signed tuple, base
+source fingerprint, activation projection and channel runtime key have distinct
+identities. The real fingerprint rejects the signed profile, and the current
+source digest cannot stand for the activated/signed configuration. Introduce
+an explicit reviewed execution-profile contract covering both source and
+execution bindings; preserve ordinary profile equality and verify the real
+fingerprint/projection path before native operational qualification. The
+controlled-identity ledger regression remains bounded test evidence only.
+
+The policy model now includes optional `CacheSignedExecutionProfile` with
+explicit source key/configuration/toolchain, activated configuration, activation
+request, signed root reference and both channel runtime keys. Ordinary contracts
+default to no signed binding. Pure policy rejects inconsistent tuple/activation
+relationships; 29 policy tests and source typechecking pass. Full policy-package
+verification passed (audit 11.0s, docgen 4.9s), and all 34 focused CLI consumer
+tests pass. The separate CLI request-bound snapshot also passed full package
+verification (audit 1043.5s, docgen 30.4s). Operational interpretation
+remains pending, and the existing profile-equality gate remains intact.
+
+Producer approval and evidence derivation now consume the explicit signed
+execution binding: source pins remain separate from execution pins; the signed
+root, per-channel runtime key, base tuple and activation request are checked
+against independent approval. Rehashed mismatch cases are rejected, including
+canary-only runtime drift. Source and package-test typechecks pass; 34 focused
+tests pass, followed by seven acceptance tests with expanded channel coverage.
+Full CLI verification is starting. The live profile/projection bridge and
+real current-profile qualification remain unfinished.
+
+The next verifier prerequisite is implemented in the isolated acceptance
+worktree: `projectCacheSignedRoot` is shared with the pilot and preserves
+legacy/global layout behavior. All 39 focused census/orchestration tests pass,
+and the helper reproduces the exact signed-root hash from the retained native
+v8 observation at its frozen source revision. Source typechecking passes
+after rebuilding the changed policy dependency. Full CLI verification is
+running; baseline-checked integration and live profile verification remain.
+
+The signed activation projection now verifies source-root bytes and census
+settings, the exact signed overlay, and the real base-profile activation before
+deriving the signed configuration identity. Seventeen tests pass with no
+fingerprint mocks, including equality with an independently projected census
+and refusal of altered roots or ambiguous source inventory. Source typechecking
+passes. The change is isolated in the capture worktree; full package proof and
+service integration remain pending.
+
+### Projection integration verification
+
+The primary signed-profile approval snapshot passed full CLI package verification
+(audit 1056.8s, docgen 32.4s), with all 37 recorded source hashes unchanged.
+The shared signed-root and activation projections are now integrated into the
+primary worktree after checking the sibling baselines. The combined source
+passes typechecking and all 37 focused census/signed-pilot tests. Full CLI
+package verification is running for the integrated 39-file snapshot. The two
+sibling proof runs remain live and their source snapshots remain unchanged.
+
+Next, bind runner-measured activated and signed configuration digests into the
+versioned authenticated receipt and derive activation-projection evidence from
+validated execution facts. Then wire the live profile verifier and rerun the
+protected stable/canary workflow before real qualification. No tuple qualifies
+from these helper tests or package checks alone.
+
+### Measured activation evidence
+
+The acceptance worktree now requires activated and signed configuration digests
+in receipt v9 and producer bindings. Independent approval v3 checks both against
+the reviewed execution profile. The runner computes the signed identity through
+the shared projection from actual source bytes. Evidence derivation retains the
+complete validated pilot and native baseline roots for activation-projection;
+contracts without a signed profile receive no such observation. All 55 focused
+tests pass, including old receipt, missing-field and substitution refusals.
+Source typechecking passes; full CLI package verification is running. These
+changes remain isolated pending baseline-checked integration. No native v9
+workflow has run, and service integration and real qualification remain pending.
+
+### Live signed-profile verifier
+
+The capture worktree now verifies the explicit source tuple, real source and
+activation fingerprints, complete reviewed activation preview, and exact signed
+root overlay before checking the live contract. Ordinary profile equality is
+preserved and ordinary source caching stays disabled. The operational regression
+uses actual fingerprint/projection functions, private authenticated acceptance
+and ledger transitions; only census/toolchain observations are controlled.
+It rejects changed artifacts, runtime drift and revocation without changing the
+ledger. All 27 focused tests and source typechecking pass; full CLI package
+verification is running. This is synthetic operational proof, not native v9
+qualification. Integration and protected stable/canary evidence remain pending.
+
+### Published implementation and current proof
+
+Draft PR #1389 saves the integrated v9 receipt, approval v3, private acceptance store, and live profile verifier. All eight schema-policy findings are addressed with behavioral properties or typed Option helpers; the scoped documentation gate now follows owning-declaration rules. Schema policy, scoped docgen, test typechecking, 48 protocol/pilot tests, 35 acceptance/producer tests, and 83 docgen tests pass. Full CLI package verification passed (audit 656.0s, docgen 21.6s) at implementation commit `6d920f87a7`.
+
+The hosted Security finding requires a narrow basic-ftp 6.2.1 override before current native evidence. Current stable authority remains the repository exact Turbo 2.11.5 under the approved decision; published canary 2.11.5-canary.5 is selected separately. Turbo 2.11.6 was observed but is not silently adopted. The frozen workflow inspection and old-head Yeet preview were cancelled while queued so the dependency refresh can land first. Native v9 stable/canary evidence, semantic closure, real qualification, adoption handoff and final reflection/lifecycle closeout remain outstanding.
+
+### PR review: signed-profile admission and error identity
+
+PR #1389 review identified omission of signed execution metadata as an approval bypass. Signed-profile approval now requires both reviewed execution metadata and activation; pure promotion policy reports a missing profile, and operational eligibility rejects omitted fields for transitions and persisted qualified entries. Acceptance fixtures now carry the complete profile. Regressions reject rehashed incomplete approvals and preserve the ledger on refusal. Issuer operations use the existing domain-error-preserving mapper, retaining explicit revocation diagnostics while keeping generic context for foreign failures.
+
+Forty focused tests pass across the cache acceptance/producer suites after fixture corrections (39 in the combined run plus the corrected operational regression), canonical test typechecking and CLI lint/check pass, and full policy package verification passes (audit 12.8s, docgen 4.1s). Full CLI proof follows publication. The frozen workflow inspection, activation preview and dependency materialization completed at the preceding head; they establish preparation only and must be rebound to the reviewed implementation before native issuance.
+
+### Test-policy repair and base refresh
+
+Predicate assertions and native property registrations reduced new Effect Vitest
+findings from 192 to 60 without enlarging the detector baseline. The acceptance
+suite now uses its test-owned scope and explicit layer hook budgets. Its nine
+tests, test typecheck, and scoped package lint/check pass. Main was merged through
+`ec71f01a0f` after full CLI verification reported 5,152 passing tests and one
+notifier comparison against a moved `origin/main`; all 26 acceptance/notifier
+tests pass after the merge. Full verification is not yet green.
+
+Removing the operational test's explicit timeout restores the existing shared
+deep-sweep timeout policy. The unchanged checks pass at 400 and 1,000 runs, with
+the latter taking 70.99 seconds. The frozen workflow inspection passed for the
+preceding `426ccee8c7` revision and the signed root projection was prepared, but
+main changed Turbo inputs; refresh those bindings after the repair batch before
+issuing native evidence. Fallow, remaining resource-policy reviews, native v9
+qualification, semantic closure and adoption handoff remain outstanding.
+
+The next resource-policy batch removes 26 redundant producer/workflow test-body
+scopes, adds four layer hook budgets, migrates the producer property registration,
+and adopts eight Option assertion helpers. All 49 affected tests pass after
+integration; isolated test typechecking and package lint/check pass. The primary
+full scan now reports 21 new findings, with the intentional socket-release scope
+preserved and the inventory baseline unchanged.
+
+Six detector judgments are now recorded as occurrence-specific exceptions in
+`research/test-resource-boundaries.md`: five native service imports required by
+filesystem/crypto behavior and the deliberate socket-release scope. Their
+reasons and retirement conditions are explicit. This adds six reviewed exception
+rows to the inventory; it does not baseline the remaining open findings or waive
+qualification evidence. The isolated detector run reports 15 new findings after
+recognizing these exceptions.
+
+
+### 2026-10-01 structural validator repair continuation
+
+PR #1389 is published at `5b9c4dda11` after integrating main `ed09a085f3`.
+The reviewed batch passed full CLI audit (681.8 seconds) and docgen (24.9 seconds)
+against its captured source hashes. That proof predates the following changes.
+The three reviewer threads were already resolved upstream when Yeet reply ran;
+no reply was posted. Publication still ended red on Fallow, so this is not a
+merge-ready or qualification closeout.
+
+Signed-receipt validation now uses schema-derived field equivalences and separate
+runtime, outcome, wire, seed, transfer, archive and control validation phases.
+Protocol validation similarly separates native-run, population, exchange,
+integrity-read and transport-failure checks. Existing refusal diagnostics and
+ordering are retained. Both validators have zero scoped health findings.
+Primary integration passed 35 validator tests; the protocol-only isolated proof
+passed 27 tests and package lint/check.
+
+Repeated ephemeral capability generation now shares a lazy crypto Effect, with
+fresh random bytes on every execution. Producer metadata inspection is shared
+across issuer material, approval and acceptance records; caller-specific bounds,
+revocation and no-follow reads remain intact. Their focused primary proof passed
+72 tests. Fixture request routing, atomic uploads, artifact reads, response
+recording and fault injection are separate phases; the final focused proof passed
+51 tests, package lint/check, and zero fixture health findings.
+
+The whole current health inventory has 13 remaining findings, down from 22.
+No thresholds, suppressions or regression baselines were changed. This batch is
+uncommitted and requires new full package verification and Yeet publication.
+Frozen native v9 bindings remain stale, no current real tuple is qualified, and
+native matrix, accepted import, semantic population/adoption, reflection/lifecycle
+and full merge-ready closeout remain required.
+
+
+The subsequent protocol-worker repair separates capture-entry inspection, fixture
+root preparation, bounded native process execution, summary verification, cache
+origin/output validation and outcome recording. Global capture count/byte limits,
+private networking, executable pins, rejection exit behavior, output inventory,
+and final producer identity rechecks remain. The current health scan has eleven
+remaining findings and none in the protocol runner. Twenty-seven protocol/fixture
+tests pass; these do not establish native worker execution or qualification. The
+latest package lint/type proof is recorded separately; final full verification
+and all native acceptance requirements remain open.
+
+
+Further structural repairs remove the introduced signed seed/producer duplication,
+separate fresh-authority and reader-protection checks, derive signed approval
+binding comparisons from schema fields, absorb exact archive-header validation
+into a named schema, and separate signed activation verification from projection.
+The latest audit attributes all four remaining clone groups to inherited code;
+all three introduced groups are removed. The current health scan has six remaining
+findings. No regression baseline, threshold or suppression changed.
+
+The archive/approval/fixture batch passes 83 focused tests, test typechecking,
+and package lint/check. The signed activation phase passes 19 focused tests and
+package lint/check. These are source-level proofs; native qualification remains
+unproven. The full structural batch is uncommitted and needs a fresh full package
+proof. A remote PR refresh encountered GraphQL quota, recorded in OPPORTUNITIES;
+remote status must be refreshed before publication/closeout claims.
+
+
+### 2026-10-01 source-health closure and current-main integration
+
+Evidence derivation separates fresh, remote-replay and shadow comparisons;
+promotion policy separates signed-contract failures without changing blocker
+order. The repo-configs package passed its full audit and docgen proof. The
+supervisor separates issuer mount exclusion and supervised receipt checks;
+pilot invocation setup and signed capture privacy have explicit phases. Their
+55 focused tests and package lint/type checks pass.
+
+The final pilot setup repair separates environment checks, reviewed activation
+resolution and source issuer exclusion. An introduced scope error in the final
+integrity check was detected and fixed by returning the original activation
+request with its verified preview. All 45 affected tests and package lint/type
+checks pass. The pre-merge source-health scan reports zero findings; no threshold,
+baseline or suppression changed.
+
+Main advanced to `a448474b15`, including dependency, Effect, Vitest and Turbo
+updates. It was merged as `545de03f4c`; SHA-256 checks prove all sixteen dirty
+files unchanged through the merge. Installation from the merged frozen lockfile
+succeeded. Source gates and full package proofs must now run on this dependency
+set. Earlier scoped and full results remain historical. Native frozen bindings
+must be refreshed against this new base before qualification execution.
+
+
+After installation on merged main, Fallow audit and health both pass with zero
+introduced findings. Effect Vitest reports zero introduced findings and 2,182
+resolved. Package lint/type checks pass. The fresh full repo-configs proof passes
+its audit (11.1 seconds) and docgen (3.7 seconds). Full CLI verification is running
+against fourteen captured unchanged source/test file hashes. This is a live proof,
+not a completed result. Source remains frozen until it settles. The fresh census
+is preparatory; semantic population closure and native qualification remain open.
+
+
+The full CLI proof completed successfully on `545de03f4c`: audit 631.6 seconds,
+docgen 22.3 seconds. All fourteen captured source/test file hashes were unchanged.
+Together with the fresh full repo-configs proof and passing Fallow/Effect Vitest
+gates, this verifies the structural source repair batch on the updated dependency
+set. Native qualification and semantic population closure remain unproven. The
+new current-source-review-refresh receipt records stale historical review bindings
+without renewing them. Publish this tested batch through Yeet before native work.
+
+
+### 2026-10-01 root Schema compiler gate and planner refresh
+
+The source-health publication exposed twenty-two root Oxlint inline Schema
+compiler findings that the passing package audit did not exercise. The obsolete
+publication was deliberately stopped after that observed failure. Ten files now
+hoist reusable schema ASTs; generated protocol worker codecs also live at module
+scope. No policy, baseline, threshold or suppression changed. Root Oxlint passes,
+as do 114 focused tests across ten files, package lint/source checks and the
+canonical package test typecheck. A fresh full CLI package proof is running with
+all ten source hashes captured and unchanged.
+
+The fresh census still has 144 workspaces, 3,473 graph nodes and 1,970 executable
+roots. Current clean local/hosted planner projections and nested-command routing
+are retained separately. The current-planner-routing-review receipt attributes
+twelve changed CI plans per context and explicitly reviews the twenty-one shell
+expression sites. Both generic census obligations remain open pending final
+committed-source attachment and complete dynamic source review. Stable/canary
+native qualification, adoption, reflection/lifecycle and full PR closeout remain
+required. The previous d331 frozen bindings are preserved as historical evidence;
+renew them after the hoist repair is verified and committed.
+
+The fresh full CLI proof completed successfully: audit 632.6 seconds and docgen
+21.7 seconds. All ten captured source hashes are unchanged. Together with root
+Oxlint, 114 focused tests and canonical test typechecking, this verifies the
+Schema compiler hoist repair. Publish the batch through Yeet and renew frozen
+source/workflow bindings before the native qualification run.
+
+
+Publication refused a stale base after main advanced to `f05e1a698d`. It was
+integrated as `5c1eb7a7df`, preserving all thirteen dirty/untracked file hashes.
+The sole inventory conflict was resolved by retaining all 2,876 current-main
+findings and the branch's twelve previously reviewed Cache exceptions; the
+branch had no modified or removed baseline rows. Installation from the merged
+frozen lockfile passed. Current package/quality proof must now include main's
+new CI modules and dependency changes. Earlier successful proof remains retained
+with its exact pre-merge source boundary; no stale-base override was used.
+
+### Authenticated native qualification — 2026-10-02
+
+The [current signed qualification receipt](research/current-signed-qualification.json)
+records both full native v9 workflows at `93a19425da`: exact stable and canary
+clients, three fresh pairs, three remote pairs, ten shadows, seven seeded
+mutations, four capture controls, four non-execution controls, missing-child
+refusal and the native protocol matrix per channel. Independently configured
+issuer trust accepted 103 evidence fragments with zero blockers; the immutable
+acceptance was persisted and independently reread.
+
+A separate operational checkout at that same revision ran the production Cache
+baseline and lifecycle commands with the actual filesystem, census, toolchain
+and accepted evidence. Revisions 6, 7 and 8 advanced the named private-loopback
+signed identity lint tuple through candidate, shadow and qualified. A subsequent
+production audit completed with zero blocking findings. The ordinary source
+profile remains excluded; the public baseline and ledger were not replaced by
+the private signed-profile operational context. This is a bounded real
+qualification, not broad cache activation or hosted proof reuse.
+
+Coverage repairs passed 54 focused tests and the affected per-file floors.
+The expanded process-boundary fixture remains separate from native authority.
+Root lint found an inline schema compiler, which was hoisted; Fallow identified
+fixture complexity, which is being reduced without threshold changes. Final
+package/Yeet/hosted verification, adoption handoff, reflection and lifecycle
+closeout remain incomplete.

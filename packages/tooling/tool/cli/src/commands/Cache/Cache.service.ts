@@ -27,12 +27,20 @@ import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { readContainedFileBytesNoFollow, writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { PosInt } from "../../internal/schema/PosInt.ts";
+import { CacheProducerAcceptanceReference } from "./Cache.acceptance.schemas.ts";
+import { loadCacheProducerStoreConfiguration, readCacheProducerAcceptance } from "./Cache.acceptance.store.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
 import { readCacheEvidenceBytes } from "./Cache.evidence.ts";
-import { collectCacheToolchain, fingerprintCacheComputation, projectCacheActivation } from "./Cache.fingerprint.ts";
+import {
+  collectCacheToolchain,
+  fingerprintCacheComputation,
+  projectCacheActivation,
+  projectCacheSignedActivation,
+} from "./Cache.fingerprint.ts";
 import { CacheActivationPreview, CacheCommandError } from "./Cache.schemas.ts";
 import type { CachePolicyAuditReport } from "@beep/repo-configs/cache";
 import type {
@@ -43,6 +51,8 @@ import type {
   CacheToolchainSnapshot,
   CacheTransitionRequest,
 } from "./Cache.schemas.ts";
+
+const CacheAcceptedReferenceJson = S.fromJsonString(CacheProducerAcceptanceReference);
 
 const $I = $RepoCliId.create("commands/Cache/Cache.service");
 const baselinePath = "standards/cache-qualification-baseline.json";
@@ -132,21 +142,47 @@ const verifyHistoryEntry = Effect.fn("CacheQualification.verifyHistoryEntry")(fu
   }
 });
 
+const verifyQualifiedEvidence = Effect.fn("CacheQualification.verifyQualifiedEvidence")(function* (
+  root: string,
+  entry: CacheQualificationStore["entries"][number]
+) {
+  const { status } = entry;
+  if (status.state !== "qualified") return;
+  yield* validateContractEligibility(entry.key, status.contract);
+  if (status.receipts.length !== 1)
+    return yield* CacheCommandError.new("Qualified entries require exactly one immutable acceptance reference.");
+  const reference = yield* verifyReference(root, status.receipts[0]).pipe(
+    Effect.flatMap(S.decodeUnknownEffect(CacheAcceptedReferenceJson))
+  );
+  const configuration = yield* loadCacheProducerStoreConfiguration();
+  const accepted = yield* readCacheProducerAcceptance(configuration.directory, reference, configuration.trust);
+  if (!sameContract(accepted.contract, status.contract) || !sameKey(accepted.contract.key, entry.key))
+    return yield* CacheCommandError.new(
+      "Qualified ledger contract differs from its independently authenticated acceptance."
+    );
+}, CacheCommandError.mapError("Cannot verify qualified acceptance against independently configured trust."));
+
 const audit = Effect.fn("CacheQualification.audit")(function* (root: string) {
   const baseline = yield* readBaseline(root);
   const store = yield* readStore(root);
   yield* Effect.forEach(store.history, ({ entry }) => verifyHistoryEntry(root, entry), { discard: true });
-  if (A.some(store.entries, (entry) => entry.status.state === "qualified"))
-    return yield* CacheCommandError.new(
-      "A qualified ledger entry requires the accepted signed conformance/trust receipt importer."
-    );
+  yield* Effect.forEach(store.entries, (entry) => verifyQualifiedEvidence(root, entry), { discard: true });
+  yield* Effect.forEach(
+    A.filter(store.entries, (entry) => entry.status.state === "qualified"),
+    (entry) => validateTransitionScope(entry.key, baseline),
+    { discard: true }
+  );
   const census = yield* collectCacheCensus(root);
-  if (A.some(store.entries, (entry) => CacheQualificationStatus.isAnyOf(["candidate", "shadow"])(entry.status))) {
+  if (
+    A.some(store.entries, (entry) =>
+      CacheQualificationStatus.isAnyOf(["candidate", "shadow", "qualified"])(entry.status)
+    )
+  ) {
     const toolchain = yield* collectCacheToolchain(root);
     yield* Effect.forEach(
       store.entries,
       Effect.fn("CacheQualification.validateActiveEntry")(function* (entry) {
-        if (!CacheQualificationStatus.isAnyOf(["candidate", "shadow"])(entry.status)) return;
+        if (!CacheQualificationStatus.isAnyOf(["candidate", "shadow", "qualified"])(entry.status)) return;
         yield* validateLiveContract(
           entry.status.contract,
           yield* contractIdentity(root, entry.status.contract, census, toolchain)
@@ -199,7 +235,11 @@ const contractIdentity = Effect.fn("CacheQualification.contractIdentity")(functi
   census: CacheCensusReport,
   toolchain: CacheToolchainSnapshot
 ) {
-  if (O.isNone(contract.activation)) return yield* fingerprintCacheComputation(contract.key, census, toolchain);
+  if (O.isNone(contract.activation)) {
+    if (O.isSome(contract.signedExecution))
+      return yield* CacheCommandError.new("Signed execution requires a reviewed activation projection.");
+    return yield* fingerprintCacheComputation(contract.key, census, toolchain);
+  }
   const activation = contract.activation.value;
   const before = yield* verifyReference(root, activation.before);
   const after = yield* verifyReference(root, activation.after);
@@ -207,7 +247,44 @@ const contractIdentity = Effect.fn("CacheQualification.contractIdentity")(functi
     root,
     CacheEvidenceReference.make({ path: activation.path, sha256: activation.before.sha256 })
   );
-  return yield* projectCacheActivation(contract.key, census, toolchain, activation, before, after);
+  if (O.isNone(contract.signedExecution))
+    return yield* projectCacheActivation(contract.key, census, toolchain, activation, before, after);
+  const execution = contract.signedExecution.value;
+  const verifySignedActivation = Effect.fn("CacheQualification.verifySignedActivation")(function* () {
+    const expectedKey = CacheQualificationKey.make({
+      ...execution.sourceKey,
+      profile: `${execution.sourceKey.profile}-private-loopback-signed-v1`,
+    });
+    if (!sameKey(contract.key, expectedKey))
+      return yield* CacheCommandError.new("Signed execution tuple differs from its reviewed source tuple.");
+    const source = yield* fingerprintCacheComputation(execution.sourceKey, census, toolchain);
+    if (
+      source.configurationDigest !== execution.sourceConfiguration ||
+      source.toolchainDigest !== execution.sourceToolchain ||
+      source.toolchainDigest !== execution.runtimeKeys.stable
+    )
+      return yield* CacheCommandError.new("Signed execution source or stable runtime identity has drifted.");
+    const target = yield* projectCacheActivation(execution.sourceKey, census, toolchain, activation, before, after);
+    if (target.configurationDigest !== execution.activatedConfiguration)
+      return yield* CacheCommandError.new("Signed execution activation identity has drifted.");
+    const preview = yield* verifyReference(root, execution.activationRequest).pipe(
+      Effect.flatMap(JsonStringCodec(CacheActivationPreview).decode),
+      CacheCommandError.mapError("Cannot decode the reviewed signed activation preview.")
+    );
+    if (!S.toEquivalence(CacheActivationPreview)(preview, CacheActivationPreview.make({ activation, source, target })))
+      return yield* CacheCommandError.new("Signed execution preview differs from the live source and activation.");
+  });
+  yield* verifySignedActivation();
+  return yield* projectCacheSignedActivation(
+    execution.sourceKey,
+    census,
+    toolchain,
+    activation,
+    before,
+    after,
+    yield* readRequired(root, "turbo.json"),
+    yield* verifyReference(root, execution.signedRootConfiguration)
+  );
 });
 
 const previewActivation = Effect.fn("CacheQualification.previewActivation")(function* (
@@ -326,6 +403,11 @@ const validateContractEligibility = Effect.fn("CacheQualification.validateContra
   contract: CacheTaskContract
 ) {
   if (!sameKey(key, contract.key)) return yield* CacheCommandError.new("Transition contract uses a different tuple.");
+  if (
+    Str.endsWith("-private-loopback-signed-v1")(key.profile) &&
+    (O.isNone(contract.signedExecution) || O.isNone(contract.activation))
+  )
+    return yield* CacheCommandError.new("Signed qualification requires a reviewed execution profile and activation.");
   if (contract.configuration.persistent || contract.configuration.interactive) {
     return yield* CacheCommandError.new("Persistent or interactive commands cannot be qualified.");
   }
@@ -361,11 +443,7 @@ const validateTransitionContract = Effect.fn("CacheQualification.validateTransit
     // they are not interpreted as passing qualification evidence here.
     yield* Effect.forEach(status.receipts, (reference) => verifyReference(root, reference), { discard: true });
   }
-  if (status.state === "qualified") {
-    return yield* CacheCommandError.new(
-      "Promotion requires the signed conformance/trust receipt importer; no accepted sibling runtime contract is installed."
-    );
-  }
+  if (status.state === "qualified") yield* verifyQualifiedEvidence(root, request.entry);
 });
 
 const validateTransitionScope = Effect.fn("CacheQualification.validateTransitionScope")(function* (
@@ -390,7 +468,7 @@ const validateAdoption = Effect.fn("CacheQualification.validateAdoption")(functi
   next: CacheQualificationStore
 ) {
   const { key, status } = request.entry;
-  if (status.state === "candidate" || status.state === "shadow") {
+  if (CacheQualificationStatus.isAnyOf(["candidate", "shadow", "qualified"])(status)) {
     const census = yield* collectCacheCensus(root);
     yield* validateLiveContract(
       status.contract,
@@ -443,9 +521,10 @@ const transition = Effect.fn("CacheQualification.transition")(function* (
         ),
       });
       // Suspension/exclusion must remain available even while the live graph is
-      // broken. Candidate/shadow adoption must match the current executable graph.
+      // broken. Candidate/shadow/qualified adoption must match the current executable graph.
       yield* validateAdoption(root, request, baseline, next);
       const encoded = yield* StoreJson.encode(next);
+      yield* verifyQualifiedEvidence(root, request.entry);
       yield* writeContainedFileString(root, storePath, `${encoded}\n`);
       return next;
     })

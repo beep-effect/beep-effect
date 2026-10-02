@@ -1,0 +1,247 @@
+{
+  "authority": "Current bounded command-specific source interpretation. No generator, installer, migration or browser execution performed.",
+  "revision": "77811ec365934c2ada0f8f2f78348edd7a0ff468",
+  "sources": [
+    {
+      "path": "apps/professional-desktop/scripts/sync-migration-bundle.ts",
+      "sha256": "56c85a526f35e1e4bd58933c73876910b2ab51cd8c372b8ccc18b59f0f9131e1"
+    },
+    {
+      "path": "apps/storybook/scripts/run-storybook-tests.mjs",
+      "sha256": "488deb42c6c48cd65647ecad3d69593225819f9ac07c6ecd8ebee1d1bc373945"
+    },
+    {
+      "path": "packages/_internal/db-admin/scripts/check-migrations-drift.ts",
+      "sha256": "29a4132e2d0456cb39e735890461e6afe464add1b2c9b5c97708ee05e1161437"
+    },
+    {
+      "path": "packages/drivers/acp/scripts/generate.ts",
+      "sha256": "717d612e65ec47544bf888d08a113b0e79ad1a1b7d6ccbc253c9c7ff152b5594"
+    },
+    {
+      "path": "packages/drivers/box/scripts/generate.ts",
+      "sha256": "6c4b978238832964399eafc0e83f237fe2f44431e8416e2e4c583136a5bd7ad8"
+    },
+    {
+      "path": "packages/drivers/ecfr/scripts/generate.ts",
+      "sha256": "6976d7b0c4b7d4452b4e601a4ef95c9dbeff16d06791cae8fcf2c1f6f98089e6"
+    },
+    {
+      "path": "packages/drivers/gov-legal-mcp/scripts/generate.ts",
+      "sha256": "75ae8ef0762a9b7e9d6e16e0e9d15e0817e408fde155e541808cbf9bd4c6fb09"
+    },
+    {
+      "path": "packages/drivers/govinfo/scripts/generate.ts",
+      "sha256": "87c951a7619e05a9ab31a242d174581ddd7ee9985abf0381405696a131a0f710"
+    },
+    {
+      "path": "packages/drivers/runpod/scripts/generate.ts",
+      "sha256": "b516e2af4ae1f4d309057870322e385035138f75fad848d3454bf4f06c21593e"
+    },
+    {
+      "path": "packages/tooling/library/codegen-kit/src/CodegenKit.cli.ts",
+      "sha256": "b76e33b0bc62688d867db98e8f286e3b677673f5236f928a71aa0cf1c513b067"
+    },
+    {
+      "path": "packages/tooling/library/codegen-kit/src/CodegenKit.service.ts",
+      "sha256": "9b0732ff74fc06e7492b04c43a3b3bbfa5aa8e499f48fd05ae80e4ff02330fb7"
+    },
+    {
+      "path": "packages/tooling/library/codegen-kit/src/internal/format.ts",
+      "sha256": "4b90dbb8b070ade69dc8ce97786cb6448c4cee1ccfb4193db1d8a036587d6b76"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/scripts/GenerateEffectLawsAllowlistSnapshot.ts",
+      "sha256": "8bec89e6cfb6f98576e564fd4b0fd4515d2b73657e8a0968c9d1a0ce8bfed593"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/bin.ts",
+      "sha256": "305fb645356b58122d401b2da5f1685a142c8aab8ee3c109ec4b8cc2c416fe71"
+    }
+  ],
+  "fileEntrypointSites": [
+    {
+      "definition": "@beep/repo-configs#codegen",
+      "step": 0,
+      "command": "bun run ./scripts/GenerateEffectLawsAllowlistSnapshot.ts",
+      "source": "packages/tooling/policy-pack/repo-configs/scripts/GenerateEffectLawsAllowlistSnapshot.ts",
+      "boundary": "Reads allowlist JSONC, decodes/renders a generated snapshot and writes only changed bytes. Read failure can become snapshot diagnostics; rendering diagnostics is not a valid-allowlist verdict. Logs changed status and counts."
+    },
+    {
+      "definition": "@beep/db-admin#migrations:check",
+      "step": 0,
+      "command": "bun run scripts/check-migrations-drift.ts",
+      "source": "packages/_internal/db-admin/scripts/check-migrations-drift.ts",
+      "boundary": "Copies migrations into scoped scratch, runs drizzle-kit generate against schema with scratch output, rejects nonzero generation and new entries. Prints pending SQL on drift. It compares new entry membership, not all file bytes; committed migration tree is preserved."
+    },
+    {
+      "definition": "@beep/acp#generate",
+      "step": 0,
+      "command": "bun run scripts/generate.ts",
+      "source": "packages/drivers/acp/scripts/generate.ts",
+      "boundary": "Reads configured schema and metadata caches for pinned release; explicit refresh uses configured release URLs. Extra renderer consumes metadata through the same refresh-aware fetch. Writes schema and metadata modules through CodegenKit."
+    },
+    {
+      "definition": "@beep/box#generate",
+      "step": 0,
+      "command": "bun run scripts/generate.ts",
+      "source": "packages/drivers/box/scripts/generate.ts",
+      "boundary": "Finds box-node-sdk by ancestor search, reads SDK declarations plus handwritten source model roots and admitted manager/operation surface, computes reachable declarations, writes models/operations and emits counts/warnings. Installed SDK path/content are additional inputs."
+    },
+    {
+      "definition": "@beep/ecfr#generate",
+      "step": 0,
+      "command": "bun run scripts/generate.ts",
+      "source": "packages/drivers/ecfr/scripts/generate.ts",
+      "boundary": "Reads local Swagger JSON with configured transforms/patches and writes generated HttpApi through CodegenKit. Formatter/config/runtime dependencies remain semantic inputs."
+    },
+    {
+      "definition": "@beep/gov-legal-mcp#generate",
+      "step": 0,
+      "command": "bun run scripts/generate.ts",
+      "source": "packages/drivers/gov-legal-mcp/scripts/generate.ts",
+      "boundary": "Reads package version and imported production collision report, writes report JSON and version module, and logs paths. Imported collision computation remains part of source/toolchain closure; this wrapper does not query government APIs."
+    },
+    {
+      "definition": "@beep/govinfo#generate",
+      "step": 0,
+      "command": "bun run scripts/generate.ts",
+      "source": "packages/drivers/govinfo/scripts/generate.ts",
+      "boundary": "Normally reads local OpenAPI cache; explicit URL refresh checks configured document version and rewrites cache. Writes generated HttpApi. Version equality does not bind response bytes."
+    },
+    {
+      "definition": "@beep/runpod#generate",
+      "step": 0,
+      "command": "bun run scripts/generate.ts",
+      "source": "packages/drivers/runpod/scripts/generate.ts",
+      "boundary": "Reads local OpenAPI and patch JSON, applies transforms, and invokes extra operations renderer. Extra renderer validation participates before output writes. Writes generated models and operations through CodegenKit."
+    },
+    {
+      "definition": "@beep/storybook#test:storybook",
+      "step": 0,
+      "command": "bun run scripts/run-storybook-tests.mjs",
+      "source": "apps/storybook/scripts/run-storybook-tests.mjs",
+      "boundary": "Chooses explicit roots or defaults, recursively discovers and sorts stories, rejects empty selection, runs sequential chunks of20 and collects all failures. CI not exactly true triggers Playwright Chromium shell installation. Inherited environment/stdout/stderr and browser state remain inputs/effects."
+    },
+    {
+      "definition": "@beep/professional-desktop#codegen:check",
+      "step": 0,
+      "command": "bun run scripts/sync-migration-bundle.ts --check",
+      "source": "apps/professional-desktop/scripts/sync-migration-bundle.ts",
+      "boundary": "Reads cross-workspace migration directories and SQL, skips entries lacking migration.sql, sorts names and renders a module. --check rejects changed output; default/--write writes it. Unreadable prior target becomes empty comparison. Does not apply database migrations."
+    },
+    {
+      "definition": "@beep/professional-desktop#codegen",
+      "step": 0,
+      "command": "bun run scripts/sync-migration-bundle.ts --write",
+      "source": "apps/professional-desktop/scripts/sync-migration-bundle.ts",
+      "boundary": "Reads cross-workspace migration directories and SQL, skips entries lacking migration.sql, sorts names and renders a module. --check rejects changed output; default/--write writes it. Unreadable prior target becomes empty comparison. Does not apply database migrations."
+    },
+    {
+      "definition": "@beep/repo-docgen#beep:docgen",
+      "step": 0,
+      "command": "bun run src/bin.ts",
+      "source": "packages/tooling/tool/docgen/src/bin.ts",
+      "boundary": "Reads module version and delegates to docgen CLI with filesystem/process services; default teardown is followed by explicit successful exit. Downstream renderer/compiler/examples retain docgen family boundaries."
+    }
+  ],
+  "sharedCodegenKit": "Default writes; --check compares; --check plus --refresh rejects. Refresh performs HTTP, checks source pin, writes/formats/rereads cache. All modules render/format before mode branching. Check drift may write scoped temporary diff input and invoke diff; formatter subprocess inherits stderr. Shared modes do not apply to custom Box or government MCP wrappers.",
+  "externalToolCommands": [
+    {
+      "command": "bunx sherif@1.10.0 -r non-existent-packages",
+      "sites": [
+        {
+          "definition": "//#repo-sanity:sherif",
+          "step": 0
+        }
+      ],
+      "boundary": "Resolved binary/package and config/source closure, inherited environment, capture and tool-specific writes are part of the contract. bunx resolution can involve package installation; no implicit offline or purity claim."
+    },
+    {
+      "command": "bunx syncpack lint",
+      "sites": [
+        {
+          "definition": "//#repo-sanity:syncpack",
+          "step": 0
+        }
+      ],
+      "boundary": "Resolved binary/package and config/source closure, inherited environment, capture and tool-specific writes are part of the contract. bunx resolution can involve package installation; no implicit offline or purity claim."
+    },
+    {
+      "command": "oxlint --disable-nested-config --deny-warnings -c .oxlintrc.shadcn.json apps packages",
+      "sites": [
+        {
+          "definition": "//#lint:shadcn",
+          "step": 0
+        }
+      ],
+      "boundary": "Resolved binary/package and config/source closure, inherited environment, capture and tool-specific writes are part of the contract. bunx resolution can involve package installation; no implicit offline or purity claim."
+    },
+    {
+      "command": "oxlint --quiet --disable-nested-config",
+      "sites": [
+        {
+          "definition": "//#lint:oxlint",
+          "step": 0
+        }
+      ],
+      "boundary": "Resolved binary/package and config/source closure, inherited environment, capture and tool-specific writes are part of the contract. bunx resolution can involve package installation; no implicit offline or purity claim."
+    },
+    {
+      "command": "tstyche --config tstyche.config.json --root .",
+      "sites": [
+        {
+          "definition": "@beep/effect-drizzle#beep:type-test",
+          "step": 0
+        }
+      ],
+      "boundary": "Resolved binary/package and config/source closure, inherited environment, capture and tool-specific writes are part of the contract. bunx resolution can involve package installation; no implicit offline or purity claim."
+    },
+    {
+      "command": "typos",
+      "sites": [
+        {
+          "definition": "//#lint:typos",
+          "step": 0
+        }
+      ],
+      "boundary": "Resolved binary/package and config/source closure, inherited environment, capture and tool-specific writes are part of the contract. bunx resolution can involve package installation; no implicit offline or purity claim."
+    }
+  ],
+  "pythonCommands": [
+    {
+      "command": "uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads pytest",
+      "sites": [
+        {
+          "definition": "@beep/repo-cli#beep:test:python",
+          "step": 0
+        }
+      ],
+      "boundary": "Pinned Python/project/frozen lock and no-python-downloads constrain resolution, not all dependency/environment materialization. Pytest retains suite effects; Ruff check/format --check retain diagnostics and reject drift rather than explicit source-fix mode."
+    },
+    {
+      "command": "uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads ruff check python/photo-face",
+      "sites": [
+        {
+          "definition": "@beep/repo-cli#beep:lint:python",
+          "step": 0
+        }
+      ],
+      "boundary": "Pinned Python/project/frozen lock and no-python-downloads constrain resolution, not all dependency/environment materialization. Pytest retains suite effects; Ruff check/format --check retain diagnostics and reject drift rather than explicit source-fix mode."
+    },
+    {
+      "command": "uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads ruff format --check python/photo-face",
+      "sites": [
+        {
+          "definition": "@beep/repo-cli#beep:lint:python",
+          "step": 1
+        }
+      ],
+      "boundary": "Pinned Python/project/frozen lock and no-python-downloads constrain resolution, not all dependency/environment materialization. Pytest retains suite effects; Ruff check/format --check retain diagnostics and reject drift rather than explicit source-fix mode."
+    }
+  ],
+  "limits": [
+    "Source interpretation classifies effects and decomposition needs; it does not prove complete deterministic runtime closure for non-pilot cohorts.",
+    "Imported renderer, compiler, suite and plugin behavior remains part of cohort-specific qualification evidence."
+  ]
+}

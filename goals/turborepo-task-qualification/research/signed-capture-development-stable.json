@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "qualification-development-receipt/v1",
+  "authority": "development-observation-only",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "channel": "stable",
+  "client": {
+    "version": "2.11.4",
+    "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+    "namespace": "team_qualification_capture_controls_stable_v8"
+  },
+  "receiptSha256": "4a15dcaec2a1bb1018e197bb15bb29f3cb5751f270eddce11bf1b8f4ee1df532",
+  "receiptBytes": 190919,
+  "nativeExitCode": 0,
+  "sourceBindingsVerified": 27,
+  "captureControls": [
+    {
+      "case": "credential-output",
+      "isolationRoot": "bc40146bc66049e0c02ad680c11c3af3025712d136e2c265f0bfb3b2a6c98afd",
+      "summarySha256": "45c92f0f751477636c0dab4898d08833b4f460dbbca16afa1cc9a24880a3359b",
+      "probeSha256": "89db6c7bf21dcd21ab2fd1c40ef4c5ace68ec1c3caf3835ffa47c964e1fa0c8d",
+      "taskHash": "97dc6816d2b386d1",
+      "selectedExitCode": 0,
+      "origin": "fresh",
+      "diagnostic": "Signed pilot capture contains synthetic credential material."
+    },
+    {
+      "case": "terminal-control",
+      "isolationRoot": "b7c4c9280a9cd223659ded866341091a0be855acf5bca92c782286bf4e72d6dd",
+      "summarySha256": "64e2e07a3ad8c9aa1c54af871b7b4523fc4844c3a91aa16774d8695572587b05",
+      "probeSha256": "6a3c6b16ace1b872a4264dbf8935767a07c474cf5e6f83d61ae32037bbe55e9d",
+      "taskHash": "f3a0a5d00da668cf",
+      "selectedExitCode": 0,
+      "origin": "fresh",
+      "diagnostic": "Pilot process streams are truncated, oversized or contain ambiguous terminal text."
+    },
+    {
+      "case": "oversized-log",
+      "isolationRoot": "c910b9f1e6bc8926fa3e68faf3d5bdab1f03569ade0f51acab01381cc19edad8",
+      "summarySha256": "ed49cb0e8722ed27188b76de67dfdf90498cc3ab954435da8d1ab9db2af1f5af",
+      "probeSha256": "f763a2cb3d462c8386024b4efb9c800d091fb675ed19fbbad40df70bab2e49fd",
+      "taskHash": "6f4150a36fbf5ca9",
+      "selectedExitCode": 0,
+      "origin": "fresh",
+      "diagnostic": "Selected pilot task log exceeded its 64 KiB bound."
+    },
+    {
+      "case": "undeclared-output",
+      "isolationRoot": "8adc6144516684eab45bd02949c6495a3ccde0c59d378aba3bc0ae18029a124f",
+      "summarySha256": "d72f13151eb1bfa1737f2b3d2b4b46d308dc2027ad1fa72b4d773632225592c0",
+      "probeSha256": "66c7f03b796d2a8ee2732024e2f5ce5a090a433ac8f6192ac93b325f3ae4e211",
+      "taskHash": "b0814c244404dd5f",
+      "selectedExitCode": 0,
+      "origin": "fresh",
+      "diagnostic": "Pilot produced an undeclared persistent output beside its replay log."
+    }
+  ],
+  "freshPairs": 3,
+  "signedPairs": 3,
+  "shadows": 10,
+  "mutations": 7,
+  "archive": "~/.cache/beep/turbo-qualification/evidence/signed-capture-v8",
+  "limitations": [
+    "Older development source/profile; not current-source qualification.",
+    "No authenticated protected producer acceptance or qualified ledger entry is established by this observation.",
+    "Full current CLI package verification remains required."
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "cache-profile-binding-review/v1",
+  "authority": "source-review-and-retained-development-observation",
+  "sourceBindings": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "893426f55d7b6b4fc0e06a8b1b4903d94a042674f5877e2f371b5edebe4ad463",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.ts": "e19a3ab1f4dc1b657231ad4e0bd639fadf6747d797c0b59f5fa77c7782c31ed3",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "8e543fb1748fa7dc24be9a712bda1f37538451b9abeb20a0802fb74c7c084316",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "9b2d3a201dea65762d78831539c68426ada6cb4bf75312c6c6755e05577c6c42",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts": "397460d6f0eef313c8c6e9aea7d08a8beecb5d0f6b8fbce5ea08c527af527e5d",
+    "packages/tooling/policy-pack/repo-configs/src/cache/Cache.policy.ts": "8c8fd9661827eaba333ef4ab38ab6076ec80e9c58acde7bf8cbf0e1e1bdea1cc"
+  },
+  "observedDevelopmentIdentity": {
+    "key": {
+      "computation": "@beep/identity#lint",
+      "layer": "turbo-task-result",
+      "profile": "local-linux-x64-bun1.4.2-private-loopback-signed-v1",
+      "epoch": "qualification-v2"
+    },
+    "baseKey": {
+      "computation": "@beep/identity#lint",
+      "layer": "turbo-task-result",
+      "profile": "local-linux-x64-bun1.4.2",
+      "epoch": "qualification-v2"
+    },
+    "configurationDigest": "81f70bcd01b9eca0f7b1c4e94511fef5574f6692df09b69763724c2315e258b3",
+    "toolchainDigest": "200c3c9d70740c2bec28815130e9764c34f3c625255ef5e39b9cad5ff8e47807",
+    "signedRootConfiguration": "798ef4c81a743bafff27ac847e4318d31e71d88e08cb7cacea873bfd771e3efc",
+    "activation": {
+      "path": ".beep/qualification-current-host/activation.json",
+      "sha256": "a4498e3543e9c376f33e08187f2a621b7a5054fcf784976a5c71565630bfac23"
+    },
+    "runtimeFingerprintSha256": "200c3c9d70740c2bec28815130e9764c34f3c625255ef5e39b9cad5ff8e47807",
+    "runtimeFingerprintSourceField": "runtimeKeyDigest in retained pilot receipt"
+  },
+  "findings": [
+    {
+      "id": "signed-profile-live-fingerprint",
+      "evidence": "Signed receipt key appends private-loopback-signed-v1. fingerprintCacheComputation requires key.profile equal to toolchain.profile, whose schema currently names local base profiles.",
+      "consequence": "Authenticated lab evidence cannot currently pass the real operational fingerprint gate."
+    },
+    {
+      "id": "source-and-execution-configuration",
+      "evidence": "Pilot receipt configurationDigest and toolchainDigest are copied from current.source; signedRootConfiguration is separately hashed after enabling remoteCache and signature. Operational contractIdentity returns projectCacheActivation when activation exists, which changes the selected cache flag and activation source hash.",
+      "consequence": "Binding contract.pins.configuration to the source digest cannot also treat it as the activated or signed execution digest. The concrete contract must state which identity each pin represents."
+    },
+    {
+      "id": "channel-runtime-identity",
+      "evidence": "runtimeIdentity replaces Turbo executable and runtime linker with the selected channel before hashing. Source toolchainDigest and runtimeKeyDigest may coincide for stable but need not coincide for canary.",
+      "consequence": "Channel runtime identity needs independent validation; equality on one stable report cannot erase this requirement."
+    }
+  ],
+  "implementationConstraints": [
+    "Keep ordinary fingerprint profile equality and activation drift validation intact.",
+    "Model reviewed base-source identity and protected execution identity explicitly; do not strip profile suffixes or relabel source digests.",
+    "Bind the complete activation request and signed root projection into the independent approval and both authenticated reports.",
+    "Candidate and shadow admission must validate the same explicit profile contract as qualified admission.",
+    "Prove real fingerprint and projection behavior without mocking them before claiming operational native qualification.",
+    "Preserve fresh execution authority and keep ordinary checkout activation outside scoped lab evidence."
+  ],
+  "status": "implementation-required; no qualification or new exception"
+}

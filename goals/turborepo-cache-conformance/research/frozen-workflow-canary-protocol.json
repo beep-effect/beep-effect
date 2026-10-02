@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "owned-frozen-protocol-checkpoint/v1",
+  "authority": "synthetic-native-observation-only",
+  "qualificationGranted": false,
+  "workflowRevision": "3865e09ba3c54c455a4b0eb3da0a181a3be9ec8e",
+  "channel": "canary",
+  "client": {
+    "version": "2.11.5-canary.2",
+    "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+    "namespace": "team_qualification_frozen_workflow_canary_3865"
+  },
+  "rawSha256": "6e4ac04eb0a2801446d71538c2908295c0f3cd06dafd4f6111e5ff4142ccbca4",
+  "nativeCases": [
+    {
+      "case": "producer",
+      "outcome": "Produced"
+    },
+    {
+      "case": "replay",
+      "outcome": "Replayed"
+    },
+    {
+      "case": "missing-tag",
+      "outcome": "Rejected"
+    },
+    {
+      "case": "invalid-tag",
+      "outcome": "Rejected"
+    },
+    {
+      "case": "corrupt-body",
+      "outcome": "Rejected"
+    },
+    {
+      "case": "wrong-key",
+      "outcome": "Rejected"
+    }
+  ],
+  "transportFailures": [
+    {
+      "case": "truncated-body",
+      "exitCode": 42,
+      "restoredOutputs": 0
+    },
+    {
+      "case": "unavailable",
+      "exitCode": 42,
+      "restoredOutputs": 0
+    },
+    {
+      "case": "throttled",
+      "exitCode": 42,
+      "restoredOutputs": 0
+    }
+  ],
+  "wireEventCount": 23,
+  "bunSha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+  "exitCode": 0,
+  "limits": [
+    "Synthetic fixture observation only; no signed operational import or real pilot qualification.",
+    "The complete real pilot matrix must be reconciled with final source, runtime and client identities."
+  ],
+  "versionControl": "Exact retained SHA-256 and a version query outside the workspace identify canary. Native summaries must match 2.11.5-canary.2; workspace --version inference is not used."
+}
