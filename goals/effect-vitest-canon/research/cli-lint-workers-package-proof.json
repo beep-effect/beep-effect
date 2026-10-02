@@ -1,0 +1,38 @@
+{
+  "source": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+  "sourceSha256": "1c9012d8742e91c52b701373d050cbcffdb7ba4f0c90ce9c8689f1945d65f959",
+  "command": "bun run beep quality package-verify @beep/repo-cli",
+  "exitCode": 0,
+  "auditSeconds": 629.8,
+  "docgenSeconds": 20.5,
+  "runtimes": {
+    "Node": {
+      "passed": 19,
+      "failed": 0
+    },
+    "Bun": {
+      "passed": 19,
+      "failed": 0
+    }
+  },
+  "controls": {
+    "sourceSha256": "1c9012d8742e91c52b701373d050cbcffdb7ba4f0c90ce9c8689f1945d65f959",
+    "positivePassed": 3,
+    "intendedNegativeFailures": 3,
+    "cleanupVerified": 6,
+    "unrelatedCasesFiltered": 32,
+    "controlsRemovedFromWorktree": true
+  },
+  "preservation": {
+    "registrations": 17,
+    "assertions": 56,
+    "registrationNamesPreserved": true,
+    "assertionsPreserved": true
+  },
+  "hostedProof": false,
+  "sourceFixSha": "5a7f1aff5a6d429e2a8d68c912b623dffbc47baa",
+  "currentBaselineWrappersFixed": 15,
+  "historicalWrapperRowsFixed": 18,
+  "earlierWrapperFixes": 2,
+  "additionalCurrentOccurrenceRows": 1
+}
