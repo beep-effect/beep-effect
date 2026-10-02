@@ -15,5 +15,25 @@
     "exception": 5,
     "preserve": 12
   },
-  "scope": "Full @beep/repo-cli package audit and docgen for three applied suites; whole-goal acceptance and hosted proof remain pending."
+  "scope": "Full @beep/repo-cli package audit and docgen for three applied suites; whole-goal acceptance and hosted proof remain pending.",
+  "canonicalExpectCorrection": {
+    "package": "@beep/repo-cli",
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "exitCode": 0,
+    "auditSeconds": 604.2,
+    "docgenSeconds": 20.0,
+    "cacheSourceSha256": "86b54d6a557272bfe2dabf8fab7931c7de2f02b15a499d4241809d0795591a3b",
+    "scope": "Canonical expect import correction; image source unchanged from previously qualified batch."
+  },
+  "reviewedImageOccurrences": {
+    "exceptions": 9,
+    "detectorGate": {
+      "exitCode": 0,
+      "files": 1209,
+      "findings": 2069,
+      "introduced": 0,
+      "resolved": 0
+    },
+    "scope": "Retained process CWD restoration and deliberately shorter child-process scope; historical findings preserved."
+  }
 }

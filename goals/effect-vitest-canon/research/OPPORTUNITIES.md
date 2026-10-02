@@ -6416,3 +6416,7 @@ verification and its execution-context cause remains unproven.
 ### Qualified migration formatting gate
 
 The cache, image and process attachment candidates passed private runtime qualification but failed the first applied package audit on Biome import ordering and formatting. The package lint reported four errors across the three files. Targeted `bunx biome check --write` repaired them; the subsequent full package audit passed in 590.3 seconds and docgen in 19.2 seconds. Run the installed formatter against private candidates before application to avoid repeating a full audit for formatting alone.
+
+### Migration detector membership preflight
+
+Early publication of the three-suite batch reached hosted checks before the local detector gate reported ten introduced findings. One was a missed canonical `expect` import; nine represented retained CWD restoration wrappers and a shorter child-process scope. The import was corrected, the nine occurrences received evidence-backed exceptions, and the canonical baseline refresh and default ratchet passed with 2,069 findings and zero introduced findings. Run the detector membership check before publication and persist decoded findings through the schema encoder rather than serializing internal Option values.

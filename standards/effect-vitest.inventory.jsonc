@@ -178,27 +178,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/cache-qualification.test.ts:89:runSync@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
-      "line": 89,
-      "endLine": 100,
-      "symbol": "runSync",
-      "occurrence": "v2:4c7f470084344da8ca1f9f7ce417cfd7ae4089a5290166e83b7f283f53081ce1",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( Arbitrary.checkEffect( Arbitrary.schema(CacheQualificationStore), (value) => { const encoded = R.getOrThrow(encodeCacheQualificationStoreJsonResult(value)); const decoded = R.getOrThro",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/changeset-graph.test.ts:229:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -1470,153 +1449,6 @@
       "occurrence": "v2:d4cb54718cde920dbcf528644d842262ae3ba1ab2505eb8a9eb2c738784b6f3e",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const next = yield* runRemoval(\"missing-slug\"); expect(Str.includes('\"alpha\"')(next)).toBe(true); expect(Str.includes('\"target-pkg\"')(next)).toBe(true); ex",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/image-command.test.ts:162:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
-      "line": 162,
-      "endLine": 198,
-      "symbol": "runPromise",
-      "occurrence": "v2:eac79c7034a36660019f926a01eb22f27cd9e088539b3289ce0cedebd8e79d1b",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/image-command.test.ts:201:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
-      "line": 201,
-      "endLine": 239,
-      "symbol": "runPromise",
-      "occurrence": "v2:0cfcc05c9ab599e3a49d79cc909a31f402cd5c00ab886ee63d38b2e807f74c2d",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/image-command.test.ts:242:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
-      "line": 242,
-      "endLine": 281,
-      "symbol": "runPromise",
-      "occurrence": "v2:0bb6feceb753dcbbdc185654366e3846f08620e9c7bf8010374b18e750e7153d",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/image-command.test.ts:284:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
-      "line": 284,
-      "endLine": 306,
-      "symbol": "runPromise",
-      "occurrence": "v2:fbecd291259196a985b44c71b1b3463e2de3c4da14ea909d74d3203d2021a61d",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const videoDir = path.join(tmpDir, \"videos\"); yield*",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/image-command.test.ts:309:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
-      "line": 309,
-      "endLine": 341,
-      "symbol": "runPromise",
-      "occurrence": "v2:188c836d1c697cae1b6e5cafafa176783fc855fc6d37830b5385e57f3c3c36ef",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/image-command.test.ts:344:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
-      "line": 344,
-      "endLine": 386,
-      "symbol": "runPromise",
-      "occurrence": "v2:483034702e0e6b5cf3e0332c3a5d083fe905e74b8ea61826c983410831b2aa99",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/image-command.test.ts:389:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
-      "line": 389,
-      "endLine": 424,
-      "symbol": "runPromise",
-      "occurrence": "v2:cf5575aba7114be4ba3bd6902a28c999ae6a3c9fe8562c80d38f62401b58325d",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -7570,153 +7402,6 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-qualification.test.ts:120:provideScopedLayer@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
-      "line": 120,
-      "endLine": 120,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:cdc65c09a85671ac6c26aed11ad2e8f0d58f6cf13ca2af9871d301c494482026",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-qualification.test.ts:135:provideScopedLayer@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
-      "line": 135,
-      "endLine": 135,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:fe4c9d0b454316f71ea3f0ff2cff0d5e43d57c98679b4bf77605a6f0c5e93c66",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-qualification.test.ts:159:provideScopedLayer@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
-      "line": 159,
-      "endLine": 159,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:a03b20e8dc2750b575cb73343dd3a26de3fe37b3e09a1f980dc2ce0e8ff73c75",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-qualification.test.ts:176:provideScopedLayer@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
-      "line": 176,
-      "endLine": 176,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:3994e808c54732b8a5a3b781a1ad32a9e85c3fb45c0e2b6cacd8cef9e502424c",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-qualification.test.ts:196:provideScopedLayer@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
-      "line": 196,
-      "endLine": 196,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:fae2d543e4ea71e5516ee6be73b854f29c4b65a671db8444e4374f425aed9b96",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-qualification.test.ts:228:provideScopedLayer@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
-      "line": 228,
-      "endLine": 228,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:6e66e0ca0cf57f86a82317fe19025bd351aa02cd12117f3b38a217d16a60ffda",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-qualification.test.ts:241:provideScopedLayer@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
-      "line": 241,
-      "endLine": 241,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:7d0008f199bc1e159b890b3addf83e94d657fe89881ec81075e63c84bc874b82",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/tooling/tool/cli/test/cache-synthetic-orchestration.test.ts:229:provideScopedLayer@7#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -9934,174 +9619,6 @@
       "occurrence": "v2:a440b9a13e00ab4edcb05642b1dcc7e14a30d8b261823669a458116ec8a3e127",
       "class": "unresolved-layer-provide",
       "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/process-attachment.test.ts:102:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 102,
-      "endLine": 102,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:7df2e83c5f933c6f0d6fd773bc28d64a516f9ed1610a7d16536797ed88b9912d",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(NodeServices.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/process-attachment.test.ts:115:provideScopedLayer@11#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 115,
-      "endLine": 115,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:682ede79cd8b3be65cbd83d28b4d0b1a9c782d510dce2668cd269335c1ab5242",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(NodeServices.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/process-attachment.test.ts:136:provideScopedLayer@11#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 136,
-      "endLine": 136,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:714004eda96d240cc55c8a5968a13851931f7f3bd02e914393c794e4b38a774e",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(NodeServices.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/process-attachment.test.ts:165:provideScopedLayer@11#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 165,
-      "endLine": 165,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:e2863b4bcdc47ddef90da83404af2d3606b83df278061e824f28288179631d4e",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(NodeServices.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/process-attachment.test.ts:34:provideScopedLayer@27#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 34,
-      "endLine": 34,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:596fd217c7095dcd35371b2911433f73043df7e08653d1c4633b12854b60b941",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(NodeServices.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/process-attachment.test.ts:62:provideScopedLayer@27#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 62,
-      "endLine": 62,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:5d15712880028d0e36a581abe81534620d162de29adede4f080bd7a6961d9e59",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(NodeServices.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/process-attachment.test.ts:72:provideScopedLayer@27#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 72,
-      "endLine": 72,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:eeeca3ff3a5adf1592c4d0bb888e3fce0a8d5dfcf3f2e41946c1bf1f582300ef",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(NodeServices.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/process-attachment.test.ts:93:provideScopedLayer@11#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 93,
-      "endLine": 93,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:eb20882c370ff2f96f5ef0d328120d902e2f912984bb25b2513141f2ee95b7fa",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -15907,38 +15424,17 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:20:provideScopedLayer@2#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
-      "line": 20,
-      "endLine": 22,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:7e30027013c6028b259f0acb6f89385cd5edeabc6062f779752d5a8f74e27eb2",
-      "class": "resource-wrapper",
-      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.flatMa",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:31:withTempDirectory@26#1",
+      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:154:withTempDirectory@4#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/image-command.test.ts",
-      "line": 31,
-      "endLine": 48,
+      "line": 154,
+      "endLine": 188,
       "symbol": "withTempDirectory",
-      "occurrence": "v2:d23542647c535e65e0882e0a1a98a92bd9b6120f1051969dc33700470617113e",
+      "occurrence": "v2:33de5e81822d6e7d42083f8ed3205b810b67ad8ecf2fec128accc831cc9e5c7a",
       "class": "resource-wrapper",
-      "evidence": "<A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const tmpDir = yield* fs.makeTempDirectory();",
+      "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPath = path.join(tmpD",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -15946,16 +15442,171 @@
       "severity": "major",
       "confidence": 0.95,
       "mechanization": "detector",
-      "status": "open"
+      "status": "exception",
+      "reason": "The public it.layer owns the native platform and it.effect owns the test scope; makeTempDirectoryScoped acquires each case root in that scope. This wrapper retains acquireUseRelease solely to restore process.cwd and constructs a fresh TestConsole at the original body-local seam. Actual root-graph Node/Bun qualification showed one platform build/release, seven roots all absent, five cleanup/restoration controls passing, and shared-console mutants failing. Moving process-global restoration into a shared layer would change the tested lifetime."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:50:withPathPrefix@23#1",
+      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:192:withTempDirectory@4#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/image-command.test.ts",
-      "line": 50,
-      "endLine": 62,
+      "line": 192,
+      "endLine": 228,
+      "symbol": "withTempDirectory",
+      "occurrence": "v2:82cfdb1234f8fddd146e5091c38a2f37122604e81efbbb47e4bd16efdb591be1",
+      "class": "resource-wrapper",
+      "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPath = path.join(tmpD",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The public it.layer owns the native platform and it.effect owns the test scope; makeTempDirectoryScoped acquires each case root in that scope. This wrapper retains acquireUseRelease solely to restore process.cwd and constructs a fresh TestConsole at the original body-local seam. Actual root-graph Node/Bun qualification showed one platform build/release, seven roots all absent, five cleanup/restoration controls passing, and shared-console mutants failing. Moving process-global restoration into a shared layer would change the tested lifetime."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:232:withTempDirectory@4#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 232,
+      "endLine": 269,
+      "symbol": "withTempDirectory",
+      "occurrence": "v2:203bb0807addca5148c3bac6478e2e3999fdb574d7e6112643f70e37a4449184",
+      "class": "resource-wrapper",
+      "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPath = path.join(tmpD",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The public it.layer owns the native platform and it.effect owns the test scope; makeTempDirectoryScoped acquires each case root in that scope. This wrapper retains acquireUseRelease solely to restore process.cwd and constructs a fresh TestConsole at the original body-local seam. Actual root-graph Node/Bun qualification showed one platform build/release, seven roots all absent, five cleanup/restoration controls passing, and shared-console mutants failing. Moving process-global restoration into a shared layer would change the tested lifetime."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:26:withTempDirectory@67#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 26,
+      "endLine": 40,
+      "symbol": "withTempDirectory",
+      "occurrence": "v2:712196b8cf16c2bf14e42b4bc2a530f39312f40ba9e1c0830d2775152ee56e25",
+      "class": "resource-wrapper",
+      "evidence": "function* <A, E, R>( use: (tmpDir: string) => Effect.Effect<A, E, R> ) { const fs = yield* FileSystem.FileSystem; const tmpDir = yield* fs.makeTempDirectoryScoped(); return yield* Effect.acquireUseRel",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The public it.layer owns the native platform and it.effect owns the test scope; makeTempDirectoryScoped acquires each case root in that scope. This wrapper retains acquireUseRelease solely to restore process.cwd and constructs a fresh TestConsole at the original body-local seam. Actual root-graph Node/Bun qualification showed one platform build/release, seven roots all absent, five cleanup/restoration controls passing, and shared-console mutants failing. Moving process-global restoration into a shared layer would change the tested lifetime."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:273:withTempDirectory@4#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 273,
+      "endLine": 293,
+      "symbol": "withTempDirectory",
+      "occurrence": "v2:e8388d6268d0af4accc086835b60d3d8a474babcc4bcb86deb045631694ba0bd",
+      "class": "resource-wrapper",
+      "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const videoDir = path.join(tmpDir, \"videos\"); yield* fs.makeDirectory(vi",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The public it.layer owns the native platform and it.effect owns the test scope; makeTempDirectoryScoped acquires each case root in that scope. This wrapper retains acquireUseRelease solely to restore process.cwd and constructs a fresh TestConsole at the original body-local seam. Actual root-graph Node/Bun qualification showed one platform build/release, seven roots all absent, five cleanup/restoration controls passing, and shared-console mutants failing. Moving process-global restoration into a shared layer would change the tested lifetime."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:297:withTempDirectory@4#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 297,
+      "endLine": 327,
+      "symbol": "withTempDirectory",
+      "occurrence": "v2:b75da30ff35b3acb62d63fdd5c5c0965280f786e5e19f72f259dace4e8c356e9",
+      "class": "resource-wrapper",
+      "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPath = path.join(tmpD",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The public it.layer owns the native platform and it.effect owns the test scope; makeTempDirectoryScoped acquires each case root in that scope. This wrapper retains acquireUseRelease solely to restore process.cwd and constructs a fresh TestConsole at the original body-local seam. Actual root-graph Node/Bun qualification showed one platform build/release, seven roots all absent, five cleanup/restoration controls passing, and shared-console mutants failing. Moving process-global restoration into a shared layer would change the tested lifetime."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:331:withTempDirectory@4#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 331,
+      "endLine": 371,
+      "symbol": "withTempDirectory",
+      "occurrence": "v2:9904618d38a705e4977bc3024b6778493fb4d78bf80476532fc8c14e415b365f",
+      "class": "resource-wrapper",
+      "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPath = path.join(tmpD",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The public it.layer owns the native platform and it.effect owns the test scope; makeTempDirectoryScoped acquires each case root in that scope. This wrapper retains acquireUseRelease solely to restore process.cwd and constructs a fresh TestConsole at the original body-local seam. Actual root-graph Node/Bun qualification showed one platform build/release, seven roots all absent, five cleanup/restoration controls passing, and shared-console mutants failing. Moving process-global restoration into a shared layer would change the tested lifetime."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:375:withTempDirectory@4#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 375,
+      "endLine": 408,
+      "symbol": "withTempDirectory",
+      "occurrence": "v2:16d4a75ff10cc8e23fbff69448d109371a17521f52bfe9ecc19f859176fc18e6",
+      "class": "resource-wrapper",
+      "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPath = path.join(tmpD",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The public it.layer owns the native platform and it.effect owns the test scope; makeTempDirectoryScoped acquires each case root in that scope. This wrapper retains acquireUseRelease solely to restore process.cwd and constructs a fresh TestConsole at the original body-local seam. Actual root-graph Node/Bun qualification showed one platform build/release, seven roots all absent, five cleanup/restoration controls passing, and shared-console mutants failing. Moving process-global restoration into a shared layer would change the tested lifetime."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/image-command.test.ts:42:withPathPrefix@23#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 42,
+      "endLine": 54,
       "symbol": "withPathPrefix",
       "occurrence": "v2:e84e401be343a186a5e1a972675752adbf0a6acc70354d989554504bf1d2f780",
       "class": "resource-wrapper",
@@ -21057,6 +20708,28 @@
       "status": "open"
     },
     {
+      "id": "EV004:packages/tooling/tool/cli/test/image-command.test.ts:135:scoped@2#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "line": 135,
+      "endLine": 150,
+      "symbol": "scoped",
+      "occurrence": "v2:b1ae76ae8aa390b84fae8475f82761c7e687bb453955f38e573beaf589cd6f15",
+      "class": "shared-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* ChildProcess.make(\"bun\", [\"run\", CLI_ENTRYPOINT, \"--\", ...args], { cwd, env: { PATH: `${pathPrefix}:${Bun.env.PATH ?? \"\"}`, }, stdin: \"ig",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "runCliCommand deliberately closes the child-process scope after collecting output and awaiting exitCode, before returning to the enclosing test. This is a shorter helper scope, not a redundant whole-test scope; preserve the subprocess lifetime and real BunRuntime entrypoint oracle, whose exit-status mutant fails on Node and Bun."
+    },
+    {
       "id": "EV004:packages/tooling/tool/cli/test/knowledge-refs.test.ts:1064:scoped@14#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -21268,90 +20941,6 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:108:scoped@4#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 108,
-      "endLine": 115,
-      "symbol": "scoped",
-      "occurrence": "v2:682ede79cd8b3be65cbd83d28b4d0b1a9c782d510dce2668cd269335c1ab5242",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const child = yield* spawnSleeper; const named = yield* processName(child.pid).pipe(Effect.ensuring(Effect.ignore(child.kill()))); expect(named).toEqual(O.some",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:126:scoped@4#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 126,
-      "endLine": 136,
-      "symbol": "scoped",
-      "occurrence": "v2:714004eda96d240cc55c8a5968a13851931f7f3bd02e914393c794e4b38a774e",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const child = yield* spawnSleeperWith({ BEEP_TEST_MARKER: \"present\" }); const chain = yield* ancestryChainOf(child.pid); expect(A.take(chain, 2)).toEqual([chil",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:142:scoped@4#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 142,
-      "endLine": 165,
-      "symbol": "scoped",
-      "occurrence": "v2:e2863b4bcdc47ddef90da83404af2d3606b83df278061e824f28288179631d4e",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const marker = \"CLAUDE_PID\"; // This process plays the harness: it exported its own pid to the child. const marked = yield* spawnSleeperWith({ [marker]: String",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:34:scoped@12#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 34,
-      "endLine": 34,
-      "symbol": "scoped",
-      "occurrence": "v2:596fd217c7095dcd35371b2911433f73043df7e08653d1c4633b12854b60b941",
-      "class": "helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:50:scoped@31#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -21363,69 +20952,6 @@
       "occurrence": "v2:0d047e0692f9688179ca33f3fe9bf8d73fdb13e4f88c922550acfc7823f20cb4",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { yield* fs.open(path.join(real, \"held.log\"), { flag: \"r\" }); return yield* scanProcessAttachments({ directory: link, kinds: [\"descriptor\"] }); }) )",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:62:scoped@12#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 62,
-      "endLine": 62,
-      "symbol": "scoped",
-      "occurrence": "v2:5d15712880028d0e36a581abe81534620d162de29adede4f080bd7a6961d9e59",
-      "class": "helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:72:scoped@12#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 72,
-      "endLine": 72,
-      "symbol": "scoped",
-      "occurrence": "v2:eeeca3ff3a5adf1592c4d0bb888e3fce0a8d5dfcf3f2e41946c1bf1f582300ef",
-      "class": "helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:80:scoped@4#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 80,
-      "endLine": 93,
-      "symbol": "scoped",
-      "occurrence": "v2:eb20882c370ff2f96f5ef0d328120d902e2f912984bb25b2513141f2ee95b7fa",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const child = yield* spawnSleeper; const ancestry = yield* ancestryPidsOf(child.pid).pipe(Effect.ensuring(Effect.ignore(child.kill()))); expect(HashSet.has(anc",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -25330,27 +24856,6 @@
       "occurrence": "v2:b4676505188054835da45cb79999d264d600b62cc8a1604d2d06951ca251a662",
       "class": "direct-arbitrary-check",
       "evidence": "Arbitrary.checkEffect( Arbitrary.schema(Sha256Hex), (sha256) => run(CachePilotRequest.make({ ...request, client: CacheClientPin.make({ ...request.client, sha256 }) })).pipe( Effect.result, Effect.map(",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:packages/tooling/tool/cli/test/cache-qualification.test.ts:90:checkEffect@8#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
-      "line": 90,
-      "endLine": 99,
-      "symbol": "checkEffect",
-      "occurrence": "v2:4c7f470084344da8ca1f9f7ce417cfd7ae4089a5290166e83b7f283f53081ce1",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.schema(CacheQualificationStore), (value) => { const encoded = R.getOrThrow(encodeCacheQualificationStoreJsonResult(value)); const decoded = R.getOrThrow(decodeCacheQua",
       "replacement": {
         "primitive": "it.effect.prop",
         "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
@@ -30379,13 +29884,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-qualification.test.ts:20:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-qualification.test.ts:21:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
-      "line": 20,
-      "endLine": 20,
+      "line": 21,
+      "endLine": 21,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",

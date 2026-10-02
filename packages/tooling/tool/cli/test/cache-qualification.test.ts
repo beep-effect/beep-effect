@@ -19,12 +19,12 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import { expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Result";
 import * as S from "effect/Schema";
-import { expect } from "vitest";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
