@@ -1,0 +1,15 @@
+{
+  "package": "@beep/repo-cli",
+  "command": "bun run beep quality package-verify @beep/repo-cli",
+  "exitCode": 0,
+  "auditSeconds": 615.6,
+  "docgenSeconds": 19.3,
+  "sourceSha256": "461cabf602e1e4f06ef1bcf513f923a69fc3c7ab9e582259ee321813d38cae2b",
+  "focusedProof": {
+    "nodePassed": 8,
+    "bunPassed": 8,
+    "numRuns": 400,
+    "seed": 20260708
+  },
+  "scope": "Applied cache-dispatch migration with canonical Vitest imports. Ledger reconciliation, full publication proof and whole-goal acceptance remain pending."
+}
