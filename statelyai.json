@@ -1,0 +1,7 @@
+{
+  "$schema": "https://stately.ai/schemas/statelyai.json",
+  "version": "1.0.0",
+  "defaultXStateVersion": 6,
+  "include": ["packages/**/src/**/*.machine.ts", "apps/**/src/**/*.machine.ts"],
+  "exclude": ["**/node_modules/**", "**/dist/**", "**/*.test.ts"]
+}

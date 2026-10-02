@@ -208,6 +208,14 @@
       "reason": "Mixed in-memory state: customEntities and instanceId are already modeled by WinkEngineState, while nlp is the live wink-nlp runtime object."
     },
     {
+      "file": "packages/drivers/xstate/src/StatelyInspector.service.ts",
+      "symbol": "StatelyInspectorShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/xstate",
+      "reason": "Effect service contract: attach and ready are runtime handles (Effect, Scope) and inspectorUrl is the relay address the Stately SDK derives at connect time; the data half (StatelyInspectorConfig) is already an annotated S.Class."
+    },
+    {
       "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
       "symbol": "EdgeVersionSourceColumns",
       "kind": "exported-type-literal",

@@ -180,9 +180,12 @@
   // (editor-only, best-effort); it is not an importable runtime/build dependency.
   // babel-plugin-annotate-pure-calls is invoked via the `babel --plugins annotate-pure-calls`
   // CLI flag in every package's build script, which knip can't trace.
+  // statelyai is the Stately CLI (`bunx statelyai scan|open`, see
+  // docs/runbooks/xstate-effect-statecharts.md): a binary, never an import.
   "ignoreDependencies": [
     "@effect/language-service",
-    "babel-plugin-annotate-pure-calls"
+    "babel-plugin-annotate-pure-calls",
+    "statelyai"
   ],
   // op = 1Password CLI, beep-cli = repo CLI bin, portless = dev proxy, and uv = the
   // system Python project runner — binaries not provided as resolvable dependency imports.
