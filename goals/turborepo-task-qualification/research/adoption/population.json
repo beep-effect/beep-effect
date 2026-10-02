@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-adoption-population/v1",
-  "sourceCheckpoint": "70e20c48d564b1057a9ccd19dc4926e2e22459a2",
+  "sourceCheckpoint": "fe8ea6109d953dcef41ba536428cf2c054b75a7d",
   "authority": "Observed graph and reviewed semantic boundaries; only the separate native receipt establishes pilot qualification.",
   "tupleContext": {
     "layer": "turbo-task-result",
@@ -27,7 +27,7 @@
   },
   "census": {
     "path": "goals/turborepo-task-qualification/research/adoption/census.json",
-    "sha256": "0c3b7409982e0e12dcc4cab2d4686476c55b13fdd4c6e5c884b56fe0054857e3"
+    "sha256": "f858c8f12c74d776365b6639bdf120c40edb746385984a94b50ab77b87f39802"
   },
   "baseline": {
     "path": "standards/cache-qualification-baseline.json",
@@ -6089,8 +6089,8 @@
       ],
       "command": "bun run beep quality fallow audit --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/audit.check.json --quiet",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 136871,
-      "observedInputsDigest": "ef86582ac69f71a35e257e8f8b791a07ee21b92ce945e21d27091781f228e031",
+      "observedInputCount": 138870,
+      "observedInputsDigest": "27500ca5671bbd93d5e4cc1187da7e7713e645cd3ebd03c088ae0b7e363b1857",
       "qualification": {
         "state": "unassessed"
       }
@@ -6107,8 +6107,8 @@
       ],
       "command": "bun run beep quality fallow boundaries --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/boundaries.advisory.json --quiet",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 136871,
-      "observedInputsDigest": "ef86582ac69f71a35e257e8f8b791a07ee21b92ce945e21d27091781f228e031",
+      "observedInputCount": 138870,
+      "observedInputsDigest": "27500ca5671bbd93d5e4cc1187da7e7713e645cd3ebd03c088ae0b7e363b1857",
       "qualification": {
         "state": "unassessed"
       }
@@ -6125,8 +6125,8 @@
       ],
       "command": "bun run beep quality fallow boundaries config-check --check",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 136432,
-      "observedInputsDigest": "f3717eb72dce84f58dc5d2c0c2dedcea7ba1deebec61fdf0c9e6cbb8870597cb",
+      "observedInputCount": 138431,
+      "observedInputsDigest": "af1600708d11d4695fe2ee9ac0af9bbf6e919e0744b9e8381734ebbdd8dd3170",
       "qualification": {
         "state": "unassessed"
       }
@@ -6143,8 +6143,8 @@
       ],
       "command": "bun run beep quality fallow dead-code --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/dead-code.check.json --quiet",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 136871,
-      "observedInputsDigest": "ef86582ac69f71a35e257e8f8b791a07ee21b92ce945e21d27091781f228e031",
+      "observedInputCount": 138870,
+      "observedInputsDigest": "27500ca5671bbd93d5e4cc1187da7e7713e645cd3ebd03c088ae0b7e363b1857",
       "qualification": {
         "state": "unassessed"
       }
@@ -6161,8 +6161,8 @@
       ],
       "command": "bun run beep quality fallow fix-preview --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/fix-preview.advisory.json --quiet",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 136871,
-      "observedInputsDigest": "ef86582ac69f71a35e257e8f8b791a07ee21b92ce945e21d27091781f228e031",
+      "observedInputCount": 138870,
+      "observedInputsDigest": "27500ca5671bbd93d5e4cc1187da7e7713e645cd3ebd03c088ae0b7e363b1857",
       "qualification": {
         "state": "unassessed"
       }
@@ -6179,8 +6179,8 @@
       ],
       "command": "bun run beep quality fallow flags --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/flags.advisory.json --quiet",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 136871,
-      "observedInputsDigest": "ef86582ac69f71a35e257e8f8b791a07ee21b92ce945e21d27091781f228e031",
+      "observedInputCount": 138870,
+      "observedInputsDigest": "27500ca5671bbd93d5e4cc1187da7e7713e645cd3ebd03c088ae0b7e363b1857",
       "qualification": {
         "state": "unassessed"
       }
@@ -6197,8 +6197,8 @@
       ],
       "command": "bun run beep quality fallow health --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/health.advisory.json --quiet",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 136871,
-      "observedInputsDigest": "ef86582ac69f71a35e257e8f8b791a07ee21b92ce945e21d27091781f228e031",
+      "observedInputCount": 138870,
+      "observedInputsDigest": "27500ca5671bbd93d5e4cc1187da7e7713e645cd3ebd03c088ae0b7e363b1857",
       "qualification": {
         "state": "unassessed"
       }
@@ -6215,8 +6215,8 @@
       ],
       "command": "bun run beep quality fallow health --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/health.check.json --quiet",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 136871,
-      "observedInputsDigest": "ef86582ac69f71a35e257e8f8b791a07ee21b92ce945e21d27091781f228e031",
+      "observedInputCount": 138870,
+      "observedInputsDigest": "27500ca5671bbd93d5e4cc1187da7e7713e645cd3ebd03c088ae0b7e363b1857",
       "qualification": {
         "state": "unassessed"
       }
@@ -6233,8 +6233,8 @@
       ],
       "command": "bun run beep quality fallow security --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/security.advisory.json --quiet",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 136871,
-      "observedInputsDigest": "ef86582ac69f71a35e257e8f8b791a07ee21b92ce945e21d27091781f228e031",
+      "observedInputCount": 138870,
+      "observedInputsDigest": "27500ca5671bbd93d5e4cc1187da7e7713e645cd3ebd03c088ae0b7e363b1857",
       "qualification": {
         "state": "unassessed"
       }
@@ -6251,8 +6251,8 @@
       ],
       "command": "bun run beep goals doctor",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 22509,
-      "observedInputsDigest": "b7b25b6321c260c6daac2da40bff4bab0c107944df978c59549270fb05556a5b",
+      "observedInputCount": 22511,
+      "observedInputsDigest": "e5c357766ebc85df515d33a9f4c441e13adf329c78cab11ffe557e252c99b2d9",
       "qualification": {
         "state": "unassessed"
       }
@@ -6270,7 +6270,7 @@
       "command": "bun run beep goals index --check",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 582,
-      "observedInputsDigest": "02a22a165b832b604e4103593ebef97598c85c0cb7643d39e499cb59beeae3f9",
+      "observedInputsDigest": "e023d1c290af985e484daee1139ddcf1da7b51b6c054c7b8816251e7534a461d",
       "qualification": {
         "state": "unassessed"
       }
@@ -6288,7 +6288,7 @@
       "command": "bun run beep quality jsdoc-inventory --output-json .beep/ci/jsdoc-documentation.inventory.jsonc --output-markdown .beep/ci/jsdoc-documentation.inventory.md",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 18421,
-      "observedInputsDigest": "6283530e05014bfb342f7e227b88f7fe285c8868e17a7f422a350fe35c1709d5",
+      "observedInputsDigest": "aae0bc41e1238d464211150fa90ec3201410da00277e0d7796de4fb6b94f8728",
       "qualification": {
         "state": "unassessed"
       }
@@ -6305,8 +6305,8 @@
       ],
       "command": "bun run beep quality knip",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 19807,
-      "observedInputsDigest": "98ebf02a6ccc7f9e6beb0f71b7d1f6f4a0b20e9efa1ddca21088f6d4ff5eb05e",
+      "observedInputCount": 21374,
+      "observedInputsDigest": "f704e7ab556ff09119b16f4d9f01afaa0757a6459697a0debdaedbef4fc092c4",
       "qualification": {
         "state": "unassessed"
       }
@@ -6323,8 +6323,8 @@
       ],
       "command": "bun run beep knowledge refs --check",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 28355,
-      "observedInputsDigest": "26441ae5de5ca775a3f45162a6c5bb3fef496a8a1651ae81418b2568e4563dd7",
+      "observedInputCount": 28357,
+      "observedInputsDigest": "0c59ccb6ed319d3c8171c6fe6a29838e4729ea1302f3334080ce0f6e4dd75649",
       "qualification": {
         "state": "unassessed"
       }
@@ -6341,8 +6341,8 @@
       ],
       "command": "bun run beep knowledge semantic-delta",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 28355,
-      "observedInputsDigest": "26441ae5de5ca775a3f45162a6c5bb3fef496a8a1651ae81418b2568e4563dd7",
+      "observedInputCount": 28357,
+      "observedInputsDigest": "0c59ccb6ed319d3c8171c6fe6a29838e4729ea1302f3334080ce0f6e4dd75649",
       "qualification": {
         "state": "unassessed"
       }
@@ -6360,7 +6360,7 @@
       "command": "bun run beep laws allowlist-check",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 8120,
-      "observedInputsDigest": "1a620b7db922654015080a57630ae1d2013ed689f47cf1abc367484039a9e87e",
+      "observedInputsDigest": "7b16d752b675447d9332f330306257314cdefc6e0e541d44f9a65ca620167280",
       "qualification": {
         "state": "unassessed"
       }
@@ -6378,7 +6378,7 @@
       "command": "bun run beep lint circular",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 1694,
-      "observedInputsDigest": "3b34c1e2dd5386c7cdfbfed805f56f920f7843a8ecebe67e8d3518ad846a6128",
+      "observedInputsDigest": "289b322192e2e28579c17852bf7de153586ebbbf2e54e86a22cec4f963457c69",
       "qualification": {
         "state": "unassessed"
       }
@@ -6413,8 +6413,8 @@
       ],
       "command": "bun run beep laws effect-imports --check",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 14594,
-      "observedInputsDigest": "1ca87ab17b9175a7931ec23ff27b15f61424fc5890b4fcf2d0e8ebca7b835123",
+      "observedInputCount": 14600,
+      "observedInputsDigest": "477ce2ec6b58508e8b4fd62b13d2f626823fd6063d47ba5359ae59bbb35aa940",
       "qualification": {
         "state": "unassessed"
       }
@@ -6432,7 +6432,7 @@
       "command": "bun run beep laws effect-imports --mode markdown --check",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 3554,
-      "observedInputsDigest": "cbede9e269cd832d30199f42867fb6ae90fb1d116a0b6979872d60e684b02d12",
+      "observedInputsDigest": "c766416c51a24c81da98f2266226fdc5624da17cdc3494a8ef76300ed11b81b5",
       "qualification": {
         "state": "unassessed"
       }
@@ -6450,7 +6450,7 @@
       "command": "bun run beep lint identity-registry",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 5842,
-      "observedInputsDigest": "24c164d2350d0345dca1d6e7818bd8a3f26a40a4ebfbbd5c76a98612b92ee689",
+      "observedInputsDigest": "6ec9fa2a7de03a1f0055acc5bc33b1d3df344b6acafc95669952da4174053012",
       "qualification": {
         "state": "unassessed"
       }
@@ -6468,7 +6468,7 @@
       "command": "bun run beep quality jsdoc-module-tags",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 11230,
-      "observedInputsDigest": "8fc924fbb9b733189e395b8b48892adf9bece4d2a1d9b4a375c0efa066bfd2a2",
+      "observedInputsDigest": "0eb3013b7eff56df8d63d5ec606e88f6614ea6616789501cd0d0bbe7cc119f67",
       "qualification": {
         "state": "unassessed"
       }
@@ -6486,7 +6486,7 @@
       "command": "beep-cli lint jsdoc --root-only",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 4775,
-      "observedInputsDigest": "9366a206e6ef7574d57063c36c35ccb922f2f5c77aefb421fdc85a0a6c21405b",
+      "observedInputsDigest": "3e328fac82c074d7a44ed1c9655fe7c0d2210fa62f283e6d1573673f30a708bd",
       "qualification": {
         "state": "unassessed"
       }
@@ -6537,8 +6537,8 @@
       ],
       "command": "oxlint --quiet --disable-nested-config",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 12896,
-      "observedInputsDigest": "a38175843134b3f2e7359b13c031ac2ede7127120f0d30e5e4badb018a157366",
+      "observedInputCount": 12902,
+      "observedInputsDigest": "42098ca9c0563ea52336d674e479866580c734c182fbb1b7100df2efedf0c0bf",
       "qualification": {
         "state": "unassessed"
       }
@@ -6556,7 +6556,7 @@
       "command": "bun run beep lint package-scripts --check",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 3589,
-      "observedInputsDigest": "ea1d1567d51f5a4681bf10824a83b8851e55602e2634faed0b29a440352ee071",
+      "observedInputsDigest": "a07361f369b6476908f12013ed9bbb8e64925ddc0d8d21dd0d3db90112798e32",
       "qualification": {
         "state": "unassessed"
       }
@@ -6572,7 +6572,7 @@
       "command": "beep-cli lint policy-fingerprint --check",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 1411,
-      "observedInputsDigest": "18ebf6109f2fbb39536393731bb9784ff0972cb0f6d893d308e5c43e6063cbb0",
+      "observedInputsDigest": "17cea4410a6a6b501ac5edf3785d912e6cd1ba6291d876193f2e27a255d3902d",
       "qualification": {
         "state": "unassessed"
       }
@@ -6589,8 +6589,8 @@
       ],
       "command": "bun run beep lint reflection-artifacts",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 533,
-      "observedInputsDigest": "53cc7ad8562bf9555f3173accc111140e089e2da32a203060b2f3aab605de803",
+      "observedInputCount": 534,
+      "observedInputsDigest": "3e7a53c4ca544c5506a47585b50ed3a03b621054a6ce987ce193c29dc0b5a6b3",
       "qualification": {
         "state": "unassessed"
       }
@@ -6607,8 +6607,8 @@
       ],
       "command": "bun run beep lint roadmap-refs",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 22510,
-      "observedInputsDigest": "99f706b96e9c47ff59cdb5c48c1fc1371b6f152548d64fa0904cc2e77c3621e1",
+      "observedInputCount": 22512,
+      "observedInputsDigest": "f78841bd3c5e03238a4ac2448d5f1e1bc3b1fc2d3c7b26939ec9d0d77143dd83",
       "qualification": {
         "state": "unassessed"
       }
@@ -6626,7 +6626,7 @@
       "command": "bun run beep lint schema-first",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 8786,
-      "observedInputsDigest": "4cace3edb4ad9f741c8bb4db7c3c930b99abf5e9f340205a38052c9f755cfbc5",
+      "observedInputsDigest": "36c77ea9d90bb65b8f68d7dc7fdc40c88f6938f935bae4a4641a476bd25f08ad",
       "qualification": {
         "state": "unassessed"
       }
@@ -6641,8 +6641,8 @@
       ],
       "command": "oxlint --disable-nested-config --deny-warnings -c .oxlintrc.shadcn.json apps packages",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 13628,
-      "observedInputsDigest": "54a3edca921faec40622af14564a057fc74f04624f47c57c13c2c068aa488025",
+      "observedInputCount": 13638,
+      "observedInputsDigest": "4d97228ba4cc0f9a9dc2ed2b4df56b21a428c3c603e9fbcb4d97667108c0e589",
       "qualification": {
         "state": "unassessed"
       }
@@ -6660,7 +6660,7 @@
       "command": "bun run beep quality tsgo-rules",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
       "observedInputCount": 5402,
-      "observedInputsDigest": "be126f0a5675160a5c5229f625a2120cae1427aac074e931127e6c2edc3de083",
+      "observedInputsDigest": "5582a6c2a54a9533d341e0ccbfe8742b42356ec833800ed710fb93ed39458f31",
       "qualification": {
         "state": "unassessed"
       }
@@ -6675,8 +6675,8 @@
       ],
       "command": "typos",
       "commandDigest": "452a83794d2ae646e1f4f141fcac3a131a3394d9f49d8652134b295e01b582cd",
-      "observedInputCount": 135873,
-      "observedInputsDigest": "865613044e442253046727186d7f0a5e9938766626707c3e57fe51105aa838b2",
+      "observedInputCount": 137926,
+      "observedInputsDigest": "471b54cc7ebf3ed59065a231a609584f958bfdb12fd6b3610ed9c68075ae8b2e",
       "qualification": {
         "state": "unassessed"
       }
@@ -33249,7 +33249,7 @@
       "command": "bun run beep:lint",
       "commandDigest": "4d362ae77e9e8afaf7e177448921a501c21da8c73f40368f2baaf02c3bba4341",
       "observedInputCount": 1020,
-      "observedInputsDigest": "82b42db4ad0fe02b18ab09ae604362cc65abf454e1f4c61b8b5beb40069d6d3e",
+      "observedInputsDigest": "2483c36b333b623b8e97b33a9a4d326c099578dccdfcb7b2b2d07d128ece243f",
       "qualification": {
         "state": "excluded",
         "review": {
@@ -54518,7 +54518,7 @@
       "command": "bun run --if-present beep:audit",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1194,
-      "observedInputsDigest": "1738b6252f05096da0ef268f9d80bc088c52ee3c7f32742f340fddf9ab7d2c3a",
+      "observedInputsDigest": "e04b39e1cf2f99f4b0f88b4a4a542c453682e6e90abd439f8cc7059a659c5be2",
       "qualification": {
         "state": "unassessed"
       }
@@ -54562,7 +54562,7 @@
       "command": "bun run beep:build",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1194,
-      "observedInputsDigest": "d744dd3a0b9383d7070024e3ff1bf3ab4691fa0b0ffdfe369d18ae6b70715684",
+      "observedInputsDigest": "4aec9ef97ce6ddf6dcedabba96908937d40329d9996ab763a6d296d9e33a8184",
       "qualification": {
         "state": "unassessed"
       }
@@ -54605,7 +54605,7 @@
       "command": "bun run beep:check",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1194,
-      "observedInputsDigest": "d744dd3a0b9383d7070024e3ff1bf3ab4691fa0b0ffdfe369d18ae6b70715684",
+      "observedInputsDigest": "4aec9ef97ce6ddf6dcedabba96908937d40329d9996ab763a6d296d9e33a8184",
       "qualification": {
         "state": "unassessed"
       }
@@ -54682,7 +54682,7 @@
       "command": "bunx vitest run --coverage",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1339,
-      "observedInputsDigest": "fc55ab37374a9bd5ae4624061ffe322405e16d8343c984262f33991674e8c508",
+      "observedInputsDigest": "1f7fc8906d28a899d1c34df20ccd90eb2991cb52ee9bada8a5245044a34888f9",
       "qualification": {
         "state": "unassessed"
       }
@@ -54735,7 +54735,7 @@
       "command": "bun run beep:docgen",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1192,
-      "observedInputsDigest": "783061a61632635bd44af1e8a3c715dcf6aa0b8d23afc94ea8015ae941f996f2",
+      "observedInputsDigest": "f44b06b6a918d7233d66b9556b57129651ed143a27e2b5686630bdca9bed61c8",
       "qualification": {
         "state": "unassessed"
       }
@@ -54779,7 +54779,7 @@
       "command": "bun run beep:doctest",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1369,
-      "observedInputsDigest": "9cb45bc92b594724adc8ccd78daf84959f53343af68c97d2c9f68b406afca099",
+      "observedInputsDigest": "7804d33ac6e67aa8714799d411a85f9260747fe578850a04928fde55ab8aa37f",
       "qualification": {
         "state": "unassessed"
       }
@@ -54795,7 +54795,7 @@
       "command": "bun run beep:lint",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1197,
-      "observedInputsDigest": "e478c1a5d64f77172ff265d63f15df431f12bc81182c37e025eed5f2387efefe",
+      "observedInputsDigest": "76e52e371481ce4a8486e45324315f0d6fe844a753e0dea0bf076797e6613d38",
       "qualification": {
         "state": "unassessed"
       }
@@ -54839,7 +54839,7 @@
       "command": "beep-cli lint deprecated-apis --package .",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1640,
-      "observedInputsDigest": "bfa617a5162c372a24cc0bf5eb0528864b07161ac57a3c31868060af2f8b5185",
+      "observedInputsDigest": "00a4972f42d891818a01a7a44ec9faa3a45152332509f585ee1119520b3bea62",
       "qualification": {
         "state": "unassessed"
       }
@@ -54855,7 +54855,7 @@
       "command": "bun run beep:lint:fix",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1190,
-      "observedInputsDigest": "86e4240b1b3801e285005dd27f8f1eeb10031de4f81cfb43b1c1f25fbd5b7512",
+      "observedInputsDigest": "eea6e21bb7a5c6d7fd1cb1f059bba5f098fc9509e2178b391e45516a2108565a",
       "qualification": {
         "state": "unassessed"
       }
@@ -54873,7 +54873,7 @@
       "command": "beep-cli lint jsdoc --package .",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1006,
-      "observedInputsDigest": "5280f25eb5367fc9140cccd10c9c3d4c95323925e4c92fa9092f9d0b8d4c6757",
+      "observedInputsDigest": "599f2cce6cbaf33e0c6a84d75c165e4995f2120d96b7861b318a1efcccbba6fd",
       "qualification": {
         "state": "unassessed"
       }
@@ -54891,7 +54891,7 @@
       "command": "beep-cli lint laws --package .",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1134,
-      "observedInputsDigest": "09d8701a0a509f6e349484888dae19ccf0d9d105d346abf5dcdafdaf6a623ed2",
+      "observedInputsDigest": "4b6df0938c4ea9647def2363907d7ea356ed2ec0a9e65dc2f1d7a657e9bb591f",
       "qualification": {
         "state": "unassessed"
       }
@@ -54934,7 +54934,7 @@
       "command": "beep-cli quality test-tsgo-package",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1335,
-      "observedInputsDigest": "65fa80757e59c6a5a8e856bff27e18ad9bffe1ded1243c60577bac5dfd7cb357",
+      "observedInputsDigest": "c7d3fe80b3e21541fac135d8eb65f1a880c909490679cf2a130f214c9fca1a0f",
       "qualification": {
         "state": "unassessed"
       }
@@ -55028,7 +55028,7 @@
       "command": "bun run beep:test",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1198,
-      "observedInputsDigest": "6ca55286f77dbc0d6be618df8ba795b31ae321a3ed2d0d577126ee4cdd151436",
+      "observedInputsDigest": "4a3f1a206c44b549c2ab7b41aea25c7a39b3fc3bf7d3b5b151192b4d3e629e76",
       "qualification": {
         "state": "unassessed"
       }
@@ -55174,7 +55174,7 @@
       "command": "bun run beep:test",
       "commandDigest": "149d0c503d33528e1a0389778596a8c91b0876f8a7c70d3a44155133bd4449ea",
       "observedInputCount": 1198,
-      "observedInputsDigest": "6ca55286f77dbc0d6be618df8ba795b31ae321a3ed2d0d577126ee4cdd151436",
+      "observedInputsDigest": "4a3f1a206c44b549c2ab7b41aea25c7a39b3fc3bf7d3b5b151192b4d3e629e76",
       "qualification": {
         "state": "unassessed"
       }

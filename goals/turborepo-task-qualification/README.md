@@ -30,16 +30,25 @@ Make cache reuse an enforced, evidence-backed contract for each quality computat
 
 ## Current phase
 
-Qualification implementation and local pilot work are in progress.
+Final verification and closeout. The real signed pilot qualified in its named
+private-loopback profile at frozen source `93a19425da`; the public adoption
+handoff is published in PR #1389. Broad rollout remains adoption's responsibility.
 
-The census and shared policy are implemented in part. Complete semantic input
-coverage and accepted signed evidence before qualification; see [PLAN.md](./PLAN.md).
+The goal remains active until full local proof, final-head hosted checks, review
+closure and same-PR lifecycle closeout pass. See the current checkpoint at the
+top of [PLAN.md](./PLAN.md); dated checkpoints below it retain historical scope.
 
 ## Latest evidence
 
-[Graduation receipt](./history/graduation-2026-09-08.md) records approval and
-packet creation only. The [acceptance audit](./research/acceptance-audit-current.md)
-records implementation and pilot evidence alongside remaining acceptance gaps.
+- [Signed qualification receipt](./research/current-signed-qualification.json):
+  native stable/canary matrix, authenticated acceptance and operational promotion.
+- [Adoption handoff](./research/adoption-handoff.md) and
+  [checked artifact manifest](./research/adoption/manifest.json): complete
+  executable/graph-only population, semantic families and invalidation rules.
+- [Current acceptance audit](./research/acceptance-2026-10-02.md): requirements,
+  evidence boundaries and remaining verification.
+- [Closeout reflection](./history/reflections/2026-10-02-codex.md): lessons from
+  implementation, native evidence and verification; final readiness is pending.
 
 ## Notes
 

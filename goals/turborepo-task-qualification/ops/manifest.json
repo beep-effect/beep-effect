@@ -5,7 +5,7 @@
     "title": "Turborepo task qualification",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-10-01",
+    "updated": "2026-10-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-task-qualification",
@@ -471,7 +471,11 @@
     "research/signed-capture-development-stable.json",
     "research/acceptance-command-review.json",
     "research/signed-profile-binding-review.json",
-    "research/signed-activation-evidence-review.json"
+    "research/signed-activation-evidence-review.json",
+    "research/current-signed-qualification.json",
+    "research/adoption-handoff.md",
+    "research/adoption/manifest.json",
+    "research/acceptance-2026-10-02.md"
   ],
   "agentLaunchers": [
     {
@@ -486,37 +490,37 @@
     {
       "id": "P0",
       "name": "Refresh and contract",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Policy and discovery",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Local pilot and shadow",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Signed replay integration",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Verify and hand off",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P5",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P6",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -535,5 +539,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "PR #1324 merged; PR #1327 carries runtime repairs and current evidence. Canonical attachment accepts 1025 sources, 90 reviews and 6 artifacts with 22 unresolved obligations. Stable 2.11.4 and exact canary 2.11.5-canary.2 each pass three local fresh/fresh pairs and twelve replay controls at frozen revision 7f53b4a840. Both clients pass seven current source-invalidation cases. Cross-root preflight found a differing toolchain digest; full snapshots attribute it to differing installed-dependency content; native-addon path metadata differs. Stable and exact canary cross-root replay pass when the identical installed dependency tree is mounted read-only at the second root. Independent-installation portability is unproven. Signed sibling receipts, semantic closure and shadow acceptance remain pending; no tuple is qualified. Stable isolated concurrency control passes with 659 ms native target overlap; canary passes with 692 ms native target overlap. Shared-writer collision proof remains separate. Stable and canary synthetic-token capture controls pass with native passthrough presence confirmed; cache archives contain only the 53-byte task log and no synthetic token or home/checkout path. Stable and exact canary configuration controls each pass all nine expected outcomes, including profile rejection before native execution and orchestration hash stability. Bounded native I/O review at 7f53b4a840 attributes 439 repository read paths and 21 scalar writes; dependency bytes match before/after. Undecoded ring operations and complete semantic closure remain explicit gaps. Latest input-control attachment at 37c597297b binds 1,025 sources, 96 reviews and six artifacts with 23 unresolved obligations; no tuple is qualified. Patched-profile attachment at f80ee33672 accepts 1,025 sources, 107 reviews and six artifacts with 24 unresolved obligations; no prior binding changed. Stable task overlap remains unproven; no tuple is qualified. Patched-profile stable and exact-canary Git exclusion controls each pass nine cases at b410da2b6d; dependency identity is unchanged. These receipts postdate the 107-review canonical attachment. Patched-profile cross-root local replay passes for both clients with an identical read-only dependency tree; independent-installation portability remains unproven. Patched-profile direct native-I/O observation at b410da2b6d passes bounded scalar-read/write and Git-routing reviews: 439 repository paths, 21 writes, unchanged dependency identity. Five ring submissions remain undecoded; semantic closure is not established. Latest patched control attachment at 1a9914e0cf binds 1,025 sources, 112 reviews and six artifacts, with 25 unresolved obligations; all prior bindings are unchanged. Separate patched-profile ring observation decoded all 12 entries across five submissions as EPOLL_CTL, with matching task streams and dependency identity. Earlier traces are not retroactively decoded; semantic closure remains open. Patched stable pinned-native full matrix passes 67 observations, 40 checks and ten shadow decisions at b410da2b6d; report relationships independently checked. Exact canary refresh is running. Signed remote evidence and semantic closure remain open; no tuple is qualified. Exact canary patched full matrix also passes 67 observations, 40 checks and ten shadows; both report relationship reviews pass. No signed replay or tuple promotion is claimed. Signed v3 stable development matrix passes three fresh pairs, three baseline signed remote pairs and ten signed shadow scenarios at frozen b410da2b6d; 75 focused tests and full CLI package verification pass. This remains an older-profile observation; signed remaining controls, semantic closure, current-profile refresh and accepted operational import remain incomplete. No tuple is qualified. Signed v4 stable development control adds native selected-task overlap of 498, 539 and 378 ms while preserving all baseline/shadow comparisons; 52 focused tests and full CLI verification pass. Remaining matrix and operational acceptance gates remain closed. Signed v5 stable development receipt passes all seven seeded mutations plus the existing fresh, signed replay and shadow comparisons; 78 focused tests and full CLI verification pass. Refusal/capture, semantic closure and operational qualification gates remain incomplete."
+  "statusNote": "PR #1389 contains the signed qualification mechanism and public adoption handoff at fe8ea6109d. Native stable/canary evidence at frozen 93a19425da qualified the named private-loopback identity lint tuple: 103 accepted fragments, ledger revision 8, zero audit blockers. The adoption bundle covers 145 workspaces, 1984 executable and 1514 graph-only nodes; ordinary entries remain 1980 unassessed and four excluded. Final local proof remains incomplete after a merged-preview deprecated-API heap exhaustion; its cached retry passed, but a cold combined shard reproduced the failure. Independent cold CLI and docgen scans pass at the same limit; the shard list now separates those packages. Hosted coverage is retrying runner communication loss. Final-head merge readiness and completed-retained lifecycle remain required; earlier receipts retain their original source identities."
 }

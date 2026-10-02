@@ -93,7 +93,9 @@ const DEPRECATED_API_LINT_SHARDS = [
   "packages/tooling/library",
   "packages/tooling/policy-pack",
   "packages/tooling/test-kit",
-  "packages/tooling/tool",
+  // CLI and docgen together also exceed 8 GiB on a cold typed scan.
+  "packages/tooling/tool/cli",
+  "packages/tooling/tool/docgen",
   "packages/workspace",
 ] as const;
 const deprecatedApiLintCacheLocation = (shard: string): string =>

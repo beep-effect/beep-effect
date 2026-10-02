@@ -2930,3 +2930,41 @@ remaining listener after the failure. This is test-server setup evidence, not a
 signed-validation mismatch. Retain the failed log and retry the same suite; a
 future shim repair should use OS-assigned ports while preserving Bun's synchronous
 server-address contract and shutdown lifecycle.
+
+### Final proof resource failures — 2026-10-02
+
+At PR #1389 head `fe8ea6109d`, hosted run `37020671503` lost its
+self-hosted runner during Heavy Lint Policy and Coverage Regression. Job
+annotations report "lost communication with the server"; these results do not
+establish source failures. Lint passed its bounded automatic retry. Coverage
+lost its runner again and the recovery workflow queued another attempt.
+Preserve job-specific logs and let the bounded workflow own retries; duplicate
+manual reruns add contention without establishing more evidence.
+
+The local merged-preview full proof passed unit, integration, property,
+coverage, documentation, Fallow and Nix, but deprecated-API ESLint exhausted
+its fixed 8 GiB heap while scanning `packages/tooling/tool`. The completed
+verdict incorrectly suggested the typos checker; the actual log identifies
+`lint:deprecated-apis` and JavaScript heap exhaustion. The unchanged canonical
+`bun run beep lint deprecated-apis --full` retry passed. A cache-disabled shard
+check and final full proof remain necessary. Preserve precise inner-step
+failure attribution and measure cold-shard heap demand before changing source,
+limits or shard boundaries.
+
+A cache-disabled run reproduced the combined shard exhaustion. Separate CLI
+and docgen scans both pass cold under the same 8 GiB cap. Splitting those two
+package roots preserves every TypeScript input, rule and process memory limit.
+The first focused test invocation ran from the repository root and failed two
+existing package-working-directory assertions; rerun through the package's
+canonical test script before attributing those setup failures to the change.
+
+The package test script passes all 72 focused lint tests. Running that suite
+concurrently with the full deprecated-API scan exposed another setup race:
+ESLint discovered a temporary `src/lint-worker-fixture-*` file that the test
+removed before ESLint read it (`ENOENT`). Serialize source-tree-writing tests
+and filesystem scans; retain the failure and rerun after fixture cleanup.
+
+The serialized canonical full deprecated-API scan passed with all 29 shards.
+Both cold package scans, all 72 focused lint tests and the package lint/type
+checks pass. The repair changes only shard boundaries and their test fixture;
+full Yeet and final-head hosted verification remain required.

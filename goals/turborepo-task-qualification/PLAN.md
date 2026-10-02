@@ -5,6 +5,63 @@
 Status: `active`
 Lifecycle: `active`
 
+## Current acceptance checkpoint: 2026-10-02
+
+PR #1389 contains the source repairs and public adoption handoff at
+`fe8ea6109d953dcef41ba536428cf2c054b75a7d`. Older checkpoints below retain
+their original identities and are historical; their statements that no tuple
+qualified no longer describe the current retained evidence.
+
+The signed native stable and exact-canary matrix qualified
+`@beep/identity#lint` for `turbo-task-result`, profile
+`local-linux-x64-bun1.4.2-private-loopback-signed-v1`, epoch
+`qualification-v2`, at frozen source
+`93a19425da0f28d262cfb4b5e9190f137fbbaf58`. Authenticated acceptance retained
+103 fragments with zero blockers. The operational ledger reached revision 8
+and its audit reported zero blocking findings. Both channels provide three
+fresh/fresh pairs, three signed remote pairs, ten shadow scenarios, seven
+mutations, four capture controls, four non-execution controls, the missing-child
+refusal and nine native protocol roots. Source, request, ledger and observation
+hashes were rechecked against the public signed qualification receipt.
+
+The public adoption bundle contains 145 workspaces, 3,498 graph nodes,
+1,984 executable computations and 1,514 graph-only nodes. It includes all 16
+semantic families, every retained shell and special terminal site, and bounded
+Cache/CI/Quality/Yeet dispatch interpretation. Fixed-input rebuild and manifest
+hash validation passed. Ordinary-profile rows remain 1,980 unassessed and four
+excluded; 1,259 existing cached computations remain legacy settings. The named
+private pilot does not activate ordinary or broad task-family reuse.
+
+The policy package full audit/docgen passed and its package source is unchanged
+since that proof. CLI full audit/docgen passed before the latest main test-only
+integration; all 15 post-integration cheap gates passed. The current full Yeet run passed unit, integration, property, coverage,
+documentation, Fallow and Nix checks, but its merged-preview lint-policy step
+exhausted the deprecated-API worker's 8 GiB heap. The unchanged cached retry passed, but a cold combined shard reproduced the
+heap failure. Separate cold CLI and docgen scans pass with the same 8 GiB cap;
+the shard list now separates those packages. Final aggregate proof remains
+required. Hosted coverage is on a bounded automatic
+retry after runner communication loss; the other hosted code checks passed. The latest two process-double review
+comments were answered and resolved with explicit native-evidence boundaries.
+Final-head strict merge readiness, reflection/lifecycle publication and merge
+remain required. This checkpoint is not a completion declaration.
+
+## Phases
+
+| Phase | Status | Work | Exit criteria |
+| --- | --- | --- | --- |
+| P0 Refresh and contract | complete | Refresh checkout, tools, scripts and source ownership. Specify the versioned qualification tuple and evidence requirements. | Reconstructable census and reviewed contract; no phantom executable nodes. |
+| P1 Policy and discovery | complete | Implement pure policy/projection in repo-configs and discovery, transition checks and drift reporting in Cache. | Fixtures prove lifecycle legality, deterministic projection and pilot-only enforcement. |
+| P2 Local pilot and shadow | complete | Exercise one synthetic fixture and @beep/identity#lint in one named profile; record reads, writes, logs and semantic perturbations. | Fresh comparisons and shadow evidence are attributable; legacy settings remain visibly unassessed. |
+| P3 Signed replay integration | complete | Consume conformance/trust receipts and run the full isolated signed-replay protocol for the real pilot. | A real pilot qualifies with the required comparisons and shadow sample; unsupported profiles remain excluded. |
+| P4 Verify and hand off | in-progress | Run package gates, command/fixture tests and the qualification replay suite; hand the population and policy API to adoption. | Acceptance and negative cases pass with versioned receipts and no unexplained divergence. |
+| P5 Yeet: PR to mergeable | in-progress | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
+| P6 Close | in-progress | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
+
+## Historical checkpoints
+
+The following entries preserve the evidence and remaining work at their dated
+revisions. Use the current acceptance checkpoint above for present status.
+
 ### Resumed recovery and review repairs: 2026-10-01
 
 The lifetime patch is already integrated, confirmed by a successful reverse-apply
@@ -35,18 +92,6 @@ Launched with `bun run beep goals set-status turborepo-task-qualification active
 P0 refresh is recorded in [census-refresh.json](./research/census-refresh.json).
 The user approved the program scope on 2026-09-08; no repeated shape approval
 is needed.
-
-## Phases
-
-| Phase | Status | Work | Exit criteria |
-| --- | --- | --- | --- |
-| P0 Refresh and contract | in-progress | Refresh checkout, tools, scripts and source ownership. Specify the versioned qualification tuple and evidence requirements. | Reconstructable census and reviewed contract; no phantom executable nodes. |
-| P1 Policy and discovery | in-progress | Implement pure policy/projection in repo-configs and discovery, transition checks and drift reporting in Cache. | Fixtures prove lifecycle legality, deterministic projection and pilot-only enforcement. |
-| P2 Local pilot and shadow | in-progress | Exercise one synthetic fixture and @beep/identity#lint in one named profile; record reads, writes, logs and semantic perturbations. | Fresh comparisons and shadow evidence are attributable; legacy settings remain visibly unassessed. |
-| P3 Signed replay integration | in-progress | Consume conformance/trust receipts and run the full isolated signed-replay protocol for the real pilot. | A real pilot qualifies with the required comparisons and shadow sample; unsupported profiles remain excluded. |
-| P4 Verify and hand off | pending | Run package gates, command/fixture tests and the qualification replay suite; hand the population and policy API to adoption. | Acceptance and negative cases pass with versioned receipts and no unexplained divergence. |
-| P5 Yeet: PR to mergeable | pending | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
-| P6 Close | pending | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
 
 ## Local evidence checkpoint: 2026-09-25
 

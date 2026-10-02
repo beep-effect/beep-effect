@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-adoption-bundle/v1",
-  "sourceCheckpoint": "70e20c48d564b1057a9ccd19dc4926e2e22459a2",
+  "sourceCheckpoint": "fe8ea6109d953dcef41ba536428cf2c054b75a7d",
   "counts": {
     "workspaces": 145,
     "graphNodes": 3498,
@@ -36,19 +36,19 @@
   "artifacts": [
     {
       "path": "goals/turborepo-task-qualification/research/adoption/census.json",
-      "sha256": "0c3b7409982e0e12dcc4cab2d4686476c55b13fdd4c6e5c884b56fe0054857e3"
+      "sha256": "f858c8f12c74d776365b6639bdf120c40edb746385984a94b50ab77b87f39802"
     },
     {
       "path": "goals/turborepo-task-qualification/research/adoption/nested-commands.json",
-      "sha256": "d99acc62d8403148ef3dea0d9381ba8d037b72960268c9c6787cbe855e45fcb9"
+      "sha256": "c96562b91fffce587d5e5309fd88fa53b2accb88c37672cded6a40b4475b352f"
     },
     {
       "path": "goals/turborepo-task-qualification/research/adoption/command-boundaries.json",
-      "sha256": "2472be8a98272a57c1c5211c6e40cbb194328a982d3474650e3419289b91cec6"
+      "sha256": "361d6f80ddcf40c857d5c9f170dd67c4645a61b5c9a8a62485c8589697a330b3"
     },
     {
       "path": "goals/turborepo-task-qualification/research/adoption/population.json",
-      "sha256": "6bf4c65ac28db3a7d12ba5af12b11d0630eca4336d1948f965bd319157d3dc86"
+      "sha256": "a28f7c6024a78c9f68310c41f279b95ac2966ed484901b15398a34359a0e85d0"
     },
     {
       "path": "goals/turborepo-task-qualification/research/adoption/semantic-boundary-profiles.json",
