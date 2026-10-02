@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "producer-envelope-prototype-checkpoint/v1",
+  "authority": "private-prototype-only",
+  "exitCode": 0,
+  "checks": [
+    {
+      "case": "valid",
+      "observed": "accepted"
+    },
+    {
+      "case": "edited-payload",
+      "observed": "rejected"
+    },
+    {
+      "case": "changed-source",
+      "observed": "rejected"
+    },
+    {
+      "case": "changed-workflow",
+      "observed": "rejected"
+    },
+    {
+      "case": "changed-client",
+      "observed": "rejected"
+    },
+    {
+      "case": "changed-profile",
+      "observed": "rejected"
+    },
+    {
+      "case": "changed-epoch",
+      "observed": "rejected"
+    },
+    {
+      "case": "expired",
+      "observed": "rejected"
+    },
+    {
+      "case": "future",
+      "observed": "rejected"
+    },
+    {
+      "case": "wrong-mac",
+      "observed": "rejected"
+    },
+    {
+      "case": "duplicate-pair",
+      "observed": "rejected"
+    },
+    {
+      "case": "missing-wire",
+      "observed": "rejected"
+    },
+    {
+      "case": "denied-upload",
+      "observed": "rejected"
+    },
+    {
+      "case": "missing-protection",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-source",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-client",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-epoch",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-configuration",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-toolchain",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-signed-root",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-duplicate-pair",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-missing-wire",
+      "observed": "rejected"
+    },
+    {
+      "case": "issue-denied-upload",
+      "observed": "rejected"
+    },
+    {
+      "case": "returned-binding-alias",
+      "observed": "isolated"
+    },
+    {
+      "case": "alias-hostile-source",
+      "observed": "rejected"
+    },
+    {
+      "case": "unknown-issuer",
+      "observed": "rejected"
+    }
+  ],
+  "sourceSha256": "26f20ec3e4c874b0e9039b71716bd11aa389d63c7a1a48af02e79d3844135520",
+  "probeSha256": "ec98420ca11c3aae66a0aaeb1bc1459ec3dc4cac550b998c7c526071393cb266",
+  "qualificationGranted": false,
+  "limits": [
+    "Private in-memory issuer prototype; not installed in the CLI.",
+    "Expected bindings are test configuration, not an independently approved workflow registry.",
+    "No durable issuer storage, revocation or operational promotion exists.",
+    "A supervisor-only key is separate from the reader-known artifact key."
+  ]
+}

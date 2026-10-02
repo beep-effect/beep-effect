@@ -13,6 +13,7 @@ import {
   CacheQualificationKey,
   CacheQualificationStore,
   CacheReviewDecision,
+  CacheTaskContract,
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -20,11 +21,13 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Result";
 import * as S from "effect/Schema";
+import { contractInput } from "./helpers/cache-producer-bundle-fixture.ts";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
@@ -76,7 +79,7 @@ const fixture = Effect.fn("CacheQualificationTest.fixture")(function* () {
   );
   const entry = CacheQualificationEntry.make({ key, status: { state: "excluded", review } });
   const request = CacheTransitionRequest.make({ expectedRevision: S.Natural.make(0), entry });
-  return { root, fs, path, request, entry };
+  return { root, fs, path, request, entry, review };
 });
 const encodeCacheQualificationStoreJsonResult = S.encodeResult(S.fromJsonString(CacheQualificationStore));
 
@@ -97,6 +100,56 @@ it.layer(testLayer, { timeout: "30 seconds" })("Cache qualification writer", (it
     { arbitrary: fcRuns(20) }
   );
 
+  it.effect(
+    "audit and promotion reject unauthenticated acceptance references without changing state",
+    Effect.fnUntraced(function* () {
+      const { root, fs, path, review } = yield* fixture();
+      const cache = yield* CacheQualificationService;
+      const contract = yield* S.decodeUnknownEffect(CacheTaskContract)({ ...contractInput, key });
+      const marker = "{}";
+      yield* fs.writeFileString(path.join(root, "acceptance.json"), marker);
+      const reference = CacheEvidenceReference.make({
+        path: "acceptance.json",
+        sha256: yield* hashBytes(new TextEncoder().encode(marker)),
+      });
+      const candidate = CacheQualificationEntry.make({ key, status: { state: "candidate", contract, review } });
+      const shadow = CacheQualificationEntry.make({
+        key,
+        status: { state: "shadow", contract, review, receipts: [] },
+      });
+      const qualified = CacheQualificationEntry.make({
+        key,
+        status: { state: "qualified", contract, review, receipts: [reference] },
+      });
+      const history = [
+        CacheQualificationEvent.make({ revision: PosInt.make(1), entry: candidate }),
+        CacheQualificationEvent.make({ revision: PosInt.make(2), entry: shadow }),
+      ];
+      const target = path.join(root, "standards/cache-qualification.json");
+      const prior = yield* encodeCacheQualificationStoreJson(
+        CacheQualificationStore.make({ revision: 2, entries: [shadow], history })
+      );
+      yield* fs.writeFileString(target, prior);
+      const promoted = yield* cache
+        .transition(root, CacheTransitionRequest.make({ expectedRevision: 2, entry: qualified }))
+        .pipe(Effect.result);
+      promoted.pipe(R.isFailure, assertTrue);
+      expect(yield* fs.readFileString(target)).toBe(prior);
+      yield* fs.writeFileString(
+        target,
+        yield* encodeCacheQualificationStoreJson(
+          CacheQualificationStore.make({
+            revision: 3,
+            entries: [qualified],
+            history: [...history, CacheQualificationEvent.make({ revision: PosInt.make(3), entry: qualified })],
+          })
+        )
+      );
+      const audited = yield* cache.audit(root).pipe(Effect.result);
+      audited.pipe(R.isFailure, assertTrue);
+      if (R.isFailure(audited)) expect(audited.failure.message).toContain("independently configured trust");
+    })
+  );
   it.effect(
     "persists a reviewed exclusion and rejects stale revisions without changing the ledger",
     Effect.fnUntraced(function* () {

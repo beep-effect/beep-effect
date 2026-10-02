@@ -1,0 +1,63 @@
+{
+  "authority": "owned-fixture-native-observation-only",
+  "channel": "stable",
+  "client": {
+    "version": "2.11.4",
+    "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+    "namespace": "team_owned_fixture_stable"
+  },
+  "bunSha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+  "nativeCases": 9,
+  "additionalFailures": {
+    "truncated-body": {
+      "status": 200,
+      "getRequests": 1,
+      "nativeExitCode": 42,
+      "restoredOutputs": 0
+    },
+    "unavailable": {
+      "status": 503,
+      "getRequests": 2,
+      "nativeExitCode": 42,
+      "restoredOutputs": 0
+    },
+    "throttled": {
+      "status": 429,
+      "getRequests": 2,
+      "nativeExitCode": 42,
+      "restoredOutputs": 0
+    }
+  },
+  "wireEvents": 23,
+  "optionalEvents": {
+    "count": 2,
+    "status": 404,
+    "verdict": "unsupported"
+  },
+  "retention": {
+    "reference": "owned-fixture-expanded-stable",
+    "files": 83,
+    "bytes": 85641,
+    "manifestSha256": "91b9f9e8e0198fd9f6e499e287d71fde640d3fd0dd26ac911b27145d7e95e322"
+  },
+  "checks": {
+    "oneNativeTaskPerCase": true,
+    "exactClientVersion": true,
+    "equalTaskHash": true,
+    "remoteHitVerified": true,
+    "equalRestoredOutput": true,
+    "sevenFaultsRestoreNoOutput": true,
+    "storedUploadAndReplayDigestsMatch": true,
+    "corruptBodyDigestDiffers": true,
+    "truncatedTransferHasOriginalTagAndShorterBody": true,
+    "unavailableAndThrottledDistinguishedFromMiss": true,
+    "noFaultCaseWrites": true,
+    "noUnclassifiedRejection": true
+  },
+  "limits": [
+    "Synthetic computation only, one signed pair per client.",
+    "Private integration harness calls the owned fixture; reusable CLI orchestration remains.",
+    "Outer private network and nested process/file mounts are specified by retained invocation source.",
+    "No protected CI workflow, real-pilot qualification, full corpus or cloud backend authority."
+  ]
+}

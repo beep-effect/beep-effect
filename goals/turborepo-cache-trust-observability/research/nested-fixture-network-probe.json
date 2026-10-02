@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "cache-fixture-network-observation/v1",
+  "date": "2026-09-29",
+  "authority": "design-probe-only",
+  "boundary": "Outer user/PID/mount/network namespace; nested reader user/PID/mount namespace shares outer loopback only.",
+  "checks": {
+    "nestedLoopback": true,
+    "noDefaultRoute": true,
+    "externalNetworkUnreachable": true
+  },
+  "retention": {
+    "reference": "signed-nested-network-probe",
+    "files": 3,
+    "manifestSha256": "66e966d0757ede24203407dd3ff333d00cfef079cad71b7e6db94615af0789a6"
+  },
+  "limits": [
+    "No Turbo process or real pilot executed in this network probe.",
+    "No artifact, signature or producer-receipt qualification credit.",
+    "Owned runner must combine this network isolation with the separately demonstrated file/process protections."
+  ]
+}

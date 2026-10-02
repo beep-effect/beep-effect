@@ -1,0 +1,48 @@
+{
+  "authority": "synthetic-issuer-boundary-observation-only",
+  "protectedFiles": 2,
+  "readerReadWriteDenied": [
+    {
+      "read": true,
+      "write": true
+    },
+    {
+      "read": true,
+      "write": true
+    }
+  ],
+  "protectedBytesUnchanged": true,
+  "editedBindings": [
+    {
+      "field": "source",
+      "rejected": true
+    },
+    {
+      "field": "workflow",
+      "rejected": true
+    },
+    {
+      "field": "profile",
+      "rejected": true
+    },
+    {
+      "field": "epoch",
+      "rejected": true
+    },
+    {
+      "field": "payloadSha256",
+      "rejected": true
+    }
+  ],
+  "artifactKeyForgeryRejected": true,
+  "validIssuerTagVerified": true,
+  "keyRetained": false,
+  "qualificationGranted": false,
+  "limitations": [
+    "Synthetic standalone control, not the actual signed-pilot reader.",
+    "No approved workflow registry, durable issuer lifecycle or operational importer exists yet.",
+    "Host operator and issuer process are trusted; no protection against compromised host authority is claimed."
+  ],
+  "probeSourceSha256": "3ebf934851c9bfeb3696d77046a33152a1913fcce1e2c9f293aa9f239cb054dc",
+  "exitCode": 0
+}

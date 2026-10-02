@@ -1,0 +1,201 @@
+{
+  "authority": "Bounded synthetic native-client protocol probe, independently checked report relationships",
+  "channel": "stable",
+  "client": {
+    "version": "2.11.4",
+    "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b"
+  },
+  "cases": [
+    {
+      "case": "producer",
+      "exitCode": 0,
+      "outputPresent": true,
+      "outputSha256": "d81d05e2755abb0346f248de117e8a7a91768de2944511a013670cfab9527729",
+      "eventIds": [1, 2, 3],
+      "summaries": 1
+    },
+    {
+      "case": "valid",
+      "exitCode": 0,
+      "outputPresent": true,
+      "outputSha256": "d81d05e2755abb0346f248de117e8a7a91768de2944511a013670cfab9527729",
+      "eventIds": [4, 5],
+      "summaries": 1
+    },
+    {
+      "case": "missing-tag",
+      "exitCode": 42,
+      "outputPresent": false,
+      "outputSha256": null,
+      "eventIds": [6, 7],
+      "summaries": 1
+    },
+    {
+      "case": "corrupt-tag",
+      "exitCode": 42,
+      "outputPresent": false,
+      "outputSha256": null,
+      "eventIds": [8, 9],
+      "summaries": 1
+    },
+    {
+      "case": "corrupt-body",
+      "exitCode": 42,
+      "outputPresent": false,
+      "outputSha256": null,
+      "eventIds": [10, 11],
+      "summaries": 1
+    },
+    {
+      "case": "wrong-key",
+      "exitCode": 42,
+      "outputPresent": false,
+      "outputSha256": null,
+      "eventIds": [12, 13],
+      "summaries": 1
+    }
+  ],
+  "denials": [
+    {
+      "case": "reader-put",
+      "status": 403,
+      "storageUnchanged": true
+    },
+    {
+      "case": "unknown-bearer",
+      "status": 401,
+      "storageUnchanged": true
+    },
+    {
+      "case": "cross-tenant",
+      "status": 403,
+      "storageUnchanged": true
+    }
+  ],
+  "confinement": [
+    {
+      "case": "valid",
+      "protectedAccessDenied": [
+        {
+          "read": true,
+          "write": true
+        },
+        {
+          "read": true,
+          "write": true
+        },
+        {
+          "read": true,
+          "write": true
+        }
+      ],
+      "storageUnchanged": true
+    },
+    {
+      "case": "missing-tag",
+      "protectedAccessDenied": [
+        {
+          "read": true,
+          "write": true
+        },
+        {
+          "read": true,
+          "write": true
+        },
+        {
+          "read": true,
+          "write": true
+        }
+      ],
+      "storageUnchanged": true
+    },
+    {
+      "case": "corrupt-tag",
+      "protectedAccessDenied": [
+        {
+          "read": true,
+          "write": true
+        },
+        {
+          "read": true,
+          "write": true
+        },
+        {
+          "read": true,
+          "write": true
+        }
+      ],
+      "storageUnchanged": true
+    },
+    {
+      "case": "corrupt-body",
+      "protectedAccessDenied": [
+        {
+          "read": true,
+          "write": true
+        },
+        {
+          "read": true,
+          "write": true
+        },
+        {
+          "read": true,
+          "write": true
+        }
+      ],
+      "storageUnchanged": true
+    },
+    {
+      "case": "wrong-key",
+      "protectedAccessDenied": [
+        {
+          "read": true,
+          "write": true
+        },
+        {
+          "read": true,
+          "write": true
+        },
+        {
+          "read": true,
+          "write": true
+        }
+      ],
+      "storageUnchanged": true
+    }
+  ],
+  "protection": "bubblewrap-user-pid-mount-isolation",
+  "wireEventCount": 16,
+  "storedUpload": {
+    "bytes": 188,
+    "sha256": "22345748780367af35423ba1fc1542a460fc37226c9a33a33b6dba011d045659"
+  },
+  "checks": {
+    "nativeVersionMatches": true,
+    "sameTaskHash": true,
+    "validNativeRemoteHit": true,
+    "equalRestoredOutput": true,
+    "storedUploadMatchesValidDownload": true,
+    "corruptBodyDiffers": true,
+    "fourIntegrityFailuresRestoreNoOutput": true,
+    "denialsLeaveServerObjectsUnchanged": true,
+    "readerProtectedFileAccessDenied": true,
+    "captureCredentialScan": "all-fixture-files-and-streams",
+    "protectedProducerAndArchiveDigestsMatch": true
+  },
+  "retention": {
+    "reference": "signed-protected-v2-stable-probe",
+    "files": 60,
+    "bytes": 50539,
+    "manifestSha256": "b295fda169ce1985299c29c84be0debc26d73748c2fdb87ff69bdd56f386061d"
+  },
+  "limits": [
+    "Synthetic single computation, not the real identity lint pilot.",
+    "One producer/replay pair per channel, not three isolated qualification pairs.",
+    "Reader isolation is demonstrated for this local fixture, not protected CI workflow provenance.",
+    "No IAM/direct Lambda invocation, full corpus or capacity credit.",
+    "Private probe awaits schema-first owned runner integration and adversarial importer tests."
+  ],
+  "date": "2026-09-29",
+  "scope": "Early local synthetic fixture handoff preparation; no qualification authority."
+}

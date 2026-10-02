@@ -3741,9 +3741,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const fiber = yield* Effect.forkChild(
               withQualityAdmission(request(), noAdmissionOriginGate, Effect.succeed("ran"), fastConfig)
             );
-            yield* Effect.sleep("100 millis");
+            const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
+              until: A.isReadonlyArrayNonEmpty,
+              schedule: Schedule.spaced(Duration.millis(10)),
+            }).pipe(Effect.timeout(Duration.seconds(5)));
             expect(fiber.pollUnsafe()).toBeUndefined();
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
+            expect(queued).toHaveLength(1);
             yield* Ref.set(gibRef, 50);
             expect(yield* Fiber.join(fiber)).toBe("ran");
           }).pipe(

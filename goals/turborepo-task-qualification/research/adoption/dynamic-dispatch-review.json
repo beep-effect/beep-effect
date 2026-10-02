@@ -1,0 +1,266 @@
+{
+  "authority": "Current bounded source interpretation, not runtime or hosted proof.",
+  "revision": "70e20c48d564b1057a9ccd19dc4926e2e22459a2",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "8caf75192f8675041a78891f2d80d31ed2f693543cd3ba57277907e4d76fc828"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "sha256": "ec5b875335b4eea1f5e8e1d594f40a5a263b0c50bdd1feb8aa2284d8b24c036b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "aab4073332e93ee0be5b4cde863746259a7fdad582cdf062afa562eda3ea5472"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+      "sha256": "b937c5ffcd45c177d82500fa4a4ca15981fdb00ef425df266a098ea3feeffce1"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "233a4adf114fe57d9d95cd347cb6a2f6182128c3c86e7e1b0922164db6cc03f6"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
+      "sha256": "baadcd12bce60347fad5847886185ba9419bc75707382bf6c0287b52c6226ecc"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+      "sha256": "b5780d28026d92fd590517b03c1897b18e25317656437c03b5b009317db824e8"
+    }
+  ],
+  "branches": [
+    {
+      "id": "ci-auto-docgen",
+      "inputs": [
+        "base/head Git changed paths",
+        "docgen selector implementation"
+      ],
+      "behavior": "Resolves auto mode before constructing steps; logs selected scope.",
+      "writesOrObservations": [
+        "selection log",
+        "downstream selected steps"
+      ],
+      "executionLimit": "No selected steps is an explicit skip, not a passed computation."
+    },
+    {
+      "id": "ci-affected-storybook",
+      "inputs": [
+        "Turbo affected dependency graph",
+        "positive Storybook filter",
+        "TURBO_SCM_BASE",
+        "ambient/cache runtime environment policy"
+      ],
+      "behavior": "Runs bounded dry selection; rejects nonzero, truncated or invalid JSON output; requires a non-missing Storybook build task. An unaffected selection skips the build.",
+      "executionLimit": "Dry selection is not browser/build execution evidence."
+    },
+    {
+      "id": "ci-jsdoc-ratchet",
+      "inputs": [
+        "inventory step output",
+        "comparison source and baseline"
+      ],
+      "behavior": "Runs step groups sequentially; failed inventory prevents comparison against an old artifact.",
+      "executionLimit": "Generic all-steps plan does not establish inventory freshness or verdict."
+    },
+    {
+      "id": "ci-partition-selection",
+      "inputs": [
+        "partition options",
+        "Turbo dry plan",
+        "current workspace inventory",
+        "base when affected"
+      ],
+      "behavior": "Proof-only flags without partition are rejected. Nonzero, truncated and malformed dry output fail; missing-script tasks are removed before package selection.",
+      "executionLimit": "This review covers selection through workspace loading; intersection and launch retain their separate source review."
+    },
+    {
+      "id": "ci-dispatch",
+      "behavior": "Selects partition interpreter first, otherwise separate Doctest and Fallow interpreters or the ordinary step interpreter.",
+      "executionLimit": "An ordinary step descriptor does not describe all specialized interpreter behavior."
+    },
+    {
+      "id": "yeet-mode-dispatch",
+      "inputs": [
+        "resolved run plan",
+        "mode/tier/merged options",
+        "current attempt and context"
+      ],
+      "behavior": "Prepare and feedback failures stop before mode dispatch. Repair, verify, publish, monitor, closeout, status and explicit pre-push-hook mode retain separate handlers. Full verify uses full-proof coordination unless already merged; review-fix uses its admission path.",
+      "executionLimit": "The explicit pre-push-hook mode is an internal handler; it does not establish installation of a Git pre-push hook. Admission and remote monitor outcomes remain live evidence."
+    },
+    {
+      "id": "ci-partition-execution",
+      "inputs": [
+        "current workspaces and actual task scripts",
+        "partition union proof",
+        "selected packages and shard"
+      ],
+      "behavior": "Excludes Labs and workspaces lacking the script from the executable set, proves the partition union, logs dry-run arguments without execution, skips empty partitions, otherwise executes the package-qualified step through Quality.",
+      "executionLimit": "Plan/dry-run/empty partition are never counted as executions."
+    },
+    {
+      "id": "ci-fallow-interpreter",
+      "inputs": [
+        "base and Fallow lane policy",
+        "subprocess status and report envelopes",
+        "validateEnvelopes option"
+      ],
+      "behavior": "Initializes and rewrites .beep/fallow/status.md with each observed status and elapsed time. Runs blocking and advisory lanes, requires nonempty blocking envelopes, optionally validates schemas, and fails on the first nonzero blocking exit.",
+      "executionLimit": "Advisory failures remain advisory; timing/report writes are observable effects, not deterministic task inputs."
+    },
+    {
+      "id": "quality-lane-proof-preparation",
+      "inputs": [
+        "mode and uniform cwd",
+        "BEEP_YEET_PROOF_BASE or origin/main",
+        "current HEAD/base Git objects and virtual tree",
+        "command/environment identities and lane-proof store"
+      ],
+      "behavior": "Off, empty, mixed-cwd or unavailable Git identities disable reuse. Current nonreusable ids are quality:security and repo-sanity:bun-audit.",
+      "executionLimit": "External vulnerability verdicts remain fresh; task qualification, lane proof, full proof and hosted status are separate authorities."
+    },
+    {
+      "id": "quality-lane-proof-persistence",
+      "inputs": [
+        "successful fresh lane outcomes",
+        "freshly recomputed original/current identities"
+      ],
+      "behavior": "Skips reused or failed outcomes. Revalidates successful identities, records timestamp/duration and atomically renames a random-UUID staging file into .beep/yeet/lane-proofs.json. Persistence errors are reported without manufacturing proof.",
+      "executionLimit": "Successful execution alone does not authorize reuse if identity changed before persistence."
+    },
+    {
+      "id": "quality-wave-outcomes",
+      "behavior": "Active reusable hits return reused without execution. Shadow hits log the match and still run. Precise red scheduling can stop later waves, which receive not-run-early-stop records. Aggregate reports retain failures, first red and skipped counts.",
+      "executionLimit": "Reused, skipped and freshly passed are distinct outcomes."
+    },
+    {
+      "id": "yeet-publication-order",
+      "inputs": [
+        "base freshness",
+        "exact reusable verified state when requested",
+        "staged commit and clean-head installation",
+        "publish mode and admission"
+      ],
+      "behavior": "Early publication performs clean-head install preflight and pushes before admitted required proof, then checks worktree stability and monitors. Standard publication proves or validates exact reuse before push. Both preserve requested PR and monitor handling.",
+      "executionLimit": "An early push is not a full-proof success."
+    },
+    {
+      "id": "yeet-pre-push-internal-mode",
+      "inputs": [
+        "current HEAD and pushed SHAs from stdin",
+        "exact reusable verified state"
+      ],
+      "behavior": "Rejects pushed SHAs outside HEAD and validates reusable proof; it does not launch a new full proof in the reviewed current handler.",
+      "executionLimit": "Supersedes the older source review description; internal mode existence does not prove installed Git hook wiring."
+    },
+    {
+      "id": "yeet-monitor-verdict",
+      "inputs": [
+        "live PR context",
+        "registered checks and settle deadline",
+        "comment monitor and status summary"
+      ],
+      "behavior": "Empty monitor plans are a no-op. Otherwise reads PR context, records the session, races check watch with comment monitoring, retries registration/settlement with last-attempt records, distinguishes optional-only from required red/timeout/unreadable and finally rejects unresolved review threads.",
+      "executionLimit": "Generic monitor handling does not supersede the final strict until-ready closeout contract or required hosted evidence."
+    },
+    {
+      "id": "ci-doctest-current",
+      "inputs": [
+        "current Turbo graph and executable doctest scripts",
+        "CI concurrency argument and summarize output"
+      ],
+      "behavior": "Current CiLane doctest handler delegates a direct Turbo doctest step through Quality. It does not implement the historical changed-path doctest selection described in the older review.",
+      "executionLimit": "Missing scripts remain graph-only; the explicit task invocation and resulting runtime selection must establish actual executions."
+    },
+    {
+      "id": "cache-observation-dispatch",
+      "commands": [
+        "census",
+        "inspect",
+        "fingerprint",
+        "dashboard"
+      ],
+      "behavior": "Census observes the graph without task execution and optionally validates a bounded entrypoint-review request. Inspect reads explicit states. Fingerprint observes a baseline-scoped computation and native toolchain. Dashboard reads native summaries, optional sanitized service logs and changed paths; it excludes forced/cache-disabled runs from effectiveness aggregation.",
+      "executionLimit": "Optional report files and timestamped dashboard observations are outputs. None of these commands transitions a tuple; dashboard tripwires are not authenticated qualification."
+    },
+    {
+      "id": "cache-policy-audit",
+      "commands": [
+        "audit"
+      ],
+      "behavior": "Validates history references, independently authenticated qualified acceptance and tuple scope, then current executable graph and active contracts before the pure policy audit. CLI fails on blocking findings.",
+      "executionLimit": "Unassessed legacy settings remain visible; zero blocking findings does not mean every tuple qualified."
+    },
+    {
+      "id": "cache-baseline-and-transition",
+      "commands": [
+        "baseline",
+        "transition"
+      ],
+      "behavior": "Serializes writes with a directory mutex. Baseline compares the previous digest, checks review basis and executable scope, preserves existing ledger state. Transition checks expected revision, scope/layer/profile/epoch, allowed lifecycle and reviewed contract; candidate/shadow/qualified additionally require live graph identity and audit. Qualified evidence is authenticated again before writing.",
+      "executionLimit": "Suspension/exclusion remain available when the graph is broken. Shadow references are observations, not interpreted passing evidence. Missing ledger cannot reset existing baseline state."
+    },
+    {
+      "id": "cache-profile-and-activation",
+      "commands": [
+        "profile",
+        "activation"
+      ],
+      "behavior": "Profile checks freshness by default and writes only with --write. Activation reads a bounded request, verifies source/before/after references and baseline scope, observes toolchain and returns an exact projected configuration preview.",
+      "executionLimit": "A generated profile or activation preview cannot itself authorize cache reuse."
+    },
+    {
+      "id": "cache-experiment-dispatch",
+      "commands": [
+        "synthetic",
+        "pilot",
+        "pilot-signed",
+        "protocol-run",
+        "protocol-review"
+      ],
+      "behavior": "Synthetic and unsigned pilot invoke their bounded runners, serialize receipts and reject any failed assertion. Signed pilot and protocol-run invoke their supervised runners. Protocol-review validates a bounded observation without executing a native client. Each request is contained, no-follow, bounded and schema-decoded.",
+      "executionLimit": "The dispatcher only routes these authorities; actual native behavior is established by runner evidence. Local validation of supplied observations is not native execution or tuple promotion."
+    },
+    {
+      "id": "cache-dependency-and-import",
+      "commands": [
+        "dependencies",
+        "accept"
+      ],
+      "behavior": "Dependencies materializes and verifies installed dependencies. Accept reads a bounded 8 MiB producer request, loads independently configured acceptance-store trust and persists authenticated policy-complete reports, returning a reference.",
+      "executionLimit": "Dependency receipts remain private. Accepted evidence is separate from the subsequent explicit lifecycle transition."
+    },
+    {
+      "id": "cache-warm",
+      "commands": [
+        "warm"
+      ],
+      "behavior": "Requires a clean checkout at exact origin/main, pinned Bun and ephemeral remote-cache environment. Runs build/check/lint/test with local:w,remote:w and rechecks Git identity before emitting its dated receipt.",
+      "executionLimit": "Writes local and remote artifacts and executes fresh tasks; warming is not qualification. Credential presence and remote behavior remain runtime requirements."
+    },
+    {
+      "id": "cache-restoration-probe",
+      "commands": [
+        "probe"
+      ],
+      "behavior": "Runs @beep/chalk lint first with local:rw,remote:r and then local:rw using the supplied cache directory; both native exits must succeed.",
+      "executionLimit": "The command does not empty that directory or assert HIT/restored output. Its cold/warm labels describe invocation order, not proof of actual cache source or restoration. Native summaries and output evidence must establish those claims."
+    },
+    {
+      "id": "cache-runtime-execution",
+      "commands": [
+        "execute"
+      ],
+      "behavior": "Rejects caller toolchain-key and native-client overrides, resolves actual task selection including dependencies, enforces governed identity-lint profile selection, and calculates the toolchain digest only for selected executable cached nodes declaring it. Hashes the resolved client against observed toolchain before native spawn and preserves exit status. Planned ordinary Turbo runs route through this checkout with --no-env-file inside any existing op wrapper; inspection/non-run commands remain unchanged.",
+      "executionLimit": "Runs inside the resolved environment and preserves inherited I/O. Runtime identity does not promote qualification or replace task/lane/full/hosted proof authorities."
+    }
+  ],
+  "remaining": [
+    "Final hosted workflow resolution, external action behavior and status/review gates require actual hosted evidence, not source review.",
+    "This bounded review does not qualify non-pilot task families or lane/full/hosted proof layers.",
+    "Cache experiment dispatch review does not substitute for the separately retained signed native pilot and protocol evidence; restoration-probe invocation success alone does not establish a cache hit."
+  ]
+}

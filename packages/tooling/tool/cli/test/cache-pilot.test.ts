@@ -1,10 +1,11 @@
-import { CachePilotLogInput } from "@beep/repo-cli/commands/Cache";
-import { extractCachePilotLog } from "@beep/repo-cli/test/Cache";
+import { CachePilotLogInput, CacheSignedPilotLogInput } from "@beep/repo-cli/commands/Cache";
+import { extractCachePilotLog, extractCacheSignedPilotLog } from "@beep/repo-cli/test/Cache";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const prefix = "@beep/identity:lint: ";
@@ -77,6 +78,44 @@ describe("real pilot capture boundary", () => {
       );
       expect(fresh).toBe("task output\n");
       expect(replay).toBe(fresh);
+    })
+  );
+});
+
+describe("signed pilot capture boundary", () => {
+  it.effect("preserves remote replay text without admitting remote origins to the local schema", () =>
+    Effect.gen(function* () {
+      const remote = CacheSignedPilotLogInput.make({
+        ...input,
+        origin: "remote-hit",
+        cacheEnabled: true,
+        stdout: `${prefix}cache hit, replaying logs 0123456789abcdef\n${prefix}cache miss, executing 0123456789abcdef\n${prefix}task output\n`,
+      });
+      expect(yield* extractCacheSignedPilotLog(remote)).toBe("cache miss, executing 0123456789abcdef\ntask output\n");
+      expect(S.is(CachePilotLogInput)(remote)).toBe(false);
+      expect(S.is(CacheSignedPilotLogInput)({ ...remote, origin: "local-hit" })).toBe(false);
+    })
+  );
+  it.effect("rejects disabled hits, wrong hashes, fallback progress and unsafe remote captures", () =>
+    Effect.gen(function* () {
+      const remote = CacheSignedPilotLogInput.make({
+        ...input,
+        origin: "remote-hit",
+        cacheEnabled: true,
+        stdout: `${prefix}cache hit, replaying logs 0123456789abcdef\n${prefix}task output\n`,
+      });
+      for (const changed of [
+        CacheSignedPilotLogInput.make({ ...remote, cacheEnabled: false }),
+        CacheSignedPilotLogInput.make({ ...remote, taskHash: "fedcba9876543210" }),
+        CacheSignedPilotLogInput.make({
+          ...remote,
+          stdout: `${prefix}cache miss, executing 0123456789abcdef\n${prefix}task output\n`,
+        }),
+        CacheSignedPilotLogInput.make({ ...remote, truncated: true }),
+        CacheSignedPilotLogInput.make({ ...remote, stderr: `${prefix}unexpected\n` }),
+        CacheSignedPilotLogInput.make({ ...remote, stdout: `${remote.stdout}\r` }),
+      ])
+        (yield* extractCacheSignedPilotLog(changed).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 });

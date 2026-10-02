@@ -11,6 +11,7 @@ import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $RepoConfigsId.create("cache/Cache.policy");
 
@@ -302,6 +303,39 @@ export class CacheActivationProjection extends S.Class<CacheActivationProjection
 ) {}
 
 /**
+ * Reviewed source and execution bindings for the private signed pilot environment.
+ *
+ * **Details**
+ * Source fingerprints describe the disabled checkout. The activated fingerprint,
+ * signed root bytes and each channel's runtime key are independent bindings.
+ * These declarations require operational verification before they grant reuse.
+ *
+ * **Example** (Inspect the channel binding)
+ * ```ts
+ * import { CacheSignedExecutionProfile } from "@beep/repo-configs/cache"
+ * console.assert("runtimeKeys" in CacheSignedExecutionProfile.fields)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CacheSignedExecutionProfile extends S.Class<CacheSignedExecutionProfile>($I`CacheSignedExecutionProfile`)(
+  {
+    schemaVersion: S.tag("cache-signed-execution-profile/v1"),
+    sourceKey: CacheQualificationKey,
+    sourceConfiguration: Sha256Hex,
+    sourceToolchain: Sha256Hex,
+    activatedConfiguration: Sha256Hex,
+    activationRequest: CacheEvidenceReference,
+    signedRootConfiguration: CacheEvidenceReference,
+    runtimeKeys: S.Record(CacheClientChannel, Sha256Hex),
+  },
+  $I.annote("CacheSignedExecutionProfile", {
+    description: "Independent reviewed source, activation, signed-root and channel-runtime identities.",
+  })
+) {}
+
+/**
  * Complete reviewed obligations for a finite executable computation.
  *
  * **Example** (Validate CacheTaskContract)
@@ -329,6 +363,10 @@ export class CacheTaskContract extends S.Class<CacheTaskContract>($I`CacheTaskCo
     crossRoot: S.Boolean,
     configuration: CacheTaskConfiguration,
     activation: CacheActivationProjection.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    signedExecution: CacheSignedExecutionProfile.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("CacheTaskContract", { description: "Complete reviewed obligations for a finite executable computation." })
 ) {}
@@ -400,11 +438,31 @@ const samePins = S.toEquivalence(CacheQualificationPins);
 const sameClient = S.toEquivalence(CacheClientPin);
 const pairKinds = CacheEvidenceKind.pick(["fresh-fresh", "fresh-remote-hit"]).literals;
 
+const signedContractFailures = (contract: CacheTaskContract): ReadonlyArray<string> => {
+  let failures = A.empty<string>();
+  if (Str.endsWith("-private-loopback-signed-v1")(contract.key.profile) && O.isNone(contract.signedExecution))
+    failures = A.append(failures, "signed-execution-missing-profile");
+  return O.match(contract.signedExecution, {
+    onNone: () => failures,
+    onSome: (execution) => {
+      const expected = CacheQualificationKey.make({
+        ...execution.sourceKey,
+        profile: `${execution.sourceKey.profile}-private-loopback-signed-v1`,
+      });
+      if (!sameKey(contract.key, expected)) failures = A.append(failures, "signed-execution-tuple-drift");
+      if (O.isNone(contract.activation)) failures = A.append(failures, "signed-execution-missing-activation");
+      else if (contract.activation.value.sourceConfiguration !== execution.sourceConfiguration)
+        failures = A.append(failures, "signed-execution-source-drift");
+      return failures;
+    },
+  });
+};
+
 const contractPromotionFailures = (
   contract: CacheTaskContract,
   observations: ReadonlyArray<CacheQualificationObservation>
 ): ReadonlyArray<string> => {
-  let failures = A.empty<string>();
+  let failures = signedContractFailures(contract);
   if (contract.key.layer !== "turbo-task-result") failures = A.append(failures, "reuse-layer-owned-elsewhere");
   if (!contract.configuration.cache) failures = A.append(failures, "reuse-disabled-contract");
   if (contract.configuration.persistent || contract.configuration.interactive)

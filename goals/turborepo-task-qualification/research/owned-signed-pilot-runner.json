@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "owned-signed-pilot-checkpoint/v1",
+  "authority": "observation-only",
+  "command": "bun run beep cache pilot-signed --request <request.json> --output <receipt.json>",
+  "clients": [
+    {
+      "channel": "stable",
+      "receiptSha256": "c57c0802ee3a0f10254e9dfd295a80122bc41bfc21330d1443b0f0a99b08fe27",
+      "bytes": 59564,
+      "pairs": 3,
+      "nativeExitCode": 0,
+      "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10"
+    },
+    {
+      "channel": "canary",
+      "receiptSha256": "86c9dac1da5dce600a39df60420ffab1814049965032c7aca67c2a38876b9cd1",
+      "bytes": 59600,
+      "pairs": 3,
+      "nativeExitCode": 0,
+      "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10"
+    }
+  ],
+  "qualificationGranted": false,
+  "limits": [
+    "Protected producer and operational importer are incomplete.",
+    "The full supervisor snapshot proof passed; the later relational validator and precise pin guard have a fresh full package proof running.",
+    "Relationship validation does not confer qualification authority."
+  ],
+  "supervisorSnapshotVerification": {
+    "auditSeconds": 704.5,
+    "docgenSeconds": 20.8,
+    "exitCode": 0
+  },
+  "currentValidatorVerification": {
+    "focusedTests": 34,
+    "typecheck": "passed",
+    "stableReceiptPairs": 3,
+    "canaryReceiptPairs": 3,
+    "wrongPinRejectedPrecisely": true,
+    "fullPackage": "running"
+  }
+}

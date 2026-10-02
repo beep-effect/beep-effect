@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "qualification-quality-closeout/v1",
+  "authority": "Sanitized summary of retained local Yeet proof and exact-head hosted readiness; not native qualification evidence.",
+  "implementationHead": "466ecffcf940001714e62a565ef409076922b8af",
+  "baseHead": "a7644af785843bb42546109272970f2f7a82b1d7",
+  "verifiedTree": "0c7e08b087430fca3c872267155c6d287d6bb334",
+  "command": "bun run beep yeet publish --start-pr-early --monitor --pr --message \"fix(lint): split tooling scans and refresh qualification closeout\"",
+  "outcome": "success",
+  "completedAt": "2026-10-02T17:53:15.094Z",
+  "fullProofTier": "full",
+  "aggregateLanes": 55,
+  "allAggregateLanesPassed": true,
+  "boundLaneRecords": 39,
+  "aggregateVerdictContext": {
+    "head": "fe8ea6109d953dcef41ba536428cf2c054b75a7d",
+    "resolvedHeadSha": "fe8ea6109d953dcef41ba536428cf2c054b75a7d",
+    "interpretation": "Both aggregate identity fields retain the pre-commit invocation context. The publication log records creation and push of implementationHead before proof; all retained lane records bind implementationHead and verifiedTree. Original artifacts are preserved without rewriting."
+  },
+  "stages": [
+    {
+      "id": "full:00-cheap-gates",
+      "status": "passed",
+      "durationMs": 157634.083388
+    },
+    {
+      "id": "full:01-pre-push",
+      "status": "passed",
+      "durationMs": 2471302.786941
+    },
+    {
+      "id": "full:02-ci-parity",
+      "status": "passed",
+      "durationMs": 2759902.973424
+    }
+  ],
+  "cliUnitTests": {
+    "passed": 5262,
+    "files": 269,
+    "surfaces": [
+      "primary full pre-push",
+      "merged-preview CI parity"
+    ]
+  },
+  "hosted": {
+    "url": "https://github.com/beep-effect/beep-effect/actions/runs/37033557074",
+    "head": "466ecffcf940001714e62a565ef409076922b8af",
+    "requiredPassed": 16,
+    "optionalPassed": 23,
+    "failing": 0,
+    "pending": 0,
+    "unresolvedReviewThreads": 0,
+    "actionableCloseoutIssues": 0,
+    "strictMonitorExitCode": 0,
+    "strictMonitorResult": "merge-ready: yes",
+    "readyAt": "2026-10-02T17:30:08.900Z",
+    "runnerRecovery": "Automatic bounded RunnerLoss recovery reran Lint in attempt 2 and Docgen in attempt 3; both passed. Coverage and all other checks passed."
+  },
+  "retainedArtifactHashes": {
+    "verdict.json": "9c1a652b2694665e561ec72e2cf7b11009e7334ea39acde59d1227860069b4c1",
+    "lane-proofs.json": "64bb2451845b7591787037f4679ccb1c9e3d186d848c4a9381ad83666d64008b",
+    "pr-closeout.json": "a834bb94ca595470d35fdcf405580ef156e8d533f9ff6533bdf0a2abe94029c0",
+    "closeout-publish.log": "7e515bd640e749521df8206a7620ec96e472e677815de1f75b99c93e6af23296",
+    "466ec-until-ready-attempt3.log": "87317694180ddb1d064bd49e1e4b89033952d4db22d8952b2cab69eeb24b3cba"
+  },
+  "limits": [
+    "Native qualification remains separately bound to frozen source 93a19425da0f28d262cfb4b5e9190f137fbbaf58.",
+    "A subsequent base merge and final packet changes require their own publication proof and exact-head readiness before merge.",
+    "No broad cache activation, hosted-proof substitution or baseline weakening."
+  ]
+}

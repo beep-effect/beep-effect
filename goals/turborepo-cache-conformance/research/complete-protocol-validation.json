@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "complete-protocol-validation-checkpoint/v1",
+  "authority": "implementation-controls-only",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.ts": "cfd98dba8be3614a6658c9c1b8708c252685797719b64871e3a1b989345ec2b0",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts": "c9a46e735ebd05115c6991544ee7d1101ac6f9a1dfadae096533f1532f529369",
+    "packages/tooling/tool/cli/src/commands/Cache/index.ts": "a8221bd1a6c1a9fb0adb1eaba515d944c166c2119ca55c560642b185606ca88c",
+    "packages/tooling/tool/cli/test/cache-protocol.test.ts": "731c24c61e26f8ef9a3b8e5959b365c59fbd165d00bdb2d08b68f4f40f4354d1"
+  },
+  "validationBoundary": ["owned worker output", "supervisor report decode"],
+  "requirements": [
+    "six distinct integrity cases",
+    "three distinct transport failures",
+    "nine distinct native summaries",
+    "ordered and attributed direct wire events",
+    "one successful writer upload",
+    "exact native-exchange and wire-event joins",
+    "matching transport failure status, task and truncated payload facts",
+    "no extra denied integrity reads; genuine producer miss preserved"
+  ],
+  "verification": {
+    "focusedTests": {
+      "files": 2,
+      "passed": 24,
+      "newCompleteValidatorTests": 6
+    },
+    "sourceTypeCheck": "passed",
+    "retainedNativeReports": {
+      "channels": ["stable", "canary"],
+      "priorReceiptHashesVerified": true,
+      "editedVariantsRejectedPerReport": 7,
+      "freshExecution": false
+    },
+    "packageVerify": {
+      "package": "@beep/repo-cli",
+      "exitCode": 0,
+      "auditSeconds": 627.0,
+      "docgenSeconds": 21.8
+    },
+    "freshNativeStable": {
+      "exitCode": 0,
+      "implementationRevision": "3d9ac523201d095ab9378f3617513a5f78349a1c",
+      "client": {
+        "version": "2.11.5",
+        "sha256": "479733d3000c9393afb0c421d003cd26417bdb9e0ff525cf1445a7e1f29bb8bc",
+        "namespace": "team_qualification_complete_protocol_stable_0bb2"
+      },
+      "nativeCases": 9,
+      "wireEvents": 23,
+      "rawSha256": "47d88b83c0a26e476f67c1e0d8acc74f60f303b0e2057553e91f3dd341c17aa2",
+      "bunSha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "authority": "synthetic-native-observation-only"
+    },
+    "freshNativeCanary": {
+      "exitCode": 0,
+      "implementationRevision": "3d9ac523201d095ab9378f3617513a5f78349a1c",
+      "client": {
+        "version": "2.11.5-canary.2",
+        "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+        "namespace": "team_qualification_complete_protocol_canary_0bb2"
+      },
+      "nativeCases": 9,
+      "wireEvents": 23,
+      "rawSha256": "57d18b639335a4d03efdc98f4f3be4b65b5d4a33fd849a41c268f3b9f0168850",
+      "bunSha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "authority": "synthetic-native-observation-only"
+    }
+  },
+  "limitations": [
+    "Relationship checks alone confer no producer or qualification authority.",
+    "Complete authenticated bundle, trusted policy and operational promotion import remain incomplete.",
+    "Retained report validation does not renew source or runtime identity."
+  ]
+}

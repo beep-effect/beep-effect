@@ -10,7 +10,13 @@ import {
   CacheRuntimeLinkerSnapshot,
   CacheToolchainSnapshot,
 } from "@beep/repo-cli/commands/Cache";
-import { fingerprintCacheComputation, joinCacheCensusPlan, projectCacheActivation } from "@beep/repo-cli/test/Cache";
+import {
+  fingerprintCacheComputation,
+  joinCacheCensusPlan,
+  projectCacheActivation,
+  projectCacheSignedActivation,
+  projectCacheSignedRoot,
+} from "@beep/repo-cli/test/Cache";
 import {
   CacheActivationProjection,
   CacheEvidenceReference,
@@ -21,7 +27,7 @@ import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto } from "@effect/platform-node";
-import { expect } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
@@ -30,6 +36,8 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const CensusJsonObject = S.fromJsonString(S.JsonObject);
 
 const workspace = CacheCensusWorkspace.make({
   name: "@beep/fixture",
@@ -127,13 +135,13 @@ const activationFixture = Effect.fn("CacheCensusTest.activationFixture")(functio
   });
   return { before, after, census, source, activation };
 });
-const encodeJsonObjectJson = S.encodeEffect(S.fromJsonString(S.JsonObject));
+const encodeJsonObjectJson = S.encodeEffect(CensusJsonObject);
 
 it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("reviewed cache activation projection", (it) => {
   it.effect.prop(
     "rejects arbitrary replacement task semantics despite a correctly rebound artifact digest",
-    { configuration: CacheTaskConfiguration },
-    ({ configuration }) =>
+    [CacheTaskConfiguration],
+    ([configuration]) =>
       Effect.gen(function* () {
         const f = yield* activationFixture();
         const after = yield* encodeJsonObjectJson({
@@ -547,6 +555,155 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("computation configuration
           CacheQualificationKey.make({ ...key, profile: "another-profile" }),
           census,
           toolchain
+        ).pipe(Effect.isFailure)
+      ).toBe(true);
+    })
+  );
+});
+
+describe("signed root projection", () => {
+  it.effect("preserves task and remote settings in legacy and global layouts", () =>
+    Effect.gen(function* () {
+      const source =
+        '{"tasks":{"lint":{"cache":false}},"remoteCache":{"enabled":false,"signature":false,"timeout":42}}';
+      const projected = yield* projectCacheSignedRoot(source);
+      expect(yield* S.decodeEffect(CensusJsonObject)(projected)).toEqual({
+        tasks: { lint: { cache: false } },
+        remoteCache: { enabled: true, signature: true, timeout: 42 },
+      });
+      expect(yield* projectCacheSignedRoot(projected)).toBe(projected);
+      const globalSource =
+        '{/* reviewed */"futureFlags":{"globalConfiguration":true},"tasks":{"lint":{"cache":false}},"global":{"env":["KEEP"],"remoteCache":{"timeout":42}}}';
+      const global = yield* projectCacheSignedRoot(globalSource);
+      expect(yield* S.decodeEffect(CensusJsonObject)(global)).toEqual({
+        futureFlags: { globalConfiguration: true },
+        tasks: { lint: { cache: false } },
+        global: { env: ["KEEP"], remoteCache: { timeout: 42, enabled: true, signature: true } },
+      });
+      expect(yield* projectCacheSignedRoot(global)).toBe(global);
+    })
+  );
+  it.effect("rejects malformed containers before producing an overlay", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        "{",
+        "[]",
+        '{"futureFlags":[]}',
+        '{"remoteCache":false}',
+        '{"futureFlags":{"globalConfiguration":true}}',
+        '{"futureFlags":{"globalConfiguration":true},"global":{"remoteCache":[]}}',
+      ]) {
+        expect((yield* projectCacheSignedRoot(source).pipe(Effect.flip)).message).toBe(
+          "Cannot project the reviewed signed root configuration."
+        );
+      }
+    })
+  );
+});
+
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
+  it.effect("binds signed activation to actual source bytes and real configuration fingerprints", () =>
+    Effect.gen(function* () {
+      const fixture = yield* activationFixture();
+      const rootBefore = '{"remoteCache":{"enabled":false},"tasks":{}}';
+      const rootSha256 = yield* hashBytes(new TextEncoder().encode(rootBefore));
+      const census = CacheCensusReport.make({
+        ...fixture.census,
+        globalConfiguration: { remoteCache: { enabled: false } },
+        sources: A.map(fixture.census.sources, (source) =>
+          source.path === "turbo.json" ? CacheCensusSource.make({ ...source, sha256: rootSha256 }) : source
+        ),
+      });
+      const source = yield* fingerprintCacheComputation(key, census, toolchain);
+      const activation = CacheActivationProjection.make({
+        ...fixture.activation,
+        sourceConfiguration: source.configurationDigest,
+      });
+      const activated = yield* projectCacheActivation(
+        key,
+        census,
+        toolchain,
+        activation,
+        fixture.before,
+        fixture.after
+      );
+      const rootSigned = yield* projectCacheSignedRoot(rootBefore);
+      const signed = yield* projectCacheSignedActivation(
+        key,
+        census,
+        toolchain,
+        activation,
+        fixture.before,
+        fixture.after,
+        rootBefore,
+        rootSigned
+      );
+      expect(signed.key).toEqual(key);
+      expect(signed.configurationDigest).not.toBe(source.configurationDigest);
+      expect(signed.configurationDigest).not.toBe(activated.configurationDigest);
+      expect(signed.toolchainDigest).toBe(source.toolchainDigest);
+      expect(signed.configuration.globalConfiguration).toEqual({ remoteCache: { enabled: true, signature: true } });
+      expect(signed.configuration.nodes).toEqual(activated.configuration.nodes);
+      const projectedCensus = CacheCensusReport.make({
+        ...census,
+        globalConfiguration: signed.configuration.globalConfiguration,
+        sources: signed.configuration.sources,
+        nodes: A.map(census.nodes, (node) =>
+          node.id === key.computation
+            ? CacheCensusNode.make({
+                ...node,
+                configuration: CacheTaskConfiguration.make({ ...node.configuration, cache: true }),
+              })
+            : node
+        ),
+      });
+      expect(yield* fingerprintCacheComputation(key, projectedCensus, toolchain)).toEqual(signed);
+      for (const altered of [
+        `${rootSigned}\n`,
+        '{"remoteCache":{"enabled":true,"signature":true},"tasks":{"lint":{"outputs":["dist/**"]}}}',
+      ])
+        expect(
+          yield* projectCacheSignedActivation(
+            key,
+            census,
+            toolchain,
+            activation,
+            fixture.before,
+            fixture.after,
+            rootBefore,
+            altered
+          ).pipe(Effect.isFailure)
+        ).toBe(true);
+      for (const altered of [
+        CacheCensusReport.make({ ...census, globalConfiguration: {} }),
+        CacheCensusReport.make({ ...census, sources: A.filter(census.sources, (row) => row.path !== "turbo.json") }),
+        CacheCensusReport.make({
+          ...census,
+          sources: A.append(census.sources, CacheCensusSource.make({ path: "turbo.json", sha256: rootSha256 })),
+        }),
+      ])
+        expect(
+          yield* projectCacheSignedActivation(
+            key,
+            altered,
+            toolchain,
+            activation,
+            fixture.before,
+            fixture.after,
+            rootBefore,
+            rootSigned
+          ).pipe(Effect.isFailure)
+        ).toBe(true);
+      expect(
+        yield* projectCacheSignedActivation(
+          key,
+          census,
+          toolchain,
+          activation,
+          fixture.before,
+          fixture.after,
+          `${rootBefore} `,
+          rootSigned
         ).pipe(Effect.isFailure)
       ).toBe(true);
     })
