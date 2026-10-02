@@ -6520,3 +6520,10 @@ repo-cli package verification passed, and the full affected coverage command
 measured 43/57 functions (75.43%) with zero regressions across 136 packages.
 A deterministic guard-specific coverage assertion and detector pass before
 the expensive proof would have exposed these issues earlier.
+
+The next hosted Heavy / Check job found four `effect(globalErrorInEffectFailure)`
+diagnostics in the new guard test's error adapters. Package verification did
+not run the repository-wide `quality:test-tsgo` gate. Replacing the callbacks'
+plain `Error` values with a tagged test error made that named gate pass, as
+well as the focused 26-test suite. Running `quality:test-tsgo` before the
+costly full proof would have caught this source issue locally.

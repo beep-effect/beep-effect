@@ -41,6 +41,8 @@ class InvalidPathSegment extends Data.TaggedError("InvalidPathSegment")<{
   readonly message: string;
 }> {}
 
+class FsGuardTestError extends Data.TaggedError("FsGuardTestError")<{ readonly message: string }> {}
+
 describe("internal/cli/FailureRendering", () => {
   it("stays quiet by default so causes do not leak transcript paths", () => {
     expect(shouldRenderFailureCause([])).toBe(false);
@@ -174,9 +176,9 @@ describe("internal/cli/FsGuards", () => {
         const root = yield* fs.makeTempDirectoryScoped();
         const missing = path.join(root, "missing");
         const directoryErrors = {
-          onStatError: (_cause: unknown, entry: string) => new Error(`stat: ${entry}`),
-          onNotDirectory: (entry: string) => new Error(`not directory: ${entry}`),
-          onRealPathError: (_cause: unknown, entry: string) => new Error(`real path: ${entry}`),
+          onStatError: (_cause: unknown, entry: string) => new FsGuardTestError({ message: `stat: ${entry}` }),
+          onNotDirectory: (entry: string) => new FsGuardTestError({ message: `not directory: ${entry}` }),
+          onRealPathError: (_cause: unknown, entry: string) => new FsGuardTestError({ message: `real path: ${entry}` }),
         };
         const directory = yield* validateDirectory(root, directoryErrors);
         expect(directory.canonicalDir).toBe(root);
@@ -185,7 +187,7 @@ describe("internal/cli/FsGuards", () => {
         expect(directoryError.message).toBe(`stat: ${missing}`);
 
         const renameError = yield* renameOrFail(missing, path.join(root, "renamed"), {
-          onError: (_cause, source) => new Error(`rename: ${source}`),
+          onError: (_cause, source) => new FsGuardTestError({ message: `rename: ${source}` }),
         }).pipe(Effect.flip);
         expect(renameError.message).toBe(`rename: ${missing}`);
       })
