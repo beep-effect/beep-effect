@@ -6793,174 +6793,6 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-dispatch.test.ts:220:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "line": 220,
-      "endLine": 220,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:2c2388b336a1c1eabaa67add7ec0415d20fea2210f92f261a83aa41fcbd24781",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-dispatch.test.ts:232:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "line": 232,
-      "endLine": 232,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:cf127b6f0b12d116c2ceac5656c6d129c72a4a67703b4fc386cc49e9ac039f9e",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-dispatch.test.ts:243:provideScopedLayer@16#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "line": 243,
-      "endLine": 243,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:9be13e873f99341ccf31c7dece44222a4af9af78c57b4ce702d96d26dbc292c7",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-dispatch.test.ts:260:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "line": 260,
-      "endLine": 260,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:50b6ef247b65ee75f55c262954cad43a45247b161ab7d348e083c605e4ca4c7d",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-dispatch.test.ts:279:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "line": 279,
-      "endLine": 279,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:ed498b26d555b62944f694d3bb4055f535ba82d88ec6d24fbc0a2778c895259d",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-dispatch.test.ts:293:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "line": 293,
-      "endLine": 293,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:60134b06e99d35e07f5130b4e0b2cfa2d17b51f84bd9038963408bf238213fbc",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-dispatch.test.ts:315:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "line": 315,
-      "endLine": 315,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:d337313bb357fe9dc9de336296faca5ac40f1fdb2f38ed9257595f26479f1aa7",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-dispatch.test.ts:334:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "line": 334,
-      "endLine": 334,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:e1476eb9c7a3b42a57faae37b3115739746494f460be90403005ccfa25a2eca4",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/tooling/tool/cli/test/cache-evidence.test.ts:43:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -24089,27 +23921,6 @@
       "status": "open"
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/cache-dispatch.test.ts:235:checkEffect@4#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "line": 235,
-      "endLine": 245,
-      "symbol": "checkEffect",
-      "occurrence": "v2:9be13e873f99341ccf31c7dece44222a4af9af78c57b4ce702d96d26dbc292c7",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.schema(CacheBaselineRequest), (request) => Effect.gen(function* () { const f = yield* fixture(emptyAudit, request); yield* f.run([\"baseline\", \"--request\", f.requests.b",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV007:packages/tooling/tool/cli/test/cache-experiment.test.ts:61:checkEffect@8#1",
       "lens": "detector",
       "ruleId": "EV007",
@@ -28851,13 +28662,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-dispatch.test.ts:35:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-dispatch.test.ts:36:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "line": 35,
-      "endLine": 35,
+      "line": 36,
+      "endLine": 36,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -28869,7 +28680,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native platform services retain real Bun.write output/error and bounded request safety behavior; the baseline-request property law uses MemoryFileSystem."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-entrypoints.test.ts:14:@effect/platform-node@0#1",

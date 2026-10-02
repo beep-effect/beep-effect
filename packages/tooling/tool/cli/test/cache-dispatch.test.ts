@@ -30,12 +30,16 @@ import {
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { A } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
+import * as NodePath from "@effect/platform-node/NodePath";
+import * as NodeStdio from "@effect/platform-node/NodeStdio";
+import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -122,6 +126,25 @@ const testLayer = Layer.mergeAll(
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
 );
 
+const memoryFsLayer = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.gen(function* () {
+    const fs = yield* MemoryFileSystem.make;
+    yield* fs.makeDirectory(process.cwd(), { recursive: true });
+    return fs;
+  })
+);
+const memoryPlatform = Layer.mergeAll(
+  memoryFsLayer,
+  NodePath.layer,
+  NodeCrypto.layer,
+  TestConsole.layer,
+  NodeChildProcessSpawner.layer.pipe(Layer.provide(Layer.merge(memoryFsLayer, NodePath.layer))),
+  NodeStdio.layer,
+  NodeTerminal.layer
+);
+const memoryLayer = Layer.merge(memoryPlatform, FsUtilsLive.pipe(Layer.provide(memoryPlatform)));
+
 const defaultBaselineRequest = CacheBaselineRequest.make({
   review,
   scope: baseline.scope,
@@ -200,137 +223,156 @@ const fixture = Effect.fn("CacheDispatchTest.fixture")(function* (
 afterEach(() => vi.restoreAllMocks());
 
 describe("cache qualification command dispatch", () => {
-  it.effect("checks and regenerates the profile only through the selected operation", () =>
-    Effect.gen(function* () {
-      const verify = vi.spyOn(Profile, "verifyCacheIdentityLintProfile").mockReturnValue(Effect.void);
-      const write = vi.spyOn(Profile, "writeCacheIdentityLintProfile").mockReturnValue(Effect.void);
-      const f = yield* fixture();
-      yield* f.run(["profile"]);
-      expect(verify).toHaveBeenCalledWith(process.cwd());
-      expect(write).not.toHaveBeenCalled();
-      yield* f.run(["profile", "--write"]);
-      expect(verify).toHaveBeenCalledTimes(1);
-      expect(write).toHaveBeenCalledWith(process.cwd());
-      const text = yield* consoleText;
-      expect(text).toContain("Identity lint candidate profile is current.");
-      expect(text).toContain("Identity lint candidate profile written.");
-      verify.mockReturnValue(Effect.fail(CacheCommandError.new("stale profile fixture")));
-      expect(yield* f.run(["profile"]).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* errorText).toContain("stale profile fixture");
-    }).pipe(provideScopedLayer(testLayer))
-  );
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("checks and regenerates the profile only through the selected operation", () =>
+      Effect.gen(function* () {
+        const verify = vi.spyOn(Profile, "verifyCacheIdentityLintProfile").mockReturnValue(Effect.void);
+        const write = vi.spyOn(Profile, "writeCacheIdentityLintProfile").mockReturnValue(Effect.void);
+        const f = yield* fixture();
+        yield* f.run(["profile"]);
+        expect(verify).toHaveBeenCalledWith(process.cwd());
+        expect(write).not.toHaveBeenCalled();
+        yield* f.run(["profile", "--write"]);
+        expect(verify).toHaveBeenCalledTimes(1);
+        expect(write).toHaveBeenCalledWith(process.cwd());
+        const text = yield* consoleText;
+        expect(text).toContain("Identity lint candidate profile is current.");
+        expect(text).toContain("Identity lint candidate profile written.");
+        verify.mockReturnValue(Effect.fail(CacheCommandError.new("stale profile fixture")));
+        expect(yield* f.run(["profile"]).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* errorText).toContain("stale profile fixture");
+      })
+    );
+  });
 
-  it.effect("forwards native arguments and reports unsuccessful native execution", () =>
-    Effect.gen(function* () {
-      const execute = vi.spyOn(Runtime, "runCacheRuntimeTasks").mockReturnValue(Effect.succeed(0));
-      const f = yield* fixture();
-      const args = ["run", "lint", "--filter=@beep/identity"];
-      yield* f.run(["execute", "--", ...args]);
-      expect(execute).toHaveBeenCalledWith(process.cwd(), args);
-      execute.mockReturnValue(Effect.succeed(7));
-      expect(yield* f.run(["execute", "--", ...args]).pipe(Effect.isFailure)).toBe(true);
-    }).pipe(provideScopedLayer(testLayer))
-  );
-  it.effect("preserves arbitrary reviewed baseline requests through file decoding and command dispatch", () =>
-    Arbitrary.checkEffect(
-      Arbitrary.schema(CacheBaselineRequest),
-      (request) =>
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("forwards native arguments and reports unsuccessful native execution", () =>
+      Effect.gen(function* () {
+        const execute = vi.spyOn(Runtime, "runCacheRuntimeTasks").mockReturnValue(Effect.succeed(0));
+        const f = yield* fixture();
+        const args = ["run", "lint", "--filter=@beep/identity"];
+        yield* f.run(["execute", "--", ...args]);
+        expect(execute).toHaveBeenCalledWith(process.cwd(), args);
+        execute.mockReturnValue(Effect.succeed(7));
+        expect(yield* f.run(["execute", "--", ...args]).pipe(Effect.isFailure)).toBe(true);
+      })
+    );
+  });
+
+  it.layer(memoryLayer, { timeout: "30 seconds" })((it) => {
+    it.effect.prop(
+      "preserves arbitrary reviewed baseline requests through file decoding and command dispatch",
+      [CacheBaselineRequest],
+      ([request]) =>
         Effect.gen(function* () {
           const f = yield* fixture(emptyAudit, request);
           yield* f.run(["baseline", "--request", f.requests.baseline]);
           expect(f.calls).toEqual(["baseline"]);
-          return true;
-        }).pipe(provideScopedLayer(testLayer)),
-      fcRuns(40)
-    ).pipe(Effect.map((result) => expect(result._tag).toBe("Passed")))
-  );
+        }),
+      { arbitrary: fcRuns(40) }
+    );
+  });
 
-  it.effect("renders the index, audit formats and explicit ledger through the injected authority", () =>
-    Effect.gen(function* () {
-      const f = yield* fixture();
-      yield* f.run([]);
-      yield* f.run(["audit"]);
-      yield* f.run(["audit", "--json"]);
-      yield* f.run(["inspect"]);
-      const text = yield* consoleText;
-      expect(text).toContain("cache commands: census");
-      expect(text).toContain("0 blocking findings; 1 unassessed");
-      expect(text).toContain('"unassessed"');
-      expect(text).toContain('"revision":1');
-    }).pipe(provideScopedLayer(testLayer))
-  );
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("renders the index, audit formats and explicit ledger through the injected authority", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        yield* f.run([]);
+        yield* f.run(["audit"]);
+        yield* f.run(["audit", "--json"]);
+        yield* f.run(["inspect"]);
+        const text = yield* consoleText;
+        expect(text).toContain("cache commands: census");
+        expect(text).toContain("0 blocking findings; 1 unassessed");
+        expect(text).toContain('"unassessed"');
+        expect(text).toContain('"revision":1');
+      })
+    );
+  });
 
-  it.effect("prints review and blocking findings and fails only on blocking audit results", () =>
-    Effect.gen(function* () {
-      const advisory = CachePolicyFinding.make({
-        kind: "configuration-source-drift",
-        subject: "turbo.json",
-        blocking: false,
-      });
-      const blocking = CachePolicyFinding.make({ kind: "unqualified-reuse", subject: key.computation, blocking: true });
-      const reviewed = yield* fixture(CachePolicyAuditReport.make({ findings: [advisory], unassessed: [] }));
-      yield* reviewed.run(["audit"]);
-      const refused = yield* fixture(CachePolicyAuditReport.make({ findings: [advisory, blocking], unassessed: [] }));
-      expect(yield* refused.run(["audit"]).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* refused.run(["audit", "--json"]).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* consoleText).toContain("REVIEW configuration-source-drift: turbo.json");
-      expect(yield* consoleText).toContain("BLOCK unqualified-reuse: @beep/fixture#lint");
-      expect(yield* errorText).toContain("Current cache reuse differs from reviewed policy.");
-    }).pipe(provideScopedLayer(testLayer))
-  );
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("prints review and blocking findings and fails only on blocking audit results", () =>
+      Effect.gen(function* () {
+        const advisory = CachePolicyFinding.make({
+          kind: "configuration-source-drift",
+          subject: "turbo.json",
+          blocking: false,
+        });
+        const blocking = CachePolicyFinding.make({
+          kind: "unqualified-reuse",
+          subject: key.computation,
+          blocking: true,
+        });
+        const reviewed = yield* fixture(CachePolicyAuditReport.make({ findings: [advisory], unassessed: [] }));
+        yield* reviewed.run(["audit"]);
+        const refused = yield* fixture(CachePolicyAuditReport.make({ findings: [advisory, blocking], unassessed: [] }));
+        expect(yield* refused.run(["audit"]).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* refused.run(["audit", "--json"]).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* consoleText).toContain("REVIEW configuration-source-drift: turbo.json");
+        expect(yield* consoleText).toContain("BLOCK unqualified-reuse: @beep/fixture#lint");
+        expect(yield* errorText).toContain("Current cache reuse differs from reviewed policy.");
+      })
+    );
+  });
 
-  it.effect("decodes reviewed requests before dispatching baseline, transition and activation operations", () =>
-    Effect.gen(function* () {
-      const f = yield* fixture();
-      yield* f.run(["baseline", "--request", f.requests.baseline]);
-      yield* f.run(["transition", "--request", f.requests.transition]);
-      const output = f.path.join(f.root, "preview.json");
-      yield* f.run(["activation", "--request", f.requests.activation, "--output", output]);
-      expect(yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodePreview))).toEqual(preview);
-      expect(f.calls).toEqual(["baseline", "transition", "activation"]);
-      expect(yield* consoleText).toContain("Reviewed baseline written for 0 executable computations");
-      expect(yield* consoleText).toContain("Qualification revision 1: @beep/fixture#lint is excluded.");
-    }).pipe(provideScopedLayer(testLayer))
-  );
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("decodes reviewed requests before dispatching baseline, transition and activation operations", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        yield* f.run(["baseline", "--request", f.requests.baseline]);
+        yield* f.run(["transition", "--request", f.requests.transition]);
+        const output = f.path.join(f.root, "preview.json");
+        yield* f.run(["activation", "--request", f.requests.activation, "--output", output]);
+        expect(yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodePreview))).toEqual(preview);
+        expect(f.calls).toEqual(["baseline", "transition", "activation"]);
+        expect(yield* consoleText).toContain("Reviewed baseline written for 0 executable computations");
+        expect(yield* consoleText).toContain("Qualification revision 1: @beep/fixture#lint is excluded.");
+      })
+    );
+  });
 
-  it.effect("prints fingerprints or writes their exact schema representation to a selected file", () =>
-    Effect.gen(function* () {
-      const f = yield* fixture();
-      yield* f.run(["fingerprint", "--computation", key.computation]);
-      const output = f.path.join(f.root, "identity.json");
-      yield* f.run(["fingerprint", "--computation", key.computation, "--output", output]);
-      expect(yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodeIdentity))).toEqual(identity);
-      expect(yield* consoleText).toContain('"cache-live-identity/v1"');
-      expect(yield* consoleText).toContain("Fingerprint recorded for @beep/fixture#lint");
-      expect(yield* f.run(["fingerprint", "--computation", "@beep/unknown#lint"]).pipe(Effect.isFailure)).toBe(true);
-      expect(
-        yield* Effect.acquireUseRelease(
-          Effect.sync(() => vi.spyOn(Bun, "write").mockRejectedValue(new Error("fixture write failure"))),
-          () => f.run(["fingerprint", "--computation", key.computation, "--output", output]).pipe(Effect.isFailure),
-          (spy) => Effect.sync(() => spy.mockRestore())
-        )
-      ).toBe(true);
-      expect(yield* errorText).toContain("Unknown computation.");
-      expect(yield* errorText).toContain("Failed to write");
-    }).pipe(provideScopedLayer(testLayer))
-  );
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("prints fingerprints or writes their exact schema representation to a selected file", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        yield* f.run(["fingerprint", "--computation", key.computation]);
+        const output = f.path.join(f.root, "identity.json");
+        yield* f.run(["fingerprint", "--computation", key.computation, "--output", output]);
+        expect(yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodeIdentity))).toEqual(identity);
+        expect(yield* consoleText).toContain('"cache-live-identity/v1"');
+        expect(yield* consoleText).toContain("Fingerprint recorded for @beep/fixture#lint");
+        expect(yield* f.run(["fingerprint", "--computation", "@beep/unknown#lint"]).pipe(Effect.isFailure)).toBe(true);
+        expect(
+          yield* Effect.acquireUseRelease(
+            Effect.sync(() => vi.spyOn(Bun, "write").mockRejectedValue(new Error("fixture write failure"))),
+            () => f.run(["fingerprint", "--computation", key.computation, "--output", output]).pipe(Effect.isFailure),
+            (spy) => Effect.sync(() => spy.mockRestore())
+          )
+        ).toBe(true);
+        expect(yield* errorText).toContain("Unknown computation.");
+        expect(yield* errorText).toContain("Failed to write");
+      })
+    );
+  });
 
-  it.effect("rejects malformed, missing, escaping and invalid UTF-8 requests before calling an operation", () =>
-    Effect.gen(function* () {
-      const f = yield* fixture();
-      const bad = f.path.join(f.root, "bad.json");
-      yield* f.fs.writeFileString(bad, "{}");
-      for (const command of ["baseline", "transition", "activation", "synthetic", "pilot"]) {
-        expect(yield* f.run([command, "--request", bad]).pipe(Effect.isFailure)).toBe(true);
-      }
-      yield* f.fs.writeFile(bad, new Uint8Array([255]));
-      expect(yield* f.run(["activation", "--request", bad]).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* errorText).toContain("not valid UTF-8");
-      expect(
-        yield* f.run(["activation", "--request", f.path.join(f.root, "missing.json")]).pipe(Effect.isFailure)
-      ).toBe(true);
-      expect(yield* f.run(["activation", "--request", "/outside-request.json"]).pipe(Effect.isFailure)).toBe(true);
-      expect(f.calls).toEqual([]);
-    }).pipe(provideScopedLayer(testLayer))
-  );
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("rejects malformed, missing, escaping and invalid UTF-8 requests before calling an operation", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const bad = f.path.join(f.root, "bad.json");
+        yield* f.fs.writeFileString(bad, "{}");
+        for (const command of ["baseline", "transition", "activation", "synthetic", "pilot"]) {
+          expect(yield* f.run([command, "--request", bad]).pipe(Effect.isFailure)).toBe(true);
+        }
+        yield* f.fs.writeFile(bad, new Uint8Array([255]));
+        expect(yield* f.run(["activation", "--request", bad]).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* errorText).toContain("not valid UTF-8");
+        expect(
+          yield* f.run(["activation", "--request", f.path.join(f.root, "missing.json")]).pipe(Effect.isFailure)
+        ).toBe(true);
+        expect(yield* f.run(["activation", "--request", "/outside-request.json"]).pipe(Effect.isFailure)).toBe(true);
+        expect(f.calls).toEqual([]);
+      })
+    );
+  });
 });
