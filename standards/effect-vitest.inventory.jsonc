@@ -9734,174 +9734,6 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:100:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
-      "line": 100,
-      "endLine": 100,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:a06814bff315cffd5bbe1cc09bed2b516691bab3bf4c9f23c5e64ed678e3a8b3",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:111:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
-      "line": 111,
-      "endLine": 111,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:04a8018e09bddbfe0a88b824bbe22f459ffe80a56e079fa369dcd91d0c049169",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:132:provideScopedLayer@8#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
-      "line": 132,
-      "endLine": 138,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:9956f06dec13c63784e839a2074836c1271c3341ceb48347d11cb7c9cda7e225",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer( ConfigProvider.layer( ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: \"0\", }) ) )",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:157:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
-      "line": 157,
-      "endLine": 157,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:23f2bf52b7fcb9a2208b23861256209c5d8d25e4ada99a7e6af7d615caa46788",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(Layer.merge(PlatformLayer, TestConsole.layer))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:185:provideScopedLayer@8#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
-      "line": 185,
-      "endLine": 191,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:3e179b8a9acf97484a372b646e32a43bcb08d2751aa99f6bad999f9b1437fa0d",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer( ConfigProvider.layer( ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: \"0\", }) ) )",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:202:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
-      "line": 202,
-      "endLine": 202,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:ec2f5105a0d802788dc9c3a95ed2cbe99c33723ce1df36279f0d6bc617cf12a2",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:218:provideScopedLayer@10#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
-      "line": 218,
-      "endLine": 218,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:8fc523b7f9bc8f30b1ac9f479ec97ab84031ce7a7e20a0327c9a31d5bc277ee2",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(services)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:227:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
-      "line": 227,
-      "endLine": 227,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:089f6e4179400a6a392548b6cd364ca4223e27df67ba1ebf1839ec6bc9509866",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/tooling/tool/cli/test/research-command.test.ts:117:provideTestLayer@4#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -30833,13 +30665,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:17:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:18:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
-      "line": 17,
-      "endLine": 17,
+      "line": 18,
+      "endLine": 18,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -30851,7 +30683,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native filesystem remains for real scheduler lease publication/link behavior and queue state. Two procfs reading cases use MemoryFileSystem. Native scoped roots are released, proven by lifecycle controls. See research/cli-scheduler-drift-package-proof.json."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts:32:@effect/platform-node@0#1",
