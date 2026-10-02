@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "sourceHead": "6911e7f1f51393031720a0787bf11a023ba94b22",
+  "previousMain": "9e136082a1212b2906cb29c8bd92656b55bf07bb",
+  "currentMain": "6cbe90d5c1a990c26084e7ca97d760d746106bc5",
+  "mergedPr": 1387,
+  "sourceIdentityOnly": true,
+  "citationReferents": {
+    "count": 1748,
+    "present": 1739,
+    "byteIdentical": 1736,
+    "changed": [
+      "apps/professional-desktop/package.json",
+      "docs/README.md",
+      "package.json"
+    ],
+    "absentCount": 9
+  },
+  "directOwners": {
+    "count": 379,
+    "byteIdentical": 378,
+    "changed": ["apps/professional-desktop/src/intake/Intake.atoms.ts"]
+  },
+  "affectedOwner": "intake-vault-status",
+  "currentSourceSemanticReviewPending": true,
+  "privateR54CandidateApproved": false,
+  "dryRoundCredit": false,
+  "independentP3Credit": false,
+  "admissionCredit": false,
+  "ratificationCredit": false,
+  "implementationCredit": false,
+  "campaignCredit": false,
+  "note": "The previous source-pinned reviews remain historical evidence. Raw byte continuity does not establish semantic coverage, census admission or convergence."
+}

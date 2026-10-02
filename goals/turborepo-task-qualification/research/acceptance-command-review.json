@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "cache-command-review-checkpoint/v1",
+  "authority": "manifest-resolution-only",
+  "censusSha256": "7fa6b471817fcbeac2620801c5bbbbce63da80be2311834a273961d7292183ac",
+  "commandGroupsSha256": "5dc214e743ee5110c1757bb8c8ff066e8ac72f2e4c801c176bd6a97827d3e05f",
+  "aliasReviewSha256": "d8f6913ba150e8efbc5ed2684db95ee9a9897988d87ee064dafd532a93c66dff",
+  "population": {
+    "executableNodes": 1970,
+    "exactCommandGroups": 77,
+    "wrapperDefinitions": 1247,
+    "distinctWrapperCommands": 68,
+    "exactAliasReferences": 1213,
+    "resolvedAliasReferences": 1213,
+    "missingAliasDefinitions": 0,
+    "distinctResolvedDefinitions": 56
+  },
+  "resolutionRule": "Only complete commands matching bun run [--if-present] beep:<script> are resolved in their own census workspace. Compound commands and nested interpreters are not inferred.",
+  "retention": "~/.cache/beep/turbo-qualification/evidence/acceptance-development-census",
+  "limits": [
+    "Uses retained development census at 10a1ad3c78, not a final post-main-merge census.",
+    "No command was executed by this review; missing scripts never become executions.",
+    "Semantic inputs, nested interpreter branches and actual external proof remain separate obligations.",
+    "No tuple qualified."
+  ]
+}

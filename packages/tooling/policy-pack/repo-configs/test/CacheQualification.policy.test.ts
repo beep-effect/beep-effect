@@ -18,6 +18,7 @@ import {
   CacheQualificationState,
   CacheQualificationStore,
   CacheReviewDecision,
+  CacheSignedExecutionProfile,
   CacheTaskConfiguration,
   CacheTaskContract,
   cacheLedgerFailures,
@@ -28,7 +29,7 @@ import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -626,3 +627,54 @@ describe("cache governance audit", () => {
     expect(cachePromotionFailures(local, observations)).toEqual([]);
   });
 });
+
+it.effect("keeps signed execution identities distinct and rejects inconsistent activation or tuples", () =>
+  Effect.gen(function* () {
+    assertNone(contract.signedExecution);
+    const execution = CacheSignedExecutionProfile.make({
+      sourceKey: key,
+      sourceConfiguration: digest(101),
+      sourceToolchain: digest(102),
+      activatedConfiguration: digest(103),
+      activationRequest: CacheEvidenceReference.make({ path: "activation.json", sha256: digest(104) }),
+      signedRootConfiguration: CacheEvidenceReference.make({ path: "signed-root.json", sha256: digest(105) }),
+      runtimeKeys: { stable: digest(106), canary: digest(107) },
+    });
+    const signed = CacheTaskContract.make({
+      ...contract,
+      key: CacheQualificationKey.make({ ...key, profile: `${key.profile}-private-loopback-signed-v1` }),
+      signedExecution: O.some(execution),
+    });
+    expect(cachePromotionFailures(signed, [])).toContain("signed-execution-missing-activation");
+    expect(cachePromotionFailures(CacheTaskContract.make({ ...signed, signedExecution: O.none() }), [])).toContain(
+      "signed-execution-missing-profile"
+    );
+    const activation = CacheActivationProjection.make({
+      path: "packages/fixture/turbo.json",
+      before: CacheEvidenceReference.make({ path: "before.json", sha256: digest(108) }),
+      after: CacheEvidenceReference.make({ path: "after.json", sha256: digest(109) }),
+      sourceConfiguration: execution.sourceConfiguration,
+    });
+    const reviewed = CacheTaskContract.make({ ...signed, activation: O.some(activation) });
+    expect(A.filter(cachePromotionFailures(reviewed, []), Str.startsWith("signed-execution-"))).toEqual([]);
+    expect(cachePromotionFailures(CacheTaskContract.make({ ...reviewed, key }), [])).toContain(
+      "signed-execution-tuple-drift"
+    );
+    expect(
+      cachePromotionFailures(
+        CacheTaskContract.make({
+          ...reviewed,
+          activation: O.some(CacheActivationProjection.make({ ...activation, sourceConfiguration: digest(110) })),
+        }),
+        []
+      )
+    ).toContain("signed-execution-source-drift");
+    const encoded = yield* S.encodeEffect(CacheSignedExecutionProfile)(execution);
+    expect(
+      yield* S.decodeUnknownEffect(CacheSignedExecutionProfile)({
+        ...encoded,
+        runtimeKeys: { stable: digest(106) },
+      }).pipe(Effect.isFailure)
+    ).toBe(true);
+  })
+);

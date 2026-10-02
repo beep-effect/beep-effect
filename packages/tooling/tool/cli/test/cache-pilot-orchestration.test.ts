@@ -1,3 +1,5 @@
+import * as NodeBuffer from "node:buffer";
+import * as NodeZlib from "node:zlib";
 import {
   CacheActivationPreview,
   CacheCensusNode,
@@ -15,6 +17,7 @@ import {
   CacheQualificationService,
   CacheRuntimeLinkerSnapshot,
   CacheToolchainSnapshot,
+  runCacheSignedPilotWorker,
 } from "@beep/repo-cli/commands/Cache";
 import * as Census from "@beep/repo-cli/commands/Cache/Cache.census";
 import * as Dependencies from "@beep/repo-cli/commands/Cache/Cache.dependencies";
@@ -45,6 +48,7 @@ import { Crypto, Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
+import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
@@ -54,13 +58,17 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import { Header } from "tar";
 
 const platform = Layer.mergeAll(
   NodeServices.layer,
   NodeCrypto.layer,
+  FetchHttpClient.layer,
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
 );
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
+const RemoteConfigJson = S.fromJsonString(S.Struct({ teamId: S.String }));
+const decodeRemoteConfig = S.decodeUnknownEffect(RemoteConfigJson);
 const PilotReceiptJson = S.fromJsonString(CachePilotReceipt);
 const encodePilotReceiptJson = S.encodeEffect(PilotReceiptJson);
 const decodePilotReceiptJson = S.decodeEffect(PilotReceiptJson);
@@ -294,6 +302,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   );
   vi.spyOn(Evidence, "hashCacheExperimentExecutable").mockReturnValue(Effect.succeed(digest));
   vi.spyOn(Fingerprint, "fingerprintCacheComputation").mockReturnValue(Effect.succeed(source));
+  vi.spyOn(Fingerprint, "projectCacheSignedActivation").mockReturnValue(Effect.succeed(source));
   vi.spyOn(Linker, "collectCacheRuntimeLinker").mockReturnValue(Effect.succeed(requestedLinker));
   vi.spyOn(Linker, "inspectCacheLinkedFile").mockReturnValue(Effect.succeed(linked));
   vi.spyOn(Worktree, "resolveWorktreeContext").mockReturnValue(
@@ -315,6 +324,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       })
     )
   );
+  const http = yield* HttpClient.HttpClient;
   const runtimeKey = `BEEP_CACHE_TOOLCHAIN_DIGEST=${yield* hash(digest)}`;
   const profileMutations: Array<boolean> = [];
   const calls: Array<string> = [];
@@ -341,7 +351,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
           const observeSandbox = Effect.fn("PilotOrchestrationTest.observeSandbox")(function* () {
             expect(command.command).toBe("/usr/bin/bwrap");
             expect(command.options.extendEnv).toBe(false);
-            expect(args).toContain("--unshare-all");
+            expect(args).toContain(command.options.env?.TURBO_API !== undefined ? "--unshare-user" : "--unshare-all");
             const invocation = A.drop(args, O.getOrThrow(A.findFirstIndex(args, Equal.equals("--"))) + 1);
             const mounted = (guest: string): string =>
               O.getOrThrow(O.flatMap(A.findFirstIndex(args, Equal.equals(guest)), (index) => A.get(args, index - 1)));
@@ -374,6 +384,14 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
               ? yield* fs.readFileString(mounted(`${guest}/biome.identity.jsonc`))
               : "absent";
             const profileKey = `BIOME_CONFIG_PATH=${yield* hash(path.join(guest, "biome.identity.jsonc"))}`;
+            const isSignedInvocation = () =>
+              command.options.env?.TURBO_API !== undefined || Str.startsWith("signed-")(label);
+            const cacheObservation = (hit: boolean) => ({
+              status: hit ? "HIT" : "MISS",
+              local: hit && command.options.env?.TURBO_API === undefined,
+              remote: fault === "remote-hit" || (hit && command.options.env?.TURBO_API !== undefined),
+            });
+            const forwardedEnvironment = (id: string) => (profile && observeProfile && id === task ? [profileKey] : []);
             const nativeTask = (id: string, taskHash: string, hit = false, code = 0) => ({
               taskId: id,
               task: "lint",
@@ -383,12 +401,12 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
               inputs: {},
               resolvedTaskDefinition: { ...configuration, passThroughEnv: [] },
               hash: taskHash,
-              cache: { status: hit ? "HIT" : "MISS", local: hit, remote: fault === "remote-hit" },
+              cache: cacheObservation(hit),
               environmentVariables: {
                 configured: fault === "missing-runtime-key" ? [] : [runtimeKey],
-                passthrough: profile && observeProfile && id === task ? [profileKey] : [],
+                passthrough: forwardedEnvironment(id),
               },
-              execution: { exitCode: code },
+              execution: { exitCode: code, startTime: 1, endTime: 2 },
             });
             const observeTask = Effect.fn("PilotOrchestrationTest.observeTask")(function* () {
               calls.push(label);
@@ -406,15 +424,30 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                 const observeExecution = Effect.fn("PilotOrchestrationTest.observeExecution")(function* () {
                   const number = O.getOrElse(MutableHashMap.get(counts, directory), () => 0);
                   MutableHashMap.set(counts, directory, number + 1);
-                  const childExists = yield* fs.exists(path.join(identity, "turbo.json"));
-                  const child = childExists ? yield* fs.readFileString(path.join(identity, "turbo.json")) : "";
-                  const enabled = Str.includes('"cache":true')(child) || !childExists;
+                  const childConfiguration = Effect.fn("PilotOrchestrationTest.childConfiguration")(function* () {
+                    const childExists = yield* fs.exists(path.join(identity, "turbo.json"));
+                    const child = childExists ? yield* fs.readFileString(path.join(identity, "turbo.json")) : "";
+                    const enabled = Str.includes('"cache":true')(child) || !childExists;
+                    return { child, enabled };
+                  });
+                  const { child, enabled } = yield* childConfiguration();
                   const reuse = A.contains(invocation, "--cache=local:rw");
                   const sourceText = yield* fs.readFileString(path.join(identity, "src/index.ts"));
                   const readme = yield* fs.readFileString(path.join(identity, "README.md"));
                   const added = yield* fs.exists(path.join(identity, "src/qualification-shadow.ts"));
                   const env = command.options.env ?? {};
                   const rootConfigBytes = yield* fs.readFileString(mounted(`${guest}/biome.jsonc`));
+                  const signedInputs = Effect.fn("PilotOrchestrationTest.signedInputs")(function* () {
+                    return isSignedInvocation()
+                      ? yield* Effect.forEach(
+                          ["turbo.json", "bun.lock", "package.json", "tsconfig.json"],
+                          (relative) => fs.readFileString(mounted(`${guest}/${relative}`)),
+                          { concurrency: 1 }
+                        )
+                      : [];
+                  });
+                  const signedRootInputs = yield* signedInputs();
+                  const dependencySource = yield* fs.readFileString(path.join(types, "src/index.ts"));
                   const mutation = Str.startsWith("mutation-")(label) && label !== "mutation-root-lint-config";
                   const mutationKey = () => (mutation ? label + (number === 0 ? "before" : "after") : "");
                   const taskHash = Str.slice(
@@ -422,12 +455,41 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                     16
                   )(
                     yield* hash(
-                      `${sourceText}:${readme}:${added}:${rootConfigBytes}:${profileBytes}:${env.BEEP_ESLINT_PROFILE ?? "absent"}:${enabled}:${mutationKey()}`
+                      `${sourceText}:${readme}:${added}:${rootConfigBytes}:${profileBytes}:${env.BEEP_ESLINT_PROFILE ?? "absent"}:${enabled}:${mutationKey()}:${A.join(signedRootInputs, ":")}:${isSignedInvocation() ? child + dependencySource : ""}`
                     )
                   );
                   const cacheFile = `cache/${taskHash}`;
-                  const hit = reuse && (yield* fs.exists(path.join(directory, cacheFile)));
+                  let hit = reuse && (yield* fs.exists(path.join(directory, cacheFile)));
+                  const readRemote = Effect.fn("PilotOrchestrationTest.readRemote")(function* () {
+                    const remoteUrl = env.TURBO_API;
+                    const remoteConfig =
+                      remoteUrl !== undefined
+                        ? yield* fs
+                            .readFileString(path.join(directory, "run/config.json"))
+                            .pipe(Effect.flatMap(decodeRemoteConfig))
+                        : undefined;
+                    const endpoint =
+                      remoteConfig !== undefined
+                        ? `${remoteUrl}/v8/artifacts/${taskHash}?teamId=${remoteConfig.teamId}`
+                        : undefined;
+                    if (endpoint !== undefined && !Str.startsWith("capture-")(label)) {
+                      const response = yield* http.get(endpoint, {
+                        headers: { authorization: `Bearer ${env.TURBO_TOKEN}` },
+                      });
+                      const remoteHit = response.status === 200;
+                      yield* response.arrayBuffer;
+                      return { endpoint, hit: remoteHit };
+                    }
+                    return { endpoint, hit };
+                  });
+                  const remote = yield* readRemote();
+                  hit = remote.hit;
+                  const endpoint = remote.endpoint;
                   const fixtureExitCode = () =>
+                    (Str.startsWith("signed-")(label) &&
+                      ((Str.includes("export const =")(sourceText) &&
+                        !Str.includes("!**/src/index.ts")(rootConfigBytes)) ||
+                        Str.includes("@deprecated qualification dependency control")(dependencySource))) ||
                     label === "failed-source" ||
                     (number === 0 && A.contains(["mutation-root-lint-config", "mutation-dependency-source"], label))
                       ? 1
@@ -457,19 +519,62 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                       directory,
                       "run/runs/run.json",
                       yield* encodeJson({
+                        id: `${label}-${number}`,
                         tasks: fault === "missing-selected" ? dependency : [selected, ...dependency],
                       })
                     );
                     if (fault === "extra-summary") yield* write(directory, "run/runs/extra.json", "{}");
                     yield* corruptSource();
-                    const log = Match.value({ fault, guest }).pipe(
-                      Match.when({ fault: "unsafe-log" }, () => "/fixture/private.ts\n"),
-                      Match.when(
-                        { fault: "initial-divergence", guest: "/fixture-other" },
-                        () => "different lint observation\n"
-                      ),
-                      Match.orElse(() => "lint observation\n")
-                    );
+                    const capturedLog = Effect.fn("PilotOrchestrationTest.capturedLog")(function* () {
+                      let log = Match.value({ fault, guest }).pipe(
+                        Match.when({ fault: "unsafe-log" }, () => "/fixture/private.ts\n"),
+                        Match.when(
+                          { fault: "initial-divergence", guest: "/fixture-other" },
+                          () => "different lint observation\n"
+                        ),
+                        Match.orElse(() => "lint observation\n")
+                      );
+                      if (Str.startsWith("capture-")(label)) {
+                        const probe = yield* fs.readFileString(path.join(identity, "capture-probe.ts"));
+                        log = Match.value(label).pipe(
+                          Match.when(
+                            "capture-credential-output",
+                            () => `${O.getOrThrow(O.flatMap(Str.match(/[a-f0-9]{64}/)(probe), A.head))}\n`
+                          ),
+                          Match.when("capture-terminal-control", () => "probe\rhidden\n"),
+                          Match.when("capture-oversized-log", () => `${Str.repeat(65537)("x")}\n`),
+                          Match.orElse(() => "ok\n")
+                        );
+                        if (label === "capture-undeclared-output")
+                          yield* write(directory, "identity-log/undeclared.txt", "probe");
+                      }
+                      return log;
+                    });
+                    const log = yield* capturedLog();
+                    const uploadRemote = Effect.fn("PilotOrchestrationTest.uploadRemote")(function* () {
+                      if (endpoint !== undefined && !hit && exitCode === 0 && !Str.startsWith("capture-")(label)) {
+                        const body = NodeBuffer.Buffer.from(log);
+                        const tar = NodeBuffer.Buffer.alloc(512 + Math.ceil(body.length / 512) * 512 + 1024);
+                        new Header({
+                          path: `${identityDirectory}/.turbo/turbo-lint.log`,
+                          type: "File",
+                          size: body.length,
+                          mode: 0o644,
+                        }).encode(tar);
+                        body.copy(tar, 512);
+                        const response = yield* HttpClientRequest.put(endpoint).pipe(
+                          HttpClientRequest.setHeaders({
+                            authorization: `Bearer ${env.TURBO_TOKEN}`,
+                            "x-artifact-tag": "opaque-fixture-tag",
+                          }),
+                          HttpClientRequest.bodyUint8Array(NodeZlib.zstdCompressSync(tar)),
+                          http.execute
+                        );
+                        expect(response.status).toBe(200);
+                        yield* response.arrayBuffer;
+                      }
+                    });
+                    yield* uploadRemote();
                     if (fault !== "missing-log") yield* write(directory, "identity-log/turbo-lint.log", log);
                     const progress = hit
                       ? "cache hit, replaying logs"
@@ -500,7 +605,29 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                         ),
                     });
             };
+            const observePlan = Effect.fn("PilotOrchestrationTest.observePlan")(function* () {
+              const planned = nativeTask(task, "0123456789abcdef");
+              stdout = yield* encodeJson({
+                tasks: [
+                  label === "policy-refusal-missing-child"
+                    ? {
+                        ...Struct.omit(planned, ["execution"]),
+                        environmentVariables: { configured: [], passthrough: [] },
+                      }
+                    : planned,
+                ],
+              });
+            });
             const observeInvocation = Effect.fn("PilotOrchestrationTest.observeInvocation")(function* () {
+              if (invocation[0] === "/tools/bun" && A.contains(invocation, "-e")) {
+                stdout = yield* encodeJson({
+                  protectedFiles: 2,
+                  readsDenied: true,
+                  writesDenied: true,
+                  writerEnvironmentHidden: true,
+                });
+                return;
+              }
               if (invocation[0] === "/usr/bin/ldd") {
                 observeLinker();
                 return;
@@ -514,7 +641,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                 return;
               }
               if (A.contains(invocation, "--dry=json")) {
-                stdout = yield* encodeJson({ tasks: [nativeTask(task, "0123456789abcdef")] });
+                yield* observePlan();
                 return;
               }
               yield* observeTask();
@@ -555,12 +682,66 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.provideService(CacheQualificationService, service)
     );
-  return { root, fs, path, run, request, calls, preview, sourceRoots, profileMutations };
+  const runSigned = (changed = request, interfaces = "lo", issuer: O.Option<string> = O.none()) =>
+    runCacheSignedPilotWorker(root, changed, issuer).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      Effect.provideService(CacheQualificationService, service),
+      Effect.provideService(FileSystem.FileSystem, {
+        ...fs,
+        readFileString: (file, encoding) =>
+          file === "/proc/net/dev"
+            ? Effect.succeed(`header\nheader\n${interfaces}: 0\n`)
+            : fs.readFileString(file, encoding),
+      })
+    );
+  return { root, fs, path, run, runSigned, request, calls, preview, sourceRoots, profileMutations };
 });
 
 afterEach(() => vi.restoreAllMocks());
 
 it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process boundary", (it) => {
+  it.effect("runs signed capture controls and isolated comparisons through the process boundary", () =>
+    Effect.gen(function* () {
+      const { runSigned } = yield* fixture("none", linker, true);
+      const receipt = yield* runSigned();
+      expect(receipt.captureControls).toHaveLength(4);
+      expect(receipt.freshPairs).toHaveLength(3);
+      expect(receipt.pairs).toHaveLength(3);
+      expect(receipt.shadows).toHaveLength(10);
+      expect(receipt.mutations).toHaveLength(7);
+    })
+  );
+  it.effect("rejects issuer material under either mounted source before native execution", () =>
+    Effect.gen(function* () {
+      const { runSigned, sourceRoots, calls, path } = yield* fixture("none", linker, true);
+      for (const source of sourceRoots) {
+        const result = yield* runSigned(undefined, "lo", O.some(path.join(source, ".private", "issuer.key"))).pipe(
+          Effect.result
+        );
+        result.pipe(Result.isFailure, assertTrue);
+        if (Result.isFailure(result))
+          expect(result.failure.message).toBe("Issuer material must remain outside every signed pilot input mount.");
+      }
+      expect(calls).toHaveLength(0);
+    })
+  );
+  it.effect("rejects signed work outside the private network before any native process", () =>
+    Effect.gen(function* () {
+      const { runSigned, calls } = yield* fixture("none", linker, true);
+      (yield* runSigned(undefined, "eth0").pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+      expect(calls).toHaveLength(0);
+    })
+  );
+  it.effect("rejects partial signed selection before any native process", () =>
+    Effect.gen(function* () {
+      const { runSigned, request, calls } = yield* fixture("none", linker, true);
+      (yield* runSigned(CachePilotRequest.make({ ...request, selection: "controls" })).pipe(Effect.result)).pipe(
+        Result.isFailure,
+        assertTrue
+      );
+      expect(calls).toHaveLength(0);
+    })
+  );
   it.effect("regenerates mounted profile bytes for root mutations and retains fixed selection", () =>
     Effect.gen(function* () {
       const { run, profileMutations } = yield* fixture("none", linker, true);

@@ -89,6 +89,30 @@ export class CachePilotLogInput extends S.Class<CachePilotLogInput>($I`CachePilo
 ) {}
 
 /**
+ * Grouped native output from the explicitly signed pilot profile.
+ *
+ * **Details**
+ * This parsing input permits remote replay without widening the offline
+ * pilot's local receipt or asserting that a remote hit was authorized.
+ *
+ * **Example** (Describe signed replay text)
+ * ```ts
+ * import { CacheSignedPilotLogInput } from "@beep/repo-cli/commands/Cache"
+ * console.assert("origin" in CacheSignedPilotLogInput.fields)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CacheSignedPilotLogInput extends S.Class<CacheSignedPilotLogInput>($I`CacheSignedPilotLogInput`)(
+  { ...CachePilotLogInput.fields, origin: LiteralKit(["fresh", "remote-hit"]) },
+  $I.annote("CacheSignedPilotLogInput", {
+    description:
+      "Bounded grouped task streams for the separate signed profile; no local receipt or qualification authority.",
+  })
+) {}
+
+/**
  * A selected task's native cache and execution facts.
  *
  * **Example** (Inspect the execution verdict)
@@ -147,6 +171,29 @@ export const CachePilotOutcome = S.TaggedUnion({
 export type CachePilotOutcome = typeof CachePilotOutcome.Type;
 
 /**
+ * Same-host native timestamps for the selected task's execution interval.
+ *
+ * **Details**
+ * Missing timing cannot prove concurrency. Receipt validation requires positive
+ * duration and a positive intersection between independent fresh executions.
+ *
+ * **Example** (Inspect native task timing)
+ * ```ts
+ * import { CachePilotExecutionInterval } from "@beep/repo-cli/commands/Cache"
+ * console.assert(CachePilotExecutionInterval.make({ startTime: 100, endTime: 200 }).endTime === 200)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CachePilotExecutionInterval extends S.Class<CachePilotExecutionInterval>($I`CachePilotExecutionInterval`)(
+  { startTime: S.Natural, endTime: S.Natural },
+  $I.annote("CachePilotExecutionInterval", {
+    description: "Native selected-task timestamps in same-host milliseconds; parent process timing is not evidence.",
+  })
+) {}
+
+/**
  * A local real-pilot execution with separate graph and task observations.
  *
  * **Example** (Inspect the non-execution boundary)
@@ -167,6 +214,9 @@ export class CachePilotRun extends S.Class<CachePilotRun>($I`CachePilotRun`)(
     cacheEnabled: S.Boolean,
     graphExitCode: S.Int,
     outcome: CachePilotOutcome,
+    selectedTaskInterval: S.OptionFromOptionalKey(CachePilotExecutionInterval).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     dependencies: S.Array(CachePilotTask),
     summarySha256: Sha256Hex,
     sourceTreeUnchanged: S.Boolean,

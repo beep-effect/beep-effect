@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "cache-signed-development-checkpoint/v1",
+  "authority": "Development observation only; no qualification or operational acceptance.",
+  "receiptSchema": "cache-pilot-signed/v7",
+  "receiptSha256": "f957f4edf37a3f94cc2aa2ab9f58b9f7be65a4ba7fe69749d2aed721fb1f05ef",
+  "receiptBytes": 189201,
+  "channel": "stable",
+  "client": {
+    "version": "2.11.4",
+    "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+    "namespace": "team_qualification_signed_archive_stable_v7"
+  },
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "counts": {
+    "freshPairs": 3,
+    "baselineRemotePairs": 3,
+    "shadows": 10,
+    "seededMutations": 7,
+    "nonExecutions": 4,
+    "archiveInspectedComparisons": 20
+  },
+  "policyRefusal": "missing-child-config",
+  "verification": {
+    "nativeExitCode": 0,
+    "sourceBindingsMatched": 12,
+    "packageVerification": "Passed before native completion; retained with source snapshot."
+  },
+  "limits": [
+    "Older frozen development profile; final current-profile refresh is required.",
+    "Archive inspection is not the complete native capture-adversary matrix.",
+    "Stable only; exact-canary final qualification remains required.",
+    "Protected complete-bundle acceptance, semantic closure and operational qualification remain incomplete.",
+    "No tuple is qualified."
+  ]
+}

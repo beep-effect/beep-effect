@@ -1,5 +1,20 @@
 # Friction and opportunities
 
+## 2026-10-01: resumed recovery and scheduler readiness
+
+The prior continuation lost the terminal output of the lifetime patch operation.
+Reverse-apply validation confirms the patch is already integrated; the retained
+ratchet log and a fresh scan both report zero introduced findings. A bounded
+operation receipt with exit status and changed-file hashes would have avoided
+reconstructing the outcome from patch state and logs.
+
+PR #1389's completed repo-cli unit job reported a failure in the inherited
+`hard-floors admission below 15 GiB and recovers when memory frees` test:
+`expected +0 to be 1`. The test slept for 100 ms before inspecting the real
+filesystem queue. It now waits for an actual queue entry with the neighboring
+test's bounded polling pattern. The focused regression passes. This is a test
+readiness repair; the hosted replacement and full proof remain required.
+
 ## 2026-09-09: draft PR readiness follow-up
 
 The operator authorized taking PR #1068 through mergeability while keeping it
@@ -2466,3 +2481,509 @@ public field; the private full report retains it and the public report hash
 binds the evidence. No scanner rule or baseline was weakened. A minimal public
 receipt projection that omits redundant runtime-key fields would prevent this
 false-positive publication failure.
+
+## 2026-09-29 — merged PR left a redundant local publish proof
+
+A refreshed GitHub query showed PR #1327 merged at 02:03 UTC while a previously
+queued local publish retry was still proving the closed branch. Its owned
+processes were identified by working directory and log destination, interrupted,
+and observed to exit 130. The pending packet files were copied with digest
+verification to the isolated implementation branch before retirement. Checking
+PR lifecycle again when a queued publish receives admission would prevent this
+wasted proof work and stale publication attempt.
+
+The older local proof failed in the inherited agents-client reconciliation test
+with a 29,750 ms watchdog. Its source matches the current base; an isolated run
+of the complete file passed all 14 tests in 2.86 seconds. This establishes a
+non-reproduction, not a root cause or a waived final gate. No test behavior was
+changed. The merged PR's hosted unit checks passed.
+
+## 2026-09-29: signed pilot must honor the frozen Turbo configuration dialect
+
+The first real signed pilot stopped before its fresh-authority summary was
+written. A bounded child-stderr diagnostic identified Turbo's error:
+`When "futureFlags.globalConfiguration" is enabled, "remoteCache" should be placed inside the "global" key.`
+The introduced overlay put that setting at the top level. A separate isolated
+startup control passed with and without a signing key, ruling out that earlier
+hypothesis. Neither attempt supplies a passing real-pilot pair. Preserve the
+frozen source and select the overlay location from its actual configuration
+flag; validate both dialects before rerunning the real computation. Missing
+summary errors should retain bounded, credential-safe native diagnostics so
+configuration rejection is not obscured by the subsequent directory read.
+
+## 2026-09-29: supervised failures need bounded stage diagnostics
+
+The public signed supervisor successfully produced the stable receipt. A request
+with a deliberately wrong binary pin exited nonzero and emitted no receipt, but
+the public error was only `Signed pilot supervisor failed or exceeded its capture bound.`
+This proves fail-closed output behavior, not which inner rejection fired. Keep
+that limitation explicit. Add a bounded typed failure-stage channel, or verify
+the pin before launching the worker, rather than exposing raw child stderr that
+could contain ephemeral fixture credentials. Do not claim the generic failure
+as stage-specific adversarial acceptance evidence.
+
+## 2026-09-29: protection-probe integration typecheck
+
+The new reader protection probe initially triggered four Effect compiler
+`missedPipeableOpportunity` diagnostics in nested codec and secret-hash calls.
+Using the existing pipeable schema and Redacted forms resolved them. Typechecking
+and all 35 focused tests then passed. The native protection experiment and its
+full package proof remain separately tracked; compilation alone does not prove
+reader confinement.
+
+## 2026-09-29: producer core integration boundaries
+
+Extracting the shared signed-pilot fixture left one stale `pin` test reference;
+the focused suite caught it and it now uses the shared input's client. The first
+source check also rejected the direct Node crypto import. Installed Effect
+Crypto exposes random bytes and digests but not HMAC; the implementation now
+uses standard Web Crypto import/sign/verify behind typed Effect boundaries and
+keeps the imported key non-extractable. No compiler diagnostic was disabled.
+Corrected source checking and all 42 focused tests pass. Durable issuer trust
+and the full package proof remain separate requirements.
+
+## Persistent issuer verification routing
+
+The initial persistence test addition used deprecated `it.scoped`; installed
+Effect/Vitest did not register those six cases. Replacing it with `it.effect`
+and explicit `Effect.scoped` registered all 13 issuer tests, which passed.
+Two nested digest calls triggered the enforced pipeable-form diagnostic; the
+pipeable forms now pass source checking without suppressions.
+
+A later focused fixture command omitted the package's canonical `--bun` runtime
+flag. All 12 Bun HTTP fixture cases failed during server initialization under
+Node (`Cannot read properties of undefined` in address conversion), while the
+other 25 cases passed. This is an invocation error, not evidence of a fixture
+regression. Use `bunx --bun vitest run` for that suite; keep the Node issuer-only
+result and the corrected Bun run separate.
+
+## Actual issuer probe: runtime drift and bounded diagnostics
+
+The first actual-key pilot stopped with the supervisor's generic worker-failure
+message. A temporary diagnostic emitted only matches from an allowlist of known
+source error messages. The child logger used stdout, so inspecting stderr alone
+missed the cause; the corrected classifier identified `The pilot activation
+preview is stale.` The temporary instrumentation was removed.
+
+Comparing a freshly computed activation to the retained activation identified
+changed startup-library hashes and the resulting toolchain digest. Source
+configuration and tool executable pins were unchanged. The new preview is a
+separate artifact; historical receipts keep their old identities. See
+[current host drift](./current-host-runtime-drift.json). A structured, secret-safe
+worker failure code would have avoided repeated diagnostic runs; raw child
+output must not be surfaced to achieve that.
+
+
+The optional issuer-probe integration initially passed an Effect value where
+`Option.match` requires a thunk. Source checking caught that error and the
+related inference fallout; it also required the direct `Effect.asSome` and
+pipeable codec forms. The corrected source check and 51 focused tests pass.
+No diagnostics were suppressed.
+
+### Workflow approval needs an execution checkout without development output
+
+While binding the protected issuer workflow, `git ls-files --others --ignored
+--exclude-standard -- packages scripts` observed 2,086 package-local module
+files, 5,533 build-output files and 355 other ignored files in the development
+checkout. Git-listed source hashes alone cannot establish which ignored files
+module resolution could execute. The observation-only route remains ineligible
+for qualification. A dedicated frozen workflow checkout with explicit dependency
+bindings and rejection of executable overrides prevents development caches from
+silently becoming part of trusted producer execution.
+
+### Pre-commit scanner distinguished public identities from secrets
+
+The saving commit's Gitleaks gate flagged two public runtime SHA-256 fields and
+two synthetic artifact IDs under the generic API-key heuristic. The compact
+reports now call the field `runtimeIdentitySha256`; test constants now say
+`artifactHash`. Values and raw receipt bindings remain unchanged. No secret-scan
+exemption was added. Domain-specific identifier names would have prevented this
+false-positive repair loop.
+
+### Standalone census inspection requires its filesystem service layer
+
+The private frozen-workflow inspection probe failed with `Service not found:
+@beep/repo-utils/FsUtils/FsUtils`. It supplied platform and crypto services but
+omitted the filesystem utility layer consumed by the census. The probe now
+uses the existing `FsUtilsLive` composition. Reusing the complete established
+runner layer setup would have prevented the failed observation; no production
+service or evidence gate was weakened.
+
+### Signed fresh controls confused configured caching with disabled cache I/O
+
+The expanded signed-pilot development control failed at its exact native progress
+boundary. A bounded diagnostic recognized only fixed, approved messages and
+confirmed that `--cache=local:` emitted the native cache-bypass boundary, while
+the new enabled-config comparison expected a cache miss. This is an introduced
+harness mismatch; neither attempt is passing qualification evidence. The fresh
+controls now use normal local caching in newly created, independent directories
+whose cache path must not already exist. Native summaries must still prove fresh
+execution, and exact task output plus persisted replay-log comparisons remain
+mandatory. Testing configured cache state separately from cache I/O mode would
+have prevented the failed run. Final qualification still requires current pins
+and the remaining signed matrix.
+
+### Native interval evidence exposed a decoded-versus-wire boundary mismatch
+
+The first concurrency development run and bounded diagnostic failed after the
+installed-runtime preflight. A small schema-boundary probe reproduced both
+errors: the runner put a decoded `Option` into the encoded native-observation
+shape, and its local/signed narrowing wrappers decoded already constructed
+observations again. The runner now supplies optional raw interval fields only
+at the native decode boundary; subsequent checks use the schema's decoded
+type. Source typechecking and 52 focused tests pass after that correction.
+The native rerun is still pending, so no task-overlap evidence is claimed.
+A boundary test covering nontrivial transformed fields would have exposed
+this before the native attempt; passing plain-field observations did not.
+
+## 2026-10-01: Node fixture shim omitted the server address
+
+While verifying signed archive inspection, all 13 protocol fixture tests failed
+under Node before exercising fixture behavior: `BunHttpServer` read an absent
+`server.hostname`. The same suite passed under real Bun. The repository's
+`vitest.setup.ts` serve adapter returned only port/stop; this Effect version
+requires hostname as well. Returning the already-bound hostname repairs the
+missing adapter property. A Node/Bun fixture parity check during Effect bumps
+would have caught this before the qualification work. Logs remain private in
+`.beep/qualification-signed-capture/`; no runtime failure is waived.
+
+The parity rerun also exposed missing `server.reload` and a shutdown-before-listen
+race. The adapter now retains the active fetch handler, supplies the server
+handle, and memoizes shutdown after listening. All 13 fixture tests pass under
+Node and Bun; root configuration typechecking passes.
+
+
+### Full package proof: unrelated worktree timeout (2026-10-01)
+
+- Work: verify the protocol-root and acceptance implementation snapshot.
+- Evidence: `bun run beep quality package-verify @beep/repo-cli` failed its
+  audit on `test/worktree-fleet.test.ts`, “worktree new calls reference linking
+  after copying files and prints its links”: `Test timed out in 30000ms.`
+  The file was unchanged; 260 test files and 5,086 tests passed.
+- Attribution: suspected environmental timing; an isolated file rerun is in
+  progress. This is not a waived package gate or proof of a source defect.
+- Prevention: retain test-level runtime and scheduling attribution in the
+  package proof summary so unrelated timing failures can be isolated without
+  rerunning every passing test during diagnosis.
+
+Attribution follow-up: the entire unchanged `worktree-fleet.test.ts` file
+passed 36/36 tests in isolation in 9.10 seconds. The timeout did not reproduce;
+no unrelated test/source changes or timeout increase were made. Full final
+package proof remains required.
+
+### Acceptance integration verification friction
+
+- During capture package verification, Biome reported import ordering in
+  `Cache/index.ts` and `src/test/Cache.test-kit.ts`. These introduced issues were
+  fixed in the editable integration worktree while the native proof source
+  stayed frozen. Full integrated package verification is still required.
+- The configuration loader used `decodeUnknownEffect` on typed configuration
+  fields; source checking reported `preferTypedSchemaDecoder`. Switching to
+  `decodeEffect` preserves compile-time validation and passes source checking.
+- Verification launch mistakes named a nonexistent `tsconfig.src.json` and
+  started package Vitest from the root, where its relative test glob matched
+  nothing. Both failures were launch errors, not test passes. Use the actual
+  package `tsconfig.json` and run package Vitest from its workspace directory.
+
+### Complete bundle blocked by generic request bound
+
+The actual `cache accept` CLI smoke failed with “Cannot read the bounded local
+experiment request.” The request initially lay outside the contained checkout;
+relocating it exposed a second cause: the command reused the 64 KiB generic
+request bound, while complete signed bundles require the private store's 8 MiB
+bound. The idle capture worktree carries the scoped command fix. Positive CLI
+proof, negative revocation and package verification must pass before integration.
+A realistic complete-bundle command fixture would have found this earlier than
+helper tests and malformed-request dispatch alone. No bound is removed.
+
+### Signed-profile operational mismatch
+
+A new authenticated-ledger regression exposed that the signed receipt key uses
+`<base-profile>-private-loopback-signed-v1`, while
+`fingerprintCacheComputation` requires equality with the observed base toolchain
+profile. Its rejection is “Computation and observed toolchain use different
+profiles.” Authentication helper success therefore cannot establish real
+operational qualification. Keep this guard; accepting a suffix alone would
+relabel protected lab evidence as ordinary checkout authority. The next design
+step must explicitly model and prove the supported execution environment before
+allowing an operational promotion. The new controlled-identity regression
+separately exercises ledger acceptance, runtime drift and revocation, and also
+asserts the real profile refusal. No live qualified row was written.
+
+### Copied policy source with stale declaration output
+
+After copying the verified policy source into the idle acceptance worktree,
+CLI typechecking reported that `CacheTaskContract.signedExecution` did not
+exist. Runtime tests imported the new source, while TypeScript references read
+old dependency declarations. Rebuilding `@beep/repo-configs` refreshed those
+declarations; codegen reported unchanged output. A source-snapshot transfer
+should explicitly rebuild changed workspace dependencies before consumer
+typechecking, instead of treating copied dependency outputs as current proof.
+
+### Activation evidence missing from protected receipt
+
+While preparing live service wiring, tracing `subjectFailures` to
+`deriveCacheProducerEvidence` showed that activation-bearing contracts require
+per-channel `activation-projection` evidence. The signed v8 report has a source
+fingerprint and request reference, without separate activated/signed
+fingerprints. Approval alone cannot supply runtime evidence for that row.
+The receipt/runner must retain those prepared identities before the verifier
+can consume them. End-to-end fixtures should exercise all mandatory subjects
+of the intended real contract, including activation, earlier in development.
+
+### Qualification receipt test loop: workspace and Option boundaries
+
+While adding measured projection evidence, a combined edit/test shell invocation
+used a repo-relative edit path from the package directory. The edit failed with
+`FileNotFoundError`, but the shell proceeded to run unchanged tests. Separate
+mutations from validation commands and use explicit absolute edit paths.
+
+The new regression also exposed two test-only API mistakes: yielding an Option
+as an Effect and calling `assertSome` without its expected payload. Both fail
+at runtime despite the package test-tsgo command reporting success. Use an
+explicit `Effect.fromOption` boundary when extracting a fixture value, and keep
+runtime focused tests as independent proof. These failures did not produce or
+accept native qualification evidence.
+
+### Direct test-tsconfig probe differs from package gate
+
+A direct `tsgo --noEmit -p test/tsconfig.json` probe from the CLI workspace
+failed with TS6059 across the test tree because the inherited rootDir remains
+`src`. This is an invocation/configuration boundary, not evidence of a new
+service regression. Use the canonical `quality test-tsgo-package` gate and
+retain focused runtime proof; do not repair unrelated test configurations.
+
+### Durable repair admission unavailable in the current session
+
+`beep yeet repair --detach --job-max-runtime "2 hours"` refused because an
+active systemd user manager was unavailable. No fallback started. Continued
+through an explicit attached repair with a retained handle and local log.
+Session startup should verify durable-job availability before scheduling long
+quality work; unavailable detachment is not a source failure or permission
+to restart an already live proof.
+
+### Scoped documentation gate and re-export ownership
+
+After merging main and repairing invalid categories, `bun run docgen:local -- --package @beep/repo-cli` rejected seven re-export declarations in `Cache/index.ts` for missing metadata. The current documentation law says re-export declarations are graph edges rather than separate documentation subjects. Package lint/type checks and the separate package docgen proof pass, so the scoped metadata gate needs attribution before changing documentation. A regression test aligning scoped export inventory with declaration ownership would prevent this contradictory repair guidance. This is a gate discrepancy, not a waiver or qualification receipt.
+
+The discrepancy was traced to `Docgen/internal/JsDocAnalysis.ts`: its dedicated re-export analyzer still required edge metadata. Removed that obsolete subject path and extended the existing graph-edge regression to cover namespace, named and star re-exports plus an undocumented owning declaration. All 83 documentation tests and the scoped CLI docgen check pass. No required owning-declaration gate was waived.
+
+### Public runtime fingerprint mistaken for a credential
+
+Early Yeet publication was rejected by the staged secret scan on `signed-profile-binding-review.json` under `generic-api-key`. The flagged value was the same public SHA-256 toolchain fingerprint already recorded beside it; the review field name included `Key`. Renamed only the authored summary field to `runtimeFingerprintSha256` and retained its original receipt-field mapping. Runtime schemas and source receipts are unchanged. An explicit fingerprint label in authored summaries prevents this ambiguity without disabling or broadening secret-scan exceptions.
+
+### Security gate refresh before native qualification
+
+PR #1389 Security job 110438422401 rejected inherited `basic-ftp@5.3.1` under GHSA-c475-qrg2-pj4r; current main retained that version. The advisory specifies patched 6.2.1. A narrow root override and regenerated lock entry were prepared in an idle sibling, verified by frozen install, consumer resolution/API/listing smoke checks, and the OSV version query (zero known advisories). `@beep/box` quick verification passed. Queued proofs of the old head were cancelled before integrating the update; the completed CLI package audit/docgen remains evidence for its exact earlier snapshot. Native workflow identities must be refreshed after this dependency change.
+
+### 2026-10-01 — New test-policy and complexity gates during signed qualification
+
+The early publish proof for PR #1389 failed `lint:effect-vitest` with 192
+new findings and Fallow audit with 20 introduced complexity findings and three
+introduced clone groups. Reviewing the detector rows and preserving predicate
+expressions while adopting assertion helpers reduced the new test-policy
+findings to 70; all 139 tests across the eleven edited files passed. No inventory
+baseline was expanded. Running these gates before the long proof would have
+exposed the required migrations sooner. Remaining findings require semantic
+review and repair before qualification closeout.
+
+### 2026-10-01 — Operational test overrode deep-sweep timeout policy
+
+PR #1389's Property Laws job failed the operational acceptance test at 30 seconds.
+The test passed an explicit timeout even though the package inherits
+`packageTestTimeout`, which allows five minutes for deep property sweeps. Removing
+the override preserves the normal 30-second limit and uses the existing deep-sweep
+policy. The 400-run floor passes locally in 27.54 seconds including startup.
+A test-policy check for explicit timeouts on floor-scaled properties would catch
+this mismatch before hosted execution. No sample count or assertion was removed.
+
+
+### 2026-10-01 — Remote state refresh reached GraphQL quota
+
+While refreshing PR #1389 before the next structural repair,
+`gh pr view 1389 --json state,headRefOid` failed with
+`GraphQL: API rate limit already exceeded`. No remote state was inferred from
+that failure; local repair continues with the published head unchanged. Shared
+account query budgeting and cached exact-head snapshots would reduce redundant
+status requests while preserving the final fresh closeout requirement.
+
+
+### 2026-10-01 root Schema compiler gate beyond package verification
+
+While publishing the source-health repair, `lint:policy:medium` failed on
+22 `beep(no-inline-schema-compile)` findings in goal-owned Cache source/tests.
+The full package audit and docgen had passed, but did not exercise the root
+Oxlint gate. Evidence: the publication log and prepared ten-file hoist manifest
+under `.beep/qualification-signed-implementation/schema-hoist-repair/`.
+The obsolete publication was deliberately cancelled after the observed failure;
+other owners' scheduler leases were preserved. The repair hoists schema ASTs
+and generated worker codecs without changing policy or adding suppressions.
+Running the applicable root compiler gate before freezing native source bindings
+would have prevented this extra frozen-binding refresh.
+
+### Generated alias drift exposed by root publication proof
+
+The root `lint:tsgo-rules` lane rejected the committed snapshot because
+`vitest.aliases.generated.json` omitted `@beep/dock-react/dock.css`, present in
+canonical `tsconfig.json` paths. Both files match merged main `f05e1a698d`;
+this is inherited generator/projection drift, not an introduced Cache change.
+The exact three-line projection repair passes `bun run beep quality tsgo-rules`.
+A pre-native root alias parity check would have prevented approval preparation
+against a source requiring another input-affecting repair. The queued native
+run was deliberately stopped before execution; its approvals and receipts remain
+historical and require renewal against the repaired committed source. No policy
+waiver or alias-detector baseline change was used.
+
+### 2026-10-02 — Test compiler policy and fresh-worktree prerequisites
+
+The full pre-push proof at `1197295fa73a` passed docgen after the primary
+checkout's dependencies were installed from the merged lockfile, then stopped
+at `quality:lint-policy`. The root `quality test-tsgo` command checks test files
+outside the package's ordinary source check. Its output contained 147 unique
+policy/type diagnostics in this goal's cache tests and fixtures. Package quick
+verification alone had not covered that boundary.
+
+The repair retains the existing assertions, uses pipe forms and typed decoders,
+preserves the signed receipt class getter, and makes fixture indexing explicit.
+An isolated checkout passed the 304-file test compiler check, all 141 tests in
+the 12 affected test files, and the Effect Vitest ratchet with zero introduced
+findings. The complete signed fixture value also matched its prior version.
+The isolated package check initially lacked dependency declaration outputs
+(`TS6305`); building its dependency graph made lint and check pass without a
+source workaround. Run the test compiler gate before full publication and
+build dependency declarations before package verification in a fresh worktree.
+
+### Signed supervisor hides the child failure
+
+The full signed stable workflow at `93a19425da` exited with
+`Signed pilot supervisor failed or exceeded its capture bound`. The supervisor
+captures bounded streams but discards the child diagnostic while cleaning its
+scoped directory. No observation or accepted evidence was produced. An admitted,
+private diagnostic run preserves bounded output with the same namespace and
+mount restrictions; it has no issuing or promotion authority. The first diagnostic
+attempt was stopped because its wrapper lacked quality admission, then relaunched
+through the canonical admission service. A safe structured failure code and local
+bounded diagnostic receipt would avoid duplicating the failed worker invocation.
+
+### Activation fixture formatting changed the fresh lint verdict
+
+The admitted native diagnostic at `93a19425da` showed both isolated identity lint
+runs exit 1 while all dependency lints passed. Direct Biome output identified one
+formatter error in the overlaid `turbo.json`. The preparation recipe had serialized
+the cache-enabled control with expanded arrays, changing more bytes than the
+reviewed boolean flip. Regenerate from the formatted source by changing only the
+selected cache boolean, verify the semantic delta and formatting, and renew every
+hash-bound activation, contract, request and issuer approval. The qualification
+validator correctly rejected the failed fresh computation; its checks remain intact.
+
+### Native protocol selector diagnosis
+
+The full approved formatted-control run reached protocol supervision, then exited without
+issuing an observation. Bounded admitted diagnostics identified an unscoped native request: the
+prepared protocol namespace lacked the `team_` prefix, so Turbo omitted `teamId`; strict fixture
+routing rejected it. The producer and replay hashes matched, but replay was a miss and the
+fallback guard exited 42. A diagnostic with a team-prefixed namespace produced a real remote
+replay and all seven required rejections. This diagnostic is not signed acceptance. Prevent this
+setup failure by validating native selector compatibility before the expensive full matrix.
+Temporary tracing was removed; retain the full-run requirement and provision fresh approval for
+corrected protocol bindings.
+### Signed orchestration coverage and fixture complexity
+
+Hosted Coverage Regression failed at `93a19425da` despite all 5,194 CLI tests
+passing. The missing coverage was the signed orchestrator's process-boundary
+success path and capture rejection edges. New focused tests cover those paths
+without replacing the separately authenticated native matrix. The six-file
+coverage run passed 54 tests and exceeded the affected per-file floors. A root
+Oxlint check then caught an inline schema compiler in the fixture; it was
+hoisted, and node imports were normalized. Fallow identified four newly complex
+fixture functions. Refactor their process, capture and remote-transport concerns
+before publication; do not refresh coverage floors or complexity baselines.
+
+### Strict test policy and new-file coverage attribution
+
+At `77811ec365`, hosted Lint Policy rejected optional-string conditions in the
+signed orchestration fixture. The earlier ordinary test typecheck did not run
+the stricter `quality test-tsgo` contract. Explicit boolean conditions now pass
+that named command. Run that gate when adding test fixtures. Hosted Coverage
+Regression also distinguishes new-file uncovered units from existing per-file
+floors: passing the focused floor checks did not establish the whole ratchet.
+Preserve its nine-file report and cover adapter and rejection paths; do not
+record lower baselines to hide the missing tests.
+
+### Protocol body-read test boundary
+
+A body-limit negative initially supplied Effect's `MaxBodySize` service, but
+the Bun request reader returned HTTP 200 because that reader delegates to the
+native Request body API. The corrected test rejects that reader in a scoped
+double, restores it in a finalizer, and verifies HTTP 400, a rejection event,
+and absence of stored bytes. The independent real oversized-upload test stays
+in place. Inspect the actual platform adapter before assuming a shared service
+controls it. Live HTTP fixture suites use real clocks for progress and cleanup.
+
+### Random test-server port collision
+
+The signed validator's five-file dependent run passed 106 tests but its signed
+orchestration case failed after `EADDRINUSE` on loopback port 39022. The shared
+Bun test shim maps requested port zero to a random port in 30000–49999 before
+calling Node's `listen`; it does not reserve that port. Inspection found no
+remaining listener after the failure. This is test-server setup evidence, not a
+signed-validation mismatch. Retain the failed log and retry the same suite; a
+future shim repair should use OS-assigned ports while preserving Bun's synchronous
+server-address contract and shutdown lifecycle.
+
+### Final proof resource failures — 2026-10-02
+
+At PR #1389 head `fe8ea6109d`, hosted run `37020671503` lost its
+self-hosted runner during Heavy Lint Policy and Coverage Regression. Job
+annotations report "lost communication with the server"; these results do not
+establish source failures. Lint passed its bounded automatic retry. Coverage
+lost its runner again and the recovery workflow queued another attempt.
+Preserve job-specific logs and let the bounded workflow own retries; duplicate
+manual reruns add contention without establishing more evidence.
+
+The local merged-preview full proof passed unit, integration, property,
+coverage, documentation, Fallow and Nix, but deprecated-API ESLint exhausted
+its fixed 8 GiB heap while scanning `packages/tooling/tool`. The completed
+verdict incorrectly suggested the typos checker; the actual log identifies
+`lint:deprecated-apis` and JavaScript heap exhaustion. The unchanged canonical
+`bun run beep lint deprecated-apis --full` retry passed. A cache-disabled shard
+check and final full proof remain necessary. Preserve precise inner-step
+failure attribution and measure cold-shard heap demand before changing source,
+limits or shard boundaries.
+
+A cache-disabled run reproduced the combined shard exhaustion. Separate CLI
+and docgen scans both pass cold under the same 8 GiB cap. Splitting those two
+package roots preserves every TypeScript input, rule and process memory limit.
+The first focused test invocation ran from the repository root and failed two
+existing package-working-directory assertions; rerun through the package's
+canonical test script before attributing those setup failures to the change.
+
+The package test script passes all 72 focused lint tests. Running that suite
+concurrently with the full deprecated-API scan exposed another setup race:
+ESLint discovered a temporary `src/lint-worker-fixture-*` file that the test
+removed before ESLint read it (`ENOENT`). Serialize source-tree-writing tests
+and filesystem scans; retain the failure and rerun after fixture cleanup.
+
+The serialized canonical full deprecated-API scan passed with all 29 shards.
+Both cold package scans, all 72 focused lint tests and the package lint/type
+checks pass. The repair changes only shard boundaries and their test fixture;
+full Yeet and final-head hosted verification remain required.
+
+
+### 2026-10-02 — Final proof identity and runner recovery
+
+- Work: close PR #1389 after the lint-shard repair. Full publication passed
+  at `466ecff`, including the cold merged preview; 55 aggregate lanes passed.
+- Evidence: the aggregate verdict retains pre-commit `fe8ea6109d` in both
+  identity fields. All 39 lane records bind actual `466ecff` and its exact
+  tree; publication and hosted closeout agree. Preserve the original records.
+- Prevention: distinguish invocation context from tested commit explicitly in
+  the aggregate verdict, and validate that relationship during closeout.
+- Hosted Lint and Docgen lost runner communication. The existing bounded
+  recovery reran only the failed jobs (attempts 2 and 3); both passed. No
+  source change or duplicate manual retry was needed.
+- Main subsequently added test isolation in #1402; the clean integration
+  requires final-head proof. A focused test command was initially issued at
+  repo root, where Turbo interpreted file arguments as task names and refused
+  them. Retained that failure and reran from the owning CLI package. Use an
+  explicit package working directory for focused test commands.

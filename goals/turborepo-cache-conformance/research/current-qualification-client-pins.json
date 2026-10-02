@@ -1,0 +1,88 @@
+{
+  "authority": "Exact-tag source and existing pinned-executable review; no runtime conformance credit",
+  "lanes": [
+    {
+      "channel": "stable",
+      "tag": "v2.11.4",
+      "commit": "40c28476951f9498c40555472b799d6a9e6f013d",
+      "client": {
+        "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+        "version": "2.11.4",
+        "namespace": "qualification-patched-local-stable-b410-matrix"
+      },
+      "sources": [
+        {
+          "path": "crates/turborepo-cache/src/signature_authentication.rs",
+          "gitBlob": "c06b1bff6026b9b45ee84fe7753a3fb0f4a52a01",
+          "sha256": "283ad102419ecb272941ffaaaf41a3a85cf2e0e8f6b4b65cba8841ce5e8ba5b0"
+        },
+        {
+          "path": "crates/turborepo-cache/src/http.rs",
+          "gitBlob": "2099341dabe694c6f36d2d49aee7bca7c1e75ee9",
+          "sha256": "e0c21198428a28671fed1c8814b7b022a9aea6f927ac0626fcc755849d8c1cf6"
+        },
+        {
+          "path": "crates/turborepo-api-client/src/lib.rs",
+          "gitBlob": "6186a3e3c1354f543885bcc868308db3b1042b60",
+          "sha256": "5d873dc435418fa1da7aaf6339f80cb1ae78b6cf4e3c67b47f173a33a3f16fce"
+        },
+        {
+          "path": "apps/docs/lib/remote-cache-openapi.json",
+          "gitBlob": "4938812fcc199b66bbbe15c2e9c29fc9c84f5dbe",
+          "sha256": "1080314512226dc48535fe24648fc0abb10c1cd405c1fd74eacfdc95e22d70b8"
+        }
+      ]
+    },
+    {
+      "channel": "canary",
+      "tag": "v2.11.5-canary.2",
+      "commit": "878741db783c1b9d4e325630d8487df44631f373",
+      "client": {
+        "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+        "version": "2.11.5-canary.2",
+        "namespace": "qualification-patched-local-canary-b410-matrix"
+      },
+      "sources": [
+        {
+          "path": "crates/turborepo-cache/src/signature_authentication.rs",
+          "gitBlob": "c06b1bff6026b9b45ee84fe7753a3fb0f4a52a01",
+          "sha256": "283ad102419ecb272941ffaaaf41a3a85cf2e0e8f6b4b65cba8841ce5e8ba5b0"
+        },
+        {
+          "path": "crates/turborepo-cache/src/http.rs",
+          "gitBlob": "dd6086ba31a0fb04d454057a1a3fd551629458d9",
+          "sha256": "0b4eb2fd2cf227f1688d6571c4ee2a0dc64ae8647582d1972f36a8bd6a66eeb2"
+        },
+        {
+          "path": "crates/turborepo-api-client/src/lib.rs",
+          "gitBlob": "6186a3e3c1354f543885bcc868308db3b1042b60",
+          "sha256": "5d873dc435418fa1da7aaf6339f80cb1ae78b6cf4e3c67b47f173a33a3f16fce"
+        },
+        {
+          "path": "apps/docs/lib/remote-cache-openapi.json",
+          "gitBlob": "4938812fcc199b66bbbe15c2e9c29fc9c84f5dbe",
+          "sha256": "1080314512226dc48535fe24648fc0abb10c1cd405c1fd74eacfdc95e22d70b8"
+        }
+      ]
+    }
+  ],
+  "signatureContract": {
+    "algorithm": "HMAC-SHA256",
+    "encoding": "standard base64",
+    "prefix": "artifact-signature:v2",
+    "framing": "Each of prefix, task hash, team id, and body is preceded by its unsigned 64-bit little-endian byte length.",
+    "backendRole": "Preserve opaque tag; do not distribute artifact signing key to backend.",
+    "minimumKeyBytes": 32,
+    "minimumKeyEnforcement": "Client future-flag gated; fixture uses at least 32 random bytes regardless."
+  },
+  "canaryDelta": {
+    "file": "crates/turborepo-cache/src/http.rs",
+    "behavior": "Remote request admission uses outage breaker; repeated eligible failures can suppress later wire calls.",
+    "fixtureConsequence": "Isolate fault cases by client process and record absence of wire calls separately from a 404."
+  },
+  "limits": [
+    "Pinned-client source review does not prove installed-binary behavior.",
+    "No backend has received runtime conformance credit.",
+    "No current-latest registry claim; lanes preserve qualification exact versions."
+  ]
+}

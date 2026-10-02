@@ -10,7 +10,13 @@ import {
   CacheRuntimeLinkerSnapshot,
   CacheToolchainSnapshot,
 } from "@beep/repo-cli/commands/Cache";
-import { fingerprintCacheComputation, joinCacheCensusPlan, projectCacheActivation } from "@beep/repo-cli/test/Cache";
+import {
+  fingerprintCacheComputation,
+  joinCacheCensusPlan,
+  projectCacheActivation,
+  projectCacheSignedActivation,
+  projectCacheSignedRoot,
+} from "@beep/repo-cli/test/Cache";
 import {
   CacheActivationProjection,
   CacheEvidenceReference,
@@ -18,18 +24,20 @@ import {
   CacheTaskConfiguration,
 } from "@beep/repo-configs/cache";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const CensusJsonObject = S.fromJsonString(S.JsonObject);
 
 const workspace = CacheCensusWorkspace.make({
   name: "@beep/fixture",
@@ -57,7 +65,6 @@ const node = (task: string, command: string) => ({
   dependencies: [],
   resolvedTaskDefinition: { ...configuration, passThroughEnv: O.none<ReadonlyArray<string>>() },
 });
-const provideCrypto = provideScopedLayer(NodeCrypto.layer);
 const digest = Sha256Hex.make(Str.padStart(64, "0")("1"));
 const changedDigest = Sha256Hex.make(Str.padStart(64, "0")("2"));
 const key = CacheQualificationKey.make({
@@ -128,34 +135,33 @@ const activationFixture = Effect.fn("CacheCensusTest.activationFixture")(functio
   });
   return { before, after, census, source, activation };
 });
-const encodeJsonObjectJson = S.encodeEffect(S.fromJsonString(S.JsonObject));
+const encodeJsonObjectJson = S.encodeEffect(CensusJsonObject);
 
-describe("reviewed cache activation projection", () => {
-  it.effect("rejects arbitrary replacement task semantics despite a correctly rebound artifact digest", () =>
-    Arbitrary.checkEffect(
-      Arbitrary.schema(CacheTaskConfiguration),
-      (configuration) =>
-        Effect.gen(function* () {
-          const f = yield* activationFixture();
-          const after = yield* encodeJsonObjectJson({
-            extends: ["//"],
-            tasks: { lint: { ...configuration, cache: true } },
-          });
-          const sha256 = yield* hashBytes(new TextEncoder().encode(after));
-          const activation = CacheActivationProjection.make({
-            ...f.activation,
-            after: CacheEvidenceReference.make({ ...f.activation.after, sha256 }),
-          });
-          const result = yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, after).pipe(
-            Effect.result
-          );
-          result.pipe(Result.isFailure, assertTrue);
-          if (Result.isFailure(result))
-            expect(result.failure.message).toBe("Activation may change only the selected task's cache flag.");
-          return true;
-        }).pipe(provideCrypto),
-      fcRuns(50)
-    ).pipe(Effect.map((result) => expect(result._tag).toBe("Passed")))
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("reviewed cache activation projection", (it) => {
+  it.effect.prop(
+    "rejects arbitrary replacement task semantics despite a correctly rebound artifact digest",
+    [CacheTaskConfiguration],
+    ([configuration]) =>
+      Effect.gen(function* () {
+        const f = yield* activationFixture();
+        const after = yield* encodeJsonObjectJson({
+          extends: ["//"],
+          tasks: { lint: { ...configuration, cache: true } },
+        });
+        const sha256 = yield* hashBytes(new TextEncoder().encode(after));
+        const activation = CacheActivationProjection.make({
+          ...f.activation,
+          after: CacheEvidenceReference.make({ ...f.activation.after, sha256 }),
+        });
+        const result = yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, after).pipe(
+          Effect.result
+        );
+        result.pipe(Result.isFailure, assertTrue);
+        if (Result.isFailure(result))
+          expect(result.failure.message).toBe("Activation may change only the selected task's cache flag.");
+        return true;
+      }),
+    { arbitrary: fcRuns(50) }
   );
 
   it.effect(
@@ -178,7 +184,7 @@ describe("reviewed cache activation projection", () => {
           row.path === f.activation.path ? CacheCensusSource.make({ ...row, sha256: f.activation.after.sha256 }) : row
         )
       );
-    }, provideCrypto)
+    })
   );
 
   it.effect(
@@ -202,7 +208,7 @@ describe("reviewed cache activation projection", () => {
         if (Result.isFailure(result))
           expect(result.failure.message).toBe("Activation may change only the selected task's cache flag.");
       }
-    }, provideCrypto)
+    })
   );
 
   it.effect(
@@ -228,17 +234,17 @@ describe("reviewed cache activation projection", () => {
       expect(
         yield* projectCacheActivation(key, changed, toolchain, f.activation, f.before, f.after).pipe(Effect.isFailure)
       ).toBe(true);
-    }, provideCrypto)
+    })
   );
 });
 
-describe("executable cache census", () => {
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("executable cache census", (it) => {
   it.effect(
     "keeps absent and blank scripts as graph-only nodes despite cache defaults",
     Effect.fnUntraced(function* () {
       const rows = yield* joinCacheCensusPlan([workspace], {
         tasks: [node("lint", "biome check ."), node("transit", "<NONEXISTENT>"), node("empty", " ")],
-      }).pipe(provideCrypto);
+      });
       expect(A.length(rows)).toBe(3);
       expect(A.length(A.filter(rows, (row) => O.isSome(row.command)))).toBe(1);
       expect(A.every(rows, (row) => row.configuration.cache)).toBe(true);
@@ -274,7 +280,7 @@ describe("executable cache census", () => {
           tasks: [{ ...rootTask, command: "unreviewed root script" }],
         }).pipe(Effect.isFailure)
       ).toBe(true);
-    }, provideCrypto)
+    })
   );
 
   it.effect(
@@ -288,7 +294,7 @@ describe("executable cache census", () => {
         { tasks: [{ ...lint, command: "biome check . --write" }] },
       ];
       for (const plan of badCases) {
-        expect(yield* joinCacheCensusPlan([workspace], plan).pipe(Effect.isFailure, provideCrypto)).toBe(true);
+        expect(yield* joinCacheCensusPlan([workspace], plan).pipe(Effect.isFailure)).toBe(true);
       }
     })
   );
@@ -297,10 +303,10 @@ describe("executable cache census", () => {
     "binds expanded input contents deterministically and preserves child config overrides",
     Effect.fnUntraced(function* () {
       const lint = node("lint", "biome check .");
-      const baseline = yield* joinCacheCensusPlan([workspace], { tasks: [lint] }).pipe(provideCrypto);
+      const baseline = yield* joinCacheCensusPlan([workspace], { tasks: [lint] });
       const permuted = yield* joinCacheCensusPlan([workspace], {
         tasks: [{ ...lint, inputs: { "src/b.ts": "input-b", "src/a.ts": "input-a" } }],
-      }).pipe(provideCrypto);
+      });
       expect(permuted).toEqual(baseline);
       const changed = yield* joinCacheCensusPlan([workspace], {
         tasks: [
@@ -310,7 +316,7 @@ describe("executable cache census", () => {
             resolvedTaskDefinition: { ...lint.resolvedTaskDefinition, outputs: ["reports/**"], cache: false },
           },
         ],
-      }).pipe(provideCrypto);
+      });
       expect(O.getOrThrow(A.head(changed)).inputsDigest).not.toBe(O.getOrThrow(A.head(baseline)).inputsDigest);
       expect(O.getOrThrow(A.head(changed)).configuration.outputs).toEqual(["reports/**"]);
       expect(O.getOrThrow(A.head(changed)).configuration.cache).toBe(false);
@@ -318,7 +324,7 @@ describe("executable cache census", () => {
   );
 });
 
-describe("computation configuration fingerprint", () => {
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("computation configuration fingerprint", (it) => {
   it.effect(
     "invalidates runtime identity for library bytes, alias targets, loader and selected client linkage",
     Effect.fnUntraced(function* () {
@@ -374,7 +380,7 @@ describe("computation configuration fingerprint", () => {
       expect((yield* fingerprintCacheComputation(key, census, toolchain)).toolchainDigest).not.toBe(
         before.toolchainDigest
       );
-    }, provideCrypto)
+    })
   );
 
   it.effect(
@@ -437,7 +443,7 @@ describe("computation configuration fingerprint", () => {
       );
       expect(absent.configurationDigest).toBe(client.configurationDigest);
       expect(absent.toolchainDigest).not.toBe(client.toolchainDigest);
-    }, provideCrypto)
+    })
   );
 
   it.effect(
@@ -462,7 +468,7 @@ describe("computation configuration fingerprint", () => {
           CacheToolchainSnapshot.make({ ...updated, bun: toolchain.bun })
         ).pipe(Effect.isFailure)
       ).toBe(true);
-    }, provideCrypto)
+    })
   );
 
   it.effect(
@@ -481,7 +487,7 @@ describe("computation configuration fingerprint", () => {
       assertNone(
         O.getOrThrow(A.findFirst(first.configuration.nodes, (row) => row.id === "@beep/fixture#transit")).command
       );
-    }, provideCrypto)
+    })
   );
 
   it.effect(
@@ -523,7 +529,7 @@ describe("computation configuration fingerprint", () => {
       );
       expect(runtime.configurationDigest).toBe(first.configurationDigest);
       expect(runtime.toolchainDigest).not.toBe(first.toolchainDigest);
-    }, provideCrypto)
+    })
   );
 
   it.effect(
@@ -551,6 +557,155 @@ describe("computation configuration fingerprint", () => {
           toolchain
         ).pipe(Effect.isFailure)
       ).toBe(true);
-    }, provideCrypto)
+    })
+  );
+});
+
+describe("signed root projection", () => {
+  it.effect("preserves task and remote settings in legacy and global layouts", () =>
+    Effect.gen(function* () {
+      const source =
+        '{"tasks":{"lint":{"cache":false}},"remoteCache":{"enabled":false,"signature":false,"timeout":42}}';
+      const projected = yield* projectCacheSignedRoot(source);
+      expect(yield* S.decodeEffect(CensusJsonObject)(projected)).toEqual({
+        tasks: { lint: { cache: false } },
+        remoteCache: { enabled: true, signature: true, timeout: 42 },
+      });
+      expect(yield* projectCacheSignedRoot(projected)).toBe(projected);
+      const globalSource =
+        '{/* reviewed */"futureFlags":{"globalConfiguration":true},"tasks":{"lint":{"cache":false}},"global":{"env":["KEEP"],"remoteCache":{"timeout":42}}}';
+      const global = yield* projectCacheSignedRoot(globalSource);
+      expect(yield* S.decodeEffect(CensusJsonObject)(global)).toEqual({
+        futureFlags: { globalConfiguration: true },
+        tasks: { lint: { cache: false } },
+        global: { env: ["KEEP"], remoteCache: { timeout: 42, enabled: true, signature: true } },
+      });
+      expect(yield* projectCacheSignedRoot(global)).toBe(global);
+    })
+  );
+  it.effect("rejects malformed containers before producing an overlay", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        "{",
+        "[]",
+        '{"futureFlags":[]}',
+        '{"remoteCache":false}',
+        '{"futureFlags":{"globalConfiguration":true}}',
+        '{"futureFlags":{"globalConfiguration":true},"global":{"remoteCache":[]}}',
+      ]) {
+        expect((yield* projectCacheSignedRoot(source).pipe(Effect.flip)).message).toBe(
+          "Cannot project the reviewed signed root configuration."
+        );
+      }
+    })
+  );
+});
+
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
+  it.effect("binds signed activation to actual source bytes and real configuration fingerprints", () =>
+    Effect.gen(function* () {
+      const fixture = yield* activationFixture();
+      const rootBefore = '{"remoteCache":{"enabled":false},"tasks":{}}';
+      const rootSha256 = yield* hashBytes(new TextEncoder().encode(rootBefore));
+      const census = CacheCensusReport.make({
+        ...fixture.census,
+        globalConfiguration: { remoteCache: { enabled: false } },
+        sources: A.map(fixture.census.sources, (source) =>
+          source.path === "turbo.json" ? CacheCensusSource.make({ ...source, sha256: rootSha256 }) : source
+        ),
+      });
+      const source = yield* fingerprintCacheComputation(key, census, toolchain);
+      const activation = CacheActivationProjection.make({
+        ...fixture.activation,
+        sourceConfiguration: source.configurationDigest,
+      });
+      const activated = yield* projectCacheActivation(
+        key,
+        census,
+        toolchain,
+        activation,
+        fixture.before,
+        fixture.after
+      );
+      const rootSigned = yield* projectCacheSignedRoot(rootBefore);
+      const signed = yield* projectCacheSignedActivation(
+        key,
+        census,
+        toolchain,
+        activation,
+        fixture.before,
+        fixture.after,
+        rootBefore,
+        rootSigned
+      );
+      expect(signed.key).toEqual(key);
+      expect(signed.configurationDigest).not.toBe(source.configurationDigest);
+      expect(signed.configurationDigest).not.toBe(activated.configurationDigest);
+      expect(signed.toolchainDigest).toBe(source.toolchainDigest);
+      expect(signed.configuration.globalConfiguration).toEqual({ remoteCache: { enabled: true, signature: true } });
+      expect(signed.configuration.nodes).toEqual(activated.configuration.nodes);
+      const projectedCensus = CacheCensusReport.make({
+        ...census,
+        globalConfiguration: signed.configuration.globalConfiguration,
+        sources: signed.configuration.sources,
+        nodes: A.map(census.nodes, (node) =>
+          node.id === key.computation
+            ? CacheCensusNode.make({
+                ...node,
+                configuration: CacheTaskConfiguration.make({ ...node.configuration, cache: true }),
+              })
+            : node
+        ),
+      });
+      expect(yield* fingerprintCacheComputation(key, projectedCensus, toolchain)).toEqual(signed);
+      for (const altered of [
+        `${rootSigned}\n`,
+        '{"remoteCache":{"enabled":true,"signature":true},"tasks":{"lint":{"outputs":["dist/**"]}}}',
+      ])
+        expect(
+          yield* projectCacheSignedActivation(
+            key,
+            census,
+            toolchain,
+            activation,
+            fixture.before,
+            fixture.after,
+            rootBefore,
+            altered
+          ).pipe(Effect.isFailure)
+        ).toBe(true);
+      for (const altered of [
+        CacheCensusReport.make({ ...census, globalConfiguration: {} }),
+        CacheCensusReport.make({ ...census, sources: A.filter(census.sources, (row) => row.path !== "turbo.json") }),
+        CacheCensusReport.make({
+          ...census,
+          sources: A.append(census.sources, CacheCensusSource.make({ path: "turbo.json", sha256: rootSha256 })),
+        }),
+      ])
+        expect(
+          yield* projectCacheSignedActivation(
+            key,
+            altered,
+            toolchain,
+            activation,
+            fixture.before,
+            fixture.after,
+            rootBefore,
+            rootSigned
+          ).pipe(Effect.isFailure)
+        ).toBe(true);
+      expect(
+        yield* projectCacheSignedActivation(
+          key,
+          census,
+          toolchain,
+          activation,
+          fixture.before,
+          fixture.after,
+          `${rootBefore} `,
+          rootSigned
+        ).pipe(Effect.isFailure)
+      ).toBe(true);
+    })
   );
 });

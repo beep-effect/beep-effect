@@ -13,16 +13,18 @@ import {
   proofLedgerPathForCheckout,
   resolveProofLedgerLocation,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { constFalse, constTrue } from "effect/Function";
 import * as Str from "effect/String";
 import type { ProofChangedPackageTripwire, ProofLedgerShape } from "@beep/repo-cli/test/Yeet";
 
+const MemoryLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const NOW = DateTime.makeUnsafe("2026-09-03T12:30:00.000Z");
 
@@ -76,7 +78,7 @@ const inTempRepo = Effect.fn("ProofLedgerTest.inTempRepo")(function* <Value, Fai
 ) {
   const fs = yield* FileSystem.FileSystem;
   return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>
-    Effect.ignore(fs.remove(root, { recursive: true }))
+    fs.remove(root, { recursive: true }).pipe(Effect.orDie)
   );
 });
 
@@ -91,318 +93,340 @@ const withLedger = <Value, Failure, Requirements>(
   }).pipe(Effect.provideServiceEffect(ProofLedger, ProofLedger.make(root, tripwire)));
 
 describe("ProofLedger", () => {
-  it.live("returns no-fact for an empty checkout ledger", () =>
-    inTempRepo((root) =>
-      withLedger(root, (ledger) =>
-        Effect.gen(function* () {
-          const decision = yield* ledger.lookup(input(), NOW);
-          expect(decision).toStrictEqual(ProofReuseMiss.make({ key: "proof-key", reason: "no-fact" }));
-          expect(yield* ledger.malformedRows).toBe(0);
-          expect(yield* ledger.expire(NOW)).toBe(0);
-          expect(yield* ledger.disagreements).toStrictEqual([]);
-        })
-      )
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
-
-  it.live("records a passed fact and returns a reuse hit", () =>
-    inTempRepo((root) =>
-      withLedger(root, (ledger) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          yield* ledger.record(fact());
-
-          const decision = yield* ledger.lookup(input(), NOW);
-          expect(decision).toStrictEqual(
-            ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" })
-          );
-
-          const ledgerPath = yield* proofLedgerPathForCheckout(root);
-          const contents = yield* fs.readFileString(ledgerPath);
-          expect(Str.endsWith("\n")(contents)).toBe(true);
-          expect(A.length(Str.split(contents, "\n"))).toBe(2);
-        })
-      )
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
-
-  it.live("returns prior-failed for the latest exact failed fact", () =>
-    inTempRepo((root) =>
-      withLedger(root, (ledger) =>
-        Effect.gen(function* () {
-          yield* ledger.record(fact());
-          yield* ledger.record(fact({ outcome: "failed", recordedAt: "2026-09-03T12:10:00.000Z" }));
-
-          expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
-            ProofReuseMiss.make({ key: "proof-key", reason: "prior-failed" })
-          );
-        })
-      )
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
-
-  it.live("returns expired and counts logical expiration without rewriting history", () =>
-    inTempRepo((root) =>
-      withLedger(root, (ledger) =>
-        Effect.gen(function* () {
-          yield* ledger.record(fact({ expiresAt: "2026-09-03T12:15:00.000Z" }));
-          expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
-            ProofReuseMiss.make({ key: "proof-key", reason: "expired" })
-          );
-
-          yield* ledger.record(fact({ key: input({ key: "invalid-expiry" }), expiresAt: "not-a-date" }));
-          yield* ledger.record(fact({ key: input({ key: "active" }), expiresAt: "2026-09-03T13:00:00.000Z" }));
-          expect(yield* ledger.expire(NOW)).toBe(2);
-        })
-      )
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
-
-  it.live("classifies epoch, profile, and inconsistent-key misses", () =>
-    inTempRepo((root) =>
-      withLedger(root, (ledger) =>
-        Effect.gen(function* () {
-          yield* ledger.record(fact());
-
-          expect(yield* ledger.lookup(input({ key: "epoch-key", epochDigest: "epoch-2" }), NOW)).toStrictEqual(
-            ProofReuseMiss.make({ key: "epoch-key", reason: "epoch-changed" })
-          );
-          expect(yield* ledger.lookup(input({ key: "profile-key", envProfile: "pr-posture" }), NOW)).toStrictEqual(
-            ProofReuseMiss.make({ key: "profile-key", reason: "profile-mismatch" })
-          );
-          expect(yield* ledger.lookup(input({ key: "inconsistent-key" }), NOW)).toStrictEqual(
-            ProofReuseMiss.make({ key: "inconsistent-key", reason: "no-fact" })
-          );
-          expect(yield* ledger.lookup(input({ key: "new-input", inputDigest: "changed-input" }), NOW)).toStrictEqual(
-            ProofReuseMiss.make({ key: "new-input", reason: "no-fact" })
-          );
-
-          yield* ledger.record(
-            fact({
-              key: input({ commandDigest: "corrupt-command", key: "colliding-key" }),
-            })
-          );
-          expect(yield* ledger.lookup(input({ key: "colliding-key" }), NOW)).toStrictEqual(
-            ProofReuseMiss.make({ key: "colliding-key", reason: "no-fact" })
-          );
-
-          yield* ledger.record(
-            fact({
-              epoch: epoch("stored-epoch"),
-              key: input({ epochDigest: "different-epoch", key: "inconsistent-epoch" }),
-            })
-          );
-          expect(
-            yield* ledger.lookup(input({ epochDigest: "different-epoch", key: "inconsistent-epoch" }), NOW)
-          ).toStrictEqual(ProofReuseMiss.make({ key: "inconsistent-epoch", reason: "no-fact" }));
-
-          yield* ledger.record(
-            fact({
-              key: input({ inputSource: "undeclared", key: "undeclared-fact" }),
-            })
-          );
-          expect(yield* ledger.lookup(input({ key: "undeclared-fact" }), NOW)).toStrictEqual(
-            ProofReuseMiss.make({ key: "undeclared-fact", reason: "no-fact" })
-          );
-        })
-      )
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
-
-  it.live("refuses undeclared inputs and caller-owned changed-package tripwires before reading", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        yield* withLedger(root, (ledger) =>
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("returns no-fact for an empty checkout ledger", () =>
+      inTempRepo((root) =>
+        withLedger(root, (ledger) =>
           Effect.gen(function* () {
-            expect(yield* ledger.lookup(input({ inputSource: "undeclared" }), NOW)).toStrictEqual(
-              ProofReuseMiss.make({ key: "proof-key", reason: "undeclared-inputs" })
+            const decision = yield* ledger.lookup(input(), NOW);
+            expect(decision).toStrictEqual(ProofReuseMiss.make({ key: "proof-key", reason: "no-fact" }));
+            expect(yield* ledger.malformedRows).toBe(0);
+            expect(yield* ledger.expire(NOW)).toBe(0);
+            expect(yield* ledger.disagreements).toStrictEqual([]);
+          })
+        )
+      )
+    );
+  });
+
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("records a passed fact and returns a reuse hit", () =>
+      inTempRepo((root) =>
+        withLedger(root, (ledger) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* ledger.record(fact());
+
+            const decision = yield* ledger.lookup(input(), NOW);
+            expect(decision).toStrictEqual(
+              ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" })
+            );
+
+            const ledgerPath = yield* proofLedgerPathForCheckout(root);
+            const contents = yield* fs.readFileString(ledgerPath);
+            expect(Str.endsWith("\n")(contents)).toBe(true);
+            expect(A.length(Str.split(contents, "\n"))).toBe(2);
+          })
+        )
+      )
+    );
+  });
+
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("returns prior-failed for the latest exact failed fact", () =>
+      inTempRepo((root) =>
+        withLedger(root, (ledger) =>
+          Effect.gen(function* () {
+            yield* ledger.record(fact());
+            yield* ledger.record(fact({ outcome: "failed", recordedAt: "2026-09-03T12:10:00.000Z" }));
+
+            expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
+              ProofReuseMiss.make({ key: "proof-key", reason: "prior-failed" })
             );
           })
-        );
-        yield* withLedger(
-          root,
-          (ledger) =>
-            Effect.gen(function* () {
-              expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
-                ProofReuseMiss.make({ key: "proof-key", reason: "changed-package-tripwire" })
-              );
-            }),
-          () => true
-        );
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
-
-  it.live("decides many keys against one snapshot and appends many rows in one write", () =>
-    inTempRepo((root) =>
-      withLedger(root, (ledger) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          yield* ledger.appendAll([
-            ProofLedgerFactRow.make({ schemaVersion: PROOF_FACT_SCHEMA_VERSION, fact: fact() }),
-            ProofLedgerFactRow.make({
-              schemaVersion: PROOF_FACT_SCHEMA_VERSION,
-              fact: fact({ key: input({ laneId: "quality:check", key: "check-key" }), outcome: "failed" }),
-            }),
-          ]);
-          const contents = yield* fs.readFileString(yield* proofLedgerPathForCheckout(root));
-          expect(A.length(A.filter(Str.split(contents, "\n"), Str.isNonEmpty))).toBe(2);
-
-          const decisions = yield* ledger.lookupAll(
-            [
-              input(),
-              input({ laneId: "quality:check", key: "check-key" }),
-              input({ laneId: "quality:labs", key: "labs-key", inputSource: "undeclared" }),
-              input({ laneId: "quality:lint", key: "lint-key" }),
-            ],
-            NOW
-          );
-          expect(decisions).toStrictEqual([
-            ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" }),
-            ProofReuseMiss.make({ key: "check-key", reason: "prior-failed" }),
-            ProofReuseMiss.make({ key: "labs-key", reason: "undeclared-inputs" }),
-            ProofReuseMiss.make({ key: "lint-key", reason: "no-fact" }),
-          ]);
-          expect(yield* ledger.lookupAll([], NOW)).toStrictEqual([]);
-          const snapshot = yield* ledger.snapshot(NOW);
-          expect(snapshot).toMatchObject({ facts: 2, expiredFacts: 0, malformedRows: 0 });
-          expect(snapshot.shadowRows).toStrictEqual([]);
-          const expired = yield* ledger.snapshot(DateTime.makeUnsafe("2026-12-01T00:00:00.000Z"));
-          expect(expired.expiredFacts).toBe(2);
-          const tripped = yield* withLedger(root, (guarded) => guarded.lookupAll([input()], NOW), constTrue);
-          expect(tripped).toStrictEqual([
-            ProofReuseMiss.make({ key: "proof-key", reason: "changed-package-tripwire" }),
-          ]);
-          yield* ledger.appendAll([]);
-          expect(yield* ledger.facts).toBe(2);
-        })
+        )
       )
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
+  });
 
-  it.live("records shadow rows and returns only hit-versus-failed disagreements", () =>
-    inTempRepo((root) =>
-      withLedger(root, (ledger) =>
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("returns expired and counts logical expiration without rewriting history", () =>
+      inTempRepo((root) =>
+        withLedger(root, (ledger) =>
+          Effect.gen(function* () {
+            yield* ledger.record(fact({ expiresAt: "2026-09-03T12:15:00.000Z" }));
+            expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
+              ProofReuseMiss.make({ key: "proof-key", reason: "expired" })
+            );
+
+            yield* ledger.record(fact({ key: input({ key: "invalid-expiry" }), expiresAt: "not-a-date" }));
+            yield* ledger.record(fact({ key: input({ key: "active" }), expiresAt: "2026-09-03T13:00:00.000Z" }));
+            expect(yield* ledger.expire(NOW)).toBe(2);
+          })
+        )
+      )
+    );
+  });
+
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("classifies epoch, profile, and inconsistent-key misses", () =>
+      inTempRepo((root) =>
+        withLedger(root, (ledger) =>
+          Effect.gen(function* () {
+            yield* ledger.record(fact());
+
+            expect(yield* ledger.lookup(input({ key: "epoch-key", epochDigest: "epoch-2" }), NOW)).toStrictEqual(
+              ProofReuseMiss.make({ key: "epoch-key", reason: "epoch-changed" })
+            );
+            expect(yield* ledger.lookup(input({ key: "profile-key", envProfile: "pr-posture" }), NOW)).toStrictEqual(
+              ProofReuseMiss.make({ key: "profile-key", reason: "profile-mismatch" })
+            );
+            expect(yield* ledger.lookup(input({ key: "inconsistent-key" }), NOW)).toStrictEqual(
+              ProofReuseMiss.make({ key: "inconsistent-key", reason: "no-fact" })
+            );
+            expect(yield* ledger.lookup(input({ key: "new-input", inputDigest: "changed-input" }), NOW)).toStrictEqual(
+              ProofReuseMiss.make({ key: "new-input", reason: "no-fact" })
+            );
+
+            yield* ledger.record(
+              fact({
+                key: input({ commandDigest: "corrupt-command", key: "colliding-key" }),
+              })
+            );
+            expect(yield* ledger.lookup(input({ key: "colliding-key" }), NOW)).toStrictEqual(
+              ProofReuseMiss.make({ key: "colliding-key", reason: "no-fact" })
+            );
+
+            yield* ledger.record(
+              fact({
+                epoch: epoch("stored-epoch"),
+                key: input({ epochDigest: "different-epoch", key: "inconsistent-epoch" }),
+              })
+            );
+            expect(
+              yield* ledger.lookup(input({ epochDigest: "different-epoch", key: "inconsistent-epoch" }), NOW)
+            ).toStrictEqual(ProofReuseMiss.make({ key: "inconsistent-epoch", reason: "no-fact" }));
+
+            yield* ledger.record(
+              fact({
+                key: input({ inputSource: "undeclared", key: "undeclared-fact" }),
+              })
+            );
+            expect(yield* ledger.lookup(input({ key: "undeclared-fact" }), NOW)).toStrictEqual(
+              ProofReuseMiss.make({ key: "undeclared-fact", reason: "no-fact" })
+            );
+          })
+        )
+      )
+    );
+  });
+
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("refuses undeclared inputs and caller-owned changed-package tripwires before reading", () =>
+      inTempRepo((root) =>
         Effect.gen(function* () {
-          const disagreement = ProofLedgerShadowRow.make({
-            schemaVersion: PROOF_FACT_SCHEMA_VERSION,
-            attemptId: "attempt-1",
-            laneId: "quality:coverage",
-            branch: "feat/example",
-            stage: "pre-push",
-            envProfile: "local",
-            decision: ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" }),
-            observed: "failed",
-            durationMs: 1_200,
-            recordedAt: "2026-09-03T12:31:00.000Z",
-          });
-          yield* ledger.recordShadow(disagreement);
-          yield* ledger.recordShadow(
-            ProofLedgerShadowRow.make({
-              schemaVersion: PROOF_FACT_SCHEMA_VERSION,
-              attemptId: "attempt-2",
-              laneId: "quality:coverage",
-              branch: "feat/example",
-              stage: "pre-push",
-              envProfile: "local",
-              decision: ProofReuseHit.make({
-                key: "proof-key",
-                factRecordedAt: "2026-09-03T12:00:00.000Z",
-              }),
-              observed: "passed",
-              durationMs: 1_200,
-              recordedAt: "2026-09-03T12:32:00.000Z",
+          yield* withLedger(root, (ledger) =>
+            Effect.gen(function* () {
+              expect(yield* ledger.lookup(input({ inputSource: "undeclared" }), NOW)).toStrictEqual(
+                ProofReuseMiss.make({ key: "proof-key", reason: "undeclared-inputs" })
+              );
             })
           );
-          yield* ledger.recordShadow(
-            ProofLedgerShadowRow.make({
+          yield* withLedger(
+            root,
+            (ledger) =>
+              Effect.gen(function* () {
+                expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
+                  ProofReuseMiss.make({ key: "proof-key", reason: "changed-package-tripwire" })
+                );
+              }),
+            () => true
+          );
+        })
+      )
+    );
+  });
+
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("decides many keys against one snapshot and appends many rows in one write", () =>
+      inTempRepo((root) =>
+        withLedger(root, (ledger) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* ledger.appendAll([
+              ProofLedgerFactRow.make({ schemaVersion: PROOF_FACT_SCHEMA_VERSION, fact: fact() }),
+              ProofLedgerFactRow.make({
+                schemaVersion: PROOF_FACT_SCHEMA_VERSION,
+                fact: fact({ key: input({ laneId: "quality:check", key: "check-key" }), outcome: "failed" }),
+              }),
+            ]);
+            const contents = yield* fs.readFileString(yield* proofLedgerPathForCheckout(root));
+            expect(A.length(A.filter(Str.split(contents, "\n"), Str.isNonEmpty))).toBe(2);
+
+            const decisions = yield* ledger.lookupAll(
+              [
+                input(),
+                input({ laneId: "quality:check", key: "check-key" }),
+                input({ laneId: "quality:labs", key: "labs-key", inputSource: "undeclared" }),
+                input({ laneId: "quality:lint", key: "lint-key" }),
+              ],
+              NOW
+            );
+            expect(decisions).toStrictEqual([
+              ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" }),
+              ProofReuseMiss.make({ key: "check-key", reason: "prior-failed" }),
+              ProofReuseMiss.make({ key: "labs-key", reason: "undeclared-inputs" }),
+              ProofReuseMiss.make({ key: "lint-key", reason: "no-fact" }),
+            ]);
+            expect(yield* ledger.lookupAll([], NOW)).toStrictEqual([]);
+            const snapshot = yield* ledger.snapshot(NOW);
+            expect(snapshot).toMatchObject({ facts: 2, expiredFacts: 0, malformedRows: 0 });
+            expect(snapshot.shadowRows).toStrictEqual([]);
+            const expired = yield* ledger.snapshot(DateTime.makeUnsafe("2026-12-01T00:00:00.000Z"));
+            expect(expired.expiredFacts).toBe(2);
+            const tripped = yield* withLedger(root, (guarded) => guarded.lookupAll([input()], NOW), constTrue);
+            expect(tripped).toStrictEqual([
+              ProofReuseMiss.make({ key: "proof-key", reason: "changed-package-tripwire" }),
+            ]);
+            yield* ledger.appendAll([]);
+            expect(yield* ledger.facts).toBe(2);
+          })
+        )
+      )
+    );
+  });
+
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("records shadow rows and returns only hit-versus-failed disagreements", () =>
+      inTempRepo((root) =>
+        withLedger(root, (ledger) =>
+          Effect.gen(function* () {
+            const disagreement = ProofLedgerShadowRow.make({
               schemaVersion: PROOF_FACT_SCHEMA_VERSION,
-              attemptId: "attempt-3",
+              attemptId: "attempt-1",
               laneId: "quality:coverage",
               branch: "feat/example",
               stage: "pre-push",
               envProfile: "local",
-              decision: ProofReuseMiss.make({ key: "proof-key", reason: "no-fact" }),
+              decision: ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" }),
               observed: "failed",
               durationMs: 1_200,
-              recordedAt: "2026-09-03T12:33:00.000Z",
-            })
-          );
+              recordedAt: "2026-09-03T12:31:00.000Z",
+            });
+            yield* ledger.recordShadow(disagreement);
+            yield* ledger.recordShadow(
+              ProofLedgerShadowRow.make({
+                schemaVersion: PROOF_FACT_SCHEMA_VERSION,
+                attemptId: "attempt-2",
+                laneId: "quality:coverage",
+                branch: "feat/example",
+                stage: "pre-push",
+                envProfile: "local",
+                decision: ProofReuseHit.make({
+                  key: "proof-key",
+                  factRecordedAt: "2026-09-03T12:00:00.000Z",
+                }),
+                observed: "passed",
+                durationMs: 1_200,
+                recordedAt: "2026-09-03T12:32:00.000Z",
+              })
+            );
+            yield* ledger.recordShadow(
+              ProofLedgerShadowRow.make({
+                schemaVersion: PROOF_FACT_SCHEMA_VERSION,
+                attemptId: "attempt-3",
+                laneId: "quality:coverage",
+                branch: "feat/example",
+                stage: "pre-push",
+                envProfile: "local",
+                decision: ProofReuseMiss.make({ key: "proof-key", reason: "no-fact" }),
+                observed: "failed",
+                durationMs: 1_200,
+                recordedAt: "2026-09-03T12:33:00.000Z",
+              })
+            );
 
-          expect(yield* ledger.disagreements).toStrictEqual([disagreement]);
-        })
+            expect(yield* ledger.disagreements).toStrictEqual([disagreement]);
+          })
+        )
       )
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
+  });
 
-  it.live("counts malformed terminated rows and ignores an unterminated append tail", () =>
-    inTempRepo((root) =>
-      withLedger(root, (ledger) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          yield* ledger.record(fact());
-          const ledgerPath = yield* proofLedgerPathForCheckout(root);
-          yield* fs.writeFileString(ledgerPath, "malformed\n", { flag: "a" });
-          yield* fs.writeFileString(ledgerPath, '{"kind":"shadow"', { flag: "a" });
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("counts malformed terminated rows and ignores an unterminated append tail", () =>
+      inTempRepo((root) =>
+        withLedger(root, (ledger) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* ledger.record(fact());
+            const ledgerPath = yield* proofLedgerPathForCheckout(root);
+            yield* fs.writeFileString(ledgerPath, "malformed\n", { flag: "a" });
+            yield* fs.writeFileString(ledgerPath, '{"kind":"shadow"', { flag: "a" });
 
-          expect(yield* ledger.malformedRows).toBe(1);
-          expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
-            ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" })
-          );
+            expect(yield* ledger.malformedRows).toBe(1);
+            expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
+              ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" })
+            );
 
-          const recoveredFact = fact({
-            key: input({ key: "recovered-key" }),
-            recordedAt: "2026-09-03T12:40:00.000Z",
-          });
-          yield* ledger.record(recoveredFact);
-          expect(yield* ledger.lookup(input({ key: "recovered-key" }), NOW)).toStrictEqual(
-            ProofReuseHit.make({ key: "recovered-key", factRecordedAt: "2026-09-03T12:40:00.000Z" })
-          );
-          expect(yield* ledger.malformedRows).toBe(2);
-        })
+            const recoveredFact = fact({
+              key: input({ key: "recovered-key" }),
+              recordedAt: "2026-09-03T12:40:00.000Z",
+            });
+            yield* ledger.record(recoveredFact);
+            expect(yield* ledger.lookup(input({ key: "recovered-key" }), NOW)).toStrictEqual(
+              ProofReuseHit.make({ key: "recovered-key", factRecordedAt: "2026-09-03T12:40:00.000Z" })
+            );
+            expect(yield* ledger.malformedRows).toBe(2);
+          })
+        )
       )
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
+  });
 
-  it.live("treats a wholly unterminated first row as in-flight rather than malformed", () =>
-    inTempRepo((root) =>
-      withLedger(root, (ledger) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const ledgerPath = yield* proofLedgerPathForCheckout(root);
-          yield* fs.makeDirectory(yield* Effect.map(Path.Path, (path) => path.dirname(ledgerPath)), {
-            recursive: true,
-          });
-          yield* fs.writeFileString(ledgerPath, '{"kind":"fact"');
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("treats a wholly unterminated first row as in-flight rather than malformed", () =>
+      inTempRepo((root) =>
+        withLedger(root, (ledger) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const ledgerPath = yield* proofLedgerPathForCheckout(root);
+            yield* fs.makeDirectory(yield* Effect.map(Path.Path, (path) => path.dirname(ledgerPath)), {
+              recursive: true,
+            });
+            yield* fs.writeFileString(ledgerPath, '{"kind":"fact"');
 
-          expect(yield* ledger.malformedRows).toBe(0);
-          expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
-            ProofReuseMiss.make({ key: "proof-key", reason: "no-fact" })
-          );
-        })
+            expect(yield* ledger.malformedRows).toBe(0);
+            expect(yield* ledger.lookup(input(), NOW)).toStrictEqual(
+              ProofReuseMiss.make({ key: "proof-key", reason: "no-fact" })
+            );
+          })
+        )
       )
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
+  });
 
-  it.live("fails with a typed error when the ledger path is not a readable regular file", () =>
-    inTempRepo((root) =>
-      withLedger(root, (ledger) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const ledgerPath = yield* proofLedgerPathForCheckout(root);
-          yield* fs.makeDirectory(ledgerPath, { recursive: true });
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("fails with a typed error when the ledger path is not a readable regular file", () =>
+      inTempRepo((root) =>
+        withLedger(root, (ledger) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const ledgerPath = yield* proofLedgerPathForCheckout(root);
+            yield* fs.makeDirectory(ledgerPath, { recursive: true });
 
-          const error = yield* ledger.malformedRows.pipe(Effect.flip);
-          expect(error._tag).toBe("YeetCommandError");
-          expect(error.message).toContain("not a readable regular file");
+            const error = yield* ledger.malformedRows.pipe(Effect.flip);
+            expect(error._tag).toBe("YeetCommandError");
+            expect(error.message).toContain("not a readable regular file");
 
-          const appendError = yield* ledger.record(fact()).pipe(Effect.flip);
-          expect(appendError._tag).toBe("YeetCommandError");
-          expect(appendError.message).toContain("not a readable regular file");
-        })
+            const appendError = yield* ledger.record(fact()).pipe(Effect.flip);
+            expect(appendError._tag).toBe("YeetCommandError");
+            expect(appendError.message).toContain("not a readable regular file");
+          })
+        )
       )
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
+  });
 
   // TTC rulings 59–60: the ledger and its fact schema never read a legacy proof store, so no
   // ProofFact can be built from rows that lack per-lane input digests, env profiles, or epochs.
@@ -426,7 +450,7 @@ describe("ProofLedger", () => {
 
   // TTC ruling 71: the ledger's checkout is the owning clone, so every lane cut from one clone
   // appends to and reads one sample, and retiring a lane never deletes it.
-  it.layer(PlatformLayer, { timeout: "30 seconds" })("owning-clone ledger", (it) => {
+  it.layer(MemoryLayer, { timeout: "30 seconds" })("owning-clone ledger", (it) => {
     // A primary clone (a `.git` directory) and linked worktrees laid out the way
     // `git worktree add` writes them: `<lane>/.git` is `gitdir: <clone>/.git/worktrees/<name>`,
     // and that directory's `commondir` is `../..`.

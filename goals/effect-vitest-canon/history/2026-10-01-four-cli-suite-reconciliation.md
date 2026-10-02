@@ -1,0 +1,9 @@
+# Four CLI suite reconciliation, 2026-10-01
+
+Source commit233ab74154327fce48d7f0ab424103b6a355882a migrates cache-census, worktree-fleet-scan, yeet-inbox and residue-reap, and refines the spawn runtime resolver. Preserve all105 original row IDs/evidence:79 findings fixed,3 explicit native-subject exceptions,23 prior-fix/NONE rows unchanged. Two current native import candidate identities are additionally represented as exceptions without rewriting historical occurrences.
+
+Focused applied proof passes all72 cases on Node22.22.3 and Bun1.4.2 (17.50s/9.34s), and applied types pass. The canonical floor-specific lane selects cache-census alone; its14cases pass on both runtimes with400runs/seed20260708. Full repo-cli package verification passes audit618.0s/docgen20.1s on the final committed sources. The preceding checkpoint package proof measured audit615.1s/docgen21.1s. These are observed timings under uncontrolled shared load, not a speedup claim.
+
+Real Fallow audit/health and all fifteen cheap gates pass; the previous resolver complexity failure is acknowledged with the source fix. The ratchet passes introduced0/current2261, preserving actual native service subjects. Eight new missing hook-budget candidates were repaired with explicit30-second layer hooks; body/global timeouts and property floors remain unchanged. Corpus and other private candidates remain unapplied. Full Yeet and exact-head hosted closeout remain distinct pending gates; goal completion is not claimed.
+
+The early publication proof subsequently exited 1 at full `lint:deprecated-apis`: both nested spawn-environment fixture files were missing from the TypeScript project service. All fifteen cheap gates, package audit/docgen and preceding full lanes passed; four later lanes were not run. The fixture project repair and a new canonical full proof remain required.

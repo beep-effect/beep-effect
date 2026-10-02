@@ -1,0 +1,41 @@
+{
+  "authority": "owned-fixture-native-observation-only",
+  "channel": "stable",
+  "client": {
+    "version": "2.11.4",
+    "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+    "namespace": "team_owned_fixture_stable"
+  },
+  "bunSha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+  "nativeCases": 6,
+  "wireEvents": 15,
+  "optionalEvents": {
+    "count": 2,
+    "status": 404,
+    "verdict": "unsupported"
+  },
+  "retention": {
+    "reference": "owned-fixture-isolated-stable",
+    "files": 59,
+    "bytes": 67792,
+    "manifestSha256": "15757fcd3349fa0f0fdad96bb8f4ee983799f56c68b4862325f5ebf8139a4511"
+  },
+  "checks": {
+    "oneNativeTaskPerCase": true,
+    "exactClientVersion": true,
+    "equalTaskHash": true,
+    "remoteHitVerified": true,
+    "equalRestoredOutput": true,
+    "fourFaultsRestoreNoOutput": true,
+    "storedUploadAndReplayDigestsMatch": true,
+    "corruptBodyDigestDiffers": true,
+    "noUnclassifiedRejection": true
+  },
+  "limits": [
+    "Synthetic computation only, one signed pair per client.",
+    "Private integration harness calls the owned fixture; reusable CLI orchestration remains.",
+    "Outer private network and nested process/file mounts are specified by retained invocation source.",
+    "No protected CI workflow, real-pilot qualification, full corpus or cloud backend authority."
+  ],
+  "date": "2026-09-29"
+}

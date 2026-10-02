@@ -20,27 +20,16 @@ type TestResponder = (
   call: number
 ) => Effect.Effect<HttpClientResponse.HttpClientResponse, HttpClientError.HttpClientError>;
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 
 const sha256Hex = (bytes: Uint8Array): Sha256Hex => Sha256Hex.make(Hex.encode(sha256(bytes)));
 
-const withTempModelRoot = <A, E, R>(use: (modelRoot: string, targetPath: string) => Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const modelRoot = yield* fs.makeTempDirectory();
-      return Tuple.make(modelRoot, path.join(modelRoot, "model.safetensors"));
-    }),
-    ([modelRoot, targetPath]) => use(modelRoot, targetPath),
-    ([modelRoot]) =>
-      FileSystem.FileSystem.use((fs) => fs.remove(modelRoot, { force: true, recursive: true }).pipe(Effect.ignore))
-  ).pipe(provideScopedLayer(testLayer));
+const modelFixture = Effect.fn("MatchPersonModelStoreTest.fixture")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const modelRoot = yield* fs.makeTempDirectoryScoped();
+  return { modelRoot, targetPath: path.join(modelRoot, "model.safetensors") };
+});
 
 const makeRecordingClient = Effect.fnUntraced(function* (respond: TestResponder) {
   const calls = yield* Ref.make(0);
@@ -149,148 +138,118 @@ const assertCleanFailure = Effect.fnUntraced(function* (
 });
 
 describe("person-match ranged model acquisition", { concurrent: false }, () => {
-  it("downloads multiple exact ranges and atomically installs the verified artifact", () =>
-    Effect.runPromise(
-      withTempModelRoot((modelRoot, targetPath) =>
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("downloads multiple exact ranges and atomically installs the verified artifact", () =>
+      Effect.gen(function* () {
+        const { modelRoot, targetPath } = yield* modelFixture();
+        const fs = yield* FileSystem.FileSystem;
+        const payload = Uint8Array.of(1, 2, 3, 4, 5, 6);
+        const [client, recordedRequests] = yield* makeRecordingClient((request) =>
+          respondWithPayload(request, payload)
+        );
+
+        yield* runAcquisition(
+          client,
+          modelRoot,
+          targetPath,
+          PosInt.make(payload.byteLength),
+          sha256Hex(payload),
+          PosInt.make(3)
+        );
+
+        expect(A.fromIterable(yield* fs.readFile(targetPath))).toEqual(A.fromIterable(payload));
+        expect(yield* fs.readDirectory(modelRoot)).toEqual(["model.safetensors"]);
+        expect(yield* recordedRequests).toEqual([
+          ["bytes=0-2", "identity"],
+          ["bytes=3-5", "identity"],
+        ]);
+      })
+    );
+
+    it.effect("retries a transport failure before installing the exact bytes once", () =>
+      Effect.gen(function* () {
+        const { modelRoot, targetPath } = yield* modelFixture();
+        const fs = yield* FileSystem.FileSystem;
+        const payload = Uint8Array.of(1, 2, 3, 4, 5, 6);
+        const [client, recordedRequests] = yield* makeRecordingClient((request, call) =>
+          Match.value(call).pipe(
+            Match.when(0, () =>
+              Effect.fail(
+                new HttpClientError.HttpClientError({
+                  reason: new HttpClientError.TransportError({
+                    cause: "fixture transport failure",
+                    request,
+                  }),
+                })
+              )
+            ),
+            Match.orElse(() => respondWithPayload(request, payload))
+          )
+        );
+
+        yield* runAcquisition(
+          client,
+          modelRoot,
+          targetPath,
+          PosInt.make(payload.byteLength),
+          sha256Hex(payload),
+          PosInt.make(3)
+        );
+
+        expect(A.fromIterable(yield* fs.readFile(targetPath))).toEqual(A.fromIterable(payload));
+        expect(yield* recordedRequests).toEqual([
+          ["bytes=0-2", "identity"],
+          ["bytes=0-2", "identity"],
+          ["bytes=3-5", "identity"],
+        ]);
+      })
+    );
+
+    it.effect("restarts a range after a mid-body decode failure without duplicating staged bytes", () =>
+      Effect.gen(function* () {
+        const { modelRoot, targetPath } = yield* modelFixture();
+        const fs = yield* FileSystem.FileSystem;
+        const payload = Uint8Array.of(1, 2, 3, 4, 5, 6);
+        const [client, recordedRequests] = yield* makeRecordingClient((request, call) =>
+          Match.value(call).pipe(
+            Match.when(0, () =>
+              Effect.succeed(makeMidBodyFailureResponse(request, Uint8Array.of(1), payload.byteLength))
+            ),
+            Match.orElse(() => respondWithPayload(request, payload))
+          )
+        );
+
+        yield* runAcquisition(
+          client,
+          modelRoot,
+          targetPath,
+          PosInt.make(payload.byteLength),
+          sha256Hex(payload),
+          PosInt.make(3)
+        );
+
+        expect(A.fromIterable(yield* fs.readFile(targetPath))).toEqual(A.fromIterable(payload));
+        expect(yield* recordedRequests).toEqual([
+          ["bytes=0-2", "identity"],
+          ["bytes=0-2", "identity"],
+          ["bytes=3-5", "identity"],
+        ]);
+      })
+    );
+
+    it.effect.each([
+      ["status", 200, "bytes 0-2/3", "3", undefined, "returned HTTP 200"],
+      ["Content-Range", 206, "bytes 1-3/3", "3", undefined, "invalid Content-Range"],
+      ["Content-Length", 206, "bytes 0-2/3", "4", undefined, "invalid Content-Length"],
+      ["Content-Encoding", 206, "bytes 0-2/3", "3", "gzip", "unsupported Content-Encoding"],
+    ] as const)(
+      "rejects an invalid %s response and removes all staging",
+      ([_label, status, contentRange, length, encoding, message]) =>
         Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const payload = Uint8Array.of(1, 2, 3, 4, 5, 6);
-          const [client, recordedRequests] = yield* makeRecordingClient((request) =>
-            respondWithPayload(request, payload)
-          );
-
-          yield* runAcquisition(
-            client,
-            modelRoot,
-            targetPath,
-            PosInt.make(payload.byteLength),
-            sha256Hex(payload),
-            PosInt.make(3)
-          );
-
-          expect(A.fromIterable(yield* fs.readFile(targetPath))).toEqual(A.fromIterable(payload));
-          expect(yield* fs.readDirectory(modelRoot)).toEqual(["model.safetensors"]);
-          expect(yield* recordedRequests).toEqual([
-            ["bytes=0-2", "identity"],
-            ["bytes=3-5", "identity"],
-          ]);
-        })
-      )
-    ));
-
-  it("retries a transport failure before installing the exact bytes once", () =>
-    Effect.runPromise(
-      withTempModelRoot((modelRoot, targetPath) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const payload = Uint8Array.of(1, 2, 3, 4, 5, 6);
-          const [client, recordedRequests] = yield* makeRecordingClient((request, call) =>
-            Match.value(call).pipe(
-              Match.when(0, () =>
-                Effect.fail(
-                  new HttpClientError.HttpClientError({
-                    reason: new HttpClientError.TransportError({
-                      cause: "fixture transport failure",
-                      request,
-                    }),
-                  })
-                )
-              ),
-              Match.orElse(() => respondWithPayload(request, payload))
-            )
-          );
-
-          yield* runAcquisition(
-            client,
-            modelRoot,
-            targetPath,
-            PosInt.make(payload.byteLength),
-            sha256Hex(payload),
-            PosInt.make(3)
-          );
-
-          expect(A.fromIterable(yield* fs.readFile(targetPath))).toEqual(A.fromIterable(payload));
-          expect(yield* recordedRequests).toEqual([
-            ["bytes=0-2", "identity"],
-            ["bytes=0-2", "identity"],
-            ["bytes=3-5", "identity"],
-          ]);
-        })
-      )
-    ));
-
-  it("restarts a range after a mid-body decode failure without duplicating staged bytes", () =>
-    Effect.runPromise(
-      withTempModelRoot((modelRoot, targetPath) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const payload = Uint8Array.of(1, 2, 3, 4, 5, 6);
-          const [client, recordedRequests] = yield* makeRecordingClient((request, call) =>
-            Match.value(call).pipe(
-              Match.when(0, () =>
-                Effect.succeed(makeMidBodyFailureResponse(request, Uint8Array.of(1), payload.byteLength))
-              ),
-              Match.orElse(() => respondWithPayload(request, payload))
-            )
-          );
-
-          yield* runAcquisition(
-            client,
-            modelRoot,
-            targetPath,
-            PosInt.make(payload.byteLength),
-            sha256Hex(payload),
-            PosInt.make(3)
-          );
-
-          expect(A.fromIterable(yield* fs.readFile(targetPath))).toEqual(A.fromIterable(payload));
-          expect(yield* recordedRequests).toEqual([
-            ["bytes=0-2", "identity"],
-            ["bytes=0-2", "identity"],
-            ["bytes=3-5", "identity"],
-          ]);
-        })
-      )
-    ));
-
-  it.each([
-    ["status", 200, "bytes 0-2/3", "3", undefined, "returned HTTP 200"],
-    ["Content-Range", 206, "bytes 1-3/3", "3", undefined, "invalid Content-Range"],
-    ["Content-Length", 206, "bytes 0-2/3", "4", undefined, "invalid Content-Length"],
-    ["Content-Encoding", 206, "bytes 0-2/3", "3", "gzip", "unsupported Content-Encoding"],
-  ])(
-    "rejects an invalid %s response and removes all staging",
-    (_label, status, contentRange, length, encoding, message) =>
-      Effect.runPromise(
-        withTempModelRoot((modelRoot, targetPath) =>
-          Effect.gen(function* () {
-            const payload = Uint8Array.of(1, 2, 3);
-            const [client, recordedRequests] = yield* makeRecordingClient((request) =>
-              Effect.succeed(makeResponse(request, payload, status, contentRange, length, encoding))
-            );
-            yield* assertCleanFailure(
-              client,
-              modelRoot,
-              targetPath,
-              PosInt.make(payload.byteLength),
-              sha256Hex(payload),
-              PosInt.make(3),
-              message
-            );
-            expect(A.length(yield* recordedRequests)).toBe(1);
-          })
-        )
-      )
-  );
-
-  it("rejects an oversized range body and removes all staging", () =>
-    Effect.runPromise(
-      withTempModelRoot((modelRoot, targetPath) =>
-        Effect.gen(function* () {
+          const { modelRoot, targetPath } = yield* modelFixture();
           const payload = Uint8Array.of(1, 2, 3);
-          const oversized = Uint8Array.of(1, 2, 3, 4);
           const [client, recordedRequests] = yield* makeRecordingClient((request) =>
-            Effect.succeed(makeResponse(request, oversized, 206, "bytes 0-2/3"))
+            Effect.succeed(makeResponse(request, payload, status, contentRange, length, encoding))
           );
           yield* assertCleanFailure(
             client,
@@ -299,56 +258,73 @@ describe("person-match ranged model acquisition", { concurrent: false }, () => {
             PosInt.make(payload.byteLength),
             sha256Hex(payload),
             PosInt.make(3),
-            "exceeded its 3-byte ceiling"
+            message
           );
           expect(A.length(yield* recordedRequests)).toBe(1);
         })
-      )
-    ));
+    );
 
-  it("rejects a short range body and removes all staging", () =>
-    Effect.runPromise(
-      withTempModelRoot((modelRoot, targetPath) =>
-        Effect.gen(function* () {
-          const payload = Uint8Array.of(1, 2, 3);
-          const short = Uint8Array.of(1, 2);
-          const [client, recordedRequests] = yield* makeRecordingClient((request) =>
-            Effect.succeed(makeResponse(request, short, 206, "bytes 0-2/3"))
-          );
-          yield* assertCleanFailure(
-            client,
-            modelRoot,
-            targetPath,
-            PosInt.make(payload.byteLength),
-            sha256Hex(payload),
-            PosInt.make(3),
-            "ended after 2 bytes; expected 3"
-          );
-          expect(A.length(yield* recordedRequests)).toBe(1);
-        })
-      )
-    ));
+    it.effect("rejects an oversized range body and removes all staging", () =>
+      Effect.gen(function* () {
+        const { modelRoot, targetPath } = yield* modelFixture();
+        const payload = Uint8Array.of(1, 2, 3);
+        const oversized = Uint8Array.of(1, 2, 3, 4);
+        const [client, recordedRequests] = yield* makeRecordingClient((request) =>
+          Effect.succeed(makeResponse(request, oversized, 206, "bytes 0-2/3"))
+        );
+        yield* assertCleanFailure(
+          client,
+          modelRoot,
+          targetPath,
+          PosInt.make(payload.byteLength),
+          sha256Hex(payload),
+          PosInt.make(3),
+          "exceeded its 3-byte ceiling"
+        );
+        expect(A.length(yield* recordedRequests)).toBe(1);
+      })
+    );
 
-  it("rejects a final SHA mismatch before installation and removes all staging", () =>
-    Effect.runPromise(
-      withTempModelRoot((modelRoot, targetPath) =>
-        Effect.gen(function* () {
-          const payload = Uint8Array.of(1, 2, 3, 4, 5, 6);
-          const otherPayload = Uint8Array.of(6, 5, 4, 3, 2, 1);
-          const [client, recordedRequests] = yield* makeRecordingClient((request) =>
-            respondWithPayload(request, payload)
-          );
-          yield* assertCleanFailure(
-            client,
-            modelRoot,
-            targetPath,
-            PosInt.make(payload.byteLength),
-            sha256Hex(otherPayload),
-            PosInt.make(3),
-            "failed integrity validation"
-          );
-          expect(A.length(yield* recordedRequests)).toBe(2);
-        })
-      )
-    ));
+    it.effect("rejects a short range body and removes all staging", () =>
+      Effect.gen(function* () {
+        const { modelRoot, targetPath } = yield* modelFixture();
+        const payload = Uint8Array.of(1, 2, 3);
+        const short = Uint8Array.of(1, 2);
+        const [client, recordedRequests] = yield* makeRecordingClient((request) =>
+          Effect.succeed(makeResponse(request, short, 206, "bytes 0-2/3"))
+        );
+        yield* assertCleanFailure(
+          client,
+          modelRoot,
+          targetPath,
+          PosInt.make(payload.byteLength),
+          sha256Hex(payload),
+          PosInt.make(3),
+          "ended after 2 bytes; expected 3"
+        );
+        expect(A.length(yield* recordedRequests)).toBe(1);
+      })
+    );
+
+    it.effect("rejects a final SHA mismatch before installation and removes all staging", () =>
+      Effect.gen(function* () {
+        const { modelRoot, targetPath } = yield* modelFixture();
+        const payload = Uint8Array.of(1, 2, 3, 4, 5, 6);
+        const otherPayload = Uint8Array.of(6, 5, 4, 3, 2, 1);
+        const [client, recordedRequests] = yield* makeRecordingClient((request) =>
+          respondWithPayload(request, payload)
+        );
+        yield* assertCleanFailure(
+          client,
+          modelRoot,
+          targetPath,
+          PosInt.make(payload.byteLength),
+          sha256Hex(otherPayload),
+          PosInt.make(3),
+          "failed integrity validation"
+        );
+        expect(A.length(yield* recordedRequests)).toBe(2);
+      })
+    );
+  });
 });

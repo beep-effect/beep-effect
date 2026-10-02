@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "actual-persistent-issuer-native-checkpoint/v1",
+  "authority": "component-verification-only",
+  "channel": "stable",
+  "client": {
+    "version": "2.11.4",
+    "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+    "namespace": "qualification-patched-local-stable-b410-matrix"
+  },
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "key": {
+    "computation": "@beep/identity#lint",
+    "layer": "turbo-task-result",
+    "profile": "local-linux-x64-bun1.4.2-private-loopback-signed-v1",
+    "epoch": "qualification-v2"
+  },
+  "runtimeIdentitySha256": "200c3c9d70740c2bec28815130e9764c34f3c625255ef5e39b9cad5ff8e47807",
+  "toolchainDigest": "200c3c9d70740c2bec28815130e9764c34f3c625255ef5e39b9cad5ff8e47807",
+  "receiptSha256": "45403c068859320674d136e00b48674e2ee4a012548a336075aa656ae9983063",
+  "envelopeSha256": "77319ff23033f53378144c738d2cf09b1933c9a5c2b2bccfdec762eb33b118b8",
+  "pairs": [
+    {
+      "id": 0,
+      "producerOrigin": "fresh",
+      "replayOrigin": "remote-hit",
+      "protection": {
+        "mechanism": "nested-reader-denial/v1",
+        "protectedFiles": 2,
+        "readsDenied": true,
+        "writesDenied": true,
+        "writerEnvironmentHidden": true,
+        "protectedBytesUnchanged": true,
+        "issuerMaterialDenied": true
+      }
+    },
+    {
+      "id": 1,
+      "producerOrigin": "fresh",
+      "replayOrigin": "remote-hit",
+      "protection": {
+        "mechanism": "nested-reader-denial/v1",
+        "protectedFiles": 2,
+        "readsDenied": true,
+        "writesDenied": true,
+        "writerEnvironmentHidden": true,
+        "protectedBytesUnchanged": true,
+        "issuerMaterialDenied": true
+      }
+    },
+    {
+      "id": 2,
+      "producerOrigin": "fresh",
+      "replayOrigin": "remote-hit",
+      "protection": {
+        "mechanism": "nested-reader-denial/v1",
+        "protectedFiles": 2,
+        "readsDenied": true,
+        "writesDenied": true,
+        "writerEnvironmentHidden": true,
+        "protectedBytesUnchanged": true,
+        "issuerMaterialDenied": true
+      }
+    }
+  ],
+  "issuerStorage": {
+    "materialBytes": 96,
+    "persistentKeySelectedBeforeExecution": true,
+    "parentVerifiedBytesUnchanged": true,
+    "keyBytesPassedToWorker": false,
+    "keyPathAddedToMountList": false,
+    "receiptAuthenticated": true,
+    "reopenedVerificationPassed": true,
+    "liveRevocationRejectedVerification": true,
+    "temporaryMaterialRemoved": true
+  },
+  "workflowApproval": "Synthetic test identities only; independently approved live workflow remains required.",
+  "qualificationGranted": false,
+  "exitCode": 0
+}

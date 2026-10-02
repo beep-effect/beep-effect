@@ -2,11 +2,11 @@
   "lastSuccessfulRun": "2026-09-30T08:19:00-05:00",
   "lastSuccessfulPacket": "research/2026-09-30",
   "lastSuccessfulPr": 1358,
-  "lastAttemptedRun": "2026-09-30T08:19:00-05:00",
+  "lastAttemptedRun": "2026-10-02T08:16:00-05:00",
   "lastAttemptedStatus": "partial",
-  "lastAttemptedPacket": "research/2026-09-30",
-  "lastAttemptedPr": 1358,
-  "note": "Draft until human merge of research/2026-09-30 nightly packet (Wednesday catch-up after Sep 28+29 failed automation; ~72h window; no weekly consolidation). Never auto-merge. Partial: X client-not-enrolled. Prior #1308 merged 2026-09-27.",
+  "lastAttemptedPacket": "research/2026-10-02",
+  "lastAttemptedPr": 1403,
+  "note": "Draft until human merge of research/2026-10-02 nightly packet (Friday ~48h window after closed-unmerged #1391; no weekly consolidation). Never auto-merge. Partial: X client-not-enrolled. Do NOT set lastSuccessful* until human merges. Prior successful #1358 merged 2026-10-01.",
   "excludedUnmergedPackets": [
     {
       "date": "2026-08-27",
@@ -23,6 +23,14 @@
       "path": "research/ledger/excluded-packets/2026-09-16.jsonl",
       "claims": 29,
       "reason": "written locally; publisher CloudAgent stuck in creating and cancelled; never opened PR; claims superseded/absorbed by research/2026-09-17"
+    },
+    {
+      "date": "2026-10-01",
+      "pr": 1391,
+      "branch": "research/2026-10-01",
+      "path": "research/ledger/excluded-packets/2026-10-01.jsonl",
+      "claims": 25,
+      "reason": "PR #1391 CLOSED unmerged 2026-10-01 ~3:16 PM CT by kriegcloud (HEAD fc865b76); Security/Repo Sanity fail on inherited GHSA; claims absorbed/re-sourced into research/2026-10-02 where still true"
     }
   ]
 }

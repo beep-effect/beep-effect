@@ -208,6 +208,14 @@
       "reason": "Mixed in-memory state: customEntities and instanceId are already modeled by WinkEngineState, while nlp is the live wink-nlp runtime object."
     },
     {
+      "file": "packages/drivers/xstate/src/StatelyInspector.service.ts",
+      "symbol": "StatelyInspectorShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/xstate",
+      "reason": "Effect service contract: attach and ready are runtime handles (Effect, Scope) and inspectorUrl is the relay address the Stately SDK derives at connect time; the data half (StatelyInspectorConfig) is already an annotated S.Class."
+    },
+    {
       "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
       "symbol": "EdgeVersionSourceColumns",
       "kind": "exported-type-literal",
@@ -901,7 +909,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 44,
+      "line": 45,
       "owner": "@beep/repo-cli",
       "reason": "CI lane regression writes fixed JSON fixture documents through the compact S.fromJsonString(S.Unknown) codec; the codec calls serialize fixtures and assert no schema law, so schema-derived arbitrary coverage does not apply."
     },
@@ -911,7 +919,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 54,
+      "line": 59,
       "owner": "@beep/repo-cli",
       "reason": "Corpus-preservation regression serializes fixed JSON fixtures through the compact S.fromJsonString(S.Unknown) codec; the codec calls build inputs and assert no schema law, so schema-derived arbitrary coverage does not apply."
     },

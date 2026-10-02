@@ -1,8 +1,8 @@
 import { findRepoRoot } from "@beep/repo-utils/Root";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { assert, describe, it } from "@effect/vitest";
+import { assert } from "@effect/vitest";
 import { Config, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -259,7 +259,7 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
   assert.strictEqual(inputs["app-secrets"], appSecrets ? "true" : undefined, jobId);
 };
 
-describe("CI runner security", () => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (it) => {
   it.effect(
     "preserves the requested PR lane when an older checkout has no resource helper",
     Effect.fnUntraced(function* () {
@@ -293,7 +293,7 @@ describe("CI runner security", () => {
         result.stdout.toString(),
         "<run>\n<beep>\n<ci>\n<lane>\n<check>\n<--affected>\n<--base>\n<origin/main>\n<--summarize>\n"
       );
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -326,7 +326,7 @@ describe("CI runner security", () => {
       assert.include(summary, "Sampled used-memory peak GiB");
       assert.notInclude(summary, "private-argument");
       assert.notInclude(result.stdout.toString(), "private-argument");
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -344,7 +344,7 @@ describe("CI runner security", () => {
       );
       assert.strictEqual(result.exitCode, 9);
       assert.include(result.stderr.toString(), "resource measurement unavailable");
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -372,7 +372,7 @@ describe("CI runner security", () => {
         assert.include(result.stderr.toString(), "resource measurement unavailable");
         assert.notInclude(result.stdout.toString(), "### Runner resources:");
       }
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -390,7 +390,7 @@ describe("CI runner security", () => {
       assert.strictEqual(result.exitCode, 9);
       assert.include(result.stderr.toString(), "resource measurement unavailable");
       assert.notInclude(result.stdout.toString(), "### Runner resources:");
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -466,7 +466,7 @@ describe("CI runner security", () => {
       git(["commit", "-m", "mixed"]);
       assert.strictEqual(profile("pull_request").goals_only, "false");
       assert.strictEqual(profile("push").goals_only, "false");
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   // Quality-lane audit D15: the src-tauri crate is compiled (cargo check +
@@ -549,7 +549,7 @@ describe("CI runner security", () => {
       // IPC proof that builds it.
       assert.isBelow(stepIndexByName(steps, "Run desktop IPC stdio proof"), stepIndexByName(steps, "Check Rust crate"));
       assert.isBelow(stepIndexByName(steps, "Check Rust crate"), stepIndexByName(steps, "Lint Rust crate"));
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   // TTC ruling 58: the labs lane gained a Turbo input digest without losing its
@@ -572,7 +572,7 @@ describe("CI runner security", () => {
         "grep -Eq '(^apps/labs/|^\\.github/workflows/check\\.yml$|^(bun\\.lock|package\\.json|turbo\\.json)$)'"
       );
       assert.include(workflowText, "run_lane ci lane labs --summarize");
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   // Release lanes run only on `professional-desktop-v*` tags, so this parse is
@@ -597,7 +597,7 @@ describe("CI runner security", () => {
         () => new Error("Job release-desktop declares no checkout step.")
       );
       assert.isBelow(checkoutIndex, stepIndexByName(steps, install));
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   // Quality-lane audit D13 (revised in PR #1054 review): the workflow gates
@@ -677,7 +677,7 @@ describe("CI runner security", () => {
         workflow.getIn(["jobs", "storybook", "environment"]),
         "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}"
       );
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -693,7 +693,7 @@ describe("CI runner security", () => {
       assert.deepStrictEqual(entries, ["README.md", "teardown-burst-runners.sh"]);
       assert.include(readme, "The manual launch path was retired");
       assert.include(readme, "there is no break-glass launch exception");
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -715,7 +715,7 @@ describe("CI runner security", () => {
       ] as const) {
         assertNoInlineCredentialTuple(name, text);
       }
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -738,7 +738,7 @@ describe("CI runner security", () => {
         assert.strictEqual(exportEnvironment[`BEEP_CI_SECRET_${name}`], `\${{ inputs.${input} }}`, input);
         assert.include(jobEnvScriptText, `"${name}"`, name);
       }
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -749,7 +749,7 @@ describe("CI runner security", () => {
       for (const [jobs, jobId, appSecrets] of yield* turboJobTable(policy)) {
         assertTurboJobSetup(jobs, jobId, appSecrets);
       }
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -784,7 +784,7 @@ describe("CI runner security", () => {
       assert.strictEqual(buildLane.name, "Build");
       assert.strictEqual(buildLane.uses_turbo, "true");
       assert.include(heavyWorkflowText, "check|test-integration|coverage|build)");
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -806,7 +806,7 @@ describe("CI runner security", () => {
       assert.notInclude(workflowText, "typos-cli");
       assert.notInclude(workflowText, "install_typos");
       assert.include(heavyWorkflowText, "typos-cli");
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -844,7 +844,7 @@ describe("CI runner security", () => {
         const result = Bun.spawnSync([process.execPath, scriptPath], {
           cwd: repoRoot,
           env: {
-            ...process.env,
+            ...R.map(process.env, (value, name) => (Str.startsWith("BEEP_CI_SECRET_")(name) ? "" : value)),
             ...secretEnvironment(input.secrets ?? secrets),
             GITHUB_EVENT_NAME: input.eventName,
             GITHUB_REPOSITORY: "beep-effect/beep-effect",
@@ -935,7 +935,7 @@ describe("CI runner security", () => {
       });
       assert.strictEqual(emptySecrets.TURBO_CACHE, "local:rw");
       assert.strictEqual(emptySecrets.DATABASE_URL, "");
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -998,7 +998,7 @@ describe("CI runner security", () => {
       assert.strictEqual(setupMonorepoInputs(checkJobs, "test-unit-shard")["free-disk-min-gib"], "64");
       assert.strictEqual(setupMonorepoInputs(checkJobs, "fallow-advisory")["free-disk"], "true");
       assert.strictEqual(setupMonorepoInputs(heavyJobs, "verify")["free-disk"], "true");
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -1049,7 +1049,7 @@ describe("CI runner security", () => {
         save.with?.key,
         "turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}"
       );
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -1063,7 +1063,7 @@ describe("CI runner security", () => {
       assert.notInclude(workflowText, "vitest.docs");
       assert.include(workflowText, "run_lane ci lane doctest\n");
       assert.notInclude(workflowText, "run_lane ci lane doctest --mode");
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 
   it.effect(
@@ -1077,6 +1077,6 @@ describe("CI runner security", () => {
       assert.notInclude(packageJson, '"doctest":');
       assert.include(packageJson, '"@effect/doctest": "catalog:"');
       assert.isFalse(yield* fs.exists(path.join(repoRoot, "vitest.docs.ts")));
-    }, provideScopedLayer(NodeServices.layer))
+    })
   );
 });

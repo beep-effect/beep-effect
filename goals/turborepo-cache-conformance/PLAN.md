@@ -2,20 +2,22 @@
 
 ## Status
 
-Status: `pending`
-Lifecycle: `paused`
+Status: `active`
+Lifecycle: `active`
 
-Authored but not started. An explicit launch begins P0 and uses
-`bun run beep goals set-status turborepo-cache-conformance active`.
-The user approved the program scope on 2026-09-08; no repeated shape approval
-is needed.
+Launched for the early handoff required by task qualification, under the
+operator's delegated blocker-resolution authority. Work is integrated in
+PR #1327 with one writer for Cache contracts and fixtures. This slice produces
+local signed-boundary evidence; it does not claim whole-packet completion or
+production readiness. Remaining comparison/deployment milestones retain their
+SPEC gates. Prefer local fixtures with no incremental cloud resources.
 
 ## Phases
 
 | Phase | Status | Work | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Pins, corpus and budget plan | pending | Refresh exact releases/licenses, inventory the source contract, agree receipt interfaces and derive the lab deployment plan. | Immutable pins and case mapping; numeric cost/TTL/load bounds precede any deployment. |
-| P1 Local differential runner | pending | Generate baseline cases and add semantic/adversarial fixtures behind Cache. | Spec/stable/canary verdicts remain separate; direct receipts expose fail-soft behavior. |
+| P0 Pins, corpus and budget plan | in-progress | Refresh exact releases/licenses, inventory the source contract, agree receipt interfaces and derive the lab deployment plan. | Immutable pins and case mapping; numeric cost/TTL/load bounds precede any deployment. |
+| P1 Local differential runner | in-progress | Generate baseline cases and add semantic/adversarial fixtures behind Cache. | Spec/stable/canary verdicts remain separate; direct receipts expose fail-soft behavior. |
 | P2 Disposable AWS lab | pending | Review the bounded deployment preview and provision isolated comparison topologies through repo infra. | Scoped lab is healthy, expiring, budgeted, and has a reproducible teardown. |
 | P3 Execute and compare | pending | Run identical cases/load across incumbent, evolved incumbent, Bruno and Ducktors; consume trust fixes and rerun. | Every case is attributed; frozen rubric yields a recommendation or a substantiated no-eligible result. |
 | P4 Verify and tear down | pending | Prove upgrade regeneration, fault reproducibility, artifact retention and lab teardown; hand off signed-boundary receipts. | Package/protocol checks pass, deletion targets are verified, cost and cleanup receipts exist. |
@@ -78,3 +80,117 @@ closeout to an unrelated state-only PR.
 Use SPEC's rollback at the affected boundary. Record the failed gate, remaining
 work and safe resume action. Retain paused state with explicit conditions when
 external evidence/authority is missing; do not label that pause complete.
+
+## Qualification prerequisite: bounded native signed probes
+
+The expanded [stable](research/native-signed-expanded-stable-probe.json) and
+[canary](research/native-signed-expanded-canary-probe.json) probes each exercise
+six native runs and three direct authorization negatives. Native summaries
+confirm an actual remote hit; stored-upload and download digests agree. Missing
+or corrupted tags, corrupted bodies and wrong signing keys restore no output,
+with fallback deliberately denied. Reader PUT, unknown bearer and cross-tenant
+requests are denied without changing server objects. Independent report
+relationship reviews pass. These are private synthetic probes, not the owned
+schema-first runner, protected producer evidence, full corpus, cloud boundary
+proof or three-pair real-pilot qualification. Integrate those remaining gates
+before accepting a signed-boundary handoff.
+
+## Observation-review implementation checkpoint: 2026-09-29
+
+The isolated CLI implementation adds a bounded schema and `cache protocol-review`
+command for producer, replay and four integrity-rejection observations. It checks
+same-client/task identity, distinct cases/request ids/native summaries, accepted
+writer upload, wire/archive relationships and matching native outcomes. It
+retains synthetic observation authority and rejects qualification assertions.
+
+Six focused tests pass. Full `@beep/repo-cli` package verification passes audit
+(776.6 seconds) and docgen (20.2 seconds) after fixing the nonempty-array guard
+narrowing error. The exact six-file snapshot and log digests are recorded in
+[the implementation receipt](./research/protocol-observation-implementation.json).
+This source is still isolated from the integration checkout while its earlier
+full proof runs. It has not been published. Continue with the reusable signed
+runner and importer; do not promote the pilot from this validator.
+
+## Owned fixture component: 2026-09-29
+
+The isolated implementation now includes a scoped Effect/Bun HTTP fixture with
+schema-owned credentials, scenarios and sanitized events. It separates reader
+and writer capabilities, preserves opaque artifact tags, rejects conflicting
+writes atomically, allows identical retries, and bounds requests, body size and
+object count. Missing/invalid tags and corrupt bodies are explicit read faults.
+Optional events and batch routes return labelled unsupported responses.
+
+Sixteen focused tests pass, including transport behavior, storage/capture bounds,
+concurrency, capability separation, optional routes and scope-owned socket
+cleanup. The first full CLI audit passed (683.2 seconds); its docgen phase found
+missing alias docs. Those docs and the guard example are corrected, and the CLI
+package docgen now passes all 1,950 examples. The final package retry passes audit (678.4 seconds) and docgen (21.1 seconds).
+The [nine-file source snapshot](./research/owned-fixture-implementation.json)
+binds that verification. No new source has been integrated or published yet.
+
+The [stable](./research/owned-fixture-stable.json) and
+[canary](./research/owned-fixture-canary.json) native probes each pass six signed
+artifact cases against this owned component. A private harness runs the server
+inside an outer private network namespace and native clients in nested
+user/PID/mount namespaces. Independent review joins native summaries, one-task
+execution, output digests and server exchanges. Both channels retain 59 files
+under four MiB. Initial auxiliary 400 responses were attributed to optional
+analytics routing; the corrected run labels both optional events responses 404,
+with no unclassified rejection. Initial calibration runs remain retained.
+
+The server component is reusable; the native orchestration harness is still
+private. Reusable CLI orchestration, protected receipt/import contracts and real
+lint pilot signed pairs remain incomplete. These are synthetic observations,
+not an accepted qualification transition or a full conformance corpus verdict.
+
+### Expanded read-fault checkpoint — 2026-09-29
+
+The owned scoped fixture now supports truncated artifact bytes and explicit
+429/503 reads without mutating stored objects. Eighteen focused protocol tests
+pass. Both pinned clients separately passed nine native cases in private outer
+network namespaces, with nested reader mounts and denied fallback execution.
+Independent review joined native task hashes, raw summaries and wire events;
+83 files per client were retained with verified digests. See the expanded
+stable/canary receipts. These observations do not establish a reusable CLI
+runner, real-pilot qualification, timeout/reset handling or full RC-023 closure.
+The expanded fixture package audit passed in 665.9 seconds and docgen passed
+in 22.6 seconds. Its verified source snapshot remains distinct from the
+subsequent signed-runner integration.
+
+### Owned CLI execution checkpoint — 2026-09-29
+
+`cache protocol-run` now replaces the private synthetic execution harness for
+new observations. Both exact clients pass all nine cases through this command;
+three invalid requests and an unconfined worker are rejected. Scope cleanup and
+retained report relationships were verified independently. Eighteen focused
+tests pass, including JSON event round trips. Full package verification passed on the integrated runner: audit 653.4 seconds
+and docgen 20.0 seconds. No real-pilot, protected producer, full-corpus
+or qualification acceptance follows from this checkpoint.
+
+## Frozen workflow: stable 2.11.5
+
+The [current stable protocol checkpoint](./research/frozen-workflow-stable-protocol.json)
+passed all nine native fixture cases from the frozen workflow at `3865e09ba3`,
+with 23 bounded wire events. The exact stable binary is 2.11.5; previous 2.11.4
+receipts retain their historical identity. The initial namespace setup failure
+and corrected rerun are attributed in the friction ledger. This is synthetic
+conformance evidence; operational import and real-pilot qualification remain open.
+
+The separate [exact-canary checkpoint](./research/frozen-workflow-canary-protocol.json)
+also passed nine native cases and 23 wire events. Its binary remains
+2.11.5-canary.2 with the previously recorded SHA-256; the version was checked
+outside the workspace to avoid local-version inference. Channel namespaces and
+receipts remain separate.
+
+### Complete worker and supervisor validation
+
+The [complete protocol checkpoint](./research/complete-protocol-validation.json)
+records one shared validator for all six integrity cases and three transport
+failures. Worker and supervisor both invoke it. It joins native exchanges to
+direct wire events, rejects duplicate or altered evidence, and preserves a
+genuine producer miss. The 24 focused tests and source type check pass. Both
+retained native reports pass revalidation after their saved hashes were checked;
+seven edited variants per report fail. Fresh stable 2.11.5 and exact canary 2.11.5-canary.2 executions each pass nine
+native cases with 23 wire events. Full package verification passes: audit 627.0
+seconds, docgen 21.8 seconds. This does not grant qualification or
+replace the remaining authenticated-bundle and operational-import work.

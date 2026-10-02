@@ -1,0 +1,33 @@
+{
+  "package": "@beep/repo-cli",
+  "command": "bun run beep quality package-verify @beep/repo-cli",
+  "exitCode": 0,
+  "auditSeconds": 615.6,
+  "docgenSeconds": 19.3,
+  "sourceSha256": "461cabf602e1e4f06ef1bcf513f923a69fc3c7ab9e582259ee321813d38cae2b",
+  "focusedProof": {
+    "nodePassed": 8,
+    "bunPassed": 8,
+    "numRuns": 400,
+    "seed": 20260708
+  },
+  "scope": "Applied cache-dispatch package proof and reviewed ledger/baseline reconciliation. Full publication proof and whole-goal acceptance remain pending.",
+  "sourceCommit": "c7a8f9026047094938657409fc1afaeceb6fba39",
+  "ledgerCounts": {
+    "fixed": 7,
+    "exception": 1,
+    "preserveHistoricalNone": 4,
+    "preserveEarlierFixed": 1
+  },
+  "strictLedgerValidation": {
+    "rows": 4588,
+    "exitCode": 0
+  },
+  "detectorGate": {
+    "exitCode": 0,
+    "files": 1216,
+    "findings": 2017,
+    "introduced": 0,
+    "resolved": 0
+  }
+}

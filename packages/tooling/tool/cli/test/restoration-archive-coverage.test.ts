@@ -1,26 +1,26 @@
 import {
   ArchiveLedgerRecord,
   CollectorManifestRecord,
+  CorpusCommandService,
   CorpusCommandServiceLive,
   preserveRestorationArchive,
   RestorationPreserveOptions,
 } from "@beep/repo-cli/commands/Corpus";
 import { restorationArchiveTesting as RA, withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
 import { Sha256Hex } from "@beep/schema";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from "effect";
+import { ByteSize, Context, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-const provideTestLayer = provideScopedLayer(NodeServices.layer);
-const provideCorpusLayer = provideScopedLayer(CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const corpusLayer = CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer));
 const collectorManifestJson = S.fromJsonString(CollectorManifestRecord);
 
 type ArchiveLedgerRace = "append-current" | "append-existing" | "append-type" | "repair-current" | "repair-opened";
@@ -69,10 +69,10 @@ const preserveOptions = (
   });
 
 describe("restoration archive boundary helpers", () => {
-  it.effect(
-    "fails closed for canonical type, containment, crash, and prefix mismatches",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "fails closed for canonical type, containment, crash, and prefix mismatches",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-archive-boundaries-" });
@@ -108,16 +108,14 @@ describe("restoration archive boundary helpers", () => {
         expect(yield* RA.prefixMatches(source, short, 6, 2)).toBe(false);
         expect(yield* RA.maybeCrash("none", "after-copy")).toBeUndefined();
         (yield* RA.maybeCrash("after-rename", "after-rename").pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "rejects overlapping canonical inputs and invalid collector destinations",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "rejects overlapping canonical inputs and invalid collector destinations",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-canonical-overlap-" });
@@ -215,16 +213,14 @@ describe("restoration archive boundary helpers", () => {
           Exit.isFailure,
           assertTrue
         );
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "derives stable inventory and writer-coordination identities",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "derives stable inventory and writer-coordination identities",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-archive-identity-" });
         const info = yield* fs.stat(root);
@@ -257,16 +253,14 @@ describe("restoration archive boundary helpers", () => {
         const reapClaim = RA.writerReapClaimPath("/tmp/claim", "observed");
         expect(reapClaim).toContain(".reap-");
         expect(RA.writerReapClaimTombstonePath(reapClaim, "observed")).toContain(".claim.reap-");
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "rejects unsupported inventories and contradictory denominators",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "rejects unsupported inventories and contradictory denominators",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-inventory-coverage-" });
@@ -370,16 +364,14 @@ describe("restoration archive boundary helpers", () => {
           { kind: "present", recordedSize: 1, relativePath: "same.bin" },
           { kind: "mutated", recordedSize: 2, relativePath: "same.bin" },
         ]).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "rejects an absent recycle tree that reappears before preservation",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(corpusLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "rejects an absent recycle tree that reappears before preservation",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-absent-tree-" });
@@ -404,16 +396,14 @@ describe("restoration archive boundary helpers", () => {
           expectedSourceTreeBytes: S.Natural.make("source".length),
         });
         (yield* preserveRestorationArchive(options).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
-      },
-      Effect.scoped,
-      provideCorpusLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "rejects collector destinations that appear only after inventory capture",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "rejects collector destinations that appear only after inventory capture",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-late-collector-file-" });
@@ -454,20 +444,22 @@ describe("restoration archive boundary helpers", () => {
         const layer = CorpusCommandServiceLive.pipe(
           Layer.provide(Layer.merge(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, lateFileSystem)))
         );
-        (yield* preserveRestorationArchive(options).pipe(provideScopedLayer(layer), Effect.exit)).pipe(
-          Exit.isFailure,
-          assertTrue
-        );
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+        (yield* preserveRestorationArchive(options).pipe(
+          Effect.provideServiceEffect(
+            CorpusCommandService,
+            Layer.build(Layer.fresh(layer)).pipe(Effect.map(Context.get(CorpusCommandService)))
+          ),
+          Effect.scoped,
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
+      })
+    );
+  });
 
-  it.effect(
-    "fails closed when archive ledgers drift across repair and append boundaries",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "fails closed when archive ledgers drift across repair and append boundaries",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const runRace = Effect.fn("RestorationArchiveCoverage.runRace")(function* (race: ArchiveLedgerRace) {
@@ -528,10 +520,14 @@ describe("restoration archive boundary helpers", () => {
             expectedRootArchiveBytes: S.Natural.make("archive".length),
             expectedSourceDirectoryCount: S.Natural.make(1),
           });
-          (yield* preserveRestorationArchive(options).pipe(provideScopedLayer(layer), Effect.exit)).pipe(
-            Exit.isFailure,
-            assertTrue
-          );
+          (yield* preserveRestorationArchive(options).pipe(
+            Effect.provideServiceEffect(
+              CorpusCommandService,
+              Layer.build(Layer.fresh(layer)).pipe(Effect.map(Context.get(CorpusCommandService)))
+            ),
+            Effect.scoped,
+            Effect.exit
+          )).pipe(Exit.isFailure, assertTrue);
         });
 
         yield* runRace("repair-opened");
@@ -539,16 +535,14 @@ describe("restoration archive boundary helpers", () => {
         yield* runRace("append-type");
         yield* runRace("append-existing");
         yield* runRace("append-current");
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "stops after the bounded attempts when a source changes after every payload sync",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "stops after the bounded attempts when a source changes after every payload sync",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-bounded-source-race-" });
@@ -602,19 +596,24 @@ describe("restoration archive boundary helpers", () => {
           expectedSourceFileCount: S.Natural.make(1),
           expectedSourceTreeBytes: S.Natural.make("source".length),
         });
-        const outcome = yield* preserveRestorationArchive(options).pipe(provideScopedLayer(layer), Effect.exit);
+        const outcome = yield* preserveRestorationArchive(options).pipe(
+          Effect.provideServiceEffect(
+            CorpusCommandService,
+            Layer.build(Layer.fresh(layer)).pipe(Effect.map(Context.get(CorpusCommandService)))
+          ),
+          Effect.scoped,
+          Effect.exit
+        );
         expect(mutation).toBe(3);
         expect(outcome).toMatchObject({ _tag: "Failure" });
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "reclaims dead writer generations and rejects ambiguous verification artifacts",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "reclaims dead writer generations and rejects ambiguous verification artifacts",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-coordination-coverage-" });
@@ -743,16 +742,14 @@ describe("restoration archive boundary helpers", () => {
         });
         expect(HashMap.size(yield* RA.validateArchiveTerminalIndex(root, [failure], preflight))).toBe(1);
         RA.indexArchiveTerminals([failure, failure, failure]).duplicateObjectId.pipe(O.isSome, assertTrue);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "fails closed when live reclamation generations block stale claim replacement",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "fails closed when live reclamation generations block stale claim replacement",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-coordination-contention-" });
@@ -905,11 +902,9 @@ describe("restoration archive boundary helpers", () => {
         yield* fs.writeFileString(emptySource, "");
         yield* fs.writeFileString(emptyPartial, "");
         expect(yield* RA.prefixMatches(emptySource, emptyPartial, 1, 2)).toBe(false);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
   it.effect(
     "handles empty capacity output and rejects thrown or invalid probes",
@@ -967,10 +962,10 @@ describe("restoration archive boundary helpers", () => {
     })
   );
 
-  it.effect(
-    "rejects changed sources, aliased partials, and opened-copy identity drift",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "rejects changed sources, aliased partials, and opened-copy identity drift",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-copy-identity-" });
@@ -1138,9 +1133,7 @@ describe("restoration archive boundary helpers", () => {
         (yield* RA.promoteAndVerifyArchiveCopy(promoteContext, options, sourceStat, sourceStat, copiedDigest, 0).pipe(
           Effect.exit
         )).pipe(Exit.isFailure, assertTrue);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 });

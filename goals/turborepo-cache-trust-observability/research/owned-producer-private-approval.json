@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "cache-producer-private-approval-checkpoint/v1",
+  "authority": "implementation-controls-only",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "8923f74ed0c7e8de01a356c3ff0fe2f34013d11478fe3f2490af3357da81825e",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "ab2ef411e8add322d15f9c5e1e57636199685dd6fdf33b78e93beecf53fa355d",
+    "packages/tooling/tool/cli/test/cache-producer.test.ts": "91b64f3ee7a57dad9b423548f953bf37e2b38e10819e5633d1652f232ec8b40e"
+  },
+  "behavior": {
+    "provisioning": "Writes owner-only approval.json beside the independently generated issuer material; binding digest is fixed in issuer.key.",
+    "verifier": "Supervisor supplies the store path; no receipt-selected binding or path, no signing method returned.",
+    "perOperation": "Re-read private approval; compare to the opening snapshot; reuse issuer material, revocation and envelope checks.",
+    "legacy": "Missing approval is rejected without reconstructing or provisioning from evidence."
+  },
+  "verification": {
+    "focusedTests": {
+      "files": 3,
+      "passed": 39,
+      "newVerifierTests": 6
+    },
+    "sourceTypeCheck": "passed",
+    "packageVerify": {
+      "package": "@beep/repo-cli",
+      "exitCode": 0,
+      "auditSeconds": 649.6,
+      "docgenSeconds": 39.2
+    },
+    "goalsDoctor": {
+      "packets": 194,
+      "newBlocking": 0,
+      "inheritedBlocking": 0,
+      "advisories": 6
+    }
+  },
+  "negativeCases": [
+    "changed policy approval before opening",
+    "changed approval after opening",
+    "missing approval without recreation",
+    "permissive approval",
+    "symbolic approval alias",
+    "hard-linked approval",
+    "empty approval",
+    "invalid UTF-8",
+    "malformed approval schema",
+    "oversized approval",
+    "different issuer",
+    "revocation"
+  ],
+  "limitations": [
+    "Private host store assumes a trusted same-uid supervisor and must remain outside reader mounts.",
+    "Verifier authenticates only the existing three-pair pilot receipt.",
+    "No accepted policy document registry, conformance/full-matrix bundle, operational promotion importer or real-computation qualification is established.",
+    "Existing native receipts predate this change; no new native workflow run is claimed."
+  ]
+}

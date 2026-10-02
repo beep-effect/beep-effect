@@ -78,3 +78,7 @@ amendment authorizes the necessary change with evidence.
 
 Done only when acceptance passes and verification is complete, or when a
 blocker is reported with file/command evidence.
+
+PR #1388 merged before completion. Benjamin approved one successor PR on
+`codex/boolean-creep-r54-remainder-2026-10-01`. Preserve R54's pending review
+and all remaining gates; verify the exact-source rebind before application.

@@ -501,3 +501,28 @@ below; they are not covered by the earlier checkpoint.
   preserved implementation/evidence boundary and explicit resume order.
 - [Checkpoint validation](./paused-pr-verification.json): source, tests, package
   handoff, publication scans and packet checks for the saved work.
+
+- [Acceptance development census](./acceptance-development-census.json):
+  refreshed dirty-worktree dry-plan inventory and exact report digest,
+  2026-10-01. Retains unresolved semantic review and final-source obligations;
+  no runtime or qualification authority.
+
+- [Signed archive development checkpoint](./signed-archive-development-stable.json):
+  passing stable v7 native comparison/refusal matrix with bounded archive
+  inspection, frozen older profile; no qualification authority.
+
+- [Signed capture v8 development observation](./signed-capture-development-stable.json):
+  native rejection of four unsafe captures, source-bound retained report; older
+  development profile only, no operational qualification authority.
+
+- [Development command review](./acceptance-command-review.json): all 1,213 exact
+  workspace-local alias references resolve in the retained census; no execution
+  or semantic qualification is inferred.
+
+- [Signed profile binding review](./signed-profile-binding-review.json): current
+  source hashes and retained native development identities identify the profile,
+  source/activation and channel-runtime binding gaps for operational acceptance.
+
+- [Signed activation evidence review](./signed-activation-evidence-review.json):
+  source-bound trace of activation-projection promotion requirements and the
+  missing prepared configuration identities in the v8 producer receipt.

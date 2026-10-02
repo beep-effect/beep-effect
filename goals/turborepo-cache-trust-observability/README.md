@@ -2,11 +2,11 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
 Source: [ops/manifest.json](./ops/manifest.json).
-Authored but not started. Launch begins P0; see [PLAN.md](./PLAN.md) for resume
-conditions and milestone dependencies.
+Active for the early handoff consumed by task qualification. See
+[PLAN.md](./PLAN.md) for current evidence and remaining milestone gates.
 
 ## Mission
 
@@ -30,15 +30,18 @@ Enforce signed artifact reuse, independent upload authorization, tenant isolatio
 
 ## Current phase
 
-P0 Threat and receipt contracts, not started.
+P0 Threat and receipt contracts, in progress.
 
 Refresh the checked-in and applicable deployed trust boundary, then define the cache-result and protected-producer receipt contract with the conformance owner.
 
 ## Latest evidence
 
-[Graduation receipt](./history/graduation-2026-09-08.md) records approval and
-packet creation only. Implementation tests, deployment and observation have
-not started.
+The [supervised workflow checkpoint](./research/owned-producer-workflow.json)
+records live workflow identity checks and closed signed-observation issuance.
+The [stable](./research/actual-persistent-issuer-stable.json) and
+[canary](./research/actual-persistent-issuer-canary.json) controls record actual
+persistent issuer material denial. These are local component observations;
+accepted operational qualification and production readiness remain incomplete.
 
 ## Notes
 

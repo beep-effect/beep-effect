@@ -42,6 +42,9 @@
       "path": "../../packages/drivers/postgres/tsconfig.json"
     },
     {
+      "path": "../../packages/drivers/xstate/tsconfig.json"
+    },
+    {
       "path": "../../packages/epistemic/client/tsconfig.json"
     },
     {

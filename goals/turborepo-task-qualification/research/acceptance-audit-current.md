@@ -7,7 +7,50 @@ The earlier audit table is the historical checkpoint at
 subsequent source and runtime evidence; none promotes the pilot.
 
 
-## Current acceptance review: patched profile, 2026-09-28
+## Current continuation: signed implementation
+
+PR #1327 is merged (verified from GitHub: merge commit
+`e6f84f8eb42500bc01dcf3104d3c321494efdb08`, September 29). Its prior readiness
+status below is historical. The remaining work lives on
+`codex/qualification-signed-implementation`; no final qualification PR has been
+published. The one-final-PR instruction remains in effect.
+
+The real signed worker has now completed three isolated fresh/remote-hit pairs
+for stable and three for canary, with per-pair reader-denial observations. See
+[stable reader protection](./reader-protection-stable.json) and
+[canary reader protection](./reader-protection-canary.json). Those observations
+remain distinct from producer authority, semantic-input closure and the full
+comparison/shadow matrix for the signed profile.
+
+The trust-owned issuer component now verifies HMAC-bound observations and has
+explicit private persistence and revocation. The
+[persistence checkpoint](../../turborepo-cache-trust-observability/research/owned-producer-store.json)
+records component tests and a real-receipt process-restart probe. The probe's
+workflow approval identities are synthetic. The later [approval-bound store](../../turborepo-cache-trust-observability/research/owned-producer-approval-bound.json)
+and actual persistent issuer probes establish stored binding checks and
+reader exclusion for those component runs.
+[Supervised workflow controls](../../turborepo-cache-trust-observability/research/owned-producer-workflow.json)
+now bind live declared sources before and after issuance. Accepted policy
+approval, complete workflow execution-profile closure and operational
+qualification import remain incomplete.
+The [frozen workflow profile](../../turborepo-cache-trust-observability/research/owned-producer-frozen-profile.json)
+now enforces clean declared sources, rejects ignored module overrides and
+ambient dotenv names, and binds issuance to the loaded supervisor's checkout.
+Native controls and full CLI package verification passed. Fresh synthetic
+conformance runs passed for stable 2.11.5 and exact canary 2.11.5-canary.2;
+the real supervised issuer control still records its own stable 2.11.4 pilot.
+These results are separate from accepted operational imports and the final
+signed-profile matrix.
+
+The qualified transition is still rejected; no criterion is marked complete.
+
+A subsequent real-run attempt correctly rejected the retained activation after
+five host startup libraries changed. Tool binaries and computation configuration
+were unchanged. [Current host drift](./current-host-runtime-drift.json) records
+the invalidation. New execution must use the refreshed runtime binding; older
+matrix receipts cannot be combined as current-runtime evidence.
+
+## Historical acceptance review: patched profile, 2026-09-29
 
 PR #1327 carries the work. The [latest canonical attachment](./current-patched-io-attachment.json)
 is bound to `1a9914e0cf`; its publication is `43b735a1c3`. Runtime controls
@@ -18,10 +61,10 @@ receipt never renews its execution at another source or dependency identity.
 
 | SPEC criterion | Current evidence | Remaining acceptance boundary |
 | --- | --- | --- |
-| Executable census | Canonical census: 144 workspaces, 3,473 graph nodes, 1,970 executable nodes, 1,025 source bindings, 112 reviews and six artifacts. Prior bindings remain unchanged. | Twenty-five explicit obligations remain; source identity does not prove complete dynamic-entrypoint or semantic coverage. |
+| Executable census | Canonical census: 144 workspaces, 3,473 graph nodes, 1,970 executable nodes, 1,025 source bindings, 112 reviews and six artifacts. Prior bindings remain unchanged. | The attachment contains 25 aggregated unresolved notes across historical profiles; [current reconciliation](./current-obligation-reconciliation.md) distinguishes renewed observations from remaining work. Source identity does not prove complete dynamic-entrypoint or semantic coverage. |
 | Policy and transitions | Existing tuple/lifecycle policy, projection and drift enforcement are retained; the historical full proof passed its cheap gates. | Accepted signed sibling imports and valid/adversarial operational transition integration remain unproven. No tuple is promoted. |
 | Synthetic fixture | Historical synthetic success and mandatory-negative receipts retain their own source/client bindings. Patched real-task capture controls confirm supplied synthetic-token absence from the retained archives. | Real-pilot observations do not renew every synthetic fixture or authoritative remote fault/signature case. |
-| Real pilot | Patched stable and canary each pass three fresh/fresh pairs, twelve local replay controls, seven source-invalidation cases, nine configuration cases, nine Git-exclusion cases, capture controls and shared-dependency cross-root replay. Bounded scalar I/O and a separate decoded ring observation are reviewed. | Complete semantic-input closure, supported concurrency boundaries, three verified signed remote pairs and representative current-profile shadow decisions remain incomplete. Historical shadow matrices are not renewed by these runs. |
+| Real pilot | Patched stable and canary each pass three fresh/fresh pairs, twelve local replay controls, seven source-invalidation cases, nine configuration cases, nine Git-exclusion cases, capture controls and shared-dependency cross-root replay. Bounded scalar I/O and a separate decoded ring observation are reviewed. | Patched stable full matrix now passes 67 observations, 40 checks and ten shadows (see current-patched-shadow-stable.json, published in 5cd64a97b7). Exact canary also passes 67 observations, 40 checks and ten shadows, with a separate report relationship review (current-patched-shadow-canary.json). Complete semantic-input closure, supported concurrency boundaries and three verified signed remote pairs remain incomplete. |
 | Legacy posture | Caching is enabled only in disposable identity overlays. Ordinary checkout policy remains disabled; no family activation accompanies these receipts. | Preserve attributed exclusions and honest unassessed states through final audit. Experimental success does not authorize promotion. |
 | Adoption handoff | Population, policy vocabulary, decomposition reviews and bounded invalidation references are available. | A validated real pilot and accepted transition/invalidation evidence remain missing from the final handoff. |
 | Package/protocol checks | Repaired package verification is retained. The [historical publish verdict](./current-proof-monitor-attribution.json) passed local pre-push proof and merged-preview CI parity, including coverage, before the watcher failed on a Vercel rate limit. | The verdict records an older head; it is not latest-head proof. Current required checks, local closeout and signed-protocol acceptance remain required. |
@@ -41,12 +84,18 @@ debugger observation decoded twelve entries across five submissions as
 does not retroactively decode prior scalar traces or establish every possible
 input. Completion queue entries and referenced buffers were not decoded.
 
-The conformance and trust packets remain authored but not started in this
-checkout. The bounded Codex search covered all five pinned tasks, the latest
+The conformance and trust packets are now active for their early qualification
+handoffs under delegated blocker-resolution authority. Their full comparison
+and production milestones remain incomplete. The bounded Codex search covered all five pinned tasks, the latest
 50 unarchived tasks and both archived listing pages (89 tasks); no runtime
 owner was identified by title/summary. Differently named work and unsearched
 transcript contents remain outside that result. No signed sibling receipt is
-accepted. None of the nine criteria is promoted to complete by this audit.
+accepted. New local stable/canary signed probes demonstrate native replay,
+four integrity rejections, three authorization denials and reader process/file
+confinement. The trust packet's `native-isolated-*-probe.json` receipts retain
+these results. The reusable owned runner and adversarial importer still need
+integration; those synthetic observations do not qualify the real pilot.
+None of the nine criteria is promoted to complete by this audit.
 
 ## Previous local checkpoint: 2026-09-25
 
@@ -591,3 +640,13 @@ write attribution for one isolated task execution. Its 439 repository read
 paths and 21 attributed writes provide bounded coverage. The `.git` mapping
 and undecoded ring contents remain explicit; no complete semantic-input
 closure or tuple promotion follows from the trace.
+
+### Private issuer approval lookup
+
+The supervisor can now open a verification-only capability from a private
+approval record fixed at issuer provisioning. Submitted pilot evidence does not
+choose its trusted binding. Edited, missing, unsafe or revoked approval fails
+closed; the current focused run passes 39 tests. This is an implementation
+control, not a new native run or accepted qualification. The complete evidence
+bundle and policy-to-promotion importer remain unfinished, and both qualified
+transition guards remain closed. See the [checkpoint](../../turborepo-cache-trust-observability/research/owned-producer-private-approval.json).

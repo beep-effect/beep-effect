@@ -1,3 +1,4 @@
+import { $RepoCliId } from "@beep/identity/packages";
 import {
   FleetMirrorService,
   FleetMirrorServiceLive,
@@ -5,11 +6,14 @@ import {
   parseProcStatStartTime,
   WorktreeCommandError,
 } from "@beep/repo-cli/commands/Worktree";
+import { repoRunOutputBound, runCaptured } from "@beep/repo-cli/test/Process";
+import { it } from "@beep/test-runner";
 import { A, N, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import type { FleetCheckout, FleetSnapshot } from "@beep/repo-cli/commands/Worktree";
 
@@ -22,12 +26,39 @@ const README_MAIN = "# fleet fixture\n\nshared line (main)\n";
 const TURBO_BASE = '{ "tasks": {} }\n';
 const TURBO_MOVED = '{ "tasks": { "check": {} } }\n';
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const testLayer = Layer.mergeAll(NodeServices.layer, FleetMirrorServiceLive.pipe(Layer.provide(NodeServices.layer)));
+
+const $I = $RepoCliId.create("test/worktree-fleet-scan");
+
+class LegacyListingTarget extends Context.Service<LegacyListingTarget, Ref.Ref<O.Option<string>>>()(
+  $I`LegacyListingTarget`
+) {}
+
+const legacyListingTargetLayer = Layer.effect(LegacyListingTarget, Ref.make(O.none<string>()));
+
+const legacyListingSpawnerLayer = Layer.effect(
+  ChildProcessSpawner.ChildProcessSpawner,
+  Effect.gen(function* () {
+    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+    const target = yield* LegacyListingTarget;
+    return ChildProcessSpawner.make((command) =>
+      Effect.gen(function* () {
+        const alpha = yield* Ref.get(target);
+        if (
+          ChildProcess.isStandardCommand(command) &&
+          command.command === "git" &&
+          O.contains(command.options.cwd)(alpha) &&
+          A.join(command.args, " ") === "worktree list --porcelain -z"
+        ) {
+          return yield* spawner.spawn(ChildProcess.make("git", ["worktree", "list", "--porcelain"], command.options));
+        }
+        return yield* spawner.spawn(command);
+      })
+    );
+  })
+).pipe(Layer.provideMerge(legacyListingTargetLayer));
+
+const legacyListingLayer = Layer.fresh(FleetMirrorServiceLive).pipe(Layer.provideMerge(legacyListingSpawnerLayer));
 
 /** A scratch fleet: a bare origin, two sibling clones under one fleet root, and hermetic scanner/home directories. */
 type FleetFixture = {
@@ -41,15 +72,19 @@ type FleetFixture = {
 };
 
 const runGit = Effect.fn("FleetScanTest.runGit")(function* (cwd: string, args: ReadonlyArray<string>) {
-  const exitCode = yield* Effect.scoped(
-    ChildProcess.make("git", [...args], {
-      cwd,
-      stdin: "ignore",
-      stdout: "ignore",
-      stderr: "ignore",
-    }).pipe(Effect.flatMap((handle) => handle.exitCode))
+  const { exitCode, output, truncated } = yield* runCaptured({
+    command: "git",
+    args,
+    cwd,
+    stdin: "ignore",
+    source: "merge",
+    bound: repoRunOutputBound,
+  });
+  yield* Effect.logError("Fleet Git prerequisite failed").pipe(
+    Effect.annotateLogs({ command: A.join(["git", ...args], " "), exitCode, output, truncated }),
+    Effect.when(Effect.succeed(exitCode !== 0))
   );
-  expect(exitCode).toBe(0);
+  expect(exitCode, `git ${A.join(args, " ")} exit=${exitCode} output=${output} truncated=${truncated}`).toBe(0);
 });
 
 const configureCheckout = Effect.fn("FleetScanTest.configureCheckout")(function* (checkout: string) {
@@ -97,19 +132,13 @@ const initScratchFleet = Effect.fn("FleetScanTest.initScratchFleet")(function* (
   return { tmpDir, originPath, fleetRoot, alpha, beta, scannerDir, homeDir };
 });
 
-const withScratchFleet = <A, E, R>(use: (fixture: FleetFixture) => Effect.Effect<A, E, R>) =>
-  Effect.scoped(
-    Effect.acquireUseRelease(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
-        const fixture = yield* initScratchFleet(tmpDir);
-        return { fs, fixture };
-      }),
-      ({ fixture }) => use(fixture),
-      ({ fixture, fs }) => fs.remove(fixture.tmpDir, { recursive: true, force: true }).pipe(Effect.ignore)
-    ).pipe(provideScopedLayer(testLayer))
+const acquireScratchFleet = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const tmpDir = yield* Effect.acquireRelease(fs.makeTempDirectory(), (root) =>
+    fs.remove(root, { recursive: true, force: true }).pipe(Effect.orDie)
   );
+  return yield* initScratchFleet(tmpDir);
+});
 
 const scanFixture = Effect.fn("FleetScanTest.scanFixture")(function* (fixture: FleetFixture) {
   const service = yield* FleetMirrorService;
@@ -131,337 +160,307 @@ const checkoutAt = (snapshot: FleetSnapshot, checkoutPath: string): FleetCheckou
     () => new Error(`The fleet snapshot has no row for ${checkoutPath}.`)
   );
 
-describe("fleet mirror scan", () => {
-  it.live(
+it.layer(testLayer, { timeout: "30 seconds" })("fleet mirror scan", (it) => {
+  it.effect(
     "derives both sibling clones against a materialized epoch target",
-    () =>
-      withScratchFleet((fixture) =>
-        Effect.gen(function* () {
-          const snapshot = yield* scanFixture(fixture);
+    Effect.fnUntraced(function* () {
+      const fixture = yield* acquireScratchFleet;
+      const snapshot = yield* scanFixture(fixture);
 
-          expect(snapshot.fleetRoot).toBe(fixture.fleetRoot);
-          expect(snapshot.originUrl).toBe(fixture.originPath);
-          expect(snapshot.target.ref).toBe("main");
-          expect(snapshot.target.materialized).toBe(true);
-          expect(snapshot.coverage.clonesDiscovered).toBe(2);
-          expect(snapshot.coverage.checkoutsDiscovered).toBe(2);
-          expect(snapshot.coverage.checkoutsDegraded).toBe(0);
-          expect(A.map(snapshot.checkouts, (row) => row.path)).toEqual([fixture.alpha, fixture.beta]);
+      expect(snapshot.fleetRoot).toBe(fixture.fleetRoot);
+      expect(snapshot.originUrl).toBe(fixture.originPath);
+      expect(snapshot.target.ref).toBe("main");
+      expect(snapshot.target.materialized).toBe(true);
+      expect(snapshot.coverage.clonesDiscovered).toBe(2);
+      expect(snapshot.coverage.checkoutsDiscovered).toBe(2);
+      expect(snapshot.coverage.checkoutsDegraded).toBe(0);
+      expect(A.map(snapshot.checkouts, (row) => row.path)).toEqual([fixture.alpha, fixture.beta]);
 
-          const alphaRow = checkoutAt(snapshot, fixture.alpha);
-          expect(alphaRow.kind).toBe("clone");
-          expect(alphaRow.branch).toBe("main");
-          expect(alphaRow.detached).toBe(false);
-          expect(alphaRow.head).toBe(snapshot.target.sha);
-          expect(alphaRow.dirtyCount).toBe(0);
-          // Fresh fixture writes are inside the liveness window.
-          expect(alphaRow.liveness).toBe("live");
-          expect(alphaRow.livenessEvidence).toContain("worktree-mtime");
-          expect(alphaRow.conflict).toBe("clean");
-          expect(alphaRow.policyMovement).toBe("unmoved");
-          expect(snapshot.contestedPaths).toEqual([]);
-        })
-      ),
+      const alphaRow = checkoutAt(snapshot, fixture.alpha);
+      expect(alphaRow.kind).toBe("clone");
+      expect(alphaRow.branch).toBe("main");
+      expect(alphaRow.detached).toBe(false);
+      expect(alphaRow.head).toBe(snapshot.target.sha);
+      expect(alphaRow.dirtyCount).toBe(0);
+      // Fresh fixture writes are inside the liveness window.
+      expect(alphaRow.liveness).toBe("live");
+      expect(alphaRow.livenessEvidence).toContain("worktree-mtime");
+      expect(alphaRow.conflict).toBe("clean");
+      expect(alphaRow.policyMovement).toBe("unmoved");
+      expect(snapshot.contestedPaths).toEqual([]);
+    }),
     SCAN_TIMEOUT_MILLIS
   );
 
-  it.live(
-    "retains a clone as degraded when its worktree listing omits NUL delimiters",
-    () =>
-      withScratchFleet((fixture) =>
-        Effect.gen(function* () {
-          const path = yield* Path.Path;
-          const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-          const linked = path.join(fixture.tmpDir, "linked-worktree");
-          yield* runGit(fixture.alpha, ["worktree", "add", "--detach", linked, "HEAD"]);
+  it.layer(legacyListingLayer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "retains a clone as degraded when its worktree listing omits NUL delimiters",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* acquireScratchFleet;
+        const path = yield* Path.Path;
+        const linked = path.join(fixture.tmpDir, "linked-worktree");
+        yield* runGit(fixture.alpha, ["worktree", "add", "--detach", linked, "HEAD"]);
 
-          // Simulate Git returning the legacy line-delimited format for one clone.
-          // Every other probe, including the sibling clone's listing, stays real.
-          const legacyListingSpawner = ChildProcessSpawner.make((command) => {
-            if (
-              ChildProcess.isStandardCommand(command) &&
-              command.command === "git" &&
-              command.options.cwd === fixture.alpha &&
-              A.join(command.args, " ") === "worktree list --porcelain -z"
-            ) {
-              return spawner.spawn(ChildProcess.make("git", ["worktree", "list", "--porcelain"], command.options));
-            }
-            return spawner.spawn(command);
-          });
-          const snapshot = yield* scanFixture(fixture).pipe(
-            provideScopedLayer(Layer.fresh(FleetMirrorServiceLive)),
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, legacyListingSpawner)
-          );
+        const target = yield* LegacyListingTarget;
+        yield* Ref.set(target, O.some(fixture.alpha));
+        yield* Effect.addFinalizer(() => Ref.set(target, O.none()));
+        const snapshot = yield* scanFixture(fixture);
 
-          expect(snapshot.target.materialized).toBe(true);
-          expect(snapshot.coverage.clonesDiscovered).toBe(2);
-          expect(snapshot.coverage.checkoutsDiscovered).toBe(2);
-          expect(snapshot.coverage.checkoutsDegraded).toBe(1);
-          expect(A.map(snapshot.checkouts, (row) => row.path)).toEqual([fixture.alpha, fixture.beta]);
-          const alpha = checkoutAt(snapshot, fixture.alpha);
-          expect(alpha.kind).toBe("clone");
-          expect(alpha.head).toBeNull();
-          expect(alpha.branch).toBeNull();
-          expect(alpha.conflict).toBe("unknown");
-          expect(alpha.conflictReason).toBe("head-unknown");
-          expect(alpha.policyMovement).toBe("unknown");
-          expect(alpha.policyReason).toBe("head-unknown");
-          expect(checkoutAt(snapshot, fixture.beta).head).toBe(snapshot.target.sha);
-        })
-      ),
-    SCAN_TIMEOUT_MILLIS
-  );
+        expect(snapshot.target.materialized).toBe(true);
+        expect(snapshot.coverage.clonesDiscovered).toBe(2);
+        expect(snapshot.coverage.checkoutsDiscovered).toBe(2);
+        expect(snapshot.coverage.checkoutsDegraded).toBe(1);
+        expect(A.map(snapshot.checkouts, (row) => row.path)).toEqual([fixture.alpha, fixture.beta]);
+        const alpha = checkoutAt(snapshot, fixture.alpha);
+        expect(alpha.kind).toBe("clone");
+        expect(alpha.head).toBeNull();
+        expect(alpha.branch).toBeNull();
+        expect(alpha.conflict).toBe("unknown");
+        expect(alpha.conflictReason).toBe("head-unknown");
+        expect(alpha.policyMovement).toBe("unknown");
+        expect(alpha.policyReason).toBe("head-unknown");
+        expect(checkoutAt(snapshot, fixture.beta).head).toBe(snapshot.target.sha);
+      }),
+      SCAN_TIMEOUT_MILLIS
+    );
+  });
 
-  it.live(
+  it.effect(
     "treats an option-like origin URL as a repository operand",
-    () =>
-      withScratchFleet((fixture) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const marker = path.join(fixture.tmpDir, "option-injection-marker");
-          const service = yield* FleetMirrorService;
-          const snapshot = yield* service.scan(
-            FleetScanOptions.make({
-              startFrom: fixture.alpha,
-              fleetRoot: fixture.fleetRoot,
-              originUrl: `--upload-pack=touch ${marker}`,
-              scannerDir: fixture.scannerDir,
-              homeDir: fixture.homeDir,
-              targetRef: "main",
-            })
-          );
-
-          expect(snapshot.target.materialized).toBe(false);
-          expect(yield* fs.exists(marker)).toBe(false);
+    Effect.fnUntraced(function* () {
+      const fixture = yield* acquireScratchFleet;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const marker = path.join(fixture.tmpDir, "option-injection-marker");
+      const service = yield* FleetMirrorService;
+      const snapshot = yield* service.scan(
+        FleetScanOptions.make({
+          startFrom: fixture.alpha,
+          fleetRoot: fixture.fleetRoot,
+          originUrl: `--upload-pack=touch ${marker}`,
+          scannerDir: fixture.scannerDir,
+          homeDir: fixture.homeDir,
+          targetRef: "main",
         })
-      ),
+      );
+
+      expect(snapshot.target.materialized).toBe(false);
+      expect(yield* fs.exists(marker)).toBe(false);
+    }),
     SCAN_TIMEOUT_MILLIS
   );
 
-  it.live(
+  it.effect(
     "fires signal 3 and keeps signals 1 and 2 silent when main moves onto a measured policy path",
-    () =>
-      withScratchFleet((fixture) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
+    Effect.fnUntraced(function* () {
+      const fixture = yield* acquireScratchFleet;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
 
-          // beta holds an in-flight branch that never touches the policy surface.
-          yield* runGit(fixture.beta, ["checkout", "--quiet", "-b", "feat/beta-work"]);
-          yield* fs.writeFileString(path.join(fixture.beta, "src.txt"), "beta work\n");
-          yield* commitAll(fixture.beta, "feat: beta work");
+      // beta holds an in-flight branch that never touches the policy surface.
+      yield* runGit(fixture.beta, ["checkout", "--quiet", "-b", "feat/beta-work"]);
+      yield* fs.writeFileString(path.join(fixture.beta, "src.txt"), "beta work\n");
+      yield* commitAll(fixture.beta, "feat: beta work");
 
-          // main moves onto turbo.json, a measured policy path beta never touched.
-          yield* fs.writeFileString(path.join(fixture.alpha, "turbo.json"), TURBO_MOVED);
-          yield* commitAll(fixture.alpha, "chore: retune turbo");
-          yield* runGit(fixture.alpha, ["push", "--quiet", "origin", "main"]);
+      // main moves onto turbo.json, a measured policy path beta never touched.
+      yield* fs.writeFileString(path.join(fixture.alpha, "turbo.json"), TURBO_MOVED);
+      yield* commitAll(fixture.alpha, "chore: retune turbo");
+      yield* runGit(fixture.alpha, ["push", "--quiet", "origin", "main"]);
 
-          const snapshot = yield* scanFixture(fixture);
-          expect(snapshot.target.materialized).toBe(true);
+      const snapshot = yield* scanFixture(fixture);
+      expect(snapshot.target.materialized).toBe(true);
 
-          const betaRow = checkoutAt(snapshot, fixture.beta);
-          expect(betaRow.branch).toBe("feat/beta-work");
-          expect(betaRow.liveness).toBe("live");
+      const betaRow = checkoutAt(snapshot, fixture.beta);
+      expect(betaRow.branch).toBe("feat/beta-work");
+      expect(betaRow.liveness).toBe("live");
 
-          // Signal 3 fires: main moved onto the measured surface.
-          expect(betaRow.policyMovement).toBe("moved");
-          expect(betaRow.policyPaths).toContain("turbo.json");
-          expect(betaRow.policyReason).toBeNull();
+      // Signal 3 fires: main moved onto the measured surface.
+      expect(betaRow.policyMovement).toBe("moved");
+      expect(betaRow.policyPaths).toContain("turbo.json");
+      expect(betaRow.policyReason).toBeNull();
 
-          // Signal 2 stays silent: the collision produces no textual conflict,
-          // and the branch's own diff is disjoint from the moved file.
-          expect(betaRow.conflict).toBe("clean");
-          expect(betaRow.conflictPaths).toEqual([]);
-          expect(betaRow.branchDiffCount).toBe(1);
+      // Signal 2 stays silent: the collision produces no textual conflict,
+      // and the branch's own diff is disjoint from the moved file.
+      expect(betaRow.conflict).toBe("clean");
+      expect(betaRow.conflictPaths).toEqual([]);
+      expect(betaRow.branchDiffCount).toBe(1);
 
-          // Signal 1 stays silent: no path is claimed by two checkouts.
-          expect(snapshot.contestedPaths).toEqual([]);
+      // Signal 1 stays silent: no path is claimed by two checkouts.
+      expect(snapshot.contestedPaths).toEqual([]);
 
-          // alpha already sits on the new tip, so nothing moved underneath it.
-          const alphaRow = checkoutAt(snapshot, fixture.alpha);
-          expect(alphaRow.head).toBe(snapshot.target.sha);
-          expect(alphaRow.policyMovement).toBe("unmoved");
-          expect(alphaRow.policyPaths).toEqual([]);
-        })
-      ),
+      // alpha already sits on the new tip, so nothing moved underneath it.
+      const alphaRow = checkoutAt(snapshot, fixture.alpha);
+      expect(alphaRow.head).toBe(snapshot.target.sha);
+      expect(alphaRow.policyMovement).toBe("unmoved");
+      expect(alphaRow.policyPaths).toEqual([]);
+    }),
     SCAN_TIMEOUT_MILLIS
   );
 
-  it.live(
+  it.effect(
     "reports unknown, never clean, when the epoch target cannot be materialized",
-    () =>
-      withScratchFleet((fixture) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
+    Effect.fnUntraced(function* () {
+      const fixture = yield* acquireScratchFleet;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
 
-          // The clones keep their configured origin string, so enumeration still
-          // matches; only ls-remote against the moved repository fails.
-          yield* fs.rename(fixture.originPath, path.join(fixture.tmpDir, "origin-gone.git"));
+      // The clones keep their configured origin string, so enumeration still
+      // matches; only ls-remote against the moved repository fails.
+      yield* fs.rename(fixture.originPath, path.join(fixture.tmpDir, "origin-gone.git"));
 
-          const snapshot = yield* scanFixture(fixture);
+      const snapshot = yield* scanFixture(fixture);
 
-          expect(snapshot.target.sha).toBeNull();
-          expect(snapshot.target.materialized).toBe(false);
-          expect(snapshot.coverage.checkoutsDiscovered).toBe(2);
-          expect(snapshot.coverage.checkoutsDegraded).toBe(0);
+      expect(snapshot.target.sha).toBeNull();
+      expect(snapshot.target.materialized).toBe(false);
+      expect(snapshot.coverage.checkoutsDiscovered).toBe(2);
+      expect(snapshot.coverage.checkoutsDegraded).toBe(0);
 
-          for (const row of snapshot.checkouts) {
-            expect(row.head).not.toBeNull();
-            expect(row.conflict).toBe("unknown");
-            expect(row.conflictReason).toBe("target-unmaterialized");
-            expect(row.conflictPaths).toEqual([]);
-            expect(row.policyMovement).toBe("unknown");
-            expect(row.policyReason).toBe("target-unmaterialized");
-            expect(row.policyPaths).toEqual([]);
-            expect(row.mergeBase).toBeNull();
-          }
-        })
-      ),
+      for (const row of snapshot.checkouts) {
+        expect(row.head).not.toBeNull();
+        expect(row.conflict).toBe("unknown");
+        expect(row.conflictReason).toBe("target-unmaterialized");
+        expect(row.conflictPaths).toEqual([]);
+        expect(row.policyMovement).toBe("unknown");
+        expect(row.policyReason).toBe("target-unmaterialized");
+        expect(row.policyPaths).toEqual([]);
+        expect(row.mergeBase).toBeNull();
+      }
+    }),
     SCAN_TIMEOUT_MILLIS
   );
 
-  it.live(
+  it.effect(
     "predicts a real textual conflict against the epoch target",
-    () =>
-      withScratchFleet((fixture) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
+    Effect.fnUntraced(function* () {
+      const fixture = yield* acquireScratchFleet;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
 
-          yield* runGit(fixture.beta, ["checkout", "--quiet", "-b", "feat/beta-readme"]);
-          yield* fs.writeFileString(path.join(fixture.beta, "README.md"), README_BETA);
-          yield* commitAll(fixture.beta, "docs: beta rewrites the shared line");
+      yield* runGit(fixture.beta, ["checkout", "--quiet", "-b", "feat/beta-readme"]);
+      yield* fs.writeFileString(path.join(fixture.beta, "README.md"), README_BETA);
+      yield* commitAll(fixture.beta, "docs: beta rewrites the shared line");
 
-          yield* fs.writeFileString(path.join(fixture.alpha, "README.md"), README_MAIN);
-          yield* commitAll(fixture.alpha, "docs: main rewrites the shared line");
-          yield* runGit(fixture.alpha, ["push", "--quiet", "origin", "main"]);
+      yield* fs.writeFileString(path.join(fixture.alpha, "README.md"), README_MAIN);
+      yield* commitAll(fixture.alpha, "docs: main rewrites the shared line");
+      yield* runGit(fixture.alpha, ["push", "--quiet", "origin", "main"]);
 
-          const snapshot = yield* scanFixture(fixture);
-          const betaRow = checkoutAt(snapshot, fixture.beta);
+      const snapshot = yield* scanFixture(fixture);
+      const betaRow = checkoutAt(snapshot, fixture.beta);
 
-          expect(betaRow.liveness).toBe("live");
-          expect(betaRow.conflict).toBe("conflict");
-          expect(betaRow.conflictPaths).toContain("README.md");
-          expect(betaRow.conflictReason).toBeNull();
-        })
-      ),
+      expect(betaRow.liveness).toBe("live");
+      expect(betaRow.conflict).toBe("conflict");
+      expect(betaRow.conflictPaths).toContain("README.md");
+      expect(betaRow.conflictReason).toBeNull();
+    }),
     SCAN_TIMEOUT_MILLIS
   );
 
-  it.live(
+  it.effect(
     "reports an untracked path held by two checkouts as contested",
-    () =>
-      withScratchFleet((fixture) =>
+    Effect.fnUntraced(function* () {
+      const fixture = yield* acquireScratchFleet;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+
+      yield* Effect.forEach([fixture.alpha, fixture.beta], (checkout) =>
         Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-
-          yield* Effect.forEach([fixture.alpha, fixture.beta], (checkout) =>
-            Effect.gen(function* () {
-              yield* fs.makeDirectory(path.join(checkout, "notes"), { recursive: true });
-              yield* fs.writeFileString(path.join(checkout, "notes", "shared.md"), "# shared\n");
-            })
-          );
-
-          const snapshot = yield* scanFixture(fixture);
-
-          const contested = O.getOrThrowWith(
-            A.findFirst(snapshot.contestedPaths, (entry) => entry.path === "notes/shared.md"),
-            () => new Error("Expected notes/shared.md to be contested by both checkouts.")
-          );
-          expect(contested.checkouts).toEqual([fixture.alpha, fixture.beta]);
-
-          // -uall expands the untracked directory, so the row counts the file.
-          expect(checkoutAt(snapshot, fixture.alpha).dirtyCount).toBe(1);
-          expect(checkoutAt(snapshot, fixture.beta).dirtyCount).toBe(1);
+          yield* fs.makeDirectory(path.join(checkout, "notes"), { recursive: true });
+          yield* fs.writeFileString(path.join(checkout, "notes", "shared.md"), "# shared\n");
         })
-      ),
+      );
+
+      const snapshot = yield* scanFixture(fixture);
+
+      const contested = O.getOrThrowWith(
+        A.findFirst(snapshot.contestedPaths, (entry) => entry.path === "notes/shared.md"),
+        () => new Error("Expected notes/shared.md to be contested by both checkouts.")
+      );
+      expect(contested.checkouts).toEqual([fixture.alpha, fixture.beta]);
+
+      // -uall expands the untracked directory, so the row counts the file.
+      expect(checkoutAt(snapshot, fixture.alpha).dirtyCount).toBe(1);
+      expect(checkoutAt(snapshot, fixture.beta).dirtyCount).toBe(1);
+    }),
     SCAN_TIMEOUT_MILLIS
   );
 
-  it.live(
+  it.effect(
     "classifies live with claude-session evidence from a confirmed registry entry recorded in a subdirectory",
-    () =>
-      withScratchFleet((fixture) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
+    Effect.fnUntraced(function* () {
+      const fixture = yield* acquireScratchFleet;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
 
-          // The test runner's own /proc identity makes the fixture entry pass
-          // the starttime reuse guard against a genuinely live process.
-          const stat = yield* fs.readFileString("/proc/self/stat");
-          const pid = O.getOrThrowWith(A.head(Str.split(stat, " ")), () => new Error("Failed to read the test pid."));
-          const numericPid = O.getOrThrowWith(N.parse(pid), () => new Error("Failed to parse the test pid."));
-          const procStart = O.getOrThrowWith(
-            parseProcStatStartTime(stat),
-            () => new Error("Failed to parse starttime from /proc/self/stat.")
-          );
+      // The test runner's own /proc identity makes the fixture entry pass
+      // the starttime reuse guard against a genuinely live process.
+      const stat = yield* fs.readFileString("/proc/self/stat");
+      const pid = O.getOrThrowWith(A.head(Str.split(stat, " ")), () => new Error("Failed to read the test pid."));
+      const numericPid = O.getOrThrowWith(N.parse(pid), () => new Error("Failed to parse the test pid."));
+      const procStart = O.getOrThrowWith(
+        parseProcStatStartTime(stat),
+        () => new Error("Failed to parse starttime from /proc/self/stat.")
+      );
 
-          const sessionsDir = path.join(fixture.homeDir, ".claude", "sessions");
-          yield* fs.makeDirectory(sessionsDir, { recursive: true });
-          // Real registry entries carry many more fields than the probe reads;
-          // the fixture keeps a representative sample to prove tolerant decode.
-          const registryEntry = yield* encodeJson({
-            pid: numericPid,
-            sessionId: "fixture-session",
-            cwd: path.join(fixture.beta, "notes"),
-            procStart,
-            version: "2.1.226",
-            kind: "interactive",
-            status: "busy",
-            messagingSocketPath: null,
-          });
-          yield* fs.writeFileString(path.join(sessionsDir, `${pid}.json`), registryEntry);
+      const sessionsDir = path.join(fixture.homeDir, ".claude", "sessions");
+      yield* fs.makeDirectory(sessionsDir, { recursive: true });
+      // Real registry entries carry many more fields than the probe reads;
+      // the fixture keeps a representative sample to prove tolerant decode.
+      const registryEntry = yield* encodeJson({
+        pid: numericPid,
+        sessionId: "fixture-session",
+        cwd: path.join(fixture.beta, "notes"),
+        procStart,
+        version: "2.1.226",
+        kind: "interactive",
+        status: "busy",
+        messagingSocketPath: null,
+      });
+      yield* fs.writeFileString(path.join(sessionsDir, `${pid}.json`), registryEntry);
 
-          const snapshot = yield* scanFixture(fixture);
+      const snapshot = yield* scanFixture(fixture);
 
-          const betaRow = checkoutAt(snapshot, fixture.beta);
-          expect(betaRow.liveness).toBe("live");
-          // The recorded cwd is a subdirectory, so the at-or-under join credits beta.
-          expect(betaRow.livenessEvidence).toContain("claude-session");
-          expect(checkoutAt(snapshot, fixture.alpha).livenessEvidence).not.toContain("claude-session");
-        })
-      ),
+      const betaRow = checkoutAt(snapshot, fixture.beta);
+      expect(betaRow.liveness).toBe("live");
+      // The recorded cwd is a subdirectory, so the at-or-under join credits beta.
+      expect(betaRow.livenessEvidence).toContain("claude-session");
+      expect(checkoutAt(snapshot, fixture.alpha).livenessEvidence).not.toContain("claude-session");
+    }),
     SCAN_TIMEOUT_MILLIS
   );
 
-  it.live(
+  it.effect(
     "contributes nothing for recycled-PID, dead-PID, or malformed registry entries",
-    () =>
-      withScratchFleet((fixture) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
+    Effect.fnUntraced(function* () {
+      const fixture = yield* acquireScratchFleet;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
 
-          const stat = yield* fs.readFileString("/proc/self/stat");
-          const pid = O.getOrThrowWith(A.head(Str.split(stat, " ")), () => new Error("Failed to read the test pid."));
-          const numericPid = O.getOrThrowWith(N.parse(pid), () => new Error("Failed to parse the test pid."));
+      const stat = yield* fs.readFileString("/proc/self/stat");
+      const pid = O.getOrThrowWith(A.head(Str.split(stat, " ")), () => new Error("Failed to read the test pid."));
+      const numericPid = O.getOrThrowWith(N.parse(pid), () => new Error("Failed to parse the test pid."));
 
-          const sessionsDir = path.join(fixture.homeDir, ".claude", "sessions");
-          yield* fs.makeDirectory(sessionsDir, { recursive: true });
-          // A stale file over a recycled PID: the process is alive, but its starttime differs.
-          const recycledEntry = yield* encodeJson({
-            pid: numericPid,
-            procStart: "1",
-            cwd: fixture.beta,
-          });
-          yield* fs.writeFileString(path.join(sessionsDir, `${pid}.json`), recycledEntry);
-          // A PID beyond pid_max, so /proc/<pid>/stat cannot exist.
-          const deadEntry = yield* encodeJson({ pid: 999999999, procStart: "1", cwd: fixture.beta });
-          yield* fs.writeFileString(path.join(sessionsDir, "999999999.json"), deadEntry);
-          // An entry that does not decode.
-          yield* fs.writeFileString(path.join(sessionsDir, "12345.json"), "not json");
+      const sessionsDir = path.join(fixture.homeDir, ".claude", "sessions");
+      yield* fs.makeDirectory(sessionsDir, { recursive: true });
+      // A stale file over a recycled PID: the process is alive, but its starttime differs.
+      const recycledEntry = yield* encodeJson({
+        pid: numericPid,
+        procStart: "1",
+        cwd: fixture.beta,
+      });
+      yield* fs.writeFileString(path.join(sessionsDir, `${pid}.json`), recycledEntry);
+      // A PID beyond pid_max, so /proc/<pid>/stat cannot exist.
+      const deadEntry = yield* encodeJson({ pid: 999999999, procStart: "1", cwd: fixture.beta });
+      yield* fs.writeFileString(path.join(sessionsDir, "999999999.json"), deadEntry);
+      // An entry that does not decode.
+      yield* fs.writeFileString(path.join(sessionsDir, "12345.json"), "not json");
 
-          const snapshot = yield* scanFixture(fixture);
+      const snapshot = yield* scanFixture(fixture);
 
-          expect(snapshot.coverage.checkoutsDiscovered).toBe(2);
-          for (const row of snapshot.checkouts) {
-            expect(row.livenessEvidence).not.toContain("claude-session");
-          }
-        })
-      ),
+      expect(snapshot.coverage.checkoutsDiscovered).toBe(2);
+      for (const row of snapshot.checkouts) {
+        expect(row.livenessEvidence).not.toContain("claude-session");
+      }
+    }),
     SCAN_TIMEOUT_MILLIS
   );
 
@@ -471,88 +470,82 @@ describe("fleet mirror scan", () => {
       return yield* service.listCheckouts(options);
     });
 
-    it.live(
+    it.effect(
       "lists every clone and linked worktree sharing the origin and skips unrelated siblings",
-      () =>
-        withScratchFleet((fixture) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            const linked = path.join(fixture.tmpDir, "linked-worktree");
-            yield* runGit(fixture.alpha, ["worktree", "add", "--quiet", "--detach", linked, "HEAD"]);
-            // Siblings that are not fleet clones: a plain directory, a stray file, a checkout
-            // without an origin remote, and a checkout of an unrelated origin.
-            yield* fs.makeDirectory(path.join(fixture.fleetRoot, "plain-dir"));
-            yield* fs.writeFileString(path.join(fixture.fleetRoot, "stray.txt"), "not a clone\n");
-            const noRemote = path.join(fixture.fleetRoot, "no-remote");
-            yield* fs.makeDirectory(noRemote);
-            yield* runGit(noRemote, ["init", "--quiet"]);
-            const otherOrigin = path.join(fixture.tmpDir, "other.git");
-            yield* runGit(fixture.tmpDir, ["init", "--bare", "--quiet", otherOrigin]);
-            yield* runGit(fixture.fleetRoot, ["clone", "--quiet", otherOrigin, "unrelated"]);
-            // A symlinked clone lists the same real checkouts, which the enumeration dedupes.
-            yield* fs.symlink(fixture.alpha, path.join(fixture.fleetRoot, "zz-alpha-link"));
+      Effect.fnUntraced(function* () {
+        const fixture = yield* acquireScratchFleet;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const linked = path.join(fixture.tmpDir, "linked-worktree");
+        yield* runGit(fixture.alpha, ["worktree", "add", "--quiet", "--detach", linked, "HEAD"]);
+        // Siblings that are not fleet clones: a plain directory, a stray file, a checkout
+        // without an origin remote, and a checkout of an unrelated origin.
+        yield* fs.makeDirectory(path.join(fixture.fleetRoot, "plain-dir"));
+        yield* fs.writeFileString(path.join(fixture.fleetRoot, "stray.txt"), "not a clone\n");
+        const noRemote = path.join(fixture.fleetRoot, "no-remote");
+        yield* fs.makeDirectory(noRemote);
+        yield* runGit(noRemote, ["init", "--quiet"]);
+        const otherOrigin = path.join(fixture.tmpDir, "other.git");
+        yield* runGit(fixture.tmpDir, ["init", "--bare", "--quiet", otherOrigin]);
+        yield* runGit(fixture.fleetRoot, ["clone", "--quiet", otherOrigin, "unrelated"]);
+        // A symlinked clone lists the same real checkouts, which the enumeration dedupes.
+        yield* fs.symlink(fixture.alpha, path.join(fixture.fleetRoot, "zz-alpha-link"));
 
-            const checkouts = yield* listFixture(
-              FleetScanOptions.make({
-                startFrom: fixture.alpha,
-                fleetRoot: fixture.fleetRoot,
-                originUrl: `${fixture.originPath}/`,
-              })
-            );
-
-            expect(checkouts).toEqual(A.sort([fixture.alpha, fixture.beta, linked], Str.Order));
+        const checkouts = yield* listFixture(
+          FleetScanOptions.make({
+            startFrom: fixture.alpha,
+            fleetRoot: fixture.fleetRoot,
+            originUrl: `${fixture.originPath}/`,
           })
-        ),
+        );
+
+        expect(checkouts).toEqual(A.sort([fixture.alpha, fixture.beta, linked], Str.Order));
+      }),
       SCAN_TIMEOUT_MILLIS
     );
 
-    it.live(
+    it.effect(
       "resolves the origin and the fleet root from the invoking checkout when neither is given",
-      () =>
-        withScratchFleet((fixture) =>
-          Effect.gen(function* () {
-            const checkouts = yield* listFixture(FleetScanOptions.make({ startFrom: fixture.beta }));
+      Effect.fnUntraced(function* () {
+        const fixture = yield* acquireScratchFleet;
+        const checkouts = yield* listFixture(FleetScanOptions.make({ startFrom: fixture.beta }));
 
-            expect(checkouts).toEqual([fixture.alpha, fixture.beta]);
-          })
-        ),
+        expect(checkouts).toEqual([fixture.alpha, fixture.beta]);
+      }),
       SCAN_TIMEOUT_MILLIS
     );
 
-    it.live(
+    it.effect(
       "fails with a typed error when the origin cannot be resolved or the fleet root cannot be read",
-      () =>
-        withScratchFleet((fixture) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            const orphan = path.join(fixture.tmpDir, "orphan");
-            yield* fs.makeDirectory(orphan);
-            yield* runGit(orphan, ["init", "--quiet"]);
+      Effect.fnUntraced(function* () {
+        const fixture = yield* acquireScratchFleet;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const orphan = path.join(fixture.tmpDir, "orphan");
+        yield* fs.makeDirectory(orphan);
+        yield* runGit(orphan, ["init", "--quiet"]);
 
-            const noOrigin = yield* Effect.flip(listFixture(FleetScanOptions.make({ startFrom: orphan })));
-            expect(noOrigin).toBeInstanceOf(WorktreeCommandError);
-            expect(noOrigin.message).toBe("Failed to resolve the origin URL for the current repository.");
+        const noOrigin = yield* Effect.flip(listFixture(FleetScanOptions.make({ startFrom: orphan })));
+        expect(noOrigin).toBeInstanceOf(WorktreeCommandError);
+        expect(noOrigin.message).toBe("Failed to resolve the origin URL for the current repository.");
 
-            const emptyOrigin = yield* Effect.flip(
-              listFixture(FleetScanOptions.make({ startFrom: fixture.alpha, originUrl: "" }))
-            );
-            expect(emptyOrigin.message).toBe("Failed to resolve the origin URL for the current repository.");
+        const emptyOrigin = yield* Effect.flip(
+          listFixture(FleetScanOptions.make({ startFrom: fixture.alpha, originUrl: "" }))
+        );
+        expect(emptyOrigin.message).toBe("Failed to resolve the origin URL for the current repository.");
 
-            const missingRoot = path.join(fixture.tmpDir, "missing-fleet-root");
-            const unreadable = yield* Effect.flip(
-              listFixture(
-                FleetScanOptions.make({
-                  startFrom: fixture.alpha,
-                  fleetRoot: missingRoot,
-                  originUrl: fixture.originPath,
-                })
-              )
-            );
-            expect(unreadable.message).toBe(`Failed to read the fleet root ${missingRoot}.`);
-          })
-        ),
+        const missingRoot = path.join(fixture.tmpDir, "missing-fleet-root");
+        const unreadable = yield* Effect.flip(
+          listFixture(
+            FleetScanOptions.make({
+              startFrom: fixture.alpha,
+              fleetRoot: missingRoot,
+              originUrl: fixture.originPath,
+            })
+          )
+        );
+        expect(unreadable.message).toBe(`Failed to read the fleet root ${missingRoot}.`);
+      }),
       SCAN_TIMEOUT_MILLIS
     );
   });

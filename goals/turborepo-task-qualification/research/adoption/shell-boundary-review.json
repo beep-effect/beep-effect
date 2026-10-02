@@ -1,0 +1,264 @@
+{
+  "authority": "Exhaustive classification of retained unsupported-shell sites without executing shell text.",
+  "revision": "77811ec365934c2ada0f8f2f78348edd7a0ff468",
+  "sites": 21,
+  "commands": [
+    {
+      "command": "biome check . > /dev/null 2>&1",
+      "sites": [
+        {
+          "definition": "@beep/identity#beep:lint",
+          "step": 0
+        }
+      ],
+      "classification": "discarded-capture",
+      "observedBoundary": "Both stdout and stderr are redirected to /dev/null. Process exit remains observable; missing captured diagnostics cannot be treated as log equivalence.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "bun run beep quality fallow audit --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/audit.check.json --quiet",
+      "sites": [
+        {
+          "definition": "//#fallow:audit:check",
+          "step": 0
+        }
+      ],
+      "classification": "fallow-base-report",
+      "observedBoundary": "Shell expands BEEP_PROOF_BASE. Selected lane reads Git/source/config and writes its named report; check/advisory flags retain separate verdict roles.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "bun run beep quality fallow boundaries --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/boundaries.advisory.json --quiet",
+      "sites": [
+        {
+          "definition": "//#fallow:boundaries:advisory",
+          "step": 0
+        }
+      ],
+      "classification": "fallow-base-report",
+      "observedBoundary": "Shell expands BEEP_PROOF_BASE. Selected lane reads Git/source/config and writes its named report; check/advisory flags retain separate verdict roles.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "bun run beep quality fallow dead-code --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/dead-code.check.json --quiet",
+      "sites": [
+        {
+          "definition": "//#fallow:dead-code:check",
+          "step": 0
+        }
+      ],
+      "classification": "fallow-base-report",
+      "observedBoundary": "Shell expands BEEP_PROOF_BASE. Selected lane reads Git/source/config and writes its named report; check/advisory flags retain separate verdict roles.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "bun run beep quality fallow fix-preview --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/fix-preview.advisory.json --quiet",
+      "sites": [
+        {
+          "definition": "//#fallow:fix-preview:advisory",
+          "step": 0
+        }
+      ],
+      "classification": "fallow-base-report",
+      "observedBoundary": "Shell expands BEEP_PROOF_BASE. Selected lane reads Git/source/config and writes its named report; check/advisory flags retain separate verdict roles.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "bun run beep quality fallow flags --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/flags.advisory.json --quiet",
+      "sites": [
+        {
+          "definition": "//#fallow:flags:advisory",
+          "step": 0
+        }
+      ],
+      "classification": "fallow-base-report",
+      "observedBoundary": "Shell expands BEEP_PROOF_BASE. Selected lane reads Git/source/config and writes its named report; check/advisory flags retain separate verdict roles.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "bun run beep quality fallow health --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/health.advisory.json --quiet",
+      "sites": [
+        {
+          "definition": "//#fallow:health:advisory",
+          "step": 0
+        }
+      ],
+      "classification": "fallow-base-report",
+      "observedBoundary": "Shell expands BEEP_PROOF_BASE. Selected lane reads Git/source/config and writes its named report; check/advisory flags retain separate verdict roles.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "bun run beep quality fallow health --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/health.check.json --quiet",
+      "sites": [
+        {
+          "definition": "//#fallow:health:check",
+          "step": 0
+        }
+      ],
+      "classification": "fallow-base-report",
+      "observedBoundary": "Shell expands BEEP_PROOF_BASE. Selected lane reads Git/source/config and writes its named report; check/advisory flags retain separate verdict roles.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "bun run beep quality fallow security --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/security.advisory.json --quiet",
+      "sites": [
+        {
+          "definition": "//#fallow:security:advisory",
+          "step": 0
+        }
+      ],
+      "classification": "fallow-base-report",
+      "observedBoundary": "Shell expands BEEP_PROOF_BASE. Selected lane reads Git/source/config and writes its named report; check/advisory flags retain separate verdict roles.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "cd lambda/turbo-cache && bun install --frozen-lockfile && bun run typecheck && bun test && bun run bundle:check && bun run zip:check",
+      "sites": [
+        {
+          "definition": "@beep/infra#test:lambda",
+          "step": 0
+        }
+      ],
+      "classification": "nested-lambda-audit",
+      "observedBoundary": "Changes cwd before frozen dependency installation and nested typecheck/test/bundle/ZIP checks. AND composition gates later commands on prior success; installation and artifact writes remain effects.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "echo 'no build needed'",
+      "sites": [
+        {
+          "definition": "@beep/infra#beep:build",
+          "step": 0
+        }
+      ],
+      "classification": "literal-placeholder",
+      "observedBoundary": "Literal echo is an executable script producing a message. It neither compiles an artifact nor represents a missing script.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "portless api-docs.labs.beep sh -c 'bun --watch src/main.ts'",
+      "sites": [
+        {
+          "definition": "@beep/api-docs#dev",
+          "step": 0
+        }
+      ],
+      "classification": "persistent-portless",
+      "observedBoundary": "Quoted nested shell preserves child expansion of PORT where present. Watch/dev/preview process is persistent, owns ports/logs and mutable runtime state, and is not a finite reusable result.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "portless ciops.labs.beep sh -c 'bun --watch src/main.ts'",
+      "sites": [
+        {
+          "definition": "@beep/ciops#dev",
+          "step": 0
+        }
+      ],
+      "classification": "persistent-portless",
+      "observedBoundary": "Quoted nested shell preserves child expansion of PORT where present. Watch/dev/preview process is persistent, owns ports/logs and mutable runtime state, and is not a finite reusable result.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "portless lejeune-bolt-workbench.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
+      "sites": [
+        {
+          "definition": "@beep/lejeune-bolt-workbench#dev",
+          "step": 0
+        }
+      ],
+      "classification": "persistent-portless",
+      "observedBoundary": "Quoted nested shell preserves child expansion of PORT where present. Watch/dev/preview process is persistent, owns ports/logs and mutable runtime state, and is not a finite reusable result.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "portless professional-desktop.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1421}\" --strictPort'",
+      "sites": [
+        {
+          "definition": "@beep/professional-desktop#dev",
+          "step": 0
+        }
+      ],
+      "classification": "persistent-portless",
+      "observedBoundary": "Quoted nested shell preserves child expansion of PORT where present. Watch/dev/preview process is persistent, owns ports/logs and mutable runtime state, and is not a finite reusable result.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "portless semantica.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
+      "sites": [
+        {
+          "definition": "@beep/semantica#dev",
+          "step": 0
+        }
+      ],
+      "classification": "persistent-portless",
+      "observedBoundary": "Quoted nested shell preserves child expansion of PORT where present. Watch/dev/preview process is persistent, owns ports/logs and mutable runtime state, and is not a finite reusable result.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "portless storybook.beep sh -c 'storybook dev -p \"${PORT:-6006}\"'",
+      "sites": [
+        {
+          "definition": "@beep/storybook#storybook",
+          "step": 0
+        }
+      ],
+      "classification": "persistent-portless",
+      "observedBoundary": "Quoted nested shell preserves child expansion of PORT where present. Watch/dev/preview process is persistent, owns ports/logs and mutable runtime state, and is not a finite reusable result.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "portless storybook.beep sh -c 'vite preview --host 0.0.0.0 --port \"${PORT:-6006}\" --outDir storybook-static'",
+      "sites": [
+        {
+          "definition": "@beep/storybook#storybook:start",
+          "step": 0
+        }
+      ],
+      "classification": "persistent-portless",
+      "observedBoundary": "Quoted nested shell preserves child expansion of PORT where present. Watch/dev/preview process is persistent, owns ports/logs and mutable runtime state, and is not a finite reusable result.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "portless trustgraph-workbench.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
+      "sites": [
+        {
+          "definition": "@beep/trustgraph-workbench#dev",
+          "step": 0
+        }
+      ],
+      "classification": "persistent-portless",
+      "observedBoundary": "Quoted nested shell preserves child expansion of PORT where present. Watch/dev/preview process is persistent, owns ports/logs and mutable runtime state, and is not a finite reusable result.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "sh -c 'biome check package.json postcss.config.mjs tsconfig.json tsconfig.stories.json vitest.config.ts vitest.storybook.config.ts vitest.storybook.setup.ts .storybook/ scripts/ \"$(git rev-parse --show-toplevel)\"/packages/foundation/ui-system/*/stories/ --write'",
+      "sites": [
+        {
+          "definition": "@beep/storybook#beep:lint:fix",
+          "step": 0
+        }
+      ],
+      "classification": "cross-workspace-shell-selection",
+      "observedBoundary": "Shell invokes Git root substitution and expands cross-workspace story paths. Explicit --write mutates selected files; check and fix remain separate computations.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    },
+    {
+      "command": "sh -c 'biome check package.json postcss.config.mjs tsconfig.json tsconfig.stories.json vitest.config.ts vitest.storybook.config.ts vitest.storybook.setup.ts .storybook/ scripts/ \"$(git rev-parse --show-toplevel)\"/packages/foundation/ui-system/*/stories/'",
+      "sites": [
+        {
+          "definition": "@beep/storybook#beep:lint",
+          "step": 0
+        }
+      ],
+      "classification": "cross-workspace-shell-selection",
+      "observedBoundary": "Shell invokes Git root substitution and expands cross-workspace story paths. Explicit --write mutates selected files; check and fix remain separate computations.",
+      "authority": "static command and reviewed handler boundary; no runtime qualification"
+    }
+  ],
+  "limits": [
+    "Subprocess/import/tool configuration remains part of the selected computation contract.",
+    "AND-chain later commands are possible steps, not evidence that earlier commands passed.",
+    "Conditional or persistent behavior remains unqualified outside the named pilot."
+  ]
+}

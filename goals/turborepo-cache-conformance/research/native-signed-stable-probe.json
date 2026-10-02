@@ -1,0 +1,168 @@
+{
+  "authority": "Bounded synthetic native-client protocol probe; not accepted producer evidence",
+  "client": {
+    "version": "2.11.4",
+    "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b"
+  },
+  "acceptedAttemptExitCode": 0,
+  "cases": [
+    {
+      "case": "producer",
+      "exitCode": 0,
+      "outputPresent": true,
+      "outputSha256": "d81d05e2755abb0346f248de117e8a7a91768de2944511a013670cfab9527729",
+      "eventIds": [1, 2, 3],
+      "summaries": 1
+    },
+    {
+      "case": "valid",
+      "exitCode": 0,
+      "outputPresent": true,
+      "outputSha256": "d81d05e2755abb0346f248de117e8a7a91768de2944511a013670cfab9527729",
+      "eventIds": [4, 5],
+      "summaries": 1
+    },
+    {
+      "case": "missing-tag",
+      "exitCode": 42,
+      "outputPresent": false,
+      "outputSha256": null,
+      "eventIds": [6, 7],
+      "summaries": 1
+    },
+    {
+      "case": "corrupt-tag",
+      "exitCode": 42,
+      "outputPresent": false,
+      "outputSha256": null,
+      "eventIds": [8, 9],
+      "summaries": 1
+    }
+  ],
+  "wireEvents": [
+    {
+      "id": 1,
+      "method": "GET",
+      "route": "/v8/artifacts/status",
+      "role": "writer",
+      "status": 200,
+      "mode": "valid",
+      "selectorNames": ["teamId"],
+      "bytes": 20,
+      "bodySha256": "a3e4e5a7745800459fc40635b77d50d3b651655e899ee82ccd324a506ecee8fa",
+      "tagPresent": false
+    },
+    {
+      "id": 2,
+      "method": "GET",
+      "route": "/v8/artifacts/21a66d93ac9926e9",
+      "role": "writer",
+      "status": 404,
+      "mode": "valid",
+      "selectorNames": ["teamId"],
+      "bytes": 0,
+      "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tagPresent": false
+    },
+    {
+      "id": 3,
+      "method": "PUT",
+      "route": "/v8/artifacts/21a66d93ac9926e9",
+      "role": "writer",
+      "status": 200,
+      "mode": "valid",
+      "selectorNames": ["teamId"],
+      "bytes": 0,
+      "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tagPresent": true
+    },
+    {
+      "id": 4,
+      "method": "GET",
+      "route": "/v8/artifacts/status",
+      "role": "reader",
+      "status": 200,
+      "mode": "valid",
+      "selectorNames": ["teamId"],
+      "bytes": 20,
+      "bodySha256": "a3e4e5a7745800459fc40635b77d50d3b651655e899ee82ccd324a506ecee8fa",
+      "tagPresent": false
+    },
+    {
+      "id": 5,
+      "method": "GET",
+      "route": "/v8/artifacts/21a66d93ac9926e9",
+      "role": "reader",
+      "status": 200,
+      "mode": "valid",
+      "selectorNames": ["teamId"],
+      "bytes": 188,
+      "bodySha256": "22345748780367af35423ba1fc1542a460fc37226c9a33a33b6dba011d045659",
+      "tagPresent": true
+    },
+    {
+      "id": 6,
+      "method": "GET",
+      "route": "/v8/artifacts/status",
+      "role": "reader",
+      "status": 200,
+      "mode": "missing-tag",
+      "selectorNames": ["teamId"],
+      "bytes": 20,
+      "bodySha256": "a3e4e5a7745800459fc40635b77d50d3b651655e899ee82ccd324a506ecee8fa",
+      "tagPresent": false
+    },
+    {
+      "id": 7,
+      "method": "GET",
+      "route": "/v8/artifacts/21a66d93ac9926e9",
+      "role": "reader",
+      "status": 200,
+      "mode": "missing-tag",
+      "selectorNames": ["teamId"],
+      "bytes": 188,
+      "bodySha256": "22345748780367af35423ba1fc1542a460fc37226c9a33a33b6dba011d045659",
+      "tagPresent": false
+    },
+    {
+      "id": 8,
+      "method": "GET",
+      "route": "/v8/artifacts/status",
+      "role": "reader",
+      "status": 200,
+      "mode": "corrupt-tag",
+      "selectorNames": ["teamId"],
+      "bytes": 20,
+      "bodySha256": "a3e4e5a7745800459fc40635b77d50d3b651655e899ee82ccd324a506ecee8fa",
+      "tagPresent": false
+    },
+    {
+      "id": 9,
+      "method": "GET",
+      "route": "/v8/artifacts/21a66d93ac9926e9",
+      "role": "reader",
+      "status": 200,
+      "mode": "corrupt-tag",
+      "selectorNames": ["teamId"],
+      "bytes": 188,
+      "bodySha256": "22345748780367af35423ba1fc1542a460fc37226c9a33a33b6dba011d045659",
+      "tagPresent": true
+    }
+  ],
+  "nativeRemoteHitConfirmed": true,
+  "rejectionRestoredNoOutput": true,
+  "rejectedAttempt": "All wire requests were tenant-denied; zero producer exit did not imply upload success.",
+  "retention": {
+    "reference": "signed-native-stable-probe",
+    "files": 75,
+    "bytes": 56391,
+    "manifestSha256": "b56e5da952cb15cdc1fe5833ca24c54da6298ca45b70646244a274fc6773d16e"
+  },
+  "limits": [
+    "No protected producer or storage-boundary proof.",
+    "No real-pilot, three-pair or qualification credit.",
+    "No canary result yet.",
+    "No cloud backend, IAM, full corpus or capacity result.",
+    "Successful PUT receipt records response bytes; independent stored-upload digest proof is still required."
+  ]
+}

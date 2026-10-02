@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import {
   BakeCheckReport,
   BakeConfig,
@@ -22,15 +23,15 @@ import {
 } from "@beep/repo-cli/commands/Runners";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { Sha256Hex } from "@beep/schema";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { NodeCrypto } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Match, Path, pipe, Ref, Sink, Stream } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
+import { Context, Effect, FileSystem, Layer, Match, Path, pipe, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
@@ -66,7 +67,7 @@ const withTempDirectory = <Result, Error, Requirements>(
     Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),
     use,
     (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true }).pipe(Effect.orDie))
-  ).pipe(provideScopedLayer(PlatformLayer));
+  );
 
 const report = (priorPin: O.Option<string>) =>
   BakeReport.make({
@@ -230,86 +231,95 @@ describe("runner bake schemas", () => {
     })
   );
 
-  it("round-trips arbitrary reports through the JSON codec", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(BakeReport)]), ([original]) => {
-          const encoded = Effect.runSync(BakeReportJson.encode(original));
-          expect(Effect.runSync(BakeReportJson.decode(encoded))).toStrictEqual(original);
-
-          return true;
-        })
-      )._tag
-    ).toBe("Passed"));
+  it.effect.prop(
+    "round-trips arbitrary reports through the JSON codec",
+    [BakeReport],
+    ([original]) =>
+      Effect.gen(function* () {
+        const encoded = yield* BakeReportJson.encode(original);
+        expect(yield* BakeReportJson.decode(encoded)).toStrictEqual(original);
+      }),
+    { arbitrary: fcRuns(100) }
+  );
 });
 
 describe("runner image manifest checks", () => {
-  it.effect("checks all freshness keys and the intended pin without AWS credentials", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const manifestPath = path.join(tmpDir, "runner-image.json");
-        const commands = yield* Ref.make<ReadonlyArray<string>>(A.empty());
-        const spawner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command) || command.command !== "git") {
-            return Effect.die("manifest checks must never invoke AWS");
-          }
-          return Ref.update(commands, A.append(command.command)).pipe(
-            Effect.as(stubHandle(A.contains(command.args, "status") ? "" : "0123456789abcdef0123456789abcdef01234567"))
-          );
-        });
-        const testLayer = RunnersServiceLive.pipe(
-          Layer.provide(
-            Layer.mergeAll(
-              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-              Layer.succeed(FileSystem.FileSystem, {
-                ...fs,
-                readFileString: Effect.fn("RunnerBakeTest.readFileString")(
-                  (...[file, options]: Parameters<typeof fs.readFileString>) =>
-                    Str.endsWith("infra/ci-runners/Pulumi.production.yaml")(file)
-                      ? Effect.succeed("config:\n  ciFleetController:amiId: ami-0123456789abcdef0\n")
-                      : fs.readFileString(file, options)
-                ),
-              }),
-              NodePath.layer,
-              NodeCrypto.layer
-            )
-          )
-        );
-        yield* Effect.gen(function* () {
-          const service = yield* RunnersService;
-          const inputs = yield* service.plan;
-          const current = BakeReport.make({
-            ...report(O.none()),
-            lockfileSha256: inputs.lockfileSha256,
-            bunArchiveSha256: inputs.bunArchiveSha256,
-            bunVersion: inputs.bunVersion,
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("checks all freshness keys and the intended pin without AWS credentials", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const manifestPath = path.join(tmpDir, "runner-image.json");
+          const commands = yield* Ref.make<ReadonlyArray<string>>(A.empty());
+          const spawner = ChildProcessSpawner.make((command) => {
+            if (!ChildProcess.isStandardCommand(command) || command.command !== "git") {
+              return Effect.die("manifest checks must never invoke AWS");
+            }
+            return Ref.update(commands, A.append(command.command)).pipe(
+              Effect.as(
+                stubHandle(A.contains(command.args, "status") ? "" : "0123456789abcdef0123456789abcdef01234567")
+              )
+            );
           });
-          const write = (value: BakeReport) =>
-            BakeReportJson.encode(value).pipe(Effect.flatMap((json) => fs.writeFileString(manifestPath, json)));
-          yield* write(current);
-          expect((yield* service.checkManifest(manifestPath)).fresh).toBe(true);
-          const observed = yield* BakeManifestJson.encode(current);
-          yield* fs.writeFileString(manifestPath, observed);
-          expect((yield* service.checkManifest(manifestPath)).fresh).toBe(true);
-          for (const stale of [
-            BakeReport.make({ ...current, lockfileSha256: digest }),
-            BakeReport.make({ ...current, bunArchiveSha256: bunArchiveDigest }),
-            BakeReport.make({ ...current, bunVersion: "0.0.0" }),
-          ]) {
-            yield* write(stale);
-            expect((yield* service.checkManifest(manifestPath)).fresh).toBe(false);
-          }
-          yield* write(BakeReport.make({ ...current, amiId: "ami-other" }));
-          expect((yield* Effect.flip(service.checkManifest(manifestPath))).message).toContain("production AMI pin");
-          yield* fs.writeFileString(manifestPath, "{}");
-          expect((yield* Effect.flip(service.checkManifest(manifestPath))).message).toContain("Invalid intended");
-        }).pipe(provideScopedLayer(testLayer));
-        expect(A.dedupe(yield* Ref.get(commands))).toEqual(["git"]);
-      })
-    )
-  );
+          const testLayer = RunnersServiceLive.pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+                Layer.succeed(FileSystem.FileSystem, {
+                  ...fs,
+                  readFileString: Effect.fn("RunnerBakeTest.readFileString")(
+                    (...[file, options]: Parameters<typeof fs.readFileString>) =>
+                      Str.endsWith("infra/ci-runners/Pulumi.production.yaml")(file)
+                        ? Effect.succeed("config:\n  ciFleetController:amiId: ami-0123456789abcdef0\n")
+                        : fs.readFileString(file, options)
+                  ),
+                }),
+                NodePath.layer,
+                NodeCrypto.layer
+              )
+            )
+          );
+          yield* Effect.gen(function* () {
+            const service = yield* RunnersService;
+            const inputs = yield* service.plan;
+            const current = BakeReport.make({
+              ...report(O.none()),
+              lockfileSha256: inputs.lockfileSha256,
+              bunArchiveSha256: inputs.bunArchiveSha256,
+              bunVersion: inputs.bunVersion,
+            });
+            const write = (value: BakeReport) =>
+              BakeReportJson.encode(value).pipe(Effect.flatMap((json) => fs.writeFileString(manifestPath, json)));
+            yield* write(current);
+            expect((yield* service.checkManifest(manifestPath)).fresh).toBe(true);
+            const observed = yield* BakeManifestJson.encode(current);
+            yield* fs.writeFileString(manifestPath, observed);
+            expect((yield* service.checkManifest(manifestPath)).fresh).toBe(true);
+            for (const stale of [
+              BakeReport.make({ ...current, lockfileSha256: digest }),
+              BakeReport.make({ ...current, bunArchiveSha256: bunArchiveDigest }),
+              BakeReport.make({ ...current, bunVersion: "0.0.0" }),
+            ]) {
+              yield* write(stale);
+              expect((yield* service.checkManifest(manifestPath)).fresh).toBe(false);
+            }
+            yield* write(BakeReport.make({ ...current, amiId: "ami-other" }));
+            expect((yield* Effect.flip(service.checkManifest(manifestPath))).message).toContain("production AMI pin");
+            yield* fs.writeFileString(manifestPath, "{}");
+            expect((yield* Effect.flip(service.checkManifest(manifestPath))).message).toContain("Invalid intended");
+          }).pipe(
+            Effect.provideServiceEffect(
+              RunnersService,
+              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+            ),
+            Effect.scoped
+          );
+          expect(A.dedupe(yield* Ref.get(commands))).toEqual(["git"]);
+        })
+      )
+    );
+  });
 
   it.effect("requires check mode and routes manifest checks to the AWS-free service", () =>
     Effect.gen(function* () {
@@ -339,39 +349,43 @@ describe("runner image manifest checks", () => {
       expect(yield* TestConsole.logLines).toStrictEqual([
         "AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no",
       ]);
-    }).pipe(provideScopedLayer(TestConsole.layer))
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 });
 
 describe("runner bake report writer", () => {
-  it.effect("writes schema-encoded bytes without leaking a raw Option", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const reportPath = path.join(tmpDir, "nested", "bake-report.json");
-        yield* writeBakeReportForTesting(reportPath, report(O.some("ami-00112233445566778")));
-        const bytes = yield* fs.readFileString(reportPath);
-        expect(bytes).not.toContain('"_id":"Option"');
-        expect(bytes).toContain('"priorPin":"ami-00112233445566778"');
-        assertSome((yield* BakeReportJson.decode(bytes)).priorPin, "ami-00112233445566778");
-      })
-    )
-  );
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("writes schema-encoded bytes without leaking a raw Option", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const reportPath = path.join(tmpDir, "nested", "bake-report.json");
+          yield* writeBakeReportForTesting(reportPath, report(O.some("ami-00112233445566778")));
+          const bytes = yield* fs.readFileString(reportPath);
+          expect(bytes).not.toContain('"_id":"Option"');
+          expect(bytes).toContain('"priorPin":"ami-00112233445566778"');
+          assertSome((yield* BakeReportJson.decode(bytes)).priorPin, "ami-00112233445566778");
+        })
+      )
+    );
+  });
 
-  it.effect("maps report-directory creation failures", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const blockerPath = path.join(tmpDir, "blocker");
-        const reportPath = path.join(blockerPath, "bake-report.json");
-        yield* fs.writeFileString(blockerPath, "not a directory");
-        const error = yield* Effect.flip(writeBakeReportForTesting(reportPath, report(O.none())));
-        expect(error.message).toBe(`Failed to create the report directory for ${reportPath}.`);
-      })
-    )
-  );
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("maps report-directory creation failures", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const blockerPath = path.join(tmpDir, "blocker");
+          const reportPath = path.join(blockerPath, "bake-report.json");
+          yield* fs.writeFileString(blockerPath, "not a directory");
+          const error = yield* Effect.flip(writeBakeReportForTesting(reportPath, report(O.none())));
+          expect(error.message).toBe(`Failed to create the report directory for ${reportPath}.`);
+        })
+      )
+    );
+  });
 });
 
 describe("runner bake planning and argv", () => {
@@ -395,7 +409,7 @@ describe("runner bake planning and argv", () => {
         "AMI: ami-0123456789abcdef0\nlockfile: fresh\nbun version: fresh\nfresh: yes",
         "baked AMI: ami-0123456789abcdef0\nbase AMI: ami-0fedcba9876543210\nlockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\npin: cd infra/ci-runners && pulumi config set ciFleetController:amiId ami-0123456789abcdef0 --stack production",
       ]);
-    }).pipe(provideScopedLayer(TestConsole.layer))
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
   it.effect("fails a stale check after rendering its report", () =>
@@ -405,7 +419,7 @@ describe("runner bake planning and argv", () => {
       expect(yield* TestConsole.logLines).toStrictEqual([
         "AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no",
       ]);
-    }).pipe(provideScopedLayer(TestConsole.layer))
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
   it.effect("reports each missing required bake flag", () =>
@@ -423,27 +437,28 @@ describe("runner bake planning and argv", () => {
     })
   );
 
-  it.effect("passes AWS an explicit global-region argv without a shell", () =>
-    Effect.gen(function* () {
-      const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-      const spawner = ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) {
-          return Effect.die("runner bake never spawns a piped command");
-        }
-        return Ref.update(commands, A.append([command.command, ...command.args])).pipe(
-          Effect.as(stubHandle('{"Images":[]}'))
+  it.layer(NodeCrypto.layer, { timeout: "10 seconds" })((it) => {
+    it.effect("passes AWS an explicit global-region argv without a shell", () =>
+      Effect.gen(function* () {
+        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+        const spawner = ChildProcessSpawner.make((command) => {
+          if (!ChildProcess.isStandardCommand(command)) {
+            return Effect.die("runner bake never spawns a piped command");
+          }
+          return Ref.update(commands, A.append([command.command, ...command.args])).pipe(
+            Effect.as(stubHandle('{"Images":[]}'))
+          );
+        });
+        const output = yield* runAwsForTesting("us-east-1", ["ec2", "describe-images", "--image-ids", "ami-123"]).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
         );
-      });
-      const output = yield* runAwsForTesting("us-east-1", ["ec2", "describe-images", "--image-ids", "ami-123"]).pipe(
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-        provideScopedLayer(NodeCrypto.layer)
-      );
-      expect(output).toBe('{"Images":[]}');
-      expect(yield* Ref.get(commands)).toStrictEqual([
-        ["aws", "--no-cli-pager", "--region", "us-east-1", "ec2", "describe-images", "--image-ids", "ami-123"],
-      ]);
-    })
-  );
+        expect(output).toBe('{"Images":[]}');
+        expect(yield* Ref.get(commands)).toStrictEqual([
+          ["aws", "--no-cli-pager", "--region", "us-east-1", "ec2", "describe-images", "--image-ids", "ami-123"],
+        ]);
+      })
+    );
+  });
 
   it.effect("plans and checks freshness through the live service with a scripted spawner", () =>
     Effect.gen(function* () {
@@ -503,7 +518,13 @@ describe("runner bake planning and argv", () => {
         yield* Ref.set(localPlan, O.some(currentPlan));
         const check = yield* service.check("us-west-2");
         return { check, currentPlan };
-      }).pipe(provideScopedLayer(testLayer));
+      }).pipe(
+        Effect.provideServiceEffect(
+          RunnersService,
+          Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+        ),
+        Effect.scoped
+      );
 
       expect(currentPlan.requiredFlags).toStrictEqual(["--region", "--subnet", "--security-group"]);
       expect(A.map(currentPlan.steps, (step) => step.name)).toStrictEqual([
@@ -523,69 +544,77 @@ describe("runner bake planning and argv", () => {
     })
   );
 
-  it.effect("bakes with safe JSON launch arguments, a unique AMI name, and bounded state polling", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-        // AWS CLI v2 hands back get-console-output's Output already decoded.
-        const consoleOutput = "BEEP_RUNNERS_BAKE_COMPLETE";
-        const spawner = makeBakeSpawner(commands, consoleOutput);
-        const testLayer = RunnersServiceLive.pipe(
-          Layer.provide(
-            Layer.mergeAll(
-              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-              NodeFileSystem.layer,
-              NodePath.layer,
-              NodeCrypto.layer
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("bakes with safe JSON launch arguments, a unique AMI name, and bounded state polling", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+          // AWS CLI v2 hands back get-console-output's Output already decoded.
+          const consoleOutput = "BEEP_RUNNERS_BAKE_COMPLETE";
+          const spawner = makeBakeSpawner(commands, consoleOutput);
+          const testLayer = RunnersServiceLive.pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+                NodeFileSystem.layer,
+                NodePath.layer,
+                NodeCrypto.layer
+              )
             )
-          )
-        );
-        const reportPath = path.join(tmpDir, "bake-report.json");
-        const baked = yield* Effect.gen(function* () {
-          const service = yield* RunnersService;
-          return yield* service.bake(bakeConfig(), O.some(reportPath));
-        }).pipe(provideScopedLayer(testLayer));
-        const captured = yield* Ref.get(commands);
-        const runInstances = yield* A.findFirst(captured, A.contains("run-instances")).pipe(
-          O.match({ onNone: () => Effect.die("missing run-instances"), onSome: Effect.succeed })
-        );
-        const createImage = yield* A.findFirst(captured, A.contains("create-image")).pipe(
-          O.match({ onNone: () => Effect.die("missing create-image"), onSome: Effect.succeed })
-        );
+          );
+          const reportPath = path.join(tmpDir, "bake-report.json");
+          const baked = yield* Effect.gen(function* () {
+            const service = yield* RunnersService;
+            return yield* service.bake(bakeConfig(), O.some(reportPath));
+          }).pipe(
+            Effect.provideServiceEffect(
+              RunnersService,
+              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+            ),
+            Effect.scoped
+          );
+          const captured = yield* Ref.get(commands);
+          const runInstances = yield* A.findFirst(captured, A.contains("run-instances")).pipe(
+            O.match({ onNone: () => Effect.die("missing run-instances"), onSome: Effect.succeed })
+          );
+          const createImage = yield* A.findFirst(captured, A.contains("create-image")).pipe(
+            O.match({ onNone: () => Effect.die("missing create-image"), onSome: Effect.succeed })
+          );
 
-        expect(baked.amiId).toBe("ami-baked");
-        expect(
-          pipe(
-            argumentAfter(runInstances, "--tag-specifications"),
-            O.exists(Str.startsWith('{"ResourceType":"instance","Tags":['))
-          )
-        ).toBe(true);
-        expect(A.contains("--iam-instance-profile")(runInstances)).toBe(false);
-        // Only the bake mode ships the revision to a guest clone, and it must
-        // prove reachability against the canonical remote before AWS calls.
-        expect(A.some(captured, A.contains("--contains"))).toBe(true);
-        expect(A.some(captured, A.contains("remote"))).toBe(true);
-        assertSome(
-          argumentAfter(runInstances, "--block-device-mappings"),
-          '[{"DeviceName":"/dev/xvda","Ebs":{"DeleteOnTermination":true,"Encrypted":true,"Iops":3000,"Throughput":250,"VolumeSize":100,"VolumeType":"gp3"}}]'
-        );
-        assertSome(
-          argumentAfter(createImage, "--name"),
-          `beep-ci-runners-${Str.slice(0, 12)(baked.lockfileSha256)}-1786640400000`
-        );
-        expect(
-          pipe(
-            argumentAfter(createImage, "--tag-specifications"),
-            O.exists(Str.includes('{"Key":"beep-ci","Value":"runner"}'))
-          )
-        ).toBe(true);
-        expect(A.some(captured, A.contains("describe-instances"))).toBe(true);
-        expect(A.some(captured, A.contains("describe-images"))).toBe(true);
-        expect(A.some(captured, A.contains("wait"))).toBe(false);
-      })
-    )
-  );
+          expect(baked.amiId).toBe("ami-baked");
+          expect(
+            pipe(
+              argumentAfter(runInstances, "--tag-specifications"),
+              O.exists(Str.startsWith('{"ResourceType":"instance","Tags":['))
+            )
+          ).toBe(true);
+          expect(A.contains("--iam-instance-profile")(runInstances)).toBe(false);
+          // Only the bake mode ships the revision to a guest clone, and it must
+          // prove reachability against the canonical remote before AWS calls.
+          expect(A.some(captured, A.contains("--contains"))).toBe(true);
+          expect(A.some(captured, A.contains("remote"))).toBe(true);
+          assertSome(
+            argumentAfter(runInstances, "--block-device-mappings"),
+            '[{"DeviceName":"/dev/xvda","Ebs":{"DeleteOnTermination":true,"Encrypted":true,"Iops":3000,"Throughput":250,"VolumeSize":100,"VolumeType":"gp3"}}]'
+          );
+          assertSome(
+            argumentAfter(createImage, "--name"),
+            `beep-ci-runners-${Str.slice(0, 12)(baked.lockfileSha256)}-1786640400000`
+          );
+          expect(
+            pipe(
+              argumentAfter(createImage, "--tag-specifications"),
+              O.exists(Str.includes('{"Key":"beep-ci","Value":"runner"}'))
+            )
+          ).toBe(true);
+          expect(A.some(captured, A.contains("describe-instances"))).toBe(true);
+          expect(A.some(captured, A.contains("describe-images"))).toBe(true);
+          expect(A.some(captured, A.contains("wait"))).toBe(false);
+        })
+      )
+    );
+  });
 
   it.effect("maps propagation NotFound errors into the pending retry signal", () =>
     Effect.gen(function* () {
@@ -616,119 +645,143 @@ describe("runner bake planning and argv", () => {
     })
   );
 
-  it.effect("classifies an unposted post-stop console read as pending", () =>
-    Effect.gen(function* () {
-      // EC2 posts a stopped instance's console minutes after the stop; an
-      // empty read is the propagation window, never a bake verdict.
-      const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-      const pending = yield* Effect.flip(
-        readPostedConsoleForTesting("us-east-1", "i-bake").pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, makeBakeSpawner(commands, "")),
-          provideScopedLayer(NodeCrypto.layer)
-        )
-      );
-      expect(pending._tag).toBe("AwsResourcePending");
-
-      // A partial publication (boot noise, no marker either way) is the same
-      // propagation window: the narrating script writes from its first
-      // command, so nonempty is not terminal.
-      const partial = yield* Effect.flip(
-        readPostedConsoleForTesting("us-east-1", "i-bake").pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            makeBakeSpawner(commands, "cloud-init boot noise without any marker")
-          ),
-          provideScopedLayer(NodeCrypto.layer)
-        )
-      );
-      expect(partial._tag).toBe("AwsResourcePending");
-    })
-  );
-
-  it.effect("refuses to bake when no remote points at the canonical repository", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
+  it.layer(NodeCrypto.layer, { timeout: "10 seconds" })((it) => {
+    it.effect("classifies an unposted post-stop console read as pending", () =>
+      Effect.gen(function* () {
+        // EC2 posts a stopped instance's console minutes after the stop; an
+        // empty read is the propagation window, never a bake verdict.
         const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-        const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", {
-          remotes: "fork\thttps://github.com/someone/beep-effect-fork.git (fetch)",
-        });
-        const testLayer = RunnersServiceLive.pipe(
-          Layer.provide(
-            Layer.mergeAll(
-              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-              NodeFileSystem.layer,
-              NodePath.layer,
-              NodeCrypto.layer
+        const pending = yield* Effect.flip(
+          readPostedConsoleForTesting("us-east-1", "i-bake").pipe(
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, makeBakeSpawner(commands, ""))
+          )
+        );
+        expect(pending._tag).toBe("AwsResourcePending");
+
+        // A partial publication (boot noise, no marker either way) is the same
+        // propagation window: the narrating script writes from its first
+        // command, so nonempty is not terminal.
+        const partial = yield* Effect.flip(
+          readPostedConsoleForTesting("us-east-1", "i-bake").pipe(
+            Effect.provideService(
+              ChildProcessSpawner.ChildProcessSpawner,
+              makeBakeSpawner(commands, "cloud-init boot noise without any marker")
             )
           )
         );
-        const error = yield* Effect.gen(function* () {
-          const service = yield* RunnersService;
-          return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
-        }).pipe(provideScopedLayer(testLayer));
-        expect(error.message).toContain("No Git remote points at github.com/beep-effect/beep-effect");
-        // The guard must refuse before any AWS call reaches the spawner.
-        expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
+        expect(partial._tag).toBe("AwsResourcePending");
       })
-    )
-  );
+    );
+  });
 
-  it.effect("refuses to bake a revision reachable only from a fork remote", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-        const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", { contains: "  fork/feature" });
-        const testLayer = RunnersServiceLive.pipe(
-          Layer.provide(
-            Layer.mergeAll(
-              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-              NodeFileSystem.layer,
-              NodePath.layer,
-              NodeCrypto.layer
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("refuses to bake when no remote points at the canonical repository", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+          const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", {
+            remotes: "fork\thttps://github.com/someone/beep-effect-fork.git (fetch)",
+          });
+          const testLayer = RunnersServiceLive.pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+                NodeFileSystem.layer,
+                NodePath.layer,
+                NodeCrypto.layer
+              )
             )
-          )
-        );
-        const error = yield* Effect.gen(function* () {
-          const service = yield* RunnersService;
-          return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
-        }).pipe(provideScopedLayer(testLayer));
-        expect(error.message).toContain("is not reachable from any github.com/beep-effect/beep-effect remote branch");
-        expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
-      })
-    )
-  );
-
-  it.effect("terminates the temporary instance when bake verification fails", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-        const consoleOutput = "BEEP_RUNNERS_BAKE_FAILED line 5: false";
-        const spawner = makeBakeSpawner(commands, consoleOutput);
-        const testLayer = RunnersServiceLive.pipe(
-          Layer.provide(
-            Layer.mergeAll(
-              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-              NodeFileSystem.layer,
-              NodePath.layer,
-              NodeCrypto.layer
-            )
-          )
-        );
-        const error = yield* Effect.gen(function* () {
-          const service = yield* RunnersService;
-          return yield* Effect.flip(
-            service.bake(bakeConfig(O.some("beep-runners-bake")), O.some(path.join(tmpDir, "bake-report.json")))
           );
-        }).pipe(provideScopedLayer(testLayer));
+          const error = yield* Effect.gen(function* () {
+            const service = yield* RunnersService;
+            return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
+          }).pipe(
+            Effect.provideServiceEffect(
+              RunnersService,
+              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+            ),
+            Effect.scoped
+          );
+          expect(error.message).toContain("No Git remote points at github.com/beep-effect/beep-effect");
+          // The guard must refuse before any AWS call reaches the spawner.
+          expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
+        })
+      )
+    );
+  });
 
-        expect(error.message).toContain("stopped without the BEEP_RUNNERS_BAKE_COMPLETE success marker");
-        expect(A.some(yield* Ref.get(commands), A.contains("terminate-instances"))).toBe(true);
-      })
-    )
-  );
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("refuses to bake a revision reachable only from a fork remote", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+          const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", { contains: "  fork/feature" });
+          const testLayer = RunnersServiceLive.pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+                NodeFileSystem.layer,
+                NodePath.layer,
+                NodeCrypto.layer
+              )
+            )
+          );
+          const error = yield* Effect.gen(function* () {
+            const service = yield* RunnersService;
+            return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
+          }).pipe(
+            Effect.provideServiceEffect(
+              RunnersService,
+              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+            ),
+            Effect.scoped
+          );
+          expect(error.message).toContain("is not reachable from any github.com/beep-effect/beep-effect remote branch");
+          expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
+        })
+      )
+    );
+  });
+
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("terminates the temporary instance when bake verification fails", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+          const consoleOutput = "BEEP_RUNNERS_BAKE_FAILED line 5: false";
+          const spawner = makeBakeSpawner(commands, consoleOutput);
+          const testLayer = RunnersServiceLive.pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+                NodeFileSystem.layer,
+                NodePath.layer,
+                NodeCrypto.layer
+              )
+            )
+          );
+          const error = yield* Effect.gen(function* () {
+            const service = yield* RunnersService;
+            return yield* Effect.flip(
+              service.bake(bakeConfig(O.some("beep-runners-bake")), O.some(path.join(tmpDir, "bake-report.json")))
+            );
+          }).pipe(
+            Effect.provideServiceEffect(
+              RunnersService,
+              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+            ),
+            Effect.scoped
+          );
+
+          expect(error.message).toContain("stopped without the BEEP_RUNNERS_BAKE_COMPLETE success marker");
+          expect(A.some(yield* Ref.get(commands), A.contains("terminate-instances"))).toBe(true);
+        })
+      )
+    );
+  });
 
   it.effect("refuses dirty lockfile inputs before making an AWS call", () =>
     Effect.gen(function* () {
@@ -753,7 +806,13 @@ describe("runner bake planning and argv", () => {
       const error = yield* Effect.gen(function* () {
         const service = yield* RunnersService;
         return yield* Effect.flip(service.plan);
-      }).pipe(provideScopedLayer(testLayer));
+      }).pipe(
+        Effect.provideServiceEffect(
+          RunnersService,
+          Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+        ),
+        Effect.scoped
+      );
 
       expect(error.message).toBe(
         "Refusing to bake while bun.lock, .bun-version, or .bun-linux-x64.sha256 has uncommitted changes."
@@ -818,29 +877,31 @@ describe("runner bake planning and argv", () => {
     expect(script).not.toContain("AWS_SESSION_TOKEN");
   });
 
-  it.effect("keeps the cloud bootstrap on pinned archives and anchored signature status", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const repoRoot = yield* findRepoRoot();
-      const script = yield* fs.readFileString(path.join(repoRoot, ".cursor", "install.sh"));
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("keeps the cloud bootstrap on pinned archives and anchored signature status", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        const script = yield* fs.readFileString(path.join(repoRoot, ".cursor", "install.sh"));
 
-      expect(script).not.toContain("https://bun.sh/install");
-      expect(script).toContain(
-        "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
-      );
-      expect(script).toContain(".bun-linux-x64.sha256");
-      expect(script).toContain("sha256sum --check --strict -");
-      expect(script.indexOf("sha256sum --check --strict -")).toBeLessThan(
-        script.indexOf('install -m 0755 "${bun_work}/bun-linux-x64/bun"')
-      );
-      expect(script).toContain('grep -q "^\\[GNUPG:\\] VALIDSIG ${OP_GPG_FINGERPRINT} "');
-      expect(script).not.toContain('grep -q "VALIDSIG ${OP_GPG_FINGERPRINT}"');
-    }).pipe(provideScopedLayer(PlatformLayer))
-  );
+        expect(script).not.toContain("https://bun.sh/install");
+        expect(script).toContain(
+          "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
+        );
+        expect(script).toContain(".bun-linux-x64.sha256");
+        expect(script).toContain("sha256sum --check --strict -");
+        expect(script.indexOf("sha256sum --check --strict -")).toBeLessThan(
+          script.indexOf('install -m 0755 "${bun_work}/bun-linux-x64/bun"')
+        );
+        expect(script).toContain('grep -q "^\\[GNUPG:\\] VALIDSIG ${OP_GPG_FINGERPRINT} "');
+        expect(script).not.toContain('grep -q "VALIDSIG ${OP_GPG_FINGERPRINT}"');
+      })
+    );
+  });
 
-  it.effect("fails closed when the optional op work directory cannot be allocated", () =>
-    Effect.scoped(
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("fails closed when the optional op work directory cannot be allocated", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -882,30 +943,32 @@ describe("runner bake planning and argv", () => {
         expect(result.exitCode).not.toBe(0);
         expect(yield* fs.exists(curlCapture)).toBe(false);
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
+  });
 
-  it.effect(
-    "authenticates baked Bun and discards inherited dependency caches",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const repoRoot = yield* findRepoRoot();
-      const action = yield* fs.readFileString(path.join(repoRoot, ".github/actions/setup-monorepo-ci/action.yml"));
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "authenticates baked Bun and discards inherited dependency caches",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        const action = yield* fs.readFileString(path.join(repoRoot, ".github/actions/setup-monorepo-ci/action.yml"));
 
-      expect(action).toContain('rm -rf -- "${HOME:?}/.bun/install/cache"');
-      expect(action).toContain("sha256sum /usr/local/bin/bun");
-      expect(action).not.toContain("bun-install-cache");
-      expect(action).toContain('[ "$bun_owner_mode" = "0:0:755" ]');
-      expect(action).toContain('[ "$bunx_target" = "bun" ]');
-      expect(action).toContain('echo "/usr/local/bin" >> "$GITHUB_PATH"');
-      expect(action).not.toContain('echo "$HOME/.bun/bin" >> "$GITHUB_PATH"');
+        expect(action).toContain('rm -rf -- "${HOME:?}/.bun/install/cache"');
+        expect(action).toContain("sha256sum /usr/local/bin/bun");
+        expect(action).not.toContain("bun-install-cache");
+        expect(action).toContain('[ "$bun_owner_mode" = "0:0:755" ]');
+        expect(action).toContain('[ "$bunx_target" = "bun" ]');
+        expect(action).toContain('echo "/usr/local/bin" >> "$GITHUB_PATH"');
+        expect(action).not.toContain('echo "$HOME/.bun/bin" >> "$GITHUB_PATH"');
 
-      expect(action).toContain('[ "$baked_binary" = "$installed_binary" ]');
-      expect(action).toContain('[ "$baked_lock" = "$checkout_lock" ]');
-      expect(action).toContain('[ "$baked_bun" = "$checkout_bun" ]');
-      expect(action).toContain('[ "$baked_archive" = "$checkout_archive" ]');
-      expect(action).toContain("bun install --frozen-lockfile");
-    }, provideScopedLayer(PlatformLayer))
-  );
+        expect(action).toContain('[ "$baked_binary" = "$installed_binary" ]');
+        expect(action).toContain('[ "$baked_lock" = "$checkout_lock" ]');
+        expect(action).toContain('[ "$baked_bun" = "$checkout_bun" ]');
+        expect(action).toContain('[ "$baked_archive" = "$checkout_archive" ]');
+        expect(action).toContain("bun install --frozen-lockfile");
+      })
+    );
+  });
 });

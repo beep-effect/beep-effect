@@ -12,10 +12,11 @@ import {
   YeetAckWontfixResolution,
   yeetInboxAckPath,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as Str from "effect/String";
@@ -29,6 +30,7 @@ const fixReceipt = (id: string): YeetAckReceipt =>
     resolution: YeetAckFixResolution.make({ sha: "2817f286d3" }),
   });
 
+const MemoryLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
 const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requirements>(
@@ -36,7 +38,7 @@ const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requiremen
 ) {
   const fs = yield* FileSystem.FileSystem;
   return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>
-    Effect.ignore(fs.remove(root, { recursive: true }))
+    fs.remove(root, { recursive: true }).pipe(Effect.orDie)
   );
 });
 
@@ -99,221 +101,245 @@ describe("YeetAckReceiptJson", () => {
 });
 
 describe("readYeetAckState", () => {
-  it.live("reports a missing receipt as unacked", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const state = yield* readYeetAckState(root, "coverage-abc123");
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("reports a missing receipt as unacked", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const state = yield* readYeetAckState(root, "coverage-abc123");
 
-        expect(state.acked).toBe(false);
-        expect(state.receipt).toBeNull();
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(state.acked).toBe(false);
+          expect(state.receipt).toBeNull();
+        })
+      )
+    );
+  });
 
-  it.live("reports a written receipt as acked with its decoded content", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        yield* writeYeetAckReceipt(root, fixReceipt("coverage-abc123"));
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("reports a written receipt as acked with its decoded content", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          yield* writeYeetAckReceipt(root, fixReceipt("coverage-abc123"));
 
-        const state = yield* readYeetAckState(root, "coverage-abc123");
+          const state = yield* readYeetAckState(root, "coverage-abc123");
 
-        expect(state.acked).toBe(true);
-        expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f286d3" }));
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(state.acked).toBe(true);
+          expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f286d3" }));
+        })
+      )
+    );
+  });
 
-  it.live("keeps an unexpired waiver acked and re-arms an expired waiver", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const receipt = (expiresAt: string) =>
-          YeetAckReceipt.make({
-            ackedAt: AT,
-            id: "coverage-abc123",
-            resolution: YeetAckWaiveResolution.make({
-              actor: "operator",
-              expiresAt,
-              reason: "temporary exception",
-              shard: "Coverage",
-            }),
-          });
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("keeps an unexpired waiver acked and re-arms an expired waiver", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const receipt = (expiresAt: string) =>
+            YeetAckReceipt.make({
+              ackedAt: AT,
+              id: "coverage-abc123",
+              resolution: YeetAckWaiveResolution.make({
+                actor: "operator",
+                expiresAt,
+                reason: "temporary exception",
+                shard: "Coverage",
+              }),
+            });
 
-        yield* writeYeetAckReceipt(root, receipt("2099-01-01T00:00:00Z"));
-        expect((yield* readYeetAckState(root, "coverage-abc123")).acked).toBe(true);
+          yield* writeYeetAckReceipt(root, receipt("2099-01-01T00:00:00Z"));
+          expect((yield* readYeetAckState(root, "coverage-abc123")).acked).toBe(true);
 
-        yield* writeYeetAckReceipt(root, receipt("2000-01-01T00:00:00Z"));
-        expect((yield* readYeetAckState(root, "coverage-abc123")).acked).toBe(false);
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          yield* writeYeetAckReceipt(root, receipt("2000-01-01T00:00:00Z"));
+          expect((yield* readYeetAckState(root, "coverage-abc123")).acked).toBe(false);
+        })
+      )
+    );
+  });
 
-  it.live("keeps an unreadable receipt acked while dropping its content", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const ackPath = yield* yeetInboxAckPath(root, "coverage-abc123");
-        yield* fs.makeDirectory(`${root}/.beep/inbox/acks`, { recursive: true });
-        yield* fs.writeFileString(ackPath, "corrupted receipt");
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("keeps an unreadable receipt acked while dropping its content", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const ackPath = yield* yeetInboxAckPath(root, "coverage-abc123");
+          yield* fs.makeDirectory(`${root}/.beep/inbox/acks`, { recursive: true });
+          yield* fs.writeFileString(ackPath, "corrupted receipt");
 
-        const state = yield* readYeetAckState(root, "coverage-abc123");
+          const state = yield* readYeetAckState(root, "coverage-abc123");
 
-        // Existence is the acknowledgment; corruption must not re-arm a denial.
-        expect(state.acked).toBe(true);
-        expect(state.receipt).toBeNull();
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          // Existence is the acknowledgment; corruption must not re-arm a denial.
+          expect(state.acked).toBe(true);
+          expect(state.receipt).toBeNull();
+        })
+      )
+    );
+  });
 
-  it.live("keeps a receipt that exists but cannot be read as a file acked", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        // A directory squatting on the receipt path: it exists, but reading it
-        // as a file fails — the ack must survive the read failure.
-        yield* fs.makeDirectory(yield* yeetInboxAckPath(root, "coverage-abc123"), { recursive: true });
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("keeps a receipt that exists but cannot be read as a file acked", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          // A directory squatting on the receipt path: it exists, but reading it
+          // as a file fails — the ack must survive the read failure.
+          yield* fs.makeDirectory(yield* yeetInboxAckPath(root, "coverage-abc123"), { recursive: true });
 
-        const state = yield* readYeetAckState(root, "coverage-abc123");
+          const state = yield* readYeetAckState(root, "coverage-abc123");
 
-        expect(state.acked).toBe(true);
-        expect(state.receipt).toBeNull();
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(state.acked).toBe(true);
+          expect(state.receipt).toBeNull();
+        })
+      )
+    );
+  });
 
-  it.live("rejects a symlinked receipt file instead of accepting its content", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const repoRoot = `${root}/repo`;
-        const outsideRoot = `${root}/outside`;
-        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox/acks`, { recursive: true });
-        yield* fs.makeDirectory(outsideRoot);
-        const id = "coverage-abc123";
-        const outsideAck = `${outsideRoot}/${id}`;
-        yield* fs.writeFileString(outsideAck, `${yield* YeetAckReceiptJson.encode(fixReceipt(id))}\n`);
-        yield* fs.symlink(outsideAck, yield* yeetInboxAckPath(repoRoot, id));
+  it.layer(PlatformLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("rejects a symlinked receipt file instead of accepting its content", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const repoRoot = `${root}/repo`;
+          const outsideRoot = `${root}/outside`;
+          yield* fs.makeDirectory(`${repoRoot}/.beep/inbox/acks`, { recursive: true });
+          yield* fs.makeDirectory(outsideRoot);
+          const id = "coverage-abc123";
+          const outsideAck = `${outsideRoot}/${id}`;
+          yield* fs.writeFileString(outsideAck, `${yield* YeetAckReceiptJson.encode(fixReceipt(id))}\n`);
+          yield* fs.symlink(outsideAck, yield* yeetInboxAckPath(repoRoot, id));
 
-        const state = yield* readYeetAckState(repoRoot, id);
+          const state = yield* readYeetAckState(repoRoot, id);
 
-        expect(state.acked).toBe(false);
-        expect(state.receipt).toBeNull();
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(state.acked).toBe(false);
+          expect(state.receipt).toBeNull();
+        })
+      )
+    );
+  });
 
-  it.live("rejects a symlinked acks parent instead of accepting its receipt", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const repoRoot = `${root}/repo`;
-        const outsideAcks = `${root}/outside-acks`;
-        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
-        yield* fs.makeDirectory(outsideAcks);
-        const id = "coverage-abc123";
-        yield* fs.writeFileString(`${outsideAcks}/${id}`, `${yield* YeetAckReceiptJson.encode(fixReceipt(id))}\n`);
-        yield* fs.symlink(outsideAcks, `${repoRoot}/.beep/inbox/acks`);
+  it.layer(PlatformLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("rejects a symlinked acks parent instead of accepting its receipt", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const repoRoot = `${root}/repo`;
+          const outsideAcks = `${root}/outside-acks`;
+          yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
+          yield* fs.makeDirectory(outsideAcks);
+          const id = "coverage-abc123";
+          yield* fs.writeFileString(`${outsideAcks}/${id}`, `${yield* YeetAckReceiptJson.encode(fixReceipt(id))}\n`);
+          yield* fs.symlink(outsideAcks, `${repoRoot}/.beep/inbox/acks`);
 
-        const state = yield* readYeetAckState(repoRoot, id);
+          const state = yield* readYeetAckState(repoRoot, id);
 
-        expect(state.acked).toBe(false);
-        expect(state.receipt).toBeNull();
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(state.acked).toBe(false);
+          expect(state.receipt).toBeNull();
+        })
+      )
+    );
+  });
 });
 
 describe("writeYeetAckReceipt", () => {
-  it.live("creates the acks directory and writes a decodable receipt at the returned path", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const receipt = fixReceipt("coverage-abc123");
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("creates the acks directory and writes a decodable receipt at the returned path", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const receipt = fixReceipt("coverage-abc123");
 
-        const written = yield* writeYeetAckReceipt(root, receipt);
+          const written = yield* writeYeetAckReceipt(root, receipt);
 
-        expect(written).toBe(`${root}/.beep/inbox/acks/coverage-abc123`);
-        const decoded = yield* YeetAckReceiptJson.decode(Str.trim(yield* fs.readFileString(written)));
-        expect(decoded.id).toBe("coverage-abc123");
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(written).toBe(`${root}/.beep/inbox/acks/coverage-abc123`);
+          const decoded = yield* YeetAckReceiptJson.decode(Str.trim(yield* fs.readFileString(written)));
+          expect(decoded.id).toBe("coverage-abc123");
+        })
+      )
+    );
+  });
 
-  it.live("overwrites a prior receipt so the last resolution stands", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        yield* writeYeetAckReceipt(
-          root,
-          YeetAckReceipt.make({
-            ackedAt: AT,
-            id: "coverage-abc123",
-            resolution: YeetAckWontfixResolution.make({ reason: "premature" }),
-          })
-        );
-        yield* writeYeetAckReceipt(root, fixReceipt("coverage-abc123"));
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("overwrites a prior receipt so the last resolution stands", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          yield* writeYeetAckReceipt(
+            root,
+            YeetAckReceipt.make({
+              ackedAt: AT,
+              id: "coverage-abc123",
+              resolution: YeetAckWontfixResolution.make({ reason: "premature" }),
+            })
+          );
+          yield* writeYeetAckReceipt(root, fixReceipt("coverage-abc123"));
 
-        const state = yield* readYeetAckState(root, "coverage-abc123");
+          const state = yield* readYeetAckState(root, "coverage-abc123");
 
-        expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f286d3" }));
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f286d3" }));
+        })
+      )
+    );
+  });
 
-  it.live("fails with a typed error when the acks location is unusable", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        // A file squatting on the acks directory path makes mkdir fail.
-        yield* fs.makeDirectory(`${root}/.beep/inbox`, { recursive: true });
-        yield* fs.writeFileString(`${root}/.beep/inbox/acks`, "squatter");
+  it.layer(MemoryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("fails with a typed error when the acks location is unusable", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          // A file squatting on the acks directory path makes mkdir fail.
+          yield* fs.makeDirectory(`${root}/.beep/inbox`, { recursive: true });
+          yield* fs.writeFileString(`${root}/.beep/inbox/acks`, "squatter");
 
-        const failure = yield* Effect.flip(writeYeetAckReceipt(root, fixReceipt("coverage-abc123")));
+          const failure = yield* Effect.flip(writeYeetAckReceipt(root, fixReceipt("coverage-abc123")));
 
-        expect(failure.message).toContain("acks");
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(failure.message).toContain("acks");
+        })
+      )
+    );
+  });
 
-  it.live("rejects a symlinked receipt target without overwriting its destination", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const repoRoot = `${root}/repo`;
-        const outsideRoot = `${root}/outside`;
-        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox/acks`, { recursive: true });
-        yield* fs.makeDirectory(outsideRoot);
-        const id = "coverage-abc123";
-        const outsideAck = `${outsideRoot}/${id}`;
-        const sentinel = "outside target must stay unchanged\n";
-        yield* fs.writeFileString(outsideAck, sentinel);
-        yield* fs.symlink(outsideAck, yield* yeetInboxAckPath(repoRoot, id));
+  it.layer(PlatformLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("rejects a symlinked receipt target without overwriting its destination", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const repoRoot = `${root}/repo`;
+          const outsideRoot = `${root}/outside`;
+          yield* fs.makeDirectory(`${repoRoot}/.beep/inbox/acks`, { recursive: true });
+          yield* fs.makeDirectory(outsideRoot);
+          const id = "coverage-abc123";
+          const outsideAck = `${outsideRoot}/${id}`;
+          const sentinel = "outside target must stay unchanged\n";
+          yield* fs.writeFileString(outsideAck, sentinel);
+          yield* fs.symlink(outsideAck, yield* yeetInboxAckPath(repoRoot, id));
 
-        const failure = yield* writeYeetAckReceipt(repoRoot, fixReceipt(id)).pipe(Effect.flip);
+          const failure = yield* writeYeetAckReceipt(repoRoot, fixReceipt(id)).pipe(Effect.flip);
 
-        expect(failure._tag).toBe("YeetCommandError");
-        expect(yield* fs.readFileString(outsideAck)).toBe(sentinel);
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(failure._tag).toBe("YeetCommandError");
+          expect(yield* fs.readFileString(outsideAck)).toBe(sentinel);
+        })
+      )
+    );
+  });
 
-  it.live("rejects a symlinked acks parent without writing through it", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const repoRoot = `${root}/repo`;
-        const outsideAcks = `${root}/outside-acks`;
-        yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
-        yield* fs.makeDirectory(outsideAcks);
-        const id = "coverage-abc123";
-        const outsideAck = `${outsideAcks}/${id}`;
-        const sentinel = "outside parent must stay unchanged\n";
-        yield* fs.writeFileString(outsideAck, sentinel);
-        yield* fs.symlink(outsideAcks, `${repoRoot}/.beep/inbox/acks`);
+  it.layer(PlatformLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect("rejects a symlinked acks parent without writing through it", () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const repoRoot = `${root}/repo`;
+          const outsideAcks = `${root}/outside-acks`;
+          yield* fs.makeDirectory(`${repoRoot}/.beep/inbox`, { recursive: true });
+          yield* fs.makeDirectory(outsideAcks);
+          const id = "coverage-abc123";
+          const outsideAck = `${outsideAcks}/${id}`;
+          const sentinel = "outside parent must stay unchanged\n";
+          yield* fs.writeFileString(outsideAck, sentinel);
+          yield* fs.symlink(outsideAcks, `${repoRoot}/.beep/inbox/acks`);
 
-        const failure = yield* writeYeetAckReceipt(repoRoot, fixReceipt(id)).pipe(Effect.flip);
+          const failure = yield* writeYeetAckReceipt(repoRoot, fixReceipt(id)).pipe(Effect.flip);
 
-        expect(failure._tag).toBe("YeetCommandError");
-        expect(yield* fs.readFileString(outsideAck)).toBe(sentinel);
-      })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+          expect(failure._tag).toBe("YeetCommandError");
+          expect(yield* fs.readFileString(outsideAck)).toBe(sentinel);
+        })
+      )
+    );
+  });
 });

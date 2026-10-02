@@ -1996,3 +1996,112 @@ that the repaired matcher still accepted `it.layer`, `test.describe` and
 prefix-only title matches, although no frozen input depended on those gaps.
 A syntax-aware title owner check, with negative cases for suite/layer openers
 and closing-quote equality, would have prevented both review cycles.
+
+## 2026-10-01: resumed model check could not decode the workstation manifest
+
+During R54 recovery, `bun run beep models check` failed before checking routes:
+`Expected RoutingRole at ["bindings"][7]["role"]`. The campaign checkout's
+manifest decoder cannot read the current workstation model policy projection.
+The workstation policy implementation belongs to a separate task; this receipt
+records the failure without changing that policy or the campaign's evidence gates.
+Direct route evidence and explicit model/effort pins are needed until a compatible
+checker can inspect the manifest. A versioned compatibility check between the
+workstation manifest and older campaign checkouts would prevent this interruption.
+
+### 2026-10-01: source refresh and local proof friction
+
+R54 review continued while main advanced through catalog/Turbo changes, a
+cloud-agent packet, the shadcn rollout, dead-runner retry support, and the
+separately managed model-policy PR #1396, and CIops/ontology PRs #1386 and
+#1394. The CIops code is excluded from the campaign corpus, while its added
+document names expand citation resolution. The shadcn/retry range changed 198
+files and affected 87 inventory rows, including 27 qualified owners. Review
+preserved each frozen proposal and verdict, then checked the exact changed
+source and refreshed the complete audit. Reviewing full commit ranges and
+retaining proofs for unchanged source avoided restarting the campaign.
+
+`yeet publish --fast` waited for full-proof admission before pushing even
+with no full proof steps. Other live proof leases owned the available tokens.
+Only that campaign job was cancelled before using Yeet's supported
+`--start-pr-early --pr` path. Publication succeeded before broad proof. No
+proof or campaign credit follows from that publication.
+
+The isolated clean-HEAD install included `@shadcn/lint`, but the working
+checkout still had older dependencies. Full proof could not load the plugin.
+`bun install --frozen-lockfile` refreshed the working checkout, and the exact
+`bun run beep ci lane shadcn-lint` rerun passed. Dependency freshness in the
+working checkout needs a separate check after a main merge.
+
+Full verification then found an inherited `lint:tsgo-rules` failure. Current
+main's `tsconfig.json` includes `@beep/dock-react/dock.css`; its tracked
+`vitest.aliases.generated.json` omits that one alias. The two files matched
+main byte-for-byte, and the TypeScript JSONC parser found no other alias
+difference. The generated projection still needs repair and exact-gate
+verification with current source bindings. Main's dock export rollout should
+have regenerated and checked the complete alias projection before merge.
+
+R54's lexical audit also exposed a citation-review defect. Numbers introduced
+by the candidate could bind to the same candidate commit and receive
+`no-conflict` without a verified source landmark. The private dock recovery
+found stale locators on thirteen claims that the parser had passed. Complete
+current-clause review and direct source excerpts are now required alongside
+the lexical audit. Parser status alone cannot approve a current claim.
+
+Confirmed Codex quota exhaustion interrupted three workers. The originating
+orchestrator used the authorized Cursor route, whose initialization reported
+Claude Opus 5.5 300K Medium. Separate author and read-only reviewer sessions
+preserved independence. Cursor's configured Git restriction required parent
+exports of exact source and test blobs with hashes. No synthetic commit was
+pushed and no evidence or campaign gate was waived.
+
+R54 review friction: a provisional citation checker accepted nearby landmarks outside exact
+cited bounds. Parent falsification retained eight counterexamples, including a guard cited
+at line 34 with its actual expression at line 33. Nearby token matches are diagnostic
+evidence only; require source-aware whole-claim dispositions and exact ranges before sealing
+a receipt. No provisional confirmation was treated as approval.
+
+R54 continuation on 2026-10-01 reached confirmed Cursor Opus exhaustion in
+three bounded workers: `ActionRequiredError: usage limit for Opus`, with the
+subscription reset reported as 2026-10-11. Their partial ledgers were retained.
+The originating Codex orchestrator advanced the approved fallback to
+`grok --model grok-4.7 --effort medium`; `grok models` confirmed the model on
+the existing grok.com login, and each new session recorded `grok-4.7` with
+`medium` effort. Separate author and read-only review workers continued the
+assigned scopes without onward delegation, purchases, overages, or added
+endpoints. R54 approval remains withheld; this route change grants no census,
+P3, ratification, implementation, or closeout credit. A route-aware handoff
+with saved claim coverage and actual model/effort metadata prevents quota
+exhaustion from discarding reviewed work or being mistaken for a campaign gate.
+
+Codex audit-checkout preparation exposed a worktree-management mismatch.
+`create_worktree` placed the checkout under the app-managed worktree root,
+while this repository requires sibling worktrees. `archive_worktree` then
+refused with `This worktree is protected by a pinned task or workspace.`
+The unused managed checkout was retained unchanged. A detached audit checkout
+was created in the required sibling root at the same published source. A
+configurable destination and cleanup for an unused checkout created by the
+calling task would prevent this friction. Neither checkout grants campaign
+credit, and no synthetic commit was pushed.
+
+R54 source review exposed an incomplete export boundary. The review inputs
+named original historical commits but omitted some of their source bytes.
+After those exact Git objects were exported, ten proposed tab-strip/sidebar
+repairs needed correction to preserve historical coordinates alongside current
+ones. The chart review also needed the original test fixture and correction
+artifacts before their recorded hashes could be verified. No affected proposal
+was applied or accepted as campaign evidence. Prepare an export for every
+explicit source pin and cited artifact before dispatch, and label missing bytes
+without replacing their historical binding. Direct current-main exports now
+supplement the earlier conservation checks; they do not rebind old receipts or
+satisfy census, P3, ratification, implementation, or closeout gates.
+
+R54's cache-pilot and HTML link migration-list review reached its configured
+32-turn limit with only an initial partial receipt (`Error: max turns reached`).
+The reviewer also searched for that partial at a relative path even though the
+saved artifact existed in the review cache. This was an ordinary bounded-run
+failure, not provider exhaustion or a source finding. No judgment credit was
+assigned. The same reviewer resumed on one complete owning list with a single
+input document naming the exact claim, absolute input/output paths, and hashed
+current-source exports. Complete one owning claim and persist its disposition
+before starting another; prepare exact paths and named historical bindings
+before dispatch. This preserves review independence and the full evidence gates.

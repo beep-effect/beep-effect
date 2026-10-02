@@ -9,13 +9,14 @@ import {
   withAdmissionWorkloadBinding,
 } from "@beep/repo-cli/test/Process";
 import { collectStepOutput, QualityTaskStep } from "@beep/repo-cli/test/Quality";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Deferred, Duration, Effect, Exit, Fiber, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
@@ -31,6 +32,7 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 const isCaptureCommandTimedOutError = S.is(CaptureCommandTimedOutError);
 
 const encoder = new TextEncoder();
+const decodeStdoutChunk = S.decodeUnknownEffect(S.String);
 
 const ActiveAdmissionWorkload = S.fromJsonString(
   S.Struct({
@@ -197,49 +199,67 @@ describe("StepExec capture pipe lifecycle", () => {
     })
   );
 
-  it.live("tees captured chunks to the parent stdout while still capturing them", () =>
-    Effect.gen(function* () {
-      const captured = yield* runCaptured({
-        command: "echo",
-        args: ["teed-line"],
-        tee: true,
-      });
-      expect(captured.output).toContain("teed-line");
-    }).pipe(provideScopedLayer(NodeServices.layer))
-  );
+  it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
+    it.effect("tees captured chunks to the parent stdout while still capturing them", () =>
+      Effect.gen(function* () {
+        const stdout = yield* Effect.acquireRelease(
+          Effect.sync(() => vi.spyOn(process.stdout, "write")),
+          (spy) => Effect.sync(() => spy.mockRestore())
+        );
+        const captured = yield* runCaptured({
+          command: "echo",
+          args: ["teed-line"],
+          tee: true,
+        });
+        expect(captured.output).toContain("teed-line");
+        const chunks = yield* Effect.forEach(stdout.mock.calls, ([chunk]) => decodeStdoutChunk(chunk));
+        expect(A.join(chunks, "")).toContain("teed-line\n");
+      })
+    );
+  });
 
   // Teeing and bounding are independent: a bounded capture still echoes every
   // chunk to the parent stdout while the fold enforces the cap.
-  it.live("tees a bounded capture while the bound still clips the output", () =>
-    Effect.gen(function* () {
-      const captured = yield* runCaptured({
-        command: "echo",
-        args: ["bounded-teed-line"],
-        bound: OutputBound.make({ maxChars: 6, truncatedNotice: "[clipped]" }),
-        tee: true,
-        trim: true,
-      });
-      expect(captured.truncated).toBe(true);
-      expect(captured.output).toContain("[clipped]");
-    }).pipe(provideScopedLayer(NodeServices.layer))
-  );
+  it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
+    it.effect("tees a bounded capture while the bound still clips the output", () =>
+      Effect.gen(function* () {
+        const stdout = yield* Effect.acquireRelease(
+          Effect.sync(() => vi.spyOn(process.stdout, "write")),
+          (spy) => Effect.sync(() => spy.mockRestore())
+        );
+        const captured = yield* runCaptured({
+          command: "echo",
+          args: ["bounded-teed-line"],
+          bound: OutputBound.make({ maxChars: 6, truncatedNotice: "[clipped]" }),
+          tee: true,
+          trim: true,
+        });
+        expect(captured.truncated).toBe(true);
+        expect(captured.output).toContain("[clipped]");
+        const chunks = yield* Effect.forEach(stdout.mock.calls, ([chunk]) => decodeStdoutChunk(chunk));
+        expect(A.join(chunks, "")).toContain("bounded-teed-line\n");
+      })
+    );
+  });
 
-  it.live("fails a deadline-hit capture even when the child traps the signal, flushes, and exits zero", () =>
-    Effect.gen(function* () {
-      const error = yield* Effect.flip(
-        runCaptured({
-          command: "sh",
-          args: ["-c", 'trap "echo summary; exit 0" TERM INT; while :; do sleep 0.05; done'],
-          timeout: "400 millis",
-          forceKillAfter: "2 seconds",
-        })
-      );
-      expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
-      if (isCaptureCommandTimedOutError(error)) {
-        expect(error.commandLine).toContain("trap");
-      }
-    }).pipe(provideScopedLayer(NodeServices.layer))
-  );
+  it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
+    it.effect("fails a deadline-hit capture even when the child traps the signal, flushes, and exits zero", () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(
+          runCaptured({
+            command: "sh",
+            args: ["-c", 'trap "echo summary; exit 0" TERM INT; while :; do sleep 0.05; done'],
+            timeout: "400 millis",
+            forceKillAfter: "2 seconds",
+          })
+        );
+        expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
+        if (isCaptureCommandTimedOutError(error)) {
+          expect(error.commandLine).toContain("trap");
+        }
+      })
+    );
+  });
 
   it.effect("collects decoded text and distinguishes zero from nonzero exits", () =>
     Effect.gen(function* () {
@@ -252,240 +272,262 @@ describe("StepExec capture pipe lifecycle", () => {
     })
   );
 
-  it.live("fails closed for partial explicit and inherited admission bindings", () =>
-    Effect.gen(function* () {
-      const { closed, spawner } = yield* makeStuckSpawner({ output: "", killEndsStream: false });
-      yield* Deferred.succeed(closed, void 0);
-      const explicit = yield* runCaptured({
-        command: "fake-step",
-        args: [],
-        env: { BEEP_YEET_ADMISSION_WORKLOAD_PATH: "/tmp/workload" },
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.flip);
-      expect(explicit.message).toContain("must be provided together");
+  it.layer(BunCrypto.layer, { excludeTestServices: true })((it) => {
+    it.effect("fails closed for partial explicit and inherited admission bindings", () =>
+      Effect.gen(function* () {
+        const { closed, spawner } = yield* makeStuckSpawner({ output: "", killEndsStream: false });
+        yield* Deferred.succeed(closed, void 0);
+        const explicit = yield* runCaptured({
+          command: "fake-step",
+          args: [],
+          env: { BEEP_YEET_ADMISSION_WORKLOAD_PATH: "/tmp/workload" },
+        }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.flip);
+        expect(explicit.message).toContain("must be provided together");
 
-      const previousPath = Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
-      const previousLease = Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
-      const inherited = yield* Effect.acquireUseRelease(
-        Effect.sync(() => {
-          Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = "/tmp/inherited-workload";
-          delete Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
-        }),
-        () =>
-          runCaptured({ command: "fake-step", args: [] }).pipe(
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-            Effect.flip
-          ),
-        () =>
+        const previousPath = Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
+        const previousLease = Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
+        const inherited = yield* Effect.acquireUseRelease(
           Effect.sync(() => {
-            if (previousPath === undefined) delete Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
-            else Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = previousPath;
-            if (previousLease === undefined) delete Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
-            else Bun.env.BEEP_YEET_ADMISSION_LEASE_ID = previousLease;
-          })
-      );
-      expect(inherited.message).toContain("Inherited admission workload path and lease id");
-    }).pipe(provideScopedLayer(BunCrypto.layer))
-  );
+            Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = "/tmp/inherited-workload";
+            delete Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
+          }),
+          () =>
+            runCaptured({ command: "fake-step", args: [] }).pipe(
+              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+              Effect.flip
+            ),
+          () =>
+            Effect.sync(() => {
+              if (previousPath === undefined) delete Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
+              else Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = previousPath;
+              if (previousLease === undefined) delete Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
+              else Bun.env.BEEP_YEET_ADMISSION_LEASE_ID = previousLease;
+            })
+        );
+        expect(inherited.message).toContain("Inherited admission workload path and lease id");
+      })
+    );
+  });
 
-  it.live("reports workload write and process-generation registration failures", () =>
-    Effect.gen(function* () {
-      const blocked = yield* makeStuckSpawner({ output: "", killEndsStream: false });
-      yield* Deferred.succeed(blocked.closed, void 0);
-      const writeFailure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
-        withAdmissionWorkloadBinding("/definitely-missing-parent/workload", "lease-write"),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, blocked.spawner),
-        Effect.flip
-      );
-      expect(writeFailure.message).toContain("Failed to write admission workload");
+  it.layer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer), { excludeTestServices: true })(
+    (it) => {
+      it.effect("reports workload write and process-generation registration failures", () =>
+        Effect.gen(function* () {
+          const blocked = yield* makeStuckSpawner({ output: "", killEndsStream: false });
+          yield* Deferred.succeed(blocked.closed, void 0);
+          const writeFailure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+            withAdmissionWorkloadBinding("/definitely-missing-parent/workload", "lease-write"),
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, blocked.spawner),
+            Effect.flip
+          );
+          expect(writeFailure.message).toContain("Failed to write admission workload");
 
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectory({ prefix: "step-exec-missing-proc-" });
-      const missing = yield* makeStuckSpawner({
-        output: "",
-        killEndsStream: false,
-        pid: 2_000_000_000,
-        isRunning: true,
-      });
-      yield* Deferred.succeed(missing.closed, void 0);
-      const registrationFailure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
-        withAdmissionWorkloadBinding(`${root}/workload`, "lease-proc"),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, missing.spawner),
-        Effect.flip,
-        Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore))
+          const fs = yield* FileSystem.FileSystem;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "step-exec-missing-proc-" });
+          const missing = yield* makeStuckSpawner({
+            output: "",
+            killEndsStream: false,
+            pid: 2_000_000_000,
+            isRunning: true,
+          });
+          yield* Deferred.succeed(missing.closed, void 0);
+          const registrationFailure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+            withAdmissionWorkloadBinding(`${root}/workload`, "lease-proc"),
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, missing.spawner),
+            Effect.flip
+          );
+          expect(registrationFailure.message).toContain("Failed to read process generation");
+        })
       );
-      expect(registrationFailure.message).toContain("Failed to read process generation");
-    }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer)))
+    }
   );
 
   // The workload file is named by a fresh UUID, so a platform that cannot mint
   // one fails the spawn with that cause instead of writing to a guessed path.
-  it.live("names the identity failure when the workload token cannot be minted", () =>
-    Effect.gen(function* () {
-      const blocked = yield* makeStuckSpawner({ output: "", killEndsStream: false });
-      yield* Deferred.succeed(blocked.closed, void 0);
+  it.layer(BunCrypto.layer, { excludeTestServices: true })((it) => {
+    it.effect("names the identity failure when the workload token cannot be minted", () =>
+      Effect.gen(function* () {
+        const blocked = yield* makeStuckSpawner({ output: "", killEndsStream: false });
+        yield* Deferred.succeed(blocked.closed, void 0);
 
-      const failure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
-        withAdmissionWorkloadBinding("/tmp/unmintable.workload", "lease-identity"),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, blocked.spawner),
-        Effect.provideService(Crypto.Crypto, uuidlessCrypto),
-        Effect.flip
-      );
+        const failure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+          withAdmissionWorkloadBinding("/tmp/unmintable.workload", "lease-identity"),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, blocked.spawner),
+          Effect.provideService(Crypto.Crypto, uuidlessCrypto),
+          Effect.flip
+        );
 
-      expect(failure.message).toContain("Failed to create admission workload identity lease-identity");
-    }).pipe(provideScopedLayer(BunCrypto.layer))
-  );
+        expect(failure.message).toContain("Failed to create admission workload identity lease-identity");
+      })
+    );
+  });
 
   // Registration reads the child's start time to fence the generation. When
   // that read fails, the liveness probe decides between "already gone" and a
   // real failure; a probe that cannot answer is itself the reported cause.
-  it.live("names the liveness probe when process-generation recovery cannot confirm the exit", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectory({ prefix: "step-exec-unprobed-proc-" });
-      const unprobed = yield* makeStuckSpawner({
-        output: "",
-        killEndsStream: false,
-        pid: 2_000_000_000,
-        isRunningFails: true,
-      });
-      yield* Deferred.succeed(unprobed.closed, void 0);
+  it.layer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer), { excludeTestServices: true })(
+    (it) => {
+      it.effect("names the liveness probe when process-generation recovery cannot confirm the exit", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "step-exec-unprobed-proc-" });
+          const unprobed = yield* makeStuckSpawner({
+            output: "",
+            killEndsStream: false,
+            pid: 2_000_000_000,
+            isRunningFails: true,
+          });
+          yield* Deferred.succeed(unprobed.closed, void 0);
 
-      const failure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
-        withAdmissionWorkloadBinding(`${root}/workload`, "lease-unprobed"),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, unprobed.spawner),
-        Effect.flip,
-        Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore))
+          const failure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+            withAdmissionWorkloadBinding(`${root}/workload`, "lease-unprobed"),
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, unprobed.spawner),
+            Effect.flip
+          );
+
+          expect(failure.message).toContain("Failed to confirm process exit");
+        })
       );
-
-      expect(failure.message).toContain("Failed to confirm process exit");
-    }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer)))
+    }
   );
 
-  it.live("preserves the exit result when a short-lived child is reaped before generation registration", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectory({ prefix: "step-exec-reaped-proc-" });
-      const reaped = yield* makeStuckSpawner({ output: "done", killEndsStream: false, pid: 2_000_000_000 });
-      yield* Deferred.succeed(reaped.closed, void 0);
+  it.layer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer), { excludeTestServices: true })(
+    (it) => {
+      it.effect("preserves the exit result when a short-lived child is reaped before generation registration", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "step-exec-reaped-proc-" });
+          const reaped = yield* makeStuckSpawner({ output: "done", killEndsStream: false, pid: 2_000_000_000 });
+          yield* Deferred.succeed(reaped.closed, void 0);
 
-      const result = yield* runCaptured({ command: "fast-step", args: [] }).pipe(
-        withAdmissionWorkloadBinding(`${root}/workload`, "lease-reaped"),
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, reaped.spawner),
-        Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore))
+          const result = yield* runCaptured({ command: "fast-step", args: [] }).pipe(
+            withAdmissionWorkloadBinding(`${root}/workload`, "lease-reaped"),
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, reaped.spawner)
+          );
+
+          expect(result).toMatchObject({ exitCode: 0, output: "done" });
+        })
       );
-
-      expect(result).toMatchObject({ exitCode: 0, output: "done" });
-    }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer)))
+    }
   );
 
-  it.live("inherits a scoped admission workload and lets an explicit nested binding override it", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      return yield* Effect.acquireUseRelease(
-        fs.makeTempDirectory({ prefix: "step-exec-admission-" }),
-        (root) =>
-          Effect.gen(function* () {
-            const outerPath = `${root}/outer.workload`;
-            const nestedPath = `${root}/nested.workload`;
-            const { closed, spawner } = yield* makeStuckSpawner({ output: "", killEndsStream: false });
-            yield* Deferred.succeed(closed, void 0);
+  it.layer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer), { excludeTestServices: true })(
+    (it) => {
+      it.effect("inherits a scoped admission workload and lets an explicit nested binding override it", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          return yield* Effect.acquireUseRelease(
+            fs.makeTempDirectory({ prefix: "step-exec-admission-" }),
+            (root) =>
+              Effect.gen(function* () {
+                const outerPath = `${root}/outer.workload`;
+                const nestedPath = `${root}/nested.workload`;
+                const { closed, spawner } = yield* makeStuckSpawner({ output: "", killEndsStream: false });
+                yield* Deferred.succeed(closed, void 0);
 
-            yield* runCaptured({ command: "fake-step", args: [] }).pipe(
-              withAdmissionWorkloadBinding(outerPath, "outer-lease"),
-              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-            );
-            const outer = yield* fs.readFileString(outerPath);
-            expect(outer).toContain('"leaseId":"outer-lease"');
-            expect(outer).toContain('"status":"active"');
+                yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+                  withAdmissionWorkloadBinding(outerPath, "outer-lease"),
+                  Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+                );
+                const outer = yield* fs.readFileString(outerPath);
+                expect(outer).toContain('"leaseId":"outer-lease"');
+                expect(outer).toContain('"status":"active"');
 
-            yield* runCaptured({
-              command: "fake-step",
-              args: [],
-              env: {
-                BEEP_YEET_ADMISSION_WORKLOAD_PATH: nestedPath,
-                BEEP_YEET_ADMISSION_LEASE_ID: "nested-lease",
-              },
-            }).pipe(
-              withAdmissionWorkloadBinding(outerPath, "outer-lease"),
-              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-            );
-            const nested = yield* fs.readFileString(nestedPath);
-            expect(nested).toContain('"leaseId":"nested-lease"');
-            expect(yield* fs.readFileString(outerPath)).toBe(outer);
-          }),
-        (root) => fs.remove(root, { recursive: true }).pipe(Effect.ignore)
+                yield* runCaptured({
+                  command: "fake-step",
+                  args: [],
+                  env: {
+                    BEEP_YEET_ADMISSION_WORKLOAD_PATH: nestedPath,
+                    BEEP_YEET_ADMISSION_LEASE_ID: "nested-lease",
+                  },
+                }).pipe(
+                  withAdmissionWorkloadBinding(outerPath, "outer-lease"),
+                  Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+                );
+                const nested = yield* fs.readFileString(nestedPath);
+                expect(nested).toContain('"leaseId":"nested-lease"');
+                expect(yield* fs.readFileString(outerPath)).toBe(outer);
+              }),
+            (root) => fs.remove(root, { recursive: true }).pipe(Effect.orDie)
+          );
+        })
       );
-    }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer)))
+    }
   );
 
-  it.live("distinguishes inherited, matching explicit, and owned explicit admission generations", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectory({ prefix: "step-exec-inherited-" });
-      const inheritedPath = `${root}/inherited.workload`;
-      const ownedPath = `${root}/owned.workload`;
-      const { closed, spawner } = yield* makeStuckSpawner({
-        output: "",
-        killEndsStream: false,
-        pid: process.pid,
-      });
-      yield* Deferred.succeed(closed, void 0);
-      const previousPath = Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
-      const previousLease = Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
+  it.layer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer), { excludeTestServices: true })(
+    (it) => {
+      it.effect("distinguishes inherited, matching explicit, and owned explicit admission generations", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "step-exec-inherited-" });
+          const inheritedPath = `${root}/inherited.workload`;
+          const ownedPath = `${root}/owned.workload`;
+          const { closed, spawner } = yield* makeStuckSpawner({
+            output: "",
+            killEndsStream: false,
+            pid: process.pid,
+          });
+          yield* Deferred.succeed(closed, void 0);
+          const previousPath = Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
+          const previousLease = Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
 
-      yield* Effect.acquireUseRelease(
-        Effect.sync(() => {
-          Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = inheritedPath;
-          Bun.env.BEEP_YEET_ADMISSION_LEASE_ID = "inherited-lease";
-        }),
-        () =>
-          Effect.gen(function* () {
-            yield* runCaptured({ command: "fake-step", args: [] }).pipe(
-              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-            );
-            yield* runCaptured({
-              command: "fake-step",
-              args: [],
-              env: {
-                BEEP_YEET_ADMISSION_WORKLOAD_PATH: inheritedPath,
-                BEEP_YEET_ADMISSION_LEASE_ID: "inherited-lease",
-              },
-            }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
-            yield* runCaptured({
-              command: "fake-step",
-              args: [],
-              env: {
-                BEEP_YEET_ADMISSION_WORKLOAD_PATH: ownedPath,
-                BEEP_YEET_ADMISSION_LEASE_ID: "owned-lease",
-              },
-            }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+          yield* Effect.acquireUseRelease(
+            Effect.sync(() => {
+              Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = inheritedPath;
+              Bun.env.BEEP_YEET_ADMISSION_LEASE_ID = "inherited-lease";
+            }),
+            () =>
+              Effect.gen(function* () {
+                yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+                  Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+                );
+                yield* runCaptured({
+                  command: "fake-step",
+                  args: [],
+                  env: {
+                    BEEP_YEET_ADMISSION_WORKLOAD_PATH: inheritedPath,
+                    BEEP_YEET_ADMISSION_LEASE_ID: "inherited-lease",
+                  },
+                }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+                yield* runCaptured({
+                  command: "fake-step",
+                  args: [],
+                  env: {
+                    BEEP_YEET_ADMISSION_WORKLOAD_PATH: ownedPath,
+                    BEEP_YEET_ADMISSION_LEASE_ID: "owned-lease",
+                  },
+                }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
 
-            expect(yield* fs.exists(inheritedPath)).toBe(false);
-            expect(yield* fs.readFileString(ownedPath)).toContain('"status":"active"');
-          }),
-        () =>
-          Effect.sync(() => {
-            if (previousPath === undefined) delete Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
-            else Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = previousPath;
-            if (previousLease === undefined) delete Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
-            else Bun.env.BEEP_YEET_ADMISSION_LEASE_ID = previousLease;
-          })
-      ).pipe(Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore)));
-    }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer)))
+                expect(yield* fs.exists(inheritedPath)).toBe(false);
+                expect(yield* fs.readFileString(ownedPath)).toContain('"status":"active"');
+              }),
+            () =>
+              Effect.sync(() => {
+                if (previousPath === undefined) delete Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
+                else Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = previousPath;
+                if (previousLease === undefined) delete Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
+                else Bun.env.BEEP_YEET_ADMISSION_LEASE_ID = previousLease;
+              })
+          );
+        })
+      );
+    }
   );
 
-  it.live(
-    "keeps a cross-process nested StepExec child in the registered outer process group",
-    () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        return yield* Effect.acquireUseRelease(
-          fs.makeTempDirectory({ prefix: "step-exec-admission-group-" }),
-          (root) =>
-            Effect.gen(function* () {
-              const workloadPath = `${root}/outer.workload`;
-              const readyPath = `${root}/nested-ready`;
-              const nestedSource = `
+  it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
+    it.effect(
+      "keeps a cross-process nested StepExec child in the registered outer process group",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          return yield* Effect.acquireUseRelease(
+            fs.makeTempDirectory({ prefix: "step-exec-admission-group-" }),
+            (root) =>
+              Effect.gen(function* () {
+                const workloadPath = `${root}/outer.workload`;
+                const readyPath = `${root}/nested-ready`;
+                const nestedSource = `
 import { runCaptured } from "@beep/repo-cli/test/Process";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
 import { Effect } from "effect";
@@ -499,248 +541,237 @@ BunRuntime.runMain(
   }).pipe(Effect.provide(BunServices.layer))
 );
 `;
-              const outer = yield* Effect.forkChild(
-                runCaptured({
-                  command: "bun",
-                  args: ["-e", nestedSource],
-                  cwd: process.cwd(),
-                  env: { ADMISSION_NESTED_READY: readyPath },
-                  extendEnv: true,
-                  forceKillAfter: "1 second",
-                }).pipe(withAdmissionWorkloadBinding(workloadPath, "outer-group-lease"))
-              );
+                const outer = yield* Effect.forkChild(
+                  runCaptured({
+                    command: "bun",
+                    args: ["-e", nestedSource],
+                    cwd: process.cwd(),
+                    env: { ADMISSION_NESTED_READY: readyPath },
+                    extendEnv: true,
+                    forceKillAfter: "1 second",
+                  }).pipe(withAdmissionWorkloadBinding(workloadPath, "outer-group-lease"))
+                );
 
-              let ready = false;
-              for (let attempt = 0; attempt < 2_000 && !ready; attempt += 1) {
-                ready = yield* fs.exists(readyPath);
-                if (!ready) yield* Effect.sleep("10 millis");
-              }
-              expect(ready).toBe(true);
+                let ready = false;
+                for (let attempt = 0; attempt < 2_000 && !ready; attempt += 1) {
+                  ready = yield* fs.exists(readyPath);
+                  if (!ready) yield* Effect.sleep("10 millis");
+                }
+                expect(ready).toBe(true);
 
-              const workload = yield* decodeActiveAdmissionWorkload(yield* fs.readFileString(workloadPath));
-              const nestedPid = Number(yield* fs.readFileString(readyPath));
-              const nestedGroup = processGroupFromStat(yield* fs.readFileString(`/proc/${nestedPid}/stat`));
-              expect(nestedGroup).toBe(workload.processGroupId);
+                const workload = yield* decodeActiveAdmissionWorkload(yield* fs.readFileString(workloadPath));
+                const nestedPid = Number(yield* fs.readFileString(readyPath));
+                const nestedGroup = processGroupFromStat(yield* fs.readFileString(`/proc/${nestedPid}/stat`));
+                expect(nestedGroup).toBe(workload.processGroupId);
 
-              yield* Fiber.interrupt(outer);
-              let nestedAlive = true;
-              for (let attempt = 0; attempt < 300 && nestedAlive; attempt += 1) {
-                nestedAlive = yield* fs.exists(`/proc/${nestedPid}`);
-                if (nestedAlive) yield* Effect.sleep("10 millis");
-              }
-              expect(nestedAlive).toBe(false);
-            }),
-          (root) => fs.remove(root, { recursive: true }).pipe(Effect.ignore)
+                yield* Fiber.interrupt(outer);
+                let nestedAlive = true;
+                for (let attempt = 0; attempt < 300 && nestedAlive; attempt += 1) {
+                  nestedAlive = yield* fs.exists(`/proc/${nestedPid}`);
+                  if (nestedAlive) yield* Effect.sleep("10 millis");
+                }
+                expect(nestedAlive).toBe(false);
+              }),
+            (root) => fs.remove(root, { recursive: true }).pipe(Effect.orDie)
+          );
+        }),
+      15_000
+    );
+  });
+
+  it.layer(Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer))((it) => {
+    it.effect(
+      "maps a bounded quality-step timeout to exit code 124",
+      Effect.fnUntraced(function* () {
+        const { spawner } = yield* makeNeverExitSpawner();
+        const fiber = yield* Effect.forkChild(
+          collectStepOutput(
+            QualityTaskStep.make({
+              label: "fake-step",
+              command: "fake-step",
+              args: ["--flag"],
+              cwd: process.cwd(),
+              captureTimeoutMillis: PosInt.make(60_000),
+            })
+          ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
         );
-      }).pipe(provideScopedLayer(NodeServices.layer)),
-    15_000
-  );
 
-  it.effect(
-    "maps a bounded quality-step timeout to exit code 124",
-    Effect.fnUntraced(function* () {
-      const { spawner } = yield* makeNeverExitSpawner();
-      const fiber = yield* Effect.forkChild(
-        collectStepOutput(
-          QualityTaskStep.make({
-            label: "fake-step",
-            command: "fake-step",
-            args: ["--flag"],
-            cwd: process.cwd(),
-            captureTimeoutMillis: PosInt.make(60_000),
-          })
-        ).pipe(
-          provideScopedLayer(
-            Layer.mergeAll(
-              BunCrypto.layer,
-              NodeFileSystem.layer,
-              NodePath.layer,
-              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)
-            )
+        yield* TestClock.adjust("1 minute");
+
+        const result = yield* Fiber.join(fiber);
+        expect(result.exitCode).toBe(124);
+        expect(result.output).toContain("fake-step --flag");
+      })
+    );
+  });
+
+  it.layer(BunCrypto.layer)((it) => {
+    it.effect(
+      "reaps the child's group when a straggler holds the pipe open after exit, keeping captured text",
+      Effect.fnUntraced(function* () {
+        const { killCount, spawner } = yield* makeStuckSpawner({ output: "partial output", killEndsStream: true });
+        const fiber = yield* Effect.forkChild(
+          runCaptured({ command: "fake-step", args: ["--flag"] }).pipe(
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+            Effect.scoped
           )
-        )
-      );
+        );
 
-      yield* TestClock.adjust("1 minute");
+        yield* TestClock.adjust("2 seconds");
 
-      const result = yield* Fiber.join(fiber);
-      expect(result.exitCode).toBe(124);
-      expect(result.output).toContain("fake-step --flag");
-    })
-  );
+        const result = yield* Fiber.join(fiber);
+        expect(result.exitCode).toBe(0);
+        expect(result.output).toContain("partial output");
+        expect(yield* Ref.get(killCount)).toBe(1);
+      })
+    );
+  });
 
-  it.effect(
-    "reaps the child's group when a straggler holds the pipe open after exit, keeping captured text",
-    Effect.fnUntraced(function* () {
-      const { killCount, spawner } = yield* makeStuckSpawner({ output: "partial output", killEndsStream: true });
-      const fiber = yield* Effect.forkChild(
-        runCaptured({ command: "fake-step", args: ["--flag"] }).pipe(
-          provideScopedLayer(
-            Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
+  it.layer(BunCrypto.layer)((it) => {
+    it.effect(
+      "dies loudly naming the command when even the group reap cannot close the pipe",
+      Effect.fnUntraced(function* () {
+        const { killCount, spawner } = yield* makeStuckSpawner({ output: "partial", killEndsStream: false });
+        const fiber = yield* Effect.forkChild(
+          runCaptured({ command: "fake-step", args: ["--flag"] }).pipe(
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+            Effect.scoped
           )
-        )
-      );
+        );
 
-      yield* TestClock.adjust("2 seconds");
+        yield* TestClock.adjust("2 seconds");
+        yield* TestClock.adjust("3 seconds");
 
-      const result = yield* Fiber.join(fiber);
-      expect(result.exitCode).toBe(0);
-      expect(result.output).toContain("partial output");
-      expect(yield* Ref.get(killCount)).toBe(1);
-    })
-  );
+        const exit = yield* Fiber.await(fiber);
+        assertTrue(Exit.isFailure(exit));
+        const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
+        expect(rendered).toContain("CapturePipeWedgedError");
+        expect(rendered).toContain("fake-step --flag");
+        expect(yield* Ref.get(killCount)).toBe(1);
+      })
+    );
+  });
 
-  it.effect(
-    "dies loudly naming the command when even the group reap cannot close the pipe",
-    Effect.fnUntraced(function* () {
-      const { killCount, spawner } = yield* makeStuckSpawner({ output: "partial", killEndsStream: false });
-      const fiber = yield* Effect.forkChild(
-        runCaptured({ command: "fake-step", args: ["--flag"] }).pipe(
-          provideScopedLayer(
-            Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
-          )
-        )
-      );
+  it.layer(BunCrypto.layer)((it) => {
+    it.effect(
+      "never kills a child whose stream closes on its own",
+      Effect.fnUntraced(function* () {
+        const { closed, killCount, spawner } = yield* makeStuckSpawner({ output: "clean", killEndsStream: false });
+        yield* Deferred.succeed(closed, void 0);
 
-      yield* TestClock.adjust("2 seconds");
-      yield* TestClock.adjust("3 seconds");
+        const result = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+          Effect.scoped
+        );
 
-      const exit = yield* Fiber.await(fiber);
-      assertTrue(Exit.isFailure(exit));
-      const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
-      expect(rendered).toContain("CapturePipeWedgedError");
-      expect(rendered).toContain("fake-step --flag");
-      expect(yield* Ref.get(killCount)).toBe(1);
-    })
-  );
+        expect(result.exitCode).toBe(0);
+        expect(result.output).toBe("clean");
+        expect(yield* Ref.get(killCount)).toBe(0);
+      })
+    );
+  });
 
-  it.effect(
-    "never kills a child whose stream closes on its own",
-    Effect.fnUntraced(function* () {
-      const { closed, killCount, spawner } = yield* makeStuckSpawner({ output: "clean", killEndsStream: false });
-      yield* Deferred.succeed(closed, void 0);
-
-      const result = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
-        provideScopedLayer(
-          Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
-        )
-      );
-
-      expect(result.exitCode).toBe(0);
-      expect(result.output).toBe("clean");
-      expect(yield* Ref.get(killCount)).toBe(0);
-    })
-  );
-
-  it.effect(
-    "interrupts and reaps a captured command whose direct child never exits",
-    Effect.fnUntraced(function* () {
-      const { killCount, killOptions, spawner, unrefCount } = yield* makeNeverExitSpawner();
-      const fiber = yield* Effect.forkChild(
-        runCaptured({
-          command: "fake-step",
-          args: ["--flag"],
-          timeout: "1 minute",
-          forceKillAfter: "1 second",
-        }).pipe(
-          provideScopedLayer(
-            Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
-          )
-        )
-      );
-
-      yield* TestClock.adjust("1 minute");
-
-      const exit = yield* Fiber.await(fiber);
-      assertTrue(Exit.isFailure(exit));
-      const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
-      expect(rendered).toContain("CaptureCommandTimedOutError");
-      expect(rendered).toContain("fake-step --flag");
-      expect(yield* Ref.get(killCount)).toBe(1);
-      expect(yield* Ref.get(killOptions)).toEqual([{ forceKillAfter: "1 second" }]);
-      expect(yield* Ref.get(unrefCount)).toBe(1);
-    })
-  );
-
-  it.effect(
-    "interrupts and reaps a captured command when its external watchdog fails",
-    Effect.fnUntraced(function* () {
-      const { killCount, spawner } = yield* makeNeverExitSpawner();
-      const fiber = yield* Effect.forkChild(
-        Effect.flip(
-          runCaptured({
-            command: "fake-step",
-            args: ["--flag"],
-            abortWhen: Effect.sleep("1 minute").pipe(Effect.andThen(Effect.fail("watchdog tripped"))),
-          }).pipe(
-            provideScopedLayer(
-              Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
-            )
-          )
-        )
-      );
-
-      yield* TestClock.adjust("1 minute");
-
-      expect(yield* Fiber.join(fiber)).toBe("watchdog tripped");
-      expect(yield* Ref.get(killCount)).toBe(1);
-    })
-  );
-
-  it.effect(
-    "returns a typed timeout after bounded cleanup when the child never reports exit",
-    Effect.fnUntraced(function* () {
-      const { killCount, spawner, unrefCount } = yield* makeNeverExitSpawner(false);
-      const fiber = yield* Effect.forkChild(
-        Effect.flip(
+  it.layer(BunCrypto.layer)((it) => {
+    it.effect(
+      "interrupts and reaps a captured command whose direct child never exits",
+      Effect.fnUntraced(function* () {
+        const { killCount, killOptions, spawner, unrefCount } = yield* makeNeverExitSpawner();
+        const fiber = yield* Effect.forkChild(
           runCaptured({
             command: "fake-step",
             args: ["--flag"],
             timeout: "1 minute",
             forceKillAfter: "1 second",
-          }).pipe(
-            provideScopedLayer(
-              Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
-            )
+          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
+        );
+
+        yield* TestClock.adjust("1 minute");
+
+        const exit = yield* Fiber.await(fiber);
+        assertTrue(Exit.isFailure(exit));
+        const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
+        expect(rendered).toContain("CaptureCommandTimedOutError");
+        expect(rendered).toContain("fake-step --flag");
+        expect(yield* Ref.get(killCount)).toBe(1);
+        expect(yield* Ref.get(killOptions)).toEqual([{ forceKillAfter: "1 second" }]);
+        expect(yield* Ref.get(unrefCount)).toBe(1);
+      })
+    );
+  });
+
+  it.layer(BunCrypto.layer)((it) => {
+    it.effect(
+      "interrupts and reaps a captured command when its external watchdog fails",
+      Effect.fnUntraced(function* () {
+        const { killCount, spawner } = yield* makeNeverExitSpawner();
+        const fiber = yield* Effect.forkChild(
+          Effect.flip(
+            runCaptured({
+              command: "fake-step",
+              args: ["--flag"],
+              abortWhen: Effect.sleep("1 minute").pipe(Effect.andThen(Effect.fail("watchdog tripped"))),
+            }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
           )
-        )
-      );
+        );
 
-      yield* TestClock.adjust("1 minute");
-      yield* TestClock.adjust("2 seconds");
+        yield* TestClock.adjust("1 minute");
 
-      const error = yield* Fiber.join(fiber);
-      expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
-      if (isCaptureCommandTimedOutError(error)) {
-        expect(error.commandLine).toBe("fake-step --flag");
-      }
-      expect(yield* Ref.get(killCount)).toBe(1);
-      expect(yield* Ref.get(unrefCount)).toBe(1);
-    })
-  );
+        expect(yield* Fiber.join(fiber)).toBe("watchdog tripped");
+        expect(yield* Ref.get(killCount)).toBe(1);
+      })
+    );
+  });
 
-  it.effect(
-    "unrefs the child when its caller is interrupted during timeout cleanup",
-    Effect.fnUntraced(function* () {
-      const { killCount, spawner, unrefCount } = yield* makeNeverExitSpawner(false);
-      const fiber = yield* Effect.forkChild(
-        runCaptured({
-          command: "fake-step",
-          args: ["--flag"],
-          timeout: "1 minute",
-          forceKillAfter: "1 second",
-        }).pipe(
-          provideScopedLayer(
-            Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
+  it.layer(BunCrypto.layer)((it) => {
+    it.effect(
+      "returns a typed timeout after bounded cleanup when the child never reports exit",
+      Effect.fnUntraced(function* () {
+        const { killCount, spawner, unrefCount } = yield* makeNeverExitSpawner(false);
+        const fiber = yield* Effect.forkChild(
+          Effect.flip(
+            runCaptured({
+              command: "fake-step",
+              args: ["--flag"],
+              timeout: "1 minute",
+              forceKillAfter: "1 second",
+            }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
           )
-        )
-      );
+        );
 
-      yield* TestClock.adjust("1 minute");
-      yield* Fiber.interrupt(fiber);
+        yield* TestClock.adjust("1 minute");
+        yield* TestClock.adjust("2 seconds");
 
-      expect(yield* Ref.get(killCount)).toBe(1);
-      expect(yield* Ref.get(unrefCount)).toBe(1);
-    })
-  );
+        const error = yield* Fiber.join(fiber);
+        expect(error).toBeInstanceOf(CaptureCommandTimedOutError);
+        if (isCaptureCommandTimedOutError(error)) {
+          expect(error.commandLine).toBe("fake-step --flag");
+        }
+        expect(yield* Ref.get(killCount)).toBe(1);
+        expect(yield* Ref.get(unrefCount)).toBe(1);
+      })
+    );
+  });
+
+  it.layer(BunCrypto.layer)((it) => {
+    it.effect(
+      "unrefs the child when its caller is interrupted during timeout cleanup",
+      Effect.fnUntraced(function* () {
+        const { killCount, spawner, unrefCount } = yield* makeNeverExitSpawner(false);
+        const fiber = yield* Effect.forkChild(
+          runCaptured({
+            command: "fake-step",
+            args: ["--flag"],
+            timeout: "1 minute",
+            forceKillAfter: "1 second",
+          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
+        );
+
+        yield* TestClock.adjust("1 minute");
+        yield* Fiber.interrupt(fiber);
+
+        expect(yield* Ref.get(killCount)).toBe(1);
+        expect(yield* Ref.get(unrefCount)).toBe(1);
+      })
+    );
+  });
 });

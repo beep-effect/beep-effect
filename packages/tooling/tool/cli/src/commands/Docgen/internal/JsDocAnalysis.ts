@@ -22,7 +22,7 @@ import {
 import { loadDocgenConfigDocument } from "./Workspace.ts";
 import type { DomainError } from "@beep/repo-utils";
 import type { FileSystem } from "effect";
-import type { ExportDeclaration, JSDoc, SourceFile } from "ts-morph";
+import type { JSDoc, SourceFile } from "ts-morph";
 import type { DocgenExportKind, DocgenIssuePriority, DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 
 const DOCGEN_REQUIRED_TAGS = ["@category", "@example", "@since"] as const;
@@ -62,14 +62,6 @@ const extractJsDocCategoryValues = flow(
     )
   )
 );
-
-const getLeadingJsDocCommentText = (node: ExportDeclaration): O.Option<string> =>
-  pipe(
-    node.getLeadingCommentRanges(),
-    A.filter((range) => Str.startsWith("/**")(range.getText())),
-    A.last,
-    O.map((range) => range.getText())
-  );
 
 const extractJsDocTagsFromText = flow(
   Str.matchAll(/@([A-Za-z][\w-]*)/g),
@@ -348,57 +340,6 @@ const analyzeModuleFileoverview = (
   );
 };
 
-const analyzeReExports = (
-  sourceFile: SourceFile,
-  relativeFilePath: string,
-  requiredTags: ReadonlyArray<DocgenRequiredTag>
-): ReadonlyArray<DocgenExportAnalysis> =>
-  pipe(
-    sourceFile.getDescendantsOfKind(SyntaxKind.ExportDeclaration),
-    A.map((declaration: ExportDeclaration) => {
-      const jsDocTags = pipe(
-        getJsDocs(declaration),
-        A.flatMap((doc) => A.map(doc.getTags(), (tag) => `@${tag.getTagName()}`))
-      );
-      const leadingTags = pipe(
-        getLeadingJsDocCommentText(declaration),
-        O.map(extractJsDocTagsFromText),
-        O.getOrElse(A.empty<string>)
-      );
-      const declarationTextTags = extractJsDocTagsFromText(declaration.getText());
-      const presentTags = pipe([...jsDocTags, ...leadingTags, ...declarationTextTags], A.dedupe);
-      const categoryValues = pipe(
-        [
-          ...extractJsDocCategoryValues(declaration),
-          ...pipe(
-            getLeadingJsDocCommentText(declaration),
-            O.map(extractJsDocCategoryValuesFromText),
-            O.getOrElse(A.empty<string>)
-          ),
-          ...extractJsDocCategoryValuesFromText(declaration.getText()),
-        ],
-        A.dedupe
-      );
-      const missingTags = missingRequiredTags(presentTags, requiredTags);
-      const categoryIssues = categoryIssueMessages(categoryValues);
-
-      return makeExportAnalysis({
-        name: declaration.getText(),
-        kind: "re-export",
-        filePath: relativeFilePath,
-        line: declaration.getStartLineNumber(),
-        presentTags,
-        missingTags,
-        categoryValues,
-        categoryIssues,
-        hasJsDoc: presentTags.length > 0,
-        declarationSource: declaration.getText(),
-        context: `Re-export from ${declaration.getModuleSpecifierValue() ?? "<unknown>"} needs documentation.`,
-      });
-    }),
-    A.filter(hasAnalysisIssue)
-  );
-
 const sourceFileMatchesExclude = (
   absolutePackagePath: string,
   srcDir: string,
@@ -447,7 +388,6 @@ const analyzeSourceFile = (
   requiredTags: ReadonlyArray<DocgenRequiredTag>
 ): ReadonlyArray<DocgenExportAnalysis> => {
   const relativeFilePath = relativePathWithinPackage(absolutePackagePath, sourceFile.getFilePath(), path);
-  const reExports = analyzeReExports(sourceFile, relativeFilePath, requiredTags);
   const exportSpecifierTags = collectExportSpecifierTags(sourceFile);
   const exportSpecifierCategoryValues = collectExportSpecifierCategoryValues(sourceFile);
   const directExports = pipe(
@@ -476,13 +416,13 @@ const analyzeSourceFile = (
     })
   );
 
-  if (reExports.length === 0 && directExports.length === 0) {
+  if (directExports.length === 0 && sourceFile.getExportDeclarations().length === 0) {
     return A.empty();
   }
 
   const moduleFileoverview = analyzeModuleFileoverview(sourceFile, relativeFilePath, requiredTags);
 
-  return pipe(O.toArray(moduleFileoverview), A.appendAll(reExports), A.appendAll(directExports));
+  return pipe(O.toArray(moduleFileoverview), A.appendAll(directExports));
 };
 
 const computeAnalysisSummary = (analyses: ReadonlyArray<DocgenExportAnalysis>): DocgenAnalysisSummary =>
