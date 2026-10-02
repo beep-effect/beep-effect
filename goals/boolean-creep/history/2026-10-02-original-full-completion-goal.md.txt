@@ -1,3 +1,12 @@
+SUPERSEDED — NON-EXECUTABLE HISTORICAL LAUNCHER
+
+The operator ended this campaign through partial closeout on 2026-10-02.
+The original text below is preserved as history. Its launch commands, Gate 2
+ratification and merge authority are retired. They cannot authorize new work;
+future execution requires new explicit authority and fresh evidence.
+
+--- BEGIN ORIGINAL TEXT ---
+
 # GOAL: eradicate boolean creep from the beep-effect corpus
 
 Repo root: the current working directory — the `beep-effect` checkout you are

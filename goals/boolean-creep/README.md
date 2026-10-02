@@ -229,7 +229,7 @@ Historical lifecycle before partial closeout: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-## Mission
+## Historical mission
 
 Find every place AI-generated code flattened one domain state variable into
 parallel correlated booleans, prove each with cited evidence (E1–E4), and
@@ -237,29 +237,24 @@ refactor the confirmed instances to schema-first shapes (LiteralKit literal,
 tagged union, or Option-of-literal) that delete the guards the booleans made
 necessary.
 
-## Launch
+## Reference use
 
-Use this command for execution-capable sessions:
-
-```text
-/goal follow the instructions in goals/boolean-creep/GOAL.md
-```
-
-`GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract;
-[`DECISIONS.md`](./DECISIONS.md) holds the ratified campaign decisions.
+This packet is reference-only. Do not launch further work from `GOAL.md`.
+`SPEC.md` preserves the historical contract and the dated partial closeout;
+[`DECISIONS.md`](./DECISIONS.md) records the decision that ended execution.
 
 ## Read This First
 
-1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
-2. [`SPEC.md`](./SPEC.md) - normative source of truth.
-3. [`DECISIONS.md`](./DECISIONS.md) - ratified decisions (binding).
-4. [`PLAN.md`](./PLAN.md) - active execution plan.
+1. [`GOAL.md`](./GOAL.md) - closed-campaign notice.
+2. [`SPEC.md`](./SPEC.md) - historical contract and current closeout notice.
+3. [`DECISIONS.md`](./DECISIONS.md) - historical ratifications and the current partial-closeout decision.
+4. [`PLAN.md`](./PLAN.md) - historical execution plan and current closeout record.
 5. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
-6. [`data/inventory.jsonl`](./data/inventory.jsonl) - campaign state of truth.
+6. [`data/inventory.jsonl`](./data/inventory.jsonl) - retained historical inventory; source validation remains incomplete.
 7. [`research/`](./research/) - supporting research.
 8. [`history/`](./history/) - evidence and closeouts.
 
-## Current Phase
+## Historical phase records
 
 2026-09-22 main synchronization: fast-forwarded to `02f8084070af1fe3329b4c769705394a9f33b9f1` with all 265 dirty packet paths preserved byte-for-byte; post-merge version sync passed. Receipt: `data/main-sync-02f808-2026-09-22.json`. The one changed corpus file is `Ci/LaneTimings.ts`; no inventory owner/evidence path changed, and all 437 explicitly recorded source hash bindings checked still match. Partition remains 3,141 files /27 lanes. This is mechanical continuity evidence, not current census or P3 approval. Inventory remains 756 rows /148 qualified /608 disqualified, zero applied; constitutional preamble and remote status contracts remain held.
 
