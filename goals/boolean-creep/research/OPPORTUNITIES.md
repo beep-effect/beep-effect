@@ -2094,3 +2094,14 @@ explicit source pin and cited artifact before dispatch, and label missing bytes
 without replacing their historical binding. Direct current-main exports now
 supplement the earlier conservation checks; they do not rebind old receipts or
 satisfy census, P3, ratification, implementation, or closeout gates.
+
+R54's cache-pilot and HTML link migration-list review reached its configured
+32-turn limit with only an initial partial receipt (`Error: max turns reached`).
+The reviewer also searched for that partial at a relative path even though the
+saved artifact existed in the review cache. This was an ordinary bounded-run
+failure, not provider exhaustion or a source finding. No judgment credit was
+assigned. The same reviewer resumed on one complete owning list with a single
+input document naming the exact claim, absolute input/output paths, and hashed
+current-source exports. Complete one owning claim and persist its disposition
+before starting another; prepare exact paths and named historical bindings
+before dispatch. This preserves review independence and the full evidence gates.
