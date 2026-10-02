@@ -1,0 +1,46 @@
+{
+  "source": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
+  "sourceSha256": "08b975ae8e022c78c1bf4f56094d1c10b0f07224b2c118983b2df419abf7bb07",
+  "sourceFixSha": "e179f37a32d630cb5acd89f0d2b593868ba5a1ca",
+  "migration": {
+    "scopedRegistrations": 8,
+    "nativeProperties": 1,
+    "registrationNamesAndOrderPreserved": true,
+    "substantiveAssertionsPreserved": true,
+    "nativeFilesystemException": "FsUtilsLive SharedGlob traverses the native Bun/Node filesystem; MemoryFileSystem alone would change the test subject."
+  },
+  "focused": {
+    "nodePassed": 8,
+    "bunPassed": 8,
+    "seededNodePassed": 8,
+    "seededBunPassed": 8,
+    "envRuns": 400,
+    "envSeed": 20260708,
+    "resolvedPropertyOptions": {
+      "runs": 400,
+      "seed": 20260708
+    }
+  },
+  "negativeControl": {
+    "intendedFailure": 1,
+    "otherPassingTests": 7,
+    "temporaryCopyRemoved": true
+  },
+  "packageVerify": {
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "exitCode": 0,
+    "auditSeconds": 592.1,
+    "docgenSeconds": 21.4
+  },
+  "detector": {
+    "baselineBefore": 1994,
+    "baselineAfter": 1985,
+    "fixedCurrentOccurrences": 9,
+    "fixedHistoricalRows": 9,
+    "additionalCurrentLineageRows": 8,
+    "exception": "EV010 native filesystem provenance",
+    "introduced": 0
+  },
+  "propertyLedger": "L-PROP-03 fixed: native it.effect.prop uses fcRuns(100), honoring environment floor and seed.",
+  "hostedProof": false
+}
