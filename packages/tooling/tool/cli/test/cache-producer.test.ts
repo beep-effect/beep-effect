@@ -30,8 +30,9 @@ import { input as bundleInput, contractInput, pilot as input } from "./helpers/c
 const ProducerApprovalJson = S.fromJsonString(CacheProducerApproval);
 const ProducerBindingJson = S.fromJsonString(CacheProducerBinding);
 
-const contract = S.decodeUnknownSync(CacheTaskContract)(contractInput);
+const decodeContract = S.decodeUnknownEffect(CacheTaskContract);
 const setup = Effect.fn("ProducerTest.setup")(function* () {
+  const contract = yield* decodeContract(contractInput);
   const receipt = yield* S.decodeUnknownEffect(CacheProducerBundle)(bundleInput);
   const binding = yield* S.decodeUnknownEffect(CacheProducerBinding)({
     ...input,
@@ -43,7 +44,7 @@ const setup = Effect.fn("ProducerTest.setup")(function* () {
   const issuer = yield* makeCacheProducerIssuer(binding);
   const envelope = yield* issuer.issue(receipt);
   const encoded = yield* S.encodeEffect(CacheProducerEnvelope)(envelope);
-  return { receipt, binding, issuer, envelope, encoded };
+  return { receipt, binding, issuer, envelope, encoded, contract };
 });
 it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed producer issuer", (it) => {
   it.effect.prop(
@@ -96,12 +97,12 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
       });
       // This remains valid conformance; its bytes are not the authenticated payload.
       yield* issuer.issue(changed);
-      assertTrue(Result.isFailure(yield* issuer.verify(envelope, changed).pipe(Effect.result)));
+      (yield* issuer.verify(envelope, changed).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       const incomplete = yield* S.decodeUnknownEffect(CacheProducerBundle)({
         ...bundleInput,
         protocol: { ...bundleInput.protocol, events: [] },
       });
-      assertTrue(Result.isFailure(yield* issuer.issue(incomplete).pipe(Effect.result)));
+      (yield* issuer.issue(incomplete).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("authenticates a bound observation without exporting keys", () =>
@@ -130,8 +131,8 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
           (binding) => ({ ...encoded, body: { ...encoded.body, binding } })
         ),
       ]) {
-        const envelope = yield* S.decodeUnknownEffect(CacheProducerEnvelope)(value);
-        assertTrue(Result.isFailure(yield* issuer.verify(envelope, receipt).pipe(Effect.result)));
+        const envelope = yield* S.decodeEffect(CacheProducerEnvelope)(value);
+        (yield* issuer.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       }
     })
   );
@@ -139,12 +140,12 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
     Effect.gen(function* () {
       const { issuer, receipt, binding, envelope } = yield* setup();
       const other = yield* makeCacheProducerIssuer(binding);
-      assertTrue(Result.isFailure(yield* other.verify(envelope, receipt).pipe(Effect.result)));
+      (yield* other.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       const changed = yield* S.decodeUnknownEffect(CacheProducerBundle)({
         ...bundleInput,
         pilot: { ...input, sourceRevision: Str.repeat(40)("0") },
       });
-      assertTrue(Result.isFailure(yield* issuer.verify(envelope, changed).pipe(Effect.result)));
+      (yield* issuer.verify(envelope, changed).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("refuses to issue against incorrect source, client, runtime and epoch", () =>
@@ -166,7 +167,7 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
           ...bundleInput,
           pilot: { ...input, ...patch },
         });
-        assertTrue(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result)));
+        (yield* issuer.issue(receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       }
     })
   );
@@ -185,7 +186,7 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
           ...bundleInput,
           pilot: { ...input, pairs },
         });
-        assertTrue(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result)));
+        (yield* issuer.issue(receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       }
     })
   );
@@ -205,7 +206,7 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
     Effect.gen(function* () {
       const { issuer, receipt, envelope } = yield* setup();
       yield* TestClock.adjust("25 hours");
-      assertTrue(Result.isFailure(yield* issuer.verify(envelope, receipt).pipe(Effect.result)));
+      (yield* issuer.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 });
@@ -215,21 +216,22 @@ const persistentSetup = Effect.fn("ProducerTest.persistentSetup")(function* () {
   const path = yield* Path.Path;
   const parent = yield* fs.makeTempDirectoryScoped();
   const directory = path.join(parent, "issuer");
-  const { receipt, binding } = yield* setup();
+  const { receipt, binding, contract } = yield* setup();
   const issuer = yield* initializeCacheProducerIssuer(directory, binding, contract);
   const envelope = yield* issuer.issue(receipt);
-  return { fs, path, directory, receipt, binding, issuer, envelope };
+  return { fs, path, directory, receipt, binding, issuer, envelope, contract };
 });
 it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 seconds" })(
   "persistent producer issuer",
   (it) => {
     it.effect("reopens the same issuer and refuses accidental reprovisioning", () =>
       Effect.gen(function* () {
-        const { directory, binding, receipt, envelope } = yield* persistentSetup();
+        const { directory, binding, receipt, envelope, contract } = yield* persistentSetup();
         const reopened = yield* openCacheProducerIssuer(directory, binding);
         expect(yield* reopened.verify(envelope, receipt)).toEqual(receipt);
-        assertTrue(
-          Result.isFailure(yield* initializeCacheProducerIssuer(directory, binding, contract).pipe(Effect.result))
+        (yield* initializeCacheProducerIssuer(directory, binding, contract).pipe(Effect.result)).pipe(
+          Result.isFailure,
+          assertTrue
         );
         expect(yield* reopened.verify(envelope, receipt)).toEqual(receipt);
       })
@@ -255,7 +257,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         ]) {
           const changed = yield* S.decodeUnknownEffect(CacheProducerBinding)({ ...binding, ...patch });
           const result = yield* openCacheProducerIssuer(directory, changed).pipe(Effect.result);
-          assertTrue(Result.isFailure(result));
+          result.pipe(Result.isFailure, assertTrue);
           if (Result.isFailure(result)) expect(result.failure.message).toContain("different workflow");
         }
         const reopened = yield* openCacheProducerIssuer(directory, binding);
@@ -266,8 +268,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
       Effect.gen(function* () {
         const { directory, binding, receipt, envelope, issuer } = yield* persistentSetup();
         yield* revokeCacheProducerIssuer(directory);
-        assertTrue(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result)));
-        assertTrue(Result.isFailure(yield* issuer.verify(envelope, receipt).pipe(Effect.result)));
+        (yield* issuer.issue(receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+        (yield* issuer.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         expect((yield* openCacheProducerIssuer(directory, binding).pipe(Effect.flip)).message).toBe(
           "Producer issuer is revoked."
         );
@@ -275,26 +277,26 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
     );
     it.effect("fails closed for missing and replaced material without recreating it", () =>
       Effect.gen(function* () {
-        const { fs, path, directory, binding, receipt, envelope, issuer } = yield* persistentSetup();
+        const { fs, path, directory, binding, receipt, envelope, issuer, contract } = yield* persistentSetup();
         const file = path.join(directory, "issuer.key");
         yield* fs.remove(file);
-        assertTrue(Result.isFailure(yield* openCacheProducerIssuer(directory, binding).pipe(Effect.result)));
+        (yield* openCacheProducerIssuer(directory, binding).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         expect(yield* fs.exists(file)).toBe(false);
         yield* fs.remove(directory, { recursive: true });
         const replacement = yield* initializeCacheProducerIssuer(directory, binding, contract);
-        assertTrue(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result)));
-        assertTrue(Result.isFailure(yield* issuer.verify(envelope, receipt).pipe(Effect.result)));
-        assertTrue(Result.isFailure(yield* replacement.verify(envelope, receipt).pipe(Effect.result)));
+        (yield* issuer.issue(receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+        (yield* issuer.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+        (yield* replacement.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
     it.effect("refuses permissive directories and files after an instance opens", () =>
       Effect.gen(function* () {
         const { fs, path, directory, receipt, issuer } = yield* persistentSetup();
         yield* fs.chmod(directory, 0o755);
-        assertTrue(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result)));
+        (yield* issuer.issue(receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         yield* fs.chmod(directory, 0o700);
         yield* fs.chmod(path.join(directory, "issuer.key"), 0o644);
-        assertTrue(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result)));
+        (yield* issuer.issue(receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
     it.effect("refuses symbolic and hard-linked material and dangling revocation markers", () =>
@@ -304,14 +306,14 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const moved = path.join(directory, "original");
         yield* fs.rename(file, moved);
         yield* fs.symlink(moved, file);
-        assertTrue(Result.isFailure(yield* openCacheProducerIssuer(directory, binding).pipe(Effect.result)));
+        (yield* openCacheProducerIssuer(directory, binding).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         yield* fs.remove(file);
         yield* fs.link(moved, file);
-        assertTrue(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result)));
+        (yield* issuer.issue(receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         yield* fs.remove(file);
         yield* fs.rename(moved, file);
         yield* fs.symlink(path.join(directory, "missing"), path.join(directory, "revoked"));
-        assertTrue(Result.isFailure(yield* issuer.issue(receipt).pipe(Effect.result)));
+        (yield* issuer.issue(receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
     it.effect("refuses a store reached through a symbolic directory alias", () =>
@@ -319,7 +321,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const { fs, path, directory, binding } = yield* persistentSetup();
         const alias = path.join(path.dirname(directory), "alias");
         yield* fs.symlink(directory, alias);
-        assertTrue(Result.isFailure(yield* openCacheProducerIssuer(alias, binding).pipe(Effect.result)));
+        (yield* openCacheProducerIssuer(alias, binding).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
     it.effect("rejects truncated or oversized material before importing it", () =>
@@ -327,7 +329,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const { fs, path, directory, binding } = yield* persistentSetup();
         for (const length of [0, 32, 64, 95, 97, 1024]) {
           yield* fs.writeFile(path.join(directory, "issuer.key"), new Uint8Array(length));
-          assertTrue(Result.isFailure(yield* openCacheProducerIssuer(directory, binding).pipe(Effect.result)));
+          (yield* openCacheProducerIssuer(directory, binding).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         }
       })
     );
@@ -342,7 +344,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const { fs, path, directory, receipt, envelope } = yield* persistentSetup();
         const verifier = yield* openCacheProducerVerifier(directory);
         const file = path.join(directory, "approval.json");
-        const approval = yield* S.decodeUnknownEffect(ProducerApprovalJson)(yield* fs.readFileString(file));
+        const approval = yield* S.decodeEffect(ProducerApprovalJson)(yield* fs.readFileString(file));
         const changedContract = CacheTaskContract.make({ ...approval.contract, negativeCases: ["weaker-policy"] });
         for (const binding of [
           approval.binding,
@@ -353,14 +355,14 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         ]) {
           const changed = CacheProducerApproval.make({ binding, contract: changedContract });
           yield* fs.writeFileString(file, yield* S.encodeEffect(ProducerApprovalJson)(changed));
-          assertTrue(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result)));
-          assertTrue(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result)));
+          (yield* openCacheProducerVerifier(directory).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+          (yield* verifier.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         }
       })
     );
     it.effect("loads independent approval and exposes verification only", () =>
       Effect.gen(function* () {
-        const { directory, receipt, envelope } = yield* persistentSetup();
+        const { directory, receipt, envelope, contract } = yield* persistentSetup();
         const verifier = yield* openCacheProducerVerifier(directory);
         expect(R.keys(verifier)).toEqual(["verify"]);
         expect((yield* verifier.verify(envelope, receipt)).contract).toEqual(contract);
@@ -370,7 +372,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
       Effect.gen(function* () {
         const { fs, path, directory, binding, receipt, envelope } = yield* persistentSetup();
         const verifier = yield* openCacheProducerVerifier(directory);
-        const changed = yield* S.decodeUnknownEffect(CacheProducerBinding)({
+        const changed = yield* S.decodeEffect(CacheProducerBinding)({
           ...binding,
           policyDigest: Str.repeat(64)("0"),
         });
@@ -378,8 +380,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
           path.join(directory, "approval.json"),
           yield* S.encodeEffect(ProducerBindingJson)(changed)
         );
-        assertTrue(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result)));
-        assertTrue(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result)));
+        (yield* openCacheProducerVerifier(directory).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+        (yield* verifier.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
     it.effect("refuses missing approval without reconstructing it from submitted evidence", () =>
@@ -388,8 +390,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const verifier = yield* openCacheProducerVerifier(directory);
         const file = path.join(directory, "approval.json");
         yield* fs.remove(file);
-        assertTrue(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result)));
-        assertTrue(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result)));
+        (yield* openCacheProducerVerifier(directory).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+        (yield* verifier.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         expect(yield* fs.exists(file)).toBe(false);
       })
     );
@@ -400,14 +402,14 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const file = path.join(directory, "approval.json");
         const moved = path.join(directory, "original-approval.json");
         yield* fs.chmod(file, 0o644);
-        assertTrue(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result)));
+        (yield* verifier.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         yield* fs.chmod(file, 0o600);
         yield* fs.rename(file, moved);
         yield* fs.symlink(moved, file);
-        assertTrue(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result)));
+        (yield* openCacheProducerVerifier(directory).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         yield* fs.remove(file);
         yield* fs.link(moved, file);
-        assertTrue(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result)));
+        (yield* verifier.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
     it.effect("rejects malformed, invalid UTF-8 and oversized approval before verification", () =>
@@ -420,7 +422,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
           new Uint8Array(16385),
         ]) {
           yield* fs.writeFile(path.join(directory, "approval.json"), bytes);
-          assertTrue(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result)));
+          (yield* openCacheProducerVerifier(directory).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         }
       })
     );
@@ -429,10 +431,10 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const { directory, receipt, envelope } = yield* persistentSetup();
         const other = yield* persistentSetup();
         const verifier = yield* openCacheProducerVerifier(directory);
-        assertTrue(Result.isFailure(yield* verifier.verify(other.envelope, receipt).pipe(Effect.result)));
+        (yield* verifier.verify(other.envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         yield* revokeCacheProducerIssuer(directory);
-        assertTrue(Result.isFailure(yield* verifier.verify(envelope, receipt).pipe(Effect.result)));
-        assertTrue(Result.isFailure(yield* openCacheProducerVerifier(directory).pipe(Effect.result)));
+        (yield* verifier.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+        (yield* openCacheProducerVerifier(directory).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
   }

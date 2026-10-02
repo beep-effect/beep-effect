@@ -126,28 +126,35 @@ export const signedPilotInput = {
   signedConfigurationDigest: digest("c"),
   toolchainDigest: digest("a"),
   signedRootConfiguration: digest("a"),
-  freshPairs: A.map(A.range(0, 2), (pair) => ({
-    id: pair,
-    leftRoot: digest(["1", "3", "5"][pair]),
-    rightRoot: digest(["2", "4", "6"][pair]),
-    left: {
-      ...run(pair, 0),
-      id: `fresh-${pair}-left`,
-      selectedTaskInterval: { startTime: 1000 + pair * 1000, endTime: 1800 + pair * 1000 },
-      cacheEnabled: true,
-      summarySha256: digest(["a", "c", "e"][pair]),
-      outcome: { ...run(pair, 0).outcome, replayLogMatches: true },
-    },
-    right: {
-      ...run(pair, 0),
-      id: `fresh-${pair}-right`,
-      selectedTaskInterval: { startTime: 1400 + pair * 1000, endTime: 2200 + pair * 1000 },
-      root: "root-b",
-      cacheEnabled: true,
-      summarySha256: digest(["b", "d", "f"][pair]),
-      outcome: { ...run(pair, 0).outcome, replayLogMatches: true },
-    },
-  })),
+  freshPairs: A.map(
+    [
+      { pair: 0, leftRoot: "1", rightRoot: "2", leftSummary: "a", rightSummary: "b" },
+      { pair: 1, leftRoot: "3", rightRoot: "4", leftSummary: "c", rightSummary: "d" },
+      { pair: 2, leftRoot: "5", rightRoot: "6", leftSummary: "e", rightSummary: "f" },
+    ],
+    ({ pair, leftRoot, rightRoot, leftSummary, rightSummary }) => ({
+      id: pair,
+      leftRoot: digest(leftRoot),
+      rightRoot: digest(rightRoot),
+      left: {
+        ...run(pair, 0),
+        id: `fresh-${pair}-left`,
+        selectedTaskInterval: { startTime: 1000 + pair * 1000, endTime: 1800 + pair * 1000 },
+        cacheEnabled: true,
+        summarySha256: digest(leftSummary),
+        outcome: { ...run(pair, 0).outcome, replayLogMatches: true },
+      },
+      right: {
+        ...run(pair, 0),
+        id: `fresh-${pair}-right`,
+        selectedTaskInterval: { startTime: 1400 + pair * 1000, endTime: 2200 + pair * 1000 },
+        root: "root-b",
+        cacheEnabled: true,
+        summarySha256: digest(rightSummary),
+        outcome: { ...run(pair, 0).outcome, replayLogMatches: true },
+      },
+    })
+  ),
   policyRefusal: {
     reason: "missing-child-config",
     removedPath: "packages/foundation/modeling/identity/turbo.json",

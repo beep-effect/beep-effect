@@ -89,14 +89,14 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const { root, fs, path } = yield* fixture();
         yield* fs.writeFileString(path.join(path.dirname(root), "outside.ts"), "outside fixture bytes");
         yield* fs.symlink("../../../../outside.ts", path.join(root, "packages/fixture/src/alias.ts"));
-        assertTrue(Result.isFailure(yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result)));
+        (yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
     it.effect("rejects missing tracked sources instead of silently dropping their binding", () =>
       Effect.gen(function* () {
         const { root, fs, source } = yield* fixture();
         yield* fs.remove(source);
-        assertTrue(Result.isFailure(yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result)));
+        (yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
 
@@ -110,9 +110,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
       Effect.gen(function* () {
         const { root, fs, source, git } = yield* fixture();
         yield* fs.writeFileString(source, "export const value = 2;\n");
-        assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
+        (yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         yield* git(["add", "packages"]);
-        assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
+        (yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
     it.effect("rejects untracked and ignored executable additions", () =>
@@ -121,7 +121,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         for (const name of ["unreviewed.ts", "ignored.ts"]) {
           const file = path.join(root, "packages/fixture/src", name);
           yield* fs.writeFileString(file, "export {};\n");
-          assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
+          (yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
           yield* fs.remove(file);
         }
         yield* assertCacheProducerWorkflowProfile(root);
@@ -133,7 +133,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const directory = path.join(root, "packages/fixture/node_modules/effect");
         yield* fs.makeDirectory(directory, { recursive: true });
         yield* fs.writeFileString(path.join(directory, "index.js"), "export {};\n");
-        assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
+        (yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
     it.effect("rejects ambient dotenv files without reading their contents", () =>
@@ -142,11 +142,11 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         for (const name of [".env", ".env.production.local", ".env.test.local"]) {
           const file = path.join(root, name);
           yield* fs.writeFileString(file, "FIXTURE_ONLY=true\n");
-          assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
+          (yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
           yield* fs.remove(file);
         }
         yield* fs.symlink("missing-env-target", path.join(root, ".env.local"));
-        assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)));
+        (yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
     it.effect("binds the loaded supervisor to its own checkout", () =>
@@ -155,7 +155,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         const testFile = yield* path.fromFileUrl(new URL(import.meta.url));
         const owner = path.resolve(path.dirname(testFile), "../../../../..");
         yield* assertCacheProducerWorkflowLocation(owner);
-        assertTrue(Result.isFailure(yield* assertCacheProducerWorkflowLocation(root).pipe(Effect.result)));
+        (yield* assertCacheProducerWorkflowLocation(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
   }

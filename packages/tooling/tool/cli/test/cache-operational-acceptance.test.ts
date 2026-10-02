@@ -212,7 +212,7 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
           ...canaryInput,
           pilot: { ...canaryInput.pilot, ...measured },
         });
-        const binding = yield* S.decodeUnknownEffect(CacheProducerBinding)({
+        const binding = yield* S.decodeEffect(CacheProducerBinding)({
           ...bundle.pilot,
           protocolClient: input.protocol.observation.client,
           workflowRevision: Str.repeat(40)("a"),

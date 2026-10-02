@@ -16,7 +16,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const FixtureEventsJson = S.fromJsonString(S.Array(CacheFixtureEvent));
+const FixtureEventsJson = CacheFixtureEvent.pipe(S.Array, S.fromJsonString);
 
 const reader = "fixture-reader-only";
 const writer = "fixture-writer-only";
@@ -45,7 +45,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
     it.effect("returns supervisor copies without mutating stored bytes or adding wire events", () =>
       Effect.gen(function* () {
         const fixture = yield* makeCacheProtocolFixture(credentials);
-        assertTrue(Result.isFailure(yield* fixture.artifactBytes(artifactHash).pipe(Effect.result)));
+        (yield* fixture.artifactBytes(artifactHash).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         const uploaded = yield* put(endpoint(fixture.url));
         yield* uploaded.text;
         const before = yield* fixture.events;
@@ -139,7 +139,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         expect(A.filter(uploaded, (r) => r.status === 409)).toHaveLength(1);
         const downloaded = yield* get(endpoint(fixture.url));
         const winner = new Uint8Array(yield* downloaded.arrayBuffer);
-        expect(winner).toEqual(uploaded[0].status === 200 ? first : second);
+        expect(winner).toEqual(A.getUnsafe(uploaded, 0).status === 200 ? first : second);
         expect((yield* put(endpoint(fixture.url), winner)).status).toBe(200);
         expect((yield* put(endpoint(fixture.url), winner, writer, "different-tag")).status).toBe(409);
       })
@@ -167,7 +167,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         }
         const events = yield* fixture.events;
         const encoded = yield* S.encodeEffect(FixtureEventsJson)(events);
-        expect(yield* S.decodeUnknownEffect(FixtureEventsJson)(encoded)).toEqual(events);
+        expect(yield* S.decodeEffect(FixtureEventsJson)(encoded)).toEqual(events);
         for (const secret of [reader, writer, tag, "complete fixture artifact"]) expect(encoded).not.toContain(secret);
         expect(events).toHaveLength(5);
         expect(A.map(events, (event) => event.sequence)).toEqual([1, 2, 3, 4, 5]);
@@ -220,8 +220,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         const recovered = yield* get(endpoint(fixture.url));
         expect(new Uint8Array(yield* recovered.arrayBuffer)).toEqual(bytes);
         const events = yield* fixture.events;
-        expect(events[2].digest).not.toEqual(events[0].digest);
-        expect(events[4].digest).toEqual(events[0].digest);
+        expect(A.getUnsafe(events, 2).digest).not.toEqual(A.getUnsafe(events, 0).digest);
+        expect(A.getUnsafe(events, 4).digest).toEqual(A.getUnsafe(events, 0).digest);
       })
     );
 
@@ -268,12 +268,12 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
     it.effect("refuses overlapping capabilities and releases the listening socket with its scope", () =>
       Effect.gen(function* () {
         const duplicate = CacheFixtureCredentials.make({ ...credentials, writer: credentials.reader });
-        assertTrue(Result.isFailure(yield* makeCacheProtocolFixture(duplicate).pipe(Effect.result)));
+        (yield* makeCacheProtocolFixture(duplicate).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         const url = yield* makeCacheProtocolFixture(credentials).pipe(
           Effect.map((fixture) => fixture.url),
           Effect.scoped
         );
-        assertTrue(Result.isFailure(yield* get(endpoint(url)).pipe(Effect.result)));
+        (yield* get(endpoint(url)).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       })
     );
   }

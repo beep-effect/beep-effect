@@ -6,6 +6,7 @@ import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -13,8 +14,9 @@ import * as Str from "effect/String";
 import { signedPilotInput as input } from "./helpers/cache-signed-pilot-fixture.ts";
 
 const digest = Str.repeat(64);
-const task = input.pairs[0].producer.outcome.selected;
-const run = (pair: number, role: number) => (role === 2 ? input.pairs[pair].replay : input.pairs[pair].producer);
+const task = A.getUnsafe(input.pairs, 0).producer.outcome.selected;
+const run = (pair: number, role: number) =>
+  role === 2 ? A.getUnsafe(input.pairs, pair).replay : A.getUnsafe(input.pairs, pair).producer;
 const validate = (value: unknown) =>
   S.decodeUnknownEffect(CacheSignedPilotReceipt)(value).pipe(
     Effect.flatMap(validateCacheSignedPilotReceipt),
@@ -30,53 +32,49 @@ describe("signed real-pilot receipt relationships", () => {
         A.map(input.captureControls, (control) => ({ ...control, diagnostic: "unrelated failure" })),
         A.map(input.captureControls, (control) => ({
           ...control,
-          summarySha256: input.pairs[0].producer.summarySha256,
+          summarySha256: A.getUnsafe(input.pairs, 0).producer.summarySha256,
         })),
-        A.map(input.captureControls, (control) => ({ ...control, isolationRoot: input.freshPairs[0].leftRoot })),
+        A.map(input.captureControls, (control) => ({
+          ...control,
+          isolationRoot: A.getUnsafe(input.freshPairs, 0).leftRoot,
+        })),
         A.map(input.captureControls, (control) => ({ ...control, selectedExitCode: 1 })),
         A.map(input.captureControls, (control) => ({ ...control, origin: "remote-hit" })),
       ])
-        assertTrue(Result.isFailure(yield* validate({ ...input, captureControls })));
+        (yield* validate({ ...input, captureControls })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("binds every inspected archive to transferred bytes and the verified producer log", () =>
     Effect.gen(function* () {
       for (const archive of [
-        { ...input.pairs[0].archive, archiveSha256: digest("e") },
-        { ...input.pairs[0].archive, archiveBytes: 160 },
-        { ...input.pairs[0].archive, logSha256: digest("e") },
-        { ...input.pairs[0].archive, logBytes: 24 },
-        { ...input.pairs[0].archive, decodedBytes: 2049 },
-        { ...input.pairs[0].archive, path: "another.log" },
+        { ...A.getUnsafe(input.pairs, 0).archive, archiveSha256: digest("e") },
+        { ...A.getUnsafe(input.pairs, 0).archive, archiveBytes: 160 },
+        { ...A.getUnsafe(input.pairs, 0).archive, logSha256: digest("e") },
+        { ...A.getUnsafe(input.pairs, 0).archive, logBytes: 24 },
+        { ...A.getUnsafe(input.pairs, 0).archive, decodedBytes: 2049 },
+        { ...A.getUnsafe(input.pairs, 0).archive, path: "another.log" },
       ]) {
-        assertTrue(
-          Result.isFailure(yield* validate({ ...input, pairs: A.map(input.pairs, (pair) => ({ ...pair, archive })) }))
+        (yield* validate({ ...input, pairs: A.map(input.pairs, (pair) => ({ ...pair, archive })) })).pipe(
+          Result.isFailure,
+          assertTrue
         );
-        assertTrue(
-          Result.isFailure(
-            yield* validate({
-              ...input,
-              shadows: A.map(input.shadows, (shadow) => ({ ...shadow, comparison: { ...shadow.comparison, archive } })),
-            })
-          )
-        );
-        assertTrue(
-          Result.isFailure(
-            yield* validate({
-              ...input,
-              mutations: A.map(input.mutations, (mutation) => ({
-                ...mutation,
-                comparison: { ...mutation.comparison, archive },
-              })),
-            })
-          )
-        );
+        (yield* validate({
+          ...input,
+          shadows: A.map(input.shadows, (shadow) => ({ ...shadow, comparison: { ...shadow.comparison, archive } })),
+        })).pipe(Result.isFailure, assertTrue);
+        (yield* validate({
+          ...input,
+          mutations: A.map(input.mutations, (mutation) => ({
+            ...mutation,
+            comparison: { ...mutation.comparison, archive },
+          })),
+        })).pipe(Result.isFailure, assertTrue);
       }
     })
   );
   it.effect("requires independent missing-child refusal with no native execution", () =>
     Effect.gen(function* () {
-      assertTrue(Result.isFailure(yield* validate(R.remove(input, "policyRefusal"))));
+      (yield* validate(R.remove(input, "policyRefusal"))).pipe(Result.isFailure, assertTrue);
       const refusal = input.policyRefusal;
       for (const policyRefusal of [
         { ...refusal, removedPath: "turbo.json" },
@@ -86,15 +84,15 @@ describe("signed real-pilot receipt relationships", () => {
         { ...refusal, planExitCode: 1 },
         { ...refusal, executionSummaries: 1 },
         { ...refusal, selectedLogFiles: 1 },
-        { ...refusal, isolationRoot: input.freshPairs[0].leftRoot },
-        { ...refusal, dryPlanSha256: input.pairs[0].producer.summarySha256 },
+        { ...refusal, isolationRoot: A.getUnsafe(input.freshPairs, 0).leftRoot },
+        { ...refusal, dryPlanSha256: A.getUnsafe(input.pairs, 0).producer.summarySha256 },
         { ...refusal, taskHash: task.taskHash },
         { ...refusal, computation: "@beep/types#lint" },
         { ...refusal, configuration: { ...refusal.configuration, env: ["BEEP_CACHE_TOOLCHAIN_DIGEST"] } },
         { ...refusal, configuration: { ...refusal.configuration, persistent: true } },
         { ...refusal, configuration: { ...refusal.configuration, interactive: true } },
       ])
-        assertTrue(Result.isFailure(yield* validate({ ...input, policyRefusal })));
+        (yield* validate({ ...input, policyRefusal })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("accepts coherent comparisons without promotion authority", () =>
@@ -105,7 +103,7 @@ describe("signed real-pilot receipt relationships", () => {
   );
   it.effect("rejects reused fresh runs and normal cache-disabled authority as same-profile evidence", () =>
     Effect.gen(function* () {
-      const first = input.freshPairs[0];
+      const first = A.getUnsafe(input.freshPairs, 0);
       for (const freshPairs of [
         A.map(input.freshPairs, () => first),
         A.map(input.freshPairs, (pair) => ({ ...pair, rightRoot: pair.leftRoot })),
@@ -114,7 +112,7 @@ describe("signed real-pilot receipt relationships", () => {
         A.map(input.freshPairs, (pair) => ({ ...pair, left: { ...pair.left, cacheEnabled: false } })),
         A.map(input.freshPairs, (pair) => ({
           ...pair,
-          left: { ...pair.left, summarySha256: input.pairs[0].authoritative.summarySha256 },
+          left: { ...pair.left, summarySha256: A.getUnsafe(input.pairs, 0).authoritative.summarySha256 },
         })),
         A.map(input.freshPairs, (pair) => ({
           ...pair,
@@ -131,12 +129,12 @@ describe("signed real-pilot receipt relationships", () => {
           },
         })),
       ])
-        assertTrue(Result.isFailure(yield* validate({ ...input, freshPairs })));
+        (yield* validate({ ...input, freshPairs })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("rejects fresh-pair verdict, log, task and runtime divergence", () =>
     Effect.gen(function* () {
-      const run = input.freshPairs[0].left;
+      const run = A.getUnsafe(input.freshPairs, 0).left;
       for (const patch of [
         { graphExitCode: 1 },
         { nativeRuntimeKeyObserved: false },
@@ -150,7 +148,7 @@ describe("signed real-pilot receipt relationships", () => {
         { outcome: { ...run.outcome, selected: { ...run.outcome.selected, computation: "@beep/types#lint" } } },
       ]) {
         const freshPairs = A.map(input.freshPairs, (pair) => ({ ...pair, left: { ...pair.left, ...patch } }));
-        assertTrue(Result.isFailure(yield* validate({ ...input, freshPairs })));
+        (yield* validate({ ...input, freshPairs })).pipe(Result.isFailure, assertTrue);
       }
     })
   );
@@ -167,7 +165,7 @@ describe("signed real-pilot receipt relationships", () => {
           ...pair,
           left: { ...pair.left, selectedTaskInterval: interval },
         }));
-        assertTrue(Result.isFailure(yield* validate({ ...input, freshPairs })));
+        (yield* validate({ ...input, freshPairs })).pipe(Result.isFailure, assertTrue);
       }
       for (const offset of [0, 1]) {
         const freshPairs = A.map(input.freshPairs, (pair) => ({
@@ -180,7 +178,7 @@ describe("signed real-pilot receipt relationships", () => {
             },
           },
         }));
-        assertTrue(Result.isFailure(yield* validate({ ...input, freshPairs })));
+        (yield* validate({ ...input, freshPairs })).pipe(Result.isFailure, assertTrue);
       }
       const oneOverlap = A.map(input.freshPairs, (pair, index) =>
         index === 0
@@ -190,7 +188,7 @@ describe("signed real-pilot receipt relationships", () => {
               right: { ...pair.right, selectedTaskInterval: { startTime: 9000, endTime: 10000 } },
             }
       );
-      assertTrue(Result.isSuccess(yield* validate({ ...input, freshPairs: oneOverlap })));
+      (yield* validate({ ...input, freshPairs: oneOverlap })).pipe(Result.isSuccess, assertTrue);
     })
   );
   it.effect("derives native non-execution from exit, summary and diagnostic facts", () =>
@@ -199,7 +197,10 @@ describe("signed real-pilot receipt relationships", () => {
         [],
         A.map(input.nonExecutions, () => input.nonExecutions[0]),
         A.map(input.nonExecutions, (observation) => ({ ...observation, id: "same" })),
-        A.map(input.nonExecutions, (observation) => ({ ...observation, isolationRoot: input.freshPairs[0].leftRoot })),
+        A.map(input.nonExecutions, (observation) => ({
+          ...observation,
+          isolationRoot: A.getUnsafe(input.freshPairs, 0).leftRoot,
+        })),
         A.map(input.nonExecutions, (observation) => ({
           ...observation,
           selectedExecutionObserved: true,
@@ -210,20 +211,26 @@ describe("signed real-pilot receipt relationships", () => {
           exitCode: observation.exitCode === 0 ? 1 : 0,
           passed: true,
         })),
-        A.map(input.nonExecutions, (observation) => ({ ...R.remove(observation, "diagnostic"), passed: true })),
+        A.map(input.nonExecutions, (observation) => ({
+          ...(P.hasProperty(observation, "diagnostic") ? R.remove(observation, "diagnostic") : observation),
+          passed: true,
+        })),
         A.map(input.nonExecutions, (observation) => ({ ...observation, diagnostic: "malformed-child-config" })),
-        A.map(input.nonExecutions, (observation) => ({ ...R.remove(observation, "summarySha256"), passed: true })),
+        A.map(input.nonExecutions, (observation) => ({
+          ...(P.hasProperty(observation, "summarySha256") ? R.remove(observation, "summarySha256") : observation),
+          passed: true,
+        })),
         A.map(input.nonExecutions, (observation) => ({ ...observation, summarySha256: digest("7"), passed: true })),
         A.map(input.nonExecutions, (observation) =>
           observation.reason === "absent-script"
             ? {
                 ...observation,
-                summarySha256: input.freshPairs[0].left.summarySha256,
+                summarySha256: A.getUnsafe(input.freshPairs, 0).left.summarySha256,
               }
             : observation
         ),
       ])
-        assertTrue(Result.isFailure(yield* validate({ ...input, nonExecutions })));
+        (yield* validate({ ...input, nonExecutions })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("requires all seven seeded cases with distinct changed files and fresh case-derived verdicts", () =>
@@ -263,7 +270,7 @@ describe("signed real-pilot receipt relationships", () => {
           },
         })),
       ])
-        assertTrue(Result.isFailure(yield* validate({ ...input, mutations })));
+        (yield* validate({ ...input, mutations })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("requires ordered seed and changed wire evidence without uploading failed seeds", () =>
@@ -317,7 +324,7 @@ describe("signed real-pilot receipt relationships", () => {
           },
         })),
       ])
-        assertTrue(Result.isFailure(yield* validate({ ...input, mutations })));
+        (yield* validate({ ...input, mutations })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("requires all ten distinct remote shadow scenarios and isolation roots", () =>
@@ -328,10 +335,10 @@ describe("signed real-pilot receipt relationships", () => {
         A.map(input.shadows, (shadow) => ({ ...shadow, comparison: input.pairs[0] })),
         A.map(input.shadows, (shadow) => ({
           ...shadow,
-          comparison: { ...shadow.comparison, producerRoot: input.pairs[0].producerRoot },
+          comparison: { ...shadow.comparison, producerRoot: A.getUnsafe(input.pairs, 0).producerRoot },
         })),
       ])
-        assertTrue(Result.isFailure(yield* validate({ ...input, shadows })));
+        (yield* validate({ ...input, shadows })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("derives shadow invalidation and invariance from the scenario", () =>
@@ -359,7 +366,7 @@ describe("signed real-pilot receipt relationships", () => {
                 },
               }
         );
-        assertTrue(Result.isFailure(yield* validate({ ...input, shadows })));
+        (yield* validate({ ...input, shadows })).pipe(Result.isFailure, assertTrue);
       }
     })
   );
@@ -368,21 +375,21 @@ describe("signed real-pilot receipt relationships", () => {
       for (const patch of [
         { events: [] },
         {
-          events: A.map(input.shadows[0].comparison.events, (event) =>
+          events: A.map(A.getUnsafe(input.shadows, 0).comparison.events, (event) =>
             event.operation === "put" ? { ...event, status: 403 } : event
           ),
         },
         {
           replay: {
-            ...input.shadows[0].comparison.replay,
-            outcome: { ...input.shadows[0].comparison.replay.outcome, logSha256: digest("0") },
+            ...A.getUnsafe(input.shadows, 0).comparison.replay,
+            outcome: { ...A.getUnsafe(input.shadows, 0).comparison.replay.outcome, logSha256: digest("0") },
           },
         },
       ]) {
         const shadows = A.map(input.shadows, (shadow, index) =>
           index === 0 ? { ...shadow, comparison: { ...shadow.comparison, ...patch } } : shadow
         );
-        assertTrue(Result.isFailure(yield* validate({ ...input, shadows })));
+        (yield* validate({ ...input, shadows })).pipe(Result.isFailure, assertTrue);
       }
     })
   );
@@ -390,7 +397,7 @@ describe("signed real-pilot receipt relationships", () => {
     Effect.gen(function* () {
       const receipt = yield* S.decodeUnknownEffect(CacheSignedPilotReceipt)(input);
       expect(receipt.comparisons).toHaveLength(20);
-      expect(receipt.comparisons[12]).toEqual(receipt.shadows[9].comparison);
+      expect(receipt.comparisons[12]).toEqual(A.getUnsafe(receipt.shadows, 9).comparison);
     })
   );
   it.effect("rejects duplicate pairs, namespaces and run summaries", () =>
@@ -403,7 +410,7 @@ describe("signed real-pilot receipt relationships", () => {
           replay: { ...pair.replay, summarySha256: pair.producer.summarySha256 },
         })),
       ])
-        assertTrue(Result.isFailure(yield* validate({ ...input, pairs })));
+        (yield* validate({ ...input, pairs })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("rejects false hits, divergent logs and changed inputs", () =>
@@ -413,45 +420,42 @@ describe("signed real-pilot receipt relationships", () => {
         { ...run(0, 2).outcome, logSha256: digest("0") },
         { ...run(0, 2).outcome, selected: { ...task, origin: "remote-hit", inputsDigest: digest("0") } },
       ])
-        assertTrue(
-          Result.isFailure(
-            yield* validate({
-              ...input,
-              pairs: A.map(input.pairs, (pair) => ({
-                ...pair,
-                replay: { ...pair.replay, outcome },
-              })),
-            })
-          )
-        );
+        (yield* validate({
+          ...input,
+          pairs: A.map(input.pairs, (pair) => ({
+            ...pair,
+            replay: { ...pair.replay, outcome },
+          })),
+        })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("rejects absent uploads, denied writes and unsigned downloads", () =>
     Effect.gen(function* () {
       for (const events of [
-        A.filter(input.pairs[0].events, (value) => value.operation !== "put"),
-        A.map(input.pairs[0].events, (value) => (value.operation === "put" ? { ...value, status: 403 } : value)),
-        A.map(input.pairs[0].events, (value) => (value.role === "reader" ? { ...value, tagPresent: false } : value)),
+        A.filter(A.getUnsafe(input.pairs, 0).events, (value) => value.operation !== "put"),
+        A.map(A.getUnsafe(input.pairs, 0).events, (value) =>
+          value.operation === "put" ? { ...value, status: 403 } : value
+        ),
+        A.map(A.getUnsafe(input.pairs, 0).events, (value) =>
+          value.role === "reader" ? { ...value, tagPresent: false } : value
+        ),
       ])
-        assertTrue(
-          Result.isFailure(yield* validate({ ...input, pairs: A.map(input.pairs, (pair) => ({ ...pair, events })) }))
+        (yield* validate({ ...input, pairs: A.map(input.pairs, (pair) => ({ ...pair, events })) })).pipe(
+          Result.isFailure,
+          assertTrue
         );
     })
   );
   it.effect("rejects profile changes and lost source integrity", () =>
     Effect.gen(function* () {
-      assertTrue(Result.isFailure(yield* validate({ ...input, key: { ...input.key, profile: "other" } })));
-      assertTrue(
-        Result.isFailure(
-          yield* validate({
-            ...input,
-            pairs: A.map(input.pairs, (pair) => ({
-              ...pair,
-              producer: { ...pair.producer, sourceTreeUnchanged: false },
-            })),
-          })
-        )
-      );
+      (yield* validate({ ...input, key: { ...input.key, profile: "other" } })).pipe(Result.isFailure, assertTrue);
+      (yield* validate({
+        ...input,
+        pairs: A.map(input.pairs, (pair) => ({
+          ...pair,
+          producer: { ...pair.producer, sourceTreeUnchanged: false },
+        })),
+      })).pipe(Result.isFailure, assertTrue);
     })
   );
 });
@@ -460,12 +464,13 @@ it.effect("rejects missing or failed reader-protection evidence", () =>
   Effect.gen(function* () {
     for (const protection of [
       undefined,
-      { ...input.pairs[0].protection, readsDenied: false },
-      { ...input.pairs[0].protection, protectedBytesUnchanged: false },
-      { ...input.pairs[0].protection, issuerMaterialDenied: false },
+      { ...A.getUnsafe(input.pairs, 0).protection, readsDenied: false },
+      { ...A.getUnsafe(input.pairs, 0).protection, protectedBytesUnchanged: false },
+      { ...A.getUnsafe(input.pairs, 0).protection, issuerMaterialDenied: false },
     ]) {
-      assertTrue(
-        Result.isFailure(yield* validate({ ...input, pairs: A.map(input.pairs, (pair) => ({ ...pair, protection })) }))
+      (yield* validate({ ...input, pairs: A.map(input.pairs, (pair) => ({ ...pair, protection })) })).pipe(
+        Result.isFailure,
+        assertTrue
       );
     }
   })
@@ -496,7 +501,7 @@ it.effect.prop(
         ...input,
         pairs: A.map(input.pairs, (pair) => ({ ...pair, archive: { ...pair.archive, archiveSha256 } })),
       });
-      strictEqual(Result.isSuccess(result), archiveSha256 === input.pairs[0].archive.archiveSha256);
+      strictEqual(Result.isSuccess(result), archiveSha256 === A.getUnsafe(input.pairs, 0).archive.archiveSha256);
     }),
   { arbitrary: fcRuns(100) }
 );

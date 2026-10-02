@@ -2833,3 +2833,22 @@ against a source requiring another input-affecting repair. The queued native
 run was deliberately stopped before execution; its approvals and receipts remain
 historical and require renewal against the repaired committed source. No policy
 waiver or alias-detector baseline change was used.
+
+### 2026-10-02 — Test compiler policy and fresh-worktree prerequisites
+
+The full pre-push proof at `1197295fa73a` passed docgen after the primary
+checkout's dependencies were installed from the merged lockfile, then stopped
+at `quality:lint-policy`. The root `quality test-tsgo` command checks test files
+outside the package's ordinary source check. Its output contained 147 unique
+policy/type diagnostics in this goal's cache tests and fixtures. Package quick
+verification alone had not covered that boundary.
+
+The repair retains the existing assertions, uses pipe forms and typed decoders,
+preserves the signed receipt class getter, and makes fixture indexing explicit.
+An isolated checkout passed the 304-file test compiler check, all 141 tests in
+the 12 affected test files, and the Effect Vitest ratchet with zero introduced
+findings. The complete signed fixture value also matched its prior version.
+The isolated package check initially lacked dependency declaration outputs
+(`TS6305`); building its dependency graph made lint and check pass without a
+source workaround. Run the test compiler gate before full publication and
+build dependency declarations before package verification in a fresh worktree.

@@ -133,7 +133,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("Cache qualification writer", (it
       const promoted = yield* cache
         .transition(root, CacheTransitionRequest.make({ expectedRevision: 2, entry: qualified }))
         .pipe(Effect.result);
-      assertTrue(R.isFailure(promoted));
+      promoted.pipe(R.isFailure, assertTrue);
       expect(yield* fs.readFileString(target)).toBe(prior);
       yield* fs.writeFileString(
         target,
@@ -146,7 +146,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("Cache qualification writer", (it
         )
       );
       const audited = yield* cache.audit(root).pipe(Effect.result);
-      assertTrue(R.isFailure(audited));
+      audited.pipe(R.isFailure, assertTrue);
       if (R.isFailure(audited)) expect(audited.failure.message).toContain("independently configured trust");
     })
   );

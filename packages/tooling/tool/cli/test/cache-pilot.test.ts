@@ -115,7 +115,7 @@ describe("signed pilot capture boundary", () => {
         CacheSignedPilotLogInput.make({ ...remote, stderr: `${prefix}unexpected\n` }),
         CacheSignedPilotLogInput.make({ ...remote, stdout: `${remote.stdout}\r` }),
       ])
-        assertTrue(Result.isFailure(yield* extractCacheSignedPilotLog(changed).pipe(Effect.result)));
+        (yield* extractCacheSignedPilotLog(changed).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 });

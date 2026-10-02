@@ -44,7 +44,7 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("bounded signed pilot arch
         invalidChecksum,
         Buffer.alloc(2048),
       ])
-        assertTrue(Result.isFailure(yield* inspect(bytes).pipe(Effect.result)));
+        (yield* inspect(bytes).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("rejects hidden padding, trailing entries and incomplete framing", () =>
@@ -58,18 +58,20 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("bounded signed pilot arch
         makeTar().subarray(0, 1024),
         Buffer.alloc(256 * 1024),
       ])
-        assertTrue(Result.isFailure(yield* inspect(bytes).pipe(Effect.result)));
-      assertTrue(
-        Result.isFailure(yield* inspectCacheSignedPilotArchive(Buffer.from("invalid"), []).pipe(Effect.result))
+        (yield* inspect(bytes).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+      (yield* inspectCacheSignedPilotArchive(Buffer.from("invalid"), []).pipe(Effect.result)).pipe(
+        Result.isFailure,
+        assertTrue
       );
     })
   );
   it.effect("rejects credentials in both task text and header metadata", () =>
     Effect.gen(function* () {
       const secret = Redacted.make("synthetic-archive-credential");
-      for (const bytes of [makeTar(Redacted.value(secret)), makeTar("safe", { uname: Redacted.value(secret) })])
-        assertTrue(
-          Result.isFailure(yield* inspectCacheSignedPilotArchive(zstdCompressSync(bytes), [secret]).pipe(Effect.result))
+      for (const bytes of [secret.pipe(Redacted.value, makeTar), makeTar("safe", { uname: Redacted.value(secret) })])
+        (yield* inspectCacheSignedPilotArchive(zstdCompressSync(bytes), [secret]).pipe(Effect.result)).pipe(
+          Result.isFailure,
+          assertTrue
         );
     })
   );

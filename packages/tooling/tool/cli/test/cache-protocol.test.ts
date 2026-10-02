@@ -39,7 +39,7 @@ describe("native protocol observation boundary", () => {
         { ...input, exchanges: A.map(input.exchanges, (event) => ({ ...event, requestId: "same-request" })) },
         { ...input, runs: A.map(input.runs, (run) => ({ ...run, summary: digest("a") })) },
       ])
-        assertTrue(Result.isFailure(yield* validate(value)));
+        (yield* validate(value)).pipe(Result.isFailure, assertTrue);
     })
   );
 
@@ -49,7 +49,7 @@ describe("native protocol observation boundary", () => {
         const exchanges = A.map(input.exchanges, (event) =>
           event.case === "producer" ? { ...event, ...patch } : event
         );
-        assertTrue(Result.isFailure(yield* validate({ ...input, exchanges })));
+        (yield* validate({ ...input, exchanges })).pipe(Result.isFailure, assertTrue);
       }
     })
   );
@@ -66,7 +66,7 @@ describe("native protocol observation boundary", () => {
         ),
         A.map(input.runs, (run) => (run.case === "replay" ? { ...run, taskHash: "different-task" } : run)),
       ])
-        assertTrue(Result.isFailure(yield* validate({ ...input, runs })));
+        (yield* validate({ ...input, runs })).pipe(Result.isFailure, assertTrue);
     })
   );
 
@@ -76,7 +76,7 @@ describe("native protocol observation boundary", () => {
         const exchanges = A.map(input.exchanges, (event) =>
           event.case === name ? { ...event, artifact, tag: "present" } : event
         );
-        assertTrue(Result.isFailure(yield* validate({ ...input, exchanges })));
+        (yield* validate({ ...input, exchanges })).pipe(Result.isFailure, assertTrue);
       }
     })
   );
@@ -88,7 +88,7 @@ describe("native protocol observation boundary", () => {
         { ...input, runs: [] },
         { ...input, runs: [...input.runs, ...input.runs] },
       ])
-        assertTrue(Result.isFailure(yield* validate(value)));
+        (yield* validate(value)).pipe(Result.isFailure, assertTrue);
     })
   );
 });
@@ -101,8 +101,9 @@ const validateExecution = (value: unknown) =>
 describe("complete protocol execution boundary", () => {
   it.effect("rejects legacy receipts and missing, duplicated or misattributed roots", () =>
     Effect.gen(function* () {
-      assertTrue(
-        Result.isFailure(yield* validateExecution({ ...executionInput, schemaVersion: "cache-protocol-execution/v1" }))
+      (yield* validateExecution({ ...executionInput, schemaVersion: "cache-protocol-execution/v1" })).pipe(
+        Result.isFailure,
+        assertTrue
       );
       for (const roots of [
         [],
@@ -110,13 +111,13 @@ describe("complete protocol execution boundary", () => {
         A.map(executionInput.roots, (root) => ({ ...root, sha256: digest("1") })),
         A.map(executionInput.roots, (root) => ({ ...root, case: "unknown" })),
       ])
-        assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, roots })));
+        (yield* validateExecution({ ...executionInput, roots })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("joins every integrity and transport case without accepting promotion authority", () =>
     Effect.gen(function* () {
       const result = yield* validateExecution(executionInput);
-      assertTrue(Result.isSuccess(result));
+      result.pipe(Result.isSuccess, assertTrue);
       if (Result.isSuccess(result)) expect(result.success.authority).toBe("synthetic-native-observation-only");
     })
   );
@@ -127,7 +128,7 @@ describe("complete protocol execution boundary", () => {
         A.map(executionInput.failures, (failure) => ({ ...failure, summary: digest("1") })),
         A.map(executionInput.failures, (failure) => ({ ...failure, taskHash: "other-task" })),
       ])
-        assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, failures })));
+        (yield* validateExecution({ ...executionInput, failures })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("rejects missing, duplicated, misattributed and edited wire evidence", () =>
@@ -143,7 +144,7 @@ describe("complete protocol execution boundary", () => {
           event.operation === "put" ? { ...event, digest: digest("0") } : event
         ),
       ])
-        assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, events })));
+        (yield* validateExecution({ ...executionInput, events })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("rejects missing fault reads, wrong transport status and wrong truncation evidence", () =>
@@ -165,7 +166,7 @@ describe("complete protocol execution boundary", () => {
           event.scenario.id === "throttled" ? { ...event, tagPresent: true } : event
         ),
       ])
-        assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, events })));
+        (yield* validateExecution({ ...executionInput, events })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("preserves a genuine producer miss and rejects extra denied integrity reads", () =>
@@ -181,8 +182,9 @@ describe("complete protocol execution boundary", () => {
         bytes: 0,
         tagPresent: false,
       };
-      assertTrue(
-        Result.isSuccess(yield* validateExecution({ ...executionInput, events: [...executionInput.events, miss] }))
+      (yield* validateExecution({ ...executionInput, events: [...executionInput.events, miss] })).pipe(
+        Result.isSuccess,
+        assertTrue
       );
       for (const patch of [
         { status: 401 },
@@ -191,11 +193,10 @@ describe("complete protocol execution boundary", () => {
         { artifact: "0123456789abcdef" },
         { scenario: { id: "wrong-key", fault: "none" }, role: "reader", status: 403 },
       ])
-        assertTrue(
-          Result.isFailure(
-            yield* validateExecution({ ...executionInput, events: [...executionInput.events, { ...miss, ...patch }] })
-          )
-        );
+        (yield* validateExecution({
+          ...executionInput,
+          events: [...executionInput.events, { ...miss, ...patch }],
+        })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("rejects a detached exchange reference or an extra upload", () =>
@@ -206,11 +207,11 @@ describe("complete protocol execution boundary", () => {
           exchange.case === "replay" ? { ...exchange, requestId: "wire-100" } : exchange
         ),
       };
-      assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, observation })));
+      (yield* validateExecution({ ...executionInput, observation })).pipe(Result.isFailure, assertTrue);
       const events = A.map(executionInput.events, (event) =>
         event.scenario.id === "replay" ? { ...event, operation: "put" } : event
       );
-      assertTrue(Result.isFailure(yield* validateExecution({ ...executionInput, events })));
+      (yield* validateExecution({ ...executionInput, events })).pipe(Result.isFailure, assertTrue);
     })
   );
 });
@@ -224,7 +225,7 @@ it.effect.prop(
         ...input,
         runs: A.map(input.runs, (run) => (run.case === "replay" ? { ...run, taskHash } : run)),
       });
-      strictEqual(Result.isSuccess(result), taskHash === input.runs[0].taskHash);
+      strictEqual(Result.isSuccess(result), taskHash === A.getUnsafe(input.runs, 0).taskHash);
     }),
   { arbitrary: fcRuns(100) }
 );

@@ -19,7 +19,7 @@ const validate = (value: unknown) =>
 describe("complete producer bundle", () => {
   it.effect("accepts both complete matrices with persistent issuer denial", () =>
     Effect.gen(function* () {
-      assertTrue(Result.isSuccess(yield* validate(input)));
+      (yield* validate(input)).pipe(Result.isSuccess, assertTrue);
     })
   );
   it.effect("rejects incomplete conformance and inconsistent native identities", () =>
@@ -30,31 +30,29 @@ describe("complete producer bundle", () => {
         { ...protocol, bunSha256: executionInput.bunSha256 },
         { ...protocol, observation: { ...protocol.observation, channel: "canary" } },
       ])
-        assertTrue(Result.isFailure(yield* validate({ ...input, protocol: changed })));
+        (yield* validate({ ...input, protocol: changed })).pipe(Result.isFailure, assertTrue);
     })
   );
   it.effect("requires persistent issuer protection for every remote reader", () =>
     Effect.gen(function* () {
-      assertTrue(Result.isFailure(yield* validate({ ...input, pilot: signedPilotInput })));
-      assertTrue(
-        Result.isFailure(yield* validate({ ...input, pilot: { ...pilot, mutations: signedPilotInput.mutations } }))
+      (yield* validate({ ...input, pilot: signedPilotInput })).pipe(Result.isFailure, assertTrue);
+      (yield* validate({ ...input, pilot: { ...pilot, mutations: signedPilotInput.mutations } })).pipe(
+        Result.isFailure,
+        assertTrue
       );
-      assertTrue(
-        Result.isFailure(yield* validate({ ...input, pilot: { ...pilot, shadows: signedPilotInput.shadows } }))
+      (yield* validate({ ...input, pilot: { ...pilot, shadows: signedPilotInput.shadows } })).pipe(
+        Result.isFailure,
+        assertTrue
       );
     })
   );
   it.effect("rejects an independently approved protocol client mismatch", () =>
     Effect.gen(function* () {
       const bundle = yield* decode(input);
-      assertTrue(
-        Result.isFailure(
-          yield* validateCacheProducerBundle(bundle, {
-            ...bundle.protocol.observation.client,
-            namespace: "another-approval",
-          }).pipe(Effect.result)
-        )
-      );
+      (yield* validateCacheProducerBundle(bundle, {
+        ...bundle.protocol.observation.client,
+        namespace: "another-approval",
+      }).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 });

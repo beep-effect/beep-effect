@@ -581,8 +581,9 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
         const result = yield* runSigned(undefined, "lo", O.some(path.join(source, ".private", "issuer.key"))).pipe(
           Effect.result
         );
-        assertTrue(Result.isFailure(result));
-        expect(result.failure.message).toBe("Issuer material must remain outside every signed pilot input mount.");
+        result.pipe(Result.isFailure, assertTrue);
+        if (Result.isFailure(result))
+          expect(result.failure.message).toBe("Issuer material must remain outside every signed pilot input mount.");
       }
       expect(calls).toHaveLength(0);
     })
@@ -590,17 +591,16 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
   it.effect("rejects signed work outside the private network before any native process", () =>
     Effect.gen(function* () {
       const { runSigned, calls } = yield* fixture("none", linker, true);
-      assertTrue(Result.isFailure(yield* runSigned(undefined, "eth0").pipe(Effect.result)));
+      (yield* runSigned(undefined, "eth0").pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       expect(calls).toHaveLength(0);
     })
   );
   it.effect("rejects partial signed selection before any native process", () =>
     Effect.gen(function* () {
       const { runSigned, request, calls } = yield* fixture("none", linker, true);
-      assertTrue(
-        Result.isFailure(
-          yield* runSigned(CachePilotRequest.make({ ...request, selection: "controls" })).pipe(Effect.result)
-        )
+      (yield* runSigned(CachePilotRequest.make({ ...request, selection: "controls" })).pipe(Effect.result)).pipe(
+        Result.isFailure,
+        assertTrue
       );
       expect(calls).toHaveLength(0);
     })
