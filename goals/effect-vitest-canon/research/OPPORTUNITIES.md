@@ -6412,3 +6412,7 @@ The publication stopped at integration dependency build with `@beep/ui` TS2589 a
 match the merged base. An isolated installed TypeScript build with normal declaration
 emission passes. Keep both receipts: the integration failure still needs full-lane
 verification and its execution-context cause remains unproven.
+
+### Qualified migration formatting gate
+
+The cache, image and process attachment candidates passed private runtime qualification but failed the first applied package audit on Biome import ordering and formatting. The package lint reported four errors across the three files. Targeted `bunx biome check --write` repaired them; the subsequent full package audit passed in 590.3 seconds and docgen in 19.2 seconds. Run the installed formatter against private candidates before application to avoid repeating a full audit for formatting alone.

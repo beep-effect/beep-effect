@@ -1,0 +1,19 @@
+{
+  "package": "@beep/repo-cli",
+  "command": "bun run beep quality package-verify @beep/repo-cli",
+  "exitCode": 0,
+  "auditSeconds": 590.3,
+  "docgenSeconds": 19.2,
+  "files": {
+    "cache-qualification.test.ts": "097a13abf56a58861f3c50a0603ffcb4ad78e71332fc5548086ca9aefad30dc0",
+    "image-command.test.ts": "570b1fac2714e7a4b8368382822ef3be0e3aebe2d9a39a33525e316423f84c4d",
+    "process-attachment.test.ts": "f7bbbdb6508192294f0b3d8af7da6cb8a8ea4f72aa3d4b39f4363afea098d1ba"
+  },
+  "sourceCommit": "a5b6d92736ab92f2bb99cf31dd69a7be99157f8e",
+  "ledgerCounts": {
+    "fixed": 24,
+    "exception": 5,
+    "preserve": 12
+  },
+  "scope": "Full @beep/repo-cli package audit and docgen for three applied suites; whole-goal acceptance and hosted proof remain pending."
+}
