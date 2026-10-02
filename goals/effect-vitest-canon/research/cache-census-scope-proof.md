@@ -1,0 +1,11 @@
+# cache-census canonical scope proof
+
+The three original named suites now use public instrumented it.layer with the stateless NodeCrypto digest service. There is no filesystem subject. All fourteen test names and forty-nine subject assertion ASTs are preserved; the former Passed scaffold is delegated to public it.effect.prop. The property still generates the complete production CacheTaskConfiguration schema and retains fcRuns(50), including the configured400-run floor and seed20260708. Its wrong-message control rejects the same law and now produces the canonical shrunk counterexample/replay output. A floor-loss mutant fails the400-evaluation witness. Four historical NONE rows retain their original coverage meaning.
+
+The four-suite private bundle passes all seventy cases on Node22.22.3 and Bun1.4.2 with current package configuration, private module cache and floor400/seed20260708. Applied package-cwd proof includes these four suites and the spawn runtime regression. Exact final counts/timings are recorded after the final hook-budget check. Applied narrow types pass. All layer hook budgets are explicit30 seconds; body/global timeout policy is preserved. No tests, production Schema constraints or property floors were weakened.
+
+These receipts are focused qualification. Full CLI package proof, committed ledger reconciliation and exact-head hosted acceptance remain separate pending gates.
+
+Final applied focused proof: all72cases pass on Node (17.5s) and Bun (9.34s), after the eight explicit hook-budget additions; applied narrow typecheck exits0. The reviewed ratchet exits0, introduced0, current findings2261. These timings are focused observations, not a speedup claim.
+
+Full applied CLI package verification on source commit `233ab74154327fce48d7f0ab424103b6a355882a` exits 0: audit 618.0 seconds, docgen 20.1 seconds. The four-suite reconciliation preserves all 105 original rows, fixes 79 findings, retains three native exceptions and leaves 23 prior-fix/NONE rows unchanged; two current native import identities are additionally ledgered. Full Yeet publication pushed this source and passed all fifteen cheap gates, then stopped at `lint:deprecated-apis` because the two new spawn-environment fixture files were outside the TypeScript project service. Four later lanes did not run; no full or hosted readiness is implied.

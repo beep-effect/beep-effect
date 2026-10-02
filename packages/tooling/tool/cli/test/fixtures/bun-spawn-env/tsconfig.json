@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.json",
+  "include": ["./spawn-env.test.ts", "./vitest.config.ts"],
+  "exclude": [],
+  "compilerOptions": {
+    "rootDir": "../../../../../../.."
+  }
+}

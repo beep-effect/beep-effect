@@ -17,9 +17,10 @@ import {
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
@@ -84,70 +85,70 @@ const encodeCacheQualificationStoreJsonResult = S.encodeResult(S.fromJsonString(
 
 const decodeCacheQualificationStoreJsonResult = S.decodeResult(S.fromJsonString(CacheQualificationStore));
 
-describe("Cache qualification writer", () => {
-  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
-    it.effect(
-      "audit and promotion reject unauthenticated acceptance references without changing state",
-      Effect.fnUntraced(function* () {
-        const { root, fs, path, review } = yield* fixture();
-        const cache = yield* CacheQualificationService;
-        const contract = yield* S.decodeUnknownEffect(CacheTaskContract)({ ...contractInput, key });
-        const marker = "{}";
-        yield* fs.writeFileString(path.join(root, "acceptance.json"), marker);
-        const reference = CacheEvidenceReference.make({
-          path: "acceptance.json",
-          sha256: yield* hashBytes(new TextEncoder().encode(marker)),
-        });
-        const candidate = CacheQualificationEntry.make({ key, status: { state: "candidate", contract, review } });
-        const shadow = CacheQualificationEntry.make({
-          key,
-          status: { state: "shadow", contract, review, receipts: [] },
-        });
-        const qualified = CacheQualificationEntry.make({
-          key,
-          status: { state: "qualified", contract, review, receipts: [reference] },
-        });
-        const history = [
-          CacheQualificationEvent.make({ revision: PosInt.make(1), entry: candidate }),
-          CacheQualificationEvent.make({ revision: PosInt.make(2), entry: shadow }),
-        ];
-        const target = path.join(root, "standards/cache-qualification.json");
-        const prior = yield* encodeCacheQualificationStoreJson(
-          CacheQualificationStore.make({ revision: 2, entries: [shadow], history })
-        );
-        yield* fs.writeFileString(target, prior);
-        const promoted = yield* cache
-          .transition(root, CacheTransitionRequest.make({ expectedRevision: 2, entry: qualified }))
-          .pipe(Effect.result);
-        assertTrue(R.isFailure(promoted));
-        expect(yield* fs.readFileString(target)).toBe(prior);
-        yield* fs.writeFileString(
-          target,
-          yield* encodeCacheQualificationStoreJson(
-            CacheQualificationStore.make({
-              revision: 3,
-              entries: [qualified],
-              history: [...history, CacheQualificationEvent.make({ revision: PosInt.make(3), entry: qualified })],
-            })
-          )
-        );
-        const audited = yield* cache.audit(root).pipe(Effect.result);
-        assertTrue(R.isFailure(audited));
-        if (R.isFailure(audited)) expect(audited.failure.message).toContain("independently configured trust");
-      })
-    );
-  });
+const equivalent = S.toEquivalence(CacheQualificationStore);
 
-  it.prop(
+it.layer(testLayer, { timeout: "30 seconds" })("Cache qualification writer", (it) => {
+  it.effect.prop(
     "preserves ledger revisions and tuples through schema serialization",
-    { value: CacheQualificationStore },
-    ({ value }) => {
-      const equivalent = S.toEquivalence(CacheQualificationStore);
-      const encoded = R.getOrThrow(encodeCacheQualificationStoreJsonResult(value));
-      const decoded = R.getOrThrow(decodeCacheQualificationStoreJsonResult(encoded));
-      assertTrue(equivalent(value, decoded));
-    },
+    [CacheQualificationStore],
+    ([value]) =>
+      Effect.sync(() => {
+        const encoded = R.getOrThrow(encodeCacheQualificationStoreJsonResult(value));
+        const decoded = R.getOrThrow(decodeCacheQualificationStoreJsonResult(encoded));
+        expect(equivalent(value, decoded)).toBe(true);
+      }),
     { arbitrary: fcRuns(20) }
+  );
+
+  it.effect(
+    "audit and promotion reject unauthenticated acceptance references without changing state",
+    Effect.fnUntraced(function* () {
+      const { root, fs, path, review } = yield* fixture();
+      const cache = yield* CacheQualificationService;
+      const contract = yield* S.decodeUnknownEffect(CacheTaskContract)({ ...contractInput, key });
+      const marker = "{}";
+      yield* fs.writeFileString(path.join(root, "acceptance.json"), marker);
+      const reference = CacheEvidenceReference.make({
+        path: "acceptance.json",
+        sha256: yield* hashBytes(new TextEncoder().encode(marker)),
+      });
+      const candidate = CacheQualificationEntry.make({ key, status: { state: "candidate", contract, review } });
+      const shadow = CacheQualificationEntry.make({
+        key,
+        status: { state: "shadow", contract, review, receipts: [] },
+      });
+      const qualified = CacheQualificationEntry.make({
+        key,
+        status: { state: "qualified", contract, review, receipts: [reference] },
+      });
+      const history = [
+        CacheQualificationEvent.make({ revision: PosInt.make(1), entry: candidate }),
+        CacheQualificationEvent.make({ revision: PosInt.make(2), entry: shadow }),
+      ];
+      const target = path.join(root, "standards/cache-qualification.json");
+      const prior = yield* encodeCacheQualificationStoreJson(
+        CacheQualificationStore.make({ revision: 2, entries: [shadow], history })
+      );
+      yield* fs.writeFileString(target, prior);
+      const promoted = yield* cache
+        .transition(root, CacheTransitionRequest.make({ expectedRevision: 2, entry: qualified }))
+        .pipe(Effect.result);
+      assertTrue(R.isFailure(promoted));
+      expect(yield* fs.readFileString(target)).toBe(prior);
+      yield* fs.writeFileString(
+        target,
+        yield* encodeCacheQualificationStoreJson(
+          CacheQualificationStore.make({
+            revision: 3,
+            entries: [qualified],
+            history: [...history, CacheQualificationEvent.make({ revision: PosInt.make(3), entry: qualified })],
+          })
+        )
+      );
+      const audited = yield* cache.audit(root).pipe(Effect.result);
+      assertTrue(R.isFailure(audited));
+      if (R.isFailure(audited)) expect(audited.failure.message).toContain("independently configured trust");
+    })
   );
   it.effect(
     "persists a reviewed exclusion and rejects stale revisions without changing the ledger",
@@ -166,7 +167,7 @@ describe("Cache qualification writer", () => {
       expect(yield* cache.transition(root, request).pipe(Effect.isFailure)).toBe(true);
       expect(yield* fs.readFileString(target)).toBe(before);
       expect(yield* fs.exists(path.join(root, ".beep/cache/qualification.writer"))).toBe(false);
-    }, provideScopedLayer(testLayer))
+    })
   );
 
   it.effect(
@@ -181,7 +182,7 @@ describe("Cache qualification writer", () => {
       expect(A.length(A.filter(results, R.isSuccess))).toBe(1);
       expect(A.length(A.filter(results, R.isFailure))).toBe(1);
       expect((yield* cache.inspect(root)).revision).toBe(1);
-    }, provideScopedLayer(testLayer))
+    })
   );
 
   it.effect(
@@ -205,7 +206,7 @@ describe("Cache qualification writer", () => {
       yield* fs.writeFileString(path.join(root, "review.md"), "changed review");
       expect(yield* cache.transition(root, request).pipe(Effect.isFailure)).toBe(true);
       expect((yield* cache.inspect(root)).revision).toBe(0);
-    }, provideScopedLayer(testLayer))
+    })
   );
 
   it.effect(
@@ -222,7 +223,7 @@ describe("Cache qualification writer", () => {
       expect(yield* cache.transition(root, request).pipe(Effect.isFailure)).toBe(true);
       expect(yield* fs.exists(path.join(root, ".beep/cache/qualification.writer"))).toBe(true);
       expect((yield* cache.inspect(root)).entries).toEqual([]);
-    }, provideScopedLayer(testLayer))
+    })
   );
 
   it.effect(
@@ -242,12 +243,12 @@ describe("Cache qualification writer", () => {
       });
       yield* fs.writeFileString(target, yield* encodeCacheQualificationStoreJson(duplicate));
       expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
-    }, provideScopedLayer(testLayer))
+    })
   );
 });
 
 // These are original-byte and safety-boundary tests, not passing qualification receipts.
-describe("bounded qualification evidence", () => {
+it.layer(testLayer, { timeout: "30 seconds" })("bounded qualification evidence", (it) => {
   it.effect(
     "preserves original bytes and rejects overflow, symlinks and an invalid byte limit",
     Effect.fnUntraced(function* () {
@@ -274,7 +275,7 @@ describe("bounded qualification evidence", () => {
       const fractional = yield* readContainedFileBytesNoFollow(root, "bytes.bin", 1.5).pipe(Effect.flip);
       expect(negative.message).toBe("Maximum byte length must be a non-negative integer.");
       expect(fractional.message).toBe("Maximum byte length must be a non-negative integer.");
-    }, provideScopedLayer(testLayer))
+    })
   );
 
   it.effect(
@@ -287,6 +288,6 @@ describe("bounded qualification evidence", () => {
       expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
       yield* fs.writeFile(target, new Uint8Array(8 * 1024 * 1024 + 1));
       expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
-    }, provideScopedLayer(testLayer))
+    })
   );
 });
