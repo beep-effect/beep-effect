@@ -29780,7 +29780,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "FsUtilsLive uses SharedGlob native filesystem traversal through Bun/Node; replacing NodeServices with MemoryFileSystem alone would change workspace discovery semantics. The scoped layer and native workspace behavior are qualified in goals/effect-vitest-canon/research/cli-package-scripts-policy-proof.json. A Memory-backed Glob would require a separate implementation."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/package-verify.test.ts:25:@effect/platform-node/NodeFileSystem@0#1",
