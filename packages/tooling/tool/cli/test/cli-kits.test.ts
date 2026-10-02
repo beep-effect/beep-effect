@@ -26,10 +26,10 @@ import {
   variadicStrings,
 } from "@beep/repo-cli/test/Cli";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Data, Effect, FileSystem, HashSet, Path } from "effect";
+import { Data, Effect, FileSystem, HashSet, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -166,31 +166,29 @@ describe("internal/cli/Flags coercions", () => {
 });
 
 describe("internal/cli/FsGuards", () => {
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
-    it.effect("reports missing directory and file paths through their typed error adapters", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const root = yield* fs.makeTempDirectoryScoped();
-          const missing = path.join(root, "missing");
-          const directoryErrors = {
-            onStatError: (_cause: unknown, entry: string) => new Error(`stat: ${entry}`),
-            onNotDirectory: (entry: string) => new Error(`not directory: ${entry}`),
-            onRealPathError: (_cause: unknown, entry: string) => new Error(`real path: ${entry}`),
-          };
-          const directory = yield* validateDirectory(root, directoryErrors);
-          expect(directory.canonicalDir).toBe(root);
+  it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seconds" })((it) => {
+    it.effect("reports missing directory and rename paths through their typed error adapters", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const missing = path.join(root, "missing");
+        const directoryErrors = {
+          onStatError: (_cause: unknown, entry: string) => new Error(`stat: ${entry}`),
+          onNotDirectory: (entry: string) => new Error(`not directory: ${entry}`),
+          onRealPathError: (_cause: unknown, entry: string) => new Error(`real path: ${entry}`),
+        };
+        const directory = yield* validateDirectory(root, directoryErrors);
+        expect(directory.canonicalDir).toBe(root);
 
-          const directoryError = yield* validateDirectory(missing, directoryErrors).pipe(Effect.flip);
-          expect(directoryError.message).toBe(`stat: ${missing}`);
+        const directoryError = yield* validateDirectory(missing, directoryErrors).pipe(Effect.flip);
+        expect(directoryError.message).toBe(`stat: ${missing}`);
 
-          const hashError = yield* hashFileSha256(missing, (_cause, entry) => new Error(`hash: ${entry}`)).pipe(
-            Effect.flip
-          );
-          expect(hashError.message).toBe(`hash: ${missing}`);
-        })
-      )
+        const renameError = yield* renameOrFail(missing, path.join(root, "renamed"), {
+          onError: (_cause, source) => new Error(`rename: ${source}`),
+        }).pipe(Effect.flip);
+        expect(renameError.message).toBe(`rename: ${missing}`);
+      })
     );
   });
 

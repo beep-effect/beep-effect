@@ -6508,8 +6508,15 @@ The exact-head hosted Heavy / Coverage Regression job measured `FsGuards.ts`
 function coverage at 70.17%, below its 71.42% floor, while the earlier full
 local coverage run measured 71.92%. The difference was one covered function
 out of 57; package verification alone did not establish the coverage gate.
-A focused filesystem guard test now exercises missing-directory and missing-file
-error adapters. Full repo-cli package verification passed, and the full affected
-coverage command measured 42/57 functions (73.68%) with zero regressions across
-136 packages. A deterministic guard-specific coverage assertion in the package
-suite would have exposed this floor-sensitive variation before hosted review.
+A first focused filesystem guard test exercised missing-directory and
+missing-file error adapters. Full repo-cli package verification passed, and
+the full affected coverage command measured 42/57 functions (73.68%) with
+zero regressions across 136 packages. After merging current main, the goal's
+detector identified a redundant scope wrapper and a new platform-resource
+review row in that test. The test now uses the approved MemoryFileSystem
+layer and exercises missing-directory and rename failures without a whole-body
+scope wrapper; the detector reports zero introduced findings. Its full
+repo-cli package verification passed, and the full affected coverage command
+measured 43/57 functions (75.43%) with zero regressions across 136 packages.
+A deterministic guard-specific coverage assertion and detector pass before
+the expensive proof would have exposed these issues earlier.
