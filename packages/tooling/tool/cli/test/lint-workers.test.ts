@@ -516,6 +516,26 @@ describe("executed lint workers", { concurrent: false }, () => {
             expect(output).toContain("project_source_files=1");
             expect(output).toContain("package-test-imports");
           }
+          if (worker === "jsdoc" || worker === "deprecated-apis") {
+            yield* fs.writeFileString(
+              `${fixture}/src/index.ts`,
+              worker === "jsdoc" ? "export const value = 1;\n" : "/** @deprecated */\nfunction oldApi() {}\noldApi();\n"
+            );
+            const invalid = yield* StepExec.runCaptured({
+              command: "bun",
+              args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", worker, "--package", "."],
+              cwd: fixture,
+              env: R.filter(
+                process.env,
+                (_, key) => !A.contains(["VITEST", "VITEST_MODE", "VITEST_POOL_ID", "VITEST_WORKER_ID"], key)
+              ),
+              extendEnv: false,
+            });
+            expect(invalid.exitCode, invalid.output).not.toBe(0);
+            expect(invalid.output).toContain(
+              worker === "jsdoc" ? "jsdoc/require-jsdoc" : "@typescript-eslint/no-deprecated"
+            );
+          }
         }),
         EXECUTED_WORKER_TIMEOUT_MILLIS
       );

@@ -6486,3 +6486,8 @@ join validate this reconciliation.
 - Context: qualifying `packages/tooling/tool/cli/test/lint-workers.test.ts`. Real worker tests created temporary TypeScript inside the CLI `src` tree to satisfy ESLint profile globs. Concurrent package proofs could inspect these transient files.
 - Resolution: use a scoped representative repository root outside production source, copy current ESLint configuration sources, and retain real CLI children. Node and Bun each pass all 19 tests. Three intended-invalid fixtures trigger the native-runtime, JSDoc, and deprecated-API diagnostics; all six positive/negative roots are removed after scope closure.
 - Prevention: qualify fixture inclusion and cleanup explicitly before admitting real-worker tests to concurrent proof lanes.
+
+
+### Executed lint profiles lacked tracked negative controls (PR #1402 review)
+
+The isolated JSDoc and deprecated-API worker cases used a valid fixture and checked exit 0. A dropped ESLint profile could pass those cases without applying either rule. Greptile identified this on `lint-workers.test.ts` after publication. The suite now runs each real worker on an intentionally invalid source file in the same scoped repository fixture and requires both a nonzero exit and its expected rule diagnostic. Focused Node and Bun runs pass 19/19 each; the updated package audit passed (601.3 seconds; docgen 20.9 seconds); hosted checks must complete before closure. Keeping positive and negative profile controls together would have surfaced configuration drift before review.
