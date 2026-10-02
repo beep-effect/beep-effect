@@ -11,5 +11,23 @@
     "numRuns": 400,
     "seed": 20260708
   },
-  "scope": "Applied cache-dispatch migration with canonical Vitest imports. Ledger reconciliation, full publication proof and whole-goal acceptance remain pending."
+  "scope": "Applied cache-dispatch package proof and reviewed ledger/baseline reconciliation. Full publication proof and whole-goal acceptance remain pending.",
+  "sourceCommit": "c7a8f9026047094938657409fc1afaeceb6fba39",
+  "ledgerCounts": {
+    "fixed": 7,
+    "exception": 1,
+    "preserveHistoricalNone": 4,
+    "preserveEarlierFixed": 1
+  },
+  "strictLedgerValidation": {
+    "rows": 4588,
+    "exitCode": 0
+  },
+  "detectorGate": {
+    "exitCode": 0,
+    "files": 1216,
+    "findings": 2017,
+    "introduced": 0,
+    "resolved": 0
+  }
 }
