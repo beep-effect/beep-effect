@@ -103,6 +103,7 @@ import { QualityScriptCommandError } from "./Quality.errors.ts";
 import {
   activeOsvIgnoreIdsForTesting as activeOsvIgnoreIdsForTestingImpl,
   selectOsvIgnoreIdsForAudit,
+  selectOsvPackageOverrideIdsForAudit,
 } from "./Quality.osv-ignore.ts";
 import {
   detectQualityProfile,
@@ -1002,8 +1003,9 @@ const githubCheckChangesetStatusLanes = Effect.fn("QualityScriptCommands.githubC
  * Run Bun's high-severity package audit with OSV ignores mirrored from config.
  *
  * Only ignores whose `ignoreUntil` is still in the future are forwarded to
- * `bun audit --ignore`; expired or malformed-expiry entries are dropped so the
- * audit re-flags the advisory instead of silently suppressing it past expiry.
+ * `bun audit --ignore`. Exact package overrides are also mirrored when every
+ * locked resolution matches the reviewed version and `effectiveUntil` has not
+ * passed. Expired or unmatched entries are dropped so the audit re-flags them.
  *
  * **Example** (Run a quality command)
  *
@@ -1030,8 +1032,13 @@ export const runBunAudit = Effect.fn("QualityScriptCommands.runBunAudit")(functi
   const configText = yield* fs
     .readFileString(configPath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${configPath}.`));
+  const lockfilePath = path.join(repoRoot, "bun.lock");
+  const lockfileText = yield* fs
+    .readFileString(lockfilePath)
+    .pipe(QualityScriptCommandError.mapError(`Failed to read ${lockfilePath}.`));
   const now = yield* DateTime.now;
   const selection = selectOsvIgnoreIdsForAudit(configText, now);
+  const packageOverrideIds = selectOsvPackageOverrideIdsForAudit(configText, lockfileText, now);
 
   if (A.isArrayNonEmpty(selection.droppedIds)) {
     yield* Console.log(
@@ -1042,7 +1049,7 @@ export const runBunAudit = Effect.fn("QualityScriptCommands.runBunAudit")(functi
   yield* runFixedStep(repoRoot, "repo-sanity:bun-audit", "bun", [
     "audit",
     "--audit-level=high",
-    ...A.map(selection.activeIds, (id) => `--ignore=${id}`),
+    ...A.map(A.dedupe([...selection.activeIds, ...packageOverrideIds]), (id) => `--ignore=${id}`),
   ]);
 });
 

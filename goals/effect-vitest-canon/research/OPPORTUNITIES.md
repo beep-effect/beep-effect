@@ -6581,3 +6581,16 @@ recipe that calls out layer memoization for mutable test services would have
 prevented the failed iteration. The same suite's `withTempRepo` registered
 cwd/env restoration only after `.git` setup; scoped finalizers now register
 before that fallible step so setup failure cannot leak process state.
+
+### Bun audit did not mirror exact OSV package overrides (2026-10-02)
+
+PR #1408's first local Yeet pre-push wave stopped at `repo-sanity:bun-audit`:
+the unchanged lockfile still contains `braces@3.0.3` and
+`http-cache-semantics@4.2.0`, whose expiring exact-version OSV overrides had
+already passed Security. The Bun wrapper mirrored only `IgnoredVulns`, while
+Bun exposes advisory-wide `--ignore` flags and cannot scope them by package
+version. The wrapper now mirrors a package override only when every matching
+`bun.lock` resolution has the reviewed exact version and the override has not
+expired; wrong, additional, malformed and expired lock states fail closed.
+An audit-policy parity check between OSV and Bun in the earlier security PR
+would have prevented this second proof wave.
