@@ -6568,3 +6568,16 @@ upstream patch before expiry is the real retirement path. The Yeet monitor's
 first red capsule was useful, but an automatic comparison of the failing
 lockfile with the PR base and advisory update time would have shortened
 attribution.
+
+### Shared TestConsole during CI command migration (2026-10-02)
+
+Moving `ci-command.test.ts` into one `it.layer` block shared its captured
+console across five tests: the aggregate Turbo summary assertion saw three
+headings instead of two after an earlier test ran. A fresh per-test
+`Effect.provide(TestConsole.layer)` passed the tests but introduced five
+`EV002` findings. Separate `it.layer` blocks with a hook timeout retained
+isolated console state and passed all five cases on Node and Bun. A migration
+recipe that calls out layer memoization for mutable test services would have
+prevented the failed iteration. The same suite's `withTempRepo` registered
+cwd/env restoration only after `.git` setup; scoped finalizers now register
+before that fallible step so setup failure cannot leak process state.
