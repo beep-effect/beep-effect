@@ -16,6 +16,7 @@ import {
   fallowAuditNeedsDiffFallbackForTesting,
   fallowCiUploadDiagnosticsForTesting,
 } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
+import { selectOsvPackageOverrideIdsForAudit } from "@beep/repo-cli/commands/Quality/Quality.osv-ignore";
 import {
   collectCoverageChangedFilesForTesting,
   collectGithubCheckLaneWavesForTesting,
@@ -168,6 +169,7 @@ import {
   ConfigProvider,
   Console,
   Crypto,
+  DateTime,
   Effect,
   Exit,
   Fiber,
@@ -696,15 +698,24 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 'id = "GHSA-expired"',
                 "ignoreUntil = definitely-not-a-date",
                 "",
+                "[[PackageOverrides]]",
+                'name = "braces"',
+                'version = "3.0.3"',
+                'ecosystem = "npm"',
+                "ignore = true",
+                "effectiveUntil = 2999-01-01T00:00:00Z",
+                'reason = "GHSA-vfj7-8cjw-p6xm is reviewed for this exact package version."',
+                "",
               ].join("\n")
             );
+            yield* fs.writeFileString(path.join(repoRoot, "bun.lock"), '{"packages":{"braces":["braces@3.0.3"]}}');
 
             const spawned: Array<string> = [];
             yield* runBunAudit(repoRoot).pipe(
               Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
             );
 
-            expect(spawned).toEqual(["bun audit --audit-level=high --ignore=GHSA-active"]);
+            expect(spawned).toEqual(["bun audit --audit-level=high --ignore=GHSA-active --ignore=GHSA-vfj7-8cjw-p6xm"]);
             expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain("GHSA-expired");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -712,6 +723,33 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )
     );
+
+    it("mirrors exact package overrides only for their sole unexpired lockfile version", () => {
+      const config = [
+        "[[PackageOverrides]]",
+        'name = "braces"',
+        'version = "3.0.3"',
+        'ecosystem = "npm"',
+        "ignore = true",
+        "effectiveUntil = 2026-10-16T00:00:00Z",
+        'reason = "GHSA-vfj7-8cjw-p6xm reviewed."',
+      ].join("\n");
+      const now = DateTime.makeUnsafe("2026-10-02T00:00:00Z");
+      const select = (lock: string, at = now) => selectOsvPackageOverrideIdsForAudit(config, lock, at);
+
+      expect(select('{"packages":{"braces":["braces@3.0.3"]}}')).toEqual(["GHSA-vfj7-8cjw-p6xm"]);
+      expect(select('{"packages":{"braces":["braces@3.0.4"]}}')).toEqual([]);
+      expect(select('{"packages":{"braces":["braces@3.0.3"],"braces@other":["braces@3.0.4"]}}')).toEqual([]);
+      expect(select('{"packages":{"braces":["braces@3.0.3"],"parent/braces":["braces@3.0.2"]}}')).toEqual([]);
+      expect(select('{"packages":{"braces":["braces@3.0.3"],"parent/braces@3.0.2":["braces@3.0.2"]}}')).toEqual([]);
+      expect(select('{"packages":{"braces":["braces@3.0.3"],"parent/braces":["braces@3.0.3"]}}')).toEqual([
+        "GHSA-vfj7-8cjw-p6xm",
+      ]);
+      expect(select('{"packages":{"braces":["braces@3.0.3"]}}', DateTime.makeUnsafe("2026-10-17T00:00:00Z"))).toEqual(
+        []
+      );
+      expect(select('{"packages":{"braces":["braces@3.0.3"]}')).toEqual([]);
+    });
 
     it.effect(
       "runs the review-fix command sequence with its default range",

@@ -6568,3 +6568,46 @@ upstream patch before expiry is the real retirement path. The Yeet monitor's
 first red capsule was useful, but an automatic comparison of the failing
 lockfile with the PR base and advisory update time would have shortened
 attribution.
+
+### Shared TestConsole during CI command migration (2026-10-02)
+
+Moving `ci-command.test.ts` into one `it.layer` block shared its captured
+console across five tests: the aggregate Turbo summary assertion saw three
+headings instead of two after an earlier test ran. A fresh per-test
+`Effect.provide(TestConsole.layer)` passed the tests but introduced five
+`EV002` findings. Separate `it.layer` blocks with a hook timeout retained
+isolated console state and passed all five cases on Node and Bun. A migration
+recipe that calls out layer memoization for mutable test services would have
+prevented the failed iteration. The same suite's `withTempRepo` registered
+cwd/env restoration only after `.git` setup; scoped finalizers now register
+before that fallible step so setup failure cannot leak process state.
+
+### Bun audit did not mirror exact OSV package overrides (2026-10-02)
+
+PR #1408's first local Yeet pre-push wave stopped at `repo-sanity:bun-audit`:
+the unchanged lockfile still contains `braces@3.0.3` and
+`http-cache-semantics@4.2.0`, whose expiring exact-version OSV overrides had
+already passed Security. The Bun wrapper mirrored only `IgnoredVulns`, while
+Bun exposes advisory-wide `--ignore` flags and cannot scope them by package
+version. The wrapper now mirrors a package override only when every matching
+`bun.lock` resolution has the reviewed exact version and the override has not
+expired; wrong, additional, malformed and expired lock states fail closed.
+An audit-policy parity check between OSV and Bun in the earlier security PR
+would have prevented this second proof wave.
+
+After the follow-up was pushed early to restart hosted checks, `bun run beep
+yeet publish --start-pr-early` refused the clean branch because its commit was
+no longer ahead of the publish remote. The supported continuation is `yeet
+verify` followed by closeout and the canonical monitor. A published-head
+continuation hint in Yeet's refusal would prevent an unnecessary retry of the
+publish command.
+
+### Nested Bun lock resolutions escaped the exact-version audit guard (2026-10-02)
+
+Greptile's P1 review of PR #1408 found that `bun.lock` can record a nested
+resolution as `parent/braces`. The first guard checked only root package keys,
+so a reviewed root version alongside an older nested version could enable an
+advisory-wide Bun ignore. The guard now checks nested keys too, with regression
+cases for a wrong nested version and a matching one. A lockfile fixture that
+included both root and nested resolutions in the first audit-policy test would
+have caught this before review.
