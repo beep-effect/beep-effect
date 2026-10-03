@@ -10,13 +10,15 @@ import {
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Order, Path, pipe, Stream } from "effect";
+import { assertSome } from "@effect/vitest/utils";
+import { Effect, FileSystem, Order, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import type * as PlatformError from "effect/PlatformError";
 
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -27,9 +29,6 @@ const wontfixAckForm = '--wontfix --reason "<text>"';
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeObject = S.decodeUnknownEffect(JsonObject);
 const encodeUnknown = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-const itEffect = <E>(name: string, program: () => Effect.Effect<unknown, E>, timeout?: number): void =>
-  it(name, () => Effect.runPromise(program()), timeout);
-
 interface HookResult {
   readonly exitCode: number;
   readonly stderr: string;
@@ -66,20 +65,6 @@ const runHook = Effect.fn("YeetInboxHookAdapterTest.runHook")(function* (
   return { exitCode, stderr, stdout } satisfies HookResult;
 });
 
-const runHookUntil = Effect.fn("YeetInboxHookAdapterTest.runHookUntil")(function* (
-  root: string,
-  harness: "claude" | "codex" | "grok",
-  payload: object,
-  accept: (result: HookResult) => boolean
-) {
-  let result = yield* runHook(root, harness, payload);
-  for (let attempt = 0; attempt < 20 && !accept(result); attempt += 1) {
-    yield* Effect.sleep("250 millis");
-    result = yield* runHook(root, harness, payload);
-  }
-  return result;
-});
-
 const withInbox = Effect.fn("YeetInboxHookAdapterTest.withInbox")(function* <Value, Failure, Requirements>(
   use: (fixture: {
     readonly ack: (id: string, contents?: string) => Effect.Effect<void, PlatformError.PlatformError>;
@@ -88,7 +73,7 @@ const withInbox = Effect.fn("YeetInboxHookAdapterTest.withInbox")(function* <Val
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fs.makeTempDirectory({ prefix: "beep-yeet-hook-" });
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-yeet-hook-" });
   const inbox = path.join(root, ".beep", "inbox");
   const acks = path.join(inbox, "acks");
   yield* fs.makeDirectory(path.join(root, ".git"), { recursive: true });
@@ -175,21 +160,16 @@ const withInbox = Effect.fn("YeetInboxHookAdapterTest.withInbox")(function* <Val
   return yield* use({
     ack: (id, contents = "{}\n") => fs.writeFileString(path.join(acks, id), contents),
     root,
-  }).pipe(Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.orDie)));
+  });
 });
 
-const TestLayer = NodeServices.layer;
-const provideTestLayer = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  Effect.scoped(Layer.build(TestLayer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 describe("Yeet inbox harness adapter", () => {
-  itEffect(
-    "injects each severity at the intended Claude session boundary and deduplicates it",
-    () =>
+  it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
+    it.effect("injects each severity at the intended Claude session boundary and deduplicates it", () =>
       withInbox(({ root }) =>
         Effect.gen(function* () {
           const payload = { cwd: root, hook_event_name: "SessionStart", session_id: "session-start" };
-          const first = yield* runHookUntil(root, "claude", payload, (result) => result.stdout !== "");
+          const first = yield* runHook(root, "claude", payload);
           const second = yield* runHook(root, "claude", payload);
 
           expect(first.exitCode).toBe(0);
@@ -203,13 +183,12 @@ describe("Yeet inbox harness adapter", () => {
           });
           expect(second.stdout).toBe("");
         })
-      ).pipe(provideTestLayer),
-    15_000
-  );
+      )
+    );
+  });
 
-  itEffect(
-    "keeps every P0 PreToolUse path context-only and blocks Stop until acknowledgement",
-    () =>
+  it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
+    it.effect("keeps every P0 PreToolUse path context-only and blocks Stop until acknowledgement", () =>
       withInbox(({ ack, root }) =>
         Effect.gen(function* () {
           for (const toolName of ["Read", "Skill", "EnterPlanMode", "ToolSearch", "mcp__x__y"]) {
@@ -344,13 +323,12 @@ describe("Yeet inbox harness adapter", () => {
           );
           expect(expiredStop).toMatchObject({ decision: "block" });
         })
-      ).pipe(provideTestLayer),
-    15_000
-  );
+      )
+    );
+  });
 
-  itEffect(
-    "honors an active waiver with BSD date semantics",
-    () =>
+  it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
+    it.effect("honors an active waiver with BSD date semantics", () =>
       withInbox(({ ack, root }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -394,85 +372,82 @@ esac
           );
           expect(stop).toStrictEqual({});
         })
-      ).pipe(provideTestLayer),
-    15_000
-  );
+      )
+    );
+  });
 
-  itEffect(
-    "renders a liveness-filtered Grok tail",
-    () =>
+  it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
+    it.effect("renders a liveness-filtered Grok tail", () =>
       withInbox(({ root }) =>
         Effect.gen(function* () {
-          const result = yield* runHookUntil(
-            root,
-            "grok",
-            {
-              cwd: root,
-              hook_event_name: "GrokTail",
-              session_id: "grok-monitor",
-            },
-            (observed) => observed.stdout.includes("coverage-live")
-          );
+          const result = yield* runHook(root, "grok", {
+            cwd: root,
+            hook_event_name: "GrokTail",
+            session_id: "grok-monitor",
+          });
 
           expect(result.exitCode).toBe(0);
+          expect(result.stderr).toBe("");
           expect(result.stdout).toContain("[yeet] inbox");
           expect(result.stdout).toContain("coverage-live");
           expect(result.stdout).toContain("thread-live");
           expect(result.stdout).toContain("drift-live");
           expect(result.stdout).not.toContain("lint-stale");
         })
-      ).pipe(provideTestLayer),
-    15_000
+      )
+    );
+  });
+});
+
+it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
+  it.effect("renders merge-ready as good news with a PR ack and no denial", () =>
+    withInbox(({ root }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const row = yield* encodeUnknown({
+          schemaVersion: "yeet-inbox/v1",
+          kind: "pr-merge-ready",
+          id: "ready-7-head",
+          severity: "P1",
+          checkout: root,
+          ts: "2026-09-16T00:00:00Z",
+          capsule: {
+            prNumber: 7,
+            headSha: "head",
+            url: "https://github.com/beep/repo/pull/7",
+            readyAt: "2026-09-16T00:00:00Z",
+            pushedAt: null,
+            settledAt: null,
+            closeoutAt: null,
+            pushToReadyMs: null,
+          },
+        });
+        yield* fs.writeFileString(`${root}/.beep/inbox/failures.ndjson`, `${row}\n`);
+        yield* fs.remove(`${root}/.beep/inbox/dispatch.json`);
+        const result = yield* runHook(root, "codex", {
+          cwd: root,
+          hook_event_name: "PreToolUse",
+          session_id: "ready-test",
+          tool_name: "Read",
+          tool_input: {},
+        });
+        expect(result.exitCode).toBe(0);
+        expect(result.stderr).toBe("");
+        const output = yield* decodeObject(result.stdout);
+        expect(output).toMatchObject({
+          hookSpecificOutput: { additionalContext: expect.stringContaining("Good news, not incident work:") },
+        });
+        expect(result.stdout).toContain("P1 merge-ready [ready-7-head] PR #7");
+        expect(result.stdout).toContain("--thread-url https://github.com/beep/repo/pull/7");
+        expect(result.stdout).not.toContain("Fix this now");
+        expect(output).not.toHaveProperty("hookSpecificOutput.permissionDecision");
+      })
+    )
   );
 });
 
-itEffect("renders merge-ready as good news with a PR ack and no denial", () =>
-  withInbox(({ root }) =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const row = yield* encodeUnknown({
-        schemaVersion: "yeet-inbox/v1",
-        kind: "pr-merge-ready",
-        id: "ready-7-head",
-        severity: "P1",
-        checkout: root,
-        ts: "2026-09-16T00:00:00Z",
-        capsule: {
-          prNumber: 7,
-          headSha: "head",
-          url: "https://github.com/beep/repo/pull/7",
-          readyAt: "2026-09-16T00:00:00Z",
-          pushedAt: null,
-          settledAt: null,
-          closeoutAt: null,
-          pushToReadyMs: null,
-        },
-      });
-      yield* fs.writeFileString(`${root}/.beep/inbox/failures.ndjson`, `${row}\n`);
-      yield* fs.remove(`${root}/.beep/inbox/dispatch.json`);
-      const result = yield* runHook(root, "codex", {
-        cwd: root,
-        hook_event_name: "PreToolUse",
-        session_id: "ready-test",
-        tool_name: "Read",
-        tool_input: {},
-      });
-      expect(result.exitCode).toBe(0);
-      const output = yield* decodeObject(result.stdout);
-      expect(output).toMatchObject({
-        hookSpecificOutput: { additionalContext: expect.stringContaining("Good news, not incident work:") },
-      });
-      expect(result.stdout).toContain("P1 merge-ready [ready-7-head] PR #7");
-      expect(result.stdout).toContain("--thread-url https://github.com/beep/repo/pull/7");
-      expect(result.stdout).not.toContain("Fix this now");
-      expect(output).not.toHaveProperty("hookSpecificOutput.permissionDecision");
-    })
-  ).pipe(provideTestLayer)
-);
-
-itEffect(
-  "surfaces P2 jobs at SessionStart and P1 jobs at PreToolUse without denial",
-  () =>
+it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
+  it.effect("surfaces P2 jobs at SessionStart and P1 jobs at PreToolUse without denial", () =>
     withInbox(
       Effect.fnUntraced(function* ({ root }) {
         const fs = yield* FileSystem.FileSystem;
@@ -498,33 +473,35 @@ itEffect(
         ];
         const encoded = yield* Effect.forEach(rows, (row) => encodeUnknown(row));
         yield* fs.writeFileString(`${root}/.beep/inbox/failures.ndjson`, `${A.join(encoded, "\n")}\n`);
-        const start = yield* runHookUntil(
-          root,
-          "claude",
-          { cwd: root, hook_event_name: "SessionStart", session_id: "job-start" },
-          (result) => result.stdout !== ""
-        );
+        const start = yield* runHook(root, "claude", {
+          cwd: root,
+          hook_event_name: "SessionStart",
+          session_id: "job-start",
+        });
+        expect(start.exitCode).toBe(0);
+        expect(start.stderr).toBe("");
         expect(start.stdout).toContain("P2 green [proof-job-green]");
         expect(start.stdout).toContain("--observed");
-        const tool = yield* runHookUntil(
-          root,
-          "claude",
-          { cwd: root, hook_event_name: "PreToolUse", session_id: "job-tool", tool_name: "Read", tool_input: {} },
-          (result) => result.stdout !== ""
-        );
+        const tool = yield* runHook(root, "claude", {
+          cwd: root,
+          hook_event_name: "PreToolUse",
+          session_id: "job-tool",
+          tool_name: "Read",
+          tool_input: {},
+        });
         expect(tool.exitCode).toBe(0);
+        expect(tool.stderr).toBe("");
         expect(tool.stdout).toContain("P1 red [proof-job-red]");
         expect(tool.stdout).not.toContain("proof-job-green");
         expect(tool.stdout).not.toContain('"deny"');
       })
-    ).pipe(provideTestLayer),
-  15000
-);
+    )
+  );
+});
 
 describe("Yeet inbox hook first-seen stamps", () => {
-  itEffect(
-    "stamps each row's first injection once and keeps the session file's shape",
-    () =>
+  it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
+    it.effect("stamps each row's first injection once and keeps the session file's shape", () =>
       withInbox(({ root }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -550,7 +527,10 @@ describe("Yeet inbox hook first-seen stamps", () => {
 
           // A P0 reaches the session at PreToolUse without entering seenIds; its
           // first injection is still stamped.
-          yield* runHookUntil(root, "claude", tool, (result) => result.stdout !== "");
+          const firstResult = yield* runHook(root, "claude", tool);
+          expect(firstResult.exitCode).toBe(0);
+          expect(firstResult.stderr).toBe("");
+          expect(firstResult.stdout).toContain("coverage-live");
           const first = yield* readState;
           expect(first.seenIds).toStrictEqual([]);
           expect(R.keys(first.firstSeenAt)).toStrictEqual(["coverage-live"]);
@@ -558,7 +538,7 @@ describe("Yeet inbox hook first-seen stamps", () => {
           expect(coverageSeen).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
 
           // A later injection of the same row never moves its stamp.
-          yield* Effect.sleep("1100 millis");
+          yield* TestClock.withLive(Effect.sleep("1100 millis"));
           yield* runHook(root, "claude", tool);
           expect((yield* readState).firstSeenAt["coverage-live"]).toBe(coverageSeen);
 
@@ -584,9 +564,9 @@ describe("Yeet inbox hook first-seen stamps", () => {
           expect(upgraded.seenIds).toStrictEqual(["coverage-live", "drift-live", "thread-live"]);
           expect(R.keys(upgraded.firstSeenAt)).toStrictEqual(["drift-live"]);
         })
-      ).pipe(provideTestLayer),
-    15_000
-  );
+      )
+    );
+  });
 });
 
 const hookExemptMarker = "# yeet-inbox: wave-exempt-kinds (parity-tested)";
@@ -613,116 +593,123 @@ const kitExemptKinds = A.sort(
 );
 
 describe("Yeet inbox hook wave-exempt kinds", () => {
-  itEffect("carries exactly the wave-exempt and observed kits on its one marked literal line", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const hookText = yield* fs.readFileString(hookPath);
-      expect(A.filter(Str.split(hookText, "\n"), (line) => line === hookExemptMarker)).toHaveLength(1);
-      expect(hookExemptKindsIn(hookText)).toStrictEqual(O.some(kitExemptKinds));
-      // The same parse notices drift on either side: a kind missing from the hook,
-      // or a kind the hook carries that no kit has.
-      const dropped = Str.replace('"review-thread"', '"review-threads"')(hookText);
-      expect(hookExemptKindsIn(dropped)).not.toStrictEqual(O.some(kitExemptKinds));
-      const extra = Str.replace('["pr-comment",', '["base-drift","pr-comment",')(hookText);
-      expect(hookExemptKindsIn(extra)).not.toStrictEqual(O.some(kitExemptKinds));
-    }).pipe(provideTestLayer)
-  );
-
-  itEffect(
-    "keeps review threads and comments across a push, drops superseded drift and conflicts, and honours a cleared ack",
-    () =>
+  it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
+    it.effect("carries exactly the wave-exempt and observed kits on its one marked literal line", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-yeet-hook-exempt-" });
-        const inbox = path.join(root, ".beep", "inbox");
-        yield* fs.makeDirectory(path.join(root, ".git"), { recursive: true });
-        yield* fs.makeDirectory(path.join(inbox, "acks"), { recursive: true });
-        const onHead = (headSha: string) => ({ headSha, prNumber: 900 });
-        const row = (kind: string, id: string, severity: string, capsule: object) => ({
-          schemaVersion: "yeet-inbox/v1",
-          kind,
-          id,
-          severity,
-          checkout: root,
-          ts: "2026-09-25T00:00:00Z",
-          capsule,
-        });
-        const conflict = (headSha: string) => ({
-          ...onHead(headSha),
-          base: "origin/main",
-          link: "https://github.com/beep/beep/pull/900",
-          mergeable: "CONFLICTING",
-          mergeStateStatus: "DIRTY",
-        });
-        const rows = [
-          row("review-thread", "thread-old", "P1", { ...onHead("old111"), threadId: "PRRT_1", link: null }),
-          row("pr-comment", "comment-old", "P1", {
-            ...onHead("old111"),
-            author: "reviewer",
-            link: "https://github.com/beep/beep/pull/900#issuecomment-1",
-          }),
-          row("base-drift", "drift-old", "P2", { ...onHead("old111"), base: "origin/main" }),
-          row("base-conflict", "conflict-old", "P0", conflict("old111")),
-          row("base-conflict", "conflict-new", "P0", conflict("new222")),
-        ];
-        const encodedRows = yield* Effect.forEach(rows, (value) => encodeUnknown(value));
-        yield* fs.writeFileString(path.join(inbox, "failures.ndjson"), `${A.join(encodedRows, "\n")}\n`);
-        yield* fs.writeFileString(
-          path.join(inbox, "dispatch.json"),
-          yield* encodeUnknown({
-            schemaVersion: "yeet-dispatch/v1",
-            capsuleIds: ["conflict-new"],
-            headSha: "new222",
-            prNumber: 900,
-            sessionStartedAt: "2026-09-25T00:00:00Z",
-            updatedAt: "2026-09-25T00:00:00Z",
-          })
-        );
+        const hookText = yield* fs.readFileString(hookPath);
+        expect(A.filter(Str.split(hookText, "\n"), (line) => line === hookExemptMarker)).toHaveLength(1);
+        assertSome(hookExemptKindsIn(hookText), kitExemptKinds);
+        // The same parse notices drift on either side: a kind missing from the hook,
+        // or a kind the hook carries that no kit has.
+        const dropped = Str.replace('"review-thread"', '"review-threads"')(hookText);
+        expect(O.getOrThrow(hookExemptKindsIn(dropped))).not.toStrictEqual(kitExemptKinds);
+        const extra = Str.replace('["pr-comment",', '["base-drift","pr-comment",')(hookText);
+        expect(O.getOrThrow(hookExemptKindsIn(extra))).not.toStrictEqual(kitExemptKinds);
+      })
+    );
+  });
 
-        const started = yield* runHookUntil(
-          root,
-          "claude",
-          { cwd: root, hook_event_name: "SessionStart", session_id: "exempt-session" },
-          (result) => result.stdout !== ""
-        );
-        expect(started.exitCode).toBe(0);
-        expect(started.stdout).toContain("[thread-old]");
-        // A comment row renders its PR and comment URL through the hook's generic
-        // label, with no comment-specific branch in the hook.
-        expect(started.stdout).toContain(
-          "P1 pr-comment [comment-old] PR #900 https://github.com/beep/beep/pull/900#issuecomment-1"
-        );
-        expect(started.stdout).toContain("P0 origin/main [conflict-new] PR #900 https://github.com/beep/beep/pull/900");
-        expect(started.stdout).not.toContain("drift-old");
-        expect(started.stdout).not.toContain("conflict-old");
+  it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
+    it.effect(
+      "keeps review threads and comments across a push, drops superseded drift and conflicts, and honours a cleared ack",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-yeet-hook-exempt-" });
+          const inbox = path.join(root, ".beep", "inbox");
+          yield* fs.makeDirectory(path.join(root, ".git"), { recursive: true });
+          yield* fs.makeDirectory(path.join(inbox, "acks"), { recursive: true });
+          const onHead = (headSha: string) => ({ headSha, prNumber: 900 });
+          const row = (kind: string, id: string, severity: string, capsule: object) => ({
+            schemaVersion: "yeet-inbox/v1",
+            kind,
+            id,
+            severity,
+            checkout: root,
+            ts: "2026-09-25T00:00:00Z",
+            capsule,
+          });
+          const conflict = (headSha: string) => ({
+            ...onHead(headSha),
+            base: "origin/main",
+            link: "https://github.com/beep/beep/pull/900",
+            mergeable: "CONFLICTING",
+            mergeStateStatus: "DIRTY",
+          });
+          const rows = [
+            row("review-thread", "thread-old", "P1", { ...onHead("old111"), threadId: "PRRT_1", link: null }),
+            row("pr-comment", "comment-old", "P1", {
+              ...onHead("old111"),
+              author: "reviewer",
+              link: "https://github.com/beep/beep/pull/900#issuecomment-1",
+            }),
+            row("base-drift", "drift-old", "P2", { ...onHead("old111"), base: "origin/main" }),
+            row("base-conflict", "conflict-old", "P0", conflict("old111")),
+            row("base-conflict", "conflict-new", "P0", conflict("new222")),
+          ];
+          const encodedRows = yield* Effect.forEach(rows, (value) => encodeUnknown(value));
+          yield* fs.writeFileString(path.join(inbox, "failures.ndjson"), `${A.join(encodedRows, "\n")}\n`);
+          yield* fs.writeFileString(
+            path.join(inbox, "dispatch.json"),
+            yield* encodeUnknown({
+              schemaVersion: "yeet-dispatch/v1",
+              capsuleIds: ["conflict-new"],
+              headSha: "new222",
+              prNumber: 900,
+              sessionStartedAt: "2026-09-25T00:00:00Z",
+              updatedAt: "2026-09-25T00:00:00Z",
+            })
+          );
 
-        const blocked = yield* decodeObject(
-          (yield* runHook(root, "claude", { cwd: root, hook_event_name: "Stop", session_id: "exempt-session" })).stdout
-        );
-        expect(blocked).toMatchObject({ decision: "block", reason: expect.stringContaining("conflict-new") });
+          const started = yield* runHook(root, "claude", {
+            cwd: root,
+            hook_event_name: "SessionStart",
+            session_id: "exempt-session",
+          });
+          expect(started.exitCode).toBe(0);
+          expect(started.stderr).toBe("");
+          expect(started.stdout).toContain("[thread-old]");
+          // A comment row renders its PR and comment URL through the hook's generic
+          // label, with no comment-specific branch in the hook.
+          expect(started.stdout).toContain(
+            "P1 pr-comment [comment-old] PR #900 https://github.com/beep/beep/pull/900#issuecomment-1"
+          );
+          expect(started.stdout).toContain(
+            "P0 origin/main [conflict-new] PR #900 https://github.com/beep/beep/pull/900"
+          );
+          expect(started.stdout).not.toContain("drift-old");
+          expect(started.stdout).not.toContain("conflict-old");
 
-        // The monitor's cleared receipt acknowledges the row like any closing move.
-        const receipt = YeetAckReceipt.make({
-          ackedAt: "2026-09-25T00:05:00Z",
-          id: "conflict-new",
-          resolution: YeetAckClearedResolution.make({
-            headSha: "new222",
-            mergeable: "MERGEABLE",
-            mergeStateStatus: "CLEAN",
-            jobId: O.none(),
-            unit: O.none(),
-          }),
-        });
-        yield* fs.writeFileString(
-          path.join(inbox, "acks", "conflict-new"),
-          `${yield* YeetAckReceiptJson.encode(receipt)}\n`
-        );
-        const stopped = yield* decodeObject(
-          (yield* runHook(root, "claude", { cwd: root, hook_event_name: "Stop", session_id: "exempt-session" })).stdout
-        );
-        expect(stopped).toStrictEqual({});
-      }).pipe(Effect.scoped, provideTestLayer),
-    15_000
-  );
+          const blocked = yield* decodeObject(
+            (yield* runHook(root, "claude", { cwd: root, hook_event_name: "Stop", session_id: "exempt-session" }))
+              .stdout
+          );
+          expect(blocked).toMatchObject({ decision: "block", reason: expect.stringContaining("conflict-new") });
+
+          // The monitor's cleared receipt acknowledges the row like any closing move.
+          const receipt = YeetAckReceipt.make({
+            ackedAt: "2026-09-25T00:05:00Z",
+            id: "conflict-new",
+            resolution: YeetAckClearedResolution.make({
+              headSha: "new222",
+              mergeable: "MERGEABLE",
+              mergeStateStatus: "CLEAN",
+              jobId: O.none(),
+              unit: O.none(),
+            }),
+          });
+          yield* fs.writeFileString(
+            path.join(inbox, "acks", "conflict-new"),
+            `${yield* YeetAckReceiptJson.encode(receipt)}\n`
+          );
+          const stopped = yield* decodeObject(
+            (yield* runHook(root, "claude", { cwd: root, hook_event_name: "Stop", session_id: "exempt-session" }))
+              .stdout
+          );
+          expect(stopped).toStrictEqual({});
+        })
+    );
+  });
 });

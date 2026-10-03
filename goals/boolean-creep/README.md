@@ -1,4 +1,32 @@
-## Current continuation: R54, 2026-10-01
+Lifecycle: `reference`
+
+## Partial closeout: 2026-10-02
+
+The operator explicitly replaced the full eradication objective with a partial
+closeout on 2026-10-02. This packet is retained as reference; execution has ended.
+The original acceptance criteria were not achieved and are preserved below as
+historical requirements, not obligations to continue this closed campaign.
+
+The published inventory retains 723 records: 108 qualified, 615 disqualified,
+and zero applied. Historical inventory reconciliation, designs and review
+receipts remain useful reference material. They do not establish current-source
+admission, two complete dry census rounds, replacement independent zero-finding
+campaign review, Gate 2 ratification, implementation, or final exact-main proof.
+Those gates remain unmet. No synthetic audit commit receives campaign credit.
+
+The operator intentionally deleted `~/.cache/beep/boolean-creep` under disk
+pressure reported at 96% usage. Private R54 proposals, runtime experiments,
+unpublished review receipts and build outputs in that directory are unavailable.
+Earlier statements that those artifacts remain preserved are superseded. Do not
+recreate approvals from reported hashes or count deleted evidence as a live gate.
+Tracked packet history and published commits remain the durable record.
+
+PR #1405 carries this reference closeout. The original campaign merge boundary
+is retired with the original objective; a documentation-only partial closeout
+may land after its own review and hosted checks. Any future implementation must
+start with explicit new authority and fresh source-bound evidence.
+
+## Historical continuation before partial closeout: R54, 2026-10-01
 
 PR #1388 merged externally at `ed09a085f35c617c352de43152330d52b908f5b5`
 before the campaign gates passed. Benjamin approved continuing all remaining work
@@ -197,11 +225,11 @@ R38 is complete and wet. The dry streak remains zero. See
 current-source dry rounds, replacement independent P3 review, Benjamin's
 ratification merge, implementation, and final exact-main closure remain required.
 
-Lifecycle: `active`
+Historical lifecycle before partial closeout: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-## Mission
+## Historical mission
 
 Find every place AI-generated code flattened one domain state variable into
 parallel correlated booleans, prove each with cited evidence (E1–E4), and
@@ -209,29 +237,24 @@ refactor the confirmed instances to schema-first shapes (LiteralKit literal,
 tagged union, or Option-of-literal) that delete the guards the booleans made
 necessary.
 
-## Launch
+## Reference use
 
-Use this command for execution-capable sessions:
-
-```text
-/goal follow the instructions in goals/boolean-creep/GOAL.md
-```
-
-`GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract;
-[`DECISIONS.md`](./DECISIONS.md) holds the ratified campaign decisions.
+This packet is reference-only. Do not launch further work from `GOAL.md`.
+`SPEC.md` preserves the historical contract and the dated partial closeout;
+[`DECISIONS.md`](./DECISIONS.md) records the decision that ended execution.
 
 ## Read This First
 
-1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
-2. [`SPEC.md`](./SPEC.md) - normative source of truth.
-3. [`DECISIONS.md`](./DECISIONS.md) - ratified decisions (binding).
-4. [`PLAN.md`](./PLAN.md) - active execution plan.
+1. [`GOAL.md`](./GOAL.md) - closed-campaign notice.
+2. [`SPEC.md`](./SPEC.md) - historical contract and current closeout notice.
+3. [`DECISIONS.md`](./DECISIONS.md) - historical ratifications and the current partial-closeout decision.
+4. [`PLAN.md`](./PLAN.md) - historical execution plan and current closeout record.
 5. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
-6. [`data/inventory.jsonl`](./data/inventory.jsonl) - campaign state of truth.
+6. [`data/inventory.jsonl`](./data/inventory.jsonl) - retained historical inventory; source validation remains incomplete.
 7. [`research/`](./research/) - supporting research.
 8. [`history/`](./history/) - evidence and closeouts.
 
-## Current Phase
+## Historical phase records
 
 2026-09-22 main synchronization: fast-forwarded to `02f8084070af1fe3329b4c769705394a9f33b9f1` with all 265 dirty packet paths preserved byte-for-byte; post-merge version sync passed. Receipt: `data/main-sync-02f808-2026-09-22.json`. The one changed corpus file is `Ci/LaneTimings.ts`; no inventory owner/evidence path changed, and all 437 explicitly recorded source hash bindings checked still match. Partition remains 3,141 files /27 lanes. This is mechanical continuity evidence, not current census or P3 approval. Inventory remains 756 rows /148 qualified /608 disqualified, zero applied; constitutional preamble and remote status contracts remain held.
 

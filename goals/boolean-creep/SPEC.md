@@ -1,3 +1,21 @@
+## Operator-authorized partial closeout — 2026-10-02
+
+The operator explicitly replaced the full eradication objective with a documented
+partial closeout. This packet now has lifecycle `reference` and is not execution
+capable. The original acceptance criteria were not achieved. All campaign
+execution mandates and gates below are historical; they neither authorize nor
+require continued census, review, implementation or private-cache reconstruction.
+
+The published inventory remains 723 records: 108 qualified, 615 disqualified,
+zero applied. Current-source admission, two complete dry census rounds,
+replacement independent zero-finding campaign review, Gate 2 ratification,
+implementation and exact-main completion remain unmet. The operator intentionally
+deleted the private cache under disk pressure; missing receipts confer no current
+authority. PLAN.md and history/reflections/2026-10-02-codex.md record the partial
+closeout. Any future execution requires new explicit operator authority and fresh
+source-bound evidence. PR #1405 may land this documentation-only reference
+closeout after its own review and checks; it does not complete eradication.
+
 # SPEC — Boolean-Creep Eradication
 
 Normative contract for the boolean-creep campaign. Ratified decisions live in

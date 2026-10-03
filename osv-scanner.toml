@@ -34,3 +34,22 @@ ecosystem = "npm"
 ignore = true
 effectiveUntil = 2026-10-31T00:00:00Z
 reason = "pkg.pr.new snapshot of effect main (4.0.0-rc.118+1); GHSA-38f7-945m-qr2g is a 3.x advisory and OSV cannot version-match the URL pin. Re-key at every snapshot bump."
+
+# No patched npm releases exist as of 2026-10-02. These exact lockfile artifacts
+# enter through development and infrastructure tooling, not application runtime
+# dependencies. Reassess promptly when upstream publishes patched versions.
+[[PackageOverrides]]
+name = "braces"
+version = "3.0.3"
+ecosystem = "npm"
+ignore = true
+effectiveUntil = 2026-10-16T00:00:00Z
+reason = "GHSA-vfj7-8cjw-p6xm has no patched npm release. This lockfile instance comes only through shadcn/Storybook fast-glob and micromatch tooling; revisit by 2026-10-16."
+
+[[PackageOverrides]]
+name = "http-cache-semantics"
+version = "4.2.0"
+ecosystem = "npm"
+ignore = true
+effectiveUntil = 2026-10-16T00:00:00Z
+reason = "GHSA-ch52-4w7c-c8xp has no patched npm release. This lockfile instance comes through Pulumi/npm install tooling via make-fetch-happen, not a shared application response cache; revisit by 2026-10-16."
