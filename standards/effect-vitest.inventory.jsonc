@@ -2530,27 +2530,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts:31:runPromise@17#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts",
-      "line": 31,
-      "endLine": 31,
-      "symbol": "runPromise",
-      "occurrence": "v2:3469f80c9f72bf5611fc0360196d8802aac5d5d17b195529c058a99b58783901",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise(program())",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/yeet-pr-provenance-boundary.test.ts:16:runSync@6#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -16102,27 +16081,6 @@
       "severity": "major",
       "confidence": 0.95,
       "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts:182:provideTestLayer@25#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts",
-      "line": 182,
-      "endLine": 183,
-      "symbol": "provideTestLayer",
-      "occurrence": "v2:cab709591b1be38041c8c883b08a7708eb279c218abad3fa976afea965ea481f",
-      "class": "resource-wrapper",
-      "evidence": "<A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.scoped(Layer.build(TestLayer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
       "status": "open"
     },
     {
@@ -31235,7 +31193,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeServices.layer remains required for real child-process shell hooks, filesystem, Git, symlink, mode and exclusive-create behavior. A memory filesystem would change the subject. Nine scenarios pass on Node and Bun; @beep/repo-cli package audit and docgen passed at source 318551c4690c7c06c05beb499bc0628ec39b4355."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-inbox-porcelain.test.ts:38:@effect/platform-node/NodeFileSystem@0#1",
@@ -42999,50 +42958,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. Workflow identity tests create real Git repositories and verify native executable permissions, symlinks, ignored files and source-root containment. NodeServices and NodeCrypto are explicit it.layer providers. A simulated filesystem would not establish these Git and native path properties."
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-census.test.ts:160:provideCrypto@14#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-census.test.ts",
-      "line": 160,
-      "endLine": 160,
-      "symbol": "provideCrypto",
-      "occurrence": "v2:561ef7557c8b44be9b1b9bf586c749d6658c06bbb584eae18b35f5123a4a8b1c",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideCrypto",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. The provider is the named provideCrypto alias for the repository provideScopedLayer(NodeCrypto.layer), not an unknown service. It is applied inside each generated property case, retains the existing per-case scope, and provides only native crypto. The property uses native it.effect.prop with the same schema and fcRuns floor. Review again if the helper or layer gains mutable state."
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/cache-dispatch.test.ts:256:provideScopedLayer@14#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "line": 256,
-      "endLine": 256,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:e7ed209fcc179e2b9e8233b04533f9a894bdcac6e964ea33827aab316e46659e",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. The property applies the repository provideScopedLayer(testLayer) inside each generated case. testLayer supplies native platform services and TestConsole; fixture creates scoped temporary request files and isolated command call capture per case. Sharing this boundary across all generated cases would change cleanup and captured-console lifetime. Keep per-case provision and teardown."
     },
     {
       "id": "EV007:packages/tooling/tool/cli/test/cache-accept-cli.test.ts:102:checkEffect@39#1",
