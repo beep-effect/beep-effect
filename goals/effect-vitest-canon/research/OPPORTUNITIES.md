@@ -6594,3 +6594,10 @@ version. The wrapper now mirrors a package override only when every matching
 expired; wrong, additional, malformed and expired lock states fail closed.
 An audit-policy parity check between OSV and Bun in the earlier security PR
 would have prevented this second proof wave.
+
+After the follow-up was pushed early to restart hosted checks, `bun run beep
+yeet publish --start-pr-early` refused the clean branch because its commit was
+no longer ahead of the publish remote. The supported continuation is `yeet
+verify` followed by closeout and the canonical monitor. A published-head
+continuation hint in Yeet's refusal would prevent an unnecessary retry of the
+publish command.
