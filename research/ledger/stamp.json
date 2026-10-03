@@ -1,12 +1,12 @@
 {
-  "lastSuccessfulRun": "2026-09-30T08:19:00-05:00",
-  "lastSuccessfulPacket": "research/2026-09-30",
-  "lastSuccessfulPr": 1358,
-  "lastAttemptedRun": "2026-10-02T08:16:00-05:00",
+  "lastSuccessfulRun": "2026-10-02T08:16:00-05:00",
+  "lastSuccessfulPacket": "research/2026-10-02",
+  "lastSuccessfulPr": 1403,
+  "lastAttemptedRun": "2026-10-03T08:18:00-05:00",
   "lastAttemptedStatus": "partial",
-  "lastAttemptedPacket": "research/2026-10-02",
-  "lastAttemptedPr": 1403,
-  "note": "Draft until human merge of research/2026-10-02 nightly packet (Friday ~48h window after closed-unmerged #1391; no weekly consolidation). Never auto-merge. Partial: X client-not-enrolled. Do NOT set lastSuccessful* until human merges. Prior successful #1358 merged 2026-10-01.",
+  "lastAttemptedPacket": "research/2026-10-03",
+  "lastAttemptedPr": null,
+  "note": "Draft until human merge of research/2026-10-03 nightly packet (Saturday ~24h window; no weekly consolidation). Never auto-merge. Partial: X client-not-enrolled. Do NOT set lastSuccessful* until human merges. Prior successful #1403 merged 2026-10-02T18:58:14Z.",
   "excludedUnmergedPackets": [
     {
       "date": "2026-08-27",
