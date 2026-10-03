@@ -103,7 +103,17 @@ const packageOverrideAuditId = (
     }),
     O.filter(({ expiry }) => Order.isGreaterThanOrEqualTo(DateTime.Order)(now)(expiry)),
     O.filter(({ name, version }) => {
-      const resolutions = A.filter(R.toEntries(packages), ([key]) => key === name || Str.startsWith(`${name}@`)(key));
+      // Bun can retain another version beneath a parent key such as
+      // `parent/braces`; an advisory-wide ignore is safe only when all roots
+      // and nested resolutions of this package match the reviewed version.
+      const resolutions = A.filter(
+        R.toEntries(packages),
+        ([key]) =>
+          key === name ||
+          Str.endsWith(`/${name}`)(key) ||
+          Str.startsWith(`${name}@`)(key) ||
+          Str.includes(`/${name}@`)(key)
+      );
       return (
         A.isReadonlyArrayNonEmpty(resolutions) &&
         A.every(resolutions, ([, tuple]) => S.is(S.String)(tuple[0]) && tuple[0] === `${name}@${version}`)

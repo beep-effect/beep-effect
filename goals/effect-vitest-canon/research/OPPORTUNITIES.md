@@ -6601,3 +6601,13 @@ no longer ahead of the publish remote. The supported continuation is `yeet
 verify` followed by closeout and the canonical monitor. A published-head
 continuation hint in Yeet's refusal would prevent an unnecessary retry of the
 publish command.
+
+### Nested Bun lock resolutions escaped the exact-version audit guard (2026-10-02)
+
+Greptile's P1 review of PR #1408 found that `bun.lock` can record a nested
+resolution as `parent/braces`. The first guard checked only root package keys,
+so a reviewed root version alongside an older nested version could enable an
+advisory-wide Bun ignore. The guard now checks nested keys too, with regression
+cases for a wrong nested version and a matching one. A lockfile fixture that
+included both root and nested resolutions in the first audit-policy test would
+have caught this before review.
