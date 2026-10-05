@@ -2,7 +2,8 @@
 
 ## Status
 
-Status: `pending`. Graduated 2026-10-01; P0 not started. Workstreams W1–W9 come from the
+Status: `in-progress`. Graduated 2026-10-01; P0 complete 2026-10-05 (W1 landed, W2 declined; P0 Rulings 1–7 in
+[`research/decisions.md`](./research/decisions.md)). Next: P1 Stage C capture (W3–W4). Workstreams W1–W9 come from the
 exploration's [`MAP.md`](../../explorations/beep-ci-operational-ontology/MAP.md), and each
 row's capability cites are in its Capability Check. "Graduation Ruling n" is Ruling n of the
 exploration's 2026-10-01 graduation sitting.
@@ -11,7 +12,7 @@ exploration's 2026-10-01 graduation sitting.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Inheritance and change events (W1); optional seat launcher (W2) | pending | Carry SOURCES forward and backfill the change-event ledger. W2 runs only if chosen. | `research/SOURCES.md` §4 refreshed against HEAD; every post-iv-870 lever under the admission criterion is a row; W2 landed or recorded as not chosen. |
+| P0 Inheritance and change events (W1); optional seat launcher (W2) | complete | Carry SOURCES forward and backfill the change-event ledger. W2 runs only if chosen. | `research/SOURCES.md` §4 refreshed against HEAD; every post-iv-870 lever under the admission criterion is a row; W2 landed or recorded as not chosen. |
 | P1 Stage C capture and proof-ledger capture (W3-W4) | pending | Pin `run4-fleet` and the owning-clone ledger through two new sibling generators. | Both pins committed with tree-pinned citation replay passing and residue scans zero; or the ledger census recorded and the pin lane stopped (graduation Ruling 1). |
 | P2 Projection on live data and planEpisode body (W5-W6) | pending | Replay the pin's admission chains and give the planner seam a body. | S7 §3.2/§6 amended first; agreement report printed beside 41-of-41; lab tests and `package-verify @beep/ciops` green; CQ-009 excluded from the live-projection certainty gate over post-#929 rows until P3's re-scope (graduation Ruling 9). |
 | P3 Auditor run 4 (W7) | pending | One frozen run on the run-3 choreography. | Gate PASSED and sittings scribed, or a steward ruling closing the run with its reason. |
@@ -23,22 +24,22 @@ exploration's 2026-10-01 graduation sitting.
 
 ### P0 — Inheritance and change events
 
-- [ ] **W1 SOURCES carry.** Keep [`research/SOURCES.md`](./research/SOURCES.md) pointing at
-      the exploration ledger as primary, and re-verify its §4 table against HEAD before the
-      first slice PR.
-- [ ] **W1 change-event backfill** (graduation Ruling 6). Apply the admission criterion
-      first: a row records a change to admission, ordering, gate selection or early stop,
-      Turbo/cache task inputs, or lane assembly/sharding on the local tiers, plus
-      hosted-runner capacity on the hosted tier; instrumentation-only and shadow-only changes
-      are excluded. Then commit a reproducible lever query (`git log --since=2026-08-27T19:52Z`
-      over the scheduler, admission, Turbo/cache, lane-assembly and hosted-runner paths, with
-      `gh pr view <n> --json mergedAt,mergeCommit` for each landing instant) and write every
-      qualifying post-iv-870 lever as an observational `OperationalChangeEvent` row under
-      adoption-qualified membership. iv-929 and iv-1006 were written by the graduation PR;
-      rows stay seed data until run 4.
-- [ ] **W2 seat launcher (optional;** graduation Ruling 4). Skill v16 with a model-agnostic
-      seat launcher, its own self-test family and new pinned digests. If not chosen, record
-      that here; run-4 seats then run on Opus 5.5 by launch-entry deviation from v15.
+- [x] **W1 SOURCES carry.** Done 2026-10-05: [`research/SOURCES.md`](./research/SOURCES.md) §4
+      re-verified against `8b7392fe00` (two drifted cites and one moved cite corrected, one new
+      correction bullet; the §5 gate-order digest note records the #1380 move for W6).
+- [x] **W1 change-event backfill** (graduation Ruling 6, amended by P0 Ruling 2). Done
+      2026-10-05: the reproducible query
+      [`research/scripts/w1_lever_query.sh`](./research/scripts/w1_lever_query.sh) (four path
+      families, widened by P0 Rulings 5 and 7) censused 194 PRs since the iv-870 instant; three
+      classify-and-refute passes and P0 Rulings 2–7 admitted 39 new `OperationalChangeEvent`
+      rows into `control-interventions.yaml` (42 rows with iv-870, iv-929 and iv-1006), each
+      under adoption-qualified membership; protocol, census, verdicts and the exclusions appendix
+      are in [`research/w1-lever-query.md`](./research/w1-lever-query.md). Rows stay seed data
+      until run 4.
+- [x] **W2 seat launcher (optional;** graduation Ruling 4). Skill v16 with a model-agnostic
+      seat launcher, its own self-test family and new pinned digests. **Not chosen** (P0
+      Ruling 1, 2026-10-05, [`research/decisions.md`](./research/decisions.md)): run-4 seats
+      run on Opus 5.5 by launch-entry deviation from v15; no v16 launcher, no new digests.
 
 ### P1 — Stage C capture
 

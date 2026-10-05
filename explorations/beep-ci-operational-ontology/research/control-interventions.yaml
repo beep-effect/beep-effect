@@ -12,6 +12,10 @@
 # shadow-only changes (time-to-certainty C4.1 with reuse off) are excluded. Rows after
 # iv-870 are a partial set until goals/ciops-ontology-pipeline phase P0 (W1) backfills them
 # by a reproducible query.
+# AMENDED (P0 Ruling 2, 2026-10-05, goals/ciops-ontology-pipeline/research/decisions.md): the
+# same mechanisms are admitted on the hosted tier; hosted-runner capacity stays the hosted
+# tier's own lever. Rows after iv-1006 were backfilled by the W1 query on 2026-10-05
+# (goals/ciops-ontology-pipeline/research/w1-lever-query.md).
 # NAMING (final-grill round 3): OperationalChangeEvent is the class — OBSERVATIONAL by
 # default; `causalStatus: causal` requires a supporting design (paired pre/post cohorts
 # under adoption-qualified membership, stated confounders — kpi-measurement-rules.md
@@ -80,9 +84,1016 @@
   measurementCaveats:
     - "ADOPTION-QUALIFIED MEMBERSHIP: checkout HEAD ancestry at or after mergeCommit (as iv-870)."
     - "Lane costs frozen at the 2026-09-03 A1 window; #1006 also changed early stop for precise reds, so ordering and early stop are confounded."
-    - "Later landing instants of the same ladder: #1068 (2086a0a090, 2026-09-10T22:38:53Z) added quality:cache-policy unseeded so it ran last; #1269 (b2a654bc43, 2026-09-25T21:46:53Z, ttc D1) seeds it at rank 19 and changes its early stop."
+    - "Later edits to the same cost-ordered ladder (the full-tier pre-push wave), each its own row and never a partition point of this row (P0 Ruling 4): iv-1021-fallow-health-lane (#1021, 74efb548f1, 2026-09-09T03:33:07Z) adds fallow:health unseeded, so it runs last; iv-1049-quality-lanes-pr1 (#1049, bed30c6adf, 2026-09-09T12:04:17Z) drops quality:check:tsgo-tests and quality:check:tsgo-smoke, adds quality:doctest and seeds quality:doctest and fallow:health; iv-1054-storybook-config-typecheck-lanes (#1054, d68f1a11dd, 2026-09-09T13:46:50Z) adds quality:storybook and repo-sanity:config-typecheck with seed rows; iv-1068-cache-policy-gate (#1068, 2086a0a090, 2026-09-10T22:38:53Z) adds quality:cache-policy unseeded, so it runs last; iv-1102-turbo-policy-plan (#1102, e08b24b004, 2026-09-12T23:26:03Z) moves several ladder lanes onto Turbo root tasks without changing membership or rank; iv-1269-cache-policy-seed (#1269, b2a654bc43, 2026-09-25T21:46:53Z, ttc D1) seeds quality:cache-policy at rank 19, which changes the lane's rank, not its stop-after-red scheduling (stop-after-red before and after); iv-1380-shadcn-lint-lane (#1380, 736f6f7b0c, 2026-10-01T20:15:16Z) seeds quality:shadcn-lint at rank 3 and shifts every later rank by one (quality:cache-policy 19 to 20). No W1 pass-2 row edits the ladder. A before/after window for this row that crosses any of these instants is confounded."
   evidence:
     - "goals/time-to-certainty/research/gate-order-handoff.json (gate-order-handoff/v1, sha256 a4d7d22edb457c14b6cfaac8c69cd5bd505bf1bcc18fd3fc8be5ec3aa6417ff8 at 04993ae26a)"
     - "gh pr view 1006 --json mergedAt,mergeCommit (verified 2026-10-01)"
     - "KPI before/after: before = ttc A1 baseline window 2026-08-04..2026-09-03 (research/baseline.md, ttc ruling 8); after = the ttc P4 A1 close window; partition at landedAt (CQ-016)"
     - "DECISIONS.md, 2026-10-01 graduation sitting, Ruling 6 (disposes of time-to-certainty ruling 79's open item iv-1006-wave-order)"
+
+# ---- W1 backfill (goals/ciops-ontology-pipeline P0, 2026-10-05; graduation Ruling 6 as amended by
+# P0 Ruling 2). Query: goals/ciops-ontology-pipeline/research/scripts/w1_lever_query.sh at 8b7392fe00;
+# protocol, census and exclusions: goals/ciops-ontology-pipeline/research/w1-lever-query.md. Every row
+# below survived both refuters or was admitted by P0 Rulings 2-4; rows are in landedAt order and are
+# seed data until run 4 (Queue-G). mechanismChanged is the primary mechanism; co-mechanisms are named
+# in a CONFOUNDED caveat. ----
+
+- id: iv-874-publish-before-admission
+  title: "PR #874 — publish before proof admission; CI-parity step, lane-proof reuse and new pre-push lanes"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-08-30T02:39:33Z"
+  mergeCommit: d324544d3a3b333b8ef1f9eb225df2d065b70338
+  pr: 874
+  mechanismChanged: admission
+  hypothesis: >
+    OBSERVATIONAL: publish proofs hold an admission lease for less of their wall time,
+    because preflight, push and PR creation now run before the admitted full proof, while
+    proofs that carry the CI-parity step request the heavier merged-preview weight (5
+    tokens against 3) and run more work. The expected association is a smaller pre-proof
+    share inside the lease and a larger admitted share on TierLocalFullProof; the net
+    direction of time-to-certainty is not predicted.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "CONFOUNDED AT ONE INSTANT: the squash also changes lane-assembly (new `full:02-ci-parity` step running `beep ci local --affected`; new pre-push lanes quality:coverage, quality:codegen, quality:commitlint and quality:desktop-ipc; new cheap-gates lanes cheap-gates:exploration-atlas and cheap-gates:test-tsgo), gate-selection (lane-proof reuse is introduced and set to active on yeet proof steps, so a lane with an exact-match proof record is skipped; the standalone default is off) and turbo-cache-inputs (build drops `$TURBO_ROOT$/.env*`, check and lint drop the ui-system stories glob, test-family tasks add `$TURBO_ROOT$/vitest.setup.ts`). No single mechanism can be credited with a before/after shift."
+    - "Check-lane Turbo concurrency moves from 1 to 3 locally (2 hosted); that is parallelism inside one lane and is context only."
+    - "HOSTED CO-MECHANISMS (P0 Ruling 2): the squash also changes hosted gate selection (goals-only lane skip), hosted Turbo cache reads (same-repo PR remote-cache read) and hosted lane assembly (cache-warm.yml on the existing beep-ec2-heavy runner); runner capacity is unchanged. For hosted runs the post-period is a run whose head includes mergeCommit (P0 Ruling 2)."
+  evidence:
+    - "gh pr view 874 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:870-871 at HEAD 8b7392fe00 (ensureRequestedPullRequest precedes runWithFullProofCoordinator; :780-782 at d324544d3a)"
+    - "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:507 at HEAD (kind is merged-preview when the CI_PARITY_STEP_ID step is present); packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:253-254 at HEAD (full-proof 3 tokens, merged-preview 5)"
+    - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:55, :428 and :445 at HEAD (CI_PARITY_STEP_ID, BEEP_YEET_LANE_PROOF_MODE defaulting to active, ciParityStep); packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts:197-198 at HEAD (standalone default off; the file is new in d324544d3a)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:414-439 at HEAD (the four new pre-push lanes; absent at d324544d3a^1, added at :305-317 of d324544d3a)"
+
+- id: iv-871-docgen-direct-package-check
+  title: "PR #871 — the docgen:local JSDoc check gates only directly selected packages"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-08-30T08:34:57Z"
+  mergeCommit: 4b8f3c4f600bcec006a892c93e2de77adff13664
+  pr: 871
+  mechanismChanged: gate-selection
+  hypothesis: >
+    OBSERVATIONAL: scoped docgen:local runs stop failing on missing JSDoc (including
+    @category) in packages that Turbo pulled in only as dependents of a changed package, so
+    Docgen reds caused by untouched dependents fall on local ci:docgen and dev:docgen-local
+    runs and on hosted pull-request Heavy / Docgen runs; full, full-required and noop plans
+    are unchanged.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local and hosted tiers (P0 Ruling 2). Locally a checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870); a hosted run is in the post-period only when its head includes mergeCommit. landedAt is the series partition point, never the fleet boundary."
+    - "HOSTED, PULL REQUESTS ONLY: Heavy / Docgen runs `ci lane docgen --mode auto` (docgen:local, scoped) on pull_request events and `--mode full` on other events, which runs `docgen` and is untouched by this row."
+    - "WHAT NARROWED: before, checkPackageDocumentation ran over Turbo's dependent-expanded docgen set (the planner filters with `--filter=...<pkg>`); after, only over the packages selected directly from changed files. The turbo docgen step that still covers dependents enforces description, examples and since but not @category, so a missing @category in a dependent no longer fails a scoped run."
+    - "CONFOUNDED: the change is branch commit 28490bf81c ('fix(docgen): scope metadata ratchet to direct packages', later indexed by bce4a71fa1) inside an unrelated langextract feature PR; the quality-scheduler test edit only adds assertions. The gate runs only when some package proof manifest is stale, a condition this PR leaves unchanged. The PR merged as `Merge pull request #871` and reaches the census only through the widened Docgen/internal family (P0 Ruling 5)."
+  evidence:
+    - "gh pr view 871 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts:1100-1101 at 4b8f3c4f60 (`selectDirectDocgenPackagesForTesting(packages, plan.selectedPackages)` feeds checkPackageDocumentation; the parent passed every package, :1069 at 4b8f3c4f60^1); :1097-1101 (the check runs only when some proof manifest is not current); :1194-1195 at HEAD 8b7392fe00"
+    - "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts:163 at 4b8f3c4f60 (turboFilterForPackage `--filter=...${pkg.name}`, the dependent-expanded set); :864-879 (checkPackageDocumentation fails the run with 'docgen:local JSDoc check failed')"
+    - "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocAnalysis.ts:28 at 4b8f3c4f60 (DOCGEN_REQUIRED_TAGS includes @category); packages/tooling/tool/docgen/src/Checker.ts:58-72 at 4b8f3c4f60 (the turbo docgen checker enforces description, examples and since)"
+    - "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:742, :746 and :748 at 4b8f3c4f60 (auto and affected modes run docgen:local with --base and --head; full runs docgen); packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts:820-824 at 4b8f3c4f60 (dev:docgen-local runs docgen:local --base/--head)"
+    - ".github/workflows/heavy.yml:41 and :234-238 at 4b8f3c4f60 (Heavy / Docgen matrix lane; pull_request runs --mode auto, other events --mode full)"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 2 (hosted clause amended), Ruling 5 (query widened)"
+
+- id: iv-891-per-user-runtime-root
+  title: "PR #891 — admission queue and proof locks resolve one per-user runtime root"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-08-30T09:20:21Z"
+  mergeCommit: 187f72069e8dcb1bb1b7cdf6536b467e1604d38c
+  pr: 891
+  mechanismChanged: admission
+  hypothesis: >
+    OBSERVATIONAL: sessions launched with a scrubbed environment stop coordinating under a
+    tmpdir root their siblings never saw and join the shared admission queue and proof-lock
+    tree, so their unserialized concurrent full proofs fall and their queue wait rises;
+    sessions that already resolved /run/user/<uid> keep the same tree.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "WHO MOVES: before, the admission root keyed on XDG_RUNTIME_DIR (XDG/beep/admit when set, tmpdir/beep-admit-uid-<uid> otherwise) and the Yeet proof-lock root made its own choice, so env-scrubbed sessions coordinated under a different tree. After, both come from one choice: /run/user/<uid> when a child directory can be created there, else tmpdir, with XDG_RUNTIME_DIR deliberately not consulted. The PR body lists XDG_RUNTIME_DIR first in the resolution order; the merged code governs."
+    - "CONFOUNDED SEQUENCE: #894 (iv-894-invariant-runtime-root, 894393a934, 2026-08-30T10:23:55Z), from the same head branch, replaced this choice about 63 minutes later, so this row's effective window is 09:20:21Z to 10:23:55Z on 2026-08-30 and covers only checkouts whose HEAD includes 187f72069e but not 894393a934. Read the two rows as one admission-root sequence."
+    - "SECOND ADMISSION-STATE EDIT: `scheduler reap --apply` on a run-user root also stops leaked run scopes under the legacy tmpdir admission roots (reapLegacyAdmissionRoots); #894 removed it. The PR merged as `Merge pull request #891`, which the first pass did not parse (P0 Ruling 5)."
+  evidence:
+    - "gh pr view 891 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:441 at 187f72069e (`const choice = yield* perUserRuntimeRoot();`); :287-298 at 187f72069e^1 (the replaced admissionRuntimeRoot keyed on XDG_RUNTIME_DIR)"
+    - "packages/tooling/tool/cli/src/internal/repo-run/RuntimeRoot.ts:4-7 at 187f72069e (scrubbed sessions coordinated under a different root and ran proofs unserialised); :83-86 (resolution order; XDG_RUNTIME_DIR deliberately not consulted); :116 (/run/user/<uid>); :159-162 (tmpdir maps to beep-admit-uid-<uid>, run-user to beep/admit)"
+    - "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts:145 at 187f72069e (the proof coordinator lock root is `(yield* perUserRuntimeRoot()).root`)"
+    - "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1567-1575 at 187f72069e (legacy admission-root reap on run-user roots)"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 5 (merge-subject PR numbers parsed)"
+
+- id: iv-894-invariant-runtime-root
+  title: "PR #894 — admission queue and proof locks move to one invariant runtime root"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-08-30T10:23:55Z"
+  mergeCommit: 894393a934f1e9491d005dde72bec8de68061114
+  pr: 894
+  mechanismChanged: admission
+  hypothesis: >
+    OBSERVATIONAL: sessions that #891's probe would have split (no writable /run/user/<uid>,
+    or a divergent TMPDIR) now share one admission tree and one proof-lock root, so their
+    unserialized concurrent proofs fall and their queue wait rises; on hosts where every
+    session passed the probe the tree only moves, and no association is expected beyond
+    the cutover.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "RELOCATION VERSUS DECISION: the canonical root is /tmp on POSIX (a home-backed .beep/runtime directory on Windows); the admission queue moves to /tmp/beep-admit-uid-<uid> and the proof-lock coordinator moves with it. The admission decision changes only for sessions whose /run/user/<uid> probe failed or whose tmpdir differed, and at the hard cutover, where processes still running #891 keep the /run/user tree until drained (the PR body records the merge host as drained)."
+    - "CONFOUNDED SEQUENCE: lands on the same head branch as #891 (iv-891-per-user-runtime-root) about 63 minutes later and supersedes it; read the two rows as one admission-root sequence. #949 (e552d7da19, 2026-09-03T14:32:02Z) later moved the POSIX base to a .beep/runtime directory under the user home, excluded by W1 as a location cutover with the same sharing, so the /tmp literal holds from 894393a934 until #949."
+    - "SECOND ADMISSION-STATE EDIT: the PR deletes the run-user legacy-root branch of reapAdmissionState that #891 added, a reaper scope change that decides no admission. The PR merged as `Merge pull request #894`, which the first pass did not parse (P0 Ruling 5)."
+  evidence:
+    - "gh pr view 894 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/internal/repo-run/RuntimeRoot.ts:46 at 894393a934 (`/tmp` on POSIX); :127 (RuntimeRootChoice kind canonical with CANONICAL_RUNTIME_ROOT); :162-164 (the canonical root maps to beep-admit-uid-<uid>); :10-14 (hard cutover; drain before adopting)"
+    - "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1567-1575 at 187f72069e (the run-user legacy-root reap branch), absent at 894393a934"
+    - "packages/tooling/tool/cli/src/internal/repo-run/RuntimeRoot.ts:48-51 at HEAD 8b7392fe00 (the base under the user home after #949)"
+    - "PR #894 body: the change 'removes all environment-dependent and fallible production root selection, so same-user sibling sessions cannot split admission or proof coordination across separate trees'"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 5 (merge-subject PR numbers parsed)"
+
+- id: iv-953-turbo-remote-read-isolation
+  title: "PR #953 — the Turbo remote-cache read gate probes only the cache variables"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-03T08:28:17Z"
+  mergeCommit: 484e24c2e984be3d6383ba6d86c493265fecb4f0
+  pr: 953
+  mechanismChanged: turbo-cache-inputs
+  hypothesis: >
+    OBSERVATIONAL: in checkouts whose environment carried an unrelated stale `op://`
+    reference, local Turbo lanes move from `--cache=local:rw` to remote cache reads, so
+    their cache-hit share rises and lane wall time falls; checkouts without such a
+    reference see no change.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "CONDITIONAL LEVER: the gate's decision changes only for a checkout whose environment held an unrelated unresolved `op://` value or failed `op whoami`. No journal records which checkouts were in that state, so a fleet-level before/after dilutes the effect."
+    - "MECHANISM READING: the decision that changes is the remote-cache read posture, not the hashed task inputs. turbo-cache-inputs covers it under P0 Ruling 4 (the cache-task-inputs reading of Ruling 6; the widened turbo-cache family sweeps commands/Cache, internal/cli/{TurboCache,EnvConfig}.ts and cache-warm.yml)."
+    - "CI is unaffected (the gate returns false when CI=true). The PR also removes the `op whoami` precondition and widens isUnresolvedSecretReference from a prefix test to a substring test, which also widens what the secret-session environment strips. The new environment-health warnings are instrumentation-only."
+  evidence:
+    - "gh pr view 953 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts:828 and :846 at HEAD 8b7392fe00 (canUseTurboCacheSecretSession probes turboCacheSecretSessionEnvironment(environment) only; :734 at 484e24c2e9; the prior probe at :570 of 484e24c2e9^ ran `op run -- /usr/bin/true` over the full environment)"
+    - "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts:322 at HEAD (unresolved-reference test is a substring match on op://; :260 at 484e24c2e9)"
+    - "standards/turbo-remote-cache.md:96 at HEAD ('an unrelated stale reference cannot disable remote reads'; :95-96 name TURBO_API, TURBO_TOKEN and TURBO_TEAM)"
+
+- id: iv-982-hosted-lint-unit-shards
+  title: "PR #982 — hosted Lint and Test Unit lanes split into partition shards"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-03T19:35:51Z"
+  mergeCommit: 9ee1e38ee98d89c66131abf2f38b442b3147ef7c
+  pr: 982
+  mechanismChanged: sharding
+  hypothesis: >
+    OBSERVATIONAL: the hosted Lint and Test Unit critical paths shorten (2 and 3 shards
+    behind always() aggregators), lowering TierCiMergeGreen time-to-certainty when either
+    is the slowest required lane, at the cost of five more hosted job slots per wave.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: hosted tier. A run is in the post-period only when the revision it runs includes mergeCommit (P0 Ruling 2). pull_request runs read check.yml from the PR merge ref, which GitHub builds against the current base, so landedAt approximates the boundary; a run started before landedAt keeps the single-job lanes."
+    - "HOSTED SHARDING (P0 Ruling 2): the hosted Lint and Test Unit lanes split into partition shards. Not hosted-runner-capacity: the runner class (ubuntu-24.04) and concurrency limit are unchanged, and five more job records per wave is demand, not supply. The --partition path is opt-in and no local tier passes it, so the local series is unaffected."
+    - "CONFOUNDED AT ONE INSTANT: lane-assembly (the shards are built from the committed LPT partition table with --only, behind always() aggregators that report the Lint and Test Unit contexts). HOSTED_16GB_TURBO_CONCURRENCY_ARG predates this PR and is reused, not new."
+    - "Later instants on the same matrix: #1195 (iv-1195-repo-cli-vitest-shards) splits the repo-cli partition into two Vitest shards; partition registrations such as #987 and #1387 carry no row (registration only)."
+  evidence:
+    - "gh pr view 982 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "P0 Ruling 2 (2026-10-05): hosted clause of graduation Ruling 6 amended; the same mechanisms qualify on the hosted tier"
+    - ".github/workflows/check.yml:345-355 and :458-468 at HEAD 8b7392fe00 (lint-shard and test-unit-shard matrices); :426 and :539 at HEAD (ci lane lint and test-unit with --partition)"
+    - "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts at HEAD (committed partition table; new in 9ee1e38ee9)"
+    - "explorations/beep-ci-operational-ontology/DECISIONS.md:1448-1451 at HEAD (graduation Ruling 6 criterion, whose hosted clause P0 Ruling 2 amends)"
+
+- id: iv-1007-deprecated-apis-tooling-shards
+  title: "PR #1007 — the deprecated-apis ESLint pass shards packages/tooling by subtree"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-04T03:09:20Z"
+  mergeCommit: 770a3dce10a741ddfe062a37a8830d618d0d5eb9
+  pr: 1007
+  mechanismChanged: sharding
+  hypothesis: >
+    OBSERVATIONAL: the single packages/tooling shard of the lint:deprecated-apis ESLint
+    pass, which exhausted the 8 GiB heap twice on hosted runners the night it landed, splits
+    into four subtree shards (25 to 28 shards, concurrency 4 unchanged), so heap-exhaustion
+    reds on hosted Heavy / Lint Policy and on local lint-policy runs fall; lane wall time is
+    not expected to move much.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local and hosted tiers (P0 Ruling 2). Locally a checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870); a hosted run is in the post-period only when its head includes mergeCommit. landedAt is the series partition point, never the fleet boundary."
+    - "PATH PER TIER AT THE MERGE: the sharded command was the lint:deprecated-apis repo-cli step in rootRepoLintPolicySteps, which ran it unconditionally. Locally it ran in the lint:policy and root lint step groups and in the pre-push quality:lint-policy lane; hosted Heavy / Lint Policy reached it through `ci lane lint-policy`, which runs `beep lint policy --full`. It was a repo-cli step, not a Turbo step."
+    - "LATER STATE: from #1079 (iv-1079-policy-lint-on-turbo) scoped local runs use per-package Turbo tasks that never read the shard list; at HEAD the shard runner runs only when CI=true or with --full and sweeps.deprecatedApis shards. #1389 (28b28fa551, 2026-10-02T18:58:02Z) later split packages/tooling/tool into tool/cli and tool/docgen, so the 28-shard list holds at 770a3dce10 and HEAD has 29 shards."
+    - "PRE-PERIOD: the commit message records two hosted heap-exhaustion reds the same night, so the pre-period hosted Lint Policy series carries those failures. ADJACENT INSTANT: iv-1006-wave-order lands 2 h 25 min later (2026-09-04T05:34:17Z) on the local tier."
+  evidence:
+    - "gh pr view 1007 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts at 770a3dce10, hunk at :72 (the packages/tooling shard becomes library, policy-pack, test-kit and tool); :48, :51 and :520-523 (concurrency 4; DEPRECATED_API_LINT_SHARDS; one eslint run per shard); :557 (the deprecated-apis command runs runDeprecatedApiLint)"
+    - "packages/tooling/tool/cli/test/lint-command.test.ts at 770a3dce10 (expectation 'running 25 shards with concurrency 4' becomes 'running 28 shards with concurrency 4')"
+    - "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2335, :2341, :2467 and :2536 at 770a3dce10 (rootRepoLintPolicySteps; the lint:deprecated-apis step; the lint:policy and lint groups); packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1432 at 770a3dce10 (the lint-policy lane runs `beep lint policy --full`); packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:267-270 at 770a3dce10 (pre-push quality:lint-policy)"
+    - ".github/workflows/heavy.yml:21 and :231-232 at 770a3dce10 (Heavy / Lint Policy runs `ci lane lint-policy`)"
+    - "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:67, :97-98, :644-647 and :786-787 at HEAD 8b7392fe00 (the shard list; the tool/cli and tool/docgen split; the shard runner; the CI or --full gate); packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2987-2989 at HEAD (full scope with sweeps shards runs `lint deprecated-apis --full`, otherwise the Turbo step)"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 2 (hosted clause amended), Ruling 5 (commands/Lint family)"
+
+- id: iv-1019-proof-reuse-key-narrowed
+  title: "PR #1019 — lane-proof reuse key stops hashing ambient settings for ordinary lanes (superseded by #1022)"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-09T00:51:25Z"
+  mergeCommit: 52fcc8d1353db9481ef9edb6cc9619500f95568d
+  pr: 1019
+  mechanismChanged: turbo-cache-inputs
+  hypothesis: >
+    OBSERVATIONAL: for about 1h50m, yeet proof lanes that do not set useLocalEnv could
+    reuse a stored proof after CI, GITHUB_ACTIONS, TURBO_CACHE, TURBO_FORCE, NODE_OPTIONS,
+    BEEP_DOCGEN_CONCURRENCY or BEEP_FC_* changed, so reuse share may rise and lane
+    executions fall in that window. The window is too short to read on its own.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "SHORT-LIVED: #1022 (ed66cbce8f, 2026-09-09T02:41:53Z) replaced this key about 1h50m later. Only a checkout whose HEAD includes 52fcc8d135 but not ed66cbce8f runs this key. Partition together with iv-1022-proof-reuse-key-full-env unless attempts fall inside that interval."
+    - "CACHE IDENTITY: the cache is Yeet's lane-proof store (.beep/yeet/lane-proofs.json, owned by LaneProofReuse.ts), not Turbo's cache; turbo-cache-inputs applies under the cache-task-inputs reading of Ruling 6. Reuse is active only on yeet proof steps. Direction: the change widened reuse for ambient-env lanes and left useLocalEnv lanes keyed as before."
+    - "Codex finding CSF-010 identifies this change as a correctness defect (a proof could be reused after a relevant setting changed). The PR title names none of this; the rest of the squash (schema-compiler hoists, test seams, an unused laneProofMode parameter) changes no decision."
+  evidence:
+    - "gh pr view 1019 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts:123-124 at 52fcc8d135 (the ambient environment is hashed only when useLocalEnv is true; before, eight named variables were hashed for every lane); the current key is :132-135 at HEAD 8b7392fe00, set by #1022"
+    - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:428 at HEAD (yeet proof steps default BEEP_YEET_LANE_PROOF_MODE to active; :414 at 52fcc8d135, unchanged by this PR)"
+    - "goals/codex-security-findings-2026-09-08/ops/triage.json:317-327 at HEAD (CSF-010)"
+
+- id: iv-1022-proof-reuse-key-full-env
+  title: "PR #1022 — lane-proof reuse key hashes the whole ambient environment"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-09T02:41:53Z"
+  mergeCommit: ed66cbce8f17111458f8b4801ec417d9adafaabd
+  pr: 1022
+  mechanismChanged: turbo-cache-inputs
+  hypothesis: >
+    OBSERVATIONAL: any difference in the ambient environment now invalidates a stored lane
+    proof for every lane that uses local env or is not an `op run turbo` command, which is
+    nearly every lane, so the reuse share in yeet proofs falls, more lanes execute, and
+    proof wall time on TierLocalFullProof rises.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "MASS INVALIDATION AT LANDING: every proof stored before the change carries a different envProfileHash, so all were invalidated at once. The key also differs across shells and sessions whose environments differ in any variable. Both effects confound reuse-rate before/after comparisons."
+    - "Parent state: at 52fcc8d135 (#1019) ordinary lanes hashed no ambient variables; before #1019, eight named variables were hashed for every lane."
+    - "CACHE IDENTITY: Yeet's lane-proof store, not Turbo. Reuse is active only on yeet proof steps; the standalone default is off. gate-selection is a defensible alternative label, because reuse decides whether a lane runs or is recorded as reused."
+    - "The title is misleading: the squash carries `fix(quality): hash complete ambient proof inputs` (the CSF-010 remediation); the rest is lint rules and docs. The effect on reuse hit rates was not measured."
+  evidence:
+    - "gh pr view 1022 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts:132-135 at HEAD 8b7392fe00 (useLocalEnv or turboEnvExtendsAmbient hashes stableRecordText(Bun.env); :125-127 at ed66cbce8f)"
+    - "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts:615 at HEAD (turboEnvExtendsAmbient; :519-522 at ed66cbce8f, the negation of isOpRunTurbo)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts:197-198 and packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:428 at HEAD (off by default; active on yeet proof steps)"
+    - "goals/codex-security-findings-2026-09-08/ops/triage.json:317-327 at HEAD (CSF-010)"
+
+- id: iv-1021-fallow-health-lane
+  title: "PR #1021 — a blocking fallow:health gate joins the pre-push, cheap-gates and CI-parity assemblies"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-09T03:33:07Z"
+  mergeCommit: 74efb548f16aa2c37f14cb3ea8b71ef47d2315ab
+  pr: 1021
+  mechanismChanged: lane-assembly
+  hypothesis: >
+    OBSERVATIONAL: local full proofs, pre-push waves, cheap-gates runs and the CI-parity
+    step run one more blocking gate (`fallow health --check`), so proof wall time rises
+    slightly and a new red class (health-envelope regressions) appears in local episodes.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "SECONDARY: the health gate flips from advisory to blocking (FALLOW_BLOCKING_LANES), which is a gate-selection reading; no selection predicate changes, and fallow:health is appended to every assembly unconditionally. It enters the cost-ordered ladder unseeded, so last, until #1049 seeds it."
+    - "Not counted: coverage `--write-baseline` runs now always use the sharded executor, but no proof tier passes `--write-baseline` (it appears only as a GateStaleness regenerateCommand), so this is not a sharding lever. The ONNX installer-mitigation step changes content inside the existing pre-push:security lane. HOSTED CO-MECHANISM (P0 Rulings 2 and 3): the hosted check.yml edits add the same health gate to hosted lane content; runner capacity is unchanged. For hosted runs the post-period is a run whose head includes mergeCommit (P0 Ruling 2)."
+  evidence:
+    - "gh pr view 1021 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:683-687 at HEAD 8b7392fe00 (fallow:health runs `fallow health --check --quiet`; :493-498 at 74efb548f1)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:724 and :821 at HEAD (fallow lanes in githubCheckPrePushLanes and the cheap-gates list); packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:412 at HEAD (the full tier uses githubCheckPrePushLanes)"
+    - "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1360 at HEAD (FALLOW_BLOCKING_LANES = audit, dead-code, health; :1210 at 74efb548f1)"
+
+- id: iv-1029-package-scripts-policy-checks
+  title: "PR #1029 — lint:package-scripts and lint:policy-fingerprint checks join lint:policy (C3.1)"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-09T08:00:35Z"
+  mergeCommit: f36be8586798aa1e9107a8cb6fc5a6cea133b2eb
+  pr: 1029
+  mechanismChanged: gate-selection   # P0 Ruling 3: a check step inside a lane is gate selection
+  hypothesis: >
+    OBSERVATIONAL: lint:policy and the root lint step group run two more blocking checks,
+    so a drifted package.json scripts block or a stale policy-tools fingerprint now turns
+    those lanes red, and lint wall time rises a little; no other association with the
+    tier KPI is expected.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: both tiers. Local: a checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870); landedAt is the series partition point, never the fleet boundary. Hosted: a run is in the post-period only when the revision it runs includes mergeCommit (P0 Ruling 2)."
+    - "GATE SELECTION under P0 Ruling 3: two unconditional entries (lint:package-scripts --check and lint:policy-fingerprint --check) join the static rootRepoLintPolicySteps catalog, adding two predicates that can turn a lane red. The step-group machinery and its concurrency (3), CiLane, check.yml, heavy.yml and turbo.json are unchanged; the PR defers Turbo registration (C3.2-C3.4) and lane rewiring (C3.5)."
+    - "TIER both: the hosted Lint Policy lane runs `beep lint policy --full`, which runs the same step list (P0 Ruling 2)."
+    - "CONSISTENCY: #1098 (iv-1098-effect-vitest-in-lint-policy) adds a step to the same list and is admitted on the same rule (P0 Ruling 3)."
+    - "The rewrite of 142 package.json files re-keys every package's Turbo hash once under unchanged `$TURBO_DEFAULT$` inputs; that is churn, not a new input definition. The per-package beep:doctest scripts and the BEEP_VITEST_DOCTEST branch in vitest.shared.ts are inert at this instant: turbo.json has no doctest task until #1102 (iv-1102-turbo-policy-plan)."
+  evidence:
+    - "gh pr view 1029 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "P0 Ruling 3: a check step inside an existing lane is gate selection"
+    - "P0 Ruling 2 (2026-10-05): hosted clause of graduation Ruling 6 amended; the same mechanisms qualify on the hosted tier"
+    - "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2548-2549, :2622 and :2691 at f36be85867 (the two repoCliStep entries; runStepGroup for lint:policy and lint)"
+    - "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1434 at f36be85867 and :1567 at HEAD 8b7392fe00 (hosted lint-policy runs `beep lint policy --full`)"
+    - "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2936-2938 at HEAD 8b7392fe00 (both checks now run as Turbo policyCheapTasks, after #1102)"
+    - "turbo.json at f36be85867 (no doctest task)"
+
+- id: iv-1050-heavy-pool-on-demand
+  title: "PR #1050 — the heavy CI pool moves from Spot to On-Demand (applied 2026-09-09)"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-09T09:13:51Z"
+  mergeCommit: de84d4218e935d1dae6519a9d537ba9468b18eff
+  pr: 1050
+  mechanismChanged: hosted-runner-capacity
+  hypothesis: >
+    OBSERVATIONAL: heavy runners stop being reclaimed mid-job, so runner-loss failures and
+    reruns on heavy lanes fall and the long tail of TierCiMergeGreen episodes shortens, at a
+    higher cost per runner hour; the 14-runner cap is unchanged.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: hosted tier (P0 Ruling 2). The heavy pool is shared fleet state, so membership follows runner launch time, not the run's head: a heavy job whose runner launched after landedAt ran On-Demand whatever its head, and one whose runner launched before ran on Spot even when its head includes mergeCommit."
+    - "LANDED AT THE RECORDED APPLY: landedAt is the instant the runbook records for the out-of-repo production apply ('The scale-up Lambda changed at 09:13:51 UTC and reported On-Demand capacity with cap 14'), 64 minutes before the merge at 2026-09-09T10:18:04Z; the PR is the record."
+    - "SUPERSEDED: the PR calls On-Demand the permanent posture, but the 2026-09-15 containment (iv-1141-heavy-pool-containment) returned the pool to Spot with a two-runner cap, so the On-Demand period ends there. At HEAD the source reads spot and cap 2, set by #1141 and kept by #1364, not by this row."
+    - "Not counted: the aws.kms.Grant blocks restore decryption for the termination-cleanup Lambdas, a cleanup permission that decides no capacity. SAME-DAY HOSTED INSTANTS: iv-1053-check-typechecks-tests (11:50:17Z) and iv-1064-heavy-build-dispatch (18:53:05Z), so a 2026-09-09 hosted before/after window crosses three rows."
+  evidence:
+    - "gh pr view 1050 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "infra/src/CiFleetController.ts:927 at de84d4218e (instance_target_capacity_type on-demand; spot at :929 of de84d4218e^1); :979 (runners_maximum_count 14, as at :981 of de84d4218e^1)"
+    - "docs/runbooks/ci-runner-reliability.md:98-100 at de84d4218e (:298-300 at HEAD 8b7392fe00): the initial production apply, with the scale-up Lambda changed at 09:13:51 UTC to On-Demand capacity and cap 14; :3-5 at de84d4218e (On-Demand posture chosen 2026-09-09; the 14-instance cap kept)"
+    - "infra/src/CiFleetController.ts:1023 at de84d4218e (aws.kms.Grant for the termination-cleanup Lambda roles)"
+    - "infra/src/CiFleetController.ts:949 and :998 at HEAD 8b7392fe00 (spot; runners_maximum_count 2)"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 5 names #1050 among the missed hosted-capacity levers"
+
+- id: iv-1053-check-typechecks-tests
+  title: "PR #1053 — every package check typechecks its test files"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-09T11:50:17Z"
+  mergeCommit: c12c6ae651a3facc3f6e6a5190fd84670ef8a014
+  pr: 1053
+  mechanismChanged: gate-selection
+  hypothesis: >
+    OBSERVATIONAL: the Turbo check task fails on test-file type errors in 64 packages, so a
+    new red class appears in hosted Heavy / Check, which had no test-file typecheck before,
+    and check wall time rises by the test-typecheck cost on cache misses. Locally the
+    quality:check lane gains the same predicate, but the existing test-tsgo lanes already
+    typechecked test files, so the local change is lane-level redundancy, not new coverage.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local and hosted tiers (P0 Ruling 2). Locally a checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870); a hosted run is in the post-period only when its head includes mergeCommit. landedAt is the series partition point, never the fleet boundary."
+    - "GATE SELECTION (P0 Ruling 3): a new check step inside an existing lane. 64 packages rewire beep:check to end in `bun run beep:check:tests`; 63 run `tsgo -p tsconfig.test.json --noEmit` over 63 new tsconfig.test.json files, and @beep/infra runs `tsgo -p test/tsconfig.json --noEmit`. turbo.json check inputs are unchanged and already include test files, so this is not a turbo-cache-inputs change."
+    - "INCIDENTAL FAMILY MATCH: infra/lambda/turbo-cache, the only turbo-cache-family file touched, gains a check script that runs `bun run typecheck`, but it is not a root workspace, so no Turbo lane runs it; it is the 65th remediated blind-spot entry (66 findings to 1, @beep/repo-cli deferred). packages/foundation/modeling/md also moves its src check to a new tsconfig.check.json."
+    - "CONFOUNDED: #1049 (iv-1049-quality-lanes-pr1, bed30c6adf, 2026-09-09T12:04:17Z, 14 minutes later) added the test-tsgo coverage partition, which reads these check scripts and stops dispatching covered packages from the test-tsgo aggregate; for those 14 minutes local runs typechecked test files twice. At KPI resolution the two rows share one partition point. SAME-DAY HOSTED INSTANTS: iv-1050-heavy-pool-on-demand (09:13:51Z) and iv-1064-heavy-build-dispatch (18:53:05Z)."
+  evidence:
+    - "gh pr view 1053 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/drivers/duckdb/package.json:33 and :39 at c12c6ae651 (beep:check ends in `bun run beep:check:tests`; beep:check:tests runs `tsgo -p tsconfig.test.json --noEmit`); infra/package.json:33-34 at c12c6ae651 (test/tsconfig.json); infra/lambda/turbo-cache/package.json:10 at c12c6ae651 (new check script); package.json:419 at c12c6ae651 (workspaces list infra, not infra/lambda/turbo-cache)"
+    - "turbo.json:118-122 at c12c6ae651 (check inputs `$TURBO_DEFAULT$` and `!.beep/**`, unchanged by this PR)"
+    - ".github/workflows/heavy.yml:26 and :228-229 at c12c6ae651 (Heavy / Check runs `ci lane check`); packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1317 at c12c6ae651 (the check lane runs the Turbo check task)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:284-293 at 03faddd538, the merge parent (hosted Check is affected-scoped and suppresses the repo-wide test extras, which stay local lanes such as quality:check:tsgo-tests)"
+    - "packages/foundation/modeling/md/package.json:31 at c12c6ae651 (beep:check now runs tsgo over tsconfig.check.json; `tsgo -p tsconfig.json --noEmit` at c12c6ae651^1)"
+    - "standards/test-typecheck.blindspot-baseline.jsonc at c12c6ae651 (total_findings 1, @beep/repo-cli deferred; 66 findings at 03faddd538)"
+    - "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts:1742-1763 at HEAD 8b7392fe00 (partitionTestTsgoPackageGroupsByCoverage; absent at c12c6ae651, first on main at bed30c6adf)"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 2 (hosted clause amended); Ruling 3 (a check step inside a lane is gate selection); admitted on that ruling's pattern: the criterion refuter upheld the row and only facts were corrected, as applied here"
+
+- id: iv-1049-quality-lanes-pr1
+  title: "PR #1049 — quality-lane audit PR-1: test tasks depend on ^transit, duplicate lanes removed, doctest joins pre-push"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-09T12:04:17Z"
+  mergeCommit: bed30c6adf3beed7de8538209fbdc84d26a3b8ce
+  pr: 1049
+  mechanismChanged: lane-assembly
+  hypothesis: >
+    OBSERVATIONAL: local proofs drop the duplicate test-tsgo and tsgo-rules lanes and gain
+    quality:doctest, while `--affected` selection after a one-file identity edit grows from
+    1 to 138 test tasks and shrinks from 140 to 1 lint task (PR body). The expected
+    association is a change in the composition of local lane wall time, with test work up
+    and lint work down; the net direction is not predicted.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "CONFOUNDED AT ONE INSTANT: turbo-cache-inputs (test and test:property gain a ^transit dependency; lint loses ^lint and lint:fix loses ^lint:fix; the audit task's env drops CI), gate-selection (test-tsgo skips packages that their own check script covers; the Property Laws sweep narrows to fast-check files; six manifests drop test:property) and ordering (WaveOrder seeds quality:doctest and fallow:health, which takes fallow:health off the unseeded tail where #1021 left it)."
+    - "SYNTHESIS CORRECTION (2026-10-05): the classification also tagged early-stop because cheap-gates now runs 4 lanes per chunk. Cheap-gates runs collect-all both before and after this PR, and pre-push runs one lane per chunk, so no early-stop decision changed; chunking bounds cheap-gates parallelism, which is lane assembly."
+    - "The title is a merge-branch subject; the PR is the quality-lane audit's PR-1."
+  evidence:
+    - "gh pr view 1049 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "turbo.json:345-346 and :380-381 at HEAD 8b7392fe00 (test and test:property depend on ^transit); turbo.json:306 at HEAD (lint has no ^lint dependency; ^lint at :98 of bed30c6adf^1)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:643 at HEAD (tier concurrency: cheap-gates 4, pre-push 1); packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2177 at HEAD (waves run in chunksOf(concurrency))"
+    - "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts:1115 at HEAD (cheap-gates failure policy collect-all; the same at bed30c6adf^1 and bed30c6adf)"
+    - "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts:311 and :371 at HEAD (seed rows for quality:doctest and fallow:health; :214 and :255-256 at bed30c6adf)"
+    - "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts:2675-2676 at bed30c6adf (test-tsgo reports packages skipped as already covered by their check script)"
+
+- id: iv-1054-storybook-config-typecheck-lanes
+  title: "PR #1054 — quality:storybook and repo-sanity:config-typecheck join pre-push; the Storybook lane is gated on Turbo's affected set"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-09T13:46:50Z"
+  mergeCommit: d68f1a11dd41579660a6c72f3d3e060d6b61352d
+  pr: 1054
+  mechanismChanged: lane-assembly
+  hypothesis: >
+    OBSERVATIONAL: local pre-push waves gain two lanes and lint:policy gains a
+    tsconfig-overlay step, so proof wall time rises for change sets that select
+    @beep/storybook; change sets outside Turbo's affected set skip the Storybook lane and
+    pay only the config-typecheck cost.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "CONFOUNDED: gate-selection (the Storybook lane runs a `turbo run storybook:build --affected --dry-run=json` probe and skips when @beep/storybook is not selected) and ordering (new WaveOrder seed rows for the two new lanes only; no existing lane is reordered, so ordering is secondary)."
+    - "Local `beep ci` also changes: storybook joins CI_LOCAL_DEFAULT_LANES and CI_LOCAL_FAST_SKIPS, and the local build replay becomes affected-scoped."
+    - "HOSTED SIDE EFFECT: PR Build, enabled here, queued with no eligible runner until #1064 (iv-1064-heavy-build-dispatch, c5b5a6c1e2, 2026-09-09T18:53:05Z; admitted under P0 Ruling 2) moved it into heavy.yml, because the beep-ec2-heavy runner group admits only @main workflows. Hosted metrics that wait on all checks are inflated in that interval. QualityScheduler.ts only loses an unused describe field."
+  evidence:
+    - "gh pr view 1054 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:460-464 and :556-560 at HEAD 8b7392fe00 (quality:storybook; repo-sanity:config-typecheck)"
+    - "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1827 and :1878 at HEAD (resolveStorybookLaneAffected; the skip when Storybook is not selected; :1778 at d68f1a11dd); packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:2344 at HEAD (storybook in CI_LOCAL_DEFAULT_LANES)"
+    - "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts:240 and :328 at HEAD (seed rows; :185 and :230-231 at d68f1a11dd); packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2991 at HEAD (lint:tsconfig-overlay step)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:109-113 at d68f1a11dd (the pre-push CI lane plan is affected, so the probe runs at pre-push)"
+
+- id: iv-1061-docgen-full-proof-metadata-check
+  title: "PR #1061 — the full docgen proof runs the JSDoc metadata check before it generates"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-09T17:45:48Z"
+  mergeCommit: 5bd8c7f4b6c6d9393d0dcff62b1eacb9ae06a0dd
+  pr: 1061
+  mechanismChanged: gate-selection
+  hypothesis: >
+    OBSERVATIONAL: full docgen proofs start failing, before Turbo starts, on missing required
+    JSDoc tags or non-canonical @category values in any package whose docgen.json has the
+    canonical outDir, so metadata debt that used to merge green on main and fail the next
+    pull request's scoped check now turns hosted Heavy / Docgen red on push to main and fails
+    local full runs; scoped pull-request runs are unchanged.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local and hosted tiers (P0 Ruling 2). Locally a checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870); a hosted run is in the post-period only when its head includes mergeCommit. landedAt is the series partition point, never the fleet boundary."
+    - "HOSTED, PUSH TO MAIN ONLY: on pull_request events Heavy / Docgen runs `ci lane docgen --mode auto`, which runs docgen:local --base/--head without --allow-full; a full-required plan exits at 'full docgen proof required' and never reaches runFullDocgen, and the scoped path already ran checkPackageDocumentation. Only non-pull_request Heavy runs (Check on push to main) take the full path. Locally the full path is `bun run docgen`, `beep ci lane docgen --mode full`, a `ci local` replay whose plan is not affected, and Yeet's feedback:docgen step."
+    - "GATE BY P0 RULING 3: the PR adds a check step inside the existing full docgen lane, a predicate that can turn it red, which P0 Ruling 3 files as gate selection. The @category renames, the three inherited bare re-exports fixed so main stays green after the merge, and the tests are instrumentation-only. The first pass classified the PR on its category renames; P0 Ruling 7 ordered this re-review of the Docgen/internal/Local.ts hunk."
+    - "LATER INSTANTS ON THE SAME CHECK: iv-1080-api-docs-docgen-config-removed (2026-09-10T07:48:11Z) took @beep/api-docs out of the checked population 14 hours later; iv-1389-deprecated-apis-tool-shards (2026-10-02T18:58:02Z) stopped re-export declarations from feeding checkPackageDocumentation, which narrows what this check can fail on from that instant."
+  evidence:
+    - "gh pr view 1061 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts:988-993 at 5bd8c7f4b6 (runFullDocgen calls `discoverFullMetadataCheckPackages(parallel)` then `checkPackageDocumentation(packages, parallel)` before the full Turbo step); :978-986 (configured packages, non-canonical outDir skipped); :867-883 (checkPackageDocumentation fails with 'docgen:local JSDoc check failed'); :956-963 at 5bd8c7f4b6^ (runFullDocgen opened with the full Turbo step)"
+    - "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocAnalysis.ts:28 at 5bd8c7f4b6 (DOCGEN_REQUIRED_TAGS: @category, @example, @since); PR #1061 body (the scoped check covers required tags and canonical @category values; the full proof ran only Turbo docgen and the aggregate)"
+    - "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1167-1174 at 5bd8c7f4b6 (auto and affected run docgen:local --base/--head; full runs root script `docgen`); package.json:369 (`\"docgen\": \"bun run beep docgen local --full\"`); Docgen/internal/Local.ts:1355-1358 (a full-required plan without --allow-full fails) and :1190-1191 (the scoped path's existing check)"
+    - ".github/workflows/heavy.yml:3-4 and :211-216 at 5bd8c7f4b6 (workflow_call only; pull_request runs --mode auto, other events --mode full); .github/workflows/check.yml:3-7 and :51 (Check calls Heavy on pull_request and on push to main)"
+    - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:338 at 5bd8c7f4b6 (feedback:docgen runs `bun run docgen`); packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:2557 (a `ci local` replay passes `--mode full` when the plan is not affected)"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 2 (hosted clause amended), Ruling 3 (a check step inside a lane is gate selection), Ruling 7 (re-review of #1061)"
+
+- id: iv-1064-heavy-build-dispatch
+  title: "PR #1064 — the PR Build lane is dispatched from heavy.yml so pull requests get a heavy runner"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-09T18:53:05Z"
+  mergeCommit: c5b5a6c1e2d970dd424dbe5ae940cecc5292511e
+  pr: 1064
+  mechanismChanged: lane-assembly
+  hypothesis: >
+    OBSERVATIONAL: PR runs stop carrying a Build check that queued indefinitely, so any
+    hosted metric that waits on all checks falls from unbounded to the Build lane's
+    runtime; Build now competes for heavy-fleet slots on every PR.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: hosted tier. A run is in the post-period when the workflow revision it executes includes mergeCommit (P0 Ruling 2). check.yml calls heavy.yml@main, so every run started after landedAt dispatches Heavy / Build whatever its PR head; landedAt is the fleet boundary here. A pull_request run whose merge ref predates mergeCommit also still declares the old check.yml Build job, which never receives a runner."
+    - "HOSTED LANE ASSEMBLY (P0 Ruling 2): the PR moves an existing job into the heavy.yml matrix so that the beep-ec2-heavy runner group, which admits only heavy.yml@main and check.yml@main, gives it a runner. Not hosted-runner-capacity: fleet supply is unchanged (Build requested beep-ec2-heavy before and after), and runner-group eligibility is not supply. Build stayed required: false, so no merge gate changed."
+    - "EARLIER INSTANT: #1054 (iv-1054-storybook-config-typecheck-lanes, d68f1a11dd, 2026-09-09T13:46:50Z) enabled PR Build in check.yml, where it queued with no eligible runner; this row closes that interval."
+    - "At the merge, heavy.yml always ran on beep-ec2-heavy; the admission-dependent runs-on (heavy.yml:34 at HEAD) came later with #1165 (iv-1165-heavy-skip-satisfied)."
+  evidence:
+    - "gh pr view 1064 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "P0 Ruling 2 (2026-10-05): hosted clause of graduation Ruling 6 amended; the same mechanisms qualify on the hosted tier"
+    - ".github/workflows/heavy.yml:79-84 and :235 at HEAD 8b7392fe00 (runner-group comment; build matrix entry; dispatch case); packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:536 at HEAD (contextName Heavy / Build; required false at :537)"
+    - ".github/workflows/check.yml:130 at HEAD (heavy.yml called @main); .github/workflows/check.yml:821 and :827 at c5b5a6c1e2^1 (the removed check.yml build job, runs-on beep-ec2-heavy)"
+
+- id: iv-1079-policy-lint-on-turbo
+  title: "PR #1079 — ESLint policy tasks move onto Turbo with a fingerprint root task (C3.2)"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-10T06:49:51Z"
+  mergeCommit: 117583a01b45902776f94b64901977b3f8836a2e
+  pr: 1079
+  mechanismChanged: turbo-cache-inputs
+  hypothesis: >
+    OBSERVATIONAL: on scoped local lint-policy runs, deprecated-API and JSDoc policy lint
+    become cached per-package Turbo tasks run `--affected` at concurrency 4 instead of 28
+    subtree shards plus a root `eslint .`, so lint-policy wall time falls on cache hits and
+    narrow change sets, and a checker edit invalidates every policy task through the
+    fingerprint dependency.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "LOCAL ONLY: under CI (runFull = full || isCi()) the merged code keeps the shard runner and `eslint .`; the PR body's claim that the shard runner retires does not match the merged code."
+    - "CONFOUNDED: lane-assembly (the scoped lint-policy plan swaps shard steps for bounded Turbo steps), gate-selection (`--affected` under the caller's TURBO_SCM_BASE selects packages) and sharding (the 28 DEPRECATED_API_LINT_SHARDS give way to per-package tasks; the weakest of the four tags)."
+    - "Later instants on the same plan: #1083 adds standards/lint-policy.sweeps.jsonc (excluded: it ships `shards`, matching existing behavior; the file is inside the widened lane-assembly family, P0 Ruling 5) and #1102 (iv-1102-turbo-policy-plan) rebuilds the plan as ordered Turbo phases. StepExec now fails a step that exits after its deadline on both tiers; that judges step outcomes and is not a named mechanism."
+  evidence:
+    - "gh pr view 1079 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "turbo.json:79 and :185 at HEAD 8b7392fe00 (lint:deprecated-apis; //#lint:policy-fingerprint root task; :58-113 at 117583a01b)"
+    - "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2901 and :2976-2989 at HEAD (deprecatedApisTurboStep; policyLintTurboStep phases; full-sweep switch)"
+    - "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2551-2569, :2592, :2603 and :2712 at 117583a01b (policyLintTurboStep adds --affected and concurrency; scoped base selects the Turbo steps; runFull = full || isCi())"
+
+- id: iv-1080-api-docs-docgen-config-removed
+  title: "PR #1080 — the stray apps/labs/api-docs docgen.json is deleted, so Docgen stops checking and aggregating @beep/api-docs"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-10T07:48:11Z"
+  mergeCommit: 43a625dacd5f934e26e5eccfac20c244d8171faf
+  pr: 1080
+  mechanismChanged: gate-selection
+  hypothesis: >
+    OBSERVATIONAL: scoped Docgen runs whose changes reach @beep/api-docs through its
+    dependencies (such as @beep/identity) stop failing in aggregation on a lab package that
+    has no docgen script, so that class of Heavy / Docgen pull-request reds and the matching
+    local docgen:local reds disappears; full proofs stop checking @beep/api-docs JSDoc
+    metadata. Runs whose changes never reach api-docs are unchanged.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local and hosted tiers (P0 Ruling 2). Locally a checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870); a hosted run is in the post-period only when its head includes mergeCommit. landedAt is the series partition point, never the fleet boundary."
+    - "WHAT CHANGED: Turbo's `--filter=...<pkg>` scope did not change; the post-fix Heavy / Docgen log still lists `@beep/api-docs [MISS]` among the expanded Turbo packages and in 'Packages in scope'. What changed is the configured-package intersection that resolveTurboTaskPackages builds (a workspace counts only with a docgen.json): it drives proof-manifest verification and aggregation, which went from 128 to 127 packages. The full proof's metadata-check population (configured packages with a canonical outDir; the deleted file had `\"outDir\": \"docs\"`) lost api-docs the same way."
+    - "HOSTED BEFORE AND AFTER ON THE PR BRANCH: Heavy / Docgen on 92a773a8ee (the identity fix alone) concluded failure in aggregation (job 102774348982: 'Package \"@beep/api-docs\" does not have generated docs'); on d0a56c26c9, the commit that deletes the file, it concluded success (job 102779417390: 'aggregated 126 of 127 package(s)')."
+    - "MECHANISM READING: the change alters which packages existing Docgen steps check and can fail on (affected scoping), which the vocabulary files as gate-selection. P0 Ruling 7 places the docgen.json path in the lane-assembly family, a path family rather than a mechanism; lane-assembly is the alternative reading if the aggregation set is read as step assembly, not a co-mechanism."
+    - "BUNDLED WITH AN UNRELATED FIX: the deletion is the squashed second commit (d0a56c26c9) of a PnLocal lone-backslash fix in @beep/identity, which changes no CI mechanism. The PR reaches the census only through the `:(glob)**/docgen.json` pathspec (P0 Ruling 7). ADJACENT INSTANT: iv-1061-docgen-full-proof-metadata-check (2026-09-09T17:45:48Z) added the full-proof check whose population this row shrinks; #1085 (2026-09-10, excluded) later added a labs guard to docgen discovery that found no lab docgen.json left on main."
+  evidence:
+    - "gh pr view 1080 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "git show --stat 43a625dacd: apps/labs/api-docs/docgen.json deleted (34 lines); commit message of the squashed d0a56c26c9: the stray config made the Heavy / Docgen PR lane 'select @beep/api-docs into aggregation whenever a foundation dependency was touched' and 'aggregation failed with no generated docs'"
+    - "apps/labs/api-docs/docgen.json:5 at 43a625dacd^ (`\"outDir\": \"docs\"`); apps/labs/api-docs/package.json at 43a625dacd^ (no docgen script; :36 depends on @beep/identity)"
+    - "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts at 43a625dacd: :165 (`--filter=...${pkg.name}`); :452-461 (discoverConfiguredPackages keeps hasDocgenConfig packages); :765-779 (resolveTurboTaskPackages intersects the Turbo tasks with configured packages); :1171-1182 (that set drives proof-manifest verification); :1203-1204 (aggregation); :978-993 (the full proof's metadata check over configured packages with a canonical outDir)"
+    - "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1168-1177 at 43a625dacd (auto and affected run docgen:local --base/--head; full runs docgen); .github/workflows/heavy.yml:249 and :251 (pull_request --mode auto, other events --mode full); packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts:988-993 (dev:docgen-local runs docgen:local)"
+    - "GitHub Actions jobs 102774348982 (Heavy / Docgen on 92a773a8ee, failure, 'aggregating 128 package(s)') and 102779417390 (on d0a56c26c9, success, 'aggregated 126 of 127 package(s)'), read with gh api repos/beep-effect/beep-effect/actions/jobs/<id>/logs (2026-10-05)"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 2 (hosted clause amended), Ruling 7 (docgen.json pathspec; third pass)"
+
+- id: iv-1067-effect-vitest-cheap-gate
+  title: "PR #1067 — the lint:effect-vitest gate joins the cheap-gates lane list"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-10T22:38:37Z"
+  mergeCommit: 955528adb46b8f62d311f5e06db2acfa9642aa08
+  pr: 1067
+  mechanismChanged: lane-assembly
+  hypothesis: >
+    OBSERVATIONAL: local cheap-gates proofs run one more gate (`beep lint effect-vitest`),
+    so cheap-gates wall time rises slightly and a new red class (effect-vitest inventory
+    drift) appears.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "ADJACENT INSTANT: #1068 (2086a0a090) landed 16 s later, at 2026-09-10T22:38:53Z. At KPI resolution the two rows share one partition point; do not attribute a shift to either alone."
+    - "No ordering or early-stop effect: cheap-gates is never cost-ordered (the Planner orders only the full tier) and runs collect-all. gate-selection holds only as a secondary reading; no selection predicate changed."
+    - "Only GithubChecks.ts and a one-line LintRouting.ts subcommand registration fall in the swept families; the rest of the 496-file PR (detector, baseline, instrumented runner, charters) makes no scheduling decision."
+  evidence:
+    - "gh pr view 1067 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:793-797 at HEAD 8b7392fe00 (lint:effect-vitest in githubCheckCheapGateLanes; :709 at 955528adb4)"
+    - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:413 and :422 at HEAD (cheap-gates composes githubCheckCheapGateLanes; only the full tier is cost-ordered)"
+    - "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts:1115 at HEAD (cheap-gates runs collect-all)"
+
+- id: iv-1068-cache-policy-gate
+  title: "PR #1068 — quality:cache-policy gate joins repo-sanity and cheap-gates; lint caching off for identity and types"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-10T22:38:53Z"
+  mergeCommit: 2086a0a090c1ed441cc5099defda4acbd53a2ee0
+  pr: 1068
+  mechanismChanged: lane-assembly
+  hypothesis: >
+    OBSERVATIONAL: local pre-push repo-sanity and cheap-gates runs gain the
+    quality:cache-policy gate (last in the cost-ordered ladder until #1269 seeds it), and
+    @beep/identity and @beep/types lint stop replaying from the Turbo cache, so local
+    proof wall time rises slightly.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "PROMOTED (P0 Ruling 4, 2026-10-05) from a landing-instant caveat on iv-1006-wave-order, which covered only the ordering side effect. The gate addition and the Turbo change are recorded here."
+    - "CO-MECHANISM turbo-cache-inputs: package-local turbo.json files switch the lint task from cache true (root) to cache false for @beep/identity and @beep/types. Identity's rewritten inputs and BEEP_CACHE_TOOLCHAIN_DIGEST env are inert while caching is off, and its ^lint dependency adds a task-graph edge."
+    - "Ordering is not a mechanism of this row: WaveOrder.ts is not in the PR, and the lane ran last only through the existing rule that sorts unseeded lanes last. #1269 (iv-1269-cache-policy-seed) later seeds it (rank 19 at b2a654bc43; rank 20 at HEAD after #1380)."
+    - "ADJACENT INSTANT: #1067 landed 16 s earlier; the two share one partition point."
+    - "FAMILY: the package turbo.json files are inside the widened turbo-cache family (P0 Ruling 5); the first pass reached #1068 through the Quality and Cache command paths. HOSTED CO-MECHANISM (P0 Ruling 2): the hosted Repo Sanity lane also gains the gate; runner capacity is unchanged. For hosted runs the post-period is a run whose head includes mergeCommit (P0 Ruling 2)."
+  evidence:
+    - "gh pr view 1068 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:570-574 and :757-761 at HEAD 8b7392fe00 (quality:cache-policy in githubCheckRepoSanityLanes and githubCheckCheapGateLanes; :537 and :687 at 2086a0a090)"
+    - "packages/foundation/modeling/identity/turbo.json:5-7 and packages/foundation/primitive/types/turbo.json:6 at HEAD (lint cache false; identity lint depends on ^lint)"
+    - "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts:350-351 at 2086a0a090 (unseeded lanes sort last)"
+    - "explorations/beep-ci-operational-ontology/research/control-interventions.yaml:83 (the existing iv-1006 caveat)"
+
+- id: iv-1098-effect-vitest-in-lint-policy
+  title: "PR #1098 — the effect-vitest ratchet runs inside lint:policy"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-12T05:45:35Z"
+  mergeCommit: dde5a31837e48d961509cbe03d26497c89a5277a
+  pr: 1098
+  mechanismChanged: gate-selection   # P0 Ruling 3: a check step inside a lane is gate selection
+  hypothesis: >
+    OBSERVATIONAL: the local pre-push quality:lint-policy lane now runs the effect-vitest
+    ratchet (about 8-10 s), which previously ran only in cheap-gates, so pre-push wall
+    time rises slightly and inventory-drift reds surface in pre-push episodes as well as
+    in cheap-gates.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "GATE SELECTION under P0 Ruling 3: the ratchet already ran in the cheap-gates lane before the merge (GithubChecks.ts:723-727 at dde5a31837^1); adding it to the lint:policy step list adds a predicate that can turn the pre-push lane red."
+    - "CONSISTENCY: #1029 (iv-1029-package-scripts-policy-checks) adds two steps to the same step list and is admitted on the same rule (P0 Ruling 3)."
+    - "TIER both: the hosted Lint Policy lane (`beep lint policy --full`) also gains the step (P0 Ruling 2). For hosted runs the post-period is a run whose head includes mergeCommit (P0 Ruling 2). The grouped-by-file report and inventory refresh are instrumentation."
+  evidence:
+    - "gh pr view 1098 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2997 at HEAD 8b7392fe00 (lint:effect-vitest in rootRepoLintPolicySteps; :2993-2994 cite its cost; :2666 at dde5a31837)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:356-360 at HEAD (local pre-push quality:lint-policy lane; :331-335 at dde5a31837)"
+    - "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1567 at HEAD (hosted lint-policy runs `beep lint policy --full`)"
+
+- id: iv-1112-coverage-fixture-owners
+  title: "PR #1112 — the coverage --affected planner maps more fixture paths to owner packages"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-12T12:57:03Z"
+  mergeCommit: 441b31f668fc4949307b9f7dae299a5d8350e6aa
+  pr: 1112
+  mechanismChanged: gate-selection
+  hypothesis: >
+    OBSERVATIONAL: change sets that touch scripts/, the five registered .claude/hooks
+    scripts, biome.jsonc or the two registered standards/*.jsonc files now scope coverage
+    to an owner package instead of a full sharded run, so coverage wall time falls for
+    them; goals/ fixture edits such as the capability atlas now run coverage instead of
+    skipping it, so those rise.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: both tiers. Local: a checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870); landedAt is the series partition point, never the fleet boundary. Hosted: a run is in the post-period only when the revision it runs includes mergeCommit (P0 Ruling 2)."
+    - "GATE SELECTION (P0 Ruling 3): the coverage planner's full/selected/noop decision changes for whole classes of change sets. The path reaches the local tier through the yeet full:ci-parity step (`ci local --affected`), and the same planner scopes hosted Heavy / Coverage Regression on pull-request runs (P0 Ruling 2); hosted-runner capacity is unchanged."
+    - "SCOPE OF THE CHANGE: before #1112 the capability-atlas path matched the goals/ noop prefix, so coverage skipped it. Only scripts/, biome.jsonc, the five named .claude/hooks/*.sh files and the two named standards/*.jsonc files leave the full fallback; other .claude/hooks and standards/*.jsonc files still hit it. The fixture-owner check already ran before the noop check; #1112 moved the owner package.json identity check ahead of it. The behavior change comes from the new table entries."
+    - "MECHANISM is gate-selection only: the shard planner is untouched, and full-sharded versus single-invocation execution follows from the scope decision. Fixture consumers must now be measurable owners, so a labs consumer now forces a full run. The dependents-on-full-plans and selector-topology parts affect only the baseline writer and the Vitest worker count."
+  evidence:
+    - "gh pr view 1112 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "P0 Ruling 3 (2026-10-05): #1102, #1112 and #1269 admitted"
+    - "P0 Ruling 2 (2026-10-05): hosted clause of graduation Ruling 6 amended; the same mechanisms qualify on the hosted tier"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts:73-97 at HEAD 8b7392fe00 (fixture-owner table: capability atlas, standards jsonc files, .claude/hooks scripts, biome.jsonc, scripts/, db-admin)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts:66, :589-597 and :602 at 614910901c (parent: goals/ noop prefix; fixture check first; no current workspace owner)"
+    - "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:916-948 at 441b31f668 (noop skip versus run); packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:445 at HEAD (ciParityStep; :460 at 441b31f668)"
+    - ".github/workflows/heavy.yml:229 at HEAD (pull-request heavy lanes pass --affected --base); packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1297 at HEAD (the coverage root script receives those shape args)"
+
+- id: iv-1102-turbo-policy-plan
+  title: "PR #1102 — doctest, the root sublanes and the lint-policy plan move onto Turbo tasks (C3.3-C3.6)"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-12T23:26:03Z"
+  mergeCommit: e08b24b0042c0c1bbd274de49407e8bade354575
+  pr: 1102
+  mechanismChanged: lane-assembly
+  hypothesis: >
+    OBSERVATIONAL: local lint-policy runs become cached, ordered Turbo phases that stop
+    after a red cheap phase, and the pre-push doctest lane runs a cached `turbo run
+    doctest` instead of a file-affected selection, so warm-cache lint-policy and doctest
+    wall time falls and red cheap-phase runs end earlier.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: both tiers. Local: a checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870); landedAt is the series partition point, never the fleet boundary. Hosted: a run is in the post-period only when the revision it runs includes mergeCommit (P0 Ruling 2); the heavy.yml Doctest edit is the exception, because heavy.yml is called @main and every run started after landedAt executes it."
+    - "TURBO TASKS: turbo.json gains a cached doctest task and 38 root (//#) tasks with declared inputs (41 root-task keys at mergeCommit, 3 at its parent); a raw count of `//#` strings also picks up 40 references to //#lint:policy-fingerprint."
+    - "CONFOUNDED AT ONE INSTANT: turbo-cache-inputs (the cached doctest task and 38 root tasks), ordering (the static LPT list at concurrency 3 becomes sequential phases), early-stop (a local non-full run stops after a red lint:policy:cheap phase; jsdoc-ratchet skips its inventory compare after a failed scan) and gate-selection (pre-push doctest drops `--mode affected --base`, trading a file-affected skip for Turbo hash caching; lint-policy's changed-scope --include filtering gives way to Turbo affected-from-base)."
+    - "TIER both (P0 Ruling 2): the heavy.yml Doctest edit removes the pull-request affected gate that could set should_run=false and the --mode flag (hosted gate selection), and hosted lint-policy collects every phase instead of stopping after a red cheap phase (hosted lane assembly); hosted-runner capacity is unchanged. The C3.6 lane-digest and yeet status parts, and the comment-only WaveOrder.ts edits, are instrumentation."
+  evidence:
+    - "gh pr view 1102 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "P0 Ruling 3 (2026-10-05): #1102, #1112 and #1269 admitted"
+    - "P0 Ruling 2 (2026-10-05): hosted clause of graduation Ruling 6 amended; the same mechanisms qualify on the hosted tier"
+    - "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2976-2989 and :3024-3025 at HEAD 8b7392fe00 (phased policy plan; stopsAfterCheapRed applies only to local runs; :2910-2911 at e08b24b004)"
+    - "turbo.json:58-61 at HEAD (doctest cache true); packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1333 at HEAD (the doctest lane runs `turbo run doctest`; :1182-1186 and :2291 at e08b24b004, where the local doctest flags became empty)"
+    - "turbo.json at e08b24b004 (41 root-task keys; 3 at e08b24b004^1)"
+    - ".github/workflows/heavy.yml:49-52 at e08b24b004 (Doctest uses_turbo true; the doctest_mode affected gate at :89-139 of e08b24b004^1 is deleted)"
+
+- id: iv-1141-heavy-pool-containment
+  title: "PR #1141 — the heavy CI pool contained to two Spot runners (live 2026-09-15)"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-16T00:18:38Z"
+  mergeCommit: 2abd88d290f8c8eb4dbce81271d311b6f19d2ce1
+  pr: 1141
+  mechanismChanged: hosted-runner-capacity
+  hypothesis: >
+    OBSERVATIONAL: with the heavy pool cut from 14 On-Demand runners to 2 Spot runners under
+    price-capacity-optimized allocation and no On-Demand fallback, heavy-lane queue wait
+    rises sharply and Spot reclamations return, so TierCiMergeGreen episodes lengthen and
+    runner-loss reruns rise, while cost per runner hour falls.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: hosted tier (P0 Ruling 2). The heavy pool is shared fleet state, so membership follows runner launch time, not the run's head: once the containment was live, every heavy job ran on the two-runner Spot pool whatever its head."
+    - "LANDING INSTANT: the change this PR records was applied live on 2026-09-15 as Lambda edits, before the merge and with no clock time in the runbooks; the PR reconciles the source without a Pulumi deployment and is the record. landedAt is the merge, the only clock-precise instant on record. The runbook's Spot capacity losses at 19:47:58 and 21:09:38 UTC during PR #1138's retries (that PR was open from 2026-09-15T03:12Z to 2026-09-16T00:58Z) put the Spot pool live before 2026-09-15T19:47:58Z, so 2026-09-15T00:00:00Z to landedAt is a mixed window that belongs to neither side."
+    - "CONFOUNDED: before the two-runner pool, an emergency containment set scale-up reserved concurrency to 0 and disabled both queue mappings (hosted admission, live only, not in this diff) until PR jobs stopped being picked up; the smaller active pool superseded it the same day. The new scale_up_reserved_concurrent_executions 1 restores normal job pickup and adds no admission rule. The budget alert ($500 to $200 in Pulumi config, live $100 to $200) changes no decision."
+    - "PROVENANCE of the replaced source values: lowest-price allocation came from #1055 (702e815971), the On-Demand failover list from #632 (5398819bf1), on-demand capacity from #1050 (iv-1050-heavy-pool-on-demand, de84d4218e) and the 14-runner cap from #666 (8df3aa7244). This row ends iv-1050's On-Demand period. LATER INSTANT: the 2026-10-01 Spot pool spread (iv-1364-spot-pool-spread) keeps this purchase model and cap; its apply found these settings already live."
+  evidence:
+    - "gh pr view 1141 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "infra/src/CiFleetController.ts:904, :921, :924 and :973 at 2abd88d290 (failover list emptied; price-capacity-optimized; spot; runners_maximum_count 2), against :905, :922, :927 and :979 at 2abd88d290^1 (failover list; lowest-price; on-demand; 14); :981 at 2abd88d290 (scale_up_reserved_concurrent_executions 1)"
+    - "docs/runbooks/aws-cost-operations.md:3 and :17-19 at 2abd88d290 (September 15 policy: cap 2, Spot with price-capacity-optimized allocation, no automatic On-Demand fallback); :63-64 (the saved live restoration receipt had already changed the pool); :71-72 (not a full Pulumi stack deployment; :76-77 at HEAD 8b7392fe00)"
+    - "docs/runbooks/aws-cost-operations.md:34-36 at 2abd88d290 (the superseded emergency pause); :82-83 (Spot capacity losses at 19:47:58 and 21:09:38 UTC during PR #1138's retries); gh pr view 1138 --json createdAt,mergedAt (2026-09-15T03:12:56Z to 2026-09-16T00:58:25Z, verified 2026-10-05)"
+    - "infra/ci-runners/Pulumi.production.yaml:4 at 2abd88d290 (monthlyBudgetUsd 500 to 200; alert only)"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 5 names #1141 among the missed hosted-capacity levers; admitted on the Ruling 3 pattern: the criterion refuter upheld the row and only facts were corrected, as applied here"
+
+- id: iv-1146-turbo-input-isolation
+  title: "PR #1146 — Turbo task inputs isolated and narrowed; REGEN_GOLDENS hashed"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-16T08:01:40Z"
+  mergeCommit: 678cf4198280d2f1effde89c1ac094f4f7abd90d
+  pr: 1146
+  mechanismChanged: turbo-cache-inputs
+  hypothesis: >
+    OBSERVATIONAL: narrower, artifact-excluding input globs and REGEN_GOLDENS in the
+    hashed env change which edits invalidate which task hashes, so local Turbo cache-hit
+    share rises for edits confined to excluded artifacts; audit stops caching outright
+    and golden-regeneration runs never replay.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "ONE-TIME KEY CHANGE: rewriting inputs re-keys most task hashes at landing, so the first post-period runs miss the cache whatever the steady-state effect."
+    - "VERSION: the title's Turbo 2.10.13 upgrade is not in this squash (no package.json or bun.lock change); the catalog bump landed in #1148 (ed016ba972). Other input changes: audit goes from cache true to cache false, //#lint:roadmap-refs inputs narrow from all files to three globs, doctest adds a @beep/utils#transit dependency, and apps/professional-desktop build gains .env* inputs and TAURI_* env."
+    - "FAMILY: the new packages/tooling/tool/cli/turbo.json (adds `$TURBO_ROOT$/turbo.json` to test inputs) and packages/tooling/policy-pack/repo-configs/turbo.json are inside the widened turbo-cache family (P0 Ruling 5). The same inputs apply to hosted runs from landedAt (P0 Ruling 2). For hosted runs the post-period is a run whose head includes mergeCommit (P0 Ruling 2)."
+  evidence:
+    - "gh pr view 1146 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "turbo.json:19 at HEAD 8b7392fe00 (global env carries REGEN_GOLDENS, moved from passThroughEnv); turbo.json:61 at HEAD (doctest depends on @beep/utils#transit); turbo.json:474-475 at HEAD (audit cache false; cache true at :389-390 of 678cf41982^1); turbo.json:821 at HEAD (//#lint:roadmap-refs)"
+    - "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1097 at HEAD (REGEN_GOLDENS=1 forces execution)"
+    - "git show --numstat 678cf41982: turbo.json +259/-46; apps/oip-web, apps/professional-desktop, apps/storybook, packages/tooling/tool/cli and packages/tooling/policy-pack/repo-configs turbo.json files also change"
+
+- id: iv-1155-heavy-admission-gate
+  title: "PR #1155 — Heavy Admission holds unlabelled code PRs out of the beep-ec2-heavy queue (TTC B8)"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-16T13:15:22Z"
+  mergeCommit: d7e8c46f4da1e91972c42ec6520715f2d4a7cc4f
+  pr: 1155
+  mechanismChanged: admission
+  hypothesis: >
+    OBSERVATIONAL: unlabelled code PRs no longer queue the seven-lane heavy matrix, so
+    beep-ec2-heavy queue wait falls for admitted PRs, while unlabelled PRs stay
+    merge-blocked until ready-for-heavy lands, which lengthens their TierCiMergeGreen
+    episodes by the label wait.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: hosted tier. A run is in the post-period only when the revision it runs includes mergeCommit (P0 Ruling 2). pull_request runs read check.yml and heavy-admit.yml from the PR merge ref, which GitHub builds against the current base, so landedAt approximates the boundary; a run started before it keeps the unconditional heavy caller. heavy.yml is called @main and already accepted the admitted input (#1151)."
+    - "HOSTED ADMISSION (P0 Ruling 2): the admission verdict (run, skip-satisfied, hold) decides which PRs enter the beep-ec2-heavy queue. Not hosted-runner-capacity: the PR's runbook and TTC Ruling 57 both state that admission adds no capacity and pool sizing is unchanged."
+    - "CONFOUNDED AT ONE INSTANT: gate-selection (docs-only diffs get the skip-satisfied verdict, so the heavy lanes stop running for them)."
+    - "LATER INSTANT: #1165 (iv-1165-heavy-skip-satisfied, 1e5d570bfe, 2026-09-16T16:08:36Z) made the docs-only skip-satisfied arm effective; from 13:15:22Z to 16:08:36Z docs-only PRs were blocked like hold (probe #1164). Prerequisite #1151 (4ff35c678c) added the admitted input, inert by default. The PR title is a stray merge subject. The local yeet monitor's heavy-not-admitted wait decides only when the monitor stops waiting."
+  evidence:
+    - "gh pr view 1155 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "P0 Ruling 2 (2026-10-05): hosted clause of graduation Ruling 6 amended; the same mechanisms qualify on the hosted tier"
+    - ".github/workflows/check.yml:61-96, :127 and :133 at HEAD 8b7392fe00 (admission job through its decide step; heavy caller skipped on hold; admitted passed to heavy.yml)"
+    - ".github/workflows/heavy-admit.yml:34 at HEAD (ready-for-heavy label trigger); packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts:315-321 at HEAD (verdictFor: run, skip-satisfied, hold)"
+    - "docs/runbooks/ci-runner-reliability.md:21-22 and :29-31 at d7e8c46f4d (admission adds no capacity; pool sizing unchanged); goals/time-to-certainty/research/decisions.md:648-651 at HEAD (Ruling 57)"
+
+- id: iv-1165-heavy-skip-satisfied
+  title: "PR #1165 — unadmitted heavy lanes pass without work on GitHub-hosted runners"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-16T16:08:36Z"
+  mergeCommit: 1e5d570bfe55f26f52243dd9615cd2691ce7ab3a
+  pr: 1165
+  mechanismChanged: gate-selection
+  hypothesis: >
+    OBSERVATIONAL: docs-only PRs stop being merge-blocked on Expected Heavy contexts, so
+    their TierCiMergeGreen episodes shorten; beep-ec2-heavy demand stays where #1151 and
+    #1155 left it.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: hosted tier. A run is in the post-period when the workflow revision it executes includes mergeCommit (P0 Ruling 2). check.yml calls heavy.yml@main, so every run started after landedAt executes the new definition whatever its PR head; landedAt is the fleet boundary here."
+    - "HOSTED GATE SELECTION (P0 Ruling 2): with admitted false, each heavy lane now expands, runs on ubuntu-24.04 with its steps skipped and reports success, so the required Heavy contexts are satisfied for docs-only diffs instead of staying Expected. Not hosted-runner-capacity: since #1151, unadmitted jobs were skipped at job level and used no beep-ec2-heavy runner, and the seven no-op jobs run on GitHub-hosted runners. The verdict function is unchanged; the HeavyAdmission.ts and Settle.ts edits are doc comments and detail strings only."
+    - "EARLIER INSTANT: #1155 (iv-1155-heavy-admission-gate, d7e8c46f4d, 2026-09-16T13:15:22Z) introduced the skip-satisfied verdict; from then until this row docs-only PRs were blocked like hold. Probe PR #1164 merged at 2026-09-16T17:04:30Z, after #1165; it ran as an open probe beforehand."
+  evidence:
+    - "gh pr view 1165 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "P0 Ruling 2 (2026-10-05): hosted clause of graduation Ruling 6 amended; the same mechanisms qualify on the hosted tier"
+    - ".github/workflows/heavy.yml:34 and :110-117 at HEAD 8b7392fe00 (runs-on depends on admitted; the not-admitted branch sets should_run=false and passes without work)"
+    - ".github/workflows/heavy.yml:27-28 at 1e5d570bfe^1 (job-level `if: inputs.admitted` on beep-ec2-heavy)"
+    - "goals/time-to-certainty/research/decisions.md:588-593 at HEAD (probe #1164 amendment)"
+
+- id: iv-1182-identity-lint-inputs
+  title: "PR #1182 — @beep/identity lint inputs widen repo-wide under a governed Biome profile"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-22T08:54:47Z"
+  mergeCommit: f25286554f3d0335aeaaeb316a4fce481537cbb4
+  pr: 1182
+  mechanismChanged: turbo-cache-inputs
+  hypothesis: >
+    OBSERVATIONAL: with affectedUsingTaskInputs on, widening @beep/identity#lint inputs
+    to repo-wide package.json, tsconfig, turbo.json, Biome and vitest globs makes
+    `--affected` lint runs select the identity task for many more change sets, so local
+    lint-lane wall time rises slightly; cache reuse does not change, because the task
+    stays uncached.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "MEDIUM CONFIDENCE: caching stays off, so the change is to task inputs and affected selection, not to cache reuse. gate-selection is a defensible secondary label (which lint tasks `--affected` selects)."
+    - "Context, not qualifying: every planned `turbo run` step that is not an inspection run now goes through `beep cache execute`, which injects the generated biome.identity.jsonc profile (gate content) and fails closed on caller-supplied cache identity env. No cache key changes at merge, because the only task declaring BEEP_CACHE_TOOLCHAIN_DIGEST has caching off."
+    - "FAMILY: packages/foundation/modeling/identity/turbo.json is inside the widened turbo-cache family (P0 Ruling 5); the first pass reached #1182 through the Cache, Quality and Ci command paths."
+  evidence:
+    - "gh pr view 1182 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/foundation/modeling/identity/turbo.json:5-6, :19 and :32-33 at HEAD 8b7392fe00 (lint cache false; `$TURBO_ROOT$/**/package.json` among the widened inputs; BIOME_CONFIG_PATH passThroughEnv)"
+    - "turbo.json:5 at HEAD (affectedUsingTaskInputs true); packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:703-704 at HEAD (turboShapeArgs adds --affected)"
+    - "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts:104-128 at HEAD (needsProfile; BIOME_CONFIG_PATH resolves to biome.identity.jsonc); wired at packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1326 and packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1668 at HEAD"
+
+- id: iv-1195-repo-cli-vitest-shards
+  title: "PR #1195 — the hosted Test Unit repo-cli partition splits into two Vitest shards"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-22T12:49:42Z"
+  mergeCommit: 7a2bb50a2b883bf43895978d41c87b1da397c556
+  pr: 1195
+  mechanismChanged: sharding
+  hypothesis: >
+    OBSERVATIONAL: the hosted Test Unit critical path shortens from the 879 s serial
+    repo-cli partition toward two halves planned at 440 s each, lowering TierCiMergeGreen
+    time-to-certainty when Test Unit is the slowest required lane.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: hosted tier. A run is in the post-period only when the revision it runs includes mergeCommit (P0 Ruling 2). pull_request runs read check.yml from the PR merge ref, which GitHub builds against the current base, so landedAt approximates the boundary; a run started before it keeps three Test Unit shards."
+    - "HOSTED SHARDING (P0 Ruling 2): the shard pass-through is reached only with --partition, which only check.yml passes, on GitHub-hosted ubuntu-24.04. No Runners or fleet file changes, so this is not hosted-runner-capacity, and the local tiers are unaffected."
+    - "EARLIER INSTANT on the same matrix: #982 (iv-982-hosted-lint-unit-shards) built the partition shards this row splits further."
+    - "The 440 s weights are arithmetic halves of the measured 879 s body, planning evidence only. The pass-through also re-keys the hosted repo-cli halves' Turbo hash (hosted only). The new coverage-proof checks validate the partition table and change no decision."
+  evidence:
+    - "gh pr view 1195 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "P0 Ruling 2 (2026-10-05): hosted clause of graduation Ruling 6 amended; the same mechanisms qualify on the hosted tier"
+    - ".github/workflows/check.yml:468 at HEAD 8b7392fe00 (partitions repo-cli-1, repo-cli-2, unit-a, unit-b; repo-cli, unit-a, unit-b at 7a2bb50a2b^1)"
+    - "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts:363-374 at HEAD (repo-cli-1 and repo-cli-2, weightSeconds 440, shards 1 and 2 of 2; repo-cli weightSeconds 879 at :305-307 of 7a2bb50a2b^1); packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1170 at HEAD (Vitest --shard pass-through)"
+
+- id: iv-1221-fallow-hash-exclusion-shared-cache
+  title: "PR #1221 — untracked .fallow output leaves task hashes; human shells share one Turbo cache directory"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-25T06:08:47Z"
+  mergeCommit: 5c768538e434336885d324cbf56d04fc2684959b
+  pr: 1221
+  mechanismChanged: turbo-cache-inputs
+  hypothesis: >
+    OBSERVATIONAL: checkouts with fallow audit residue stop drifting task hashes (the PR
+    measured seven transit hashes shifting between clean clones), and human shells in
+    sibling checkouts read one shared local cache, so local Turbo cache-hit share rises
+    across clones.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "MECHANISM DETAIL: the transit hash fix comes from the new root .gitignore line `.fallow/` (Turbo's default inputs skip gitignored files). transit declares no inputs, so the new `!.fallow/**` negations on `$TURBO_DEFAULT$` tasks do not reach it."
+    - "SHARED-CACHE SCOPE: .envrc is a human-shell layer; agent lanes, detached proofs and systemd units do not load it (.envrc:1-3 at HEAD, added later). The code-level default for workstation Turbo runs came with #1232 (iv-1232-shared-turbo-cache-dir, 2026-09-25T11:57:07Z), reached by the widened turbo-cache family (P0 Ruling 5)."
+    - "Not counted: vitest fsModuleCache and coverage-run isolation are test-runtime tuning. The squash also carries about 230 unrelated files (scratchpad, effect-drizzle, runbooks)."
+  evidence:
+    - "gh pr view 1221 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "turbo.json:337 at HEAD 8b7392fe00 (`!.fallow/**` in the check task inputs); turbo.json:516-518 at HEAD (transit has no inputs)"
+    - ".gitignore:116 at HEAD (`.fallow/`, added in 5c768538e4)"
+    - ".envrc:7 at HEAD (TURBO_CACHE_DIR defaults to the shared cache directory; :4 at 5c768538e4)"
+
+- id: iv-1232-shared-turbo-cache-dir
+  title: "PR #1232 — workstation Turbo runs default to the shared cache directory"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-25T11:57:07Z"
+  mergeCommit: 41d6c9eb97e266d0ecf9607ef1998a009e8aed01
+  pr: 1232
+  mechanismChanged: turbo-cache-inputs
+  hypothesis: >
+    OBSERVATIONAL: agent tool shells, detached proof services and un-allowed fresh
+    worktrees, which direnv does not reach, now read and write one shared Turbo cache
+    directory instead of each checkout's own .turbo/cache, so a task proven in one checkout
+    replays in its siblings and the local cross-checkout cache-hit share rises.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870), that is once its CLI carries the default; the change takes effect per checkout, never fleet-wide at one instant. landedAt is the series partition point, never the fleet boundary."
+    - "MECHANISM SCOPE: the lever is which cache store a run reads and writes (--cache-dir), which decides whether a stored result replays; declared task inputs and hashes are unchanged. It is filed under turbo-cache-inputs, the only cache value in the closed set (P0 Ruling 4), on the reading that also files the remote-read posture there (iv-953-turbo-remote-read-isolation)."
+    - "CONDITIONS: the CLI attaches the shared directory only when TURBO_CACHE_DIR is unset, no --cache-dir argument is present and HOME is known; cache-mode arguments keep it. CI returns caller-controlled before the directory is resolved, so the hosted tier is untouched."
+    - "PARTIAL POPULATION: #1221 (iv-1221-fallow-hash-exclusion-shared-cache, 5c768538e4, 2026-09-25T06:08:47Z, 5 h 48 min earlier) first exported the same default in .envrc, so direnv-loaded shells already shared the store; this row changes only the contexts direnv missed. #1254 (d0cb080de1, 2026-09-25T16:39:10Z, 4 h 42 min later) made direnv a human-only layer, after which the CLI default is the only shared-store path for agent runs. Pre/post cohorts around 2026-09-25 need per-context membership (shell type), not checkout ancestry alone."
+  evidence:
+    - "gh pr view 1232 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:525 at 41d6c9eb97 (SHARED_TURBO_CACHE_DIR_SUFFIX `.cache/beep/turbo`; :521 at HEAD 8b7392fe00); :584-589 (the directory's conditions; CI never reaches the helper)"
+    - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:745-747 at 41d6c9eb97 (CI returns caller-controlled before :749 resolves the directory); :799-809 and :813-817 (turboCachePlanArgs emits --cache-dir for caller-controlled, local-only and remote-read plans through cacheDirArgs)"
+    - "standards/turbo-remote-cache.md:290-297 at 41d6c9eb97 (the CLI owns the default for quality tasks, Yeet proofs, detached proof jobs, ci lane bodies and local docgen; CI stays caller-controlled)"
+    - ".envrc:4 at 5c768538e4 (#1221's direnv default; absent at 5c768538e4^1); .envrc:1 at d0cb080de1 (#1254: human-shell convenience layer only)"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 4 (closed vocabulary), Ruling 5 (TurboCache.ts and EnvConfig.ts in the turbo-cache family)"
+
+- id: iv-1233-pilot-dependency-lint-uncached
+  title: "PR #1233 — lint caching off for @beep/fc-runs and @beep/test-runner"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-25T16:09:11Z"
+  mergeCommit: df5b20d19e7df024ddef42b14b84b6619ada4687
+  pr: 1233
+  mechanismChanged: turbo-cache-inputs
+  hypothesis: >
+    OBSERVATIONAL: lint for @beep/fc-runs and @beep/test-runner stops replaying from the
+    local and remote Turbo caches and re-executes on every run that selects it, so lint wall
+    time rises slightly for change sets that reach those packages.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local and hosted tiers (P0 Ruling 2). Locally a checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870); a hosted run is in the post-period only when its head includes mergeCommit. landedAt is the series partition point, never the fleet boundary."
+    - "MECHANISM: two new package turbo.json files set lint to cache false; both tasks inherited cache true from the root lint task. This is the class P0 Ruling 4 counted for #1068 (lint cache turns off for two packages). It is live Turbo configuration, not C4.1 shadow reuse; the cache-qualification store and baseline edits only record the excluded tuples."
+    - "HOSTED: hosted Lint runs the Turbo lint task with the Turbo remote cache (same-repository pull requests read, trusted main pushes write); the actions-cache Turbo restore in setup-monorepo-ci is a fallback only when the remote credentials are absent. Either way the two tasks stop replaying."
+    - "ADJACENT INSTANTS: iv-1221-fallow-hash-exclusion-shared-cache (06:08:47Z) and iv-1232-shared-turbo-cache-dir (11:57:07Z) land the same day on the local cache store, and #1254 (16:39:10Z, 30 min later) changes which shells load direnv."
+  evidence:
+    - "gh pr view 1233 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/test-kit/fc-runs/turbo.json:5 and packages/tooling/test-kit/test-runner/turbo.json:5 at df5b20d19e (lint cache false; both files new; unchanged at HEAD 8b7392fe00)"
+    - "turbo.json:319-320 at df5b20d19e^1 (the root lint task's cache true, which both tasks inherited)"
+    - "goals/turborepo-task-qualification/research/dependency-lint-exclusion-review.md:5-8 at df5b20d19e (the two tasks inherit cache: true; set only those two lint tasks to cache: false)"
+    - ".github/workflows/check.yml:380 and :415 at df5b20d19e (turbo-remote-cache true; `ci lane lint`); packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1541-1548 at df5b20d19e (the lint lane runs the Turbo lint task); .github/actions/setup-monorepo-ci/action.yml:38-46 and :257-258 at df5b20d19e (remote-cache credential tuple; Turbo actions-cache restore as local fallback only)"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 2 (hosted clause amended), Ruling 4 (#1068 lint cache-off precedent)"
+
+- id: iv-1269-cache-policy-seed
+  title: "PR #1269 — quality:cache-policy seeded into the gate-order ladder at rank 19 (TTC D1)"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-09-25T21:46:53Z"
+  mergeCommit: b2a654bc4347d33862d815368e7ca56a9c86da28
+  pr: 1269
+  mechanismChanged: ordering
+  hypothesis: >
+    OBSERVATIONAL: quality:cache-policy moves from last place to rank 19 in the full-tier
+    pre-push ladder, so a cache-policy red stops the wave earlier and skips the lanes
+    ranked behind it; time to first actionable failure falls for cache-policy reds.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "PROMOTED (P0 Ruling 4, 2026-10-05) from a later-instant caveat on iv-1006-wave-order, and admitted under P0 Ruling 3: the seed row changes an ordering decision on the live local path."
+    - "MECHANISM is ordering: the lane's red scheduling is stop-after-red both before (unseeded, onNone) and after (precise). Only the set of lanes a cache-policy red skips changes, and that follows from the rank. P0 Ruling 4 corrects the iv-1006 caveat to match: the lane's rank changed, not its early stop."
+    - "CONFOUNDED AT ONE INSTANT (minor): turbo-cache-inputs. packages/tooling/tool/cli/turbo.json adds economics.json and gate-order-handoff.json to the @beep/repo-cli test and test:property inputs, so those two tasks re-key once and re-run whenever either file changes; the file is inside the widened turbo-cache family (P0 Ruling 5), and the inputs serve the new gate-order-handoff test."
+    - "Not counted: WAVE_ORDER_KEYS renames the comparator without changing behavior; githubCheckPrePushLanes repeats the old Planner concatenation; redSchedulingDecision gains only an export and JSDoc. #1380 (iv-1380-shadcn-lint-lane) later inserts quality:shadcn-lint at rank 3, so this lane sits at rank 20 at HEAD."
+  evidence:
+    - "gh pr view 1269 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "P0 Ruling 4: promoted from an iv-1006 caveat (2026-10-05; P0 Ruling 3 admits the row)"
+    - "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts:244-253 at HEAD 8b7392fe00 (seed row: laneId :245, costP50Seconds 183 :246, precision precise :253; :244-252 at b2a654bc43)"
+    - "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1914-1921 at HEAD (redSchedulingDecision: onNone and precise both stop-after-red); packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:422 at HEAD (the full tier is ordered by DEFAULT_GATE_ORDER_SEED)"
+    - "goals/time-to-certainty/research/gate-order-handoff.json:669-673 at b2a654bc43 (rank 19, stop-after-red) and :694-698 at HEAD (rank 20)"
+    - "packages/tooling/tool/cli/turbo.json:9-10 and :17-18 at b2a654bc43 (the two goal files join the test and test:property inputs)"
+    - "explorations/beep-ci-operational-ontology/research/control-interventions.yaml:83 at HEAD 8b7392fe00 (the iv-1006 caveat this row is promoted from)"
+
+- id: iv-1364-spot-pool-spread
+  title: "PR #1364 — the heavy CI fleet spreads across capacity-optimized Spot pools (applied 2026-10-01)"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-10-01T12:05:00Z"
+  mergeCommit: a69b1956eed9949b314c64b93f2d3d3eabf11283
+  pr: 1364
+  mechanismChanged: hosted-runner-capacity
+  hypothesis: >
+    OBSERVATIONAL: with 40 Spot pools (eight instance types across five availability zones,
+    up from four types in two zones, 8 pools) under capacity-optimized allocation,
+    heavy-fleet Spot evictions and launch failures fall, so runner-loss reruns and the tail
+    they add to TierCiMergeGreen episodes shrink; the two-worker cap still bounds
+    concurrency, so no queue-wait change is expected.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: hosted tier (P0 Ruling 2). The heavy pool is shared fleet state, so membership follows runner launch time, not the run's head: heavy runners launched after landedAt draw on the 40 pools whatever the run's head."
+    - "LANDED AT THE RECORDED APPLY: landedAt is the end of the out-of-repo Pulumi apply the runbook records ('Applied 2026-10-01 12:03–12:05 UTC'), at minute precision; the PR is the source record. Its merge at 2026-10-01T10:22:28Z did not change the live pool (the runbook at the merge reads 'It is not deployed.'). #1375 (8a46aa3466, 12:24:46Z) recorded the apply and is not a separate row: one event, one row."
+    - "CONFOUNDED: the apply reset RUNNERS_MAXIMUM_COUNT to the source value over a live temporary burst cap, which the operator re-applied afterwards. The preview's other items (Spot, cap 2, the failover list removal, reserved concurrency 1) were already live from the 2026-09-15 containment (iv-1141-heavy-pool-containment), so the only capacity delta at this instant is the pool spread. #1384 (iv-1384-rerun-runner-loss, 2026-10-01T20:15:29Z) changes measured runner-loss outcomes the same day."
+    - "Unchanged: purchase model, the two-worker cap and the empty On-Demand failover list. The runbook's post-apply sample (1 eviction in 40 launches over 40 minutes, against 41 in 564 before) is too small to call the rate, as the runbook itself says."
+  evidence:
+    - "gh pr view 1364 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "infra/src/CiFleetController.ts:947 at a69b1956ee (instance_allocation_strategy capacity-optimized; price-capacity-optimized at :926 of a69b1956ee^1; :946 at HEAD 8b7392fe00); :42-51 at a69b1956ee (runnerInstanceTypes grows from four to eight types)"
+    - "infra/src/internal/ci-runners-entry.ts:18-24 at a69b1956ee (subnetIds hands subnets A to E to the controller); infra/src/CiRunners.ts and infra/ci-runners/Pulumi.yaml at a69b1956ee (subnets C, D and E in us-east-1c, us-east-1d and us-east-1f)"
+    - "docs/runbooks/ci-runner-reliability.md:147 and :156 at a69b1956ee (deployment evidence pending; 'It is not deployed.')"
+    - "docs/runbooks/ci-runner-reliability.md:236-294 at HEAD 8b7392fe00 (deployment evidence recorded by #1375, 8a46aa3466): :246-247 (applied 12:03–12:05 UTC from a saved plan), :252-258 (containment items already live), :261-264 (burst cap re-applied afterwards)"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 5 names #1364 as the hosted-capacity lever itself"
+
+- id: iv-1381-app-env-out-of-build-hash
+  title: "PR #1381 — app env patterns and unresolved op:// values leave shared build hashes"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-10-01T16:16:58Z"
+  mergeCommit: 43585c73b41323db538160fa5584431eb5316379
+  pr: 1381
+  mechanismChanged: turbo-cache-inputs
+  hypothesis: >
+    OBSERVATIONAL: library build hashes stop varying with each clone's .env, so cross-clone
+    build cache hits on the shared workstation cache rise (the PR reproduced 0/141 before
+    and 138/141 after swapping .env between clones) and local build wall time falls.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "The 12 app env patterns move from the root build task into the oip-web and todox build env (the same declared set for those apps); professional-desktop extends the root, so it loses the 12 patterns and gains VITE_*."
+    - "turboEnvOverrides now unsets unresolved op:// values in the environment of direct Turbo spawns at runtime, which removes them from the hashes and from the child environment."
+    - "The 138/141 figure is the PR's own reproduction, not a fleet measurement. The standards/cache-qualification-baseline.json edit is a reviewed-baseline acceptance (evidence)."
+  evidence:
+    - "gh pr view 1381 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "turbo.json:267-293 at HEAD 8b7392fe00 (the root build task declares no env)"
+    - "apps/todox/turbo.json:5-16 and apps/oip-web/turbo.json:7-19 at HEAD (per-app build env, including AUTH_* and OAUTH_*); apps/professional-desktop/turbo.json:13-14 at HEAD ($TURBO_EXTENDS$ inputs; env adds TAURI_* and VITE_*)"
+    - "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts:691 at HEAD (unrelatedSecretReferenceScrub in turboEnvOverrides)"
+
+- id: iv-1380-shadcn-lint-lane
+  title: "PR #1380 — quality:shadcn-lint joins pre-push at rank 3, local beep ci and the Lint Policy battery"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-10-01T20:15:16Z"
+  mergeCommit: 736f6f7b0c210b4861c12c1b614958b1751b8f78
+  pr: 1380
+  mechanismChanged: lane-assembly
+  hypothesis: >
+    OBSERVATIONAL: local full proofs run one more precise gate early in the cost-ordered
+    ladder (rank 3, stop-after-red), so design-system lint reds reach their first
+    actionable failure early, and green proofs pay one more lane.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local tier. A checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870). landedAt is the series partition point, never the fleet boundary."
+    - "CO-MECHANISM ordering (secondary): the new seed row places the lane at rank 3 and shifts the absolute rank of every later lane by one (quality:cache-policy 19 to 20). Existing lanes keep their relative order and red scheduling. No early-stop rule changes; the lane takes stop-after-red from the existing default for precise lanes."
+    - "Lane assembly outside the ladder: shadcn-lint joins CI_LOCAL_DEFAULT_LANES, and lint:shadcn joins the Lint Policy state battery. The new Turbo task is uncached, so no existing task's inputs change. The hosted Shadcn Lint job runs on existing ubuntu-24.04 runners (no capacity change)."
+    - "ADJACENT INSTANT: #1384 (iv-1384-rerun-runner-loss) landed 13 s later, at 2026-10-01T20:15:29Z; at KPI resolution the two rows share one partition point."
+  evidence:
+    - "gh pr view 1380 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:379-383 at HEAD 8b7392fe00 (quality:shadcn-lint pre-push lane)"
+    - "goals/time-to-certainty/research/gate-order-handoff.json:490-494 at HEAD (rank 3, stop-after-red) and :694-698 at HEAD (quality:cache-policy rank 20; rank 19 at 736f6f7b0c^1); packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts:293 at HEAD (seed row)"
+    - "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:2335 and packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2962 at HEAD (CI_LOCAL_DEFAULT_LANES; policyStateTasks)"
+    - "turbo.json:774-775 at HEAD (//#lint:shadcn, cache false); .github/workflows/check.yml:158 at HEAD (shadcn-lint matrix entry)"
+
+- id: iv-1384-rerun-runner-loss
+  title: "PR #1384 — a hosted automation re-runs jobs lost to a dead self-hosted runner"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-10-01T20:15:29Z"
+  mergeCommit: f05e1a698d4116ec29adec33111c1195228c5c97
+  pr: 1384
+  mechanismChanged: admission
+  hypothesis: >
+    OBSERVATIONAL: required hosted jobs that lose their Spot runner are re-dispatched
+    automatically (at most 3 reruns per job and 8 attempts per run) instead of waiting for
+    a human, so the long tail of TierCiMergeGreen episodes shortens; the PR body says
+    Coverage Regression lost about 20% of its runs to runner loss.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: hosted tier. A run is in the post-period when the workflow revision that handles it includes mergeCommit (P0 Ruling 2). The workflow_run automation runs from the default branch, so every failed Check or Heavy Admit run that completes after landedAt is evaluated whatever its head; landedAt is the fleet boundary here. The repository variable BEEP_RERUN_RUNNER_LOSS=false switches the automation off, so a series reader confirms it was on for the window."
+    - "HOSTED ADMISSION (P0 Ruling 2): the evaluator decides which failed jobs are re-dispatched to the runner queue: jobs whose check-run annotation reports lost communication and that have no failed step, bounded at 3 reruns per job and 8 attempts per run. Not hosted-runner-capacity: no runner is added (the evaluator runs on ubuntu-24.04; check.yml, heavy.yml and heavy-admit.yml are untouched), and re-dispatching lost jobs onto the same pool is demand, not supply."
+    - "ADJACENT INSTANT: #1380 (iv-1380-shadcn-lint-lane) landed 13 s earlier, at 2026-10-01T20:15:16Z; at KPI resolution the two rows share one partition point. The LaneTimings.ts edits only rename and export helpers; JobShape.ts gains the failed-step helper the evaluator uses, and the yeet monitor's runner-loss rule is unchanged."
+  evidence:
+    - "gh pr view 1384 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "P0 Ruling 2 (2026-10-05): hosted clause of graduation Ruling 6 amended; the same mechanisms qualify on the hosted tier"
+    - ".github/workflows/rerun-runner-loss.yml:24, :41 and :42 at HEAD 8b7392fe00 (triggered by Check and Heavy Admit; BEEP_RERUN_RUNNER_LOSS switch; evaluator runs on ubuntu-24.04)"
+    - "packages/tooling/tool/cli/src/commands/Ci/RunnerLossRerun.ts:75, :91, :114, :660 and :724 at HEAD (8 attempts per run; 3 reruns per job; runner-loss annotation pattern; failed-step guard; per-job rerun bound)"
+
+- id: iv-1389-deprecated-apis-tool-shards
+  title: "PR #1389 — the deprecated-apis ESLint pass splits packages/tooling/tool into tool/cli and tool/docgen shards"
+  class: OperationalChangeEvent
+  causalStatus: observational
+  landedAt: "2026-10-02T18:58:02Z"
+  mergeCommit: 28b28fa551a4aa30c3cfd5b5a3a899a739328aa2
+  pr: 1389
+  mechanismChanged: sharding
+  hypothesis: >
+    OBSERVATIONAL: the packages/tooling/tool shard of the deprecated-apis ESLint pass, whose
+    cli and docgen packages together exceed the 8 GiB heap on a cold typed scan, splits into
+    two shards (28 to 29 shards, concurrency 4 unchanged), so heap-exhaustion reds on hosted
+    Heavy / Lint Policy and on local full lint-policy runs fall; lane wall time is not
+    expected to move much.
+  measurementCaveats:
+    - "ADOPTION-QUALIFIED MEMBERSHIP: local and hosted tiers (P0 Ruling 2). Locally a checkout is in the post-period only when its HEAD ancestry includes mergeCommit (kpi-measurement-rules.md §2; as iv-870); a hosted run is in the post-period only when its head includes mergeCommit. landedAt is the series partition point, never the fleet boundary."
+    - "PATH PER TIER: the shard runner runs only when CI=true or with --full, and with the lint-policy sweeps switch at `shards`. Hosted Heavy / Lint Policy reaches it through `ci lane lint-policy`, which runs `beep lint policy --full` and so `lint deprecated-apis --full`. Locally it runs under `ci lane lint-policy`, `ci local` (lint-policy is a default lane) and other --full runs; a plain local `bun run lint:deprecated-apis` takes the affected per-package Turbo task and never reads the shard list."
+    - "POPULATION UNCHANGED: packages/tooling/tool holds only cli and docgen at the parent and at the merge, so the scanned files are the same; each new shard runs its own eslint process with an 8 GiB heap and its own cache file. The 8 GiB reason is the diff's code comment; the PR body reports that the repair passed a cold full deprecated-API scan without raising the 8 GiB limit."
+    - "CONFOUNDED: at the same instant Docgen/internal/JsDocAnalysis.ts drops analyzeReExports from analyzeSourceFile, so re-export declarations no longer feed docgen:local's checkPackageDocumentation and that JSDoc check can no longer fail on an undocumented re-export (gate-selection, on scoped and full Docgen runs on both tiers); barrel files that hold only export declarations keep the fileoverview check. The PR body describes it as following the existing rule that re-exports are graph edges (P0 Ruling 4: scalar mechanismChanged, co-mechanism named here)."
+    - "SAME PR, NOT COUNTED: the signed producer acceptance and live qualification machinery under commands/Cache, its tests and evidence, which the first pass classified instrumentation-only; P0 Ruling 7 ordered this re-review of the Lint.command.ts hunk. LINEAGE: the shard list extends iv-1007-deprecated-apis-tooling-shards (#1007, 2026-09-04T03:09:20Z), which created the packages/tooling/tool shard."
+  evidence:
+    - "gh pr view 1389 --json mergedAt,mergeCommit (verified 2026-10-05)"
+    - "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:96-98 at 28b28fa551 (`// CLI and docgen together also exceed 8 GiB on a cold typed scan.` with `\"packages/tooling/tool/cli\",` and `\"packages/tooling/tool/docgen\",` replacing `\"packages/tooling/tool\",`); :64 (DEPRECATED_API_LINT_CONCURRENCY 4); :66 (`--max-old-space-size=8192`); :101-102 and :608-609 (one eslint cache file per shard); :643-645 (shard-count log); :646-648 (Effect.forEach over the shards with concurrency 4)"
+    - "packages/tooling/tool/cli/test/lint-command.test.ts at 28b28fa551 (expectation 'running 28 shards with concurrency 4' becomes 'running 29 shards with concurrency 4'); git ls-tree 28b28fa551^ and 28b28fa551 packages/tooling/tool/ (cli and docgen only)"
+    - "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:786-787 at 28b28fa551 (`!full && ci !== \"true\"` takes runRootDeprecatedApisTask; otherwise `sweeps.deprecatedApis === \"shards\"` runs runDeprecatedApiLint); standards/lint-policy.sweeps.jsonc:3 (`\"deprecatedApis\": \"shards\"`); package.json:405 (`\"lint:deprecated-apis\": \"beep-cli lint deprecated-apis\"`)"
+    - "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:1567 at 28b28fa551 (the lint-policy lane runs `beep lint policy --full`); :2327-2330 (ci local default lanes include lint-policy); packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:2987-2989 (full scope with sweeps shards runs `lint deprecated-apis --full`, otherwise the Turbo step); .github/workflows/heavy.yml:238-239 (Heavy / Lint Policy runs `ci lane lint-policy`)"
+    - "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocAnalysis.ts:419 and :425 at 28b28fa551 (co-mechanism: analyzeReExports removed; the export-declaration guard; `pipe(O.toArray(moduleFileoverview), A.appendAll(directExports))`); packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts:871-886 (checkPackageDocumentation fails on `summary.missingDocumentation > 0`)"
+    - "PR #1389 body: the lint-shard repair passed a cold full merged-preview deprecated-API scan 'without increasing its 8 GiB limit'; the analyzer 'follows the existing rule that re-exports are graph edges'"
+    - "goals/ciops-ontology-pipeline/research/decisions.md, 2026-10-05 P0 sitting: Ruling 2 (hosted clause amended), Ruling 4 (scalar mechanismChanged; CONFOUNDED caveat), Ruling 7 (re-review of #1389)"
