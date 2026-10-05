@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/nightly-research-routine",
   "lifecycle": "active",
+  "statusNote": "2026-10-02 roadmap re-eval: P0 shipped and the routine runs on its timer (packets 2026-09-22, 09-23, 09-25, 09-27, 09-30, 10-02). P1 to P4 are Lane 3 queue fillers, not stalled work.",
   "mission": "Ship an unattended nightly research routine that lands delta-first, sanitized, novelty-gated intel packets under top-level research/ as mergeable PRs — native x.com search and cross-provider verify running entirely on non-Anthropic quota pools — with per-packet claims truth and machine-proposes/human-admits actioning.",
   "executionCapable": true,
   "reflectionRequired": true,

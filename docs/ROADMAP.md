@@ -1,19 +1,23 @@
 # Roadmap
 
-Freshness: 2026-09-12. Re-eval after the 2026-08-25 → 2026-09-12 machinery
-sprint: 120 PRs merged and none of them touched Lane 1, so this file now says
-what the portfolio actually did — **machinery-first until
-[`time-to-certainty`](../goals/time-to-certainty/README.md) C4 lands or Lane
-1's attorney-side blockers clear, whichever comes first** — and gives that
-order an expiry instead of pretending the 2026-08-17 lane map held.
-[`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
-closed 2026-08-26 and its Lane 3 slot passes to `time-to-certainty`; the
-[`goal-portfolio-driver`](../goals/goal-portfolio-driver/README.md) revisit
-gate is satisfied but the revisit waits for the C4 proof ledger; every active
-or paused packet the 2026-08-17 map did not name is reconciled below; three
-untouched 2026-08-13 graduations are paused with resume conditions. Prior
-freshness: 2026-08-17 (exploration-portfolio closeout); 2026-07-27
-(first-user delivery decision); 2026-07-14 (portfolio consolidation, PR #401).
+Freshness: 2026-10-05 (re-eval opened 2026-10-02, refreshed before merge).
+Re-eval after three weeks under the 2026-09-12 map: 287 PRs merged since
+09-12 and none touched a Lane 1 packet (#1387 on 10-02 landed the
+document-intake statechart in `apps/professional-desktop` without a packet
+commit, the only product-facing merge of the period); the accelerator
+[`time-to-certainty`](../goals/time-to-certainty/README.md) paused itself on
+2026-09-28 (ruling 80: C4.2 enforcement waits for a post-merge shadow sample),
+so the expiry clause's first trigger cannot fire from inside the lane; three
+CI admission windows were denied and the signed repair is a fan-out governor,
+not more machinery. **Machinery-first ends with this re-eval: Lane 1 starts
+practice-kg-mcp P6 now**, the Lane 3 slot passes to
+[`effect-vitest-canon`](../goals/effect-vitest-canon/README.md) with
+ci-lane-economics P3 riding, and every packet that graduated, closed, paused
+or was superseded since 09-12 is reconciled below (the seven `goals doctor`
+advisories are cleared in the same PR). Prior freshness: 2026-09-12
+(machinery-first with an expiry); 2026-08-17 (exploration-portfolio
+closeout); 2026-07-27 (first-user delivery decision); 2026-07-14 (portfolio
+consolidation, PR #401).
 This file supersedes the *frame* of
 [`docs/mirror/2026-07-08-roadmap.md`](./mirror/2026-07-08-roadmap.md) (which
 remains a dated personal snapshot). Where the two disagree, this file wins.
@@ -64,31 +68,41 @@ checks went from hours to minutes with faster backpressure, and its named
 consumer is every subsequent goal — most concretely the paused
 goal-portfolio-driver, which is uneconomic at hours-per-iteration.
 
-**The one finish-first goal (2026-09-12):**
-[`time-to-certainty`](../goals/time-to-certainty/README.md) replaces
-[`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
-(closed 2026-08-26, 6/6) as the single accelerator that should *finish before
-the rest*. It passes both accelerator tests: its named consumers are every
-Yeet closeout (proof reuse, cheap-gates-first ordering) and the paused
-goal-portfolio-driver, and its payback lands before any Lane 1 phase would
-finish anyway. The dependency chain is now: CI speed (paid) + control-plane
-state truth (paid) + proof certainty (this goal, C4 shadow mode with a
-disagreement report) → the goal-portfolio-driver revisit.
+**The one finish-first goal (2026-10-02):** none in Lane 3 this cycle.
+[`time-to-certainty`](../goals/time-to-certainty/README.md) finished what it
+can without a live sample (P0, P1 and P3 complete; P2 complete except C4.2;
+P4 in progress) and paused on ruling 80. It resumes only when
+`bun run beep yeet proof-report --since <round-25 merge instant>` in the
+owning clone reads ready (200 attempts, 10 branches, 0 disagreements, counting
+only rows recorded after that merge) with `malformed rows: 0` on the sample,
+every C5 fixture green and the ruling-69 root-input gap closed; that flip PR turns reuse on and closes the
+packet. The chain is paid up to the sample: CI speed + control-plane state
+truth + shadow proof reuse (C4.1 and the owning-clone ledger) → the
+goal-portfolio-driver revisit once the flip lands.
+[`cloud-agent-readiness`](../goals/cloud-agent-readiness/README.md) (opened
+2026-10-01) is the only new accelerator and takes no slot by its own charter.
 
-**Machinery-first, with an expiry (2026-09-12):** between 2026-08-25 and
-2026-09-12 the portfolio merged 120 PRs, all machinery, and Lane 1 has had no
-merged PR since 2026-07-30. That order is ratified here as the realized
-priority, on two conditions: it ends when `time-to-certainty` C4 lands or
-when Lane 1's attorney-side inputs arrive (practice-kg-mcp P5: the AC-2
-provenance defect B-2 and Tom's G-1..G-5 calls), whichever comes first; and
-no new machinery packet starts a lane slot while it holds — machinery work
-is the Lane 3 queue below, drained in order, not a license to scaffold.
+**Machinery-first ended (2026-10-02):** the 2026-09-12 clause expired on
+neither of its triggers — C4.2 is sample-gated and Tom's inputs did not
+arrive — and it ends anyway, by this re-eval. The accelerator has paid what
+it can without a sample; the three admission windows (weeks of 09-04, 09-13
+and 09-23) were denied with the breach attributed to hosted-queue saturation
+and bounded by a six-branch fan-out cap (repair decision 3, signed
+2026-10-01), which no further machinery packet changes; and 287 PRs in three
+weeks moved one product-facing change (#1387), none through a packet. From
+here: Lane 1 holds a dated start (practice-kg-mcp P6 and P7, no attorney
+input needed; as of 10-05 no session has opened P6 yet, so it is the first
+thing to happen after this merges); Lane 3 keeps one slot (`effect-vitest-canon`) with ci-lane-economics
+P3 riding for the governor and window 4; no new machinery packet starts a
+lane slot; accelerators that take no slot by charter (cloud-agent-readiness,
+ciops-ontology-pipeline run 4) run in parallel.
 
 Execution note: [`goal-portfolio-driver`](../goals/goal-portfolio-driver/README.md)
 stays **paused**; its revisit gate (exploration wrap-up complete +
 packet-control-plane-core closed) was verified satisfied on 2026-09-12, but
-the relock needs the C4 proof ledger to score what is certain, so the revisit
-is sequenced immediately after C4. Its 2026-07-14 locked 25-packet queue is
+the relock needs the proof ledger's post-merge sample to score what is
+certain, so the revisit is sequenced immediately after the time-to-certainty
+resume and flip PR (C4.2). Its 2026-07-14 locked 25-packet queue is
 stale (8 of 25 drained, 13 dormant); until the relock the portfolio drains
 through ordinary operator-driven sessions in the order this file gives.
 Priority stays owned by this file; lifecycle stays owned by tracked packet
@@ -97,14 +111,21 @@ view.
 
 ### Lane 1 — Product
 
-**Live front (stalled since 2026-07-30; first to resume):**
+**Live front (stalled since 2026-07-30; dated start 2026-10-02):**
 [`practice-kg-mcp`](../goals/practice-kg-mcp/README.md) — P0–P4 shipped
 (bundle, host package, OA candidate claims, .mcpb distribution); P5
 acceptance evidence has been in progress since 2026-07-30 with no commit
 since, waiting on the AC-2 provenance defect (B-2) and Tom's G-1..G-5 calls.
-Resume order is P5 close → P6 graph-integrity repair → P7 server hardening →
-P8 handoff, each its own PR; P6 and P7 do not need Tom and may start while
-P5 waits. The cut itself is unchanged — the first-user
+Resume order is P6 graph-integrity repair → P7 server hardening, each its
+own PR; neither needs Tom and both start now, before P5 closes. P5 closes in
+parallel once Tom's calls and the AC-2 provenance fix land. P8 handoff waits
+for all three: the bundle is not installed on Tom's machine until the P5
+acceptance gauntlet passes. No
+commit has touched a Lane 1 packet since the 09-12 re-eval (still true on
+2026-10-05; the practice-kg-mcp packet was last touched 2026-08-30);
+`legal-document-intake` now carries `blockedBy: practice-kg-mcp` so the
+doctor reads its wait as a dependency, not neglect. The cut itself is
+unchanged — the first-user
 delivery cut (decision 2026-07-27): a read-only, local-first stdio MCP server
 over a portable data bundle (deterministic docket-family spine + OA candidate
 claims + email edges + corpus full-text) into Tom's Claude Desktop, .mcpb
@@ -177,7 +198,8 @@ clean; it does not consume a lane slot.
 Only packets that directly feed Lane 1:
 
 - [`agentic-professional-runtime`](../goals/agentic-professional-runtime/README.md)
-  (3/5, untouched since 2026-07-14; resumes when practice-kg-mcp P8 hands off).
+  (3/5, untouched since 2026-07-14; `blockedBy: practice-kg-mcp`, resumes at
+  the P8 handoff).
 - [`citation-verified-span-substrate`](../goals/citation-verified-span-substrate/README.md)
   (2/4) — the span-provenance substrate whose close unblocks the dormant
   consumers `citation-extraction-engine` and `law-doc-structure-oa-slice`
@@ -205,48 +227,78 @@ completed-retained (2026-08-17 re-eval), and
 [`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
 (6/6, completed-retained 2026-08-26) took and finished the freed slot: the
 packet system's event fold, guarded writers, and derived projections,
-self-hosting in advisory mode per D9. The slot passes (2026-09-12) to:
+self-hosting in advisory mode per D9. `time-to-certainty` held the slot from
+2026-09-12 to 2026-09-28 (P1 closed 09-15; the C3 train, B5 detached proof
+jobs, B7 until-ready, B8 heavy admission, C4a and C4.1 shadow proof reuse all
+merged) and is paused on ruling 80 (parked table). The slot passes
+(2026-10-02) to:
 
-- [`time-to-certainty`](../goals/time-to-certainty/README.md) (P1 in
-  progress; the C3.3–C3.6 package-task train is PR #1102) — the slot holder
-  and the finish-first goal above. Its close is C4 shadow mode with a
-  disagreement report; P3 hands the ordering to the portfolio-driver revisit.
+- [`effect-vitest-canon`](../goals/effect-vitest-canon/README.md) (8/11; P1
+  inventory and P2 remediation waves in progress, PR #1312 merged, 33
+  commits since 09-22, the latest via #1406 and #1408, merged 10-03 and 10-05
+  UTC) — the slot
+  holder. It closes on the final empty
+  baseline, the complete inventory and hosted proof.
 
-**Lane 3 queue (drained in this order, one slot, no new starts while
-machinery-first holds):**
+Riding in the slot, not holding it:
 
-1. [`ci-lane-economics`](../goals/ci-lane-economics/README.md) P3 — the
-   2026-09-04 → 2026-09-11 admission census; its close fires
-   [`ci-fleet-endgame`](../goals/ci-fleet-endgame/README.md) P6 (4/7).
-2. [`effect-vitest-canon`](../goals/effect-vitest-canon/README.md) (8/11) —
-   sequenced after time-to-certainty C3.4 merges; both edit
-   `vitest.shared.ts`.
-3. [`runner-trust-boundary`](../goals/runner-trust-boundary/README.md) (8/9)
+- [`ci-lane-economics`](../goals/ci-lane-economics/README.md) P3 — three
+  windows denied: 09-04 (Check, Coverage Regression, pickup), 09-13 (Test
+  Unit, Lint Policy, pickup) and 09-23 (Test Unit 35m00s, Lint 29m16s, pickup
+  23m58s under the 16-context population ratified 2026-10-01). Repair
+  decision 3 (2026-10-01): bound the load with a six-branch fan-out governor
+  on the agent side; window 4 is censused with a concurrency column so a
+  pass or breach attributes to the cap, the governor or capacity. The
+  governor PR is not open as of 2026-10-05, so window 4 has not started; it
+  is the next ci-lane-economics move. Its close
+  still fires [`ci-fleet-endgame`](../goals/ci-fleet-endgame/README.md) P6.
+- [`agent-pool-doctrine`](../goals/agent-pool-doctrine/README.md) (1/5,
+  graduated 2026-09-16; #1162 bound the pool order and admitted the Cursor
+  lane) — P1 implement; `agent-pool-picker` resumes when it ships.
+
+**Lane 3 queue (one slot, in this order):**
+
+1. [`turborepo-cache-conformance`](../goals/turborepo-cache-conformance/README.md)
+   and
+   [`turborepo-cache-trust-observability`](../goals/turborepo-cache-trust-observability/README.md)
+   — active early handoff since #1327;
+   [`turborepo-task-qualification`](../goals/turborepo-task-qualification/README.md)
+   closed via #1389 on 2026-10-02. Single writer for the shared Cache
+   contracts; `turborepo-quality-cache-adoption` stays parked until they ship.
+2. [`runner-trust-boundary`](../goals/runner-trust-boundary/README.md) (8/9)
    — P8 post-release JIT containment is a security acceptance gate, not a
    closeout: it closes only when live proof shows no recoverable handoff
    credential, or server-side replay rejection after the original listener
    ends, from both the original and a second host.
    [`schema-utils-selective-codec-statics`](../goals/schema-utils-selective-codec-statics/README.md)
-   (4/6) — closeout, no gate.
-4. [`boolean-creep`](../goals/boolean-creep/README.md) (2/6) — after the
-   operator ratifies GATE 1.
-5. [`knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md)
+   (4/6) — P4 Yeet to mergeable, no gate.
+3. [`knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md)
    (3/7),
    [`coding-agent-effectiveness-evidence-loop`](../goals/coding-agent-effectiveness-evidence-loop/README.md)
    (2/9) and
    [`nightly-research-routine`](../goals/nightly-research-routine/README.md)
-   (1/5) — fillers while the slot holder waits on review.
-6. [`slice-topology-audit`](../goals/slice-topology-audit/README.md) (0/5) →
+   (1/5; the routine itself runs — packets 09-22, 09-23, 09-25, 09-27, 09-30,
+   10-02 and 10-03 — P1 to P4 are the fillers) — while the slot holder waits on
+   review.
+4. [`ontology-sidecar-stateless-identity`](../goals/ontology-sidecar-stateless-identity/README.md)
+   (1/5, graduated 2026-09-22) — its gate,
+   [`mcp-stateless-kit-and-drivers`](../goals/mcp-stateless-kit-and-drivers/README.md),
+   closed, so it can start; it feeds the desktop ontology sidecar, so it is
+   the queue's one Lane 1-adjacent item.
+5. [`slice-topology-audit`](../goals/slice-topology-audit/README.md) (0/5) →
    [`canonical-proof-reconciliation`](../goals/canonical-proof-reconciliation/README.md)
-   (0/5, blockedBy the audit) — after C4.
-7. The Turborepo quartet, parked below — after C4 and only once the operator
-   re-authorizes `turborepo-task-qualification` from its 2026-09-09
-   checkpoint; the three unstarted scaffolds follow in parallel behind its
-   early contract.
+   (0/5, blockedBy the audit) — after the time-to-certainty flip.
+6. [`ciops-ontology-pipeline`](../goals/ciops-ontology-pipeline/README.md)
+   (0/7, graduated 2026-10-01; auditor run 4 is gated on C4.1 facts from both
+   local stages) — slot-free auditor work, listed for order only.
 
-[`codex-security-findings-2026-09-08`](../goals/codex-security-findings-2026-09-08/README.md)
-runs under the maintenance rule (all thirteen findings shipped in PRs #1026,
-#1032 and #1037; closeout only) and consumes no slot.
+Ended or closed since 09-12: [`boolean-creep`](../goals/boolean-creep/README.md)
+— the operator replaced eradication with a documented partial closeout on
+2026-10-02 (#1405 set its manifest to `reference`; the unfinished phases stay
+recorded there and are not scheduled); both `codex-security-findings`
+packets closed (09-16 and #1181); `tsgo-045-effect-idiom-sweep` was
+superseded by the single-PR tsgo ratchet. The maintenance rule covers the
+next security batch; it consumes no slot.
 
 ### Labs — slot-free canaries (2026-08-24)
 
@@ -265,6 +317,9 @@ so the map stays true.
   after the atlas-sync P1 verdict lane, with
   [`semantica-reasoning-spike`](../goals/semantica-reasoning-spike/README.md)
   P1 (fixture only) free to run alongside and P2+ after the storage verdict.
+  Nobody has pulled any of the three since graduation (2026-09-03). If that
+  is still true at the next re-eval, pause them with resume conditions
+  rather than carry them as active.
 
 ### Maintenance rule (always allowed, any packet, any lane state)
 
@@ -338,8 +393,10 @@ renders their current local status view.
 | [`attributed-multi-claim-span`](../goals/attributed-multi-claim-span/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution, no blocker recorded). Resumes when `citation-verified-span-substrate` closes and a Lane 2 slot pulls the LangExtract-to-ClaimGate proof. |
 | [`effect-native-legal-eval`](../goals/effect-native-legal-eval/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes when a Lane 2 slot pulls the C&H baseline; `tracked-changes-ingest-wedge` is blockedBy it and waits with it. |
 | [`patent-drafting-episode-ledger`](../goals/patent-drafting-episode-ledger/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes after practice-kg-mcp P8 hands off and `agentic-professional-runtime` closes; also needs `citation-verified-span-substrate`. |
-| [`turborepo-task-qualification`](../goals/turborepo-task-qualification/README.md) | Paused by operator request 2026-09-09 mid-execution (P0–P2 in progress; checkpoint saved as a draft PR and `research/paused-pr-verification.json`). Resumes only on explicit operator authorization from that checkpoint, after time-to-certainty C4; Lane 3 queue item 7 leads with it. |
-| [`turborepo-cache-conformance`](../goals/turborepo-cache-conformance/README.md), [`turborepo-cache-trust-observability`](../goals/turborepo-cache-trust-observability/README.md), [`turborepo-quality-cache-adoption`](../goals/turborepo-quality-cache-adoption/README.md) | Scaffolded paused 2026-09-08, unstarted. Resume in parallel behind task-qualification's early contract once it is re-authorized. |
+| [`time-to-certainty`](../goals/time-to-certainty/README.md) | Paused 2026-09-28 on ruling 80 (P0, P1, P3 complete; P2 complete except C4.2). Resumes when `bun run beep yeet proof-report --since <round-25 merge instant>` in the owning clone reads ready (200 attempts, 10 branches, 0 disagreements, counting only rows recorded after that merge) with `malformed rows: 0` on the sample, every C5 fixture green and the ruling-69 root-input gap closed; the flip PR turns reuse on, retires the legacy stores and closes the packet. |
+| [`turborepo-quality-cache-adoption`](../goals/turborepo-quality-cache-adoption/README.md) | Scaffolded paused 2026-09-08, unstarted. Resumes behind the two active cache packets (conformance, trust-observability) once their shared Cache contracts ship. |
+| [`knowledge-freshness-audit`](../goals/knowledge-freshness-audit/README.md) | Paused 2026-09-25 after the planning packet (#1218). Resumes on explicit operator activation of P1 reporting; audited-content mutation follows each report and its false-positive review. |
+| [`agent-pool-picker`](../goals/agent-pool-picker/README.md) | Scaffolded paused 2026-09-16. Resumes when `agent-pool-doctrine` ships its seat map and floors (P1 implement there). |
 | [`lejeune-knowledge-desk-lab`](../goals/lejeune-knowledge-desk-lab/README.md) | Paused 2026-08-26. Resumes when `lejeune-demo-corpus-and-ontology` closes and a pitch date exists. |
 | [`ci-step-watchdog`](../goals/ci-step-watchdog/README.md) | Paused 2026-08-23 (1/8). Resumes when a Lane 3 slot frees and a capped-step incident recurs. |
 | [`configurable-full-document-editor`](../goals/configurable-full-document-editor/README.md) | Paused 2026-08-24. Resumes when intake P5 (viewer) pulls an editor surface. |
@@ -356,7 +413,10 @@ scaffolded `paused` on 2026-08-17 as queue goals. The rows from
 three 2026-08-13 graduations that `goals doctor` flagged as stale-active
 (21+ days untouched, no blocker, no status note) were paused via
 `set-status` in the same PR, and the paused packets that graduated without
-lane rows since 2026-08-17 now carry their resume conditions here.
+lane rows since 2026-08-17 now carry their resume conditions here. The
+2026-10-02 re-eval added `time-to-certainty` (paused by its own ruling 80),
+`knowledge-freshness-audit` and `agent-pool-picker`, and retired the
+`turborepo-task-qualification` row (closed via #1389).
 
 **2026-08-13 vintage, still `active` (queued, not in flight):** the rest of
 that graduation cohort is chained and waits on its `blockedBy` edges rather
@@ -380,7 +440,8 @@ as a pair, also behind `law-doc-structure-oa-slice`; and
 [`epistemic-contradiction-triage`](../goals/epistemic-contradiction-triage/README.md)
 and [`openclaw-workstation-agent`](../goals/openclaw-workstation-agent/README.md),
 which carry their own status notes and resume when a Lane 1 or Lane 2 slot
-pulls them. None of these starts while machinery-first holds.
+pulls them. Machinery-first no longer holds them back; none starts until a
+Lane 1 or Lane 2 slot pulls it.
 
 Completed packets record their own reopening triggers; deleted packets' living
 visions were re-captured under `explorations/`:
@@ -417,7 +478,22 @@ successors in Labs; `practice-m365-contacts`, `practice-mail-backfill` and
 `patent-document-schema` in Lane 2 as chain unlocks; the 2026-08-13 vintage
 listed under the parked table; and `todox-marketing-site` closed (#1101).
 The rule held for none of them; the funnel policy stands, and the next
-graduation names its lane row in the same PR. The gold-intake cohort's
+graduation names its lane row in the same PR. **Reconciled again
+2026-10-02:** since the 09-12 re-eval these graduated or opened without lane
+rows and now have them — `agent-pool-doctrine` and `agent-pool-picker`
+(09-16), `ontology-sidecar-stateless-identity` (09-22),
+`knowledge-freshness-audit` (09-24), `cloud-agent-readiness` and
+`ciops-ontology-pipeline` (10-01); closed without needing one:
+`effect-schema-parity`, `harness-evidence-ledger`,
+`mcp-stateless-kit-and-drivers`, `model-routing-sync`, `yeet-pr-events`,
+`effect-reference-workspace`, `turborepo-task-qualification` and both
+`codex-security-findings` packets; `tsgo-045-effect-idiom-sweep` was
+superseded by the single-PR tsgo ratchet. The rule held for none of them
+either. **Refreshed 2026-10-05** before this re-eval merged: #1405 moved
+`boolean-creep` to `reference` on 10-02; nothing else graduated, closed,
+paused or was superseded between 10-02 and 10-05 (13 PRs merged, 54 active,
+15 paused, 123 completed-retained, 4 reference, 1 superseded). The
+gold-intake cohort's
 pre-drafted DECISIONS files are the shaping queue;
 `bun run beep explore atlas` renders the local status board from D3 state.
 
