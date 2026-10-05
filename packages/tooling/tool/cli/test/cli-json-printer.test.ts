@@ -14,25 +14,12 @@ import {
 import { it } from "@beep/test-runner";
 import { beforeEach, describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const collectLines = <A, E>(
-  effect: Effect.Effect<A, E, TestConsole.TestConsole>
-): Effect.Effect<ReadonlyArray<unknown>, E> =>
-  Effect.gen(function* () {
-    yield* effect;
-    return yield* TestConsole.logLines;
-  }).pipe(provideScopedLayer(Layer.fresh(TestConsole.layer)));
 
 describe("internal/cli/Json renderPrettyCommandJson", () => {
   it("pretty-formats a compact JSON payload with a trailing newline", () => {
@@ -190,7 +177,7 @@ describe("internal/cli/Json printCommandJson", () => {
     });
     const output = result.stdout.toString();
 
-    expect(result.exitCode).toBe(0);
+    expect(result.exitCode, `printCommandJson Bun child stderr: ${result.stderr.toString()}`).toBe(0);
     expect(result.stdout.byteLength).toBeGreaterThan(65_536);
     expect(output).toBe(`${JSON.stringify(payload)}\n`);
   });
@@ -252,24 +239,27 @@ describe("internal/cli/Printer formatDurationSeconds", () => {
 });
 
 describe("internal/cli/Printer tagged logging", () => {
-  it.effect(
-    "prefixes messages with the tag",
-    Effect.fnUntraced(function* () {
-      const lines = yield* collectLines(
-        Effect.gen(function* () {
-          const log = makeTaggedLogger("ci");
-          yield* log("done");
-        })
-      );
-      expect(lines).toEqual(["[ci] done"]);
-    })
-  );
+  it.layer(TestConsole.layer)("prefix", (it) => {
+    it.effect(
+      "prefixes messages with the tag",
+      Effect.fnUntraced(function* () {
+        const log = makeTaggedLogger("ci");
+        yield* log("done");
+        expect(yield* TestConsole.logLines).toEqual(["[ci] done"]);
+      })
+    );
+  });
 
-  it.effect(
-    "logs record entries as [tag] key=value in insertion order",
-    Effect.fnUntraced(function* () {
-      const lines = yield* collectLines(logTaggedSummary("schema-first", { live_entries: 3, missing_entries: 0 }));
-      expect(lines).toEqual(["[schema-first] live_entries=3", "[schema-first] missing_entries=0"]);
-    })
-  );
+  it.layer(TestConsole.layer)("summary", (it) => {
+    it.effect(
+      "logs record entries as [tag] key=value in insertion order",
+      Effect.fnUntraced(function* () {
+        yield* logTaggedSummary("schema-first", { live_entries: 3, missing_entries: 0 });
+        expect(yield* TestConsole.logLines).toEqual([
+          "[schema-first] live_entries=3",
+          "[schema-first] missing_entries=0",
+        ]);
+      })
+    );
+  });
 });
