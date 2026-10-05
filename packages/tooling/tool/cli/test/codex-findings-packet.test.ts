@@ -252,3 +252,50 @@ describe("codex findings packet is deterministic and scan-clean", () => {
     })
   );
 });
+
+describe("Security Cloud packet guidance", () => {
+  it.effect("requires detail enrichment and Fixed closeout without a Chrome dependency", () =>
+    Effect.gen(function* () {
+      const record = CodexFindingRecord.make({ ...recordAt(1), codexId: `commit:${"a".repeat(32)}` });
+      const plan = CodexPacketPlan.make({
+        ...planWith([record]),
+        source: "security-cloud-csv",
+        sourceUrl: "https://chatgpt.com/mcp-app/connector_openai_defense_factory/open_defense_factory#/findings",
+      });
+      const documents = yield* renderPacketDocuments({
+        plan,
+        rawPayloadJson: "{}",
+        rawReports: [
+          {
+            codexId: record.codexId,
+            description: "SUMMARY ONLY",
+            relevantPaths: "packages/x.ts",
+            detectedAt: "2026-10-05T12:00:00Z",
+          },
+        ],
+      });
+      expect(yield* decodeGoalManifest(yield* parseJson(at(documents, "ops/manifest.json").contents))).toBeDefined();
+      expect(yield* decodeCodexTriageLedger(yield* parseJson(at(documents, "ops/triage.json").contents))).toBeDefined();
+      const goal = at(documents, "GOAL.md").contents;
+      expect(goal.length).toBeLessThanOrEqual(GOAL_MD_MAX_CHARS);
+      expect(goal).toContain("Attack-path analysis");
+      expect(goal).toContain("as Fixed");
+      expect(
+        A.join(
+          A.map(documents, (d) => d.contents),
+          "\n"
+        )
+      ).not.toContain("Chrome");
+      expect(at(documents, "raw/reports/CSF-001.md").contents).toContain("Captured summary");
+      expect(
+        A.join(
+          A.map(
+            A.filter(documents, (d) => d.tracked),
+            (d) => d.contents
+          ),
+          "\n"
+        )
+      ).not.toContain("SUMMARY ONLY");
+    })
+  );
+});
