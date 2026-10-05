@@ -196,7 +196,9 @@ const generatedComposers = $I.compose(
   "box-provisioning",
   "freshbooks",
   "test-runner",
-  "xstate"
+  "xstate",
+  "occt",
+  "pdf-tools"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -2680,3 +2682,37 @@ export const $TestRunnerId: Identity.IdentityComposer<"@beep/test-runner"> = com
  * @since 0.0.0
  */
 export const $XstateId: Identity.IdentityComposer<"@beep/xstate"> = composers.$XstateId;
+
+/**
+ * Identity composer for `@beep/occt`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $OcctId } from "@beep/identity/packages"
+ *
+ * const id = $OcctId.make("Occt")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $OcctId: Identity.IdentityComposer<"@beep/occt"> = composers.$OcctId;
+
+/**
+ * Identity composer for `@beep/pdf-tools`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $PdfToolsId } from "@beep/identity/packages"
+ *
+ * const id = $PdfToolsId.make("PdfTools")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $PdfToolsId: Identity.IdentityComposer<"@beep/pdf-tools"> = composers.$PdfToolsId;

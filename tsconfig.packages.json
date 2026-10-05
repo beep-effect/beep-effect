@@ -157,6 +157,9 @@
       "path": "packages/drivers/obs"
     },
     {
+      "path": "packages/drivers/occt"
+    },
+    {
       "path": "packages/drivers/onepassword-cli"
     },
     {
@@ -173,6 +176,9 @@
     },
     {
       "path": "packages/drivers/pacer"
+    },
+    {
+      "path": "packages/drivers/pdf-tools"
     },
     {
       "path": "packages/drivers/pglite"

@@ -2024,7 +2024,11 @@
       "@beep/xstate/*": ["./packages/drivers/xstate/src/*"],
       "@beep/dock-react/dock.css": [
         "./packages/foundation/ui-system/dock-react/src/dock.css"
-      ]
+      ],
+      "@beep/occt": ["./packages/drivers/occt/src/index.ts"],
+      "@beep/occt/*": ["./packages/drivers/occt/src/*"],
+      "@beep/pdf-tools": ["./packages/drivers/pdf-tools/src/index.ts"],
+      "@beep/pdf-tools/*": ["./packages/drivers/pdf-tools/src/*"]
     }
   }
 }

@@ -111,6 +111,8 @@ const config = {
     "packages/drivers/box-provisioning/package.json",
     "packages/drivers/freshbooks/package.json",
     "packages/drivers/xstate/package.json",
+    "packages/drivers/occt/package.json",
+    "packages/drivers/pdf-tools/package.json",
   ],
   customTypes: {
     catalog: {
