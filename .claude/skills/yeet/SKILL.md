@@ -300,7 +300,13 @@ CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run b
 cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep --retire --lane <lane>
 ```
 
-  `--json` prints one document; `--branch` is refused with `--retire`.
+  `--json` prints one document; `--branch` is refused with `--retire`. Both
+  the plan and the report name every goal packet the retired branch touched
+  whose lifecycle is still `active` (`[yeet] packet still active after merge:
+  goals/<slug> …`, `activePackets` in JSON): that packet's lifecycle flip
+  belonged in the merged PR, so open the closeout PR before moving on.
+  `bun run beep goals doctor` keeps flagging it as `active-after-merge` while
+  a merge commit cites the slug and nobody touches the packet.
 
 - Post and resolve the drafted review-thread replies for this branch's PR:
 
