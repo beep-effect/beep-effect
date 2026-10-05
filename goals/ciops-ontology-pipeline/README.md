@@ -31,11 +31,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Inheritance — not started.
+P0 Inheritance — complete 2026-10-05 (W1 landed, W2 declined by P0 Ruling 1). Next: P1 Stage
+C capture (W3–W4), the first irreversible step.
 
 ## Latest Evidence
 
-Not started.
+- 2026-10-05, W1: `research/SOURCES.md` §4 refreshed against `8b7392fe00`; 39 change-event rows
+  backfilled into `explorations/beep-ci-operational-ontology/research/control-interventions.yaml`
+  (42 rows) by the reproducible query in `research/scripts/w1_lever_query.sh`, under P0 Rulings
+  2–7; protocol, census and exclusions in `research/w1-lever-query.md`.
 
 ## Notes
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`
 
 ## Phases
 
@@ -10,8 +10,8 @@ Status: `active`
 | --- | --- | --- | --- |
 | P0 Hostile-text fixture spike | completed | Execute the deferred spike over surrogate pairs, combining marks, ligatures, curly quotes, collapsed whitespace, duplicate occurrences, page boundaries, and source drift. Compare all incoming units against canonical half-open UTF-16 and specify normalization-to-raw mapping, straddle reconstruction, ambiguity, and re-anchor failure semantics before freezing implementation contracts. | Executable fixtures expose the current assumptions; one explicit conversion/mapping contract is recorded; every fixture has an exact raw-slice success or typed fail-closed expectation; unresolved conversion contradictions block P1. |
 | P1 Implement | complete | Add the smallest schema-first verified-anchor construction and persistence contract in provenance plus Effect-first normalization/source mapping, explicit boundary adapters, and straddle over direct `GroundedExtraction[]` input in langextract. | Exact raw slices produce matter-scoped verified anchors; absent, stale, ambiguous, malformed-unit, and cross-matter inputs fail closed; required persistence fields and re-anchor history round-trip. |
-| P2 Verify | in progress | Run the hostile-text, raw-slice, straddle, drift/re-anchor, ambiguity, matter-scope, persistence, focused package, and repo proof matrix. | Every `SPEC.md` acceptance criterion is green, or blockers are archived reproducibly without weakening equality, privilege, or closed-failure rules. |
-| P3 Close | pending | Drive the implementation PR to mergeable through Yeet, write the closeout reflection, archive proof, and synchronize packet evidence/status. | Yeet/GitHub reports the PR mergeable; a schema-valid reflection exists; README, PLAN, and manifest match the evidence. |
+| P2 Verify | complete | Run the hostile-text, raw-slice, straddle, drift/re-anchor, ambiguity, matter-scope, persistence, focused package, and repo proof matrix. | Every `SPEC.md` acceptance criterion is green, or blockers are archived reproducibly without weakening equality, privilege, or closed-failure rules. |
+| P3 Close | complete | Drive the implementation PR to mergeable through Yeet, write the closeout reflection, archive proof, and synchronize packet evidence/status. | Yeet/GitHub reports the PR mergeable; a schema-valid reflection exists; README, PLAN, and manifest match the evidence. The implementation PR #871 merged 2026-08-30; this status flip lands in the closeout PR #1415 under the same-PR packet-state law, so its merge is the hosted receipt. |
 
 ## P3 Closeout Checklist
 

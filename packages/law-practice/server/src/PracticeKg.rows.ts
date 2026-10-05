@@ -53,6 +53,7 @@ const $I = $LawPracticeServerId.create("PracticeKg.rows");
  *   effectiveName: "2019-04-02-office-action.pdf",
  *   mtimeIso: "2019-04-02T14:22:00.000Z",
  *   organizedRelativePath: "organized/Acme/AB-1234/2019-04-02-office-action.pdf",
+ *   restored: false,
  *   runLabel: "base",
  *   sizeBytes: 18342,
  *   sourceLabel: "acme-archive",
@@ -76,6 +77,7 @@ export class PracticeKgCatalogRow extends S.Class<PracticeKgCatalogRow>($I`Pract
     effectiveName: S.String,
     mtimeIso: S.String,
     organizedRelativePath: S.NullOr(S.String),
+    restored: S.Boolean,
     sourceOriginChain: S.String,
     runLabel: S.String,
     sizeBytes: S.Finite,
@@ -134,6 +136,90 @@ export class PracticeKgEnrichmentRow extends S.Class<PracticeKgEnrichmentRow>($I
   },
   $I.annote("PracticeKgEnrichmentRow", {
     description: "One USPTO enrichment candidate joined to a docket family from the catalog DuckDB.",
+  })
+) {}
+
+/**
+ * One `<client>.<family>` attorney-reference token found in a docket document.
+ *
+ * **Details**
+ *
+ * Rows come from scanning the bundle's `document_text` for the practice's own
+ * reference form `<client>.<docket><country><seq>`; only the numeric client
+ * prefix, the full docket code, and its family part are kept. A document
+ * contributes one row per distinct `(client, docket)` pair it mentions; the
+ * docket code is what lets attribution tell a document's own reference from a
+ * citation of another client's matter that shares the family number.
+ *
+ * **Example** (Decode docket reference row)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PracticeKgDocketReferenceRow } from "../../src/PracticeKg.rows.ts"
+ *
+ * const row = S.decodeUnknownSync(PracticeKgDocketReferenceRow)({
+ *   client: "12345",
+ *   digest: "sha256:9f2c",
+ *   docket: "10008US01",
+ *   family: "10008"
+ * })
+ *
+ * console.log(row.client) // "12345"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class PracticeKgDocketReferenceRow extends S.Class<PracticeKgDocketReferenceRow>(
+  $I`PracticeKgDocketReferenceRow`
+)(
+  {
+    client: S.NonEmptyString,
+    digest: S.NonEmptyString,
+    docket: S.NonEmptyString,
+    family: S.NonEmptyString,
+  },
+  $I.annote("PracticeKgDocketReferenceRow", {
+    description: "One client-prefixed docket-family reference found in a docket document's text.",
+  })
+) {}
+
+/**
+ * One normalized USPTO application or patent number found in a docket document.
+ *
+ * **Details**
+ *
+ * `source` records whether the number sat in the document's own text or in its
+ * catalogued file name and path; a file-name mention is treated as the stronger
+ * signal when a number is resolved to a family. `number` is digits only, which
+ * is the same normal form the enrichment rows carry.
+ *
+ * **Example** (Decode number mention row)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PracticeKgNumberMentionRow } from "../../src/PracticeKg.rows.ts"
+ *
+ * const row = S.decodeUnknownSync(PracticeKgNumberMentionRow)({
+ *   digest: "sha256:9f2c",
+ *   number: "14783547",
+ *   source: "text"
+ * })
+ *
+ * console.log(row.source) // "text"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class PracticeKgNumberMentionRow extends S.Class<PracticeKgNumberMentionRow>($I`PracticeKgNumberMentionRow`)(
+  {
+    digest: S.NonEmptyString,
+    number: S.NonEmptyString,
+    source: S.Literals(["filename", "text"]),
+  },
+  $I.annote("PracticeKgNumberMentionRow", {
+    description: "One USPTO number mentioned by a docket document, with where it was found.",
   })
 ) {}
 

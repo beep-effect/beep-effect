@@ -71,11 +71,12 @@ export class YeetRetireSweepPlan extends S.Class<YeetRetireSweepPlan>($I`YeetRet
     schemaVersion: S.Literal("yeet-retire-sweep-plan/v1"),
     retire: YeetRetirePlan,
     blocker: S.OptionFromNullOr(S.String),
+    activePackets: S.Array(S.String),
     sweep: SweepPlan,
   },
   $I.annote("YeetRetireSweepPlan", {
     description:
-      "Dry-run document for a retirement: the lane plan, why it would be refused if at all, and the owning clone's sweep plan.",
+      "Dry-run document for a retirement: the lane plan, why it would be refused if at all, the touched packets still active, and the owning clone's sweep plan.",
   })
 ) {}
 
@@ -106,11 +107,12 @@ export class YeetRetireSweepReport extends S.Class<YeetRetireSweepReport>($I`Yee
     schemaVersion: S.Literal("yeet-retire-sweep-report/v1"),
     retire: YeetRetirePlan,
     receipt: WorktreeRemovalReceipt,
+    activePackets: S.Array(S.String),
     sweep: SweepReport,
   },
   $I.annote("YeetRetireSweepReport", {
     description:
-      "Result document for a retirement: the lane plan, the worktree removal receipt, and the owning clone's sweep report.",
+      "Result document for a retirement: the lane plan, the worktree removal receipt, the touched packets still active, and the owning clone's sweep report.",
   })
 ) {}
 

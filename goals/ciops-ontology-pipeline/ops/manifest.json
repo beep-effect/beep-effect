@@ -6,7 +6,7 @@
     "title": "CI-Ops Ontology Pipeline",
     "status": "active",
     "created": "2026-10-01",
-    "updated": "2026-10-01",
+    "updated": "2026-10-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ciops-ontology-pipeline",
@@ -76,7 +76,7 @@
     {
       "id": "P0",
       "name": "Inheritance and change events (W1); optional seat launcher (W2)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",

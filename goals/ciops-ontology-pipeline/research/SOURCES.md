@@ -35,7 +35,7 @@ None beyond the exploration ledger's §3.
 
 ## 4. In-repo capability references
 
-Refreshed at graduation against main `886de7a261`. Repo-cli paths are under
+Refreshed against main `8b7392fe00` (2026-10-05, P0 W1 SOURCES carry; the graduation refresh was against `886de7a261`). Repo-cli paths are under
 `packages/tooling/tool/cli/src/`; packet paths are under
 `explorations/beep-ci-operational-ontology/`. `apps/labs/ciops` code is cited by symbol only
 (#1371, merged 2026-10-01 after that anchor, edits its projection files).
@@ -43,10 +43,10 @@ Refreshed at graduation against main `886de7a261`. Repo-cli paths are under
 | Capability | Cite at HEAD | Use |
 | --- | --- | --- |
 | S7 projection engine | `apps/labs/ciops` (`@beep/ciops`): `CiOpsProjection` service and `CiOpsProjectionShape` (`project`, `emitAbox`, `planEpisode`) in `src/projection/CiOpsProjection.ts`; `projectSchedule` in `src/projection/Engine.ts`; `emitScheduleAbox` in `src/projection/Turtle.ts` | reuse and extend (W5, W6) |
-| Differential replay | `decodeAdmissionJournal`, `replayAdmissionJournal`, `requireReplayMatch` in `apps/labs/ciops/src/projection/Replay.ts`; `apps/labs/ciops/scripts/generate-replay-evidence.ts` | reuse; agreement report NET-NEW (W5) |
+| Differential replay | `decodeAdmissionJournal`, `replayAdmissionJournal`, `requireReplayMatch` in `apps/labs/ciops/src/projection/Replay.ts`; `generateReplayEvidence` in `apps/labs/ciops/src/projection/Evidence.ts`, run by `apps/labs/ciops/scripts/generate-replay-evidence.ts` (`evidence:s7` checks, `evidence:s7:write` writes; #1394) | reuse; agreement report NET-NEW (W5) |
 | Planner seam | `PlanEpisodeInput` (`{ episodeId }` at HEAD) and `plannerNotImplemented` in `apps/labs/ciops/src/projection/Schemas.ts`; contract `ontology/docs/s7-projection-contract.md` §3.2 and §6 | widened first, then given a body (W6, graduation Ruling 11) |
-| Gate-order handoff | `GateOrderHandoff` in `commands/Quality/Quality.schemas.ts:1821`; `DEFAULT_GATE_ORDER_SEED` (:224), `GATE_ORDER_SOURCE` (:414) and `orderWaveLanes` (:641) in `commands/Yeet/internal/WaveOrder.ts`; document `goals/time-to-certainty/research/gate-order-handoff.json` | read as a document by path and sha256, never imported (W6) |
-| Admission journal | `internal/repo-run/AdmissionJournal.ts`: v3 `admission-lease-evicted` (:317), `admission-enqueued` (:438), `admission-withdrawn` (:462); 200-admission retention | capture input (W3); seat-request clock (W8) |
+| Gate-order handoff | `GateOrderHandoff` in `commands/Quality/Quality.schemas.ts:1821`; `DEFAULT_GATE_ORDER_SEED` (:225), `GATE_ORDER_SOURCE` (:435) and `orderWaveLanes` (:663) in `commands/Yeet/internal/WaveOrder.ts`; document `goals/time-to-certainty/research/gate-order-handoff.json` | read as a document by path and sha256, never imported (W6) |
+| Admission journal | `internal/repo-run/AdmissionJournal.ts`: v3 `admission-lease-evicted` (`AdmissionJournalLeaseEvictedV3` :512), `admission-enqueued` (:438), `admission-withdrawn` (:462); 200-admission retention (`RETAINED_ADMISSIONS` :51) | capture input (W3); seat-request clock (W8) |
 | Scheduler invariant | `internal/repo-run/QualityScheduler.ts:1599` (`activeTokenTotal(state) + ticket.weightTokens <= capacityTokens`); `isTicketSkippable` (:1556); `ProofStage` in `internal/repo-run/QualityScheduler.schemas.ts:194` | replay oracle and tier vocabulary (W5, W8) |
 | Attempt journals | `commands/Yeet/internal/AttemptJournal.ts` `YeetAttemptFinished` (:86): `attempt-finished` embeds the verdict, so verdict history survives a last-write-only `verdict.json` | capture input (W3) |
 | Proof ledger | Owning-clone `.beep/yeet/proof-ledger.ndjson` resolved by `proofLedgerPathForCheckout` (`commands/Yeet/internal/ArtifactPaths.ts:457`, time-to-certainty ruling 71); `ProofProvenance` (`commands/Yeet/internal/ProofFact.ts:233`), `ProofFact` (:298); writer `recordProofShadowForAttempt` (`commands/Yeet/internal/ProofShadow.ts:983`, called at `commands/Yeet/internal/Handler.ts:1627`); append-only `commands/Yeet/internal/ProofLedger.ts` | NET-NEW capture generator reads it (W4) |
@@ -69,6 +69,11 @@ Corrections carried from frozen exploration files, which are never edited:
   `Schemas.ts:885-887` and `:843-848`; read them as `plannerNotImplemented` and
   `PlanEpisodeInput` in `apps/labs/ciops/src/projection/Schemas.ts` (the ttc file stays
   unedited under its ruling 79).
+- `goals/time-to-certainty/research/d1-ordering-handoff.md:110` cites
+  `apps/labs/ciops/scripts/generate-replay-evidence.ts:17-20` and `:41-54`. Since #1394 the script
+  is a 33-line entry: read the paths as `EvidencePaths.make` (script :8-12) and the read and digest
+  steps as `readArtifact` and `sha256` (`apps/labs/ciops/src/projection/Evidence.ts:125`, `:142`)
+  under `generateReplayEvidence` (:206). The ttc file stays unedited.
 
 ## 5. Cross-links & provenance
 
@@ -85,7 +90,10 @@ Corrections carried from frozen exploration files, which are never edited:
   graduation PR).
 - **Gate-order handoff digest.** At HEAD `886de7a261`,
   `goals/time-to-certainty/research/gate-order-handoff.json` is sha256
-  `a4d7d22edb457c14b6cfaac8c69cd5bd505bf1bcc18fd3fc8be5ec3aa6417ff8` (#1322, 2026-09-28).
+  `a4d7d22edb457c14b6cfaac8c69cd5bd505bf1bcc18fd3fc8be5ec3aa6417ff8` (#1322, 2026-09-28). At `8b7392fe00` it is
+  `705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198` with 33 lanes (#1380 added
+  `quality:shadcn-lint`), so the unchanged-order claim below holds up to #1380 only; W6 pins the
+  digest it reads.
   The `c9619cee…` digest in the exploration's 2026-09-25 receipt and Trail line is correct
   as dated (#1269). Between the two, #1321 and #1322 moved only `source.reference.sha256`
   (the pinned `economics.json` digest, time-to-certainty ruling 77); the seed and the 32-lane

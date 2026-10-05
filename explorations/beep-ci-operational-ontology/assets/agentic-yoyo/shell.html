@@ -1,0 +1,847 @@
+<title>The Agentic Yoyo, Illustrated</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ground:#0B1310; --surface:#111C15; --panel:#0E1712; --line:#1E2E24;
+    --ink:#E4EFE6; --muted:#87A192; --faint:#4E6156;
+    --silver:#C7D3DC; --silver-dim:#8FA0AC;
+    --green:#44B877; --amber:#CFA51E; --red:#E2503A;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --ground:#F2EDE0; --surface:#FAF7EE; --panel:#EFE9DA; --line:#D8D0BC;
+      --ink:#22382B; --muted:#6B7D6F; --faint:#A9B4A6;
+      --silver:#5A7184; --silver-dim:#8497A6;
+      --green:#1E7A4A; --amber:#8F6B00; --red:#B03A28;
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#F2EDE0; --surface:#FAF7EE; --panel:#EFE9DA; --line:#D8D0BC;
+    --ink:#22382B; --muted:#6B7D6F; --faint:#A9B4A6;
+    --silver:#5A7184; --silver-dim:#8497A6;
+    --green:#1E7A4A; --amber:#8F6B00; --red:#B03A28;
+  }
+  :root[data-theme="dark"]{
+    --ground:#0B1310; --surface:#111C15; --panel:#0E1712; --line:#1E2E24;
+    --ink:#E4EFE6; --muted:#87A192; --faint:#4E6156;
+    --silver:#C7D3DC; --silver-dim:#8FA0AC;
+    --green:#44B877; --amber:#CFA51E; --red:#E2503A;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:"Instrument Sans",system-ui,sans-serif;
+  }
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+
+  /* ---------- slim sticky header + the hero stage ----------
+     The stage is an ordinary hero that scrolls away. Only the header stays. A chapter's
+     "show me" brings the stage back as a fixed overlay (the peek), which closes itself once
+     you scroll on, so reading is never done under a pinned band. */
+  header{
+    position:sticky; top:0; z-index:6; background:var(--ground);
+    display:flex; align-items:center; gap:1.2rem; flex-wrap:nowrap; min-width:0;
+    padding:.55rem 1.4rem .5rem; border-bottom:1px solid var(--line); min-height:3.25rem;
+  }
+  header h1{font-family:"Instrument Serif",Georgia,serif; font-weight:400; font-size:1.3rem; margin:0; white-space:nowrap}
+  header h1 em{color:var(--silver)}
+  nav.chapters{
+    flex:1; min-width:0; display:flex; gap:.1rem .8rem; flex-wrap:wrap; justify-content:center;
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.6rem; letter-spacing:.04em; line-height:1.5;
+  }
+  nav.chapters a{color:var(--faint); text-decoration:none; white-space:nowrap}
+  nav.chapters a:hover, nav.chapters a:focus-visible{color:var(--silver); outline:none}
+  @media (max-width:1100px){ nav.chapters{display:none} }
+  .phase-name{
+    margin-left:auto; font-family:"IBM Plex Mono",ui-monospace,monospace; white-space:nowrap;
+    font-size:.68rem; letter-spacing:.2em; color:var(--faint); text-transform:uppercase;
+  }
+  #btnLoop{display:none; margin-left:auto}
+  header.away #btnLoop{display:inline-block}
+  header.away .phase-name{display:none}
+  #hero{height:calc(100vh - 3.25rem); height:calc(100dvh - 3.25rem)}
+  #pin{height:100%; display:flex; flex-direction:column; background:var(--ground); border-bottom:1px solid var(--line)}
+  #pin.peek{
+    position:fixed; top:3.25rem; left:0; right:0; z-index:5; height:48vh; height:48dvh;
+    box-shadow:0 14px 34px rgba(0,0,0,.35);
+  }
+  @media (max-width:700px){ #pin.peek{height:44vh; height:44dvh} }
+  #stage{flex:1; position:relative; min-height:0}
+  #stage svg{display:block; width:100%; height:100%}
+  #caption{
+    position:absolute; left:0; right:0; bottom:.55rem; text-align:center; pointer-events:none;
+    font-family:"Instrument Serif",Georgia,serif; font-style:italic; font-size:1.18rem;
+    color:var(--ink); text-shadow:0 1px 8px var(--ground), 0 0 18px var(--ground); padding:0 2rem; text-wrap:balance;
+  }
+  #caption small{display:block; font-family:"IBM Plex Mono",ui-monospace,monospace; font-style:normal;
+    font-size:.64rem; color:var(--faint); letter-spacing:.08em; margin-top:.25rem}
+  .peek #caption{font-size:.98rem; bottom:.35rem}
+  .peek #caption small{font-size:.58rem; margin-top:.1rem}
+  @media (max-width:700px){ #caption{font-size:1rem} .peek #caption{font-size:.86rem} }
+  .stage-bar{
+    display:flex; align-items:center; gap:.7rem; padding:.45rem 1.4rem;
+    border-top:1px solid var(--line); flex-wrap:wrap;
+  }
+  .peek .stage-bar{padding:.3rem 1rem}
+  .stage-bar button, .beat, #btnLoop{
+    background:var(--surface); color:var(--ink); border:1px solid var(--line); border-radius:3px;
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.74rem; padding:.36rem .85rem; cursor:pointer;
+  }
+  .stage-bar button:hover, .beat:hover, #btnLoop:hover{border-color:var(--silver-dim)}
+  .stage-bar button:focus-visible, .beat:focus-visible, #btnLoop:focus-visible, summary:focus-visible{outline:2px solid var(--silver); outline-offset:1px}
+  .stage-bar .receipts{margin-left:auto; color:var(--faint); font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.64rem; text-align:right}
+  @media (max-width:700px){ .stage-bar .receipts{display:none} }
+  .peek .stage-bar .receipts{display:none}
+  .stage-bar .variant{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.64rem; color:var(--faint); letter-spacing:.06em}
+  #btnHide{display:none; margin-left:auto}
+  .peek #btnHide{display:inline-block}
+
+  /* ---------- the story ---------- */
+  main.story{
+    max-width:68ch; margin:0 auto; padding:2.6rem 1.4rem 5rem;
+    font-size:1.06rem; line-height:1.62;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.66rem; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--faint); margin:0 0 1.4rem;
+  }
+  details.toc{margin:0 0 2rem; border:1px solid var(--line); border-radius:3px; padding:.5rem .9rem; display:none}
+  details.toc summary{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.72rem; letter-spacing:.1em; color:var(--muted); cursor:pointer}
+  details.toc div{display:flex; flex-direction:column; gap:.35rem; padding:.6rem 0 .2rem;
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.72rem}
+  details.toc a{color:var(--silver); text-decoration:none}
+  @media (max-width:1100px){ details.toc{display:block} }
+  .story h2{
+    font-family:"Instrument Serif",Georgia,serif; font-weight:400; font-size:1.9rem; line-height:1.15;
+    margin:2.9rem 0 .55rem; text-wrap:balance; scroll-margin-top:4.2rem;
+  }
+  .story h2 em{color:var(--silver)}
+  .story p{margin:0 0 1.15rem}
+  .story blockquote{
+    border-left:2px solid var(--silver-dim); margin:0 0 1.7rem; padding:.15rem 0 .15rem 1.1rem;
+    font-family:"Instrument Serif",Georgia,serif; font-style:italic; font-size:1.22rem; color:var(--muted); line-height:1.5;
+  }
+  .story blockquote p{margin:0}
+  .story blockquote cite{
+    display:block; font-style:normal; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.66rem;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin-top:.55rem;
+  }
+  .story a{color:var(--silver); text-decoration-color:var(--silver-dim); text-underline-offset:.15em; overflow-wrap:anywhere}
+  .story a:hover{color:var(--ink)}
+  .story code{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.86em; background:var(--surface); padding:.06em .32em; border-radius:2px}
+  .story ul, .story ol{padding-left:1.35rem; margin:0 0 1.2rem}
+  .story li{margin:.32rem 0}
+  .story strong{font-weight:600}
+  .beats{display:flex; gap:.5rem; flex-wrap:wrap; margin:.15rem 0 1.15rem}
+  .beat{font-size:.7rem; letter-spacing:.04em; color:var(--silver); padding:.3rem .7rem}
+  .beat.active{border-color:var(--green); color:var(--green)}
+
+  /* legend, injected into "The silver cord" */
+  .legend{
+    display:grid; grid-template-columns:72px 1fr; column-gap:1rem; row-gap:.7rem; align-items:center;
+    margin:.2rem 0 1.8rem; padding:1rem 1.1rem; border:1px solid var(--line); background:var(--panel);
+  }
+  .legend svg{width:72px; height:28px; display:block; overflow:visible}
+  .legend dt{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--silver); margin:0 0 .1rem}
+  .legend dd{margin:0; font-size:.92rem; line-height:1.45; color:var(--muted)}
+  .legend .sw-silver{color:var(--silver)} .legend .sw-amber{color:var(--amber)}
+  .legend .sw-green{color:var(--green)} .legend .sw-red{color:var(--red)} .legend .sw-faint{color:var(--faint)}
+  .legend .row{display:contents}
+
+  /* receipts */
+  .receipts-block{border-top:1px solid var(--line); padding:.7rem 0}
+  .receipts-block:last-of-type{border-bottom:1px solid var(--line)}
+  .receipts-block summary{cursor:pointer; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.8rem; color:var(--silver); padding:.2rem 0}
+  .receipts-block .note{font-size:.92rem; color:var(--muted); margin:.6rem 0 .8rem}
+  .scroll{overflow-x:auto}
+  .receipts-block table{border-collapse:collapse; width:100%; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.76rem; font-variant-numeric:tabular-nums}
+  .receipts-block th, .receipts-block td{text-align:left; padding:.3rem .55rem; border-bottom:1px solid var(--line); vertical-align:top}
+  .receipts-block th{color:var(--muted); font-weight:500; letter-spacing:.04em}
+  .receipts-block td.num{text-align:right; white-space:nowrap}
+  .receipts-block tr.touched td{color:var(--silver)}
+  .receipts-block ul.files{columns:3; column-gap:1.4rem; padding-left:1rem; margin:.6rem 0 .4rem;
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.74rem}
+  @media (max-width:700px){ .receipts-block ul.files{columns:2} }
+  .receipts-block li{margin:.15rem 0}
+</style>
+
+<header id="hdr">
+  <h1>The Agentic <em>Yoyo</em></h1>
+  <nav class="chapters" id="nav"><!--NAV--><a href="#receipts">Receipts</a></nav>
+  <div class="phase-name" id="phaseName"></div>
+  <button id="btnLoop" type="button" title="Bring the loop back while you read">&#9654; loop</button>
+</header>
+<div id="hero">
+  <div id="pin">
+    <div id="stage">
+      <svg id="svg" role="img" aria-label="Sub-agents on separate clocks throw their yoyo at one node at a time, edit-command beads riding the silver cord; checks roll out beside each node and collapse green before it spins up, node by node, back to the source. On alternate loops one cord is severed: its work never returns and its charge persists until a replay infers the death."></svg>
+      <div id="caption"></div>
+    </div>
+    <div class="stage-bar">
+      <button id="btnPlay" type="button">pause</button>
+      <button id="btnRestart" type="button">restart</button>
+      <button id="btnStep" type="button" hidden>step &rsaquo;</button>
+      <span class="variant" id="variantName"></span>
+      <div class="receipts">real fan of commit 8733d894e0 &middot; 26 pkgs / 123 dependsOn edges &middot; beads = its real 48 files &middot; p(first attempt red) = 0.59 &middot; chips = real yeet lanes</div>
+      <button id="btnHide" type="button" title="Hide the loop">hide &times;</button>
+    </div>
+  </div>
+</div>
+
+<main class="story">
+  <p class="eyebrow">The article, as it stands on __REVISED__ &middot; press a chapter's "show me" to seek the loop</p>
+  <details class="toc"><summary>chapters</summary><div id="tocNarrow"></div></details>
+  <!--STORY-->
+  <section class="chapter" id="receipts" data-slug="receipts">
+    <h2 id="receipts-heading">Receipts</h2>
+    <p>The animation is not a diagram. Every node, bead, chip, and the severed charge are the repo's own numbers, listed here so the picture can be checked against them.</p>
+    <!--RECEIPTS-->
+  </section>
+</main>
+
+<template id="tpl-legend">
+  <dl class="legend" aria-label="How the animation draws the metaphor">
+    <div class="row">
+      <svg viewBox="0 0 72 28" class="sw-silver" aria-hidden="true"><path d="M4 6 C 30 6, 40 22, 62 22" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="62" cy="22" r="5" fill="currentColor"/><circle cx="30" cy="10.5" r="2.4" fill="currentColor"/></svg>
+      <div><dt>the throw</dt><dd>An agent's change, thrown down the dependency graph one node at a time. Beads are the edit commands riding the cord.</dd></div>
+    </div>
+    <div class="row">
+      <svg viewBox="0 0 72 28" class="sw-silver" aria-hidden="true"><path d="M4 14 L 68 14" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="14" r="3" fill="currentColor"/><circle cx="68" cy="14" r="3" fill="currentColor"/></svg>
+      <div><dt>the string</dt><dd>The silver cord. The channel assurance flows back through. Every line on the stage ends at a node, because a line with nothing on the end is a cut string.</dd></div>
+    </div>
+    <div class="row">
+      <svg viewBox="0 0 72 28" class="sw-amber" aria-hidden="true"><path d="M4 4 L 40 22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 4"/><circle cx="44" cy="23" r="5.5" fill="currentColor"/><line x1="38.5" y1="23" x2="49.5" y2="23" stroke="#0B1310" stroke-opacity=".45" stroke-width="1.4"/></svg>
+      <div><dt>the sleeper</dt><dd>Done but unverified: spinning at the bottom of the string, amber, dashed thread. The tug has not come yet.</dd></div>
+    </div>
+    <div class="row">
+      <svg viewBox="0 0 72 28" class="sw-green" aria-hidden="true"><rect x="2" y="8" width="20" height="12" rx="2" fill="none" stroke="currentColor"/><rect x="26" y="8" width="20" height="12" rx="2" fill="currentColor" fill-opacity=".25" stroke="currentColor"/><path d="M50 14 L 68 14" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="60" cy="14" r="2.6" fill="currentColor"/></svg>
+      <div><dt>the tug</dt><dd>Feedback. Checks roll out beside a node and collapse green nearest-first; the cheapest check that can prove you wrong runs first, and only an empty row lets the node spin up. A red chip sends the yoyo back down.</dd></div>
+    </div>
+    <div class="row">
+      <svg viewBox="0 0 72 28" class="sw-green" aria-hidden="true"><path d="M62 24 C 40 24, 30 6, 8 6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="6" r="5" fill="currentColor"/><circle cx="36" cy="15" r="2.4" fill="currentColor"/></svg>
+      <div><dt>the return</dt><dd>Reunion with origin. Nodes fold back up the inverted graph one at a time, leaf-most first, and the disc re-spools into the agent that threw it.</dd></div>
+    </div>
+    <div class="row">
+      <svg viewBox="0 0 72 28" aria-hidden="true"><path d="M4 6 C 16 6, 22 12, 26 15" fill="none" stroke="currentColor" stroke-width="1.4" class="sw-silver" style="color:var(--silver)"/><path d="M38 20 C 44 22, 50 22, 52 22" fill="none" stroke="currentColor" stroke-width="1.4" style="color:var(--silver-dim)"/><circle cx="57" cy="22" r="5" fill="currentColor" style="color:var(--faint)"/><g style="color:var(--red)"><rect x="60" y="2" width="3" height="6" fill="currentColor"/><rect x="64" y="2" width="3" height="6" fill="currentColor"/><rect x="68" y="2" width="3" height="6" fill="currentColor"/></g></svg>
+      <div><dt>the severed cord</dt><dd>The string is cut. The work dies where it landed and never comes home, and the ledger keeps charging its 5 tokens against everyone behind it until a replay infers the death.</dd></div>
+    </div>
+  </dl>
+</template>
+
+<script>
+const DATA = __DATA__;
+const FILES = DATA.files;
+const S7 = DATA.s7;
+
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CSS = getComputedStyle(document.documentElement);
+const col = k => CSS.getPropertyValue('--' + k).trim();
+const svg = document.getElementById('svg');
+const NS = 'http://www.w3.org/2000/svg';
+function el(t, a = {}, parent = svg) {
+  const e = document.createElementNS(NS, t);
+  for (const k in a) e.setAttribute(k, a[k]);
+  parent.appendChild(e); return e;
+}
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const clamp01 = t => Math.max(0, Math.min(1, t));
+const MONO = 'IBM Plex Mono,monospace';
+
+/* ================= model ================= */
+const touched = DATA.touched;
+const meta = new Map(DATA.nodes.map(n => [n.n, n]));
+const owner = new Map();
+for (const t of touched)
+  for (const [a, b] of DATA.edges)
+    if (a === t && !touched.includes(b) && !owner.has(b)) owner.set(b, t);
+
+const CHECKS_FAN = DATA.lanes.fan;
+const CHECKS_TOUCHED = DATA.lanes.touched;
+
+const AG = touched.map((t, i) => {
+  const owned = [...owner.entries()].filter(([, o]) => o === t).map(([n]) => meta.get(n))
+    .sort((a, b) => b.dependents - a.dependents);
+  return {
+    i, t, owned,
+    visitOrder: [t, ...owned.map(n => n.n)],                                        // cast out: touched first, then heavy-first
+    retOrder: [...owned].sort((a, b) => a.dependents - b.dependents).map(n => n.n), // fold: leaf-most first
+    speed: [1, 1.18, .9][i],
+    offset: [1.4, 3.4, 5.4][i],   // nobody deploys before the root agent has left YOU
+    files: FILES.filter((_, k) => k % 3 === i),
+  };
+});
+
+/* ---------------- geometry ---------------- */
+let W = 0, H = 0, sy = 1; const P = {};
+let bandTop = 0, bandBot = 0;
+function layout() {
+  W = svg.clientWidth || svg.parentElement.clientWidth || 1200;
+  H = svg.clientHeight || svg.parentElement.clientHeight || 800;
+  sy = Math.max(.45, Math.min(1, H / 860));   // the peek overlay keeps the same picture, compressed
+  P.user = { x: W / 2, y: 50 * sy };
+  P.orch = { x: W / 2, y: 112 * sy };
+  bandTop = 258 * sy; bandBot = H - 128 * sy;
+  AG.forEach(a => {
+    const cx = W * (2 * a.i + 1) / 6;
+    P['agent:' + a.t] = { x: cx, y: 180 * sy };
+    P[a.t] = { x: cx, y: bandTop, yInv: bandBot };
+    const colW = W / 3 - 48;
+    const rows = [lerp(bandTop, bandBot, .48), bandBot];
+    const r1 = a.owned.slice(0, Math.ceil(a.owned.length / 2));
+    const r2 = a.owned.slice(r1.length);
+    r1.forEach((n, j) => P[n.n] = { x: cx - colW / 2 + (j + .5) * colW / r1.length, y: rows[0] });
+    r2.forEach((n, j) => P[n.n] = { x: cx - colW / 2 + (j + .5) * colW / Math.max(1, r2.length), y: rows[1] });
+    for (const n of a.owned) P[n.n].yInv = bandTop + bandBot - P[n.n].y;
+    P[a.t].yInv = bandTop + bandBot - P[a.t].y;
+  });
+}
+const pkgPos = (n, invMix) => { const p = P[n]; return { x: p.x, y: lerp(p.y, p.yInv, invMix) }; };
+function pathBetween(p1, p2) {
+  const my = (p1.y + p2.y) / 2;
+  return `M${p1.x},${p1.y} C${p1.x},${my} ${p2.x},${my} ${p2.x},${p2.y}`;
+}
+function pointOn(p1, p2, t) {
+  const my = (p1.y + p2.y) / 2, u = 1 - t;
+  return {
+    x: u*u*u*p1.x + 3*u*u*t*p1.x + 3*u*t*t*p2.x + t*t*t*p2.x,
+    y: u*u*u*p1.y + 3*u*u*t*my + 3*u*t*t*my + t*t*t*p2.y,
+  };
+}
+
+/* ---------------- per-agent event schedule ----------------
+   One flat list of timed events per agent; render() scans it.
+   kind: null (clean), 'red' (a check refuses to collapse), 'severed' (the cord is cut). */
+const variant = n => ({ agent: n % 3, kind: n % 2 ? 'severed' : 'red' });
+function schedule(a, kind, holdUntil = 0) {
+  const s = a.speed, ev = [];
+  const push = (k, dur, x = {}) => ev.push({ kind: k, dur: dur / s, ...x });
+  const stamp = () => { let acc = 0; for (const e of ev) { e.start = acc; acc += e.dur; } ev.total = acc; };
+  push('wait', a.offset * s);                       // offsets are absolute
+  push('deploy', .9);                               // the sub-agent yoyos OUT of the main agent
+  a.visitOrder.forEach((n, vi) => push('visit', .62, { node: n, file: a.files[vi % a.files.length] }));
+  push('sleep', 1.7 + a.i * .4);
+  if (kind === 'severed') {
+    push('sever', .9);                              // the cord snaps mid-sleep
+    push('charge', .8);                             // the phantom charge persists (stretched below)
+    stamp();
+    const ch = ev[ev.length - 1];
+    ch.dur = Math.max(.8, holdUntil - ch.start);    // ...until the others have docked
+    push('evict', .8);                              // a replay infers the death; nothing comes home
+    stamp();
+    ev.terminal = 'evicted';
+    return ev;
+  }
+  push('invert', 2.2);
+  const seq = [...a.retOrder, a.t];
+  const redNode = kind === 'red' ? a.retOrder[1] ?? a.retOrder[0] : null;
+  for (const n of seq) {
+    const chips = n === a.t ? CHECKS_TOUCHED : CHECKS_FAN;
+    push('roll', .3, { node: n, chips });
+    if (n === redNode) {
+      const die = Math.floor(chips.length / 2);     // first pass dies at the middle chip
+      for (let k = 0; k < die; k++) push('chip', .27, { node: n, chips, chipIdx: k });
+      push('redchip', .5, { node: n, chips, chipIdx: die });
+      push('respin', 1.15, { node: n, chips });
+      push('roll', .25, { node: n, chips });
+    }
+    for (let k = 0; k < chips.length; k++) push('chip', n === redNode ? .2 : .27, { node: n, chips, chipIdx: k });   // cheapest lane first
+    push('fold', .45, { node: n, chips });
+  }
+  push('dock', 1.3);
+  stamp();
+  ev.terminal = 'done';
+  return ev;
+}
+let loopN = 0, TL = [], TOTAL = 0;
+function buildTimelines() {
+  const v = variant(loopN);
+  TL = AG.map(a => a.i === v.agent ? (v.kind === 'red' ? schedule(a, 'red') : null) : schedule(a, null));
+  const busyOthers = Math.max(...TL.filter(Boolean).map(t => t.total));
+  if (v.kind === 'severed') TL[v.agent] = schedule(AG[v.agent], 'severed', busyOthers + .2);
+  const busy = Math.max(...TL.map(t => t.total));
+  TL.variant = v; TL.converge = busy; TL.hold = busy + 2.4; TOTAL = busy + 2.4 + 1.8;
+  const vn = document.getElementById('variantName');
+  if (vn) vn.textContent = `loop ${loopN + 1} · ${v.kind === 'red' ? 'a red check' : 'a severed cord'} on sub-agent ${v.agent + 1}`;
+}
+// scan an agent's schedule at time t -> composed state
+function agentState(i, t) {
+  const ev = TL[i];
+  const st = {
+    phase: ev.terminal, local: 1, visited: new Set(), folded: new Set(),
+    active: null, chipsLeft: null, chipProg: 0, red: false, foldProg: 0, foldNode: null,
+    visitNode: null, visitProg: 0, visitFile: null, invMix: 1, docked: 0, severed: false, phaseStart: 0,
+  };
+  let sawInvert = false, invLocal = 1;
+  for (const e of ev) {
+    const endsBefore = t >= e.start + e.dur;
+    const activeNow = t >= e.start && !endsBefore;
+    if (e.kind === 'visit') { if (endsBefore) st.visited.add(e.node); }
+    if (e.kind === 'invert') { sawInvert = true; if (activeNow) invLocal = (t - e.start) / e.dur; else if (!endsBefore) invLocal = 0; }
+    if (e.kind === 'fold' && endsBefore) st.folded.add(e.node);
+    if (e.kind === 'sever' && t >= e.start) st.severed = true;
+    if (activeNow) {
+      st.phase = e.kind; st.local = (t - e.start) / e.dur; st.phaseStart = e.start;
+      if (e.kind === 'visit') { st.visitNode = e.node; st.visitProg = ease(st.local); st.visitFile = e.file; }
+      if (e.kind === 'roll') { st.active = e.node; st.chipsLeft = e.chips.length; st.chipProg = 0; st.rollProg = ease(st.local); st.chips = e.chips; }
+      if (e.kind === 'chip') { st.active = e.node; st.chipsLeft = e.chips.length - e.chipIdx; st.chipProg = st.local; st.chips = e.chips; }
+      if (e.kind === 'redchip') { st.active = e.node; st.chipsLeft = e.chips.length - e.chipIdx; st.chipProg = st.local; st.red = true; st.chips = e.chips; }
+      if (e.kind === 'respin') { st.active = e.node; st.red = true; st.chips = e.chips; st.chipsLeft = 0; }
+      if (e.kind === 'fold') { st.foldNode = e.node; st.foldProg = ease(st.local); st.active = null; }
+      break;
+    }
+    if (t < e.start) { st.phase = 'wait'; st.local = 0; break; }
+  }
+  st.invMix = !sawInvert ? 0 : ease(clamp01(invLocal));
+  if (st.phase === 'wait' || st.phase === 'visit' || st.phase === 'sleep') st.invMix = 0;
+  if (st.phase === 'invert') st.invMix = ease(st.local);
+  if (t >= ev.total) { st.phase = ev.terminal; if (ev.terminal === 'done') st.folded = new Set([...AG[i].retOrder, AG[i].t]); }
+  else if (st.phase === 'dock') st.docked = ease(st.local);
+  return st;
+}
+
+/* ---------------- persistent DOM ---------------- */
+let dom = {};
+function build() {
+  svg.innerHTML = '';
+  // chips group LAST: command rows always render on top of every line and node
+  dom = { edges: el('g'), threads: el('g'), nodes: el('g'), beads: el('g'), actors: el('g'), fx: el('g'), meters: el('g'), chips: el('g') };
+  dom.edgeEls = DATA.edges.map(([a, b]) => {
+    const p = el('path', { fill: 'none', 'stroke-width': .8 }, dom.edges);
+    p._a = a; p._b = b; return p;
+  });
+  dom.nodeEls = new Map(DATA.nodes.map(n => {
+    const g = el('g', {}, dom.nodes);
+    const isT = touched.includes(n.n);
+    el('circle', { r: isT ? 9 : 4 + Math.min(4, Math.sqrt(n.dependents) * .6), 'stroke-width': 1.2 }, g);
+    const t = el('text', { y: isT ? 22 : 14, 'text-anchor': 'middle', 'font-size': isT ? 10 : 8 }, g);
+    t.setAttribute('font-family', MONO);
+    t.textContent = n.n.replace('@beep/', '');
+    return [n.n, g];
+  }));
+  dom.threadUserOrch = el('path', { fill: 'none', 'stroke-width': 1.5 }, dom.threads);
+  dom.threadOrchAgent = AG.map(() => el('path', { fill: 'none', 'stroke-width': 1.4 }, dom.threads));
+  dom.threadAgentPkg = AG.map(() => el('path', { fill: 'none', 'stroke-width': 1.2 }, dom.threads));
+  dom.visitThread = AG.map(() => el('path', { fill: 'none', 'stroke-width': 1.1 }, dom.threads));
+  const actor = (r, label) => {
+    const g = el('g', {}, dom.actors);
+    el('circle', { r, 'stroke-width': 1.6 }, g);
+    const tx = el('text', { y: -r - 7, 'text-anchor': 'middle', 'font-size': 10 }, g);
+    tx.setAttribute('font-family', MONO); tx.textContent = label;
+    return g;
+  };
+  dom.user = actor(11, 'YOU');
+  dom.orch = actor(9, 'agent');
+  dom.orch.querySelector('text').setAttribute('y', 22);   // label below: no clash with YOU while emerging
+  dom.agents = AG.map(() => {
+    const g = actor(8, 'sub-agent');
+    g.querySelector('text').setAttribute('y', 21);
+    el('line', { x1: -8, y1: 0, x2: 8, y2: 0, 'stroke-width': 1.6 }, g);
+    return g;
+  });
+  dom.visitBead = AG.map(() => {
+    const g = el('g', {}, dom.beads);
+    el('circle', { r: 2.8 }, g);
+    const t = el('text', { x: 7, y: -5, 'font-size': 8.5 }, g);
+    t.setAttribute('font-family', MONO);
+    return g;
+  });
+  dom.retBead = AG.map(() => el('circle', { r: 2.8 }, dom.beads));
+  dom.chipRow = AG.map(() => el('g', {}, dom.chips));
+  dom.meter = AG.map(() => el('g', {}, dom.meters));
+  dom.originLine = el('line', { 'stroke-width': 2 }, dom.fx);
+}
+
+/* ---------------- chip row renderer ---------------- */
+const CHIP_W = 48, CHIP_H = 15, CHIP_GAP = 5;
+function drawChips(gi, node, chips, chipsLeft, chipProg, red, invMix, rollProg) {
+  const g = dom.chipRow[gi];
+  g.innerHTML = '';
+  if (!node || chipsLeft == null) return;
+  const c = { green: col('green'), red: col('red'), faint: col('faint'), line: col('line'), silver: col('silver') };
+  const p = pkgPos(node, invMix);
+  // pick the side with room; flip (or clamp) so the row never leaves the canvas
+  let dir = p.x < W * .52 ? 1 : -1;
+  const rowW = chipsLeft * (CHIP_W + CHIP_GAP);
+  if (dir === 1 && p.x + 16 + rowW > W - 8) dir = -1;
+  if (dir === -1 && p.x - 16 - rowW < 8) dir = 1;
+  let x0 = p.x + dir * 16;
+  if (dir === 1) x0 = Math.min(x0, W - 8 - rowW);
+  else x0 = Math.max(x0, 8 + rowW);
+  const rp = rollProg == null ? 1 : rollProg;
+  if (chipsLeft > 0) {   // backing plate so the row stays readable over any threads or nodes beneath
+    const bw = rowW * rp + 8;
+    el('rect', { x: dir === 1 ? x0 - 4 : x0 - bw + 4, y: p.y - CHIP_H / 2 - 4, width: bw, height: CHIP_H + 8, rx: 4,
+      fill: col('ground'), opacity: .82 }, g);
+  }
+  const done = chips.length - chipsLeft;   // lanes already passed; the row shows what is left, cheapest first
+  for (let k = 0; k < chipsLeft; k++) {
+    const lane = chips[done + k];
+    const cx = x0 + dir * k * (CHIP_W + CHIP_GAP) * rp;
+    const x = dir === 1 ? cx : cx - CHIP_W;
+    const isActive = k === 0 && rollProg == null;
+    const gg = el('g', {}, g);
+    el('rect', { x, y: p.y - CHIP_H / 2, width: CHIP_W, height: CHIP_H, rx: 3,
+      fill: isActive ? (red ? c.red : chipProg > .65 ? c.green : 'none') : 'none',
+      'fill-opacity': isActive ? .25 : 0,
+      stroke: isActive ? (red ? c.red : chipProg > .65 ? c.green : c.silver) : c.line,
+      'stroke-width': 1 }, gg);
+    const t = el('text', { x: x + CHIP_W / 2, y: p.y + 3, 'text-anchor': 'middle', 'font-size': 7.2,
+      fill: isActive ? (red ? c.red : chipProg > .65 ? c.green : c.silver) : c.faint }, gg);
+    t.setAttribute('font-family', MONO);
+    t.textContent = isActive && chipProg > .65 ? (red ? '✕ ' : '✓ ') + lane : lane;
+  }
+}
+
+/* ---------------- token ledger meter (the severed agent's phantom charge) ---------------- */
+function drawMeter(gi, home, st) {
+  const g = dom.meter[gi];
+  g.innerHTML = '';
+  if (!st.severed || st.phase === 'evicted') return;
+  const evicting = st.phase === 'evict';
+  const gone = evicting && st.local > .45;
+  const fadeRed = evicting ? 1 - ease(clamp01((st.local - .1) / .5)) : 1;
+  const c = { red: col('red'), silver: col('silver'), line: col('line'), muted: col('muted'), green: col('green'), ground: col('ground') };
+  const CW = 6, CG = 2, n = S7.capacity, barW = n * (CW + CG) - CG;
+  const left = home.x < W * .62;
+  const x0 = left ? home.x + 46 : home.x - 46 - barW;   // clear of the disc AND its "sub-agent" label
+  const y0 = home.y - 12;
+  el('rect', { x: x0 - 5, y: y0 - 5, width: barW + 10, height: 40, rx: 4, fill: c.ground, opacity: .82 }, g);
+  const active = gone ? S7.activeAfter : S7.activeBefore;
+  for (let k = 0; k < n; k++) {
+    const phantom = k >= S7.activeAfter && k < S7.activeBefore;
+    const filled = k < active;
+    el('rect', { x: x0 + k * (CW + CG), y: y0, width: CW, height: 9, rx: 1,
+      fill: filled ? (phantom ? c.red : c.silver) : 'none', stroke: c.line, 'stroke-width': .8,
+      opacity: phantom ? fadeRed : 1 }, g);
+  }
+  const line = (y, text, fill) => {
+    const t = el('text', { x: left ? x0 : x0 + barW, y, 'text-anchor': left ? 'start' : 'end', 'font-size': 7.2, fill }, g);
+    t.setAttribute('font-family', MONO); t.textContent = text;
+  };
+  if (gone) {
+    line(y0 + 20, `inferred eviction · event ${S7.evictionEvent}`, c.green);
+    line(y0 + 29, `active ${S7.activeAfter}/${S7.capacity} · nothing comes home`, c.muted);
+  } else {
+    line(y0 + 20, `phantom charge ${S7.evictedWeight} · active ${S7.activeBefore}/${S7.capacity}`, c.red);
+    line(y0 + 29, 'no release event exists', c.muted);
+  }
+}
+
+/* ---------------- render (pure in t) ---------------- */
+function styleActor(g, fill, stroke, op = 1) {
+  const c0 = g.querySelector('circle');
+  c0.setAttribute('fill', fill); c0.setAttribute('stroke', stroke);
+  g.setAttribute('opacity', op);
+  const tx = g.querySelector('text'); if (tx) tx.setAttribute('fill', col('muted'));
+  const seam = g.querySelector('line'); if (seam) seam.setAttribute('stroke', 'rgba(0,0,0,.4)');
+}
+const hide = e => e.setAttribute('opacity', 0);
+const terminal = ph => ph === 'done' || ph === 'evicted';
+
+function render(t) {
+  const c = { silver: col('silver'), silverDim: col('silver-dim'), green: col('green'), amber: col('amber'), red: col('red'),
+    faint: col('faint'), line: col('line'), surface: col('surface'), muted: col('muted') };
+  const states = AG.map(a => agentState(a.i, t));
+  const allDone = states.every(s => terminal(s.phase));
+  const convergeT = allDone ? clamp01((t - TL.converge) / 2.4) : 0;
+  const holdT = t > TL.hold ? clamp01((t - TL.hold) / 1.8) : 0;
+  const severedLoop = TL.variant.kind === 'severed';
+
+  // the root agent yoyos OUT of YOU first, and re-spools INTO YOU at the end
+  const orchK = ease(clamp01(t / 1.4)) * (1 - ease(holdT));
+  const ORCH = pointOn(P.user, P.orch, orchK);
+
+  dom.user.setAttribute('transform', `translate(${P.user.x},${P.user.y})`);
+  styleActor(dom.user, c.silver, c.silver);
+  dom.orch.setAttribute('transform', `translate(${ORCH.x},${ORCH.y})`);
+  styleActor(dom.orch, allDone ? c.green : c.surface, allDone ? c.green : c.silver, 1 - holdT);
+  dom.threadUserOrch.setAttribute('d', pathBetween(P.user, ORCH));
+  dom.threadUserOrch.setAttribute('stroke', allDone ? c.green : c.silver);
+  dom.threadUserOrch.setAttribute('opacity', orchK < .02 ? 0 : .85);
+
+  const nodeDraw = new Map();
+  AG.forEach((a, i) => {
+    const st = states[i];
+    const agHome = P['agent:' + a.t];
+    const inv = st.invMix;
+    const evictFade = st.phase === 'evict' ? ease(st.local) : st.phase === 'evicted' ? 1 : 0;
+
+    // agent disc travels ALONG the cord (orch -> station); the thread ends AT the disc,
+    // so no line ever outlives its node. k = how far out on the string the yoyo is.
+    let k = 1, spin = 0, discFill = c.amber, discStroke = c.silver, bob = 0, discVis = 1;
+    if (st.phase === 'wait') { k = 0; discVis = 0; }
+    else if (st.phase === 'deploy') { k = ease(st.local); }
+    else if (st.phase === 'sleep') { bob = 8; spin = REDUCED ? 0 : (t * 260) % 360; }
+    else if (st.phase === 'sever') { bob = 8 * (1 - st.local); spin = REDUCED ? 0 : (t * 260) % 360; }
+    else if (st.phase === 'charge') { spin = REDUCED ? 0 : (st.phaseStart * 260 + (t - st.phaseStart) * 120) % 360; discFill = c.faint; discStroke = c.silverDim; }
+    else if (st.phase === 'evict') { spin = REDUCED ? 0 : (st.phaseStart * 120 + (t - st.phaseStart) * 60) % 360; discFill = c.faint; discStroke = c.silverDim; discVis = 1 - evictFade; }
+    else if (st.phase === 'evicted') { discVis = 0; }
+    else if (st.phase === 'respin') { bob = Math.sin(st.local * Math.PI) * 22; spin = REDUCED ? 0 : (t * 480) % 360; discFill = c.red; }
+    else if (st.phase === 'dock') { k = 1 - st.docked; discFill = c.green; discStroke = c.green; }
+    else if (st.phase === 'done') { k = 0; discVis = 0; }
+    const disc = pointOn(ORCH, { x: agHome.x, y: agHome.y }, k);
+    disc.y += bob * k;
+    dom.agents[i].setAttribute('transform', `translate(${disc.x},${disc.y}) rotate(${spin})`);
+    styleActor(dom.agents[i], discFill, discStroke, discVis);
+
+    // threads — always terminating at the disc
+    const thColor = st.phase === 'respin' || st.red ? c.red
+      : st.phase === 'sleep' ? c.amber
+      : ['roll', 'chip', 'fold', 'dock', 'redchip'].includes(st.phase) ? c.green : c.silver;
+    const thOA = dom.threadOrchAgent[i];
+    const vth = dom.visitThread[i], vbd = dom.visitBead[i];
+    if (st.phase === 'sever') {
+      // the cord snaps at the cut point; both frayed ends recede toward what they were tied to
+      const cut = .55, u = ease(st.local);
+      thOA.setAttribute('d', pathBetween(ORCH, pointOn(ORCH, disc, cut * (1 - u))));
+      thOA.setAttribute('stroke', c.silver); thOA.setAttribute('opacity', .75 * (1 - u * .5));
+      thOA.setAttribute('stroke-dasharray', 'none');
+      vth.setAttribute('d', pathBetween(pointOn(ORCH, disc, cut + (1 - cut) * u), disc));
+      vth.setAttribute('stroke', c.silver); vth.setAttribute('opacity', .75 * (1 - u * .5));
+      hide(vbd);
+    } else if (st.severed) {
+      hide(thOA); hide(vth); hide(vbd);      // no string. nothing is holding the other end.
+    } else {
+      thOA.setAttribute('d', pathBetween(ORCH, disc));
+      thOA.setAttribute('stroke', thColor);
+      thOA.setAttribute('opacity', discVis === 0 ? 0 : .75);
+      thOA.setAttribute('stroke-dasharray', st.phase === 'sleep' ? '3 5' : 'none');
+      // CAST OUT: transient thread + labeled edit bead to the node being visited
+      if (st.phase === 'visit' && st.visitNode) {
+        const from = st.visitNode === a.t ? disc : pkgPos(a.t, 0);
+        const to = pkgPos(st.visitNode, 0);
+        const tip = pointOn(from, to, st.visitProg);
+        vth.setAttribute('d', pathBetween(from, tip));
+        vth.setAttribute('stroke', c.silver); vth.setAttribute('opacity', .8);
+        vbd.setAttribute('transform', `translate(${tip.x},${tip.y})`);
+        vbd.setAttribute('opacity', 1);
+        vbd.querySelector('circle').setAttribute('fill', c.silver);
+        const label = vbd.querySelector('text');
+        label.setAttribute('fill', c.muted);
+        label.textContent = 'edit ' + st.visitFile;
+        if (tip.x > W * .6) { label.setAttribute('text-anchor', 'end'); label.setAttribute('x', -7); }
+        else { label.setAttribute('text-anchor', 'start'); label.setAttribute('x', 7); }
+      } else { hide(vth); hide(vbd); }
+    }
+    const tp = pkgPos(a.t, inv);
+    const touchedFolded = st.folded.has(a.t);
+    // the cord tracks the MOVING touched node while it retracts into the disc
+    const tpDraw = st.foldNode === a.t ? pointOn(tp, disc, st.foldProg) : tp;
+    const thAP = dom.threadAgentPkg[i];
+    thAP.setAttribute('d', pathBetween(disc, tpDraw));
+    thAP.setAttribute('stroke', st.severed ? c.silverDim : thColor);
+    const apVis = discVis && st.visited.has(a.t) && !touchedFolded && !terminal(st.phase);
+    thAP.setAttribute('opacity', !apVis ? 0 : st.severed ? .3 * (1 - evictFade) : .55);
+    thAP.setAttribute('stroke-dasharray', st.phase === 'sleep' ? '3 5' : 'none');
+
+    // nodes owned by this agent (+ its touched)
+    const dim = st.severed ? .35 * (1 - evictFade) : 1;
+    const consider = [a.t, ...a.owned.map(n => n.n)];
+    for (const n of consider) {
+      const isT = n === a.t;
+      if (!st.visited.has(n) && st.visitNode !== n) { nodeDraw.set(n, null); continue; }
+      const justArriving = st.visitNode === n && st.visitProg < .92;
+      if (justArriving) { nodeDraw.set(n, null); continue; }
+      if (st.folded.has(n) || terminal(st.phase)) { nodeDraw.set(n, null); continue; }
+      let pos = pkgPos(n, inv), fade = dim, color = isT ? c.silver : c.faint, stroke = isT ? c.silver : c.line;
+      if (st.active === n) { color = st.red ? c.red : c.silver; stroke = st.red ? c.red : c.silver; }
+      if (st.foldNode === n) {
+        const parent = isT ? disc : pkgPos(a.t, inv);
+        pos = pointOn(pkgPos(n, inv), parent, st.foldProg);
+        fade = 1 - st.foldProg * .7; color = c.green; stroke = c.green;
+        const b = dom.retBead[i];
+        const bp = pointOn(pkgPos(n, inv), parent, clamp01(st.foldProg * 1.15));
+        b.setAttribute('cx', bp.x); b.setAttribute('cy', bp.y);
+        b.setAttribute('fill', c.green); b.setAttribute('opacity', .95);
+      }
+      nodeDraw.set(n, { pos, fade, color, stroke });
+    }
+    if (!st.foldNode) hide(dom.retBead[i]);   // during dock, the DISC is the returning payload
+
+    // chips beside the active node
+    if (st.active && (st.phase === 'roll' || st.phase === 'chip' || st.phase === 'redchip' || st.phase === 'respin')) {
+      drawChips(i, st.active, st.chips, st.phase === 'respin' ? st.chips.length : st.chipsLeft,
+        st.chipProg, st.red, inv, st.phase === 'roll' ? st.rollProg : null);
+    } else drawChips(i, null);
+
+    drawMeter(i, agHome, st);
+  });
+
+  // edges: only between two currently-drawn nodes
+  dom.edgeEls.forEach(p => {
+    const sa = nodeDraw.get(p._a), sb = nodeDraw.get(p._b);
+    if (!sa || !sb) { p.setAttribute('opacity', 0); return; }
+    p.setAttribute('d', pathBetween(sa.pos, sb.pos));
+    const cross = owner.get(p._b) !== p._a && touched.includes(p._a);
+    p.setAttribute('stroke', cross ? c.faint : c.silver);
+    p.setAttribute('opacity', (cross ? .06 : .16) * Math.min(sa.fade, sb.fade));
+  });
+  for (const [name, g] of dom.nodeEls) {
+    const s = nodeDraw.get(name);
+    if (!s) { g.setAttribute('opacity', 0); continue; }
+    g.setAttribute('opacity', s.fade);
+    g.setAttribute('transform', `translate(${s.pos.x},${s.pos.y})`);
+    const circ = g.querySelector('circle');
+    circ.setAttribute('fill', s.color); circ.setAttribute('stroke', s.stroke);
+    g.querySelector('text').setAttribute('fill', c.muted);
+  }
+
+  // convergence to YOU
+  if (allDone) {
+    const b = dom.retBead[0];
+    if (convergeT < 1) {
+      const bp = pointOn(ORCH, P.user, ease(convergeT));
+      b.setAttribute('cx', bp.x); b.setAttribute('cy', bp.y);
+      b.setAttribute('fill', c.green); b.setAttribute('opacity', .95);
+    } else hide(b);
+    dom.originLine.setAttribute('x1', W * .2); dom.originLine.setAttribute('x2', W * .8);
+    dom.originLine.setAttribute('y1', P.user.y + 24 * sy); dom.originLine.setAttribute('y2', P.user.y + 24 * sy);
+    dom.originLine.setAttribute('stroke', c.green);
+    dom.originLine.setAttribute('opacity', ease(convergeT) * (1 - holdT));
+  } else dom.originLine.setAttribute('opacity', 0);
+
+  // caption by dominant beat
+  const ph = states.map(s => s.phase);
+  let cap, sub;
+  if (t < 1.4) { cap = 'A user makes a wish. An agent deals out sub-agents — each on its own clock.'; sub = 'no fleet moves in lockstep'; }
+  else if (ph.includes('sever')) { cap = 'The string is cut. The work dies where it landed, and the ledger keeps charging for it.'; sub = 'no journal event exists for a lease that died'; }
+  else if (ph.includes('evict')) { cap = `A replay infers the death: capacity comes back, ${S7.activeBefore} to ${S7.activeAfter}. Nothing comes home.`; sub = `S7 differential replay · inferred eviction at event ${S7.evictionEvent}`; }
+  else if (ph.includes('respin') || ph.includes('redchip')) { cap = 'Red. That check refuses to collapse — back down the thread while the others keep working.'; sub = '59% of fleet attempts end red'; }
+  else if (allDone && severedLoop) { cap = 'Two return. One never did. The ledger only noticed when someone replayed it.'; sub = `lease death is unjournaled · S7 replay, event ${S7.evictionEvent}`; }
+  else if (allDone) { cap = 'And everything returns to the source.'; sub = 'Ecclesiastes 12:6 · git remote: origin'; }
+  else if (ph.includes('roll') || ph.includes('chip') || ph.includes('fold')) { cap = 'Checks roll out beside each node and collapse green — only an empty row lets it spin up.'; sub = 'leaf-most first, one node at a time, real yeet lanes'; }
+  else if (ph.includes('invert')) { cap = 'Fans invert as their work completes. Verification is the return trip.'; sub = 'reverse topo, per agent'; }
+  else if (ph.includes('sleep')) { cap = 'Done-but-unverified: sleepers spinning at the bottom of their strings.'; sub = 'the tug has not come yet'; }
+  else if (ph.includes('charge')) { cap = 'No string, still charged. Five tokens nobody can use until someone notices the lease is dead.'; sub = 'the deployed reaper frees them by pid liveness and writes nothing down'; }
+  else { cap = 'The yoyo is thrown at one node at a time — edit commands riding the silver cord.'; sub = `beads = the ${DATA.commit.files} files commit ${DATA.commit.sha} really edited`; }
+  document.getElementById('caption').innerHTML = cap + `<small>${sub}</small>`;
+  document.getElementById('phaseName').textContent =
+    allDone ? 'return' : [...new Set(ph.filter(x => !['done', 'wait', 'evicted'].includes(x)))].join(' · ') || 'cast';
+}
+
+/* ---------------- engine ---------------- */
+let t0 = 0, paused = false, pauseAt = 0, stepIdx = 0;
+function tick(now) {
+  if (!t0) t0 = now;
+  const shown = stageShown();   // nothing to draw while the hero is off-screen and no overlay is open
+  if (shown && (svg.clientHeight || 0) > 0 && (Math.abs(svg.clientHeight - H) > 2 || Math.abs((svg.clientWidth || 0) - W) > 2)) { layout(); build(); }
+  let t = ((paused ? pauseAt : now) - t0) / 1000;
+  if (t >= TOTAL && !paused) { loopN++; buildTimelines(); t0 = now; t = 0; clearBeat(); }
+  if (shown) render(Math.min(Math.max(t, 0), TOTAL - .001));
+  requestAnimationFrame(tick);
+}
+const MILESTONES = () => {
+  const m = [1, 3, 6, 9, 12];
+  const ret = TL.find(tl => tl.find(e => e.kind === 'roll'))?.find(e => e.kind === 'roll');
+  if (ret) m.push(ret.start + .4, ret.start + 2, ret.start + 5);
+  for (const k of ['sever', 'evict']) { const e = TL.map(tl => tl.find(x => x.kind === k)).find(Boolean); if (e) m.push(e.start + .3); }
+  m.push(TL.converge + .6, TL.converge + 2);
+  return m.sort((a, b) => a - b);
+};
+const btnPlay = document.getElementById('btnPlay');
+const btnRestart = document.getElementById('btnRestart');
+const btnStep = document.getElementById('btnStep');
+btnPlay.onclick = () => {
+  paused = !paused;
+  if (paused) pauseAt = performance.now(); else t0 += performance.now() - pauseAt;
+  btnPlay.textContent = paused ? 'play' : 'pause';
+};
+btnRestart.onclick = () => { loopN = 0; buildTimelines(); t0 = 0; paused = false; pauseAt = 0; btnPlay.textContent = 'pause'; stepIdx = 0; clearBeat(); if (REDUCED) render(MILESTONES()[0]); };
+btnStep.onclick = () => { const m = MILESTONES(); render(m[++stepIdx % m.length]); };
+
+/* ---------------- beat API: the story seeks the loop ---------------- */
+const BEAT_KIND = { red: 'red', severed: 'severed', evict: 'severed' };
+function firstStart(kind) {
+  let best = Infinity;
+  for (const tl of TL) { const e = tl.find(x => x.kind === kind); if (e) best = Math.min(best, e.start); }
+  return best;
+}
+function beatTime(id) {
+  switch (id) {
+    case 'throw': return 0;
+    case 'sleeper': return firstStart('sleep') + .4;
+    case 'invert': return firstStart('invert');
+    case 'checks': return firstStart('roll');
+    case 'red': return firstStart('redchip') - .3;
+    case 'severed': return firstStart('sever');
+    case 'evict': return firstStart('evict');
+    case 'return': return TL.converge + .2;
+    default: return 0;
+  }
+}
+let activeBeat = null;
+function clearBeat() {
+  activeBeat = null;
+  if (document.querySelectorAll) for (const b of document.querySelectorAll('.beat.active')) b.classList.remove('active');
+}
+function seek(id) {
+  const need = BEAT_KIND[id];
+  if (need === 'red' && variant(loopN).kind !== 'red') loopN++;
+  if (need === 'severed' && variant(loopN).kind !== 'severed') loopN++;
+  buildTimelines();
+  const bt = Math.max(0, Math.min(TOTAL - .01, beatTime(id)));
+  clearBeat();
+  activeBeat = id;
+  if (document.querySelectorAll) for (const b of document.querySelectorAll(`.beat[data-beat="${id}"]`)) b.classList.add('active');
+  if (REDUCED) {   // static mode: step continues from the nearest preset point at or before this beat
+    const m = MILESTONES(); let k = 0;
+    for (let j = 0; j < m.length; j++) if (m[j] <= bt) k = j;
+    stepIdx = k; render(bt); return bt;
+  }
+  paused = false; btnPlay.textContent = 'pause';
+  t0 = performance.now() - bt * 1000;
+  return bt;
+}
+globalThis.yoyo = { seek, beats: Object.keys(BEAT_KIND).concat(['throw', 'sleeper', 'invert', 'checks', 'return']),
+  _debug: { render, agentState: (i, t) => agentState(i, t), tl: () => TL, dom: () => dom, total: () => TOTAL, variant: () => TL.variant, beatTime, loop: () => loopN } };
+
+/* ---------------- page: hero, peek overlay, legend, nav ----------------
+   The hero scrolls away like any block. A "show me" seeks the loop and, if the hero is already
+   off-screen, opens the stage as a fixed overlay under the header; scrolling on by roughly half
+   a viewport closes it again, as does reaching the hero or pressing hide. */
+const pin = document.getElementById('pin'), hero = document.getElementById('hero'), hdr = document.getElementById('hdr');
+const btnLoop = document.getElementById('btnLoop'), btnHide = document.getElementById('btnHide');
+let peek = false, peekAt = 0;
+const heroVisible = () => hero.getBoundingClientRect ? hero.getBoundingClientRect().bottom > 120 : true;
+const stageShown = () => peek || heroVisible();
+function syncHeader() { if (hdr.classList) hdr.classList.toggle('away', !heroVisible() && !peek); }
+function openPeek() {
+  peekAt = globalThis.scrollY ?? 0;
+  if (peek) return;
+  peek = true; if (pin.classList) pin.classList.add('peek'); syncHeader();
+}
+function closePeek() {
+  if (!peek) return;
+  peek = false; if (pin.classList) pin.classList.remove('peek'); syncHeader();
+}
+function onScroll() {
+  const y = globalThis.scrollY ?? 0;
+  const far = Math.max(240, (globalThis.innerHeight || 800) * .45);
+  if (peek && (Math.abs(y - peekAt) > far || heroVisible())) closePeek();
+  syncHeader();
+}
+function showBeat(id) { seek(id); if (heroVisible()) closePeek(); else openPeek(); }
+Object.assign(globalThis.yoyo, { showBeat, openPeek, closePeek, onScroll, isPeek: () => peek });
+function wirePage() {
+  if (document.querySelectorAll) for (const b of document.querySelectorAll('.beat')) b.addEventListener('click', () => showBeat(b.dataset.beat));
+  btnLoop.onclick = () => { if (!heroVisible()) openPeek(); };
+  btnHide.onclick = closePeek;
+  const tpl = document.getElementById('tpl-legend');
+  const anchor = document.querySelector ? document.querySelector('section[data-slug="the-silver-cord"] ul') : null;
+  if (tpl && anchor && tpl.content && anchor.after) anchor.after(tpl.content.cloneNode(true));
+  const nav = document.getElementById('nav'), toc = document.getElementById('tocNarrow');
+  if (nav && toc) toc.innerHTML = nav.innerHTML;
+  addEventListener('scroll', onScroll, { passive: true });
+}
+
+function boot() {
+  layout(); build(); buildTimelines(); wirePage();
+  if (REDUCED) { btnPlay.hidden = true; btnStep.hidden = false; render(MILESTONES()[0]); }
+  else requestAnimationFrame(tick);
+}
+addEventListener('resize', () => { layout(); build(); if (REDUCED) render(MILESTONES()[stepIdx % MILESTONES().length]); });
+boot();
+</script>

@@ -10,8 +10,10 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, flow, Layer, Result, Runtime } from "effect";
+import { Cause, Console, DateTime, Effect, Exit, flow, Layer, Result, Runtime } from "effect";
+import * as A from "effect/Array";
 import { Command } from "effect/cli";
+import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
@@ -57,6 +59,53 @@ const writeDriftedPacket = Effect.fn("writeDriftedPacket")(function* (slug: stri
   yield* writeProjectFile(`goals/${slug}/README.md`, `# ${slug}\n\n## Status\n\nLifecycle: \`active\`\n`);
 });
 
+const runGit = Effect.fn("GoalsDoctorTest.runGit")(function* (
+  args: ReadonlyArray<string>,
+  env: Record<string, string> = {}
+) {
+  const handle = yield* ChildProcess.make("git", [...args], {
+    cwd: process.cwd(),
+    env,
+    extendEnv: true,
+    stdin: "ignore",
+    stdout: "ignore",
+    stderr: "inherit",
+  });
+  expect(yield* handle.exitCode).toBe(0);
+});
+
+const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
+  const current = yield* Console.Console;
+  let output: ReadonlyArray<unknown> = [];
+  yield* effect.pipe(
+    Effect.provideService(Console.Console, {
+      ...current,
+      log: (...values: ReadonlyArray<unknown>) => {
+        output = A.appendAll(output, values);
+      },
+      error: (...values: ReadonlyArray<unknown>) => {
+        output = A.appendAll(output, values);
+      },
+    })
+  );
+  return A.join(A.map(output, String), "\n");
+});
+
+// A consistent active packet whose shipping PR could already have merged.
+const writeActivePacket = Effect.fn("writeActivePacket")(function* (slug: string) {
+  yield* writeProjectFile(
+    `goals/${slug}/ops/manifest.json`,
+    `${encodeJson({
+      schemaVersion: "initiative-manifest/v2",
+      initiative: { id: slug, title: slug, status: "active" },
+      lifecycle: "active",
+      completionGate: COMPLETION_GATE,
+    })}\n`
+  );
+  yield* writeProjectFile(`goals/${slug}/README.md`, `# ${slug}\n\n## Status\n\nLifecycle: \`active\`\n`);
+  yield* writeProjectFile(`goals/${slug}/GOAL.md`, `# ${slug}\n`);
+});
+
 const writeBaseline = (keys: ReadonlyArray<string>) =>
   writeProjectFile(
     "goals/goals-doctor.baseline.jsonc",
@@ -99,6 +148,60 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         yield* writeBaseline(["demo lifecycle-mismatch"]);
         const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
         assertTrue(Exit.isSuccess(exit));
+      }),
+    20_000
+  );
+
+  it.effect(
+    "flags an active packet a squash merge cited and nobody touched since, and nothing else",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* runGit(["init", "-b", "main"]);
+        yield* runGit(["config", "user.email", "goals-doctor-test@example.com"]);
+        yield* runGit(["config", "user.name", "Goals Doctor Test"]);
+        yield* runGit(["config", "commit.gpgsign", "false"]);
+        yield* writeBaseline([]);
+        // The wall clock, not the test clock: git compares the backdated commits
+        // against real time when the doctor asks for the last 21 days.
+        const backdated = DateTime.formatIso(DateTime.subtract(DateTime.nowUnsafe(), { days: 40 }));
+        const oldEnv = { GIT_AUTHOR_DATE: backdated, GIT_COMMITTER_DATE: backdated };
+        // Cited by a squash subject, untouched since: the shipped-but-open shape.
+        yield* writeActivePacket("shipped");
+        yield* runGit(["add", "."]);
+        yield* runGit(["commit", "-m", "feat(demo): ship shipped (#1)"], oldEnv);
+        // Cited only by an ordinary commit: stale, but no merge is evidenced.
+        yield* writeActivePacket("mentioned");
+        yield* runGit(["add", "."]);
+        yield* runGit(["commit", "-m", "chore(demo): mention mentioned in passing"], oldEnv);
+        // Cited by a squash subject only inside a longer hyphenated token, and only by a
+        // PR number that merely contains the one it recorded: neither is a citation.
+        yield* writeActivePacket("cargo");
+        yield* writeProjectFile(
+          "goals/cargo/ops/manifest.json",
+          `${encodeJson({
+            schemaVersion: "initiative-manifest/v2",
+            initiative: { id: "cargo", title: "cargo", status: "active" },
+            lifecycle: "active",
+            completionGate: COMPLETION_GATE,
+            mergedPullRequest: 7,
+          })}\n`
+        );
+        yield* runGit(["add", "."]);
+        yield* runGit(["commit", "-m", "feat(demo): ship cargo-bay (#70)"], oldEnv);
+        // Cited by a squash subject but touched inside the window: not stale.
+        yield* writeActivePacket("fresh");
+        yield* runGit(["add", "."]);
+        yield* runGit(["commit", "-m", "feat(demo): ship fresh (#2)"]);
+        const output = yield* captureOutput(runGoalsCommand(["doctor"]));
+        expect(output).toContain("shipped [active-after-merge]");
+        expect(output).not.toContain("shipped [stale-active]");
+        expect(output).toContain("mentioned [stale-active]");
+        expect(output).not.toContain("mentioned [active-after-merge]");
+        expect(output).toContain("cargo [stale-active]");
+        expect(output).not.toContain("cargo [active-after-merge]");
+        expect(output).not.toContain("fresh [active-after-merge]");
+        expect(output).not.toContain("fresh [stale-active]");
       }),
     20_000
   );

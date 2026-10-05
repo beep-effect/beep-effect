@@ -788,3 +788,15 @@
 - The packet validator needs `rdflib` (+ `pyshacl` for `--s6`), which the offline uv cache lacked;
   `uv run --with pyyaml --with rdflib --with pyshacl` with network resolved it. Prevention: record the
   full `--with` set beside every validator invocation in the packet docs.
+
+## 2026-10-05: P0 W1 drive — friction
+- 2026-10-01 closeout: the detached `yeet monitor --until-ready` proof job for PR #1386 ended
+  "terminated without a verdict" (unit result success, log tail "All fibers interrupted without
+  error") minutes after `git merge origin/main` and `bun install --frozen-lockfile` ran in the
+  same checkout; re-submitting the monitor was the only remedy. Prevention: the job should
+  survive a reinstall under it, or name the fiber that interrupted it; until then re-submit the
+  monitor after any install in the monitored checkout.
+- 2026-10-05 census: a zsh `for p in $paths` loop silently swept one family (no word split),
+  so the first census counted 46 PRs instead of 155; the per-family zero counts caught it.
+  Prevention: the committed `research/scripts/w1_lever_query.sh` is bash and was diffed
+  against the inline census (244 rows, identical).

@@ -20,6 +20,10 @@ const $I = $LawPracticeDomainId.create("values/PracticeKgProvenanceKind");
  * application number, and so on. Widening this set means teaching every consumer
  * a new ref format.
  *
+ * A `uspto-anchor` ref identifies the USPTO record a row was enriched from; it
+ * says nothing about which family the record belongs to. Family placement of an
+ * anchored row is carried by the row's attribution source, never by this kind.
+ *
  * **Example** (Decode provenance kind value)
  *
  * ```ts

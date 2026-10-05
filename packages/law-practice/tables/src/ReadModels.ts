@@ -117,6 +117,7 @@ export type DbSchema = DbSchemaShape;
  *   label: "AB-1234",
  *   docketFamily: "AB",
  *   client: "Acme Corp",
+ *   attributionSource: "filename",
  *   epistemicStatus: "derived-from-official-records",
  *   provenanceKind: "catalog-digest",
  *   provenanceRef: "sha256:9f2c",
@@ -145,6 +146,7 @@ export type KgNodeReadModel = typeof kgNodeTable.$inferSelect;
  * const emailArchive: KgNodeInsert = {
  *   iri: "urn:beep:practice-kg:email_archive:sha256:1a4f",
  *   kind: "email_archive",
+ *   attributionSource: "filename",
  *   naturalKey: "sha256:1a4f",
  *   label: "acme-2019.pst",
  *   epistemicStatus: "derived-from-official-records",
@@ -174,7 +176,7 @@ export type KgNodeInsert = typeof kgNodeTable.$inferInsert;
  *
  * console.log(isCandidate({
  *   subjectIri: "urn:beep:practice-kg:docket_family:AB",
- *   predicate: "enriched_family",
+ *   predicate: "mentioned_in_family",
  *   objectIri: "urn:beep:practice-kg:application:16123456",
  *   epistemicStatus: "candidate-unreviewed",
  *   provenanceKind: "uspto-anchor",
@@ -237,7 +239,8 @@ export type KgEdgeInsert = typeof kgEdgeTable.$inferInsert;
  *   bundleVersion: "2026.07.1",
  *   builtFromRuns: "base,refresh-2026-07",
  *   counts: { nodes: 8421, edges: 19233 },
- *   builtAt: "2026-07-27T18:04:11.000Z"
+ *   builtAt: "2026-07-27T18:04:11.000Z",
+ *   corpusSnapshotAt: "2026-07-03T09:12:44.000Z"
  * })) // true
  * ```
  *
@@ -258,7 +261,8 @@ export type KgBuildReadModel = typeof kgBuildTable.$inferSelect;
  *   bundleVersion: "2026.07.1",
  *   builtFromRuns: "base",
  *   counts: { nodes: 8421, edges: 19233, documents: 6104, emails: 0 },
- *   builtAt: "2026-07-27T18:04:11.000Z"
+ *   builtAt: "2026-07-27T18:04:11.000Z",
+ *   corpusSnapshotAt: "2026-07-03T09:12:44.000Z"
  * }
  *
  * console.log(provenance.bundleVersion) // "2026.07.1"

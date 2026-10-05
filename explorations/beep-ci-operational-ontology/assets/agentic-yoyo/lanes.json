@@ -1,0 +1,73 @@
+{
+  "note": "Real yeet planner feedback steps (packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts). The animation's check chips.",
+  "fan": ["check", "lint", "test"],
+  "touched": ["cheap-gates", "build", "check", "lint", "test", "docgen"],
+  "planner": [
+    {
+      "id": "feedback:00-cheap-gates",
+      "lane": "cheap-gates",
+      "note": "fast structural gates before anything heavy"
+    },
+    {
+      "id": "feedback:01-build",
+      "lane": "build",
+      "note": "turbo build, cacheable"
+    },
+    {
+      "id": "feedback:02-check",
+      "lane": "check",
+      "note": "typecheck"
+    },
+    {
+      "id": "feedback:03-lint",
+      "lane": "lint",
+      "note": "biome + repo laws"
+    },
+    {
+      "id": "feedback:04-test",
+      "lane": "test",
+      "note": "vitest; the lane whose cache was 0 of 131"
+    },
+    {
+      "id": "feedback:00-heavy:02-docgen",
+      "lane": "docgen",
+      "note": "heavy: compiles every JSDoc example"
+    }
+  ],
+  "s7": {
+    "events": 79,
+    "admitted": 41,
+    "released": 38,
+    "inferredEvictions": 1,
+    "evictionEvent": 66,
+    "evictedNonce": "1813f29f",
+    "evictedWeight": 5,
+    "activeBefore": 8,
+    "activeAfter": 3,
+    "admittedAtEvent": 20,
+    "divergencesBeforeInference": [66, 68, 71, 73, 75, 78],
+    "capacity": 10,
+    "publishAgingSeconds": 120,
+    "reviewFixClassCap": 3,
+    "weights": {
+      "full-proof": 3,
+      "merged-preview": 5,
+      "review-fix": 1,
+      "publish": 1
+    }
+  },
+  "journal": {
+    "date": "2026-09-11",
+    "note": "Canonical admission journal on the author's workstation, counts only. Words added 2026-09-03 (evictions) and 2026-09-08 (enqueue, withdraw).",
+    "rows": 634,
+    "enqueued": 217,
+    "withdrawn": 17,
+    "admitted": 200,
+    "released": 197,
+    "leaseEvicted": 2,
+    "ticketEvicted": 1,
+    "admissionsTracedToEnqueue": 199,
+    "protocol": "yeet-admission-protocol/v2",
+    "evictionEmission": "on"
+  }
+}
