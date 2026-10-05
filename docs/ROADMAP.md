@@ -235,7 +235,8 @@ merged) and is paused on ruling 80 (parked table). The slot passes
 
 - [`effect-vitest-canon`](../goals/effect-vitest-canon/README.md) (8/11; P1
   inventory and P2 remediation waves in progress, PR #1312 merged, 33
-  commits since 09-22, the last on 10-05 via #1406 and #1408) — the slot
+  commits since 09-22, the latest via #1406 and #1408, merged 10-03 and 10-05
+  UTC) — the slot
   holder. It closes on the final empty
   baseline, the complete inventory and hosted proof.
 
