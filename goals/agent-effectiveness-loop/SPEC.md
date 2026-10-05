@@ -131,7 +131,12 @@ command failures.
 
 - Phoenix target: `https://dankserver.tailc7c348.ts.net:8447`
   (`defaultAgentEffectivenessPhoenixBaseUrl` in the command module).
-- Local metrics root: `.beep/ai-metrics`.
+- Metrics root: `--data-root` takes precedence, then `BEEP_AI_METRICS_DATA_ROOT`.
+  Without either, the `--target` default `dankserver` resolves to
+  `/srv/data/ai-metrics`; `--target local` resolves to
+  `${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics`
+  (`resolveAiMetricsDataRoot` in `@beep/repo-ai-metrics`). The original
+  2026-05 default of `.beep/ai-metrics` no longer applies.
 - Worker-eval evidence: the 2026-05-16 Runpod/Ollama Qwen3-Coder 30B packet
   under `goals/jsdoc-worker-eval/history/outputs/`.
 

@@ -11,11 +11,11 @@
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `phoenix-capability-map` | Phoenix feature inventory mapped to coding-agent opportunities | arize-ai/phoenix docs | `research/phoenix-capability-map.md` | observability / evals | reference |
-| `live-phoenix-state-audit` | Sanitized read-only audit of the deployed dankserver Phoenix | this repo | `research/live-phoenix-state-audit.md` | live evidence | reference |
-| `repo-eval-metrics-surface-audit` | Existing repo eval, metrics, labels, benchmarks, scorecards, OTLP surfaces | this repo | `research/repo-eval-metrics-surface-audit.md` | repo inventory | reuse |
-| `agent-effectiveness-opportunity-map` | Candidate evals, diagnostics, scorecards, CLI workflows | this repo | `research/agent-effectiveness-opportunity-map.md` | opportunity ranking | reference |
-| `synthesis-ranked-execution-plan` | Ranked execution plan and selected first slice | this repo | `research/synthesis-ranked-execution-plan.md` | plan | implemented (Phase 1) |
+| `phoenix-capability-map` | Phoenix feature inventory mapped to coding-agent opportunities | arize-ai/phoenix docs | [`phoenix-capability-map.md:35`](./phoenix-capability-map.md#capability-matrix) (Capability Matrix), [`:165`](./phoenix-capability-map.md#recommended-first-uses) (Recommended First Uses) | observability / evals | reference |
+| `live-phoenix-state-audit` | Sanitized read-only audit of the deployed dankserver Phoenix | this repo | [`live-phoenix-state-audit.md:62`](./live-phoenix-state-audit.md#projects) (Projects), [`:118`](./live-phoenix-state-audit.md#audit-readout) (Audit Readout) | live evidence | reference |
+| `repo-eval-metrics-surface-audit` | Existing repo eval, metrics, labels, benchmarks, scorecards, OTLP surfaces | this repo | [`repo-eval-metrics-surface-audit.md:92`](./repo-eval-metrics-surface-audit.md#surface-inventory) (Surface Inventory), [`:183`](./repo-eval-metrics-surface-audit.md#agent-effectiveness-reuse-guidance) (Reuse Guidance) | repo inventory | reuse |
+| `agent-effectiveness-opportunity-map` | Candidate evals, diagnostics, scorecards, CLI workflows | this repo | [`agent-effectiveness-opportunity-map.md:115`](./agent-effectiveness-opportunity-map.md#ranked-opportunity-table) (Ranked Opportunity Table), [`:527`](./agent-effectiveness-opportunity-map.md#annotation-schema-candidates) (Annotation Schema Candidates) | opportunity ranking | reference |
+| `synthesis-ranked-execution-plan` | Ranked execution plan and selected first slice | this repo | [`synthesis-ranked-execution-plan.md:20`](./synthesis-ranked-execution-plan.md#executive-decision) (Executive Decision), [`:50`](./synthesis-ranked-execution-plan.md#phase-1-contract) (Phase 1 Contract) | plan | implemented (Phase 1) |
 
 **How these inform implementation:** the capability map and opportunity map
 bounded Phase 1 to a local, no-mutation trust gate plus metadata-only
