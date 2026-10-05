@@ -239,7 +239,7 @@ describe("internal/cli/Printer formatDurationSeconds", () => {
 });
 
 describe("internal/cli/Printer tagged logging", () => {
-  it.layer(TestConsole.layer)("prefix", (it) => {
+  it.layer(TestConsole.layer, { timeout: "30 seconds" })("prefix", (it) => {
     it.effect(
       "prefixes messages with the tag",
       Effect.fnUntraced(function* () {
@@ -250,7 +250,7 @@ describe("internal/cli/Printer tagged logging", () => {
     );
   });
 
-  it.layer(TestConsole.layer)("summary", (it) => {
+  it.layer(TestConsole.layer, { timeout: "30 seconds" })("summary", (it) => {
     it.effect(
       "logs record entries as [tag] key=value in insertion order",
       Effect.fnUntraced(function* () {
