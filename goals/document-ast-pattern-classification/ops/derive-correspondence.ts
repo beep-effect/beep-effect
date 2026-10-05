@@ -276,4 +276,4 @@ for (const [type, member] of R.toEntries(LexicalNode.cases)) {
 }
 flushEdges("Lexical → Md nodes (loose leaves wrap into `p` by the codec's documented rule)", lines);
 
-console.log(A.join(lines, "\n"));
+process.stdout.write(`${A.join(lines, "\n")}\n`);
