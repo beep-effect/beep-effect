@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -20,10 +20,9 @@ validator → attorney sign-off) instead of a one-off.
 
 ## Next Open Question
 
-Does `BRIEF.md` match the picture in the operator's head? Specifically the
-two-slice appetite (unshaded hidden-line set first, shading + judge second)
-and the no-gos. Confirm or edit, then move to decompose (`MAP.md`: sibling
-goal `design-figure-generation` depending on agentic-cad bricks).
+None — graduated. Promised-now goal: [`goals/design-figure-generation`](../../goals/design-figure-generation/).
+Gated candidates (`design-figure-intake`, `design-figure-desktop`) stay in
+[`MAP.md`](./MAP.md); a fired gate reopens this packet at `decompose`.
 
 ## Read This First
 
@@ -42,4 +41,5 @@ goal `design-figure-generation` depending on agentic-cad bricks).
   because they describe the client's article; RESEARCH.md carries the
   generic findings. Align grilled in two rounds (8 decisions in
   `DECISIONS.md`, topology resolved by doctrine); BRIEF.md drafted; stopped
-  at shape awaiting operator confirmation.
+  at shape; operator confirmed the brief; MAP.md written; graduated into
+  `goals/design-figure-generation` (agentic-cad Out list amended to point there).

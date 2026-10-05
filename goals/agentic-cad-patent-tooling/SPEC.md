@@ -246,10 +246,16 @@ rather than confidentiality arguments:
 
 **Out (this packet)**
 
-- Text-to-CAD / model generation of any kind.
-- Filing-ready `37 CFR 1.84` compliance certification.
+- Text-to-CAD / model generation of any kind — see the sibling goal
+  `goals/design-figure-generation` (graduated 2026-10-05 from
+  `explorations/patent-drawing-pipeline`), which generates design figures
+  from a spec-built solid and shares this packet's OCCT driver and compositor
+  bricks (D7).
+- Filing-ready `37 CFR 1.84` compliance certification — the sibling's
+  validator covers design sheets; utility certification stays out.
 - Replacing the human illustrator.
-- Design-patent shading grammar (`37 CFR 1.152`) — materially different rules.
+- Design-patent shading grammar (`37 CFR 1.152`) — materially different rules;
+  owned by `goals/design-figure-generation` slice 2.
 
 ## Constraints
 

@@ -3,12 +3,12 @@
   "exploration": {
     "slug": "patent-drawing-pipeline",
     "title": "Patent Drawing Pipeline",
-    "status": "active",
-    "stage": "shape",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/design-figure-generation"],
       "docs": [],
       "supersededBy": null
     },
