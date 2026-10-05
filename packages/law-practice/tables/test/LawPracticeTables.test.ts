@@ -56,6 +56,7 @@ describe("law-practice tables", () => {
 
   it("declares the projected column sets", () => {
     expect(columnNames(getColumns(kgNodeTable))).toStrictEqual([
+      "attribution_source",
       "client",
       "docket_family",
       "epistemic_status",
@@ -79,6 +80,7 @@ describe("law-practice tables", () => {
       "built_at",
       "built_from_runs",
       "bundle_version",
+      "corpus_snapshot_at",
       "counts",
     ]);
   });

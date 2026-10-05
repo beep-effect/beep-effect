@@ -104,8 +104,9 @@ Carried from the brief's rabbit holes:
   recorded `corpus_tree`; current-tree resolution is advisory, and frozen pins are never
   edited (graduation Ruling 8).
 - **Change-event admission.** A row records a change to admission, ordering, gate selection
-  or early stop, Turbo/cache task inputs, or lane assembly/sharding on the local tiers, plus
-  hosted-runner capacity on the hosted tier; instrumentation-only and shadow-only changes are
+  or early stop, Turbo/cache task inputs, or lane assembly/sharding on any tier, plus
+  hosted-runner capacity on the hosted tier (P0 Ruling 2, 2026-10-05, amending graduation
+  Ruling 6's hosted clause); instrumentation-only and shadow-only changes are
   excluded. Rows stay seed data until run 4 ratifies `OperationalChangeEvent` and `landedAt`
   through a Queue-G intake row (graduation Ruling 6).
 - **Tiers.** Merged preview is a sub-partition of `TierLocalFullProof` in KPI law v1.1; a

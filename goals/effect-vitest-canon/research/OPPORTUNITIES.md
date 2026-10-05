@@ -1677,7 +1677,7 @@ labeled an identical set "inherited" would have made that a one-line read.
 
 Verdict noise: `verdict.json` listed `publish:03-pr-provenance-stamp: failed` with a
 manual `gh pr edit` repair while the PR body already carried the provenance footer; the
-log showed the stamp had preserved a concurrent body edit by Blacksmith. A stamp that
+log showed the stamp had preserved a concurrent body edit by [redacted-vendor]. A stamp that
 lost a race but converged should record `passed` (or a distinct `raced` state), not a
 failure that invites an unnecessary repair.
 
@@ -6674,3 +6674,28 @@ head, while `gh pr view` returned `GraphQL: API rate limit already exceeded`.
 Closeout should report the transport or rate-limit error instead of converting
 an unavailable GraphQL lookup into a misleading no-PR conclusion. A REST
 fallback for basic PR identity would also keep read-only status available.
+
+### Unrelated HTML coverage floor blocked the CLI wave (2026-10-05)
+
+PR #1416's local `quality:coverage` gate failed on the unchanged
+`@beep/html` `Html.source-size.ts` file at 99.51% branches and 99.72%
+statements against a 100% file baseline. All Turbo coverage tasks passed, and
+a focused 196-test HTML coverage run reproduced the gap. The uncovered guard
+checked for an empty list after `tokenize` had supplied an EOF token; the
+installed comma-list parser always returns at least one entry for that input.
+Removing the unreachable guard preserves the existing malformed-input behavior.
+Retaining the coverage ratchet's rendered diagnostic in Yeet evidence, rather
+than truncating its log before the failure, would have made attribution faster.
+
+### Main merge displaced detector IDs and exception reasons (2026-10-05)
+
+Integrating current main into the next CLI wave moved detector anchors in
+`PracticeKg.projections.test.ts` and several repo-cli tests. The live scan
+reported five introduced and two resolved position IDs. `lint effect-vitest
+--write` reconciled the current 1,934 findings but reset two previously
+reasoned shorter-scope `PracticeKg` exceptions to open after their occurrence
+fingerprints changed. We checked the current nested database and host scopes
+and restored those reasons. Three `yeet-sweep-retire.test.ts` EV002 candidates
+remain open for the later main-delta inventory. A stable identity or reviewed
+exception reattachment across line and expression shifts would prevent this
+manual merge repair.

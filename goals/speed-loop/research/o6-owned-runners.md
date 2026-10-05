@@ -3,9 +3,9 @@
 ## Executive recommendation
 
 Pilot a **hybrid**, not an across-the-board migration: keep every fork-exposed
-job on Blacksmith and send one duplicated, non-required `Coverage Regression`
+job on [redacted-vendor] and send one duplicated, non-required `Coverage Regression`
 job from trusted same-repository PR branches to an ephemeral 8-vCPU EC2 Spot
-runner built from a lockfile-keyed AMI. Keep the required Blacksmith job during
+runner built from a lockfile-keyed AMI. Keep the required [redacted-vendor] job during
 the measurement period. This tests the largest 8-vCPU demand row and the whole
 security/control plane without making a new runner a merge gate.
 
@@ -15,7 +15,7 @@ read-only Turbo seed are parts of that design, not separate reasons to expose a
 self-hosted worker to arbitrary fork code. Firecracker and the workstation are
 second-phase tools for trusted workloads only.
 
-This conclusion is deliberately narrower than “replace Blacksmith.” The repo is
+This conclusion is deliberately narrower than “replace [redacted-vendor].” The repo is
 public, and `pull_request` jobs execute PR-controlled code. The workflow already
 withholds application and Turbo secrets on PRs
 (`.github/workflows/check.yml:108-123`), but it also grants
@@ -100,7 +100,7 @@ machine would turn parallel work into a queue.
 
 All prices in this section are **estimate — verify current pricing**. They are
 training-knowledge planning figures, not live AWS, RunsOn, GitHub, or
-Blacksmith quotes. Region, architecture, interruption rate, storage, data
+[redacted-vendor] quotes. Region, architecture, interruption rate, storage, data
 transfer, discounts, and controller fees can materially change them.
 
 ### Ranked recommendation
@@ -120,7 +120,7 @@ introduce Kubernetes/EKS, which is unjustified for this initial demand.
 
 Use memory-oriented instances for type-heavy lanes rather than mapping vCPU
 alone. The census found individual check programs around 9 GB peak RSS, and the
-repo already attributed whole-runner losses to 4-vCPU Blacksmith capacity
+repo already attributed whole-runner losses to 4-vCPU [redacted-vendor] capacity
 (`goals/quality-speedup/research/SOURCES.md:36-53`). Start 8-vCPU lanes at 32 GB
 RAM and record peak RSS before right-sizing.
 
@@ -314,9 +314,9 @@ cache writes, labels, or OIDC for owned runners. Keep code-executing checks on
 `pull_request`; place privileged metadata-only automation in a separate job
 that never checks out or evaluates PR-controlled content.
 
-### What Blacksmith currently absorbs
+### What [redacted-vendor] currently absorbs
 
-The committed contract shows Blacksmith as the runner provider while cache
+The committed contract shows [redacted-vendor] as the runner provider while cache
 logic remains GitHub Actions based (`followup/r2-ci-shared-setup.md:59-62`). As
 a managed ephemeral provider it currently absorbs, to varying provider-defined
 degrees that are not evidenced in this repo: capacity acquisition, queue-to-VM
@@ -352,7 +352,7 @@ separate follow-ups.
 Phase 0 is controller/image/security infrastructure only. Phase 1 adds a
 **non-required shadow** job named `Coverage Regression (owned pilot)` for
 trusted same-repository PRs. It runs the exact Coverage command and SHA in
-parallel with the existing required Blacksmith `Coverage Regression`; forks do
+parallel with the existing required [redacted-vendor] `Coverage Regression`; forks do
 not instantiate the shadow job. Coverage is the best first lane because it is
 the largest 8-vCPU demand row (2,562.9 runner-minutes/week), has an 11.5-minute
 p50, and its own body is deliberately uncached, so a result cannot be explained
@@ -373,14 +373,14 @@ criteria below.
 - Fully loaded owned cost (compute + boot/interruption waste + EBS + S3/logs +
   allocated controller fee) is at most **$0.06 per successful Coverage run,
   estimate — verify current pricing**, and the measured weekly projection is at
-  least 30% below the comparable share of the current Blacksmith invoice.
+  least 30% below the comparable share of the current [redacted-vendor] invoice.
 - Cost is reported both per attempt and per successful completion; retries and
   orphan time cannot disappear from the denominator.
 
 **Wall time and capacity**
 
 - At least 20 paired same-SHA samples; compare medians and p95s, not one run.
-- Owned total job wall p50 is no worse than Blacksmith p50 by more than 5%, and
+- Owned total job wall p50 is no worse than [redacted-vendor] p50 by more than 5%, and
   p95 is no worse by more than 10%.
 - Provisioning/queue p50 <= 30 s and p95 <= 90 s; setup p50 <= 15 s, proving at
   least 45 s of the estimated 60 s setup floor was erased.

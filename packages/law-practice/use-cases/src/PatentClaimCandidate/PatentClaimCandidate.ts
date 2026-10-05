@@ -78,6 +78,10 @@ export class PatentClaimCandidateInput extends S.Class<PatentClaimCandidateInput
     operationId: OperationId.annotateKey({
       description: "Normalization activity identifier retained in the candidate snapshot.",
     }),
+    sourceDocumentDigest: S.optionalKey(ContentDigest).annotateKey({
+      description:
+        "Catalogued corpus document digest the source file was resolved to, when the batch could resolve one.",
+    }),
     sourceFile: S.NonEmptyString.annotateKey({
       description: "Traceable source filename presented by the batch caller.",
     }),
@@ -244,6 +248,7 @@ export const patentClaimCandidateFrom = Effect.fn("PatentClaimCandidate.from")(f
       docket: input.docket,
       evidenceFixtureKey,
       family: Str.takeLeft(5)(input.docket),
+      sourceDocumentDigest: input.sourceDocumentDigest ?? null,
       sourceFile: input.sourceFile,
     },
     publicId: `${Epistemic.CandidateClaimId.tableName}_${identityKey}`,

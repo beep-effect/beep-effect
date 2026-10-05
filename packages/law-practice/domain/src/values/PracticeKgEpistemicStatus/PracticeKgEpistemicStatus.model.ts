@@ -18,7 +18,10 @@ const $I = $LawPracticeDomainId.create("values/PracticeKgEpistemicStatus");
  * The distinction is load-bearing rather than descriptive: rows labelled
  * `derived-from-official-records` are reconcilable against the corpus catalog,
  * while `candidate-unreviewed` rows come from enrichment or extraction and must
- * not be presented as settled fact.
+ * not be presented as settled fact. `mention-derived` marks edges whose only
+ * basis is a number mentioned in family documents, and `recycled-unverified`
+ * marks documents recovered from recycle-bin `$R` stubs whose original name and
+ * docket come from a restoration record rather than a live file.
  *
  * **Example** (Decode epistemic status label)
  *
@@ -36,7 +39,12 @@ const $I = $LawPracticeDomainId.create("values/PracticeKgEpistemicStatus");
  * @category schemas
  * @since 0.0.0
  */
-export const PracticeKgEpistemicStatus = LiteralKit(["derived-from-official-records", "candidate-unreviewed"]).pipe(
+export const PracticeKgEpistemicStatus = LiteralKit([
+  "derived-from-official-records",
+  "candidate-unreviewed",
+  "mention-derived",
+  "recycled-unverified",
+]).pipe(
   $I.annoteSchema("PracticeKgEpistemicStatus", {
     description: "Authority label distinguishing deterministic spine rows from candidate claims.",
   })

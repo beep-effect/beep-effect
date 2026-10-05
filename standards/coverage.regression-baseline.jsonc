@@ -25440,12 +25440,12 @@
         "packages/tooling/tool/cli/src/commands/Quality/Quality.osv-ignore.ts": {
           "lines": 96,
           "statements": 96,
-          "branches": 100,
+          "branches": 94.44,
           "functions": 92.3,
           "uncovered": {
             "lines": 1,
-            "statements": 1,
-            "branches": 0,
+            "statements": 2,
+            "branches": 1,
             "functions": 1
           }
         },

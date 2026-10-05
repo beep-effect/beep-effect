@@ -130,7 +130,7 @@ follow-up and is independently falsifiable by re-running probe B.
   three concurrent packages from the top table can already stack >20GB.
   Fine on this 128GB workstation, fatal on small machines.
 - **Hosted**: `boundedRootTurboArgs` **skips** the concurrency cap when
-  `isCi()` — turbo defaults to ~10 concurrent tasks. On `blacksmith-4vcpu`
+  `isCi()` — turbo defaults to ~10 concurrent tasks. On `[redacted-vendor]-4vcpu`
   runners this reproduces the "runner lost communication" whole-runner deaths
   (30/56 failed jobs in the prior session's sweep of failed check.yml runs —
   labeled historical). Still on 4vcpu today: **Repo Sanity, Test Unit,
