@@ -293,9 +293,9 @@ command, as ruled for #967) and the ad hoc root `audit` script run it, so the cr
 refuted it and it is excluded on the Ruling 3 pattern. No row.
 
 **Final count: 39 W1 rows** (16 pass-1 survivors + 10 steward-admitted + 10 from pass 2 + 3
-from pass 3). With iv-870, iv-929 and iv-1006 the ledger holds **42 rows**. The other 152
-census PRs are in the appendix, which also lists the three pre-existing rows as "existing row"
-and the commit with no PR (39 + 155 = 194 PRs).
+from pass 3; none from pass 4). With iv-870, iv-929 and iv-1006 the ledger holds **42 rows**.
+The other 155 census PRs are in the appendix, which also lists the three pre-existing rows as
+"existing row" and the commit with no PR (39 + 3 + 155 = 197 PRs; 159 appendix lines).
 
 The 39 W1 rows by primary mechanism:
 
