@@ -81,10 +81,6 @@ const optionGuardRules: ReadonlyArray<OptionGuardRule> = [
     message: "yeet publish --push-only does not accept --message because it never creates a commit.",
   },
   {
-    rejects: (options) => options.pr && options.mode !== "publish",
-    message: "yeet --pr is only valid for publish.",
-  },
-  {
     rejects: (options) => options.stagedOnly && options.mode !== "publish",
     message: "yeet --staged-only is only valid for publish.",
   },
@@ -212,7 +208,9 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
   }
 
   yield* validateMonitorBranch(context);
-  if (!options.plan && !options.pr) {
+  // `pr` defaults to true (push-first-publish D8) and only publish acts on it;
+  // every other monitoring mode still needs an open pull request to watch.
+  if (!options.plan && !(options.mode === "publish" && options.pr)) {
     yield* validateOpenPullRequest(context);
   }
 });
