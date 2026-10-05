@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "push-first-publish",
+    "packetId": "goal-packet/v1:6b7e0d9ed1a3c51b78b8978814fe072c86da5b2cc90c899f73bcbf78433b82fa",
+    "title": "Push-First Publish",
+    "status": "active",
+    "created": "2026-10-05",
+    "updated": "2026-10-05",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/push-first-publish",
+  "lifecycle": "active",
+  "mission": "Yeet publish gates on cheap-gates only, pushes to a draft PR by default, and hands proof to hosted CI so agents never wait on the local admission queue.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until the new default publish path ships and this packet's own PR is published through it: draft PR, ready-pending-flip, yeet ready, then merge-ready: yes via yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/push-first-publish/README.md",
+    "goals/push-first-publish/SPEC.md",
+    "goals/push-first-publish/PLAN.md",
+    "goals/push-first-publish/GOAL.md",
+    "goals/push-first-publish/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/push-first-publish/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Doctrine",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/push-first-publish/GOAL.md)\" -le 4000",
+    "jq . goals/push-first-publish/ops/manifest.json",
+    "rg -n \"push-first-publish|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/push-first-publish",
+    "git diff --check -- goals/push-first-publish",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep quality package-verify @beep/repo-cli",
+    "bun run beep goals doctor",
+    "bun run beep goals index --check"
+  ],
+  "stopConditions": [
+    "Draft PRs receive no reviewer or hosted signal, removing the back-pressure this packet relies on.",
+    "The change would require touching the admission scheduler contract.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Authored 2026-10-05 from a grill-with-docs session. Decisions D1-D10 in SPEC.md are locked. P0 complete; P1 not started."
+}
