@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/turborepo-task-qualification",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 1389,
   "mission": "Make cache reuse an enforced, evidence-backed contract for each quality computation, reuse layer, environment profile and epoch.",
   "executionCapable": true,
   "reflectionRequired": true,

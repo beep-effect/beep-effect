@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -13,19 +13,19 @@ statics and migrate all existing usages to the minimal required set.
 
 ## Current State
 
-The selective API and repository migration are locally complete. P0-P3 are
-closed with reproducible inventories and attributed verification evidence; the
-packet is now in P4 for Yeet publication and hosted closeout.
+Closed on 2026-10-05. The selective API and repository migration shipped as
+PR #927 (merged 2026-08-31). PR #1371 (`goals/effect-schema-parity` P5,
+merged 2026-10-01) later retired `withCodecStatics`, `classStatics`, and every
+codec facade attached through `withStatics` in favour of free `effect/Schema`
+functions guarded by the `SFV4-codec-static` schema-first rule. Nothing from
+this packet remains live to maintain; it is retained as design and migration
+evidence.
 
 ## Launch
 
-Use this command for execution-capable sessions:
-
-```text
-/goal follow the instructions in goals/schema-utils-selective-codec-statics/GOAL.md
-```
-
-`GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract.
+This packet is closed and not execution-capable. `GOAL.md` is kept as the
+historical launcher; `SPEC.md` remains the record of the contract PR #927
+satisfied.
 
 ## Read This First
 
@@ -43,8 +43,8 @@ Use this command for execution-capable sessions:
 
 ## Next Action
 
-Publish the reviewed implementation through Yeet, resolve every hosted review
-thread, and monitor until `merge-ready: yes`.
+None. Successor work lives in `goals/inline-schema-compile-hard-error`
+(closed 2026-09-09) and `goals/effect-schema-parity` (closed 2026-10-01).
 
 ## Latest Evidence
 
@@ -68,4 +68,11 @@ thread, and monitor until `merge-ready: yes`.
   package's expected `bin` boundary; Yeet's frozen exact-head install reproduced
   that preparation successfully.
 - The mandatory `inline-schema-compile-hard-error` successor packet was
-  materialized from the repository bootstrap plan.
+  materialized from the repository bootstrap plan and closed on 2026-09-09.
+- PR #927 merged on 2026-08-31 at `27318473461e` with both review threads
+  resolved and required hosted checks green.
+- PR #1371 (merged 2026-10-01) retired the selective registry: 390 attaching
+  steps in 170 files were removed and 858 reads moved to free `effect/Schema`
+  functions; the `SFV4-codec-static` rule holds the occurrence count at zero.
+- Closeout evidence: `history/2026-10-05-closeout.md`; reflection:
+  `history/reflections/2026-10-05-claude.md`.

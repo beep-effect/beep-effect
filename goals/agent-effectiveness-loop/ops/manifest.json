@@ -5,10 +5,23 @@
     "title": "Agent Effectiveness Loop",
     "status": "completed-retained",
     "created": "2026-05-16",
-    "updated": "2026-05-20",
+    "updated": "2026-10-05",
     "packetAnchorDocument": "SPEC.md"
   },
+  "packetPath": "goals/agent-effectiveness-loop",
+  "lifecycle": "completed-retained",
   "mission": "Design a repo-specific Phoenix-backed feedback loop for improving coding-agent effectiveness.",
+  "executionCapable": false,
+  "executionNote": "Delivered scope (Phase 0 research + Phase 1 doctor/annotation/bundle/guarded-sync commands) merged 2026-05-20 via PR #167 and PR #168. Retained as evidence and reusable bricks; no GOAL.md launcher. Do not reopen; successor work lives in goals/coding-agent-effectiveness-evidence-loop.",
+  "reflectionRequired": true,
+  "mergedPullRequest": 168,
+  "mergedPullRequests": [167, 168],
+  "statusNote": "legacy status: phase1-complete. Format aligned to goals/_template and staleness audited 2026-10-05 (no scope change).",
+  "provenance": {
+    "exploration": null,
+    "graduated": null,
+    "note": "Authored directly on 2026-05-16 before explorations/ existed. Phase 0 research lanes under research/ are the primary ledger."
+  },
   "ownership": {
     "family": "tooling",
     "primaryLibrary": "@beep/repo-ai-metrics",
@@ -22,26 +35,30 @@
     "graphqlUrl": "https://dankserver.tailc7c348.ts.net:8447/graphql",
     "sanitization": "project names, aggregate counts, feature availability, schema names, attribute names, and hashed identifiers only"
   },
-  "phase0": {
-    "id": "research-bootstrap-and-ranked-plan",
-    "status": "complete",
-    "outputs": [
-      "research/phoenix-capability-map.md",
-      "research/live-phoenix-state-audit.md",
-      "research/repo-eval-metrics-surface-audit.md",
-      "research/agent-effectiveness-opportunity-map.md",
-      "research/synthesis-ranked-execution-plan.md"
-    ],
-    "researchLanes": [
-      "phoenix-capability-map",
-      "live-phoenix-state-audit",
-      "repo-eval-metrics-surface-audit",
-      "agent-effectiveness-opportunity-map"
-    ]
-  },
-  "phase1": {
-    "id": "doctor-and-annotation-plan",
-    "status": "complete",
+  "inputPackets": ["goals/ai-metrics-stack", "goals/jsdoc-worker-eval"],
+  "relatedPackets": [
+    {
+      "id": "agent-pipeline-velocity",
+      "relation": "absorbed-follow-ups",
+      "notes": "Superseded agent-effectiveness-phoenix-enrichment and agent-effectiveness-workflow-integration on 2026-07-05 (merged PR #295, 2026-07-06); both follow-ups deleted in PR #401 (2026-07-14)."
+    },
+    {
+      "id": "coding-agent-effectiveness-evidence-loop",
+      "relation": "successor",
+      "notes": "Active home for coding-agent effectiveness measurement; lists this packet as retained evidence it will not reopen."
+    },
+    {
+      "id": "skillopt-training-pilot",
+      "relation": "shares-command-group",
+      "notes": "Added beep agent-effectiveness evals (PR #309); outside this packet's scope."
+    },
+    {
+      "id": "harness-evidence-ledger",
+      "relation": "shares-command-group",
+      "notes": "Extended beep agent-effectiveness evals (PR #1362); outside this packet's scope."
+    }
+  ],
+  "deliveredSurfaces": {
     "commands": [
       "beep agent-effectiveness doctor --json",
       "beep agent-effectiveness annotations plan --json",
@@ -52,14 +69,17 @@
       "beep agent-effectiveness phoenix sync --json"
     ],
     "mutationPolicy": "dry-run-default-confirmation-required",
-    "proof": "history/outputs/phase1-live-proof.md",
-    "closeout": "history/outputs/phase1-closeout.md",
     "implementationSurfaces": [
       "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
-      "packages/tooling/tool/cli/src/commands/AgentEffectiveness/index.ts"
+      "packages/tooling/tool/cli/src/commands/AgentEffectiveness/"
     ]
   },
-  "inputPackets": ["goals/ai-metrics-stack", "goals/jsdoc-worker-eval"],
+  "evidence": {
+    "liveProof": "history/outputs/phase1-live-proof.md",
+    "closeout": "history/outputs/phase1-closeout.md",
+    "reflection": "history/reflections/2026-08-29-codex.md",
+    "lastAudited": "2026-10-05"
+  },
   "externalReferences": [
     "https://arize.com/docs/phoenix/llms.txt",
     "https://arize.com/docs/phoenix/integrations/developer-tools/coding-agents",
@@ -71,13 +91,11 @@
     "using live Phoenix mutation as required Phase 1 closeout proof",
     "moving AI metrics semantics out of tooling packages",
     "syncing raw transcripts or private paths into research artifacts",
-    "graduating worker auto-remediation from read-only evidence"
+    "graduating worker auto-remediation from read-only evidence",
+    "Phoenix-native enrichment and repo workflow integration (deferred tranches, superseded)",
+    "reopening this packet"
   ],
-  "followUpGoals": [
-    "goals/agent-effectiveness-phoenix-enrichment",
-    "goals/agent-effectiveness-workflow-integration"
-  ],
-  "nextAction": "Use the follow-up goal packets for Phoenix-native enrichment or repo workflow integration instead of reopening Phase 1 closeout.",
+  "nextAction": "None in this packet. New agent-effectiveness work belongs in goals/coding-agent-effectiveness-evidence-loop; any revival of the deferred Phoenix enrichment tranche is a new packet that preserves the confirmation gate on Phoenix writes.",
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
@@ -85,9 +103,62 @@
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
-  "reflectionRequired": true,
-  "statusNote": "legacy status: phase1-complete",
-  "lifecycle": "completed-retained",
-  "mergedPullRequest": 168,
-  "packetPath": "goals/agent-effectiveness-loop"
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agent-effectiveness-loop/README.md",
+    "goals/agent-effectiveness-loop/SPEC.md",
+    "goals/agent-effectiveness-loop/PLAN.md",
+    "goals/agent-effectiveness-loop/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/README.md",
+    "research/phoenix-capability-map.md",
+    "research/live-phoenix-state-audit.md",
+    "research/repo-eval-metrics-surface-audit.md",
+    "research/agent-effectiveness-opportunity-map.md",
+    "research/synthesis-ranked-execution-plan.md"
+  ],
+  "agentLaunchers": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "jq . goals/agent-effectiveness-loop/ops/manifest.json",
+    "rg -n -e agent-effectiveness-loop -e packetAnchorDocument -e executionCapable goals/agent-effectiveness-loop",
+    "git diff --check -- goals/agent-effectiveness-loop",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep goals doctor"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope (any deferred Phase 2/3 tranche).",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval (in particular any live Phoenix write).",
+    "The same blocker repeats after reasonable investigation."
+  ]
 }

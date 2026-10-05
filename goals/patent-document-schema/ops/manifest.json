@@ -3,15 +3,15 @@
   "initiative": {
     "id": "patent-document-schema",
     "title": "Patent Document Schema",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
-    "updated": "2026-08-27",
+    "updated": "2026-10-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/patent-document-schema",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Ship schema-first patent-document structure in @beep/law-practice-domain with the practice-KG claims batch as first consumer.",
-  "statusNote": "P0/P1 complete: the typed patent-document vertical slice is implemented; repository and hosted verification remain.",
+  "statusNote": "Shipped in merged PR #867 (f1383148c6, 2026-08-30): typed patent sections, claim structure with dependency diagnostics, Md heading normalization, and the practice-KG claims-batch consumer. The closeout PR records the terminal lifecycle and reflection omitted when #867 merged; 2026-10-05 re-proof on main: 71 domain, 73 use-cases, 87 server tests green (1 opt-in corpus test skipped).",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -53,11 +53,31 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Research", "status": "complete" },
-    { "id": "P1", "name": "Implement", "status": "complete" },
-    { "id": "P2", "name": "Verify", "status": "in-progress" },
-    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
-    { "id": "P4", "name": "Close", "status": "pending" }
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/patent-document-schema/GOAL.md)\" -le 4000",

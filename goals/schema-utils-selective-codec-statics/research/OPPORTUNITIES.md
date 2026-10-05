@@ -130,3 +130,33 @@
   server listener instead of probing and reopening it, and expose a supported
   aggregate-only resume command that consumes successful coverage summaries
   after narrowly rerunning failed or skipped packages.
+
+## 2026-10-05 — Packet stayed `active` for 35 days after its PR merged
+
+- **What I was doing:** Resuming the goal from its launcher and finding the
+  implementation already merged (#927, 2026-08-31) and later retired (#1371,
+  2026-10-01) while the manifest still read P4 in progress.
+- **Evidence:** `goals/INDEX.md` listed the packet at 4/6 under Active; the
+  `/goal` launcher pointed a session at work with no live surface left. The
+  `goals doctor` stale-active advisory fires on age alone and did not connect
+  the packet to its merged PR.
+- **What would have prevented it:** A doctor rule that reads the packet's
+  completion gate (`requiresPullRequest`) and flags an active packet whose
+  publishing PR is MERGED, or a Yeet `sweep` hook that reminds the agent to
+  flip the lifecycle when the merged branch carried a goal packet.
+
+## 2026-10-05 — Inherited coverage drift blocked a docs-only publish
+
+- **What I was doing:** `bun run beep yeet publish --pr` for this packet-only
+  closeout (eight files under `goals/schema-utils-selective-codec-statics/`).
+- **Evidence:** 32 of 33 pre-push lanes passed; `quality:coverage` failed
+  with `@beep/repo-cli (…/Quality.osv-ignore.ts) branches: 94.44 < 100`.
+  That file was last changed on `main` by #1408, after the baseline's last
+  update in #1387, so `main` owes the row. The docs-only diff cannot have
+  moved it, yet the lane judged `@beep/repo-cli` at the base floor because a
+  packet path counts as a global input. Hosted heavy lanes skip for a
+  docs-only PR, so the local proof was stricter than the gate it predicts.
+- **What would have prevented it:** Judge rows at the lowered value when the
+  only "affecting" change is a docs-only global input, or let the coverage
+  lane skip locally under the same docs-only rule the hosted Heavy admission
+  uses.

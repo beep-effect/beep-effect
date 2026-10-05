@@ -9,8 +9,8 @@
 ## Status
 
 Lifecycle: `active`. P0a through P0g are complete. PR1067 is merged and
-Benjamin ratified continuation on 2026-09-11. P1 inventory is in progress;
-P2 waits for acknowledgement of the completed inventory. See
+Benjamin ratified continuation on 2026-09-11. P1 inventory and P2 remediation
+waves are both in progress. See
 [the ratification receipt](history/2026-09-11-p0g-ratification-p1-start.md).
 The machine-readable state is in [ops/manifest.json](./ops/manifest.json).
 

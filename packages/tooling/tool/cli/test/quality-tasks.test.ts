@@ -738,6 +738,20 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       const select = (lock: string, at = now) => selectOsvPackageOverrideIdsForAudit(config, lock, at);
 
       expect(select('{"packages":{"braces":["braces@3.0.3"]}}')).toEqual(["GHSA-vfj7-8cjw-p6xm"]);
+      expect(
+        selectOsvPackageOverrideIdsForAudit(
+          Str.replace('ecosystem = "npm"', 'ecosystem = "Go"')(config),
+          '{"packages":{"braces":["braces@3.0.3"]}}',
+          now
+        )
+      ).toEqual([]);
+      expect(
+        selectOsvPackageOverrideIdsForAudit(
+          Str.replace("ignore = true", "ignore = false")(config),
+          '{"packages":{"braces":["braces@3.0.3"]}}',
+          now
+        )
+      ).toEqual([]);
       expect(select('{"packages":{"braces":["braces@3.0.4"]}}')).toEqual([]);
       expect(select('{"packages":{"braces":["braces@3.0.3"],"braces@other":["braces@3.0.4"]}}')).toEqual([]);
       expect(select('{"packages":{"braces":["braces@3.0.3"],"parent/braces":["braces@3.0.2"]}}')).toEqual([]);
