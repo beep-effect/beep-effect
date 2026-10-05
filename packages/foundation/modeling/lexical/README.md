@@ -97,6 +97,16 @@ The codec profile was locked after running the Md ↔ Lexical lossiness check
 - Inline styles (`style`, `textStyle`), `textFormat`, `detail`, `mode`,
   NodeState (`$`).
 
+### Detached nodes on Lexical → Md (`nodeToBlocks` outside a parent)
+
+- `listitem` and `tablecell` project onto a paragraph of their inline content
+  (container → block); their list or table structure belongs to the parent
+  that is no longer present.
+- `tablerow` re-wraps into a single-row `Table` (pattern preserved).
+- `text`, `tab`, `linebreak`, and `link` wrap into a paragraph.
+- `quote` → `BlockQuote` and `code` → `Pre` re-realize losslessly;
+  `artifact-ref` → the artifact-link paragraph convention.
+
 ### Degraded on Md → Lexical (documented, deterministic)
 
 - `Document.frontmatter` is outside the editor wire and must be retained by the
