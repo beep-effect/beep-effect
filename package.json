@@ -301,7 +301,6 @@
   },
   "name": "@beep/root",
   "overrides": {
-    "postcss-selector-parser": "7.1.6",
     "@effect/platform-node": "catalog:",
     "@effect/platform-node-shared": "catalog:",
     "@effect/tsgo-darwin-arm64": "catalog:",
@@ -333,6 +332,7 @@
     },
     "pdfjs-dist": "catalog:",
     "postcss": "^8.5.23",
+    "postcss-selector-parser": "^7.1.6",
     "protobufjs": "^7.6.6",
     "sharp": "catalog:",
     "tar": "catalog:",

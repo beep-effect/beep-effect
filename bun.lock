@@ -3292,7 +3292,7 @@
     },
     "pdfjs-dist": "catalog:",
     "postcss": "^8.5.23",
-    "postcss-selector-parser": "7.1.6",
+    "postcss-selector-parser": "^7.1.6",
     "protobufjs": "^7.6.6",
     "sharp": "catalog:",
     "tar": "catalog:",
