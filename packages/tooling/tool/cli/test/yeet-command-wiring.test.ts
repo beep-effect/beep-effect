@@ -29,6 +29,7 @@ import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
+import { TestClock } from "effect/testing";
 import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
@@ -794,6 +795,51 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
       expect(A.map(entries, (entry) => entry.step.id)).toEqual([MONITOR_READY_SUBMIT_STEP_ID]);
       expect(A.map(entries, (entry) => entry.result.exitCode)).toEqual([0]);
       expect(A.map(entries, (entry) => entry.status)).not.toContain("skipped");
+    })
+  );
+
+  // `TestClock.withLive`: the contender's lock retry is a real 25 ms sleep,
+  // which never elapses on the test clock.
+  it.effect(
+    "serializes concurrent publishes so only one submits a monitor",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-race-" });
+      const submits = `${root}/submits.txt`;
+      const registered = `${root}/registered.txt`;
+      // The fake submit takes long enough that an unlocked second publish would
+      // read the registry before this one registers its job.
+      const submitSource = [
+        'const fs = require("node:fs");',
+        "Bun.sleepSync(400);",
+        `fs.appendFileSync("${submits}", "submitted\\n");`,
+        `fs.writeFileSync("${registered}", "1");`,
+      ].join(" ");
+      const first = yield* tailFixture(root, submitSource);
+      const second = yield* tailFixture(root, submitSource);
+      const listJobs = () =>
+        fs.exists(registered).pipe(
+          Effect.map((exists) => (exists ? [unboundSubmitted] : [])),
+          Effect.orElseSucceed(() => [])
+        );
+      const publish = (fixture: typeof first) =>
+        finishPublishWithPullRequestForTesting(
+          fixture.plan,
+          defaultYeetRunOptions({ message: "fix(repo-cli): racing push", pr: true }),
+          [fixture.submit],
+          fixture.recorder,
+          fixture.extras,
+          false,
+          { ensurePullRequest: fixture.ensurePullRequest, listJobs }
+        );
+      yield* Effect.all([publish(first), publish(second)], { concurrency: 2 }).pipe(TestClock.withLive);
+      expect(yield* fs.readFileString(submits)).toBe("submitted\n");
+      const statuses = A.map(
+        [...(yield* Ref.get(first.recorder)), ...(yield* Ref.get(second.recorder))],
+        (entry) => entry.status === "skipped"
+      );
+      expect(A.filter(statuses, (skipped) => skipped)).toHaveLength(1);
+      expect(statuses).toHaveLength(2);
     })
   );
 
