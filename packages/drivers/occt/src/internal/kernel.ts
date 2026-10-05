@@ -9,6 +9,7 @@
 import { A, N, O } from "@beep/utils";
 import { Order, pipe } from "effect";
 import * as replicad from "replicad";
+import { OcctError } from "../Occt.errors.ts";
 import { BoundingBox, EdgeSet, SolidSummary } from "../Occt.models.ts";
 import type { OpenCascadeInstance } from "replicad-opencascadejs";
 import type { Camera, Primitive, Rotation, Segment2, SolidSpec } from "../Occt.models.ts";
@@ -53,7 +54,7 @@ const buildPrimitive = (primitive: Primitive): Shape3D => {
 const buildPart = (add: ReadonlyArray<Primitive>, subtract: ReadonlyArray<Primitive>): Shape3D => {
   const [first, ...rest] = add;
   if (first === undefined) {
-    throw new Error("A part needs at least one primitive to add.");
+    throw OcctError.make({ reason: "solid-build", message: "A part needs at least one primitive to add." });
   }
   const fused = pipe(
     rest,
@@ -109,7 +110,7 @@ export const summarize = (built: ReturnType<typeof buildCompound>): SolidSummary
 const normalize = (v: readonly [number, number, number]): [number, number, number] => {
   const length = Math.hypot(v[0], v[1], v[2]);
   if (!(length > 0)) {
-    throw new Error("Camera vectors must be non-zero.");
+    throw OcctError.make({ reason: "projection", message: "Camera vectors must be non-zero." });
   }
   return [v[0] / length, v[1] / length, v[2] / length];
 };

@@ -244,10 +244,11 @@ export class Cylinder extends S.Class<Cylinder>($I`Cylinder`)(
  * **Example** (Branch on a primitive)
  *
  * ```ts
- * import { Primitive, Box } from "@beep/occt"
+ * import { Box, Primitive } from "@beep/occt"
+ * import * as S from "effect/Schema"
  *
  * const p = Box.make({ min: [0, 0, 0], max: [1, 1, 1] })
- * console.log(Primitive.is(p))
+ * console.log(S.is(Primitive)(p))
  * ```
  *
  * @category models

@@ -91,7 +91,7 @@ export const structureOf = (options: { readonly bytes: Uint8Array; readonly doc:
   return PdfStructure.make({
     headerVersion: headerVersion(bytes),
     pages,
-    fonts: pipe(Array.from(MutableHashMap.values(fonts)), A.sort(fontOrder)),
+    fonts: pipe(A.fromIterable(MutableHashMap.values(fonts)), A.sort(fontOrder)),
     annotationCount,
     hasOptionalContent: doc.catalog.has(PDFName.of("OCProperties")),
     encrypted: doc.isEncrypted,

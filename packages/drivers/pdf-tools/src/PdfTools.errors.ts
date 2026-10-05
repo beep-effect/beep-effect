@@ -55,6 +55,8 @@ export type PdfToolsErrorReason = typeof PdfToolsErrorReason.Type;
 const causeText = (cause: unknown): O.Option<string> =>
   P.isString(cause) ? O.some(cause) : P.isError(cause) ? O.some(cause.message) : O.none();
 
+const isPdfToolsError = (cause: unknown): cause is PdfToolsError => S.is(PdfToolsError)(cause);
+
 /**
  * Technical failure raised inside the PDF tools driver boundary.
  *
@@ -85,7 +87,8 @@ export class PdfToolsError extends S.TaggedError<PdfToolsError>($I`PdfToolsError
   })
 ) {
   /**
-   * Build an error from a thrown value, tool output, or schema issue.
+   * Build an error from a thrown value, tool output, or schema issue. A thrown
+   * {@link PdfToolsError} passes through unchanged.
    *
    * **Example** (Wrap a parser message)
    *
@@ -99,5 +102,5 @@ export class PdfToolsError extends S.TaggedError<PdfToolsError>($I`PdfToolsError
    * @since 0.0.0
    */
   static readonly fromUnknown = (reason: PdfToolsErrorReason, message: string, cause: unknown): PdfToolsError =>
-    PdfToolsError.make({ reason, message, cause: causeText(cause) });
+    isPdfToolsError(cause) ? cause : PdfToolsError.make({ reason, message, cause: causeText(cause) });
 }

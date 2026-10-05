@@ -56,6 +56,8 @@ export type OcctErrorReason = typeof OcctErrorReason.Type;
 const causeText = (cause: unknown): O.Option<string> =>
   P.isString(cause) ? O.some(cause) : P.isError(cause) ? O.some(cause.message) : O.none();
 
+const isOcctError = (cause: unknown): cause is OcctError => S.is(OcctError)(cause);
+
 /**
  * Technical failure raised inside the OCCT driver boundary.
  *
@@ -86,7 +88,8 @@ export class OcctError extends S.TaggedError<OcctError>($I`OcctError`)(
   })
 ) {
   /**
-   * Build an error from a thrown kernel value or schema issue.
+   * Build an error from a thrown kernel value or schema issue. A thrown
+   * {@link OcctError} passes through unchanged.
    *
    * **Example** (Wrap a kernel exception)
    *
@@ -100,5 +103,5 @@ export class OcctError extends S.TaggedError<OcctError>($I`OcctError`)(
    * @since 0.0.0
    */
   static readonly fromUnknown = (reason: OcctErrorReason, message: string, cause: unknown): OcctError =>
-    OcctError.make({ reason, message, cause: causeText(cause) });
+    isOcctError(cause) ? cause : OcctError.make({ reason, message, cause: causeText(cause) });
 }

@@ -5,6 +5,7 @@
  */
 
 import { O } from "@beep/utils";
+import { PdfToolsError } from "../PdfTools.errors.ts";
 import { PixelBox, RasterMetrics } from "../PdfTools.models.ts";
 
 const SPACE = 0x20;
@@ -23,7 +24,7 @@ export const parseP6Header = (
   bytes: Uint8Array
 ): { readonly width: number; readonly height: number; readonly offset: number } => {
   if (bytes[0] !== 0x50 || bytes[1] !== 0x36) {
-    throw new Error("Expected a binary PPM (P6) header.");
+    throw PdfToolsError.make({ reason: "parse", message: "Expected a binary PPM (P6) header." });
   }
   let offset = 2;
   const fields: Array<number> = [];
@@ -45,19 +46,19 @@ export const parseP6Header = (
       digits += 1;
     }
     if (digits === 0) {
-      throw new Error("Malformed PPM header.");
+      throw PdfToolsError.make({ reason: "parse", message: "Malformed PPM header." });
     }
     fields.push(value);
   }
   if (fields[2] !== 255) {
-    throw new Error(`Unsupported PPM maxval ${fields[2]}; expected 255.`);
+    throw PdfToolsError.make({ reason: "parse", message: `Unsupported PPM maxval ${fields[2]}; expected 255.` });
   }
   // Exactly one whitespace byte separates the header from the raster.
   offset += 1;
   const width = fields[0]!;
   const height = fields[1]!;
   if (bytes.length < offset + width * height * 3) {
-    throw new Error("PPM raster is shorter than its header declares.");
+    throw PdfToolsError.make({ reason: "parse", message: "PPM raster is shorter than its header declares." });
   }
   return { width, height, offset };
 };

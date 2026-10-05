@@ -3,10 +3,9 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertInstanceOf, assertSome } from "@effect/vitest/utils";
+import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
 import { Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 
 // A 40 × 30 × 20 box with an off-centre wedge on top, so no two principal
 // views coincide and the top/bottom distinction is observable.
@@ -34,7 +33,6 @@ const bottom = Camera.make({ eye: [0, 0, -1], up: [0, 1, 0] });
 const front = Camera.make({ eye: [0, -1, 0], up: [0, 0, 1] });
 const persp = (focus: number) =>
   Camera.make({ eye: [90, -120, 65], up: [0, 0, 1], target: [0, 0, 15], focus: O.some(focus) });
-const encodeSegments = S.encodeSync(S.Array(S.Tuple([S.Finite, S.Finite, S.Finite, S.Finite])));
 
 const TestLayer = Occt.layer.pipe(Layer.provide(NodeServices.layer));
 
@@ -76,7 +74,7 @@ describe("@beep/occt service", () => {
         expect(topView?.visible.length).toBe(8);
         expect(bottomView?.hidden.length).toBeGreaterThan(topView?.hidden.length ?? 0);
         expect(frontView?.visible.length).toBe(6);
-        expect(encodeSegments(topView?.visible ?? [])).not.toEqual(encodeSegments(bottomView?.visible ?? []));
+        expect(topView?.visible).not.toEqual(bottomView?.visible);
       })
     );
 
@@ -92,7 +90,7 @@ describe("@beep/occt service", () => {
         );
         expect(axo?.visible.length).toBe(15);
         expect(near?.visible.length).toBe(15);
-        expect(encodeSegments(axo?.visible ?? [])).not.toEqual(encodeSegments(near?.visible ?? []));
+        expect(axo?.visible).not.toEqual(near?.visible);
         // In the axonometric view the four vertical box edges stay parallel
         // (equal projected direction); in perspective they converge.
         const directionSpread = (segments: ReadonlyArray<readonly [number, number, number, number]>) =>
@@ -115,7 +113,7 @@ describe("@beep/occt service", () => {
         const request = ProjectionRequest.make({ solid: fixture, cameras: [top, persp(300)] });
         const first = yield* occt.project(request);
         const second = yield* occt.project(request);
-        expect(first.map((v) => encodeSegments(v.visible))).toEqual(second.map((v) => encodeSegments(v.visible)));
+        expect(first).toEqual(second);
         expect(first.length).toBe(2);
       })
     );
@@ -131,7 +129,8 @@ describe("@beep/occt service", () => {
         );
         assertInstanceOf(error, OcctError);
         expect(error.reason).toBe("projection");
-        assertSome(error.cause, "Camera vectors must be non-zero.");
+        expect(error.message).toBe("Camera vectors must be non-zero.");
+        assertNone(error.cause);
       })
     );
   });
