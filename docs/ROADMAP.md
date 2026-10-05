@@ -112,9 +112,11 @@ view.
 (bundle, host package, OA candidate claims, .mcpb distribution); P5
 acceptance evidence has been in progress since 2026-07-30 with no commit
 since, waiting on the AC-2 provenance defect (B-2) and Tom's G-1..G-5 calls.
-Resume order is P6 graph-integrity repair → P7 server hardening → P8 handoff,
-each its own PR; P6 and P7 do not need Tom and start now, before P5 closes.
-P5 closes in parallel once Tom's calls and the AC-2 provenance fix land. No
+Resume order is P6 graph-integrity repair → P7 server hardening, each its
+own PR; neither needs Tom and both start now, before P5 closes. P5 closes in
+parallel once Tom's calls and the AC-2 provenance fix land. P8 handoff waits
+for all three: the bundle is not installed on Tom's machine until the P5
+acceptance gauntlet passes. No
 commit has touched a Lane 1 packet since the 09-12 re-eval;
 `legal-document-intake` now carries `blockedBy: practice-kg-mcp` so the
 doctor reads its wait as a dependency, not neglect. The cut itself is
