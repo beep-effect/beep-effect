@@ -76,6 +76,12 @@ const $I = $RepoCliId.create("commands/Yeet/internal/ProofJobLauncher");
 // journal helper's 25 ms pause (about 5 s) before failing with a retryable "stayed busy" error, so a
 // brief stall never loses a transition: the caller reruns cancel, finalize, or the bookkeeping.
 const PROOF_JOB_LOCK_RETRY_ATTEMPTS = 200;
+// The readiness-monitor submit lock is held across a registry read and one detached submit
+// (a child CLI start plus `systemd-run`), so contenders wait about a minute. A dead holder's
+// generation is reclaimed by the journal lock helper, and a contender that still cannot take
+// the lock proceeds unlocked: a duplicate monitor is cheaper than a publish with none.
+const READY_MONITOR_SUBMIT_LOCK_RETRY_ATTEMPTS = 2400;
+const READY_MONITOR_SUBMIT_LOCK_FILE = "ready-monitor-submit.lock";
 const decodeUUIDOption = S.decodeOption(UUID);
 const decodeUUID = S.decodeEffect(UUID);
 
@@ -169,6 +175,11 @@ export type ProofJobWaitResult = typeof ProofJobWaitResult.Type;
  *   earlier wait returned, or a required red set on the same head that names a
  *   red the last return did not), and records the returned row ids and red set
  *   so a re-run waits for the next wave.
+ * - `withReadyMonitorSubmitLock` serializes a publish's "is a readiness monitor
+ *   already polling this pull request, else submit one" decision across
+ *   processes in the checkout, so two concurrent publishes cannot both read an
+ *   empty registry and both submit. A contender that cannot take the lock in
+ *   about a minute warns and runs unlocked.
  *
  * **Example** (Name a launcher operation)
  *
@@ -196,6 +207,9 @@ export interface ProofJobLauncherShape {
   readonly submit: (submission: ProofJobSubmission) => Effect.Effect<ProofJobRecord, YeetCommandError>;
   readonly support: Effect.Effect<RunScopeSupport>;
   readonly wait: (jobId: UUID, options: ProofJobWaitOptions) => Effect.Effect<ProofJobWaitResult, YeetCommandError>;
+  readonly withReadyMonitorSubmitLock: <Value, Error, Requirements>(
+    operation: Effect.Effect<Value, Error, Requirements>
+  ) => Effect.Effect<Value, Error | YeetCommandError, Requirements>;
 }
 
 const proofJobEnvironment = Effect.fn("ProofJob.environment")(function* () {
@@ -272,11 +286,9 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     if (O.isNone(record)) return yield* YeetCommandError.make({ message: `Unknown proof job ${id}.` });
     return record.value;
   });
-  const withRecordLock = Effect.fn("ProofJob.withRecordLock")(function* <Value, Error, Requirements>(
-    operation: Effect.Effect<Value, Error, Requirements>,
-    id: UUID
-  ) {
-    const lockPath = path.join(jobsRoot, `${id}.lock`);
+  // Take the named lock file under the jobs root and report whether this caller owns it.
+  const acquireJobsLock = Effect.fn("ProofJob.acquireJobsLock")(function* (fileName: string, retryAttempts: number) {
+    const lockPath = path.join(jobsRoot, fileName);
     yield* readContainedFileStringNoFollow(repoRoot, lockPath).pipe(
       Effect.provide(context),
       Effect.mapError(guardError)
@@ -285,15 +297,43 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     const start = yield* processStartIdentityForPid(process.pid).pipe(Effect.provide(context));
     const nonce = yield* crypto.randomUUIDv4.pipe(Effect.mapError(guardError));
     const token = `${process.pid}:${O.getOrElse(start, constant("unknown"))}:${nonce}`;
+    const owned = yield* acquireJournalFileLock(lockPath, token, retryAttempts).pipe(Effect.provide(context));
+    return { lockPath, owned, token };
+  });
+  const releaseJobsLock = (lock: { readonly lockPath: string; readonly owned: boolean; readonly token: string }) =>
+    lock.owned ? releaseJournalFileLock(lock.lockPath, lock.token).pipe(Effect.provide(context)) : Effect.void;
+  const withRecordLock = Effect.fn("ProofJob.withRecordLock")(function* <Value, Error, Requirements>(
+    operation: Effect.Effect<Value, Error, Requirements>,
+    id: UUID
+  ) {
     return yield* Effect.acquireUseRelease(
-      acquireJournalFileLock(lockPath, token, PROOF_JOB_LOCK_RETRY_ATTEMPTS).pipe(
-        Effect.provide(context),
-        Effect.flatMap((owned) =>
-          owned ? Effect.void : Effect.fail(YeetCommandError.make({ message: `Proof job ${id} stayed busy.` }))
+      acquireJobsLock(`${id}.lock`, PROOF_JOB_LOCK_RETRY_ATTEMPTS).pipe(
+        Effect.filterOrFail(
+          (lock) => lock.owned,
+          () => YeetCommandError.make({ message: `Proof job ${id} stayed busy.` })
         )
       ),
       () => operation,
-      () => releaseJournalFileLock(lockPath, token).pipe(Effect.provide(context))
+      releaseJobsLock
+    );
+  });
+  const withReadyMonitorSubmitLock = Effect.fn("ProofJob.withReadyMonitorSubmitLock")(function* <
+    Value,
+    Error,
+    Requirements,
+  >(operation: Effect.Effect<Value, Error, Requirements>) {
+    return yield* Effect.acquireUseRelease(
+      acquireJobsLock(READY_MONITOR_SUBMIT_LOCK_FILE, READY_MONITOR_SUBMIT_LOCK_RETRY_ATTEMPTS).pipe(
+        Effect.tap((lock) =>
+          lock.owned
+            ? Effect.void
+            : Console.error(
+                "[yeet] warning: the readiness-monitor submit lock stayed busy; continuing without it (a duplicate monitor is possible; check `bun run beep yeet job list`)"
+              )
+        )
+      ),
+      () => operation,
+      releaseJobsLock
     );
   });
   const command = Effect.fn("ProofJob.command")(function* (exe: string, args: ReadonlyArray<string>) {
@@ -530,6 +570,7 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     list,
     prune,
     finalize,
+    withReadyMonitorSubmitLock,
     submit: Effect.fn("ProofJob.submit")(function* (submission: ProofJobSubmission) {
       if ((yield* support) !== "active")
         return yield* YeetCommandError.make({
