@@ -61,3 +61,8 @@ The publish proof's `quality:coverage` lane failed on the inherited
 `@beep/repo-cli` `Quality.osv-ignore.ts` row that hosted `main` already fails
 at `c156ca2b3c`; every other pre-push lane passed. The attribution receipt is
 in `research/OPPORTUNITIES.md`, and the PR was pushed for hosted gating.
+
+Hosted receipt: closeout PR #1415 carries this status flip under the same-PR
+packet-state law, so the packet reads complete only once GitHub merges it.
+Yeet until-ready monitor job `d063c257-e66d-4417-b9ad-cdef284207e0` tracks
+the hosted checks and review threads.

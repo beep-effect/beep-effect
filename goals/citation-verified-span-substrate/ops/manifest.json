@@ -11,6 +11,7 @@
   "packetPath": "goals/citation-verified-span-substrate",
   "lifecycle": "completed-retained",
   "mission": "Deliver generic matter-scoped verified TextAnchor construction with canonical UTF-16 raw offsets, deterministic locator mapping, straddle, and fail-closed source-drift behavior.",
+  "mergedPullRequest": 871,
   "statusNote": "Complete. The substrate merged in PR #871 (2026-08-30); the 2026-10-05 closeout re-proved the owned acceptance matrix on current main and recorded the reflection. Evidence: history/p3/2026-10-05-current-main-closeout.md.",
   "executionCapable": true,
   "reflectionRequired": true,
