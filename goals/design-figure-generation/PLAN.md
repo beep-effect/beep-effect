@@ -2,15 +2,15 @@
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Deep-research sweep + align grill (exploration). | `explorations/patent-drawing-pipeline/{RESEARCH,DECISIONS,BRIEF,MAP}.md` exist. |
-| P1 Spike: perspective HLR via replicad | pending | Throwaway Bun script: opencascade.js + replicad, box + wedge, orthographic and perspective projected visible edges to SVG. | Result note in `research/`; kernel route for perspective figures fixed. |
-| P2 Slice 1: unshaded sheets for the live matter | pending | Schemas (`Matter`, `ModelSpec`, `Figure`, view LiteralKit), `GeometryEngine`/`ProjectionEngine`/`SheetComposer`/`DrawingSheetValidator` contracts, replicad + pdf-tool drivers, `beep drawings render` / `validate`, synthetic fixture + goldens, then the live matter spec under the corpus root. | Acceptance items 2–4. |
+| P1 Spike: perspective HLR via replicad | complete | Throwaway Bun script: opencascade.js + replicad, box + wedge, orthographic and perspective projected visible edges to SVG. | Result note in `research/`; kernel route for perspective figures fixed. |
+| P2 Slice 1: unshaded sheets for the live matter | in-progress | Schemas (`ModelSpec`, `FigureSetSpec`, view LiteralKit, omission claims), `GeometryEngine`/`PdfBackend` ports, `FigureSet` service (compose, validate, manifest), `@beep/occt` + `@beep/pdf-tools` drivers, `beep drawings render` / `validate`, synthetic fixture + goldens — DONE 2026-10-05; the live matter spec under the corpus root is OPEN (article unmeasured). | Acceptance items 2–4. |
 | P3 Slice 2: shading, judge rubric, sign-off | pending | `ShadingEngine` (face-exposure hatching through HLR), QA judge drawing rubric, `beep drawings judge` / `sign`, sign-off event schema. | Acceptance item 5. |
 | P4 Yeet: PR to mergeable | pending | Publish through yeet; required checks green; threads answered and resolved. | `merge-ready: yes`; zero unresolved review threads. |
 | P5 Close | pending | Closeout reflection; packet state flipped. | Reflection passes `beep lint reflection-artifacts`; README/manifest updated. |
@@ -40,6 +40,10 @@ rg -n "design-figure-generation|GOAL.md|agentLaunchers|packetAnchorDocument" goa
 git diff --check -- goals/design-figure-generation
 bun run beep lint reflection-artifacts
 ```
+
+## Progress log
+
+- 2026-10-05 — P1 done: `research/p1-perspective-hlr-spike.md` (perspective HLR works in-process; no build123d fallback). P2 code done on the synthetic fixture: eight sheets, byte-identical across two runs, validator zero findings, negatives (margin, gray, PDF 1.7) each flagged; live test `packages/tooling/tool/cli/test/drawings-live.test.ts` skips where librsvg/poppler are absent. Target Surfaces amended (see SPEC Amendments).
 
 ## Current blockers
 

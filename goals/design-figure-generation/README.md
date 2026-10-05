@@ -35,14 +35,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 — perspective-HLR spike through replicad's public API. Next concrete
-action: a throwaway Bun script that loads opencascade.js, builds a box, and
-asks replicad for projected visible edges under a perspective camera; record
-the result in `research/`.
+P2 — slice 1. The pipeline runs end to end on the synthetic fixture
+(`bun run beep drawings render --spec packages/foundation/capability/technical-drawing/test/fixtures/synthetic-bracket.spec.json --out <dir>`);
+the live matter still needs its measured `spec.json` under the corpus root.
 
 ## Latest Evidence
 
-Not started.
+- 2026-10-05 — `research/p1-perspective-hlr-spike.md`: perspective HLR
+  through the opencascade.js `HLRAlgo_Projector(gp_Ax2, focus)` binding.
+- 2026-10-05 — synthetic bracket: 8 sheets, two consecutive renders share
+  sheet-set sha256, validator clean; margin / gray / PDF 1.7 negatives
+  flagged (`packages/tooling/tool/cli/test/drawings-live.test.ts`).
 
 ## Notes
 

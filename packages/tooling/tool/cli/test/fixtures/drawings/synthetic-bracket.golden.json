@@ -1,0 +1,60 @@
+{
+  "spec": "packages/foundation/capability/technical-drawing/test/fixtures/synthetic-bracket.spec.json",
+  "scale": 6.4835,
+  "model": {
+    "boundingBox": { "min": [0, 0, 0], "max": [60, 40, 26] },
+    "volume": 19776.885,
+    "faceCount": 21,
+    "edgeCount": 45
+  },
+  "figures": [
+    {
+      "figure": 1,
+      "view": "top-perspective",
+      "svgSha256": "0f59e24228fb51a3be78d5dc15d66eb0007456d77e6e270f700a69ced69ac6cc",
+      "visibleSegments": 226
+    },
+    {
+      "figure": 2,
+      "view": "bottom-perspective",
+      "svgSha256": "b81ba3bf5daa18b44a91091c5f0b7c0d640b58eb9004ebc0abdf02ab15c4ca8a",
+      "visibleSegments": 144
+    },
+    {
+      "figure": 3,
+      "view": "top-plan",
+      "svgSha256": "39300ebdc19e5394ba7f3a469ef6a01cb3da016b686f85a2f2e16d0637eb86e8",
+      "visibleSegments": 62
+    },
+    {
+      "figure": 4,
+      "view": "bottom-plan",
+      "svgSha256": "84197a16e3d16c310866484673729b94e6035d5e0964edafc771668016da3bcf",
+      "visibleSegments": 32
+    },
+    {
+      "figure": 5,
+      "view": "front",
+      "svgSha256": "0adb273d82974465cc715f562e6c9331cca3c1719dba42ad063d2111ce40b8c3",
+      "visibleSegments": 42
+    },
+    {
+      "figure": 6,
+      "view": "rear",
+      "svgSha256": "f9176c3a340ce78fb3c6534174114b930124f0c4375e35a56e8c673af31c3c7b",
+      "visibleSegments": 4
+    },
+    {
+      "figure": 7,
+      "view": "left",
+      "svgSha256": "cafcf44572242b02d5d49e6f4ceb3d5c3dcf1764ccc1941fbf40d55393b2284d",
+      "visibleSegments": 35
+    },
+    {
+      "figure": 8,
+      "view": "right",
+      "svgSha256": "c25560cf0cda599d76bb77df58b0dd6c645cb3f6e4778cdab652ca61c9b0bf8f",
+      "visibleSegments": 59
+    }
+  ]
+}

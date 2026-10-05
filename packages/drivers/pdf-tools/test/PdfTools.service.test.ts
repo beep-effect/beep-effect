@@ -174,7 +174,7 @@ describe("@beep/pdf-tools service", () => {
           );
           expect(out).toBe("/tmp/x/page-1.png");
           expect(commands[0]?.args[0]).toBe("-png");
-          expect(A.last(commands[0]?.args ?? [])).toEqual(O.some("/tmp/x/page-1"));
+          assertSome(A.last(commands[0]?.args ?? []), "/tmp/x/page-1");
         })
       );
     });

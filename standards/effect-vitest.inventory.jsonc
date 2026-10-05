@@ -26248,6 +26248,27 @@
       "reason": "Retain native Node filesystem and path services for actual streaming files and realPath-based allowed-root guards. No memory substitute or HTTP conformance claim is made for local file operations. All original fixture inputs and native cleanup behavior remain."
     },
     {
+      "id": "EV010:packages/drivers/occt/test/Occt.service.test.ts:4:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/occt",
+      "file": "packages/drivers/occt/test/Occt.service.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/drivers/openclaw/test/integration/OpenclawBinary.acceptance.test.ts:36:@effect/platform-node/NodeServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -26290,6 +26311,48 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Actual executable files, chmod, child-visible paths, native process spawning and kernel termination are the subject. Retain NodeServices and scoped native temporary directories; MemoryFS would remove the tested boundary."
+    },
+    {
+      "id": "EV010:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:4:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/pdf-tools",
+      "file": "packages/drivers/pdf-tools/test/PdfTools.service.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/drivers/pdf-tools/test/integration/PdfTools.live.test.ts:3:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/pdf-tools",
+      "file": "packages/drivers/pdf-tools/test/integration/PdfTools.live.test.ts",
+      "line": 3,
+      "endLine": 3,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV010:packages/drivers/pglite/test/integration/PgliteClient.persistent.test.ts:3:@effect/platform-node/NodeFileSystem@0#1",
@@ -26531,6 +26594,27 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The subject is the actual checkout and three real compiler fixture configurations. MemoryFileSystem would erase that boundary test; NodeServices supplies the scoped real child process."
+    },
+    {
+      "id": "EV010:packages/foundation/capability/technical-drawing/test/FigureSet.test.ts:32:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/technical-drawing",
+      "file": "packages/foundation/capability/technical-drawing/test/FigureSet.test.ts",
+      "line": 32,
+      "endLine": 32,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV010:packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts:28:@effect/platform-bun/BunFileSystem@0#1",
@@ -28748,6 +28832,27 @@
       "file": "packages/tooling/tool/cli/test/doctest-turbo-inputs.test.ts",
       "line": 4,
       "endLine": 4,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/drawings-live.test.ts:6:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-live.test.ts",
+      "line": 6,
+      "endLine": 6,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",

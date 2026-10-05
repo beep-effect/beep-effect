@@ -42,13 +42,19 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- `packages/drivers/<occt-or-replicad>` — geometry kernel + HLR wrapper (shared with agentic-cad; create via `bun run beep create-package`).
-- `packages/drivers/<pdf-tools>` — `rsvg-convert` / `qpdf` / `pdftoppm` wrappers in the `@beep/ffmpeg` shape (`effect/process`).
-- `packages/law-practice/domain` (+ `use-cases`, `server`) — `Matter`, `ModelSpec`, `Figure`, view-name `LiteralKit`, validator findings, sign-off event; pipeline service composition.
-- `packages/tooling/tool/cli/src/commands/Drawings/` — `render`, `validate`, `judge`, `sign`.
+Amended 2026-10-05 (operator decision, see Amendments): the pipeline is a
+product-neutral foundation capability, not law-practice slice code, because
+`standards/ARCHITECTURE.md` forbids `packages/tooling/*` from depending on a
+product slice and the operator command lives in the tooling CLI.
+
+- `packages/drivers/occt` (`@beep/occt`) — replicad / opencascade.js solid construction and exact hidden-line projection, orthographic and perspective (shared with agentic-cad per its D7).
+- `packages/drivers/pdf-tools` (`@beep/pdf-tools`) — `rsvg-convert` and poppler `pdftoppm` wrappers in the `@beep/ffmpeg` shape (`effect/process`), pdf-lib page merge at a pinned version and date, structure inspection, non-anti-aliased raster metrics.
+- `packages/foundation/capability/technical-drawing` (`@beep/technical-drawing`) — `ModelSpec`, `FigureSetSpec`, view-name `LiteralKit`, omission claims, sheet rules and composition, validator findings, render manifest, and (slice 2) the approval record keyed to the sheet-set hash, behind a `GeometryEngine` port and a `PdfBackend` port.
+- `packages/law-practice/domain` — only Matter-bound meaning, when a slice flow needs it (slice 1 touches no law-practice package).
+- `packages/tooling/tool/cli/src/commands/Drawings/` — `render`, `validate` (slice 1); `judge`, `sign` (slice 2); the port adapters over the two drivers live here.
 - `packages/tooling/tool/cli/src/commands/Qa/` — drawing rubric extension of the qa-inventory/v1 judge.
 - `packages/drivers/m365` — a dedicated read-only verb for sign-off verification (slice 2; no intake). Graph returns `uniqueBody` only when it is explicitly `$select`ed, and `getMessage` (`M365.service.ts`) sends no query parameters, so the new verb requests `messages/{id}?$select=uniqueBody,from,sender,internetMessageId,receivedDateTime` and decodes its own response schema. Graph returns `uniqueBody` as HTML by default, so the verb also sends `Prefer: outlook.body-content-type="text"` (the driver's request builder sets only the bearer token today) and refuses any response whose `uniqueBody.contentType` is not `text`; the whole-line match is defined over that plain text only, never over stripped HTML. `getMessage` and the `GraphMessage` schema stay untouched, because `GraphMessage` is also the success schema of the `@beep/m365-mcp` read tool (`M365Tools.ts`) and `$select` would shrink that payload.
-- Synthetic fixture article + golden sheets under the owning package's `test/`.
+- Synthetic fixture article under `packages/foundation/capability/technical-drawing/test/fixtures/`; golden SVG hashes and the live end-to-end test under `packages/tooling/tool/cli/test/` (the adapters live there). PDF bytes depend on the installed cairo, so the PDF golden is two-run equality, not a committed hash.
 
 ## Constraints
 
@@ -92,6 +98,12 @@ Higher sources outrank lower sources when they conflict.
 - Verification requires credentials, cost, destructive side effects, or policy approval not named in this spec.
 - The same blocker repeats after reasonable investigation.
 - Any step would commit real article geometry, photos, or renders to the repo.
+
+## Amendments
+
+| Date | Change | Owner | Rationale |
+| --- | --- | --- | --- |
+| 2026-10-05 | Target Surfaces: pipeline schemas/services move from `packages/law-practice/*` to the new `@beep/technical-drawing` foundation capability; law-practice keeps only Matter-bound meaning | Operator (asked in session, answered "foundation/capability package") | `standards/ARCHITECTURE.md` (source 3) outranks this spec (source 4): tooling packages never depend on product slices, and no tooling package does today; a ledgered exception and a non-`beep` command were the rejected alternatives |
 
 ## Exception Ledger
 
