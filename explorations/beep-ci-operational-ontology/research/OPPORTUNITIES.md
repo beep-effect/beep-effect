@@ -800,3 +800,26 @@
   so the first census counted 46 PRs instead of 155; the per-family zero counts caught it.
   Prevention: the committed `research/scripts/w1_lever_query.sh` is bash and was diffed
   against the inline census (244 rows, identical).
+
+## 2026-10-05: P1 Stage C capture drive — friction
+- The run-4 gate's premise (graduation Ruling 1: ledger facts "from both local stages") did not
+  hold at the first re-read: 3,442 post-#1321 facts in eight clones, every one `pre-push`, and no
+  `merged-preview` attempt anywhere in the fleet since 2026-09-09, before the C4.1 writer shipped.
+  Handling: P1 Ruling 1 amended the gate to pre-push facts and flagged the merged-preview legs.
+  Prevention: a gate that names a stage should cite the last time that stage ran; a census-only
+  probe (`proof-report --json --since <instant>` per clone) belongs in the docket before the gate
+  is written.
+- The hosted Secret Scanning check reads main's `.gitleaks.toml`, so a ledger pin that carries
+  64-hex values under a member named `key` cannot allowlist itself in its own PR (`generic-api-key`
+  flags `"key":"<hex64>"`; probed with `gitleaks stdin`). Handling: P1 Ruling 3 pins the two `key`
+  members as 12-hex prefixes with an injectivity assertion. Prevention: probe every new payload
+  shape with `gitleaks stdin --config .gitleaks.toml` before choosing a projection.
+- A verbatim copy of the run3b discovery would today publish the private duplicate clone (the
+  `beep-effect*` glob matches it), miss 17 `.claude/worktrees` checkouts, skip the `promotions`
+  family and turn 2,068 quarantined lease files into about 4,100 payload files. Handling: P1
+  Ruling 5. Prevention: every fleet capture should filter by the origin URL read from the git
+  config and receipt the excluded count; quarantine should be censused before a layout is chosen.
+- The five-lane read-only survey workflow was lost to an account switch mid-run (the critic lane
+  had started; the five notes were already on disk). Handling: resumed with `resumeFromRunId`, the
+  five cached lanes replayed and only the critic re-ran. Prevention: keep every lane's deliverable
+  on disk (the notes were), and resume rather than relaunch.
