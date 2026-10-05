@@ -223,8 +223,11 @@ const sameDocket = (reference: string, docket: string): boolean =>
 
 /*
  * A document may cite another client's matter that shares its bare family
- * number. When the document has a docket code and some reference names that
- * same docket, only those references are evidence; the rest are citations.
+ * number. When the document has a docket code, only references naming that
+ * docket are evidence; every other reference is a citation, and a document
+ * with citations alone falls through to the client map, family consensus, or
+ * the bare family. Family-level documents have no docket code, so all of their
+ * family references count.
  */
 const ownReferences = (
   row: PracticeKgCatalogRow,
@@ -234,8 +237,7 @@ const ownReferences = (
   if (docket === null) {
     return references;
   }
-  const own = A.filter(references, (reference) => sameDocket(reference.docket, Str.toUpperCase(docket)));
-  return A.isReadonlyArrayNonEmpty(own) ? own : references;
+  return A.filter(references, (reference) => sameDocket(reference.docket, Str.toUpperCase(docket)));
 };
 
 const clientsByDigestFor = (
@@ -342,9 +344,9 @@ export class PracticeKgResolveAnchorsInput extends S.Class<PracticeKgResolveAnch
  * restores the client dimension deterministically, with no model in the loop:
  *
  * 1. a document whose own text names exactly one `<client>.<family>` for its
- *    family takes that client (`text-reference`); when the text also cites
- *    another client's matter under the same family number, references naming
- *    the document's own docket code win over the citations;
+ *    family takes that client (`text-reference`); for a document with a
+ *    docket code only references naming that exact docket count, so citing
+ *    another client's matter under the same family number never moves it;
  * 2. otherwise an organizer client-map value is used (`client-map`);
  * 3. otherwise, when every text-attributed, non-recycled document of the bare
  *    family agrees on one client, the document inherits it

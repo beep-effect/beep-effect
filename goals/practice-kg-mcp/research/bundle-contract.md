@@ -88,8 +88,8 @@ mentioned by exactly one family's docket documents — file names and text
 counted together — and that family is client-keyed (D-11c). `corpus_enrichment.docket_families` is read into the
 DuckDB `enrichment` table for reference but never creates families or edges.
 
-Node counts (2026-10-05-01 rebuild): 31 clients · 174 families (147
-client-keyed + 27 bare remainders over 105 bare family numbers) · 442 dockets
+Node counts (2026-10-05-01 rebuild): 30 clients · 170 families (143
+client-keyed + 27 bare remainders over 105 bare family numbers) · 438 dockets
 · 181 applications · 63 patents · 7,330 documents · 28 archives.
 
 **IRI scheme** — `@beep/identity` `make(...)` composers mint

@@ -67,7 +67,7 @@ AC-2 node provenance is P7.
   `attribution_source` on every node, `$R` stubs labelled
   `recycled-unverified`, claim rows joinable by `sourceDocumentDigest`, build
   metadata split into `builtAt`/`corpusSnapshotAt`. Rebuilt bundle
-  `2026-10-05-01` (graph store format 2): 8,249 nodes / 1,761 edges, 147 client-keyed families + 27
+  `2026-10-05-01` (graph store format 2): 8,240 nodes / 1,756 edges, 143 client-keyed families + 27
   bare remainders, 0 cartesian memberships. Evidence:
   [`history/p6/`](./history/p6/).
 - 2026-07-30: **AC-4/AC-5 gauntlet run** — G-1..G-5 provisional PASS on the

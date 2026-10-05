@@ -616,12 +616,20 @@ const buildGraphRows = (
     },
   };
 
-  A.forEach(catalogRows, (row) => {
-    const attribution = pipe(
+  const attributed = A.map(catalogRows, (row) => ({
+    attribution: pipe(
       MutableHashMap.get(attributionByDigest, row.digest),
       O.getOrThrowWith(() => new Error(`Graph build lost the attribution for "${row.digest}".`))
-    );
-    projectDocumentNode(sink, row, attribution);
+    ),
+    row,
+  }));
+  A.forEach(attributed, ({ attribution, row }) => projectDocumentNode(sink, row, attribution));
+  // Spine nodes are first-write-wins, so verified documents go first: a shared
+  // family or docket takes its attribution source from a live file whenever one
+  // exists, and from a recycle stub only when nothing else backs it.
+  const verified = A.filter(attributed, ({ attribution }) => !attribution.recycled);
+  const recycled = A.filter(attributed, ({ attribution }) => attribution.recycled);
+  A.forEach(A.appendAll(verified, recycled), ({ attribution, row }) => {
     projectFamilySpine(sink, row, attribution);
     projectClientSpine(sink, row, attribution);
   });

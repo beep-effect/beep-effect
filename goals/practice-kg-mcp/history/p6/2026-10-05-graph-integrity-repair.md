@@ -49,21 +49,22 @@ The shipped `practice-kg-bundle` was left in place (see "Not done").
 | Count | 2026-07-27-01 (shipped) | 2026-10-05-01 (P6) |
 | --- | --- | --- |
 | documents / emails | 7,330 / 118,771 | 7,330 / 118,771 |
-| nodes | 8,092 | 8,249 |
-| edges | 2,799 | 1,761 |
-| `docket_family` nodes | 105 (bare) | 174 = 147 client-keyed + 27 bare remainders |
-| `client` nodes | 1 (client map) | 31 |
-| `docket` nodes | 385 | 442 (client-keyed) |
+| nodes | 8,092 | 8,240 |
+| edges | 2,799 | 1,756 |
+| `docket_family` nodes | 105 (bare) | 170 = 143 client-keyed + 27 bare remainders |
+| `client` nodes | 1 (client map) | 30 |
+| `docket` nodes | 385 | 438 (client-keyed where attributed) |
 | `files_as` edges | cartesian (90 rows / 8 dockets in G-1) | 74; max 4 applications per family; 0 applications filed from more than one family; 0 from an unattributed family |
-| `mentioned_in_family` edges | — | 246, all `mention-derived` |
+| `mentioned_in_family` edges | — | 249, all `mention-derived` |
 | documents labelled `recycled-unverified` | 0 | 274 (63 docket, 211 unsorted) |
-| spine nodes backed only by recycle stubs (`recycled-unverified`) | 0 | 7 families, 14 dockets, 2 clients |
+| spine nodes backed only by recycle stubs (`recycled-unverified`) | 0 | 4 families, 10 dockets, 2 clients |
 | anchors: member / mention-only | — | 41 / 49 |
 
-Attribution of the 643 docket documents: 345 `text-reference`, 169
-`family-consensus`, 129 file-name only (`filename` 111 / `restored-name` 18);
-514 carry a client. Of the 105 bare families, 74 resolve to one client, 21 to
-several (max 16), 10 to none.
+Attribution of the 643 docket documents: 321 `text-reference` (the text names
+the document's own docket code under one client), 179 `family-consensus`, 143
+file-name only (`filename` 121 / `restored-name` 22); 500 carry a client. Of
+the 105 bare families, 73 resolve to one client, 20 to several (max 16), 12
+to none.
 
 Exit criteria from `PLAN.md`:
 
@@ -108,6 +109,12 @@ above were taken:
   the server.
 - `kg_application_lookup` accepts a bare docket as well as a client-keyed one.
 - The rebuild-determinism test no longer depends on a frozen clock.
+- For a document with a docket code, only references naming that exact
+  docket are attribution evidence, so citing another client's matter never
+  moves a document (24 documents dropped from `text-reference` to consensus
+  or file-name attribution as a result).
+- Spine nodes take their attribution source from a verified document when
+  one exists, and the bare-docket lookup compares literally.
 
 ## Not done / operator decisions
 

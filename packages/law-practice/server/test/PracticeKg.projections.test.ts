@@ -331,11 +331,11 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
   yield* fs.writeFileString(path.join(textRoot, "operation:op-b.txt"), "family 20001 patent application 55/667,788");
   yield* fs.writeFileString(
     path.join(textRoot, "operation:op-c.txt"),
-    `beta client ${fixtureClients.beta}.20001US02 response citing 11/223,344`
+    `beta client ${fixtureClients.beta}.20001US02 response citing 11/223,344 and ${fixtureClients.alpha}.20001US01`
   );
   yield* fs.writeFileString(
     path.join(textRoot, "operation:op-d.txt"),
-    `restored ${fixtureClients.alpha}.20001US03 letter`
+    `restored letter citing ${fixtureClients.beta}.20001US02`
   );
   const refreshSource = yield* encodeFixtureSource(
     FixtureSourceRow.make({
@@ -627,10 +627,10 @@ describe("practice KG projections", () => {
             )
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(textLines, (row) => row.line)).toStrictEqual([
-            `{"operation_id":"operation:op-d","text":"restored ${fixtureClients.alpha}.20001US03 letter"}`,
+            `{"operation_id":"operation:op-d","text":"restored letter citing ${fixtureClients.beta}.20001US02"}`,
             `{"operation_id":"operation:op-a","text":"alpha docket ${fixtureClients.alpha}.20001US01 response citing application 87/654,321 and 11/223,344 and matter ${fixtureClients.beta}.20001US010"}`,
             '{"operation_id":"operation:op-b","text":"family 20001 patent application 55/667,788"}',
-            `{"operation_id":"operation:op-c","text":"beta client ${fixtureClients.beta}.20001US02 response citing 11/223,344"}`,
+            `{"operation_id":"operation:op-c","text":"beta client ${fixtureClients.beta}.20001US02 response citing 11/223,344 and ${fixtureClients.alpha}.20001US01"}`,
           ]);
           const ftsDocLines = yield* db
             .query(
@@ -692,12 +692,12 @@ describe("practice KG projections", () => {
             `{"kind":"client","natural_key":"${fixtureClients.alpha}","client":null,"docket_family":null,"attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             `{"kind":"client","natural_key":"${fixtureClients.beta}","client":null,"docket_family":null,"attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             `{"kind":"docket","natural_key":"${fixtureClients.alpha}.20001US01","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
-            `{"kind":"docket","natural_key":"${fixtureClients.alpha}.20001US03","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"recycled-unverified"}`,
+            '{"kind":"docket","natural_key":"20001US03","client":null,"docket_family":"20001","attribution_source":"restored-name","epistemic_status":"recycled-unverified"}',
             `{"kind":"docket","natural_key":"${fixtureClients.beta}.20001US02","client":"${fixtureClients.beta}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             `{"kind":"docket_family","natural_key":"${fixtureClients.alpha}.20001","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             '{"kind":"docket_family","natural_key":"20001","client":null,"docket_family":"20001","attribution_source":"filename","epistemic_status":"derived-from-official-records"}',
             `{"kind":"docket_family","natural_key":"${fixtureClients.beta}.20001","client":"${fixtureClients.beta}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
-            `{"kind":"document","natural_key":"${fixtureDigests.recycle}","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"recycled-unverified"}`,
+            `{"kind":"document","natural_key":"${fixtureDigests.recycle}","client":null,"docket_family":"20001","attribution_source":"restored-name","epistemic_status":"recycled-unverified"}`,
             `{"kind":"document","natural_key":"${fixtureDigests.docket}","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             `{"kind":"document","natural_key":"${fixtureDigests.family}","client":null,"docket_family":"20001","attribution_source":"filename","epistemic_status":"derived-from-official-records"}`,
             `{"kind":"document","natural_key":"${fixtureDigests.beta}","client":"${fixtureClients.beta}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
@@ -722,8 +722,8 @@ describe("practice KG projections", () => {
             )
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(familyCountLines, (row) => row.line)).toStrictEqual([
-            `{"family":"${fixtureClients.alpha}.20001","docketCount":2,"applicationCount":1,"documentCount":2}`,
-            '{"family":"20001","docketCount":0,"applicationCount":0,"documentCount":0}',
+            `{"family":"${fixtureClients.alpha}.20001","docketCount":1,"applicationCount":1,"documentCount":1}`,
+            '{"family":"20001","docketCount":1,"applicationCount":0,"documentCount":1}',
             `{"family":"${fixtureClients.beta}.20001","docketCount":1,"applicationCount":0,"documentCount":1}`,
           ]);
           const bareDocketLines = yield* sql
