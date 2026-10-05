@@ -189,6 +189,20 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         );
         yield* runGit(["add", "."]);
         yield* runGit(["commit", "-m", "feat(demo): ship cargo-bay (#70)"], oldEnv);
+        // Cited by a squash subject and stale, but it says why it stays open.
+        yield* writeActivePacket("noted");
+        yield* writeProjectFile(
+          "goals/noted/ops/manifest.json",
+          `${encodeJson({
+            schemaVersion: "initiative-manifest/v2",
+            initiative: { id: "noted", title: "noted", status: "active" },
+            lifecycle: "active",
+            completionGate: COMPLETION_GATE,
+            statusNote: "P8 is an operator gate; closes on live proof.",
+          })}\n`
+        );
+        yield* runGit(["add", "."]);
+        yield* runGit(["commit", "-m", "feat(demo): ship noted (#3)"], oldEnv);
         // Cited by a squash subject but touched inside the window: not stale.
         yield* writeActivePacket("fresh");
         yield* runGit(["add", "."]);
@@ -200,6 +214,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         expect(output).not.toContain("mentioned [active-after-merge]");
         expect(output).toContain("cargo [stale-active]");
         expect(output).not.toContain("cargo [active-after-merge]");
+        expect(output).not.toContain("noted [active-after-merge]");
+        expect(output).not.toContain("noted [stale-active]");
         expect(output).not.toContain("fresh [active-after-merge]");
         expect(output).not.toContain("fresh [stale-active]");
       }),

@@ -287,6 +287,7 @@ If you touch this, load or run this first. Do not hand-author around it.
 | Gesture-bearing UI | browser-qa-loop skill |
 | Tailwind className / style props in UI code | bun run lint:shadcn (strict @shadcn/lint; policy .oxlintrc.shadcn.json, runbook docs/runbooks/design-system-lint.md) |
 | PR publish / checks | yeet skill |
+| Any stopping point (done, blocked, merge-ready, retired) | closeout skill |
 
 ## Dev Servers
 
@@ -372,6 +373,20 @@ If you touch this, load or run this first. Do not hand-author around it.
   of spawning fresh ones.
 - Durable on-disk handoffs: agent/session transitions exchange deliverables as
   files on disk (packet `research/`, scratchpad), never chat-only summaries.
+
+## Guided Closeout
+
+- Every stopping point ends with a structured prompt, never a prose list of
+  options: task done, blocked on the operator, PR merge-ready, post-merge
+  closeout, and before yielding on any question. Claude Code calls
+  `AskUserQuestion`; Codex calls `request_user_input`. Give 2-4 concrete next
+  steps, the recommended one first and labelled "(Recommended)", always
+  including a "stop here" option, with a one-line state summary (clone,
+  lane, PR, what landed) in the question itself. Keep the prose recap above
+  it short; the operator reads the prompt, not the essay. Workflow and
+  option shapes: the `closeout` skill.
+- Direction-setting decisions go through `/grill-with-docs` first; the
+  closeout prompt then carries the frontier's remaining questions.
 
 <!-- graft:start -->
 ## Graft — repo context graph
