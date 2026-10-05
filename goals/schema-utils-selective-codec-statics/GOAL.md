@@ -58,13 +58,13 @@ Workflow:
 
 Acceptance:
 
-- [ ] The complete `SPEC.md` contract is satisfied.
+- [x] The complete `SPEC.md` contract is satisfied.
 - [x] No broad helper or zero-argument selector remains in live source.
 - [x] Every migrated schema exposes only its evidenced static set.
 - [x] Class and JSON footguns have focused runtime and type tests.
 - [x] Touched and known inline compiler sites are clean with no warning growth.
 - [x] A closing census records the mandatory successor cleanup goal.
-- [ ] Required local and hosted checks are green.
+- [x] Required local and hosted checks are green.
 
 Stop and report if the work would require custom Effect Schema machinery,
 cannot establish an exported schema's public static surface, would rebuild a

@@ -4,18 +4,18 @@
     "id": "schema-utils-selective-codec-statics",
     "packetId": "goal-packet/v1:c2391bcf696f4ef142e6a4536fcd8771b4c8594aa6287178faeb107090123599",
     "title": "Selective Schema Codec Statics",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-30",
-    "updated": "2026-08-30",
+    "updated": "2026-10-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/schema-utils-selective-codec-statics",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Replace broad SchemaUtils codec-static bundles with safe, selected, hoisted statics and migrate all existing usages to the minimal required set.",
-  "executionCapable": true,
+  "executionCapable": false,
   "reflectionRequired": true,
   "provenance": {
-    "note": "Authored directly from a 2026-08-30 SchemaUtils design review and /grilling session; decisions are recorded in DECISIONS.md and made normative by SPEC.md.",
+    "note": "Authored directly from a 2026-08-30 SchemaUtils design review and /grilling session; decisions are recorded in DECISIONS.md and made normative by SPEC.md. The implementation shipped as PR #927 (merged 2026-08-31, 27318473461e); PR #1371 (merged 2026-10-01) later retired the selective registry under goals/effect-schema-parity. Closed 2026-10-05.",
     "graduated": "2026-08-30"
   },
   "completionGate": {
@@ -72,12 +72,14 @@
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete",
+      "evidence": "PR #927 (refactor(schema): select codec statics) merged 2026-08-31T09:17Z at 27318473461e with both review threads resolved and the hosted required checks green; the manual publication noted in its body stood in for the unadmitted final full local proof."
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "pending"
+      "status": "complete",
+      "evidence": "Reflection history/reflections/2026-10-05-claude.md, lifecycle completed-retained, and history/2026-10-05-closeout.md record that PR #1371 (goals/effect-schema-parity P5, merged 2026-10-01) retired withCodecStatics and classStatics in favour of free effect/Schema functions and the SFV4-codec-static gate, so this packet closes as superseded-by-retirement with no live surface to maintain."
     }
   ],
   "openQuestions": [],
