@@ -176,8 +176,12 @@ Runbook: `docs/runbooks/agent-pools.md`.
   the tier is `GithubCheckLaneSpec.tier`, never an id prefix, and the step label
   is the log prefix (TTC ruling 28).
 - Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
-  `... verify`, `... publish --message "..."`, `... monitor`. Keep those
-  commands green.
+  `... publish --message "..."`, `... job wait <id>`, `... ready`. `publish`
+  gates the push on cheap-gates and the head-install preflight only, opens a
+  draft PR labelled `ready-for-heavy`, and submits the detached readiness
+  monitor; hosted CI is the authoritative proof and `yeet verify` is
+  on-demand. Never wait on a queued local full proof to publish. One push per
+  fully addressed wave, never per file or comment (push-first-publish D1–D10).
 - Heavy admitted work runs in `agent-run-<ticket>.scope` under
   `agent-runs.slice` when the user manager allows it; `scheduler reap --apply`
   stops scopes backed by dead leases. A loaded scope without a dead lease is

@@ -4,13 +4,13 @@
     "id": "push-first-publish",
     "packetId": "goal-packet/v1:6b7e0d9ed1a3c51b78b8978814fe072c86da5b2cc90c899f73bcbf78433b82fa",
     "title": "Push-First Publish",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-05",
     "updated": "2026-10-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/push-first-publish",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Yeet publish gates on cheap-gates only, pushes to a draft PR by default, and hands proof to hosted CI so agents never wait on the local admission queue.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -56,17 +56,17 @@
     {
       "id": "P2",
       "name": "Doctrine",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -85,5 +85,5 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P0 and P1 complete 2026-10-05 (code + tests on the lane; history/p1-handoff.md). P2 doctrine next."
+  "statusNote": "P0-P2 complete and closeout reflection written 2026-10-05; P3 is the live publish of this packet through the new push-first path (draft PR, ready-pending-flip, yeet ready, merge-ready: yes). Lifecycle flipped in the same PR per the same-PR packet-state rule."
 }

@@ -386,7 +386,7 @@ control removal are cleanup with no claimed fixed savings.
    or AWS-managed keys as savings.
 6. Verify budget notifications, enrollment and tagging state. Recommendation
    generation and billing attribution can lag; report that lag explicitly.
-7. Publish through `bun run beep yeet publish --start-pr-early --monitor --pr`,
+7. Publish through `bun run beep yeet publish`,
    address review comments and conflicts, and monitor the current PR head to
    `merge-ready: yes`. Do not merge.
 

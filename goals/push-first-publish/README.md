@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -32,8 +32,8 @@ carries the ten locked decisions.
 
 ## Current Phase
 
-P0 Research and P1 Implement complete (2026-10-05). P2 Doctrine not
-started; see `history/p1-handoff.md`.
+P0-P2 complete and closeout reflection written (2026-10-05). P3 live publish
+in flight through the new push-first path; see `history/p1-handoff.md`.
 
 ## Latest Evidence
 

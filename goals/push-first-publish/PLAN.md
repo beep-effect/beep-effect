@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `pending` (packet authored 2026-10-05 from a grill-with-docs session;
+Status: `closing` (packet authored 2026-10-05 from a grill-with-docs session;
 decisions D1–D10 in `SPEC.md` are locked).
 
 ## Phases
@@ -11,9 +11,9 @@ decisions D1–D10 in `SPEC.md` are locked).
 | --- | --- | --- | --- |
 | P0 Research | complete | Ground the decisions in current Yeet behaviour, hosted triggers, and the ship-velocity parity audit. | `SPEC.md` decisions table and `research/SOURCES.md` filled. |
 | P1 Implement | complete | Planner, flags, guards, draft PR creation, monitor terminal, `ready` verb, tests. | Acceptance criteria 1–7 in `SPEC.md`. |
-| P2 Doctrine | pending | Rewrite the yeet skill sections and the `AGENTS.md` Quality Operator bullet. | No prose anywhere states full proof before publish as a rule. |
-| P3 Yeet: PR to mergeable | pending | Publish this packet through the **new** default path as its own live proof. | Draft PR, `ready-pending-flip`, `yeet ready`, `merge-ready: yes`. |
-| P4 Close | pending | Record reviewer-on-draft observation, write the closeout reflection, flip packet state. | Reflection lint passes; manifest flipped in the same PR. |
+| P2 Doctrine | complete | Rewrite the yeet skill sections and the `AGENTS.md` Quality Operator bullet. | No prose anywhere states full proof before publish as a rule. |
+| P3 Yeet: PR to mergeable | in-progress | Publish this packet through the **new** default path as its own live proof. | Draft PR, `ready-pending-flip`, `yeet ready`, `merge-ready: yes`. |
+| P4 Close | complete | Record reviewer-on-draft observation, write the closeout reflection, flip packet state. | Reflection lint passes; manifest flipped in the same PR. |
 
 ## P1 work items, in order
 
