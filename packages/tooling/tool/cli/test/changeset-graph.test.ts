@@ -14,11 +14,6 @@ import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -32,20 +27,6 @@ const runGit = Effect.fn("ChangesetGraphTest.runGit")(function* (repoRoot: strin
   const exitCode = yield* handle.exitCode;
   expect(exitCode).toBe(0);
 });
-
-const withTempRepo = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>
-  Effect.scoped(
-    Effect.acquireUseRelease(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
-
-        return { fs, tmpDir } as const;
-      }),
-      ({ tmpDir }) => use(tmpDir),
-      ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true })
-    ).pipe(provideScopedLayer(testLayer))
-  );
 
 const writeRepoFile = Effect.fn("ChangesetGraphTest.writeRepoFile")(function* (
   repoRoot: string,
@@ -225,116 +206,114 @@ Record a null bump.
     });
   });
 
-  it("accepts tracked workspace changesets through the release-path check", () =>
-    Effect.runPromise(
-      withTempRepo((tmpDir) =>
-        Effect.gen(function* () {
-          yield* writeFixtureRepo(
-            tmpDir,
-            `---
+  it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+    it.effect("accepts tracked workspace changesets through the release-path check", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writeFixtureRepo(
+          tmpDir,
+          `---
 "@beep/demo": patch
 ---
 
 Patch demo.
 `
-          );
+        );
 
-          const summary = yield* runChangesetGraphCheck(tmpDir);
+        const summary = yield* runChangesetGraphCheck(tmpDir);
 
-          expect(summary).toMatchObject({
-            workspacePackages: 1,
-            changesetFiles: 1,
-            references: 1,
-            missingReferences: [],
-          });
-        })
-      )
-    ));
+        expect(summary).toMatchObject({
+          workspacePackages: 1,
+          changesetFiles: 1,
+          references: 1,
+          missingReferences: [],
+        });
+      })
+    );
 
-  it("accepts retired package references declared in the repo retirement record", () =>
-    Effect.runPromise(
-      withTempRepo((tmpDir) =>
-        Effect.gen(function* () {
-          yield* writeFixtureRepo(
-            tmpDir,
-            `---
+    it.effect("accepts retired package references declared in the repo retirement record", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writeFixtureRepo(
+          tmpDir,
+          `---
 "@beep/ontology": patch
 ---
 
 Record retired package release cleanup.
 `,
-            {
-              packages: [
-                {
-                  name: "@beep/ontology",
-                  rationale: "Retired workspace package retained only for pending release cleanup changesets.",
-                },
-              ],
-            }
-          );
+          {
+            packages: [
+              {
+                name: "@beep/ontology",
+                rationale: "Retired workspace package retained only for pending release cleanup changesets.",
+              },
+            ],
+          }
+        );
 
-          const summary = yield* runChangesetGraphCheck(tmpDir);
+        const summary = yield* runChangesetGraphCheck(tmpDir);
 
-          expect(summary).toMatchObject({
-            workspacePackages: 1,
-            changesetFiles: 1,
-            references: 1,
-            missingReferences: [],
-          });
-        })
-      )
-    ));
+        expect(summary).toMatchObject({
+          workspacePackages: 1,
+          changesetFiles: 1,
+          references: 1,
+          missingReferences: [],
+        });
+      })
+    );
 
-  it("rejects tracked changesets that reference packages outside the workspace graph", () =>
-    Effect.runPromise(
-      withTempRepo((tmpDir) =>
-        Effect.gen(function* () {
-          yield* writeFixtureRepo(
-            tmpDir,
-            `---
+    it.effect("rejects tracked changesets that reference packages outside the workspace graph", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writeFixtureRepo(
+          tmpDir,
+          `---
 "@beep/missing": patch
 ---
 
 Patch missing package.
 `
-          );
+        );
 
-          const error = yield* runChangesetGraphCheck(tmpDir).pipe(Effect.flip);
-          const errorLines = yield* TestConsole.errorLines;
+        const error = yield* runChangesetGraphCheck(tmpDir).pipe(Effect.flip);
+        const errorLines = yield* TestConsole.errorLines;
 
-          expect(error).toMatchObject({
-            message: "Changeset package graph validation failed.",
-          });
-          expect(errorLines).toEqual([
-            "[changeset-graph] changeset package references outside current workspace graph:",
-            "- .changeset/demo.md :: @beep/missing",
-          ]);
-        })
-      )
-    ));
+        expect(error).toMatchObject({
+          message: "Changeset package graph validation failed.",
+        });
+        expect(errorLines).toEqual([
+          "[changeset-graph] changeset package references outside current workspace graph:",
+          "- .changeset/demo.md :: @beep/missing",
+        ]);
+      })
+    );
 
-  it("treats tracked empty changesets as release-path no-ops", () =>
-    Effect.runPromise(
-      withTempRepo((tmpDir) =>
-        Effect.gen(function* () {
-          yield* writeFixtureRepo(
-            tmpDir,
-            `---
+    it.effect("treats tracked empty changesets as release-path no-ops", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writeFixtureRepo(
+          tmpDir,
+          `---
 ---
 
 Record a private workspace change.
 `
-          );
+        );
 
-          const summary = yield* runChangesetGraphCheck(tmpDir);
+        const summary = yield* runChangesetGraphCheck(tmpDir);
 
-          expect(summary).toMatchObject({
-            workspacePackages: 1,
-            changesetFiles: 1,
-            references: 0,
-            missingReferences: [],
-          });
-        })
-      )
-    ));
+        expect(summary).toMatchObject({
+          workspacePackages: 1,
+          changesetFiles: 1,
+          references: 0,
+          missingReferences: [],
+        });
+      })
+    );
+  });
 });
