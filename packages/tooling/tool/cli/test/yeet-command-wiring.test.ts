@@ -1,7 +1,6 @@
 import { YeetCommandError, yeetCommand, yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet";
 import { CommandJsonOutput, printCommandJson } from "@beep/repo-cli/test/Cli";
 import { MemoryStats, RepoPlanStep, RepoRunPlan } from "@beep/repo-cli/test/RepoRun";
-import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   buildYeetRunPlanWithMode,
   defaultYeetRunOptions,
@@ -23,7 +22,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
@@ -584,7 +583,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
     submittedAt: string
   ) =>
     ProofJobRecord.make({
-      jobId: S.decodeSync(UUID)(jobId),
+      jobId,
       phase,
       submittedAt,
       request,
@@ -663,7 +662,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
       O.map(findLiveReadyMonitorJob([verifyJob, otherPr, finished, unboundSubmitted, running], target), (r) => r.jobId),
       unboundSubmitted.jobId
     );
-    expect(O.isNone(findLiveReadyMonitorJob([verifyJob, otherPr, finished], target))).toBe(true);
+    assertNone(findLiveReadyMonitorJob([verifyJob, otherPr, finished], target));
   });
 
   const tailFixture = Effect.fnUntraced(function* (root: string, submitSource: string) {
@@ -732,7 +731,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
       expect(A.map(entries, (entry) => entry.result.output)).toEqual([
         `skipped: readiness monitor job ${RUNNING_ID} is already running for this pull request`,
       ]);
-    }, provideScopedLayer(commandTestLayer))
+    })
   );
 
   it.effect(
@@ -740,7 +739,32 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-submit-" });
-      const line = JSON.stringify(S.encodeSync(ProofJobRecord)(unboundSubmitted));
+      // The child's JSON record line, as `monitor --until-ready --detach --json` prints it.
+      const line = JSON.stringify({
+        schemaVersion: "yeet-proof-job/v1",
+        jobId: SUBMITTED_ID,
+        phase: "submitted",
+        submittedAt: "2026-10-05T11:00:00.000Z",
+        request: {
+          mode: "monitor",
+          argv: ["monitor", "--until-ready", "--json"],
+          checkout: "/repo",
+          branch: "feat/push-first",
+          base: "origin/main",
+          head: "0123456789abcdef0123456789abcdef01234567",
+          forwardedEnvNames: [],
+        },
+        submitter: { pid: 4242, cwd: "/repo" },
+        unit: {
+          unitName: `beep-proof-${SUBMITTED_ID}.service`,
+          slice: "agent-runs.slice",
+          description: "beep-yeet-job",
+          logPath: `/repo/.beep/yeet/jobs/${SUBMITTED_ID}.log`,
+          execStart: ["/opt/bun"],
+          execStopPost: ["/opt/bun"],
+        },
+        returnedWaveRowIds: [],
+      });
       const fixture = yield* tailFixture(root, `console.log(${JSON.stringify(line)})`);
       const result = yield* finishPublishWithPullRequestForTesting(
         fixture.plan,
@@ -756,7 +780,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
       expect(A.map(entries, (entry) => entry.step.id)).toEqual([MONITOR_READY_SUBMIT_STEP_ID]);
       expect(A.map(entries, (entry) => entry.result.exitCode)).toEqual([0]);
       expect(A.map(entries, (entry) => entry.status)).not.toContain("skipped");
-    }, provideScopedLayer(commandTestLayer))
+    })
   );
 
   it.effect(
@@ -779,6 +803,6 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
       );
       expect(result.pushed).toBe(true);
       expect(A.map(yield* Ref.get(fixture.recorder), (entry) => entry.step.id)).toEqual([MONITOR_READY_SUBMIT_STEP_ID]);
-    }, provideScopedLayer(commandTestLayer))
+    })
   );
 });
