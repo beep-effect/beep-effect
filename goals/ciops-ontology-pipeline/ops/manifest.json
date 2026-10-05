@@ -11,7 +11,7 @@
   },
   "packetPath": "goals/ciops-ontology-pipeline",
   "lifecycle": "active",
-  "statusNote": "Graduated 2026-10-01 from explorations/beep-ci-operational-ontology (graduation sitting Rulings 1-11). Five slices: inheritance and change events, Stage C capture with proof-ledger capture, projection on live data, auditor run 4, KPI verdict. Run 4 gate per graduation Ruling 1: time-to-certainty C4.1 checked and post-#1321 owning-clone ledger facts from both local stages; realization and copy legs name time-to-certainty C4.2 (its ruling 80). Seats run on Opus 5.5 (Ruling 4); the v16 seat launcher (W2) is optional. The done bar is a stated verdict under KPI law v1.1; improvement is reported, not required (Ruling 3). apps/labs/ciops stays an active lab owned by this goal (Ruling 5), and the ontology working tree stays under the exploration packet (Ruling 7). Rulings from 2026-10-01 on land in research/decisions.md.",
+  "statusNote": "Graduated 2026-10-01 from explorations/beep-ci-operational-ontology (graduation sitting Rulings 1-11). Five slices: inheritance and change events, Stage C capture with proof-ledger capture, projection on live data, auditor run 4, KPI verdict. Run 4 gate per graduation Ruling 1 as amended by P1 Rulings 1-2 (2026-10-05): time-to-certainty C4.1 checked and post-#1321 pre-push facts in the fleet's owning-clone ledgers; the merged-preview legs stay flagged on the first post-#1321 merged-preview fact, and realization and copy legs name time-to-certainty C4.2 (its ruling 80). Seats run on Opus 5.5 (Ruling 4); the v16 seat launcher (W2) is optional. The done bar is a stated verdict under KPI law v1.1; improvement is reported, not required (Ruling 3). apps/labs/ciops stays an active lab owned by this goal (Ruling 5), and the ontology working tree stays under the exploration packet (Ruling 7). Rulings from 2026-10-01 on land in research/decisions.md.",
   "mission": "Operate the ratified CI operational ontology as a pipeline: project live admission and wave-order data through the S7 engine, hold CQ regression green, ratify auditor run 4, and state the fleet time-to-certainty verdict.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -81,7 +81,7 @@
     {
       "id": "P1",
       "name": "Stage C capture and proof-ledger capture (W3-W4)",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

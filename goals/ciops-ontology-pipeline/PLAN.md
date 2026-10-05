@@ -13,7 +13,7 @@ exploration's 2026-10-01 graduation sitting.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Inheritance and change events (W1); optional seat launcher (W2) | complete | Carry SOURCES forward and backfill the change-event ledger. W2 runs only if chosen. | `research/SOURCES.md` §4 refreshed against HEAD; every post-iv-870 lever under the admission criterion is a row; W2 landed or recorded as not chosen. |
-| P1 Stage C capture and proof-ledger capture (W3-W4) | pending | Pin `run4-fleet` and the owning-clone ledger through two new sibling generators. | Both pins committed with tree-pinned citation replay passing and residue scans zero; or the ledger census recorded and the pin lane stopped (graduation Ruling 1). |
+| P1 Stage C capture and proof-ledger capture (W3-W4) | in-progress | Pin `run4-fleet` and the owning-clone ledger through two new sibling generators. | Both pins committed with tree-pinned citation replay passing and residue scans zero; or the ledger census recorded and the pin lane stopped (graduation Ruling 1). |
 | P2 Projection on live data and planEpisode body (W5-W6) | pending | Replay the pin's admission chains and give the planner seam a body. | S7 §3.2/§6 amended first; agreement report printed beside 41-of-41; lab tests and `package-verify @beep/ciops` green; CQ-009 excluded from the live-projection certainty gate over post-#929 rows until P3's re-scope (graduation Ruling 9). |
 | P3 Auditor run 4 (W7) | pending | One frozen run on the run-3 choreography. | Gate PASSED and sittings scribed, or a steward ruling closing the run with its reason. |
 | P4 KPI reading and verdict (W8-W9) | pending | Lab-side ETL to the v1.1 law, then the stated verdict and the S9 statement. | Verdict document beside `economics-close.json` M1 with the episode-definition mapping. |
@@ -57,8 +57,9 @@ exploration's 2026-10-01 graduation sitting.
       the owning clone (`proofLedgerPathForCheckout`, time-to-certainty ruling 71): facts and
       shadow rows, `originKey` mapped to corpus-local tokens, run and attempt ids kept as join
       keys, run-3 Ruling 11 surrogates, run-3 Ruling 22 residue scan. Gate: C4.1 checked and
-      post-#1321 facts from both local stages; otherwise record the census and stop
-      (graduation Ruling 1).
+      post-#1321 pre-push facts in the fleet's owning-clone ledgers (graduation Ruling 1 as
+      amended by P1 Rulings 1–2; the merged-preview legs stay flagged on the first post-#1321
+      merged-preview fact); otherwise record the census and stop.
 
 ### P2 — Projection on live data
 

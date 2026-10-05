@@ -50,5 +50,6 @@ C capture (W3–W4), the first irreversible step.
   rulings land in [`research/decisions.md`](./research/decisions.md).
 - The ontology tree and `research/scripts/**` stay under the exploration; this goal owns them
   by back-link (graduation Ruling 7). `ontology/extraction/**` is byte-immutable.
-- Run 4 waits on the graduation Ruling 1 gate: time-to-certainty C4.1 checked plus
-  post-#1321 owning-clone proof-ledger facts from both local stages.
+- Run 4 waits on the graduation Ruling 1 gate as amended by P1 Rulings 1–2 (2026-10-05):
+  time-to-certainty C4.1 checked plus post-#1321 pre-push proof-ledger facts in the fleet's
+  owning-clone ledgers; the merged-preview legs stay flagged beside the C4.2 legs.
