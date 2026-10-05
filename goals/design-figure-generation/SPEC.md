@@ -25,13 +25,14 @@ surface shading, the judge rubric, and the sign-off event.
 
 ## Source Hierarchy
 
-1. User objective that created this packet (the 2026-10-05 drawing request) and
-   `explorations/patent-drawing-pipeline/DECISIONS.md`.
+1. User objective that created this packet (the 2026-10-05 drawing request).
 2. `AGENTS.md`, `CLAUDE.md`, and required skills (effect-first-development,
    schema-first-development, yeet).
 3. `standards/ARCHITECTURE.md`, `standards/architecture/03-driver-boundaries.md`,
    `07-non-slice-families.md`; `goals/agentic-cad-patent-tooling/SPEC.md` D6–D8.
-4. This `SPEC.md`.
+4. This `SPEC.md`, which carries the exploration's eight decisions
+   (`explorations/patent-drawing-pipeline/DECISIONS.md`) as its contract; a
+   decision that conflicts with a higher source is reopened, not followed.
 5. `PLAN.md`.
 6. `GOAL.md`.
 7. `research/`, `ops/`, `history/`.
@@ -54,6 +55,7 @@ Higher sources outrank lower sources when they conflict.
 - Each figure carries its own description sentence; the 1:1 FIG↔description rule is a decode-time invariant. Omission statements ("rear identical to front") are typed claims proven by render diff.
 - Sheets: A4 or Letter, all alike; margins ≥ top 2.5 cm, left 2.5 cm, right 1.5 cm, bottom 1.0 cm; no frame; pure black uniform-width strokes; text ≥ 0.32 cm, outlined; "FIG. n" consecutive from 1; "n/N" top centre; no hidden lines, no reference numerals, no solid black, stipple and line shading never on one face.
 - PDF 1.1–1.6, fonts embedded, no layers/annotations/encryption, rasters ≥ 300 dpi. Validator has a structural tier and a raster tier (300 and 600 dpi ink bounding box vs. margins; B/W only).
+- Raster-tier colour rule: render with anti-aliasing disabled (`pdftoppm -aa no -aaVector no`, or the pdfjs equivalent) so vector edges land as pure black or white; then every pixel must have zero chroma and a luminance of exactly 0 or 255. Any other pixel is a finding. A gray stroke, a gray fill, or an embedded grayscale image survives a non-anti-aliased render as gray and fails; a black vector stroke cannot produce gray and passes. The pure-B/W rule is therefore defined on the non-anti-aliased render only; the anti-aliased 300 dpi render is used for the ink-bounding-box margin measurement, never for colour.
 - Reproducibility: outlined text, rounded/sorted SVG coordinates, PDF dates stripped or from `SOURCE_DATE_EPOCH`, seeded jitter, WASM pinned by hash, pixi lockfile committed; `manifest.json` records spec, toolchain, per-figure, and PDF hashes plus the validator report.
 - Licensing: MuPDF.js (AGPL) is never linked; opencascade.js (LGPL) is linked, not vendored; ported code carries attribution per `research/SOURCES.md`.
 - Data: real matter inputs/outputs only under `BEEP_OPPOLD_CORPUS_ROOT`; the repo holds a synthetic fixture.
