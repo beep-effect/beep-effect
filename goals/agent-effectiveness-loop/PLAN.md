@@ -1,80 +1,74 @@
 # Agent Effectiveness Loop Plan
 
-## Phase 0 - Research Bootstrap
+## Status
 
-Status: complete
+Status: `complete`
 
-- Create the goal packet and research lane index.
-- Run the Phoenix capability map, live Phoenix state audit, repo eval/metrics
-  audit, and opportunity map as separate artifact-producing lanes.
-- Synthesize the artifacts into a ranked execution plan.
-- Keep all production code, infra, timers, deployment files, and agent configs
-  unchanged during this phase.
+All phases closed. This plan is retained as the execution ledger; it is not an
+active plan and must not be resumed inside this packet.
 
-## Phase 1 - Agent-Effectiveness Doctor And Annotation Plan
+## Phases
 
-Status: complete
+| Phase | Status | Goal | Exit criteria |
+| --- | --- | --- | --- |
+| P0 Research | complete | Run four artifact-producing research lanes (Phoenix capability map, live Phoenix state audit, repo eval/metrics surface audit, opportunity map) and synthesize a ranked execution plan. | Five artifacts under `research/`; synthesis selected one first slice (2026-05-16). |
+| P1 Implement | complete | Ship the local, no-mutation doctor and annotation plan/check loop, then the guarded Phoenix bundle and sync plumbing (Phase 1B). | Seven `beep agent-effectiveness` subcommands in `@beep/repo-cli`, report schemas and privacy checks in `@beep/repo-ai-metrics`. |
+| P2 Verify | complete | Prove the loop live and read-only, with privacy checks and CI. | [`history/outputs/phase1-live-proof.md`](./history/outputs/phase1-live-proof.md); annotation privacy checks pass; hosted CI green. |
+| P3 Yeet: PR to mergeable | complete | Publish and drive the PRs to mergeable with review threads resolved. | PR #167 and PR #168 merged 2026-05-20; stale #167 threads verified against #168 and resolved. |
+| P4 Close | complete | Record the closeout, write the reflection, flip packet state, route deferred tranches to successors. | [`history/outputs/phase1-closeout.md`](./history/outputs/phase1-closeout.md); [`history/reflections/2026-08-29-codex.md`](./history/reflections/2026-08-29-codex.md); status `completed-retained`. |
 
-Implemented local, no-mutation outputs:
+Phase ids match `ops/manifest.json` `phases[]`.
 
-- `beep agent-effectiveness doctor --json`
-- `beep agent-effectiveness annotations plan --json`
-- `beep agent-effectiveness annotations check --json`
+## Deferred Tranches
 
-This phase combines Phoenix reachability/project inventory, local AI-metrics
-DuckDB evidence, source coverage, scorecard gaps, labels, benchmarks, and
-worker-eval report status into one report-only trust gate. Missing providers
-are represented as `unavailable` evidence.
-
-The annotation plan renders proposed Phoenix annotation metadata from repo-owned
-labels, benchmarks, scorecards, worker-eval status, source coverage, and loop
-health without applying them to Phoenix. The annotation check command validates
-that plans stay metadata-only and do not include private paths, secret-shaped
-values, draft JSDoc, or code examples.
-
-Live proof is recorded in
-[history/outputs/phase1-live-proof.md](./history/outputs/phase1-live-proof.md).
-
-Implemented guarded Phoenix sync plumbing:
-
-- `beep agent-effectiveness datasets bundle --json`
-- `beep agent-effectiveness prompts bundle --json`
-- `beep agent-effectiveness experiments bundle --json`
-- `beep agent-effectiveness phoenix sync --json`
-
-This closeout treats the Phoenix driver and sync loop as guarded Phase 1B
-plumbing. Sync defaults to dry-run, requires explicit confirmation before live
-writes, and is not used as live-mutation proof for Phase 1 completion. Closeout
-evidence is recorded in
-[history/outputs/phase1-closeout.md](./history/outputs/phase1-closeout.md).
-
-## Phase 2 - Phoenix-Native Enrichment
-
-Status: split into `goals/agent-effectiveness-phoenix-enrichment`
-
-Candidate areas:
+The original plan carried Phase 2 (Phoenix-native enrichment) and Phase 3
+(repo workflow integration). On 2026-05-20 they were split into
+`goals/agent-effectiveness-phoenix-enrichment` and
+`goals/agent-effectiveness-workflow-integration`; both were superseded by
+`goals/agent-pipeline-velocity` (2026-07-05) and deleted in PR #401
+(2026-07-14). The candidate areas, kept here only as the record of what was
+deferred:
 
 - datasets and experiments for repo-specific agent tasks;
 - evals on traces and deterministic code evaluators;
 - prompt/config experiment comparison;
-- annotations and failure-mode labels in Phoenix;
-- Phoenix CLI/MCP usage if it improves operator workflows.
+- annotations and failure-mode labels written to Phoenix;
+- Phoenix CLI/MCP usage where it improves operator workflows;
+- operator workflow, CI/report, runbook, and agent-handoff integration.
 
-## Phase 3 - Repo Workflow Integration
+Any revival of these must be a new packet (or an amendment to
+`coding-agent-effectiveness-evidence-loop`) that preserves the confirmation
+gate on Phoenix writes.
 
-Status: split into `goals/agent-effectiveness-workflow-integration`
+## P4 Closeout Checklist
 
-Future implementation may add Phoenix annotation writes, datasets, experiments,
-prompt-management workflows, Phoenix API drivers, or additional AI metrics
-projections only after Phase 1 proves the local trust gate and annotation schema
-are useful and private.
+1. [x] Closeout reflection written to
+       `history/reflections/2026-08-29-codex.md` (on-demand trigger; frontmatter
+       validates against `ReflectionFrontmatter`).
+2. [x] `bun run beep lint reflection-artifacts` passes
+       (`reflectionRequired: true`).
+3. [x] `README.md` status and evidence, and `ops/manifest.json` phase statuses
+       and `initiative.status`, updated (last refreshed 2026-10-05).
 
-## Verification Posture
+## Execution Notes
 
-Every implementation phase must name:
+- Every implementation phase named the repo command producing its evidence,
+  the Phoenix project or derived report receiving sanitized output, the privacy
+  checks proving no raw transcript or private path leakage, the repo quality
+  commands for touched packages, and the no-op behavior when Phoenix is
+  unavailable.
+- Phase 1 completion did not require a live Phoenix mutation; sync stayed
+  dry-run by default with an explicit confirmation token for writes.
+- Local docgen was skipped during the follow-up loop; hosted CI docgen on the
+  final PR #168 head supplied that proof.
+- Preserve unrelated worktree changes; keep `SPEC.md` normative.
 
-- the repo command or runbook that produces the evidence;
-- the Phoenix project or derived report that receives sanitized output;
-- privacy checks proving no raw transcript or private path leakage;
-- the repo quality commands for any touched package;
-- the rollback or no-op behavior when Phoenix is unavailable.
+## Verification Commands
+
+```sh
+jq . goals/agent-effectiveness-loop/ops/manifest.json
+rg -n "agent-effectiveness-loop|packetAnchorDocument|executionCapable" goals/agent-effectiveness-loop
+git diff --check -- goals/agent-effectiveness-loop
+bun run beep lint reflection-artifacts
+bun run beep goals doctor
+```
