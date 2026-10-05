@@ -301,6 +301,7 @@
   },
   "name": "@beep/root",
   "overrides": {
+    "postcss-selector-parser": "7.1.6",
     "@effect/platform-node": "catalog:",
     "@effect/platform-node-shared": "catalog:",
     "@effect/tsgo-darwin-arm64": "catalog:",
