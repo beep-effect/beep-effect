@@ -146,3 +146,23 @@ dry-run command and its output line, dry-run totals (owners, present ledgers, ro
 pre-push facts, stage census, hits resolved, keys projected, origin kinds), the residue commands run on the
 dry-run root (empty output), a `gitleaks dir <dry-run-root> --config .gitleaks.toml --redact --no-banner`
 result (0 findings expected; the binary is `/usr/bin/gitleaks`), and a "deviations from R3B" list.
+
+## Addenda (critic pass, 2026-10-05 ~23:40Z) — binding
+
+W4-A1. **Drop the raw digests (overrides §"Discovery" item 4 and the `ledgers[]` block).** Do NOT record
+       `raw_sha256` or `raw_bytes` anywhere in committed bytes. Record `rows`, `facts`, `shadows`, `empty_lines`,
+       `torn_rows`, `unterminated_tail_bytes` and the emitted payload's `bytes`/`sha256` (in `files[]`). Reason:
+       the raw file embeds `FLEET_ROOT` on every fact, so its length discloses `len(FLEET_ROOT)` and its digest
+       is an offline oracle for a guessed path. Add a test asserting no manifest member equals the raw file's
+       sha256 or byte length.
+W4-A2. **Public-origin filter applies to owners.** The private duplicate clone's ledger (pre-cut rows only)
+       never enters the pin; count it under `discovery.excluded.non_public_origin`. Prove it with the fixture.
+W4-A3. **Lane ids.** Keep `laneId` verbatim (bare `coverage` and wave-qualified `quality:coverage` both occur)
+       and census both forms (`distinct.lanes`, `distinct.lanes_bare`, `distinct.lanes_qualified`); never
+       normalize.
+W4-A4. **Root name.** `run4-ledger` is this capture; the first post-#1321 merged-preview fact will be read by a
+       LATER sibling root with its own name (a committed pin is never refreshed). Record in the manifest:
+       `merged_preview_followup: "a later sibling pin captures the first post-#1321 merged-preview fact (P1 Ruling 1)"`.
+W4-A5. **Config location.** When resolving a checkout's origin, read `<commondir>/config` (a linked worktree's
+       git dir has no `config`); canonicalize scp (`git@github.com:owner/repo.git`) and https forms; named tests
+       as in the W3 addenda.

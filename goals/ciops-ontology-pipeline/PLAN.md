@@ -72,7 +72,11 @@ exploration's 2026-10-01 graduation sitting.
       41-of-41; byte-determinism kept. Until W7 re-scopes CQ-009, it is not a certainty gate
       over these post-#929 rows: evaluate it on pre-#929 rows only or report it as
       temporally out of scope, never as a pass or a failure (graduation Ruling 9; SPEC
-      "CQ-009").
+      "CQ-009"). Prerequisite recorded 2026-10-05 (P1 orchestrator note m): the lab's v3
+      admission decoders must accept run-3 Ruling 11 surrogate rows (`ownerRef`, no `pid` or
+      `procStart`; `checkoutRef` in the snapshot projection), and ring-trimmed released-only
+      chains are skipped, not failed, using the per-root window boundaries the `run4-fleet`
+      manifest records.
 - [ ] **W6 `planEpisode` body.** Read `gate-order-handoff/v1` by path and sha256, build the
       lane DAG in canonical insertion order with `Graph` from `effect`, fail with
       `CyclicPlanError` on cycles, and add 32 lane steps to the `ScheduleProposal` A-Box in

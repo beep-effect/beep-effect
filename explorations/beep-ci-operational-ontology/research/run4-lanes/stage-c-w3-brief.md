@@ -149,3 +149,31 @@ The structured return must include: generator path and sha256, test file path, t
 the dry-run command and output line, dry-run totals (payload files, bytes, events, checkouts by kind and
 layout, excluded counts by reason, chain counts live and snapshot, reconciliation counts), the residue
 commands run on the dry-run root with empty output, and a "deviations from R3B" list.
+
+## Addenda (critic pass, 2026-10-05 ~23:40Z) — binding
+
+W3-A1. **Attribution fix.** "Synthetic labels retained" comes from the intake docket's Stage C clause and
+       `PLAN.md` W3, not from graduation Ruling 8 item 7 (which is tree-pinned replay). Keep the behaviour.
+W3-A2. **Origin filter, named tests.** (a) A linked worktree's git dir (`<clone>/.git/worktrees/<name>`) has NO
+       `config`; read `<commondir>/config` and prove with a fixture that a linked worktree without a gitdir
+       config is admitted. (b) 21 of 23 fleet origins are scp form `git@github.com:beep-effect/beep-effect.git`,
+       one is https; canonicalize both and prove each is admitted. (c) The private clone's own `*-worktrees`
+       lanes resolve to the private origin and are excluded; prove it. (d) A literal substring match on
+       `github.com/beep-effect/beep-effect` without canonicalization is a bug: a test must fail it.
+W3-A3. **Admission kind is not the proof stage.** `AdmissionWorkKind` `merged-preview` is written both by real
+       `yeet verify --merged` admissions (`Handler.ts` `runWithMergedPreviewAdmission`) and by any full proof whose
+       steps include the CI-parity step (`Handler.ts` `const kind = A.some(proofSteps, (step) => step.id === CI_PARITY_STEP_ID)`);
+       the merged-preview STAGE is `attempt-started.stage` (`attemptStageFor`). Add a manifest prose member
+       `admission_kind_note` saying exactly that with both citations, and a census block
+       `attempt_starts_by_stage` `{repair-loop, pre-push, merged-preview, hosted}` × `{all, since_cut}` over the
+       pinned attempt rows (cut = 2026-09-28T15:09:38Z on `startedAt`), plus `last_merged_preview_start` (the
+       instant or null). This reproduces the P1 sitting's "three merged-preview starts, the last on 2026-09-09".
+W3-A4. **Quarantine semantics.** The quarantine family receipt carries `family_semantics: "reaper-quarantined
+       dead leases moved aside by the admission reaper; not live queue or lease state"` and a counts-only
+       `mtime_days: {<YYYY-MM-DD>: n}` census (no names, no times finer than a day).
+W3-A5. **hotPaths.** The sentence "hotPaths are host paths" is volatile: the live root currently has none
+       absolute. The host-root pass still covers them; keep the test with an absolute fixture value. The members
+       that DO carry host paths in live state are `checkoutRoot` and `command`.
+W3-A6. **Window boundaries for W5.** For each admission root record `window: {first_retained_row_instant,
+       last_retained_row_instant, released_only_chains (pre-v3 count), note: "ring-trimmed; released-only chains
+       have no admitted pair in the retained window"}` so the P2 replay can skip them instead of failing.

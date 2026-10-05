@@ -239,3 +239,22 @@ drifts from the deployed schema (unknown member, literal or kind) fails the capt
 (f) W4 reads no attempt journal; W3 owns attempts, and join coverage is recorded as counts.
 (g) `biome.jsonc` and the generated `biome.identity.jsonc` gain negations for both roots before
 any payload is staged; graduation Ruling 7 names them as coupled files.
+
+**Orchestrator notes, continued (after the survey critic, 2026-10-05 ~23:40Z).** (h) Ruling 5(1)'s
+public-origin filter applies to W4's owning clones as well: the private duplicate clone's ledger (pre-cut
+rows only) never enters the pin and is counted under the excluded reasons. (i) No manifest member may
+carry a sha256 or byte length of a raw fleet file that embeds a host path: the length would disclose the
+fleet root's length and the digest would confirm a guessed path offline, the oracle the snapshot's second
+addendum closed; only emitted payload digests and row counts are recorded. (j) Under Ruling 4 a
+`{file, line}` citation needs byte equality with the `origin/main` blob, so files this PR edits (the
+intake docket, SPEC, PLAN, README, the manifest, this log, the Biome files, the lane briefs) are named in
+prose, never cited, until the PR merges. (k) The admission work kind `merged-preview` is written by real
+`yeet verify --merged` admissions and by any full proof that carries the CI-parity step; the merged-preview
+STAGE is the attempt journal's `stage`. The W3 manifest states this beside an attempt-start census by stage,
+so the "dormant" reading of Ruling 1 is reproducible from pinned bytes. (l) The first post-#1321
+merged-preview fact will be read by a later sibling pin with its own root; `run4-ledger` is never
+refreshed. (m) For P2: the lab's v3 admission decoders (`AdmissionJournalV3Identity`,
+`AdmissionJournalQueuedIdentity` in `apps/labs/ciops/src/projection/Schemas.ts`) require `pid` and
+`procStart`, which run-3 Ruling 11 custody removes, and `releaseFromLedger` fails on ring-trimmed
+released-only chains; W5 must widen the decoder to surrogate rows and skip released-only chains, and the
+W3 manifest records each root's window boundaries for that purpose.

@@ -181,3 +181,29 @@ count; tamper with line/needle/sha in the manifest → fail; missing tree object
 Report in your structured return: the exact test command, counts (tests run / failures / errors), the dry-run
 command and its output JSON line, the dry-run root's file count and manifest byte size, and the residue
 commands you ran on the dry-run root with their (empty) output.
+
+## Addenda (critic pass, 2026-10-05 ~23:40Z) — binding on top of everything above
+
+A1. **Citable files.** Under P1 Ruling 4 a `{file, line, needle, sha256}` citation must be byte-equal between the
+    capturing checkout and the `origin/main` blob. Files this PR edits can therefore NOT be cited until it merges:
+    `biome.jsonc`, `biome.identity.jsonc`, `PKT/research/auditor-run4-intake.md`, `PKT/research/run4-lanes/*`,
+    `PKT/research/OPPORTUNITIES.md`, `goals/ciops-ontology-pipeline/{PLAN,README,SPEC}.md`, its `ops/manifest.json`
+    and `research/decisions.md`. Name those rulings in prose strings (`rulings:` members). Files you may cite:
+    `packages/tooling/tool/cli/src/**`, `goals/time-to-certainty/**`, `PKT/DECISIONS.md`, `PKT/research/scripts/*`,
+    `PKT/research/evidence/journal-snapshot-2026-10-01/*`, `PKT/ontology/extraction/**` (frozen).
+A2. **The `.beep` read split.** W3 reads every discovered checkout's `.beep/yeet/runs/*/attempts.ndjson` (lanes
+    included; run-3 Ruling 2 and Stage B Ruling 18) and stats each checkout's `.beep/yeet/proof-ledger.ndjson` for
+    existence only. W4 reads exactly one file per owning clone (`<owner>/.beep/yeet/proof-ledger.ndjson`) and
+    nothing else under any `.beep`. Neither reads any other `.beep` path.
+A3. **`beep-effect5` is a fleet clone.** The generators' discovery includes it, and the real pin reads its attempt
+    journals (W3) and its ledger (W4) read-only, like every other clone. The "never touch beep-effect5" rule means
+    never write there, never run commands with it as cwd, never edit it. Your dry runs may read it through the
+    generator; do nothing else with it.
+A4. **No raw-file digests.** No manifest member may carry a sha256 or byte length of a raw (pre-projection) fleet
+    file that contains a host path: the length discloses `len(FLEET_ROOT)` and the digest confirms a guessed
+    path offline (the oracle the snapshot addendum closed). Record row/line/tail counts and the EMITTED payload's
+    sha256 and bytes (as `files[]` already does). This overrides any earlier sentence that said otherwise.
+A5. **`generator_lineage`** is a list; its first entry is
+    `{generator: etl_run3b_fleet_corpus.py, sha256: <sha256 of that blob at corpus_tree>, relation: "patterns copied, nothing imported (Stage B Ruling 18)"}`.
+A6. **Filed names.** The briefs are filed in the repo as `PKT/research/run4-lanes/stage-c-{common,w3,w4}-brief.md`;
+    the scratch copies you read are the same text.
