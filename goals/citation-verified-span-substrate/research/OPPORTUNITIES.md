@@ -112,7 +112,9 @@ the downstream workspace in the release metadata.
   `c156ca2b3c` (check.yml run 37347112441) reports the same row with the same
   value, alongside `@beep/html` `Html.source-size.ts`. The two later `main`
   runs (37341075876, 37350588742) died of self-hosted runner loss before the
-  ratchet ran. The floor for that file was raised to 100 branches in #1408.
+  ratchet ran. The 100-branch floor for that file dates from #1049
+  (2026-09-09, per `git blame` on the baseline row); #1408 added uncovered
+  branches to the file without touching the baseline.
   Attribution: inherited.
 - **Prevention:** judge rows for packages selected only through a global
   input against the base measurement rather than the committed floor when the
