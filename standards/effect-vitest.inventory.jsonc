@@ -136,48 +136,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/cache-dependencies.test.ts:26:runSync@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
-      "line": 26,
-      "endLine": 38,
-      "symbol": "runSync",
-      "occurrence": "v2:46901f3d8f1312d3977af309ff103a60e3e998248dfa12c0343e7ebbc570d4bc",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( Arbitrary.checkEffect( Arbitrary.schema(CacheDependencyMaterialization), (value) => { const codec = S.fromJsonString(CacheDependencyMaterialization); const encoded = Result.getOrThrow(",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/cache-experiment.test.ts:60:runSync@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-experiment.test.ts",
-      "line": 60,
-      "endLine": 71,
-      "symbol": "runSync",
-      "occurrence": "v2:55447627a60dfd536a17425b1af73cc696c335cddf3590ba6e10af580a9684ce",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( Arbitrary.checkEffect( Arbitrary.all([Arbitrary.schema(CacheSyntheticRun), Arbitrary.schema(Sha256Hex)]), ([run, otherRuntime]) => { const fresh = CacheSyntheticRun.make({ ...run, exit",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/changeset-graph.test.ts:229:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -1081,27 +1039,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/package-scripts.schemas.test.ts:58:runSync@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.schemas.test.ts",
-      "line": 58,
-      "endLine": 69,
-      "symbol": "runSync",
-      "occurrence": "v2:7048fcfcdd5de8e4f6ff1f68019e9badf9f038b984df3b605bcf8a20cda517b5",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( Arbitrary.checkEffect( Arbitrary.all([scriptsArbitrary]), ([input]) => { const block = Result.getOrThrow(decodeAppResult(input)); expect(Result.getOrThrow(encodeAppResult(block))).toEq",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/process-identity.test.ts:94:runSync@13#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -1113,27 +1050,6 @@
       "occurrence": "v2:389449c80f14295ef9a15693b3219d94f7ab85179dcc47c7edaa4d64cac42c11",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runSync(isProcessPidAlive(process.pid))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/proof-fact.test.ts:117:runSync@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/proof-fact.test.ts",
-      "line": 117,
-      "endLine": 129,
-      "symbol": "runSync",
-      "occurrence": "v2:6c51108e88ee44245575542a4fc5cb9473a59b7219ba189d3983671f2b8f3e36",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( Arbitrary.checkEffect( Arbitrary.all([arbitrary]), ([value]) => equivalent( Result.getOrThrow( decodeUnknownProofLedgerRowResult(Result.getOrThrow(encodeProofLedgerRowResult(value))) )",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -22328,48 +22244,6 @@
       "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. This native CLI integration runs one complete provision/import/revoke transaction. The inner generated loop mutates only the acceptance reference while asserting the same persisted marker remains unchanged before revocation. Moving the whole CLI transaction into each generated case would remove that shared-marker invariant and multiply subprocess work. Keep fcRuns(10), seed/shrinking, and the explicit Passed assertion; focused and 400-run integration checks pass."
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/cache-dependencies.test.ts:27:checkEffect@8#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
-      "line": 27,
-      "endLine": 37,
-      "symbol": "checkEffect",
-      "occurrence": "v2:46901f3d8f1312d3977af309ff103a60e3e998248dfa12c0343e7ebbc570d4bc",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.schema(CacheDependencyMaterialization), (value) => { const codec = S.fromJsonString(CacheDependencyMaterialization); const encoded = Result.getOrThrow(S.encodeResult(c",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:packages/tooling/tool/cli/test/cache-experiment.test.ts:61:checkEffect@8#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-experiment.test.ts",
-      "line": 61,
-      "endLine": 70,
-      "symbol": "checkEffect",
-      "occurrence": "v2:55447627a60dfd536a17425b1af73cc696c335cddf3590ba6e10af580a9684ce",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.all([Arbitrary.schema(CacheSyntheticRun), Arbitrary.schema(Sha256Hex)]), ([run, otherRuntime]) => { const fresh = CacheSyntheticRun.make({ ...run, exitCode: 0, violati",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV007:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:360:checkEffect@36#1",
       "lens": "detector",
       "ruleId": "EV007",
@@ -22476,27 +22350,6 @@
       "status": "open"
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/package-scripts.schemas.test.ts:59:checkEffect@8#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-scripts.schemas.test.ts",
-      "line": 59,
-      "endLine": 68,
-      "symbol": "checkEffect",
-      "occurrence": "v2:7048fcfcdd5de8e4f6ff1f68019e9badf9f038b984df3b605bcf8a20cda517b5",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.all([scriptsArbitrary]), ([input]) => { const block = Result.getOrThrow(decodeAppResult(input)); expect(Result.getOrThrow(encodeAppResult(block))).toEqual(input); retu",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV007:packages/tooling/tool/cli/test/policy-fingerprint-turbo-inputs.test.ts:154:checkEffect@28#1",
       "lens": "detector",
       "ruleId": "EV007",
@@ -22508,27 +22361,6 @@
       "occurrence": "v2:fa9e4a014247066708cd6dadea385c7b39a9ab3c8412dbeff70d96e0af838891",
       "class": "direct-arbitrary-check",
       "evidence": "Arbitrary.checkEffect( FingerprintRunSummaryArbitrary, (summary) => Effect.gen(function* () { const encoded = yield* encodeSummary(summary); const decoded = yield* decodeSummary(encoded); expect(summa",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:packages/tooling/tool/cli/test/proof-fact.test.ts:118:checkEffect@8#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/proof-fact.test.ts",
-      "line": 118,
-      "endLine": 128,
-      "symbol": "checkEffect",
-      "occurrence": "v2:6c51108e88ee44245575542a4fc5cb9473a59b7219ba189d3983671f2b8f3e36",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.all([arbitrary]), ([value]) => equivalent( Result.getOrThrow( decodeUnknownProofLedgerRowResult(Result.getOrThrow(encodeProofLedgerRowResult(value))) ), value ), fcRun",
       "replacement": {
         "primitive": "it.effect.prop",
         "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
